@@ -1,5 +1,5 @@
 
-# automated noncompartmental analysis (aNCA) Project <img src="inst/shiny/www/images/aNCA_logo.png" align="right" width=140 height=140 alt="icon" />
+# automated Non-Compartmental Analysis (aNCA) <img src="inst/shiny/www/images/aNCA_logo.png" align="right" width=140 height=140 alt="icon" />
 
 <!-- badges:
 
@@ -16,6 +16,56 @@ This application enables users to upload their datasets and perform Non-Compartm
 can be tailored to calculate pharmacokinetic parameters for various dosing regimens and time points, given certain restrictions. It also features manual slope selection, simplifying the process of conducting lambda-z-regression and PK-timepoint exclusions.
 Furthermore, the pharmacokinetic parameters can be dynamically visualized through customized graphics such as line and mean plots. The calculated pharmacokinetic parameters can be compiled in a dynamic table, visualized using boxplots, or exported as a comprehensive report.
 Designed with user-friendliness in mind, this app aims to make NCA accessible and straightforward for all scientists.
+
+## Installation
+
+This repository is private and still in developer mode. To install the package, follow the instructions below:
+
+### 1. Access Token 
+In GitHub click on your icon on the top right and head to: Settings > Developer Settings > Personal access tokens and create a classic access token.
+
+### 2. Clone the repository
+
+Assuming you have git installed: 
+
+In RStudio go to "Create a project" > "Create Project from version control" > GitHub and paste the following with your personcal access token into the field for the Repository URL: 
+
+```
+ https://<your-token>@github.com/pharmaverse/aNCA.git
+```
+
+You can also switch the the directory you want to clone to in your terminal you run: 
+
+```sh
+
+git clone https://<your-token>@github.com/pharmaverse/aNCA.git
+
+```
+
+### 3. Install the package
+
+If you have not already, a package to install packages from local repos, e.g. devtools
+
+```r
+install.packages("devtools")
+```
+
+If not already done, head into the cloned repository and install the package:
+
+```r
+devtools::install()
+```
+
+## Use the App
+
+Once correctly installed, the aNCA app can be simply install and run with the following to lines of code: 
+
+```r
+library(aNCA)
+aNCA::run_app()
+```
+
+Have fun running your tailored Non-Compartemental Analysis!
 
 <!--
 ## Contribute as developer
