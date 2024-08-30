@@ -1,0 +1,319 @@
+---
+title: "`r params$resNCA$result$STUDYID[1]` - MAD NCA Report"
+output: html_document
+params:
+  resNCA:
+    value: x
+---
+
+## Overview
+<!--START_EXPLANATION-->
+This document contains exploratory plots for multiple ascending dose PK data as well as the R code that generates these graphs. The plots presented here are based on simulated data ([see: PKPD Datasets](PKPD_Datasets.html)). Data specifications can be accessed on [Datasets](Datasets.html) and Rmarkdown template to generate this page can be found on [Rmarkdown-Template](Rmarkdown/Multiple_Ascending_Dose_PK.Rmd). You may also download the Multiple Ascending Dose PK/PD dataset for your reference ([download dataset](Data/Multiple_Ascending_Dose_Dataset2.csv)).
+<!--END_EXPLANATION-->
+
+## Setup
+
+```{r, error = TRUE, echo = TRUE, warning = FALSE, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(xgxr)
+
+#flag for labeling figures as draft
+status = "DRAFT"
+
+## ggplot settings
+xgx_theme_set()
+
+```
+
+## Load Dataset
+
+```{r, error = TRUE, warning = FALSE, message = FALSE}
+
+#load dataset
+pkpd_data <- resNCA # readRDS("resNCA.rds") # for local tests
+
+# DOSE_CMT = 1
+# PK_CMT = 2
+SS_PROFDAY = 6 # steady state prof day
+TAU = 24 # time between doses, units should match units of TIME, e.g. 24 for QD, 12 for BID, 7*24 for Q1W (when units of TIME are h)
+
+#ensure dataset has all the necessary columns
+  pk_data <- pkpd_data$data$conc$data %>%
+    mutate(ID      = USUBJID,     #ID   column
+           TIME    = TIME,   #TIME column name 
+           NOMTIME = NRRLT, #NOMINAL TIME column name
+           PROFDAY = case_when(
+             NOMTIME < (SS_PROFDAY - 1)*24 ~ 1 + floor(NOMTIME / 24),
+             NOMTIME >= (SS_PROFDAY - 1)*24 ~ SS_PROFDAY
+             ), #PROFILE DAY day associated with profile, e.g. day of dose administration
+           PROFTIME = NOMTIME - (PROFDAY - 1)*24, #PROFILE TIME, time associated with profile, e.g. hours post dose
+           LIDV    = AVAL,   #DEPENDENT VARIABLE column name
+           CENS    = case_when(AVAL <= PCLLOQ ~ 1, 
+                               TRUE ~ 0),   #CENSORING column name
+           # CMT     = CMT,    #COMPARTMENT column
+           DOSE    = DOSEA,   #DOSE column here (numeric value)
+           TRTACT  = paste(DOSEA, DOSEU), #DOSE REGIMEN column here (character, with units), 
+           LIDV_NORM = LIDV/DOSEA, 
+           LIDV_UNIT = AVALU, 
+           DAY_label = paste("Day", PROFDAY)
+    ) %>% 
+  #create a factor for the treatment variable for plotting
+  arrange(DOSE) %>%
+  mutate(TRTACT_low2high = factor(TRTACT, levels = unique(TRTACT)), 
+         TRTACT_high2low = factor(TRTACT, levels = rev(unique(TRTACT)))) %>%
+  select(-TRTACT)
+
+
+
+# original code perform NCA, for additional plots
+# NCA = pk_data %>%
+#   group_by(ID, DOSE) %>%
+#   filter(!is.na(LIDV)) %>%
+#   summarize(AUC_0 = ifelse(length(LIDV[NOMTIME > 0 & NOMTIME <= TAU]) > 1,
+#                               caTools::trapz(TIME[NOMTIME > 0 & NOMTIME <= TAU], 
+#                                       LIDV[NOMTIME > 0 & NOMTIME <= TAU]),
+#                               NA), 
+#             Cmax_0     = ifelse(length(LIDV[NOMTIME > 0 & NOMTIME <= TAU]) > 1,
+#                               max(LIDV[NOMTIME > 0 & NOMTIME <= TAU]),
+#                               NA), 
+#             AUC_tau = ifelse(length(LIDV[NOMTIME > (SS_PROFDAY-1)*24 & 
+#                                            NOMTIME <= ((SS_PROFDAY-1)*24 + TAU)]) > 1,
+#                              caTools::trapz(TIME[NOMTIME > (SS_PROFDAY-1)*24 & 
+#                                                    NOMTIME <= ((SS_PROFDAY-1)*24 + TAU)],
+#                                      LIDV[NOMTIME > (SS_PROFDAY-1)*24 & 
+#                                             NOMTIME <= ((SS_PROFDAY-1)*24 + TAU)]),
+#                              NA),
+#             Cmax_tau     = ifelse(length(LIDV[NOMTIME > (SS_PROFDAY-1)*24 & 
+#                                                 NOMTIME <= ((SS_PROFDAY-1)*24 + TAU)]) > 1,
+#                              max(LIDV[NOMTIME > (SS_PROFDAY-1)*24 & 
+#                                         NOMTIME <= ((SS_PROFDAY-1)*24 + TAU)]),
+#                              NA),
+#             AUC_acc = AUC_tau / AUC_0, 
+#             Cmax_acc = Cmax_tau / Cmax_0, 
+#             SEX      = SEX[1], #this part just keeps the SEX and WEIGHTB covariates
+#             WEIGHTB  = WEIGHTB[1]) %>%
+#   gather(PARAM, VALUE, -c(ID, DOSE, SEX, WEIGHTB)) %>%
+#   ungroup() %>%
+#   mutate(VALUE_NORM = VALUE/DOSE, 
+#          PROFDAY = ifelse(PARAM %in% c("AUC_0", "Cmax_0"), 1, SS_PROFDAY), 
+#          DAY_label = paste("Day", PROFDAY))
+  
+NCA <- resNCA$formatted_res %>% 
+  mutate(VALUE = AVAL, 
+         DOSE = DOSEA,
+         VALUE_NORM = VALUE/DOSE, 
+         WEIGHTB = WTBL, 
+         PROFDAY = ifelse(PARAM %in% c("auclast", "cmax"), 1, SS_PROFDAY),
+         DAY_label = paste("Day", PROFDAY))
+
+
+#units and labels
+time_units_dataset = "hours"
+time_units_plot    = "days"
+trtact_label       = "Dose"
+dose_units         = resNCA$formatted_res$DOSEU # unique((pkpd_data %>% filter(CMT == DOSE_CMT) )$LIDV_UNIT) %>% as.character()
+dose_label         = paste0("Dose (", dose_units, ")")
+conc_units         = unique(pk_data$LIDV_UNIT) %>% as.character()
+conc_label         = paste0("Concentration (", conc_units, ")")
+concnorm_label     = paste0("Normalized Concentration (", conc_units, ")/", dose_units)
+AUC_units          = paste0("h.", conc_units)
+                              
+#directories for saving individual graphs
+dirs = list(
+  parent_dir = "Parent_Directory", 
+  rscript_dir  = "./", 
+  rscript_name = "Example.R", 
+  results_dir  = "./", 
+  filename_prefix   = "", 
+  filename     = "Example.png")
+  
+```
+
+## Provide an overview of the data
+<!--START_EXPLANATION-->
+Summarize the data in a way that is easy to visualize the general trend of PK over time and between doses. Using summary statistics can be helpful, e.g. Mean +/- SE, or median, 5th & 95th percentiles. Consider either coloring by dose or faceting by dose. Depending on the amount of data one graph may be better than the other.
+
+When looking at summaries of PK over time, there are several things to observe. Note the number of doses and number of time points or sampling schedule. Observe the overall shape of the average profiles. What is the average Cmax per dose? Tmax? Does the elimination phase appear to be parallel across the different doses? Is there separation between the profiles for different doses? Can you make a visual estimate of the number of compartments that would be needed in a PK model?
+<!--END_EXPLANATION-->
+
+### Concentration over Time, colored by dose, mean +/- 95% CI
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 5}
+
+gg <- ggplot(data = pk_data, 
+             aes(x = NOMTIME, y = LIDV, 
+                 group = interaction(TRTACT_high2low, PROFDAY), color = TRTACT_high2low)) 
+gg <- gg + xgx_theme()
+gg <- gg + xgx_geom_ci(conf_level = 0.95, alpha = 0.5)
+gg <- gg + xgx_scale_y_log10()
+gg <- gg + xgx_scale_x_time_units(units_dataset = time_units_dataset, 
+                                  units_plot    = time_units_plot)
+gg <- gg + labs(y = conc_label, color = trtact_label) 
+gg <- gg + xgx_annotate_status(status)
+gg <- gg + xgx_annotate_filenames(dirs)
+
+#if saving copy of figure, replace xgx_annotate lines with xgx_save() shown below:
+#xgx_save(width, height, dirs, "filename_main", status)
+print(gg)
+
+```
+
+### Side-by-side comparison of first administered dose and steady state
+<!--START_EXPLANATION-->
+For multiple dose studies, zoom in on key visits for a clearer picture of the profiles. Look for accumulation (if any) between first administered dose and steady state.
+<!--END_EXPLANATION-->
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 5, include = FALSE}
+data_to_plot <- pk_data %>% subset(PROFDAY %in% c(1, SS_PROFDAY))
+
+gg <- ggplot(data_to_plot, aes(x = PROFTIME, y = LIDV, 
+                                   group = interaction(TRTACT_high2low, PROFDAY), color = TRTACT_high2low)) +
+  xgx_theme() +
+  xgx_geom_ci(conf_level = 0.95, alpha = 0.5) +
+  xgx_scale_y_log10() +
+  xgx_scale_x_time_units(units_dataset = time_units_dataset, 
+                         units_plot    = "Hours") +
+  labs(y = conc_label, color = trtact_label) +
+  facet_grid(~DAY_label)
+
+# Print the new plot
+print(gg)
+
+```
+
+### Concentration over Time, faceted by dose, mean +/- 95% CI, overlaid on gray spaghetti plots
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 3, include = FALSE}
+
+gg <- ggplot(data = pk_data, aes(x = NOMTIME, y = LIDV, group = interaction(TRTACT_high2low, PROFDAY)))
+gg <- gg + xgx_theme()
+gg <- gg + geom_line(aes(group = interaction(ID, PROFDAY)), color = rgb(0.5, 0.5, 0.5), size = 1, alpha = 0.3)  
+gg <- gg + geom_point(aes(color = factor(CENS), shape = factor(CENS), alpha = 0.3), size = 2, alpha = 0.3)
+gg <- gg + scale_shape_manual(values = c(19, 8))
+gg <- gg + scale_color_manual(values = c("grey50", "red"))
+gg <- gg + theme(legend.position = "none")
+gg <- gg + xgx_geom_ci(conf_level = 0.95)
+gg <- gg + xgx_scale_y_log10()
+gg <- gg + xgx_scale_x_time_units(units_dataset = time_units_dataset, 
+                                  units_plot    = time_units_plot)
+gg <- gg + labs(y = conc_label, color = trtact_label) 
+gg <- gg + xgx_annotate_status(status)
+gg <- gg + xgx_annotate_filenames(dirs)
+gg <- gg + facet_grid(.~TRTACT_low2high)
+
+#if saving copy of figure, replace xgx_annotate lines with xgx_save() shown below:
+#xgx_save(width, height, dirs, "filename_main", status)
+print(gg)
+
+```
+
+
+## Explore variability
+<!--START_EXPLANATION-->
+Use spaghetti plots to visualize the extent of variability between individuals. The wider the spread of the profiles, the higher the between subject variability. Distinguish different doses by color, or separate into different panels. If coloring by dose, do the individuals in the different dose groups overlap across doses? Dose there seem to be more variability at higher or lower concentrations?
+<!--END_EXPLANATION-->
+
+### Concentration over Time, colored by dose, dots and lines grouped by individual
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 5, include = FALSE}
+
+gg <- ggplot(data = pk_data, aes(x = TIME, y = LIDV)) 
+gg <- gg + xgx_theme()
+gg <- gg + geom_line(aes(group = interaction(ID, PROFDAY), color = TRTACT_high2low), size = 1, alpha = 0.5) 
+gg <- gg + geom_point(aes(alpha = 0.3, color = TRTACT_high2low), size = 2, alpha = 0.5)
+gg <- gg + geom_point(aes(shape = factor(CENS), alpha = 0.3), size = 2, alpha = 0.5, color = "red")
+gg <- gg + scale_shape_manual(values = c(NA, 8))
+gg <- gg + xgx_scale_y_log10()
+gg <- gg + xgx_scale_x_time_units(units_dataset = time_units_dataset, 
+                                  units_plot    = time_units_plot)
+gg <- gg + labs(y = conc_label, color = trtact_label, shape = "BLQ") 
+gg <- gg + xgx_annotate_status(status)
+gg <- gg + xgx_annotate_filenames(dirs)
+
+#if saving copy of figure, replace xgx_annotate lines with xgx_save() shown below:
+#xgx_save(width, height, dirs, "filename_main", status)
+print(gg)
+```
+
+### Side-by-side comparison of first administered dose and steady state
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 5, include = FALSE}
+
+ggplot(data_to_plot, aes(x = PROFTIME, y = LIDV)) +
+  xgx_theme() +
+  geom_line(aes(group = interaction(ID, PROFDAY), color = TRTACT_high2low), size = 1, alpha = 0.5) +
+  geom_point(aes(alpha = 0.3, color = TRTACT_high2low), size = 2, alpha = 0.5) +
+  geom_point(aes(shape = factor(CENS), alpha = 0.3), size = 2, alpha = 0.5, color = "red") +
+  scale_shape_manual(values = c(NA, 8)) +
+  xgx_scale_y_log10() +
+  xgx_scale_x_time_units(units_dataset = time_units_dataset, units_plot = "Hours") +
+  labs(y = conc_label, color = trtact_label, shape = "BLQ") +
+  facet_grid(~DAY_label)
+
+```
+
+### Concentration over Time, faceted by dose, lines grouped by individual
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 3, include = FALSE}
+gg <- ggplot(data = pk_data, aes(x = TIME, y = LIDV)) 
+gg <- gg + xgx_theme()
+gg <- gg + geom_line(aes(group = interaction(ID, PROFDAY)), size = 1, alpha = 0.5) 
+gg <- gg + geom_point(data = pk_data %>% filter(CENS == 0), size = 2, alpha = 0.5)
+gg <- gg + geom_point(data = pk_data %>% filter(CENS == 1), size = 2, alpha = 0.5, color = "red", shape = 8)
+gg <- gg + xgx_scale_y_log10()
+gg <- gg + xgx_scale_x_time_units(units_dataset = time_units_dataset, 
+                                  units_plot    = time_units_plot)
+gg <- gg + labs(y = conc_label) 
+gg <- gg + facet_grid(.~TRTACT_low2high)
+gg <- gg + xgx_annotate_status(status)
+gg <- gg + xgx_annotate_filenames(dirs)
+
+#if saving copy of figure, replace xgx_annotate lines with xgx_save() shown below:
+#xgx_save(width, height, dirs, "filename_main", status)
+print(gg)
+
+```
+
+## Assess the dose linearity of exposure
+
+### Dose Normalized Concentration over Time, colored by dose, mean +/- 95% CI
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 5, include = FALSE}
+
+gg <- ggplot(data = pk_data, 
+             aes(x = NOMTIME, y = LIDV_NORM, 
+                 group = TRTACT_high2low, color = TRTACT_high2low)) 
+gg <- gg + xgx_theme()
+gg <- gg + xgx_geom_ci(conf_level = 0.95, alpha = 0.5)
+gg <- gg + xgx_scale_y_log10()
+gg <- gg + xgx_scale_x_time_units(units_dataset = time_units_dataset, 
+                                  units_plot    = time_units_plot)
+
+gg <- gg + labs(y = concnorm_label, color = trtact_label)
+gg <- gg + xgx_annotate_status(status)
+gg <- gg + xgx_annotate_filenames(dirs)
+
+#if saving copy of figure, replace xgx_annotate lines with xgx_save() shown below:
+#xgx_save(width, height, dirs, "filename_main", status)
+print(gg)
+ 
+```
+
+### Side-by-side comparison of first administered dose and steady state
+
+```{r, error = TRUE , cache = TRUE, echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 5, include = FALSE}
+
+ggplot(data_to_plot, aes(x = PROFTIME, y = LIDV_NORM, 
+                                   group = TRTACT_high2low, color = TRTACT_high2low)) +
+  xgx_theme() +
+  xgx_geom_ci(conf_level = 0.95, alpha = 0.5) +
+  xgx_scale_y_log10() +
+  xgx_scale_x_time_units(units_dataset = time_units_dataset, units_plot = "Hours") +
+  labs(y = concnorm_label, color = trtact_label) +
+  facet_grid(~DAY_label) +
+  xlab("Time after dose (hours)")
+```
+
+-> all of the NCA plot were removed to, as there is no known destinction between AUC_0 and AUC: you can add this sectionagain from the MAD file: https://opensource.nibr.com/xgx/Multiple_Ascending_Dose_PK.htmls

@@ -1,0 +1,18 @@
+---
+title: "PDF Report"
+output: html_document
+params:
+  resNCA:
+    value: x
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Report
+
+```{r}
+str(params$resNCA)
+```
+

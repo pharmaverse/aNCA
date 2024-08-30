@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+aNCA.Rproj
+inst/guidelines
+inst/templates
+inst/shiny/data
+!inst/shiny/data/DummyRO_ADNCA.csv
