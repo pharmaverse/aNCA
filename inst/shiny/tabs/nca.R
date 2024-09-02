@@ -140,7 +140,7 @@ observeEvent(input$submit_analyte, {
                              formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO, 
                              route = ifelse(toupper(df_dose$IQROUTE) == 'EXTRAVASCULAR', 'extravascular', 'intravascular'), 
                              time.nominal = 'NFRLT', 
-                             duration = 'NDOSEDUR')
+                             duration = 'ADOSEDUR')
   
   # Combine the PKNCA objects into the PKNCAdata object
   mydata <- PKNCA::PKNCAdata(data.conc = myconc, 
