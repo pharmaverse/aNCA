@@ -41,21 +41,26 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
                              PKNCAconc_df = mydata$conc$data, 
                              dosno=profile, 
                              usubjid=patient, 
+                             analyte = analyte,
                              R2ADJTHRESHOL=0.7){
   
+  print("produce lambda_res")
+  print(PKNCAres_df)
   # Obtain all information relevant regarding lambda calculation
   lambda_res = PKNCAres_df %>%
-    filter(DOSNO==dosno, USUBJID==usubjid)  %>% 
-    arrange(USUBJID, DOSNO, start, desc(end))  %>%
-    filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) 
-  
+    filter(DOSNO==dosno, USUBJID==usubjid, ANALYTE %in% analyte)  %>% 
+    arrange(ANALYTE, USUBJID, DOSNO, start, desc(end))  %>%
+    filter(!duplicated(paste0(USUBJID, DOSNO, ANALYTE, PPTESTCD))) 
+  print(paste0("DOSNO:", dosno, " USUBJID:", usubjid, " ANALYTE:", paste0(analyte, collapse=",")))
+  print(lambda_res)
   # Obtain the number of data points used to calculate lambda
   lambda.z.n.points = as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=='lambda.z.n.points'])
   if (is.na(lambda.z.n.points)) lambda.z.n.points = 0
   
+  print("generate lambda.z.ix.rows")
   # Identify in the data the points used to calculate lambda
   lambda.z.ix.rows = PKNCAconc_df   %>% 
-    filter(DOSNO==dosno, USUBJID==usubjid, !exclude_half.life,
+    filter(DOSNO==dosno, USUBJID==usubjid, ANALYTE %in% analyte, !exclude_half.life,
            TIME>=sum(subset(lambda_res, lambda_res$PPTESTCD=='lambda.z.time.first', select=c('start', 'PPORRES'))) 
     )  %>% 
     arrange(IX) %>%
@@ -67,6 +72,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
   half_life_value <- signif(log(2)/as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=='lambda.z']), 3)
   time_span <- signif(abs(lambda.z.ix.rows$TIME[nrow(lambda.z.ix.rows)] - lambda.z.ix.rows$TIME[1]), 3)
   
+  print("subtitle color")
   # Determine the color based on the conditions
   subtitle_color <- ifelse(R2ADJ_value < R2ADJTHRESHOL | half_life_value > (time_span/2), "red", "black")
   subtitle_text <- paste0("R^2: ", signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=='r.squared']), 3), 
@@ -82,7 +88,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     "    (T<sub>", lambda.z.ix.rows$IX[2], "</sub> - T<sub>", lambda.z.ix.rows$IX[1], "</sub>)/2 = ", time_span/2, "h"
   )
   
-  
+
   # If Cmax is included in lambda calculation, inform the user in the plot
   if(lambda_res$PPORRES[lambda_res$PPTESTCD=='cmax'] <=  max(lambda.z.ix.rows$PCSTRESC)){
     subtitle_color = 'red'
@@ -92,7 +98,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
   
   # Include in the data the aesthetics for the plot
   plot_data = PKNCAconc_df  %>%
-    filter(DOSNO==dosno, USUBJID==usubjid) %>% 
+    filter(DOSNO==dosno, USUBJID==usubjid, ANALYTE %in% analyte) %>% 
     arrange(IX)  %>% 
     mutate(IX_shape =ifelse(is.excluded.hl, 'excluded', 'included'),
            IX_stroke = ifelse(is.excluded.hl, 4, 1),
@@ -112,7 +118,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     geom_smooth(data=subset(plot_data, IX_color=='hl.included'),method = 'lm', se = F, color = 'green3', linetype='solid', linewidth=1) +
     geom_point(data = plot_data, aes(shape = IX_shape, color= IX_color, stroke=IX_stroke), size = 5) +
     labs(
-      title = paste0('USUBJID: ', usubjid, ', DOSNO: ', dosno),
+      title = paste0('USUBJID: ', usubjid, ', DOSNO: ', dosno, ' (', analyte, ')'),
       y = paste0('Log10 Concentration (', PKNCAconc_df $PCSTRESU[1], ')'),
       x = paste0('Actual time post dose (', PKNCAconc_df $RRLTU[1], ')')
     ) +
@@ -132,7 +138,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     scale_shape_manual(values = c("included" = 16, "excluded" = 3)) +
     scale_color_manual(values = c("hl.included" = "green4", "hl.excluded" = "black", "excluded" ="red3"))+
     scale_y_log10()
-  
+  print("generate plotly")
   # Make a plotly interactive plot
   library(plotly)
   pl <- ggplotly(p) %>% 
@@ -157,9 +163,9 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     style(hovertext=~paste0('Data Point: ',IX), hoverinfo='none', traces=4)  %>% 
     style(hovertext=~paste0('Data Point: ',IX), hoverinfo='none', traces=5)  %>% 
     # Make this trace the only one 
-    add_trace(data = plot_data  %>% filter(DOSNO==dosno, USUBJID==usubjid),
+    add_trace(data = plot_data  %>% filter(DOSNO==dosno, USUBJID==usubjid, ANALYTE==analyte),
               x = ~TIME, y = ~log10(PCSTRESC),
-              customdata = ~paste0(USUBJID, '_', DOSNO, '_', IX),
+              customdata = ~paste0(USUBJID, '_', DOSNO, '_', ANALYTE, '_', IX),
               text = ~paste0('Data Point: ',IX, '\n', '(', signif(TIME,2), ' , ', signif(PCSTRESC,2), ')'),
               type = 'scatter',
               mode = 'markers',
@@ -172,7 +178,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
               ), size = 50, opacity = 0),  # Make points semi-transparent
               showlegend = FALSE  # Don't show this trace in the legend
     )
-  
+    print("finished plotly")
   return(pl)
   
 }

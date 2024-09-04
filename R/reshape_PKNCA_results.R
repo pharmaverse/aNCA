@@ -77,7 +77,6 @@ reshape_PKNCA_results <- function(resNCA, intervals_userinput_data) {
 
       all_AUCs = merge(infinite_AUCs_with_lambda_details, interval_AUCs, all=T)
   } else all_AUCs = infinite_AUCs_with_lambda_details
-
    print('FUNCTION STARTS all_AUCs')
   # Do a final standardization of the results reshaped
   reshaped_results <- all_AUCs  %>%

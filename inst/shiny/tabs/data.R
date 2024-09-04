@@ -167,32 +167,37 @@ observeEvent(data(), updateSelectInput(session, inputId = 'analyte',
                                        label = 'Choose the analyte :',
                                        choices = unique(data()$ANALYTE)))
 
+
 # When an analyte is selected and the user clicks the "Submit" button, create the PKNCA data object
 mydata = reactiveVal(NULL)
 observeEvent(input$submit_analyte, {
-
+  print("create conc")
   # Segregate the data into concentration and dose records
   df_conc <-create_conc(data(), input$analyte, input$proftype)
+  print("create dose")
   df_dose <- create_dose(df_conc)
 
 # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
+  print("make conc cols")
   df_conc$is.excluded.hl = FALSE
   df_conc$is.included.hl = FALSE
   df_conc$REASON = NA  # Exclusions will have preferential reason statements than inclusions
   df_conc$exclude_half.life = FALSE
-
+  
+  print("myconc")
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(df_conc,
                       formula = AVAL ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID/DOSNO,
                       exclude_half.life='exclude_half.life',
                       time.nominal = 'NFRLT')
-
+  print("mydose")
   mydose <- PKNCA::PKNCAdose(data = df_dose,
-                      formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
+                      formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID + DOSNO,
                       route = ifelse(toupper(df_dose$IQROUTE) == 'EXTRAVASCULAR', 'extravascular', 'intravascular'),
                       time.nominal = 'NFRLT',
                       duration = 'NDOSEDUR')
 
+  print("mydata starts")
   # Combine the PKNCA objects into the PKNCAdata object
   # TODO think of case with different units for different analytes
   mydata <- PKNCA::PKNCAdata(data.conc = myconc,
@@ -201,6 +206,7 @@ observeEvent(input$submit_analyte, {
                                                        doseu = myconc$data$DOSEU[1],
                                                        amountu = myconc$data$PCSTRESU[1],
                                                        timeu = myconc$data$RRLTU[1]))
+  print("mydata finished")
   mydata(mydata)
 })
 

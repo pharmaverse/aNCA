@@ -102,9 +102,9 @@ observeEvent(input$settings_upload,{
   # Lambda slope point selections and exclusions
   slope_manual_NCA_data = setts  %>% select(TYPE, USUBJID, DOSNO, IX, REASON)  %>% 
     mutate(PATIENT=as.character(USUBJID), PROFILE=as.character(DOSNO))  %>%
-    group_by(TYPE, PATIENT, PROFILE, REASON)  %>%
+    group_by(TYPE, PATIENT, PROFILE, ANALYTE, REASON)  %>%
     summarise(IXrange=paste0(IX, collapse=','))  %>% 
-    select(TYPE, PATIENT, PROFILE, IXrange, REASON)
+    select(TYPE, PATIENT, PROFILE, ANALYTE, IXrange, REASON)
   
   slope_manual_NCA_data(slope_manual_NCA_data)
   
@@ -116,46 +116,13 @@ observeEvent(data(), updateSelectInput(session, inputId = 'analyte',
                                        label = 'Choose the analyte :', 
                                        choices = unique(data()$ANALYTE)))
 
-# When an analyte is selected and the user clicks the "Submit" button, create the PKNCA data object
-mydata = reactiveVal(NULL)
-observeEvent(input$submit_analyte, {
-  
-  # Segregate the data into concentration and dose records
-  df_conc <- create_conc(data(), input$analyte, input$proftype)
-  df_dose <- create_dose(df_conc)
-  
-  # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
-  df_conc$is.excluded.hl = FALSE
-  df_conc$is.included.hl = FALSE
-  df_conc$REASON = NA  # Exclusions will have preferential reason statements than inclusions
-  df_conc$exclude_half.life = FALSE
-  
-  # Make the PKNCA concentration and dose objects
-  myconc <- PKNCA::PKNCAconc(df_conc, 
-                             formula = AVAL ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID/DOSNO,
-                             exclude_half.life='exclude_half.life',
-                             time.nominal = 'NFRLT')
-  
-  mydose <- PKNCA::PKNCAdose(data = df_dose, 
-                             formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO, 
-                             route = ifelse(toupper(df_dose$IQROUTE) == 'EXTRAVASCULAR', 'extravascular', 'intravascular'), 
-                             time.nominal = 'NFRLT', 
-                             duration = 'NDOSEDUR')
-  
-  # Combine the PKNCA objects into the PKNCAdata object
-  mydata <- PKNCA::PKNCAdata(data.conc = myconc, 
-                             data.dose = mydose, 
-                             units = PKNCA::pknca_units_table(concu = myconc$data$AVALU[1], 
-                                                              doseu = myconc$data$DOSEU[1], 
-                                                              amountu = myconc$data$AVALU[1], 
-                                                              timeu = myconc$data$RRLTU[1]))
-  mydata(mydata)
-})
+
 
 
 # Display the PKNCA data object for the user (concentration records)
 output$datatable <- renderDataTable({
   req(mydata())
+  print("output datatable conc")
   DT::datatable(data=mydata()$conc$data,
                 options=list(scrollX=TRUE,
                              scrollY = TRUE,
@@ -174,6 +141,7 @@ output$datatable <- renderDataTable({
 # Define the profiles (dosno) associated with each patient (usubjid) for the selected analyte
 profiles_per_patient <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, {
+  print("create profiles per patient")
   profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
   
 })
@@ -217,7 +185,7 @@ observe({
 
 observeEvent(input$analyte, {
   updateSelectInput(session, inputId = 'cyclenca', label = 'Choose the Dose Number:', 
-                    choices = unique(data()  %>% filter(ANALYTE==input$analyte)  %>% pull(DOSNO)))
+                    choices = unique(data()  %>% filter(ANALYTE %in% input$analyte)  %>% pull(DOSNO)))
 })
 
 # Partial AUC Selection
@@ -507,7 +475,7 @@ output$settings_save <- downloadHandler(
 
     # Include the rule settings as additional columns
     setts = setts_lambda  %>% 
-      mutate(ANALYTE=input$analyte,
+      mutate(ANALYTE=paste0(unique(input$analyte), collapse=','),
              doses_selected = ifelse(!is.null(input$cyclenca), paste0(input$cyclenca, collapse = ','), unique(mydata()$conc$data$DOSNO)),
              method = input$method,
              adj.r.squared_threshold = ifelse(input$rule_adj.r.squared, input$adj.r.squared_threshold, NA),
@@ -549,7 +517,7 @@ output$preslopesettings <- renderDataTable({
 
   # Reshape results and only choose the columns that are relevant to half life calculation
   preslopesettings = reshape_PKNCA_results(resNCA(), intervals_userinput_data())  %>% 
-    select(any_of(c('USUBJID', 'DOSNO')), starts_with('lambda.z'), starts_with('span.ratio'), starts_with('half.life'), 
+    select(any_of(c('USUBJID', 'DOSNO', 'ANALYTE', 'DRUG')), starts_with('lambda.z'), starts_with('span.ratio'), starts_with('half.life'), 
     #'lambda.z.ix', 
    'exclude.lambda.z')   
 
@@ -588,20 +556,25 @@ observeEvent(resNCA(),{
   for (patient in unique(names(profiles_per_patient()))) {
 
     for (profile in profiles_per_patient()[[patient]]) {
+      
+      for (analyte in unique(resNCA()$data$conc$data %>% filter(USUBJID==patient, DOSNO==profile) %>% pull(ANALYTE)) )
 
       local({
         patient <- patient
         profile <- profile
+        analyte <- analyte
         
         force(patient)  # Ensure patient is captured correctly
         force(profile)  # Ensure profile is captured correctly
+        force(analyte)  # Ensure profile is captured correctly
         
-        output_name <- paste0("slopetestplot_", patient, '_', profile)
+        output_name <- paste0("slopetestplot_", patient, '_', profile, '_', analyte)
         output[[output_name]] <- renderPlotly({
           
           lambda_slope_plot(PKNCAres_df = resNCA()$result,
                             PKNCAconc_df = resNCA()$data$conc$data,
                             dosno = profile,
+                            analyte = analyte,
                             usubjid = patient,
                             R2ADJTHRESHOL = 0.7
           )
@@ -622,7 +595,7 @@ id_inputs = reactiveValues(
 
 
 # Define the object to use for organizing the inputs of both
-slope_manual_NCA_data <- reactiveVal(data.frame(TYPE=character(), PATIENT=character(), PROFILE=character(), 
+slope_manual_NCA_data <- reactiveVal(data.frame(TYPE=character(), PATIENT=character(), PROFILE=character(), ANALYTE=character(),
                                                 IXrange=character(), REASON=character(), id=character()))
 
 # Render as output the table ignoring the Shiny-ID column
@@ -640,7 +613,7 @@ rowCounter <- reactiveVal(0) # Initialize a counter for the number of exclusions
 # Define a function that saves the inputs as values in the table once the user has finished inputting them
 update_slope_manual_NCA_data <- function(slope_manual_NCA_data){
       # Define the columns to be updated
-  columns_to_update <- c('TYPE', 'PATIENT', 'PROFILE', 'IXrange', 'REASON')
+  columns_to_update <- c('TYPE', 'PATIENT', 'PROFILE', 'ANALYTE', 'IXrange', 'REASON')
   
   # Retrieve the last row's ID for input prefix
   last_id <- slope_manual_NCA_data$id[length(slope_manual_NCA_data$id)]
@@ -683,6 +656,9 @@ observeEvent(input$add_excsel, {
     )),
     PROFILE = as.character(selectInput(
       inputId = paste0("PROFILE_",id), label='', width='60%', choices=unname(unique(unlist(profiles_per_patient()))), selectize=T,
+    )),
+    ANALYTE = as.character(selectInput(
+      inputId = paste0("ANALYTE_",id), label='', width='60%', choices=unique(resNCA()$data$conc$data$ANALYTE), selectize=T,
     )),
     IXrange = as.character(textInput(
       inputId = paste0("IXrange_",id), label='', width='70%',
@@ -769,7 +745,7 @@ observeEvent(input$save_excsel, {
     if(slope_manual_NCA_data()$TYPE[i] == 'Selection'){
       
       mydata$conc$data = mydata$conc$data %>% 
-        mutate(is.included.hl = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & DOSNO == slope_manual_NCA_data()$PROFILE[i] & IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), TRUE, is.included.hl),
+        mutate(is.included.hl = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & DOSNO == slope_manual_NCA_data()$PROFILE[i] & IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])) & ANALYTE==slope_manual_NCA_data()$ANALYTE[i] , TRUE, is.included.hl),
                REASON = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & DOSNO == slope_manual_NCA_data()$PROFILE[i] & IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), slope_manual_NCA_data()$REASON[i], REASON))
     } else {
       mydata$conc$data = mydata$conc$data %>% 
@@ -803,10 +779,10 @@ observeEvent(list(input$nca, input$search_patient), {
     mydata()$conc$data %>%
     filter(DOSNO %in% input$cyclenca, 
            USUBJID %in% search_patient)%>%
-    select(USUBJID, DOSNO)%>%
+    select(USUBJID, DOSNO, ANALYTE)%>%
     unique() %>%
-    arrange(USUBJID, DOSNO) %>%
-    mutate(id = paste0('slopetestplot_', USUBJID, '_', DOSNO))  %>% 
+    arrange(USUBJID, DOSNO, ANALYTE) %>%
+    mutate(id = paste0('slopetestplot_', USUBJID, '_', DOSNO, '_', ANALYTE))  %>% 
     pull(id)
    )
 })
@@ -887,7 +863,7 @@ observeEvent(mydata(), mydata2(mydata()))
 
 # Define the click events for the point exclusion and selection in the slope plots
 click_counter <- reactiveVal(0)
-firstclick_vals <- reactiveValues(patient = NULL, profile = NULL, idx_pnt = NULL)
+firstclick_vals <- reactiveValues(patient = NULL, profile = NULL, analyte=NULL, idx_pnt = NULL)
 
 observeEvent(event_data("plotly_click", priority='event'), {
 
@@ -896,9 +872,10 @@ observeEvent(event_data("plotly_click", priority='event'), {
   
   if(!is.null(click_data) & !is.null(click_data$customdata)){
     # Get identifiers of the clicked plot
-    patient = gsub('(.*)_.*_.*', '\\1',  click_data$customdata)
-    profile = gsub('.*_(.*)_.*', '\\1',  click_data$customdata)
-    idx_pnt = gsub('.*_.*_(.*)', '\\1',  click_data$customdata)
+    patient = gsub('(.*)_.*_.*_.*', '\\1',  click_data$customdata)
+    profile = gsub('.*_(.*)_.*_.*', '\\1',  click_data$customdata)
+    analyte = gsub('.*_.*_(.*)_.*', '\\1',  click_data$customdata)
+    idx_pnt = gsub('.*_.*_.*_(.*)', '\\1',  click_data$customdata)
     
     # Increment the click counter
     click_counter(click_counter() + 1)
@@ -908,20 +885,24 @@ observeEvent(event_data("plotly_click", priority='event'), {
       
       firstclick_vals$patient = patient
       firstclick_vals$profile = profile
+      firstclick_vals$analyte = analyte
       firstclick_vals$idx_pnt = idx_pnt
     }
     
     # When second click happens in the plot an event should occur
     if(click_counter()%%2==0 & click_counter()>0){
       # If the user clicks another plot after one click, reset everything and start over
-      if(patient!=firstclick_vals$patient | profile!=firstclick_vals$profile){
+      mydata2 = mydata2()
+      if(patient!=firstclick_vals$patient | profile!=firstclick_vals$profile | analyte!=firstclick_vals$analyte){
         click_counter(1)
         firstclick_vals$patient = patient
         firstclick_vals$profile = profile
+        firstclick_vals$analyte = analyte
         firstclick_vals$idx_pnt = idx_pnt
       
       # If the user clicked in the same plot, perform an action over the temporary data
       } else {
+        print("If the user clicked in the same plot")
         # Define a temporary data that does not affect the original until is saved by the user (save_excsel)
         mydata2 = mydata2()
         
@@ -933,33 +914,35 @@ observeEvent(event_data("plotly_click", priority='event'), {
             mutate(
               is.included.hl = case_when(
                 idx_pnt == firstclick_vals$idx_pnt ~ is.included.hl,
-                USUBJID == patient & DOSNO == profile & IX %in% firstclick_vals$idx_pnt:idx_pnt ~ TRUE,
+                USUBJID == patient & DOSNO == profile & ANALYTE==analyte & IX %in% firstclick_vals$idx_pnt:idx_pnt ~ TRUE,
                 TRUE ~ FALSE
                 ),
             # If the user clicked two times the same point, do its exclusion
               is.excluded.hl = case_when(
                 idx_pnt != firstclick_vals$idx_pnt ~ is.excluded.hl,
-                USUBJID == patient & DOSNO == profile & IX %in% idx_pnt ~ !is.excluded.hl,
+                USUBJID == patient & DOSNO == profile  & ANALYTE==analyte & IX %in% idx_pnt ~ !is.excluded.hl,
                 TRUE ~ is.excluded.hl
                 )
               )  %>% 
-            group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>% 
+            group_by(STUDYID, USUBJID, PCSPEC, DOSNO, ANALYTE) %>% 
             mutate(exclude_half.life = if(any(is.included.hl)) is.excluded.hl|!is.included.hl else is.excluded.hl)
         mydata2(mydata2) 
         
 
         # Change the plot of only the profile and patient selected 
-        mydata2$conc$data = mydata2$conc$data %>% filter(USUBJID==patient, DOSNO==profile)
-        mydata2$dose$data = mydata2$dose$data %>% filter(USUBJID==patient, DOSNO==profile)
+        mydata2$conc$data = mydata2$conc$data %>% filter(USUBJID==patient, DOSNO==profile, ANALYTE==analyte)
+        mydata2$dose$data = mydata2$dose$data %>% filter(USUBJID==patient, DOSNO==profile, ANALYTE==analyte)
         myres2 = suppressWarnings(PKNCA::pk.nca(data=mydata2, verbose=F))
-        
-      
+        print("myres2$result:")
+        print(head(myres2$result))
+        print(head(myres2$data$conc$data))
         # Alter the output with the transitory changes and the new slope plot
-        output[[paste0('slopetestplot_', patient, '_', profile)]] <- renderPlotly({
+        output[[paste0('slopetestplot_', patient, '_', profile, '_', analyte)]] <- renderPlotly({
           lambda_slope_plot(PKNCAres_df = myres2$result,
                             PKNCAconc_df = myres2$data$conc$data,
                             dosno = profile,
                             usubjid = patient,
+                            analyte=analyte,
                             R2ADJTHRESHOL = ifelse(input$rule_adj.r.squared, input$adj.r.squared_threshold, 0.7)
           )
         })
@@ -974,6 +957,7 @@ observeEvent(event_data("plotly_click", priority='event'), {
           
           condition.vr = slope_manual_NCA_data()$PATIENT == patient & 
                          slope_manual_NCA_data()$PROFILE == profile & 
+                         slope_manual_NCA_data()$ANALYTE == analyte &
                          sapply(slope_manual_NCA_data()$IXrange, function(x) idx_pnt %in% eval(parse(text = paste0('c(',x,')'))))
 
           slope_manual_NCA_data <- slope_manual_NCA_data() %>%
@@ -1005,6 +989,7 @@ observeEvent(event_data("plotly_click", priority='event'), {
             TYPE= ifelse(idx_pnt != firstclick_vals$idx_pnt, 'Selection', 'Exclusion'),
             PATIENT = patient,
             PROFILE = as.character(profile),
+            ANALYTE == as.character(analyte),
             IXrange = paste0(firstclick_vals$idx_pnt, ':', idx_pnt), 
             REASON = '[Graphical selection. Double click here to include a reason]', 
             id=id

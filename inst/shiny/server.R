@@ -38,7 +38,7 @@ function(input, output, session) {
 
 
   # DATA ----
-
+  
   source(system.file("shiny/tabs/data.R", package = "aNCA"), local = TRUE)
 
   # NCA ----

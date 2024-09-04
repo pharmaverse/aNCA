@@ -10,7 +10,7 @@
 
 
 # TAB: General Lineplot --------------------------------------------------------
-
+print("outputs start")
 #  select the analyte for the general lineplot
 output$generalplot_analyte <- renderUI({
   # deselect choices that are no pp parameters
@@ -216,13 +216,13 @@ output$descriptivestats2 <- renderDataTable({
 mean_data = reactive({
 
   ADNCA() %>% # mydata()$conc$data %>%
-    filter(ANALYTE == input$analyte,
+    filter(ANALYTE %in% input$analyte,
            DOSNO %in% input$cyclenca)%>%
     mutate(DOSEA = as.factor(DOSEA),
            TRT = as.factor(NOMDOSE),
            TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
            NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT))%>%
-    group_by(DOSEA, NOMTIME, DOSNO)%>%
+    group_by(DOSEA, NOMTIME, ANALYTE, DOSNO)%>%
     summarise(Mean = geometric.mean(AVAL, na.rm = T),
               SD = sd(AVAL, na.rm = T),
               N = n())%>%
@@ -235,7 +235,7 @@ mean_data = reactive({
 doseescalation_meanplot <- function() {
 
   dataset <- mydata()$conc$data %>%
-    filter(ANALYTE == input$analyte,
+    filter(ANALYTE %in% input$analyte,
            DOSNO %in% input$cyclenca)
 
   time_label = paste0('Nominal Time [', unique(dataset$RRLTU), "]")
@@ -269,7 +269,7 @@ plot_data = reactive({
   req(input$analyte)
 
   ADNCA() %>%  # mydata()$conc$data %>%
-    filter(ANALYTE == input$analyte,
+    filter(ANALYTE %in% input$analyte,
            DOSNO %in% input$cyclenca)%>%
     select(AFRLT, AVAL, DOSEA, DOSNO, AFRLT, NFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU, RRLTU, DOSEU, NOMDOSE)%>%
     mutate(CONC_NORM = AVAL/DOSEA,
