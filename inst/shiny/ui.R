@@ -106,7 +106,7 @@ shinyUI(fluidPage(
                                      accept=c('.csv','.xpt')),
 
                             # Selection of analyte
-                            selectInput("analyte", "Choose the analyte :", choices=NULL),
+                            selectInput("analyte", "Choose the analyte :", choices=NULL, multiple = T),
 
                             br(),
                             actionButton("submit_analyte", "Submit"),
