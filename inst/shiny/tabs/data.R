@@ -37,7 +37,7 @@ observeEvent(input$local_upload, {
                   rds = readRDS(input$local_upload$datapath),
            validate('Invalid file type. Only accepted are .csv and .rds')
                   )
-
+  
   # Make sure the dataset includes all the neded column names
   # req_cols <- c("STUDYID", "USUBJID", "ANALYTE", "PCSPEC", "DOSEFRQ", 'DOSNO', "AFRLT", "ARRLT", "NRRLT", "NFRLT", "AVAL",
   #               "AVALU", "ROUTE", "DOSEA", "AGE", "SEX", "RACE", "NDOSEDUR", "RRLTU", "DOSEU", "PCLLOQ", "DRUG", "AVAL", "AVALU", "DOSEU", "EVID")
@@ -49,8 +49,9 @@ observeEvent(input$local_upload, {
 
     # Disconsider events that do not contain drug information (i.e, Follow-up visits)
     ADNCA <- ADNCA %>%
-      filter(if ('AVISIT' %in% names(ADNCA)) tolower(gsub('[^a-zA-Z]','', AVISIT))!='followup' else T)
-
+      filter(if ('AVISIT' %in% names(ADNCA) & !all(is.na(AVISIT))) tolower(gsub('[^a-zA-Z]','', AVISIT))!='followup' else T)
+    
+    
     # Make sure AVAL is numeric and TIME is derived from the first dose
     ADNCA <- ADNCA  %>%
         mutate(AVAL = if('AVAL' %in% names(ADNCA)) as.numeric(AVAL) 
@@ -59,7 +60,7 @@ observeEvent(input$local_upload, {
               mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT),
                      NDOSEDUR = as.numeric(NDOSEDUR),
                      ADOSEDUR = as.numeric(ADOSEDUR))
-
+    
     # browser()
     ADNCA(ADNCA)
 })
@@ -192,7 +193,7 @@ observeEvent(input$submit_analyte, {
                       formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
                       route = ifelse(toupper(df_dose$IQROUTE) == 'EXTRAVASCULAR', 'extravascular', 'intravascular'),
                       time.nominal = 'NFRLT',
-                      duration = 'NDOSEDUR')
+                      duration = 'ADOSEDUR')
 
   # Combine the PKNCA objects into the PKNCAdata object
   # TODO think of case with different units for different analytes
