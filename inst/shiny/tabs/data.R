@@ -173,7 +173,7 @@ mydata = reactiveVal(NULL)
 observeEvent(input$submit_analyte, {
   print("create conc")
   # Segregate the data into concentration and dose records
-  df_conc <-create_conc(data(), input$analyte, input$proftype)
+  df_conc <-create_conc(data(), input$analyte)
   print("create dose")
   df_dose <- create_dose(df_conc)
 
@@ -183,7 +183,7 @@ observeEvent(input$submit_analyte, {
   df_conc$is.included.hl = FALSE
   df_conc$REASON = NA  # Exclusions will have preferential reason statements than inclusions
   df_conc$exclude_half.life = FALSE
-  
+
   print("myconc")
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(df_conc,
@@ -192,7 +192,7 @@ observeEvent(input$submit_analyte, {
                       time.nominal = 'NFRLT')
   print("mydose")
   mydose <- PKNCA::PKNCAdose(data = df_dose,
-                      formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID + DOSNO,
+                      formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
                       route = ifelse(toupper(df_dose$IQROUTE) == 'EXTRAVASCULAR', 'extravascular', 'intravascular'),
                       time.nominal = 'NFRLT',
                       duration = 'NDOSEDUR')

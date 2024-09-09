@@ -244,8 +244,6 @@ observeEvent(input$nca,{
       # all dataframe columns equal false except aucint.last (without knowing the other column names)
       mutate(across(everything(), ~FALSE)) %>%
       mutate(aucint.last=TRUE)
-
-  
   
   # Return the output
   intervals_userinput(intervals_userinput)
@@ -292,7 +290,9 @@ resNCA <- eventReactive(rv$trigger, {
     
     # Filter the data based on the selected profiles
     mydata = mydata()
-
+    print("mydata() used to generate resNCA")
+    print(mydata$conc$data)
+    
     mydata$conc$data = mydata$conc$data %>% filter(DOSNO %in% as.numeric(input$cyclenca))
     
     # Include manually the calculation of AUCpext.obs and AUCpext.pred 
@@ -312,9 +312,10 @@ resNCA <- eventReactive(rv$trigger, {
                aucpext.pred = T
                )
 
-
     # Perform NCA on the profiles selected
     myres = PKNCA::pk.nca(data=mydata, verbose=F)
+    print("resNCA() generated")
+    print(myres$result)
     
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
@@ -556,9 +557,10 @@ observeEvent(resNCA(),{
   for (patient in unique(names(profiles_per_patient()))) {
 
     for (profile in profiles_per_patient()[[patient]]) {
-      
-      for (analyte in unique(resNCA()$data$conc$data %>% filter(USUBJID==patient, DOSNO==profile) %>% pull(ANALYTE)) )
 
+      for (analyte in unique(resNCA()$data$conc$data %>% filter(USUBJID==patient, DOSNO==profile) %>% pull(ANALYTE)) ){
+        print("resNCA()$result inisde loop")
+        print(head(resNCA()$result))
       local({
         patient <- patient
         profile <- profile
@@ -567,6 +569,9 @@ observeEvent(resNCA(),{
         force(patient)  # Ensure patient is captured correctly
         force(profile)  # Ensure profile is captured correctly
         force(analyte)  # Ensure profile is captured correctly
+        
+        print("resNCA()$result inisde loop")
+        print(head(resNCA()$result))
         
         output_name <- paste0("slopetestplot_", patient, '_', profile, '_', analyte)
         output[[output_name]] <- renderPlotly({
@@ -580,6 +585,7 @@ observeEvent(resNCA(),{
           )
         })
       })
+      }
     }
   }
 })
@@ -869,6 +875,8 @@ observeEvent(event_data("plotly_click", priority='event'), {
 
   # Store the information of the last click event
   click_data <- event_data("plotly_click")
+  print("Click data:")
+  print(click_data)
   
   if(!is.null(click_data) & !is.null(click_data$customdata)){
     # Get identifiers of the clicked plot
@@ -906,8 +914,7 @@ observeEvent(event_data("plotly_click", priority='event'), {
         # Define a temporary data that does not affect the original until is saved by the user (save_excsel)
         mydata2 = mydata2()
         
-        
-
+   
         # Modify the data for the plot according to the user's clicks
         mydata2$conc$data <- mydata2$conc$data %>% 
             # If the user clicked two different points, do their selection
@@ -930,12 +937,24 @@ observeEvent(event_data("plotly_click", priority='event'), {
         
 
         # Change the plot of only the profile and patient selected 
+        print("Make changes in concentration and dose datasets")
         mydata2$conc$data = mydata2$conc$data %>% filter(USUBJID==patient, DOSNO==profile, ANALYTE==analyte)
-        mydata2$dose$data = mydata2$dose$data %>% filter(USUBJID==patient, DOSNO==profile, ANALYTE==analyte)
+        drug_for_analyte = unique(mydata2$conc$data$DRUG)
+        mydata2$dose$data = mydata2$dose$data %>% filter(USUBJID==patient, 
+                                                         DOSNO==profile, 
+                                                         if("DRUG" %in% names(mydata2$dose$data)) DRUG %in% drug_for_analyte,
+                                                         if("ANALYTE" %in% names(mydata2$dose$data)) ANALYTE %in% analyte)
+        
+        print('conc and dose datasets')
+        print(head(mydata2$conc$data))
+        print(head(mydata2$dose$data))
+        
         myres2 = suppressWarnings(PKNCA::pk.nca(data=mydata2, verbose=F))
         print("myres2$result:")
+        browser()
         print(head(myres2$result))
         print(head(myres2$data$conc$data))
+
         # Alter the output with the transitory changes and the new slope plot
         output[[paste0('slopetestplot_', patient, '_', profile, '_', analyte)]] <- renderPlotly({
           lambda_slope_plot(PKNCAres_df = myres2$result,
@@ -946,14 +965,15 @@ observeEvent(event_data("plotly_click", priority='event'), {
                             R2ADJTHRESHOL = ifelse(input$rule_adj.r.squared, input$adj.r.squared_threshold, 0.7)
           )
         })
-        
+       
 
         ## Make UI changes in the table displayed
         # 1) If the point selected is a exclusion that was already indicated, then remove previous records from the UI table and stop the observeEvent
           if (idx_pnt == firstclick_vals$idx_pnt && all(!mydata2$conc$data$is.excluded.hl[mydata2$conc$data$USUBJID == patient & 
-                                                        mydata2$conc$data$DOSNO == profile & 
+                                                        mydata2$conc$data$DOSNO == profile &
+                                                        mydata2$conc$data$ANALYTE == analyte &
                                                         mydata2$conc$data$IX == idx_pnt])) {
-          
+          print("Double click on same point")
           
           condition.vr = slope_manual_NCA_data()$PATIENT == patient & 
                          slope_manual_NCA_data()$PROFILE == profile & 
@@ -971,11 +991,10 @@ observeEvent(event_data("plotly_click", priority='event'), {
                                           ))  %>% 
                                           # delete all rows where IXrange does not contain a numeric value
                     filter(grepl('\\d.*', IXrange))
-
-          
           
 
           slope_manual_NCA_data(slope_manual_NCA_data) 
+          print("Changed slope_manual_NCA_data")
         } else {
 
 
@@ -995,7 +1014,7 @@ observeEvent(event_data("plotly_click", priority='event'), {
             id=id
         )
         slope_manual_NCA_data(rbind(slope_manual_NCA_data(), new.row.slope_manual_NCA_data))       
-        
+        print("Changed slope_manual_NCA_data")
         }
 
     }

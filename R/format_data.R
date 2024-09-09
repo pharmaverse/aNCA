@@ -64,7 +64,7 @@ format_data <- function(datafile) {
 #' @export
 
 #create pknca concentration dataset
-create_conc <- function(ADNCA, analyte, proftype) {
+create_conc <- function(ADNCA, analyte) {
   print(analyte)
   data <- ADNCA %>%  
     filter(ANALYTE %in% analyte,
@@ -76,7 +76,8 @@ create_conc <- function(ADNCA, analyte, proftype) {
     filter(TIME>=0) %>% 
     arrange(STUDYID, USUBJID, ANALYTE, PCSPEC, DOSNO, TIME) %>%
     group_by(STUDYID, USUBJID, ANALYTE, PCSPEC, DOSNO) %>%
-    mutate(IX=1:n())
+    mutate(IX=1:n()) %>% 
+    ungroup()
 }
 
 #' Create PK Dose Dataset
@@ -109,8 +110,9 @@ create_dose <- function(ADNCA_conc) {
   
   ADNCA_conc %>%
     arrange(USUBJID, DOSNO) %>%
-    group_by(USUBJID, DOSNO, DRUG) %>%
+    group_by(USUBJID, DOSNO, ANALYTE) %>%
     slice(1) %>%
     mutate(DOSEA=as.numeric(DOSEA),
-           IQROUTE = ROUTE) 
+           IQROUTE = ROUTE) %>% 
+    ungroup()
 }

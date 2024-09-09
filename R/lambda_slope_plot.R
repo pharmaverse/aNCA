@@ -46,12 +46,14 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
   
   print("produce lambda_res")
   print(PKNCAres_df)
+  print(paste0("DOSNO:", dosno, " USUBJID:", usubjid, " ANALYTE:", paste0(analyte, collapse=",")))
+
   # Obtain all information relevant regarding lambda calculation
   lambda_res = PKNCAres_df %>%
     filter(DOSNO==dosno, USUBJID==usubjid, ANALYTE %in% analyte)  %>% 
     arrange(ANALYTE, USUBJID, DOSNO, start, desc(end))  %>%
     filter(!duplicated(paste0(USUBJID, DOSNO, ANALYTE, PPTESTCD))) 
-  print(paste0("DOSNO:", dosno, " USUBJID:", usubjid, " ANALYTE:", paste0(analyte, collapse=",")))
+  
   print(lambda_res)
   # Obtain the number of data points used to calculate lambda
   lambda.z.n.points = as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=='lambda.z.n.points'])
