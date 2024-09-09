@@ -21,20 +21,25 @@ Designed with user-friendliness in mind, this app aims to make NCA accessible an
 
 This repository is private and still in developer mode. To install the package, follow the instructions below:
 
-### 1. Access Token 
+
+### 1. Create Access Token 
+
 In GitHub click on your icon on the top right and head to: Settings > Developer Settings > Personal access tokens and create a classic access token.
 
 ### 2. Clone the repository
 
 Assuming you have git installed: 
 
-In RStudio go to "Create a project" > "Create Project from version control" > GitHub and paste the following with your personcal access token into the field for the Repository URL: 
+
+In RStudio go to "Create a project" > "Create Project from version control" > GitHub and paste the following together with your personal access token into the field for the Repository URL: 
+
 
 ```
  https://<your-token>@github.com/pharmaverse/aNCA.git
 ```
 
-You can also switch the the directory you want to clone to in your terminal you run: 
+
+You can also switch the the directory you want to clone into and run the following in your terminal: 
 
 ```sh
 
@@ -44,21 +49,26 @@ git clone https://<your-token>@github.com/pharmaverse/aNCA.git
 
 ### 3. Install the package
 
-If you have not already, a package to install packages from local repos, e.g. devtools
+
+Next make sure you have a package development environment set up. If not, install the `devtools` or a similar package:
 
 ```r
 install.packages("devtools")
 ```
 
-If not already done, head into the cloned repository and install the package:
+
+If not already done, head into the cloned repository and install the package, e.g.:
+
 
 ```r
 devtools::install()
 ```
 
-## Use the App
 
-Once correctly installed, the aNCA app can be simply install and run with the following to lines of code: 
+## Use
+
+Once correctly installed, the aNCA app can be simply run with the following two lines of code: 
+
 
 ```r
 library(aNCA)
