@@ -172,7 +172,7 @@ mydata = reactiveVal(NULL)
 observeEvent(input$submit_analyte, {
 
   # Segregate the data into concentration and dose records
-  df_conc <-create_conc(data(), input$analyte, input$proftype)
+  df_conc <-create_conc(data(), input$analyte, input$proftype) %>% impute_c0()
   df_dose <- create_dose(df_conc)
 
 # Define initially a inclusions/exclusions for lambda slope estimation (with no input)

@@ -336,7 +336,7 @@ resNCA <- eventReactive(rv$trigger, {
              vss.iv.obs = T,
              cl.obs = T,
              cl.pred = T,
-             f = if (length(unique(mydata$conc$data$PKROUTE))>1) T else F,
+             f = if (length(unique(mydata$conc$data$IQROUTE))>1) T else F,
              vz.obs = T)  %>% 
         # If so, include the AUC intervals defined by the user
         rbind(intervals_userinput())  %>%

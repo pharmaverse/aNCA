@@ -71,11 +71,13 @@ create_conc <- function(ADNCA, analyte, proftype) {
     # mutate(TIME=ifelse(TIME<0,0,TIME),
     #        AVAL=ifelse(TIME==0,0,AVAL)) %>% #make the conc at time 0, 0
     # distinct()  %>%
-    mutate(groups=paste0(USUBJID, ', ', DOSNO)) %>%
+    mutate(groups=paste0(USUBJID, ', ', DOSNO),
+           IQROUTE = ROUTE) %>%
     filter(TIME>=0) %>% 
     arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
     group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-    mutate(IX=1:n())
+    mutate(IX=1:n()) %>% 
+    ungroup()
 }
 
 #' Create PK Dose Dataset
