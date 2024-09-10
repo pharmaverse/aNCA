@@ -60,13 +60,7 @@ shinyUI(fluidPage(
 
                  br(),
                  br(),
-                 # Local upload option
-                 fileInput('preclinical_upload',
-                           width = '60%',
-                           label = NULL,
-                           placeholder = 'CSV',
-                           buttonLabel = list(icon('folder'),'Upload Preclinical Data'),
-                           accept=c('.csv')),
+     
 
                ),
                mainPanel(
