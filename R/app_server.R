@@ -15,6 +15,7 @@
 #' @importFrom rio export_list
 #' @importFrom rmarkdown render
 #' @importFrom shinyFiles shinyDirChoose
+#' @importFrom htmlwidgets JS
 #'
 #' @export
 app_server <- function(input, output, session) {

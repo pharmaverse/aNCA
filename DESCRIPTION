@@ -33,6 +33,7 @@ Imports:
     forcats,
     ggplot2,
     haven,
+    htmlwidgets,
     nestcolor,
     PKNCA,
     plotly,
@@ -50,4 +51,4 @@ Imports:
     zip
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2

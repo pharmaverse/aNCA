@@ -84,7 +84,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
   
   
   # If Cmax is included in lambda calculation, inform the user in the plot
-  if(lambda_res$PPORRES[lambda_res$PPTESTCD=='cmax'] <=  max(lambda.z.ix.rows$PCSTRESC)){
+  if(lambda_res$PPORRES[lambda_res$PPTESTCD=='cmax'] <=  max(lambda.z.ix.rows$AVAL)){
     subtitle_color = 'red'
     subtitle_text = paste0('Cmax should not be included in lambda calculation', '\n', subtitle_text)
   }
@@ -106,7 +106,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
   
   # Generate the base scatter ggplot 
   p = plot_data  %>% 
-    ggplot(aes(x = TIME, y = PCSTRESC)) +
+    ggplot(aes(x = TIME, y = AVAL)) +
     #geom_segment_layer+
     geom_line(color = 'gray70', linetype='solid', linewidth=1)+
     geom_smooth(data=subset(plot_data, IX_color=='hl.included'),method = 'lm', se = F, color = 'green3', linetype='solid', linewidth=1) +
@@ -158,9 +158,9 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     style(hovertext=~paste0('Data Point: ',IX), hoverinfo='none', traces=5)  %>% 
     # Make this trace the only one 
     add_trace(data = plot_data  %>% filter(DOSNO==dosno, USUBJID==usubjid),
-              x = ~TIME, y = ~log10(PCSTRESC),
+              x = ~TIME, y = ~log10(AVAL),
               customdata = ~paste0(USUBJID, '_', DOSNO, '_', IX),
-              text = ~paste0('Data Point: ',IX, '\n', '(', signif(TIME,2), ' , ', signif(PCSTRESC,2), ')'),
+              text = ~paste0('Data Point: ',IX, '\n', '(', signif(TIME,2), ' , ', signif(AVAL,2), ')'),
               type = 'scatter',
               mode = 'markers',
               name = 'Data Points',

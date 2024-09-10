@@ -67,7 +67,7 @@ format_data <- function(datafile) {
 create_conc <- function(ADNCA, analyte, proftype) {
   data <- ADNCA %>%  
     filter(ANALYTE == analyte,
-           EVID == 0) %>%  
+           if ('EVID' %in% names(ADNCA)) EVID == 0 else T) %>%  
     # mutate(TIME=ifelse(TIME<0,0,TIME),
     #        AVAL=ifelse(TIME==0,0,AVAL)) %>% #make the conc at time 0, 0
     # distinct()  %>%
