@@ -54,12 +54,12 @@ observeEvent(input$local_upload, {
     
     # Make sure AVAL is numeric and TIME is derived from the first dose
     ADNCA <- ADNCA  %>%
-        mutate(AVAL = if('AVAL' %in% names(ADNCA)) as.numeric(AVAL) 
-                      else ifelse(PCSTRESC %in% c('BLQ', 'Negative', 'negative', 'NEGATIVE'), 0, as.numeric(PCSTRESC)) 
+        mutate(AVAL = if('AVAL' %in% names(ADNCA)) {as.numeric(AVAL)} 
+                      else if ('PCSTRESC' %in% names(ADNCA)) ifelse(PCSTRESC %in% c('BLQ', 'Negative', 'negative', 'NEGATIVE'), 0, as.numeric(PCSTRESC))
+                      else ifelse(AVALC %in% c('BLQ', 'Negative', 'negative', 'NEGATIVE'), 0, as.numeric(AVALC))
               ) %>%
               mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT),
-                     NDOSEDUR = as.numeric(NDOSEDUR),
-                     ADOSEDUR = as.numeric(ADOSEDUR))
+                     ANALYTE = if("ANALYTE" %in% names(ADNCA)) ANALYTE else PARAM)
     
     # browser()
     ADNCA(ADNCA)
