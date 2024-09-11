@@ -43,7 +43,7 @@ shinyUI(fluidPage(
                            width = '60%',
                            label = NULL,
                            placeholder = 'CSV rds',
-                           buttonLabel = list(icon('folder'),'Browse ADPC...'),
+                           buttonLabel = list(icon('folder'),'Upload File...'),
                            accept=c('.csv','.rds')),
 
                  tags$head(
