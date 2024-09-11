@@ -266,7 +266,7 @@ observeEvent(input$nca,{
     unique())
 
   # Use the base intervals dataset settings as a reference and cross it with the inputs
-  intervals_userinput = mydata$intervals %>%
+  intervals_userinput = mydata()$intervals %>%
       filter(end==Inf)  %>% 
       group_by(STUDYID,ANALYTE, USUBJID, DOSNO) %>% 
       slice(1) %>% 
