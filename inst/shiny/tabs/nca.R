@@ -224,6 +224,8 @@ observeEvent(input$nca,{
   intervals_userinput_data(data.frame(start=AUC_mins, end=AUC_maxs)  %>% 
     arrange(start, end)  %>% 
     unique())
+  
+  print(intervals_userinput_data())
 
   # Use the base intervals dataset settings as a reference and cross it with the inputs
   intervals_userinput = mydata()$intervals %>%
@@ -234,10 +236,11 @@ observeEvent(input$nca,{
       select(-start)  %>% select(-end)  %>% 
       crossing(intervals_userinput_data()) %>% 
       # all dataframe columns equal false except aucint.last (without knowing the other column names)
-      mutate(across(everything(), ~FALSE)) %>%
+    mutate(across(-c(start, end), ~FALSE)) %>%
       mutate(aucint.last=TRUE)
 
   
+  View(intervals_userinput)  # Debug print
   
   # Return the output
   intervals_userinput(intervals_userinput)
@@ -287,6 +290,7 @@ resNCA <- eventReactive(rv$trigger, {
 
     mydata$conc$data = mydata$conc$data %>% filter(DOSNO %in% as.numeric(input$cyclenca))
     
+    
     # Include manually the calculation of AUCpext.obs and AUCpext.pred 
       mydata$intervals = mydata$intervals  %>%
       mutate(aucinf.obs.dn = T,
@@ -304,9 +308,17 @@ resNCA <- eventReactive(rv$trigger, {
                aucpext.pred = T
                )
 
+      View(mydata$intervals)  # Debug print
 
     # Perform NCA on the profiles selected
     myres = PKNCA::pk.nca(data=mydata, verbose=F)
+    
+    # Access the result component
+    nca_results <- myres$result
+    
+    
+    # Optionally, view the entire results in a viewer (if using RStudio)
+    View(nca_results)
     
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
