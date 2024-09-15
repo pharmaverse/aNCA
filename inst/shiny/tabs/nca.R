@@ -341,11 +341,7 @@ finalresNCA = reactiveVal(NULL)
 observeEvent(resNCA(), {
   
   # Create a reshaped object that will be used to display the results in the UI
-  finalresNCA = reshape_PKNCA_results(resNCA(), intervals_userinput_data())
-
-  colnames_with_units = colnames(finalresNCA)
-  names(finalresNCA) = gsub('\\[.*\\]', '', names(finalresNCA))
-  
+  finalresNCA = reshape_PKNCA_results(resNCA())
 
   # Get all inputs which are TRUE and start with 'rule_'
   for (rule_input in grep('^rule_', names(input), value = TRUE)){
@@ -356,13 +352,19 @@ observeEvent(resNCA(), {
      else finalresNCA[[paste0('flag_',pptestcd)]] = finalresNCA[[pptestcd]] <= input[[paste0(pptestcd, '_threshold')]] 
   }
 
-  
-
   # Include units for all column names
   dict_pttestcd_with_units = resNCA()$result  %>% select(PPTESTCD, PPORRESU)  %>% unique()  %>%  pull(PPORRESU,PPTESTCD) 
   finalresNCA = finalresNCA  %>%
-     rename_with(~ifelse(gsub('_.*','',.x) %in% names(dict_pttestcd_with_units), paste0(.x, "[", dict_pttestcd_with_units[.x],']'), .x))
-
+     rename_with(~ifelse(gsub('_.*','',.x) %in% names(dict_pttestcd_with_units), paste0(.x, "[", dict_pttestcd_with_units[gsub('_.*','',.x)],']'), .x))
+  
+  # Sort alphabetically all columns but the grouping and the exclude columns
+  group_cols = c(unname(unlist(resNCA()$data$conc$columns$groups)), 'start', 'end')
+  exclude_cols = names(finalresNCA)[startsWith(names(finalresNCA),'exclude.')]
+  finalresNCA = finalresNCA[, c(group_cols, 
+                                sort(setdiff(names(finalresNCA),c(group_cols, exclude_cols))),
+                                sort(exclude_cols)
+                                )]
+  
   # Create a reshaped object
   
   finalresNCA(finalresNCA   %>% 
@@ -519,7 +521,7 @@ for (input_name in grep('(TYPE|PATIENT|PROFILE|IXrange|REASON)_Ex\\d+$', names((
 output$preslopesettings <- renderDataTable({
 
   # Reshape results and only choose the columns that are relevant to half life calculation
-  preslopesettings = reshape_PKNCA_results(resNCA(), intervals_userinput_data())  %>% 
+  preslopesettings = reshape_PKNCA_results(resNCA())  %>% 
     select(any_of(c('USUBJID', 'DOSNO')), starts_with('lambda.z'), starts_with('span.ratio'), starts_with('half.life'), 
     #'lambda.z.ix', 
    'exclude.lambda.z')   
