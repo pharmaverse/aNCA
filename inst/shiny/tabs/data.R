@@ -165,8 +165,9 @@ output$filecontents <- renderDataTable({
 # Update analyte selection input based on the data
 observeEvent(data(), updateSelectInput(session, inputId = 'analyte',
                                        label = 'Choose the analyte :',
-                                       choices = unique(data()$ANALYTE)))
-
+                                       choices = unique(data()$ANALYTE), 
+                                       selected = unique(data()$ANALYTE)))
+# 
 
 # When an analyte is selected and the user clicks the "Submit" button, create the PKNCA data object
 mydata = reactiveVal(NULL)
