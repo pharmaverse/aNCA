@@ -13,7 +13,7 @@
 #' @export
 #'
 
-reshape_PKNCA_results <- function(resNCA, intervals_userinput_data) {
+reshape_PKNCA_results <- function(resNCA) {
     print('FUNCTION STARTS reshape_PKNCA_results')
 
     # Get all names with units and make a dictionary structure
@@ -33,9 +33,9 @@ reshape_PKNCA_results <- function(resNCA, intervals_userinput_data) {
     pivot_wider(names_from = PPTESTCD, values_from = exclude)
 
     infinite_AUCs <- merge(infinite_AUCs_vals, infinite_AUCs_exclude)
+    
 
-
-      infinite_AUCs_with_lambda_details = resNCA$data$conc$data  %>%
+    infinite_AUCs_with_lambda_details = resNCA$data$conc$data  %>%
         merge(infinite_AUCs)  %>%
         group_by(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO)  %>%
         arrange(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, IX)  %>%
@@ -44,9 +44,9 @@ reshape_PKNCA_results <- function(resNCA, intervals_userinput_data) {
         mutate(lambda.z.method = ifelse(any(is.excluded.hl) | any(is.included.hl), 'Manual', 'Best slope'))  %>%
 
         # Filter out the rows that do not have relation with lambda calculation (when calculated) and derive the IX
-        filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points) )  %>%
+        filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points) )  %>% 
         filter(TIME >= (lambda.z.time.first+start) | is.na(lambda.z.time.first))  %>%
-        filter(n() <= lambda.z.n.points | is.na(lambda.z.n.points))  %>%
+        filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points))  %>% 
         mutate(lambda.z.ix = paste0(IX, collapse=','))  %>%
         mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix))  %>%
         slice(1)  %>%
@@ -54,31 +54,33 @@ reshape_PKNCA_results <- function(resNCA, intervals_userinput_data) {
 
 
   # If there were intervals defined by the user, filter out the AUCs corresponding to those intervals
-   if(!is.null(intervals_userinput_data)){
-      print('FUNCTION STARTS reshape_PKNCA_results for INTERVALS')
+   if(any(resNCA$result$PPTESTCD=='aucint.last')){
+
       interval_AUCs_vals =  resNCA$result  %>%
-        filter(end!=Inf & start %in% intervals_userinput_data$start & end %in% intervals_userinput_data$end)  %>%
+        filter(PPTESTCD=='aucint.last')  %>%
         mutate(interval_name = paste0(start, '-', end),
-               interval_name_col = paste0(PPTESTCD, '_', interval_name))  %>%
+               interval_name_col = paste0(PPTESTCD, '_', interval_name 
+                                          ))  %>%
         select(-exclude, -PPORRESU, -start, -end, -PPTESTCD, -interval_name)  %>%
         pivot_wider(names_from = interval_name_col, values_from = PPORRES)
-       print('FUNCTION STARTS reshape_PKNCA_results for INTERVALS 2')
+      
 
       interval_AUCs_exclude = resNCA$result  %>%
-        filter(end!=Inf & start %in% intervals_userinput_data$start & end %in% intervals_userinput_data$end)  %>%
+        filter(PPTESTCD=='aucint.last')  %>%
         mutate(interval_name = paste0(start, '-', end),
-               interval_name_col = paste0('exclude.', PPTESTCD, '_', interval_name))  %>%
+               interval_name_col = paste0('exclude.', PPTESTCD, '_', interval_name #, "[", unit_col,']'
+                                          ))  %>%
         select(-PPORRES, -PPORRESU, -start, -end, -PPTESTCD, -interval_name)  %>%
         pivot_wider(names_from = interval_name_col, values_from = exclude)
-         print('FUNCTION STARTS reshape_PKNCA_results for INTERVALS 3')
+       
       interval_AUCs =  merge(interval_AUCs_vals, interval_AUCs_exclude)  %>%
     # Rename column names to include the units in parenthesis
-    rename_with(~ifelse(.x %in% names(dict_pttestcd_with_units), paste0(.x, "_", "[", dict_pttestcd_with_units[.x],']'), .x))
+        rename_with(~ifelse(.x %in% names(dict_pttestcd_with_units), paste0(.x, "_", "[", dict_pttestcd_with_units[.x],']'), .x))
 
       all_AUCs = merge(infinite_AUCs_with_lambda_details, interval_AUCs, all=T)
   } else all_AUCs = infinite_AUCs_with_lambda_details
 
-   print('FUNCTION STARTS all_AUCs')
+  
   # Do a final standardization of the results reshaped
   reshaped_results <- all_AUCs  %>%
     # Define the number of decimals to round the results

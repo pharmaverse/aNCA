@@ -111,46 +111,6 @@ observeEvent(input$settings_upload,{
 })
 
 
-# Update analyte selection input based on the data
-observeEvent(data(), updateSelectInput(session, inputId = 'analyte', 
-                                       label = 'Choose the analyte :', 
-                                       choices = unique(data()$ANALYTE)))
-
-# When an analyte is selected and the user clicks the "Submit" button, create the PKNCA data object
-mydata = reactiveVal(NULL)
-observeEvent(input$submit_analyte, {
-  
-  # Segregate the data into concentration and dose records
-  df_conc <- create_conc(data(), input$analyte, input$proftype)
-  df_dose <- create_dose(df_conc)
-  
-  # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
-  df_conc$is.excluded.hl = FALSE
-  df_conc$is.included.hl = FALSE
-  df_conc$REASON = NA  # Exclusions will have preferential reason statements than inclusions
-  df_conc$exclude_half.life = FALSE
-  
-  # Make the PKNCA concentration and dose objects
-  myconc <- PKNCA::PKNCAconc(df_conc, 
-                             formula = AVAL ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID/DOSNO,
-                             exclude_half.life='exclude_half.life',
-                             time.nominal = 'NFRLT')
-  
-  mydose <- PKNCA::PKNCAdose(data = df_dose, 
-                             formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO, 
-                             route = ifelse(toupper(df_dose$IQROUTE) == 'EXTRAVASCULAR', 'extravascular', 'intravascular'), 
-                             time.nominal = 'NFRLT', 
-                             duration = 'ADOSEDUR')
-  
-  # Combine the PKNCA objects into the PKNCAdata object
-  mydata <- PKNCA::PKNCAdata(data.conc = myconc, 
-                             data.dose = mydose, 
-                             units = PKNCA::pknca_units_table(concu = myconc$data$AVALU[1], 
-                                                              doseu = myconc$data$DOSEU[1], 
-                                                              amountu = myconc$data$AVALU[1], 
-                                                              timeu = myconc$data$RRLTU[1]))
-  mydata(mydata)
-})
 
 
 # Display the PKNCA data object for the user (concentration records)
@@ -264,9 +224,11 @@ observeEvent(input$nca,{
   intervals_userinput_data(data.frame(start=AUC_mins, end=AUC_maxs)  %>% 
     arrange(start, end)  %>% 
     unique())
+  
+  print(intervals_userinput_data())
 
   # Use the base intervals dataset settings as a reference and cross it with the inputs
-  intervals_userinput = mydata$intervals %>%
+  intervals_userinput = mydata()$intervals %>%
       filter(end==Inf)  %>% 
       group_by(STUDYID,ANALYTE, USUBJID, DOSNO) %>% 
       slice(1) %>% 
@@ -274,9 +236,9 @@ observeEvent(input$nca,{
       select(-start)  %>% select(-end)  %>% 
       crossing(intervals_userinput_data()) %>% 
       # all dataframe columns equal false except aucint.last (without knowing the other column names)
-      mutate(across(everything(), ~FALSE)) %>%
-      mutate(aucint.last=TRUE)
+    mutate(auclast = FALSE, aucint.last=TRUE, aucinf.obs = FALSE)
 
+  
   
   
   # Return the output
@@ -327,6 +289,7 @@ resNCA <- eventReactive(rv$trigger, {
 
     mydata$conc$data = mydata$conc$data %>% filter(DOSNO %in% as.numeric(input$cyclenca))
     
+    
     # Include manually the calculation of AUCpext.obs and AUCpext.pred 
       mydata$intervals = mydata$intervals  %>%
       mutate(aucinf.obs.dn = T,
@@ -344,9 +307,17 @@ resNCA <- eventReactive(rv$trigger, {
                aucpext.pred = T
                )
 
+      
 
     # Perform NCA on the profiles selected
     myres = PKNCA::pk.nca(data=mydata, verbose=F)
+    
+    # Access the result component
+    nca_results <- myres$result
+    
+    
+    # Optionally, view the entire results in a viewer (if using RStudio)
+    
     
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
@@ -370,11 +341,7 @@ finalresNCA = reactiveVal(NULL)
 observeEvent(resNCA(), {
   
   # Create a reshaped object that will be used to display the results in the UI
-  finalresNCA = reshape_PKNCA_results(resNCA(), intervals_userinput_data())
-
-  colnames_with_units = colnames(finalresNCA)
-  names(finalresNCA) = gsub('\\[.*\\]', '', names(finalresNCA))
-  
+  finalresNCA = reshape_PKNCA_results(resNCA())
 
   # Get all inputs which are TRUE and start with 'rule_'
   for (rule_input in grep('^rule_', names(input), value = TRUE)){
@@ -385,13 +352,19 @@ observeEvent(resNCA(), {
      else finalresNCA[[paste0('flag_',pptestcd)]] = finalresNCA[[pptestcd]] <= input[[paste0(pptestcd, '_threshold')]] 
   }
 
-  
-
   # Include units for all column names
   dict_pttestcd_with_units = resNCA()$result  %>% select(PPTESTCD, PPORRESU)  %>% unique()  %>%  pull(PPORRESU,PPTESTCD) 
   finalresNCA = finalresNCA  %>%
-     rename_with(~ifelse(gsub('_.*','',.x) %in% names(dict_pttestcd_with_units), paste0(.x, "[", dict_pttestcd_with_units[.x],']'), .x))
-
+     rename_with(~ifelse(gsub('_.*','',.x) %in% names(dict_pttestcd_with_units), paste0(.x, "[", dict_pttestcd_with_units[gsub('_.*','',.x)],']'), .x))
+  
+  # Sort alphabetically all columns but the grouping and the exclude columns
+  group_cols = c(unname(unlist(resNCA()$data$conc$columns$groups)), 'start', 'end')
+  exclude_cols = names(finalresNCA)[startsWith(names(finalresNCA),'exclude.')]
+  finalresNCA = finalresNCA[, c(group_cols, 
+                                sort(setdiff(names(finalresNCA),c(group_cols, exclude_cols))),
+                                sort(exclude_cols)
+                                )]
+  
   # Create a reshaped object
   
   finalresNCA(finalresNCA   %>% 
@@ -548,7 +521,7 @@ for (input_name in grep('(TYPE|PATIENT|PROFILE|IXrange|REASON)_Ex\\d+$', names((
 output$preslopesettings <- renderDataTable({
 
   # Reshape results and only choose the columns that are relevant to half life calculation
-  preslopesettings = reshape_PKNCA_results(resNCA(), intervals_userinput_data())  %>% 
+  preslopesettings = reshape_PKNCA_results(resNCA())  %>% 
     select(any_of(c('USUBJID', 'DOSNO')), starts_with('lambda.z'), starts_with('span.ratio'), starts_with('half.life'), 
     #'lambda.z.ix', 
    'exclude.lambda.z')   

@@ -45,7 +45,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
   
   # Obtain all information relevant regarding lambda calculation
   lambda_res = PKNCAres_df %>%
-    filter(DOSNO==dosno, USUBJID==usubjid)  %>% 
+    filter(DOSNO==dosno, USUBJID==usubjid, end==Inf)  %>% 
     arrange(USUBJID, DOSNO, start, desc(end))  %>%
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) 
   
@@ -60,7 +60,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     )  %>% 
     arrange(IX) %>%
     slice(0:lambda.z.n.points)
-  
+
   # Calculate the base and adjusted fitness, half life and time span estimated
   R2_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=='r.squared']), 3)
   R2ADJ_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=='adj.r.squared']), 3)
