@@ -3,8 +3,9 @@
 #' This function processes the results from a PKNCA and exports them into CDISC compliant datasets.
 #' Attention: All parameters that do no match pptest dataframe will be lost in this pipeline!
 #'
-#'@param pknca_result Output from function call `pk.nca()` (formatted)
-#'@param pknca_result_raw Output from function call `pk.nca()` (needs to be merged with upper later on but now we avoid merge conflict)
+#'@details Outputs are the following:
+#'  * pknca_result Output from function call `pk.nca()` (formatted)
+#'  * pknca_result_raw Output from function call `pk.nca()` (needs to be merged with upper later on but now we avoid merge conflict)
 #'
 #' @return A list with two data frames:
 #' \describe{
