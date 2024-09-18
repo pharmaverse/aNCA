@@ -114,7 +114,7 @@ observeEvent(input$settings_upload,{
 
 
 # Display the PKNCA data object for the user (concentration records)
-output$datatable <- renderDataTable({
+output$datatable <- DT::renderDataTable({
   req(mydata())
   DT::datatable(data=mydata()$conc$data,
                 options=list(scrollX=TRUE,
@@ -388,7 +388,7 @@ observeEvent(resNCA(), {
 })
 
 # Render the reshaped results as a DT datatable 
-output$myresults <- renderDataTable({
+output$myresults <- DT::renderDataTable({
   req(finalresNCA())
   DT::datatable(data = finalresNCA(),
                 options = list(scrollX = TRUE,
@@ -518,7 +518,7 @@ for (input_name in grep('(TYPE|PATIENT|PROFILE|IXrange|REASON)_Ex\\d+$', names((
 # TAB: Slopes ------------------------------------------------------------------
 
 # Slope settings
-output$preslopesettings <- renderDataTable({
+output$preslopesettings <- DT::renderDataTable({
 
   # Reshape results and only choose the columns that are relevant to half life calculation
   preslopesettings = reshape_PKNCA_results(resNCA())  %>% 
@@ -599,7 +599,7 @@ slope_manual_NCA_data <- reactiveVal(data.frame(TYPE=character(), PATIENT=charac
                                                 IXrange=character(), REASON=character(), id=character()))
 
 # Render as output the table ignoring the Shiny-ID column
-output$slope_manual_NCA_data <- renderDataTable(datatable(data=slope_manual_NCA_data()[,c(1:5)], escape=F, 
+output$slope_manual_NCA_data <- DT::renderDataTable(datatable(data=slope_manual_NCA_data()[,c(1:5)], escape=F, 
                                          rownames= FALSE, editable=TRUE,
                                          options = list(paging = FALSE,ordering=FALSE,searching=FALSE, 
                                          preDrawCallback=JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
