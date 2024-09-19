@@ -30,7 +30,7 @@ observeEvent(input$settings_upload,{
     showNotification(validate('The analyte selected in the settings file is not present in the data. Please, if you want to use this settings for a different file, make sure all meaningful variables in the file are in the data (ANALYTE, DOSNO...)')
                      , type = "error")
   }
-  browser()
+  #browser()
   # Compare the dataset with settings for inclusions and exclusions
   new_data = data()%>%
     mutate(groups=paste0(USUBJID, ', ', DOSNO)) %>%
