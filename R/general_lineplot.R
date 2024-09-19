@@ -43,6 +43,8 @@
 #' @importFrom tern g_ipp
 #' @export
 
+
+
 general_lineplot <- function(data, 
                                  selected_analytes,
                                  selected_usubjids, 
@@ -50,6 +52,7 @@ general_lineplot <- function(data,
                                  time_scale, 
                                  xaxis_scale, 
                                  cycle = NULL){
+
   # preprocess data according to user selection
   preprocessed_data <- data %>%
     filter(USUBJID %in% selected_usubjids,
@@ -61,6 +64,24 @@ general_lineplot <- function(data,
     mutate(USUBJID = factor(USUBJID), 
            DOSNO = factor(DOSNO), 
            DOSEA = factor(DOSEA))
+
+  # If there are predose records duplicate them in the previous line so they are considered
+    if('ARRLT' %in% names(preprocessed_data) & any(preprocessed_data$ARRLT<0 & preprocessed_data$AFRLT>0)){
+    cycle_times = preprocessed_data  %>%
+      filter(preprocessed_data$ARRLT>0, preprocessed_data$AFRLT>0)  %>%  
+      mutate(AFRLT.dose = AFRLT-ARRLT)  %>% 
+      group_by(DOSNO)  %>% 
+      summarise(AFRLT.dose = mean(AFRLT.dose, na.rm=T))  %>% 
+      pull(AFRLT.dose, DOSNO)
+
+    predose_records = preprocessed_data  %>% 
+      filter(ARRLT<0, AFRLT>0)  %>% 
+      mutate(DOSNO = ifelse(AFRLT < as.numeric(cycle_times[as.character(DOSNO)]), as.numeric(DOSNO)-1, as.numeric(DOSNO)+1))
+
+    preprocessed_data = rbind(predose_records, preprocessed_data)
+
+    }
+
   
   # Adjust the data selection according to input
   if (time_scale == "By Cycle"){
