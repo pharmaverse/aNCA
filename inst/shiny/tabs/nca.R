@@ -30,6 +30,38 @@ observeEvent(input$settings_upload,{
     showNotification(validate('The analyte selected in the settings file is not present in the data. Please, if you want to use this settings for a different file, make sure all meaningful variables in the file are in the data (ANALYTE, DOSNO...)')
                      , type = "error")
   }
+  #browser()
+  # Compare the dataset with settings for inclusions and exclusions
+  new_data = data()%>%
+    mutate(groups=paste0(USUBJID, ', ', DOSNO)) %>%
+    filter(TIME>=0) %>% 
+    arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
+    group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
+    mutate(IX=1:n())%>%# Assuming data() returns the newly uploaded dataset
+    select(STUDYID, USUBJID, AVAL, DOSNO, TIME, IX)
+  
+  setts_lambda = setts %>% select(STUDYID, USUBJID, DOSNO, IX, AVAL, TIME)
+  
+  # Identify mismatched data points
+  mismatched_points = setts_lambda %>% 
+    anti_join(new_data, by = c("USUBJID", "DOSNO", "IX", "AVAL", "TIME"))
+  
+  if (nrow(mismatched_points) > 0) {
+    # Generate a detailed warning message
+    mismatched_details = paste0("USUBJID: ", mismatched_points$USUBJID, 
+                                ", DOSNO: ", mismatched_points$DOSNO, 
+                                ", AVAL: ", mismatched_points$AVAL, 
+                                ", TIME: ", mismatched_points$TIME,
+                                collapse = "\n")
+    warning_message = paste("The following data points in the settings file do not match the uploaded dataset. These points will be removed from inclusions and exclusions:\n", 
+                            mismatched_details)
+    
+    showNotification(warning_message, type = "warning")
+    
+    # Remove mismatched data points from inclusions and exclusions
+    setts_lambda = setts_lambda %>% 
+      anti_join(mismatched_points, by = c("USUBJID", "DOSNO", "IX"))
+  }
   
   # Analyte
   updateSelectInput(session, inputId = 'analyte', label='Choose the analyte:', choices=ADNCA()$ANALYTE[1],
@@ -49,8 +81,10 @@ observeEvent(input$settings_upload,{
   # AUC intervals
   if (!is.na(setts$AUC_mins[1])){
     updateCheckboxInput(session, inputId = 'AUCoptions', label = "Select Partial AUC", value = T)
-    AUC_mins = strsplit(setts$AUC_mins[1], split = ',')[[1]]
-    AUC_maxs = strsplit(setts$AUC_maxs[1], split = ',')[[1]]
+    AUC_mins = as.character(setts$AUC_mins[1])
+    AUC_maxs = as.character(setts$AUC_maxs[1])
+    AUC_mins = strsplit(AUC_mins, split = ',')[[1]]
+    AUC_maxs = strsplit(AUC_maxs, split = ',')[[1]]
     
     for (i in 1:length(AUC_mins)){
       AUC_counter(AUC_counter() + 1)
@@ -114,7 +148,7 @@ observeEvent(input$settings_upload,{
 
 
 # Display the PKNCA data object for the user (concentration records)
-output$datatable <- renderDataTable({
+output$datatable <- DT::renderDataTable({
   req(mydata())
   DT::datatable(data=mydata()$conc$data,
                 options=list(scrollX=TRUE,
@@ -388,7 +422,7 @@ observeEvent(resNCA(), {
 })
 
 # Render the reshaped results as a DT datatable 
-output$myresults <- renderDataTable({
+output$myresults <- DT::renderDataTable({
   req(finalresNCA())
   DT::datatable(data = finalresNCA(),
                 options = list(scrollX = TRUE,
@@ -518,7 +552,7 @@ for (input_name in grep('(TYPE|PATIENT|PROFILE|IXrange|REASON)_Ex\\d+$', names((
 # TAB: Slopes ------------------------------------------------------------------
 
 # Slope settings
-output$preslopesettings <- renderDataTable({
+output$preslopesettings <- DT::renderDataTable({
 
   # Reshape results and only choose the columns that are relevant to half life calculation
   preslopesettings = reshape_PKNCA_results(resNCA())  %>% 
@@ -599,7 +633,7 @@ slope_manual_NCA_data <- reactiveVal(data.frame(TYPE=character(), PATIENT=charac
                                                 IXrange=character(), REASON=character(), id=character()))
 
 # Render as output the table ignoring the Shiny-ID column
-output$slope_manual_NCA_data <- renderDataTable(datatable(data=slope_manual_NCA_data()[,c(1:5)], escape=F, 
+output$slope_manual_NCA_data <- DT::renderDataTable(datatable(data=slope_manual_NCA_data()[,c(1:5)], escape=F, 
                                          rownames= FALSE, editable=TRUE,
                                          options = list(paging = FALSE,ordering=FALSE,searching=FALSE, 
                                          preDrawCallback=JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
