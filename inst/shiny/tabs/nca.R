@@ -133,7 +133,7 @@ output$datatable <- renderDataTable({
 
 # Define the profiles (dosno) associated with each patient (usubjid) for the selected analyte
 profiles_per_patient <- reactiveVal(NULL)
-observeEvent(input$submit_analyte, {
+observeEvent(mydata(), {
   profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
   
 })
