@@ -319,7 +319,7 @@ output$norm_concovertimesemilog <- renderPlotly(
 # create formatted boxplot data -> also used for report
 boxplotdata <- reactive({
   # browser()
-  reshape_PKNCA_results(resNCA(), intervals_userinput_data()) %>%
+  reshape_PKNCA_results(resNCA()) %>%
   select(-starts_with("start"), -starts_with("end"), -starts_with("exclude"), -starts_with("lambda.z")) %>%
     left_join(resNCA()$data$conc$data %>%
                 select(USUBJID, DOSNO, DOSEA, DOSEU, any_of(c("AGE", "RACE", "SEX", "WTBL", "WTBLU", "HTBL", "HTBLU"))),
