@@ -526,7 +526,7 @@ output$settings_save <- downloadHandler(
              AUC_maxs = if(is.null(AUC_maxs)) NA else paste(AUC_maxs, collapse=',')
              )
     
-    write.csv(setts, file)
+    write.csv(setts, file, row.names = F)
   },
   contentType = "text/csv"
 )
