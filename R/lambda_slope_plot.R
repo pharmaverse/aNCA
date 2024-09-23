@@ -119,12 +119,12 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     theme_bw() +
     
     theme(
-      plot.title = element_text(hjust=0, face = "bold", size = 24, family = 'serif'),
+      plot.title = element_text(hjust=0, face = "bold", size = 20, family = 'serif'),
       plot.subtitle = element_text(hjust=0, color = subtitle_color, size = 18, family = 'serif'),
       legend.position="none",
-      axis.text = element_text(size = 18),
-      axis.title.x = element_text(size = 18, family = "serif", margin=margin(t=0)),
-      axis.title.y = element_text(size = 18, family = "serif", margin=margin(r=10)),
+      axis.text = element_text(size = 15),
+      axis.title.x = element_text(size = 15, family = "serif", margin=margin(t=0)),
+      axis.title.y = element_text(size = 15, family = "serif", margin=margin(r=10)),
       panel.border = element_rect(colour = "gray35", fill=NA, size=1),
       panel.grid.major = element_line(colour = "gray90"),
       plot.margin = margin(t = 5, r = 5, b = 35, l = 5)  # Add margin space below the X-axis title
@@ -144,11 +144,12 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
         yref = "paper",
         xanchor = "left",
         yanchor = "top",
-        font = list(size = 18, color = subtitle_color, family='times'),
+        font = list(size = 15, color = subtitle_color, family='times'),
         x  = 0,
         y = 1.105
       ),
-      hoverlabel = list(font= list(family='times', size=20))
+      hoverlabel = list(font= list(family='times', size=20)),
+      width=800, height=600
     )  %>% 
     config(mathjax='cdn')  %>%
     style(hovertext=~paste0('Data Point: ',IX), hoverinfo='none', traces=1)  %>% 

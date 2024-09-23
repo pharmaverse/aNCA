@@ -264,9 +264,10 @@ shinyUI(fluidPage(
 
                                      )
                                    ),
-                                   tags$div(title = "Click for help",
-                                            actionButton("slope_helpIcon", label = "", icon = icon("question-circle"))
-                                            ),
+                                   # Commented help buton until future solution with working directory in package
+                                   # tags$div(title = "Click for help",
+                                   #          actionButton("slope_helpIcon", label = "", icon = icon("question-circle"))
+                                   #          ),
                                    uiOutput("slopetestUI"),
                                                                      # Include details for modal message in slope_helpIcon (Instruction details)
   tags$head(

@@ -58,7 +58,7 @@ observeEvent(input$settings_upload,{
                             mismatched_details)
     
     showNotification(warning_message, type = "warning", duration = NULL)
-    
+
     # Remove mismatched data points from inclusions and exclusions
     setts_lambda = setts_lambda %>% 
       anti_join(mismatched_points, by = c("USUBJID", "DOSNO", "IX"))
@@ -168,7 +168,7 @@ output$datatable <- DT::renderDataTable({
 
 # Define the profiles (dosno) associated with each patient (usubjid) for the selected analyte
 profiles_per_patient <- reactiveVal(NULL)
-observeEvent(input$submit_analyte, {
+observeEvent(mydata(), {
   profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
   
 })
