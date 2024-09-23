@@ -4,7 +4,7 @@
 \alias{reshape_PKNCA_results}
 \title{Reshape PKNCA Results}
 \usage{
-reshape_PKNCA_results(resNCA, intervals_userinput_data)
+reshape_PKNCA_results(resNCA)
 }
 \arguments{
 \item{resNCA}{The output of PKNCA::pk.nca}

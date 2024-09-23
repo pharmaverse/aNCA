@@ -10,11 +10,6 @@ An object of class \code{character} of length 18.
 \usage{
 pptestcd_dict
 }
-\arguments{
-\item{pknca_result}{Output from function call \code{pk.nca()} (formatted)}
-
-\item{pknca_result_raw}{Output from function call \code{pk.nca()} (needs to be merged with upper later on but now we avoid merge conflict)}
-}
 \value{
 A list with two data frames:
 \describe{
@@ -25,5 +20,12 @@ A list with two data frames:
 \description{
 This function processes the results from a PKNCA and exports them into CDISC compliant datasets.
 Attention: All parameters that do no match pptest dataframe will be lost in this pipeline!
+}
+\details{
+Outputs are the following:
+\itemize{
+\item pknca_result Output from function call \code{pk.nca()} (formatted)
+\item pknca_result_raw Output from function call \code{pk.nca()} (needs to be merged with upper later on but now we avoid merge conflict)
+}
 }
 \keyword{datasets}

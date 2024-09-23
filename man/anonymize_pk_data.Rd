@@ -9,6 +9,8 @@ anonymize_pk_data(path, drug_map = NULL, overwrite = TRUE)
 \arguments{
 \item{path}{path to dataframe in xpt, sas or csv format}
 
+\item{drug_map}{set to NULL}
+
 \item{overwrite}{decides whether file at input location \code{path} is overwritten. default is TRUE}
 }
 \value{

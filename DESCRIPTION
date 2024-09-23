@@ -1,5 +1,5 @@
 Package: aNCA
-Title: (Pre-)clinical NCA in a dynamic shiny app.
+Title: (Pre-)clinical NCA in a dynamic shiny app
 Version: 0.0.0.9000
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
@@ -25,7 +25,7 @@ Description: This application enables users to upload their datasets and
     visualized using boxplots, or exported as a comprehensive report.
     Designed with user-friendliness in mind, this app aims to make NCA
     accessible and straightforward for all scientists. 
-License: MIT
+License: MIT + file LICENSE
 Imports: 
     checkmate,
     dplyr,
@@ -41,6 +41,7 @@ Imports:
     rmarkdown,
     shiny,
     shinyBS,
+    shinyFiles,
     shinyjqui,
     shinyWidgets,
     stats,
@@ -52,3 +53,4 @@ Imports:
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Files: LICENSE

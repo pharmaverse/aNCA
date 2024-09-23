@@ -2,3 +2,4 @@
 ^renv\.lock$
 ^aNCA\.Rproj$
 ^\.Rproj\.user$
+^\.renvignore$

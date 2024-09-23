@@ -6,7 +6,7 @@
 #' 
 #' @param path path to dataframe in xpt, sas or csv format
 #' @param overwrite decides whether file at input location `path` is overwritten. default is TRUE
-#' 
+#' @param drug_map set to NULL
 #' @return anonymized dataframe file
 #' 
 #' @export

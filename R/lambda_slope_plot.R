@@ -78,7 +78,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
   subtitle_text <- paste0(
     # "R<sup>2</sup>: ", R2_value,
     "    R<sup>2</sup><sub>adj</sub>: ", R2ADJ_value, 
-    "    ln(2)/λ = ", half_life_value, "h",
+    "    ln(2)/\u03BB = ", half_life_value, "h",
     "    (T<sub>", lambda.z.ix.rows$IX[2], "</sub> - T<sub>", lambda.z.ix.rows$IX[1], "</sub>)/2 = ", time_span/2, "h"
   )
   
@@ -134,7 +134,7 @@ lambda_slope_plot = function(PKNCAres_df = myres$result,
     scale_y_log10()
   
   # Make a plotly interactive plot
-  library(plotly)
+  #library(plotly)
   pl <- ggplotly(p) %>% 
     layout(
       annotations = list(

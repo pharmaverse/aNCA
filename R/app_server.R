@@ -16,6 +16,10 @@
 #' @importFrom rmarkdown render
 #' @importFrom shinyFiles shinyDirChoose
 #' @importFrom htmlwidgets JS
+#' 
+#' @param input Shiny input object
+#' @param output Shiny output object
+#' @param session Shiny session object
 #'
 #' @export
 app_server <- function(input, output, session) {

@@ -154,7 +154,7 @@ observe({
 data <- reactive({apply_filters(ADNCA(), filters)})
 
 # update the data table object with the filtered data
-output$filecontents <- renderDataTable({
+output$filecontents <- DT::renderDataTable({
   req(data())
   DT::datatable(data(),
                 options = list(scrollX = TRUE,
@@ -208,7 +208,7 @@ observeEvent(input$submit_analyte, {
 
 
 # Display the PKNCA data object for the user (concentration records)
-output$datatable <- renderDataTable({
+output$datatable <- DT::renderDataTable({
   req(mydata())
   DT::datatable(data=mydata()$conc$data,
                 options=list(scrollX=TRUE,

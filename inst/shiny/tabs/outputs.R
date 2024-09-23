@@ -188,7 +188,7 @@ summary_stats <- reactive({
 })
 
 # render the reactive summary table in a datatable
-output$descriptivestats <- renderDataTable({
+output$descriptivestats <- DT::renderDataTable({
   req(summary_stats())
   DT::datatable(data = summary_stats(),
                 options = list(scrollX = TRUE,
@@ -198,7 +198,7 @@ output$descriptivestats <- renderDataTable({
   )
 })
 
-output$descriptivestats2 <- renderDataTable({
+output$descriptivestats2 <- DT::renderDataTable({
   req(resNCA())
   DT::datatable(data = calculate_summary_stats(resNCA())  %>% rename(PARAM=PPTESTCD),
                 options = list(scrollX = TRUE,
