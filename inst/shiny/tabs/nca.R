@@ -40,7 +40,8 @@ observeEvent(input$settings_upload,{
     mutate(IX=1:n())%>%# Assuming data() returns the newly uploaded dataset
     select(STUDYID, USUBJID, AVAL, DOSNO, TIME, IX)
   
-  setts_lambda = setts %>% select(STUDYID, USUBJID, DOSNO, IX, AVAL, TIME)
+  setts_lambda = setts %>% select(STUDYID, USUBJID, DOSNO, IX, AVAL, TIME)%>%
+    na.omit()
   
   # Identify mismatched data points
   mismatched_points = setts_lambda %>% 
@@ -56,7 +57,7 @@ observeEvent(input$settings_upload,{
     warning_message = paste("The following data points in the settings file do not match the uploaded dataset. These points will be removed from inclusions and exclusions:\n", 
                             mismatched_details)
     
-    showNotification(warning_message, type = "warning")
+    showNotification(warning_message, type = "warning", duration = NULL)
     
     # Remove mismatched data points from inclusions and exclusions
     setts_lambda = setts_lambda %>% 
