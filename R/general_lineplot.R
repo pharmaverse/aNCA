@@ -53,7 +53,8 @@ general_lineplot <- function(data,
   # preprocess data according to user selection
   preprocessed_data <- data %>%
     filter(USUBJID %in% selected_usubjids,
-           ANALYTE %in% selected_analytes) %>% 
+           ANALYTE %in% selected_analytes,
+           if ('EVID' %in% names(data)) EVID == 0 else T) %>% 
     # filter only the ones where time conc are na
     # use columns names
     select(ARRLT, PCSPEC, AVAL, DOSEA, DOSNO, AFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU, RRLTU) %>%

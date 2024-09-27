@@ -30,7 +30,8 @@ general_meanplot <- function(data,
   preprocessed_data <- data %>%
     filter(STUDYID == selected_studyids,
            ANALYTE == selected_analytes,
-           DOSNO == selected_cycles) %>%
+           DOSNO == selected_cycles,
+           if ('EVID' %in% names(data)) EVID == 0 else T) %>%
     # rename(id_variable = id_variable) %>%
     mutate(id_variable = as.factor(!!sym(id_variable))) %>%
     group_by(id_variable, NRRLT) %>%
