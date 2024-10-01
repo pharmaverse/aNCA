@@ -14,7 +14,7 @@
 #  select the analyte for the general lineplot
 output$generalplot_analyte <- renderUI({
   # deselect choices that are no pp parameters
-  param_choices <- ADNCA() %>%
+  param_choices <- data() %>%
     pull(ANALYTE) %>%
     unique()
 
@@ -29,7 +29,7 @@ output$generalplot_analyte <- renderUI({
 # select the usubjid for the general lineplot
 output$generalplot_usubjid <- renderUI({
   # deselect choices that are no pp parameters
-  param_choices <- ADNCA() %>%
+  param_choices <- data() %>%
     pull(USUBJID) %>%
     unique()
 
@@ -55,7 +55,7 @@ output$generalplot_colorby <- renderUI({
 output$cycleselect <- renderUI({
   req(input$generalplot_analyte)
 
-  y = ADNCA() %>%
+  y = data() %>%
     filter(ANALYTE == input$generalplot_analyte) %>%
     pull(DOSNO) %>%
     unique()
@@ -65,7 +65,7 @@ output$cycleselect <- renderUI({
 
 # render the general lineplot output in plotly
 output$individualplot <- renderPlotly({
-  req(ADNCA())
+  req(data())
   req(input$generalplot_analyte)
   req(input$generalplot_usubjid)
   req(input$generalplot_colorby)
@@ -73,7 +73,7 @@ output$individualplot <- renderPlotly({
   req(input$log)
 
   # browser()
-  general_lineplot(ADNCA(),
+  general_lineplot(data(),
                        input$generalplot_analyte,
                        input$generalplot_usubjid,
                        input$generalplot_colorby,
@@ -130,7 +130,7 @@ output$meanplot <- renderPlotly({
   req(input$analytemean)
   req(input$cyclesmean)
   # browser()
-  general_meanplot(ADNCA(),
+  general_meanplot(data(),
                        input$studyidmean,
                        input$analytemean,
                        input$cyclesmean,
@@ -215,7 +215,7 @@ output$descriptivestats2 <- DT::renderDataTable({
 # preprocess data for plotting mean concentration over time
 mean_data = reactive({
 
-  ADNCA() %>% # mydata()$conc$data %>%
+  data() %>% # mydata()$conc$data %>%
     filter(ANALYTE == input$analyte,
            DOSNO %in% input$cyclenca)%>%
     mutate(DOSEA = as.factor(DOSEA),
@@ -268,7 +268,7 @@ output$mean_concovertimelog <- renderPlotly(
 plot_data = reactive({
   req(input$analyte)
 
-  ADNCA() %>%  # mydata()$conc$data %>%
+  data() %>%  # mydata()$conc$data %>%
     filter(ANALYTE == input$analyte,
            DOSNO %in% input$cyclenca)%>%
     select(AFRLT, AVAL, DOSEA, DOSNO, AFRLT, NFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU, RRLTU, DOSEU, NOMDOSE)%>%

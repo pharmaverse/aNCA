@@ -65,11 +65,11 @@ observeEvent(input$settings_upload,{
   }
   
   # Analyte
-  updateSelectInput(session, inputId = 'analyte', label='Choose the analyte:', choices=ADNCA()$ANALYTE[1],
+  updateSelectInput(session, inputId = 'analyte', label='Choose the analyte:', choices=data()$ANALYTE[1],
                     selected = setts$ANALYTE[1])
   
   # Dose number
-  updateSelectInput(session, inputId = "cyclenca", label = "Choose the Dose Number:", choices = sort(unique(ADNCA()  %>% filter(ANALYTE==setts$ANALYTE[1])  %>% pull(DOSNO))), 
+  updateSelectInput(session, inputId = "cyclenca", label = "Choose the Dose Number:", choices = sort(unique(data()  %>% filter(ANALYTE==setts$ANALYTE[1])  %>% pull(DOSNO))), 
                     selected = doses_selected)
   
   

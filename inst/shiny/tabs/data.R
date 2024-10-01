@@ -151,7 +151,9 @@ observe({
 })
 
 # create reactive value with applied filters
-data <- reactive({apply_filters(ADNCA(), filters)})
+data <- reactive({
+  apply_filters(ADNCA(), filters)
+  })
 
 # update the data table object with the filtered data
 output$filecontents <- DT::renderDataTable({
