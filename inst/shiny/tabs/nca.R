@@ -18,6 +18,8 @@
 # Make GUI change when new settings are uploaded
 observeEvent(input$settings_upload,{
   
+  #browser()
+  
   setts = read.csv(input$settings_upload$datapath, na = c("", "NA"))
   
   # Set the basic settings 
@@ -32,6 +34,8 @@ observeEvent(input$settings_upload,{
   }
   # Compare the dataset with settings for inclusions and exclusions
   new_data = data()%>%
+    filter(ANALYTE == analyte,
+           if ('EVID' %in% names(data())) EVID == 0 else T)%>%
     mutate(groups=paste0(USUBJID, ', ', DOSNO)) %>%
     filter(TIME>=0) %>% 
     arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
