@@ -72,7 +72,7 @@ output$individualplot <- renderPlotly({
   req(input$timescale)
   req(input$log)
 
-  # browser()
+  
   general_lineplot(data(),
                        input$generalplot_analyte,
                        input$generalplot_usubjid,
@@ -129,7 +129,7 @@ output$meanplot <- renderPlotly({
   req(input$studyidmean)
   req(input$analytemean)
   req(input$cyclesmean)
-  # browser()
+  
   general_meanplot(data(),
                        input$studyidmean,
                        input$analytemean,
@@ -155,7 +155,7 @@ output$meanplot <- renderPlotly({
 # pickerInput to filter for parameters to display in the summary table
 output$summaryselect <- renderUI({
   req(resNCA())
-  # browser()
+  
   # available parameters
   paramselection <- unique(resNCA()$result$PPTESTCD)
   # select from available with all perselected
@@ -318,7 +318,7 @@ output$norm_concovertimesemilog <- renderPlotly(
 
 # create formatted boxplot data -> also used for report
 boxplotdata <- reactive({
-  # browser()
+  
   reshape_PKNCA_results(resNCA()) %>%
   select(-starts_with("start"), -starts_with("end"), -starts_with("exclude"), -starts_with("lambda.z")) %>%
     left_join(resNCA()$data$conc$data %>%
@@ -328,7 +328,7 @@ boxplotdata <- reactive({
                  names_to = "PARAM", values_to = "AVAL") %>%
     left_join(resNCA()$result %>% select(PPTESTCD, PPORRESU) %>% distinct(), by = c("PARAM" = "PPTESTCD")) %>%
     rename("AVALU" = "PPORRESU")
-  # browser()
+  
 })
 
 # select which parameter to box or violin plot
@@ -389,7 +389,7 @@ output$violin_toggle <- renderUI({
 
 # compute the boxplot
 output$boxplot <- renderPlot({
-  # browser()
+  
   req(boxplotdata())
   req(input$boxplotparam)
   req(input$display_dose_boxplot)
@@ -409,7 +409,7 @@ output$boxplot <- renderPlot({
 #     paste("CDISC_", Sys.Date(), ".zip", sep = "")
 #   },
 #   content = function(file) {
-#     # browser()
+#     
 #     # Export the list of dataframes to a zip file containing CSVs
 #     rio::export_list(x = exportCDISC(resNCA()),
 #                      file = paste("%s_", Sys.Date(), ".csv", sep = ""), # filename from above is somehow not passed here?
@@ -486,7 +486,7 @@ output$download_rmd <- downloadHandler(
     paste("report/SD_report", "html", sep = ".")
   },
   content = function(file) {
-    # browser()
+    
     file.copy(rendered_rmd(), file)
   },
   contentType = "text/html"
@@ -501,7 +501,7 @@ output$download_rmd <- downloadHandler(
 #     # Copy the report template to a temporary directory
 #     tempReport <- file.path(tempdir(), "report.Rmd")
 #     file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
-#     # browser()
+#     
 #     browser()
 #     # Set up parameters to pass to Rmd document
 #     params <- list(
