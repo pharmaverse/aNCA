@@ -316,15 +316,15 @@ output$norm_concovertimesemilog <- renderPlotly(
 
 # TAB: Parameter Boxplots ----------------------------------------------------
 
-# create formatted boxplot data -> also used for report
+# Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
 boxplotdata <- reactive({
-  
-  # Merge PKNCAconc to PP results so user can also access DOSEA within PPTESTCDs
-  merge(resNCA()$result,
-        resNCA()$data$conc$data, 
-        by=unname(unlist(resNCA()$data$conc$columns$groups))
+  group_columns = unname(unlist(resNCA()$data$conc$columns$groups))
+
+  left_join(resNCA()$result,
+        resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), .keep_all = T), 
+        by=group_columns,
+        keep = F
   )
-  
 })
 
 # select which parameter to box or violin plot
@@ -396,7 +396,7 @@ output$boxplot <- renderPlot({
                          input$boxplotparam,
                          input$display_dose_boxplot,
                          input$display_dosenumber_boxplot,
-                         input$violinplot_toggle_switch)
+                         input$violinplot_toggle_switch) 
 
 })
 
