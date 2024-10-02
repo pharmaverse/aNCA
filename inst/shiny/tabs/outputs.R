@@ -319,23 +319,19 @@ output$norm_concovertimesemilog <- renderPlotly(
 # create formatted boxplot data -> also used for report
 boxplotdata <- reactive({
   
-  reshape_PKNCA_results(resNCA()) %>%
-  select(-starts_with("start"), -starts_with("end"), -starts_with("exclude"), -starts_with("lambda.z")) %>%
-    left_join(resNCA()$data$conc$data %>%
-                select(USUBJID, DOSNO, DOSEA, DOSEU, any_of(c("AGE", "RACE", "SEX", "WTBL", "WTBLU", "HTBL", "HTBLU"))),
-              by = c("USUBJID", "DOSNO")) %>%
-    pivot_longer(-any_of(c("USUBJID", "DOSNO", "STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSEU", "AGE", "RACE", "SEX", "WTBL", "WTBLU", "HTBL", "HTBLU")),
-                 names_to = "PARAM", values_to = "AVAL") %>%
-    left_join(resNCA()$result %>% select(PPTESTCD, PPORRESU) %>% distinct(), by = c("PARAM" = "PPTESTCD")) %>%
-    rename("AVALU" = "PPORRESU")
+  # Merge PKNCAconc to PP results so user can also access DOSEA within PPTESTCDs
+  merge(resNCA()$result,
+        resNCA()$data$conc$data, 
+        by=unname(unlist(resNCA()$data$conc$columns$groups))
+  )
   
 })
 
 # select which parameter to box or violin plot
 output$selectboxplot <- renderUI({
-  # deselect choices that are no pp parameters
-
-  param_choices <- boxplotdata()$PARAM %>% unique()
+  
+  param_choices <- boxplotdata()$PPTESTCD %>% unique()
+  
   pickerInput("boxplotparam", "Choose the parameter to display:",
               choices = param_choices,
               selected = param_choices[1],
@@ -346,16 +342,16 @@ output$selectboxplot <- renderUI({
 
 # filter for dose amounts to display in the boxplot
 output$display_dose_boxplot <- renderUI({
-  # deselect choices that are no pp parameters
-  param_choices <- boxplotdata()$DOSEA %>% unique() %>% sort()
-  #  browser()
+  
+  param_choices <- sort(unique(boxplotdata()$DOSEA))
+  
   # filter for DOSEA with more than one observation
   preselected_choices <- boxplotdata() %>%
-                    group_by(DOSEA) %>%
-                    summarise(n = n()) %>%
-                    filter(n > 1) %>%
-                    pull(DOSEA)
-
+    group_by(DOSEA) %>%
+    summarise(n = n()) %>%
+    filter(n > 1) %>%
+    pull(DOSEA)
+  
   pickerInput("display_dose_boxplot", "Choose the doses amounts to display",
               choices = param_choices,
               selected = preselected_choices,
@@ -366,14 +362,15 @@ output$display_dose_boxplot <- renderUI({
 
 # filter for dose numbers to display in the boxplot
 output$display_dosenumber_boxplot <- renderUI({
+  
   # deselect choices that are no pp parameters
-  param_choices <- boxplotdata()$DOSNO %>% unique() %>% sort()
+  param_choices <- sort(unique(boxplotdata()$DOSNO))
   pickerInput("display_dosenumber_boxplot", "Choose the dose numbers to display",
               choices = param_choices,
               selected = param_choices,
               multiple = TRUE,
               options = list(`actions-box` = TRUE))
-
+  
 })
 
 # toggle between boxplot and violinplot
