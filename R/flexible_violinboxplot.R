@@ -34,7 +34,7 @@ flexible_violinboxplot <- function(result_data,
   # # xlabel of violin/boxplot
   dose_label = paste0("Dose [",  paste0(unique(box_data$DOSEU)), ']')
   # ylabel of violin/boxplot
-  col_name <- if (box_data$AVALU[1] == "unitless") {
+  col_name <- if (box_data$AVALU[1] == "unitless" | is.na(box_data$AVALU[1]) | is.null(box_data$AVALU)) {
     parameter} else {
       paste(parameter," [", box_data$AVALU[1], "]")
     }
