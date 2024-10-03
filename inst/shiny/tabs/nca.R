@@ -18,8 +18,6 @@
 # Make GUI change when new settings are uploaded
 observeEvent(input$settings_upload,{
   
-  #browser()
-  
   setts = read.csv(input$settings_upload$datapath, na = c("", "NA"))
   
   # Set the basic settings 
@@ -78,8 +76,8 @@ observeEvent(input$settings_upload,{
   
   
   # Extrapolation Method
-  method_choices = c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation", "Linear LinearLogInterpolation")
-  updateSelectInput(session, inputId = 'method', label='Extrapolation Method:', choices=c("lin-log", "lin up/log down", "linear", "Linear LinearLogInterpolation"),
+  method_choices = c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation")
+  updateSelectInput(session, inputId = 'method', label='Extrapolation Method:', choices=c("lin-log", "lin up/log down", "linear"),
                     selected= setts$method)
   
   
@@ -144,7 +142,8 @@ observeEvent(input$settings_upload,{
     mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
     group_by(TYPE, PATIENT, PROFILE, REASON) %>%
     summarise(IXrange = paste0(min(IX), ":", max(IX))) %>%
-    select(TYPE, PATIENT, PROFILE, IXrange, REASON)
+    select(TYPE, PATIENT, PROFILE, IXrange, REASON)%>%
+    na.omit()
   
   slope_manual_NCA_data(slope_manual_NCA_data)
   
@@ -747,7 +746,6 @@ handle_nca_excsel <- function() {
     
     # Rerun the NCA with the modified data
     mydata(mydata)
-    #rv$trigger <- rv$trigger + 1
 
     # Stop the observeEvent
     return()
@@ -805,8 +803,6 @@ handle_nca_excsel <- function() {
 
   mydata(mydata)
 
-  # Rerun the NCA with the modified data
-  #rv$trigger <- rv$trigger + 1
 }
 
 # Observe input$nca
