@@ -93,15 +93,15 @@ output$individualplot <- renderPlotly({
 
 # select the analyte for the mean plot
 output$analytemean <- renderUI({
-  y = mydata()$conc$data %>%
+  y = data() %>%
     pull(ANALYTE) %>%
     unique()
-  selectInput("analytemean", "Choose the Analyte:", choices = sort(y))
+  selectInput("analytemean", "Choose the Analyte:", choices = sort(y), selected = y[1])
 })
 
 # select the study id for the mean plot (needed for preclinical data, where multiple studyids per dataset)
 output$studyidmean <- renderUI({
-  y = mydata()$conc$data %>%
+  y = data() %>%
     pull(STUDYID) %>%
     unique()
   selectInput("studyidmean", "Choose the Study ID:", choices = sort(y))
@@ -109,15 +109,15 @@ output$studyidmean <- renderUI({
 
 # select the variable to calculate the mean by
 output$selectidvar <- renderUI({
-  y = c("PCSPEC", "DOSEA", "ANALYTE")
+  y = c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
   selectInput("selectidvar", "Choose the variable to group by:",
               choices = y, selected = "DOSEA")
 })
 
 # select the cycle to plot the mean concentrations
 output$cyclemean <- renderUI({
-  y = mydata()$conc$data %>%
-    filter(ANALYTE == input$analytemean)%>%
+  y = data() %>%
+    filter(ANALYTE %in% input$analytemean)%>%
     pull(DOSNO) %>%
     unique()
   selectInput("cyclesmean", "Choose the cycle:", choices = sort(y))
