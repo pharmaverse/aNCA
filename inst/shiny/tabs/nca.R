@@ -641,6 +641,16 @@ output$slope_manual_NCA_data <- DT::renderDataTable(datatable(data=slope_manual_
                                          drawCallback=JS('function() { Shiny.bindAll(this.api().table().node()); } ')
                                          )))
 
+# Ensure edits are saved in slope data
+observeEvent(input$slope_manual_NCA_data_cell_edit, {
+  info <- input$slope_manual_NCA_data_cell_edit
+
+  # Update the reactive data frame with the new value
+  slope_manual_NCA_data <- slope_manual_NCA_data()
+  slope_manual_NCA_data[info$row, (info$col+1)] <- info$value
+  slope_manual_NCA_data(slope_manual_NCA_data)
+})
+
 output$slope_manual_NCA_data2 <- renderTable(update_slope_manual_NCA_data(slope_manual_NCA_data()[,c(1:5)]))
 
 rowCounter <- reactiveVal(0) # Initialize a counter for the number of exclusions  
