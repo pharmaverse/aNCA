@@ -644,7 +644,6 @@ output$slope_manual_NCA_data <- DT::renderDataTable(datatable(data=slope_manual_
 # Ensure edits are saved in slope data
 observeEvent(input$slope_manual_NCA_data_cell_edit, {
   info <- input$slope_manual_NCA_data_cell_edit
-  str(info)  # For debugging purposes, you can print the edit info
 
   # Update the reactive data frame with the new value
   slope_manual_NCA_data <- slope_manual_NCA_data()
