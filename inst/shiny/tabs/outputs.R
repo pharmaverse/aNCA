@@ -385,7 +385,7 @@ output$violin_toggle <- renderUI({
   })
 
 # compute the boxplot
-output$boxplot <- renderPlot({
+output$boxplot <- renderPlotly({
   
   req(boxplotdata())
   req(input$boxplotparam)
@@ -396,6 +396,7 @@ output$boxplot <- renderPlot({
                          input$boxplotparam,
                          input$display_dose_boxplot,
                          input$display_dosenumber_boxplot,
+                         columns_to_hover = unname(unlist(resNCA()$data$conc$columns$groups)),
                          input$violinplot_toggle_switch) 
 
 })

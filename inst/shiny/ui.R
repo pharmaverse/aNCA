@@ -526,7 +526,7 @@ shinyUI(fluidPage(
                                   uiOutput("display_dose_boxplot"),
                                   uiOutput("display_dosenumber_boxplot"),
                                   uiOutput("violin_toggle"),
-                                  plotOutput('boxplot')
+                                  plotlyOutput('boxplot')
                                   # plotlyOutput("cmaxboxplot"),
                                   # br(),
                                   # plotlyOutput("aucboxplot"),
