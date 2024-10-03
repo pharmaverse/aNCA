@@ -319,12 +319,19 @@ output$norm_concovertimesemilog <- renderPlotly(
 # Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
 boxplotdata <- reactive({
   group_columns = unname(unlist(resNCA()$data$conc$columns$groups))
-
-  left_join(resNCA()$result,
-        resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), .keep_all = T), 
-        by=group_columns,
-        keep = F
-  )
+  
+  left_join(
+    resNCA()$result %>% filter(end==Inf | startsWith(PPTESTCD, 'aucint')),
+    resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), 
+                                         .keep_all = T), 
+    by=group_columns,
+    keep = F
+  ) %>% 
+    # Intervals should also be considered as differentiated options each
+    mutate(PPTESTCD = ifelse(startsWith(PPTESTCD,'aucint'), 
+                             paste0(PPTESTCD, '_', start, '-', end), 
+                             PPTESTCD ) )
+  
 })
 
 # select which parameter to box or violin plot

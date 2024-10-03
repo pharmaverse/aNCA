@@ -28,8 +28,7 @@ flexible_violinboxplot <- function(result_data,
            DOSNO = as.factor(DOSNO)) %>% 
     filter(PPTESTCD == parameter,
            DOSEA %in% doses_included,
-           DOSNO %in% dosenumber_included,
-           end==Inf) 
+           DOSNO %in% dosenumber_included) 
   
   # # xlabel of violin/boxplot
   dose_label = if ('DOSEU' %in% names(box_data)) {
