@@ -72,7 +72,7 @@ output$individualplot <- renderPlotly({
   req(input$timescale)
   req(input$log)
 
-  # browser()
+  
   general_lineplot(data(),
                        input$generalplot_analyte,
                        input$generalplot_usubjid,
@@ -93,15 +93,15 @@ output$individualplot <- renderPlotly({
 
 # select the analyte for the mean plot
 output$analytemean <- renderUI({
-  y = mydata()$conc$data %>%
+  y = data() %>%
     pull(ANALYTE) %>%
     unique()
-  selectInput("analytemean", "Choose the Analyte:", choices = sort(y))
+  selectInput("analytemean", "Choose the Analyte:", choices = sort(y), selected = y[1])
 })
 
 # select the study id for the mean plot (needed for preclinical data, where multiple studyids per dataset)
 output$studyidmean <- renderUI({
-  y = mydata()$conc$data %>%
+  y = data() %>%
     pull(STUDYID) %>%
     unique()
   selectInput("studyidmean", "Choose the Study ID:", choices = sort(y))
@@ -109,15 +109,15 @@ output$studyidmean <- renderUI({
 
 # select the variable to calculate the mean by
 output$selectidvar <- renderUI({
-  y = c("PCSPEC", "DOSEA", "ANALYTE")
+  y = c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
   selectInput("selectidvar", "Choose the variable to group by:",
               choices = y, selected = "DOSEA")
 })
 
 # select the cycle to plot the mean concentrations
 output$cyclemean <- renderUI({
-  y = mydata()$conc$data %>%
-    filter(ANALYTE == input$analytemean)%>%
+  y = data() %>%
+    filter(ANALYTE %in% input$analytemean)%>%
     pull(DOSNO) %>%
     unique()
   selectInput("cyclesmean", "Choose the cycle:", choices = sort(y))
@@ -129,7 +129,7 @@ output$meanplot <- renderPlotly({
   req(input$studyidmean)
   req(input$analytemean)
   req(input$cyclesmean)
-  # browser()
+  
   general_meanplot(data(),
                        input$studyidmean,
                        input$analytemean,
@@ -155,7 +155,7 @@ output$meanplot <- renderPlotly({
 # pickerInput to filter for parameters to display in the summary table
 output$summaryselect <- renderUI({
   req(resNCA())
-  # browser()
+  
   # available parameters
   paramselection <- unique(resNCA()$result$PPTESTCD)
   # select from available with all perselected
@@ -316,26 +316,22 @@ output$norm_concovertimesemilog <- renderPlotly(
 
 # TAB: Parameter Boxplots ----------------------------------------------------
 
-# create formatted boxplot data -> also used for report
+# Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
 boxplotdata <- reactive({
-  # browser()
-  reshape_PKNCA_results(resNCA()) %>%
-  select(-starts_with("start"), -starts_with("end"), -starts_with("exclude"), -starts_with("lambda.z")) %>%
-    left_join(resNCA()$data$conc$data %>%
-                select(USUBJID, DOSNO, DOSEA, DOSEU, any_of(c("AGE", "RACE", "SEX", "WTBL", "WTBLU", "HTBL", "HTBLU"))),
-              by = c("USUBJID", "DOSNO")) %>%
-    pivot_longer(-any_of(c("USUBJID", "DOSNO", "STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSEU", "AGE", "RACE", "SEX", "WTBL", "WTBLU", "HTBL", "HTBLU")),
-                 names_to = "PARAM", values_to = "AVAL") %>%
-    left_join(resNCA()$result %>% select(PPTESTCD, PPORRESU) %>% distinct(), by = c("PARAM" = "PPTESTCD")) %>%
-    rename("AVALU" = "PPORRESU")
-  # browser()
+  group_columns = unname(unlist(resNCA()$data$conc$columns$groups))
+
+  left_join(resNCA()$result,
+        resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), .keep_all = T), 
+        by=group_columns,
+        keep = F
+  )
 })
 
 # select which parameter to box or violin plot
 output$selectboxplot <- renderUI({
-  # deselect choices that are no pp parameters
-
-  param_choices <- boxplotdata()$PARAM %>% unique()
+  
+  param_choices <- boxplotdata()$PPTESTCD %>% unique()
+  
   pickerInput("boxplotparam", "Choose the parameter to display:",
               choices = param_choices,
               selected = param_choices[1],
@@ -346,16 +342,16 @@ output$selectboxplot <- renderUI({
 
 # filter for dose amounts to display in the boxplot
 output$display_dose_boxplot <- renderUI({
-  # deselect choices that are no pp parameters
-  param_choices <- boxplotdata()$DOSEA %>% unique() %>% sort()
-  #  browser()
+  
+  param_choices <- sort(unique(boxplotdata()$DOSEA))
+  
   # filter for DOSEA with more than one observation
   preselected_choices <- boxplotdata() %>%
-                    group_by(DOSEA) %>%
-                    summarise(n = n()) %>%
-                    filter(n > 1) %>%
-                    pull(DOSEA)
-
+    group_by(DOSEA) %>%
+    summarise(n = n()) %>%
+    filter(n > 1) %>%
+    pull(DOSEA)
+  
   pickerInput("display_dose_boxplot", "Choose the doses amounts to display",
               choices = param_choices,
               selected = preselected_choices,
@@ -366,14 +362,15 @@ output$display_dose_boxplot <- renderUI({
 
 # filter for dose numbers to display in the boxplot
 output$display_dosenumber_boxplot <- renderUI({
+  
   # deselect choices that are no pp parameters
-  param_choices <- boxplotdata()$DOSNO %>% unique() %>% sort()
+  param_choices <- sort(unique(boxplotdata()$DOSNO))
   pickerInput("display_dosenumber_boxplot", "Choose the dose numbers to display",
               choices = param_choices,
               selected = param_choices,
               multiple = TRUE,
               options = list(`actions-box` = TRUE))
-
+  
 })
 
 # toggle between boxplot and violinplot
@@ -389,7 +386,7 @@ output$violin_toggle <- renderUI({
 
 # compute the boxplot
 output$boxplot <- renderPlot({
-  # browser()
+  
   req(boxplotdata())
   req(input$boxplotparam)
   req(input$display_dose_boxplot)
@@ -399,7 +396,7 @@ output$boxplot <- renderPlot({
                          input$boxplotparam,
                          input$display_dose_boxplot,
                          input$display_dosenumber_boxplot,
-                         input$violinplot_toggle_switch)
+                         input$violinplot_toggle_switch) 
 
 })
 
@@ -409,7 +406,7 @@ output$boxplot <- renderPlot({
 #     paste("CDISC_", Sys.Date(), ".zip", sep = "")
 #   },
 #   content = function(file) {
-#     # browser()
+#     
 #     # Export the list of dataframes to a zip file containing CSVs
 #     rio::export_list(x = exportCDISC(resNCA()),
 #                      file = paste("%s_", Sys.Date(), ".csv", sep = ""), # filename from above is somehow not passed here?
@@ -486,7 +483,7 @@ output$download_rmd <- downloadHandler(
     paste("report/SD_report", "html", sep = ".")
   },
   content = function(file) {
-    # browser()
+    
     file.copy(rendered_rmd(), file)
   },
   contentType = "text/html"
@@ -501,7 +498,7 @@ output$download_rmd <- downloadHandler(
 #     # Copy the report template to a temporary directory
 #     tempReport <- file.path(tempdir(), "report.Rmd")
 #     file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
-#     # browser()
+#     
 #     browser()
 #     # Set up parameters to pass to Rmd document
 #     params <- list(
