@@ -21,37 +21,38 @@ flexible_violinboxplot <- function(result_data,
                                    dosenumber_included,
                                    box = TRUE) {
   
-  
   # preprocess data to plot
   box_data <- result_data %>%
-    mutate(DOSEA_factor = as.factor(DOSEA)) %>% 
-    filter(PARAM == parameter) %>% 
-    # adapt DOSNO to be discrete with the fct_relevel library
-    mutate(DOSNO = as.factor(DOSNO)) %>%
-    filter(DOSEA %in% doses_included, 
-           DOSNO %in% dosenumber_included)
+    mutate(DOSEA = as.factor(DOSEA),
+           DOSNO = as.factor(DOSNO)) %>% 
+    filter(PPTESTCD == parameter,
+           DOSEA %in% doses_included,
+           DOSNO %in% dosenumber_included) 
   
   # # xlabel of violin/boxplot
-  dose_label = paste0("Dose [",  paste0(unique(box_data$DOSEU)), ']')
+  dose_label = if ('DOSEU' %in% names(box_data)) {
+                paste0("Dose [", unique(box_data$DOSEU)[1], "]")
+                } else {"Dose"}
+  
   # ylabel of violin/boxplot
-  col_name <- if (box_data$AVALU[1] == "unitless") {
+  pptestcd_label <- if (box_data$PPORRESU[1] == "unitless" | is.na(box_data$PPORRESU[1]) | is.null(box_data$PPORRESU)) {
     parameter} else {
-      paste(parameter," [", box_data$AVALU[1], "]")
+      paste(parameter," [", box_data$PPORRESU[1], "]")
     }
   # decide whether to layer violin or boxplot
   p <- if (box) {
-    ggplot(data = box_data, aes(x = DOSEA_factor, y = AVAL, color = DOSNO)) + geom_boxplot()
-      
+    ggplot(data = box_data, aes(x = DOSEA, y = PPORRES, color = DOSNO)) + geom_boxplot()
+    
   } else {
-    ggplot(data = box_data, aes(x = DOSEA_factor, y = AVAL, color = DOSNO)) + geom_violin()
+    ggplot(data = box_data, aes(x = DOSEA, y = PPORRES, color = DOSNO)) + geom_violin()
   }
   
   # add jitter, facet_wrap, and labels
   p +
     geom_point(position=position_jitterdodge()) +
-    # geom_smooth(method = "lm", color = "black") + # This is conceptually wrong, we need to do an ANOVA here
+    # geom_smooth(method = "lm", color = "black") + # Let's consider it for the future
     facet_wrap(~STUDYID) +
-    labs(x = dose_label, y = col_name, color = "Dose Number") +
+    labs(x = dose_label, y = pptestcd_label, color = "Dose Number") +
     theme(legend.position = "right",
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
