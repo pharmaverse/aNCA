@@ -14,7 +14,7 @@
 #  select the analyte for the general lineplot
 output$generalplot_analyte <- renderUI({
   # deselect choices that are no pp parameters
-  param_choices <- ADNCA() %>%
+  param_choices <- data() %>%
     pull(ANALYTE) %>%
     unique()
 
@@ -29,7 +29,7 @@ output$generalplot_analyte <- renderUI({
 # select the usubjid for the general lineplot
 output$generalplot_usubjid <- renderUI({
   # deselect choices that are no pp parameters
-  param_choices <- ADNCA() %>%
+  param_choices <- data() %>%
     pull(USUBJID) %>%
     unique()
 
@@ -55,7 +55,7 @@ output$generalplot_colorby <- renderUI({
 output$cycleselect <- renderUI({
   req(input$generalplot_analyte)
 
-  y = ADNCA() %>%
+  y = data() %>%
     filter(ANALYTE == input$generalplot_analyte) %>%
     pull(DOSNO) %>%
     unique()
@@ -65,14 +65,14 @@ output$cycleselect <- renderUI({
 
 # render the general lineplot output in plotly
 output$individualplot <- renderPlotly({
-  req(ADNCA())
+  req(data())
   req(input$generalplot_analyte)
   req(input$generalplot_usubjid)
   req(input$generalplot_colorby)
   req(input$timescale)
   req(input$log)
 
-  general_lineplot(ADNCA(),
+  general_lineplot(data(),
                        input$generalplot_analyte,
                        input$generalplot_usubjid,
                        input$generalplot_colorby,
@@ -92,15 +92,15 @@ output$individualplot <- renderPlotly({
 
 # select the analyte for the mean plot
 output$analytemean <- renderUI({
-  y = mydata()$conc$data %>%
+  y = data() %>%
     pull(ANALYTE) %>%
     unique()
-  selectInput("analytemean", "Choose the Analyte:", choices = sort(y))
+  selectInput("analytemean", "Choose the Analyte:", choices = sort(y), selected = y[1])
 })
 
 # select the study id for the mean plot (needed for preclinical data, where multiple studyids per dataset)
 output$studyidmean <- renderUI({
-  y = mydata()$conc$data %>%
+  y = data() %>%
     pull(STUDYID) %>%
     unique()
   selectInput("studyidmean", "Choose the Study ID:", choices = sort(y))
@@ -108,15 +108,15 @@ output$studyidmean <- renderUI({
 
 # select the variable to calculate the mean by
 output$selectidvar <- renderUI({
-  y = c("PCSPEC", "DOSEA", "ANALYTE")
+  y = c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
   selectInput("selectidvar", "Choose the variable to group by:",
               choices = y, selected = "DOSEA")
 })
 
 # select the cycle to plot the mean concentrations
 output$cyclemean <- renderUI({
-  y = mydata()$conc$data %>%
-    filter(ANALYTE == input$analytemean)%>%
+  y = data() %>%
+    filter(ANALYTE %in% input$analytemean)%>%
     pull(DOSNO) %>%
     unique()
   selectInput("cyclesmean", "Choose the cycle:", choices = sort(y))
@@ -129,7 +129,7 @@ output$meanplot <- renderPlotly({
   req(input$analytemean)
   req(input$cyclesmean)
 
-  general_meanplot(ADNCA(),
+  general_meanplot(data(),
                        input$studyidmean,
                        input$analytemean,
                        input$cyclesmean,
@@ -154,6 +154,7 @@ output$meanplot <- renderPlotly({
 # pickerInput to filter for parameters to display in the summary table
 output$summaryselect <- renderUI({
   req(resNCA())
+
   # available parameters
   paramselection <- unique(resNCA()$result$PPTESTCD)
   # select from available with all perselected
@@ -213,7 +214,7 @@ output$descriptivestats2 <- DT::renderDataTable({
 # preprocess data for plotting mean concentration over time
 mean_data = reactive({
 
-  ADNCA() %>% # mydata()$conc$data %>%
+  data() %>% # mydata()$conc$data %>%
     filter(ANALYTE == input$analyte,
            DOSNO %in% input$cyclenca)%>%
     mutate(DOSEA = as.factor(DOSEA),
@@ -266,7 +267,7 @@ output$mean_concovertimelog <- renderPlotly(
 plot_data = reactive({
   req(input$analyte)
 
-  ADNCA() %>%  # mydata()$conc$data %>%
+  data() %>%  # mydata()$conc$data %>%
     filter(ANALYTE == input$analyte,
            DOSNO %in% input$cyclenca)%>%
     select(AFRLT, AVAL, DOSEA, DOSNO, AFRLT, NFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU, RRLTU, DOSEU, NOMDOSE)%>%
@@ -314,24 +315,23 @@ output$norm_concovertimesemilog <- renderPlotly(
 
 # TAB: Parameter Boxplots ----------------------------------------------------
 
-# create formatted boxplot data -> also used for report
+# Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
 boxplotdata <- reactive({
-  reshape_PKNCA_results(resNCA()) %>%
-  select(-starts_with("start"), -starts_with("end"), -starts_with("exclude"), -starts_with("lambda.z")) %>%
-    left_join(resNCA()$data$conc$data %>%
-                select(USUBJID, DOSNO, DOSEA, DOSEU, any_of(c("AGE", "RACE", "SEX", "WTBL", "WTBLU", "HTBL", "HTBLU"))),
-              by = c("USUBJID", "DOSNO")) %>%
-    pivot_longer(-any_of(c("USUBJID", "DOSNO", "STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSEU", "AGE", "RACE", "SEX", "WTBL", "WTBLU", "HTBL", "HTBLU")),
-                 names_to = "PARAM", values_to = "AVAL") %>%
-    left_join(resNCA()$result %>% select(PPTESTCD, PPORRESU) %>% distinct(), by = c("PARAM" = "PPTESTCD")) %>%
-    rename("AVALU" = "PPORRESU")
+  group_columns = unname(unlist(resNCA()$data$conc$columns$groups))
+
+  left_join(resNCA()$result,
+        resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), .keep_all = T), 
+        by=group_columns,
+        keep = F
+  )
+
 })
 
 # select which parameter to box or violin plot
 output$selectboxplot <- renderUI({
-  # deselect choices that are no pp parameters
-
-  param_choices <- boxplotdata()$PARAM %>% unique()
+  
+  param_choices <- boxplotdata()$PPTESTCD %>% unique()
+  
   pickerInput("boxplotparam", "Choose the parameter to display:",
               choices = param_choices,
               selected = param_choices[1],
@@ -342,15 +342,16 @@ output$selectboxplot <- renderUI({
 
 # filter for dose amounts to display in the boxplot
 output$display_dose_boxplot <- renderUI({
-  # deselect choices that are no pp parameters
-  param_choices <- boxplotdata()$DOSEA %>% unique() %>% sort()
+
+  param_choices <- sort(unique(boxplotdata()$DOSEA))
+
   # filter for DOSEA with more than one observation
   preselected_choices <- boxplotdata() %>%
-                    group_by(DOSEA) %>%
-                    summarise(n = n()) %>%
-                    filter(n > 1) %>%
-                    pull(DOSEA)
-
+    group_by(DOSEA) %>%
+    summarise(n = n()) %>%
+    filter(n > 1) %>%
+    pull(DOSEA)
+  
   pickerInput("display_dose_boxplot", "Choose the doses amounts to display",
               choices = param_choices,
               selected = preselected_choices,
@@ -361,14 +362,15 @@ output$display_dose_boxplot <- renderUI({
 
 # filter for dose numbers to display in the boxplot
 output$display_dosenumber_boxplot <- renderUI({
+  
   # deselect choices that are no pp parameters
-  param_choices <- boxplotdata()$DOSNO %>% unique() %>% sort()
+  param_choices <- sort(unique(boxplotdata()$DOSNO))
   pickerInput("display_dosenumber_boxplot", "Choose the dose numbers to display",
               choices = param_choices,
               selected = param_choices,
               multiple = TRUE,
               options = list(`actions-box` = TRUE))
-
+  
 })
 
 # toggle between boxplot and violinplot
@@ -394,7 +396,7 @@ output$boxplot <- renderPlot({
                          input$boxplotparam,
                          input$display_dose_boxplot,
                          input$display_dosenumber_boxplot,
-                         input$violinplot_toggle_switch)
+                         input$violinplot_toggle_switch) 
 
 })
 
