@@ -30,9 +30,10 @@ observeEvent(input$settings_upload,{
     showNotification(validate('The analyte selected in the settings file is not present in the data. Please, if you want to use this settings for a different file, make sure all meaningful variables in the file are in the data (ANALYTE, DOSNO...)')
                      , type = "error")
   }
-  #browser()
   # Compare the dataset with settings for inclusions and exclusions
   new_data = data()%>%
+    filter(ANALYTE == analyte,
+           if ('EVID' %in% names(data())) EVID == 0 else T)%>%
     mutate(groups=paste0(USUBJID, ', ', DOSNO)) %>%
     filter(TIME>=0) %>% 
     arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
@@ -48,20 +49,21 @@ observeEvent(input$settings_upload,{
     anti_join(new_data, by = c("USUBJID", "DOSNO", "IX", "AVAL", "TIME"))
   
   if (nrow(mismatched_points) > 0) {
-    # Generate a detailed warning message
-    mismatched_details = paste0("USUBJID: ", mismatched_points$USUBJID, 
-                                ", DOSNO: ", mismatched_points$DOSNO, 
-                                ", AVAL: ", mismatched_points$AVAL, 
-                                ", TIME: ", mismatched_points$TIME,
-                                collapse = "\n")
-    warning_message = paste("The following data points in the settings file do not match the uploaded dataset. These points will be removed from inclusions and exclusions:\n", 
-                            mismatched_details)
+    showModal(modalDialog(
+      title = "Mismatched Data Points",
+      tags$h4("The following data points in the settings file do not match the uploaded dataset. The slopes for these profiles will be reset to best slope:"),
+      DTOutput("mismatched_table"),
+      easyClose = TRUE,
+      footer = NULL
+    ))
     
-    showNotification(warning_message, type = "warning", duration = NULL)
+    output$mismatched_table <- DT::renderDT({
+      datatable(mismatched_points%>%
+                  select(-IX))
+    })
 
-    # Remove mismatched data points from inclusions and exclusions
-    setts_lambda = setts_lambda %>% 
-      anti_join(mismatched_points, by = c("USUBJID", "DOSNO", "IX"))
+    setts = setts %>% 
+      anti_join(mismatched_points, by = c("USUBJID", "DOSNO"))
   }
   
   # Analyte
@@ -74,8 +76,8 @@ observeEvent(input$settings_upload,{
   
   
   # Extrapolation Method
-  method_choices = c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation", "Linear LinearLogInterpolation")
-  updateSelectInput(session, inputId = 'method', label='Extrapolation Method:', choices=c("lin-log", "lin up/log down", "linear", "Linear LinearLogInterpolation"),
+  method_choices = c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation")
+  updateSelectInput(session, inputId = 'method', label='Extrapolation Method:', choices=c("lin-log", "lin up/log down", "linear"),
                     selected= setts$method)
   
   
@@ -132,14 +134,16 @@ observeEvent(input$settings_upload,{
   } else{
     updateCheckboxInput(session, inputId = 'rule_span.ratio', label = "SPAN:", value = F)
   }
-  
+
   
   # Lambda slope point selections and exclusions
-  slope_manual_NCA_data = setts  %>% select(TYPE, USUBJID, DOSNO, IX, REASON)  %>% 
-    mutate(PATIENT=as.character(USUBJID), PROFILE=as.character(DOSNO))  %>%
-    group_by(TYPE, PATIENT, PROFILE, REASON)  %>%
-    summarise(IXrange=paste0(IX, collapse=','))  %>% 
-    select(TYPE, PATIENT, PROFILE, IXrange, REASON)
+  slope_manual_NCA_data = setts %>%
+    select(TYPE, USUBJID, DOSNO, IX, REASON) %>%
+    mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
+    group_by(TYPE, PATIENT, PROFILE, REASON) %>%
+    summarise(IXrange = paste0(min(IX), ":", max(IX))) %>%
+    select(TYPE, PATIENT, PROFILE, IXrange, REASON)%>%
+    na.omit()
   
   slope_manual_NCA_data(slope_manual_NCA_data)
   
@@ -492,7 +496,7 @@ output$settings_save <- downloadHandler(
     # Create a settings file that the user can download/upload for establishing the same configuration
     setts_lambda = myconc$data %>% 
       # Identify the points that the user has manually selected for the half-life calculation
-      mutate(TYPE = case_when(is.excluded.hl ~ 'Exclusion', is.included.hl ~ 'Inclusion', T ~ NA))  %>%
+      mutate(TYPE = case_when(is.excluded.hl ~ 'Exclusion', is.included.hl ~ 'Selection', T ~ NA))  %>%
       filter(is.excluded.hl | is.included.hl)  %>%
       select(any_of(c(unname(unlist(myconc$columns$groups)), 'IX', myconc$columns$time, myconc$columns$concentration, 'TYPE', 'REASON')))  
         
@@ -634,6 +638,16 @@ output$slope_manual_NCA_data <- DT::renderDataTable(datatable(data=slope_manual_
                                          drawCallback=JS('function() { Shiny.bindAll(this.api().table().node()); } ')
                                          )))
 
+# Ensure edits are saved in slope data
+observeEvent(input$slope_manual_NCA_data_cell_edit, {
+  info <- input$slope_manual_NCA_data_cell_edit
+
+  # Update the reactive data frame with the new value
+  slope_manual_NCA_data <- slope_manual_NCA_data()
+  slope_manual_NCA_data[info$row, (info$col+1)] <- info$value
+  slope_manual_NCA_data(slope_manual_NCA_data)
+})
+
 output$slope_manual_NCA_data2 <- renderTable(update_slope_manual_NCA_data(slope_manual_NCA_data()[,c(1:5)]))
 
 rowCounter <- reactiveVal(0) # Initialize a counter for the number of exclusions  
@@ -717,11 +731,10 @@ observeEvent(input$remove_excsel, {
 })
 
 
-# SERVER LOGIC: connecting exclusion and manula slope selection to rerun NCA function call
-
+# SERVER LOGIC: connecting exclusion and manual slope selection to rerun NCA function call
 
 # Save the exclusion/selection data to the server data and rerun the NCA results
-observeEvent(input$save_excsel, {
+handle_nca_excsel <- function() {
   
     # Update the data in mydata() to reflect the changes in the exclusion/selection table
   mydata = mydata()
@@ -736,7 +749,6 @@ observeEvent(input$save_excsel, {
     
     # Rerun the NCA with the modified data
     mydata(mydata)
-    rv$trigger <- rv$trigger + 1
 
     # Stop the observeEvent
     return()
@@ -751,7 +763,8 @@ observeEvent(input$save_excsel, {
   #mutate(IXmax = unlist(lapply(IXrange, function(x) max(eval(parse(text=x))))))  %>% 
   filter(PATIENT %in% names(profiles_per_patient()),
          PROFILE %in% unname(unlist(profiles_per_patient()[PATIENT])),
-         all(!is.na(sapply(IXrange, function(x) eval(parse(text = x))))) & all(!is.null(sapply(IXrange, function(x) eval(parse(text = x))))),
+         all(!is.na(sapply(IXrange, function(x) eval(parse(text = x))))) & 
+           all(!is.null(sapply(IXrange, function(x) eval(parse(text = x))))),
          #paste0(PATIENT, PROFILE, IXmax) %in% paste0(resNCA()$data$conc$data$SUBJID, resNCA()$data$conc$data$DOSNO, resNCA()$data$conc$data$IX)
          #paste0(PATIENT, PROFILE, sapply(IXrange, function(ixs) max(eval(parse(ixs))))) %in% paste0(resNCA()$data$conc$data$SUBJID, resNCA()$data$conc$data$DOSNO, resNCA()$data$conc$data$IX)
          )  %>%
@@ -766,16 +779,25 @@ observeEvent(input$save_excsel, {
   # Update the exclusion/selection data for Lambda based on the current exc/sel table
   for (i in 1:nrow(slope_manual_NCA_data())) {
     #
-    
+    #update inclusions
     if(slope_manual_NCA_data()$TYPE[i] == 'Selection'){
       
       mydata$conc$data = mydata$conc$data %>% 
-        mutate(is.included.hl = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & DOSNO == slope_manual_NCA_data()$PROFILE[i] & IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), TRUE, is.included.hl),
-               REASON = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & DOSNO == slope_manual_NCA_data()$PROFILE[i] & IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), slope_manual_NCA_data()$REASON[i], REASON))
+        mutate(is.included.hl = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & 
+                                         DOSNO == slope_manual_NCA_data()$PROFILE[i] & 
+                                         IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), TRUE, is.included.hl),
+               REASON = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & 
+                                 DOSNO == slope_manual_NCA_data()$PROFILE[i] & 
+                                 IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), slope_manual_NCA_data()$REASON[i], REASON))
     } else {
+      #update exclusions
       mydata$conc$data = mydata$conc$data %>% 
-        mutate(is.excluded.hl = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & DOSNO == slope_manual_NCA_data()$PROFILE[i] & IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), TRUE, is.excluded.hl),
-               REASON = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & DOSNO == slope_manual_NCA_data()$PROFILE[i] & IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), slope_manual_NCA_data()$REASON[i], REASON))
+        mutate(is.excluded.hl = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & 
+                                         DOSNO == slope_manual_NCA_data()$PROFILE[i] & 
+                                         IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), TRUE, is.excluded.hl),
+               REASON = ifelse(USUBJID == slope_manual_NCA_data()$PATIENT[i] & 
+                                 DOSNO == slope_manual_NCA_data()$PROFILE[i] & 
+                                 IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])), slope_manual_NCA_data()$REASON[i], REASON))
     }
   }
   mydata$conc$data = mydata$conc$data  %>% 
@@ -784,7 +806,16 @@ observeEvent(input$save_excsel, {
 
   mydata(mydata)
 
-  # Rerun the NCA with the modified data
+}
+
+# Observe input$nca
+observeEvent(input$nca, {
+  handle_nca_excsel()
+})
+
+# Observe input$save_excsel
+observeEvent(input$save_excsel, {
+  handle_nca_excsel()
   rv$trigger <- rv$trigger + 1
 })
 

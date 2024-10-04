@@ -60,8 +60,7 @@ observeEvent(input$local_upload, {
               mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT),
                      NDOSEDUR = as.numeric(NDOSEDUR),
                      ADOSEDUR = as.numeric(ADOSEDUR))
-    
-    # browser()
+
     ADNCA(ADNCA)
 })
 
