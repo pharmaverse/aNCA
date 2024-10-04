@@ -72,7 +72,6 @@ output$individualplot <- renderPlotly({
   req(input$timescale)
   req(input$log)
 
-  
   general_lineplot(data(),
                        input$generalplot_analyte,
                        input$generalplot_usubjid,
@@ -129,7 +128,7 @@ output$meanplot <- renderPlotly({
   req(input$studyidmean)
   req(input$analytemean)
   req(input$cyclesmean)
-  
+
   general_meanplot(data(),
                        input$studyidmean,
                        input$analytemean,
@@ -155,7 +154,7 @@ output$meanplot <- renderPlotly({
 # pickerInput to filter for parameters to display in the summary table
 output$summaryselect <- renderUI({
   req(resNCA())
-  
+
   # available parameters
   paramselection <- unique(resNCA()$result$PPTESTCD)
   # select from available with all perselected
@@ -325,6 +324,7 @@ boxplotdata <- reactive({
         by=group_columns,
         keep = F
   )
+
 })
 
 # select which parameter to box or violin plot
@@ -342,9 +342,9 @@ output$selectboxplot <- renderUI({
 
 # filter for dose amounts to display in the boxplot
 output$display_dose_boxplot <- renderUI({
-  
+
   param_choices <- sort(unique(boxplotdata()$DOSEA))
-  
+
   # filter for DOSEA with more than one observation
   preselected_choices <- boxplotdata() %>%
     group_by(DOSEA) %>%
@@ -386,7 +386,7 @@ output$violin_toggle <- renderUI({
 
 # compute the boxplot
 output$boxplot <- renderPlot({
-  
+
   req(boxplotdata())
   req(input$boxplotparam)
   req(input$display_dose_boxplot)
@@ -406,7 +406,7 @@ output$boxplot <- renderPlot({
 #     paste("CDISC_", Sys.Date(), ".zip", sep = "")
 #   },
 #   content = function(file) {
-#     
+
 #     # Export the list of dataframes to a zip file containing CSVs
 #     rio::export_list(x = exportCDISC(resNCA()),
 #                      file = paste("%s_", Sys.Date(), ".csv", sep = ""), # filename from above is somehow not passed here?
@@ -483,7 +483,7 @@ output$download_rmd <- downloadHandler(
     paste("report/SD_report", "html", sep = ".")
   },
   content = function(file) {
-    
+
     file.copy(rendered_rmd(), file)
   },
   contentType = "text/html"
@@ -498,8 +498,7 @@ output$download_rmd <- downloadHandler(
 #     # Copy the report template to a temporary directory
 #     tempReport <- file.path(tempdir(), "report.Rmd")
 #     file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
-#     
-#     browser()
+
 #     # Set up parameters to pass to Rmd document
 #     params <- list(
 #       resNCA = concat_report_data()

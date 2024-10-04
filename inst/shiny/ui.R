@@ -114,8 +114,7 @@ shinyUI(fluidPage(
                                                choices = c('Please specify ANALYTE in Data Selection'='')  ),
 
                                    selectInput("method", "Extrapolation Method:", choices = c("lin-log", "lin up/log down",
-                                                                                              "linear",
-                                                                                              "Linear LinearLogInterpolation"),
+                                                                                              "linear"),
                                                selected = "lin up/log down"),
 
                                    br(),

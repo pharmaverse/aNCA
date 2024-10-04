@@ -97,7 +97,6 @@ exportCDISC <- function(resNCA){
                 "AVALC",
                 "AVALU")
 
-# browser()
 
 pp_info = resNCA$result  %>%
   filter(is.infinite(end) | PPTESTCD=='auclast' )  %>%
