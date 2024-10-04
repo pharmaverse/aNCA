@@ -50,13 +50,15 @@ flexible_violinboxplot <- function(result_data,
                       function(row) {
                         paste(names(row), row, sep = ": ", collapse = "<br>")
                       })
-  
+
   # decide whether to layer violin or boxplot
-  p <- if (box) {
-    p =ggplot(data = box_data %>% arrange(DOSNO), aes(x = DOSEA, y = PPORRES, color = DOSNO)) + geom_boxplot()
+  if (box) {
+    p = ggplot(data = box_data %>% arrange(DOSNO), 
+               aes(x = DOSEA, y = PPORRES, color = DOSNO)) + geom_boxplot()
     
   } else {
-    ggplot(data = box_data, aes(x = DOSEA, y = PPORRES, color = DOSNO, text=hover_text)) + geom_violin()
+    p = ggplot(data = box_data %>% arrange(DOSNO), 
+               aes(x = DOSEA, y = PPORRES, color = DOSNO)) + geom_violin()
   }
   
   # add jitter, facet_wrap, and labels
@@ -65,6 +67,7 @@ flexible_violinboxplot <- function(result_data,
     # geom_smooth(method = "lm", color = "black") + # Let's consider it for the future
     facet_wrap(~STUDYID) +
     labs(x = dose_label, y = pptestcd_label, color = "Dose Number") +
+    theme_bw() + 
     theme(legend.position = "right",
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10)) 
