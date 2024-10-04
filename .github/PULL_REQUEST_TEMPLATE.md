@@ -12,11 +12,10 @@ Definition of done, preferably copied from the issue.
 
 ## How to test
 
-How to test the feature.
+How to test features not covered by unit tests.
 
-## Contributor checkilist
+## Contributor checklist
 - [ ] Code passes style checks
 - [ ] Code passes all unit tests
 - [ ] New logic covered by unit tests
-- [ ] Documentation for new logic generated
-- [ ] README or other documentation updated, if applicable
+- [ ] New logic is documented
