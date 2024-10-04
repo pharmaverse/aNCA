@@ -351,13 +351,6 @@ resNCA <- eventReactive(rv$trigger, {
     # Perform NCA on the profiles selected
     myres = PKNCA::pk.nca(data=mydata, verbose=F)
     
-    # Access the result component
-    nca_results <- myres$result
-    
-    
-    # Optionally, view the entire results in a viewer (if using RStudio)
-    
-    
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
 

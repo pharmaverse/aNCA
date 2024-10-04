@@ -318,13 +318,19 @@ output$norm_concovertimesemilog <- renderPlotly(
 # Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
 boxplotdata <- reactive({
   group_columns = unname(unlist(resNCA()$data$conc$columns$groups))
-
-  left_join(resNCA()$result,
-        resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), .keep_all = T), 
-        by=group_columns,
-        keep = F
-  )
-
+  
+  left_join(
+    resNCA()$result %>% filter(end==Inf | startsWith(PPTESTCD, 'aucint')),
+    resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), 
+                                         .keep_all = T), 
+    by=group_columns,
+    keep = F
+  ) %>% 
+    # Intervals should also be considered as differentiated options each
+    mutate(PPTESTCD = ifelse(startsWith(PPTESTCD,'aucint'), 
+                             paste0(PPTESTCD, '_', start, '-', end), 
+                             PPTESTCD ) )
+  
 })
 
 # select which parameter to box or violin plot
@@ -385,18 +391,19 @@ output$violin_toggle <- renderUI({
   })
 
 # compute the boxplot
-output$boxplot <- renderPlot({
-
+output$boxplot <- renderPlotly({
+  
   req(boxplotdata())
   req(input$boxplotparam)
   req(input$display_dose_boxplot)
   req(input$display_dosenumber_boxplot)
 
-  flexible_violinboxplot(boxplotdata(),
-                         input$boxplotparam,
-                         input$display_dose_boxplot,
-                         input$display_dosenumber_boxplot,
-                         input$violinplot_toggle_switch) 
+  flexible_violinboxplot(result_data = boxplotdata(),
+                         parameter = input$boxplotparam,
+                         doses_included = input$display_dose_boxplot,
+                         dosenumber_included = input$display_dosenumber_boxplot,
+                         columns_to_hover = unname(unlist(resNCA()$data$conc$columns$groups)),
+                         box = input$violinplot_toggle_switch) 
 
 })
 
