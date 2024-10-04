@@ -49,7 +49,8 @@ general_meanplot <- function(data,
   labels_data <- data %>%
     filter(STUDYID == selected_studyids,
            ANALYTE == selected_analytes,
-           DOSNO == selected_cycles)
+           DOSNO == selected_cycles,
+           if ('EVID' %in% names(data)) EVID == 0 else T)
 
   time_label = paste0('Nominal Time [', unique(labels_data$RRLTU), "]")
   conc_units = paste0(unique(labels_data$AVALU))
