@@ -29,13 +29,13 @@ Number of the appropriate issue the pull request closes or references.
 Brief description of implemented changes, what they do and what is the reasoning behind the changes. 
 
 #### Definition of Done
-Checklist with minimal requirements to consider the feature or bugfix complete. Preferably the list supplied with the appropraite issue. Requirements might change and the scope might grow or shrink during developement, so feel free to make changes to the list if relevant, but make sure any deviations are documented.
+Checklist with minimal requirements to consider the feature or bugfix complete. Preferably the list supplied with the appropriate issue. Requirements might change and the scope might grow or shrink during development, so feel free to make changes to the list if relevant, but make sure any deviations are documented.
 
 #### How to test
-Instructions on how to test the new feature manually (go to..., click on...). Might include code snippets. It is especially important to include such instructions if submitted code is not fully covered by unit tests. If full suite of unit tests is supplied alongside logic, this part might not be required or relevant in terms of miscallenous changes (documentation, dependencies etc.).
+Instructions on how to test the new feature manually (go to..., click on...). Might include code snippets. It is especially important to include such instructions if submitted code is not fully covered by unit tests. If full suite of unit tests is supplied alongside logic, this part might not be required or relevant in terms of miscellaneous changes (documentation, dependencies etc.).
 
 #### Developers checklist
-This part is here as a reminder to perform basic tasks and checks before the code is submitted, to ensure complience with the guidelines. Before opening a PR for review, please make sure that:
+This part is here as a reminder to perform basic tasks and checks before the code is submitted, to ensure compliance with the guidelines. Before opening a PR for review, please make sure that:
 - Code passes lintr checks
 - Code passes all unit tests
 - New logic covered is by unit tests

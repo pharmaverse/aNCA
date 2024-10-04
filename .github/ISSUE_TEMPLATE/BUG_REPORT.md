@@ -6,10 +6,10 @@ labels: bug
 ---
 
 ### Description
-Describe the issue, what happend?
+Describe the issue, what happened?
 
 ### To reproduce
 Steps to reproduce the issue (go to..., click on...) or minimal reproducible code example.
 
 ### Expected behaviour
-If applicable, what do you think should happend instead?
+If applicable, what do you think should happen instead?
