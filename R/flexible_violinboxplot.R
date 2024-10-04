@@ -50,7 +50,6 @@ flexible_violinboxplot <- function(result_data,
                       function(row) {
                         paste(names(row), row, sep = ": ", collapse = "<br>")
                       })
-
   # decide whether to layer violin or boxplot
   if (box) {
     p = ggplot(data = box_data %>% arrange(DOSNO), 
@@ -58,7 +57,12 @@ flexible_violinboxplot <- function(result_data,
     
   } else {
     p = ggplot(data = box_data %>% arrange(DOSNO), 
-               aes(x = DOSEA, y = PPORRES, color = DOSNO)) + geom_violin()
+               aes(x = DOSEA, y = PPORRES, color = DOSNO)) 
+    # Make sure there is at least 1 group of 2 points
+    if (box_data %>% group_by(DOSEA) %>% filter(n()>1) %>% nrow()>0 ){
+      p = p + geom_violin()
+    }
+    
   }
   
   # add jitter, facet_wrap, and labels
