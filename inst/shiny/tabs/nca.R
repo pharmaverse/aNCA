@@ -466,19 +466,14 @@ observeEvent(input$download, {
 
 output$local_download_NCAres = downloadHandler(
   filename=function(){
-    paste0(mydata()$conc$data$STUDYID[1], 'results.zip')
+    paste0(mydata()$conc$data$STUDYID[1], 'PK_Parameters.csv')
   },
   content = function(file){
     old_wd <- getwd()  # save old working directory  
     tempdir <- tempdir()  # create a temporary directory  
     setwd(tempdir)  # change working directory to temporary directory  
     
-    csv <- 'PK_Parameters.csv'
-    cdisc <- 'cdisc'
-    
-    write.csv(finalresults(), csv)
-    # HERE WE NEED TO WRITE ADPP AND ADPC FUNCTION TO WRITE CDISC FILES 
-    # zip(zipfile = file, files = c(csv, cdisc))
+    write.csv(finalresNCA(), file, row.names = F)
     
     setwd(old_wd)  # change working directory back to original  
   }
