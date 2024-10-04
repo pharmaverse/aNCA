@@ -15,7 +15,7 @@ Definition of done, preferably copied from the issue.
 How to test features not covered by unit tests.
 
 ## Contributor checklist
-- [ ] Code passes style checks
+- [ ] Code passes lintr checks
 - [ ] Code passes all unit tests
 - [ ] New logic covered by unit tests
 - [ ] New logic is documented
