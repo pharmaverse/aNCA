@@ -399,12 +399,12 @@ output$boxplot <- renderPlotly({
   req(input$display_dose_boxplot)
   req(input$display_dosenumber_boxplot)
 
-  flexible_violinboxplot(boxplotdata(),
-                         input$boxplotparam,
-                         input$display_dose_boxplot,
-                         input$display_dosenumber_boxplot,
+  flexible_violinboxplot(result_data = boxplotdata(),
+                         parameter = input$boxplotparam,
+                         doses_included = input$display_dose_boxplot,
+                         dosenumber_included = input$display_dosenumber_boxplot,
                          columns_to_hover = unname(unlist(resNCA()$data$conc$columns$groups)),
-                         input$violinplot_toggle_switch) 
+                         box = input$violinplot_toggle_switch) 
 
 })
 
