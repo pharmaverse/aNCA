@@ -129,13 +129,30 @@ output$meanplot <- renderPlotly({
   req(input$analytemean)
   req(input$cyclesmean)
 
-  general_meanplot(data(),
-                       input$studyidmean,
-                       input$analytemean,
-                       input$cyclesmean,
-                       input$selectidvar,
-                       input$logmeanplot,
-                       input$sdmeanplot) %>%
+  validate(
+    need(data() %>% 
+                filter(STUDYID %in% input$studyidmean,
+                       ANALYTE %in% input$analytemean,
+                       DOSNO %in% input$cyclesmean,
+                       if ('EVID' %in% names(data)) EVID == 0 else T,
+                       NRRLT>0
+                ) %>% 
+                group_by(!!sym(input$selectidvar), NRRLT) %>% 
+                summarise(N=n()) %>% 
+                filter(N>=3) %>%
+                nrow(.)>0,
+        
+         message = paste0('Data issue: No data with more than 3 points to calculate average based on nominal time (NRRLT) and selected variable: ', input$selectidvar)
+         )
+  )
+  
+  general_meanplot(data = data(),
+                   selected_studyids = input$studyidmean,
+                   selected_analytes = input$analytemean,
+                   selected_cycles = input$cyclesmean,
+                   id_variable = input$selectidvar,
+                   plot_ylog = input$logmeanplot,
+                   plot_sd = input$sdmeanplot) %>%
     plotly_build()
 
 })
