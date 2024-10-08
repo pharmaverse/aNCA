@@ -522,6 +522,17 @@ shinyUI(fluidPage(
 
                          tabPanel("Box Plots",
                                   uiOutput("selectboxplot"),
+                                  uiOutput('select_xvars_boxplot'),
+                                  pickerInput(inputId = 'selected_xvals_boxplot', 
+                                              label = 'Select values to display for grouping',
+                                              multiple = T,
+                                              choices = NULL, 
+                                              selected = NULL,
+                                              options = list(`actions-box` = TRUE)
+                                              ),
+                                  uiOutput('select_colorvars_boxplot'),
+                                  
+                                  
                                   uiOutput("display_dose_boxplot"),
                                   uiOutput("display_dosenumber_boxplot"),
                                   uiOutput("violin_toggle"),

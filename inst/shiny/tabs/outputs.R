@@ -346,6 +346,51 @@ output$selectboxplot <- renderUI({
 
 })
 
+
+
+
+# Selector for the variables to segregate boxplots in the x axis 
+output$select_xvars_boxplot <- renderUI({
+  
+  pickerInput(inputId = 'selected_xvars_boxplot', 
+              label = 'Select X grouping variables',
+              multiple = T,
+              choices = intersect(names(boxplotdata()), names(data())),
+              selected = 'DOSEA' 
+              )
+})
+
+
+
+observeEvent(input$selected_xvars_boxplot,{
+  
+  xvar_options_list = lapply(input$selected_xvars_boxplot, 
+                             \(id_var) unique(boxplotdata()[[id_var]]))
+  
+  names(xvar_options_list) = input$selected_xvars_boxplot
+  
+  updatePickerInput(session = session, 
+                    inputId = 'selected_xvals_boxplot', 
+                    label = 'Select values to display for grouping',
+                    choices = xvar_options_list, 
+                    selected = unlist(xvar_options_list)
+  )
+}
+)
+
+
+output$select_colorvars_boxplot <- renderUI({
+  
+  pickerInput(inputId = 'selected_colorvars_boxplot', 
+              label = 'Select coloring variables to differentiate boxplots',
+              multiple = T,
+              choices = intersect(names(boxplotdata()), names(data())),
+              selected = 'DOSNO' 
+  )
+})
+
+
+
 # filter for dose amounts to display in the boxplot
 output$display_dose_boxplot <- renderUI({
 
