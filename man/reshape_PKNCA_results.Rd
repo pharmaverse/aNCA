@@ -10,10 +10,12 @@ reshape_PKNCA_results(resNCA)
 \item{resNCA}{The output of PKNCA::pk.nca}
 }
 \value{
-A data frame (finalres2) which provides an easy overview on the results from the NCA in each profile/subject
-and how it was computed lambda (half life) and the results of the NCA parameters (cmax, AUC, AUClast)
+A data frame (finalres2) which provides an easy overview on the results from the NCA
+in each profile/subject and how it was computed lambda (half life) and the results
+of the NCA parameters (cmax, AUC, AUClast)
 }
 \description{
-This function reshapes the structure of the results produced by the main function of the PKNCA package (pk.nca)
-in a way that each row represents all the main results summarized for each profile in each individual/patient.
+This function reshapes the structure of the results produced by the main function
+of the PKNCA package (pk.nca) in a way that each row represents all the main results
+summarized for each profile in each individual/patient.
 }

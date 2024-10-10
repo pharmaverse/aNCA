@@ -14,7 +14,10 @@ pptestcd_dict
 A list with two data frames:
 \describe{
 \item{pp}{A data frame containing the PP (Pharmacokinetic Parameters) domain data.}
-\item{adpp}{A data frame containing the ADPP (Analysis Dataset for Pharmacokinetic Parameters) domain data.}
+\item{adpp}{
+A data frame containing the ADPP (Analysis Dataset for
+Pharmacokinetic Parameters) domain data.
+}
 }
 }
 \description{
@@ -25,7 +28,8 @@ Attention: All parameters that do no match pptest dataframe will be lost in this
 Outputs are the following:
 \itemize{
 \item pknca_result Output from function call \code{pk.nca()} (formatted)
-\item pknca_result_raw Output from function call \code{pk.nca()} (needs to be merged with upper later on but now we avoid merge conflict)
+\item pknca_result_raw Output from function call \code{pk.nca()}
+(needs to be merged with upper later on but now we avoid merge conflict)
 }
 }
 \keyword{datasets}

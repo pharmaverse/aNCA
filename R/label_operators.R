@@ -17,11 +17,11 @@
 #' }
 #'
 #' @export
-as_factor_preserve_label <- function(x) {  
-  label <- attr(x, "label")  
-  x <- as.factor(x)  
-  attr(x, "label") <- label  
-  return(x)  
+as_factor_preserve_label <- function(x) {
+  label <- attr(x, "label")
+  x <- as.factor(x)
+  attr(x, "label") <- label
+  return(x)
 }
 
 #' Check if a Vector Has a Label
@@ -42,9 +42,9 @@ as_factor_preserve_label <- function(x) {
 #'
 #' @export
 
-has_label <- function(x) {  
-  return(!is.null(attr(x, "label")))  
-}  
+has_label <- function(x) {
+  return(!is.null(attr(x, "label")))
+}
 
 #' Set an Empty Label if None Exists
 #'
@@ -64,9 +64,9 @@ has_label <- function(x) {
 #'
 #' @export
 
-set_empty_label <- function(x) {  
-  if (is.null(attr(x, "label"))) {  
-    attr(x, "label") <- ""  
-  }  
-  return(x)  
-}  
+set_empty_label <- function(x) {
+  if (is.null(attr(x, "label"))) {
+    attr(x, "label") <- ""
+  }
+  return(x)
+}

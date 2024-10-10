@@ -13,40 +13,51 @@ lambda_slope_plot(
 )
 }
 \arguments{
-\item{PKNCAres_df}{Data frame containing the results of the pharmacokinetic non-compartmental analysis (default is \code{PKNCA::pk.nca(.)$result}).}
+\item{PKNCAres_df}{Data frame containing the results of the pharmacokinetic non-compartmental
+analysis (default is \code{PKNCA::pk.nca(.)$result}).}
 
-\item{PKNCAconc_df}{Data frame containing the concentration data (default is \code{mydata$conc$data}).}
+\item{PKNCAconc_df}{Data frame containing the concentration data
+(default is \code{mydata$conc$data}).}
 
 \item{dosno}{Numeric value representing the dose number (default is \code{profile}).}
 
-\item{usubjid}{Character value representing the unique subject identifier (default is \code{patient}).}
+\item{usubjid}{Character value representing the unique subject identifier
+(default is \code{patient}).}
 
-\item{R2ADJTHRESHOL}{Numeric value representing the R-squared adjusted threshold for determining the subtitle color (default is 0.7).}
+\item{R2ADJTHRESHOL}{Numeric value representing the R-squared adjusted threshold for determining
+the subtitle color (default is 0.7).}
 }
 \value{
 A plotly object representing the lambda slope plot.
 }
 \description{
-This function generates a lambda slope plot using pharmacokinetic data. It calculates relevant lambda parameters and visualizes the data points used for lambda calculation, along with a linear regression line and additional plot annotations.
+This function generates a lambda slope plot using pharmacokinetic data. It calculates relevant
+lambda parameters and visualizes the data points used for lambda calculation, along with
+a linear regression line and additional plot annotations.
 }
 \details{
 The function performs the following steps:
 \itemize{
-\item Filters and arranges the input data to obtain relevant lambda calculation information.
-\item Identifies the data points used for lambda calculation.
-\item Calculates the fitness, intercept, and time span of the half-life estimate.
-\item Determines the subtitle color based on the R-squared adjusted value and half-life estimate.
-\item Generates a ggplot object with the relevant data points, linear regression line, and annotations.
-\item Converts the ggplot object to a plotly object for interactive visualization.
+\item{Filters and arranges the input data to obtain relevant lambda calculation information.}
+\item{Identifies the data points used for lambda calculation.}
+\item{Calculates the fitness, intercept, and time span of the half-life estimate.}
+\item{
+Determines the subtitle color based on the R-squared adjusted value and half-life estimate.
+}
+\item{
+Generates a ggplot object with the relevant data points,
+linear regression line, and annotations.
+}
+\item{Converts the ggplot object to a plotly object for interactive visualization.}
 }
 }
 \examples{
 \dontrun{
   # Example usage:
-  plot <- lambda_slope_plot(PKNCAres_df = myres$result, 
-                            PKNCAconc_df = mydata$conc$data, 
-                            dosno = 1, 
-                            usubjid = "subject_1", 
+  plot <- lambda_slope_plot(PKNCAres_df = myres$result,
+                            PKNCAconc_df = mydata$conc$data,
+                            dosno = 1,
+                            usubjid = "subject_1",
                             R2ADJTHRESHOL = 0.7)
   plot
 }

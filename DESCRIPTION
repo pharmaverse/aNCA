@@ -45,6 +45,7 @@ Imports:
     shinyjqui,
     shinyWidgets,
     stats,
+    stringr,
     tern,
     tidyr,
     tools,

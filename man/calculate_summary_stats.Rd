@@ -7,9 +7,11 @@
 calculate_summary_stats(resPKNCA = resNCA(), input_groups = "DOSNO")
 }
 \arguments{
-\item{resPKNCA}{A data frame containing results of Non Compartmental Analysis using PKNCA package}
+\item{resPKNCA}{A data frame containing results of
+Non Compartmental Analysis using PKNCA package}
 
-\item{input_groups}{A character vector specifying the columns to group by. Here. the hierachrical order matters}
+\item{input_groups}{A character vector specifying the columns to group by.
+Here. the hierachrical order matters}
 }
 \value{
 A data frame with summary statistics for each group and parameter.
@@ -30,7 +32,8 @@ The function calculates the following statistics for numeric variables:
 \item Median value (\code{median})
 \item Count (\code{count})
 }
-The function excludes the columns \code{ANALYTE}, \code{DOSEA}, \code{PCSPEC}, \code{STUDYID}, and \code{USUBJID} from the numeric summarization because they are possible grouping variables
+The function excludes the columns \code{ANALYTE}, \code{DOSEA}, \code{PCSPEC}, \code{STUDYID}, and \code{USUBJID}
+from the numeric summarization because they are possible grouping variables
 The resulting summary statistics are rounded to three decimal places.
 }
 \examples{
