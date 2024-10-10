@@ -214,9 +214,10 @@ observe({
 
 # Choose dosenumbers to be analyzed
 
-observeEvent(input$analyte, {
+observeEvent(input$submit_analyte, {
+  req(mydata())
   updateSelectInput(session, inputId = 'cyclenca', label = 'Choose the Dose Number:', 
-                    choices = unique(data()  %>% filter(ANALYTE==input$analyte)  %>% pull(DOSNO)))
+                    choices = unique(mydata()$conc$data  %>% filter(ANALYTE==input$analyte)  %>% pull(DOSNO)))
 })
 
 # Partial AUC Selection
@@ -247,8 +248,8 @@ rv <- reactiveValues(trigger = 0)
 
 # Update the trigger whenever either button is clicked
 observeEvent(input$nca,{
-  req(mydata())
   
+  req(mydata())
  # If there are intervals defined, update the intervals_userinput reactive value
   if(input$AUCoptions && AUC_counter()>0){
 
@@ -263,8 +264,6 @@ observeEvent(input$nca,{
   intervals_userinput_data(data.frame(start=AUC_mins, end=AUC_maxs)  %>% 
     arrange(start, end)  %>% 
     unique())
-  
-  print(intervals_userinput_data())
 
   # Use the base intervals dataset settings as a reference and cross it with the inputs
   intervals_userinput = mydata()$intervals %>%
@@ -276,9 +275,6 @@ observeEvent(input$nca,{
       crossing(intervals_userinput_data()) %>% 
       # all dataframe columns equal false except aucint.last (without knowing the other column names)
     mutate(auclast = FALSE, aucint.last=TRUE, aucinf.obs = FALSE)
-
-  
-  
   
   # Return the output
   intervals_userinput(intervals_userinput)
@@ -730,7 +726,11 @@ observeEvent(input$remove_excsel, {
 
 # Save the exclusion/selection data to the server data and rerun the NCA results
 handle_nca_excsel <- function() {
-  
+
+  if (input$submit_analyte == 0) {
+    showNotification("Data issue: Please select an Analyte in the Data Selection tab", duration = NULL, closeButton = TRUE, type = "error")
+    return(NULL)
+  }
     # Update the data in mydata() to reflect the changes in the exclusion/selection table
   mydata = mydata()
 
