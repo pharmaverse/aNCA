@@ -215,8 +215,9 @@ observe({
 # Choose dosenumbers to be analyzed
 
 observeEvent(input$submit_analyte, {
+  req(mydata())
   updateSelectInput(session, inputId = 'cyclenca', label = 'Choose the Dose Number:', 
-                    choices = unique(mydata()  %>% filter(ANALYTE==input$analyte)  %>% pull(DOSNO)))
+                    choices = unique(mydata()$conc$data  %>% filter(ANALYTE==input$analyte)  %>% pull(DOSNO)))
 })
 
 # Partial AUC Selection
@@ -725,7 +726,7 @@ observeEvent(input$remove_excsel, {
 
 # Save the exclusion/selection data to the server data and rerun the NCA results
 handle_nca_excsel <- function() {
-  
+
   if (input$submit_analyte == 0) {
     showNotification("Data issue: Please select an Analyte in the Data Selection tab", duration = NULL, closeButton = TRUE, type = "error")
     return(NULL)
