@@ -43,7 +43,7 @@ general_meanplot <- function(data,
     mutate(id_variable = as.factor(!!sym(id_variable))) %>%
     group_by(id_variable, NRRLT) %>%
     summarise(
-      Mean = geometric.mean(AVAL, na.rm = TRUE),
+      Mean = geometric_mean(AVAL, na.rm = TRUE),
       SD = sd(AVAL, na.rm = TRUE),
       N = n()
     ) %>%
@@ -105,7 +105,7 @@ general_meanplot <- function(data,
 #' @param na.rm A logical value indicating whether NA values should be removed.
 #' @return The geometric mean of the input vector.
 #' @export
-geometric.mean <- function(x, na.rm = FALSE) {
+geometric_mean <- function(x, na.rm = FALSE) { # nolint
   if (na.rm) {
     x <- x[!is.na(x)]
   }

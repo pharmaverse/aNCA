@@ -5,18 +5,18 @@
 \title{Generate a Lambda Slope Plot}
 \usage{
 lambda_slope_plot(
-  PKNCAres_df = myres$result,
-  PKNCAconc_df = mydata$conc$data,
+  res_pknca_df = myres$result,
+  conc_pknca_df = mydata$conc$data,
   dosno = profile,
   usubjid = patient,
   R2ADJTHRESHOL = 0.7
 )
 }
 \arguments{
-\item{PKNCAres_df}{Data frame containing the results of the pharmacokinetic non-compartmental
+\item{res_pknca_df}{Data frame containing the results of the pharmacokinetic non-compartmental
 analysis (default is \code{PKNCA::pk.nca(.)$result}).}
 
-\item{PKNCAconc_df}{Data frame containing the concentration data
+\item{conc_pknca_df}{Data frame containing the concentration data
 (default is \code{mydata$conc$data}).}
 
 \item{dosno}{Numeric value representing the dose number (default is \code{profile}).}
@@ -54,8 +54,8 @@ linear regression line, and annotations.
 \examples{
 \dontrun{
   # Example usage:
-  plot <- lambda_slope_plot(PKNCAres_df = myres$result,
-                            PKNCAconc_df = mydata$conc$data,
+  plot <- lambda_slope_plot(res_pknca_df = myres$result,
+                            conc_pknca_df = mydata$conc$data,
                             dosno = 1,
                             usubjid = "subject_1",
                             R2ADJTHRESHOL = 0.7)

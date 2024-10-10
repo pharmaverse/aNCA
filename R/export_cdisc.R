@@ -35,22 +35,23 @@ pptestcd_dict <- setNames(
   )
 )
 
-exportCDISC <- function(resNCA) {
+export_cdisc <- function(res_nca) {
+  if (FALSE) {
+    # uncomment in case of more added variables
+    # load metadata
+    pptestcd <- read.csv("data/pptestcd.csv") %>%
+      # add descriptions not available from oak metadata
+      bind_rows(
+        data.frame(
+          PPTESTCD = c("CLSTP", "LAMZSPNR"),
+          STD_PPTEST = c(
+            "Last Non Zero Concentration Predicted",
+            "Ratio of Half-Life to Time used for Half-Life Calculation"
+          )
+        )
+      )
+  }
 
-  # # uncomment in case of more added variables
-  # # load metadata
-  # pptestcd <- read.csv("data/pptestcd.csv") %>%
-  #   # add descriptions not available from oak metadata
-  #   bind_rows(
-  #     data.frame(
-  #       PPTESTCD = c("CLSTP", "LAMZSPNR"),
-  #       STD_PPTEST = c(
-  #         "Last Non Zero Concentration Predicted",
-  #         "Ratio of Half-Life to Time used for Half-Life Calculation"
-  #       )
-  #     )
-  #   )
-  
   # define columns needed for pp
   pp_col <- c(
     "STUDYID",
@@ -110,11 +111,11 @@ exportCDISC <- function(resNCA) {
                 "AVALC",
                 "AVALU")
 
-  pp_info <- resNCA$result %>%
+  pp_info <- res_nca$result %>%
     filter(is.infinite(end) | PPTESTCD == "auclast") %>%
     group_by(
       across(all_of(c(
-        unname(unlist(resNCA$data$conc$columns$groups)), "start", "end", "PPTESTCD"
+        unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
       )))
     ) %>%
     arrange(USUBJID, DOSNO, !is.na(PPORRES)) %>%
@@ -149,7 +150,7 @@ exportCDISC <- function(resNCA) {
       # Group ID
       PPGRPID = paste(ANALYTE, PCSPEC, paste("CYCLE", DOSNO, sep = " "), sep = "-"),
       # Parameter Cathegory
-      PPCAT = if ('PARAM'%in% names(.)) PARAM else ANALYTE,
+      PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
       PPSCAT = "NON-COMPARTMENTAL",
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
@@ -196,8 +197,8 @@ exportCDISC <- function(resNCA) {
   adpp <- pp_info %>%
     rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU) %>%
     merge(
-      resNCA$data$dose$data %>%
-        select(any_of(c("USUBJID", setdiff(names(resNCA$data$dose$data), names(pp_info))))),
+      res_nca$data$dose$data %>%
+        select(any_of(c("USUBJID", setdiff(names(res_nca$data$dose$data), names(pp_info))))),
       all.x = TRUE,
       all.y = FALSE
     ) %>%

@@ -4,9 +4,9 @@
 #' lambda parameters and visualizes the data points used for lambda calculation, along with
 #' a linear regression line and additional plot annotations.
 #'
-#' @param PKNCAres_df   Data frame containing the results of the pharmacokinetic non-compartmental
+#' @param res_pknca_df   Data frame containing the results of the pharmacokinetic non-compartmental
 #'                      analysis (default is `PKNCA::pk.nca(.)$result`).
-#' @param PKNCAconc_df  Data frame containing the concentration data
+#' @param conc_pknca_df  Data frame containing the concentration data
 #'                      (default is `mydata$conc$data`).
 #' @param dosno         Numeric value representing the dose number (default is `profile`).
 #' @param usubjid       Character value representing the unique subject identifier
@@ -35,8 +35,8 @@
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   plot <- lambda_slope_plot(PKNCAres_df = myres$result,
-#'                             PKNCAconc_df = mydata$conc$data,
+#'   plot <- lambda_slope_plot(res_pknca_df = myres$result,
+#'                             conc_pknca_df = mydata$conc$data,
 #'                             dosno = 1,
 #'                             usubjid = "subject_1",
 #'                             R2ADJTHRESHOL = 0.7)
@@ -48,25 +48,25 @@
 #' @import plotly
 #' @export
 lambda_slope_plot <- function(
-  PKNCAres_df = myres$result,
-  PKNCAconc_df = mydata$conc$data,
+  res_pknca_df = myres$result,
+  conc_pknca_df = mydata$conc$data,
   dosno = profile,
   usubjid = patient,
   R2ADJTHRESHOL = 0.7
 ) {
 
   # Obtain all information relevant regarding lambda calculation
-  lambda_res <- PKNCAres_df %>%
+  lambda_res <- res_pknca_df %>%
     filter(DOSNO == dosno, USUBJID == usubjid, end == Inf)  %>%
     arrange(USUBJID, DOSNO, start, desc(end)) %>%
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD)))
 
   # Obtain the number of data points used to calculate lambda
-  lambda.z.n.points <- as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == 'lambda.z.n.points'])
-  if (is.na(lambda.z.n.points)) lambda.z.n.points <- 0
+  lambda_z_n_points <- as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
+  if (is.na(lambda_z_n_points)) lambda_z_n_points <- 0
 
   # Identify in the data the points used to calculate lambda
-  lambda.z.ix.rows = PKNCAconc_df %>%
+  lambda_z_ix_rows <- conc_pknca_df %>%
     filter(
       DOSNO == dosno,
       USUBJID == usubjid,
@@ -80,21 +80,21 @@ lambda_slope_plot <- function(
       )
     ) %>%
     arrange(IX) %>%
-    slice(0:lambda.z.n.points)
+    slice(0:lambda_z_n_points)
 
   # Calculate the base and adjusted fitness, half life and time span estimated
-  R2_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=="r.squared"]), 3)
-  R2ADJ_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD=='adj.r.squared']), 3)
+  r2_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "r.squared"]), 3)
+  r2adj_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
   half_life_value <- signif(
     log(2) / as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "lambda.z"]), 3
   )
   time_span <- signif(
-    abs(lambda.z.ix.rows$TIME[nrow(lambda.z.ix.rows)] - lambda.z.ix.rows$TIME[1]), 3
+    abs(lambda_z_ix_rows$TIME[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$TIME[1]), 3
   )
 
   # Determine the color based on the conditions
   subtitle_color <- ifelse(
-    R2ADJ_value < R2ADJTHRESHOL | half_life_value > (time_span / 2),
+    r2adj_value < R2ADJTHRESHOL | half_life_value > (time_span / 2),
     "red",
     "black"
   )
@@ -102,28 +102,28 @@ lambda_slope_plot <- function(
     "R^2: ",
     signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "r.squared"]), 3),
     "    R^2_{adj}: ",
-    R2ADJ_value,
+    r2adj_value,
     "  ln(2)/lambda = ",
     half_life_value, "h    ",
     "(T_",
-    lambda.z.ix.rows$IX[nrow(lambda.z.ix.rows)],
+    lambda_z_ix_rows$IX[nrow(lambda_z_ix_rows)],
     " - T_",
-    lambda.z.ix.rows$IX[1],
+    lambda_z_ix_rows$IX[1],
     ")/2 = ", time_span / 2,
     "h"
   )
 
   subtitle_text <- paste0(
-    # "R<sup>2</sup>: ", R2_value,
-    "    R<sup>2</sup><sub>adj</sub>: ", R2ADJ_value,
+    # "R<sup>2</sup>: ", r2_value,
+    "    R<sup>2</sup><sub>adj</sub>: ", r2adj_value,
     "    ln(2)/\u03BB = ", half_life_value, "h",
-    "    (T<sub>", lambda.z.ix.rows$IX[2], "</sub> - T<sub>",
-    lambda.z.ix.rows$IX[1], "</sub>)/2 = ", time_span / 2, "h"
+    "    (T<sub>", lambda_z_ix_rows$IX[2], "</sub> - T<sub>",
+    lambda_z_ix_rows$IX[1], "</sub>)/2 = ", time_span / 2, "h"
   )
 
 
   # If Cmax is included in lambda calculation, inform the user in the plot
-  if (lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"] <= max(lambda.z.ix.rows$AVAL)) {
+  if (lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"] <= max(lambda_z_ix_rows$AVAL)) {
     subtitle_color <- "red"
     subtitle_text <- paste0(
       "Cmax should not be included in lambda calculation", "\n", subtitle_text
@@ -131,7 +131,7 @@ lambda_slope_plot <- function(
   }
 
   # Include in the data the aesthetics for the plot
-  plot_data <- PKNCAconc_df %>%
+  plot_data <- conc_pknca_df %>%
     filter(DOSNO == dosno, USUBJID == usubjid) %>%
     arrange(IX) %>%
     mutate(
@@ -139,7 +139,7 @@ lambda_slope_plot <- function(
       IX_stroke = ifelse(is.excluded.hl, 4, 1),
       IX_color = case_when(
         is.excluded.hl ~ "excluded",
-        IX %in% lambda.z.ix.rows$IX ~ "hl.included",
+        IX %in% lambda_z_ix_rows$IX ~ "hl.included",
         TRUE ~ "hl.excluded"
       )
     ) %>%
@@ -166,8 +166,8 @@ lambda_slope_plot <- function(
     ) +
     labs(
       title = paste0("USUBJID: ", usubjid, ", DOSNO: ", dosno),
-      y = paste0("Log10 Concentration (", PKNCAconc_df $PCSTRESU[1], ")"),
-      x = paste0("Actual time post dose (", PKNCAconc_df $RRLTU[1], ")")
+      y = paste0("Log10 Concentration (", conc_pknca_df $PCSTRESU[1], ")"),
+      x = paste0("Actual time post dose (", conc_pknca_df $RRLTU[1], ")")
     ) +
     theme_bw() +
 
@@ -224,7 +224,7 @@ lambda_slope_plot <- function(
       hoverinfo = "text",
       marker = list(color = case_when(
         plot_data$is.excluded.hl ~ "red",
-        plot_data$IX %in% lambda.z.ix.rows$IX ~ "green",
+        plot_data$IX %in% lambda_z_ix_rows$IX ~ "green",
         TRUE ~ "black"
       ), size = 50, opacity = 0),  # Make points semi-transparent
       showlegend = FALSE  # Don't show this trace in the legend

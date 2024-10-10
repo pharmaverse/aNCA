@@ -8,7 +8,7 @@
 #'
 #'
 
-partialAUCInput <- function(id, min_sel_value=0, max_sel_value=NULL) {
+partial_auc_input <- function(id, min_sel_value = 0, max_sel_value = NULL) {
   fluidRow(
     id = id,
     column(

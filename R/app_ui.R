@@ -1,7 +1,10 @@
 #' UI function for the Shiny app
 #'
 #' @import shiny
-#' @importFrom shiny tags icon navbarPage tabPanel sidebarLayout sidebarPanel mainPanel fluidPage fluidRow column selectInput actionButton fileInput conditionalPanel numericInput checkboxInput radioButtons downloadButton uiOutput helpText plotOutput
+#' @importFrom shiny tags icon navbarPage tabPanel sidebarLayout sidebarPanel mainPanel fluidPage
+#' @importFrom shiny fluidRow column selectInput actionButton fileInput conditionalPanel
+#' @importFrom shiny numericInput checkboxInput radioButtons downloadButton uiOutput helpText
+#' @importFrom shiny plotOutput
 #' @importFrom shinyBS bsModal
 #' @importFrom shinyWidgets dropdown pickerInput
 #' @importFrom shinyjqui orderInput updateOrderInput

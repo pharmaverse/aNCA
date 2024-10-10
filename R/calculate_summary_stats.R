@@ -4,7 +4,7 @@
 #'
 #' @param input_groups A character vector specifying the columns to group by.
 #'                     Here. the hierachrical order matters
-#' @param resPKNCA     A data frame containing results of
+#' @param res_pknca     A data frame containing results of
 #'                     Non Compartmental Analysis using PKNCA package
 #' @return A data frame with summary statistics for each group and parameter.
 #' @details The function calculates the following statistics for numeric variables:
@@ -41,18 +41,18 @@
 #' calculate_summary_stats(data, input_groups)
 #' }
 
-calculate_summary_stats <- function(resPKNCA = resNCA(), input_groups = "DOSNO") {
+calculate_summary_stats <- function(res_pknca, input_groups = "DOSNO") {
 
   # Disconsider interval records for the summary statistics
-  data <- resPKNCA$result %>%
+  data <- res_pknca$result %>%
     filter(end == Inf) %>%
     mutate(start = 0)
 
   # Join subject data to allow the user to group by it
   data <- merge(
     data,
-    resPKNCA$data$conc$data %>%
-      select(any_of(c(input_groups, unname(unlist(resPKNCA$data$conc$columns$groups)))))
+    res_pknca$data$conc$data %>%
+      select(any_of(c(input_groups, unname(unlist(res_pknca$data$conc$columns$groups)))))
   )
 
   # Calculate summary statistics, using all value rows
@@ -61,7 +61,7 @@ calculate_summary_stats <- function(resPKNCA = resNCA(), input_groups = "DOSNO")
     group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
     unique() %>%
     summarise(
-      geomean = exp(mean(log(PPORRES), na.rm = TRUE)),
+      geomean = exp(mean(log(PPORRES), na.rm = TRUE)), # nolint
       geocv = (sd(PPORRES, na.rm = TRUE) / exp(mean(log(PPORRES), na.rm = TRUE))) * 100,
       mean = mean(PPORRES, na.rm = TRUE),
       CV = (sd(PPORRES, na.rm = TRUE) / mean(PPORRES, na.rm = TRUE)) * 100,

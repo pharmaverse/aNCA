@@ -90,7 +90,7 @@ observeEvent(input$settings_upload,{
     for (i in 1:length(AUC_mins)){
       AUC_counter(AUC_counter() + 1)
       insertUI(selector = "#AUCInputs", where = "beforeEnd", 
-               ui = partialAUCInput(id=paste0("AUC_", AUC_counter()),
+               ui = partial_auc_input(id=paste0("AUC_", AUC_counter()),
                                     min_sel_value = as.numeric(AUC_mins[i]),
                                     max_sel_value = as.numeric(AUC_maxs[i])
                )
@@ -224,7 +224,7 @@ intervals_userinput <- reactiveVal(NULL)
 observeEvent(input$addAUC, {
   AUC_counter(AUC_counter() + 1)
   id <- paste0("AUC_", AUC_counter())
-  insertUI(selector = "#AUCInputs", where = "beforeEnd", ui = partialAUCInput(id))
+  insertUI(selector = "#AUCInputs", where = "beforeEnd", ui = partial_auc_input(id))
 })
 
 # Remove the last partial AUC input  
@@ -376,7 +376,7 @@ finalresNCA = reactiveVal(NULL)
 observeEvent(resNCA(), {
   
   # Create a reshaped object that will be used to display the results in the UI
-  finalresNCA = reshape_PKNCA_results(resNCA())
+  finalresNCA = reshape_pknca_results(resNCA())
 
   # Get all inputs which are TRUE and start with 'rule_'
   for (rule_input in grep('^rule_', names(input), value = TRUE)){
@@ -556,7 +556,7 @@ for (input_name in grep('(TYPE|PATIENT|PROFILE|IXrange|REASON)_Ex\\d+$', names((
 output$preslopesettings <- DT::renderDataTable({
 
   # Reshape results and only choose the columns that are relevant to half life calculation
-  preslopesettings = reshape_PKNCA_results(resNCA())  %>% 
+  preslopesettings = reshape_pknca_results(resNCA())  %>% 
     select(any_of(c('USUBJID', 'DOSNO')), starts_with('lambda.z'), starts_with('span.ratio'), starts_with('half.life'), 
     #'lambda.z.ix', 
    'exclude.lambda.z')   

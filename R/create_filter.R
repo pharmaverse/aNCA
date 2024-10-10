@@ -93,17 +93,24 @@ apply_filters <- function(raw_data, filters) {
         value <- filter_info$value
       }
 
-      if (condition == "==") {
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) == value)
-      } else if (condition == ">") {
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) > value)
-      } else if (condition == "<") {
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) < value)
-      } else if (condition == ">=") {
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) >= value)
-      } else if (condition == "<=") {
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) <= value)
-      }
+      switch(
+        condition,
+        "==" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) == value)
+        },
+        ">" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) > value)
+        },
+        "<" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) < value)
+        },
+        ">=" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) >= value)
+        },
+        "<=" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) <= value)
+        }
+      )
     }
   }
   return(raw_data)

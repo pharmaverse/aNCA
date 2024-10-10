@@ -223,7 +223,7 @@ mean_data = reactive({
            TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
            NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT))%>%
     group_by(DOSEA, NOMTIME, DOSNO)%>%
-    summarise(Mean = geometric.mean(AVAL, na.rm = T),
+    summarise(Mean = geometric_mean(AVAL, na.rm = T),
               SD = sd(AVAL, na.rm = T),
               N = n())%>%
     filter(N >= 3)
@@ -401,14 +401,14 @@ output$boxplot <- renderPlot({
 })
 
 # create a download button for CDISC dataframes
-# output$exportCDISC <- downloadHandler(
+# output$export_cdisc <- downloadHandler(
 #   filename = function() {
 #     paste("CDISC_", Sys.Date(), ".zip", sep = "")
 #   },
 #   content = function(file) {
 #     
 #     # Export the list of dataframes to a zip file containing CSVs
-#     rio::export_list(x = exportCDISC(resNCA()),
+#     rio::export_list(x = export_cdisc(resNCA()),
 #                      file = paste("%s_", Sys.Date(), ".csv", sep = ""), # filename from above is somehow not passed here?
 #                      archive = paste("CDISC_", Sys.Date(), ".zip", sep = ""))
 #   }
@@ -426,7 +426,7 @@ output$exportCDISC <- downloadHandler(
     # Create a temporary directory to store the CSV files
     temp_dir <- tempdir()
 
-    CDISC <- exportCDISC(resNCA())
+    CDISC <- export_cdisc(resNCA())
     # Export the list of data frames to CSV files in the temporary directory
     file_paths <- rio::export_list(
       x = CDISC,

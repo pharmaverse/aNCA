@@ -71,7 +71,7 @@ create_conc <- function(ADNCA, analyte, proftype) {
   data <- ADNCA %>%
     filter(
       ANALYTE == analyte,
-      if ('EVID' %in% names(ADNCA)) EVID == 0 else TRUE
+      if ("EVID" %in% names(ADNCA)) EVID == 0 else TRUE
     ) %>%
     # mutate(TIME=ifelse(TIME<0,0,TIME),
     #        AVAL=ifelse(TIME==0,0,AVAL)) %>% #make the conc at time 0, 0
@@ -80,14 +80,14 @@ create_conc <- function(ADNCA, analyte, proftype) {
     filter(TIME >= 0) %>%
     arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
     group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-    mutate(IX = 1:n())
+    mutate(IX = seq_len(n()))
 }
 
 #' Create PK Dose Dataset
 #'
 #' This function creates a pharmacokinetic dose dataset from the provided concentration data.
 #'
-#' @param ADNCA_conc A data frame containing the concentration data.
+#' @param adnca_conc A data frame containing the concentration data.
 #'
 #' @return A data frame containing the dose data.
 #'
@@ -109,13 +109,13 @@ create_conc <- function(ADNCA, analyte, proftype) {
 #' @import dplyr
 #' @export
 
-create_dose <- function(ADNCA_conc) {
-  ADNCA_conc %>%
+create_dose <- function(adnca_conc) {
+  adnca_conc %>%
     arrange(USUBJID, DOSNO) %>%
     group_by(USUBJID, DOSNO) %>%
     slice(1) %>%
     mutate(
-      DOSEA=as.numeric(DOSEA),
+      DOSEA = as.numeric(DOSEA),
       IQROUTE = ROUTE
     )
 }
