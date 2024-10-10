@@ -58,7 +58,7 @@ flexible_violinboxplot <- function(boxplotdata,
 
   # Make the plot
   p = ggplot(data = box_data %>% arrange(!!!syms(colorvars)),
-             aes(x = interaction(!!!syms(xvars)), 
+             aes(x = interaction(!!!syms(xvars), sep = '\n'), 
                  y = PPORRES, 
                  color = interaction(!!!syms(colorvars)))) 
   
