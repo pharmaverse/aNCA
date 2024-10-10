@@ -355,7 +355,7 @@ output$selectboxplot <- renderUI({
   
   param_choices <- boxplotdata()$PPTESTCD %>% unique()
   
-  pickerInput("boxplotparam", "Choose the parameter to display:",
+  pickerInput("selected_param_boxplot", "Choose the parameter to display:",
               choices = param_choices,
               selected = param_choices[1],
               multiple = FALSE,
@@ -363,38 +363,50 @@ output$selectboxplot <- renderUI({
 
 })
 
-# filter for dose amounts to display in the boxplot
-output$display_dose_boxplot <- renderUI({
 
-  param_choices <- sort(unique(boxplotdata()$DOSEA))
 
-  # filter for DOSEA with more than one observation
-  preselected_choices <- boxplotdata() %>%
-    group_by(DOSEA) %>%
-    summarise(n = n()) %>%
-    filter(n > 1) %>%
-    pull(DOSEA)
+
+# Selector for the variables to segregate boxplots in the x axis 
+output$select_xvars_boxplot <- renderUI({
   
-  pickerInput("display_dose_boxplot", "Choose the doses amounts to display",
-              choices = param_choices,
-              selected = preselected_choices,
-              multiple = TRUE,
-              options = list(`actions-box` = TRUE))
-
+  pickerInput(inputId = 'selected_xvars_boxplot', 
+              label = 'Select X grouping variables',
+              multiple = T,
+              choices = intersect(names(boxplotdata()), names(data())),
+              selected = 'DOSEA' 
+              )
 })
 
-# filter for dose numbers to display in the boxplot
-output$display_dosenumber_boxplot <- renderUI({
+
+output$select_colorvars_boxplot <- renderUI({
   
-  # deselect choices that are no pp parameters
-  param_choices <- sort(unique(boxplotdata()$DOSNO))
-  pickerInput("display_dosenumber_boxplot", "Choose the dose numbers to display",
-              choices = param_choices,
-              selected = param_choices,
-              multiple = TRUE,
-              options = list(`actions-box` = TRUE))
-  
+  pickerInput(inputId = 'selected_colorvars_boxplot', 
+              label = 'Select coloring variables to differentiate boxplots',
+              multiple = T,
+              choices = intersect(names(boxplotdata()), names(data())),
+              selected = 'DOSNO' 
+  )
 })
+
+
+observeEvent(list(input$selected_xvars_boxplot, input$selected_colorvars_boxplot),{
+  
+  xvar_options_list = lapply(c(input$selected_xvars_boxplot, 
+                               input$selected_colorvars_boxplot), 
+                             \(id_var) paste(id_var, unique(boxplotdata()[[id_var]]), sep = ': '))
+  
+  names(xvar_options_list) = c(input$selected_xvars_boxplot, 
+                               input$selected_colorvars_boxplot)
+  
+  updatePickerInput(session = session, 
+                    inputId = 'selected_varvalstofilter_boxplot', 
+                    label = 'Select values to display for grouping',
+                    choices = xvar_options_list, 
+                    selected = unlist(xvar_options_list)
+  )
+}
+)
+
 
 # toggle between boxplot and violinplot
 output$violin_toggle <- renderUI({
@@ -411,14 +423,16 @@ output$violin_toggle <- renderUI({
 output$boxplot <- renderPlotly({
   
   req(boxplotdata())
-  req(input$boxplotparam)
-  req(input$display_dose_boxplot)
-  req(input$display_dosenumber_boxplot)
-
-  flexible_violinboxplot(result_data = boxplotdata(),
-                         parameter = input$boxplotparam,
-                         doses_included = input$display_dose_boxplot,
-                         dosenumber_included = input$display_dosenumber_boxplot,
+  req(input$selected_param_boxplot)
+  req(input$selected_xvars_boxplot)
+  req(input$selected_colorvars_boxplot)
+  req(input$selected_varvalstofilter_boxplot)
+  
+  flexible_violinboxplot(boxplotdata = boxplotdata(),
+                         parameter = input$selected_param_boxplot,
+                         xvars = input$selected_xvars_boxplot,
+                         colorvars = input$selected_colorvars_boxplot,
+                         varvalstofilter = input$selected_varvalstofilter_boxplot,
                          columns_to_hover = unname(unlist(resNCA()$data$conc$columns$groups)),
                          box = input$violinplot_toggle_switch) 
 

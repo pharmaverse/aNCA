@@ -4,8 +4,7 @@ shinyUI(fluidPage(
   tags$script("
     Shiny.addCustomMessageHandler('update', function(value) {
     Shiny.setInputValue('update', value);
-    });
-  "),
+    }); "),
 
   tags$script("
     Shiny.addCustomMessageHandler('increment', function(value) {
@@ -522,15 +521,17 @@ shinyUI(fluidPage(
 
                          tabPanel("Box Plots",
                                   uiOutput("selectboxplot"),
-                                  uiOutput("display_dose_boxplot"),
-                                  uiOutput("display_dosenumber_boxplot"),
+                                  uiOutput('select_xvars_boxplot'),
+                                  uiOutput('select_colorvars_boxplot'),
+                                  pickerInput(inputId = 'selected_varvalstofilter_boxplot', 
+                                              label = 'Select values to display',
+                                              multiple = T,
+                                              choices = NULL, 
+                                              selected = NULL,
+                                              options = list(`actions-box` = TRUE)
+                                              ),
                                   uiOutput("violin_toggle"),
                                   plotlyOutput('boxplot')
-                                  # plotlyOutput("cmaxboxplot"),
-                                  # br(),
-                                  # plotlyOutput("aucboxplot"),
-
-
                                   )
 
 
