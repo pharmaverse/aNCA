@@ -17,27 +17,30 @@ TLG_order <- reactiveVal(
 )
 
 output$TLG_order <- DT::renderDT({
-  # Load reactive value
-  TLG_order <- TLG_order() 
+  
+  # Load reactive value and include link to the TLG reference
+  TLG_order <- TLG_order() %>% 
+    mutate(PKid = paste0("<a href='", Catalog_Link, "'>", PKid, "</a>"))
   
   # Generate a color palette based on those
   colors <- colorRampPalette(c("#f8fbfd", '#f9f8fd', '#f2f3ff', '#fbf3ff'))(length(unique(TLG_order$type)))
   
   # Render the editable DT table
   datatable(data = TLG_order, 
-            editable = TRUE, 
-            rownames = TRUE,
+            editable = T, 
+            rownames = T,
+            escape = F,
             extensions = c('Select', 'RowGroup'),
             options = list(
-              paging = FALSE,  # Disable pagination
-              autoWidth = TRUE,
+              paging = F,  # Disable pagination
+              autoWidth = T,
               dom = 't',  # Hide length menu
               columnDefs = list(
                 list(width = '150px', targets = '_all'),
                 list(className = 'dt-center', targets = '_all'),
-                list(targets = 0, orderable = FALSE, className = "select-checkbox"),
-                list(visible = FALSE, 
-                     targets = which(names(TLG_order) %in% c("row_group", "Selection")))  # Hide the row_group and Selection columns
+                list(targets = 0, orderable = F, className = "select-checkbox"),
+                list(visible = F, 
+                     targets = which(names(TLG_order) %in% c("row_group", "Selection", "Catalog_Link")))  # Hide the row_group and Selection columns
               ),
               select = list(
                 style = "os", 
@@ -55,9 +58,7 @@ output$TLG_order <- DT::renderDT({
     ) 
 })
 
-
-
-# Save user table changes from the UI into the server
+# Save table changes from the UI into the server
 observeEvent(input$TLG_order_cell_edit, {
   info <- input$TLG_order_cell_edit
   
@@ -67,25 +68,20 @@ observeEvent(input$TLG_order_cell_edit, {
   TLG_order(TLG_order)
 })
 
-
 # When the user submits the TLG order...
 observeEvent(input$submit_TLG_order, {
 
-  # Filter the rows requested by the user
+  # Filter only the rows requested by the user
   TLG_order = TLG_order()[input$TLG_order_rows_selected,]
   
   ## FOR LOOOP OR LAPPLY
   print(TLG_order)
-  
-  
+ 
   # Take each TLG function 
-  #func <- get(func_name)
+  # func <- get(TLG_order[i, 'PKid'])
   
   ## ANOTHER LOOP 
   
   # Apply each function over each group set of records
   
 })
-
-
-
