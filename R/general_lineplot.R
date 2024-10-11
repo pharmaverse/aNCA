@@ -72,7 +72,7 @@ general_lineplot <- function(
 
   # If there are predose records duplicate them in the previous line so they are considered
   if ("ARRLT" %in% names(preprocessed_data) &&
-        any(preprocessed_data$ARRLT < 0 && preprocessed_data$AFRLT > 0)) {
+        any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
 
     cycle_times <- preprocessed_data  %>%
       filter(preprocessed_data$ARRLT > 0, preprocessed_data$AFRLT > 0) %>%

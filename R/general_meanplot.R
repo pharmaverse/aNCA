@@ -47,7 +47,7 @@ general_meanplot <- function(data,
     mutate(groups = paste(STUDYID, ANALYTE, DOSNO, sep = ", ")) %>%
     group_by(id_variable, NRRLT) %>%
     mutate(
-      Mean = round(geometric.mean(AVAL, na.rm = TRUE), 3),
+      Mean = round(geometric_mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),
       N = n()
     ) %>%
