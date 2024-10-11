@@ -564,12 +564,29 @@ shinyUI(fluidPage(
 
              )
 
-            )
+            ),
 
+    # New TLG tab
+    tabPanel("TLG",
+      tabsetPanel(
+        tabPanel("Order details",
+          DTOutput("TLG_order"), 
+          actionButton("submit_TLG_order", "Submit Order Details")
+        ),
+        tabPanel("Tables",
+        # Content for Tables tab
+        ),
+        tabPanel("Listings",
+          # Content for Listings tab
+        ),
+        tabPanel("Graphs",
+          # Content for Graphs tab
+        )
+      )
+    )    
 
-
-    )
 
   )
 
+)
 )
