@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 aNCA.Rproj
+/docs/*
 inst/guidelines
 inst/templates
 inst/shiny/data
