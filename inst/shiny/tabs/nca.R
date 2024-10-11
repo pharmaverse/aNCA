@@ -1111,7 +1111,7 @@ observeEvent(event_data("plotly_click", priority = "event"), {
             is.included.hl = case_when(
               idx_pnt == firstclick_vals$idx_pnt ~ is.included.hl,
               USUBJID == patient &
-                OSNO == profile & IX %in% firstclick_vals$idx_pnt:idx_pnt ~ TRUE,
+                DOSNO == profile & IX %in% firstclick_vals$idx_pnt:idx_pnt ~ TRUE,
               TRUE ~ FALSE
             ),
             # If the user clicked two times the same point, do its exclusion
