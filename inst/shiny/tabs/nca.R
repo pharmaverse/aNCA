@@ -169,7 +169,7 @@ observeEvent(input$settings_upload, {
     select(TYPE, PATIENT, PROFILE, IXrange, REASON) %>%
     na.omit()
 
-  slope_manual_NCA_data(slope_manual_NCA_data)
+  slope_manual_nca_data(slope_manual_nca_data)
 })
 
 # Display the PKNCA data object for the user (concentration records)
@@ -503,7 +503,7 @@ output$local_download_NCAres <- downloadHandler(
     tempdir <- tempdir()  # create a temporary directory
     setwd(tempdir)  # change working directory to temporary directory
 
-    write.csv(finalresNCA(), file, row.names = FALSE)
+    write.csv(final_res_nca(), file, row.names = FALSE)
 
     setwd(old_wd)  # change working directory back to original
   }
@@ -864,7 +864,7 @@ handle_nca_excsel <- function() {
 
 
   # Eliminate all rows with conflicting or blank values
-  slope_manual_NCA_data(slope_manual_NCA_data  %>%
+  slope_manual_nca_data(slope_manual_nca_data  %>%
     filter(
       PATIENT %in% names(profiles_per_patient()),
       PROFILE %in% unname(unlist(profiles_per_patient()[PATIENT])),
@@ -881,24 +881,24 @@ handle_nca_excsel <- function() {
   )
 
   # Update the exclusion/selection data for Lambda based on the current exc/sel table
-  for (i in seq_len(nrow(slope_manual_NCA_data()))) {
+  for (i in seq_len(nrow(slope_manual_nca_data()))) {
     #
     #update inclusions
-    if (slope_manual_NCA_data()$TYPE[i] == "Selection") {
+    if (slope_manual_nca_data()$TYPE[i] == "Selection") {
       mydata$conc$data <- mydata$conc$data %>%
         mutate(
           is.included.hl = ifelse(
-            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
-              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
+            USUBJID == slope_manual_nca_data()$PATIENT[i] &
+              DOSNO == slope_manual_nca_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
             TRUE,
             is.included.hl
           ),
           REASON = ifelse(
-            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
-              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
-            slope_manual_NCA_data()$REASON[i],
+            USUBJID == slope_manual_nca_data()$PATIENT[i] &
+              DOSNO == slope_manual_nca_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
+            slope_manual_nca_data()$REASON[i],
             REASON
           )
         )
@@ -907,17 +907,17 @@ handle_nca_excsel <- function() {
       mydata$conc$data <- mydata$conc$data %>%
         mutate(
           is.excluded.hl = ifelse(
-            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
-              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
+            USUBJID == slope_manual_nca_data()$PATIENT[i] &
+              DOSNO == slope_manual_nca_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
             TRUE,
             is.excluded.hl
           ),
           REASON = ifelse(
-            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
-              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
-            slope_manual_NCA_data()$REASON[i],
+            USUBJID == slope_manual_nca_data()$PATIENT[i] &
+              DOSNO == slope_manual_nca_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
+            slope_manual_nca_data()$REASON[i],
             REASON
           )
         )
