@@ -928,7 +928,7 @@ handle_nca_excsel <- function() {
     mutate(
       exclude_half.life = {
         if (any(is.included.hl)) {
-          is.excluded.hl || !is.included.hl
+          is.excluded.hl | !is.included.hl
         } else {
           is.excluded.hl
         }
