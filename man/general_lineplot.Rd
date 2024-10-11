@@ -19,24 +19,31 @@ general_lineplot(
 
 \item{selected_analytes}{A character vector of selected analytes to be included in the plot.}
 
-\item{selected_usubjids}{A character vector of selected unique subject identifiers (USUBJIDs) to be included in the plot.}
+\item{selected_usubjids}{A character vector of selected unique subject identifiers (USUBJIDs)
+to be included in the plot.}
 
-\item{colorby_var}{A character string specifying the variable by which to color the lines in the plot.}
+\item{colorby_var}{A character string specifying the variable by which to color
+the lines in the plot.}
 
-\item{time_scale}{A character string specifying the time scale. Options are "By Cycle" or other values.}
+\item{time_scale}{A character string specifying the time scale.
+Options are "By Cycle" or other values.}
 
-\item{xaxis_scale}{A character string specifying the x-axis scale. Options are "Log" or other values.}
+\item{xaxis_scale}{A character string specifying the x-axis scale.
+Options are "Log" or other values.}
 
-\item{cycle}{A character string or numeric value specifying the cycle to filter by when \code{time_scale} is "By Cycle". Default is NULL.}
+\item{cycle}{A character string or numeric value specifying the cycle to filter by
+when \code{time_scale} is "By Cycle". Default is NULL.}
 }
 \value{
 A ggplot object representing the line plot of pharmacokinetic concentration over time.
 }
 \description{
-This function generates a line plot for an ADNCA dataset based on user-selected analytes, subjects, and other parameters. The plot can be customized to display data on a linear or logarithmic scale and can be filtered by cycle.
+This function generates a line plot for an ADNCA dataset based on user-selected analytes,
+subjects, and other parameters. The plot can be customized to display data on a linear or
+logarithmic scale and can be filtered by cycle.
 }
 \details{
-The function performs the following steps:
+The function performs the following steps:a
 \itemize{
 \item Filters the data based on the selected analytes and subjects.
 \item Selects relevant columns and removes rows with missing concentration values.

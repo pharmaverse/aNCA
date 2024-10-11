@@ -21,17 +21,23 @@ general_meanplot(
 
 \item{selected_analytes}{A character vector of selected analytes to be included in the plot.}
 
-\item{selected_cycles}{A character vector or numeric vector of selected cycles to be included in the plot.}
+\item{selected_cycles}{A character vector or numeric vector of selected cycles to be
+included in the plot.}
 
-\item{id_variable}{A character string specifying the variable by which to color the lines in the plot. Default is "DOSEA".}
+\item{id_variable}{A character string specifying the variable by which to color the lines
+in the plot. Default is "DOSEA".}
 
-\item{plot_ylog}{A logical value indicating whether to use a logarithmic scale for the y-axis. Default is FALSE.}
+\item{plot_ylog}{A logical value indicating whether to use a logarithmic scale for
+the y-axis. Default is FALSE.}
 
-\item{plot_sd}{A logical value indicating whether to include standard deviation error bars. Default is FALSE.}
+\item{plot_sd}{A logical value indicating whether to include standard deviation
+error bars. Default is FALSE.}
 }
 \value{
 A ggplot object representing the mean concentration plot.
 }
 \description{
-This function generates a mean concentration plot for an ADNCA dataset based on user-selected study IDs, analytes, and cycles. The plot can be customized to display data on a linear or logarithmic scale and can optionally include standard deviation error bars.
+This function generates a mean concentration plot for an ADNCA dataset based on user-selected
+study IDs, analytes, and cycles. The plot can be customized to display data on a linear or
+logarithmic scale and can optionally include standard deviation error bars.
 }

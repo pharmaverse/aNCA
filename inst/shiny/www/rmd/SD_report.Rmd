@@ -9,6 +9,7 @@ params:
 ## Setup
 
 ```{r setup, error = TRUE, warning=FALSE, message=FALSE}
+# nolint start
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -356,6 +357,6 @@ gg + aes(color = SEX)
 ```
 
 ```{r eval=FALSE, include=FALSE}
-
+# nolint end
 ```
 
