@@ -50,6 +50,9 @@ function(input, output, session) {
 
   source(system.file("shiny/tabs/outputs.R", package = "aNCA"), local = TRUE)
 
+  # TLG ----
+  
+  source(system.file("shiny/tabs/tlg.R", package = "aNCA"), local = TRUE)
 }
 
 #Testing git editing
