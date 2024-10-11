@@ -41,8 +41,18 @@ observeEvent(input$local_upload, {
       }
     )
 
-  # Make sure AVAL is numeric and TIME is derived from the first dose
+  # Disconsider events that do not contain drug information (i.e, Follow-up visits)
   ADNCA <- ADNCA %>%
+    filter(
+      if ("AVISIT" %in% names(ADNCA) & !all(is.na(AVISIT))) {
+        tolower(gsub("[^a-zA-Z]", "", AVISIT)) != "followup"
+      } else {
+        TRUE
+      }
+    )
+
+  # Make sure AVAL is numeric and TIME is derived from the first dose
+  ADNCA <- ADNCA  %>%
     mutate(
       AVAL = {
         if ("AVAL" %in% names(ADNCA)) {
@@ -61,6 +71,7 @@ observeEvent(input$local_upload, {
       NDOSEDUR = as.numeric(NDOSEDUR),
       ADOSEDUR = as.numeric(ADOSEDUR)
     )
+
   ADNCA(ADNCA)
 })
 

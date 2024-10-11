@@ -5,35 +5,36 @@
 #'
 #'@details Outputs are the following:
 #'  * pknca_result Output from function call `pk.nca()` (formatted)
-#'  * pknca_result_raw Output from function call `pk.nca()`
-#'    (needs to be merged with upper later on but now we avoid merge conflict)
+#'  * pknca_result_raw Output from function call `pk.nca()` (needs to be merged with upper later
+#'                      on but now we avoid merge conflict)
 #'
 #' @return A list with two data frames:
 #' \describe{
 #' \item{pp}{A data frame containing the PP (Pharmacokinetic Parameters) domain data.}
-#' \item{adpp}{
-#'     A data frame containing the ADPP (Analysis Dataset for
-#'     Pharmacokinetic Parameters) domain data.
-#'    }
+#' \item{adpp}{A data frame containing the ADPP (Analysis Dataset for Pharmacokinetic Parameters)
+#'            domain data.}
 #' }
 #'
 #'
 #' @import dplyr
 #' @export
+
+
 # Define the unique combinations
 pptestcd_dict <- setNames(
   c(
-    "Total CL Obs by F", "Time of Last Nonzero Conc", "Max Conc", "Vz Obs by F",
-    "AUC Infinity Obs", "Last Nonzero Conc", "Time of CMAX", "R Squared", "R Squared Adjusted",
-    "Max Conc Norm by Dose", "AUC to Last Nonzero Conc Norm by Dose", "Lambda z",
-    "AUC to Last Nonzero Conc", "Half-Life Lambda z", "Number of points used for Lambda z",
-    "Last Nonzero Conc Predicted", "Span Ratio", "Lambda z lower limit (time)"
+    "Total CL Obs by F", "Time of Last Nonzero Conc", "Max Conc", "Vz Obs by F", "AUC Infinity Obs",
+    "Last Nonzero Conc", "Time of CMAX", "R Squared", "R Squared Adjusted", "Max Conc Norm by Dose",
+    "AUC to Last Nonzero Conc Norm by Dose", "Lambda z", "AUC to Last Nonzero Conc",
+    "Half-Life Lambda z", "Number of points used for Lambda z", "Last Nonzero Conc Predicted",
+    "Span Ratio", "Lambda z lower limit (time)"
   ),
   c(
     "CLFO", "TLST", "CMAX", "VZFO", "AUCIFO", "CLST", "TMAX", "R2", "R2ADJ", "CMAXD", "AUCLSTD",
     "LAMZ", "AUCLST", "LAMZHL", "LAMZNPT", "CLSTP", "LAMZSPNR", "LAMZLL"
   )
 )
+
 
 export_cdisc <- function(res_nca) {
   if (FALSE) {
@@ -51,6 +52,9 @@ export_cdisc <- function(res_nca) {
         )
       )
   }
+
+
+
 
   # define columns needed for pp
   pp_col <- c(
@@ -111,19 +115,20 @@ export_cdisc <- function(res_nca) {
                 "AVALC",
                 "AVALU")
 
-  pp_info <- res_nca$result %>%
+
+  pp_info <- res_nca$result  %>%
     filter(is.infinite(end) | PPTESTCD == "auclast") %>%
     group_by(
       across(all_of(c(
         unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
       )))
-    ) %>%
+    )  %>%
     arrange(USUBJID, DOSNO, !is.na(PPORRES)) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) %>%
     ungroup() %>%
-    # mutate PPTESTCD to match metadata and recode the PPTESTCD
-    # to match the PPTESTCD in the PPTESTCD data frame
+    #  mutate PPTESTCD to match metadata and recode the PPTESTCD to
+    #  match the PPTESTCD in the PPTESTCD data frame
     mutate(
       PPTESTCD = recode(
         PPTESTCD %>% toupper,
@@ -133,12 +138,12 @@ export_cdisc <- function(res_nca) {
         "LAMBDA.Z" = "LAMZ",
         "R.SQUARED" = "R2",
         "ADJ.R.SQUARED" = "R2ADJ",
-        # This one does not exist right? I dont see its parameter use
+        # This one does not exist right? I don't see its parameter use
         "LAMBDA.Z.TIME.FIRST" = "LAMZLL",
-        "LAMBDA.Z.N.POINTS" = "LAMZNPT",  # The same with this one
+        "LAMBDA.Z.N.POINTS" = "LAMZNPT",        # The same with this one
         "CLAST.PRED" = "CLSTP",
         "HALF.LIFE" = "LAMZHL",
-        "SPAN.RATIO" = "LAMZSPNR",        # Is this code name correct/standard?
+        "SPAN.RATIO" = "LAMZSPNR",              # Is this code name correct/standard?
         "AUCINF.OBS" = "AUCIFO",
         "AUCINF.PRED" = "AUCIFP",
         "AUCPEXT.OBS" = "AUCPEO",
@@ -148,7 +153,7 @@ export_cdisc <- function(res_nca) {
       ),
       DOMAIN = "PP",
       # Group ID
-      PPGRPID = paste(ANALYTE, PCSPEC, paste("CYCLE", DOSNO, sep = " "), sep = "-"),
+      PPGRPID =  paste(ANALYTE, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
       # Parameter Cathegory
       PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
       PPSCAT = "NON-COMPARTMENTAL",
@@ -161,7 +166,7 @@ export_cdisc <- function(res_nca) {
       PPSTRESC = as.character(PPORRES),
       PPSTRESU = PPORRESU,
       # Status and Reason for Exclusion
-      PPSTAT = ifelse(is.na(PPORRES) | (PPORRES == 0 & PPTESTCD == "CMAX"), "NOT DONE", ""),
+      PPSTAT = ifelse(is.na(PPORRES) | (PPORRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
       PPREASND = case_when(
         !is.na(exclude) ~ exclude,
         is.na(PPORRES) ~ "Unespecified",
@@ -181,21 +186,22 @@ export_cdisc <- function(res_nca) {
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(end != Inf, start, NA),
       PPENINT = ifelse(end != Inf, end, NA)
-    ) %>%
+    )  %>%
     # Include PPTEST (PPTESTCD descriptions)
-    mutate(PPTEST = pptestcd_dict[PPTESTCD]) %>%
+    mutate(PPTEST = pptestcd_dict[PPTESTCD])  %>%
     # Make all numeric columns with 3 decimals
-    mutate(across(where(is.numeric), ~ signif(.x, 3))) %>%
-    group_by(USUBJID) %>%
-    mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number()) %>%
+    mutate(across(where(is.numeric), ~ signif(.x, 3)))  %>%
+    group_by(USUBJID)  %>%
+    mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
+
 
   # select pp columns
   pp <- pp_info %>%  select(all_of(pp_col))
 
   # Include subject metadata and select adpp columns
   adpp <- pp_info %>%
-    rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU) %>%
+    rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU)  %>%
     merge(
       res_nca$data$dose$data %>%
         select(any_of(c("USUBJID", setdiff(names(res_nca$data$dose$data), names(pp_info))))),
@@ -203,6 +209,7 @@ export_cdisc <- function(res_nca) {
       all.y = FALSE
     ) %>%
     select(any_of(adpp_col))
+
 
   return(list(pp = pp, adpp = adpp))
 }

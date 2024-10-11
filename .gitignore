@@ -7,3 +7,4 @@ inst/guidelines
 inst/templates
 inst/shiny/data
 !inst/shiny/data/DummyRO_ADNCA.csv
+.Rprofile

@@ -33,9 +33,12 @@ observeEvent(input$settings_upload, {
       type = "error"
     )
   }
-
   # Compare the dataset with settings for inclusions and exclusions
   new_data <- data() %>%
+    filter(
+      ANALYTE == analyte,
+      if ("EVID" %in% names(data())) EVID == 0 else TRUE
+    ) %>%
     mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
     filter(TIME >= 0) %>%
     arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
@@ -52,24 +55,22 @@ observeEvent(input$settings_upload, {
     anti_join(new_data, by = c("USUBJID", "DOSNO", "IX", "AVAL", "TIME"))
 
   if (nrow(mismatched_points) > 0) {
-    # Generate a detailed warning message
-    mismatched_details <- paste0(
-      "USUBJID: ", mismatched_points$USUBJID,
-      ", DOSNO: ", mismatched_points$DOSNO,
-      ", AVAL: ", mismatched_points$AVAL,
-      ", TIME: ", mismatched_points$TIME,
-      collapse = "\n"
-    )
-    warning_message <- paste(
-      "The following data points in the settings file do not match the uploaded dataset.
-      These points will be removed from inclusions and exclusions:\n", mismatched_details
-    )
+    showModal(modalDialog(
+      title = "Mismatched Data Points",
+      tags$h4("The following data points in the settings file do not match the uploaded dataset.
+              The slopes for these profiles will be reset to best slope:"),
+      DTOutput("mismatched_table"),
+      easyClose = TRUE,
+      footer = NULL
+    ))
 
-    showNotification(warning_message, type = "warning", duration = NULL)
+    output$mismatched_table <- DT::renderDT({
+      datatable(mismatched_points %>%
+                  select(-IX))
+    })
 
-    # Remove mismatched data points from inclusions and exclusions
-    setts_lambda <- setts_lambda %>%
-      anti_join(mismatched_points, by = c("USUBJID", "DOSNO", "IX"))
+    setts <- setts %>%
+      anti_join(mismatched_points, by = c("USUBJID", "DOSNO"))
   }
 
   # Analyte
@@ -91,14 +92,12 @@ observeEvent(input$settings_upload, {
   )
 
   # Extrapolation Method
-  method_choices <- c(
-    "Linear Log", "LinearUp LogDown", "Linear LinearInterpolation", "Linear LinearLogInterpolation"
-  )
+  method_choices <- c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation")
   updateSelectInput(
     session,
     inputId = "method",
     label = "Extrapolation Method:",
-    choices = c("lin-log", "lin up/log down", "linear", "Linear LinearLogInterpolation"),
+    choices = c("lin-log", "lin up/log down", "linear"),
     selected = setts$method
   )
 
@@ -163,13 +162,14 @@ observeEvent(input$settings_upload, {
 
   # Lambda slope point selections and exclusions
   slope_manual_nca_data <- setts %>%
-    select(TYPE, USUBJID, DOSNO, IX, REASON)  %>%
-    mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO))  %>%
-    group_by(TYPE, PATIENT, PROFILE, REASON)  %>%
-    summarise(IXrange = paste0(IX, collapse = ",")) %>%
-    select(TYPE, PATIENT, PROFILE, IXrange, REASON)
+    select(TYPE, USUBJID, DOSNO, IX, REASON) %>%
+    mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
+    group_by(TYPE, PATIENT, PROFILE, REASON) %>%
+    summarise(IXrange = paste0(min(IX), ":", max(IX))) %>%
+    select(TYPE, PATIENT, PROFILE, IXrange, REASON) %>%
+    na.omit()
 
-  slope_manual_nca_data(slope_manual_nca_data)
+  slope_manual_NCA_data(slope_manual_NCA_data)
 })
 
 # Display the PKNCA data object for the user (concentration records)
@@ -234,12 +234,14 @@ observe({
 })
 
 # Choose dosenumbers to be analyzed
-observeEvent(input$analyte, {
+
+observeEvent(input$submit_analyte, {
+  req(mydata())
   updateSelectInput(
     session,
     inputId = "cyclenca",
     label = "Choose the Dose Number:",
-    choices = unique(data() %>% filter(ANALYTE == input$analyte) %>% pull(DOSNO))
+    choices = unique(mydata()$conc$data  %>% filter(ANALYTE == input$analyte) %>% pull(DOSNO))
   )
 })
 
@@ -270,8 +272,7 @@ rv <- reactiveValues(trigger = 0)
 observeEvent(input$nca, {
   req(mydata())
   # If there are intervals defined, update the intervals_userinput reactive value
-  if (input$AUCoptions && AUC_counter() > 0) {
-
+  if (input$AUCoptions && auc_counter() > 0) {
     # Collect all inputs for the AUC intervals
     input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
     input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
@@ -281,7 +282,7 @@ observeEvent(input$nca, {
 
     # Define the intervals specified by the user
     intervals_userinput_data(
-      data.frame(start = auc_mins, end = auc_maxs) %>%
+      data.frame(start = AUC_mins, end = AUC_maxs) %>%
         arrange(start, end) %>%
         unique()
     )
@@ -291,14 +292,13 @@ observeEvent(input$nca, {
       filter(end == Inf) %>%
       group_by(STUDYID, ANALYTE, USUBJID, DOSNO) %>%
       slice(1) %>%
-      ungroup() %>%
+      ungroup()  %>%
       select(-start) %>%
       select(-end) %>%
       crossing(intervals_userinput_data()) %>%
-      # all dataframe columns equal false except aucint.last
-      # (without knowing the other column names)
+      # all dataframe columns equal false except
+      # aucint.last (without knowing the other column names)
       mutate(auclast = FALSE, aucint.last = TRUE, aucinf.obs = FALSE)
-
     # Return the output
     intervals_userinput(intervals_userinput)
   }
@@ -371,10 +371,6 @@ res_nca <- eventReactive(rv$trigger, {
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
 
-    # Access the result component
-    nca_results <- myres$result
-
-    # Optionally, view the entire results in a viewer (if using RStudio)
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
 
@@ -500,18 +496,14 @@ observeEvent(input$download, {
 
 output$local_download_NCAres <- downloadHandler(
   filename = function() {
-    paste0(mydata()$conc$data$STUDYID[1], "results.zip")
+    paste0(mydata()$conc$data$STUDYID[1], "PK_Parameters.csv")
   },
   content = function(file) {
     old_wd <- getwd()  # save old working directory
     tempdir <- tempdir()  # create a temporary directory
     setwd(tempdir)  # change working directory to temporary directory
 
-    csv <- "PK_Parameters.csv"
-    cdisc <- "cdisc"
-
-    write.csv(finalresults(), csv)
-    # HERE WE NEED TO WRITE ADPP AND ADPC FUNCTION TO WRITE CDISC FILES
+    write.csv(finalresNCA(), file, row.names = FALSE)
 
     setwd(old_wd)  # change working directory back to original
   }
@@ -531,11 +523,9 @@ output$settings_save <- downloadHandler(
     #for establishing the same configuration
     setts_lambda <- myconc$data %>%
       # Identify the points that the user has manually selected for the half-life calculation
-      mutate(TYPE = case_when(
-        is.excluded.hl ~ "Exclusion",
-        is.included.hl ~ "Inclusion",
-        TRUE ~ NA
-      )) %>%
+      mutate(
+        TYPE = case_when(is.excluded.hl ~ "Exclusion", is.included.hl ~ "Selection", TRUE ~ NA)
+      ) %>%
       filter(is.excluded.hl | is.included.hl)  %>%
       select(any_of(c(
         unname(unlist(myconc$columns$groups)),
@@ -836,10 +826,21 @@ observeEvent(input$remove_excsel, {
   }
 })
 
-# SERVER LOGIC: connecting exclusion and manula slope selection to rerun NCA function call
+
+# SERVER LOGIC: connecting exclusion and manual slope selection to rerun NCA function call
 
 # Save the exclusion/selection data to the server data and rerun the NCA results
-observeEvent(input$save_excsel, {
+handle_nca_excsel <- function() {
+
+  if (input$submit_analyte == 0) {
+    showNotification(
+      "Data issue: Please select an Analyte in the Data Selection tab",
+      duration = NULL,
+      closeButton = TRUE,
+      type = "error"
+    )
+    return(NULL)
+  }
   # Update the data in mydata() to reflect the changes in the exclusion/selection table
   mydata <- mydata()
 
@@ -853,7 +854,6 @@ observeEvent(input$save_excsel, {
 
     # Rerun the NCA with the modified data
     mydata(mydata)
-    rv$trigger <- rv$trigger + 1
 
     # Stop the observeEvent
     return()
@@ -862,59 +862,62 @@ observeEvent(input$save_excsel, {
   # Make previous rows values instead of input widgets
   slope_manual_nca_data <- update_slope_manual_nca_data(slope_manual_nca_data())
 
+
   # Eliminate all rows with conflicting or blank values
-  slope_manual_nca_data(
-    slope_manual_nca_data %>%
-      filter(
-        PATIENT %in% names(profiles_per_patient()),
-        PROFILE %in% unname(unlist(profiles_per_patient()[PATIENT])),
-        all(!is.na(sapply(IXrange, function(x) eval(parse(text = x))))) &
-          all(!is.null(sapply(IXrange, function(x) eval(parse(text = x))))),
-      )  %>%
-      # Eliminate duplicated records within the same profile
-      filter(
-        !duplicated(
-          paste0(PATIENT, PROFILE, IXrange, fromLast = TRUE),
-          !(duplicated(paste0(PATIENT, PROFILE), fromLast = TRUE))
-        )
+  slope_manual_NCA_data(slope_manual_NCA_data  %>%
+    filter(
+      PATIENT %in% names(profiles_per_patient()),
+      PROFILE %in% unname(unlist(profiles_per_patient()[PATIENT])),
+      all(!is.na(sapply(IXrange, function(x) eval(parse(text = x))))) &
+        all(!is.null(sapply(IXrange, function(x) eval(parse(text = x))))),
+    )  %>%
+    # Eliminate duplicated records within the same profile
+    filter(
+      !duplicated(
+        paste0(PATIENT, PROFILE, IXrange, fromLast = TRUE),
+        !(duplicated(paste0(PATIENT, PROFILE), fromLast = TRUE))
       )
+    )
   )
 
   # Update the exclusion/selection data for Lambda based on the current exc/sel table
-  for (i in seq_len(nrow(slope_manual_nca_data()))) {
-    if (slope_manual_nca_data()$TYPE[i] == "Selection") {
+  for (i in seq_len(nrow(slope_manual_NCA_data()))) {
+    #
+    #update inclusions
+    if (slope_manual_NCA_data()$TYPE[i] == "Selection") {
       mydata$conc$data <- mydata$conc$data %>%
         mutate(
           is.included.hl = ifelse(
-            USUBJID == slope_manual_nca_data()$PATIENT[i] &
-              DOSNO == slope_manual_nca_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
+            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
+              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
             TRUE,
             is.included.hl
           ),
           REASON = ifelse(
-            USUBJID == slope_manual_nca_data()$PATIENT[i] &
-              DOSNO == slope_manual_nca_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
-            slope_manual_nca_data()$REASON[i],
+            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
+              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
+            slope_manual_NCA_data()$REASON[i],
             REASON
           )
         )
     } else {
+      #update exclusions
       mydata$conc$data <- mydata$conc$data %>%
         mutate(
           is.excluded.hl = ifelse(
-            USUBJID == slope_manual_nca_data()$PATIENT[i] &
-              DOSNO == slope_manual_nca_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
+            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
+              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
             TRUE,
             is.excluded.hl
           ),
           REASON = ifelse(
-            USUBJID == slope_manual_nca_data()$PATIENT[i] &
-              DOSNO == slope_manual_nca_data()$PROFILE[i] &
-              IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
-            slope_manual_nca_data()$REASON[i],
+            USUBJID == slope_manual_NCA_data()$PATIENT[i] &
+              DOSNO == slope_manual_NCA_data()$PROFILE[i] &
+              IX %in% eval(parse(text = slope_manual_NCA_data()$IXrange[i])),
+            slope_manual_NCA_data()$REASON[i],
             REASON
           )
         )
@@ -934,7 +937,16 @@ observeEvent(input$save_excsel, {
 
   mydata(mydata)
 
-  # Rerun the NCA with the modified data
+}
+
+# Observe input$nca
+observeEvent(input$nca, {
+  handle_nca_excsel()
+})
+
+# Observe input$save_excsel
+observeEvent(input$save_excsel, {
+  handle_nca_excsel()
   rv$trigger <- rv$trigger + 1
 })
 

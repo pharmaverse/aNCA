@@ -90,6 +90,8 @@ output$individualplot <- renderPlotly({
     input$log,
     cycle = input$cycles
   )
+
+
 })
 # TAB: Mean Plot ---------------------------------------------------------------
 
@@ -134,15 +136,32 @@ output$meanplot <- renderPlotly({
   req(input$analytemean)
   req(input$cyclesmean)
 
-  general_meanplot(
-    data(),
-    input$studyidmean,
-    input$analytemean,
-    input$cyclesmean,
-    input$selectidvar,
-    input$logmeanplot,
-    input$sdmeanplot
-  ) %>%
+  validate(
+    need(
+      data() %>%
+        filter(
+          STUDYID %in% input$studyidmean,
+          ANALYTE %in% input$analytemean,
+          DOSNO %in% input$cyclesmean,
+          if ("EVID" %in% names(data)) EVID == 0 else TRUE,
+          NRRLT > 0
+        ) %>%
+        group_by(!!sym(input$selectidvar), NRRLT) %>%
+        summarise(N = n()) %>%
+        filter(N >= 3) %>%
+        nrow(.) > 0,
+      message = paste0("Data issue: No data with more than 3 points to calculate average based on
+                        nominal time (NRRLT) and selected variable: ", input$selectidvar)
+    )
+  )
+
+  general_meanplot(data = data(),
+                   selected_studyids = input$studyidmean,
+                   selected_analytes = input$analytemean,
+                   selected_cycles = input$cyclesmean,
+                   id_variable = input$selectidvar,
+                   plot_ylog = input$logmeanplot,
+                   plot_sd = input$sdmeanplot) %>%
     plotly_build()
 
 })
@@ -156,10 +175,10 @@ output$meanplot <- renderPlotly({
 
 # pickerInput to filter for parameters to display in the summary table
 output$summaryselect <- renderUI({
-  req(resNCA())
+  req(res_nca())
 
   # available parameters
-  paramselection <- unique(resNCA()$result$PPTESTCD)
+  paramselection <- unique(res_nca()$result$PPTESTCD)
   # select from available with all perselected
   pickerInput(
     "paramselect",
@@ -172,12 +191,12 @@ output$summaryselect <- renderUI({
 })
 
 # Update inputs based on what is avaialble in the data
-observeEvent(resNCA(), {
+observeEvent(res_nca(), {
   # Define the relevant columns for the groupby picker
-  group_cols <- unname(unlist(resNCA()$data$conc$columns$groups))
+  group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
   classification_cols <- sort(c("SEX", "RACE", "ACTARM", "AGE", "TRT01P", "TRT01A", "DOSEA"))
   classification_cols <- classification_cols[
-    classification_cols %in% names(resNCA()$data$conc$data)
+    classification_cols %in% names(res_nca()$data$conc$data)
   ]
 
   # update the input for the groupby picker
@@ -189,7 +208,7 @@ summary_stats <- reactive({
   req(input$summarygroupby, input$paramselect)
 
   # Calculate summary stats and filter by selected parameters
-  calculate_summary_stats(resNCA(), input$summarygroupby) %>%
+  calculate_summary_stats(res_nca(), input$summarygroupby) %>%
     filter(PPTESTCD %in% input$paramselect)  %>%
     rename(PARAM = PPTESTCD)
 })
@@ -208,9 +227,9 @@ output$descriptivestats <- DT::renderDataTable({
 })
 
 output$descriptivestats2 <- DT::renderDataTable({
-  req(resNCA())
+  req(res_nca())
   DT::datatable(
-    data = calculate_summary_stats(resNCA())  %>% rename(PARAM = PPTESTCD),
+    data = calculate_summary_stats(res_nca())  %>% rename(PARAM = PPTESTCD),
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
@@ -329,65 +348,87 @@ output$norm_concovertimesemilog <- renderPlotly({
 
 # Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
 boxplotdata <- reactive({
-  group_columns <- unname(unlist(resNCA()$data$conc$columns$groups))
+  group_columns <- unname(unlist(res_nca()$data$conc$columns$groups))
 
   left_join(
-    resNCA()$result,
-    resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), .keep_all = TRUE),
+    res_nca()$result %>%
+      filter(
+        end == Inf | startsWith(PPTESTCD, "aucint")
+      ),
+    res_nca()$data$conc$data %>%
+      distinct(across(all_of(group_columns)), .keep_all = TRUE),
     by = group_columns,
     keep = FALSE
-  )
+  ) %>%
+    # Intervals should also be considered as differentiated options each
+    mutate(
+      PPTESTCD = ifelse(
+        startsWith(PPTESTCD, "aucint"),
+        paste0(PPTESTCD, "_", start, "-", end),
+        PPTESTCD
+      )
+    )
 })
 
 # select which parameter to box or violin plot
 output$selectboxplot <- renderUI({
   param_choices <- boxplotdata()$PPTESTCD %>% unique()
 
-  pickerInput(
-    "boxplotparam",
-    "Choose the parameter to display:",
-    choices = param_choices,
-    selected = param_choices[1],
-    multiple = FALSE,
-    options = list(`actions-box` = TRUE)
-  )
+  pickerInput("selected_param_boxplot", "Choose the parameter to display:",
+              choices = param_choices,
+              selected = param_choices[1],
+              multiple = FALSE,
+              options = list(`actions-box` = TRUE))
 
 })
 
-# filter for dose amounts to display in the boxplot
-output$display_dose_boxplot <- renderUI({
-  param_choices <- sort(unique(boxplotdata()$DOSEA))
 
-  # filter for DOSEA with more than one observation
-  preselected_choices <- boxplotdata() %>%
-    group_by(DOSEA) %>%
-    summarise(n = n()) %>%
-    filter(n > 1) %>%
-    pull(DOSEA)
+
+
+# Selector for the variables to segregate boxplots in the x axis
+output$select_xvars_boxplot <- renderUI({
 
   pickerInput(
-    "display_dose_boxplot",
-    "Choose the doses amounts to display",
-    choices = param_choices,
-    selected = preselected_choices,
+    inputId = "selected_xvars_boxplot",
+    label = "Select X grouping variables",
     multiple = TRUE,
-    options = list(`actions-box` = TRUE)
+    choices = intersect(names(boxplotdata()), names(data())),
+    selected = "DOSEA"
   )
 })
 
-# filter for dose numbers to display in the boxplot
-output$display_dosenumber_boxplot <- renderUI({
-  # deselect choices that are no pp parameters
-  param_choices <- sort(unique(boxplotdata()$DOSNO))
+
+output$select_colorvars_boxplot <- renderUI({
   pickerInput(
-    "display_dosenumber_boxplot",
-    "Choose the dose numbers to display",
-    choices = param_choices,
-    selected = param_choices,
+    inputId = "selected_colorvars_boxplot",
+    label = "Select coloring variables to differentiate boxplots",
     multiple = TRUE,
-    options = list(`actions-box` = TRUE)
+    choices = intersect(names(boxplotdata()), names(data())),
+    selected = "DOSNO"
   )
 })
+
+
+observeEvent(list(input$selected_xvars_boxplot, input$selected_colorvars_boxplot), {
+  xvar_options_list <- lapply(
+    c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot),
+    \(id_var) paste(id_var, unique(boxplotdata()[[id_var]]), sep = ": ")
+  )
+
+  names(xvar_options_list) <- c(
+    input$selected_xvars_boxplot,
+    input$selected_colorvars_boxplot
+  )
+
+  updatePickerInput(
+    session = session,
+    inputId = "selected_varvalstofilter_boxplot",
+    label = "Select values to display for grouping",
+    choices = xvar_options_list,
+    selected = unlist(xvar_options_list)
+  )
+})
+
 
 # toggle between boxplot and violinplot
 output$violin_toggle <- renderUI({
@@ -401,19 +442,24 @@ output$violin_toggle <- renderUI({
 })
 
 # compute the boxplot
-output$boxplot <- renderPlot({
+output$boxplot <- renderPlotly({
+
   req(boxplotdata())
-  req(input$boxplotparam)
-  req(input$display_dose_boxplot)
-  req(input$display_dosenumber_boxplot)
+  req(input$selected_param_boxplot)
+  req(input$selected_xvars_boxplot)
+  req(input$selected_colorvars_boxplot)
+  req(input$selected_varvalstofilter_boxplot)
 
   flexible_violinboxplot(
-    boxplotdata(),
-    input$boxplotparam,
-    input$display_dose_boxplot,
-    input$display_dosenumber_boxplot,
-    input$violinplot_toggle_switch
+    boxplotdata = boxplotdata(),
+    parameter = input$selected_param_boxplot,
+    xvars = input$selected_xvars_boxplot,
+    colorvars = input$selected_colorvars_boxplot,
+    varvalstofilter = input$selected_varvalstofilter_boxplot,
+    columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
+    box = input$violinplot_toggle_switch
   )
+
 })
 # CDISC ------------------------------------------------------------------------
 
@@ -426,7 +472,7 @@ output$exportCDISC <- downloadHandler(
     # Create a temporary directory to store the CSV files
     temp_dir <- tempdir()
 
-    CDISC <- export_cdisc(resNCA())
+    CDISC <- export_cdisc(res_nca())
     # Export the list of data frames to CSV files in the temporary directory
     file_paths <- rio::export_list(
       x = CDISC,
@@ -447,7 +493,7 @@ output$exportCDISC <- downloadHandler(
 
 # concat all dataframes into one object
 concat_report_data <- reactive({
-  data <- resNCA()
+  data <- res_nca()
   data$formatted_res <- boxplotdata()
   data
 })
@@ -458,7 +504,7 @@ rendered_rmd <- reactiveVal(NULL)
 observeEvent(input$generate_report, {
   # specifying the temp location, params and report to be rendered
   output_file <- file.path(tempdir(), "report.html")
-  params <- list(resNCA = concat_report_data())
+  params <- list(res_nca = concat_report_data())
   report_path <- system.file(
     paste0("shiny/www/rmd/", input$report_studytype, "_report.Rmd"),
     package = "aNCA"

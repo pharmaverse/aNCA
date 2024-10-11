@@ -31,59 +31,57 @@ general_meanplot <- function(data,
                              plot_ylog = FALSE,
                              plot_sd = FALSE) {
 
+
   # preprocess the data by summarising
   preprocessed_data <- data %>%
     filter(
-      STUDYID == selected_studyids,
-      ANALYTE == selected_analytes,
-      DOSNO == selected_cycles,
-      if ("EVID" %in% names(data)) EVID == 0 else TRUE
+      STUDYID %in% selected_studyids,
+      ANALYTE %in% selected_analytes,
+      DOSNO %in% selected_cycles,
+      if ("EVID" %in% names(data)) EVID == 0 else TRUE,
+      NRRLT > 0
     ) %>%
     # rename(id_variable = id_variable) %>%
     mutate(id_variable = as.factor(!!sym(id_variable))) %>%
+    # Create a groups variables for the labels
+    mutate(groups = paste(STUDYID, ANALYTE, DOSNO, sep = ", ")) %>%
     group_by(id_variable, NRRLT) %>%
-    summarise(
-      Mean = geometric_mean(AVAL, na.rm = TRUE),
+    mutate(
+      Mean = round(geometric.mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),
       N = n()
     ) %>%
+    select(where(~n_distinct(.) == 1), Mean, SD, N) %>%
+    slice(1) %>%
+    # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
 
-  # filter for log scaling
+  # filter for log scaling y values that equal 0
   if (plot_ylog) {
-    preprocessed_data <- preprocessed_data %>% filter(NRRLT > 0, Mean != 0)
+    preprocessed_data <- preprocessed_data %>% filter(Mean != 0)
   }
-
-  # create the plot labels
-  labels_data <- data %>%
-    filter(
-      STUDYID == selected_studyids,
-      ANALYTE == selected_analytes,
-      DOSNO == selected_cycles
-    )
-
-  time_label <- paste0("Nominal Time [", unique(labels_data$RRLTU), "]")
-  conc_units <- paste0(unique(labels_data$AVALU))
-  dose_units <- paste0(unique(labels_data$DOSEU))
-  conc_label <- paste0(
-    "Mean", unique(labels_data$ANALYTE), "Concentration [", conc_units, "/", dose_units, "]"
-  )
 
   # plot the preprocess data
   p <- ggplot(data = preprocessed_data, aes(x = NRRLT, y = Mean), group = id_variable) +
     geom_line(aes(colour = id_variable)) +
     geom_point(aes(colour = id_variable)) +
-    labs(title = paste(
-      unique(labels_data$STUDYID),
-      unique(labels_data$ANALYTE),
-      "Profile: ",
-      unique(labels_data$DOSNO)
-    ),
-    x = time_label,
-    y = conc_label,
-    color = id_variable) +
+    facet_wrap(~groups,
+               strip.position = "top") +
+    labs(
+      x = paste0("Nominal Time [", preprocessed_data$RRLTU[1], "]"),
+      y = paste0(
+        "Mean concentration", " [", paste(unique(preprocessed_data$AVALU), collapse = ","), "]"
+      ),
+      color = id_variable
+    ) +
     theme_bw() +
-    theme(axis.title = element_text())
+    theme(legend.position = "right",
+          panel.spacing = unit(1, "lines"),
+          strip.text = element_text(size = 8),
+          strip.background = element_rect(fill = "grey90", color = "grey50"),
+          plot.margin = margin(10, 10, 10, 10, "pt"))
+
+  ggplotly(p)
 
   # add log scale
   if (plot_ylog) {
@@ -111,3 +109,9 @@ geometric_mean <- function(x, na.rm = FALSE) { # nolint
   }
   exp(mean(log(x)))
 }
+
+#' Derived function from labeller label_both: Labels in one line
+#'
+#' @param x Column names as character vector
+#' @return Corresponding labels of the facet plots split by the specified colimns (labels)
+#' @export

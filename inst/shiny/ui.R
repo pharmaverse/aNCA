@@ -4,8 +4,7 @@ shinyUI(fluidPage(
   tags$script("
     Shiny.addCustomMessageHandler('update', function(value) {
     Shiny.setInputValue('update', value);
-    });
-  "),
+    }); "),
 
   tags$script("
     Shiny.addCustomMessageHandler('increment', function(value) {
