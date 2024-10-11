@@ -145,6 +145,8 @@ lambda_slope_plot <- function(
     ) %>%
     as.data.frame()
 
+  print(plot_data)
+
 
   # Generate the base scatter ggplot
   p <- plot_data %>%
@@ -207,11 +209,11 @@ lambda_slope_plot <- function(
       height = 600
     ) %>%
     config(mathjax = "cdn")  %>%
-    style(hovertext = paste0("Data Point: ", IX), hoverinfo = "none", traces = 1) %>%
-    style(hovertext = paste0("Data Point: ", IX), hoverinfo = "none", traces = 2) %>%
-    style(hovertext = paste0("Data Point: ", IX), hoverinfo = "none", traces = 3) %>%
-    style(hovertext = paste0("Data Point: ", IX), hoverinfo = "none", traces = 4) %>%
-    style(hovertext = paste0("Data Point: ", IX), hoverinfo = "none", traces = 5) %>%
+    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 1) %>%
+    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 2) %>%
+    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 3) %>%
+    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 4) %>%
+    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 5) %>%
     # Make this trace the only one
     add_trace(
       data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid),
