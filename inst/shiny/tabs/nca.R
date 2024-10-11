@@ -116,8 +116,8 @@ observeEvent(input$settings_upload, {
         where = "beforeEnd",
         ui = partial_auc_input(
           id = paste0("AUC_", auc_counter()),
-          min_sel_value = as.numeric(AUC_mins[i]),
-          max_sel_value = as.numeric(AUC_maxs[i])
+          min_sel_value = as.numeric(auc_mins[i]),
+          max_sel_value = as.numeric(auc_maxs[i])
         )
       )
     }
@@ -282,7 +282,7 @@ observeEvent(input$nca, {
 
     # Define the intervals specified by the user
     intervals_userinput_data(
-      data.frame(start = AUC_mins, end = AUC_maxs) %>%
+      data.frame(start = auc_mins, end = auc_maxs) %>%
         arrange(start, end) %>%
         unique()
     )
@@ -570,8 +570,8 @@ output$settings_save <- downloadHandler(
         span.ratio_threshold = ifelse(
           input$rule_span.ratio, input$span.ratio_threshold, NA
         ),
-        AUC_mins = if (is.null(AUC_mins)) NA else paste(AUC_mins, collapse = ","),
-        AUC_maxs = if (is.null(AUC_maxs)) NA else paste(AUC_maxs, collapse = ",")
+        auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
+        auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
       )
 
     write.csv(setts, file, row.names = FALSE)
