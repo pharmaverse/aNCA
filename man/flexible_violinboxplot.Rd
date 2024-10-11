@@ -5,29 +5,34 @@
 \title{Flexible Violin/Box Plot}
 \usage{
 flexible_violinboxplot(
-  result_data,
+  boxplotdata,
   parameter,
-  doses_included,
-  dosenumber_included,
+  xvars,
+  colorvars,
+  varvalstofilter,
+  columns_to_hover,
   box = TRUE
 )
 }
 \arguments{
+\item{parameter}{A string specifying the parameter to be plotted.}
+
+\item{columns_to_hover}{A character vector indicating the column names from result_data that
+should be used to identify when hovering the plotly outputs}
+
+\item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or a
+violin plot (\code{FALSE}). Default is \code{TRUE}.}
+
 \item{result_data}{A list containing the data to be plotted. It should have a \code{data}
 element with dose information and a \code{formatted} element with the
 data to be plotted.}
 
-\item{parameter}{A string specifying the parameter to be plotted.}
-
 \item{doses_included}{A vector of doses to be included in the plot.}
 
 \item{dosenumber_included}{A vector of dose numbers to be included in the plot.}
-
-\item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or
-a violin plot (\code{FALSE}). Default is \code{TRUE}.}
 }
 \value{
-A ggplot object representing the violin or box plot.
+A plotly object representing the violin or box plot.
 }
 \description{
 This function generates a  violin or box plot based on the provided data,
