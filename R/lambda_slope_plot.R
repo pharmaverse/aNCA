@@ -145,9 +145,6 @@ lambda_slope_plot <- function(
     ) %>%
     as.data.frame()
 
-  print(plot_data)
-
-
   # Generate the base scatter ggplot
   p <- plot_data %>%
     ggplot(aes(x = TIME, y = AVAL)) +

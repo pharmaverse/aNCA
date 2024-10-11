@@ -540,10 +540,18 @@ shinyUI(fluidPage(
             tabPanel(
               "Box Plots",
               uiOutput("selectboxplot"),
-              uiOutput("display_dose_boxplot"),
-              uiOutput("display_dosenumber_boxplot"),
+              uiOutput("select_xvars_boxplot"),
+              uiOutput("select_colorvars_boxplot"),
+              pickerInput(
+                inputId = "selected_varvalstofilter_boxplot",
+                label = "Select values to display",
+                multiple = TRUE,
+                choices = NULL,
+                selected = NULL,
+                options = list(`actions-box` = TRUE)
+              ),
               uiOutput("violin_toggle"),
-              plotOutput("boxplot")
+              plotlyOutput("boxplot")
             )
           )
         ),

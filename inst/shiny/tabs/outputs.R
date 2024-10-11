@@ -443,7 +443,6 @@ output$violin_toggle <- renderUI({
 
 # compute the boxplot
 output$boxplot <- renderPlotly({
-
   req(boxplotdata())
   req(input$selected_param_boxplot)
   req(input$selected_xvars_boxplot)
@@ -459,8 +458,8 @@ output$boxplot <- renderPlotly({
     columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
     box = input$violinplot_toggle_switch
   )
-
 })
+
 # CDISC ------------------------------------------------------------------------
 
 # export pp and adpp as zip file
