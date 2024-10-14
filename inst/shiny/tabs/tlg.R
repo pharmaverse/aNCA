@@ -1,87 +1,116 @@
 # SERVER LOGIC OF NAVBAR TLG TAB ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Order details: Input definition for Tables, Listings and Graphs to generate
+# Order details: Input definition for Tables, Listings and Graphs to generate in the other tabs
 # Tables:
 # Listings:
-# Graps:
+# Graphs:
 
-# TABSET: General Individual Plots =============================================
-#
-# Order details: Displays specifications file for the TLGs and allows user to inspect and their details and make certain changes
+# TABSET: Order details =============================================
 
-
-# Make available the file defined in UI DTOutput("TLG_order_details"), an editable table with certain columns not editable 
-TLG_order <- reactiveVal(
-  # Read the excel file
-  read.csv("www/data/TLG_order_details.csv")  
+# Make available the CSV file with the TLG list
+tlg_order <- reactiveVal(
+  read.csv("www/data/TLG_order_details.csv")
 )
 
-output$TLG_order <- DT::renderDT({
-  
+# Render the TLG list for the user's inspection
+output$tlg_order <- DT::renderDT({
+
   # Load reactive value and include link to the TLG reference
-  TLG_order <- TLG_order() %>% 
-    mutate(PKid = paste0("<a href='", Catalog_Link, "'>", PKid, "</a>"))
-  
-  # Generate a color palette based on those
-  colors <- colorRampPalette(c("#f8fbfd", '#f9f8fd', '#f2f3ff', '#fbf3ff'))(length(unique(TLG_order$type)))
+  tlg_order_data <- tlg_order() %>% 
+    mutate(PKid = paste0("<a href='{Catalog_Link}'>", PKid, "</a>"))
   
   # Render the editable DT table
-  datatable(data = TLG_order, 
-            editable = T, 
-            rownames = T,
-            escape = F,
-            extensions = c('Select', 'RowGroup'),
-            options = list(
-              paging = F,  # Disable pagination
-              autoWidth = T,
-              dom = 't',  # Hide length menu
-              columnDefs = list(
-                list(width = '150px', targets = '_all'),
-                list(className = 'dt-center', targets = '_all'),
-                list(targets = 0, orderable = F, className = "select-checkbox"),
-                list(visible = F, 
-                     targets = which(names(TLG_order) %in% c("row_group", "Selection", "Catalog_Link")))  # Hide the row_group and Selection columns
-              ),
-              select = list(
-                style = "os", 
-                selector = "td:first-child",  # Only select by the first cell (checkbox)
-                selected = which(as.logical(TLG_order$Selection))
-              ),
-              rowGroup = list(dataSrc = which(names(TLG_order) %in% c('Type', 'Dataset')))
-            ),
-            class = 'table table-striped table-bordered'
+  datatable(
+    data = tlg_order_data, 
+    editable = TRUE, 
+    rownames = TRUE,
+    escape = FALSE,
+    
+    # Server/Client processing of selected rows
+    selection = list(
+      mode = 'multiple',
+      selected = which(as.logical(tlg_order_data$Selection))
+    ),
+    extensions = c("RowGroup", "Select"),
+    options = list(
+      paging = FALSE,  # Disable pagination
+      autoWidth = TRUE,
+      dom = "t",  
+      
+      # Columns to hide from the user / UI
+      columnDefs = list(
+        list(width = "150px", targets = "_all"),
+        list(className = "dt-center", targets = "_all"),
+        list(targets = 0, orderable = FALSE, className = "select-checkbox"),
+        list(visible = FALSE, 
+             targets = which(names(tlg_order_data) %in% c("row_group", "Selection", "Catalog_Link")))  # Hide the row_group and Selection columns
+      ),
+      
+      # Aesthetics to create a checkbox column for selected rows
+      select = list(
+        style = 'multiple',
+        selector = 'td:first-child',
+        selection = 'none',
+        server = F
+      ),
+      
+      # Aesthetics to define the row distribution in groups (Tables, Listing, Graphs)
+      rowGroup = list(dataSrc = which(names(tlg_order_data) %in% c("Type", "Dataset")))
+    ),
+    class = "table table-striped table-bordered"
   ) %>% 
+    # Aesthetics for the font
     formatStyle(
-      columns = colnames(TLG_order),
-      fontSize = '14px',
-      fontFamily = 'Arial'
+      columns = colnames(tlg_order_data),
+      fontSize = "14px",
+      fontFamily = "Arial"
     ) 
-})
+}, server = F)
 
 # Save table changes from the UI into the server
-observeEvent(input$TLG_order_cell_edit, {
-  info <- input$TLG_order_cell_edit
+observeEvent(input$tlg_order_cell_edit, {
+  info <- input$tlg_order_cell_edit
   
   # Update the reactive data frame with the new value
-  TLG_order <- TLG_order() 
-  TLG_order[info$row, (info$col + 1)] <- info$value
-  TLG_order(TLG_order)
+  tlg_order_data <- tlg_order() 
+  tlg_order_data[info$row, info$col] <- info$value
+  tlg_order(tlg_order_data)
 })
 
-# When the user submits the TLG order...
-observeEvent(input$submit_TLG_order, {
 
+# Based on the TLG list conditions for data() define the preselected rows in $Selection 
+observeEvent(data(), {
+  req(data())
+  req(tlg_order())
+
+  # Take the column name to later test if it is present in the data
+  column_of_conditions = gsub("([=<>!].*)", "", tlg_order()$Condition)
+  
+  # If there is any condition assess if it is true at least for one case
+  tlg_order = tlg_order() %>% 
+    mutate(
+      Selection = case_when(
+        Condition=='' | is.na(Condition) ~ Selection,
+        ! column_of_conditions %in% names(data()) ~ F,
+        sum(eval(parse(text=Condition), envir=data())) > 0 ~ T,
+        T ~ F
+      )
+    )
+  
+  # Based on the data return a new preselected set of TLGs
+  tlg_order(tlg_order)
+})
+
+
+# When the user submits the TLG order...
+observeEvent(input$submit_tlg_order, {
+  
   # Filter only the rows requested by the user
-  TLG_order = TLG_order()[input$TLG_order_rows_selected,]
+  tlg_order_filt <- tlg_order()[input$tlg_order_rows_selected, ]
+  print(tlg_order_filt)
   
-  ## FOR LOOOP OR LAPPLY
-  print(TLG_order)
- 
   # Take each TLG function 
-  # func <- get(TLG_order[i, 'PKid'])
-  
-  ## ANOTHER LOOP 
-  
+  # func <- get(tlg_order_filt[i, "PKid"])
   # Apply each function over each group set of records
   
 })

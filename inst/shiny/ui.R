@@ -570,8 +570,8 @@ shinyUI(fluidPage(
     tabPanel("TLG",
       tabsetPanel(
         tabPanel("Order details",
-          DTOutput("TLG_order"), 
-          actionButton("submit_TLG_order", "Submit Order Details")
+          DTOutput("tlg_order"), 
+          actionButton("submit_tlg_order", "Submit Order Details")
         ),
         tabPanel("Tables",
         # Content for Tables tab
