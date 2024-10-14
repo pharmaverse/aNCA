@@ -31,25 +31,23 @@
 #'
 #' @import shiny
 #' @export
-create_filter <- function(filter_id, dataset) {
-  tags$div(
-    id = filter_id,
-    tags$hr(),
-    selectInput(
-      paste0(filter_id, "_column"),
-      "Select Column:",
-      choices = colnames(dataset)
+
+#create filters function
+create_filter <- function(filter_id, dataset) {  
+  tags$div(  
+    id = filter_id,  
+    tags$hr(),  
+    fluidRow(
+      column(5, selectInput(paste0(filter_id, "_column"), "Column:", choices = colnames(dataset))),
+      column(3, selectInput(paste0(filter_id, "_condition"), "cond.", choices = c("==", ">", "<", ">=", "<="))),
+      column(4, textInput(paste0(filter_id, "_value"), "Value:"))
     ),
-    selectInput(
-      paste0(filter_id, "_condition"),
-      "Condition:",
-      choices = c("==", ">", "<", ">=", "<=")
-    ),
-    textInput(paste0(filter_id, "_value"), "Value:"),
-    actionButton(paste0(filter_id, "_confirm"), "Submit"),
-    actionButton(paste0(filter_id, "_remove"), "Remove Filter")
-  )
-}
+    fluidRow(
+      column(4, actionButton(paste0(filter_id, "_confirm"), "Submit")),
+      column(4,  actionButton(paste0(filter_id, "_remove"), "Remove Filter"))
+    )
+  )  
+}   
 
 #' Apply Filters to a Dataset
 #'
