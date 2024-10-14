@@ -225,7 +225,7 @@ lambda_slope_plot <- function(
         plot_data$is.excluded.hl ~ "red",
         plot_data$IX %in% lambda_z_ix_rows$IX ~ "green",
         TRUE ~ "black"
-      ), size = 12, opacity = 1),  # Make points semi-transparent
+      ), size = 15, opacity = 0),  # Make points semi-transparent
       showlegend = FALSE  # Don't show this trace in the legend
     )
 
