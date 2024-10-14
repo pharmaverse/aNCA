@@ -34,8 +34,9 @@ output$tlg_order <- DT::renderDT({
     extensions = c("RowGroup", "Select"),
     options = list(
       paging = FALSE,  # Disable pagination
+      searching = TRUE,
       autoWidth = TRUE,
-      dom = "t",  
+      dom = "ft",  
       
       # Columns to hide from the user / UI
       columnDefs = list(
