@@ -17,7 +17,7 @@ output$tlg_order <- DT::renderDT({
 
   # Load reactive value and include link to the TLG reference
   tlg_order_data <- tlg_order() %>% 
-    mutate(PKid = paste0("<a href='{Catalog_Link}'>", PKid, "</a>"))
+    mutate(PKid = paste0("<a href='", Catalog_Link, "'>", PKid, "</a>"))
   
   # Render the editable DT table
   datatable(
