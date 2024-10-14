@@ -13,7 +13,9 @@ flexible_violinboxplot(
 )
 }
 \arguments{
-\item{result_data}{A list containing the data to be plotted. It should have a \code{data} element with dose information and a \code{formatted} element with the data to be plotted.}
+\item{result_data}{A list containing the data to be plotted. It should have a \code{data}
+element with dose information and a \code{formatted} element with the
+data to be plotted.}
 
 \item{parameter}{A string specifying the parameter to be plotted.}
 
@@ -21,11 +23,13 @@ flexible_violinboxplot(
 
 \item{dosenumber_included}{A vector of dose numbers to be included in the plot.}
 
-\item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or a violin plot (\code{FALSE}). Default is \code{TRUE}.}
+\item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or
+a violin plot (\code{FALSE}). Default is \code{TRUE}.}
 }
 \value{
 A ggplot object representing the violin or box plot.
 }
 \description{
-This function generates a  violin or box plot based on the provided data, parameter, and dose information.
+This function generates a  violin or box plot based on the provided data,
+parameter, and dose information.
 }

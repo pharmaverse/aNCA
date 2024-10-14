@@ -9,16 +9,19 @@ apply_filters(raw_data, filters)
 \arguments{
 \item{raw_data}{A data frame containing the raw data to be filtered.}
 
-\item{filters}{A list of filters, where each filter is a list containing the column, condition, and value.}
+\item{filters}{A list of filters, where each filter is a list containing
+the column, condition, and value.}
 }
 \value{
 A data frame containing the filtered data.
 }
 \description{
-This function applies a set of filters to a dataset. Each filter specifies a column, condition, and value to filter the dataset.
+This function applies a set of filters to a dataset. Each filter specifies a column,
+condition, and value to filter the dataset.
 }
 \details{
-The function iterates over the list of filters and applies each filter to the dataset. The supported conditions are \code{==}, \code{>}, \code{<}, \code{>=}, and \code{<=}.
+The function iterates over the list of filters and applies each filter to the dataset.
+The supported conditions are \code{==}, \code{>}, \code{<}, \code{>=}, and \code{<=}.
 }
 \examples{
 \dontrun{
