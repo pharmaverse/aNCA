@@ -50,9 +50,10 @@ git clone https://<your-token>@github.com/pharmaverse/aNCA.git
 ### 3. Install the package
 
 
-Next make sure you have a package development environment set up. If not, install the `devtools` or a similar package:
+Next make sure you have a package development environment set up. If not, install the `devtools` or a similar package (if it does not work, please use R version 4.3.3):
 
 ```r
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
 install.packages("devtools")
 ```
 
@@ -72,6 +73,7 @@ Once correctly installed, the aNCA app can be simply run with the following two 
 
 ```r
 library(aNCA)
+devtools::load_all()
 aNCA::run_app()
 ```
 
