@@ -11,7 +11,8 @@ create_conc(ADNCA, analyte, proftype)
 
 \item{analyte}{A character string specifying the analyte of interest.}
 
-\item{proftype}{A character string specifying the profile type (not used in the function but kept for consistency).}
+\item{proftype}{A character string specifying the profile type
+(not used in the function but kept for consistency).}
 }
 \value{
 A data frame containing the filtered and processed concentration data.

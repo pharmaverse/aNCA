@@ -18,11 +18,14 @@ output$generalplot_analyte <- renderUI({
     pull(ANALYTE) %>%
     unique()
 
-  pickerInput("generalplot_analyte", "Select Analyte:",
-              choices = param_choices,
-              selected = param_choices[1],
-              multiple = FALSE,
-              options = list(`actions-box` = TRUE))
+  pickerInput(
+    "generalplot_analyte",
+    "Select Analyte:",
+    choices = param_choices,
+    selected = param_choices[1],
+    multiple = FALSE,
+    options = list(`actions-box` = TRUE)
+  )
 
 })
 
@@ -33,29 +36,35 @@ output$generalplot_usubjid <- renderUI({
     pull(USUBJID) %>%
     unique()
 
-  pickerInput("generalplot_usubjid", "Select Subjects:",
-              choices = param_choices,
-              selected = param_choices[1],
-              multiple = TRUE,
-              options = list(`actions-box` = TRUE))
+  pickerInput(
+    "generalplot_usubjid",
+    "Select Subjects:",
+    choices = param_choices,
+    selected = param_choices[1],
+    multiple = TRUE,
+    options = list(`actions-box` = TRUE)
+  )
 })
 
 # select which variable to color the general lineplot by
 output$generalplot_colorby <- renderUI({
   # deselect choices that are no pp parameters
   param_choices <- c("STUDYID", "PCSPEC", "ANALYTE", "USUBJID", "DOSEA", "DOSNO")
-  pickerInput("generalplot_colorby", "Choose the variables to color by",
-              choices = param_choices,
-              selected = param_choices[1],
-              multiple = FALSE,
-              options = list(`actions-box` = TRUE))
+  pickerInput(
+    "generalplot_colorby",
+    "Choose the variables to color by",
+    choices = param_choices,
+    selected = param_choices[1],
+    multiple = FALSE,
+    options = list(`actions-box` = TRUE)
+  )
 })
 
 # select the dose number/cycle for the general lineplot, if plotting by cycle is chosen
 output$cycleselect <- renderUI({
   req(input$generalplot_analyte)
 
-  y = data() %>%
+  y <- data() %>%
     filter(ANALYTE == input$generalplot_analyte) %>%
     pull(DOSNO) %>%
     unique()
@@ -72,35 +81,34 @@ output$individualplot <- renderPlotly({
   req(input$timescale)
   req(input$log)
 
-  general_lineplot(data(),
-                       input$generalplot_analyte,
-                       input$generalplot_usubjid,
-                       input$generalplot_colorby,
-                       input$timescale,
-                       input$log,
-                       cycle = input$cycles)
+  general_lineplot(
+    data(),
+    input$generalplot_analyte,
+    input$generalplot_usubjid,
+    input$generalplot_colorby,
+    input$timescale,
+    input$log,
+    cycle = input$cycles
+  )
 
 
 })
-
-
-
-
 # TAB: Mean Plot ---------------------------------------------------------------
 
 # This tabs plots the mean concentration of the input data in a dynamic plot
 
 # select the analyte for the mean plot
 output$analytemean <- renderUI({
-  y = data() %>%
+  y <- data() %>%
     pull(ANALYTE) %>%
     unique()
   selectInput("analytemean", "Choose the Analyte:", choices = sort(y), selected = y[1])
 })
 
-# select the study id for the mean plot (needed for preclinical data, where multiple studyids per dataset)
+# select the study id for the mean plot
+# (needed for preclinical data, where multiple studyids per dataset)
 output$studyidmean <- renderUI({
-  y = data() %>%
+  y <- data() %>%
     pull(STUDYID) %>%
     unique()
   selectInput("studyidmean", "Choose the Study ID:", choices = sort(y))
@@ -108,15 +116,15 @@ output$studyidmean <- renderUI({
 
 # select the variable to calculate the mean by
 output$selectidvar <- renderUI({
-  y = c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
+  y <- c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
   selectInput("selectidvar", "Choose the variable to group by:",
               choices = y, selected = "DOSEA")
 })
 
 # select the cycle to plot the mean concentrations
 output$cyclemean <- renderUI({
-  y = data() %>%
-    filter(ANALYTE %in% input$analytemean)%>%
+  y <- data() %>%
+    filter(ANALYTE %in% input$analytemean) %>%
     pull(DOSNO) %>%
     unique()
   selectInput("cyclesmean", "Choose the cycle:", choices = sort(y))
@@ -124,56 +132,75 @@ output$cyclemean <- renderUI({
 
 # render the meanplot output in plotly
 output$meanplot <- renderPlotly({
-
   req(input$studyidmean)
   req(input$analytemean)
   req(input$cyclesmean)
 
-  general_meanplot(data(),
-                       input$studyidmean,
-                       input$analytemean,
-                       input$cyclesmean,
-                       input$selectidvar,
-                       input$logmeanplot,
-                       input$sdmeanplot) %>%
+  validate(
+    need(
+      data() %>%
+        filter(
+          STUDYID %in% input$studyidmean,
+          ANALYTE %in% input$analytemean,
+          DOSNO %in% input$cyclesmean,
+          if ("EVID" %in% names(data)) EVID == 0 else TRUE,
+          NRRLT > 0
+        ) %>%
+        group_by(!!sym(input$selectidvar), NRRLT) %>%
+        summarise(N = n()) %>%
+        filter(N >= 3) %>%
+        nrow(.) > 0,
+      message = paste0("Data issue: No data with more than 3 points to calculate average based on
+                        nominal time (NRRLT) and selected variable: ", input$selectidvar)
+    )
+  )
+
+  general_meanplot(data = data(),
+                   selected_studyids = input$studyidmean,
+                   selected_analytes = input$analytemean,
+                   selected_cycles = input$cyclesmean,
+                   id_variable = input$selectidvar,
+                   plot_ylog = input$logmeanplot,
+                   plot_sd = input$sdmeanplot) %>%
     plotly_build()
 
 })
-
-
 # TABSET: Dose Escalation Outputs ==============================================
 
 # This tabset computes and visualizes output data from the NCA analysis for dose
 # escalation meetings. The user can view summary statistics, individual and mean
 # as well as boxplots of the calculated NCA parameters.
 
-
 # TAB: Descriptive Statistics --------------------------------------------------
-
 
 # pickerInput to filter for parameters to display in the summary table
 output$summaryselect <- renderUI({
-  req(resNCA())
+  req(res_nca())
 
   # available parameters
-  paramselection <- unique(resNCA()$result$PPTESTCD)
+  paramselection <- unique(res_nca()$result$PPTESTCD)
   # select from available with all perselected
-  pickerInput("paramselect", "Filter parameters to display:",
-              choices = paramselection,
-              selected = paramselection,
-              multiple = TRUE,
-              options = list(`actions-box` = TRUE))
+  pickerInput(
+    "paramselect",
+    "Filter parameters to display:",
+    choices = paramselection,
+    selected = paramselection,
+    multiple = TRUE,
+    options = list(`actions-box` = TRUE)
+  )
 })
 
 # Update inputs based on what is avaialble in the data
-observeEvent(resNCA(), {
+observeEvent(res_nca(), {
   # Define the relevant columns for the groupby picker
-  group_cols = unname(unlist(resNCA()$data$conc$columns$groups))
-  classification_cols = sort(c('SEX','RACE','ACTARM','AGE','TRT01P','TRT01A', 'DOSEA'))
-  classification_cols = classification_cols[classification_cols %in% names(resNCA()$data$conc$data)]
+  group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
+  classification_cols <- sort(c("SEX", "RACE", "ACTARM", "AGE", "TRT01P", "TRT01A", "DOSEA"))
+  classification_cols <- classification_cols[
+    classification_cols %in% names(res_nca()$data$conc$data)
+  ]
 
   # update the input for the groupby picker
-  updateOrderInput(session, 'summarygroupbysource', items=c(group_cols, classification_cols) )
+  updateOrderInput(session, "summarygroupbysource", items = c(group_cols, classification_cols))
 })
 
 # Reactive expression for summary table based on selected group and parameters
@@ -181,74 +208,81 @@ summary_stats <- reactive({
   req(input$summarygroupby, input$paramselect)
 
   # Calculate summary stats and filter by selected parameters
-  calculate_summary_stats(resNCA(), input$summarygroupby) %>%
+  calculate_summary_stats(res_nca(), input$summarygroupby) %>%
     filter(PPTESTCD %in% input$paramselect)  %>%
-    rename(PARAM=PPTESTCD)
+    rename(PARAM = PPTESTCD)
 })
 
 # render the reactive summary table in a datatable
 output$descriptivestats <- DT::renderDataTable({
   req(summary_stats())
-  DT::datatable(data = summary_stats(),
-                options = list(scrollX = TRUE,
-                               scrollY = TRUE,
-                               lengthMenu = list(c(10, 25, -1), c('10', '25', 'All'))
-                )
+  DT::datatable(
+    data = summary_stats(),
+    options = list(
+      scrollX = TRUE,
+      scrollY = TRUE,
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+    )
   )
 })
 
 output$descriptivestats2 <- DT::renderDataTable({
-  req(resNCA())
-  DT::datatable(data = calculate_summary_stats(resNCA())  %>% rename(PARAM=PPTESTCD),
-                options = list(scrollX = TRUE,
-                               scrollY = TRUE,
-                               lengthMenu = list(c(10, 25, -1), c('10', '25', 'All'))
-                )
+  req(res_nca())
+  DT::datatable(
+    data = calculate_summary_stats(res_nca())  %>% rename(PARAM = PPTESTCD),
+    options = list(
+      scrollX = TRUE,
+      scrollY = TRUE,
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+    )
   )
 })
-
-
-
 # TAB: Mean Concentration over Time --------------------------------------------
 
 # preprocess data for plotting mean concentration over time
-mean_data = reactive({
-
+mean_data <- reactive({
   data() %>% # mydata()$conc$data %>%
-    filter(ANALYTE == input$analyte,
-           DOSNO %in% input$cyclenca)%>%
-    mutate(DOSEA = as.factor(DOSEA),
-           TRT = as.factor(NOMDOSE),
-           TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
-           NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT))%>%
-    group_by(DOSEA, NOMTIME, DOSNO)%>%
-    summarise(Mean = geometric.mean(AVAL, na.rm = T),
-              SD = sd(AVAL, na.rm = T),
-              N = n())%>%
+    filter(
+      ANALYTE == input$analyte,
+      DOSNO %in% input$cyclenca
+    ) %>%
+    mutate(
+      DOSEA = as.factor(DOSEA),
+      TRT = as.factor(NOMDOSE),
+      TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
+      NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT)
+    ) %>%
+    group_by(DOSEA, NOMTIME, DOSNO) %>%
+    summarise(
+      Mean = geometric_mean(AVAL, na.rm = TRUE),
+      SD = sd(AVAL, na.rm = TRUE),
+      N = n()
+    ) %>%
     filter(N >= 3)
-
 })
-
 
 ######################################### same plots as in general plotting?
 doseescalation_meanplot <- function() {
-
   dataset <- mydata()$conc$data %>%
-    filter(ANALYTE == input$analyte,
-           DOSNO %in% input$cyclenca)
+    filter(
+      ANALYTE == input$analyte,
+      DOSNO %in% input$cyclenca
+    )
 
-  time_label = paste0('Nominal Time [', unique(dataset$RRLTU), "]")
-  trtact_label = 'Dose Group'
-  conc_units = paste0(unique(dataset$AVALU))
-  dose_units = paste0(unique(dataset$DOSEU))
-  conc_label = paste0('Mean Concentration [', conc_units, "/", dose_units, "]")
+  time_label <- paste0("Nominal Time [", unique(dataset$RRLTU), "]")
+  trtact_label <- "Dose Group"
+  conc_units <- paste0(unique(dataset$AVALU))
+  dose_units <- paste0(unique(dataset$DOSEU))
+  conc_label <- paste0("Mean Concentration [", conc_units, "/", dose_units, "]")
 
-  ggplot(data = mean_data(), aes(x = NOMTIME, y = Mean, ymin = (Mean - SD), ymax = (Mean + SD), group= DOSEA, color = DOSEA))+
-    geom_errorbar(width = 0.4)+
-    geom_point()+
-    geom_line()+
-    labs(x = time_label, y=conc_label, color = trtact_label)
-
+  ggplot(
+    data = mean_data(),
+    aes(x = NOMTIME, y = Mean, ymin = (Mean - SD), ymax = (Mean + SD), group = DOSEA, color = DOSEA)
+  ) +
+    geom_errorbar(width = 0.4) +
+    geom_point() +
+    geom_line() +
+    labs(x = time_label, y = conc_label, color = trtact_label)
 }
 
 output$mean_concovertime <- renderPlotly(
@@ -256,60 +290,57 @@ output$mean_concovertime <- renderPlotly(
 )
 
 output$mean_concovertimelog <- renderPlotly(
-  doseescalation_meanplot()+
+  doseescalation_meanplot() +
     xgx_scale_y_log10()
 )
-
-
-
 # TAB  Dose Norm Conc over Time Plots ----
 
-plot_data = reactive({
+plot_data <- reactive({
   req(input$analyte)
 
-  data() %>%  # mydata()$conc$data %>%
-    filter(ANALYTE == input$analyte,
-           DOSNO %in% input$cyclenca)%>%
-    select(AFRLT, AVAL, DOSEA, DOSNO, AFRLT, NFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU, RRLTU, DOSEU, NOMDOSE)%>%
-    mutate(CONC_NORM = AVAL/DOSEA,
-           TRT = as.factor(NOMDOSE),
-           TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
-           NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT))%>%
+  data() %>%
+    filter(
+      ANALYTE == input$analyte,
+      DOSNO %in% input$cyclenca
+    ) %>%
+    select(
+      AFRLT, AVAL, DOSEA, DOSNO, AFRLT, NFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU,
+      RRLTU, DOSEU, NOMDOSE
+    ) %>%
+    mutate(
+      CONC_NORM = AVAL / DOSEA,
+      TRT = as.factor(NOMDOSE),
+      TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
+      NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT)
+    ) %>%
     na.omit()
-
-
 })
 
+# TODO: this function should be in `R/`
 normconcplot <- function() {
+  dataset <- plot_data()
+  time_label <- paste0("Nominal Time [", unique(dataset$RRLTU), "]")
+  trtact_label <- "Dose Group"
+  conc_units <- paste0(unique(dataset$AVALU))
+  dose_units <- paste0(unique(dataset$DOSEU))
+  concnorm_label <- paste0("Normalised Concentration [", conc_units, "/", dose_units, "]")
 
-  dataset = plot_data()
-  time_label = paste0('Nominal Time [', unique(dataset$RRLTU), "]")
-  trtact_label = 'Dose Group'
-  conc_units = paste0(unique(dataset$AVALU))
-  dose_units = paste0(unique(dataset$DOSEU))
-  concnorm_label = paste0('Normalised Concentration [', conc_units, "/", dose_units, "]")
-
-  ggplot(data = dataset,
-         aes(x = NOMTIME, y = CONC_NORM,
-             group = USUBJID, color = TRT))+
-    geom_point(aes(color = TRT), size = 2, alpha = 0.5)+
-    geom_line(aes(group= USUBJID, color=TRT), size = 1, alpha = 0.5)+
-    facet_wrap(~DOSNO)+
-    labs(y=concnorm_label, x = time_label, color = trtact_label)
-
+  ggplot(
+    data = dataset,
+    aes(x = NOMTIME, y = CONC_NORM, group = USUBJID, color = TRT)
+  ) +
+    geom_point(aes(color = TRT), size = 2, alpha = 0.5) +
+    geom_line(aes(group = USUBJID, color = TRT), size = 1, alpha = 0.5) +
+    facet_wrap(~DOSNO) +
+    labs(y = concnorm_label, x = time_label, color = trtact_label)
 }
 
-output$norm_concovertime <- renderPlotly(
+output$norm_concovertime <- renderPlotly(normconcplot())
 
-  normconcplot()
-
-  )
-
-output$norm_concovertimesemilog <- renderPlotly(
-
-  normconcplot()+
+output$norm_concovertimesemilog <- renderPlotly({
+  normconcplot() +
     xgx_scale_y_log10()
-)
+})
 
 ################################################################################
 
@@ -317,28 +348,33 @@ output$norm_concovertimesemilog <- renderPlotly(
 
 # Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
 boxplotdata <- reactive({
-  group_columns = unname(unlist(resNCA()$data$conc$columns$groups))
-  
+  group_columns <- unname(unlist(res_nca()$data$conc$columns$groups))
+
   left_join(
-    resNCA()$result %>% filter(end==Inf | startsWith(PPTESTCD, 'aucint')),
-    resNCA()$data$conc$data %>% distinct(across(all_of(group_columns)), 
-                                         .keep_all = T), 
-    by=group_columns,
-    keep = F
-  ) %>% 
+    res_nca()$result %>%
+      filter(
+        end == Inf | startsWith(PPTESTCD, "aucint")
+      ),
+    res_nca()$data$conc$data %>%
+      distinct(across(all_of(group_columns)), .keep_all = TRUE),
+    by = group_columns,
+    keep = FALSE
+  ) %>%
     # Intervals should also be considered as differentiated options each
-    mutate(PPTESTCD = ifelse(startsWith(PPTESTCD,'aucint'), 
-                             paste0(PPTESTCD, '_', start, '-', end), 
-                             PPTESTCD ) )
-  
+    mutate(
+      PPTESTCD = ifelse(
+        startsWith(PPTESTCD, "aucint"),
+        paste0(PPTESTCD, "_", start, "-", end),
+        PPTESTCD
+      )
+    )
 })
 
 # select which parameter to box or violin plot
 output$selectboxplot <- renderUI({
-  
   param_choices <- boxplotdata()$PPTESTCD %>% unique()
-  
-  pickerInput("boxplotparam", "Choose the parameter to display:",
+
+  pickerInput("selected_param_boxplot", "Choose the parameter to display:",
               choices = param_choices,
               selected = param_choices[1],
               multiple = FALSE,
@@ -346,38 +382,53 @@ output$selectboxplot <- renderUI({
 
 })
 
-# filter for dose amounts to display in the boxplot
-output$display_dose_boxplot <- renderUI({
 
-  param_choices <- sort(unique(boxplotdata()$DOSEA))
 
-  # filter for DOSEA with more than one observation
-  preselected_choices <- boxplotdata() %>%
-    group_by(DOSEA) %>%
-    summarise(n = n()) %>%
-    filter(n > 1) %>%
-    pull(DOSEA)
-  
-  pickerInput("display_dose_boxplot", "Choose the doses amounts to display",
-              choices = param_choices,
-              selected = preselected_choices,
-              multiple = TRUE,
-              options = list(`actions-box` = TRUE))
 
+# Selector for the variables to segregate boxplots in the x axis
+output$select_xvars_boxplot <- renderUI({
+
+  pickerInput(
+    inputId = "selected_xvars_boxplot",
+    label = "Select X grouping variables",
+    multiple = TRUE,
+    choices = intersect(names(boxplotdata()), names(data())),
+    selected = "DOSEA"
+  )
 })
 
-# filter for dose numbers to display in the boxplot
-output$display_dosenumber_boxplot <- renderUI({
-  
-  # deselect choices that are no pp parameters
-  param_choices <- sort(unique(boxplotdata()$DOSNO))
-  pickerInput("display_dosenumber_boxplot", "Choose the dose numbers to display",
-              choices = param_choices,
-              selected = param_choices,
-              multiple = TRUE,
-              options = list(`actions-box` = TRUE))
-  
+
+output$select_colorvars_boxplot <- renderUI({
+  pickerInput(
+    inputId = "selected_colorvars_boxplot",
+    label = "Select coloring variables to differentiate boxplots",
+    multiple = TRUE,
+    choices = intersect(names(boxplotdata()), names(data())),
+    selected = "DOSNO"
+  )
 })
+
+
+observeEvent(list(input$selected_xvars_boxplot, input$selected_colorvars_boxplot), {
+  xvar_options_list <- lapply(
+    c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot),
+    \(id_var) paste(id_var, unique(boxplotdata()[[id_var]]), sep = ": ")
+  )
+
+  names(xvar_options_list) <- c(
+    input$selected_xvars_boxplot,
+    input$selected_colorvars_boxplot
+  )
+
+  updatePickerInput(
+    session = session,
+    inputId = "selected_varvalstofilter_boxplot",
+    label = "Select values to display for grouping",
+    choices = xvar_options_list,
+    selected = unlist(xvar_options_list)
+  )
+})
+
 
 # toggle between boxplot and violinplot
 output$violin_toggle <- renderUI({
@@ -388,39 +439,26 @@ output$violin_toggle <- renderUI({
     onLabel = "Boxplot",
     offLabel = "Violinplot"
   )
-  })
+})
 
 # compute the boxplot
 output$boxplot <- renderPlotly({
-  
   req(boxplotdata())
-  req(input$boxplotparam)
-  req(input$display_dose_boxplot)
-  req(input$display_dosenumber_boxplot)
+  req(input$selected_param_boxplot)
+  req(input$selected_xvars_boxplot)
+  req(input$selected_colorvars_boxplot)
+  req(input$selected_varvalstofilter_boxplot)
 
-  flexible_violinboxplot(result_data = boxplotdata(),
-                         parameter = input$boxplotparam,
-                         doses_included = input$display_dose_boxplot,
-                         dosenumber_included = input$display_dosenumber_boxplot,
-                         columns_to_hover = unname(unlist(resNCA()$data$conc$columns$groups)),
-                         box = input$violinplot_toggle_switch) 
-
+  flexible_violinboxplot(
+    boxplotdata = boxplotdata(),
+    parameter = input$selected_param_boxplot,
+    xvars = input$selected_xvars_boxplot,
+    colorvars = input$selected_colorvars_boxplot,
+    varvalstofilter = input$selected_varvalstofilter_boxplot,
+    columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
+    box = input$violinplot_toggle_switch
+  )
 })
-
-# create a download button for CDISC dataframes
-# output$exportCDISC <- downloadHandler(
-#   filename = function() {
-#     paste("CDISC_", Sys.Date(), ".zip", sep = "")
-#   },
-#   content = function(file) {
-
-#     # Export the list of dataframes to a zip file containing CSVs
-#     rio::export_list(x = exportCDISC(resNCA()),
-#                      file = paste("%s_", Sys.Date(), ".csv", sep = ""), # filename from above is somehow not passed here?
-#                      archive = paste("CDISC_", Sys.Date(), ".zip", sep = ""))
-#   }
-# )
-
 
 # CDISC ------------------------------------------------------------------------
 
@@ -433,7 +471,7 @@ output$exportCDISC <- downloadHandler(
     # Create a temporary directory to store the CSV files
     temp_dir <- tempdir()
 
-    CDISC <- exportCDISC(resNCA())
+    CDISC <- export_cdisc(res_nca())
     # Export the list of data frames to CSV files in the temporary directory
     file_paths <- rio::export_list(
       x = CDISC,
@@ -444,7 +482,6 @@ output$exportCDISC <- downloadHandler(
     zip::zipr(zipfile = file, files = file_paths)
   }
 )
-
 # EXPORT Report ----------------------------------------------------------------
 
 # ATTENTION: most of the blocks in the RMD are still eval = FALSE, as
@@ -455,7 +492,7 @@ output$exportCDISC <- downloadHandler(
 
 # concat all dataframes into one object
 concat_report_data <- reactive({
-  data <- resNCA()
+  data <- res_nca()
   data$formatted_res <- boxplotdata()
   data
 })
@@ -466,14 +503,19 @@ rendered_rmd <- reactiveVal(NULL)
 observeEvent(input$generate_report, {
   # specifying the temp location, params and report to be rendered
   output_file <- file.path(tempdir(), "report.html")
-  params <- list(resNCA = concat_report_data())
-  report_path <- system.file(paste0("shiny/www/rmd/",input$report_studytype , "_report.Rmd"), package = "aNCA")
+  params <- list(res_nca = concat_report_data())
+  report_path <- system.file(
+    paste0("shiny/www/rmd/", input$report_studytype, "_report.Rmd"),
+    package = "aNCA"
+  )
   # render the report in new env
-  rmarkdown::render(report_path,
-                    output_file = output_file,
-                    params = params,
-                    # render in seperate environment to ensure params pass!
-                    envir = new.env(parent = globalenv()))
+  rmarkdown::render(
+    report_path,
+    output_file = output_file,
+    params = params,
+    # render in seperate environment to ensure params pass!
+    envir = new.env(parent = globalenv())
+  )
   rendered_rmd(output_file)
 })
 
@@ -490,32 +532,7 @@ output$download_rmd <- downloadHandler(
     paste("report/SD_report", "html", sep = ".")
   },
   content = function(file) {
-
     file.copy(rendered_rmd(), file)
   },
   contentType = "text/html"
 )
-
-# # Download handler for the PDF report
-# output$downloadReport <- downloadHandler(
-#   filename = function() {
-#     paste("report", Sys.Date(), ".pdf", sep = "")
-#   },
-#   content = function(file) {
-#     # Copy the report template to a temporary directory
-#     tempReport <- file.path(tempdir(), "report.Rmd")
-#     file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
-
-#     # Set up parameters to pass to Rmd document
-#     params <- list(
-#       resNCA = concat_report_data()
-#     )
-#
-#     # Knit the document
-#     rmarkdown::render(tempReport, output_file = file, params = params, envir = new.env(parent = globalenv()))
-#   }
-# )
-
-
-
-

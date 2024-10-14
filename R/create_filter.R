@@ -1,6 +1,7 @@
 #' Create a Filter UI Component
 #'
-#' This function generates a UI component for creating a filter in a Shiny application. The filter allows users to select a column, condition, and value to filter a dataset.
+#' This function generates a UI component for creating a filter in a Shiny application.
+#' The filter allows users to select a column, condition, and value to filter a dataset.
 #'
 #' @param filter_id A unique identifier for the filter.
 #' @param dataset A data frame containing the dataset to be filtered.
@@ -50,15 +51,18 @@ create_filter <- function(filter_id, dataset) {
 
 #' Apply Filters to a Dataset
 #'
-#' This function applies a set of filters to a dataset. Each filter specifies a column, condition, and value to filter the dataset.
+#' This function applies a set of filters to a dataset. Each filter specifies a column,
+#' condition, and value to filter the dataset.
 #'
 #' @param raw_data A data frame containing the raw data to be filtered.
-#' @param filters A list of filters, where each filter is a list containing the column, condition, and value.
+#' @param filters  A list of filters, where each filter is a list containing
+#'                 the column, condition, and value.
 #'
 #' @return A data frame containing the filtered data.
 #'
 #' @details
-#' The function iterates over the list of filters and applies each filter to the dataset. The supported conditions are `==`, `>`, `<`, `>=`, and `<=`.
+#' The function iterates over the list of filters and applies each filter to the dataset.
+#' The supported conditions are `==`, `>`, `<`, `>=`, and `<=`.
 #'
 #' @examples
 #' \dontrun{
@@ -73,34 +77,39 @@ create_filter <- function(filter_id, dataset) {
 #'
 #' @import dplyr
 #' @export
+apply_filters <- function(raw_data, filters) {
+  for (filter_id in names(filters)) {
+    filter_info <- filters[[filter_id]]
 
-#apply filters function
-apply_filters <- function(raw_data, filters) {  
-  for (filter_id in names(filters)) {  
-    filter_info <- filters[[filter_id]]  
-    
-    if (!is.null(filter_info)) {  
-      column <- filter_info$column  
-      condition <- filter_info$condition  
-      value <- filter_info$value  
-      
-      value <- as.numeric(value)  
-      if (is.na(value)) {  
-        value <- filter_info$value  
-      }  
-      
-      if (condition == "==") {  
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) == value)  
-      } else if (condition == ">") {  
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) > value)  
-      } else if (condition == "<") {  
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) < value)  
-      } else if (condition == ">=") {  
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) >= value)  
-      } else if (condition == "<=") {  
-        raw_data <- raw_data %>% dplyr::filter(!!sym(column) <= value)  
-      }  
-    }  
-  }  
-  return(raw_data)  
-}  
+    if (!is.null(filter_info)) {
+      column <- filter_info$column
+      condition <- filter_info$condition
+      value <- filter_info$value
+
+      value <- as.numeric(value)
+      if (is.na(value)) {
+        value <- filter_info$value
+      }
+
+      switch(
+        condition,
+        "==" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) == value)
+        },
+        ">" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) > value)
+        },
+        "<" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) < value)
+        },
+        ">=" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) >= value)
+        },
+        "<=" = {
+          raw_data <- raw_data %>% dplyr::filter(!!sym(column) <= value)
+        }
+      )
+    }
+  }
+  return(raw_data)
+}

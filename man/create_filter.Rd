@@ -15,7 +15,8 @@ create_filter(filter_id, dataset)
 A Shiny UI component for creating a filter.
 }
 \description{
-This function generates a UI component for creating a filter in a Shiny application. The filter allows users to select a column, condition, and value to filter a dataset.
+This function generates a UI component for creating a filter in a Shiny application.
+The filter allows users to select a column, condition, and value to filter a dataset.
 }
 \details{
 The function creates a UI component with the following elements:

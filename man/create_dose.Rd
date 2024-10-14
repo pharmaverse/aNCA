@@ -4,10 +4,10 @@
 \alias{create_dose}
 \title{Create PK Dose Dataset}
 \usage{
-create_dose(ADNCA_conc)
+create_dose(adnca_conc)
 }
 \arguments{
-\item{ADNCA_conc}{A data frame containing the concentration data.}
+\item{adnca_conc}{A data frame containing the concentration data.}
 }
 \value{
 A data frame containing the dose data.

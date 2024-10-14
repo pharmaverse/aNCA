@@ -14,6 +14,7 @@ This document contains exploratory plots for multiple ascending dose PK data as 
 ## Setup
 
 ```{r, error = TRUE, echo = TRUE, warning = FALSE, message = FALSE}
+# nolint start
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -314,6 +315,8 @@ ggplot(data_to_plot, aes(x = PROFTIME, y = LIDV_NORM,
   labs(y = concnorm_label, color = trtact_label) +
   facet_grid(~DAY_label) +
   xlab("Time after dose (hours)")
+
+# nolint end
 ```
 
 -> all of the NCA plot were removed to, as there is no known destinction between AUC_0 and AUC: you can add this sectionagain from the MAD file: https://opensource.nibr.com/xgx/Multiple_Ascending_Dose_PK.htmls

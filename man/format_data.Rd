@@ -13,13 +13,20 @@ format_data(datafile)
 A data frame with formatted concentration and time values.
 }
 \description{
-This function formats a data file for pharmacokinetic analysis by converting specific concentration values to numeric and adjusting time based on dose number.
+This function formats a data file for pharmacokinetic analysis by converting specific
+concentration values to numeric and adjusting time based on dose number.
 }
 \details{
 The function performs the following steps:
 \itemize{
-\item Converts concentration values ('AVAL') that are 'BLQ', 'Negative', 'negative', or 'NEGATIVE' to 0.
-\item Adjusts the time values ('TIME') based on the dose number ('DOSNO'). If 'DOSNO' is 1, 'TIME' is set to 'AFRLT'; otherwise, it is set to 'TIME'.
+\item{
+Converts concentration values ('AVAL') that are 'BLQ', 'Negative',
+'negative', or 'NEGATIVE' to 0.
+}
+\item{
+Adjusts the time values ('TIME') based on the dose number ('DOSNO'). If 'DOSNO' is 1,
+'TIME' is set to 'AFRLT'; otherwise, it is set to 'TIME'.
+}
 }
 }
 \examples{

@@ -1,81 +1,106 @@
 #' Flexible Violin/Box Plot
 #'
-#' This function generates a  violin or box plot based on the provided data, parameter, and dose information.
+#' This function generates a  violin or box plot based on the provided data,
+#' parameter, and dose information.
 #'
-#' @param result_data A list containing the data to be plotted. It should have a `data` element with dose information and a `formatted` element with the data to be plotted.
-#' @param parameter A string specifying the parameter to be plotted.
-#' @param doses_included A vector of doses to be included in the plot.
+#' @param result_data         A list containing the data to be plotted. It should have a `data`
+#'                            element with dose information and a `formatted` element with the
+#'                            data to be plotted.
+#' @param parameter           A string specifying the parameter to be plotted.
+#' @param doses_included      A vector of doses to be included in the plot.
 #' @param dosenumber_included A vector of dose numbers to be included in the plot.
-#' @param columns_to_hover A character vector indicating the column names from result_data that should be used to identify when hovering the plotly outputs
-#' @param box A logical value indicating whether to plot a box plot (`TRUE`) or a violin plot (`FALSE`). Default is `TRUE`.
+#' @param columns_to_hover    A character vector indicating the column names from result_data that
+#'                            should be used to identify when hovering the plotly outputs
+#' @param box                 A logical value indicating whether to plot a box plot (`TRUE`) or a
+#'                            violin plot (`FALSE`). Default is `TRUE`.
 #'
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
 #' @import ggplot2
 #' @import forcats
 #' @export
-
-
-flexible_violinboxplot <- function(result_data, 
-                                   parameter, 
-                                   doses_included,
-                                   dosenumber_included,
+flexible_violinboxplot <- function(boxplotdata,
+                                   parameter,
+                                   xvars,
+                                   colorvars,
+                                   varvalstofilter,
                                    columns_to_hover,
                                    box = TRUE) {
-  # preprocess data to plot
-  box_data <- result_data %>%
-    mutate(DOSEA = as.factor(DOSEA),
-           DOSNO = as.factor(DOSNO)) %>% 
-    filter(PPTESTCD == parameter,
-           DOSEA %in% doses_included,
-           DOSNO %in% dosenumber_included) 
-  
-  # # xlabel of violin/boxplot
-  dose_label = if ('DOSEU' %in% names(box_data)) {
-    paste0("Dose [", unique(box_data$DOSEU)[1], "]")
-  } else {"Dose"}
-  
-  # ylabel of violin/boxplot
-  pptestcd_label <- if (box_data$PPORRESU[1] == "unitless" | is.na(box_data$PPORRESU[1]) | is.null(box_data$PPORRESU)) {
-    parameter} else {
-      paste(parameter," [", box_data$PPORRESU[1], "]")
-    }
-  
-  # Create the hover text for the points dynamically, including also X,Y column values
-  columns_to_hover = c(columns_to_hover, 'DOSEA', 'PPORRES')
-  
-  hover_text <- apply(box_data[columns_to_hover] %>% 
-                        mutate(across(where(is.numeric), round, digits = 2)), 
+
+  # Variables to use to filter
+  vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
+  vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
+  var_types <- sapply(vars_tofilter, \(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
+
+  filter_text <- paste0(
+    sapply(unique(vars_tofilter), \(varid) {
+      vartype <- class(boxplotdata[[varid]])
+      paste0(
+        varid,
+        " %in% as.",
+        vartype,
+        "(c('", paste0(vals_tofilter[vars_tofilter == varid], collapse = "','"), "'))"
+      )
+    }), collapse = " & "
+  )
+
+  # Filter the data
+  box_data <- boxplotdata %>%
+    filter(
+      eval(parse(text = filter_text)),
+      PPTESTCD == parameter
+    )
+
+  # Hover text to identify each point
+  hover_text <- apply(box_data[columns_to_hover] %>%
+                        mutate(across(where(is.numeric), round, digits = 2)),
                       MARGIN = 1,
                       function(row) {
                         paste(names(row), row, sep = ": ", collapse = "<br>")
                       })
-  # decide whether to layer violin or boxplot
-  if (box) {
-    p = ggplot(data = box_data %>% arrange(DOSNO), 
-               aes(x = DOSEA, y = PPORRES, color = DOSNO)) + geom_boxplot()
-    
-  } else {
-    p = ggplot(data = box_data %>% arrange(DOSNO), 
-               aes(x = DOSEA, y = PPORRES, color = DOSNO)) 
-    # Make sure there is at least 1 group of 2 points
-    if (box_data %>% group_by(DOSEA) %>% filter(n()>1) %>% nrow()>0 ){
-      p = p + geom_violin()
+
+  # ylabel of violin/boxplot
+  ylabel <- {
+    if (box_data$PPORRESU[1] == "unitless" ||
+          is.na(box_data$PPORRESU[1]) ||
+          is.null(box_data$PPORRESU)) {
+      parameter
+    } else {
+      paste(parameter, " [", box_data$PPORRESU[1], "]")
     }
-    
   }
-  
-  # add jitter, facet_wrap, and labels
-  p = p +
-    geom_point(position=position_jitterdodge(), aes(text=hover_text)) +
-    # geom_smooth(method = "lm", color = "black") + # Let's consider it for the future
-    facet_wrap(~STUDYID) +
-    labs(x = dose_label, y = pptestcd_label, color = "Dose Number") +
-    theme_bw() + 
+
+  # Make the plot
+  p <- ggplot(
+    data = box_data %>% arrange(!!!syms(colorvars)),
+    aes(
+      x = interaction(!!!syms(xvars), sep = "\n"),
+      y = PPORRES,
+      color = interaction(!!!syms(colorvars))
+    )
+  )
+
+  #  Make boxplot or violin
+  if (box) {
+    p <- p + geom_boxplot()
+  } else {
+    p <- p + geom_violin()
+  }
+
+  # Include points, labels and theme
+  p <- p +
+    geom_point(position = position_jitterdodge(), aes(text = hover_text)) +
+    # facet_wrap(~STUDYID) +
+    labs(
+      x = paste(xvars, collapse = ", "),
+      y = ylabel,
+      color = paste(colorvars, collapse = ", ")
+    ) +
+    theme_bw() +
     theme(legend.position = "right",
           panel.spacing = unit(3, "lines"),
-          strip.text = element_text(size = 10)) 
-  
-  ggplotly(p, tooltip = 'text')
-  
+          strip.text = element_text(size = 10))
+
+  # Make plotly with hover features
+  return(ggplotly(p, tooltip = "text"))
 }
