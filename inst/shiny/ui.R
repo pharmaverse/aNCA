@@ -579,7 +579,14 @@ shinyUI(fluidPage(
     tabPanel("TLG",
       tabsetPanel(
         tabPanel("Order details",
-          DTOutput("tlg_order"),
+          actionButton("add_tlg", "Add TLG"),
+          actionButton("remove_tlg", "Remove TLG"),
+          actionButton("submit_tlg_order", "Submit Order Details"),
+          tags$head(tags$style(HTML("table tbody td:nth-child(1), 
+                                     table tbody td:nth-child(2),
+                                     table tbody td:nth-child(4) 
+                                     {pointer-events: none;}"))),
+          DTOutput("selected_tlg_table"),
           actionButton("submit_tlg_order", "Submit Order Details")
         ),
         tabPanel("Tables",
