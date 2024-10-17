@@ -1,6 +1,7 @@
-# Define UI
-shinyUI(fluidPage(
+assets <- system.file("shiny/www", package = "aNCA")
 
+# Define UI
+fluidPage(
   tags$script("
     Shiny.addCustomMessageHandler('update', function(value) {
     Shiny.setInputValue('update', value);
@@ -13,16 +14,7 @@ shinyUI(fluidPage(
     });
   "),
 
-  # Add custom CSS for progress bar
-  tags$style(HTML("
-    .shiny-notification {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10000;
-    }
-  ")),
+  includeCSS(file.path(assets, "style.css")),
 
   navbarPage(
     id = "page",
@@ -42,21 +34,11 @@ shinyUI(fluidPage(
             buttonLabel = list(icon("folder"), "Upload File..."),
             accept = c(".csv", ".rds")
           ),
-          tags$head(
-            tags$style(
-              HTML("
-              .input-group-btn {
-                width: auto;
-              }"
-              )
-            )
-          ),
           br(),
           # Add filter UI elements
           actionButton("add_filter", "Add Filter"),
           tags$div(id = "filters"),
-          br(),
-          br(),
+          br(), br(),
         ),
         mainPanel(
           DTOutput("filecontents")
@@ -66,20 +48,7 @@ shinyUI(fluidPage(
     # NCA ----
     tabPanel("NCA", fluid = TRUE,
       fluidPage(
-        tags$head(
-          tags$style(
-            HTML("
-              .run-nca-btn {
-                position: absolute;
-                right: 100px;
-                top: 65px;
-                z-index: 100;
-              }
-            ")
-          )
-        ),
         actionButton("nca", "Run NCA", class = "run-nca-btn"),
-
 
         tabsetPanel(id = "ncapanel",
           tabPanel("Setup", fluid = TRUE,
@@ -141,13 +110,6 @@ shinyUI(fluidPage(
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
-                        tags$style(
-                          HTML("
-                            .shiny-input-container {
-                              display: inline-block;
-                            }
-                          ")
-                        ),
                         numericInput(
                           "adj.r.squared_threshold",
                           "",
@@ -172,13 +134,6 @@ shinyUI(fluidPage(
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
-                        tags$style(
-                          HTML("
-                            .shiny-input-container {
-                              display: inline-block;
-                            }
-                          ")
-                        ),
                         numericInput(
                           "aucpext.obs_threshold",
                           "",
@@ -203,13 +158,6 @@ shinyUI(fluidPage(
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
-                        tags$style(
-                          HTML("
-                            .shiny-input-container {
-                              display: inline-block;
-                            }
-                          ")
-                        ),
                         numericInput(
                           "aucpext.pred_threshold",
                           "",
@@ -234,13 +182,6 @@ shinyUI(fluidPage(
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
-                        tags$style(
-                          HTML("
-                            .shiny-input-container {
-                              display: inline-block;
-                            }
-                          ")
-                        ),
                         numericInput(
                           "span.ratio_threshold",
                           "",
@@ -291,91 +232,6 @@ shinyUI(fluidPage(
                 ),
                 uiOutput("slopetestUI"),
                 # Include details for modal message in slope_helpIcon (Instruction details)
-                tags$head(
-                  tags$style(HTML("
-                    .modal-dialog {
-                      max-width: 800px;
-                    }
-                    .modal-header {
-                      border-bottom: 1px solid #e5e5e5;
-                      background-color: #3f8abf; /* Blue header background */
-                      text-align: center;
-                    }
-                    .modal-title {
-                      font-family: 'Arial', sans-serif;
-                      font-size: 32px; /* Larger title font size */
-                      font-weight: bold;
-                      color: #ffffff; /* White title color */
-                      margin-bottom: 10px;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                    }
-                    .modal-body {
-                      display: flex;
-                      flex-wrap: wrap;
-                      justify-content: center;
-                      font-family: 'Arial', sans-serif;
-                      font-size: 16px;
-                      background-color: #f5f5f5; /* Light grey body background */
-                      padding: 20px;
-                      text-align: center;
-                    }
-                    .modal-intro {
-                      font-family: 'Georgia', serif; /* Elegant font type for intro text */
-                      font-size: 18px;
-                      margin-bottom: 20px;
-                      color: #333; /* Dark text color */
-                    }
-                    .gif-container {
-                      position: relative;
-                      margin: 20px;
-                      text-align: center;
-                      width: 220px;
-                      height: 220px; /* Ensure the container has a fixed height */
-                      padding: 15px;
-                      border-radius: 8px;
-                      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-                      transition: transform 0.3s ease-in-out;
-                      background-color: #ffffff; /* White container background */
-                    }
-                    .gif-container:hover {
-                      transform: scale(1.05);
-                    }
-                    .gif-container img {
-                      width: 120%;
-                      height: 120%;
-                      margin: 0px;
-                      object-fit: cover;
-                      border: 1px solid #ddd;
-                      border-radius: 4px;
-                      padding: 5px;
-                    }
-                    .gif-title {
-                      margin-bottom: 0px;
-                      margin-top: 0px;
-                      font-weight: bold;
-                      font-size: 24px; /* Larger font size for titles */
-                      color: #0056b3; /* More vibrant color */
-                      text-align: center; /* Center the title */
-                      font-family: 'Arial', sans-serif; /* Use a more attractive font */
-                      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Add a subtle text shadow */
-                    }
-
-                    .btn-primary {
-                      background-color: #0056b3;
-                      border-color: #004080;
-                      font-size: 20px; /* Increase font size */
-                      padding: 15px 30px; /* Increase padding */
-                      border-radius: 10px; /* Optional: Increase border radius */
-                    }
-
-                    .btn-help-icon {
-                      font-size: 20px; /* Increase font size */
-                      padding: 10px 20px; /* Increase padding */
-                    }
-                    "))
-                ),
                 bsModal(
                   "modal1",
                   title = tags$a(
@@ -454,9 +310,6 @@ shinyUI(fluidPage(
               ),
               tabPanel(
                 "Exclusions",
-                fluidRow(tags$head(tags$style(
-                  HTML(".selectize-input {height: 100%; width: 200%; font-size: 100%;}")
-                ))),
                 tableOutput("slope_manual_NCA_data2")
               )
             )
@@ -576,4 +429,4 @@ shinyUI(fluidPage(
       )
     )
   )
-))
+)
