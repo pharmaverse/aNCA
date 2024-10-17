@@ -19,3 +19,7 @@ How to test features not covered by unit tests.
 - [ ] Code passes all unit tests
 - [ ] New logic covered by unit tests
 - [ ] New logic is documented
+
+## Notes to reviewer
+
+Anything that the reviewer should know before tacking the pull request?
