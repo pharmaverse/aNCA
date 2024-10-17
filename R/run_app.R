@@ -1,9 +1,9 @@
 #' Run the Shiny app
-#' @import shiny
 #'
 #' List of functions imported for the shiny application.
 #' When adding new imports, please keep the alphabetical order, at lest for packages.
 #'
+#' @import shiny
 #' @importFrom dplyr mutate filter select group_by summarise pull arrange ungroup
 #' @importFrom dplyr rename_with across case_when left_join rename
 #' @importFrom DT DTOutput renderDataTable datatable formatStyle styleEqual
