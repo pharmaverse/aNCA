@@ -7,7 +7,7 @@
 #' @param filters  A list of filters, where each filter is a list containing
 #'                 the column, condition, and value.
 #'
-#' @return A data frame containing the filtered data.
+#' @returns A data frame containing the filtered data.
 #'
 #' @details
 #' The function iterates over the list of filters and applies each filter to the dataset.

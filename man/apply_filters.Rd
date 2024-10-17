@@ -4,10 +4,10 @@
 \alias{apply_filters}
 \title{Apply Filters to a Dataset}
 \usage{
-apply_filters(raw_data, filters)
+apply_filters(data, filters)
 }
 \arguments{
-\item{raw_data}{A data frame containing the raw data to be filtered.}
+\item{data}{A data frame containing the raw data to be filtered.}
 
 \item{filters}{A list of filters, where each filter is a list containing
 the column, condition, and value.}
@@ -26,12 +26,12 @@ The supported conditions are \code{==}, \code{>}, \code{<}, \code{>=}, and \code
 \examples{
 \dontrun{
   # Example usage:
-  raw_data <- mtcars
+  data <- mtcars
   filters <- list(
-    filter1 = list(column = "mpg", condition = ">", value = "20"),
-    filter2 = list(column = "cyl", condition = "==", value = "6")
+    list(column = "mpg", condition = ">", value = "20"),
+    list(column = "cyl", condition = "==", value = "6")
   )
-  filtered_data <- apply_filters(raw_data, filters)
+  filtered_data <- apply_filters(data, filters)
 }
 
 }
