@@ -164,7 +164,10 @@ observe({
 
 # create reactive value with applied filters
 data <- reactive({
-  apply_filters(ADNCA(), filters)
+  apply_filters(
+    ADNCA(),
+    reactiveValuesToList(filters)
+  )
 })
 
 # update the data table object with the filtered data

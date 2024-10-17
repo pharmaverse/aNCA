@@ -8,6 +8,7 @@ function(input, output, session) {
   # OUTPUT ----
   source(system.file("shiny/tabs/outputs.R", package = "aNCA"), local = TRUE)
   # shiny functions #
-  list.files("./functions") |>
+  system.file("shiny/functions", package = "aNCA") |>
+    list.files(full.names = TRUE) |>
     sapply(source)
 }
