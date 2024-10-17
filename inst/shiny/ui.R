@@ -1,7 +1,7 @@
 assets <- system.file("shiny/www", package = "aNCA")
-# Define UI
-shinyUI(fluidPage(
 
+# Define UI
+fluidPage(
   tags$script("
     Shiny.addCustomMessageHandler('update', function(value) {
     Shiny.setInputValue('update', value);
@@ -429,4 +429,4 @@ shinyUI(fluidPage(
       )
     )
   )
-))
+)
