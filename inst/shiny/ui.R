@@ -1,3 +1,5 @@
+source(system.file("shiny/modules/tab_tlg.R", package = "aNCA"))
+
 # Define UI
 shinyUI(fluidPage(
 
@@ -577,28 +579,7 @@ shinyUI(fluidPage(
     ),
     # New TLG tab
     tabPanel("TLG",
-      tabsetPanel(
-        tabPanel("Order details",
-          actionButton("add_tlg", "Add TLG"),
-          actionButton("remove_tlg", "Remove TLG"),
-          actionButton("submit_tlg_order", "Submit Order Details"),
-          tags$head(tags$style(HTML("table tbody td:nth-child(1), 
-                                     table tbody td:nth-child(2),
-                                     table tbody td:nth-child(4) 
-                                     {pointer-events: none;}"))),
-          DTOutput("selected_tlg_table"),
-          actionButton("submit_tlg_order", "Submit Order Details")
-        ),
-        tabPanel("Tables",
-          # Content for Tables tab
-        ),
-        tabPanel("Listings",
-          # Content for Listings tab
-        ),
-        tabPanel("Graphs",
-          # Content for Graphs tab
-        )
-      )
+      tab_tlg_ui("tlg")
     )
   )
 ))
