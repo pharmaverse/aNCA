@@ -5,10 +5,12 @@ tab_tlg_ui <- function(id) {
     #' TODO(mateusz): please migrate this to outside style.css file
     #' TODO(mateusz): those styles are global, so they will inpact all tables in the application -
     #'                are you sure we want to do that?
-    tags$head(tags$style(HTML("table tbody td:nth-child(1), 
-                                  table tbody td:nth-child(2),
-                                  table tbody td:nth-child(4) 
-                                  {pointer-events: none;}"))),
+    tags$head(tags$style(HTML("#selected_tlg_table table tbody td:nth-child(1), 
+                               #selected_tlg_table table tbody td:nth-child(2),
+                               #selected_tlg_table table tbody td:nth-child(4) 
+                                  {pointer-events: none;}")
+                         )
+              ),
     tabPanel("Order details",
       actionButton(ns("add_tlg"), "Add TLG"),
       actionButton(ns("remove_tlg"), "Remove TLG"),
@@ -18,13 +20,13 @@ tab_tlg_ui <- function(id) {
       actionButton(ns("submit_tlg_order"), "Submit Order Details")
     ),
     tabPanel("Tables",
-      # Content for Tables tab
+      radioButtons(inputId = ns("buttons_Tables"), label = "\n", choices = "")
     ),
     tabPanel("Listings",
-      # Content for Listings tab
+      radioButtons(inputId = ns("buttons_Listings"), label = "\n", choices = "")
     ),
     tabPanel("Graphs",
-      # Content for Graphs tab
+      radioButtons(inputId = ns("buttons_Graphs"), label = "\n", choices = "")
     )
   )
 }
@@ -74,6 +76,7 @@ tab_tlg_server <- function(id, data) {
 
       # Render the editable DT table
       datatable(
+        elementId = "selected_tlg_table",
         data = dplyr::filter(tlg_order(), Selection),
         editable = list(
           target = "cell",
@@ -210,9 +213,41 @@ tab_tlg_server <- function(id, data) {
 
     # When the user submits the TLG order...
     observeEvent(input$submit_tlg_order, {
+
       # Filter only the rows requested by the user
-      tlg_order_filt <- tlg_order()[input$tlg_order_rows_selected, ]
-      print(tlg_order_filt)
+      tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
+      
+      ## possible TODO(Gerardo): func_plot = get(tlg_order_filt$Function[i])
+      ## possible TODO(Gerardo): Generate all plots, with id based on $Label and save them in outputs 
+      
+      
+      # Update TLG options to display in each tab
+      if (sum(tlg_order_filt$Type == "Table") > 0) {
+        updateRadioButtons(session = session, inputId = "buttons_Tables", label = "Table to display", 
+                           choices = tlg_order_filt$Label[tlg_order_filt$Type == "Table"] )
+      } else {
+        updateRadioButtons(session = session, inputId = "buttons_Tables", label = "", choices = "")
+      }
+      
+      if (sum(tlg_order_filt$Type == "Listing") > 0) {
+        updateRadioButtons(session = session, inputId = "buttons_Listings", label = "Listing to display", 
+                           choices = tlg_order_filt$Label[tlg_order_filt$Type == "Listing"])
+      } else {
+        updateRadioButtons(session = session, inputId = "buttons_Listings", label = "", choices = "")
+      }
+      
+      if (sum(tlg_order_filt$Type == "Graph") > 0) {
+        updateRadioButtons(session = session, inputId = "buttons_Graphs", label = "Graph to display", 
+                           choices = tlg_order_filt$Label[tlg_order_filt$Type == "Graph"])
+      } else {
+        updateRadioButtons(session = session, inputId = "buttons_Graphs", label = "", choices = "")
+      }
+      
     })
+    
+    # Render the outputs to display dynamically
+    
+    
+    
   })
 }
