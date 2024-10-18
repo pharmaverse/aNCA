@@ -20,30 +20,10 @@ fluidPage(
     id = "page",
     title = "",
     # DATA ----
-    tabPanel("Data", fluid = TRUE,
-      sidebarLayout(
-        sidebarPanel(
-          actionButton("login", "Login and Select File Path"),
-          br(), br(), br(),
-          # Local upload option
-          fileInput(
-            "local_upload",
-            width = "60%",
-            label = NULL,
-            placeholder = "CSV rds",
-            buttonLabel = list(icon("folder"), "Upload File..."),
-            accept = c(".csv", ".rds")
-          ),
-          br(),
-          # Add filter UI elements
-          actionButton("add_filter", "Add Filter"),
-          tags$div(id = "filters"),
-          br(), br(),
-        ),
-        mainPanel(
-          DTOutput("filecontents")
-        )
-      )
+    tabPanel(
+      "Data",
+      fluid = TRUE,
+      tab_data_ui("data")
     ),
     # NCA ----
     tabPanel("NCA", fluid = TRUE,

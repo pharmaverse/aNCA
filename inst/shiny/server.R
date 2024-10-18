@@ -2,7 +2,7 @@
 # Define server logic
 function(input, output, session) {
   # DATA ----
-  source(system.file("shiny/tabs/data.R", package = "aNCA"), local = TRUE)
+  data <- tab_data_server("data")
   # NCA ----
   source(system.file("shiny/tabs/nca.R", package = "aNCA"), local = TRUE)
   # OUTPUT ----
