@@ -94,4 +94,42 @@ function(input, output, session) {
     updateNavbarPage(session, "page", selected = "NCA")
     updateTabsetPanel(session, "ncapanel", selected = "Setup")
   })
+
+  # Include keyboard limits for the settings GUI display
+  ## Define a function that simplifies the action
+  # TODO: ???
+  input_limit <- function(input_id, max = Inf, min = -Inf, update_fun = updateNumericInput) {
+    observeEvent(input[[input_id]], {
+      if (input[[input_id]] < min & !is.na(input[[input_id]])) {
+        update_fun(session, input_id, "", value = min)
+      }
+      if (input[[input_id]] > max & !is.na(input[[input_id]])) {
+        update_fun(session, input_id, "", value = max)
+      }
+    })
+  }
+
+  # ## Keyboard limits for the setting thresholds
+  input_limit("adj.r.squared_threshold", max = 1, min = 0)
+  input_limit("aucpext.obs_threshold", max = 100, min = 0)
+  input_limit("aucpext.pred_threshold", max = 100, min = 0)
+  input_limit("span.ratio_threshold", min = 0)
+
+  # ## Keyboard limits for the dynamically created partial AUC ranges
+  # # TODO: ????
+  observe({
+    inputs_list <- reactiveValuesToList(input)
+    for (input_id in names(inputs_list)) {
+      if (startsWith(input_id, "timeInput")) {
+        local({
+          my_input_id <- input_id
+          observeEvent(input[[my_input_id]], {
+            if (is.numeric(input[[my_input_id]]) && input[[my_input_id]] < 0) {
+              input_limit(my_input_id, min = 0)
+            }
+          })
+        })
+      }
+    }
+  })
 }

@@ -4,6 +4,7 @@
 #' STUDYID, USUBJID, ANALYTE, PCSPEC, DOSEFRQ, DOSNO, AFRLT, ARRLT, NRRLT, NFRLT,
 #' AVAL, AVALU, ROUTE, DOSEA, AGE
 
+source(system.file("/shiny/modules/input_filter.R", package = "aNCA"))
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
@@ -23,7 +24,8 @@ tab_data_ui <- function(id) {
       ),
       br(),
       # Add filter UI elements
-      actionButton(ns("add_filter"), "Add Filter"),
+      actionButton(ns("add_filter"), "Add filter"),
+      actionButton(ns("submit_filters"), "Submit filters"),
       tags$div(id = ns("filters")),
       br(), br(),
     ),
@@ -102,81 +104,24 @@ tab_data_server <- function(id) {
       # Insert a new filter UI
       insertUI(
         selector = paste0("#", session$ns("filters")),
-        ui = create_filter(filter_id, ADNCA())
+        ui = input_filter_ui(session$ns(filter_id), colnames(ADNCA()))
       )
 
-      # Observe the "Remove Filter" button click for the newly created filter
-      observeEvent(input[[paste0(filter_id, "_remove")]], {
-        filters[[filter_id]] <- NULL
-        # Remove the filter UI
-        removeUI(selector = paste0("#", filter_id))
-        # Remove the filter from the reactiveValues object
-        filters[[filter_id]] <- NULL
-      }, ignoreInit = TRUE, once = TRUE)
-
-      observe({
-        column <- input[[paste0(filter_id, "_column")]]
-        condition <- input[[paste0(filter_id, "_condition")]]
-        value <- input[[paste0(filter_id, "_value")]]
-
-        if ((input[[paste0(filter_id, "_confirm")]] == TRUE) &&
-              !is.null(column) &&
-              !is.null(condition) &&
-              !is.null(value)) {
-          filters[[filter_id]] <- list(column = column, condition = condition, value = value)
-        } else {
-          filters[[filter_id]] <- NULL
-        }
-      })
+      filters[[filter_id]] <- input_filter_server(filter_id)
     })
-
-    # Include keyboard limits for the settings GUI display
-    ## Define a function that simplifies the action
-    # TODO: ???
-    input_limit <- function(input_id, max = Inf, min = -Inf, update_fun = updateNumericInput) {
-      observeEvent(input[[input_id]], {
-        if (input[[input_id]] < min & !is.na(input[[input_id]])) {
-          update_fun(session, input_id, "", value = min)
-        }
-        if (input[[input_id]] > max & !is.na(input[[input_id]])) {
-          update_fun(session, input_id, "", value = max)
-        }
-      })
-    }
-
-    ## Keyboard limits for the setting thresholds
-    input_limit("adj.r.squared_threshold", max = 1, min = 0)
-    input_limit("aucpext.obs_threshold", max = 100, min = 0)
-    input_limit("aucpext.pred_threshold", max = 100, min = 0)
-    input_limit("span.ratio_threshold", min = 0)
-
-    ## Keyboard limits for the dynamically created partial AUC ranges
-    # TODO: ????
-    observe({
-      inputs_list <- reactiveValuesToList(input)
-      for (input_id in names(inputs_list)) {
-        if (startsWith(input_id, "timeInput")) {
-          local({
-            my_input_id <- input_id
-            observeEvent(input[[my_input_id]], {
-              if (is.numeric(input[[my_input_id]]) && input[[my_input_id]] < 0) {
-                input_limit(my_input_id, min = 0)
-              }
-            })
-          })
-        }
-      }
-    })
-
 
     # create reactive value with applied filters
-    data <- reactive({
-      apply_filters(
-        ADNCA(),
-        reactiveValuesToList(filters)
-      )
-    })
+    data <- reactiveVal(NULL)
+    observeEvent(list(input$submit_filters, ADNCA()), {
+      # extract filters from reactive #
+      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
 
+      # filter and overwrite data #
+      filtered_data <- apply_filters(
+        ADNCA(), applied_filters
+      )
+      data(filtered_data)
+    }, ignoreInit = FALSE)
 
     # update the data table object with the filtered data #
     output$filecontents <- DT::renderDataTable({
