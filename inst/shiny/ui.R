@@ -407,6 +407,10 @@ fluidPage(
           )
         )
       )
+    ),
+    # New TLG tab
+    tabPanel("TLG",
+      tab_tlg_ui("tlg")
     )
   )
 )
