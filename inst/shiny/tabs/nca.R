@@ -235,7 +235,8 @@ observe({
 
 # Choose dosenumbers to be analyzed
 
-observeEvent(input$submit_analyte, {
+observeEvent(input$submit_analyte, priority = -1, {
+  print(mydata())
   req(mydata())
   updateSelectInput(
     session,
