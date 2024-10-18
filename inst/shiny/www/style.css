@@ -16,8 +16,29 @@
 
 .selectize-input {
   height: 100%;
-  width: 200%;
-  font-size: 100%;
+  width: 100%;
+}
+
+/* filters on data page */
+#data-filters {
+  padding: 1em;
+}
+
+#data-filters .col-sm-6,
+#data-filters .col-sm-5,
+#data-filters .col-sm-4,
+#data-filters .col-sm-2,
+#data-filters .col-sm-1 {
+  padding: 0;
+}
+
+#data-filters .form-group.shiny-input-container {
+  width: 100%;
+}
+
+#data-filters button.btn-danger {
+  margin-top: 1.45em;
+  margin-left: 0.25em;
 }
 
 /* buttons */

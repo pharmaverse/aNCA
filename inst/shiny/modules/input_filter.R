@@ -22,19 +22,28 @@ input_filter_ui <- function(id, cols) {
 
   tags$div(
     id = ns("filter_container"),
-    tags$hr(),
-    selectInput(
-      ns("column"),
-      "Select Column:",
-      choices = cols
-    ),
-    selectInput(
-      ns("condition"),
-      "Condition:",
-      choices = c("==", ">", "<", ">=", "<=")
-    ),
-    textInput(ns("value"), "Value:"),
-    actionButton(ns("remove"), "Remove Filter")
+    fluidRow(
+      column(width = 4,
+        selectInput(
+          ns("column"),
+          "",
+          choices = cols
+        )
+      ),
+      column(width = 2,
+        selectInput(
+          ns("condition"),
+          "",
+          choices = c("==", ">", "<", ">=", "<=")
+        )
+      ),
+      column(width = 5,
+        textInput(ns("value"), ""),
+      ),
+      column(width = 1,
+        actionButton(ns("remove"), "X", class = "btn-danger")
+      )
+    )
   )
 }
 
