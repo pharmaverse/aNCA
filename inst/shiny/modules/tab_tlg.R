@@ -2,15 +2,6 @@ tab_tlg_ui <- function(id) {
   ns <- NS(id)
   
   tabsetPanel(
-    #' TODO(mateusz): please migrate this to outside style.css file
-    #' TODO(mateusz): those styles are global, so they will inpact all tables in the application -
-    #'                are you sure we want to do that?
-    tags$head(tags$style(HTML("table tbody td:nth-child(1), 
-                               #selected_tlg_datatable tbody td:nth-child(2),
-                               .selected_tlg_datatable tbody td:nth-child(4) 
-                                  {pointer-events: none;}")
-    )
-    ),
     tabPanel("Order details",
              actionButton(ns("add_tlg"), "Add TLG"),
              actionButton(ns("remove_tlg"), "Remove TLG"),
@@ -113,6 +104,7 @@ tab_tlg_server <- function(id, data) {
       # Render the editable DT table
       datatable(
         elementId = "selected_tlg_datatable",
+        class = "tlg-order-datatable",
         data = dplyr::filter(tlg_order(), Selection),
         editable = list(
           target = "cell",
