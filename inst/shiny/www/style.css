@@ -117,3 +117,10 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Add a subtle text shadow */
 }
 
+/* CSS rules to disable pointer events for specific table columns */
+/* TODO(Mateusz): Make specific for datatable() id = selected_tlg_datatable (tab_tlg.R) */
+table tbody td:nth-child(1), 
+#selected_tlg_table tbody td:nth-child(2),
+.selected_tlg_table tbody td:nth-child(4) {
+  pointer-events: none;
+}

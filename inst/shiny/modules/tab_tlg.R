@@ -22,15 +22,14 @@ tab_tlg_ui <- function(id) {
     tabPanel("Tables",
              fluidRow(
                column(2,  # Left column for plot selection
-                      h3("Input from user to choose plot"),
-                      radioButtons(inputId = ns("buttons_Tables"), label = "\n", choices = "")
+                      radioButtons(inputId = ns("buttons_Tables"), label = "Choose Table\n", choices = "")
                ),
                column(6,  # Middle column for plot output
-                      h3("Output plots to display based on user's input"),
+                      h4("Table to display"),
                       plotOutput(ns("plot_Tables"))
                ),
                column(2,  # Right column for plot customization inputs
-                      h3("Inputs with selections linked to downloadable object (i.e, tlg_order())"),
+                      h4("Inputs with selected vals linked to downloadable object (i.e, tlg_order())"),
                       textInput(ns("footnote_Tables"), label = 'Footnote')
                )
              )
@@ -38,15 +37,14 @@ tab_tlg_ui <- function(id) {
     tabPanel("Listings",
              fluidRow(
                column(2,  # Left column for plot selection
-                      h3("Input from user to choose plot"),
-                      radioButtons(inputId = ns("buttons_Listings"), label = "\n", choices = "")
+                      radioButtons(inputId = ns("buttons_Listings"), label = "Choose List\n", choices = "")
                ),
                column(6,  # Middle column for plot output
-                      h3("Output plots to display based on user's input"),
+                      h4("Listing to display"),
                       plotOutput(ns("plot_Listings"))
                ),
                column(2,  # Right column for plot customization inputs
-                      h3("Inputs with selections linked to downloadable object (i.e, tlg_order())"),
+                      h4("Inputs with selected vals linked to downloadable object (i.e, tlg_order())"),
                       textInput(ns("footnote_Listings"), label = 'Footnote')
                )
              )
@@ -54,15 +52,14 @@ tab_tlg_ui <- function(id) {
     tabPanel("Graphs",
              fluidRow(
                column(2,  # Left column for plot selection
-                      h3("Input from user to choose plot"),
-                      radioButtons(inputId = ns("buttons_Graphs"), label = "\n", choices = "")
+                      radioButtons(inputId = ns("buttons_Graphs"), label = "Choose Graph\n", choices = "")
                ),
                column(6,  # Middle column for plot output
-                      h3("Output plots to display based on user's input"),
+                      h4("Graph to display"),
                       plotOutput(ns("plot_Graphs"))
                ),
                column(2,  # Right column for plot customization inputs
-                      h3("Inputs with selections linked to downloadable object (i.e, tlg_order())"),
+                      h4("Inputs with selected vals linked to downloadable object (i.e, tlg_order())"),
                       textInput(ns("footnote_Graphs"), label = 'Footnote')
                )
              )
@@ -84,7 +81,7 @@ tab_tlg_server <- function(id, data) {
     # Make available the CSV file with the TLG list and available links to NEST
     tlg_order <- reactiveVal(
       # TODO(mateusz): migrate this to shiny/data folder
-      read.csv("www/data/TLG_order_details.csv") %>%
+      read.csv(file.path(assets, "data/TLG_order_details.csv")) %>%
         mutate(PKid = paste0("<a href='", Catalog_Link, "' target='_blank'>", PKid, "</a>"))
     )
     
