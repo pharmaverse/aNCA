@@ -88,7 +88,7 @@ tab_tlg_server <- function(id, data) {
 
     # Make available the CSV file with the TLG list and available links to NEST
     tlg_order <- reactiveVal(
-      read.csv(system.file("shiny/www/data/TLG_order_details.csv", package = "aNCA")) %>%
+      read.csv(system.file("www/data/TLG_order_details.csv", package = "aNCA")) %>%
         mutate(PKid = paste0("<a href='", Catalog_Link, "' target='_blank'>", PKid, "</a>"))
     )
 
