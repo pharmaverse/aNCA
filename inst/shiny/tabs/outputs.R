@@ -218,10 +218,12 @@ output$descriptivestats <- DT::renderDataTable({
   req(summary_stats())
   DT::datatable(
     data = summary_stats(),
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      fixedHeader = TRUE
     )
   )
 })
@@ -230,10 +232,12 @@ output$descriptivestats2 <- DT::renderDataTable({
   req(res_nca())
   DT::datatable(
     data = calculate_summary_stats(res_nca())  %>% rename(PARAM = PPTESTCD),
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      fixedHeader = TRUE
     )
   )
 })
