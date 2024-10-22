@@ -1,4 +1,5 @@
 assets <- system.file("shiny/www", package = "aNCA")
+source(system.file("shiny/modules/tab_tlg.R", package = "aNCA"))
 
 # Define UI
 fluidPage(
@@ -407,6 +408,10 @@ fluidPage(
           )
         )
       )
+    ),
+    # New TLG tab
+    tabPanel("TLG",
+      tab_tlg_ui("tlg")
     )
   )
 )
