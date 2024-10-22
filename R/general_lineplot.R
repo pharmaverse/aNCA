@@ -98,8 +98,6 @@ general_lineplot <- function(
   if (time_scale == "By Cycle") {
     preprocessed_data <- preprocessed_data %>%
       filter(DOSNO %in% cycle)
-    
-    
   }
 
   if (xaxis_scale == "Log") {
@@ -109,8 +107,7 @@ general_lineplot <- function(
   
   time <- if (time_scale == "By Cycle") {
     "ARRLT"
-  }
-  else {
+  } else {
     "AFRLT"
   }
 
