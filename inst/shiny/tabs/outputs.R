@@ -49,13 +49,13 @@ output$generalplot_usubjid <- renderUI({
 # select which variable to color the general lineplot by
 output$generalplot_colorby <- renderUI({
   # deselect choices that are no pp parameters
-  param_choices <- c("STUDYID", "PCSPEC", "ANALYTE", "USUBJID", "DOSEA", "DOSNO")
+  param_choices <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID"))
   pickerInput(
     "generalplot_colorby",
     "Choose the variables to color by",
     choices = param_choices,
-    selected = param_choices[1],
-    multiple = FALSE,
+    selected = param_choices[length(param_choices)],
+    multiple = TRUE,
     options = list(`actions-box` = TRUE)
   )
 })
