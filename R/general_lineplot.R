@@ -105,7 +105,7 @@ general_lineplot <- function(
     preprocessed_data <- preprocessed_data %>%
       mutate(AVAL = ifelse(AVAL == 0, 0.001, AVAL))
   }
-  
+
   time <- if (time_scale == "By Cycle") {
     "ARRLT"
   } else {
@@ -131,13 +131,13 @@ general_lineplot <- function(
     yvar_baseline = "AVAL",
     ggtheme = nestcolor::theme_nest(),
     col = NULL
-  ) + 
-    labs(color = paste(colorby_var, collapse = ", ") )
+  ) +
+    labs(color = paste(colorby_var, collapse = ", "))
 
   if (xaxis_scale == "Log") {
     plt <- plt +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10), label = c(0.001, 0.01, 0.1, 1, 10)) +
-      annotation_logticks(sides = "l") 
+      annotation_logticks(sides = "l")
   }
 
   return(plt)
