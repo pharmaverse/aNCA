@@ -67,7 +67,8 @@ general_lineplot <- function(
     mutate(
       USUBJID = factor(USUBJID),
       DOSNO = factor(DOSNO),
-      DOSEA = factor(DOSEA)
+      DOSEA = factor(DOSEA),
+      id_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
 
   # If there are predose records duplicate them in the previous line so they are considered
@@ -117,7 +118,7 @@ general_lineplot <- function(
     yvar = "AVAL",
     xlab = paste0("Time [", unique(preprocessed_data$RRLTU), "]"),
     ylab = paste0("Concentration [", unique(preprocessed_data$AVALU), "]"),
-    id_var = colorby_var,
+    id_var = "id_var",
     title = "Plot of PK Concentration - Time Profile",
     subtitle = paste0(
       "Subjects: ",
@@ -130,12 +131,13 @@ general_lineplot <- function(
     yvar_baseline = "AVAL",
     ggtheme = nestcolor::theme_nest(),
     col = NULL
-  )
+  ) + 
+    labs(color = paste(colorby_var, collapse = ", ") )
 
   if (xaxis_scale == "Log") {
     plt <- plt +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10), label = c(0.001, 0.01, 0.1, 1, 10)) +
-      annotation_logticks(sides = "l")
+      annotation_logticks(sides = "l") 
   }
 
   return(plt)
