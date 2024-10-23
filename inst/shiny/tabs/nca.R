@@ -232,10 +232,12 @@ output$datatable <- DT::renderDataTable({
   req(mydata())
   DT::datatable(
     data = mydata()$conc$data,
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      fixedHeader = TRUE
     )
   )
 })
@@ -521,10 +523,12 @@ output$myresults <- DT::renderDataTable({
   req(final_res_nca())
   DT::datatable(
     data = final_res_nca(),
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
       lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      fixedHeader = TRUE,
       columnDefs = list(list(
         visible = FALSE, targets = setdiff(colnames(final_res_nca()), input$params)
       ))
@@ -672,10 +676,13 @@ output$preslopesettings <- DT::renderDataTable({
   # Render the DT datatable object
   DT::datatable(
     data = preslopesettings,
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      pageLength = -1, 
+      fixedHeader = TRUE
     )
   ) %>%
     formatStyle(
@@ -755,10 +762,12 @@ output$slope_manual_NCA_data <- DT::renderDataTable({
     escape = FALSE,
     rownames = FALSE,
     editable = TRUE,
+    extensions = "FixedHeader",
     options = list(
       paging = FALSE,
       ordering = FALSE,
       searching = FALSE,
+      fixedHeader = TRUE,
       preDrawCallback = JS("function() { Shiny.unbindAll(this.api().table().node()); }"),
       drawCallback = JS("function() { Shiny.bindAll(this.api().table().node()); } ")
     )

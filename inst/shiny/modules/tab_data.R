@@ -128,10 +128,12 @@ tab_data_server <- function(id) {
       req(data())
       DT::datatable(
         data(),
+        extensions = "FixedHeader",
         options = list(
           scrollX = TRUE,
           scrollY = TRUE,
-          lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+          fixedHeader = TRUE
         )
       )
     })
