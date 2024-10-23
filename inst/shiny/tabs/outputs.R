@@ -68,7 +68,7 @@ output$cycleselect <- renderUI({
     filter(ANALYTE == input$generalplot_analyte) %>%
     pull(DOSNO) %>%
     unique()
-  selectInput("cycles", "Choose the cycle :", choices = sort(y))
+  selectInput("cycles", "Choose the cycle :", choices = sort(y), multiple = TRUE, selected = y[1])
 
 })
 
