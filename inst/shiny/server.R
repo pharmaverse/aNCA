@@ -1,6 +1,8 @@
 # This script sources the server logic from the tabs folder
 # Define server logic
 function(input, output, session) {
+  log_info("Startup")
+
   # DATA ----
   data <- tab_data_server("data")
   # NCA ----
