@@ -697,48 +697,6 @@ output$preslopesettings <- DT::renderDataTable({
 ### SLOPE PLOTS MODULE, WIP
 slope_selector_server("slope_selector", mydata, res_nca, profiles_per_patient, input$cyclenca)
 
-rv$page <- 1
-rv$searched_patient <- NULL
-
-# Output slope test plots for each patient
-# observeEvent(res_nca(), {
-
-#   # Define the profiles selected (dosno) that each patient (usubjid) has
-#   profiles_per_patient(tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique))
-
-#   # Update the patient search input to make available choices for the user
-#   updatePickerInput(
-#     session = session,
-#     inputId = "search_patient",
-#     label = "Search Patient",
-#     choices = unique(res_nca()$result$USUBJID)
-#   )
-
-#   # Generate output lambda slope plots for each patient/profile
-#   for (patient in unique(names(profiles_per_patient()))) {
-#     for (profile in profiles_per_patient()[[patient]]) {
-#       local({
-#         patient <- patient
-#         profile <- profile
-
-#         force(patient)  # Ensure patient is captured correctly
-#         force(profile)  # Ensure profile is captured correctly
-
-#         output_name <- paste0("slopetestplot_", patient, "_", profile)
-#         output[[output_name]] <- renderPlotly({
-#           lambda_slope_plot(
-#             res_nca()$result,
-#             res_nca()$data$conc$data,
-#             profile,
-#             patient,
-#             0.7
-#           )
-#         })
-#       })
-#     }
-#   }
-# })
-
 # Store all ids from UIs plot-related features
 id_inputs <- reactiveValues(
   slope_inputs = NULL,
