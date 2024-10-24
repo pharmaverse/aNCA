@@ -121,7 +121,7 @@ slope_selector_server <- function(
     observeEvent(input$next_page, current_page(current_page() + 1))
     observeEvent(input$previous_page, current_page(current_page() - 1))
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
-    observeEvent(input$plots_per_page, current_page(1))
+    observeEvent(list(input$plots_per_page, input$search_patient), current_page(1))
 
     observeEvent(list(
       res_nca(), input$plots_per_page, input$search_patient, current_page()
