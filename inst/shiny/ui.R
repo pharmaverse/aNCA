@@ -327,5 +327,6 @@ fluidPage(
     tabPanel("TLG",
       tab_tlg_ui("tlg")
     )
-  )
+  ),
+  shinyjs::useShinyjs()
 )
