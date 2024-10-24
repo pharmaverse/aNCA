@@ -37,9 +37,11 @@ slope_selector_ui <- function(id) {
       )
     ),
     fluidRow(
-      column(4, align = "left", actionButton(ns("prev_page"), "Previous Page")),
+      column(4, align = "left", actionButton(ns("previous_page"), "Previous Page")),
       column(
         4, align = "center",
+        #' TODO(mateusz): the 'jump to page' select input could be part of the page number
+        #' display for better visuals
         uiOutput(ns("page_number")),
         selectInput(
           ns("select_page"),
@@ -49,7 +51,6 @@ slope_selector_ui <- function(id) {
       ),
       column(4, align = "right", actionButton(ns("next_page"), "Next Page"))
     ),
-    #uiOutput(ns("slopetestUI")),
     uiOutput(ns("slope_plots_ui")),
     # Include details for modal message in slope_helpIcon (Instruction details)
     #' TODO(mateusz): make this work, possibly refactor
@@ -115,8 +116,18 @@ slope_selector_server <- function(
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
 
-    observeEvent(list(res_nca(), input$plots_per_page, input$search_patient), {
+    current_page <- reactiveVal(1)
+
+    observeEvent(input$next_page, current_page(current_page() + 1))
+    observeEvent(input$previous_page, current_page(current_page() - 1))
+    observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
+    observeEvent(input$plots_per_page, current_page(1))
+
+    observeEvent(list(
+      res_nca(), input$plots_per_page, input$search_patient, current_page()
+    ), {
       log_trace("{id}: Updating displayed plots")
+
       # Make sure the search_patient input is not NULL
       search_patient <- {
         if (is.null(input$search_patient) || length(input$search_patient) == 0) {
@@ -126,6 +137,7 @@ slope_selector_server <- function(
         }
       }
 
+      # create plot ids based on available data #
       patient_profile_plot_ids <- mydata()$conc$data %>%
         filter(
           DOSNO %in% cycle_nca,
@@ -137,16 +149,42 @@ slope_selector_server <- function(
         mutate(id = session$ns(paste0("slope_plot_", USUBJID, "_", DOSNO))) %>%
         pull(id)
 
-      plots_to_render <- patient_profile_plot_ids[1:input$plots_per_page]
+      num_plots <- length(patient_profile_plot_ids)
 
+      # find which plots should be displayed based on page #
+      plots_per_page <- as.numeric(input$plots_per_page)
+      page_end <- current_page() * plots_per_page
+      page_start <- page_end - plots_per_page + 1
+      if (page_end > num_plots) page_end <- num_plots
+
+      plots_to_render <- patient_profile_plot_ids[page_start:page_end]
+
+      # render plot outputs #
       plot_outputs <- lapply(plots_to_render, \(id) {
-        tags$div(class = "slope-plot", plotlyOutput(id))
+        plotlyOutput(id)
       })
 
       output$slope_plots_ui <- renderUI({
         plot_outputs
       })
 
+      # update page number display #
+      num_pages <- ceiling(num_plots / plots_per_page)
+      output$page_number <- renderUI({
+        tags$span(stringr::str_glue("Page {current_page()} of {num_pages}"))
+      })
+
+      # update jump to page selector #
+      updateSelectInput(
+        session = session,
+        inputId = "select_page",
+        choices = 1:num_pages,
+        selected = current_page()
+      )
+
+      # disable buttons if necessary #
+      shinyjs::toggleState(id = "previous_page", condition = current_page() > 1)
+      shinyjs::toggleState(id = "next_page", condition = current_page() < num_pages)
     })
 
     observeEvent(res_nca(), {
