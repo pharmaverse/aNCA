@@ -694,47 +694,50 @@ output$preslopesettings <- DT::renderDataTable({
 
 # Slope Tests
 
+### SLOPE PLOTS MODULE, WIP
+slope_selector_server("slope_selector", mydata, res_nca, profiles_per_patient, input$cyclenca)
+
 rv$page <- 1
 rv$searched_patient <- NULL
 
 # Output slope test plots for each patient
-observeEvent(res_nca(), {
+# observeEvent(res_nca(), {
 
-  # Define the profiles selected (dosno) that each patient (usubjid) has
-  profiles_per_patient(tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique))
+#   # Define the profiles selected (dosno) that each patient (usubjid) has
+#   profiles_per_patient(tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique))
 
-  # Update the patient search input to make available choices for the user
-  updatePickerInput(
-    session = session,
-    inputId = "search_patient",
-    label = "Search Patient",
-    choices = unique(res_nca()$result$USUBJID)
-  )
+#   # Update the patient search input to make available choices for the user
+#   updatePickerInput(
+#     session = session,
+#     inputId = "search_patient",
+#     label = "Search Patient",
+#     choices = unique(res_nca()$result$USUBJID)
+#   )
 
-  # Generate output lambda slope plots for each patient/profile
-  for (patient in unique(names(profiles_per_patient()))) {
-    for (profile in profiles_per_patient()[[patient]]) {
-      local({
-        patient <- patient
-        profile <- profile
+#   # Generate output lambda slope plots for each patient/profile
+#   for (patient in unique(names(profiles_per_patient()))) {
+#     for (profile in profiles_per_patient()[[patient]]) {
+#       local({
+#         patient <- patient
+#         profile <- profile
 
-        force(patient)  # Ensure patient is captured correctly
-        force(profile)  # Ensure profile is captured correctly
+#         force(patient)  # Ensure patient is captured correctly
+#         force(profile)  # Ensure profile is captured correctly
 
-        output_name <- paste0("slopetestplot_", patient, "_", profile)
-        output[[output_name]] <- renderPlotly({
-          lambda_slope_plot(
-            res_nca()$result,
-            res_nca()$data$conc$data,
-            profile,
-            patient,
-            0.7
-          )
-        })
-      })
-    }
-  }
-})
+#         output_name <- paste0("slopetestplot_", patient, "_", profile)
+#         output[[output_name]] <- renderPlotly({
+#           lambda_slope_plot(
+#             res_nca()$result,
+#             res_nca()$data$conc$data,
+#             profile,
+#             patient,
+#             0.7
+#           )
+#         })
+#       })
+#     }
+#   }
+# })
 
 # Store all ids from UIs plot-related features
 id_inputs <- reactiveValues(
@@ -1029,18 +1032,18 @@ observeEvent(list(input$nca, input$search_patient), {
   }
 
   # Create a vector with each patient/profile lambda slope plot ID
-  patient_profile_plotids(
-    mydata()$conc$data %>%
-      filter(
-        DOSNO %in% input$cyclenca,
-        USUBJID %in% search_patient
-      ) %>%
-      select(USUBJID, DOSNO) %>%
-      unique() %>%
-      arrange(USUBJID, DOSNO) %>%
-      mutate(id = paste0("slopetestplot_", USUBJID, "_", DOSNO)) %>%
-      pull(id)
-  )
+  # patient_profile_plotids(
+  #   mydata()$conc$data %>%
+  #     filter(
+  #       DOSNO %in% input$cyclenca,
+  #       USUBJID %in% search_patient
+  #     ) %>%
+  #     select(USUBJID, DOSNO) %>%
+  #     unique() %>%
+  #     arrange(USUBJID, DOSNO) %>%
+  #     mutate(id = paste0("slopetestplot_", USUBJID, "_", DOSNO)) %>%
+  #     pull(id)
+  # )
 })
 
 # To elude confusions between user and UI, changes in the search engine will reset the page to 1
@@ -1077,33 +1080,33 @@ observeEvent(list(res_nca(), rv$page, patient_profile_plotids(), input$plots_per
   )[seq_along(patient_profile_plotids())]
 
   # Define the UI pagination interface based on page number
-  prev_button(
-    if (rv$page > 1) {
-      actionButton("prev_page", "Previous Page")
-    } else {
-      NULL
-    }
-  )
+  # prev_button(
+  #   if (rv$page > 1) {
+  #     actionButton("prev_page", "Previous Page")
+  #   } else {
+  #     NULL
+  #   }
+  # )
 
-  next_button(
-    if (rv$page < rv$num_pages) {
-      actionButton("next_page", "Next Page")
-    } else {
-      NULL
-    }
-  )
+  # next_button(
+  #   if (rv$page < rv$num_pages) {
+  #     actionButton("next_page", "Next Page")
+  #   } else {
+  #     NULL
+  #   }
+  # )
 
-  page_info(paste("Page", rv$page, "of", rv$num_pages))
-  page_selector(
-    numericInput(
-      "page_selector",
-      "Jump to page:",
-      value = rv$page,
-      min = 1,
-      max = rv$num_pages,
-      step = 1
-    )
-  )
+  # page_info(paste("Page", rv$page, "of", rv$num_pages))
+  # page_selector(
+  #   numericInput(
+  #     "page_selector",
+  #     "Jump to page:",
+  #     value = rv$page,
+  #     min = 1,
+  #     max = rv$num_pages,
+  #     step = 1
+  #   )
+  # )
 
   # Keep a list outputing the plots that need to be displayed
   plot_outputs(
@@ -1116,16 +1119,16 @@ observeEvent(list(res_nca(), rv$page, patient_profile_plotids(), input$plots_per
   )
 })
 
-output$slopetestUI <- renderUI({
-  fluidRow(
-    plot_outputs(),
-    fluidRow(
-      column(4, align = "left", prev_button()),
-      column(4, align = "center", page_info(), page_selector()),
-      column(4, align = "right", next_button())
-    )
-  )
-})
+# output$slopetestUI <- renderUI({
+#   fluidRow(
+#     plot_outputs(),
+#     fluidRow(
+#       column(4, align = "left", prev_button()),
+#       column(4, align = "center", page_info(), page_selector()),
+#       column(4, align = "right", next_button())
+#     )
+#   )
+# })
 
 # Make a copy of mydata() to make transitory changes in the plots easily
 mydata2 <- reactiveVal()
