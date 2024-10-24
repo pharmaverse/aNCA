@@ -44,6 +44,7 @@ Imports:
     shinyBS,
     shinyFiles,
     shinyjqui,
+    shinyjs,
     shinyWidgets,
     stats,
     stringr,
