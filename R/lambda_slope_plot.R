@@ -114,7 +114,6 @@ lambda_slope_plot <- function(
   )
 
   subtitle_text <- paste0(
-    # "R<sup>2</sup>: ", r2_value,
     "    R<sup>2</sup><sub>adj</sub>: ", r2adj_value,
     "    ln(2)/\u03BB = ", half_life_value, "h",
     "    (T<sub>", lambda_z_ix_rows$IX[2], "</sub> - T<sub>",
@@ -148,12 +147,12 @@ lambda_slope_plot <- function(
   # Generate the base scatter ggplot
   p <- plot_data %>%
     ggplot(aes(x = TIME, y = AVAL)) +
-    #geom_segment_layer+
     geom_line(color = "gray70", linetype = "solid", linewidth = 1) +
     geom_smooth(
       data = subset(plot_data, IX_color == "hl.included"),
       method = "lm",
       se = FALSE,
+      formula = y ~ x,
       color = "green3",
       linetype = "solid",
       linewidth = 1
@@ -185,10 +184,10 @@ lambda_slope_plot <- function(
     scale_color_manual(values = c(
       "hl.included" = "green4", "hl.excluded" = "black", "excluded" = "red3"
     )) +
-    scale_y_log10()
+    scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 0.01, base = exp(10)))
 
   # Make a plotly interactive plot
-  pl <- ggplotly(p) %>%
+  pl <- ggplotly(p, width = 800, height = 600) %>%
     layout(
       annotations = list(
         text = subtitle_text,
@@ -201,16 +200,17 @@ lambda_slope_plot <- function(
         x  = 0,
         y = 1.105
       ),
-      hoverlabel = list(font = list(family = "times", size = 20)),
-      width = 800,
-      height = 600
+      hoverlabel = list(font = list(family = "times", size = 20))
     ) %>%
-    config(mathjax = "cdn")  %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 1) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 2) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 3) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 4) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 5) %>%
+    config(mathjax = "cdn")
+
+  num_traces <- length(pl$x$data)
+  for (i in seq_len(num_traces)) {
+    pl <- pl %>%
+      style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = i)
+  }
+
+  pl <- pl %>%
     # Make this trace the only one
     add_trace(
       data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid),
