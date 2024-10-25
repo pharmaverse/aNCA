@@ -29,7 +29,8 @@ general_meanplot <- function(data,
                              selected_cycles,
                              id_variable = "DOSEA",
                              plot_ylog = FALSE,
-                             plot_sd = FALSE) {
+                             plot_sd = FALSE,
+                             plot_cv = FALSE) {
 
 
   # preprocess the data by summarising
@@ -49,9 +50,10 @@ general_meanplot <- function(data,
     mutate(
       Mean = round(geometric_mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),
+      CV = (SD / Mean) * 100,
       N = n()
     ) %>%
-    select(where(~n_distinct(.) == 1), Mean, SD, N) %>%
+    select(where(~n_distinct(.) == 1), Mean, SD, CV, N) %>%
     slice(1) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
@@ -91,6 +93,11 @@ general_meanplot <- function(data,
   if (plot_sd) {
     p <- p +
       geom_errorbar(aes(ymin = (Mean - SD), ymax = (Mean + SD), color = id_variable), width = 0.4)
+  }
+  # add sd
+  if (plot_cv) {
+    p <- p +
+      geom_errorbar(aes(ymin = (Mean - CV), ymax = (Mean + CV), color = id_variable), width = 0.4)
   }
 
   return(p)
