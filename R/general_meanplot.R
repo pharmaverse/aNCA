@@ -57,10 +57,16 @@ general_meanplot <- function(data,
     slice(1) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
-
+  
   # filter for log scaling y values that equal 0
   if (plot_ylog) {
     preprocessed_data <- preprocessed_data %>% filter(Mean != 0)
+  }
+  
+  # Check if preprocessed_data is empty
+  if (nrow(preprocessed_data) == 0) {
+    empty_plot <- ggplot() + labs(title = "No data available")
+    return(ggplotly(empty_plot))
   }
 
   # plot the preprocess data
@@ -83,8 +89,6 @@ general_meanplot <- function(data,
           strip.background = element_rect(fill = "grey90", color = "grey50"),
           plot.margin = margin(10, 10, 10, 10, "pt"))
 
-  ggplotly(p)
-
   # add log scale
   if (plot_ylog) {
     p <- p + scale_y_log10()
@@ -99,9 +103,10 @@ general_meanplot <- function(data,
     p <- p +
       geom_errorbar(aes(ymin = (Mean - CV), ymax = (Mean + CV), color = id_variable), width = 0.4)
   }
-
-  return(p)
-
+  # Convert ggplot to plotly
+  p_plotly <- ggplotly(p)
+  
+  return(p_plotly)
 }
 
 #' Helper Function: Calculate the Geometric Mean
