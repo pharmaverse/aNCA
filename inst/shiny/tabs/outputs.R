@@ -161,7 +161,8 @@ output$meanplot <- renderPlotly({
                    selected_cycles = input$cyclesmean,
                    id_variable = input$selectidvar,
                    plot_ylog = input$logmeanplot,
-                   plot_sd = input$sdmeanplot) %>%
+                   plot_sd = input$sdmeanplot,
+                   plot_cv = input$cvmeanplot) %>%
     plotly_build()
 
 })
