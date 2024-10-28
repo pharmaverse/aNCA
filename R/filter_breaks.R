@@ -66,7 +66,7 @@ filter_breaks <- function(breaks = NA,
     # Take latest selected break and calculate its distance
     b0 <- filt_breaks[length(filt_breaks)]
     bdist <- (breaks[i] - b0) / diff(scale_range) * panel_size_cm
-    print(bdist)
+
     if (bdist >= min_cm_distance) {
       filt_breaks <- c(filt_breaks, breaks[i])
     }
