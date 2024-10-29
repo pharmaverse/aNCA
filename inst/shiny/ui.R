@@ -205,7 +205,7 @@ fluidPage(
               ),
               tabPanel(
                 "Exclusions",
-                tableOutput("slope_manual_NCA_data2")
+                tableOutput("manual_slopes2")
               )
             )
           )

@@ -170,7 +170,7 @@ observeEvent(input$settings_upload, {
   }
 
   # Lambda slope point selections and exclusions
-  slope_manual_nca_data <- setts %>%
+  manual_slopes <- setts %>%
     select(TYPE, USUBJID, DOSNO, IX, REASON) %>%
     mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
     group_by(TYPE, PATIENT, PROFILE, REASON) %>%
@@ -178,7 +178,7 @@ observeEvent(input$settings_upload, {
     select(TYPE, PATIENT, PROFILE, IXrange, REASON) %>%
     na.omit()
 
-  slope_manual_nca_data(slope_manual_nca_data)
+  manual_slopes(manual_slopes)
 })
 
 # When an analyte is selected and the user clicks the "Submit" button,
@@ -649,11 +649,11 @@ observe({
       id <- gsub("_(Ex\\d+)$", "", input_name)
 
       # Update the reactive list of exclusion IDs
-      slope_manual_nca_data <- slope_manual_nca_data()
+      manual_slopes <- manual_slopes()
       set_selected_value(
-        slope_manual_nca_data[slope_manual_nca_data$id == id, ], paste0(input[[input_name]])
-      ) <- slope_manual_nca_data[slope_manual_nca_data$id == id, ]
-      slope_manual_nca_data(slope_manual_nca_data)
+        manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
+      ) <- manual_slopes[manual_slopes$id == id, ]
+      manual_slopes(manual_slopes)
 
     })
   }
@@ -703,7 +703,7 @@ slope_exclusions <- slope_selector_server(
 )
 
 #' display exclusions on Results -> Exclusions tab
-output$slope_manual_NCA_data2 <- renderTable({
+output$manual_slopes2 <- renderTable({
   slope_exclusions()
 })
 
