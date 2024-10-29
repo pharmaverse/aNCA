@@ -52,16 +52,18 @@
 general_lineplot <- function(
   data, selected_analytes, selected_usubjids, colorby_var, time_scale, xaxis_scale, cycle = NULL
 ) {
+
+  # Check if the data is empty
+  if (nrow(data) == 0) {
+    return(ggplot() + ggtitle("No data available"))
+  }
+
   # preprocess data according to user selection
   preprocessed_data <- data %>%
     filter(
       USUBJID %in% selected_usubjids,
       ANALYTE %in% selected_analytes,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE
-    ) %>%
-    # filter only the ones where time conc are na, use columns names
-    select(
-      ARRLT, PCSPEC, AVAL, DOSEA, DOSNO, AFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU, RRLTU
     ) %>%
     filter(!is.na(AVAL)) %>%
     mutate(
@@ -70,7 +72,7 @@ general_lineplot <- function(
       DOSEA = factor(DOSEA),
       id_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
-
+  
   # If there are predose records duplicate them in the previous line so they are considered
   if ("ARRLT" %in% names(preprocessed_data) &&
         any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
@@ -103,7 +105,7 @@ general_lineplot <- function(
 
   if (xaxis_scale == "Log") {
     preprocessed_data <- preprocessed_data %>%
-      mutate(AVAL = ifelse(AVAL == 0, 0.001, AVAL))
+      mutate(AVAL = ifelse(AVAL < 1e-3, 1e-3, AVAL))
   }
 
   time <- if (time_scale == "By Cycle") {
@@ -111,8 +113,9 @@ general_lineplot <- function(
   } else {
     "AFRLT"
   }
-
-  plt <- g_ipp(
+  
+  
+  plt <- tern::g_ipp(
     df = preprocessed_data,
     xvar = time,
     yvar = "AVAL",
@@ -136,9 +139,22 @@ general_lineplot <- function(
 
   if (xaxis_scale == "Log") {
     plt <- plt +
-      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10), label = c(0.001, 0.01, 0.1, 1, 10)) +
-      annotation_logticks(sides = "l")
+      scale_y_continuous(trans = scales::pseudo_log_trans(base = 10, sigma = 1)) +   
+      labs(y = paste0("Log 10 - ", plt$labels$y))
+    
+    custom_label <- function(x) {
+      
+      ifelse(x == 1e-3, 0, scales::trans_format("log10", scales::math_format(10^x)))
+    }
+    
+    plt <- plt %+% dplyr::mutate(preprocessed_data, AVAL = ifelse(AVAL == 1e-3, 0, AVAL)) %>% 
+      + 
+      scale_y_continuous(
+        trans = scales::pseudo_log_trans(base = 10, sigma = 1),
+        breaks = c(-Inf, 10^seq(from = -3, to = ceiling(log10(max(plt$data["AVAL"], na.rm = T))))) %>% 
+          filter_breaks(plot = plt, min_cm_distance = 20, axis = "y"),
+        labels = scales::trans_format("log10", scales::math_format(10^.x))
+        )
   }
-
   return(plt)
 }
