@@ -6,8 +6,23 @@ Discussions regarding the project are handled using issues system directly on Gi
 In general, any posted issue should contain a brief description of the problem, as well as your expectations - we design this application with user-friendliness in mind, we wish to hear your opinion!
 
 # Submit changes
+## Joining the project
+In order to gain privileges to commit changes to the codebase, you will need to be added as a collaborator. To do so, please contact one of the contributors. You can find the list with contact info in the [DESCRIPTION](/DESCRIPTION) file.
+
 ## Issues
 Before creating any changes, please make sure an appropriate issue thread is opened. This is the place to discuss the topic at hand, agree on the approach for solving the problem and keep the tasks organized across the whole project.
+
+To keep things organized, [GitHub Project board](https://github.com/orgs/pharmaverse/projects/30/views/1) is used.
+
+#### Status
+Each new issue should go to **Backlog**. Feel free to add not only any bugs and feature requests, but also loose ideas - this is also a space for discussing proposals and validity of implementing them. When committed to implementing a change, the issue is moved to `Todo` status, and subsequently to `In progress` when a feature branch is created and work has begun. When the change is ready and the pull request is open, issues should be moved to `Needs review` where it will be picked up by a reviewer and moved to `In review`. After the change is merged and issue is closed, it will be moved to `Done`.
+
+#### Priority
+The tasks are prioritized based on a variant of the [MSCW method](https://en.wikipedia.org/wiki/MoSCoW_method). It gives a verbose descriptions for each level of priority:
+- **MUST** - task of highest priority, must be implemented for the application to be usable and useful.
+- **SHOULD** - task that we should include in the ready product, but it will not be breaking if it is not implemented.
+- **COULD** - things that would be nice to have and useful, but not instrumental to the whole package.
+- **WISH** - ideas that are not valid for the time being, but are nevertheless cool and could become useful as the development progresses.
 
 ## Branches
 Each change should be implemented on a separate branch. Branches should have related issues opened and be named after the issue topic. Branch name should include change type (bug/enhancement/documentation etc.) and name of the solved issue. Examples:
@@ -18,8 +33,13 @@ Each change should be implemented on a separate branch. Branches should have rel
 | Bug: help widget not working            | bug/help-widget-not-working            |
 |                                         |                                        |
 
-## Pull requests
+## Code guidelines
+The codebase follows the general [tidyverse](https://style.tidyverse.org/files.html) guidelines, but with lenient implementation. Please do make an effort to make your code clean, readable and easily understandable for the reviewer. In general, as long as your code passes all the `lintr` tests, you are good.
 
+## Commit messages
+Do try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) convention whenever possible. That said, software development is messy and if you feel like this standard does not suit the situation, feel free to deviate from it, but do keep the commit messages short and meaningful at the very least.
+
+## Pull requests
 [Pull request template](.github/PULL_REQUEST_TEMPLATE.md) is available to make documenting PRs more consistent and streamlined. Each PR description should include:
 
 #### Issue
@@ -43,8 +63,14 @@ This part is here as a reminder to perform basic tasks and checks before the cod
 
 The above rules will help keep our work organized, as well as allow for quick information flow between related issues, branches and pull requests.
 
-# Code guidelines
-TBA: depends on implemented rules within the `lintr` package.
+#### Notes to reviewer
+If there is anything that the reviewer should know before tackling the pull request, please provide it here. This could include things like pointing to specific parts of the code that require special attention, explaining decisions behind unusual implementations or providing logic behind changing the scope of the task.
 
-# Code review
-TBA
+## Code review
+Each pull request must be accepted by at least one reviewer before it can be merged to the main branch.
+
+#### For reviewee
+When the change is done, pull request is open and the description is filled, please move your issue from **In Progress** to **Needs review** status, so it can be picked up by a reviewer. From this point it is up to the contributor and the person validating the change to work out any kinks and lead to merging the changes.
+
+#### For reviewers
+When reviewing a pull request, please do try to follow the [conventional comments](https://conventionalcomments.org/) guidelines. Ideas and labels described in that convention can be very helpful in getting your thoughts across and facilitate meaningful cooperation. That said, they are not applicable in every circumstance and you are free to do whatever you feel is suitable, as long as it aims to provide valid discussion.

@@ -7,5 +7,6 @@
 run_app()
 }
 \description{
-Run the Shiny app
+List of functions imported for the shiny application.
+When adding new imports, please keep the alphabetical order, at lest for packages.
 }

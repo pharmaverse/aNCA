@@ -14,6 +14,15 @@
 # TAB: Data Selection ----------------------------------------------------------
 
 # In this tab we select the analyte to be analyzed or can upload settings
+# Update analyte selection input based on the data
+observeEvent(data(), {
+  updateSelectInput(
+    session,
+    inputId = "analyte",
+    label = "Choose the analyte :",
+    choices = unique(data()$ANALYTE)
+  )
+})
 
 # Make GUI change when new settings are uploaded
 observeEvent(input$settings_upload, {
@@ -172,15 +181,63 @@ observeEvent(input$settings_upload, {
   slope_manual_nca_data(slope_manual_nca_data)
 })
 
+# When an analyte is selected and the user clicks the "Submit" button,
+# create the PKNCA data object
+mydata <- reactiveVal(NULL)
+observeEvent(input$submit_analyte, priority = 2, {
+  print("trigered")
+  # Segregate the data into concentration and dose records
+  df_conc <- create_conc(data(), input$analyte, input$proftype)
+  df_dose <- create_dose(df_conc)
+
+  # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
+  df_conc$is.excluded.hl <- FALSE
+  df_conc$is.included.hl <- FALSE
+  df_conc$REASON <- NA  # Exclusions will have preferential reason statements than inclusions
+  df_conc$exclude_half.life <- FALSE
+
+  # Make the PKNCA concentration and dose objects
+  myconc <- PKNCA::PKNCAconc(
+    df_conc,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID / DOSNO,
+    exclude_half.life = "exclude_half.life",
+    time.nominal = "NFRLT"
+  )
+
+  mydose <- PKNCA::PKNCAdose(
+    data = df_dose,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
+    route = ifelse(toupper(df_dose$IQROUTE) == "EXTRAVASCULAR", "extravascular", "intravascular"),
+    time.nominal = "NFRLT",
+    duration = "ADOSEDUR"
+  )
+
+  # Combine the PKNCA objects into the PKNCAdata object
+  # TODO think of case with different units for different analytes
+  mydata <- PKNCA::PKNCAdata(
+    data.conc = myconc,
+    data.dose = mydose,
+    units = PKNCA::pknca_units_table(
+      concu = myconc$data$PCSTRESU[1],
+      doseu = myconc$data$DOSEU[1],
+      amountu = myconc$data$PCSTRESU[1],
+      timeu = myconc$data$RRLTU[1]
+    )
+  )
+  mydata(mydata)
+})
+
 # Display the PKNCA data object for the user (concentration records)
 output$datatable <- DT::renderDataTable({
   req(mydata())
   DT::datatable(
     data = mydata()$conc$data,
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      fixedHeader = TRUE
     )
   )
 })
@@ -235,7 +292,8 @@ observe({
 
 # Choose dosenumbers to be analyzed
 
-observeEvent(input$submit_analyte, {
+observeEvent(input$submit_analyte, priority = -1, {
+  print(mydata())
   req(mydata())
   updateSelectInput(
     session,
@@ -465,10 +523,12 @@ output$myresults <- DT::renderDataTable({
   req(final_res_nca())
   DT::datatable(
     data = final_res_nca(),
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
       lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      fixedHeader = TRUE,
       columnDefs = list(list(
         visible = FALSE, targets = setdiff(colnames(final_res_nca()), input$params)
       ))
@@ -616,10 +676,13 @@ output$preslopesettings <- DT::renderDataTable({
   # Render the DT datatable object
   DT::datatable(
     data = preslopesettings,
+    extensions = "FixedHeader",
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All"))
+      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+      pageLength = -1, 
+      fixedHeader = TRUE
     )
   ) %>%
     formatStyle(
@@ -699,10 +762,12 @@ output$slope_manual_NCA_data <- DT::renderDataTable({
     escape = FALSE,
     rownames = FALSE,
     editable = TRUE,
+    extensions = "FixedHeader",
     options = list(
       paging = FALSE,
       ordering = FALSE,
       searching = FALSE,
+      fixedHeader = TRUE,
       preDrawCallback = JS("function() { Shiny.unbindAll(this.api().table().node()); }"),
       drawCallback = JS("function() { Shiny.bindAll(this.api().table().node()); } ")
     )

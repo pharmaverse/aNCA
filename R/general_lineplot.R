@@ -97,17 +97,23 @@ general_lineplot <- function(
   # Adjust the data selection according to input
   if (time_scale == "By Cycle") {
     preprocessed_data <- preprocessed_data %>%
-      filter(DOSNO == cycle)
+      filter(DOSNO %in% cycle)
   }
 
   if (xaxis_scale == "Log") {
     preprocessed_data <- preprocessed_data %>%
       mutate(AVAL = ifelse(AVAL == 0, 0.001, AVAL))
   }
+  
+  time <- if (time_scale == "By Cycle") {
+    "ARRLT"
+  } else {
+    "AFRLT"
+  }
 
   plt <- g_ipp(
     df = preprocessed_data,
-    xvar = "AFRLT",
+    xvar = time,
     yvar = "AVAL",
     xlab = paste0("Time [", unique(preprocessed_data$RRLTU), "]"),
     ylab = paste0("Concentration [", unique(preprocessed_data$AVALU), "]"),
