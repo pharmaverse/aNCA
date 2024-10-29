@@ -8,7 +8,8 @@ slope_selector_ui <- function(id) {
         dropdown(
           actionButton(ns("add_excsel"), "+ Exclusion/Selection"),
           actionButton(ns("remove_excsel"), "- Remove selected rows"),
-          DTOutput(ns("slope_manual_NCA_data")),
+          reactable.extras::reactable_extras_dependency(),
+          reactableOutput(ns("manual_slopes")),
           actionButton(ns("save_excsel"), "Save"),
           style = "unite", icon = icon("chart-line"),
           status = "success", width = "500px",
@@ -203,7 +204,7 @@ slope_selector_server <- function(
       # or can we just have it locally?
 
       # Define the profiles selected (dosno) that each patient (usubjid) has
-      profiles_per_patient(tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique))
+      profiles_per_patient(tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique, simplify = FALSE))
 
       # Update the patient search input to make available choices for the user
       updatePickerInput(
@@ -237,10 +238,12 @@ slope_selector_server <- function(
         }
       }
     })
+    
+    ## Manual Slopes Table----
 
     #' Object for storing exclusion and selection data for lambda slope calculation
     #' TODO(mateusz): think about better name
-    slope_manual_nca_data <- reactiveVal({
+    manual_slopes <- reactiveVal({
       data.frame(
         TYPE = character(),
         PATIENT = character(),
@@ -253,132 +256,98 @@ slope_selector_server <- function(
 
     row_counter <- reactiveVal(0)
 
-    # Render as output the table ignoring the Shiny-ID column
-    output$slope_manual_NCA_data <- DT::renderDataTable({
-      log_trace("{id}: rendering slope edit data table")
-      datatable(
-        data = slope_manual_nca_data()[, c(1:5)],
-        escape = FALSE,
-        rownames = FALSE,
-        editable = TRUE,
-        extensions = "FixedHeader",
-        options = list(
-          paging = FALSE,
-          ordering = FALSE,
-          searching = FALSE,
-          fixedHeader = TRUE,
-          preDrawCallback = JS("function() { Shiny.unbindAll(this.api().table().node()); }"),
-          drawCallback = JS("function() { Shiny.bindAll(this.api().table().node()); } ")
-        )
-      )
-    })
-
-    #' Update object with edits
-    observeEvent(input$slope_manual_NCA_data_cell_edit, {
-      log_trace("{id}: saving slope edits")
-      info <- input$slope_manual_NCA_data_cell_edit
-
-      # Update the reactive data frame with the new value
-      slope_manual_nca_data <- slope_manual_nca_data()
-      slope_manual_nca_data[info$row, (info$col + 1)] <- info$value
-      slope_manual_nca_data(slope_manual_nca_data)
-    })
-
-    # Define a function that saves the inputs as values in
-    # the table once the user has finished inputting them
-    update_slope_manual_nca_data <- function(slope_manual_nca_data) {
-      # Define the columns to be updated
+    # Function to update data frame with input values
+    update_manual_slopes <- function(manual_slopes) {
       columns_to_update <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
+      last_id <- manual_slopes$id[length(manual_slopes$id)]
 
-      # Retrieve the last row"s ID for input prefix
-      last_id <- slope_manual_nca_data$id[length(slope_manual_nca_data$id)]
-
-      # Update each specified column with the corresponding input value
       for (col in columns_to_update) {
         input_id <- paste0(col, "_", last_id)
         if (!is.null(input[[input_id]])) {
-          slope_manual_nca_data[nrow(slope_manual_nca_data), col] <- input[[input_id]]
+          manual_slopes[nrow(manual_slopes), col] <- input[[input_id]]
         }
       }
-
-      # The function returns the object
-      return(slope_manual_nca_data)
+      return(manual_slopes)
     }
-
+    # 
+    # # Observe cell edits
+    # observeEvent(input$manual_slopes_cell_edit, {
+    #   log_trace("{id}: saving slope edits")
+    #   info <- input$manual_slopes_cell_edit
+    #   manual_slopes <- manual_slopes()
+    #   manual_slopes[info$row, (info$col + 1)] <- info$value
+    #   manual_slopes(manual_slopes)
+    # })
+    
+    # Add new row
     observeEvent(input$add_excsel, {
-      # Make previous rows values instead of input widgets
-      slope_manual_nca_data <- update_slope_manual_nca_data(slope_manual_nca_data())
-
-      # Create an ID for the new row
+      
       row_counter(row_counter() + 1)
       id <- paste0("Ex_", row_counter())
-
-      # Create the new row as a set of input widgets for the UI
-      new_row_slope_manual_nca_data <- data.frame(
-        TYPE = as.character(
-          selectInput(
-            inputId = session$ns(paste0("TYPE_", id)),
-            label = "",
-            width = "60%",
-            choices = c("Selection", "Exclusion"),
-            selected = "Selection",
-            selectize = TRUE
-          )
-        ),
-        PATIENT = as.character(
-          selectInput(
-            inputId = session$ns(paste0("PATIENT_", id)),
-            label = "",
-            width = "60%",
-            choices = names(profiles_per_patient()),
-            selectize = TRUE
-          )
-        ),
-        PROFILE = as.character(
-          selectInput(
-            inputId = session$ns(paste0("PROFILE_", id)),
-            label = "",
-            width = "60%",
-            choices = unname(unique(unlist(profiles_per_patient()))),
-            selectize = TRUE
-          )
-        ),
-        IXrange = as.character(
-          textInput(
-            inputId = session$ns(paste0("IXrange_", id)),
-            label = "",
-            width = "70%",
-            value = "1:3"
-          )
-        ),
-        REASON = as.character(
-          textInput(
-            inputId = session$ns(paste0("REASON_", id)),
-            value = "",
-            label = "",
-            width = "80%"
-          )
-        ),
-        id = id
+      
+      new_row <- data.frame(
+        TYPE = "Selection",
+        PATIENT = "",
+        PROFILE = "",
+        IXrange = "1:3",
+        REASON = "",
+        stringsAsFactors = FALSE
       )
-
-      # Bind the row to the reactive value displayed in the UI
-      slope_manual_nca_data(rbind(slope_manual_nca_data, new_row_slope_manual_nca_data))
+      updated_data <- rbind(manual_slopes(), new_row)
+      manual_slopes(updated_data)
     })
-
-    # Allow the user to delete the rows selected in the UI table
-    observeEvent(input$remove_excsel, {
-      if (!is.null(input$slope_manual_NCA_data_rows_selected)) {
-        # Make previous rows values instead of input widgets
-        slope_manual_nca_data <- update_slope_manual_nca_data(slope_manual_nca_data())
-
-        # Reset the variable deleting the selected rows
-        slope_manual_nca_data(
-          slope_manual_nca_data[-as.numeric(input$slope_manual_NCA_data_rows_selected), ]
+    
+    #TODO (mateusz): figure out how to remove selected rows
+    # # Remove selected rows
+    # observeEvent(input$remove_excsel, {
+    #   }
+    # })
+    
+    # Render as output the table ignoring the Shiny-ID column
+    output$manual_slopes <- reactable::renderReactable({
+      log_trace("{id}: rendering slope edit data table")
+      data <- manual_slopes()
+      profiles <- unique(unlist(profiles_per_patient()))
+      
+      reactable(
+        data = data[ , c(1:5)],
+        columns = list(
+          TYPE = colDef(
+            cell = dropdown_extra(
+              id = "dropdowntype",
+              choices = c("Selection", "Exclusion"),
+              class = "dropdown-extra"
+            )
+          ),
+          PATIENT = colDef(
+            cell = dropdown_extra(
+              id = "dropdownpt",
+              choices = names(profiles_per_patient()),
+              class = "dropdown-extra"
+            )
+          ),
+          PROFILE = colDef(
+            cell = dropdown_extra(
+              id = "dropdownprof",
+              choices = c("", profiles),
+              class = "dropdown-extra"
+            )
+          ),
+          IXrange = colDef(
+            cell = text_extra(
+              id = "textrange"
+            )
+          ),
+          REASON = colDef(
+            cell = text_extra(
+              id = "textreason"
+            )
+          )
         )
-      }
+      )
     })
-
+    
+    
     # Save the exclusion/selection data to the server data and rerun the NCA results
     handle_nca_excsel <- function() {
       if (is.null(mydata())) {
@@ -399,7 +368,7 @@ slope_selector_server <- function(
       mydata$conc$data$exclude_half.life <- FALSE
 
       # If there is no specification there is nothing to save
-      if (nrow(slope_manual_nca_data()) == 0) {
+      if (nrow(manual_slopes()) == 0) {
 
         # Rerun the NCA with the modified data
         mydata(mydata)
@@ -409,10 +378,10 @@ slope_selector_server <- function(
       }
 
       # Make previous rows values instead of input widgets
-      slope_manual_nca_data <- update_slope_manual_nca_data(slope_manual_nca_data())
+      manual_slopes <- update_manual_slopes(manual_slopes())
 
       # Eliminate all rows with conflicting or blank values
-      slope_manual_nca_data(slope_manual_nca_data  %>%
+      manual_slopes(manual_slopes  %>%
         filter(
           PATIENT %in% names(profiles_per_patient()),
           PROFILE %in% unname(unlist(profiles_per_patient()[PATIENT])),
@@ -429,24 +398,24 @@ slope_selector_server <- function(
       )
 
       # Update the exclusion/selection data for Lambda based on the current exc/sel table
-      for (i in seq_len(nrow(slope_manual_nca_data()))) {
+      for (i in seq_len(nrow(manual_slopes()))) {
         #
         #update inclusions
-        if (slope_manual_nca_data()$TYPE[i] == "Selection") {
+        if (manual_slopes()$TYPE[i] == "Selection") {
           mydata$conc$data <- mydata$conc$data %>%
             mutate(
               is.included.hl = ifelse(
-                USUBJID == slope_manual_nca_data()$PATIENT[i] &
-                  DOSNO == slope_manual_nca_data()$PROFILE[i] &
-                  IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
+                USUBJID == manual_slopes()$PATIENT[i] &
+                  DOSNO == manual_slopes()$PROFILE[i] &
+                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
                 TRUE,
                 is.included.hl
               ),
               REASON = ifelse(
-                USUBJID == slope_manual_nca_data()$PATIENT[i] &
-                  DOSNO == slope_manual_nca_data()$PROFILE[i] &
-                  IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
-                slope_manual_nca_data()$REASON[i],
+                USUBJID == manual_slopes()$PATIENT[i] &
+                  DOSNO == manual_slopes()$PROFILE[i] &
+                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
+                manual_slopes()$REASON[i],
                 REASON
               )
             )
@@ -455,17 +424,17 @@ slope_selector_server <- function(
           mydata$conc$data <- mydata$conc$data %>%
             mutate(
               is.excluded.hl = ifelse(
-                USUBJID == slope_manual_nca_data()$PATIENT[i] &
-                  DOSNO == slope_manual_nca_data()$PROFILE[i] &
-                  IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
+                USUBJID == manual_slopes()$PATIENT[i] &
+                  DOSNO == manual_slopes()$PROFILE[i] &
+                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
                 TRUE,
                 is.excluded.hl
               ),
               REASON = ifelse(
-                USUBJID == slope_manual_nca_data()$PATIENT[i] &
-                  DOSNO == slope_manual_nca_data()$PROFILE[i] &
-                  IX %in% eval(parse(text = slope_manual_nca_data()$IXrange[i])),
-                slope_manual_nca_data()$REASON[i],
+                USUBJID == manual_slopes()$PATIENT[i] &
+                  DOSNO == manual_slopes()$PROFILE[i] &
+                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
+                manual_slopes()$REASON[i],
                 REASON
               )
             )
@@ -596,22 +565,22 @@ slope_selector_server <- function(
               ])) {
 
               condition_vr <- {
-                slope_manual_nca_data()$PATIENT == patient &
-                  slope_manual_nca_data()$PROFILE == profile &
+                manual_slopes()$PATIENT == patient &
+                  manual_slopes()$PROFILE == profile &
                   sapply(
-                    slope_manual_nca_data()$IXrange,
+                    manual_slopes()$IXrange,
                     function(x) idx_pnt %in% eval(parse(text = paste0("c(", x, ")")))
                   )
               }
 
-              slope_manual_nca_data <- slope_manual_nca_data() %>%
+              manual_slopes <- manual_slopes() %>%
                 mutate(
                   IXrange = ifelse(
                     condition_vr,
                     yes = {
                       ixrange <- eval(parse(text = paste0("c(", IXrange, ")")))
                       ixrange <- ixrange[ixrange != idx_pnt]
-                      paste(ixrange, collapse = ",")
+                      paste(ixrange, collapse = ":")
                     },
                     no = IXrange
                   )
@@ -619,22 +588,22 @@ slope_selector_server <- function(
                 # delete all rows where IXrange does not contain a numeric value
                 filter(grepl("\\d.*", IXrange))
 
-              slope_manual_nca_data(slope_manual_nca_data)
+              manual_slopes(manual_slopes)
             } else {
               # 2) If the point selected is a selection or a exclusion that was not indicated
               #    then include it also in the UI table
               row_counter(row_counter() + 1)
               id <- paste0("Ex_", row_counter())
 
-              new_row_slope_manual_nca_data <- data.frame(
+              new_row_manual_slopes <- data.frame(
                 TYPE = ifelse(idx_pnt != firstclick_vals$idx_pnt, "Selection", "Exclusion"),
                 PATIENT = patient,
                 PROFILE = as.character(profile),
                 IXrange = paste0(firstclick_vals$idx_pnt, ":", idx_pnt),
-                REASON = "[Graphical selection. Double click here to include a reason]",
+                REASON = "[Graphical selection. Click here to include a reason]",
                 id = id
               )
-              slope_manual_nca_data(rbind(slope_manual_nca_data(), new_row_slope_manual_nca_data))
+              manual_slopes(rbind(manual_slopes(), new_row_manual_slopes))
             }
           }
         }
@@ -645,7 +614,7 @@ slope_selector_server <- function(
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
     return(
       reactive({
-        update_slope_manual_nca_data(slope_manual_nca_data()[, c(1:5)])
+        update_manual_slopes(manual_slopes()[, c(1:5)])
       })
     )
   })

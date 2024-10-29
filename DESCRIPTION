@@ -38,6 +38,8 @@ Imports:
     nestcolor,
     PKNCA,
     plotly,
+    reactable,
+    reactable.extras,
     rio,
     rmarkdown,
     shiny,
