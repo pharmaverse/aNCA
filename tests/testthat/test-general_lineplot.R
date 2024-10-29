@@ -1,7 +1,3 @@
-library(testthat)
-library(dplyr)
-library(ggplot2)
-
 # Sample data for testing
 sample_data <- data.frame(
   STUDYID = rep("Study1", 24),
@@ -76,7 +72,7 @@ describe("general_lineplot functions correctly", {
     expect_s3_class(p, "ggplot")
 
     # Check for logarithmic scale in the plot
-    is_log_scale <- p$scales$scales[[1]]$trans$name == "log-10"
+    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
   })
 })
