@@ -257,6 +257,7 @@ slope_selector_server <- function(
     row_counter <- reactiveVal(0)
 
     # Function to update data frame with input values
+    #TODO: this currently works for plotly click events, but should be updated to work with the table inputs
     update_manual_slopes <- function(manual_slopes) {
       columns_to_update <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
       last_id <- manual_slopes$id[length(manual_slopes$id)]
@@ -269,8 +270,8 @@ slope_selector_server <- function(
       }
       return(manual_slopes)
     }
-    # 
-    # # Observe cell edits
+
+    # Observe cell edits
     # observeEvent(input$manual_slopes_cell_edit, {
     #   log_trace("{id}: saving slope edits")
     #   info <- input$manual_slopes_cell_edit
@@ -281,6 +282,7 @@ slope_selector_server <- function(
     
     # Add new row
     observeEvent(input$add_excsel, {
+      log_trace("{id}: adding manual slopes row")
       
       row_counter(row_counter() + 1)
       id <- paste0("Ex_", row_counter())
@@ -291,26 +293,33 @@ slope_selector_server <- function(
         PROFILE = "",
         IXrange = "1:3",
         REASON = "",
+        id = id, #currently present for debugging, remove later
         stringsAsFactors = FALSE
       )
       updated_data <- rbind(manual_slopes(), new_row)
       manual_slopes(updated_data)
     })
     
-    #TODO (mateusz): figure out how to remove selected rows
     # # Remove selected rows
-    # observeEvent(input$remove_excsel, {
-    #   }
-    # })
+    observeEvent(input$remove_excsel, {
+      log_trace("{id}: removing manual slopes row")
+      
+      selected <- getReactableState("manual_slopes", "selected")
+      req(selected)
+      data <- manual_slopes()
+      data <- data[-selected, ]
+      manual_slopes(data)
+    })
     
     # Render as output the table ignoring the Shiny-ID column
+    #TODO: figure out a way to get the inputs saved in manual_slopes()
     output$manual_slopes <- reactable::renderReactable({
       log_trace("{id}: rendering slope edit data table")
       data <- manual_slopes()
       profiles <- unique(unlist(profiles_per_patient()))
       
       reactable(
-        data = data[ , c(1:5)],
+        data = data, # [,c(1:5)]
         columns = list(
           TYPE = colDef(
             cell = dropdown_extra(
@@ -329,7 +338,7 @@ slope_selector_server <- function(
           PROFILE = colDef(
             cell = dropdown_extra(
               id = "dropdownprof",
-              choices = c("", profiles),
+              choices = profiles,
               class = "dropdown-extra"
             )
           ),
@@ -343,6 +352,12 @@ slope_selector_server <- function(
               id = "textreason"
             )
           )
+        ),
+        selection = "single",
+        borderless = TRUE,
+        onClick = "select",
+        theme = reactableTheme(
+          rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
         )
       )
     })
