@@ -1,0 +1,61 @@
+# Source: https://github.com/pharmaverse/admiralci
+# Stripped down version of admiralci checks. Good for
+# the developement process. When package is ready to
+# be published, revisit and add release-related
+# workflows.
+name: admiral CI/CD Workflows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
+
+concurrency:
+  group: admiral-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  R_VERSION: "release"
+
+jobs:
+  get_r_version:
+    name: Get R version
+    runs-on: ubuntu-latest
+    outputs:
+      r-version: ${{ steps.get_r_version.outputs.R_VERSION }}
+    steps:
+      - name: Get R Version for Downstream Container Jobs
+        id: get_r_version
+        run: echo "R_VERSION=$R_VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+  spellcheck:
+    name: Spelling
+    uses: pharmaverse/admiralci/.github/workflows/spellcheck.yml@main
+    if: github.event_name == 'pull_request'
+    needs: get_r_version
+    with:
+      r-version: "${{ needs.get_r_version.outputs.r-version }}"
+  linter:
+    name: Lint
+    uses: pharmaverse/admiralci/.github/workflows/lintr.yml@main
+    needs: get_r_version
+    if: github.event_name == 'pull_request'
+    with:
+      r-version: "${{ needs.get_r_version.outputs.r-version }}"
+  man-pages:
+    name: Man Pages
+    uses: pharmaverse/admiralci/.github/workflows/man-pages.yml@main
+    if: github.event_name == 'pull_request'
+    needs: get_r_version
+    with:
+      r-version: "${{ needs.get_r_version.outputs.r-version }}"
+  check:
+    name: Check
+    uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
+    with:
+      error-on: warning # TODO: find a way to ignore specific notes
+    if: github.event_name == 'pull_request'
