@@ -56,5 +56,4 @@ jobs:
   check:
     name: Check
     uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
-    # TODO: reinstate with: error-on: warning when warnings are cleaned up
     if: github.event_name == 'pull_request'
