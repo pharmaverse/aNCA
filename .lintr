@@ -4,6 +4,7 @@ linters:
     object_name_linter = object_name_linter(
         styles = c("snake_case", "SNAKE_CASE")
     ),
-    object_usage_linter = NULL
+    object_usage_linter = NULL,
+    trailing_blank_lines_linter = NULL
   )
 encoding: "UTF-8"

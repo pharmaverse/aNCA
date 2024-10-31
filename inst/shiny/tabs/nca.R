@@ -681,7 +681,7 @@ output$preslopesettings <- DT::renderDataTable({
       scrollX = TRUE,
       scrollY = TRUE,
       lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-      pageLength = -1, 
+      pageLength = -1,
       fixedHeader = TRUE
     )
   ) %>%

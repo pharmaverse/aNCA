@@ -13,7 +13,7 @@ sample_data <- data.frame(
   AVALU = rep("ng/mL", 24),
   DOSEA = rep(35, 24)
 )
-# testthat::test_file("tests/testhat/test-general_lineplot.R")
+
 describe("general_lineplot functions correctly", {
   it("returns a ggplot object", {
     p <- general_lineplot(
