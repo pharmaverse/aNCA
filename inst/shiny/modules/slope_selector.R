@@ -111,6 +111,8 @@ slope_selector_ui <- function(id) {
 
 }
 
+.SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
+
 slope_selector_server <- function(
   id, mydata, res_nca, profiles_per_patient, cycle_nca, rv
 ) {
@@ -204,7 +206,9 @@ slope_selector_server <- function(
       # or can we just have it locally?
 
       # Define the profiles selected (dosno) that each patient (usubjid) has
-      profiles_per_patient(tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique, simplify = FALSE))
+      profiles_per_patient(
+        tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique, simplify = FALSE)
+      )
 
       # Update the patient search input to make available choices for the user
       updatePickerInput(
@@ -238,11 +242,10 @@ slope_selector_server <- function(
         }
       }
     })
-    
+
     ## Manual Slopes Table----
 
     #' Object for storing exclusion and selection data for lambda slope calculation
-    #' TODO(mateusz): think about better name
     manual_slopes <- reactiveVal({
       data.frame(
         TYPE = character(),
@@ -256,100 +259,71 @@ slope_selector_server <- function(
 
     row_counter <- reactiveVal(0)
 
-    # Function to update data frame with input values
-    #TODO: this currently works for plotly click events, but should be updated to work with the table inputs
-    update_manual_slopes <- function(manual_slopes) {
-      columns_to_update <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
-      last_id <- manual_slopes$id[length(manual_slopes$id)]
-
-      for (col in columns_to_update) {
-        input_id <- paste0(col, "_", last_id)
-        if (!is.null(input[[input_id]])) {
-          manual_slopes[nrow(manual_slopes), col] <- input[[input_id]]
-        }
-      }
-      return(manual_slopes)
-    }
-
-    # Observe cell edits
-    # observeEvent(input$manual_slopes_cell_edit, {
-    #   log_trace("{id}: saving slope edits")
-    #   info <- input$manual_slopes_cell_edit
-    #   manual_slopes <- manual_slopes()
-    #   manual_slopes[info$row, (info$col + 1)] <- info$value
-    #   manual_slopes(manual_slopes)
-    # })
-    
-    # Add new row
+    #' Adds new row to the selection/exclusion datatable
     observeEvent(input$add_excsel, {
       log_trace("{id}: adding manual slopes row")
-      
-      row_counter(row_counter() + 1)
-      id <- paste0("Ex_", row_counter())
-      
+
       new_row <- data.frame(
         TYPE = "Selection",
-        PATIENT = "",
-        PROFILE = "",
+        PATIENT = names(profiles_per_patient())[1],
+        PROFILE = unique(unlist(profiles_per_patient()))[1],
         IXrange = "1:3",
         REASON = "",
-        id = id, #currently present for debugging, remove later
         stringsAsFactors = FALSE
       )
       updated_data <- rbind(manual_slopes(), new_row)
       manual_slopes(updated_data)
     })
-    
-    # # Remove selected rows
+
+    #' Removes selected row
     observeEvent(input$remove_excsel, {
       log_trace("{id}: removing manual slopes row")
-      
+
       selected <- getReactableState("manual_slopes", "selected")
       req(selected)
-      data <- manual_slopes()
-      data <- data[-selected, ]
-      manual_slopes(data)
+      edited_slopes <- manual_slopes()[-selected, ]
+      manual_slopes(edited_slopes)
     })
-    
-    # Render as output the table ignoring the Shiny-ID column
-    #TODO: figure out a way to get the inputs saved in manual_slopes()
-    output$manual_slopes <- reactable::renderReactable({
+
+
+    #' Render manual slopes table
+    output$manual_slopes <- renderReactable({
       log_trace("{id}: rendering slope edit data table")
       data <- manual_slopes()
       profiles <- unique(unlist(profiles_per_patient()))
-      
+
       reactable(
-        data = data, # [,c(1:5)]
+        data = data,
         columns = list(
           TYPE = colDef(
             cell = dropdown_extra(
-              id = "dropdowntype",
+              id = session$ns("edit_TYPE"),
               choices = c("Selection", "Exclusion"),
               class = "dropdown-extra"
             )
           ),
           PATIENT = colDef(
             cell = dropdown_extra(
-              id = "dropdownpt",
+              id = session$ns("edit_PATIENT"),
               choices = names(profiles_per_patient()),
               class = "dropdown-extra"
             )
           ),
           PROFILE = colDef(
             cell = dropdown_extra(
-              id = "dropdownprof",
+              id = session$ns("dropdown_PROFILE"),
               choices = profiles,
               class = "dropdown-extra"
             )
           ),
           IXrange = colDef(
             cell = text_extra(
-              id = "textrange"
+              id = session$ns("edit_IXrange")
             )
           ),
           REASON = colDef(
             cell = text_extra(
-              id = "textreason"
+              id = session$ns("edit_READSON")
             )
           )
         ),
@@ -361,9 +335,22 @@ slope_selector_server <- function(
         )
       )
     })
-    
-    
+
+    #' For each of the columns in slope selector data frame, attach an even that will read
+    #' edits for that column made in the reactable.
+    purrr::walk(.SLOPE_SELECTOR_COLUMNS, \(colname) {
+      observeEvent(input[[paste0("edit_", colname)]], {
+        log_trace("{id}: manual slope edit")
+
+        edit <- input[[paste0("edit_", colname)]]
+        edited_slopes <- manual_slopes()
+        edited_slopes[edit$row, edit$column] <- edit$value
+        manual_slopes(edited_slopes)
+      })
+    })
+
     # Save the exclusion/selection data to the server data and rerun the NCA results
+    #' TODO(mateusz): migrate this to a function outside of server, take proper arguments
     handle_nca_excsel <- function() {
       if (is.null(mydata())) {
         showNotification(
@@ -384,19 +371,17 @@ slope_selector_server <- function(
 
       # If there is no specification there is nothing to save
       if (nrow(manual_slopes()) == 0) {
-
         # Rerun the NCA with the modified data
         mydata(mydata)
 
         # Stop the observeEvent
-        return()
+        return(NULL)
       }
 
-      # Make previous rows values instead of input widgets
-      manual_slopes <- update_manual_slopes(manual_slopes())
+      manual_slopes <- manual_slopes()
 
       # Eliminate all rows with conflicting or blank values
-      manual_slopes(manual_slopes  %>%
+      manual_slopes(manual_slopes %>%
         filter(
           PATIENT %in% names(profiles_per_patient()),
           PROFILE %in% unname(unlist(profiles_per_patient()[PATIENT])),
@@ -492,7 +477,9 @@ slope_selector_server <- function(
       log_trace("{id}: plotly click detected")
       # Store the information of the last click event
       click_data <- event_data("plotly_click")
+
       if (!is.null(click_data) & !is.null(click_data$customdata)) {
+        log_trace("{id}: plotly click with data detected")
         # Get identifiers of the clicked plot
         patient <- gsub("(.*)_.*_.*", "\\1",  click_data$customdata)
         profile <- gsub(".*_(.*)_.*", "\\1",  click_data$customdata)
@@ -615,8 +602,7 @@ slope_selector_server <- function(
                 PATIENT = patient,
                 PROFILE = as.character(profile),
                 IXrange = paste0(firstclick_vals$idx_pnt, ":", idx_pnt),
-                REASON = "[Graphical selection. Click here to include a reason]",
-                id = id
+                REASON = "[Graphical selection. Click here to include a reason]"
               )
               manual_slopes(rbind(manual_slopes(), new_row_manual_slopes))
             }
@@ -625,12 +611,9 @@ slope_selector_server <- function(
       }
     })
 
-
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
-    return(
-      reactive({
-        update_manual_slopes(manual_slopes()[, c(1:5)])
-      })
-    )
+    return(reactive({
+      manual_slopes()
+    }))
   })
 }
