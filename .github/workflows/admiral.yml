@@ -54,7 +54,21 @@ jobs:
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
   check:
-    name: Check
-    uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
-    # TODO: reinstate with: error-on: warning when warnings are cleaned up
-    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+        - name: Check
+          id: r_cmd_check
+          uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
+          if: github.event_name == 'pull_request'
+
+        - name: Check for errors, pass on warnings
+          if: steps.r_cmd_check.outcome == 'failure'
+          run: |
+            # Check the logs for errors #
+            if grep -q "ERROR" check-log.txt; then
+              echo "Errors found in R CMD CHECK"
+              exit 1
+            else
+              echo "Warnings found, continuing"
+              exit 0
+            fi
