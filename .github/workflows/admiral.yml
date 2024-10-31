@@ -57,3 +57,5 @@ jobs:
     name: Check
     uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
     if: github.event_name == 'pull_request'
+    with:
+        error-on: error
