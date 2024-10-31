@@ -53,6 +53,25 @@ jobs:
     needs: get_r_version
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: get_r_version
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ needs.get_r_version.outputs.r-version }}:latest"
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Install dependencies
+          run: |
+            Rscript -e 'install.packages("remotes")'
+            Rscript -e 'remotes::install_deps(dependencies = TRUE)'
+
+        - name: Run tests
+          run: |
+            Rscript -e 'if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")'
+            Rscript -e 'devtools::load_all("."); devtools::test()'
   check:
     name: Check
     uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
