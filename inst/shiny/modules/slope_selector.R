@@ -229,8 +229,6 @@ slope_selector_server <- function(
       }
     })
 
-    ## Manual Slopes Table----
-
     #' Object for storing exclusion and selection data for lambda slope calculation
     manual_slopes <- reactiveVal({
       data.frame(
@@ -275,7 +273,12 @@ slope_selector_server <- function(
     #' Render manual slopes table
     output$manual_slopes <- renderReactable({
       log_trace("{id}: rendering slope edit data table")
-      data <- manual_slopes()
+
+      # enclosing this in isolate() so the table is not re-rendered on every edit #
+      isolate({
+        data <- manual_slopes()
+      })
+
       profiles <- unique(unlist(profiles_per_patient()))
 
       reactable(
@@ -329,12 +332,20 @@ slope_selector_server <- function(
       )
     })
 
+    #' Separate event handling updating displayed reactable upon every change (adding and removing
+    #' rows, plots selection, edits). This needs to be separate call, since simply  re-rendering
+    #' the table would mean losing focus on text inputs when entering values.
+    observeEvent(manual_slopes(), {
+      reactable::updateReactable(
+        outputId = "manual_slopes",
+        data = manual_slopes()
+      )
+    })
+
     #' For each of the columns in slope selector data frame, attach an even that will read
     #' edits for that column made in the reactable.
     purrr::walk(.SLOPE_SELECTOR_COLUMNS, \(colname) {
       observeEvent(input[[paste0("edit_", colname)]], {
-        log_trace("{id}: manual slope edit")
-
         edit <- input[[paste0("edit_", colname)]]
         edited_slopes <- manual_slopes()
         edited_slopes[edit$row, edit$column] <- edit$value
