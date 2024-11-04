@@ -53,14 +53,6 @@
   z-index: 100;
 }
 
-.btn-primary {
-  background-color: #0056b3;
-  border-color: #004080;
-  font-size: 20px; /* Increase font size */
-  padding: 15px 30px; /* Increase padding */
-  border-radius: 10px; /* Optional: Increase border radius */
-}
-
 .btn-help-icon {
   font-size: 20px; /* Increase font size */
   padding: 10px 20px; /* Increase padding */
@@ -132,3 +124,15 @@
   transform: scale(1.05);
 }
 
+/* general reactable rules */
+.rt-table {
+  input {
+    width: 100%;
+    text-align: center;
+  }
+
+  .rt-select-input[type="checkbox"] {
+    position: relative;
+    top: 3px;
+  }
+}

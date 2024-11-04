@@ -7,9 +7,9 @@ slope_selector_ui <- function(id) {
     includeCSS(file.path(assets, "slope_selector.css")),
     fluidRow(
       # Selection and exclusion controls #
-      actionButton(ns("add_excsel"), "+ Exclusion/Selection"),
-      actionButton(ns("remove_excsel"), "- Remove selected rows"),
-      actionButton(ns("save_excsel"), "Apply"),
+      actionButton(ns("add_excsel"), "+ Exclusion/Selection", class = "btn-success"),
+      actionButton(ns("remove_excsel"), "- Remove selected rows", class = "btn-warning"),
+      actionButton(ns("save_excsel"), tags$b("Apply"), class = "btn-primary"),
       # Help widget #
       dropdown(
         div(
@@ -61,7 +61,7 @@ slope_selector_ui <- function(id) {
             ns("plots_per_page"),
             "",
             choices = c(1, 2, 4, 6, 8, 10),
-            selected = 1
+            selected = 2
           )
         )
       ),
@@ -280,37 +280,45 @@ slope_selector_server <- function(
 
       reactable(
         data = data,
+        defaultColDef = colDef(
+          align = "center"
+        ),
         columns = list(
           TYPE = colDef(
             cell = dropdown_extra(
               id = session$ns("edit_TYPE"),
               choices = c("Selection", "Exclusion"),
               class = "dropdown-extra"
-            )
+            ),
+            minWidth = 75
           ),
           PATIENT = colDef(
             cell = dropdown_extra(
               id = session$ns("edit_PATIENT"),
               choices = names(profiles_per_patient()),
               class = "dropdown-extra"
-            )
+            ),
+            minWidth = 75
           ),
           PROFILE = colDef(
             cell = dropdown_extra(
               id = session$ns("dropdown_PROFILE"),
               choices = profiles,
               class = "dropdown-extra"
-            )
+            ),
+            minWidth = 75
           ),
           IXrange = colDef(
             cell = text_extra(
               id = session$ns("edit_IXrange")
-            )
+            ),
+            minWidth = 75
           ),
           REASON = colDef(
             cell = text_extra(
               id = session$ns("edit_REASON")
-            )
+            ),
+            minWidth = 300
           )
         ),
         selection = "multiple",
