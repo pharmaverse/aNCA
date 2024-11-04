@@ -1,0 +1,29 @@
+.slope-selector-module {
+  padding: 1em;
+
+  .sw-dropdown {
+    float: right;
+  }
+
+  .reactable {
+    padding: 1em;
+    margin-bottom: 2em;
+  }
+
+  .plot-widgets-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+  }
+
+  .inline-select-input > div {
+    width: 5em !important;
+    text-align: left !important;
+  }
+
+  .slope-plots-container {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    margin-top: 2em;
+  }
+}
