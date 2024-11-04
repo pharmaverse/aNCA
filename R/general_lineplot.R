@@ -104,7 +104,7 @@ general_lineplot <- function(
     preprocessed_data <- preprocessed_data %>%
       mutate(AVAL = ifelse(AVAL == 0, 0.001, AVAL))
   }
-  
+
   time <- if (time_scale == "By Cycle") {
     "ARRLT"
   } else {

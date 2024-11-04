@@ -57,12 +57,12 @@ general_meanplot <- function(data,
     slice(1) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
-  
+
   # filter for log scaling y values that equal 0
   if (plot_ylog) {
     preprocessed_data <- preprocessed_data %>% filter(Mean != 0)
   }
-  
+
   # Check if preprocessed_data is empty
   if (nrow(preprocessed_data) == 0) {
     empty_plot <- ggplot() + labs(title = "No data available")
@@ -105,7 +105,6 @@ general_meanplot <- function(data,
   }
   # Convert ggplot to plotly
   p_plotly <- ggplotly(p)
-  
   return(p_plotly)
 }
 
