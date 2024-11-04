@@ -42,7 +42,7 @@
 
   .slope-plots-container {
     display: grid;
-    grid-template-columns: 50% 50%;
+    grid-template-columns: 33% 33% 33%;
     margin-top: 2em;
   }
 }
