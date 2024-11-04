@@ -5,6 +5,25 @@
     float: right;
   }
 
+  .sw-dropdown-content {
+    width: 50em;
+
+    h1 {
+      text-align: center;
+    }
+
+    p {
+      text-align: justify;
+    }
+
+    .gif-grid {
+      display: grid;
+      grid-template-columns: auto auto;
+      column-gap: 2em;
+      row-gap: 2em;
+    }
+  }
+
   .reactable {
     padding: 1em;
     margin-bottom: 2em;

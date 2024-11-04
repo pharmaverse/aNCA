@@ -1,24 +1,54 @@
 slope_selector_ui <- function(id) {
   ns <- NS(id)
+  assets <- system.file("shiny/www", package = "aNCA")
 
   div(
     class = "slope-selector-module",
-    includeCSS(file.path(system.file("shiny/www", package = "aNCA"), "slope_selector.css")),
+    includeCSS(file.path(assets, "slope_selector.css")),
     fluidRow(
+      # Selection and exclusion controls #
       actionButton(ns("add_excsel"), "+ Exclusion/Selection"),
       actionButton(ns("remove_excsel"), "- Remove selected rows"),
       actionButton(ns("save_excsel"), "Apply"),
+      # Help widget #
       dropdown(
-        tags$div("Here will be manual"),
+        div(
+          tags$h1("Slope selector guide"),
+          p("
+            Upon initial NCA run, the plots will display the optimal slope selection.
+            However, you have the flexibility to change it. Remember to apply your
+            changes once you are done!
+          "),
+          div(class = "gif-grid",
+            div(class = "gif-container",
+              tags$h1("Zoom"),
+              img(src = "images/zoom_slopeselector.gif", alt = "Zoom")
+            ),
+            div(class = "gif-container",
+              tags$h1("Select"),
+              img(src = "images/selection_slopeselector.gif", alt = "Select")
+            ),
+            div(class = "gif-container",
+              tags$h1("Exclude"),
+              img(src = "images/exclusion_slopeselector.gif", alt = "Exclude")
+            ),
+            div(class = "gif-container",
+              tags$h1("Check"),
+              img(src = "images/status_slopeselector.gif", alt = "Check")
+            )
+          )
+        ),
         style = "unite",
         right = TRUE,
         icon = icon("question"),
         status = "primary"
       )
     ),
+    # Table with selections and exclusions #
     fluidRow(
       reactableOutput(ns("manual_slopes")),
     ),
+    # Widgets for manipulating plots display #
     fluidRow(
       class = "plot-widgets-container",
       div(
@@ -57,6 +87,7 @@ slope_selector_ui <- function(id) {
       ),
       div(align = "right", actionButton(ns("next_page"), "Next Page"))
     ),
+    # Plots display #
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
     # Include details for modal message in slope_helpIcon (Instruction details)
     #' TODO(mateusz): make this work, possibly refactor
