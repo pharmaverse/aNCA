@@ -89,62 +89,7 @@ slope_selector_ui <- function(id) {
     ),
     # Plots display #
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
-    # Include details for modal message in slope_helpIcon (Instruction details)
-    #' TODO(mateusz): make this work, possibly refactor
-    #' NOTE: I am not namespacing it yet, as the implementation could change
-    bsModal(
-      "modal1",
-      title = tags$a(
-        style = "color: white",
-        icon("chart-line"),
-        "Slope Selector Guide"
-      ),
-      "slope_helpIcon",
-      size = "large",
-      div(class = "modal-body",
-        p(
-          class = "modal-intro",
-          "Upon initial NCA run, the plots will display the optimal slope selection.
-          However, you have the flexibility to change it. Remember to save/update
-          your results once you are done!"
-        ),
-        div(class = "gif-container",
-          div(class = "gif-title", "Zoom"),
-          img(
-            id = "zoom-gif",
-            src = system.file("images/zoom_slopeselector.gif", package = "aNCA"),
-            alt = "Zoom"
-          )
-        ),
-        div(class = "gif-container",
-          div(class = "gif-title", "Select"),
-          img(
-            id = "select-gif",
-            src = system.file("images/selection_slopeselector.gif", package = "aNCA"),
-            alt = "Select"
-          )
-        ),
-        div(class = "gif-container",
-          div(class = "gif-title", "Exclude"),
-          img(
-            id = "exclude-gif",
-            src = system.file("images/exclusion_slopeselector.gif", package = "aNCA"),
-            alt = "Exclude"
-          )
-        ),
-        div(class = "gif-container",
-          div(class = "gif-title", "Check"),
-          img(
-            id = "check-gif",
-            src = system.file("images/status_slopeselector.gif", package = "aNCA"),
-            alt = "Check"
-          )
-        )
-      )
-    )
   )
-
-
 }
 
 .SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
