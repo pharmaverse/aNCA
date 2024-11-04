@@ -142,6 +142,7 @@ lambda_slope_plot <- function(
         TRUE ~ "hl.excluded"
       )
     ) %>%
+    filter(AVAL > 0) %>%
     as.data.frame()
 
   # Generate the base scatter ggplot
@@ -183,7 +184,7 @@ lambda_slope_plot <- function(
     scale_color_manual(values = c(
       "hl.included" = "green4", "hl.excluded" = "black", "excluded" = "red3"
     )) +
-    scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 0.01, base = exp(10)))
+    scale_y_log10()
 
   # Make a plotly interactive plot
   pl <- ggplotly(p) %>%
@@ -204,6 +205,7 @@ lambda_slope_plot <- function(
     config(mathjax = "cdn")
 
   num_traces <- length(pl$x$data)
+
   for (i in seq_len(num_traces)) {
     pl <- pl %>%
       style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = i)
