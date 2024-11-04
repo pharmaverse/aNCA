@@ -51,9 +51,10 @@ general_meanplot <- function(data,
       Mean = round(geometric_mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),
       CV = (SD / Mean) * 100,
-      N = n()
+      N = n(),
+      Min_CV = pmax(Mean - CV, .Machine$double.eps)
     ) %>%
-    select(where(~n_distinct(.) == 1), Mean, SD, CV, N) %>%
+    select(where(~n_distinct(.) == 1), Mean, SD, CV, N, Min_CV) %>%
     slice(1) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
@@ -99,10 +100,10 @@ general_meanplot <- function(data,
     p <- p +
       geom_errorbar(aes(ymin = (Mean - SD), ymax = (Mean + SD), color = id_variable), width = 0.4)
   }
-  # add sd
+  # add cv
   if (plot_cv) {
     p <- p +
-      geom_ribbon(aes(ymin = (Mean - CV), ymax = (Mean + CV), fill = id_variable), alpha = 0.3)
+      geom_ribbon(aes(ymin = Min_CV, ymax = (Mean + CV), fill = id_variable), alpha = 0.3)
   }
   # Convert ggplot to plotly
   ggplotly(p)
