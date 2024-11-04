@@ -130,18 +130,6 @@ output$cyclemean <- renderUI({
   selectInput("cyclesmean", "Choose the cycle:", choices = sort(y))
 })
 
-observeEvent(input$sdmeanplot, {
-  if (input$sdmeanplot) {
-    updateCheckboxInput(session, "mean_plot_cv", value = FALSE)
-  }
-})
-
-observeEvent(input$mean_plot_cv, {
-  if (input$mean_plot_cv) {
-    updateCheckboxInput(session, "sdmeanplot", value = FALSE)
-  }
-})
-
 # render the meanplot output in plotly
 output$meanplot <- renderPlotly({
   req(input$studyidmean)

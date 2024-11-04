@@ -80,7 +80,8 @@ general_meanplot <- function(data,
       y = paste0(
         "Mean concentration", " [", paste(unique(preprocessed_data$AVALU), collapse = ","), "]"
       ),
-      color = id_variable
+      color = id_variable,
+      fill = ""
     ) +
     theme_bw() +
     theme(legend.position = "right",
@@ -101,7 +102,7 @@ general_meanplot <- function(data,
   # add sd
   if (plot_cv) {
     p <- p +
-      geom_errorbar(aes(ymin = (Mean - CV), ymax = (Mean + CV), color = id_variable), width = 0.4)
+      geom_ribbon(aes(ymin = (Mean - CV), ymax = (Mean + CV), fill = id_variable), alpha = 0.3)
   }
   # Convert ggplot to plotly
   ggplotly(p)
