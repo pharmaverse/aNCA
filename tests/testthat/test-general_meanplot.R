@@ -33,7 +33,6 @@ describe("general_meanplot functions correctly", {
     expect_s3_class(p, "plotly")
     expect_true(p$x$layout$title$text == "No data available")
   })
-  
   it("handles missing columns gracefully", {
     incomplete_data <- sample_data %>% select(-AVAL)
     expect_error(
@@ -46,7 +45,6 @@ describe("general_meanplot functions correctly", {
       "object 'AVAL' not found"
     )
   })
-  
   it("can plot with standard deviation error bars", {
     p <- general_meanplot(
       data = sample_data,
@@ -56,9 +54,8 @@ describe("general_meanplot functions correctly", {
       plot_sd = TRUE
     )
     expect_s3_class(p, "plotly")
-    
     # Check for error bars in the plotly object
-has_error_bars <- any(sapply(p$x$data, function(trace) "error_y" %in% names(trace)))
+    has_error_bars <- any(sapply(p$x$data, function(trace) "error_y" %in% names(trace)))
     expect_true(has_error_bars)
   })
 
@@ -71,7 +68,7 @@ has_error_bars <- any(sapply(p$x$data, function(trace) "error_y" %in% names(trac
       plot_cv = TRUE
     )
     expect_s3_class(p, "plotly")
-    
+
     # Check for CV error bars in the plotly object
     has_cv_error_bars <- any(sapply(p$x$data, function(trace) {
       if ("error_y" %in% names(trace)) {
@@ -81,6 +78,6 @@ has_error_bars <- any(sapply(p$x$data, function(trace) "error_y" %in% names(trac
     }))
     expect_true(has_cv_error_bars)
   })
-  
+
   #TODO: Add test that plot implements logarithmic scale correctly
 })
