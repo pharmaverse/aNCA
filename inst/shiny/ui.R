@@ -328,5 +328,6 @@ fluidPage(
       tab_tlg_ui("tlg")
     )
   ),
-  shinyjs::useShinyjs()
+  shinyjs::useShinyjs(),
+  reactable.extras::reactable_extras_dependency()
 )

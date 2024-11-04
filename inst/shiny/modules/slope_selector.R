@@ -3,44 +3,43 @@ slope_selector_ui <- function(id) {
 
   tagList(
     fluidRow(
+      actionButton(ns("add_excsel"), "+ Exclusion/Selection"),
+      actionButton(ns("remove_excsel"), "- Remove selected rows"),
+      actionButton(ns("save_excsel"), "Apply"),
+      dropdown(
+        tags$div("Here will be manual"),
+        style = "unite",
+        right = TRUE,
+        icon = icon("question"),
+        status = "primary"
+      )
+    ),
+    fluidRow(
+      reactableOutput(ns("manual_slopes")),
+    ),
+    fluidRow(
       column(
-        width = 3,
-        dropdown(
-          actionButton(ns("add_excsel"), "+ Exclusion/Selection"),
-          actionButton(ns("remove_excsel"), "- Remove selected rows"),
-          reactable.extras::reactable_extras_dependency(),
-          reactableOutput(ns("manual_slopes")),
-          actionButton(ns("save_excsel"), "Save"),
-          style = "unite", icon = icon("chart-line"),
-          status = "success", width = "500px",
-        )
-      ),
-      column(
-        width = 4,
+        width = 2,
         selectInput(
           ns("plots_per_page"),
           "Plots per page:",
           choices = c(2, 4, 6, 8, 10),
-          selected = 2,
-          width = "50%"
+          selected = 2
         ),
       ),
       column(
-        width = 5,
+        width = 4,
         pickerInput(
           ns("search_patient"),
           label = "Search Patient",
-          width = "70%",
           choices = NULL,
           multiple = TRUE,
           options = list(`actions-box` = TRUE)
         ),
-      )
-    ),
-    fluidRow(
-      column(4, align = "left", actionButton(ns("previous_page"), "Previous Page")),
+      ),
+      column(2, align = "left", actionButton(ns("previous_page"), "Previous Page")),
       column(
-        4, align = "center",
+        2, align = "center",
         #' TODO(mateusz): the 'jump to page' select input could be part of the page number
         #' display for better visuals
         uiOutput(ns("page_number")),
@@ -50,7 +49,7 @@ slope_selector_ui <- function(id) {
           choices = c()
         )
       ),
-      column(4, align = "right", actionButton(ns("next_page"), "Next Page"))
+      column(2, align = "right", actionButton(ns("next_page"), "Next Page"))
     ),
     uiOutput(ns("slope_plots_ui")),
     # Include details for modal message in slope_helpIcon (Instruction details)
