@@ -1,7 +1,9 @@
 slope_selector_ui <- function(id) {
   ns <- NS(id)
 
-  tagList(
+  div(
+    class = "slope-selector-module",
+    includeCSS(file.path(system.file("shiny/www", package = "aNCA"), "slope_selector.css")),
     fluidRow(
       actionButton(ns("add_excsel"), "+ Exclusion/Selection"),
       actionButton(ns("remove_excsel"), "- Remove selected rows"),
@@ -18,17 +20,22 @@ slope_selector_ui <- function(id) {
       reactableOutput(ns("manual_slopes")),
     ),
     fluidRow(
-      column(
-        width = 2,
-        selectInput(
-          ns("plots_per_page"),
-          "Plots per page:",
-          choices = c(2, 4, 6, 8, 10),
-          selected = 2
-        ),
+      class = "plot-widgets-container",
+      div(
+        tags$span(
+          class = "inline-select-input",
+          tags$label(
+            "Plots per page: "
+          ),
+          selectInput(
+            ns("plots_per_page"),
+            "",
+            choices = c(2, 4, 6, 8, 10),
+            selected = 2
+          )
+        )
       ),
-      column(
-        width = 4,
+      div(
         pickerInput(
           ns("search_patient"),
           label = "Search Patient",
@@ -37,21 +44,20 @@ slope_selector_ui <- function(id) {
           options = list(`actions-box` = TRUE)
         ),
       ),
-      column(2, align = "left", actionButton(ns("previous_page"), "Previous Page")),
-      column(
-        2, align = "center",
-        #' TODO(mateusz): the 'jump to page' select input could be part of the page number
-        #' display for better visuals
-        uiOutput(ns("page_number")),
-        selectInput(
-          ns("select_page"),
-          "Jump to page:",
-          choices = c()
+      div(align = "left", actionButton(ns("previous_page"), "Previous Page")),
+      div(
+        align = "center",
+        tags$span(
+          class = "inline-select-input",
+          tags$span("Page "),
+          selectInput(ns("select_page"), "", choices = c()),
+          tags$span(" out of "),
+          uiOutput(ns("page_number"), inline = TRUE)
         )
       ),
-      column(2, align = "right", actionButton(ns("next_page"), "Next Page"))
+      div(align = "right", actionButton(ns("next_page"), "Next Page"))
     ),
-    uiOutput(ns("slope_plots_ui")),
+    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
     # Include details for modal message in slope_helpIcon (Instruction details)
     #' TODO(mateusz): make this work, possibly refactor
     #' NOTE: I am not namespacing it yet, as the implementation could change
@@ -176,9 +182,7 @@ slope_selector_server <- function(
 
       # update page number display #
       num_pages <- ceiling(num_plots / plots_per_page)
-      output$page_number <- renderUI({
-        tags$span(stringr::str_glue("Page {current_page()} of {num_pages}"))
-      })
+      output$page_number <- renderUI(num_pages)
 
       # update jump to page selector #
       updateSelectInput(
@@ -322,13 +326,12 @@ slope_selector_server <- function(
           ),
           REASON = colDef(
             cell = text_extra(
-              id = session$ns("edit_READSON")
+              id = session$ns("edit_REASON")
             )
           )
         ),
-        selection = "single",
+        selection = "multiple",
         borderless = TRUE,
-        onClick = "select",
         theme = reactableTheme(
           rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
         )

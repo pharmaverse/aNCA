@@ -187,7 +187,7 @@ lambda_slope_plot <- function(
     scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 0.01, base = exp(10)))
 
   # Make a plotly interactive plot
-  pl <- ggplotly(p, width = 800, height = 600) %>%
+  pl <- ggplotly(p) %>%
     layout(
       annotations = list(
         text = subtitle_text,
