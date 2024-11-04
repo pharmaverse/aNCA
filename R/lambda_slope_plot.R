@@ -125,7 +125,7 @@ lambda_slope_plot <- function(
   if (lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"] <= max(lambda_z_ix_rows$AVAL)) {
     subtitle_color <- "red"
     subtitle_text <- paste0(
-      "Cmax should not be included in lambda calculation", "\n", subtitle_text
+      subtitle_text, "\nCmax should not be included in lambda calculation"
     )
   }
 
@@ -170,8 +170,7 @@ lambda_slope_plot <- function(
     theme_bw() +
 
     theme(
-      plot.title = element_text(hjust = 0, face = "bold", size = 20, family = "serif"),
-      plot.subtitle = element_text(hjust = 0, color = subtitle_color, size = 18, family = "serif"),
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 20, family = "serif"),
       legend.position = "none",
       axis.text = element_text(size = 15),
       axis.title.x = element_text(size = 15, family = "serif", margin = margin(t = 0)),
@@ -194,11 +193,11 @@ lambda_slope_plot <- function(
         showarrow = FALSE,
         xref = "paper",
         yref = "paper",
-        xanchor = "left",
+        xanchor = "right",
         yanchor = "top",
         font = list(size = 15, color = subtitle_color, family = "times"),
-        x  = 0,
-        y = 1.105
+        x  = 1,
+        y = 1.108
       ),
       hoverlabel = list(font = list(family = "times", size = 20))
     ) %>%
@@ -229,5 +228,5 @@ lambda_slope_plot <- function(
       showlegend = FALSE  # Don't show this trace in the legend
     )
 
-  return(pl)
+  pl
 }
