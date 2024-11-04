@@ -61,7 +61,7 @@ slope_selector_ui <- function(id) {
             ns("plots_per_page"),
             "",
             choices = c(1, 2, 4, 6, 8, 10),
-            selected = 4
+            selected = 1
           )
         )
       ),
@@ -166,6 +166,13 @@ slope_selector_server <- function(
         inputId = "select_page",
         choices = 1:num_pages,
         selected = current_page()
+      )
+
+      # update plot display #
+      shinyjs::toggleClass(
+        selector = ".slope-plots-container",
+        class = "multiple",
+        condition = plots_per_page != 1
       )
 
       # disable buttons if necessary #
