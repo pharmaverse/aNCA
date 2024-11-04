@@ -104,8 +104,7 @@ general_meanplot <- function(data,
       geom_errorbar(aes(ymin = (Mean - CV), ymax = (Mean + CV), color = id_variable), width = 0.4)
   }
   # Convert ggplot to plotly
-  p_plotly <- ggplotly(p)
-  return(p_plotly)
+  ggplotly(p)
 }
 
 #' Helper Function: Calculate the Geometric Mean
