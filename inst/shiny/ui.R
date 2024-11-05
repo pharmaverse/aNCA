@@ -332,7 +332,6 @@ fluidPage(
               uiOutput("selectidvar"),
               checkboxInput("logmeanplot", label = "Scale y Log"),
               checkboxInput("sdmeanplot", label = "Show SD"),
-              checkboxInput("mean_plot_cv", label = "Show CV%"),
               checkboxInput("mean_plot_ci", label = "Show CI 95%"),
               plotlyOutput("meanplot", height = "400px"),
               br(),
