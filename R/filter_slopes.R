@@ -10,6 +10,7 @@
 #'
 #' @returns Original dataset, with is.included.hl, is.excluded.hl and exclude_half.life columns
 #'          modified in accordance to the provided slope filters.
+#' @export
 filter_slopes <- function(data, slopes, profiles) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
@@ -27,11 +28,11 @@ filter_slopes <- function(data, slopes, profiles) {
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
     filter(
+      TYPE %in% c("Selection", "Exclusion"),
       PATIENT %in% names(profiles),
       PROFILE %in% unname(unlist(profiles[PATIENT])),
-      all(!is.na(sapply(IXrange, function(x) eval(parse(text = x))))) &
-        all(!is.null(sapply(IXrange, function(x) eval(parse(text = x))))),
-    )  %>%
+      all(!is.na(sapply(IXrange, function(x) .eval_range(x))))
+    ) %>%
     # Eliminate duplicated records within the same profile
     filter(
       !duplicated(
@@ -45,7 +46,7 @@ filter_slopes <- function(data, slopes, profiles) {
     selection_index <- which(
       data$conc$data$USUBJID == slopes$PATIENT[i] &
         data$conc$data$DOSNO == slopes$PROFILE[i] &
-        data$conc$data$IX %in% eval(parse(text = slopes$IXrange[i]))
+        data$conc$data$IX %in% .eval_range(slopes$IXrange[i])
     )
 
     if (slopes$TYPE[i] == "Selection") {
@@ -68,4 +69,15 @@ filter_slopes <- function(data, slopes, profiles) {
     })
 
   data
+}
+
+#' Evaluates range notation. If provided notation is invalid, returns NA. In example,
+#' eval_range("1:5") returns c(1,2,3,4,5).
+#'
+#' @param x character string with range notation, eg. 1:5.
+#' @returns numeric vector with specified range of numbers, NA if notation is invalid
+#' @noRD
+.eval_range <- function(x) {
+  val_range <- try(eval(parse(text = x)), silent = TRUE)
+  if (inherits(val_range, "try-error")) NA else val_range
 }
