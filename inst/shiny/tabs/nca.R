@@ -185,10 +185,15 @@ observeEvent(input$settings_upload, {
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
-  print("trigered")
+  
+  # Define explicetely input columns until there are input definitions
+  group_columns = intersect(colnames(data()), c('STUDYID', 'PCSPEC', 'DOSNO', 'ROUTE', 'DRUG'))
+  usubjid_column = 'USUBJID'
+  time_column = 'AFRLT'
+  
   # Segregate the data into concentration and dose records
-  df_conc <- create_conc(data(), input$analyte, input$proftype)
-  df_dose <- create_dose(df_conc)
+  df_conc <- create_conc(data(), input$analyte, c(group_columns, usubjid_column), time_column = 'AFRLT')
+  df_dose <- create_dose(df_conc, group_columns = c(group_columns, usubjid_column), time_column = 'AFRLT')
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
   df_conc$is.excluded.hl <- FALSE
@@ -207,7 +212,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
-    route = ifelse(toupper(df_dose$IQROUTE) == "EXTRAVASCULAR", "extravascular", "intravascular"),
+    route = ifelse(toupper(df_dose$ROUTE) == "EXTRAVASCULAR", "extravascular", "intravascular"),
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
