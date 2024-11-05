@@ -77,7 +77,7 @@ devtools::load_all()
 aNCA::run_app()
 ```
 
-Have fun running your tailored Non-Compartemental Analysis!
+Have fun running your tailored Non-Compartmental Analysis!
 
 <!--
 ## Contribute as developer

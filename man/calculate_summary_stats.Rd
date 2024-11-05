@@ -11,7 +11,7 @@ calculate_summary_stats(res_pknca, input_groups = "DOSNO")
 Non Compartmental Analysis using PKNCA package}
 
 \item{input_groups}{A character vector specifying the columns to group by.
-Here. the hierachrical order matters}
+Here. the hierarchical order matters}
 }
 \value{
 A data frame with summary statistics for each group and parameter.
