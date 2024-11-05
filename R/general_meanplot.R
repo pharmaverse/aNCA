@@ -30,7 +30,8 @@ general_meanplot <- function(data,
                              id_variable = "DOSEA",
                              plot_ylog = FALSE,
                              plot_sd = FALSE,
-                             plot_cv = FALSE) {
+                             plot_cv = FALSE,
+                             plot_ci = FALSE) {
 
 
   # preprocess the data by summarising
@@ -52,9 +53,11 @@ general_meanplot <- function(data,
       SD = sd(AVAL, na.rm = TRUE),
       CV = (SD / Mean) * 100,
       N = n(),
-      Min_CV = pmax(Mean - CV, .Machine$double.eps)
+      SE = SD / sqrt(N),
+      CI_lower = Mean - 1.96 * SE,
+      CI_upper = Mean + 1.96 * SE,
     ) %>%
-    select(where(~n_distinct(.) == 1), Mean, SD, CV, N, Min_CV) %>%
+    select(where(~n_distinct(.) == 1), Mean, SD, CV, N, CI_lower, CI_upper) %>%
     slice(1) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
@@ -82,7 +85,7 @@ general_meanplot <- function(data,
         "Mean concentration", " [", paste(unique(preprocessed_data$AVALU), collapse = ","), "]"
       ),
       color = id_variable,
-      fill = ""
+      fill = "95% Confidence Interval"
     ) +
     theme_bw() +
     theme(legend.position = "right",
@@ -91,10 +94,6 @@ general_meanplot <- function(data,
           strip.background = element_rect(fill = "grey90", color = "grey50"),
           plot.margin = margin(10, 10, 10, 10, "pt"))
 
-  # add log scale
-  if (plot_ylog) {
-    p <- p + scale_y_log10()
-  }
   # add sd
   if (plot_sd) {
     p <- p +
@@ -103,8 +102,20 @@ general_meanplot <- function(data,
   # add cv
   if (plot_cv) {
     p <- p +
-      geom_ribbon(aes(ymin = Min_CV, ymax = (Mean + CV), fill = id_variable), alpha = 0.3)
+      geom_errorbar(aes(ymin = (Mean - CV), ymax = (Mean + CV), color = id_variable), width = 0.4)
   }
+  
+  # add ci
+  if (plot_ci) {
+    p <- p +
+      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, color = id_variable), alpha = 0.3)
+  }
+  
+  # add log scale
+  if (plot_ylog) {
+    p <- p + scale_y_log10()
+  }
+  
   # Convert ggplot to plotly
   ggplotly(p)
 }
