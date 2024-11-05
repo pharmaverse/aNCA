@@ -65,13 +65,13 @@ jobs:
 
         - name: Install dependencies
           run: |
-            Rscript -e 'install.packages("remotes")'
             Rscript -e 'remotes::install_deps(dependencies = TRUE)'
 
         - name: Run tests
+          shell: Rscript {0}
           run: |
-            Rscript -e 'if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")'
-            Rscript -e 'devtools::load_all("."); devtools::test()'
+            devtools::load_all(".")
+            devtools::test()
   check:
     name: Check
     uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
