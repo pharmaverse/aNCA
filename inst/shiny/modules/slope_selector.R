@@ -7,9 +7,9 @@ slope_selector_ui <- function(id) {
     includeCSS(file.path(assets, "slope_selector.css")),
     fluidRow(
       # Selection and exclusion controls #
-      actionButton(ns("add_excsel"), "+ Exclusion/Selection", class = "btn-success"),
-      actionButton(ns("remove_excsel"), "- Remove selected rows", class = "btn-warning"),
-      actionButton(ns("save_excsel"), tags$b("Apply"), class = "btn-primary"),
+      actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success"),
+      actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning"),
+      actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary"),
       # Help widget #
       dropdown(
         div(
@@ -244,7 +244,7 @@ slope_selector_server <- function(
     row_counter <- reactiveVal(0)
 
     #' Adds new row to the selection/exclusion datatable
-    observeEvent(input$add_excsel, {
+    observeEvent(input$add_rule, {
       log_trace("{id}: adding manual slopes row")
 
       new_row <- data.frame(
@@ -260,7 +260,7 @@ slope_selector_server <- function(
     })
 
     #' Removes selected row
-    observeEvent(input$remove_excsel, {
+    observeEvent(input$remove_rule, {
       log_trace("{id}: removing manual slopes row")
 
       selected <- getReactableState("manual_slopes", "selected")
@@ -353,120 +353,14 @@ slope_selector_server <- function(
       })
     })
 
-    # Save the exclusion/selection data to the server data and rerun the NCA results
-    #' TODO(mateusz): migrate this to a function outside of server, take proper arguments
-    handle_nca_excsel <- function() {
-      if (is.null(mydata())) {
-        showNotification(
-          "Data issue: Please select an Analyte in the Data Selection tab",
-          duration = NULL,
-          closeButton = TRUE,
-          type = "error"
-        )
-        return(NULL)
-      }
-
-      mydata <- mydata()
-
-      # Reset to 0 all previous (if done) changes
-      mydata$conc$data$is.included.hl <- FALSE
-      mydata$conc$data$is.excluded.hl <- FALSE
-      mydata$conc$data$exclude_half.life <- FALSE
-
-      # If there is no specification there is nothing to save
-      if (nrow(manual_slopes()) == 0) {
-        # Rerun the NCA with the modified data
-        mydata(mydata)
-
-        # Stop the observeEvent
-        return(NULL)
-      }
-
-      manual_slopes <- manual_slopes()
-
-      # Eliminate all rows with conflicting or blank values
-      manual_slopes(manual_slopes %>%
-        filter(
-          PATIENT %in% names(profiles_per_patient()),
-          PROFILE %in% unname(unlist(profiles_per_patient()[PATIENT])),
-          all(!is.na(sapply(IXrange, function(x) eval(parse(text = x))))) &
-            all(!is.null(sapply(IXrange, function(x) eval(parse(text = x))))),
-        )  %>%
-        # Eliminate duplicated records within the same profile
-        filter(
-          !duplicated(
-            paste0(PATIENT, PROFILE, IXrange, fromLast = TRUE),
-            !(duplicated(paste0(PATIENT, PROFILE), fromLast = TRUE))
-          )
-        )
-      )
-
-      # Update the exclusion/selection data for Lambda based on the current exc/sel table
-      for (i in seq_len(nrow(manual_slopes()))) {
-        #
-        #update inclusions
-        if (manual_slopes()$TYPE[i] == "Selection") {
-          mydata$conc$data <- mydata$conc$data %>%
-            mutate(
-              is.included.hl = ifelse(
-                USUBJID == manual_slopes()$PATIENT[i] &
-                  DOSNO == manual_slopes()$PROFILE[i] &
-                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
-                TRUE,
-                is.included.hl
-              ),
-              REASON = ifelse(
-                USUBJID == manual_slopes()$PATIENT[i] &
-                  DOSNO == manual_slopes()$PROFILE[i] &
-                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
-                manual_slopes()$REASON[i],
-                REASON
-              )
-            )
-        } else {
-          #update exclusions
-          mydata$conc$data <- mydata$conc$data %>%
-            mutate(
-              is.excluded.hl = ifelse(
-                USUBJID == manual_slopes()$PATIENT[i] &
-                  DOSNO == manual_slopes()$PROFILE[i] &
-                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
-                TRUE,
-                is.excluded.hl
-              ),
-              REASON = ifelse(
-                USUBJID == manual_slopes()$PATIENT[i] &
-                  DOSNO == manual_slopes()$PROFILE[i] &
-                  IX %in% eval(parse(text = manual_slopes()$IXrange[i])),
-                manual_slopes()$REASON[i],
-                REASON
-              )
-            )
-        }
-      }
-      mydata$conc$data <- mydata$conc$data %>%
-        group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-        mutate(
-          exclude_half.life = {
-            if (any(is.included.hl)) {
-              is.excluded.hl | !is.included.hl
-            } else {
-              is.excluded.hl
-            }
-          }
-        )
-
-      mydata(mydata)
-    }
-
     # Observe input$nca
     observeEvent(profiles_per_patient(), {
-      handle_nca_excsel()
+      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
     })
 
-    # Observe input$save_excsel
-    observeEvent(input$save_excsel, {
-      handle_nca_excsel()
+    #' saves and implements provided ruleset
+    observeEvent(input$save_ruleset, {
+      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
       rv$trigger <- rv$trigger + 1
     })
 
