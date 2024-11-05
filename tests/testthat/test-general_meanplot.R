@@ -64,25 +64,5 @@ describe("general_meanplot functions correctly", {
     expect_true(has_error_bars)
   })
 
-  it("can plot with CV error bars", {
-    p <- general_meanplot(
-      data = sample_data,
-      selected_studyids = "Study1",
-      selected_analytes = "Analyte1",
-      selected_cycles = 1,
-      plot_cv = TRUE
-    )
-    expect_s3_class(p, "plotly")
-
-    # Check for CV error bars in the plotly object
-    has_cv_error_bars <- any(sapply(p$x$data, function(trace) {
-      if ("error_y" %in% names(trace)) {
-        return(all(c("array", "arrayminus") %in% names(trace$error_y)))
-      }
-      return(FALSE)
-    }))
-    expect_true(has_cv_error_bars)
-  })
-
   #TODO: Add test that plot implements logarithmic scale correctly
 })
