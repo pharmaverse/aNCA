@@ -203,30 +203,6 @@ slope_selector_server <- function(
         label = "Search Patient",
         choices = unique(res_nca()$result$USUBJID)
       )
-
-      # Generate output lambda slope plots for each patient/profile
-      for (patient in unique(names(profiles_per_patient()))) {
-        for (profile in profiles_per_patient()[[patient]]) {
-          local({
-            patient <- patient
-            profile <- profile
-
-            force(patient)  # Ensure patient is captured correctly
-            force(profile)  # Ensure profile is captured correctly
-
-            output_name <- paste0("slope_plot_", patient, "_", profile)
-            output[[output_name]] <- renderPlotly({
-              lambda_slope_plot(
-                res_nca()$result,
-                res_nca()$data$conc$data,
-                profile,
-                patient,
-                0.7
-              )
-            })
-          })
-        }
-      }
     })
 
     #' Object for storing exclusion and selection data for lambda slope calculation
@@ -236,8 +212,7 @@ slope_selector_server <- function(
         PATIENT = character(),
         PROFILE = character(),
         IXrange = character(),
-        REASON = character(),
-        id = character()
+        REASON = character()
       )
     })
 
@@ -271,6 +246,7 @@ slope_selector_server <- function(
 
 
     #' Render manual slopes table
+    refresh_reactable <- reactiveVal(1)
     output$manual_slopes <- renderReactable({
       log_trace("{id}: rendering slope edit data table")
 
@@ -330,10 +306,11 @@ slope_selector_server <- function(
           rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
         )
       )
-    })
+    }) %>%
+      shiny::bindEvent(refresh_reactable())
 
     #' Separate event handling updating displayed reactable upon every change (adding and removing
-    #' rows, plots selection, edits). This needs to be separate call, since simply  re-rendering
+    #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
     #' the table would mean losing focus on text inputs when entering values.
     observeEvent(manual_slopes(), {
       reactable::updateReactable(
@@ -364,149 +341,92 @@ slope_selector_server <- function(
       rv$trigger <- rv$trigger + 1
     })
 
-    mydata2 <- reactiveVal()
-    observeEvent(mydata(), mydata2(mydata()))
+    #' Plot data is a local reactive copy of full data. The purpose is to display data that
+    #' is already adjusted with the applied rules, so that the user can verify added selctions
+    #' and exclusions before applying them to the actual dataset.
+    plot_data <- reactive({
+      req(mydata(), manual_slopes(), profiles_per_patient())
+      filter_slopes(mydata(), manual_slopes(), profiles_per_patient())
+    }) %>%
+      shiny::debounce(750)
 
-    # Define the click events for the point exclusion and selection in the slope plots
-    click_counter <- reactiveVal(0)
-    firstclick_vals <- reactiveValues(patient = NULL, profile = NULL, idx_pnt = NULL)
 
-    observeEvent(event_data("plotly_click", priority = "event"), {
-      log_trace("{id}: plotly click detected")
-      # Store the information of the last click event
-      click_data <- event_data("plotly_click")
+    #' Redraw plots every time manual slopes are edited or added
+    observeEvent(plot_data(), {
+      req(plot_data())
 
-      if (!is.null(click_data) & !is.null(click_data$customdata)) {
-        log_trace("{id}: plotly click with data detected")
-        # Get identifiers of the clicked plot
-        patient <- gsub("(.*)_.*_.*", "\\1",  click_data$customdata)
-        profile <- gsub(".*_(.*)_.*", "\\1",  click_data$customdata)
-        idx_pnt <- gsub(".*_.*_(.*)", "\\1",  click_data$customdata)
+      for (patient in unique(names(profiles_per_patient()))) {
+        for (profile in profiles_per_patient()[[patient]]) {
+          local({
+            patient <- patient
+            profile <- profile
 
-        # Increment the click counter
-        click_counter(click_counter() + 1)
+            force(patient)  # Ensure patient is captured correctly
+            force(profile)  # Ensure profile is captured correctly
 
-        if (click_counter() %% 2 == 1) {
-          log_trace("{id}: first click")
-          firstclick_vals$patient <- patient
-          firstclick_vals$profile <- profile
-          firstclick_vals$idx_pnt <- idx_pnt
-        }
-
-        # When second click happens in the plot an event should occur
-        if (click_counter() %% 2 == 0 & click_counter() > 0) {
-          log_trace("{id}: second click, adding new selection rule")
-          # If the user clicks another plot after one click, reset everything and start over
-          if (patient != firstclick_vals$patient | profile != firstclick_vals$profile) {
-            click_counter(1)
-            firstclick_vals$patient <- patient
-            firstclick_vals$profile <- profile
-            firstclick_vals$idx_pnt <- idx_pnt
-
-            # If the user clicked in the same plot, perform an action over the temporary data
-          } else {
-            # Define a temporary data that does not affect the original until is
-            # saved by the user (save_excsel)
-            mydata2 <- mydata2()
-
-            # Modify the data for the plot according to the user's clicks
-            mydata2$conc$data <- mydata2$conc$data %>%
-              # If the user clicked two different points, do their selection
-              mutate(
-                is.included.hl = case_when(
-                  idx_pnt == firstclick_vals$idx_pnt ~ is.included.hl,
-                  USUBJID == patient &
-                    DOSNO == profile & IX %in% firstclick_vals$idx_pnt:idx_pnt ~ TRUE,
-                  TRUE ~ FALSE
-                ),
-                # If the user clicked two times the same point, do its exclusion
-                is.excluded.hl = case_when(
-                  idx_pnt != firstclick_vals$idx_pnt ~ is.excluded.hl,
-                  USUBJID == patient & DOSNO == profile & IX %in% idx_pnt ~ !is.excluded.hl,
-                  TRUE ~ is.excluded.hl
-                )
-              ) %>%
-              group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-              mutate(
-                exclude_half.life = {
-                  if (any(is.included.hl)) {
-                    is.excluded.hl | !is.included.hl
-                  } else {
-                    is.excluded.hl
-                  }
-                }
-              )
-            mydata2(mydata2)
-
-            # Change the plot of only the profile and patient selected
-            mydata2$conc$data <- mydata2$conc$data %>% filter(USUBJID == patient, DOSNO == profile)
-            mydata2$dose$data <- mydata2$dose$data %>% filter(USUBJID == patient, DOSNO == profile)
-            myres2 <- suppressWarnings(PKNCA::pk.nca(data = mydata2, verbose = FALSE))
-
-            # Alter the output with the transitory changes and the new slope plot
-            output[[paste0("slopetestplot_", patient, "_", profile)]] <- renderPlotly({
+            output_name <- paste0("slope_plot_", patient, "_", profile)
+            output[[output_name]] <- renderPlotly({
               lambda_slope_plot(
-                myres2$result,
-                myres2$data$conc$data,
+                res_nca()$result,
+                plot_data()$conc$data,
                 profile,
                 patient,
-                ifelse(input$rule_adj.r.squared, input$adj.r.squared_threshold, 0.7)
+                0.7
               )
             })
-
-            ## Make UI changes in the table displayed
-            # 1) If the point selected is a exclusion that was already indicated, then remove
-            #    previous records from the UI table and stop the observeEvent
-            if (idx_pnt == firstclick_vals$idx_pnt &&
-              all(!mydata2$conc$data$is.excluded.hl[
-                mydata2$conc$data$USUBJID == patient &
-                  mydata2$conc$data$DOSNO == profile &
-                  mydata2$conc$data$IX == idx_pnt
-              ])) {
-
-              condition_vr <- {
-                manual_slopes()$PATIENT == patient &
-                  manual_slopes()$PROFILE == profile &
-                  sapply(
-                    manual_slopes()$IXrange,
-                    function(x) idx_pnt %in% eval(parse(text = paste0("c(", x, ")")))
-                  )
-              }
-
-              manual_slopes <- manual_slopes() %>%
-                mutate(
-                  IXrange = ifelse(
-                    condition_vr,
-                    yes = {
-                      ixrange <- eval(parse(text = paste0("c(", IXrange, ")")))
-                      ixrange <- ixrange[ixrange != idx_pnt]
-                      paste(ixrange, collapse = ":")
-                    },
-                    no = IXrange
-                  )
-                ) %>%
-                # delete all rows where IXrange does not contain a numeric value
-                filter(grepl("\\d.*", IXrange))
-
-              manual_slopes(manual_slopes)
-            } else {
-              # 2) If the point selected is a selection or a exclusion that was not indicated
-              #    then include it also in the UI table
-              row_counter(row_counter() + 1)
-              id <- paste0("Ex_", row_counter())
-
-              new_row_manual_slopes <- data.frame(
-                TYPE = ifelse(idx_pnt != firstclick_vals$idx_pnt, "Selection", "Exclusion"),
-                PATIENT = patient,
-                PROFILE = as.character(profile),
-                IXrange = paste0(firstclick_vals$idx_pnt, ":", idx_pnt),
-                REASON = "[Graphical selection. Click here to include a reason]"
-              )
-              manual_slopes(rbind(manual_slopes(), new_row_manual_slopes))
-            }
-          }
+          })
         }
       }
+    })
+
+    # Define the click events for the point exclusion and selection in the slope plots
+    last_click_data <- reactiveValues(patient = "", profile = "", idx_pnt = "")
+    observeEvent(event_data("plotly_click", priority = "event"), {
+      # Store the information of the last click event #
+      click_data <- event_data("plotly_click")
+
+      # If no information is present, exit #
+      if (is.null(click_data) || is.null(click_data$customdata))
+        return(NULL)
+
+      log_trace("{id}: plotly click with data detected")
+
+      # Get identifiers of the clicked plot #
+      patient <- gsub("(.*)_.*_.*", "\\1",  click_data$customdata)
+      profile <- gsub(".*_(.*)_.*", "\\1",  click_data$customdata)
+      idx_pnt <- gsub(".*_.*_(.*)", "\\1",  click_data$customdata)
+
+      #' If not data was previously provided, or user clicked on different plot,
+      #' update last data and exit
+      if (patient != last_click_data$patient || profile != last_click_data$profile) {
+        last_click_data$patient <- patient
+        last_click_data$profile <- profile
+        last_click_data$idx_pnt <- idx_pnt
+        return(NULL)
+      }
+
+      # If valid selection is provided, construct new row
+      new_slope_rule <- data.frame(
+        TYPE = if (idx_pnt != last_click_data$idx_pnt) "Selection" else "Exclusion",
+        PATIENT = patient,
+        PROFILE = as.character(profile),
+        IXrange = paste0(last_click_data$idx_pnt, ":", idx_pnt),
+        REASON = "[Graphical selection. Click here to include a reason]"
+      )
+
+      # Check if there is any overlap with existing rules, adda new or edit accordingly
+      new_manual_slopes <- .check_slope_rule_overlap(manual_slopes(), new_slope_rule)
+
+      manual_slopes(new_manual_slopes)
+
+      # after adding new rule, reset last click data #
+      last_click_data$patient <- ""
+      last_click_data$profile <- ""
+      last_click_data$idx_pnt <- ""
+
+      # render rectable anew #
+      shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
+      refresh_reactable(refresh_reactable() + 1)
     })
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
@@ -514,4 +434,37 @@ slope_selector_server <- function(
       manual_slopes()
     }))
   })
+}
+
+.check_slope_rule_overlap <- function(existing, new) {
+  # check if any rule already exists for specific patient and profile #
+  existing_index <- which(
+    existing$TYPE == new$TYPE &
+      existing$PATIENT == new$PATIENT &
+      existing$PROFILE == new$PROFILE
+  )
+
+  if (length(existing_index) != 1) {
+    if (length(existing_index) > 1)
+      log_warn("More than one range for single patient, profile and rule type detected.")
+    return(rbind(existing, new))
+  }
+
+  existing_range <- .eval_range(existing$IXrange[existing_index])
+  new_range <- .eval_range(new$IXrange)
+
+  is_inter <- length(intersect(existing_range, new_range)) != 0
+  is_diff <- length(setdiff(new_range, existing_range)) != 0
+
+  if (is_diff) {
+    existing$IXrange[existing_index] <- unique(c(existing_range, new_range)) %>%
+      sort() %>%
+      paste0(collapse = ",")
+
+  } else if (is_inter) {
+    existing$IXrange[existing_index] <- setdiff(existing_range, new_range) %>%
+      paste0(collapse = ",")
+  }
+
+  existing
 }
