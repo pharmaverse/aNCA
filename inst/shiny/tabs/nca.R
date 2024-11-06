@@ -183,6 +183,7 @@ observeEvent(input$settings_upload, {
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
+  
   browser()
   
   # Define explicetely input columns until there are input definitions
@@ -203,14 +204,14 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + ROUTE + PCSPEC + ANALYTE + DRUG + USUBJID,
+    formula = AVAL ~ TIME | STUDYID + ROUTE + PCSPEC + DRUG + USUBJID / ANALYTE,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + ROUTE + PCSPEC + ANALYTE + DRUG + USUBJID + DOSNO,
+    formula = DOSEA ~ TIME | STUDYID + ROUTE + PCSPEC + DRUG + USUBJID + DOSNO,
     route = tolower(df_dose$ROUTE),
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
@@ -404,7 +405,7 @@ res_nca <- eventReactive(rv$trigger, {
       # Make sure the standard options do not prohibit results
       min.hl.r.squared = 0.001,
       min.span.ratio = Inf,
-      min.hl.points = 2
+      min.hl.points = 3
     )
 
     # Filter the data based on the selected profiles
@@ -422,7 +423,7 @@ res_nca <- eventReactive(rv$trigger, {
              vss.iv.obs = TRUE,
              cl.obs = TRUE,
              cl.pred = TRUE,
-             f = if (length(unique(mydata$conc$data$PKROUTE)) > 1) TRUE else FALSE,
+             f = if (length(unique(mydata$conc$data$ROUTE)) > 1) TRUE else FALSE,
              vz.obs = TRUE) %>%
       # If so, include the AUC intervals defined by the user
       rbind(intervals_userinput()) %>%
