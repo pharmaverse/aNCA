@@ -4,8 +4,6 @@
 # results of the NCA. In the setup tabset we select the anaylte to be processed,
 # setup the NCA setting and can do manual slope selection or point exclusion. In the result tabset
 # we can view the NCA results, slope caclulation und exclusions table.
-
-
 # TABSET: Setup ================================================================
 
 # In the setup tabset we select the anaylte to be processed,
@@ -193,7 +191,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   
   # Segregate the data into concentration and dose records
   df_conc <- create_conc(data(), input$analyte, c(group_columns, usubjid_column), time_column = 'AFRLT')
-  df_dose <- create_dose(df_conc, group_columns = c(group_columns, usubjid_column), time_column = 'AFRLT')
+  df_dose <- create_dose(df_conc, group_columns = c(group_columns, usubjid_column), time_column = 'AFRLT', relative_time0_column = "ARRLT")
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
   df_conc$is.excluded.hl <- FALSE
@@ -204,15 +202,15 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID / DOSNO,
+    formula = AVAL ~ TIME | STUDYID + ROUTE + PCSPEC + ANALYTE + DRUG + USUBJID / DOSNO,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
-    route = ifelse(toupper(df_dose$ROUTE) == "EXTRAVASCULAR", "extravascular", "intravascular"),
+    formula = DOSEA ~ TIME | STUDYID + ROUTE + PCSPEC + ANALYTE + DRUG + USUBJID + DOSNO,
+    route = tolower(df_dose$ROUTE),
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
@@ -229,6 +227,7 @@ observeEvent(input$submit_analyte, priority = 2, {
       timeu = myconc$data$RRLTU[1]
     )
   )
+
   mydata(mydata)
 })
 
@@ -430,6 +429,11 @@ res_nca <- eventReactive(rv$trigger, {
         aucpext.obs = TRUE,
         aucpext.pred = TRUE
       )
+    
+    # Perform C0 imputations for the relevant parameters
+    if (input$impute_c0) {
+      mydata <- create_c0_impute(mydata = mydata)
+    }
 
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
