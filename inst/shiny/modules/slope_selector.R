@@ -21,20 +21,20 @@ slope_selector_ui <- function(id) {
           "),
           div(class = "gif-grid",
             div(class = "gif-container",
+              tags$h1("Check"),
+              img(src = "images/slope_plot_check.gif", alt = "Check")
+            ),
+            div(class = "gif-container",
               tags$h1("Zoom"),
-              img(src = "images/zoom_slopeselector.gif", alt = "Zoom")
+              img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
             ),
             div(class = "gif-container",
               tags$h1("Select"),
-              img(src = "images/selection_slopeselector.gif", alt = "Select")
+              img(src = "images/slope_plot_select.gif", alt = "Select")
             ),
             div(class = "gif-container",
               tags$h1("Exclude"),
-              img(src = "images/exclusion_slopeselector.gif", alt = "Exclude")
-            ),
-            div(class = "gif-container",
-              tags$h1("Check"),
-              img(src = "images/status_slopeselector.gif", alt = "Check")
+              img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
             )
           )
         ),
