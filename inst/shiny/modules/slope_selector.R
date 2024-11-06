@@ -332,12 +332,12 @@ slope_selector_server <- function(
 
     # Observe input$nca
     observeEvent(profiles_per_patient(), {
-      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
+      mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
     })
 
     #' saves and implements provided ruleset
     observeEvent(input$save_ruleset, {
-      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
+      mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
       rv$trigger <- rv$trigger + 1
     })
 
@@ -346,7 +346,7 @@ slope_selector_server <- function(
     #' and exclusions before applying them to the actual dataset.
     plot_data <- reactive({
       req(mydata(), manual_slopes(), profiles_per_patient())
-      filter_slopes(mydata(), manual_slopes(), profiles_per_patient())
+      .filter_slopes(mydata(), manual_slopes(), profiles_per_patient())
     }) %>%
       shiny::debounce(750)
 
@@ -434,37 +434,4 @@ slope_selector_server <- function(
       manual_slopes()
     }))
   })
-}
-
-.check_slope_rule_overlap <- function(existing, new) {
-  # check if any rule already exists for specific patient and profile #
-  existing_index <- which(
-    existing$TYPE == new$TYPE &
-      existing$PATIENT == new$PATIENT &
-      existing$PROFILE == new$PROFILE
-  )
-
-  if (length(existing_index) != 1) {
-    if (length(existing_index) > 1)
-      log_warn("More than one range for single patient, profile and rule type detected.")
-    return(rbind(existing, new))
-  }
-
-  existing_range <- .eval_range(existing$IXrange[existing_index])
-  new_range <- .eval_range(new$IXrange)
-
-  is_inter <- length(intersect(existing_range, new_range)) != 0
-  is_diff <- length(setdiff(new_range, existing_range)) != 0
-
-  if (is_diff) {
-    existing$IXrange[existing_index] <- unique(c(existing_range, new_range)) %>%
-      sort() %>%
-      paste0(collapse = ",")
-
-  } else if (is_inter) {
-    existing$IXrange[existing_index] <- setdiff(existing_range, new_range) %>%
-      paste0(collapse = ",")
-  }
-
-  existing
 }
