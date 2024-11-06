@@ -120,12 +120,22 @@ lambda_slope_plot <- function(
     lambda_z_ix_rows$IX[1], "</sub>)/2 = ", time_span / 2, "h"
   )
 
+  cmax_error_text <- NULL
+
 
   # If Cmax is included in lambda calculation, inform the user in the plot
   if (lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"] <= max(lambda_z_ix_rows$AVAL)) {
     subtitle_color <- "red"
-    subtitle_text <- paste0(
-      subtitle_text, "\nCmax should not be included in lambda calculation"
+    cmax_error_text <- list(
+      text = "Cmax should not be included in lambda calculation",
+      font = list(size = 15, color = "red", family = "times"),
+      x = 1,
+      y = 1,
+      xref = "paper",
+      yref = "paper",
+      xanchor = "right",
+      yanchor = "top",
+      showarrow = FALSE
     )
   }
 
@@ -189,16 +199,21 @@ lambda_slope_plot <- function(
   # Make a plotly interactive plot
   pl <- ggplotly(p) %>%
     layout(
+      margin = list(t = 80),
       annotations = list(
-        text = subtitle_text,
-        showarrow = FALSE,
-        xref = "paper",
-        yref = "paper",
-        xanchor = "right",
-        yanchor = "top",
-        font = list(size = 15, color = subtitle_color, family = "times"),
-        x  = 1,
-        y = 1.108
+        list(
+          text = subtitle_text,
+          showarrow = TRUE,
+          arrowcolor = "transparent",
+          xref = "paper",
+          yref = "paper",
+          xanchor = "right",
+          yanchor = "top",
+          font = list(size = 15, color = subtitle_color, family = "times"),
+          x = 1,
+          y = 1
+        ),
+        cmax_error_text
       ),
       hoverlabel = list(font = list(family = "times", size = 20))
     ) %>%
