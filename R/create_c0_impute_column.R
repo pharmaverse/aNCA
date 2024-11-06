@@ -1,7 +1,7 @@
 create_c0_impute <- function(mydata) {
   
   # Define group columns
-  group_columns <- unname(unlist(mydata$conc$columns$groups))
+  group_columns <- unname(unlist(mydata$dose$columns$groups))
   conc_column <- mydata$conc$columns$conc
   time_column <- mydata$conc$columns$time
   common_cols <- intersect(unlist(mydata$conc$columns$groups),
@@ -59,7 +59,3 @@ create_c0_impute <- function(mydata) {
   
   return(mydata)
 }
-
-
-
-PKNCA_impute_method_start_predose()
