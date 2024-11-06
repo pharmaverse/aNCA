@@ -15,6 +15,8 @@
 #'                          the y-axis. Default is FALSE.
 #' @param plot_sd           A logical value indicating whether to include standard deviation
 #'                          error bars. Default is FALSE.
+#' @param plot_ci           A logical value indicating whether to include confidence interval 95% 
+#'                          ribbon. Default is FALSE.
 #'
 #' @return A ggplot object representing the mean concentration plot.
 #'
@@ -62,7 +64,8 @@ general_meanplot <- function(data,
 
   # filter for log scaling y values that equal 0
   if (plot_ylog) {
-    preprocessed_data <- preprocessed_data %>% filter(Mean != 0)
+    preprocessed_data <- preprocessed_data %>% filter(Mean != 0)%>%
+      mutate(CI_lower = pmax(CI_lower, 0.1))
   }
 
   # Check if preprocessed_data is empty
