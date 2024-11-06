@@ -11,7 +11,7 @@
 #' @returns Original dataset, with is.included.hl, is.excluded.hl and exclude_half.life columns
 #'          modified in accordance to the provided slope filters.
 #' @export
-filter_slopes <- function(data, slopes, profiles) {
+.filter_slopes <- function(data, slopes, profiles) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
 
@@ -69,4 +69,46 @@ filter_slopes <- function(data, slopes, profiles) {
     })
 
   data
+}
+
+#' Check overlap between existing and new slope rulesets
+#'
+#' Takes in tables with existing and incoming selections and exclusions, finds any overlap and
+#' differences, edits the ruleset table accordingly.
+#'
+#' @param existing Data frame with existing selections and exclusions.
+#' @param new      Data frame with new rule to be added or removed.
+#' @returns Data frame with full ruleset, adjusted for new rules.
+#' @export
+.check_slope_rule_overlap <- function(existing, new) {
+  # check if any rule already exists for specific patient and profile #
+  existing_index <- which(
+    existing$TYPE == new$TYPE &
+      existing$PATIENT == new$PATIENT &
+      existing$PROFILE == new$PROFILE
+  )
+
+  if (length(existing_index) != 1) {
+    if (length(existing_index) > 1)
+      log_warn("More than one range for single patient, profile and rule type detected.")
+    return(rbind(existing, new))
+  }
+
+  existing_range <- .eval_range(existing$IXrange[existing_index])
+  new_range <- .eval_range(new$IXrange)
+
+  is_inter <- length(intersect(existing_range, new_range)) != 0
+  is_diff <- length(setdiff(new_range, existing_range)) != 0
+
+  if (is_diff) {
+    existing$IXrange[existing_index] <- unique(c(existing_range, new_range)) %>%
+      sort() %>%
+      paste0(collapse = ",")
+
+  } else if (is_inter) {
+    existing$IXrange[existing_index] <- setdiff(existing_range, new_range) %>%
+      paste0(collapse = ",")
+  }
+
+  existing
 }
