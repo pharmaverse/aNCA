@@ -39,7 +39,7 @@ Imports:
     PKNCA,
     plotly,
     reactable,
-    reactable.extras (>= 0.2.1),
+    reactable.extras,
     rio,
     rmarkdown,
     shiny,
