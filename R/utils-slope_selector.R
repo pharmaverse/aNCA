@@ -27,14 +27,14 @@
 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
-    filter(
+    dplyr::filter(
       TYPE %in% c("Selection", "Exclusion"),
       PATIENT %in% names(profiles),
       PROFILE %in% unname(unlist(profiles[PATIENT])),
       all(!is.na(sapply(IXrange, function(x) .eval_range(x))))
     ) %>%
     # Eliminate duplicated records within the same profile
-    filter(
+    dplyr::filter(
       !duplicated(
         paste0(PATIENT, PROFILE, IXrange, fromLast = TRUE),
         !(duplicated(paste0(PATIENT, PROFILE), fromLast = TRUE))
@@ -59,8 +59,8 @@
   }
 
   data$conc$data <- data$conc$data %>%
-    group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-    mutate(exclude_half.life = {
+    dplyr::group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
+    dplyr::mutate(exclude_half.life = {
       if (any(is.included.hl)) {
         is.excluded.hl | !is.included.hl
       } else {
@@ -102,12 +102,11 @@
 
   if (is_diff) {
     existing$IXrange[existing_index] <- unique(c(existing_range, new_range)) %>%
-      sort() %>%
-      paste0(collapse = ",")
+      .compress_range()
 
   } else if (is_inter) {
     existing$IXrange[existing_index] <- setdiff(existing_range, new_range) %>%
-      paste0(collapse = ",")
+      .compress_range()
   }
 
   existing
