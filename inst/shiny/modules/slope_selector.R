@@ -88,7 +88,7 @@ slope_selector_ui <- function(id) {
       div(align = "right", actionButton(ns("next_page"), "Next Page"))
     ),
     # Plots display #
-    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
+    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container", style = "height:70%;"),
   )
 }
 
@@ -152,7 +152,17 @@ slope_selector_server <- function(
           row["DOSNO"],
           row["USUBJID"],
           0.7
-        )
+        ) |>
+          htmlwidgets::onRender(
+            # nolint start
+            "function(el, x) {
+              const plotlyElements = $('.slope-selector-module .plotly.html-widget.html-fill-item.html-widget-static-bound.js-plotly-plot');
+              plotlyElements.css('height', '100%');
+              plotlyElements.css('aspect-ratio', '1');
+              window.dispatchEvent(new Event('resize'));
+            }"
+            # nolint end
+          )
       })
 
       output$slope_plots_ui <- renderUI({
