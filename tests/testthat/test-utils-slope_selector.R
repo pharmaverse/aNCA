@@ -61,3 +61,79 @@ describe(".filter_slopes", {
     )
   })
 })
+
+EXISTING_FIXTURE <- data.frame(
+  TYPE = "Exclusion",
+  PATIENT = 1,
+  PROFILE = 1,
+  IXrange = "3:6"
+)
+
+describe(".check_slope_rule_overlap", {
+  it("should add new row if no overlap is detected", {
+    # different type #
+    NEW <- data.frame(
+      TYPE = "Selection",
+      PATIENT = 1,
+      PROFILE = 1,
+      IXrange = "1:3"
+    )
+    expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
+
+    # different patient #
+    NEW <- data.frame(
+      TYPE = "Exclusion",
+      PATIENT = 2,
+      PROFILE = 1,
+      IXrange = "1:3"
+    )
+    expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
+
+    # different profile #
+    NEW <- data.frame(
+      TYPE = "Exclusion",
+      PATIENT = 1,
+      PROFILE = 2,
+      IXrange = "1:3"
+    )
+    expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
+  })
+
+  it("should remove overlapping points if no new points are detected", {
+    NEW <- data.frame(
+      TYPE = "Exclusion",
+      PATIENT = 1,
+      PROFILE = 1,
+      IXrange = "4:5"
+    )
+    expect_equal(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "3,6")
+
+    NEW <- data.frame(
+      TYPE = "Exclusion",
+      PATIENT = 1,
+      PROFILE = 1,
+      IXrange = "3:4"
+    )
+    expect_equal(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "5:6")
+  })
+
+  it("should add new points of partial overlap is detected", {
+    NEW <- data.frame(
+      TYPE = "Exclusion",
+      PATIENT = 1,
+      PROFILE = 1,
+      IXrange = "4:9"
+    )
+    expect_equal(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "3:9")
+  })
+
+  it("should remove full row if full range of rule is removed", {
+    NEW <- data.frame(
+      TYPE = "Exclusion",
+      PATIENT = 1,
+      PROFILE = 1,
+      IXrange = "3:6"
+    )
+    expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 0)
+  })
+})
