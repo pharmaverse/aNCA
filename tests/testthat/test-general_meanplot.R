@@ -63,7 +63,7 @@ describe("general_meanplot functions correctly", {
     has_error_bars <- any(sapply(p$x$data, function(trace) "error_y" %in% names(trace)))
     expect_true(has_error_bars)
   })
-  
+
   it("can plot with confidence interval ribbon", {
     p <- general_meanplot(
       data = sample_data,
@@ -74,9 +74,27 @@ describe("general_meanplot functions correctly", {
     )
     expect_s3_class(p, "plotly")
     # Check for error bars in the plotly object
-    has_ribbon <- any(sapply(p$x$data, function(trace) "type" %in% names(trace) && trace$type == "scatter"))
+    has_ribbon <- any(sapply(p$x$data, function(trace) {
+      "type" %in% names(trace) &&
+        trace$type == "scatter"
+    }))
     expect_true(has_ribbon)
   })
 
-  #TODO: Add test that plot implements logarithmic scale correctly
+  it("can plot with logarithmic scale", {
+    p <- general_meanplot(
+      data = sample_data,
+      selected_studyids = "Study1",
+      selected_analytes = "Analyte1",
+      selected_cycles = 1,
+      plot_ylog = TRUE
+    )
+    expect_s3_class(p, "plotly")
+    # Check for logarithmic scale in the plotly object
+    has_log_scale <- any(sapply(p$x$layout$yaxis, function(axis) {
+      "type" %in% names(axis) &&
+        axis$type == "log"
+    }))
+    expect_true(has_log_scale)
+  })
 })
