@@ -183,6 +183,7 @@ observeEvent(input$settings_upload, {
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
+  browser()
   
   # Define explicetely input columns until there are input definitions
   group_columns = intersect(colnames(data()), c('STUDYID', 'PCSPEC', 'DOSNO', 'ROUTE', 'DRUG'))
@@ -202,7 +203,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + ROUTE + PCSPEC + ANALYTE + DRUG + USUBJID / DOSNO,
+    formula = AVAL ~ TIME | STUDYID + ROUTE + PCSPEC + ANALYTE + DRUG + USUBJID,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
