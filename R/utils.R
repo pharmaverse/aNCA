@@ -20,6 +20,7 @@
 .compress_range <- function(range_vector) {
   if (class(range_vector) != "numeric") range_vector <- as.numeric(range_vector)
   if (any(is.na(range_vector))) stop("Error: only numeric values allowed")
+  if (length(range_vector) == 0) return(NA_integer_)
 
   range_vector <- sort(unique(range_vector))
   grouped_range <- c(TRUE, diff(range_vector) != 1) %>%

@@ -109,5 +109,5 @@
       .compress_range()
   }
 
-  existing
+  dplyr::filter(existing, !is.na(IXrange))
 }
