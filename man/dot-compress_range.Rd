@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{.compress_range}
 \alias{.compress_range}
-\title{Compresses a numeric vector into the simples possible character string that, when evaluated,
+\title{Compresses a numeric vector into the simplest possible character string that, when evaluated,
 will create the same numeric vector.}
 \usage{
 .compress_range(range_vector)
@@ -14,7 +14,7 @@ will create the same numeric vector.}
 simplest possible character string representing provided vector
 }
 \description{
-Compresses a numeric vector into the simples possible character string that, when evaluated,
+Compresses a numeric vector into the simplest possible character string that, when evaluated,
 will create the same numeric vector.
 }
 \examples{

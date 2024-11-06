@@ -7,17 +7,17 @@
 .filter_slopes(data, slopes, profiles)
 }
 \arguments{
-\item{data}{Data to filter. Must be PKNCAdata list, containing the conc element with
-PKNCAconc list and appropriate data frame included under data.}
+\item{data}{Data to filter. Must be \code{PKNCAdata} list, containing the \code{conc} element with
+\code{PKNCAconc} list and appropriate data frame included under data.}
 
 \item{slopes}{Data frame with slopes selection rules, must contain the following columns:
-TYPE, PATIENT, PROFILE, IXrange, REASON.}
+\code{TYPE}, \code{PATIENT}, \code{PROFILE}, \code{IXrange}, \code{REASON}.}
 
-\item{profiles}{List with available profiles for each PATIENT.}
+\item{profiles}{List with available profiles for each \code{PATIENT}.}
 }
 \value{
-Original dataset, with is.included.hl, is.excluded.hl and exclude_half.life columns
-modified in accordance to the provided slope filters.
+Original dataset, with \code{is.included.hl}, \code{is.excluded.hl} and \code{exclude_half.life}
+columns modified in accordance to the provided slope filters.
 }
 \description{
 This function filters main dataset based on provided slope selections an exclusions.

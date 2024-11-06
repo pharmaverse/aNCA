@@ -1,7 +1,6 @@
-#' Evaluates range notation. If provided notation is invalid, returns NA. In example,
-#' eval_range("1:5") returns c(1,2,3,4,5).
+#' Evaluates range notation. If provided notation is invalid, returns NA.
 #'
-#' @param x character string with range notation, eg. 1:5.
+#' @param x character string with range notation, e.g. 1:5.
 #' @returns numeric vector with specified range of numbers, NA if notation is invalid
 #'
 #' @examples
@@ -15,7 +14,7 @@
   if (inherits(val_range, "try-error")) NA else val_range
 }
 
-#' Compresses a numeric vector into the simples possible character string that, when evaluated,
+#' Compresses a numeric vector into the simplest possible character string that, when evaluated,
 #' will create the same numeric vector.
 #'
 #' @param range_vector numeric vector with numbers to compress into string

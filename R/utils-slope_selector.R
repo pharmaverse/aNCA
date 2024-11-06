@@ -2,14 +2,14 @@
 #'
 #' This function filters main dataset based on provided slope selections an exclusions.
 #'
-#' @param data     Data to filter. Must be PKNCAdata list, containing the conc element with
-#'                 PKNCAconc list and appropriate data frame included under data.
+#' @param data     Data to filter. Must be `PKNCAdata` list, containing the `conc` element with
+#'                 `PKNCAconc` list and appropriate data frame included under data.
 #' @param slopes   Data frame with slopes selection rules, must contain the following columns:
-#'                 TYPE, PATIENT, PROFILE, IXrange, REASON.
-#' @param profiles List with available profiles for each PATIENT.
+#'                 `TYPE`, `PATIENT`, `PROFILE`, `IXrange`, `REASON`.
+#' @param profiles List with available profiles for each `PATIENT`.
 #'
-#' @returns Original dataset, with is.included.hl, is.excluded.hl and exclude_half.life columns
-#'          modified in accordance to the provided slope filters.
+#' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
+#'          columns modified in accordance to the provided slope filters.
 #' @export
 .filter_slopes <- function(data, slopes, profiles) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))

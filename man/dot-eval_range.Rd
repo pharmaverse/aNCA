@@ -2,20 +2,18 @@
 % Please edit documentation in R/utils.R
 \name{.eval_range}
 \alias{.eval_range}
-\title{Evaluates range notation. If provided notation is invalid, returns NA. In example,
-eval_range("1:5") returns c(1,2,3,4,5).}
+\title{Evaluates range notation. If provided notation is invalid, returns NA.}
 \usage{
 .eval_range(x)
 }
 \arguments{
-\item{x}{character string with range notation, eg. 1:5.}
+\item{x}{character string with range notation, e.g. 1:5.}
 }
 \value{
 numeric vector with specified range of numbers, NA if notation is invalid
 }
 \description{
-Evaluates range notation. If provided notation is invalid, returns NA. In example,
-eval_range("1:5") returns c(1,2,3,4,5).
+Evaluates range notation. If provided notation is invalid, returns NA.
 }
 \examples{
 # Basic usage
