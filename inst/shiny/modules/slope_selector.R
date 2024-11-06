@@ -355,28 +355,23 @@ slope_selector_server <- function(
     observeEvent(plot_data(), {
       req(plot_data())
 
-      for (patient in unique(names(profiles_per_patient()))) {
-        for (profile in profiles_per_patient()[[patient]]) {
-          local({
-            patient <- patient
-            profile <- profile
+      patients <- unique(names(profiles_per_patient()))
+      profiles <- profiles_per_patient()
 
-            force(patient)  # Ensure patient is captured correctly
-            force(profile)  # Ensure profile is captured correctly
-
-            output_name <- paste0("slope_plot_", patient, "_", profile)
-            output[[output_name]] <- renderPlotly({
-              lambda_slope_plot(
-                res_nca()$result,
-                plot_data()$conc$data,
-                profile,
-                patient,
-                0.7
-              )
-            })
+      purrr::walk(patients, \(patient) {
+        purrr::walk(profiles[[patient]], \(profile) {
+          output_name <- paste0("slope_plot_", patient, "_", profile)
+          output[[output_name]] <- renderPlotly({
+            lambda_slope_plot(
+              res_nca()$result,
+              plot_data()$conc$data,
+              profile,
+              patient,
+              0.7
+            )
           })
-        }
-      }
+        })
+      })
     })
 
     # Define the click events for the point exclusion and selection in the slope plots
