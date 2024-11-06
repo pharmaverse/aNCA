@@ -112,7 +112,7 @@ slope_selector_server <- function(
     #' Scans for any related reactives (page number, patient filter etc) and updates the plot output
     #' UI to have only plotlyOutput elements for desired plots.
     observeEvent(list(
-      res_nca(), input$plots_per_page, input$search_patient, current_page()
+      plot_data(), res_nca(), input$plots_per_page, input$search_patient, current_page()
     ), {
       log_trace("{id}: Updating displayed plots")
 
@@ -133,11 +133,9 @@ slope_selector_server <- function(
         ) %>%
         select(USUBJID, DOSNO) %>%
         unique() %>%
-        arrange(USUBJID, DOSNO) %>%
-        mutate(id = session$ns(paste0("slope_plot_", USUBJID, "_", DOSNO))) %>%
-        pull(id)
+        arrange(USUBJID, DOSNO)
 
-      num_plots <- length(patient_profile_plot_ids)
+      num_plots <- nrow(patient_profile_plot_ids)
 
       # find which plots should be displayed based on page #
       plots_per_page <- as.numeric(input$plots_per_page)
@@ -145,11 +143,16 @@ slope_selector_server <- function(
       page_start <- page_end - plots_per_page + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      plots_to_render <- patient_profile_plot_ids[page_start:page_end]
+      plots_to_render <- slice(patient_profile_plot_ids, page_start:page_end)
 
-      # render plot outputs #
-      plot_outputs <- lapply(plots_to_render, \(id) {
-        plotlyOutput(id)
+      plot_outputs <- apply(plots_to_render, 1, function(row) {
+        lambda_slope_plot(
+          res_nca()$result,
+          plot_data()$conc$data,
+          row["DOSNO"],
+          row["USUBJID"],
+          0.7
+        )
       })
 
       output$slope_plots_ui <- renderUI({
@@ -349,30 +352,6 @@ slope_selector_server <- function(
       .filter_slopes(mydata(), manual_slopes(), profiles_per_patient())
     }) %>%
       shiny::debounce(750)
-
-
-    #' Redraw plots every time manual slopes are edited or added
-    observeEvent(plot_data(), {
-      req(plot_data())
-
-      patients <- unique(names(profiles_per_patient()))
-      profiles <- profiles_per_patient()
-
-      purrr::walk(patients, \(patient) {
-        purrr::walk(profiles[[patient]], \(profile) {
-          output_name <- paste0("slope_plot_", patient, "_", profile)
-          output[[output_name]] <- renderPlotly({
-            lambda_slope_plot(
-              res_nca()$result,
-              plot_data()$conc$data,
-              profile,
-              patient,
-              0.7
-            )
-          })
-        })
-      })
-    })
 
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveValues(patient = "", profile = "", idx_pnt = "")
