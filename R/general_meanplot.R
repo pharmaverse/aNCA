@@ -15,7 +15,7 @@
 #'                          the y-axis. Default is FALSE.
 #' @param plot_sd           A logical value indicating whether to include standard deviation
 #'                          error bars. Default is FALSE.
-#' @param plot_ci           A logical value indicating whether to include confidence interval 95% 
+#' @param plot_ci           A logical value indicating whether to include confidence interval 95%
 #'                          ribbon. Default is FALSE.
 #'
 #' @return A ggplot object representing the mean concentration plot.
@@ -64,7 +64,8 @@ general_meanplot <- function(data,
 
   # filter for log scaling y values that equal 0
   if (plot_ylog) {
-    preprocessed_data <- preprocessed_data %>% filter(Mean != 0)%>%
+    preprocessed_data <- preprocessed_data %>%
+      filter(Mean != 0) %>%
       mutate(CI_lower = pmax(CI_lower, 0.1))
   }
 
@@ -100,18 +101,21 @@ general_meanplot <- function(data,
     p <- p +
       geom_errorbar(aes(ymin = (Mean - SD), ymax = (Mean + SD), color = id_variable), width = 0.4)
   }
-  
+
   # add ci
   if (plot_ci) {
     p <- p +
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, color = id_variable), alpha = 0.3)
   }
-  
+
   # add log scale
   if (plot_ylog) {
-    p <- p + scale_y_log10()
+    p <- p +
+      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
+                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
+      annotation_logticks(sides = "l")
   }
-  
+
   # Convert ggplot to plotly
   ggplotly(p)
 }
