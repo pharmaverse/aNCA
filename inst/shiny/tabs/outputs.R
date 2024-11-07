@@ -163,6 +163,7 @@ output$meanplot <- renderPlotly({
                    plot_ylog = input$logmeanplot,
                    plot_sd = input$sdmeanplot,
                    plot_ci = input$mean_plot_ci) %>%
+    ggplotly() %>%
     plotly_build()
 
 })
