@@ -34,7 +34,6 @@ general_meanplot <- function(data,
                              plot_sd = FALSE,
                              plot_ci = FALSE) {
 
-
   # preprocess the data by summarising
   preprocessed_data <- data %>%
     filter(
@@ -117,7 +116,7 @@ general_meanplot <- function(data,
   }
 
   # Convert ggplot to plotly
-  ggplotly(p)
+  return(p)
 }
 
 #' Helper Function: Calculate the Geometric Mean
