@@ -100,6 +100,9 @@ slope_selector_server <- function(
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
 
+    # HACK: workaround to avoid plotly_click not being registered warning
+    session$userData$plotlyShinyEventIDs <- "plotly_click-A"
+
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
