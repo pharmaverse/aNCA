@@ -71,7 +71,7 @@ general_meanplot <- function(data,
   # Check if preprocessed_data is empty
   if (nrow(preprocessed_data) == 0) {
     empty_plot <- ggplot() + labs(title = "No data available")
-    return(ggplotly(empty_plot))
+    return(empty_plot)
   }
 
   # plot the preprocess data
