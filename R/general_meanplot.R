@@ -116,7 +116,7 @@ general_meanplot <- function(data,
   }
 
   # Convert ggplot to plotly
-  return(p)
+  p
 }
 
 #' Helper Function: Calculate the Geometric Mean
