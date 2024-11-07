@@ -25,7 +25,8 @@ describe("general_meanplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_cycles = 1
     )
-    expect_s3_class(p, "plotly")
+    expect_s3_class(p, "ggplot")
+    expect_s3_class(ggplotly(p), "plotly")
   })
   it("handles empty data gracefully", {
     empty_data <- sample_data[0, ]
@@ -35,8 +36,9 @@ describe("general_meanplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_cycles = 1
     )
-    expect_s3_class(p, "plotly")
-    expect_true(p$x$layout$title$text == "No data available")
+    expect_s3_class(p, "ggplot")
+    expect_s3_class(ggplotly(p), "plotly")
+    expect_true(ggplotly(p)$x$layout$title$text == "No data available")
   })
   it("handles missing columns gracefully", {
     incomplete_data <- sample_data %>% select(-AVAL)
@@ -58,9 +60,10 @@ describe("general_meanplot functions correctly", {
       selected_cycles = 1,
       plot_sd = TRUE
     )
-    expect_s3_class(p, "plotly")
+    expect_s3_class(p, "ggplot")
+    expect_s3_class(ggplotly(p), "plotly")
     # Check for error bars in the plotly object
-    has_error_bars <- any(sapply(p$x$data, function(trace) "error_y" %in% names(trace)))
+    has_error_bars <- any(sapply(ggplotly(p)$x$data, function(trace) "error_y" %in% names(trace)))
     expect_true(has_error_bars)
   })
 
@@ -72,9 +75,10 @@ describe("general_meanplot functions correctly", {
       selected_cycles = 1,
       plot_ci = TRUE
     )
-    expect_s3_class(p, "plotly")
+    expect_s3_class(p, "ggplot")
+    expect_s3_class(ggplotly(p), "plotly")
     # Check for error bars in the plotly object
-    has_ribbon <- any(sapply(p$x$data, function(trace) {
+    has_ribbon <- any(sapply(ggplotly(p)$x$data, function(trace) {
       "type" %in% names(trace) &&
         trace$type == "scatter"
     }))
@@ -89,12 +93,13 @@ describe("general_meanplot functions correctly", {
       selected_cycles = 1,
       plot_ylog = TRUE
     )
-    expect_s3_class(p, "plotly")
-    # Check for logarithmic scale in the plotly object
-    has_log_scale <- any(sapply(p$x$layout$yaxis, function(axis) {
-      "type" %in% names(axis) &&
-        axis$type == "log"
-    }))
-    expect_true(has_log_scale)
+    expect_s3_class(p, "ggplot")
+    expect_s3_class(ggplotly(p), "plotly")
+    # Check log-transform was added in the ggplot object
+    has_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
+    
+    # Check data was log transformed in ggplot
+    has_log_data <- all(log10(p$data$Mean) == ggplot_build(p)$data[[1]][["y"]])
+    expect_true(has_log_scale && has_log_data)
   })
 })
