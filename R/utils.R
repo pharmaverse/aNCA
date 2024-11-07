@@ -8,7 +8,6 @@
 #' .eval_range("1:5") # c(1, 2, 3, 4, 5)
 #' .eval_range("5,3:1,15") # c(5, 3, 2, 1, 15)
 #'
-#' @export
 .eval_range <- function(x) {
   val_range <- try(eval(parse(text = paste0("c(", x, ")"))), silent = TRUE)
   if (inherits(val_range, "try-error")) NA else val_range
@@ -24,7 +23,7 @@
 #' # Basic usage
 #' .compress_range(c(1, 2, 3, 4)) # "1:4"
 #' .compress_range(c(15, 1, 11, 4, 5, 10, 2, 12, 3)) # "1:5,10:12,15"
-#' @export
+#'
 .compress_range <- function(range_vector) {
   if (class(range_vector) != "numeric") range_vector <- suppressWarnings(as.numeric(range_vector))
   if (any(is.na(range_vector))) stop("Error: only numeric values allowed")

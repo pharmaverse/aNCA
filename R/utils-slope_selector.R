@@ -10,7 +10,6 @@
 #'
 #' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
 #'          columns modified in accordance to the provided slope filters.
-#' @export
 .filter_slopes <- function(data, slopes, profiles) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
@@ -79,7 +78,6 @@
 #' @param existing Data frame with existing selections and exclusions.
 #' @param new      Data frame with new rule to be added or removed.
 #' @returns Data frame with full ruleset, adjusted for new rules.
-#' @export
 .check_slope_rule_overlap <- function(existing, new) {
   # check if any rule already exists for specific patient and profile #
   existing_index <- which(
