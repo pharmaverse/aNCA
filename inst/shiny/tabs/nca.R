@@ -26,6 +26,7 @@ observeEvent(data(), {
 
 # Make GUI change when new settings are uploaded
 observeEvent(input$settings_upload, {
+
   setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
   # Set the basic settings
   analyte <- setts$ANALYTE[1]
@@ -111,10 +112,10 @@ observeEvent(input$settings_upload, {
   )
 
   # AUC intervals
-  if (!is.na(setts$AUC_mins[1])) {
+  if (!is.na(setts$auc_mins[1])) {
     updateCheckboxInput(session, inputId = "AUCoptions", label = "Select Partial AUC", value = TRUE)
-    auc_mins <- as.character(setts$AUC_mins[1])
-    auc_maxs <- as.character(setts$AUC_maxs[1])
+    auc_mins <- as.character(setts$auc_mins[1])
+    auc_maxs <- as.character(setts$auc_maxs[1])
     auc_mins <- strsplit(auc_mins, split = ",")[[1]]
     auc_maxs <- strsplit(auc_maxs, split = ",")[[1]]
 
@@ -168,17 +169,6 @@ observeEvent(input$settings_upload, {
   } else {
     updateCheckboxInput(session, inputId = "rule_span.ratio", label = "SPAN:", value = FALSE)
   }
-
-  # Lambda slope point selections and exclusions
-  manual_slopes <- setts %>%
-    select(TYPE, USUBJID, DOSNO, IX, REASON) %>%
-    mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
-    group_by(TYPE, PATIENT, PROFILE, REASON) %>%
-    summarise(IXrange = paste0(min(IX), ":", max(IX))) %>%
-    select(TYPE, PATIENT, PROFILE, IXrange, REASON) %>%
-    na.omit()
-
-  manual_slopes(manual_slopes)
 })
 
 # When an analyte is selected and the user clicks the "Submit" button,
@@ -693,18 +683,19 @@ output$preslopesettings <- DT::renderDataTable({
 })
 
 # Slope selector module #
-slope_exclusions <- slope_selector_server(
+slope_rules <- slope_selector_server(
   "slope_selector",
   mydata,
   res_nca,
   profiles_per_patient,
   input$cyclenca,
-  rv
+  rv,
+  reactive(input$settings_upload)
 )
 
-#' display exclusions on Results -> Exclusions tab
+#' display rules on Results -> rules tab
 output$manual_slopes2 <- renderTable({
-  slope_exclusions()
+  slope_rules()
 })
 
 # Save summary stats to improve

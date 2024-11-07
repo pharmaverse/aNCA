@@ -95,7 +95,7 @@ slope_selector_ui <- function(id) {
 .SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
 
 slope_selector_server <- function(
-  id, mydata, res_nca, profiles_per_patient, cycle_nca, rv
+  id, mydata, res_nca, profiles_per_patient, cycle_nca, rv, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -414,6 +414,26 @@ slope_selector_server <- function(
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
       refresh_reactable(refresh_reactable() + 1)
+    })
+
+    #' If any settings are uploaded by the user, overwrite current rules
+    observeEvent(settings_upload(), {
+      req(settings_upload()$datapath)
+
+      #' TODO(mateusz): This is suboptimal, as currently the .csv file is read twice (once in the
+      #' nca.R file, and second time here). Ideally, file should be loaded once and then relevant
+      #' info passed to appropriate modules. This should be reworked once the application is
+      #' modularized and improved further.
+      setts <- read.csv(settings_upload()$datapath)
+      imported_slopes <- setts %>%
+        select(TYPE, USUBJID, DOSNO, IX, REASON) %>%
+        mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
+        group_by(TYPE, PATIENT, PROFILE, REASON) %>%
+        summarise(IXrange = .compress_range(IX), .groups = "keep") %>%
+        select(TYPE, PATIENT, PROFILE, IXrange, REASON) %>%
+        na.omit()
+
+      manual_slopes(imported_slopes)
     })
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
