@@ -18,7 +18,7 @@ sample_data <- data.frame(
 )
 
 describe("general_meanplot functions correctly", {
-  it("returns a plotly object", {
+  it("returns a ggplot object", {
     p <- general_meanplot(
       data = sample_data,
       selected_studyids = "Study1",
@@ -94,7 +94,6 @@ describe("general_meanplot functions correctly", {
       plot_ylog = TRUE
     )
     expect_s3_class(p, "ggplot")
-    expect_s3_class(ggplotly(p), "plotly")
     # Check log-transform was added in the ggplot object
     has_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     
