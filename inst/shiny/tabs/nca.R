@@ -183,17 +183,17 @@ observeEvent(input$settings_upload, {
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
-  
-  browser()
-  
+
   # Define explicetely input columns until there are input definitions
-  group_columns = intersect(colnames(data()), c('STUDYID', 'PCSPEC', 'DOSNO', 'ROUTE', 'DRUG'))
-  usubjid_column = 'USUBJID'
-  time_column = 'AFRLT'
-  
+  group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "DOSNO", "ROUTE", "DRUG"))
+  usubjid_column <- "USUBJID"
+  time_column <- "AFRLT"
+
   # Segregate the data into concentration and dose records
-  df_conc <- create_conc(data(), input$analyte, c(group_columns, usubjid_column), time_column = 'AFRLT')
-  df_dose <- create_dose(df_conc, group_columns = c(group_columns, usubjid_column), time_column = 'AFRLT', relative_time0_column = "ARRLT")
+  df_conc <- create_conc(data(), input$analyte, c(group_columns, usubjid_column),
+                         time_column = time_column)
+  df_dose <- create_dose(df_conc, group_columns = c(group_columns, usubjid_column),
+                         time_column = time_column, relative_time0_column = "ARRLT")
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
   df_conc$is.excluded.hl <- FALSE
@@ -431,7 +431,7 @@ res_nca <- eventReactive(rv$trigger, {
         aucpext.obs = TRUE,
         aucpext.pred = TRUE
       )
-    
+
     # Perform C0 imputations for the relevant parameters
     if (input$impute_c0) {
       mydata <- create_c0_impute(mydata = mydata)
@@ -692,7 +692,7 @@ output$preslopesettings <- DT::renderDataTable({
       scrollX = TRUE,
       scrollY = TRUE,
       lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-      pageLength = -1, 
+      pageLength = -1,
       fixedHeader = TRUE
     )
   ) %>%
