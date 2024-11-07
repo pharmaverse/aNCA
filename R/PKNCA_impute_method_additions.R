@@ -1,4 +1,4 @@
-PKNCA_impute_method_start_log <- function(conc, time, start, end, ..., options = list()) {
+PKNCA_impute_method_start_log <- function(conc, time, start, end, ..., options = list()) { # nolint
   ret <- data.frame(conc = conc, time = time)
   mask_start <- time %in% start
   if (!any(mask_start)) {
@@ -13,7 +13,7 @@ PKNCA_impute_method_start_log <- function(conc, time, start, end, ..., options =
   ret
 }
 
-PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = list()) {
+PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = list()) { # nolint
   ret <- data.frame(conc = conc, time = time)
   mask_start <- time %in% start
   if (!any(mask_start)) {
