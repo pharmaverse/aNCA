@@ -13,6 +13,7 @@
 
 # In this tab we select the analyte to be analyzed or can upload settings
 # Update analyte selection input based on the data
+
 observeEvent(data(), {
   updateSelectInput(
     session,
@@ -40,6 +41,7 @@ observeEvent(input$settings_upload, {
       type = "error"
     )
   }
+  
   # Compare the dataset with settings for inclusions and exclusions
   new_data <- data() %>%
     filter(
@@ -88,7 +90,7 @@ observeEvent(input$settings_upload, {
     choices = data()$ANALYTE[1],
     selected = setts$ANALYTE[1]
   )
-
+  
   # Dose number
   updateSelectInput(
     session,
@@ -190,10 +192,16 @@ observeEvent(input$submit_analyte, priority = 2, {
   time_column <- "AFRLT"
 
   # Segregate the data into concentration and dose records
-  df_conc <- create_conc(data(), input$analyte, c(group_columns, usubjid_column),
+  df_conc <- create_conc(ADNCA = data(), 
+                         analyte = input$analyte, 
+                         group_columns = c(group_columns, usubjid_column),
                          time_column = time_column)
-  df_dose <- create_dose(df_conc, group_columns = c(group_columns, usubjid_column),
-                         time_column = time_column, relative_time0_column = "ARRLT")
+
+  df_dose <- create_dose(df_conc = df_conc, 
+                         group_columns = c(group_columns, usubjid_column),
+                         time_column = time_column, 
+                         since_lastdose_time_column = "ARRLT", 
+                         make_intervals_st_from_dose = input$should_impute_c0)
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
   df_conc$is.excluded.hl <- FALSE
@@ -229,7 +237,6 @@ observeEvent(input$submit_analyte, priority = 2, {
       timeu = myconc$data$RRLTU[1]
     )
   )
-
   mydata(mydata)
 })
 
@@ -299,7 +306,7 @@ observe({
 # Choose dosenumbers to be analyzed
 
 observeEvent(input$submit_analyte, priority = -1, {
-  print(mydata())
+  
   req(mydata())
   updateSelectInput(
     session,
@@ -380,7 +387,7 @@ observeEvent(input$nca, {
     rv$trigger <- rv$trigger + 1
     updateTabsetPanel(session, "ncapanel", selected = "Results")
   }
-
+  
   # Update profiles per patient considering the profiles selected
   mydataconc_new <- mydata()$conc$data %>% filter(DOSNO %in% input$cyclenca)
   profiles_per_patient(tapply(mydataconc_new$DOSNO, mydataconc_new$USUBJID, unique))
@@ -433,7 +440,7 @@ res_nca <- eventReactive(rv$trigger, {
       )
 
     # Perform C0 imputations for the relevant parameters
-    if (input$impute_c0) {
+    if (input$should_impute_c0) {
       mydata <- create_c0_impute(mydata = mydata)
     }
 

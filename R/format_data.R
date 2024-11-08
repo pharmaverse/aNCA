@@ -24,13 +24,13 @@
 
 #Format data for pknca
 format_data <- function(datafile) {  
-  datafile = datafile %>% 
-    mutate(AVAL = as.numeric(ifelse(AVAL %in% 
-                                      c('BLQ', 'Negative', 'negative', 'NEGATIVE'),
+  datafile <- datafile %>% 
+    dplyr::mutate(AVAL = as.numeric(ifelse(AVAL %in% 
+                                      c("BLQ", "Negative", "negative", "NEGATIVE"),
                                     0, AVAL))
-    )%>%  
-    mutate(TIME = ifelse(DOSNO == 1, AFRLT, TIME))
-  
+    )%>%
+    dplyr::mutate(TIME = ifelse(DOSNO == 1, AFRLT, TIME))
+
   return(datafile)
 }
 
@@ -64,16 +64,19 @@ format_data <- function(datafile) {
 #' @export
 
 #create pknca concentration dataset
-create_conc <- function(ADNCA, analyte, group_columns, time_column='AFRLT') {
-  data <- ADNCA %>%  
-    filter(ANALYTE == analyte,
-           if ('EVID' %in% names(ADNCA)) EVID == 0 else T) %>%  
-    mutate(conc_groups = interaction(!!!syms(group_columns), sep = '\n')) %>%
-    arrange(!!sym(time_column)) %>%
-    mutate(TIME = !!sym(time_column)) %>% 
-    group_by(!!!syms(group_columns)) %>%
-    mutate(IX = 1:n()) %>% 
-    ungroup()
+create_conc <- function(ADNCA,
+                        analyte,
+                        group_columns,
+                        time_column="AFRLT") {
+  data <- ADNCA %>%
+    dplyr::filter(ANALYTE == analyte,
+           if ("EVID" %in% names(ADNCA)) EVID == 0 else TRUE) %>%
+    dplyr::mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
+    dplyr::arrange(!!sym(time_column)) %>%
+    dplyr::mutate(TIME = !!sym(time_column)) %>%
+    dplyr::group_by(!!!syms(group_columns)) %>%
+    dplyr::mutate(IX = 1:n()) %>% 
+    dplyr::ungroup()
 }
 
 #' Create PK Dose Dataset
@@ -102,14 +105,18 @@ create_conc <- function(ADNCA, analyte, group_columns, time_column='AFRLT') {
 #' @import dplyr
 #' @export
 
-create_dose <- function(df_conc, group_columns, time_column = "AFRLT", relative_time0_column = "ARRLT") {
-  
+create_dose <- function(df_conc,
+                        group_columns,
+                        time_column = "AFRLT",
+                        since_lastdose_time_column = "ARRLT",
+                        make_intervals_st_from_dose = TRUE) {
+
   df_conc %>%
-    arrange(!!sym(time_column)) %>%
-    group_by(!!!syms(group_columns)) %>%
-    slice(1) %>%
-    ungroup() %>% 
-    mutate(TIME = !!sym(time_column) - !!sym(relative_time0_column))
+    dplyr::mutate(TIME = if (make_intervals_st_from_dose) {
+      !!sym(time_column) - !!sym(since_lastdose_time_column)
+    } else !!sym(time_column)) %>% 
+    dplyr::filter(TIME >= 0) %>% 
+    dplyr::group_by(!!!syms(group_columns)) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup()
 }
-
-

@@ -44,9 +44,18 @@ fluidPage(
                   buttonLabel = list(icon("folder"), "Browse"),
                   accept = c(".csv", ".xpt")
                 ),
+                br(),
+
                 # Selection of analyte
                 selectInput("analyte", "Choose the analyte :", choices = NULL),
                 br(),
+
+                # Only for relevant parameter calculation in NCA, it won't be at the actual data
+                h4("Data imputation"),
+                checkboxInput(inputId = "should_impute_c0",
+                              label = "Impute C0 when missing",
+                              value = TRUE),
+
                 actionButton("submit_analyte", "Submit"),
                 DTOutput("datatable"),
               ),
