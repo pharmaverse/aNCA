@@ -4,9 +4,11 @@
 #' @returns numeric vector with specified range of numbers, NA if notation is invalid
 #'
 #' @examples
+#' \dontrun{
 #' # Basic usage
 #' .eval_range("1:5") # c(1, 2, 3, 4, 5)
 #' .eval_range("5,3:1,15") # c(5, 3, 2, 1, 15)
+#' }
 #'
 .eval_range <- function(x) {
   val_range <- try({
@@ -23,12 +25,14 @@
 #' @returns simplest possible character string representing provided vector
 #'
 #' @examples
+#' \dontrun{
 #' # Basic usage
 #' .compress_range(c(1, 2, 3, 4)) # "1:4"
 #' .compress_range(c(15, 1, 11, 4, 5, 10, 2, 12, 3)) # "1:5,10:12,15"
+#' }
 #'
 .compress_range <- function(range_vector) {
-  if (class(range_vector) != "numeric") range_vector <- suppressWarnings(as.numeric(range_vector))
+  if (!is(range_vector, "numeric")) range_vector <- suppressWarnings(as.numeric(range_vector))
   if (any(is.na(range_vector))) stop("Error: only numeric values allowed")
   if (length(range_vector) == 0) return(NA_integer_)
 

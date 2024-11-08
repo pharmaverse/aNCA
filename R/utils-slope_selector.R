@@ -34,10 +34,7 @@
     ) %>%
     # Eliminate duplicated records within the same profile
     dplyr::filter(
-      !duplicated(
-        paste0(PATIENT, PROFILE, IXrange, fromLast = TRUE),
-        !(duplicated(paste0(PATIENT, PROFILE), fromLast = TRUE))
-      )
+      !duplicated(paste0(PATIENT, PROFILE, IXrange), !(duplicated(paste0(PATIENT, PROFILE), fromLast = TRUE)))
     )
 
   # Update the exclusion/selection data for Lambda based on the current exc/sel table #
