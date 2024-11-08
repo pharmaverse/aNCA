@@ -447,7 +447,9 @@ observeEvent(res_nca(), {
   for (rule_input in grep("^rule_", names(input), value = TRUE)) {
     if (!input[[rule_input]]) next
 
-    pptestcd <- gsub("rule_", "", rule_input)
+    pptestcd <- rule_input |>
+      gsub("^rule_", "", x = _) |>
+      gsub("_", ".", x = _, fixed = TRUE)
     if (startsWith(pptestcd, "auc")) {
       final_res_nca[[paste0("flag_", pptestcd)]] <- {
         final_res_nca[[pptestcd]] >= input[[paste0(pptestcd, "_threshold")]]
