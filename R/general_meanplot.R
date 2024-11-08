@@ -95,9 +95,9 @@ general_meanplot <- function(data,
     facet_wrap(~groups,
                strip.position = "top") +
     labs(
-      x = paste0("Nominal Time [", timeunit, "]"),
+      x = paste0("Nominal Time [", time_unit, "]"),
       y = paste0(
-        "Mean concentration", " [", concunit, "]"
+        "Mean concentration", " [", conc_unit, "]"
       ),
       color = id_variable,
       fill = "95% Confidence Interval"
