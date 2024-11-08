@@ -82,12 +82,12 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_adj.r.squared", "RSQADJ:")
+                    checkboxInput("rule_adj_r_squared", "RSQADJ:")
                   ),
                   column(
                     width = 6,
                     conditionalPanel(
-                      condition = "input.rule_adj.r.squared == true",
+                      condition = "input.rule_adj_r_squared == true",
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
@@ -106,12 +106,12 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_aucpext.obs", "AUCPEO (% ext.observed): ")
+                    checkboxInput("rule_aucpext_obs", "AUCPEO (% ext.observed): ")
                   ),
                   column(
                     width = 6,
                     conditionalPanel(
-                      condition = "input.rule_aucpext.obs == true",
+                      condition = "input.rule_aucpext_obs == true",
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
@@ -130,12 +130,12 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_aucpext.pred", "AUCPEP (% ext.predicted): "),
+                    checkboxInput("rule_aucpext_pred", "AUCPEP (% ext.predicted): "),
                   ),
                   column(
                     width = 6,
                     conditionalPanel(
-                      condition = "input.rule_aucpext.pred == true",
+                      condition = "input.rule_aucpext_pred == true",
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
@@ -154,12 +154,12 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_span.ratio", "SPAN: "),
+                    checkboxInput("rule_span_ratio", "SPAN: "),
                   ),
                   column(
                     width = 6,
                     conditionalPanel(
-                      condition = "input.rule_span.ratio == true",
+                      condition = "input.rule_span_ratio == true",
                       div(
                         style = "display: flex; align-items: center;",
                         span(">=", style = "margin-right: 5px;"),
