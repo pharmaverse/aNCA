@@ -96,7 +96,6 @@ describe("general_meanplot functions correctly", {
     expect_s3_class(p, "ggplot")
     # Check log-transform was added in the ggplot object
     has_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
-    
     # Check data was log transformed in ggplot
     has_log_data <- all(log10(p$data$Mean) == ggplot_build(p)$data[[1]][["y"]])
     expect_true(has_log_scale && has_log_data)
