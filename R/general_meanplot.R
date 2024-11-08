@@ -42,48 +42,62 @@ general_meanplot <- function(data,
       DOSNO %in% selected_cycles,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       NRRLT > 0
-    ) %>%
-    # rename(id_variable = id_variable) %>%
+    )
+
+  timeunit <- unique(preprocessed_data$RRLTU)
+  concunit <- unique(preprocessed_data$AVALU)
+
+  summarised_data <- preprocessed_data %>%
     mutate(id_variable = as.factor(!!sym(id_variable))) %>%
     # Create a groups variables for the labels
     mutate(groups = paste(STUDYID, ANALYTE, DOSNO, sep = ", ")) %>%
-    group_by(id_variable, NRRLT) %>%
-    mutate(
+    group_by(id_variable, NRRLT, groups) %>%
+    summarise(
       Mean = round(geometric_mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),
+      SD_min = Mean - SD,
+      SD_max = Mean + SD,
       N = n(),
       SE = SD / sqrt(N),
       CI_lower = Mean - 1.96 * SE,
       CI_upper = Mean + 1.96 * SE,
-    ) %>%
-    select(where(~n_distinct(.) == 1), Mean, SD, N, CI_lower, CI_upper) %>%
-    slice(1) %>%
+      .groups = "drop") %>%
+    select(NRRLT, Mean, SD, N, CI_lower, CI_upper, id_variable, groups, SD_min, SD_max, SE) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
 
   # filter for log scaling y values that equal 0
   if (plot_ylog) {
-    preprocessed_data <- preprocessed_data %>%
-      filter(Mean != 0) %>%
-      mutate(CI_lower = pmax(CI_lower, 0.1))
+    summarised_data <- summarised_data %>%
+      filter(Mean > 0) %>%
+      mutate(
+        log10_Mean = log10(Mean),
+        log10_SD = SD / (Mean * log(10)),  # Calculation of SD in log10 scale
+        SD_min = 10^(log10_Mean - log10_SD),
+        SD_max = 10^(log10_Mean + log10_SD),
+        log10_SE = SE / (Mean * log(10)),  # Calculation of SE in log10 scale
+        log10_CI = 1.96 * log10_SE,  # CI in the log10 scale
+        CI_lower = 10^(log10_Mean - log10_CI),
+        CI_upper = 10^(log10_Mean + log10_CI)
+      )
   }
 
   # Check if preprocessed_data is empty
-  if (nrow(preprocessed_data) == 0) {
+  if (nrow(summarised_data) == 0) {
     empty_plot <- ggplot() + labs(title = "No data available")
     return(empty_plot)
   }
 
   # plot the preprocess data
-  p <- ggplot(data = preprocessed_data, aes(x = NRRLT, y = Mean), group = id_variable) +
+  p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean), group = id_variable) +
     geom_line(aes(colour = id_variable)) +
     geom_point(aes(colour = id_variable)) +
     facet_wrap(~groups,
                strip.position = "top") +
     labs(
-      x = paste0("Nominal Time [", preprocessed_data$RRLTU[1], "]"),
+      x = paste0("Nominal Time [", timeunit, "]"),
       y = paste0(
-        "Mean concentration", " [", paste(unique(preprocessed_data$AVALU), collapse = ","), "]"
+        "Mean concentration", " [", concunit, "]"
       ),
       color = id_variable,
       fill = "95% Confidence Interval"
@@ -98,7 +112,7 @@ general_meanplot <- function(data,
   # add sd
   if (plot_sd) {
     p <- p +
-      geom_errorbar(aes(ymin = (Mean - SD), ymax = (Mean + SD), color = id_variable), width = 0.4)
+      geom_errorbar(aes(ymin = SD_min, ymax = SD_max, color = id_variable), width = 0.4)
   }
 
   # add ci
@@ -111,8 +125,7 @@ general_meanplot <- function(data,
   if (plot_ylog) {
     p <- p +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
-                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
-      annotation_logticks(sides = "l")
+                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000))
   }
 
   # Convert ggplot to plotly
