@@ -114,19 +114,28 @@ lambda_slope_plot <- function(
   )
 
   subtitle_text <- paste0(
-    # "R<sup>2</sup>: ", r2_value,
     "    R<sup>2</sup><sub>adj</sub>: ", r2adj_value,
     "    ln(2)/\u03BB = ", half_life_value, "h",
     "    (T<sub>", lambda_z_ix_rows$IX[2], "</sub> - T<sub>",
     lambda_z_ix_rows$IX[1], "</sub>)/2 = ", time_span / 2, "h"
   )
 
+  cmax_error_text <- NULL
+
 
   # If Cmax is included in lambda calculation, inform the user in the plot
   if (lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"] <= max(lambda_z_ix_rows$AVAL)) {
     subtitle_color <- "red"
-    subtitle_text <- paste0(
-      "Cmax should not be included in lambda calculation", "\n", subtitle_text
+    cmax_error_text <- list(
+      text = "Cmax should not be included in lambda calculation",
+      font = list(size = 15, color = "red", family = "times"),
+      x = 1,
+      y = 1,
+      xref = "paper",
+      yref = "paper",
+      xanchor = "right",
+      yanchor = "top",
+      showarrow = FALSE
     )
   }
 
@@ -143,17 +152,18 @@ lambda_slope_plot <- function(
         TRUE ~ "hl.excluded"
       )
     ) %>%
+    filter(AVAL > 0) %>%
     as.data.frame()
 
   # Generate the base scatter ggplot
   p <- plot_data %>%
     ggplot(aes(x = TIME, y = AVAL)) +
-    #geom_segment_layer+
     geom_line(color = "gray70", linetype = "solid", linewidth = 1) +
     geom_smooth(
       data = subset(plot_data, IX_color == "hl.included"),
       method = "lm",
       se = FALSE,
+      formula = y ~ x,
       color = "green3",
       linetype = "solid",
       linewidth = 1
@@ -171,8 +181,7 @@ lambda_slope_plot <- function(
     theme_bw() +
 
     theme(
-      plot.title = element_text(hjust = 0, face = "bold", size = 20, family = "serif"),
-      plot.subtitle = element_text(hjust = 0, color = subtitle_color, size = 18, family = "serif"),
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 20, family = "serif"),
       legend.position = "none",
       axis.text = element_text(size = 15),
       axis.title.x = element_text(size = 15, family = "serif", margin = margin(t = 0)),
@@ -190,27 +199,34 @@ lambda_slope_plot <- function(
   # Make a plotly interactive plot
   pl <- ggplotly(p) %>%
     layout(
+      margin = list(t = 80),
       annotations = list(
-        text = subtitle_text,
-        showarrow = FALSE,
-        xref = "paper",
-        yref = "paper",
-        xanchor = "left",
-        yanchor = "top",
-        font = list(size = 15, color = subtitle_color, family = "times"),
-        x  = 0,
-        y = 1.105
+        list(
+          text = subtitle_text,
+          showarrow = TRUE,
+          arrowcolor = "transparent",
+          xref = "paper",
+          yref = "paper",
+          xanchor = "right",
+          yanchor = "top",
+          font = list(size = 15, color = subtitle_color, family = "times"),
+          x = 1,
+          y = 1
+        ),
+        cmax_error_text
       ),
-      hoverlabel = list(font = list(family = "times", size = 20)),
-      width = 800,
-      height = 600
+      hoverlabel = list(font = list(family = "times", size = 20))
     ) %>%
-    config(mathjax = "cdn")  %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 1) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 2) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 3) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 4) %>%
-    style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = 5) %>%
+    config(mathjax = "cdn")
+
+  num_traces <- length(pl$x$data)
+
+  for (i in seq_len(num_traces)) {
+    pl <- pl %>%
+      style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = i)
+  }
+
+  pl <- pl %>%
     # Make this trace the only one
     add_trace(
       data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid),
@@ -229,5 +245,5 @@ lambda_slope_plot <- function(
       showlegend = FALSE  # Don't show this trace in the legend
     )
 
-  return(pl)
+  pl
 }

@@ -11,6 +11,9 @@
 #' @importFrom htmlwidgets JS
 #' @importFrom PKNCA PKNCAconc PKNCAdose PKNCAdata pk.nca PKNCA.options pknca_units_table
 #' @importFrom plotly plotlyOutput renderPlotly plotly_build event_data
+#' @importFrom reactable reactable reactableOutput renderReactable colDef reactableTheme
+#' @importFrom reactable getReactableState
+#' @importFrom reactable.extras text_extra dropdown_extra
 #' @importFrom rio export_list
 #' @importFrom rmarkdown render
 #' @importFrom shinyBS bsModal
