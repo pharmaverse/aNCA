@@ -44,8 +44,8 @@ general_meanplot <- function(data,
       NRRLT > 0
     )
 
-  timeunit <- unique(preprocessed_data$RRLTU)
-  concunit <- unique(preprocessed_data$AVALU)
+  time_unit <- unique(preprocessed_data$RRLTU)
+  conc_unit <- unique(preprocessed_data$AVALU)
 
   summarised_data <- preprocessed_data %>%
     mutate(id_variable = as.factor(!!sym(id_variable))) %>%
