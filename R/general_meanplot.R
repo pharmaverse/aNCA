@@ -53,15 +53,15 @@ general_meanplot <- function(data,
     mutate(groups = paste(STUDYID, ANALYTE, DOSNO, sep = ", ")) %>%
     group_by(id_variable, NRRLT, groups) %>%
     summarise(
-      Mean = round(geometric_mean(AVAL, na.rm = TRUE), 3),
-      SD = sd(AVAL, na.rm = TRUE),
-      SD_min = Mean - SD,
-      SD_max = Mean + SD,
-      N = n(),
-      SE = SD / sqrt(N),
-      CI_lower = Mean - 1.96 * SE,
-      CI_upper = Mean + 1.96 * SE,
-      .groups = "drop") %>%
+              Mean = round(geometric_mean(AVAL, na.rm = TRUE), 3),
+              SD = sd(AVAL, na.rm = TRUE),
+              SD_min = Mean - SD,
+              SD_max = Mean + SD,
+              N = n(),
+              SE = SD / sqrt(N),
+              CI_lower = Mean - 1.96 * SE,
+              CI_upper = Mean + 1.96 * SE,
+              .groups = "drop") %>%
     select(NRRLT, Mean, SD, N, CI_lower, CI_upper, id_variable, groups, SD_min, SD_max, SE) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
