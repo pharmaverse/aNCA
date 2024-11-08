@@ -243,62 +243,7 @@ output$descriptivestats2 <- DT::renderDataTable({
     )
   )
 })
-# TAB: Mean Concentration over Time --------------------------------------------
 
-# preprocess data for plotting mean concentration over time
-mean_data <- reactive({
-  data() %>% # mydata()$conc$data %>%
-    filter(
-      ANALYTE == input$analyte,
-      DOSNO %in% input$cyclenca
-    ) %>%
-    mutate(
-      DOSEA = as.factor(DOSEA),
-      TRT = as.factor(NOMDOSE),
-      TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
-      NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT)
-    ) %>%
-    group_by(DOSEA, NOMTIME, DOSNO) %>%
-    summarise(
-      Mean = geometric_mean(AVAL, na.rm = TRUE),
-      SD = sd(AVAL, na.rm = TRUE),
-      N = n()
-    ) %>%
-    filter(N >= 3)
-})
-
-######################################### same plots as in general plotting?
-doseescalation_meanplot <- function() {
-  dataset <- mydata()$conc$data %>%
-    filter(
-      ANALYTE == input$analyte,
-      DOSNO %in% input$cyclenca
-    )
-
-  time_label <- paste0("Nominal Time [", unique(dataset$RRLTU), "]")
-  trtact_label <- "Dose Group"
-  conc_units <- paste0(unique(dataset$AVALU))
-  dose_units <- paste0(unique(dataset$DOSEU))
-  conc_label <- paste0("Mean Concentration [", conc_units, "/", dose_units, "]")
-
-  ggplot(
-    data = mean_data(),
-    aes(x = NOMTIME, y = Mean, ymin = (Mean - SD), ymax = (Mean + SD), group = DOSEA, color = DOSEA)
-  ) +
-    geom_errorbar(width = 0.4) +
-    geom_point() +
-    geom_line() +
-    labs(x = time_label, y = conc_label, color = trtact_label)
-}
-
-output$mean_concovertime <- renderPlotly(
-  doseescalation_meanplot()
-)
-
-output$mean_concovertimelog <- renderPlotly(
-  doseescalation_meanplot() +
-    xgx_scale_y_log10()
-)
 # TAB  Dose Norm Conc over Time Plots ----
 
 plot_data <- reactive({
