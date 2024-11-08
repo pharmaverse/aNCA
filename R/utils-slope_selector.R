@@ -10,6 +10,8 @@
 #'
 #' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
 #'          columns modified in accordance to the provided slope filters.
+#' @importFrom dplyr filter group_by mutate
+#'
 .filter_slopes <- function(data, slopes, profiles) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
