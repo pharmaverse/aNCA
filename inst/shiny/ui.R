@@ -246,7 +246,8 @@ fluidPage(
               uiOutput("selectidvar"),
               checkboxInput("logmeanplot", label = "Scale y Log"),
               checkboxInput("sdmeanplot", label = "Show SD"),
-              plotlyOutput("meanplot", height = "400px"),
+              checkboxInput("mean_plot_ci", label = "Show CI 95%"),
+              plotlyOutput("meanplot", height = "100%"),
               br(),
               helpText("If n<3 at the specified time point then the mean value is not displayed.")
             )
