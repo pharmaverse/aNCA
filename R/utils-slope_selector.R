@@ -33,11 +33,15 @@
       PATIENT %in% names(profiles),
       PROFILE %in% unname(unlist(profiles[PATIENT])),
       all(!is.na(sapply(IXrange, function(x) .eval_range(x))))
-    ) %>%
-    # Eliminate duplicated records within the same profile
-    dplyr::filter(
-      !duplicated(paste0(PATIENT, PROFILE, IXrange), !(duplicated(paste0(PATIENT, PROFILE), fromLast = TRUE)))
     )
+
+  if (nrow(slopes) != 0) {
+    # Go over all rules and check if there is no overlap - if there is, edit accordingly
+    slopes <- purrr::reduce(
+      split(slopes, seq_len(nrow(slopes))),
+      .f = ~ .check_slope_rule_overlap(.x, .y, .keep = TRUE)
+    )
+  }
 
   # Update the exclusion/selection data for Lambda based on the current exc/sel table #
   for (i in seq_len(nrow(slopes))) {
@@ -76,8 +80,11 @@
 #'
 #' @param existing Data frame with existing selections and exclusions.
 #' @param new      Data frame with new rule to be added or removed.
+#' @param .keep    Whether to force keep fully overlapping rulesets. If FALSE, it will be assumed
+#'                 that the user wants to remove rule if new range already exists in the dataset.
+#'                 If TRUE, in that case full range will be kept.
 #' @returns Data frame with full ruleset, adjusted for new rules.
-.check_slope_rule_overlap <- function(existing, new) {
+.check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   # check if any rule already exists for specific patient and profile #
   existing_index <- which(
     existing$TYPE == new$TYPE &
@@ -97,7 +104,7 @@
   is_inter <- length(intersect(existing_range, new_range)) != 0
   is_diff <- length(setdiff(new_range, existing_range)) != 0
 
-  if (is_diff) {
+  if (is_diff || .keep) {
     existing$IXrange[existing_index] <- unique(c(existing_range, new_range)) %>%
       .compress_range()
 

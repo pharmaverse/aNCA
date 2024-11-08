@@ -22,5 +22,4 @@ Evaluates range notation. If provided notation is invalid, returns NA.
 .eval_range("5,3:1,15") # c(5, 3, 2, 1, 15)
 }
 
-
 }
