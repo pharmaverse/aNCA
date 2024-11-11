@@ -16,7 +16,6 @@
 #' @export
 #'
 reshape_pknca_results <- function(res_nca) {
-  print("FUNCTION STARTS reshape_pknca_results")
 
   # Get all names with units and make a dictionary structure
   dict_pttestcd_with_units <- res_nca$result %>%
@@ -27,11 +26,13 @@ reshape_pknca_results <- function(res_nca) {
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
   infinite_aucs_vals <- res_nca$result %>%
+    unique() %>% 
     filter(end == Inf)  %>%
     select(-PPORRESU, -exclude) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
 
   infinite_aucs_exclude <- res_nca$result %>%
+    unique() %>% 
     filter(end == Inf) %>%
     select(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, PPTESTCD, exclude)  %>%
     mutate(PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
