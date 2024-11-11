@@ -190,11 +190,13 @@ observeEvent(input$submit_analyte, priority = 2, {
   group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "DOSNO", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
-
+  route_column <- "ROUTE"
+  analyte_column <- "ANALYTE"
+  
   # Segregate the data into concentration and dose records
   df_conc <- create_conc(ADNCA = data(), 
                          analyte = input$analyte, 
-                         group_columns = c(group_columns, usubjid_column),
+                         group_columns = c(group_columns, usubjid_column, analyte_column),
                          time_column = time_column)
 
   df_dose <- create_dose(df_conc = df_conc, 
@@ -212,15 +214,15 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + ROUTE + PCSPEC + DRUG + USUBJID / ANALYTE,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + ROUTE + PCSPEC + DRUG + USUBJID + DOSNO,
-    route = tolower(df_dose$ROUTE),
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID + DOSNO,
+    route = route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
@@ -420,7 +422,13 @@ res_nca <- eventReactive(rv$trigger, {
 
     mydata$conc$data <- mydata$conc$data %>%
       filter(DOSNO %in% as.numeric(input$cyclenca))
-
+    
+    mydata$dose$data <- mydata$dose$data %>%
+      filter(DOSNO %in% as.numeric(input$cyclenca))
+    
+    mydata$intervals <- mydata$intervals %>%
+      filter(DOSNO %in% as.numeric(input$cyclenca))
+    
     # Include manually the calculation of AUCpext.obs and AUCpext.pred
     mydata$intervals <- mydata$intervals  %>%
       mutate(aucinf.obs.dn = TRUE,
