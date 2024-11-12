@@ -1,14 +1,21 @@
-# automated Non-Compartmental Analysis (aNCA) ![aNCA logo white bg](inst/shiny/www/images/aNCA_logo_bbg.png#gh-dark-mode-only) ![aNCA logo dark bg](inst/shiny/www/images/aNCA_logo_wbg.png#gh-light-mode-only)
+# automated Non-Compartmental Analysis (aNCA)  
+<img src='inst/shiny/www/images/aNCA_logo_bbg.png#gh-dark-mode-only' align="right" alt="aNCA logo dark bg" height="200" style="float:right; height:200px;">
+<img src="inst/shiny/www/images/aNCA_logo_wbg.png#gh-light-mode-only" align="right" alt="aNCA logo light bg" height="200" style="float:right; height:200px;">
 
-```{=html}
-<!-- badges:
 
-[![CRAN](https://www.r-pkg.org/badges/version/shiny)](https://CRAN.R-project.org/package=shiny)
+<!-- badges: start -->
+[<img src="http://pharmaverse.org/shields/aNCA.svg">](https://pharmaverse.org)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CRAN status](https://www.r-pkg.org/badges/version/aNCA)](https://CRAN.R-project.org/package=aNCA)
 [![R build status](https://github.com/rstudio/shiny/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rstudio/shiny/actions)
 [![RStudio community](https://img.shields.io/badge/community-shiny-blue?style=social&logo=rstudio&logoColor=75AADB)](https://forum.posit.co/new-topic?category=shiny&tags=shiny)
+<!-- badges: end -->
 
--->
-```
+<br/> 
+Our aim is to develop and share an open-source R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets. By fostering community collaboration, our goal is to create a user-friendly tool that simplifies pharmacokinetic analysis and visualization for scientists worldwide
+<br/> 
+<br/> 
+
 ## Description
 
 This application enables users to upload their datasets and perform Non-Compartment Analysis (NCA) on both pre-clinical and clinical datasets, with the results being easily visualizable. The NCA can be tailored to calculate pharmacokinetic parameters for various dosing regimens and time points, given certain restrictions. It also features manual slope selection, simplifying the process of conducting lambda-z-regression and PK-timepoint exclusions. Furthermore, the pharmacokinetic parameters can be dynamically visualized through customized graphics such as line and mean plots. The calculated pharmacokinetic parameters can be compiled in a dynamic table, visualized using boxplots, or exported as a comprehensive report. Designed with user-friendliness in mind, this app aims to make NCA accessible and straightforward for all scientists.
