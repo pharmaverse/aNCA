@@ -509,7 +509,9 @@ observeEvent(res_nca(), {
     ))
 
   # Sort alphabetically all columns but the grouping and the exclude columns
-  group_cols <- c(unname(unlist(res_nca()$data$conc$columns$groups)), "start", "end")
+  group_cols <- c(unname(unique(c(unlist(res_nca()$data$conc$columns$groups),
+                                  unlist(res_nca()$data$dose$columns$groups))
+                                )), "start", "end")
   exclude_cols <- names(final_res_nca)[startsWith(names(final_res_nca), "exclude.")]
   final_res_nca <- final_res_nca[, c(
     group_cols,
