@@ -22,43 +22,23 @@ This application enables users to upload their datasets and perform Non-Compartm
 
 ## Installation
 
-This repository is private and still in developer mode. To install the package, follow the instructions below:
+To run you can first install the development version of the package from GitHub:
 
-### 1. Create Access Token
-
-In GitHub click on your icon on the top right and head to: Settings \> Developer Settings \> Personal access tokens and create a classic access token.
-
-### 2. Clone the repository
-
-Assuming you have git installed:
-
-In RStudio go to "Create a project" \> "Create Project from version control" \> GitHub and paste the following together with your personal access token into the field for the Repository URL:
-
-```         
- https://<your-token>@github.com/pharmaverse/aNCA.git
+```r
+# install.packages("devtools")
+devtools::install_github("pharmaverse/aNCA")
 ```
 
-You can also switch the the directory you want to clone into and run the following in your terminal:
+Alternatively, you can also clone the repository directly in your computer and install locally:
 
 ``` sh
-
-git clone https://<your-token>@github.com/pharmaverse/aNCA.git
+git clone https://github.com/pharmaverse/aNCA.git
 ```
-
-### 3. Install the package
-
-Next make sure you have a package development environment set up. If not, install the `devtools` or a similar package (if it does not work, please use R version 4.3.3):
-
 ``` r
-options(repos = c(CRAN = "https://cloud.r-project.org/"))
-install.packages("devtools")
-```
-
-If not already done, head into the cloned repository and install the package, e.g.:
-
-``` r
+# install.packages("devtools")
 devtools::install()
 ```
+
 
 ## Use
 
@@ -70,17 +50,16 @@ devtools::load_all()
 aNCA::run_app()
 ```
 
-Have fun running your tailored Non-Compartmental Analysis!
 
-```{=html}
+
 <!--
 ## Contribute as developer
 
 To ensure a clean and informative git version history, please adhere to the [guidelines](man/GUIDELINES.md) of our git workflow. You can find further information on possible ways to use gits full power on our homemade [cheatsheet](man/GIT-CHEATSHEET.md).
 
 -->
-```
-```{=html}
+
+
 <!-- 
 
 ## Getting started
@@ -137,4 +116,4 @@ The shiny package as a whole is licensed under the GPLv3. See the [LICENSE](LICE
 This Shiny application is supported on the latest release version of R, as well as the previous four minor release versions of R. For example, if the latest release R version is 4.1, then that version is supported, as well as 4.0, 3.6, 3.5, and 3.4.
 
 -->
-```
+
