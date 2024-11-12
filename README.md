@@ -20,6 +20,8 @@ Our aim is to develop and share an open-source R Shiny application for performin
 
 This application enables users to upload their datasets and perform Non-Compartment Analysis (NCA) on both pre-clinical and clinical datasets, with the results being easily visualizable. The NCA can be tailored to calculate pharmacokinetic parameters for various dosing regimens and time points, given certain restrictions. It also features manual slope selection, simplifying the process of conducting lambda-z-regression and PK-timepoint exclusions. Furthermore, the pharmacokinetic parameters can be dynamically visualized through customized graphics such as line and mean plots. The calculated pharmacokinetic parameters can be compiled in a dynamic table, visualized using boxplots, or exported as a comprehensive report. Designed with user-friendliness in mind, this app aims to make NCA accessible and straightforward for all scientists.
 
+
+
 ## Installation
 
 To run you can first install the development version of the package from GitHub:
@@ -52,12 +54,15 @@ aNCA::run_app()
 
 
 
-<!--
-## Contribute as developer
+## Contributing (developers or user requests)
 
 To ensure a clean and informative git version history, please adhere to the [guidelines](man/GUIDELINES.md) of our git workflow. You can find further information on possible ways to use gits full power on our homemade [cheatsheet](man/GIT-CHEATSHEET.md).
 
--->
+
+## Documentation and references
+
+* Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the `aNCA app` (still in development).
+* The main package used by the App is `PKNCA`, which has plenty of documentation available in its [GitHub](https://github.com/billdenney/pknca)
 
 
 <!-- 
