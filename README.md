@@ -1,6 +1,6 @@
+# automated Non-Compartmental Analysis (aNCA) ![aNCA logo white bg](inst/shiny/www/images/aNCA_logo_bbg.png#gh-dark-mode-only) ![aNCA logo dark bg](inst/shiny/www/images/aNCA_logo_wbg.png#gh-light-mode-only)
 
-# automated Non-Compartmental Analysis (aNCA) <img src="inst/shiny/www/images/aNCA_logo.png" align="right" width=140 height=140 alt="icon" />
-
+```{=html}
 <!-- badges:
 
 [![CRAN](https://www.r-pkg.org/badges/version/shiny)](https://CRAN.R-project.org/package=shiny)
@@ -8,70 +8,56 @@
 [![RStudio community](https://img.shields.io/badge/community-shiny-blue?style=social&logo=rstudio&logoColor=75AADB)](https://forum.posit.co/new-topic?category=shiny&tags=shiny)
 
 -->
-
-
+```
 ## Description
 
-This application enables users to upload their datasets and perform Non-Compartment Analysis (NCA) on both pre-clinical and clinical datasets, with the results being easily visualizable. The NCA
-can be tailored to calculate pharmacokinetic parameters for various dosing regimens and time points, given certain restrictions. It also features manual slope selection, simplifying the process of conducting lambda-z-regression and PK-timepoint exclusions.
-Furthermore, the pharmacokinetic parameters can be dynamically visualized through customized graphics such as line and mean plots. The calculated pharmacokinetic parameters can be compiled in a dynamic table, visualized using boxplots, or exported as a comprehensive report.
-Designed with user-friendliness in mind, this app aims to make NCA accessible and straightforward for all scientists.
+This application enables users to upload their datasets and perform Non-Compartment Analysis (NCA) on both pre-clinical and clinical datasets, with the results being easily visualizable. The NCA can be tailored to calculate pharmacokinetic parameters for various dosing regimens and time points, given certain restrictions. It also features manual slope selection, simplifying the process of conducting lambda-z-regression and PK-timepoint exclusions. Furthermore, the pharmacokinetic parameters can be dynamically visualized through customized graphics such as line and mean plots. The calculated pharmacokinetic parameters can be compiled in a dynamic table, visualized using boxplots, or exported as a comprehensive report. Designed with user-friendliness in mind, this app aims to make NCA accessible and straightforward for all scientists.
 
 ## Installation
 
 This repository is private and still in developer mode. To install the package, follow the instructions below:
 
+### 1. Create Access Token
 
-### 1. Create Access Token 
-
-In GitHub click on your icon on the top right and head to: Settings > Developer Settings > Personal access tokens and create a classic access token.
+In GitHub click on your icon on the top right and head to: Settings \> Developer Settings \> Personal access tokens and create a classic access token.
 
 ### 2. Clone the repository
 
-Assuming you have git installed: 
+Assuming you have git installed:
 
+In RStudio go to "Create a project" \> "Create Project from version control" \> GitHub and paste the following together with your personal access token into the field for the Repository URL:
 
-In RStudio go to "Create a project" > "Create Project from version control" > GitHub and paste the following together with your personal access token into the field for the Repository URL: 
-
-
-```
+```         
  https://<your-token>@github.com/pharmaverse/aNCA.git
 ```
 
+You can also switch the the directory you want to clone into and run the following in your terminal:
 
-You can also switch the the directory you want to clone into and run the following in your terminal: 
-
-```sh
+``` sh
 
 git clone https://<your-token>@github.com/pharmaverse/aNCA.git
-
 ```
 
 ### 3. Install the package
 
-
 Next make sure you have a package development environment set up. If not, install the `devtools` or a similar package (if it does not work, please use R version 4.3.3):
 
-```r
+``` r
 options(repos = c(CRAN = "https://cloud.r-project.org/"))
 install.packages("devtools")
 ```
 
-
 If not already done, head into the cloned repository and install the package, e.g.:
 
-
-```r
+``` r
 devtools::install()
 ```
 
-
 ## Use
 
-Once correctly installed, the aNCA app can be simply run with the following two lines of code: 
+Once correctly installed, the aNCA app can be simply run with the following two lines of code:
 
-
-```r
+``` r
 library(aNCA)
 devtools::load_all()
 aNCA::run_app()
@@ -79,13 +65,15 @@ aNCA::run_app()
 
 Have fun running your tailored Non-Compartmental Analysis!
 
+```{=html}
 <!--
 ## Contribute as developer
 
 To ensure a clean and informative git version history, please adhere to the [guidelines](man/GUIDELINES.md) of our git workflow. You can find further information on possible ways to use gits full power on our homemade [cheatsheet](man/GIT-CHEATSHEET.md).
 
 -->
-
+```
+```{=html}
 <!-- 
 
 ## Getting started
@@ -142,3 +130,4 @@ The shiny package as a whole is licensed under the GPLv3. See the [LICENSE](LICE
 This Shiny application is supported on the latest release version of R, as well as the previous four minor release versions of R. For example, if the latest release R version is 4.1, then that version is supported, as well as 4.0, 3.6, 3.5, and 3.4.
 
 -->
+```
