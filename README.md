@@ -12,15 +12,20 @@
 <!-- badges: end -->
 
 <br/> 
-Our aim is to develop and share an open-source R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets. By fostering community collaboration, our goal is to create a user-friendly tool that simplifies pharmacokinetic analysis and visualization for scientists worldwide
-<br/> 
+
+> Our aim is to develop and share an open-source R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets worldwide and across pharmaceutical companies. 
+
 <br/> 
 
 ## Description
 
-This application enables users to upload their datasets and perform Non-Compartment Analysis (NCA) on both pre-clinical and clinical datasets, with the results being easily visualizable. The NCA can be tailored to calculate pharmacokinetic parameters for various dosing regimens and time points, given certain restrictions. It also features manual slope selection, simplifying the process of conducting lambda-z-regression and PK-timepoint exclusions. Furthermore, the pharmacokinetic parameters can be dynamically visualized through customized graphics such as line and mean plots. The calculated pharmacokinetic parameters can be compiled in a dynamic table, visualized using boxplots, or exported as a comprehensive report. Designed with user-friendliness in mind, this app aims to make NCA accessible and straightforward for all scientists.
+This application enables users to upload their datasets and perform Non-Compartment Analysis (NCA) on both pre-clinical and clinical datasets, with the results being easily visualizable. Designed with user-friendliness in mind, this app aims to make NCA accessible and straightforward for all scientists. Among the features it currently possess, the App can:
 
-
+* **Customize half life calculation**: Either by rule settings definitions or performing manual in-plot adjustments
+* **Define AUC intervals of interest**: Providing by default last and to-infinite calculations 
+* **Visualize data and results** with interactive boxplots, summary statistic tables and scatter plots
+* **Produce PP and ADPP** dataset formats of the resulting parameters
+* **Save your analysis settings** and reupload them later to keep on!
 
 ## Installation
 
@@ -53,7 +58,7 @@ R -e "if (!requireNamespace('devtools', quietly = TRUE)) install.packages('devto
 
 ## Use
 
-Once correctly installed, the aNCA app can be simply run with the following two lines of code:
+Once correctly installed, the aNCA app can be simply run with the following lines of code:
 
 ``` r
 library(aNCA)
@@ -63,15 +68,18 @@ aNCA::run_app()
 
 
 
-## Contributing (developers or user requests)
+## Contributing 
 
+### As developer 
 To ensure a clean and informative git version history, please adhere to the [guidelines](man/GUIDELINES.md) of our git workflow. You can find further information on possible ways to use gits full power on our homemade [cheatsheet](man/GIT-CHEATSHEET.md).
 
+### As user 
+Feel free to open identified issues, to reach us for questions or fill our [google sheet]() for feedback.
 
 ## Documentation and references
 
 * Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the `aNCA app` (still in development).
-* The main package used by the App is `PKNCA`, which has plenty of documentation available in its [GitHub](https://github.com/billdenney/pknca)
+* The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/billdenney/pknca)
 
 
 <!-- 
