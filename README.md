@@ -29,7 +29,9 @@ This application enables users to upload their datasets and perform Non-Compartm
 
 ## Installation
 
-To run you can first install the development version of the package from GitHub through your `R console`:
+There are different ways to install the package:
+
+`Through your R console` To run you can first install the development version of the package from GitHub through your :
 
 ```r
 # Check if devtools is installed, and install it if necessary
@@ -41,7 +43,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
 devtools::install_github("pharmaverse/aNCA")
 ```
 
-Alternatively, you can also clone the repository and install locally through your `terminal`:
+`Through your terminal` Clone the repository and install locally using the next code:
 
 ``` sh
 # Clone the repository
@@ -54,11 +56,15 @@ cd aNCA
 R -e "if (!requireNamespace('devtools', quietly = TRUE)) install.packages('devtools'); devtools::install()"
 ```
 
+`Download manually` At the top of this webpage click `<Code>` & `Download ZIP`
+
+![Screenshot 2024-11-14 143034](https://github.com/user-attachments/assets/2e482ffd-3414-43ec-a738-60492988ed4c)
+
 
 
 ## Use
 
-Once correctly installed, the aNCA app can be simply run with the following lines of code:
+Once installed, set your R console to the aNCA directory (i.e, by opening any aNCA .rmd or.R file with R/RStudio) and run the next code:
 
 ``` r
 library(aNCA)
