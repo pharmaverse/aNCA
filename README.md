@@ -25,7 +25,7 @@ This application enables users to upload their datasets and perform Non-Compartm
 * **Define AUC intervals of interest**: Providing by default last and to-infinite calculations 
 * **Visualize data and results** with interactive boxplots, summary statistic tables and scatter plots
 * **Produce PP and ADPP** dataset formats of the resulting parameters
-* **Save your analysis settings** and reupload them later to keep on!
+* **Save your analysis settings** and reupload them later to keep on analysing!
 
 ## Installation
 
@@ -43,7 +43,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
 devtools::install_github("pharmaverse/aNCA")
 ```
 
-`Through your terminal` Clone the repository and install locally using the next code:
+`Through your terminal` Clone the repository and install locally using the following code:
 
 ``` sh
 # Clone the repository
@@ -64,7 +64,7 @@ R -e "if (!requireNamespace('devtools', quietly = TRUE)) install.packages('devto
 
 ## Use
 
-Once installed, set your R console to the aNCA directory (i.e, by opening any aNCA .rmd or.R file with R/RStudio) and run the next code:
+Once installed, set your R console working directory to the aNCA directory (i.e, by opening any aNCA .rmd or.R file with R/RStudio) and run the next code:
 
 ``` r
 library(aNCA)
@@ -80,7 +80,7 @@ aNCA::run_app()
 To ensure a clean and informative git version history, please adhere to the [guidelines](man/GUIDELINES.md) of our git workflow. You can find further information on possible ways to use gits full power on our homemade [cheatsheet](man/GIT-CHEATSHEET.md).
 
 ### As user 
-Feel free to open identified issues, to reach us for questions or fill our [google sheet]() for feedback.
+Feel free to open identified issues, to reach out to us for questions or fill our [google sheet]() for feedback.
 
 ## Documentation and references
 
