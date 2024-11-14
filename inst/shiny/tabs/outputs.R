@@ -124,7 +124,7 @@ output$selectidvar <- renderUI({
 # select the cycle to plot the mean concentrations
 output$cyclemean <- renderUI({
   y <- data() %>%
-    filter(ANALYTE %in% input$analytemean) %>%
+    filter(ANALYTE %in% input$select_analytemean) %>%
     pull(DOSNO) %>%
     unique()
   selectInput("cyclesmean", "Choose the cycle:", choices = sort(y))
@@ -133,7 +133,7 @@ output$cyclemean <- renderUI({
 # render the meanplot output in plotly
 output$meanplot <- renderPlotly({
   req(input$studyidmean)
-  req(input$analytemean)
+  req(input$select_analytemean)
   req(input$cyclesmean)
 
   validate(
@@ -141,7 +141,7 @@ output$meanplot <- renderPlotly({
       data() %>%
         filter(
           STUDYID %in% input$studyidmean,
-          ANALYTE %in% input$analytemean,
+          ANALYTE %in% input$select_analytemean,
           DOSNO %in% input$cyclesmean,
           if ("EVID" %in% names(data)) EVID == 0 else TRUE,
           NRRLT > 0
@@ -157,7 +157,7 @@ output$meanplot <- renderPlotly({
 
   general_meanplot(data = data(),
                    selected_studyids = input$studyidmean,
-                   selected_analytes = input$analytemean,
+                   selected_analytes = input$select_analytemean,
                    selected_cycles = input$cyclesmean,
                    id_variable = input$selectidvar,
                    plot_ylog = input$logmeanplot,
@@ -247,8 +247,8 @@ output$descriptivestats2 <- DT::renderDataTable({
 mean_data <- reactive({
   data() %>% # mydata()$conc$data %>%
     filter(
-      ANALYTE == input$analyte,
-      DOSNO %in% input$cyclenca
+      ANALYTE == input$select_analyte,
+      DOSNO %in% input$select_dosno
     ) %>%
     mutate(
       DOSEA = as.factor(DOSEA),
@@ -269,8 +269,8 @@ mean_data <- reactive({
 doseescalation_meanplot <- function() {
   dataset <- mydata()$conc$data %>%
     filter(
-      ANALYTE == input$analyte,
-      DOSNO %in% input$cyclenca
+      ANALYTE == input$select_analyte,
+      DOSNO %in% input$select_dosno
     )
 
   time_label <- paste0("Nominal Time [", unique(dataset$RRLTU), "]")
@@ -300,12 +300,12 @@ output$mean_concovertimelog <- renderPlotly(
 # TAB  Dose Norm Conc over Time Plots ----
 
 plot_data <- reactive({
-  req(input$analyte)
+  req(input$select_analyte)
 
   data() %>%
     filter(
-      ANALYTE == input$analyte,
-      DOSNO %in% input$cyclenca
+      ANALYTE == input$select_analyte,
+      DOSNO %in% input$select_dosno
     ) %>%
     select(
       AFRLT, AVAL, DOSEA, DOSNO, AFRLT, NFRLT, NRRLT, USUBJID, ANALYTE, STUDYID, AVALU,

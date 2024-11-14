@@ -47,7 +47,11 @@ fluidPage(
                 br(),
 
                 # Selection of analyte
-                selectInput("analyte", "Choose the analyte :", choices = NULL),
+                selectInput("select_analyte", "Choose the analyte :", choices = NULL),
+                selectInput("select_dosno", "Choose the Dose Number:", 
+                            multiple = TRUE,
+                            choices = c("Please specify ANALYTE in Data Selection" = "")
+                            ),
                 br(),
 
                 # Only for relevant parameter calculation in NCA, it won't be at the actual data
@@ -60,12 +64,6 @@ fluidPage(
                 DTOutput("datatable"),
               ),
               tabPanel("Settings",
-                selectInput(
-                  "cyclenca",
-                  "Choose the Dose Number:",
-                  multiple = TRUE,
-                  choices = c("Please specify ANALYTE in Data Selection" = "")
-                ),
                 selectInput(
                   "method",
                   "Extrapolation Method:",

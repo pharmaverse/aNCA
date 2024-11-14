@@ -65,12 +65,9 @@ format_data <- function(datafile) {
 
 #create pknca concentration dataset
 create_conc <- function(ADNCA,
-                        analyte,
                         group_columns,
                         time_column="AFRLT") {
   data <- ADNCA %>%
-    dplyr::filter(ANALYTE == analyte,
-           if ("EVID" %in% names(ADNCA)) EVID == 0 else TRUE) %>%
     dplyr::mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     dplyr::arrange(!!sym(time_column)) %>%
     dplyr::mutate(TIME = !!sym(time_column)) %>%
@@ -108,13 +105,12 @@ create_conc <- function(ADNCA,
 create_dose <- function(df_conc,
                         group_columns,
                         time_column = "AFRLT",
-                        since_lastdose_time_column = "ARRLT",
-                        make_intervals_st_from_dose = TRUE) {
+                        since_lastdose_time_column = "ARRLT") {
 
   df_conc %>%
-    dplyr::mutate(TIME = if (make_intervals_st_from_dose) {
-      !!sym(time_column) - !!sym(since_lastdose_time_column)
-    } else !!sym(time_column)) %>% 
+    dplyr::mutate(TIME.dose = !!sym(time_column) - !!sym(since_lastdose_time_column),
+                  TIME = !!sym(time_column)
+                  ) %>% 
     dplyr::filter(TIME >= 0) %>% 
     dplyr::group_by(!!!syms(group_columns)) %>%
     dplyr::slice(1) %>%

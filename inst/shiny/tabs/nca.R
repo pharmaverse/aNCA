@@ -17,7 +17,7 @@
 observeEvent(data(), {
   updateSelectInput(
     session,
-    inputId = "analyte",
+    inputId = "select_analyte",
     label = "Choose the analyte :",
     choices = unique(data()$ANALYTE)
   )
@@ -94,7 +94,7 @@ observeEvent(input$settings_upload, {
   # Dose number
   updateSelectInput(
     session,
-    inputId = "cyclenca",
+    inputId = "select_dosno",
     label = "Choose the Dose Number:",
     choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(DOSNO))),
     selected = doses_selected
@@ -193,17 +193,21 @@ observeEvent(input$submit_analyte, priority = 2, {
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
   
+  # Filter data based on selected analyte and dose numbers
+  data_filt <- data() %>% 
+    dplyr::filter(!!sym(analyte_column) == input$select_analyte,
+                  DOSNO %in% input$select_dosno,
+                  if ("EVID" %in% names(data())) EVID == 0 else TRUE)
+  
   # Segregate the data into concentration and dose records
-  df_conc <- create_conc(ADNCA = data(), 
-                         analyte = input$analyte, 
+  df_conc <- create_conc(ADNCA = data_filt, 
                          group_columns = c(group_columns, usubjid_column, analyte_column),
                          time_column = time_column)
 
   df_dose <- create_dose(df_conc = df_conc, 
                          group_columns = c(group_columns, usubjid_column),
                          time_column = time_column, 
-                         since_lastdose_time_column = "ARRLT", 
-                         make_intervals_st_from_dose = input$should_impute_c0)
+                         since_lastdose_time_column = "ARRLT")
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
   df_conc$is.excluded.hl <- FALSE
@@ -307,14 +311,12 @@ observe({
 
 # Choose dosenumbers to be analyzed
 
-observeEvent(input$submit_analyte, priority = -1, {
-  
-  req(mydata())
+observeEvent(input$select_analyte, priority = -1, {
   updateSelectInput(
     session,
-    inputId = "cyclenca",
+    inputId = "select_dosno",
     label = "Choose the Dose Number:",
-    choices = unique(mydata()$conc$data  %>% filter(ANALYTE == input$analyte) %>% pull(DOSNO))
+    choices = unique(data() %>% filter(ANALYTE == input$select_analyte) %>% pull(DOSNO))
   )
 })
 
@@ -377,7 +379,7 @@ observeEvent(input$nca, {
   }
 
   # Make the user aware if it forgot to select at least 1 DOSNO
-  if (is.null(input$cyclenca)) {
+  if (is.null(input$select_dosno)) {
     showNotification(
       "Please select a profile from the 'Settings' tab to proceed.",
       duration = NULL,
@@ -391,14 +393,14 @@ observeEvent(input$nca, {
   }
   
   # Update profiles per patient considering the profiles selected
-  mydataconc_new <- mydata()$conc$data %>% filter(DOSNO %in% input$cyclenca)
+  mydataconc_new <- mydata()$conc$data %>% filter(DOSNO %in% input$select_dosno)
   profiles_per_patient(tapply(mydataconc_new$DOSNO, mydataconc_new$USUBJID, unique))
 })
 
 # run the nca upon button click
 
 res_nca <- eventReactive(rv$trigger, {
-  req(!is.null(input$cyclenca))
+  req(!is.null(input$select_dosno))
 
   withProgress(message = "Calculating NCA...", value = 0, {
     req(mydata())
@@ -417,17 +419,8 @@ res_nca <- eventReactive(rv$trigger, {
       min.hl.points = 3
     )
 
-    # Filter the data based on the selected profiles
+    # Load mydata reactive
     mydata <- mydata()
-
-    mydata$conc$data <- mydata$conc$data %>%
-      filter(DOSNO %in% as.numeric(input$cyclenca))
-    
-    mydata$dose$data <- mydata$dose$data %>%
-      filter(DOSNO %in% as.numeric(input$cyclenca))
-    
-    mydata$intervals <- mydata$intervals %>%
-      filter(DOSNO %in% as.numeric(input$cyclenca))
     
     # Include manually the calculation of AUCpext.obs and AUCpext.pred
     mydata$intervals <- mydata$intervals  %>%
@@ -639,10 +632,10 @@ output$settings_save <- downloadHandler(
     # Include the rule settings as additional columns
     setts <- setts_lambda %>%
       mutate(
-        ANALYTE = input$analyte,
+        ANALYTE = input$select_analyte,
         doses_selected = ifelse(
-          !is.null(input$cyclenca),
-          paste0(input$cyclenca, collapse = ","),
+          !is.null(input$select_dosno),
+          paste0(input$select_dosno, collapse = ","),
           unique(mydata()$conc$data$DOSNO)
         ),
         method = input$method,
@@ -1060,7 +1053,7 @@ observeEvent(list(input$nca, input$search_patient), {
   patient_profile_plotids(
     mydata()$conc$data %>%
       filter(
-        DOSNO %in% input$cyclenca,
+        DOSNO %in% input$select_dosno,
         USUBJID %in% search_patient
       ) %>%
       select(USUBJID, DOSNO) %>%
