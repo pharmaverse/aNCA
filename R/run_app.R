@@ -11,6 +11,7 @@
 #' @importFrom DT DTOutput renderDataTable datatable formatStyle styleEqual
 #' @importFrom ggplot2 ggplot geom_errorbar geom_point geom_line labs aes facet_wrap
 #' @importFrom htmlwidgets JS
+#' @importFrom logger log_trace log_debug log_info log_warn log_error log_fatal
 #' @importFrom PKNCA PKNCAconc PKNCAdose PKNCAdata pk.nca PKNCA.options pknca_units_table
 #' @importFrom plotly plotlyOutput renderPlotly plotly_build event_data
 #' @importFrom reactable reactable reactableOutput renderReactable colDef reactableTheme
