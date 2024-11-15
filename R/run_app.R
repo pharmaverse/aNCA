@@ -5,6 +5,7 @@
 #'
 #' @param ... Arguments passed to `shiny::runApp()`
 #'
+#' @import aNCA
 #' @import shiny
 #' @importFrom dplyr mutate filter select group_by summarise pull arrange ungroup
 #' @importFrom dplyr rename_with across case_when left_join rename
@@ -28,6 +29,7 @@
 #' @importFrom zip zipr
 #' @export
 run_app <- function(...) {
+  require("aNCA")
   require("dplyr")
   require("DT")
   require("ggplot2")
