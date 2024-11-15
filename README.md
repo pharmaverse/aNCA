@@ -28,51 +28,18 @@ This application enables users to upload their datasets and perform Non-Compartm
 * **Save your analysis settings** and reupload them later to keep on analysing!
 
 ## Installation
-
-There are different ways to install the package:
-
-`Through your R console` To run you can first install the development version of the package from GitHub through your :
-
-```r
-# Check if devtools is installed, and install it if necessary
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-}
-
-# Install aNCA from GitHub
-devtools::install_github("pharmaverse/aNCA")
-```
-
-`Through your terminal` Clone the repository and install locally using the following code:
-
+To run the application, clone the repository and load it locally using the following commands:
 ``` sh
-# Clone the repository
-git clone https://github.com/pharmaverse/aNCA.git
-
-# Navigate to the cloned directory
-cd aNCA
-
-# Install the package
-R -e "if (!requireNamespace('devtools', quietly = TRUE)) install.packages('devtools'); devtools::install()"
+git clone https://github.com/pharmaverse/aNCA.git # Clone the repository
+cd aNCA # Navigate to the cloned directory
 ```
-
-`Download manually` At the top of this webpage click `<Code>` & `Download ZIP`
-
-![Screenshot 2024-11-14 143034](https://github.com/user-attachments/assets/2e482ffd-3414-43ec-a738-60492988ed4c)
-
-
-
-## Use
-
-Once installed, set your R console working directory to the aNCA directory (i.e, by opening any aNCA .rmd or.R file with R/RStudio) and run the next code:
-
+You can then run the application from the R console:
 ``` r
-library(aNCA)
-devtools::load_all()
-aNCA::run_app()
+# install devtools if not present
+if (!requireNamespace('devtools', quietly = TRUE)) install.packages('devtools')
+devtools::load_all() # load all dependencies
+aNCA::run_app() # run the applicaiton
 ```
-
-
 
 ## Contributing 
 
