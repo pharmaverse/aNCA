@@ -1,3 +1,5 @@
+.TLG_DEFINITIONS <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
+
 tab_tlg_ui <- function(id) {
   ns <- NS(id)
 
@@ -56,29 +58,7 @@ tab_tlg_ui <- function(id) {
         )
       )
     ),
-    tabPanel(
-      "Graphs",
-      fluidRow(
-        column(
-          2,  # Left column for plot selection
-          radioButtons(
-            inputId = ns("buttons_Graphs"),
-            label = "Choose Graph\n",
-            choices = ""
-          )
-        ),
-        column(
-          6,  # Middle column for plot output
-          h4("Graph to display"),
-          plotOutput(ns("plot_Graphs"))
-        ),
-        column(
-          2,  # Right column for plot customization inputs
-          h4("Inputs with selected vals linked to downloadable obj (i.e, tlg_order())"),
-          textInput(ns("footnote_Graphs"), label = "Footnote")
-        )
-      )
-    )
+    tabPanel("Graphs", uiOutput(ns("graphs")))
   )
 }
 
@@ -87,10 +67,33 @@ tab_tlg_server <- function(id, data) {
     ns <- session$ns
 
     # Make available the CSV file with the TLG list and available links to NEST
-    tlg_order <- reactiveVal(
-      read.csv(system.file("www/data/TLG_order_details.csv", package = "aNCA")) %>%
-        mutate(PKid = paste0("<a href='", Catalog_Link, "' target='_blank'>", PKid, "</a>"))
-    )
+    tlg_order <- reactiveVal({
+      tlg_data <- dplyr::tibble(
+        id = character(),
+        Selection = logical(),
+        Type = character(),
+        Dataset = character(),
+        PKid = character(),
+        Description = character(),
+        Footnote = character(),
+        Stratification = character(),
+        Condition = character(),
+        Comment = character()
+      )
+
+      purrr::iwalk(.TLG_DEFINITIONS, function(x, id) {
+        tlg_data <<- dplyr::add_row(
+          tlg_data,
+          id = id,
+          Selection = x$is_default,
+          Type = x$type,
+          Dataset = x$dataset,
+          PKid = paste0("<a href='", x$link, "'>", x$pkid, "</a>"),
+          Description = x$description
+        )
+      })
+      tlg_data
+    })
 
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
     observeEvent(list(tlg_order(), data()), {
@@ -267,19 +270,25 @@ tab_tlg_server <- function(id, data) {
                            choices = "")
       }
 
-      if (sum(tlg_order_filt$Type == "Graph") > 0) {
-        updateRadioButtons(
-          session = session,
-          inputId = "buttons_Graphs",
-          label = "Graph to display",
-          choices = tlg_order_filt$Label[tlg_order_filt$Type == "Graph"]
-        )
-      } else {
-        updateRadioButtons(session = session,
-                           inputId = "buttons_Graphs",
-                           label = "",
-                           choices = "")
-      }
+      tlg_order_graphs <- filter(tlg_order_filt, Type == "Graph")$id
+      panels <- lapply(tlg_order_graphs, function(g_id) {
+        plot_ui <- {
+          g_def <- .TLG_DEFINITIONS[[g_id]]
+
+          if (exists(g_def$fun)) {
+            tlg_plot_server(g_id, get(g_def$fun), g_def$opts, data)
+            tlg_plot_ui(session$ns(g_id))
+          } else {
+            tags$div("Plot not implemented yet")
+          }
+        }
+
+        tabPanel(g_def$label, plot_ui)
+      })
+
+      output$graphs <- renderUI({
+        do.call(navlistPanel, panels)
+      })
     })
   })
 }

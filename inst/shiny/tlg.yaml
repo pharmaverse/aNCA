@@ -1,0 +1,40 @@
+# Configuration file containing TLG definitions. Each TLG should be a separate entry, with unique ID.
+# The TLG entry should have the following format:
+# id:
+#   is_default: # true / false whether TLG should be included as default
+#   type: # Graph / List / Table
+#   dataset: # name of the dataset
+#   pkid: # standarized id of the TLG
+#   label: # short label to display as tab name
+#   description: # longer descriptions, to be displayed in the order table
+#   link: # link to the documentation of the TLG
+#   fun: # name of the function exported by the package, responsible for generating TLG
+#   opts:        # options that can be passed as arguments to the function
+#     - option1  # will generate input widgets for editing
+#     - option2  # TODO: add ability to specify default value and type
+
+g_pkconc_ind_lin:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg01
+  label: pkcg01 - linear
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with linear scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
+  fun: g_pkconc_ind_lin
+  opts:
+    - xlab
+    - ylab
+g_pkconc_ind_log:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg01
+  label: pkcg01 - log
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
+  fun: g_pkconc_ind_log
+  opts:
+    - xlab
+    - ylab
+  
