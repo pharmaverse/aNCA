@@ -27,6 +27,7 @@
 #'
 #' @export
 run_app <- function(...) {
+  # Load all packages mentioned in the NAMESPACE
   require("aNCA")
   require("dplyr")
   require("DT")
