@@ -135,7 +135,7 @@ observeEvent(input$settings_upload, {
 
   # RSADJ
   if (!is.na(setts$adj.r.squared_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_adj.r.squared", label = "RSQADJ:", value = TRUE)
+    updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = TRUE)
     updateNumericInput(
       session,
       "adj.r.squared_threshold",
@@ -143,31 +143,31 @@ observeEvent(input$settings_upload, {
       value = setts$adj.r.squared_threshold[1]
     )
   } else {
-    updateCheckboxInput(session, inputId = "rule_adj.r.squared", label = "RSQADJ:", value = FALSE)
+    updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = FALSE)
   }
 
   # AUCPE.Obs
   if (!is.na(setts$aucpext.obs_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_aucpext.obs", value = TRUE)
+    updateCheckboxInput(session, inputId = "rule_aucpext_obs", value = TRUE)
     updateNumericInput(session, "aucpext.obs_threshold", value = setts$aucpext.obs_threshold[1])
   } else {
-    updateCheckboxInput(session, inputId = "rule_aucpext.obs", label = "", value = FALSE)
+    updateCheckboxInput(session, inputId = "rule_aucpext_obs", label = "", value = FALSE)
   }
 
   # AUCPE.Pred
   if (!is.na(setts$aucpext.pred_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_aucpext.pred",  value = TRUE)
+    updateCheckboxInput(session, inputId = "rule_aucpext_pred",  value = TRUE)
     updateNumericInput(session, "aucpext.pred_threshold", value = setts$aucpext.pred_threshold[1])
   } else {
-    updateCheckboxInput(session, inputId = "rule_aucpext.pred", value = FALSE)
+    updateCheckboxInput(session, inputId = "rule_aucpext_pred", value = FALSE)
   }
 
   # SPAN
   if (!is.na(setts$span.ratio_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_span.ratio", label = "SPAN: ", value = TRUE)
+    updateCheckboxInput(session, inputId = "rule_span_ratio", label = "SPAN: ", value = TRUE)
     updateNumericInput(session, "span.ratio_threshold", "", value = setts$span.ratio_threshold[1])
   } else {
-    updateCheckboxInput(session, inputId = "rule_span.ratio", label = "SPAN:", value = FALSE)
+    updateCheckboxInput(session, inputId = "rule_span_ratio", label = "SPAN:", value = FALSE)
   }
 })
 
@@ -447,7 +447,9 @@ observeEvent(res_nca(), {
   for (rule_input in grep("^rule_", names(input), value = TRUE)) {
     if (!input[[rule_input]]) next
 
-    pptestcd <- gsub("rule_", "", rule_input)
+    pptestcd <- rule_input |>
+      gsub("^rule_", "", x = _) |>
+      gsub("_", ".", x = _, fixed = TRUE)
     if (startsWith(pptestcd, "auc")) {
       final_res_nca[[paste0("flag_", pptestcd)]] <- {
         final_res_nca[[pptestcd]] >= input[[paste0(pptestcd, "_threshold")]]
@@ -609,16 +611,16 @@ output$settings_save <- downloadHandler(
         ),
         method = input$method,
         adj.r.squared_threshold = ifelse(
-          input$rule_adj.r.squared, input$adj.r.squared_threshold, NA
+          input$rule_adj_r_squared, input$adj.r.squared_threshold, NA
         ),
         aucpext.obs_threshold = ifelse(
-          input$rule_aucpext.obs, input$aucpext.obs_threshold, NA
+          input$rule_aucpext_obs, input$aucpext.obs_threshold, NA
         ),
         aucpext.pred_threshold = ifelse(
-          input$rule_aucpext.pred, input$aucpext.pred_threshold, NA
+          input$rule_aucpext_pred, input$aucpext.pred_threshold, NA
         ),
         span.ratio_threshold = ifelse(
-          input$rule_span.ratio, input$span.ratio_threshold, NA
+          input$rule_span_ratio, input$span.ratio_threshold, NA
         ),
         auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
         auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
