@@ -28,7 +28,7 @@ This application enables users to upload their datasets and perform Non-Compartm
 * **Save your analysis settings** and reupload them later to keep on analysing!
 
 ## Installation
-To run the application, clone the repository and load it locally using the following commands:
+To run the application, clone the repository and load it locally using the following commands in your terminal:
 ``` sh
 git clone https://github.com/pharmaverse/aNCA.git # Clone the repository
 cd aNCA # Navigate to the cloned directory
