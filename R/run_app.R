@@ -38,6 +38,7 @@ run_app <- function(...) {
   require("PKNCA")
   require("plotly")
   require("reactable")
+  require("reactable.extras")
   require("rio")
   require("rmarkdown")
   require("shinyBS")
