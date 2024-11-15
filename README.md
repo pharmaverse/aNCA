@@ -41,8 +41,14 @@ devtools::load_all() # load all dependencies
 aNCA::run_app() # run the applicaiton
 ```
 
-## Contributing 
+## Quickstart
+The testing data will be automatically loaded upon application startup. You can provide your own dataset in the **data** tab. Here you can also specify pre-processing filters.
 
+In the **NCA** tab, start off by loading the pre-processed data using *Submit* button. You will also need to choose dose number in the *Settings*. Then, you will be able to run the NCA analysis. From there, you can also specify different analysis options, like applying flag rule sets and selecting slopes.
+
+After the setup is done and analysis is performed, you are free to explore the results in the **Outputs** tab. Application supports various customizable plots, as well as report exporting.
+
+## Contributing 
 ### As developer 
 To ensure a clean and informative git version history, please adhere to the [guidelines](man/GUIDELINES.md) of our git workflow. You can find further information on possible ways to use gits full power on our homemade [cheatsheet](man/GIT-CHEATSHEET.md).
 
