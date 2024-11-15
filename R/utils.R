@@ -27,11 +27,12 @@
 #' @examples
 #' \dontrun{
 #' # Basic usage
-#' .compress_range(c(1, 2, 3, 4)) # "1:4"
-#' .compress_range(c(15, 1, 11, 4, 5, 10, 2, 12, 3)) # "1:5,10:12,15"
+#' compress_range(c(1, 2, 3, 4)) # "1:4"
+#' compress_range(c(15, 1, 11, 4, 5, 10, 2, 12, 3)) # "1:5,10:12,15"
 #' }
 #'
-.compress_range <- function(range_vector) {
+#' @export
+compress_range <- function(range_vector) {
   if (!is(range_vector, "numeric")) range_vector <- suppressWarnings(as.numeric(range_vector))
   if (any(is.na(range_vector))) stop("Error: only numeric values allowed")
   if (length(range_vector) == 0) return(NA_integer_)
