@@ -184,6 +184,7 @@ observeEvent(input$settings_upload, {
 # When an analyte is selected and the user clicks the "Submit" button,
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
+mydata_c1cn_intervals <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
 
   # Define explicetely input columns until there are input definitions
@@ -244,6 +245,7 @@ observeEvent(input$submit_analyte, priority = 2, {
     )
   )
   mydata(mydata)
+  mydata_c1cn_intervals(mydata$intervals %>% dplyr::filter(end != Inf))
 })
 
 # Display the PKNCA data object for the user (concentration records)
@@ -312,17 +314,23 @@ observe({
 # Choose dosenumbers to be analyzed
 
 observeEvent(input$select_analyte, priority = -1, {
+  doses_options <- data() %>% 
+    filter(ANALYTE == input$select_analyte) %>% 
+    pull(DOSNO) %>% 
+    sort() %>% 
+    unique()
+  
   updateSelectInput(
     session,
     inputId = "select_dosno",
     label = "Choose the Dose Number:",
-    choices = unique(data() %>% filter(ANALYTE == input$select_analyte) %>% pull(DOSNO))
+    choices = doses_options, 
+    selected = doses_options[1]
   )
 })
 
 # Partial AUC Selection
 auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
-intervals_userinput_data <- reactiveVal(NULL)
 intervals_userinput <- reactiveVal(NULL)
 
 # Add a new partial AUC input
@@ -346,40 +354,36 @@ rv <- reactiveValues(trigger = 0)
 # Update the trigger whenever either button is clicked
 observeEvent(input$nca, {
   req(mydata())
-  # If there are intervals defined, update the intervals_userinput reactive value
+  
+  # Use the intervals defined by the user if so
   if (input$AUCoptions && auc_counter() > 0) {
-    #browser()
+    
     # Collect all inputs for the AUC intervals
-    input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-    input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-    input_names_params <- grep("^timeInputParam_", names(input), value = TRUE)
+    input_names_ranges <- grep("^RangeInput_", names(input), value = TRUE)
+    input_names_params <- grep("^ParamInput_.*[0-9]$", names(input), value = TRUE)
     
-    auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
-    auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
-    auc_params <- lapply(input_names_params, function(name) input[[name]])
+    starts <- unlist(lapply(input_names_ranges, function(name) input[[name]][1]))
+    ends <- unlist(lapply(input_names_ranges, function(name) input[[name]][2]))
+    params <- lapply(input_names_params, function(name) input[[name]])
     
-    c1_intervals <- mydata()$intervals
+    # Define the time values at first (C1) and last (Cn) concentrations
+    c1 <- mydata_c1cn_intervals()$start
+    cn <- mydata_c1cn_intervals()$end
+    
+    # Make a list of dataframes with each of the intervals requested
+    intervals_list <- lapply(1:length(starts), function(i){
+      mydata_c1cn_intervals() %>% 
+        dplyr::mutate(
+          start = if (starts[i] == "C1") c1 else if (starts[i] == "Cn") cn else as.numeric(starts[i]),
+          end = if (ends[i] == "C1") c1 else if (ends[i] == "Cn") cn else as.numeric(ends[i])
+        ) %>% 
+        # only TRUE for columns specified in params
+        mutate(across(where(is.logical), ~FALSE)) %>%
+        mutate(across(params[[i]], ~TRUE))
+    })
 
-    # Define the intervals specified by the user
-    intervals_userinput_data(
-      data.frame(start = auc_mins, end = auc_maxs) %>%
-        arrange(start, end) %>%
-        unique()
-    )
-
-    # Use the base intervals dataset settings as a reference and cross it with the inputs
-    intervals_userinput <- mydata()$intervals %>%
-      group_by(STUDYID, ANALYTE, USUBJID, DOSNO) %>%
-      slice(1) %>%
-      ungroup()  %>%
-      select(-start) %>%
-      select(-end) %>%
-      crossing(intervals_userinput_data()) %>%
-      # all dataframe columns equal false except
-      # aucint.last (without knowing the other column names)
-      mutate(auclast = FALSE, aucint.last = TRUE, aucinf.obs = FALSE)
-    # Return the output
-    intervals_userinput(intervals_userinput)
+    # Save intervals as a dataframe
+    intervals_userinput(intervals_list)
   }
 
   # Make the user aware if it forgot to select at least 1 DOSNO
@@ -426,32 +430,17 @@ res_nca <- eventReactive(rv$trigger, {
     # Load mydata reactive
     mydata <- mydata()
     
-    # Include manually the calculation of AUCpext.obs and AUCpext.pred
-    mydata$intervals <- mydata$intervals  %>%
-      mutate(aucinf.obs.dn = TRUE,
-             cmax.dn = TRUE,
-             cav = TRUE,
-             ctrough = TRUE,
-             vss.iv.obs = TRUE,
-             cl.obs = TRUE,
-             cl.pred = TRUE,
-             f = if (length(unique(mydata$conc$data$ROUTE)) > 1) TRUE else FALSE,
-             vz.obs = TRUE) %>%
-      # If so, include the AUC intervals defined by the user
-      rbind(intervals_userinput()) %>%
-      mutate(
-        aucpext.obs = TRUE,
-        aucpext.pred = TRUE
-      )
+    # Include manual intervals if specified by the user
+    if (!is.null(intervals_userinput())) mydata$intervals <- bind_rows(intervals_userinput())
 
-    # Perform C0 imputations for the relevant parameters
+    # Perform C0 imputations if specified by the user
     if (input$should_impute_c0) {
       mydata <- create_c0_impute(mydata = mydata)
     }
 
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
-
+    browser()
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
 
