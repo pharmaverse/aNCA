@@ -28,17 +28,16 @@ This application enables users to upload their datasets and perform Non-Compartm
 * **Save your analysis settings** and reupload them later to keep on analysing!
 
 ## Installation
-To run the application, clone the repository and load it locally using the following commands in your terminal:
+To install the application, clone the repository and load it locally using the following commands in your terminal:
 ``` sh
 git clone https://github.com/pharmaverse/aNCA.git # Clone the repository
-cd aNCA # Navigate to the cloned directory
 ```
-You can then run the application from the R console:
+You can then run the application from the R console anytime. Just make sure first your working directory is set to the aNCA folder:
 ``` r
 # install devtools if not present
 if (!requireNamespace('devtools', quietly = TRUE)) install.packages('devtools')
 devtools::load_all() # load all dependencies
-aNCA::run_app() # run the applicaiton
+aNCA::run_app() # run the application
 ```
 
 ## Quick start
