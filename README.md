@@ -50,14 +50,14 @@ After the setup is done and analysis is performed, you are free to explore the r
 
 ## Contributing 
 ### As developer 
-To ensure a clean and informative git version history, please adhere to the [guidelines](man/GUIDELINES.md) of our git workflow. You can find further information on possible ways to use gits full power on our homemade [cheatsheet](man/GIT-CHEATSHEET.md).
+To ensure a clean codebase and smooth cooperation, please adhere to the [contributing guidelines](CONTRIBUTING.md).
 
 ### As user 
 Feel free to open identified issues, to reach out to us for questions or fill our [google sheet]() for feedback.
 
 ## Documentation and references
 
-* Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the `aNCA app` (still in development).
+* Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app** (still in development).
 * The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/billdenney/pknca)
 
 
