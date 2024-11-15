@@ -7,9 +7,11 @@
 run_app(...)
 }
 \arguments{
-\item{...}{Arguments passed to \code{shiny::runApp()}}
+\item{...}{Arguments passed to \code{shiny::runApp()}
+
+List of packages imported for the shiny application.
+When adding new imports, please keep the alphabetical order, at lest for packages.}
 }
 \description{
-List of functions imported for the shiny application.
-When adding new imports, please keep the alphabetical order, at lest for packages.
+Run the Shiny app
 }
