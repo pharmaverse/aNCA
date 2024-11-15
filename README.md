@@ -41,7 +41,7 @@ devtools::load_all() # load all dependencies
 aNCA::run_app() # run the applicaiton
 ```
 
-## Quickstart
+## Quick start
 The testing data will be automatically loaded upon application startup. You can provide your own dataset in the **data** tab. Here you can also specify pre-processing filters.
 
 In the **NCA** tab, start off by loading the pre-processed data using *Submit* button. You will also need to choose dose number in the *Settings*. Then, you will be able to run the NCA analysis. From there, you can also specify different analysis options, like applying flag rule sets and selecting slopes.

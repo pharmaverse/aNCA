@@ -20,12 +20,15 @@ RStudio
 STUDYID
 USUBJID
 USUBJIDs
+analysing
 analyte
 analytes
 anonymized
 anonymizes
+cheatsheet
 cmax
 csv
+customizable
 ggplot
 nca
 pharmacokinetic
@@ -33,6 +36,7 @@ pknca
 plotly
 pptest
 pre
+reupload
 ruleset
 rulesets
 sas
@@ -40,5 +44,3 @@ summarization
 timepoint
 visualizable
 xpt
-reupload
-cheatsheet
