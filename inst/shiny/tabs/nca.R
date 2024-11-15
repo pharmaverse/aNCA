@@ -348,12 +348,17 @@ observeEvent(input$nca, {
   req(mydata())
   # If there are intervals defined, update the intervals_userinput reactive value
   if (input$AUCoptions && auc_counter() > 0) {
+    #browser()
     # Collect all inputs for the AUC intervals
     input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
     input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-
+    input_names_params <- grep("^timeInputParam_", names(input), value = TRUE)
+    
     auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
     auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
+    auc_params <- lapply(input_names_params, function(name) input[[name]])
+    
+    c1_intervals <- mydata()$intervals
 
     # Define the intervals specified by the user
     intervals_userinput_data(
@@ -364,7 +369,6 @@ observeEvent(input$nca, {
 
     # Use the base intervals dataset settings as a reference and cross it with the inputs
     intervals_userinput <- mydata()$intervals %>%
-      filter(end == Inf) %>%
       group_by(STUDYID, ANALYTE, USUBJID, DOSNO) %>%
       slice(1) %>%
       ungroup()  %>%
