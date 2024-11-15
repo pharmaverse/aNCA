@@ -3,6 +3,8 @@
 #' List of functions imported for the shiny application.
 #' When adding new imports, please keep the alphabetical order, at lest for packages.
 #'
+#' @param ... Arguments passed to `shiny::runApp()`
+#'
 #' @import shiny
 #' @importFrom dplyr mutate filter select group_by summarise pull arrange ungroup
 #' @importFrom dplyr rename_with across case_when left_join rename
@@ -24,6 +26,6 @@
 #' @importFrom utils read.csv write.csv
 #' @importFrom zip zipr
 #' @export
-run_app <- function() {
-  shiny::runApp(system.file("shiny", package = "aNCA"))
+run_app <- function(...) {
+  shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }
