@@ -28,5 +28,22 @@
 #' @importFrom zip zipr
 #' @export
 run_app <- function(...) {
+  require("dplyr")
+  require("DT")
+  require("ggplot2")
+  require("htmlwidgets")
+  require("logger")
+  require("PKNCA")
+  require("plotly")
+  require("reactable")
+  require("rio")
+  require("rmarkdown")
+  require("shinyBS")
+  require("shinyFiles")
+  require("shinyjqui")
+  require("shinyWidgets")
+  require("tools")
+  require("utils")
+  require("zip")
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }
