@@ -50,7 +50,7 @@
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
-  data, selected_analytes, selected_usubjids, colorby_var, time_scale, xaxis_scale, cycle = NULL
+  data, selected_analytes, selected_usubjids, colorby_var, time_scale, yaxis_scale, cycle = NULL
 ) {
 
   # Check if the data is empty
@@ -103,9 +103,9 @@ general_lineplot <- function(
       filter(DOSNO %in% cycle)
   }
 
-  if (xaxis_scale == "Log") {
+  if (yaxis_scale == "Log") {
     preprocessed_data <- preprocessed_data %>%
-      mutate(AVAL = ifelse(AVAL < 1e-3, 1e-3, AVAL))
+      filter(AVAL > 0)
   }
 
   time <- if (time_scale == "By Cycle") {
@@ -136,26 +136,11 @@ general_lineplot <- function(
   ) +
     labs(color = paste(colorby_var, collapse = ", "))
 
-  if (xaxis_scale == "Log") {
+  if (yaxis_scale == "Log") {
     plt <- plt +
-      scale_y_continuous(trans = scales::pseudo_log_trans(base = 10, sigma = 1)) +
+      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
+                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
       labs(y = paste0("Log 10 - ", plt$labels$y))
-
-    custom_label <- function(x) {
-
-      ifelse(x == 1e-3, 0, scales::trans_format("log10", scales::math_format(10^x)))
-    }
-
-    plt <- plt %+% dplyr::mutate(preprocessed_data, AVAL = ifelse(AVAL == 1e-3, 0, AVAL)) %>%
-      +
-        scale_y_continuous(
-          trans = scales::pseudo_log_trans(base = 10, sigma = 1),
-          breaks = c(
-            -Inf, 10^seq(from = -3, to = ceiling(log10(max(plt$data["AVAL"], na.rm = TRUE))))
-          ) %>%
-            filter_breaks(plot = plt, min_cm_distance = 20, axis = "y"),
-          labels = scales::trans_format("log10", scales::math_format(10^.x))
-        )
   }
   return(plt)
 }

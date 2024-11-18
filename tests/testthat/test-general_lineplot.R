@@ -27,7 +27,7 @@ describe("general_lineplot functions correctly", {
       selected_usubjids = c("Subject1", "Subject2"),
       colorby_var = "DOSNO",
       time_scale = "By Cycle",
-      xaxis_scale = "Linear",
+      yaxis_scale = "Linear",
       cycle = 1
     )
     expect_s3_class(p, "ggplot")
@@ -41,7 +41,7 @@ describe("general_lineplot functions correctly", {
       selected_usubjids = c("Subject1", "Subject2"),
       colorby_var = "DOSNO",
       time_scale = "By Cycle",
-      xaxis_scale = "Linear",
+      yaxis_scale = "Linear",
       cycle = 1
     )
     expect_s3_class(p, "ggplot")
@@ -57,7 +57,7 @@ describe("general_lineplot functions correctly", {
         selected_usubjids = c("Subject1", "Subject2"),
         colorby_var = "DOSNO",
         time_scale = "By Cycle",
-        xaxis_scale = "Linear",
+        yaxis_scale = "Linear",
         cycle = 1
       ),
       "object 'AVAL' not found"
@@ -71,7 +71,7 @@ describe("general_lineplot functions correctly", {
       selected_usubjids = c("Subject1", "Subject2"),
       colorby_var = "DOSNO",
       time_scale = "By Cycle",
-      xaxis_scale = "Log",
+      yaxis_scale = "Log",
       cycle = 1
     )
     expect_s3_class(p, "ggplot")
