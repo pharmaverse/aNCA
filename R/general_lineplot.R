@@ -12,7 +12,7 @@
 #'                          the lines in the plot.
 #' @param time_scale        A character string specifying the time scale.
 #'                          Options are "By Cycle" or other values.
-#' @param xaxis_scale       A character string specifying the x-axis scale.
+#' @param yaxis_scale       A character string specifying the x-axis scale.
 #'                          Options are "Log" or other values.
 #' @param cycle             A character string or numeric value specifying the cycle to filter by
 #'                          when `time_scale` is "By Cycle". Default is NULL.
@@ -26,9 +26,9 @@
 #'   \item Selects relevant columns and removes rows with missing concentration values.
 #'   \item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
 #'   \item Filters the data by cycle if `time_scale` is "By Cycle".
-#'   \item Adjusts concentration values for logarithmic scale if `xaxis_scale` is "Log".
+#'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
 #'   \item Generates a line plot using the `g_ipp` function with the specified parameters.
-#'   \item Adjusts the y-axis to logarithmic scale if `xaxis_scale` is "Log".
+#'   \item Adjusts the y-axis to logarithmic scale if `yaxis_scale` is "Log".
 #' }
 #'
 #' @examples
@@ -39,7 +39,7 @@
 #'                            selected_usubjids = c("Subject1", "Subject2"),
 #'                            colorby_var = "DOSNO",
 #'                            time_scale = "By Cycle",
-#'                            xaxis_scale = "Log",
+#'                            yaxis_scale = "Log",
 #'                            cycle = "1")
 #'   print(plot)
 #' }
