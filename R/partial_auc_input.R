@@ -12,19 +12,10 @@ partial_auc_input <- function(id, min_sel_value = 0, max_sel_value = NULL) {
   fluidRow(
     id = id,
     column(
-      width = 2, shinyWidgets::sliderTextInput(inputId = "rangeInput_", 
-                                               label = "Interval range", 
-                                               choices = c(0, "C1", 1:100, "Cn", Inf),
-                                               selected = c("C1", Inf),
-                                               dragRange = TRUE)
+      width = 6, numericInput(paste0("timeInputMin_", id), "Min:", min = 0, value = min_sel_value)
     ),
     column(
-      width = 2, shinyWidgets::pickerInput(paste0("timeInputParam_", id), "Parameters:", 
-                                           choices = sort(setdiff(names(PKNCA::PKNCA.options()$single.dose.aucs),
-                                                                  c("start", "end"))),
-                                           options = list(maxItems = NULL),
-                                           multiple = TRUE)
+      width = 6, numericInput(paste0("timeInputMax_", id), "Max:", min = 0, value = max_sel_value)
     )
   )
 }
-
