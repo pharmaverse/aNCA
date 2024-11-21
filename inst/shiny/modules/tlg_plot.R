@@ -15,8 +15,19 @@ tlg_plot_ui <- function(id) {
 
 tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
   moduleServer(id, function(input, output, session) {
+    plot_list <- reactive({
+      plot_options <- purrr::list_modify(list(data = data()), !!!reactiveValuesToList(opts))
+
+      purrr::iwalk(plot_options, \(value, name) {
+        if (isTRUE(value == ""))
+          plot_options[[name]] <<- NULL
+      })
+
+      do.call(render_plot, plot_options)
+    })
+
     output$plot <- renderPlot({
-      do.call(render_plot, purrr::list_modify(list(data = data()), !!!reactiveValuesToList(opts)))
+      plot_list()[[1]]
     })
 
     opts <- reactiveValues()
