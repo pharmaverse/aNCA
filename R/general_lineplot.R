@@ -12,7 +12,7 @@
 #'                          the lines in the plot.
 #' @param time_scale        A character string specifying the time scale.
 #'                          Options are "By Cycle" or other values.
-#' @param xaxis_scale       A character string specifying the x-axis scale.
+#' @param yaxis_scale       A character string specifying the x-axis scale.
 #'                          Options are "Log" or other values.
 #' @param cycle             A character string or numeric value specifying the cycle to filter by
 #'                          when `time_scale` is "By Cycle". Default is NULL.
@@ -26,9 +26,9 @@
 #'   \item Selects relevant columns and removes rows with missing concentration values.
 #'   \item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
 #'   \item Filters the data by cycle if `time_scale` is "By Cycle".
-#'   \item Adjusts concentration values for logarithmic scale if `xaxis_scale` is "Log".
+#'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
 #'   \item Generates a line plot using the `g_ipp` function with the specified parameters.
-#'   \item Adjusts the y-axis to logarithmic scale if `xaxis_scale` is "Log".
+#'   \item Adjusts the y-axis to logarithmic scale if `yaxis_scale` is "Log".
 #' }
 #'
 #' @examples
@@ -39,7 +39,7 @@
 #'                            selected_usubjids = c("Subject1", "Subject2"),
 #'                            colorby_var = "DOSNO",
 #'                            time_scale = "By Cycle",
-#'                            xaxis_scale = "Log",
+#'                            yaxis_scale = "Log",
 #'                            cycle = "1")
 #'   print(plot)
 #' }
@@ -50,7 +50,7 @@
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
-  data, selected_analytes, selected_usubjids, colorby_var, time_scale, xaxis_scale, cycle = NULL
+  data, selected_analytes, selected_usubjids, colorby_var, time_scale, yaxis_scale, cycle = NULL
 ) {
 
   # Check if the data is empty
@@ -103,9 +103,9 @@ general_lineplot <- function(
       filter(DOSNO %in% cycle)
   }
 
-  if (xaxis_scale == "Log") {
+  if (yaxis_scale == "Log") {
     preprocessed_data <- preprocessed_data %>%
-      mutate(AVAL = ifelse(AVAL < 1e-3, 1e-3, AVAL))
+      filter(AVAL > 0)
   }
 
   time <- if (time_scale == "By Cycle") {
@@ -136,26 +136,11 @@ general_lineplot <- function(
   ) +
     labs(color = paste(colorby_var, collapse = ", "))
 
-  if (xaxis_scale == "Log") {
+  if (yaxis_scale == "Log") {
     plt <- plt +
-      scale_y_continuous(trans = scales::pseudo_log_trans(base = 10, sigma = 1)) +
+      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
+                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
       labs(y = paste0("Log 10 - ", plt$labels$y))
-
-    custom_label <- function(x) {
-
-      ifelse(x == 1e-3, 0, scales::trans_format("log10", scales::math_format(10^x)))
-    }
-
-    plt <- plt %+% dplyr::mutate(preprocessed_data, AVAL = ifelse(AVAL == 1e-3, 0, AVAL)) %>%
-      +
-        scale_y_continuous(
-          trans = scales::pseudo_log_trans(base = 10, sigma = 1),
-          breaks = c(
-            -Inf, 10^seq(from = -3, to = ceiling(log10(max(plt$data["AVAL"], na.rm = TRUE))))
-          ) %>%
-            filter_breaks(plot = plt, min_cm_distance = 20, axis = "y"),
-          labels = scales::trans_format("log10", scales::math_format(10^.x))
-        )
   }
   return(plt)
 }

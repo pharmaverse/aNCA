@@ -125,7 +125,8 @@ general_meanplot <- function(data,
   if (plot_ylog) {
     p <- p +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
-                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000))
+                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
+      labs(y = paste0("Log 10 - ", p$labels$y))
   }
 
   # Convert ggplot to plotly
