@@ -5,116 +5,115 @@
 tab_visuals_ui <- function(id) {
   ns <- NS(id)
   
-  navlistPanel(
-    tabPanel("General Plotting",
-             tabsetPanel(
-               tabPanel("Individual Plots",
-                        fluidRow(
-                          column(
-                            4, # This column will take 4/12 of the width of the row
-                            uiOutput(ns("generalplot_analyte")),
-                            uiOutput(ns("generalplot_usubjid")),
-                            uiOutput(ns("generalplot_colorby")),
-                            radioButtons(ns("log"), "Select the Plot type:", choices = c("Lin", "Log")),
-                            radioButtons(
-                              ns("timescale"),
-                              "Choose the Timescale",
-                              choices = c("All Time", "By Cycle"),
-                              selected = "All Time"
-                            ),
-                            conditionalPanel(
-                              condition = "input.timescale == 'By Cycle'",
-                              uiOutput(ns("cycleselect")),
-                              ns = NS(id)
-                            )
-                          ),
-                          column(8, plotlyOutput(ns("individualplot"), height = "400px"))
-                        )
-               ),
-               tabPanel("Mean Plots",
-                        uiOutput(ns("studyidmean")),
-                        uiOutput(ns("analytemean")),
-                        uiOutput(ns("cyclemean")),
-                        uiOutput(ns("selectidvar")),
-                        checkboxInput(ns("logmeanplot"), label = "Scale y Log"),
-                        checkboxInput(ns("sdmeanplot"), label = "Show SD"),
-                        checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
-                        plotlyOutput(ns("meanplot"), height = "100%"),
-                        br(),
-                        helpText("If n<3 at the specified time point then the mean value is not displayed.")
-               )
-             )
+  layout_sidebar(
+    sidebar = sidebar( 
+      conditionalPanel(
+        "input.visuals === 'Individual Plots'",
+        uiOutput(ns("generalplot_analyte")),
+        uiOutput(ns("generalplot_usubjid")),
+        uiOutput(ns("generalplot_colorby")),
+        radioButtons(ns("log"), "Select the Plot type:", choices = c("Lin", "Log")),
+        radioButtons(
+          ns("timescale"),
+          "Choose the Timescale",
+          choices = c("All Time", "By Cycle"),
+          selected = "All Time"
+        ),
+        conditionalPanel(
+          condition = "input.timescale == 'By Cycle'",
+          uiOutput(ns("cycleselect")),
+          ns = NS(id)
+        )
+      ),
+      conditionalPanel(
+        "input.visuals === 'Mean Plots'",
+        uiOutput(ns("studyidmean")),
+        uiOutput(ns("analytemean")),
+        uiOutput(ns("cyclemean")),
+        uiOutput(ns("selectidvar")),
+        checkboxInput(ns("logmeanplot"), label = "Scale y Log"),
+        checkboxInput(ns("sdmeanplot"), label = "Show SD"),
+        checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%")
+      ),
+      conditionalPanel(
+        "input.visuals === 'Descriptive Statistics'",
+        orderInput(
+            ns("summarygroupbysource"),
+            "Drag and drop these variables...",
+            items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
+            width = shiny::validateCssUnit("100%"),
+            connect = ns("summarygroupby")
+          ),
+          orderInput(
+            ns("summarygroupby"),
+            "..to hierarchically group by (order matters!):",
+            items = c("DOSNO"),
+            width = shiny::validateCssUnit("100%"),
+            connect = ns("summarygroupbysource"),
+            placeholder = "Drag items here to group hierarchically..."
+          ),
+          uiOutput(ns("summaryselect"))
+      ),
+      conditionalPanel(
+        "input.visuals === 'Boxplot'",
+        uiOutput(ns("selectboxplot")),
+        uiOutput(ns("select_xvars_boxplot")),
+        uiOutput(ns("select_colorvars_boxplot")),
+        pickerInput(
+          inputId = ns("selected_varvalstofilter_boxplot"),
+          label = "Select values to display",
+          multiple = TRUE,
+          choices = NULL,
+          selected = NULL,
+          options = list(`actions-box` = TRUE)
+        ),
+        uiOutput(ns("violin_toggle"))
+      ),
+      position = "right",
+      open = TRUE),
+    navset_card_underline(
+      header = "Exploratory Analysis",
+      id = "visuals",
+      nav_panel("Individual Plots", 
+                plotlyOutput(ns("individualplot"))),
+      nav_panel("Mean Plots",
+                plotlyOutput(ns("meanplot")),
+                br(),
+                helpText("If n<3 at the specified time point then the mean value is not displayed.")
+                ),
+      nav_panel("Descriptive Statistics",
+                card(
+                DTOutput(ns("descriptivestats"))),
+                card(
+                actionButton(ns("downloadsum"), "Download the NCA Summary Data"),
+                downloadButton(ns("downloadsum_browser"), "Locally Download Summary Data"))
+                ),
+      nav_panel("Boxplot",
+                plotlyOutput(ns("boxplot"))
+      )
     ),
-    tabPanel("Dose Escalation",
-             tabsetPanel(
-               tabPanel("Descriptive Statistics",
-                        fluidRow(
-                          column(
-                            width = 9,
-                            orderInput(
-                              ns("summarygroupbysource"),
-                              "Drag and drop these variables...",
-                              items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
-                              width = shiny::validateCssUnit("100%"),
-                              connect = ns("summarygroupby")
-                            ),
-                            orderInput(
-                              ns("summarygroupby"),
-                              "..to hierarchically group by (order matters!):",
-                              items = c("DOSNO"),
-                              width = shiny::validateCssUnit("100%"),
-                              connect = ns("summarygroupbysource"),
-                              placeholder = "Drag items here to group hierarchically..."
-                            )
-                          ),
-                          column(
-                            width = 3,
-                            uiOutput(ns("summaryselect"))
-                          )
-                        ),
-                        br(),
-                        DTOutput(ns("descriptivestats")),
-                        actionButton(ns("downloadsum"), "Download the NCA Summary Data"),
-                        actionButton(ns("downloadsum_csv"), "Save NCA Summary Data to Directory"),
-                        downloadButton(ns("downloadsum_browser"), "Download Summary Data")
-               ),
-               tabPanel(
-                 "Box Plots",
-                 uiOutput(ns("selectboxplot")),
-                 uiOutput(ns("select_xvars_boxplot")),
-                 uiOutput(ns("select_colorvars_boxplot")),
-                 pickerInput(
-                   inputId = ns("selected_varvalstofilter_boxplot"),
-                   label = "Select values to display",
-                   multiple = TRUE,
-                   choices = NULL,
-                   selected = NULL,
-                   options = list(`actions-box` = TRUE)
-                 ),
-                 uiOutput(ns("violin_toggle")),
-                 plotlyOutput(ns("boxplot"))
-               )
-             )
-    ),
-    #TODO: Figure out where this section should go (NCA results? TLGs?)
-    tabPanel("Report",
-             tabsetPanel(
-               tabPanel("Configuration",
-                        # add radio buttons with single or multiple dose as choice
-                        radioButtons(
-                          ns("report_studytype"),
-                          "Select the study type:",
-                          choices = c("SD", "MD")
-                        ),
-                        actionButton(ns("generate_report"), "Generate Report")
-               ),
-               tabPanel("Report",
-                        downloadButton(ns("download_rmd"), "Export Report "),
-                        uiOutput(ns("rmd_content"))
-               )
-             )
-    )
+    class = "p-0"
   )
+
+  #   #TODO: Figure out where this section should go (NCA results? TLGs?)
+  #   tabPanel("Report",
+  #            tabsetPanel(
+  #              tabPanel("Configuration",
+  #                       # add radio buttons with single or multiple dose as choice
+  #                       radioButtons(
+  #                         ns("report_studytype"),
+  #                         "Select the study type:",
+  #                         choices = c("SD", "MD")
+  #                       ),
+  #                       actionButton(ns("generate_report"), "Generate Report")
+  #              ),
+  #              tabPanel("Report",
+  #                       downloadButton(ns("download_rmd"), "Export Report "),
+  #                       uiOutput(ns("rmd_content"))
+  #              )
+  #            )
+  #   )
+  # )
 
 }
 
@@ -371,6 +370,27 @@ tab_visuals_server <- function(id, data, res_nca) {
         )
       )
     })
+    
+    # Save summary stats to improve
+    observeEvent(input$downloadsum, {
+      showModal(modalDialog(
+        title = "Please enter the path to the folder on improve for your results:",
+        textInput(ns("pathresults"), "Path:"),
+        textInput(ns("filename"), "Enter filename of choice:", ""),
+        actionButton(ns("go2"), "GO"),
+        footer = modalButton("Close")
+      ))
+    })
+    
+    # alternatively: save to browser
+    output$downloadsum_browser <- downloadHandler(
+      filename = function() {
+        paste("NCA_summary.csv", sep = "_")
+      },
+      content = function(file) {
+        write.csv(summary_stats(), file)
+      }
+    )
     
     # TAB  Dose Norm Conc over Time Plots ----
     

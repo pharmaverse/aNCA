@@ -216,9 +216,10 @@ fluidPage(
       )
     ),
     # VISUALISATION ----
-    tabPanel("Visualisation",
+    nav_panel("Visualisation",
              fluid = TRUE,
              tab_visuals_ui("visuals")
+
     ),
     # New TLG tab
     tabPanel("TLG",
