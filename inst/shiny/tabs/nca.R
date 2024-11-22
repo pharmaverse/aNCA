@@ -184,7 +184,6 @@ observeEvent(input$settings_upload, {
 # When an analyte is selected and the user clicks the "Submit" button,
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
-mydata_c1cn_intervals <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
 
   # Define explicetely input columns until there are input definitions
@@ -244,8 +243,13 @@ observeEvent(input$submit_analyte, priority = 2, {
       timeu = myconc$data$RRLTU[1]
     )
   )
+
+  # Keep only the default intervals to infinity
+  mydata$intervals <- mydata$intervals %>%
+    dplyr::filter(end == Inf) %>%
+    dplyr::mutate(auclast = TRUE)
+  
   mydata(mydata)
-  mydata_c1cn_intervals(mydata$intervals %>% dplyr::filter(end != Inf))
 })
 
 # Display the PKNCA data object for the user (concentration records)
@@ -357,29 +361,25 @@ observeEvent(input$nca, {
   
   # Use the intervals defined by the user if so
   if (input$AUCoptions && auc_counter() > 0) {
-    
+
     # Collect all inputs for the AUC intervals
-    input_names_ranges <- grep("^RangeInput_", names(input), value = TRUE)
-    input_names_params <- grep("^ParamInput_.*[0-9]$", names(input), value = TRUE)
+    input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
+    input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
     
-    starts <- unlist(lapply(input_names_ranges, function(name) input[[name]][1]))
-    ends <- unlist(lapply(input_names_ranges, function(name) input[[name]][2]))
-    params <- lapply(input_names_params, function(name) input[[name]])
-    
-    # Define the time values at first (C1) and last (Cn) concentrations
-    c1 <- mydata_c1cn_intervals()$start
-    cn <- mydata_c1cn_intervals()$end
-    
+    starts <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
+    ends <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
+
     # Make a list of dataframes with each of the intervals requested
     intervals_list <- lapply(1:length(starts), function(i){
-      mydata_c1cn_intervals() %>% 
+      mydata()$intervals %>% 
         dplyr::mutate(
-          start = if (starts[i] == "C1") c1 else if (starts[i] == "Cn") cn else as.numeric(starts[i]),
-          end = if (ends[i] == "C1") c1 else if (ends[i] == "Cn") cn else as.numeric(ends[i])
+          start = start + as.numeric(starts[i]),
+          end = start + as.numeric(ends[i])
         ) %>% 
         # only TRUE for columns specified in params
         mutate(across(where(is.logical), ~FALSE)) %>%
-        mutate(across(params[[i]], ~TRUE))
+        # Intervals will always only compute AUC values
+        mutate(across(c("aucint.last", "aucint.inf.obs", "aucint.inf.pred", "aucint.all"), ~TRUE))
     })
 
     # Save intervals as a dataframe
@@ -429,18 +429,27 @@ res_nca <- eventReactive(rv$trigger, {
 
     # Load mydata reactive
     mydata <- mydata()
-    
-    # Include manual intervals if specified by the user
-    if (!is.null(intervals_userinput())) mydata$intervals <- bind_rows(intervals_userinput())
 
-    # Perform C0 imputations if specified by the user
+    # Include manual intervals if specified by the user
+    mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
+    browser()
+    # Define C0 imputations on intervals starting at dose time if specified by the user
     if (input$should_impute_c0) {
       mydata <- create_c0_impute(mydata = mydata)
-    }
+      mydata$impute <- "impute"
 
+    # Otherwise if at C0 is not already present, make those intervals start at C1 for auclast
+    } 
+  
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
-    browser()
+
+    # Make the starts and ends of results relative to last dose
+    myres$result = merge(myres$result, mydata$dose$data) %>% 
+      dplyr::mutate(start = start - !!sym(mydata$dose$columns$time),
+                    end = end - !!sym(mydata$dose$columns$time)) %>% 
+      dplyr::select(names(myres$result))
+
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
 

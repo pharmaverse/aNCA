@@ -4,7 +4,7 @@
 #' of the PKNCA package (pk.nca) in a way that each row represents all the main results
 #' summarized for each profile in each individual/patient.
 #'
-#' @param res_nca The output of PKNCA::pk.nca
+#' @param myres The output of PKNCA::pk.nca
 #'
 #' @returns A data frame (finalres2) which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
@@ -15,23 +15,23 @@
 #' @importFrom tidyr pivot_wider pivot_longer
 #' @export
 #'
-reshape_pknca_results <- function(res_nca) {
+reshape_pknca_results <- function(myres) {
 
   # Get all names with units and make a dictionary structure
-  dict_pttestcd_with_units <- res_nca$result %>%
+  dict_pttestcd_with_units <- myres$result %>%
     select(PPTESTCD, PPORRESU) %>%
     unique() %>%
     pull(PPORRESU, PPTESTCD)
 
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
-  infinite_aucs_vals <- res_nca$result %>%
+  infinite_aucs_vals <- myres$result %>%
     unique() %>% 
     filter(end == Inf)  %>%
     select(-PPORRESU, -exclude) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
 
-  infinite_aucs_exclude <- res_nca$result %>%
+  infinite_aucs_exclude <- myres$result %>%
     unique() %>% 
     filter(end == Inf) %>%
     select(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, PPTESTCD, exclude)  %>%
@@ -40,7 +40,7 @@ reshape_pknca_results <- function(res_nca) {
 
   infinite_aucs <- merge(infinite_aucs_vals, infinite_aucs_exclude)
 
-  infinite_aucs_with_lambda <- res_nca$data$conc$data %>%
+  infinite_aucs_with_lambda <- myres$data$conc$data %>%
     merge(infinite_aucs) %>%
     group_by(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO) %>%
     arrange(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, IX) %>%
@@ -60,22 +60,22 @@ reshape_pknca_results <- function(res_nca) {
     select(any_of(c(names(infinite_aucs), "lambda.z.method", "lambda.z.ix")))
 
 
-  # If there were intervals defined by the user,
-  # filter out the AUCs corresponding to those intervals
-  if (any(res_nca$result$PPTESTCD == "aucint.last")) {
-    interval_aucs_vals <- res_nca$result %>%
-      filter(PPTESTCD == "aucint.last") %>%
+  # If there were intervals defined, make independent columns for each
+  if (any(startsWith(myres$result$PPTESTCD, prefix = "aucint."))) {
+    
+    interval_aucs_vals <- myres$result %>%
+      filter(startsWith(PPTESTCD, prefix = "aucint."), (start != 0 | end != Inf)) %>%
       mutate(
-        interval_name = paste0(start, "-", end),
+        interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
-      ) %>%
+      ) %>% 
       select(-exclude, -PPORRESU, -start, -end, -PPTESTCD, -interval_name) %>%
       pivot_wider(names_from = interval_name_col, values_from = PPORRES)
 
-    interval_aucs_exclude <- res_nca$result %>%
-      filter(PPTESTCD == "aucint.last") %>%
+    interval_aucs_exclude <- myres$result %>%
+      filter(startsWith(PPTESTCD, prefix = "aucint.")) %>%
       mutate(
-        interval_name = paste0(start, "-", end),
+        interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       )  %>%
       select(-PPORRES, -PPORRESU, -start, -end, -PPTESTCD, -interval_name) %>%

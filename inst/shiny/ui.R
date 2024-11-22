@@ -53,13 +53,6 @@ fluidPage(
                             choices = c("Please specify ANALYTE in Data Selection" = "")
                             ),
                 br(),
-
-                # Only for relevant parameter calculation in NCA, it won't be at the actual data
-                h4("Data imputation"),
-                checkboxInput(inputId = "should_impute_c0",
-                              label = "Impute C0 when missing",
-                              value = TRUE),
-
                 actionButton("submit_analyte", "Submit"),
                 DTOutput("datatable"),
               ),
@@ -72,6 +65,10 @@ fluidPage(
                   ),
                   selected = "lin up/log down"
                 ),
+                h4("Data imputation"),
+                checkboxInput(inputId = "should_impute_c0",
+                              label = "Impute C0 when missing",
+                              value = TRUE),
                 br(),
                 checkboxInput("AUCoptions", "Select Partial AUC"),
                 conditionalPanel(

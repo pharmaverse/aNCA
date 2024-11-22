@@ -78,7 +78,7 @@ create_conc <- function(ADNCA,
 
 #' Create PK Dose Dataset
 #'
-#' This function creates a pharmacokinetic dose dataset from the provided concentration data.
+#' This function creates a pharmacokinetic dose dataset from the provided concentration data, including time of dose (TIME) and first (TIME1) and last (TIMELAST) times observed. 
 #'
 #' @param ADNCA_conc A data frame containing the concentration data.
 #'
@@ -108,11 +108,10 @@ create_dose <- function(df_conc,
                         since_lastdose_time_column = "ARRLT") {
 
   df_conc %>%
-    dplyr::mutate(TIME.dose = !!sym(time_column) - !!sym(since_lastdose_time_column),
-                  TIME = !!sym(time_column)
-                  ) %>% 
-    dplyr::filter(TIME >= 0) %>% 
+    dplyr::mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>% 
     dplyr::group_by(!!!syms(group_columns)) %>%
+    dplyr::filter(if (any(!!sym(since_lastdose_time_column) >= 0)) !!sym(since_lastdose_time_column) >= 0 else TRUE) %>%
+    dplyr::mutate(TIME1 =  min(!!sym(since_lastdose_time_column)), TIMELAST = max(!!sym(since_lastdose_time_column))) %>% 
     dplyr::slice(1) %>%
     dplyr::ungroup()
 }

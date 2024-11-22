@@ -1,74 +1,60 @@
 create_c0_impute <- function(mydata) {
 
-  # Define group columns
-  group_columns <- unique(c(unname(unlist(mydata$conc$columns$groups)),
-                          unname(unlist(mydata$dose$columns$groups))))
-  route_column <- mydata$dose$columns$route
+  # Define columns
   conc_column <- mydata$conc$columns$conc
   time_column <- mydata$conc$columns$time
-  common_cols <- intersect(unlist(mydata$conc$columns$groups),
-                           unlist(mydata$dose$columns$groups))
+  analyte_column <- mydata$conc$columns$groups$group_analyte
+  route_column <- mydata$dose$columns$route
+  duration_column <- mydata$dose$columns$duration
+  drug_column <- "DRUG"  # At some point should be added at least manually in PKNCA mydata object
+  group_columns <- unique(c(unname(unlist(mydata$conc$columns$groups)),
+                            unname(unlist(mydata$dose$columns$groups))))
 
-  mydata_conc <- merge(
+  mydata_with_int <- merge(
     x = mydata$conc$data,
     y = mydata$dose$data[, group_columns] %>%
       dplyr::mutate(time_dose = mydata$dose$data[[time_column]])
-  )
+  ) %>% 
+    merge(mydata$intervals)
 
-  # Define parameters that need to include c0 imputations
-  all_params <- suppressWarnings(apply(mydata$intervals, MARGIN = 2, function(col) any(col)))
-  all_params <- names(all_params[!is.na(all_params) & all_params])
-  params_noc0 <-  c("half.life", "cmax", "tmax", "cmax.dn",
-                    "ctrough", "min.hl.points", "min.hl.r.squared")
-  params_c0 <- setdiff(all_params, params_noc0)
-
-  # Process c0_rows and assign c0 imputation strategy
-  c0_rows <- mydata_conc %>%
-    group_by(across(all_of(group_columns))) %>%
-    arrange(across(all_of(c(group_columns, time_column)))) %>%
+  # Process imputation strategy based on each interval
+  new_intervals <- mydata_with_int %>%
+    group_by(across(all_of(c(group_columns, "start", "end")))) %>% 
+    arrange(across(all_of(c(group_columns, time_column)))) %>% 
     dplyr::mutate(
       vr_avals = paste0("c(", paste0(!!sym(conc_column), collapse = ","), ")"),
-      vr_times = paste0("c(", paste0(!!sym(time_column), collapse = ","), ")"),
-      time_dose = !!sym(time_column) - ARRLT
+      vr_times = paste0("c(", paste0(!!sym(time_column), collapse = ","), ")")
     ) %>%
-    ungroup() %>%
-    group_by(across(all_of(group_columns))) %>%
+    arrange(abs(!!sym(time_column) - start)) %>% 
     slice(1) %>%
     ungroup() %>%
     mutate(
       impute = case_when(
-        AFRLT == 0 & !is.na(AVAL) ~ NA,
+        !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ NA,
         DOSNO == 1 &
-          (tolower(ROUTE) == "extravascular" |
-             ADOSEDUR > 0 |
-             ANALYTE != DRUG) ~ "start_conc0",
+          (tolower(!!sym(route_column)) == "extravascular" |
+             !!sym(duration_column) > 0 |
+             !!sym(analyte_column) != !!sym(drug_column)) ~ "start_conc0",
         DOSNO > 1 &
-          (tolower(ROUTE) == "extravascular" |
-             ADOSEDUR > 0 |
-             ANALYTE != DRUG) ~ "start_predose",
-        tolower(ROUTE) == "intravascular" & ADOSEDUR == 0 & ANALYTE == DRUG &
+          (tolower(!!sym(route_column)) == "extravascular" |
+             !!sym(duration_column) > 0 |
+             !!sym(analyte_column) != !!sym(drug_column)) ~ "start_predose",
+        tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0 & !!sym(analyte_column) == !!sym(drug_column) &
           !is.na(PKNCA::pk.calc.c0(conc = eval(parse(text = vr_avals)),
                                    time = eval(parse(text = vr_times)),
                                    time.dose = time_dose[1],
                                    method = "logslope")) ~ "start_logslope",
-        tolower(ROUTE) == "intravascular" & ADOSEDUR == 0 & ANALYTE == DRUG ~ "start_c1"
+        tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0 & !!sym(analyte_column) == !!sym(drug_column) ~ "start_c1"
       )
     ) %>%
-    select(any_of(c(group_columns, "impute")))
-
-  new_intervals <- mydata$intervals %>% dplyr::mutate(across(all_of(all_params), ~FALSE))
+    # Select only the columns of interest
+    select(any_of(c(names(mydata$intervals), "impute")))
   
-  # Update mydata$intervals
-  mydata$intervals <- rbind(
-    mydata$intervals %>%
-      mutate(across(all_of(params_c0), ~ FALSE)) %>%
-      mutate(impute = NA) %>% 
-      dplyr::filter(end == Inf),
-
-    mydata$intervals %>%
-      left_join(c0_rows, by = group_columns) %>%
-      mutate(across(any_of(params_noc0), ~ FALSE)) 
-  )
-
+  # new_intervals <- merge(mydata$intervals, c0_rows) %>% 
+  #   # Make sure the C0 impute is only applied for intervals which start has no concentration record
+  #   dplyr::mutate(impute = ifelse(start %in% eval(parse(text = vr_times)), NA, impute))
+  
+  mydata$intervals = new_intervals
+  
   return(mydata)
 }
