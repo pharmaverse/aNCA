@@ -19,15 +19,15 @@ fluidPage(
 
   navbarPage(
     id = "page",
-    title = "",
+    title = "aNCA",
     # DATA ----
-    tabPanel(
+    nav_panel(
       "Data",
       fluid = TRUE,
       tab_data_ui("data")
     ),
     # NCA ----
-    tabPanel("NCA", fluid = TRUE,
+    nav_panel("NCA", fluid = TRUE,
       fluidPage(
         actionButton("nca", "Run NCA", class = "run-nca-btn"),
 
@@ -219,10 +219,9 @@ fluidPage(
     nav_panel("Visualisation",
              fluid = TRUE,
              tab_visuals_ui("visuals")
-
     ),
     # New TLG tab
-    tabPanel("TLG",
+    nav_panel("TLG",
       tab_tlg_ui("tlg")
     )
   ),
