@@ -8,7 +8,7 @@ function(input, output, session) {
   # NCA ----
   source(system.file("shiny/tabs/nca.R", package = "aNCA"), local = TRUE)
   # OUTPUT ----
-  source(system.file("shiny/tabs/outputs.R", package = "aNCA"), local = TRUE)
+  tab_visuals_server("visuals", data, res_nca)
 
   # TLG
   tab_tlg_server("tlg", data)

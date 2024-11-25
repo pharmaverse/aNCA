@@ -700,67 +700,25 @@ output$manual_slopes2 <- renderTable({
   slope_rules()
 })
 
-# Save summary stats to improve
-observeEvent(input$downloadsum, {
-  showModal(modalDialog(
-    title = "Please enter the path to the folder on improve for your results:",
-    textInput("pathresults", "Path:"),
-    textInput("filename", "Enter filename of choice:", ""),
-    actionButton("go2", "GO"),
-    footer = modalButton("Close")
-  ))
-})
+# CDISC ------------------------------------------------------------------------
 
-# Save to working directory
-
-shinyDirChoose(input, "dir", roots = c(home = "~"))
-
-observeEvent(input$downloadsum_csv, {
-  showModal(
-    modalDialog(
-      title = "Local Download",
-      shinyDirButton("dir", "Select directory", "Download"),
-      textInput("fileNameInput", "Enter filename", value = "data_summary.csv"),
-      textOutput("selectedDirText"),
-      footer = tagList(
-        actionButton("confirmBtn", "Save"),
-        modalButton("Cancel")
-      )
-    )
-  )
-})
-
-# path of selected directory
-observeEvent(input$dir, {
-  output$selectedDirText <- renderText({
-    if (!is.null(input$dir)) {
-      paste0("Path:", parseDirPath(roots = c(wd = "."), input$dir), "/",  input$fileNameInput)
-    } else {
-      "No directory selected"
-    }
-  })
-})
-
-
-# confirm path
-observeEvent(input$confirmBtn, {
-  req(input$dir)
-  req(input$fileNameInput)
-  file_path <- file.path(parseDirPath(roots = c(wd = "~"), input$dir), input$fileNameInput)
-  write.csv(summary_stats(), file_path)
-  session$sendCustomMessage(
-    type = "downloadFile",
-    message = list(fileName = input$fileNameInput, filePath = file_path)
-  )
-  removeModal()
-})
-
-# alternatively: save to browser
-output$downloadsum_browser <- downloadHandler(
+# export pp and adpp as zip file
+output$exportCDISC <- downloadHandler(
   filename = function() {
-    paste("NCA_summary.csv", sep = "_")
+    paste("CDISC_", Sys.Date(), ".zip", sep = "")
   },
   content = function(file) {
-    write.csv(summary_stats(), file)
+    # Create a temporary directory to store the CSV files
+    temp_dir <- tempdir()
+
+    CDISC <- export_cdisc(res_nca())
+    # Export the list of data frames to CSV files in the temporary directory
+    file_paths <- rio::export_list(
+      x = CDISC,
+      file = file.path(temp_dir, paste0(names(CDISC), "_", Sys.Date(), ".csv"))
+    )
+
+    # Create a ZIP file containing the CSV files
+    zip::zipr(zipfile = file, files = file_paths)
   }
 )
