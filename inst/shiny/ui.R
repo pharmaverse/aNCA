@@ -17,7 +17,7 @@ fluidPage(
 
   includeCSS(file.path(assets, "style.css")),
 
-  navbarPage(
+  page_navbar(
     id = "page",
     title = "aNCA",
     # DATA ----

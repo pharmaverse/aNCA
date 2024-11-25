@@ -5,94 +5,98 @@
 tab_visuals_ui <- function(id) {
   ns <- NS(id)
   
-  layout_sidebar(
-    sidebar = sidebar( 
-      conditionalPanel(
-        "input.visuals === 'Individual Plots'",
-        uiOutput(ns("generalplot_analyte")),
-        uiOutput(ns("generalplot_usubjid")),
-        uiOutput(ns("generalplot_colorby")),
-        radioButtons(ns("log"), "Select the Plot type:", choices = c("Lin", "Log")),
-        radioButtons(
-          ns("timescale"),
-          "Choose the Timescale",
-          choices = c("All Time", "By Cycle"),
-          selected = "All Time"
-        ),
-        conditionalPanel(
-          condition = "input.timescale == 'By Cycle'",
-          uiOutput(ns("cycleselect")),
-          ns = NS(id)
-        )
-      ),
-      conditionalPanel(
-        "input.visuals === 'Mean Plots'",
-        uiOutput(ns("studyidmean")),
-        uiOutput(ns("analytemean")),
-        uiOutput(ns("cyclemean")),
-        uiOutput(ns("selectidvar")),
-        checkboxInput(ns("logmeanplot"), label = "Scale y Log"),
-        checkboxInput(ns("sdmeanplot"), label = "Show SD"),
-        checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%")
-      ),
-      conditionalPanel(
-        "input.visuals === 'Descriptive Statistics'",
-        orderInput(
-            ns("summarygroupbysource"),
-            "Drag and drop these variables...",
-            items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
-            width = shiny::validateCssUnit("100%"),
-            connect = ns("summarygroupby")
-          ),
-          orderInput(
-            ns("summarygroupby"),
-            "..to hierarchically group by (order matters!):",
-            items = c("DOSNO"),
-            width = shiny::validateCssUnit("100%"),
-            connect = ns("summarygroupbysource"),
-            placeholder = "Drag items here to group hierarchically..."
-          ),
-          uiOutput(ns("summaryselect"))
-      ),
-      conditionalPanel(
-        "input.visuals === 'Boxplot'",
-        uiOutput(ns("selectboxplot")),
-        uiOutput(ns("select_xvars_boxplot")),
-        uiOutput(ns("select_colorvars_boxplot")),
-        pickerInput(
-          inputId = ns("selected_varvalstofilter_boxplot"),
-          label = "Select values to display",
-          multiple = TRUE,
-          choices = NULL,
-          selected = NULL,
-          options = list(`actions-box` = TRUE)
-        ),
-        uiOutput(ns("violin_toggle"))
-      ),
-      position = "right",
-      open = TRUE),
-    navset_card_underline(
+    navset_card_pill(
       header = "Exploratory Analysis",
       id = "visuals",
       nav_panel("Individual Plots", 
-                plotlyOutput(ns("individualplot"))),
+                layout_sidebar(
+                sidebar = sidebar(
+                  uiOutput(ns("generalplot_analyte")),
+                  uiOutput(ns("generalplot_usubjid")),
+                  uiOutput(ns("generalplot_colorby")),
+                  radioButtons(ns("log"), "Select the Plot type:", choices = c("Lin", "Log")),
+                  radioButtons(
+                    ns("timescale"),
+                    "Choose the Timescale",
+                    choices = c("All Time", "By Cycle"),
+                    selected = "All Time"
+                  ),
+                  conditionalPanel(
+                    condition = "input.timescale == 'By Cycle'",
+                    uiOutput(ns("cycleselect")),
+                    ns = NS(id)
+                  ),
+                  position = 'right',
+                  open = TRUE
+                  ),
+                plotlyOutput(ns("individualplot")))
+                ),
       nav_panel("Mean Plots",
+                layout_sidebar(
+                  sidebar = sidebar(
+                    uiOutput(ns("studyidmean")),
+                    uiOutput(ns("analytemean")),
+                    uiOutput(ns("cyclemean")),
+                    uiOutput(ns("selectidvar")),
+                    checkboxInput(ns("logmeanplot"), label = "Scale y Log"),
+                    checkboxInput(ns("sdmeanplot"), label = "Show SD"),
+                    checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
+                    position = 'right',
+                    open = TRUE
+                  ),
                 plotlyOutput(ns("meanplot")),
                 br(),
                 helpText("If n<3 at the specified time point then the mean value is not displayed.")
-                ),
+                )),
       nav_panel("Descriptive Statistics",
+                layout_sidebar(
+                  sidebar = sidebar(
+                    uiOutput(ns("summaryselect")),
+                    orderInput(
+                      ns("summarygroupbysource"),
+                      "Drag and drop these variables...",
+                      items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
+                      width = shiny::validateCssUnit("100%"),
+                      connect = ns("summarygroupby")
+                    ),
+                    orderInput(
+                      ns("summarygroupby"),
+                      "..to hierarchically group by (order matters!):",
+                      items = c("DOSNO"),
+                      width = shiny::validateCssUnit("100%"),
+                      connect = ns("summarygroupbysource"),
+                      placeholder = "Drag items here to group hierarchically..."
+                    ),
+                    position = 'right',
+                    open = TRUE
+                  ),
                 card(
                 DTOutput(ns("descriptivestats"))),
                 card(
                 actionButton(ns("downloadsum"), "Download the NCA Summary Data"),
                 downloadButton(ns("downloadsum_browser"), "Locally Download Summary Data"))
-                ),
+                )),
       nav_panel("Boxplot",
+                layout_sidebar(
+                  sidebar = sidebar(
+                    uiOutput(ns("selectboxplot")),
+                    uiOutput(ns("select_xvars_boxplot")),
+                    uiOutput(ns("select_colorvars_boxplot")),
+                    pickerInput(
+                      inputId = ns("selected_varvalstofilter_boxplot"),
+                      label = "Select values to display",
+                      multiple = TRUE,
+                      choices = NULL,
+                      selected = NULL,
+                      options = list(`actions-box` = TRUE)
+                    ),
+                    uiOutput(ns("violin_toggle")),
+                    position = "right",
+                    open = TRUE),
                 plotlyOutput(ns("boxplot"))
+                )
       )
-    ),
-    class = "p-0"
+    #class = "p-0"
   )
 
   #   #TODO: Figure out where this section should go (NCA results? TLGs?)
