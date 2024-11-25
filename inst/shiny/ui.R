@@ -206,10 +206,10 @@ fluidPage(
               tabPanel(
                 "Exclusions",
                 tableOutput("manual_slopes2")
-                ),
-              tabPanel("CDISC", 
-                       downloadButton("exportCDISC", "Export CDISC")
-                       )
+              ),
+              tabPanel("CDISC",
+                downloadButton("exportCDISC", "Export CDISC")
+              )
             )
           )
         )
@@ -217,8 +217,8 @@ fluidPage(
     ),
     # VISUALISATION ----
     nav_panel("Visualisation",
-             fluid = TRUE,
-             tab_visuals_ui("visuals")
+      fluid = TRUE,
+      tab_visuals_ui("visuals")
     ),
     # New TLG tab
     nav_panel("TLG",

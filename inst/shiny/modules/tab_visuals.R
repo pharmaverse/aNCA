@@ -1,105 +1,106 @@
-# The Visualisation Navbar tab loads the data from the Data tab, and results from NCA tab 
+# The Visualisation Navbar tab loads the data from the Data tab, and results from NCA tab
 # The user can then explore the data using various visualisation tools
 
 # VISUALISATION ----
 tab_visuals_ui <- function(id) {
   ns <- NS(id)
-  
-    navset_card_pill(
-      header = "Exploratory Analysis",
-      id = "visuals",
-      nav_panel("Individual Plots", 
-                layout_sidebar(
+
+  navset_card_pill(
+    header = "Exploratory Analysis",
+    id = "visuals",
+    nav_panel("Individual Plots",
+      layout_sidebar(
+                     sidebar = sidebar(
+                                       uiOutput(ns("generalplot_analyte")),
+                                       uiOutput(ns("generalplot_usubjid")),
+                                       uiOutput(ns("generalplot_colorby")),
+                                       radioButtons(ns("log"), "Select the Plot type:",
+                                                    choices = c("Lin", "Log")),
+                                       radioButtons(
+                                         ns("timescale"),
+                                         "Choose the Timescale",
+                                         choices = c("All Time", "By Cycle"),
+                                         selected = "All Time"
+                                       ),
+                                       conditionalPanel(
+                                         condition = "input.timescale == 'By Cycle'",
+                                         uiOutput(ns("cycleselect")),
+                                         ns = NS(id)
+                                       ),
+                                       position = "right",
+                                       open = TRUE),
+                     plotlyOutput(ns("individualplot")))
+    ),
+    nav_panel("Mean Plots",
+              layout_sidebar(
                 sidebar = sidebar(
-                  uiOutput(ns("generalplot_analyte")),
-                  uiOutput(ns("generalplot_usubjid")),
-                  uiOutput(ns("generalplot_colorby")),
-                  radioButtons(ns("log"), "Select the Plot type:", choices = c("Lin", "Log")),
-                  radioButtons(
-                    ns("timescale"),
-                    "Choose the Timescale",
-                    choices = c("All Time", "By Cycle"),
-                    selected = "All Time"
-                  ),
-                  conditionalPanel(
-                    condition = "input.timescale == 'By Cycle'",
-                    uiOutput(ns("cycleselect")),
-                    ns = NS(id)
-                  ),
-                  position = 'right',
-                  open = TRUE
-                  ),
-                plotlyOutput(ns("individualplot")))
-                ),
-      nav_panel("Mean Plots",
-                layout_sidebar(
-                  sidebar = sidebar(
-                    uiOutput(ns("studyidmean")),
-                    uiOutput(ns("analytemean")),
-                    uiOutput(ns("cyclemean")),
-                    uiOutput(ns("selectidvar")),
-                    checkboxInput(ns("logmeanplot"), label = "Scale y Log"),
-                    checkboxInput(ns("sdmeanplot"), label = "Show SD"),
-                    checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
-                    position = 'right',
-                    open = TRUE
-                  ),
+                                  uiOutput(ns("studyidmean")),
+                                  uiOutput(ns("analytemean")),
+                                  uiOutput(ns("cyclemean")),
+                                  uiOutput(ns("selectidvar")),
+                                  checkboxInput(ns("logmeanplot"), label = "Scale y Log"),
+                                  checkboxInput(ns("sdmeanplot"), label = "Show SD"),
+                                  checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
+                                  position = "right",
+                                  open = TRUE),
                 plotlyOutput(ns("meanplot")),
                 br(),
-                helpText("If n<3 at the specified time point then the mean value is not displayed.")
-                )),
-      nav_panel("Descriptive Statistics",
-                layout_sidebar(
-                  sidebar = sidebar(
-                    uiOutput(ns("summaryselect")),
-                    orderInput(
-                      ns("summarygroupbysource"),
-                      "Drag and drop these variables...",
-                      items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
-                      width = shiny::validateCssUnit("100%"),
-                      connect = ns("summarygroupby")
-                    ),
-                    orderInput(
-                      ns("summarygroupby"),
-                      "..to hierarchically group by (order matters!):",
-                      items = c("DOSNO"),
-                      width = shiny::validateCssUnit("100%"),
-                      connect = ns("summarygroupbysource"),
-                      placeholder = "Drag items here to group hierarchically..."
-                    ),
-                    position = 'right',
-                    open = TRUE
-                  ),
-                card(
-                DTOutput(ns("descriptivestats"))),
-                card(
-                actionButton(ns("downloadsum"), "Download the NCA Summary Data"),
-                downloadButton(ns("downloadsum_browser"), "Locally Download Summary Data"))
-                )),
-      nav_panel("Boxplot",
-                layout_sidebar(
-                  sidebar = sidebar(
-                    uiOutput(ns("selectboxplot")),
-                    uiOutput(ns("select_xvars_boxplot")),
-                    uiOutput(ns("select_colorvars_boxplot")),
-                    pickerInput(
-                      inputId = ns("selected_varvalstofilter_boxplot"),
-                      label = "Select values to display",
-                      multiple = TRUE,
-                      choices = NULL,
-                      selected = NULL,
-                      options = list(`actions-box` = TRUE)
-                    ),
-                    uiOutput(ns("violin_toggle")),
-                    position = "right",
-                    open = TRUE),
-                plotlyOutput(ns("boxplot"))
-                )
+                helpText("If n<3 at the specified time point 
+                         then the mean value is not displayed.")
+              )),
+    nav_panel("Descriptive Statistics",
+      layout_sidebar(
+        sidebar = sidebar(
+                          uiOutput(ns("summaryselect")),
+                          orderInput(
+                            ns("summarygroupbysource"),
+                            "Drag and drop these variables...",
+                            items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
+                            width = shiny::validateCssUnit("100%"),
+                            connect = ns("summarygroupby")
+                          ),
+                          orderInput(
+                            ns("summarygroupby"),
+                            "..to hierarchically group by (order matters!):",
+                            items = c("DOSNO"),
+                            width = shiny::validateCssUnit("100%"),
+                            connect = ns("summarygroupbysource"),
+                            placeholder = "Drag items here to group hierarchically..."
+                          ),
+                          position = "right",
+                          open = TRUE),
+        card(
+             DTOutput(ns("descriptivestats"))),
+        card(
+             actionButton(ns("downloadsum"), "Download the NCA Summary Data"),
+             downloadButton(ns("downloadsum_browser"), "Locally Download Summary Data"))
       )
-    #class = "p-0"
+    ),
+    nav_panel("Boxplot",
+      layout_sidebar(
+        sidebar = sidebar(
+                          uiOutput(ns("selectboxplot")),
+                          uiOutput(ns("select_xvars_boxplot")),
+                          uiOutput(ns("select_colorvars_boxplot")),
+                          pickerInput(
+                            inputId = ns("selected_varvalstofilter_boxplot"),
+                            label = "Select values to display",
+                            multiple = TRUE,
+                            choices = NULL,
+                            selected = NULL,
+                            options = list(`actions-box` = TRUE)
+                          ),
+                          uiOutput(ns("violin_toggle")),
+                          position = "right",
+                          open = TRUE),
+        plotlyOutput(ns("boxplot"))
+      )
+    )
   )
 
-  #   #TODO: Figure out where this section should go (NCA results? TLGs?)
+  #nolint start
+  
+  #TODO: Figure out where this section should go (NCA results? TLGs?)
   #   tabPanel("Report",
   #            tabsetPanel(
   #              tabPanel("Configuration",
@@ -118,7 +119,8 @@ tab_visuals_ui <- function(id) {
   #            )
   #   )
   # )
-
+  
+  #nolint end
 }
 
 # SERVER LOGIC OF NAVBAR OUTPUT TAB ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,20 +132,16 @@ tab_visuals_ui <- function(id) {
 tab_visuals_server <- function(id, data, res_nca) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
-    # TABSET: General Individual Plots =============================================
-    #
-    # This tabset plots the input data generally in a dynamic lineplot and meanplot
-    
+
     # TAB: General Lineplot --------------------------------------------------------
-    
+
     #  select the analyte for the general lineplot
     output$generalplot_analyte <- renderUI({
       # deselect choices that are no pp parameters
       param_choices <- data() %>%
         pull(ANALYTE) %>%
         unique()
-      
+
       pickerInput(
         ns("generalplot_analyte"),
         "Select Analyte:",
@@ -152,16 +150,16 @@ tab_visuals_server <- function(id, data, res_nca) {
         multiple = FALSE,
         options = list(`actions-box` = TRUE)
       )
-      
+
     })
-    
+
     # select the usubjid for the general lineplot
     output$generalplot_usubjid <- renderUI({
       # deselect choices that are no pp parameters
       param_choices <- data() %>%
         pull(USUBJID) %>%
         unique()
-      
+
       pickerInput(
         ns("generalplot_usubjid"),
         "Select Subjects:",
@@ -171,8 +169,8 @@ tab_visuals_server <- function(id, data, res_nca) {
         options = list(`actions-box` = TRUE)
       )
     })
-    
-    # select which variable to color the general lineplot by
+
+    # select which variable to color the general line plot by
     output$generalplot_colorby <- renderUI({
       # deselect choices that are no pp parameters
       param_choices <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID"))
@@ -185,7 +183,7 @@ tab_visuals_server <- function(id, data, res_nca) {
         options = list(`actions-box` = TRUE)
       )
     })
-    
+
     # select the dose number/cycle for the general lineplot, if plotting by cycle is chosen
     output$cycleselect <- renderUI({
       req(input$generalplot_analyte)
@@ -195,9 +193,9 @@ tab_visuals_server <- function(id, data, res_nca) {
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
                   multiple = TRUE, selected = y[1])
-      
+
     })
-    
+
     # render the general lineplot output in plotly
     output$individualplot <- renderPlotly({
       req(data())
@@ -206,7 +204,7 @@ tab_visuals_server <- function(id, data, res_nca) {
       req(input$generalplot_colorby)
       req(input$timescale)
       req(input$log)
-      
+
       general_lineplot(
         data(),
         input$generalplot_analyte,
@@ -216,13 +214,13 @@ tab_visuals_server <- function(id, data, res_nca) {
         input$log,
         cycle = input$cycles
       )
-      
-      
+
     })
-    # TAB: Mean Plot ---------------------------------------------------------------
-    
+
+    # TAB: Mean Plot -----------------------------------------------------------
+
     # This tabs plots the mean concentration of the input data in a dynamic plot
-    
+
     # select the analyte for the mean plot
     output$analytemean <- renderUI({
       y <- data() %>%
@@ -231,7 +229,7 @@ tab_visuals_server <- function(id, data, res_nca) {
       selectInput(ns("analytemean"), "Choose the Analyte:", choices = sort(y),
                   selected = y[1])
     })
-    
+
     # select the study id for the mean plot
     # (needed for preclinical data, where multiple studyids per dataset)
     output$studyidmean <- renderUI({
@@ -240,14 +238,14 @@ tab_visuals_server <- function(id, data, res_nca) {
         unique()
       selectInput(ns("studyidmean"), "Choose the Study ID:", choices = sort(y))
     })
-    
+
     # select the variable to calculate the mean by
     output$selectidvar <- renderUI({
       y <- c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
       selectInput(ns("selectidvar"), "Choose the variable to group by:",
                   choices = y, selected = "DOSEA")
     })
-    
+
     # select the cycle to plot the mean concentrations
     output$cyclemean <- renderUI({
       y <- data() %>%
@@ -256,13 +254,13 @@ tab_visuals_server <- function(id, data, res_nca) {
         unique()
       selectInput(ns("cyclesmean"), "Choose the cycle:", choices = sort(y))
     })
-    
-    # render the meanplot output in plotly
+
+    # render the mean plot output in plotly
     output$meanplot <- renderPlotly({
       req(input$studyidmean)
       req(input$analytemean)
       req(input$cyclesmean)
-      
+
       validate(
         need(
           data() %>%
@@ -283,7 +281,7 @@ tab_visuals_server <- function(id, data, res_nca) {
                            input$selectidvar)
         )
       )
-      
+
       general_meanplot(data = data(),
                        selected_studyids = input$studyidmean,
                        selected_analytes = input$analytemean,
@@ -294,23 +292,20 @@ tab_visuals_server <- function(id, data, res_nca) {
                        plot_ci = input$mean_plot_ci) %>%
         ggplotly() %>%
         plotly_build()
-      
+
     })
-    # TABSET: Dose Escalation Outputs ==========================================
-    
-    # This tabset computes and visualizes output data from the NCA analysis 
-    #for dose escalation meetings. The user can view summary statistics,
-    # individual and mean as well as boxplots of the calculated NCA parameters.
-    
+
+
     # TAB: Descriptive Statistics ---------------------------------------------
-    
-    # pickerInput to filter for parameters to display in the summary table
+    # This tab computes and visualizes output data from the NCA analysis
+
+    # picker Input to filter for parameters to display in the summary table
     output$summaryselect <- renderUI({
       req(res_nca())
-      
+
       # available parameters
       paramselection <- unique(res_nca()$result$PPTESTCD)
-      # select from available with all perselected
+      # select from available with all preselected
       pickerInput(
         ns("paramselect"),
         "Filter parameters to display:",
@@ -320,33 +315,34 @@ tab_visuals_server <- function(id, data, res_nca) {
         options = list(`actions-box` = TRUE)
       )
     })
-    
-    # Update inputs based on what is avaialable in the data
+
+    # Update inputs based on what is available in the data
     observeEvent(res_nca(), {
-      # Define the relevant columns for the groupby picker
+      # Define the relevant columns for the group by picker
       group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
       classification_cols <- sort(
-        c("SEX", "RACE", "ACTARM", "AGE", "TRT01P", "TRT01A", "DOSEA"))
+                                  c("SEX", "RACE", "ACTARM", "AGE",
+                                    "TRT01P", "TRT01A", "DOSEA"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
-      
-      # update the input for the groupby picker
+
+      # update the input for the group by picker
       updateOrderInput(session, "summarygroupbysource",
                        items = c(group_cols, classification_cols))
     })
-    
+
     # Reactive expression for summary table based on selected group and parameters
     summary_stats <- reactive({
       req(input$summarygroupby, input$paramselect)
-      
+
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(res_nca(), input$summarygroupby) %>%
         filter(PPTESTCD %in% input$paramselect)  %>%
         rename(PARAM = PPTESTCD)
     })
-    
-    # render the reactive summary table in a datatable
+
+    # render the reactive summary table in a data table
     output$descriptivestats <- DT::renderDataTable({
       req(summary_stats())
       DT::datatable(
@@ -360,7 +356,7 @@ tab_visuals_server <- function(id, data, res_nca) {
         )
       )
     })
-    
+
     output$descriptivestats2 <- DT::renderDataTable({
       req(res_nca())
       DT::datatable(
@@ -374,7 +370,7 @@ tab_visuals_server <- function(id, data, res_nca) {
         )
       )
     })
-    
+
     # Save summary stats to improve
     observeEvent(input$downloadsum, {
       showModal(modalDialog(
@@ -385,8 +381,8 @@ tab_visuals_server <- function(id, data, res_nca) {
         footer = modalButton("Close")
       ))
     })
-    
-    # alternatively: save to browser
+
+    # alternatively: save locally
     output$downloadsum_browser <- downloadHandler(
       filename = function() {
         paste("NCA_summary.csv", sep = "_")
@@ -395,66 +391,13 @@ tab_visuals_server <- function(id, data, res_nca) {
         write.csv(summary_stats(), file)
       }
     )
-    
-    # TAB  Dose Norm Conc over Time Plots ----
-    
-    plot_data <- reactive({
-      req(input$analyte)
-      
-      data() %>%
-        filter(
-          ANALYTE == input$analyte,
-          DOSNO %in% input$cyclenca
-        ) %>%
-        select(
-          AFRLT, AVAL, DOSEA, DOSNO, AFRLT, NFRLT, NRRLT, USUBJID, ANALYTE,
-          STUDYID, AVALU,
-          RRLTU, DOSEU, NOMDOSE
-        ) %>%
-        mutate(
-          CONC_NORM = AVAL / DOSEA,
-          TRT = as.factor(NOMDOSE),
-          TIME = ifelse(DOSNO == 1, AFRLT, AFRLT),
-          NOMTIME = ifelse(DOSNO == 1, NFRLT, NRRLT)
-        ) %>%
-        na.omit()
-    })
-    
-    # TODO: this function should be in `R/`
-    normconcplot <- function() {
-      dataset <- plot_data()
-      time_label <- paste0("Nominal Time [", unique(dataset$RRLTU), "]")
-      trtact_label <- "Dose Group"
-      conc_units <- paste0(unique(dataset$AVALU))
-      dose_units <- paste0(unique(dataset$DOSEU))
-      concnorm_label <- paste0("Normalised Concentration [", conc_units, "/",
-                               dose_units, "]")
-      
-      ggplot(
-        data = dataset,
-        aes(x = NOMTIME, y = CONC_NORM, group = USUBJID, color = TRT)
-      ) +
-        geom_point(aes(color = TRT), size = 2, alpha = 0.5) +
-        geom_line(aes(group = USUBJID, color = TRT), size = 1, alpha = 0.5) +
-        facet_wrap(~DOSNO) +
-        labs(y = concnorm_label, x = time_label, color = trtact_label)
-    }
-    
-    output$norm_concovertime <- renderPlotly(normconcplot())
-    
-    output$norm_concovertimesemilog <- renderPlotly({
-      normconcplot() +
-        xgx_scale_y_log10()
-    })
-    
-    ###########################################################################
-    
-    # TAB: Parameter Boxplots ----------------------------------------------------
-    
-    # Create formatted Boxplot data: PKNCAconc + PP results, linking DOSEA + PPTESTCD
+
+    # TAB: Parameter Box plots ----------------------------------------------------
+
+    # Create formatted Box plot data: PKNCA + PP results, linking DOSEA + PPTESTCD
     boxplotdata <- reactive({
       group_columns <- unname(unlist(res_nca()$data$conc$columns$groups))
-      
+
       left_join(
         res_nca()$result %>%
           filter(
@@ -474,25 +417,21 @@ tab_visuals_server <- function(id, data, res_nca) {
           )
         )
     })
-    
+
     # select which parameter to box or violin plot
     output$selectboxplot <- renderUI({
       param_choices <- boxplotdata()$PPTESTCD %>% unique()
-      
+
       pickerInput(ns("selected_param_boxplot"), "Choose the parameter to display:",
                   choices = param_choices,
                   selected = param_choices[1],
                   multiple = FALSE,
                   options = list(`actions-box` = TRUE))
-      
+
     })
-    
-    
-    
-    
-    # Selector for the variables to segregate boxplots in the x axis
+
+    # Selector for the variables to segregate box plots in the x axis
     output$select_xvars_boxplot <- renderUI({
-      
       pickerInput(
         inputId = ns("selected_xvars_boxplot"),
         label = "Select X grouping variables",
@@ -501,8 +440,7 @@ tab_visuals_server <- function(id, data, res_nca) {
         selected = "DOSEA"
       )
     })
-    
-    
+
     output$select_colorvars_boxplot <- renderUI({
       pickerInput(
         inputId = ns("selected_colorvars_boxplot"),
@@ -512,30 +450,28 @@ tab_visuals_server <- function(id, data, res_nca) {
         selected = "DOSNO"
       )
     })
-    
-    
+
     observeEvent(list(input$selected_xvars_boxplot,
                       input$selected_colorvars_boxplot), {
-      xvar_options_list <- lapply(
-        c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot),
-        \(id_var) paste(id_var, unique(boxplotdata()[[id_var]]), sep = ": ")
-      )
-      
-      names(xvar_options_list) <- c(
-        input$selected_xvars_boxplot,
-        input$selected_colorvars_boxplot
-      )
-      
-      updatePickerInput(
-        session = session,
-        inputId = "selected_varvalstofilter_boxplot",
-        label = "Select values to display for grouping",
-        choices = xvar_options_list,
-        selected = unlist(xvar_options_list)
-      )
-    })
-    
-    
+                   xvar_options_list <- lapply(
+                     c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot),
+                     \(id_var) paste(id_var, unique(boxplotdata()[[id_var]]), sep = ": ")
+                   )
+
+                   names(xvar_options_list) <- c(
+                     input$selected_xvars_boxplot,
+                     input$selected_colorvars_boxplot
+                   )
+
+                   updatePickerInput(
+                     session = session,
+                     inputId = "selected_varvalstofilter_boxplot",
+                     label = "Select values to display for grouping",
+                     choices = xvar_options_list,
+                     selected = unlist(xvar_options_list)
+                   )
+                 })
+
     # toggle between boxplot and violinplot
     output$violin_toggle <- renderUI({
       switchInput(
@@ -546,15 +482,15 @@ tab_visuals_server <- function(id, data, res_nca) {
         offLabel = "Violinplot"
       )
     })
-    
-    # compute the boxplot
+
+    # compute the box plot
     output$boxplot <- renderPlotly({
       req(boxplotdata())
       req(input$selected_param_boxplot)
       req(input$selected_xvars_boxplot)
       req(input$selected_colorvars_boxplot)
       req(input$selected_varvalstofilter_boxplot)
-      
+
       flexible_violinboxplot(
         boxplotdata = boxplotdata(),
         parameter = input$selected_param_boxplot,
@@ -565,25 +501,25 @@ tab_visuals_server <- function(id, data, res_nca) {
         box = input$violinplot_toggle_switch
       )
     })
-    
+
     # EXPORT Report ------------------------------------------------------------
-    
+
     # ATTENTION: most of the blocks in the RMD are still eval = FALSE, as
     # feature is under development and only implemented as preview for idea of
     # exporting reports
-    
+
     # templates from: https://opensource.nibr.com/xgx/
-    
+
     # concat all dataframes into one object
     concat_report_data <- reactive({
       data <- res_nca()
       data$formatted_res <- boxplotdata()
       data
     })
-    
+
     # render the markdown upon clicking generate
     rendered_rmd <- reactiveVal(NULL)
-    
+
     observeEvent(input$generate_report, {
       # specifying the temp location, params and report to be rendered
       output_file <- file.path(tempdir(), "report.html")
@@ -602,14 +538,14 @@ tab_visuals_server <- function(id, data, res_nca) {
       )
       rendered_rmd(output_file)
     })
-    
+
     # Display the HTML content in the Shiny app
     output$rmd_content <- renderUI({
       req(rendered_rmd())
       html_content <- readLines(rendered_rmd(), warn = FALSE)
       HTML(paste(html_content, collapse = "\n"))
     })
-    
+
     # Handle the download request
     output$download_rmd <- downloadHandler(
       filename = function() {

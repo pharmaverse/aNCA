@@ -710,14 +710,14 @@ output$exportCDISC <- downloadHandler(
   content = function(file) {
     # Create a temporary directory to store the CSV files
     temp_dir <- tempdir()
-    
+
     CDISC <- export_cdisc(res_nca())
     # Export the list of data frames to CSV files in the temporary directory
     file_paths <- rio::export_list(
       x = CDISC,
       file = file.path(temp_dir, paste0(names(CDISC), "_", Sys.Date(), ".csv"))
     )
-    
+
     # Create a ZIP file containing the CSV files
     zip::zipr(zipfile = file, files = file_paths)
   }
