@@ -50,8 +50,11 @@
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
-  data, selected_analytes, selected_usubjids, colorby_var, time_scale, yaxis_scale, cycle = NULL
+  data, selected_analytes, selected_usubjids, colorvar, time_scale, yaxis_scale, cycle = NULL
 ) {
+  
+  #ensure USUBJID is always grouping factor
+  colorby_var <- c("USUBJID", colorvar)
 
   # Check if the data is empty
   if (nrow(data) == 0) {
@@ -78,7 +81,7 @@ general_lineplot <- function(
         any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
 
     cycle_times <- preprocessed_data  %>%
-      filter(preprocessed_data$ARRLT > 0, preprocessed_data$AFRLT > 0) %>%
+      filter(ARRLT > 0, AFRLT > 0) %>%
       mutate(AFRLT.dose = AFRLT - ARRLT) %>%
       group_by(DOSNO) %>%
       summarise(AFRLT.dose = mean(AFRLT.dose, na.rm = TRUE)) %>%
@@ -89,8 +92,9 @@ general_lineplot <- function(
       mutate(DOSNO = ifelse(
         AFRLT < as.numeric(cycle_times[as.character(DOSNO)]),
         as.numeric(DOSNO) - 1,
-        as.numeric(DOSNO) + 1
-      ))
+        as.numeric(DOSNO) + 1),
+        #ARRLT = ifelse(#???)
+      )
 
     preprocessed_data <- rbind(predose_records, preprocessed_data)
 

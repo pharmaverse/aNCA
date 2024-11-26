@@ -29,7 +29,12 @@ tab_visuals_ui <- function(id) {
                                        ),
                                        position = "right",
                                        open = TRUE),
-                     plotlyOutput(ns("individualplot")))
+                     card(
+                       plotlyOutput(ns("individualplot"))),
+                     card(
+                       DTOutput(ns("pkparams_ind"))
+                     )
+      )
     ),
     nav_panel("Mean Plots",
               layout_sidebar(
@@ -173,12 +178,12 @@ tab_visuals_server <- function(id, data, res_nca) {
     # select which variable to color the general line plot by
     output$generalplot_colorby <- renderUI({
       # deselect choices that are no pp parameters
-      param_choices <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID"))
+      param_choices <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO"))
       pickerInput(
         ns("generalplot_colorby"),
-        "Choose the variables to color by",
+        "Additional Grouping Variables:",
         choices = param_choices,
-        selected = param_choices[length(param_choices)],
+        selected = NULL,
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
       )
@@ -196,12 +201,16 @@ tab_visuals_server <- function(id, data, res_nca) {
 
     })
 
+    # Observer to update grouping when 'by cycle' is chosen
+    observeEvent(input$cycles, {
+      updatePickerInput(session, "generalplot_colorby", selected = "DOSNO")
+    })
+
     # render the general lineplot output in plotly
     output$individualplot <- renderPlotly({
       req(data())
       req(input$generalplot_analyte)
       req(input$generalplot_usubjid)
-      req(input$generalplot_colorby)
       req(input$timescale)
       req(input$log)
 
@@ -215,6 +224,25 @@ tab_visuals_server <- function(id, data, res_nca) {
         cycle = input$cycles
       )
 
+    })
+    
+    output$pkparams_ind <- DT::renderDataTable({
+      req(res_nca())
+      data <- res_nca()$result%>%
+        filter(USUBJID %in% input$generalplot_usubjid)
+      
+      DT::datatable(
+        data = data,
+        extensions = "FixedHeader",
+        options = list(
+          scrollX = TRUE,
+          scrollY = TRUE,
+          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+          fixedHeader = TRUE)
+          #columnDefs = list(list(
+            #visible = FALSE, targets = setdiff(colnames(res_nca()), input$params)
+
+      )
     })
 
     # TAB: Mean Plot -----------------------------------------------------------
