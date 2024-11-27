@@ -432,14 +432,28 @@ res_nca <- eventReactive(rv$trigger, {
 
     # Include manual intervals if specified by the user
     mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
-    browser()
-    # Define C0 imputations on intervals starting at dose time if specified by the user
+
+    # Define start imputations on intervals if specified by the user
     if (input$should_impute_c0) {
       mydata <- create_c0_impute(mydata = mydata)
       mydata$impute <- "impute"
-
-    # Otherwise if at C0 is not already present, make those intervals start at C1 for auclast
-    } 
+      
+    } else {
+    # Otherwise, the original intervals should start at C1 for all calculations
+      
+      c1_intervals <- mydata$conc$data %>% 
+        group_by(!!!syms(unname(unlist(mydata$dose$columns$groups)))) %>% 
+        arrange(!!sym(mydata$conc$columns$time) <= 0, 
+                !!sym(mydata$conc$columns$time)
+                ) %>% 
+        select(any_of(unname(unlist(mydata$dose$columns)))) %>% 
+        rename(start = !!sym(mydata$conc$columns$time)) %>% 
+        slice(1)
+      
+      mydata$intervals <- bind_rows(merge(mydata()$intervals %>% select(-start), 
+                                          c1_intervals), 
+                                    intervals_userinput())
+    }
   
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
