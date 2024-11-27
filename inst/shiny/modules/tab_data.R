@@ -9,28 +9,39 @@ source(system.file("/shiny/modules/input_filter.R", package = "aNCA"))
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
-  sidebarLayout(
-    sidebarPanel(
-      actionButton(ns("login"), "Login and Select File Path"),
-      br(), br(), br(),
-      # Local upload option
-      fileInput(
-        ns("local_upload"),
-        width = "60%",
-        label = NULL,
-        placeholder = "CSV rds",
-        buttonLabel = list(icon("folder"), "Upload File..."),
-        accept = c(".csv", ".rds")
-      ),
-      br(),
-      # Add filter UI elements
-      actionButton(ns("add_filter"), "Add filter"),
-      actionButton(ns("submit_filters"), "Submit filters"),
-      tags$div(id = ns("filters")),
-      br(), br(),
+  
+  navset_pill( 
+    nav_panel("Raw Data Upload",
+              card(
+                "Upload your PK dataset in .csv format",
+                # Local upload option
+                fileInput(
+                  ns("local_upload"),
+                  width = "60%",
+                  label = NULL,
+                  placeholder = "CSV rds",
+                  buttonLabel = list(icon("folder"), "Upload File..."),
+                  accept = c(".csv", ".rds"))
+              ),
+              reactableOutput(ns("filecontents"))
+              ), 
+    nav_panel("Mapping and Filters",
+              card(
+                "Data Mapping",
+                "The following columns are required for data analysis.
+                Please ensure each of these columns has been assigned a corresponding column from your dataset",
+              ),
+              card(
+              # Add filter UI elements
+              actionButton(ns("add_filter"), "Add filter"),
+              tags$div(id = ns("filters")),
+              actionButton(ns("submit_filters"), "Submit filters"),
+              )
     ),
-    mainPanel(
-      DTOutput(ns("filecontents"))
+    nav_panel("Review Data",
+              "This is the data set that will be used for the analysis.
+              If you want to make any changes, please do so in the Mapping and Filters tab.",
+              reactableOutput(ns("data_processed"))
     )
   )
 
@@ -124,17 +135,23 @@ tab_data_server <- function(id) {
     }, ignoreInit = FALSE)
 
     # update the data table object with the filtered data #
-    output$filecontents <- DT::renderDataTable({
+    output$filecontents <- renderReactable({
       req(data())
-      DT::datatable(
+      reactable(
         data(),
-        extensions = "FixedHeader",
-        options = list(
-          scrollX = TRUE,
-          scrollY = TRUE,
-          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-          fixedHeader = TRUE
-        )
+        searchable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        showPageSizeOptions = TRUE,
+        striped = TRUE,
+        bordered = TRUE
+        # extensions = "FixedHeader",
+        # options = list(
+        #   scrollX = TRUE,
+        #   scrollY = TRUE,
+        #   lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+        #   fixedHeader = TRUE
+        # )
       )
     })
 
