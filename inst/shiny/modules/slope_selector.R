@@ -134,9 +134,9 @@ slope_selector_server <- function(
           DOSNO %in% cycle_nca,
           USUBJID %in% search_patient
         ) %>%
-        select(USUBJID, DOSNO) %>%
+        dplyr::select(USUBJID, DOSNO) %>%
         unique() %>%
-        arrange(USUBJID, DOSNO)
+        dplyr::arrange(USUBJID, DOSNO)
 
       num_plots <- nrow(patient_profile_plot_ids)
 

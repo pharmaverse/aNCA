@@ -212,10 +212,10 @@ observeEvent(input$submit_analyte, priority = 2, {
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
-
+  browser()
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID + DOSNO,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DOSNO + DRUG + USUBJID,
     route = route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
@@ -725,7 +725,7 @@ slope_rules <- slope_selector_server(
   mydata,
   res_nca,
   profiles_per_patient,
-  input$cyclenca,
+  input$select_dosno,
   rv,
   reactive(input$settings_upload)
 )
