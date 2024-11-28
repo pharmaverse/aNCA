@@ -82,18 +82,33 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
 
       label <- if (is.null(opt_def$label)) opt_id else opt_def$label
 
-      if (opt_def$type == "text") {
-        textInput(
-          session$ns(opt_id),
-          label = label
-        )
-      } else if (opt_def$type == "numeric") {
-        numericInput(
-          session$ns(opt_id),
-          label = label,
-          value = 0
-        )
-      }
+      switch(
+        opt_def$type,
+        text = {
+          textInput(
+            session$ns(opt_id),
+            label = label,
+            value = ""
+          )
+        },
+        numeric = {
+          numericInput(
+            session$ns(opt_id),
+            label = label,
+            value = 0
+          )
+        },
+        select = {
+          choices <- if (isTRUE(opt_def$choices == ".colnames")) names(data()) else opt_def$choices
+          selectInput(
+            session$ns(opt_id),
+            label = label,
+            selected = "",
+            choices = c("", choices),
+            multiple = isTRUE(opt_def$multiple)
+          )
+        }
+      )
     })
 
     output$options <- renderUI(option_widgets)
