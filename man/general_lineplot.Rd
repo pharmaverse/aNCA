@@ -10,7 +10,7 @@ general_lineplot(
   selected_usubjids,
   colorby_var,
   time_scale,
-  xaxis_scale,
+  yaxis_scale,
   cycle = NULL
 )
 }
@@ -28,7 +28,7 @@ the lines in the plot.}
 \item{time_scale}{A character string specifying the time scale.
 Options are "By Cycle" or other values.}
 
-\item{xaxis_scale}{A character string specifying the x-axis scale.
+\item{yaxis_scale}{A character string specifying the x-axis scale.
 Options are "Log" or other values.}
 
 \item{cycle}{A character string or numeric value specifying the cycle to filter by
@@ -49,9 +49,9 @@ The function performs the following steps:a
 \item Selects relevant columns and removes rows with missing concentration values.
 \item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
 \item Filters the data by cycle if \code{time_scale} is "By Cycle".
-\item Adjusts concentration values for logarithmic scale if \code{xaxis_scale} is "Log".
+\item Adjusts concentration values for logarithmic scale if \code{yaxis_scale} is "Log".
 \item Generates a line plot using the \code{g_ipp} function with the specified parameters.
-\item Adjusts the y-axis to logarithmic scale if \code{xaxis_scale} is "Log".
+\item Adjusts the y-axis to logarithmic scale if \code{yaxis_scale} is "Log".
 }
 }
 \examples{
@@ -62,7 +62,7 @@ The function performs the following steps:a
                            selected_usubjids = c("Subject1", "Subject2"),
                            colorby_var = "DOSNO",
                            time_scale = "By Cycle",
-                           xaxis_scale = "Log",
+                           yaxis_scale = "Log",
                            cycle = "1")
   print(plot)
 }

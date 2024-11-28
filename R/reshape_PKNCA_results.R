@@ -6,7 +6,7 @@
 #'
 #' @param myres The output of PKNCA::pk.nca
 #'
-#' @returns A data frame (finalres2) which provides an easy overview on the results from the NCA
+#' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
 #'          of the NCA parameters (cmax, AUC, AUClast)
 #'

@@ -8,12 +8,17 @@ sample_data <- data.frame(
   NRRLT = rep(1:6, 4),
   ARRLT = rep(1:6, 4),
   ARRLT = rep(1:6, 4),
-  AVAL = runif(24, 1, 100),
+  AVAL = c(
+    10, 20, 30, 40, 50, 60,
+    15, 25, 35, 45, 55, 65,
+    12, 22, 32, 42, 52, 62,
+    18, 28, 38, 48, 58, 68
+  ),
   RRLTU = rep("hours", 24),
   AVALU = rep("ng/mL", 24),
   DOSEA = rep(35, 24)
 )
-# testthat::test_file("tests/testhat/test-general_lineplot.R")
+
 describe("general_lineplot functions correctly", {
   it("returns a ggplot object", {
     p <- general_lineplot(
@@ -22,7 +27,7 @@ describe("general_lineplot functions correctly", {
       selected_usubjids = c("Subject1", "Subject2"),
       colorby_var = "DOSNO",
       time_scale = "By Cycle",
-      xaxis_scale = "Linear",
+      yaxis_scale = "Linear",
       cycle = 1
     )
     expect_s3_class(p, "ggplot")
@@ -36,7 +41,7 @@ describe("general_lineplot functions correctly", {
       selected_usubjids = c("Subject1", "Subject2"),
       colorby_var = "DOSNO",
       time_scale = "By Cycle",
-      xaxis_scale = "Linear",
+      yaxis_scale = "Linear",
       cycle = 1
     )
     expect_s3_class(p, "ggplot")
@@ -52,7 +57,7 @@ describe("general_lineplot functions correctly", {
         selected_usubjids = c("Subject1", "Subject2"),
         colorby_var = "DOSNO",
         time_scale = "By Cycle",
-        xaxis_scale = "Linear",
+        yaxis_scale = "Linear",
         cycle = 1
       ),
       "object 'AVAL' not found"
@@ -66,7 +71,7 @@ describe("general_lineplot functions correctly", {
       selected_usubjids = c("Subject1", "Subject2"),
       colorby_var = "DOSNO",
       time_scale = "By Cycle",
-      xaxis_scale = "Log",
+      yaxis_scale = "Log",
       cycle = 1
     )
     expect_s3_class(p, "ggplot")

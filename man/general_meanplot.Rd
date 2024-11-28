@@ -11,7 +11,8 @@ general_meanplot(
   selected_cycles,
   id_variable = "DOSEA",
   plot_ylog = FALSE,
-  plot_sd = FALSE
+  plot_sd = FALSE,
+  plot_ci = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ the y-axis. Default is FALSE.}
 
 \item{plot_sd}{A logical value indicating whether to include standard deviation
 error bars. Default is FALSE.}
+
+\item{plot_ci}{A logical value indicating whether to include confidence interval 95\%
+ribbon. Default is FALSE.}
 }
 \value{
 A ggplot object representing the mean concentration plot.

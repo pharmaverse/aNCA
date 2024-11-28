@@ -3,7 +3,7 @@
 #' This function calculates various summary statistics for formatted output of PKNCA::pk.nca().
 #'
 #' @param input_groups A character vector specifying the columns to group by.
-#'                     Here. the hierachrical order matters
+#'                     Here. the hierarchical order matters
 #' @param res_pknca     A data frame containing results of
 #'                     Non Compartmental Analysis using PKNCA package
 #' @return A data frame with summary statistics for each group and parameter.

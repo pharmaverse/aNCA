@@ -8,7 +8,7 @@ tab_tlg_ui <- function(id) {
       actionButton(ns("remove_tlg"), "Remove TLG"),
       actionButton(ns("submit_tlg_order"), "Submit Order Details"),
       DTOutput(ns("selected_tlg_table")),
-      actionButton(ns("submit_tlg_order"), "Submit Order Details")
+      actionButton(ns("submit_tlg_order_alt"), "Submit Order Details")
     ),
     tabPanel(
       "Tables",
@@ -239,7 +239,7 @@ tab_tlg_server <- function(id, data) {
     })
 
     # When the user submits the TLG order...
-    observeEvent(input$submit_tlg_order, {
+    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), {
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
 
       if (sum(tlg_order_filt$Type == "Table") > 0) {

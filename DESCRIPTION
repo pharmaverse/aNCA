@@ -38,12 +38,15 @@ Imports:
     nestcolor,
     PKNCA,
     plotly,
+    reactable,
+    reactable.extras,
     rio,
     rmarkdown,
     shiny,
     shinyBS,
     shinyFiles,
     shinyjqui,
+    shinyjs,
     shinyWidgets,
     stats,
     stringr,
@@ -60,3 +63,4 @@ Suggests:
     lintr (>= 3.1.2),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Language: en-US

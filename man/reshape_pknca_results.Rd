@@ -10,7 +10,7 @@ reshape_pknca_results(res_nca)
 \item{res_nca}{The output of PKNCA::pk.nca}
 }
 \value{
-A data frame (finalres2) which provides an easy overview on the results from the NCA
+A data frame which provides an easy overview on the results from the NCA
 in each profile/subject and how it was computed lambda (half life) and the results
 of the NCA parameters (cmax, AUC, AUClast)
 }
