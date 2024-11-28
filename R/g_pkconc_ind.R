@@ -273,19 +273,20 @@ add_figure_details <- function(
         collapse = collapse_subtitle
       ),
       footnote = {
-        footnote <- ifelse(
-          is.na(xmax),
-          yes = "",
-          no = paste0("Plot not showing observations beyond ", xmax, " ", !!sym(xvar_unit), ".")
-        )
-        if (!is.na(xmin)) {
+        footnote <- if (is.null(footnote)) "" else paste0(footnote, "\n")
+
+        if (!is.na(xmax)) {
           footnote <- paste0(
-            footnote, "\nPlot not showing observations before ", xmin, " ", !!sym(xvar_unit), "."
+            footnote,
+            "Plot not showing observations beyond ", xmax, " ", !!sym(xvar_unit), ".\n"
           )
         }
 
-        if (!is.null(footnote))
-          footnote <- footnote
+        if (!is.na(xmin)) {
+          footnote <- paste0(
+            footnote, "Plot not showing observations before ", xmin, " ", !!sym(xvar_unit), ".\n"
+          )
+        }
 
         footnote
       }
