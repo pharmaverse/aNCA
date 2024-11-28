@@ -136,3 +136,17 @@
     top: 3px;
   }
 }
+
+.inline-select-input > div,
+.inline-select-input > div > div {
+  width: 5em !important;
+  text-align: left !important;
+  display: inline-block !important;
+}
+
+.plot-widgets-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+    margin-bottom: 1em;
+  }
