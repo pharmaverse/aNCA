@@ -286,6 +286,7 @@ tab_tlg_server <- function(id, data) {
         tabPanel(g_def$label, plot_ui)
       })
 
+      panels$"widths" <- c(2, 10)
       output$graphs <- renderUI({
         do.call(navlistPanel, panels)
       })
