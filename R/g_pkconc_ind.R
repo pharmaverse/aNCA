@@ -140,9 +140,6 @@ pkcg01 <- function(
     id_var = "subtitle",
     add_baseline_hline = FALSE,
     yvar_baseline = yvar,
-    title = unique(plot_data$title),
-    subtitle = unique(plot_data$subtitle),
-    caption = unique(plot_data$footnote),
     plotting_choices = "separate_by_obs"
   )[[1]]
 
@@ -219,18 +216,18 @@ pkcg01 <- function(
   }
 
   # Create the list of plots for each unique group
-  plot_list <- list()
-  for (id_val in unique(adpc[["id_plot"]])) {
-
+  lapply(unique(adpc[["id_plot"]]), \(id_val) {
     plot_data <- adpc %>% dplyr::filter(id_plot ==  id_val)
-    plot_list <- c(plot_list, list(plot %+% plot_data))
-  }
+    plot %+%
+      labs(
+        title = unique(plot_data$title),
+        subtitle = unique(plot_data$subtitle),
+        caption = unique(plot_data$footnote),
+      ) %+%
+      plot_data
 
-  # Define IDs to differentiate each group of plots
-  names(plot_list) <- unique(adpc[["id_plot"]])
-
-  # Return the list of plots as output of the function
-  return(plot_list)
+  }) |>
+    setNames(unique(adpc[["id_plot"]]))
 }
 
 #' Add Figure Details to Data Frame
