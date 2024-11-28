@@ -20,7 +20,7 @@ tlg_plot_ui <- function(id) {
         div(align = "right", actionButton(ns("next_page"), "Next Page"))
       ),
       # Plots display #
-      plotOutput(ns("plot"))
+      plotlyOutput(ns("plot"))
     ),
     column(
       width = 3,
@@ -69,7 +69,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       do.call(render_plot, plot_options)
     })
 
-    output$plot <- renderPlot({
+    output$plot <- renderPlotly({
       plot_list()[[current_page()]]
     })
 

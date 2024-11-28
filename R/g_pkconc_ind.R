@@ -224,7 +224,8 @@ pkcg01 <- function(
         subtitle = unique(plot_data$subtitle),
         caption = unique(plot_data$footnote),
       ) %+%
-      plot_data
+      plot_data %>%
+      ggplotly(tooltip = c("x", "y"))
 
   }) |>
     setNames(unique(adpc[["id_plot"]]))
