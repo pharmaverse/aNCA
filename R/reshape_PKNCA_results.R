@@ -26,13 +26,13 @@ reshape_pknca_results <- function(myres) {
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
   infinite_aucs_vals <- myres$result %>%
-    unique() %>% 
+    unique() %>%
     filter(end == Inf)  %>%
     select(-PPORRESU, -exclude) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
 
   infinite_aucs_exclude <- myres$result %>%
-    unique() %>% 
+    unique() %>%
     filter(end == Inf) %>%
     select(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, PPTESTCD, exclude)  %>%
     mutate(PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
@@ -62,13 +62,13 @@ reshape_pknca_results <- function(myres) {
 
   # If there were intervals defined, make independent columns for each
   if (any(startsWith(myres$result$PPTESTCD, prefix = "aucint."))) {
-    
+
     interval_aucs_vals <- myres$result %>%
       filter(startsWith(PPTESTCD, prefix = "aucint."), (start != 0 | end != Inf)) %>%
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
-      ) %>% 
+      ) %>%
       select(-exclude, -PPORRESU, -start, -end, -PPTESTCD, -interval_name) %>%
       pivot_wider(names_from = interval_name_col, values_from = PPORRES)
 

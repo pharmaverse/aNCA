@@ -41,7 +41,7 @@ observeEvent(input$settings_upload, {
       type = "error"
     )
   }
-  
+
   # Compare the dataset with settings for inclusions and exclusions
   new_data <- data() %>%
     filter(
@@ -90,7 +90,7 @@ observeEvent(input$settings_upload, {
     choices = data()$ANALYTE[1],
     selected = setts$ANALYTE[1]
   )
-  
+
   # Dose number
   updateSelectInput(
     session,
@@ -192,21 +192,21 @@ observeEvent(input$submit_analyte, priority = 2, {
   time_column <- "AFRLT"
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
-  
+
   # Filter data based on selected analyte and dose numbers
-  data_filt <- data() %>% 
+  data_filt <- data() %>%
     dplyr::filter(!!sym(analyte_column) == input$select_analyte,
                   DOSNO %in% input$select_dosno,
                   if ("EVID" %in% names(data())) EVID == 0 else TRUE)
-  
+
   # Segregate the data into concentration and dose records
-  df_conc <- create_conc(ADNCA = data_filt, 
+  df_conc <- create_conc(ADNCA = data_filt,
                          group_columns = c(group_columns, usubjid_column, analyte_column),
                          time_column = time_column)
 
-  df_dose <- create_dose(df_conc = df_conc, 
+  df_dose <- create_dose(df_conc = df_conc,
                          group_columns = c(group_columns, usubjid_column),
-                         time_column = time_column, 
+                         time_column = time_column,
                          since_lastdose_time_column = "ARRLT")
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
@@ -248,7 +248,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   mydata$intervals <- mydata$intervals %>%
     dplyr::filter(end == Inf) %>%
     dplyr::mutate(auclast = TRUE)
-  
+
   mydata(mydata)
 })
 
@@ -318,17 +318,17 @@ observe({
 # Choose dosenumbers to be analyzed
 
 observeEvent(input$select_analyte, priority = -1, {
-  doses_options <- data() %>% 
-    filter(ANALYTE == input$select_analyte) %>% 
-    pull(DOSNO) %>% 
-    sort() %>% 
+  doses_options <- data() %>%
+    filter(ANALYTE == input$select_analyte) %>%
+    pull(DOSNO) %>%
+    sort() %>%
     unique()
-  
+
   updateSelectInput(
     session,
     inputId = "select_dosno",
     label = "Choose the Dose Number:",
-    choices = doses_options, 
+    choices = doses_options,
     selected = doses_options[1]
   )
 })
@@ -358,24 +358,24 @@ rv <- reactiveValues(trigger = 0)
 # Update the trigger whenever either button is clicked
 observeEvent(input$nca, {
   req(mydata())
-  
+
   # Use the intervals defined by the user if so
   if (input$AUCoptions && auc_counter() > 0) {
 
     # Collect all inputs for the AUC intervals
     input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
     input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-    
+
     starts <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
     ends <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
 
     # Make a list of dataframes with each of the intervals requested
-    intervals_list <- lapply(1:length(starts), function(i){
-      mydata()$intervals %>% 
+    intervals_list <- lapply(seq_along(starts), function(i) {
+      mydata()$intervals %>%
         dplyr::mutate(
           start = start + as.numeric(starts[i]),
           end = start + as.numeric(ends[i])
-        ) %>% 
+        ) %>%
         # only TRUE for columns specified in params
         mutate(across(where(is.logical), ~FALSE)) %>%
         # Intervals will always only compute AUC values
@@ -399,7 +399,7 @@ observeEvent(input$nca, {
     rv$trigger <- rv$trigger + 1
     updateTabsetPanel(session, "ncapanel", selected = "Results")
   }
-  
+
   # Update profiles per patient considering the profiles selected
   mydataconc_new <- mydata()$conc$data %>% filter(DOSNO %in% input$select_dosno)
   profiles_per_patient(tapply(mydataconc_new$DOSNO, mydataconc_new$USUBJID, unique))
@@ -437,31 +437,29 @@ res_nca <- eventReactive(rv$trigger, {
     if (input$should_impute_c0) {
       mydata <- create_c0_impute(mydata = mydata)
       mydata$impute <- "impute"
-      
+
     } else {
-    # Otherwise, the original intervals should start at C1 for all calculations
-      
-      c1_intervals <- mydata$conc$data %>% 
-        group_by(!!!syms(unname(unlist(mydata$dose$columns$groups)))) %>% 
-        arrange(!!sym(mydata$conc$columns$time) <= 0, 
-                !!sym(mydata$conc$columns$time)
-                ) %>% 
-        select(any_of(unname(unlist(mydata$dose$columns)))) %>% 
-        rename(start = !!sym(mydata$conc$columns$time)) %>% 
+      # Otherwise, the original intervals should start at C1 for all calculations
+
+      c1_intervals <- mydata$conc$data %>%
+        group_by(!!!syms(unname(unlist(mydata$dose$columns$groups)))) %>%
+        arrange(!!sym(mydata$conc$columns$time) <= 0, !!sym(mydata$conc$columns$time)) %>%
+        select(any_of(unname(unlist(mydata$dose$columns)))) %>%
+        rename(start = !!sym(mydata$conc$columns$time)) %>%
         slice(1)
-      
-      mydata$intervals <- bind_rows(merge(mydata()$intervals %>% select(-start), 
-                                          c1_intervals), 
+
+      mydata$intervals <- bind_rows(merge(mydata()$intervals %>% select(-start),
+                                          c1_intervals),
                                     intervals_userinput())
     }
-  
+
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
 
     # Make the starts and ends of results relative to last dose
-    myres$result = merge(myres$result, mydata$dose$data) %>% 
+    myres$result <- merge(myres$result, mydata$dose$data) %>%
       dplyr::mutate(start = start - !!sym(mydata$dose$columns$time),
-                    end = end - !!sym(mydata$dose$columns$time)) %>% 
+                    end = end - !!sym(mydata$dose$columns$time)) %>%
       dplyr::select(names(myres$result))
 
     # Increment progress to 100% after NCA calculations are complete
@@ -519,8 +517,8 @@ observeEvent(res_nca(), {
 
   # Sort alphabetically all columns but the grouping and the exclude columns
   group_cols <- c(unname(unique(c(unlist(res_nca()$data$conc$columns$groups),
-                                  unlist(res_nca()$data$dose$columns$groups))
-                                )), "start", "end")
+                                  unlist(res_nca()$data$dose$columns$groups)))),
+                  "start", "end")
   exclude_cols <- names(final_res_nca)[startsWith(names(final_res_nca), "exclude.")]
   final_res_nca <- final_res_nca[, c(
     group_cols,

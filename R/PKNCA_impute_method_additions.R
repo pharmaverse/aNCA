@@ -6,7 +6,7 @@
 #' @param end Numeric value indicating the end time.
 #' @param ... Additional arguments (currently not used).
 #' @param options List of options (currently not used).
-#' 
+#'
 #' @return A data frame with imputed start concentration.
 #' @export
 #'
@@ -41,7 +41,7 @@ PKNCA_impute_method_start_log <- function(conc, time, start, end, ..., options =
 #' @param end Numeric value indicating the end time.
 #' @param ... Additional arguments (currently not used).
 #' @param options List of options (currently not used).
-#' 
+#'
 #' @return A data frame with imputed start concentration.
 #' @export
 #'

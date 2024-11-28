@@ -48,10 +48,9 @@ fluidPage(
 
                 # Selection of analyte
                 selectInput("select_analyte", "Choose the analyte :", choices = NULL),
-                selectInput("select_dosno", "Choose the Dose Number:", 
+                selectInput("select_dosno", "Choose the Dose Number:",
                             multiple = TRUE,
-                            choices = c("Please specify ANALYTE in Data Selection" = "")
-                            ),
+                            choices = c("Please specify ANALYTE in Data Selection" = "")),
                 br(),
                 actionButton("submit_analyte", "Submit"),
                 DTOutput("datatable"),
