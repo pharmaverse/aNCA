@@ -62,7 +62,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       plot_options <- purrr::list_modify(list(data = data()), !!!reactiveValuesToList(opts))
 
       purrr::iwalk(plot_options, \(value, name) {
-        if (isTRUE(value == ""))
+        if (isTRUE(value %in% c(NULL, "", 0)))
           plot_options[[name]] <<- NULL
       })
 
@@ -75,15 +75,23 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
 
     opts <- reactiveValues()
 
-    option_widgets <- lapply(options, function(opt_id) {
+    option_widgets <- purrr::imap(options, function(opt_def, opt_id) {
       observeEvent(input[[opt_id]], {
         opts[[opt_id]] <- input[[opt_id]]
       })
 
-      textInput(
-        session$ns(opt_id),
-        label = opt_id
-      )
+      if (opt_def$type == "text") {
+        textInput(
+          session$ns(opt_id),
+          label = opt_id
+        )
+      } else if (opt_def$type == "numeric") {
+        numericInput(
+          session$ns(opt_id),
+          label = opt_id,
+          value = 0
+        )
+      }
     })
 
     output$options <- renderUI(option_widgets)

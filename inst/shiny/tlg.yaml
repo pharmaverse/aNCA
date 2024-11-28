@@ -23,13 +23,20 @@ g_pkconc_ind_lin:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkconc_ind_lin
   opts: 
-    - footnote
-    - xlab
-    - ylab
-    - xmin
-    - xmax
-    - ymin
-    - ymax
+    footnote:
+      type: text
+    xlab:
+      type: text
+    ylab:
+      type: text
+    xmin:
+      type: numeric
+    xmax:
+      type: numeric
+    ymin:
+      type: numeric
+    ymax:
+      type: numeric
 g_pkconc_ind_log:
   is_default: true
   type: Graph
@@ -40,10 +47,17 @@ g_pkconc_ind_log:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkconc_ind_log
   opts:
-    - footnote
-    - xlab
-    - ylab
-    - xmin
-    - xmax
-    - ymin
-    - ymax
+    footnote:
+      type: text
+    xlab:
+      type: text
+    ylab:
+      type: text
+    xmin:
+      type: numeric
+    xmax:
+      type: numeric
+    ymin:
+      type: numeric
+    ymax:
+      type: numeric
