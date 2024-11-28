@@ -25,10 +25,13 @@ g_pkconc_ind_lin:
   opts: 
     footnote:
       type: text
+      label: Footnote
     xlab:
       type: text
+      label: X axis label
     ylab:
       type: text
+      label: Y axis label
     xmin:
       type: numeric
     xmax:
@@ -49,10 +52,13 @@ g_pkconc_ind_log:
   opts:
     footnote:
       type: text
+      label: Footnote
     xlab:
       type: text
+      label: X axis label
     ylab:
       type: text
+      label: Y axis label
     xmin:
       type: numeric
     xmax:

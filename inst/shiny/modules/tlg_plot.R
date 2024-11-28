@@ -80,15 +80,17 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
         opts[[opt_id]] <- input[[opt_id]]
       })
 
+      label <- if (is.null(opt_def$label)) opt_id else opt_def$label
+
       if (opt_def$type == "text") {
         textInput(
           session$ns(opt_id),
-          label = opt_id
+          label = label
         )
       } else if (opt_def$type == "numeric") {
         numericInput(
           session$ns(opt_id),
-          label = opt_id,
+          label = label,
           value = 0
         )
       }
