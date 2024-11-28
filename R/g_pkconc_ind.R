@@ -85,8 +85,8 @@ pkcg01 <- function(
   #                          " (", unique(adpc[[xvar_unit]]), ")")),
   # ylab = substitute(paste0(attr(adpc[[yvar]], "label"),
   #                          " (", unique(adpc[[yvar_unit]]), ")")),
-  xlab = paste0(xvar, " [", xvar_unit, "]"),
-  ylab = paste0(yvar, " [", yvar_unit, "]"),
+  xlab = paste0(xvar, " [", unique(adpc[[xvar_unit]]), "]"),
+  ylab = paste0(yvar, " [", unique(adpc[[yvar_unit]]), "]"),
   footnote = NULL,
   # Inputs to split-by/seggregate plots
   plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM", "USUBJID"),
@@ -97,7 +97,6 @@ pkcg01 <- function(
   studyid = "STUDYID",
   trt_var = "TRT01A"
 ) {
-
   xmin <- as.numeric(xmin)
   xmax <- as.numeric(xmax)
   ymin <- as.numeric(ymin)
