@@ -4,6 +4,22 @@ tlg_plot_ui <- function(id) {
   fluidRow(
     column(
       width = 9,
+      fluidRow(
+        class = "plot-widgets-container",
+        div(align = "left", shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page"))),
+        div(
+          align = "center",
+          tags$span(
+            class = "inline-select-input",
+            tags$span("Page "),
+            uiOutput(ns("select_page_ui")),
+            tags$span(" out of "),
+            uiOutput(ns("page_number"), inline = TRUE)
+          )
+        ),
+        div(align = "right", actionButton(ns("next_page"), "Next Page"))
+      ),
+      # Plots display #
       plotOutput(ns("plot"))
     ),
     column(
@@ -15,6 +31,33 @@ tlg_plot_ui <- function(id) {
 
 tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
   moduleServer(id, function(input, output, session) {
+    current_page <- reactiveVal(1)
+
+    #' updating current page based on user input
+    observeEvent(input$next_page, current_page(current_page() + 1))
+    observeEvent(input$previous_page, current_page(current_page() - 1))
+    observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
+
+    observeEvent(data(), {
+      current_page(1)
+      output$page_number <- renderUI(length(plot_list()))
+      output$select_page_ui <- renderUI({
+        selectInput(
+          inputId = session$ns("select_page"),
+          label = "",
+          choices = seq_len(length(plot_list())),
+          selected = 1
+        )
+      })
+    })
+
+    observeEvent(current_page(), {
+      shinyjs::toggleState(id = "previous_page", condition = current_page() > 1)
+      shinyjs::toggleState(id = "next_page", condition = current_page() < length(plot_list()))
+      updateSelectInput(session = session, inputId = "select_page", selected = current_page())
+    })
+
+
     plot_list <- reactive({
       plot_options <- purrr::list_modify(list(data = data()), !!!reactiveValuesToList(opts))
 
@@ -27,7 +70,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
     })
 
     output$plot <- renderPlot({
-      plot_list()[[1]]
+      plot_list()[[current_page()]]
     })
 
     opts <- reactiveValues()
