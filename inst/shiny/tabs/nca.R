@@ -212,20 +212,23 @@ observeEvent(input$submit_analyte, priority = 2, {
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
-  browser()
+
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DOSNO + DRUG + USUBJID,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
     route = route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
 
+  myintervals <- create_dose_intervals(mydose)
+  
   # Combine the PKNCA objects into the PKNCAdata object
   # TODO think of case with different units for different analytes
   mydata <- PKNCA::PKNCAdata(
     data.conc = myconc,
     data.dose = mydose,
+    intervals = myintervals,
     units = PKNCA::pknca_units_table(
       concu = myconc$data$PCSTRESU[1],
       doseu = myconc$data$DOSEU[1],
@@ -233,12 +236,7 @@ observeEvent(input$submit_analyte, priority = 2, {
       timeu = myconc$data$RRLTU[1]
     )
   )
-
-  # Keep only the default intervals to infinity
-  mydata$intervals <- mydata$intervals %>%
-    dplyr::filter(end == Inf) %>%
-    dplyr::mutate(auclast = TRUE)
-
+  
   mydata(mydata)
 })
 
@@ -342,10 +340,7 @@ observeEvent(input$removeAUC, {
   }
 })
 # NCA button object
-
-# Create a reactive values object
-rv <- reactiveValues(trigger = 0)
-# Update the trigger whenever either button is clicked
+myres <- reactiveVal(NULL)
 observeEvent(input$nca, {
   req(mydata())
 
@@ -369,96 +364,76 @@ observeEvent(input$nca, {
         # only TRUE for columns specified in params
         mutate(across(where(is.logical), ~FALSE)) %>%
         # Intervals will always only compute AUC values
-        mutate(across(c("aucint.last", "aucint.inf.obs", "aucint.inf.pred", "aucint.all"), ~TRUE))
+        mutate(across(c("aucint.last", "aucint.inf.obs", "aucint.inf.pred", "aucint.all"), ~TRUE)) %>% 
+        # Identify the intervals as the manual ones created by the user
+        mutate(type_interval = "manual")
     })
 
     # Save intervals as a dataframe
     intervals_userinput(intervals_list)
   }
-
-  # Make the user aware if it forgot to select at least 1 DOSNO
-  if (is.null(input$select_dosno)) {
-    showNotification(
-      "Please select a profile from the 'Settings' tab to proceed.",
-      duration = NULL,
-      closeButton = TRUE,
-      type = "warning"
-    )
-  } else {
-    # Lead the user to the Results section
-    rv$trigger <- rv$trigger + 1
-    updateTabsetPanel(session, "ncapanel", selected = "Results")
-  }
-
+  
   # Update profiles per patient considering the profiles selected
-  mydataconc_new <- mydata()$conc$data %>% filter(DOSNO %in% input$select_dosno)
-  profiles_per_patient(tapply(mydataconc_new$DOSNO, mydataconc_new$USUBJID, unique))
-})
-
-# run the nca upon button click
-
-res_nca <- eventReactive(rv$trigger, {
-  req(!is.null(input$select_dosno))
-
+  profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
+  
+  # Run NCA results
   withProgress(message = "Calculating NCA...", value = 0, {
     req(mydata())
-
+    
     # Increment progress to 50% after getting dataNCA
     incProgress(0.5, detail = "Performing NCA calculations...")
-
+    
     # Use the user inputs to determine the NCA settings to apply
     PKNCA::PKNCA.options(
       auc.method = input$method,
       allow.tmax.in.half.life = TRUE,
-
+      keep_interval_cols = c("DOSNO", "type_interval"),
       # Make sure the standard options do not prohibit results
       min.hl.r.squared = 0.001,
       min.span.ratio = Inf,
       min.hl.points = 3
     )
-
+    
     # Load mydata reactive
     mydata <- mydata()
-
+    
     # Include manual intervals if specified by the user
     mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
-
+    
     # Define start imputations on intervals if specified by the user
     if (input$should_impute_c0) {
       mydata <- create_c0_impute(mydata = mydata)
       mydata$impute <- "impute"
-
+      
     } else {
       # Otherwise, the original intervals should start at C1 for all calculations
-
-      c1_intervals <- mydata$conc$data %>%
-        group_by(!!!syms(unname(unlist(mydata$dose$columns$groups)))) %>%
-        arrange(!!sym(mydata$conc$columns$time) <= 0, !!sym(mydata$conc$columns$time)) %>%
-        select(any_of(unname(unlist(mydata$dose$columns)))) %>%
-        rename(start = !!sym(mydata$conc$columns$time)) %>%
-        slice(1)
-
-      mydata$intervals <- bind_rows(merge(mydata()$intervals %>% select(-start),
-                                          c1_intervals),
+      mydata$intervals <- bind_rows(create_dose_intervals(mydose,
+                                                          start_from_last_dose = FALSE), 
                                     intervals_userinput())
     }
-
+    
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
-
+    
     # Make the starts and ends of results relative to last dose
     myres$result <- merge(myres$result, mydata$dose$data) %>%
       dplyr::mutate(start = start - !!sym(mydata$dose$columns$time),
                     end = end - !!sym(mydata$dose$columns$time)) %>%
       dplyr::select(names(myres$result))
-
+    
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
-
+    
     # Return the result
-    return(myres)
+    myres(myres)
+    
+    # Update panel to show results page
+    updateTabsetPanel(session, "ncapanel", selected = "Results")
   })
+  
 })
+
+res_nca <- eventReactive(myres(), return(myres()))
 
 # TABSET: Results ==============================================================
 

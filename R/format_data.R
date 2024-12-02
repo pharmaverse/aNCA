@@ -79,3 +79,58 @@ create_dose <- function(df_conc,
     dplyr::slice(1) %>%
     dplyr::ungroup()
 }
+
+mydata = readRDS("inst/shiny/mydata3")
+
+#' Create Dose Intervals Dataset
+#'
+#' This function creates a dataset with dose intervals and specified pharmacokinetic parameters.
+#'
+#' @param df_dose A PKNCAdose object. Default from the app is `mydose`.
+#' @param params A character vector specifying the pharmacokinetic parameters to include. Default is `c("aucinf.obs", "aucint.last", "auclast", "cmax", "half.life", "tmax")`.
+#' @param start_from_last_dose If start of the interval should be based on dose start (TIME) or actual C1 (AFRLT).
+#' 
+#' @return A data frame containing the dose intervals and specified pharmacokinetic parameters.
+#'
+#' @details
+#' The function performs the following steps:
+#' \itemize{
+#'   \item Creates a vector with all pharmacokinetic parameters.
+#'   \item Based on dose times, creates a data frame with start and end times.
+#'   \item Adds logical columns for each specified parameter.
+#' }
+#'
+#' @examples
+#' \dontrun{
+#'   # Example usage:
+#'   dose_intervals <- create_dose_intervals(df_dose, params)
+#' }
+#'
+#' @import dplyr
+#' @export
+create_dose_intervals <- function(mydose = mydose, 
+                                  params =  c("aucinf.obs", "aucint.last", "auclast", "cmax", 
+                                              "half.life", "tmax", "lambda.z", "lambda.z.n.points",
+                                              "r.squared", "adj.r.squared", "lambda.z.time.first"),
+                                  start_from_last_dose = TRUE
+                                  ){
+  
+  # Based on dose times create a data frame with start and end times
+  dose_intervals <- mydose$data %>%
+    group_by(!!!syms(unname(unlist(mydose$columns$groups)))) %>% 
+    dplyr::arrange(!!sym( mydose$columns$time)) %>% 
+    mutate(start = if (start_from_last_dose) !!sym( mydose$columns$time) else AFRLT, 
+           end = lead(!!sym( mydose$columns$time), 
+                      default = Inf)) %>% 
+    ungroup() %>% 
+    select(start, end, unname(unlist(mydose$columns$groups)), DOSNO) %>% 
+    
+    # Create logical columns with the TRUE and as names params argument
+    mutate(!!!setNames(rep(TRUE, length(params)), params)) %>% 
+    
+    # Identify the intervals as the base ones for the NCA analysis
+    mutate(type_interval = "main")
+
+  return(dose_intervals)
+}
+
