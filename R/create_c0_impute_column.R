@@ -12,9 +12,8 @@ create_c0_impute <- function(mydata) {
 
   mydata_with_int <- merge(
     x = mydata$conc$data,
-    y = mydata$dose$data[, group_columns] %>%
-      dplyr::mutate(time_dose = mydata$dose$data[[time_column]])
-  ) %>%
+    y = mydata$dose$data[, group_columns]
+    ) %>%
     merge(mydata$intervals)
 
   # Process imputation strategy based on each interval
@@ -25,7 +24,8 @@ create_c0_impute <- function(mydata) {
       vr_avals = paste0("c(", paste0(!!sym(conc_column), collapse = ","), ")"),
       vr_times = paste0("c(", paste0(!!sym(time_column), collapse = ","), ")")
     ) %>%
-    arrange(abs(!!sym(time_column) - start)) %>%
+    arrange((!!sym(time_column) - start) < 0,
+            (!!sym(time_column) - start)) %>%
     slice(1) %>%
     ungroup() %>%
     mutate(
@@ -44,7 +44,7 @@ create_c0_impute <- function(mydata) {
           !!sym(analyte_column) == !!sym(drug_column) &
           !is.na(PKNCA::pk.calc.c0(conc = eval(parse(text = vr_avals)),
                                    time = eval(parse(text = vr_times)),
-                                   time.dose = time_dose[1],
+                                   time.dose = start[1],
                                    method = "logslope")) ~ "start_logslope",
         tolower(!!sym(route_column)) == "intravascular" &
           !!sym(duration_column) == 0 &

@@ -27,14 +27,14 @@ reshape_pknca_results <- function(myres) {
   # the parameters into columns with their units
   infinite_aucs_vals <- myres$result %>%
     unique() %>%
-    filter(end == Inf)  %>%
-    select(-PPORRESU, -exclude) %>%
+    filter(type_interval == "main")  %>%
+    select(-PPORRESU, -exclude, -type_interval) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
 
   infinite_aucs_exclude <- myres$result %>%
     unique() %>%
-    filter(end == Inf) %>%
-    select(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, PPTESTCD, exclude)  %>%
+    filter(type_interval == "main") %>%
+    select(-PPORRES, -PPORRESU, -type_interval)  %>%
     mutate(PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
     pivot_wider(names_from = PPTESTCD, values_from = exclude)
 
@@ -61,24 +61,24 @@ reshape_pknca_results <- function(myres) {
 
 
   # If there were intervals defined, make independent columns for each
-  if (any(startsWith(myres$result$PPTESTCD, prefix = "aucint."))) {
+  if (any(myres$result$type_interval == "manual")) {
 
     interval_aucs_vals <- myres$result %>%
-      filter(startsWith(PPTESTCD, prefix = "aucint."), (start != 0 | end != Inf)) %>%
+      filter(type_interval == "manual") %>%
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
-      select(-exclude, -PPORRESU, -start, -end, -PPTESTCD, -interval_name) %>%
+      select(-exclude, -PPORRESU, -start, -end, -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = PPORRES)
 
     interval_aucs_exclude <- myres$result %>%
-      filter(startsWith(PPTESTCD, prefix = "aucint.")) %>%
+      filter(type_interval == "manual") %>%
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       )  %>%
-      select(-PPORRES, -PPORRESU, -start, -end, -PPTESTCD, -interval_name) %>%
+      select(-PPORRES, -PPORRESU, -start, -end, -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
     interval_aucs <- merge(interval_aucs_vals, interval_aucs_exclude) %>%
