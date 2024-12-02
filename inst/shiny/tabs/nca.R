@@ -407,7 +407,7 @@ observeEvent(input$nca, {
       
     } else {
       # Otherwise, the original intervals should start at C1 for all calculations
-      mydata$intervals <- bind_rows(create_dose_intervals(mydose,
+      mydata$intervals <- bind_rows(create_dose_intervals(mydata$dose,
                                                           start_from_last_dose = FALSE), 
                                     intervals_userinput())
     }
