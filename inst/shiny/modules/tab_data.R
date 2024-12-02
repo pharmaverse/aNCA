@@ -8,8 +8,6 @@ source(system.file("/shiny/modules/input_filter.R", package = "aNCA"))
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
-
-  print("parent_module_ui called") # Debugging statement
   
   navset_pill( 
     nav_panel("Raw Data Upload",
