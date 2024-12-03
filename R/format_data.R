@@ -80,8 +80,6 @@ create_dose <- function(df_conc,
     dplyr::ungroup()
 }
 
-mydata <- readRDS("inst/shiny/mydata3")
-
 #' Create Dose Intervals Dataset
 #'
 #' This function creates a dataset with dose intervals and specified pharmacokinetic parameters.
