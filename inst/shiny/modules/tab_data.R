@@ -82,10 +82,13 @@ tab_data_server <- function(id) {
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
+        wrap = FALSE,
+        resizable = TRUE,
+        defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        height = 600
+        height = "98vh"
       )
     })
     
@@ -98,25 +101,41 @@ tab_data_server <- function(id) {
       "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
     )
     
+    # Define the desired column order
+    desired_order <- c("STUDYID", "USUBJID", "ANALYTE",
+                       "PCSPEC", "AVAL", "AVALU", "AFRLT",
+                       "ARRLT", "NRRLT", "NFRLT", "RRLTU",
+                       "ROUTE", "DOSEA", "DOSEU", "DOSNO")
+    
     output$column_selectors <- renderUI({
       data <- ADNCA()
       column_names <- names(data)
+      
+      # Exclude columns specified in desired_order from the choices for "Grouping Variables"
+      grouping_variable_choices <- setdiff(column_names, desired_order)
       
       ui_elements <- lapply(names(column_groups), function(group) {
         group_columns <- column_groups[[group]]
         
         group_ui <- lapply(group_columns, function(column) {
-          choices <- column_names
+          choices <- c("Select Column" = "", column_names)
           if (column == "ADOSEDUR") {
             choices <- c(choices, "NA")
           }
+          # Handle choices for Grouping Variables separately
+          if (column == "Grouping Variables") {
+            choices <- grouping_variable_choices
+          }
           
-          selectInput(
+          selectizeInput(
             inputId = ns(paste0("select_", column)),
             label = column,
             choices = choices,
-            selected = if (column %in% column_names) column else NULL,
-            multiple = column == "Grouping Variables"
+            selected = if (column %in% column_names) column else "",
+            multiple = column == "Grouping Variables",
+            options = list(
+              placeholder = "Select Column"
+            )
           )
         })
         
@@ -175,7 +194,10 @@ tab_data_server <- function(id) {
         return(col)
       })
       
-      processed_data(data)
+      # Reorder columns based on the desired order
+      ordered_data <- data[, c(desired_order, setdiff(names(data), desired_order))]
+      
+      processed_data(ordered_data)
     })
     
     # Handle user-provided filters
@@ -215,10 +237,13 @@ tab_data_server <- function(id) {
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
+        wrap = FALSE,
+        resizable = TRUE,
+        defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        height = 800
+        height = "98vh"
       )
     })
     
