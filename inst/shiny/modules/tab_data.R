@@ -1,3 +1,54 @@
+#' The user can upload a new data set by clicking the "Browse" button.
+#' The data set must be in CSV format and contain the following columns:
+#' STUDYID, USUBJID, ANALYTE, PCSPEC, DOSEFRQ, DOSNO, AFRLT, ARRLT, NRRLT, NFRLT,
+#' AVAL, AVALU, ROUTE, DOSEA, AGE
+
+source(system.file("/shiny/modules/input_filter.R", package = "aNCA"))
+
+tab_data_ui <- function(id) {
+  ns <- NS(id)
+  
+  navset_pill( 
+    nav_panel("Raw Data Upload",
+              card(
+                "Upload your PK dataset in .csv format",
+                # Local upload option
+                fileInput(
+                  ns("local_upload"),
+                  width = "60%",
+                  label = NULL,
+                  placeholder = ".csv",
+                  buttonLabel = list(icon("folder"), "Upload File..."),
+                  accept = c(".csv", ".rds"))
+              ),
+              reactableOutput(ns("filecontents"))
+    ), 
+    nav_panel("Mapping and Filters",
+              card(
+                h3("Data Mapping"),
+                br(),
+                "The following columns are required for data analysis.
+                Please ensure each of these columns has been assigned a corresponding column from your dataset",
+                br(),
+                uiOutput(ns("column_selectors")),
+                actionButton(ns("submit_columns"), "Submit Mapping")
+              ),
+              card(
+                # Add filter UI elements
+                actionButton(ns("add_filter"), "Add filter"),
+                tags$div(id = ns("filters")),
+                actionButton(ns("submit_filters"), "Submit filters"),
+              )
+    ),
+    nav_panel("Review Data",
+              "This is the data set that will be used for the analysis.
+              If you want to make any changes, please do so in the Mapping and Filters tab.",
+              reactableOutput(ns("data_processed"))
+    )
+  )
+  
+}
+
 tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
