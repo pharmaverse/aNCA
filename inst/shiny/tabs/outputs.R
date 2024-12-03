@@ -49,7 +49,7 @@ output$generalplot_usubjid <- renderUI({
 # select which variable to color the general lineplot by
 output$generalplot_colorby <- renderUI({
   # deselect choices that are no pp parameters
-  param_choices <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID"))
+  param_choices <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID")) #TODO: Add grouping_vars?
   pickerInput(
     "generalplot_colorby",
     "Choose the variables to color by",
@@ -116,7 +116,7 @@ output$studyidmean <- renderUI({
 
 # select the variable to calculate the mean by
 output$selectidvar <- renderUI({
-  y <- c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
+  y <- c("PCSPEC", "DOSEA", grouping_vars())
   selectInput("selectidvar", "Choose the variable to group by:",
               choices = y, selected = "DOSEA")
 })
@@ -196,7 +196,7 @@ output$summaryselect <- renderUI({
 observeEvent(res_nca(), {
   # Define the relevant columns for the groupby picker
   group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
-  classification_cols <- sort(c("SEX", "RACE", "ACTARM", "AGE", "TRT01P", "TRT01A", "DOSEA"))
+  classification_cols <- sort(grouping_vars())
   classification_cols <- classification_cols[
     classification_cols %in% names(res_nca()$data$conc$data)
   ]

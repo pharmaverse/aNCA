@@ -159,7 +159,7 @@ tab_data_server <- function(id) {
     # })
     
     # Global variable to store grouping variables
-    grouping_variables <- NULL
+    grouping_variables <- reactiveVal(NULL)
     
     # Reactive value for the processed dataset
     processed_data <- reactiveVal(NULL)
@@ -177,7 +177,7 @@ tab_data_server <- function(id) {
       }, simplify = FALSE)
       
       # Extract and store the "Grouping Variables" column
-      grouping_variables <<- selected_cols[["Group Identifiers"]][["Grouping Variables"]]
+      grouping_variables(selected_cols[["Group Identifiers"]][["Grouping Variables"]])
       
       # Remove "Grouping Variables" from selected columns to prevent renaming
       selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
@@ -247,6 +247,9 @@ tab_data_server <- function(id) {
       )
     })
     
-    return(data)
+    return(list(
+      data = data,
+      grouping_variables = grouping_variables
+    ))
   })
 }
