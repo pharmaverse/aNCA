@@ -17,7 +17,7 @@
 #' @importFrom reactable.extras text_extra dropdown_extra
 #' @importFrom rio export_list
 #' @importFrom rmarkdown render
-#' @importFrom shinyBS bsModal
+#' @importFrom shinyBS bsModal bsTooltip
 #' @importFrom shinyFiles shinyDirChoose
 #' @importFrom shinyjqui orderInput updateOrderInput
 #' @importFrom shinyWidgets dropdown pickerInput switchInput updatePickerInput
