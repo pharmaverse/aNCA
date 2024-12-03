@@ -422,7 +422,7 @@ observeEvent(input$nca, {
         )
       )
       mydata(mydata)
-      
+
     }
 
     # Perform NCA on the profiles selected

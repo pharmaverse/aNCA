@@ -13,7 +13,7 @@ create_c0_impute <- function(mydata) {
   mydata_with_int <- merge(
     x = mydata$conc$data,
     y = mydata$dose$data[, group_columns]
-    ) %>%
+  ) %>%
     merge(mydata$intervals)
 
   # Process imputation strategy based on each interval
