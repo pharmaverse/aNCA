@@ -146,10 +146,11 @@ tab_data_server <- function(id) {
               E.g. Treatment Arm, Age, Sex, Race",
               "ANALYTE" = "Analyte",
               "PCSPEC" = "Matrix",
-              "ROUTE" = "Route of administration.",
+              "ROUTE" = "Route of administration,
+              stating either 'intravascular' or 'extravascular'.",
               "AVAL" = "Analysis value.",
               "DOSNO" = "Dose number.",
-              "DOSEA" = "Actual Dose amount",
+              "DOSEA" = "Actual Dose amount.",
               "ADOSEDUR" = "Duration of dose administration.
               Only required for infusion studies, otherwise select NA",
               "AFRLT" = "Actual time relative to first dose.",
