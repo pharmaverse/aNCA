@@ -138,8 +138,6 @@ export_cdisc <- function(res_nca) {
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) %>%
     ungroup() %>%
-    # Make all numeric columns with 3 decimals
-    mutate(across(where(is.numeric), ~ signif(.x, 3)))  %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     mutate(
       PPTESTCD = recode(
