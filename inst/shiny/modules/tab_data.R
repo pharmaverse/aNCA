@@ -32,7 +32,7 @@ tab_data_ui <- function(id) {
         a corresponding column from your dataset",
         br(),
         uiOutput(ns("column_selectors")),
-        actionButton(ns("submit_columns"), "Submit Mapping")
+        input_task_button(ns("submit_columns"), "Submit Mapping")
       ),
       card(
         # Add filter UI elements
@@ -60,8 +60,7 @@ tab_data_server <- function(id) {
       read.csv(
         system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"),
         na.strings = c("", "NA")
-      ) %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after auc0 merged
+      )
     )
 
     # Load data provided by user
@@ -128,14 +127,38 @@ tab_data_server <- function(id) {
             choices <- grouping_variable_choices
           }
 
-          selectizeInput(
-            inputId = ns(paste0("select_", column)),
-            label = column,
-            choices = choices,
-            selected = if (column %in% column_names) column else "",
-            multiple = column == "Grouping Variables",
-            options = list(
-              placeholder = "Select Column"
+          tooltip(
+            selectizeInput(
+              inputId = ns(paste0("select_", column)),
+              label = column,
+              choices = choices,
+              selected = if (column %in% column_names) column else "",
+              multiple = column == "Grouping Variables",
+              options = list(
+                placeholder = "Select Column"
+              )
+            ),
+            switch(column,
+              "STUDYID" = "Select Study ID Column",
+              "USUBJID" = "Unique subject identifier.",
+              "Grouping Variables" = "Select the column(s)
+              that will be used to group the data for tables, listings and graphs.
+              E.g. Treatment Arm, Age, Sex, Race",
+              "ANALYTE" = "Analyte",
+              "PCSPEC" = "Matrix",
+              "ROUTE" = "Route of administration.",
+              "AVAL" = "Analysis value.",
+              "DOSNO" = "Dose number.",
+              "DOSEA" = "Actual Dose amount",
+              "ADOSEDUR" = "Duration of dose administration.
+              Only required for infusion studies, otherwise select NA",
+              "AFRLT" = "Actual time relative to first dose.",
+              "ARRLT" = "Actual time relative to reference time.",
+              "NFRLT" = "Nominal time relative to first dose.",
+              "NRRLT" = "Nominal time relative to reference time.",
+              "AVALU" = "Unit of analysis value.",
+              "DOSEU" = "Unit of dose amount.",
+              "RRLTU" = "Unit of time."
             )
           )
         })
@@ -146,20 +169,8 @@ tab_data_server <- function(id) {
         )
       })
       do.call(tagList, ui_elements)
-
     })
 
-    #nolint start
-    # # Add tooltips for each column selector
-    # observe({
-    #   lapply(names(tooltips), function(column) {
-    #     bsTooltip(id = ns(paste0("select_", column)),
-    #               title = tooltips[[column]],
-    #               placement = "right",
-    #               trigger = "hover")
-    #   })
-    # })
-    #nolint end
 
     # Global variable to store grouping variables
     grouping_variables <- reactiveVal(NULL)
@@ -169,6 +180,7 @@ tab_data_server <- function(id) {
 
     # Observe submit button click and update processed_data
     observeEvent(input$submit_columns, {
+      Sys.sleep(1)  # Make this artificially slow
       req(ADNCA())
       data <- ADNCA()
 
@@ -198,7 +210,8 @@ tab_data_server <- function(id) {
       })
 
       # Reorder columns based on the desired order
-      ordered_data <- data[, c(desired_order, setdiff(names(data), desired_order))]
+      ordered_data <- data[, c(desired_order, setdiff(names(data), desired_order))] %>%
+        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after auc0 merged
       processed_data(ordered_data)
     })
 
