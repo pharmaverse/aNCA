@@ -304,15 +304,12 @@ fluidPage(
             )
           )
         ),
-        tabPanel("Parameter Datasets", 
+        tabPanel("Parameter Datasets",
                  tabsetPanel(
-                 tabPanel("PP",
-                          DTOutput("pp_dataset")
-                          ),
-                 tabPanel("ADPP",
-                          DTOutput("adpp_dataset")
-                          )
-                 #downloadButton("exportCDISC", "Export CDISC")
+                   tabPanel("PP",
+                            DTOutput("pp_dataset")),
+                   tabPanel("ADPP",
+                            DTOutput("adpp_dataset"))
                  )),
         tabPanel("Report",
           tabsetPanel(
