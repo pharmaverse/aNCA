@@ -27,11 +27,18 @@ pptestcd_dict <- setNames(
     "Last Nonzero Conc", "Time of CMAX", "R Squared", "R Squared Adjusted", "Max Conc Norm by Dose",
     "AUC to Last Nonzero Conc Norm by Dose", "Lambda z", "AUC to Last Nonzero Conc",
     "Half-Life Lambda z", "Number of points used for Lambda z", "Last Nonzero Conc Predicted",
-    "Span Ratio", "Lambda z lower limit (time)"
+    "Span Ratio", "Lambda z lower limit (time)",
+    
+    # Manually filled
+    "Trough Concentration", "Average Concentration", "AUC Infinity Predicted", "AUMC Infinity Observed", "AUC Percent Extrapolated Observed", 
+    "AUC Percent Extrapolated Predicted", "Clearance Observed", "Clearance Predicted", "Mean Residence Time Intravenous Observed", "Volume of Distribution Observed", 
+    "Steady-State Volume of Distribution Intravenous Observed", "AUC Infinity Observed Dose-Normalized", "Maximum Concentration Dose-Normalized"
   ),
   c(
     "CLFO", "TLST", "CMAX", "VZFO", "AUCIFO", "CLST", "TMAX", "R2", "R2ADJ", "CMAXD", "AUCLSTD",
-    "LAMZ", "AUCLST", "LAMZHL", "LAMZNPT", "CLSTP", "LAMZSPNR", "LAMZLL"
+    "LAMZ", "AUCLST", "LAMZHL", "LAMZNPT", "CLSTP", "LAMZSPNR", "LAMZLL",
+    
+    "CTROUGH", "CAV", "AUCIFP", "AUMCINF.OBS", "AUCPEO", "AUCPEP", "CL.OBS", "CL.PRED", "MRT.IV.OBS", "VZ.OBS", "VSS.IV.OBS", "AUCINF.OBS.DN", "CMAX.DN"
   )
 )
 
@@ -65,7 +72,6 @@ export_cdisc <- function(res_nca) {
     "PPGRPID",
     # "DRUG",
     # "PARAM",
-    # "PPSPEC",
     # "PPDOSNO",
     "PPSPID",
     "PPTESTCD",
@@ -115,9 +121,14 @@ export_cdisc <- function(res_nca) {
                 "AVALC",
                 "AVALU")
 
-
   pp_info <- res_nca$result  %>%
     filter(is.infinite(end) | PPTESTCD == "auclast") %>%
+    merge(res_nca$data$dose$data,
+          by = unname(unlist(res_nca$data$dose$columns$groups)),
+          all.x = TRUE, 
+          all.y = FALSE,
+          suffixes = c("", ".y")
+          ) %>% 
     group_by(
       across(all_of(c(
         unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
@@ -184,7 +195,7 @@ export_cdisc <- function(res_nca) {
       # Matrix
       PPSPEC = PCSPEC,
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
-      PPSTINT = ifelse(end != Inf, start, NA),
+      PPSTINT = ifelse(start != Inf, start, NA),
       PPENINT = ifelse(end != Inf, end, NA)
     )  %>%
     # Include PPTEST (PPTESTCD descriptions)
@@ -201,6 +212,8 @@ export_cdisc <- function(res_nca) {
 
   # Include subject metadata and select adpp columns
   adpp <- pp_info %>%
+    # Elude potential collapse cases with PC variables
+    .[!names(.) %in% c("AVAL", "AVALC", "AVALU")] %>% 
     rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU)  %>%
     merge(
       res_nca$data$dose$data %>%
@@ -209,7 +222,6 @@ export_cdisc <- function(res_nca) {
       all.y = FALSE
     ) %>%
     select(any_of(adpp_col))
-
 
   return(list(pp = pp, adpp = adpp))
 }
