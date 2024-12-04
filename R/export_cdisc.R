@@ -61,8 +61,6 @@ export_cdisc <- function(res_nca) {
   }
 
 
-
-
   # define columns needed for pp
   pp_col <- c(
     "STUDYID",
@@ -138,8 +136,9 @@ export_cdisc <- function(res_nca) {
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) %>%
     ungroup() %>%
-    #  mutate PPTESTCD to match metadata and recode the PPTESTCD to
-    #  match the PPTESTCD in the PPTESTCD data frame
+    # Make all numeric columns with 3 decimals
+    mutate(across(where(is.numeric), ~ signif(.x, 3)))  %>%
+    #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     mutate(
       PPTESTCD = recode(
         PPTESTCD %>% toupper,
@@ -198,10 +197,8 @@ export_cdisc <- function(res_nca) {
       PPSTINT = ifelse(start != Inf, start, NA),
       PPENINT = ifelse(end != Inf, end, NA)
     )  %>%
-    # Include PPTEST (PPTESTCD descriptions)
+    # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     mutate(PPTEST = pptestcd_dict[PPTESTCD])  %>%
-    # Make all numeric columns with 3 decimals
-    mutate(across(where(is.numeric), ~ signif(.x, 3)))  %>%
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
