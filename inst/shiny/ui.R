@@ -304,7 +304,16 @@ fluidPage(
             )
           )
         ),
-        tabPanel("CDISC", downloadButton("exportCDISC", "Export CDISC")),
+        tabPanel("Parameter Datasets", 
+                 tabsetPanel(
+                 tabPanel("PP",
+                          DTOutput("pp_dataset")
+                          ),
+                 tabPanel("ADPP",
+                          DTOutput("adpp_dataset")
+                          )
+                 #downloadButton("exportCDISC", "Export CDISC")
+                 )),
         tabPanel("Report",
           tabsetPanel(
             tabPanel("Configuration",
