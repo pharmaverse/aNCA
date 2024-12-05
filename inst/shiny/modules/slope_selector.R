@@ -95,7 +95,7 @@ slope_selector_ui <- function(id) {
 .SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
 
 slope_selector_server <- function(
-  id, mydata, res_nca, profiles_per_patient, cycle_nca, rv, settings_upload
+  id, mydata, res_nca, profiles_per_patient, cycle_nca, pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -354,7 +354,8 @@ slope_selector_server <- function(
     #' saves and implements provided ruleset
     observeEvent(input$save_ruleset, {
       mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
-      rv$trigger <- rv$trigger + 1
+      pk_nca_trigger <- pk_nca_trigger()
+      pk_nca_trigger(pk_nca_trigger + 1)
     })
 
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
