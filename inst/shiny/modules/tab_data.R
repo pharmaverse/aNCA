@@ -9,6 +9,7 @@ tab_data_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill(
+    id = ns("data_navset"),
     nav_panel("Raw Data Upload",
       card(
         "Upload your PK dataset in .csv format",
@@ -24,22 +25,133 @@ tab_data_ui <- function(id) {
       reactableOutput(ns("filecontents"))
     ),
     nav_panel("Mapping and Filters",
-      card(
-        h3("Data Mapping"),
-        br(),
-        "The following columns are required for data analysis.
-        Please ensure each of these columns has been assigned
-        a corresponding column from your dataset",
-        br(),
-        uiOutput(ns("column_selectors")),
-        input_task_button(ns("submit_columns"), "Submit Mapping")
-      ),
-      card(
-        # Add filter UI elements
-        actionButton(ns("add_filter"), "Add filter"),
-        tags$div(id = ns("filters")),
-        actionButton(ns("submit_filters"), "Submit filters"),
-      )
+              card(
+                h3("Data Mapping"),
+                br(),
+                "The following columns are required for data analysis.
+    Please ensure each of these columns has been assigned
+    a corresponding column from your dataset",
+                br(),
+                fluidRow(
+                  h4("Group Identifiers"),
+                  column(12,
+                  tooltip(
+                    selectizeInput(ns("select_STUDYID"), "STUDYID",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Select Study ID Column"
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_USUBJID"), "USUBJID",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Unique subject identifier."
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_Grouping_Variables"), "Grouping Variables",
+                                   choices = NULL, multiple = TRUE, options = list(placeholder = "Select Column(s)")),
+                    "Select the additional column(s) that will be used to group the data 
+                    for tables, listings and graphs. E.g. Treatment Arm, Age, Sex, Race"
+                  )
+                  )
+                ),
+                fluidRow(
+                  h4("Sample Variables"),
+                  column(12,
+                  tooltip(
+                    selectizeInput(ns("select_ANALYTE"), "ANALYTE",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Analyte"
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_PCSPEC"), "PCSPEC",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Matrix"
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_ROUTE"), "ROUTE",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Route of administration, stating either 'intravascular' or 'extravascular'."
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_AVAL"), "AVAL",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Analysis value in numeric format."
+                  )
+                  )
+                ),
+                fluidRow(
+                  h4("Dose Variables"),
+                  column(12,
+                  tooltip(
+                    selectizeInput(ns("select_DOSNO"), "DOSNO",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Numeric format."
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_DOSEA"), "DOSEA",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Actual Dose amount in numeric format."
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_ADOSEDUR"), "ADOSEDUR",
+                                   choices = c("Select Column" = "", "NA"),
+                                   options = list(placeholder = "Select Column")),
+                    "Duration of dose administration. Only required for infusion studies, otherwise select NA"
+                  )
+                  )
+                ),
+                fluidRow(
+                  h4("Time Variables"),
+                  column(12,
+                  tooltip(
+                    selectizeInput(ns("select_AFRLT"), "AFRLT",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Numeric format"
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_ARRLT"), "ARRLT",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Numeric format"
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_NFRLT"), "NFRLT",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Numeric format"
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_NRRLT"), "NRRLT",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Numeric format"
+                  )
+                  )
+                ),
+                fluidRow(
+                  h4("Unit Variables"),
+                  column(12,
+                  tooltip(
+                    selectizeInput(ns("select_AVALU"), "AVALU",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Unit of analysis value."
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_DOSEU"), "DOSEU",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Unit of dose amount."
+                  ),
+                  tooltip(
+                    selectizeInput(ns("select_RRLTU"), "RRLTU",
+                                   choices = NULL, options = list(placeholder = "Select Column")),
+                    "Unit of time."
+                  )
+                  )
+                ),
+                input_task_button(ns("submit_columns"), "Submit Mapping")
+              ),
+              card(
+                # Add filter UI elements
+                actionButton(ns("add_filter"), "Add filter"),
+                tags$div(id = ns("filters")),
+                actionButton(ns("submit_filters"), "Submit filters"),
+              )
     ),
     nav_panel("Review Data",
       "This is the data set that will be used for the analysis.
@@ -91,7 +203,7 @@ tab_data_server <- function(id) {
         height = "98vh"
       )
     })
-
+    
     # Define the required columns and group them into categories
     column_groups <- list(
       "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping Variables"),
@@ -100,78 +212,39 @@ tab_data_server <- function(id) {
       "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
       "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
     )
-
+    
     # Define the desired column order
     desired_order <- c("STUDYID", "USUBJID", "ANALYTE",
                        "PCSPEC", "AVAL", "AVALU", "AFRLT",
                        "ARRLT", "NRRLT", "NFRLT", "RRLTU",
                        "ROUTE", "DOSEA", "DOSEU", "DOSNO")
-
-    output$column_selectors <- renderUI({
+    
+    # Populate the static inputs with column names
+    observe({
       data <- ADNCA()
       column_names <- names(data)
-
+      
+      input_ids <- c("select_STUDYID", "select_USUBJID", "select_Grouping_Variables",
+                     "select_ANALYTE", "select_PCSPEC", "select_ROUTE", "select_AVAL",
+                     "select_DOSNO", "select_DOSEA", "select_ADOSEDUR", "select_AFRLT",
+                     "select_ARRLT", "select_NFRLT", "select_NRRLT", "select_AVALU",
+                     "select_DOSEU", "select_RRLTU")
+      
       # Exclude columns specified in desired_order from the choices for "Grouping Variables"
       grouping_variable_choices <- setdiff(column_names, desired_order)
-
-      ui_elements <- lapply(names(column_groups), function(group) {
-        group_columns <- column_groups[[group]]
-
-        group_ui <- lapply(group_columns, function(column) {
-          choices <- c("Select Column" = "", column_names)
-          if (column == "ADOSEDUR") {
-            choices <- c(choices, "NA")
-          }
-          # Handle choices for Grouping Variables separately
-          if (column == "Grouping Variables") {
-            choices <- grouping_variable_choices
-          }
-
-          tooltip(
-            selectizeInput(
-              inputId = ns(paste0("select_", column)),
-              label = column,
-              choices = choices,
-              selected = if (column %in% column_names) column else "",
-              multiple = column == "Grouping Variables",
-              options = list(
-                placeholder = "Select Column"
-              )
-            ),
-            switch(column,
-              "STUDYID" = "Select Study ID Column",
-              "USUBJID" = "Unique subject identifier.",
-              "Grouping Variables" = "Select the column(s)
-              that will be used to group the data for tables, listings and graphs.
-              E.g. Treatment Arm, Age, Sex, Race",
-              "ANALYTE" = "Analyte",
-              "PCSPEC" = "Matrix",
-              "ROUTE" = "Route of administration,
-              stating either 'intravascular' or 'extravascular'.",
-              "AVAL" = "Analysis value.",
-              "DOSNO" = "Dose number.",
-              "DOSEA" = "Actual Dose amount.",
-              "ADOSEDUR" = "Duration of dose administration.
-              Only required for infusion studies, otherwise select NA",
-              "AFRLT" = "Actual time relative to first dose.",
-              "ARRLT" = "Actual time relative to reference time.",
-              "NFRLT" = "Nominal time relative to first dose.",
-              "NRRLT" = "Nominal time relative to reference time.",
-              "AVALU" = "Unit of analysis value.",
-              "DOSEU" = "Unit of dose amount.",
-              "RRLTU" = "Unit of time."
-            )
-          )
-        })
-
-        fluidRow(
-          column(12, h4(group)),
-          do.call(tagList, group_ui)
-        )
-      })
-      do.call(tagList, ui_elements)
+      
+      for (input_id in input_ids) {
+        column_name <- sub("select_", "", input_id)
+        selected_value <- if (column_name %in% column_names) column_name else NULL
+        updateSelectizeInput(session, input_id, choices = c("Select Column" = "", column_names), selected = selected_value)
+      }
+      
+      # Special case for ADOSEDUR to include "NA"
+      updateSelectizeInput(session, "select_ADOSEDUR", choices = c("Select Column" = "", column_names, "NA"))
+      
+      # Special case for Grouping Variables
+      updateSelectizeInput(session, "select_Grouping_Variables", choices = grouping_variable_choices)
     })
-
 
     # Global variable to store grouping variables
     grouping_variables <- reactiveVal(NULL)
