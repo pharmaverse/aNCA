@@ -70,14 +70,11 @@ export_cdisc <- function(res_nca) {
     "DOMAIN",
     "USUBJID",
     "PPSEQ",
+    "PPCAT",
     "PPGRPID",
-    # "DRUG",
-    # "PARAM",
-    # "PPDOSNO",
     "PPSPID",
     "PPTESTCD",
     "PPTEST",
-    "PPCAT",
     "PPSCAT",
     "PPORRES",
     "PPORRESU",
@@ -94,13 +91,14 @@ export_cdisc <- function(res_nca) {
 
   # define columns needed for adpp
   adpp_col <- c("STUDYID",
+                "DOMAIN",
                 "USUBJID",
-                "PPGRPID",
-                # "DRUG",
-                # "PARAM",
-                # "PPDOSNO",
-                # "PPSPEC",
+                "PPSEQ",
                 "PPCAT",
+                "PPGRPID",
+                "PPSPID",
+                "PPTESTCD",
+                "PPTEST",
                 "PPSCAT",
                 "PPREASND",
                 "PPSPEC",
@@ -116,8 +114,6 @@ export_cdisc <- function(res_nca) {
                 "AAGEU",
                 "TRT01P",
                 "TRT01A",
-                "PARAM",
-                "PARAMCD",
                 "AVAL",
                 "AVALC",
                 "AVALU")
@@ -179,7 +175,7 @@ export_cdisc <- function(res_nca) {
       PPSTAT = ifelse(is.na(PPORRES) | (PPORRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
       PPREASND = case_when(
         !is.na(exclude) ~ exclude,
-        is.na(PPORRES) ~ "Unespecified",
+        is.na(PPORRES) ~ "Unspecified",
         TRUE ~ ""
       ),
       # Datetime
