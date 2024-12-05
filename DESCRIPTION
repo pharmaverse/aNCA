@@ -27,6 +27,7 @@ Description: This application enables users to upload their datasets and
     accessible and straightforward for all scientists. 
 License: MIT + file LICENSE
 Imports: 
+    bslib,
     checkmate,
     dplyr,
     DT,
