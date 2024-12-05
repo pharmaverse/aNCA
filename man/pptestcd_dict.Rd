@@ -5,7 +5,7 @@
 \alias{pptestcd_dict}
 \title{Export CDISC Data}
 \format{
-An object of class \code{character} of length 18.
+An object of class \code{character} of length 31.
 }
 \usage{
 pptestcd_dict
