@@ -192,7 +192,8 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Segregate the data into concentration and dose records
   df_conc <- create_conc(ADNCA = data_filt,
                          group_columns = c(group_columns, usubjid_column, analyte_column),
-                         time_column = time_column)
+                         time_column = time_column) %>%
+    dplyr::arrange(across(all_of(c(usubjid_column, time_column))))
 
   df_dose <- create_dose(df_conc = df_conc,
                          group_columns = c(group_columns, usubjid_column),
@@ -417,30 +418,29 @@ observeEvent(input$nca, {
     )
     mydata(mydata)
   }
-  
+
   # Perform NCA on the profiles selected
   pk_nca_trigger <- pk_nca_trigger()
   pk_nca_trigger(pk_nca_trigger + 1)
-  
+
   # Update panel to show results page
   updateTabsetPanel(session, "ncapanel", selected = "Results")
 })
-
 
 res_nca <- eventReactive(pk_nca_trigger(), {
   req(mydata())
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
-    
+
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
-    
+
     # Make the starts and ends of results relative to last dose
     myres$result <- merge(myres$result, mydata()$dose$data) %>%
       dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
                     end = end - !!sym(mydata()$dose$columns$time)) %>%
       dplyr::select(names(myres$result))
-    
+
     # Return the result
     return(myres)
   })
