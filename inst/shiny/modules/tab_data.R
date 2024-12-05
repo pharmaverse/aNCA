@@ -287,6 +287,9 @@ tab_data_server <- function(id) {
       ordered_data <- data[, c(desired_order, setdiff(names(data), desired_order))] %>%
         mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after auc0 merged
       processed_data(ordered_data)
+      
+      # Navigate to the "Review Data" tab
+      nav_select("data_navset", "Review Data")
     })
 
     # Handle user-provided filters
