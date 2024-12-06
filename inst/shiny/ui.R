@@ -65,19 +65,18 @@ fluidPage(
                   selected = "lin up/log down"
                 ),
                 h4("Data imputation"),
-                tags$div(
-                checkboxInput(inputId = "should_impute_c0",
-                              label = "Impute concentration at t0 when missing",
-                              value = TRUE),
-                id = "checkbox_id",
-                title = paste(
-                "Imputes a start-of-interval concentration for calculating non-observational parameters:",
-                "If DOSNO = 1 & IV bolus: C0 = 0",
-                "If DOSNO > 1 & not IV bolus: C0 = predose",
-                "If IV bolus & monoexponential data: logslope",
-                "If IV bolus & not monoexponential data: C0 = C1",
-                sep = "\n"
-                )
+                tags$div(checkboxInput(inputId = "should_impute_c0",
+                                       label = "Impute concentration at t0 when missing",
+                                       value = TRUE),
+                  id = "checkbox_id",
+                  title = paste(
+                                "Imputes a start-of-interval concentration 
+                                to calculate non-observational parameters:",
+                                "If DOSNO = 1 & IV bolus: C0 = 0",
+                                "If DOSNO > 1 & not IV bolus: C0 = predose",
+                                "If IV bolus & monoexponential data: logslope",
+                                "If IV bolus & not monoexponential data: C0 = C1",
+                                sep = "\n")
                 ),
                 br(),
                 checkboxInput("AUCoptions", "Select Partial AUC"),
