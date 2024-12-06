@@ -4,10 +4,10 @@
 \alias{reshape_pknca_results}
 \title{Reshape PKNCA Results}
 \usage{
-reshape_pknca_results(res_nca)
+reshape_pknca_results(myres)
 }
 \arguments{
-\item{res_nca}{The output of PKNCA::pk.nca}
+\item{myres}{The output of PKNCA::pk.nca}
 }
 \value{
 A data frame which provides an easy overview on the results from the NCA
