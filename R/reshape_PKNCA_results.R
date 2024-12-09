@@ -64,7 +64,7 @@ reshape_pknca_results <- function(myres) {
   if (any(myres$result$type_interval == "manual")) {
 
     interval_aucs_vals <- myres$result %>%
-      filter(type_interval == "manual") %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
@@ -73,7 +73,7 @@ reshape_pknca_results <- function(myres) {
       pivot_wider(names_from = interval_name_col, values_from = PPORRES)
 
     interval_aucs_exclude <- myres$result %>%
-      filter(type_interval == "manual") %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)

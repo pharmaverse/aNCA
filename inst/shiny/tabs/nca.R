@@ -416,8 +416,8 @@ observeEvent(input$nca, {
         timeu = mydata$conc$data$RRLTU[1]
       )
     )
-    mydata(mydata)
   }
+  mydata(mydata)
 
   # Perform NCA on the profiles selected
   pk_nca_trigger <- pk_nca_trigger()
