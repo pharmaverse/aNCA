@@ -94,6 +94,7 @@ tab_tlg_server <- function(id, data) {
 
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
     observeEvent(list(tlg_order(), data()), {
+      req(data())
       column_of_conditions <- gsub("([=<>!].*)", "", tlg_order()$Condition)
 
       new_tlg_order <- tlg_order() %>%
