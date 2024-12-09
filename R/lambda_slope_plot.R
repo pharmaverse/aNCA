@@ -57,7 +57,7 @@ lambda_slope_plot <- function(
 
   # Obtain all information relevant regarding lambda calculation
   lambda_res <- res_pknca_df %>%
-    filter(DOSNO == dosno, USUBJID == usubjid, end == Inf)  %>%
+    filter(DOSNO == dosno, USUBJID == usubjid, type_interval == "main")  %>%
     arrange(USUBJID, DOSNO, start, desc(end)) %>%
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD)))
 
