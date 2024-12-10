@@ -1,53 +1,12 @@
-#' Format Data for Pharmacokinetic Analysis
-#'
-#' This function formats a data file for pharmacokinetic analysis by converting specific
-#' concentration values to numeric and adjusting time based on dose number.
-#'
-#' @param datafile A data frame containing the raw data to be formatted.
-#'
-#' @return A data frame with formatted concentration and time values.
-#'
-#' @details
-#' The function performs the following steps:
-#' \itemize{
-#'   \item{
-#'      Converts concentration values ('AVAL') that are 'BLQ', 'Negative',
-#'      'negative', or 'NEGATIVE' to 0.
-#'    }
-#'   \item{
-#'     Adjusts the time values ('TIME') based on the dose number ('DOSNO'). If 'DOSNO' is 1,
-#'     'TIME' is set to 'AFRLT'; otherwise, it is set to 'TIME'.
-#'   }
-#' }
-#'
-#' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   formatted_data <- format_data(raw_data)
-#' }
-#'
-#' @import dplyr
-#' @export
-format_data <- function(datafile) {
-  datafile <- datafile %>%
-    mutate(
-      AVAL = as.numeric(ifelse(AVAL %in% c("BLQ", "Negative", "negative", "NEGATIVE"), 0, AVAL)),
-      TIME = ifelse(DOSNO == 1, AFRLT, TIME)
-    )
-
-  return(datafile)
-}
-
 #' Create PK Concentration Dataset
 #'
 #' This function creates a pharmacokinetic concentration dataset from the provided ADNCA data.
 #'
-#' @param ADNCA    A data frame containing the ADNCA data.
-#' @param analyte  A character string specifying the analyte of interest.
-#' @param proftype A character string specifying the profile type
-#'                 (not used in the function but kept for consistency).
+#' @param ADNCA A data frame containing the ADNCA data.
+#' @param analyte A character string specifying the analyte of interest.
+
 #'
-#' @returns A data frame containing the filtered and processed concentration data.
+#' @return A data frame containing the filtered and processed concentration data.
 #'
 #' @details
 #' The function performs the following steps:
@@ -67,27 +26,25 @@ format_data <- function(datafile) {
 #'
 #' @import dplyr
 #' @export
-create_conc <- function(ADNCA, analyte, proftype) {
+
+#create pknca concentration dataset
+create_conc <- function(ADNCA,
+                        group_columns,
+                        time_column = "AFRLT") {
   data <- ADNCA %>%
-    filter(
-      ANALYTE == analyte,
-      if ("EVID" %in% names(ADNCA)) EVID == 0 else TRUE
-    ) %>%
-    # mutate(TIME=ifelse(TIME<0,0,TIME),
-    #        AVAL=ifelse(TIME==0,0,AVAL)) %>% #make the conc at time 0, 0
-    # distinct()  %>%
-    mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
-    filter(TIME >= 0) %>%
-    arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
-    group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-    mutate(IX = seq_len(n()))
+    dplyr::mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
+    dplyr::arrange(!!sym(time_column)) %>%
+    dplyr::mutate(TIME = !!sym(time_column)) %>%
+    dplyr::group_by(!!!syms(group_columns)) %>%
+    dplyr::mutate(IX = seq_len(n())) %>%
+    dplyr::ungroup()
 }
 
 #' Create PK Dose Dataset
 #'
 #' This function creates a pharmacokinetic dose dataset from the provided concentration data.
 #'
-#' @param adnca_conc A data frame containing the concentration data.
+#' @param ADNCA_conc A data frame containing the concentration data.
 #'
 #' @return A data frame containing the dose data.
 #'
@@ -109,13 +66,69 @@ create_conc <- function(ADNCA, analyte, proftype) {
 #' @import dplyr
 #' @export
 
-create_dose <- function(adnca_conc) {
-  adnca_conc %>%
-    arrange(USUBJID, DOSNO) %>%
-    group_by(USUBJID, DOSNO) %>%
-    slice(1) %>%
-    mutate(
-      DOSEA = as.numeric(DOSEA),
-      IQROUTE = ROUTE
-    )
+create_dose <- function(df_conc,
+                        group_columns,
+                        time_column = "AFRLT",
+                        since_lastdose_time_column = "ARRLT") {
+
+  df_conc %>%
+    dplyr::mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
+    dplyr::group_by(!!!syms(group_columns)) %>%
+    dplyr::arrange(!!sym(since_lastdose_time_column) < 0,
+                   !!sym(since_lastdose_time_column)) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup()
 }
+
+#' Create Dose Intervals Dataset
+#'
+#' This function creates a dataset with dose intervals and specified pharmacokinetic parameters.
+#'
+#' @param df_dose A PKNCAdose object. Default from the app is `mydose`.
+#' @param params A character vector specifying the pharmacokinetic parameters to include.
+#' @param start_from_last_dose Logical defining if start is at time of last dose or C1.
+#'
+#' @return A data frame containing the dose intervals and specified pharmacokinetic parameters.
+#'
+#' @details
+#' The function performs the following steps:
+#' \itemize{
+#'   \item Creates a vector with all pharmacokinetic parameters.
+#'   \item Based on dose times, creates a data frame with start and end times.
+#'   \item Adds logical columns for each specified parameter.
+#' }
+#'
+#' @examples
+#' \dontrun{
+#'   # Example usage:
+#'   dose_intervals <- create_dose_intervals(df_dose, params)
+#' }
+#'
+#' @import dplyr
+#' @export
+create_dose_intervals <- function(mydose = mydose,
+                                  params =  c("aucinf.obs", "aucint.last", "auclast", "cmax",
+                                              "half.life", "tmax", "lambda.z", "lambda.z.n.points",
+                                              "r.squared", "adj.r.squared", "lambda.z.time.first",
+                                              "aucpext.obs", "aucpext.pred", "clast.obs"),
+                                  start_from_last_dose = TRUE) {
+
+  # Based on dose times create a data frame with start and end times
+  dose_intervals <- mydose$data %>%
+    group_by(!!!syms(unname(unlist(mydose$columns$groups)))) %>%
+    dplyr::arrange(!!sym(mydose$columns$time)) %>%
+    mutate(start = if (start_from_last_dose) !!sym(mydose$columns$time) else !!sym("AFRLT"),
+           end = lead(!!sym(mydose$columns$time),
+                      default = Inf)) %>%
+    ungroup() %>%
+    select(start, end, unname(unlist(mydose$columns$groups)), DOSNO) %>%
+
+    # Create logical columns with the TRUE and as names params argument
+    mutate(!!!setNames(rep(TRUE, length(params)), params)) %>%
+
+    # Identify the intervals as the base ones for the NCA analysis
+    mutate(type_interval = "main")
+
+  return(dose_intervals)
+}
+
