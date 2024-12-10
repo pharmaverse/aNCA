@@ -227,6 +227,16 @@ tab_data_server <- function(id) {
                        "PCSPEC", "AVAL", "AVALU", "AFRLT",
                        "ARRLT", "NRRLT", "NFRLT", "RRLTU",
                        "ROUTE", "DOSEA", "DOSEU", "DOSNO")
+    
+    # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
+    manual_conc_units <- c("mg/L", "µg/mL", "ng/mL", "pg/mL",
+                           "mol/L", "mmol/L", "µmol/L", "nmol/L",
+                           "pmol/L", "mg/dL", "µg/dL", "ng/dL")
+    manual_dose_units <- c("mg", "g", "µg", "ng", "pg", "mol", "mmol",
+                           "µmol", "nmol", "pmol", "IU", "mg/kg", "g/kg",
+                           "µg/kg", "ng/kg", "pg/kg", "mol/kg", "mmol/kg",
+                           "µmol/kg", "nmol/kg", "pmol/kg")
+    manual_time_units <- c("sec", "min", "hr", "day", "week", "month", "year")
 
     # Populate the static inputs with column names
     observe({
@@ -247,6 +257,32 @@ tab_data_server <- function(id) {
       updateSelectizeInput(session, "select_ADOSEDUR",
                            choices = c("Select Column" = "", column_names, "NA"),
                            selected = if ("ADOSEDUR" %in% column_names) "ADOSEDUR" else NULL)
+      
+      # Special case for Units options
+      
+      # Update the select input with grouped options
+      updateSelectizeInput(session, "select_AVALU",
+                           choices = list(
+                             "Dataset Columns" = column_names,
+                             "Manual Units" = manual_conc_units
+                           ),
+                           selected = if ("AVALU" %in% column_names) "AVALU" else NULL)
+      
+      # Update the select input for dose units with grouped options
+      updateSelectizeInput(session, "select_DOSEU",
+                           choices = list(
+                             "Dataset Columns" = column_names,
+                             "Manual Units" = manual_dose_units
+                           ),
+                           selected = if ("DOSEU" %in% column_names) "DOSEU" else NULL)
+      
+      # Update the select input for time units with grouped options
+      updateSelectizeInput(session, "select_RRLTU",
+                           choices = list(
+                             "Dataset Columns" = column_names,
+                             "Manual Units" = manual_time_units
+                           ),
+                           selected = if ("RRLTU" %in% column_names) "RRLTU" else NULL)
 
       # Special case for Grouping Variables
       updateSelectizeInput(session, "select_Grouping_Variables",
@@ -305,6 +341,17 @@ tab_data_server <- function(id) {
       # Handle ADOSEDUR == NA case
       if (input$select_ADOSEDUR == "NA") {
         data$ADOSEDUR <- 0
+      }
+      
+      # Update dataset columns if manual units are selected
+      if (input$select_AVALU %in% manual_conc_units) {
+        data$AVALU <- input$select_AVALU
+      }
+      if (input$select_DOSEU %in% manual_dose_units) {
+        data$DOSEU <- input$select_DOSEU
+      }
+      if (input$select_RRLTU %in% manual_time_units) {
+        data$RRLTU <- input$select_RRLTU
       }
 
       # Reorder columns based on the desired order
