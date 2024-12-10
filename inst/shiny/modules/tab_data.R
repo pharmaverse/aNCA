@@ -132,17 +132,20 @@ tab_data_ui <- function(id) {
             tooltip(
               selectizeInput(ns("select_AVALU"), "AVALU",
                              choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of analysis value."
+              "Unit of analysis value. If not available, select the unit used in the dataset
+              from the manual units."
             ),
             tooltip(
               selectizeInput(ns("select_DOSEU"), "DOSEU",
                              choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of dose amount."
+              "Unit of dose amount. If not available, select the unit used in the dataset
+              from the manual units"
             ),
             tooltip(
               selectizeInput(ns("select_RRLTU"), "RRLTU",
                              choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of time."
+              "Unit of time. If not available, select the unit used in the dataset
+              from the manual units"
             )
           )
         ),
@@ -233,7 +236,7 @@ tab_data_server <- function(id) {
                            "mol/L", "mmol/L", "µmol/L", "nmol/L",
                            "pmol/L", "mg/dL", "µg/dL", "ng/dL")
     manual_dose_units <- c("mg", "g", "µg", "ng", "pg", "mol", "mmol",
-                           "µmol", "nmol", "pmol", "IU", "mg/kg", "g/kg",
+                           "µmol", "nmol", "pmol", "mg/kg", "g/kg",
                            "µg/kg", "ng/kg", "pg/kg", "mol/kg", "mmol/kg",
                            "µmol/kg", "nmol/kg", "pmol/kg")
     manual_time_units <- c("sec", "min", "hr", "day", "week", "month", "year")
@@ -374,7 +377,7 @@ tab_data_server <- function(id) {
       # Insert a new filter UI
       insertUI(
         selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), colnames(ADNCA()))
+        ui = input_filter_ui(session$ns(filter_id), colnames(processed_data()))
       )
 
       filters[[filter_id]] <- input_filter_server(filter_id)
