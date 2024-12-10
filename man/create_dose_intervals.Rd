@@ -6,9 +6,9 @@
 \usage{
 create_dose_intervals(
   mydose = mydose,
-  params = c("aucinf.obs", "aucint.last", "auclast", "cmax", "clast.obs", "half.life",
-    "tmax", "lambda.z", "lambda.z.n.points", "r.squared", "adj.r.squared",
-    "lambda.z.time.first", "aucpext.obs", "aucpext.pred"),
+  params = c("aucinf.obs", "aucint.last", "auclast", "cmax", "half.life", "tmax",
+    "lambda.z", "lambda.z.n.points", "r.squared", "adj.r.squared", "lambda.z.time.first",
+    "aucpext.obs", "aucpext.pred", "clast.obs"),
   start_from_last_dose = TRUE
 )
 }
