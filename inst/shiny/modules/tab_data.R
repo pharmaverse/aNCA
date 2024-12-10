@@ -68,11 +68,6 @@ tab_data_ui <- function(id) {
               "Matrix"
             ),
             tooltip(
-              selectizeInput(ns("select_ROUTE"), "ROUTE",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Route of administration, stating either 'intravascular' or 'extravascular'."
-            ),
-            tooltip(
               selectizeInput(ns("select_AVAL"), "AVAL",
                              choices = NULL, options = list(placeholder = "Select Column")),
               "Analysis value in numeric format."
@@ -86,6 +81,11 @@ tab_data_ui <- function(id) {
               selectizeInput(ns("select_DOSNO"), "DOSNO",
                              choices = NULL, options = list(placeholder = "Select Column")),
               "Numeric format."
+            ),
+            tooltip(
+              selectizeInput(ns("select_ROUTE"), "ROUTE",
+                             choices = NULL, options = list(placeholder = "Select Column")),
+              "Route of administration, stating either 'intravascular' or 'extravascular'."
             ),
             tooltip(
               selectizeInput(ns("select_DOSEA"), "DOSEA",
@@ -132,20 +132,20 @@ tab_data_ui <- function(id) {
             tooltip(
               selectizeInput(ns("select_AVALU"), "AVALU",
                              choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of analysis value. If not available, select the unit used in the dataset
-              from the manual units."
+              "Unit of analysis value. If a column is not available, type and select the unit
+              used in the dataset from the manual units."
             ),
             tooltip(
               selectizeInput(ns("select_DOSEU"), "DOSEU",
                              choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of dose amount. If not available, select the unit used in the dataset
-              from the manual units"
+              "Unit of dose amount. If a column is not available, type and select the unit
+              used in the dataset from the manual units"
             ),
             tooltip(
               selectizeInput(ns("select_RRLTU"), "RRLTU",
                              choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of time. If not available, select the unit used in the dataset
-              from the manual units"
+              "Unit of time. If a column is not available, type and select the unit
+              used in the dataset from the manual units"
             )
           )
         ),
@@ -230,7 +230,7 @@ tab_data_server <- function(id) {
                        "PCSPEC", "AVAL", "AVALU", "AFRLT",
                        "ARRLT", "NRRLT", "NFRLT", "RRLTU",
                        "ROUTE", "DOSEA", "DOSEU", "DOSNO")
-    
+
     # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
     manual_conc_units <- c("mg/L", "µg/mL", "ng/mL", "pg/mL",
                            "mol/L", "mmol/L", "µmol/L", "nmol/L",
@@ -260,9 +260,9 @@ tab_data_server <- function(id) {
       updateSelectizeInput(session, "select_ADOSEDUR",
                            choices = c("Select Column" = "", column_names, "NA"),
                            selected = if ("ADOSEDUR" %in% column_names) "ADOSEDUR" else NULL)
-      
+
       # Special case for Units options
-      
+
       # Update the select input with grouped options
       updateSelectizeInput(session, "select_AVALU",
                            choices = list(
@@ -270,7 +270,7 @@ tab_data_server <- function(id) {
                              "Manual Units" = manual_conc_units
                            ),
                            selected = if ("AVALU" %in% column_names) "AVALU" else NULL)
-      
+
       # Update the select input for dose units with grouped options
       updateSelectizeInput(session, "select_DOSEU",
                            choices = list(
@@ -278,7 +278,7 @@ tab_data_server <- function(id) {
                              "Manual Units" = manual_dose_units
                            ),
                            selected = if ("DOSEU" %in% column_names) "DOSEU" else NULL)
-      
+
       # Update the select input for time units with grouped options
       updateSelectizeInput(session, "select_RRLTU",
                            choices = list(
@@ -345,7 +345,7 @@ tab_data_server <- function(id) {
       if (input$select_ADOSEDUR == "NA") {
         data$ADOSEDUR <- 0
       }
-      
+
       # Update dataset columns if manual units are selected
       if (input$select_AVALU %in% manual_conc_units) {
         data$AVALU <- input$select_AVALU
