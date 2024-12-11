@@ -4,6 +4,7 @@
 #' AVAL, AVALU, ROUTE, DOSEA, AGE
 
 source(system.file("/shiny/modules/input_filter.R", package = "aNCA"))
+source(system.file("/shiny/modules/column_mapping.R", package = "aNCA"))
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
@@ -26,131 +27,9 @@ tab_data_ui <- function(id) {
     ),
     nav_panel("Mapping and Filters",
       card(
-        h3("Data Mapping"),
-        br(),
-        "The following columns are required for data analysis.
-    Please ensure each of these columns has been assigned
-    a corresponding column from your dataset",
-        br(),
-        fluidRow(
-          h4("Group Identifiers"),
-          column(12,
-            tooltip(
-              selectizeInput(ns("select_STUDYID"), "STUDYID",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Select Study ID Column"
-            ),
-            tooltip(
-              selectizeInput(ns("select_USUBJID"), "USUBJID",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Unique subject identifier."
-            ),
-            tooltip(
-              selectizeInput(ns("select_Grouping_Variables"), "Grouping Variables",
-                             choices = NULL, multiple = TRUE,
-                             options = list(placeholder = "Select Column(s)")),
-              "Select the additional column(s) that will be used to group the data 
-              for tables, listings and graphs. E.g. Treatment Arm, Age, Sex, Race"
-            )
-          )
-        ),
-        fluidRow(
-          h4("Sample Variables"),
-          column(12,
-            tooltip(
-              selectizeInput(ns("select_ANALYTE"), "ANALYTE",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Analyte"
-            ),
-            tooltip(
-              selectizeInput(ns("select_PCSPEC"), "PCSPEC",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Matrix"
-            ),
-            tooltip(
-              selectizeInput(ns("select_AVAL"), "AVAL",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Analysis value in numeric format."
-            )
-          )
-        ),
-        fluidRow(
-          h4("Dose Variables"),
-          column(12,
-            tooltip(
-              selectizeInput(ns("select_DOSNO"), "DOSNO",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Numeric format."
-            ),
-            tooltip(
-              selectizeInput(ns("select_ROUTE"), "ROUTE",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Route of administration, stating either 'intravascular' or 'extravascular'."
-            ),
-            tooltip(
-              selectizeInput(ns("select_DOSEA"), "DOSEA",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Actual Dose amount in numeric format."
-            ),
-            tooltip(
-              selectizeInput(ns("select_ADOSEDUR"), "ADOSEDUR",
-                             choices = c("Select Column" = "", "NA"),
-                             options = list(placeholder = "Select Column")),
-              "Duration of dose administration. Only required for infusion studies,
-              otherwise select NA"
-            )
-          )
-        ),
-        fluidRow(
-          h4("Time Variables"),
-          column(12,
-            tooltip(
-              selectizeInput(ns("select_AFRLT"), "AFRLT",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Numeric format"
-            ),
-            tooltip(
-              selectizeInput(ns("select_ARRLT"), "ARRLT",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Numeric format"
-            ),
-            tooltip(
-              selectizeInput(ns("select_NFRLT"), "NFRLT",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Numeric format"
-            ),
-            tooltip(
-              selectizeInput(ns("select_NRRLT"), "NRRLT",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Numeric format"
-            )
-          )
-        ),
-        fluidRow(
-          h4("Unit Variables"),
-          column(12,
-            tooltip(
-              selectizeInput(ns("select_AVALU"), "AVALU",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of analysis value. If a column is not available, type and select the unit
-              used in the dataset from the manual units."
-            ),
-            tooltip(
-              selectizeInput(ns("select_DOSEU"), "DOSEU",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of dose amount. If a column is not available, type and select the unit
-              used in the dataset from the manual units"
-            ),
-            tooltip(
-              selectizeInput(ns("select_RRLTU"), "RRLTU",
-                             choices = NULL, options = list(placeholder = "Select Column")),
-              "Unit of time. If a column is not available, type and select the unit
-              used in the dataset from the manual units"
-            )
-          )
-        ),
-        input_task_button(ns("submit_columns"), "Submit Mapping")
+        column_mapping_ui(ns("column_mapping"))
       ),
+
       card(
         # Add filter UI elements
         actionButton(ns("add_filter"), "Add filter"),
@@ -211,161 +90,36 @@ tab_data_server <- function(id) {
 
     # Column Mapping ----
 
-    # Define the required columns and group them into categories
-    column_groups <- list(
-      "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping Variables"),
-      "Sample Variables" = c("ANALYTE", "PCSPEC", "ROUTE", "AVAL"),
-      "Dose Variables" = c("DOSNO", "DOSEA", "ADOSEDUR"),
-      "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
-      "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
+    # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
+    manual_units <- list(
+      concentration = c("mg/L", "µg/mL", "ng/mL", "pg/mL",
+                        "mol/L", "mmol/L", "µmol/L", "nmol/L",
+                        "pmol/L", "mg/dL", "µg/dL", "ng/dL"),
+      dose = c("mg", "g", "µg", "ng", "pg", "mol", "mmol",
+               "µmol", "nmol", "pmol", "mg/kg", "g/kg",
+               "µg/kg", "ng/kg", "pg/kg", "mol/kg", "mmol/kg",
+               "µmol/kg", "nmol/kg", "pmol/kg"),
+      time = c("sec", "min", "hr", "day", "week", "month", "year")
     )
 
-    # Derive input IDs from column_groups
-    input_ids <- unlist(lapply(column_groups, function(cols) {
-      paste0("select_", cols)
-    }))
+    # Define the callback function to change the tab
+    change_to_review_tab <- function() {
+      updateTabsetPanel(session, "data_navset", selected = "Review Data")
+    }
 
-    # Define the desired column order
-    desired_order <- c("STUDYID", "USUBJID", "ANALYTE",
-                       "PCSPEC", "AVAL", "AVALU", "AFRLT",
-                       "ARRLT", "NRRLT", "NFRLT", "RRLTU",
-                       "ROUTE", "DOSEA", "DOSEU", "DOSNO")
-
-    # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
-    manual_conc_units <- c("mg/L", "µg/mL", "ng/mL", "pg/mL",
-                           "mol/L", "mmol/L", "µmol/L", "nmol/L",
-                           "pmol/L", "mg/dL", "µg/dL", "ng/dL")
-    manual_dose_units <- c("mg", "g", "µg", "ng", "pg", "mol", "mmol",
-                           "µmol", "nmol", "pmol", "mg/kg", "g/kg",
-                           "µg/kg", "ng/kg", "pg/kg", "mol/kg", "mmol/kg",
-                           "µmol/kg", "nmol/kg", "pmol/kg")
-    manual_time_units <- c("sec", "min", "hr", "day", "week", "month", "year")
-
-    # Populate the static inputs with column names
-    observe({
-      data <- ADNCA()
-      column_names <- names(data)
-
-      # Exclude columns specified in desired_order from the choices for "Grouping Variables"
-      grouping_variable_choices <- setdiff(column_names, desired_order)
-
-      for (input_id in input_ids) {
-        column_name <- sub("select_", "", input_id)
-        selected_value <- if (column_name %in% column_names) column_name else NULL
-        updateSelectizeInput(session, input_id, choices = c("Select Column" = "", column_names),
-                             selected = selected_value)
-      }
-
-      # Special case for ADOSEDUR to include "NA"
-      updateSelectizeInput(session, "select_ADOSEDUR",
-                           choices = c("Select Column" = "", column_names, "NA"),
-                           selected = if ("ADOSEDUR" %in% column_names) "ADOSEDUR" else NULL)
-
-      # Special case for Units options
-
-      # Update the select input with grouped options
-      updateSelectizeInput(session, "select_AVALU",
-                           choices = list(
-                             "Dataset Columns" = column_names,
-                             "Manual Units" = manual_conc_units
-                           ),
-                           selected = if ("AVALU" %in% column_names) "AVALU" else NULL)
-
-      # Update the select input for dose units with grouped options
-      updateSelectizeInput(session, "select_DOSEU",
-                           choices = list(
-                             "Dataset Columns" = column_names,
-                             "Manual Units" = manual_dose_units
-                           ),
-                           selected = if ("DOSEU" %in% column_names) "DOSEU" else NULL)
-
-      # Update the select input for time units with grouped options
-      updateSelectizeInput(session, "select_RRLTU",
-                           choices = list(
-                             "Dataset Columns" = column_names,
-                             "Manual Units" = manual_time_units
-                           ),
-                           selected = if ("RRLTU" %in% column_names) "RRLTU" else NULL)
-
-      # Special case for Grouping Variables
-      updateSelectizeInput(session, "select_Grouping_Variables",
-                           choices = grouping_variable_choices)
-    })
-
-    # Global variable to store grouping variables
-    grouping_variables <- reactiveVal(NULL)
+    # Call the column mapping module
+    column_mapping <- column_mapping_server(
+      id = "column_mapping",
+      data = ADNCA,
+      manual_units = manual_units,
+      on_submit = change_to_review_tab
+    )
 
     # Reactive value for the processed dataset
-    processed_data <- reactiveVal(NULL)
+    processed_data <- column_mapping$processed_data
 
-    # Observe submit button click and update processed_data
-    observeEvent(input$submit_columns, {
-      Sys.sleep(1)  # Make this artificially slow
-      req(ADNCA())
-      data <- ADNCA()
-
-      # Get the selected columns
-      selected_cols <- sapply(names(column_groups), function(group) {
-        sapply(column_groups[[group]], function(column) {
-          input[[(paste0("select_", column))]]
-        })
-      }, simplify = FALSE)
-
-      # Check for duplicate column selections
-      all_selected_columns <- unlist(selected_cols)
-      if (any(duplicated(all_selected_columns))) {
-        showModal(modalDialog(
-          title = "Duplicate Column Selections",
-          "Please ensure that each column selection is unique.",
-          easyClose = TRUE,
-          footer = NULL
-        ))
-        return()
-      }
-
-      # Extract and store the "Grouping Variables" column
-      grouping_variables(selected_cols[["Group Identifiers"]][["Grouping Variables"]])
-
-      # Remove "Grouping Variables" from selected columns to prevent renaming
-      selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-        names(selected_cols[["Group Identifiers"]]) != "Grouping Variables"
-      ]
-
-      # Rename columns
-      colnames(data) <- sapply(colnames(data), function(col) {
-        for (group in names(selected_cols)) {
-          if (col %in% selected_cols[[group]]) {
-            return(names(selected_cols[[group]])[which(selected_cols[[group]] == col)])
-          }
-        }
-        return(col)
-      })
-
-      # Handle ADOSEDUR == NA case
-      if (input$select_ADOSEDUR == "NA") {
-        data$ADOSEDUR <- 0
-      }
-
-      # Update dataset columns if manual units are selected
-      if (input$select_AVALU %in% manual_conc_units) {
-        data$AVALU <- input$select_AVALU
-      }
-      if (input$select_DOSEU %in% manual_dose_units) {
-        data$DOSEU <- input$select_DOSEU
-      }
-      if (input$select_RRLTU %in% manual_time_units) {
-        data$RRLTU <- input$select_RRLTU
-      }
-
-      # Reorder columns based on the desired order
-      ordered_data <- data[, c(desired_order, setdiff(names(data), desired_order))] %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after auc0 merged
-      processed_data(ordered_data)
-
-      # Navigate to the "Review Data" tab
-      nav_select("data_navset", "Review Data")
-    })
-
+    # Global variable to store grouping variables
+    grouping_variables <- column_mapping$grouping_variables
 
     # Handle user-provided filters
     filters <- reactiveValues()
@@ -383,20 +137,20 @@ tab_data_server <- function(id) {
       filters[[filter_id]] <- input_filter_server(filter_id)
     })
 
-    # create reactive value with applied filters
+    # Create reactive value with applied filters
     data <- reactiveVal(NULL)
     observeEvent(list(input$submit_filters, processed_data()), {
-      # extract filters from reactive #
+      # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
 
-      # filter and overwrite data #
+      # Filter and overwrite data
       filtered_data <- apply_filters(
         processed_data(), applied_filters
       )
       data(filtered_data)
     }, ignoreInit = FALSE)
 
-    # update the data table object with the filtered data #
+    # Update the data table object with the filtered data
     output$data_processed <- renderReactable({
       req(data())
       reactable(
