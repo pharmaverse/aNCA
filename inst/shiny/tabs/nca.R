@@ -217,6 +217,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   print(mydata$conc$columns$groups$group_analyte)
   
   # Redefine units for each analyte and for potential customizations
+  unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
   mydata$units <- crossing(
     mydata$units,
     !!sym(mydata$conc$columns$groups$group_analyte) := unique_analytes)  %>%
@@ -350,26 +351,36 @@ observeEvent(mydata()$intervals, {
   print(mydata()$units)
 })
 
+
+modal_units_table <- reactiveVal(NULL)
+observeEvent(list(mydata()$units, input$select_unitstable_analyte) ,{
+  req(mydata()$units)
+  req(input$select_unitstable_analyte)
+  modal_units_table <- mydata()$units %>%
+    mutate(row_original = 1:n()) %>% 
+    dplyr::group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>% 
+    dplyr::filter(!!sym(mydata()$conc$columns$groups$group_analyte) == input$select_unitstable_analyte) %>% 
+    dplyr::rename(`Parameter` = PPTESTCD,
+                  `Default unit` = PPORRESU,
+                  `Conversion Factor` = conversion_factor,
+                  `Custom unit` = PPSTRESU) %>% 
+    dplyr::mutate(Analytes = paste(!!sym(mydata()$conc$columns$groups$group_analyte), collapse = ", "),
+                  row_original = paste(row_original, collapse = ",")) %>% 
+    dplyr::ungroup() %>% 
+    dplyr::select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
+  modal_units_table(modal_units_table)
+  print(modal_units_table())
+})
+
 output$modal_units_table <- DT::renderDT({
   datatable(
-    data = mydata()$units  %>%
-      mutate(row_original = 1:n()) %>% 
-      dplyr::group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>% 
-      dplyr::filter(!!sym(mydata()$conc$columns$groups$group_analyte) == input$select_unitstable_analyte) %>% 
-      dplyr::rename(`Parameter` = PPTESTCD,
-                    `Default unit` = PPORRESU,
-                    `Conversion factor` = conversion_factor,
-                    `User unit` = PPSTRESU) %>% 
-      dplyr::mutate(Analytes = paste(!!sym(mydata()$conc$columns$groups$group_analyte), collapse = ", "),
-                    row_original = paste(row_original, collapse = ",")) %>% 
-      dplyr::ungroup() %>% 
-      dplyr::select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`),
+    data = modal_units_table(),
     escape = FALSE,
     class = "table table-striped table-bordered",
     editable = list(
       target = "cell",
       disable = list(
-        columns = which(names(mydata()$units) %in% c("PPTESTCD", "PPORRESU")))
+        columns = c(1, 2, 3))
     ),
     options = list(
       order = list(2, "desc"),
@@ -380,7 +391,7 @@ output$modal_units_table <- DT::renderDT({
       rowCallback = JS(
         "function(row, data, index) {",
         "  var paramsToCalculate = ", paste0("['", paste(params_to_calculate(), collapse = "','"), "']"), ";",
-        "  if (paramsToCalculate.indexOf(data[2]) === -1) {",
+        "  if (paramsToCalculate.indexOf(data[1]) === -1) {",
         "    $(row).hide();",
         "  }",
         "}"
