@@ -65,6 +65,12 @@ fluidPage(
                   ),
                   selected = "lin up/log down"
                 ),
+                actionButton(
+                  "open_units_table",
+                  icon = shiny::icon("scale-balanced"),
+                  label = "Parameter Units",
+                  disabled = TRUE
+                  ),
                 br(),
                 checkboxInput("AUCoptions", "Select Partial AUC"),
                 conditionalPanel(

@@ -26,16 +26,16 @@ observeEvent(data(), {
 
 # Make GUI change when new settings are uploaded
 observeEvent(input$settings_upload, {
-
+  
   setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
   # Set the basic settings
   analyte <- setts$ANALYTE[1]
   doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
-
+  
   # Check that match with the data currently loaded
   if (!setts$ANALYTE[1] %in% unique(data()$ANALYTE) ||
-        !all(doses_selected %in% unique(data()$DOSNO))) {
-
+      !all(doses_selected %in% unique(data()$DOSNO))) {
+    
     showNotification(
       validate("The analyte selected in the settings file is not present in the data. Please, if
                 you want to use this settings for a different file, make sure all meaningful
@@ -55,15 +55,15 @@ observeEvent(input$settings_upload, {
     group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
     mutate(IX = seq_len(n())) %>% # Assuming data() returns the newly uploaded dataset
     select(STUDYID, USUBJID, AVAL, DOSNO, TIME, IX)
-
+  
   setts_lambda <- setts %>%
     select(STUDYID, USUBJID, DOSNO, IX, AVAL, TIME) %>%
     na.omit()
-
+  
   # Identify mismatched data points
   mismatched_points <- setts_lambda %>%
     anti_join(new_data, by = c("USUBJID", "DOSNO", "IX", "AVAL", "TIME"))
-
+  
   if (nrow(mismatched_points) > 0) {
     showModal(modalDialog(
       title = "Mismatched Data Points",
@@ -73,16 +73,16 @@ observeEvent(input$settings_upload, {
       easyClose = TRUE,
       footer = NULL
     ))
-
+    
     output$mismatched_table <- DT::renderDT({
       datatable(mismatched_points %>%
                   select(-IX))
     })
-
+    
     setts <- setts %>%
       anti_join(mismatched_points, by = c("USUBJID", "DOSNO"))
   }
-
+  
   # Analyte
   updateSelectInput(
     session,
@@ -91,7 +91,7 @@ observeEvent(input$settings_upload, {
     choices = data()$ANALYTE[1],
     selected = setts$ANALYTE[1]
   )
-
+  
   # Dose number
   updateSelectInput(
     session,
@@ -100,7 +100,7 @@ observeEvent(input$settings_upload, {
     choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(DOSNO))),
     selected = doses_selected
   )
-
+  
   # Extrapolation Method
   method_choices <- c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation")
   updateSelectInput(
@@ -110,7 +110,7 @@ observeEvent(input$settings_upload, {
     choices = c("lin-log", "lin up/log down", "linear"),
     selected = setts$method
   )
-
+  
   # AUC intervals
   if (!is.na(setts$auc_mins[1])) {
     updateCheckboxInput(session, inputId = "AUCoptions", label = "Select Partial AUC", value = TRUE)
@@ -118,7 +118,7 @@ observeEvent(input$settings_upload, {
     auc_maxs <- as.character(setts$auc_maxs[1])
     auc_mins <- strsplit(auc_mins, split = ",")[[1]]
     auc_maxs <- strsplit(auc_maxs, split = ",")[[1]]
-
+    
     for (i in seq_along(auc_mins)) {
       auc_counter(auc_counter() + 1)
       insertUI(
@@ -132,7 +132,7 @@ observeEvent(input$settings_upload, {
       )
     }
   }
-
+  
   # RSADJ
   if (!is.na(setts$adj.r.squared_threshold[1])) {
     updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = TRUE)
@@ -145,7 +145,7 @@ observeEvent(input$settings_upload, {
   } else {
     updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = FALSE)
   }
-
+  
   # AUCPE.Obs
   if (!is.na(setts$aucpext.obs_threshold[1])) {
     updateCheckboxInput(session, inputId = "rule_aucpext_obs", value = TRUE)
@@ -153,7 +153,7 @@ observeEvent(input$settings_upload, {
   } else {
     updateCheckboxInput(session, inputId = "rule_aucpext_obs", label = "", value = FALSE)
   }
-
+  
   # AUCPE.Pred
   if (!is.na(setts$aucpext.pred_threshold[1])) {
     updateCheckboxInput(session, inputId = "rule_aucpext_pred",  value = TRUE)
@@ -161,7 +161,7 @@ observeEvent(input$settings_upload, {
   } else {
     updateCheckboxInput(session, inputId = "rule_aucpext_pred", value = FALSE)
   }
-
+  
   # SPAN
   if (!is.na(setts$span.ratio_threshold[1])) {
     updateCheckboxInput(session, inputId = "rule_span_ratio", label = "SPAN: ", value = TRUE)
@@ -179,29 +179,29 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Segregate the data into concentration and dose records
   df_conc <- create_conc(data(), input$analyte, input$proftype)
   df_dose <- create_dose(df_conc)
-
+  
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- NA  # Exclusions will have preferential reason statements than inclusions
   df_conc$exclude_half.life <- FALSE
-
+  
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID / DOSNO,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + USUBJID + DOSNO / ANALYTE,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
-
+  
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + USUBJID + DOSNO,
     route = ifelse(toupper(df_dose$IQROUTE) == "EXTRAVASCULAR", "extravascular", "intravascular"),
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
-
+  
   # Combine the PKNCA objects into the PKNCAdata object
   # TODO think of case with different units for different analytes
   mydata <- PKNCA::PKNCAdata(
@@ -214,6 +214,15 @@ observeEvent(input$submit_analyte, priority = 2, {
       timeu = myconc$data$RRLTU[1]
     )
   )
+  print(mydata$conc$columns$groups$group_analyte)
+  
+  # Redefine units for each analyte and for potential customizations
+  mydata$units <- crossing(
+    mydata$units,
+    !!sym(mydata$conc$columns$groups$group_analyte) := unique_analytes)  %>%
+    dplyr::mutate(PPSTRESU = PPORRESU,
+                  conversion_factor = 1)
+  
   mydata(mydata)
 })
 
@@ -293,6 +302,114 @@ observeEvent(input$submit_analyte, priority = -1, {
   )
 })
 
+# Parameters units
+observeEvent(mydata(),{
+             updateActionButton(session = session, 
+                                inputId = "open_units_table", 
+                                disabled = FALSE)
+})
+observeEvent(input$open_units_table, {
+  showModal(modalDialog(
+    title = tagList(
+      span("Units of NCA parameter results"),
+      tags$button(
+        type = "button",
+        class = "close",
+        `data-dismiss` = "modal",
+        `aria-label` = "Close",
+        span(`aria-hidden` = "true", HTML("&times;"))
+      )
+    ),
+    selectInput(
+      inputId = "select_unitstable_analyte",
+      multiple = TRUE,
+      label = "Select Analyte:",
+      choices = mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]] %>% unique(),
+      selected = mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]] %>% unique()
+    ),
+    DTOutput(("modal_units_table")),
+    footer = tagList(
+      modalButton("Close"),
+      actionButton(("save_units_table"), "Save Units Table")
+    ),
+    size = "l"
+  ))
+})
+
+params_to_calculate <- reactiveVal(NULL)
+observeEvent(mydata()$intervals, {
+  params_to_calculate <- names(mydata()$intervals)[sapply(mydata()$intervals, function(x) {
+    if (is.logical(x)) {
+      any(x)
+    } else {
+      FALSE
+    }
+  })]
+  params_to_calculate(params_to_calculate)
+  print(params_to_calculate())
+  print(mydata()$units)
+})
+
+output$modal_units_table <- DT::renderDT({
+  datatable(
+    data = mydata()$units  %>%
+      mutate(row_original = 1:n()) %>% 
+      dplyr::group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>% 
+      dplyr::filter(!!sym(mydata()$conc$columns$groups$group_analyte) == input$select_unitstable_analyte) %>% 
+      dplyr::rename(`Parameter` = PPTESTCD,
+                    `Default unit` = PPORRESU,
+                    `Conversion factor` = conversion_factor,
+                    `User unit` = PPSTRESU) %>% 
+      dplyr::mutate(Analytes = paste(!!sym(mydata()$conc$columns$groups$group_analyte), collapse = ", "),
+                    row_original = paste(row_original, collapse = ",")) %>% 
+      dplyr::ungroup() %>% 
+      dplyr::select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`),
+    escape = FALSE,
+    class = "table table-striped table-bordered",
+    editable = list(
+      target = "cell",
+      disable = list(
+        columns = which(names(mydata()$units) %in% c("PPTESTCD", "PPORRESU")))
+    ),
+    options = list(
+      order = list(2, "desc"),
+      paging = FALSE,
+      searching = TRUE,
+      autoWidth = TRUE,
+      dom = "ft",
+      rowCallback = JS(
+        "function(row, data, index) {",
+        "  var paramsToCalculate = ", paste0("['", paste(params_to_calculate(), collapse = "','"), "']"), ";",
+        "  if (paramsToCalculate.indexOf(data[2]) === -1) {",
+        "    $(row).hide();",
+        "  }",
+        "}"
+      ),
+      columnDefs = list(
+        list(
+          visible = FALSE,
+          targets = c(0,3,6) # Hides row index, ANALYTE and row_original
+        )
+      )
+    )
+  )
+})
+
+# Save table changes from the UI into the server
+observeEvent(input$selected_modal_units_table_cell_edit, {
+  info <- input$selected_modal_units_table_cell_edit
+  # 
+  # new_tlg_order <- tlg_order()
+  # new_tlg_order[new_tlg_order$Selection, ][info$row, info$col] <- info$value
+  # tlg_order(new_tlg_order)
+})
+
+# observeEvent(input$save_units_table, {
+#   
+#   removeModal()
+# })
+
+
 # Partial AUC Selection
 auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
 intervals_userinput_data <- reactiveVal(NULL)
@@ -324,17 +441,17 @@ observeEvent(input$nca, {
     # Collect all inputs for the AUC intervals
     input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
     input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-
+    
     auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
     auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
-
+    
     # Define the intervals specified by the user
     intervals_userinput_data(
       data.frame(start = auc_mins, end = auc_maxs) %>%
         arrange(start, end) %>%
         unique()
     )
-
+    
     # Use the base intervals dataset settings as a reference and cross it with the inputs
     intervals_userinput <- mydata()$intervals %>%
       filter(end == Inf) %>%
@@ -350,7 +467,7 @@ observeEvent(input$nca, {
     # Return the output
     intervals_userinput(intervals_userinput)
   }
-
+  
   # Make the user aware if it forgot to select at least 1 DOSNO
   if (is.null(input$cyclenca)) {
     showNotification(
@@ -364,7 +481,7 @@ observeEvent(input$nca, {
     rv$trigger <- rv$trigger + 1
     updateTabsetPanel(session, "ncapanel", selected = "Results")
   }
-
+  
   # Update profiles per patient considering the profiles selected
   mydataconc_new <- mydata()$conc$data %>% filter(DOSNO %in% input$cyclenca)
   profiles_per_patient(tapply(mydataconc_new$DOSNO, mydataconc_new$USUBJID, unique))
@@ -374,30 +491,30 @@ observeEvent(input$nca, {
 
 res_nca <- eventReactive(rv$trigger, {
   req(!is.null(input$cyclenca))
-
+  
   withProgress(message = "Calculating NCA...", value = 0, {
     req(mydata())
-
+    
     # Increment progress to 50% after getting dataNCA
     incProgress(0.5, detail = "Performing NCA calculations...")
-
+    
     # Use the user inputs to determine the NCA settings to apply
     PKNCA::PKNCA.options(
       auc.method = input$method,
       allow.tmax.in.half.life = TRUE,
-
+      
       # Make sure the standard options do not prohibit results
       min.hl.r.squared = 0.001,
       min.span.ratio = Inf,
       min.hl.points = 2
     )
-
+    
     # Filter the data based on the selected profiles
     mydata <- mydata()
-
+    
     mydata$conc$data <- mydata$conc$data %>%
       filter(DOSNO %in% as.numeric(input$cyclenca))
-
+    
     # Include manually the calculation of AUCpext.obs and AUCpext.pred
     mydata$intervals <- mydata$intervals  %>%
       mutate(aucinf.obs.dn = TRUE,
@@ -415,13 +532,13 @@ res_nca <- eventReactive(rv$trigger, {
         aucpext.obs = TRUE,
         aucpext.pred = TRUE
       )
-
+    
     # Perform NCA on the profiles selected
     myres <- PKNCA::pk.nca(data = mydata, verbose = FALSE)
-
+    
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
-
+    
     # Return the result
     return(myres)
   })
@@ -439,14 +556,14 @@ final_res_nca <- reactiveVal(NULL)
 
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
-
+  
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- reshape_pknca_results(res_nca())
-
+  
   # Get all inputs which are TRUE and start with 'rule_'
   for (rule_input in grep("^rule_", names(input), value = TRUE)) {
     if (!input[[rule_input]]) next
-
+    
     pptestcd <- rule_input |>
       gsub("^rule_", "", x = _) |>
       gsub("_", ".", x = _, fixed = TRUE)
@@ -460,20 +577,20 @@ observeEvent(res_nca(), {
       }
     }
   }
-
+  
   # Include units for all column names
   dict_pttestcd_with_units <- res_nca()$result %>%
     select(PPTESTCD, PPORRESU) %>%
     unique() %>%
     pull(PPORRESU, PPTESTCD)
-
+  
   final_res_nca <- final_res_nca %>%
     rename_with(~ifelse(
       gsub("_.*", "", .x) %in% names(dict_pttestcd_with_units),
       paste0(.x, "[", dict_pttestcd_with_units[gsub("_.*", "", .x)], "]"),
       .x
     ))
-
+  
   # Sort alphabetically all columns but the grouping and the exclude columns
   group_cols <- c(unname(unlist(res_nca()$data$conc$columns$groups)), "start", "end")
   exclude_cols <- names(final_res_nca)[startsWith(names(final_res_nca), "exclude.")]
@@ -482,7 +599,7 @@ observeEvent(res_nca(), {
     sort(setdiff(names(final_res_nca), c(group_cols, exclude_cols))),
     sort(exclude_cols)
   )]
-
+  
   # Create a reshaped object
   final_res_nca(
     final_res_nca %>%
@@ -499,7 +616,7 @@ observeEvent(res_nca(), {
         )
       )
   )
-
+  
   # Allow user to choose the parameters to display of final_res_nca
   updatePickerInput(
     session = session,
@@ -554,9 +671,9 @@ output$local_download_NCAres <- downloadHandler(
     old_wd <- getwd()  # save old working directory
     tempdir <- tempdir()  # create a temporary directory
     setwd(tempdir)  # change working directory to temporary directory
-
+    
     write.csv(final_res_nca(), file, row.names = FALSE)
-
+    
     setwd(old_wd)  # change working directory back to original
   }
 )
@@ -567,10 +684,10 @@ output$settings_save <- downloadHandler(
     paste(mydata()$conc$data$STUDYID[1], "NCA_settings.csv", sep = "_")
   },
   content = function(file) {
-
+    
     # Get the data settings from the NCA results (data run)
     myconc <- res_nca()$data$conc
-
+    
     # Create a settings file that the user can download/upload
     #for establishing the same configuration
     setts_lambda <- myconc$data %>%
@@ -587,19 +704,19 @@ output$settings_save <- downloadHandler(
         "TYPE",
         "REASON"
       )))
-
+    
     # Make sure that there is at least one row so the settings can be considered
     if (nrow(setts_lambda) == 0) {
       setts_lambda <- setts_lambda %>%
         add_row()
     }
-
+    
     # Consider the intervals defined by the user for the AUC calculation
     input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
     input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
     auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
     auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
-
+    
     # Include the rule settings as additional columns
     setts <- setts_lambda %>%
       mutate(
@@ -625,7 +742,7 @@ output$settings_save <- downloadHandler(
         auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
         auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
       )
-
+    
     write.csv(setts, file, row.names = FALSE)
   },
   contentType = "text/csv"
@@ -639,14 +756,14 @@ observe({
     observeEvent(input[[input_name]], {
       # Get the ID of the exclusion
       id <- gsub("_(Ex\\d+)$", "", input_name)
-
+      
       # Update the reactive list of exclusion IDs
       manual_slopes <- manual_slopes()
       set_selected_value(
         manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
       ) <- manual_slopes[manual_slopes$id == id, ]
       manual_slopes(manual_slopes)
-
+      
     })
   }
 })
@@ -664,7 +781,7 @@ output$preslopesettings <- DT::renderDataTable({
       starts_with("half.life"),
       "exclude.lambda.z"
     )
-
+  
   # Render the DT datatable object
   DT::datatable(
     data = preslopesettings,
