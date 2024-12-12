@@ -87,14 +87,14 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
           textInput(
             session$ns(opt_id),
             label = label,
-            value = ""
+            value = opt_def$default
           )
         },
         numeric = {
           numericInput(
             session$ns(opt_id),
             label = label,
-            value = 0
+            value = opt_def$default
           )
         },
         select = {
@@ -107,10 +107,23 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
               opt_def$choices
             }
           }
+
+          selected <- {
+            if (!is.null(opt_def$default)) {
+              if (opt_def$default == ".all") {
+                choices
+              } else {
+                opt_def$default
+              }
+            } else {
+              ""
+            }
+          }
+
           selectInput(
             session$ns(opt_id),
             label = label,
-            selected = "",
+            selected = selected,
             choices = c("", choices),
             multiple = isTRUE(opt_def$multiple)
           )
