@@ -22,7 +22,7 @@ g_pkconc_ind_lin:
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with linear scale"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkconc_ind_lin
-  opts:
+  options:
     xvar:
       type: select
       label: X axis
@@ -66,7 +66,7 @@ g_pkconc_ind_log:
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkconc_ind_log
-  opts:
+  options:
     footnote:
       type: text
       label: Footnote

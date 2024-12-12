@@ -73,11 +73,11 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       plot_list()[[current_page()]]
     })
 
-    opts <- reactiveValues()
+    options <- reactiveValues()
 
     option_widgets <- purrr::imap(options, function(opt_def, opt_id) {
       observeEvent(input[[opt_id]], {
-        opts[[opt_id]] <- input[[opt_id]]
+        options[[opt_id]] <- input[[opt_id]]
       })
 
       label <- if (is.null(opt_def$label)) opt_id else opt_def$label

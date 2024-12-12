@@ -276,7 +276,7 @@ tab_tlg_server <- function(id, data) {
           g_def <- .TLG_DEFINITIONS[[g_id]]
 
           if (exists(g_def$fun)) {
-            tlg_plot_server(g_id, get(g_def$fun), g_def$opts, data)
+            tlg_plot_server(g_id, get(g_def$fun), g_def$options, data)
             tlg_plot_ui(session$ns(g_id))
           } else {
             tags$div("Plot not implemented yet")
