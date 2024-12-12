@@ -80,6 +80,10 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
 
     #' creates widgets responsible for custimizing the plots
     option_widgets <- purrr::imap(options, function(opt_def, opt_id) {
+      if (grepl(".group_label", opt_id)) {
+        return(tags$h1(opt_def, class = "tlg-group-label"))
+      }
+
       observeEvent(input[[opt_id]], {
         options_[[opt_id]] <- input[[opt_id]]
       })

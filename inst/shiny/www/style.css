@@ -150,3 +150,11 @@
     align-items: baseline;
     margin-bottom: 1em;
   }
+
+  /* tlg tab */
+  h1.tlg-group-label {
+  font-weight: bold;
+  font-size: 3rem;
+  border-bottom: thin solid #337ab7;
+  border-radius: 0 0 .25em 0;
+}

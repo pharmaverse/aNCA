@@ -22,6 +22,9 @@
 #                 # outright or using a special keyword:
                   #   - .colnames keyword will pull the choices from the data column names
                   #   - .COLUMN_NAME keyword will pull choices from values of a specific column
+#     There are additional keywords to allow shaping the resulting interface:
+#     .group_label_N: # will create a label to help visually group related widgets; should be a character
+#                     # string; N should be replaced with an integer to uniquely identify the keyword 
 g_pkconc_ind_lin:
   is_default: true
   type: Graph
@@ -32,6 +35,7 @@ g_pkconc_ind_lin:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkconc_ind_lin
   options:
+    .group_label_1: "General"
     xvar:
       type: select
       label: X axis
@@ -50,6 +54,7 @@ g_pkconc_ind_lin:
         - PCSPEC
         - PARAM
         - USUBJID
+    .group_label_2: "Labels"
     footnote:
       type: text
       label: Footnote
@@ -60,6 +65,7 @@ g_pkconc_ind_lin:
     ylab:
       type: text
       label: Y axis label
+    .group_label_3: "Limits"
     xmin:
       type: numeric
     xmax:
