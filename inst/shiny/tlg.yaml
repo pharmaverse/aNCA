@@ -14,6 +14,9 @@
 #     optname:    # option name, the same as the argument that is passed to the rendering function
 #       type:     # type of the option/widget, one of: text, numeric, select
 #       label:    # label to be displayed in the editing widget
+#       default:  # default value to be provided in the field; if provided, will overwrite function
+#                 # argument defaults. if left empty, function defaults will be applied; if type is selected,
+#                 # '.all' keyword can be applied to select all choices
 #       multiple: # applicable to 'select' type, whether to allow for multiple values to be selected
 #       choices:  # applicable to 'select' type, choices to pick from the dropdown, either specified
 #                 # outright or using a special keyword:
@@ -40,6 +43,7 @@ g_pkconc_ind_lin:
     plotgroup_vars:
       type: select
       label: "Grouping variables"
+      default: .all
       multiple: true
       choices:
         - ROUTE
@@ -52,6 +56,7 @@ g_pkconc_ind_lin:
     xlab:
       type: text
       label: X axis label
+      default: "Test default label"
     ylab:
       type: text
       label: Y axis label
