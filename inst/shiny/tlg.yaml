@@ -8,11 +8,16 @@
 #   label: # short label to display as tab name
 #   description: # longer descriptions, to be displayed in the order table
 #   link: # link to the documentation of the TLG
-#   fun: # name of the function exported by the package, responsible for generating TLG
-#   opts:        # options that can be passed as arguments to the function
-#     - option1  # will generate input widgets for editing
-#     - option2  # TODO: add ability to specify default value and type
-
+#   fun: # name of the function exported by the package, responsible for generating TLG, must
+#        # return a list of plots to be displayed
+#   options:        # options that can be passed as arguments to the function
+#     optname:    # option name, the same as the argument that is passed to the rendering function
+#       type:     # type of the option/widget, one of: text, numeric, select
+#       label:    # label to be displayed in the editing widget
+#       multiple: # applicable to 'select' type, whether to allow for multiple values to be selected
+#       choices:  # applicable to 'select' type, choices to pick from the dropdown, either specified
+#                 # outright or using a special keyword:
+                  #   - .colnames keyword will pull the choices from the data column names
 g_pkconc_ind_lin:
   is_default: true
   type: Graph
