@@ -88,7 +88,7 @@ tab_tlg_server <- function(id, data) {
           Selection = x$is_default,
           Type = x$type,
           Dataset = x$dataset,
-          PKid = paste0("<a href='", x$link, "'>", x$pkid, "</a>"),
+          PKid = paste0("<a href='", x$link, "' target='_blank'>", x$pkid, "</a>"),
           Description = x$description
         )
       })
