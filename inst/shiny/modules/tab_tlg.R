@@ -68,31 +68,18 @@ tab_tlg_server <- function(id, data) {
 
     # Make available the CSV file with the TLG list and available links to NEST
     tlg_order <- reactiveVal({
-      tlg_data <- dplyr::tibble(
-        id = character(),
-        Selection = logical(),
-        Type = character(),
-        Dataset = character(),
-        PKid = character(),
-        Description = character(),
-        Footnote = character(),
-        Stratification = character(),
-        Condition = character(),
-        Comment = character()
-      )
-
-      purrr::iwalk(.TLG_DEFINITIONS, function(x, id) {
-        tlg_data <<- dplyr::add_row(
-          tlg_data,
-          id = id,
-          Selection = x$is_default,
-          Type = x$type,
-          Dataset = x$dataset,
-          PKid = paste0("<a href='", x$link, "' target='_blank'>", x$pkid, "</a>"),
-          Description = x$description
-        )
-      })
-      tlg_data
+      purrr::map_dfr(.TLG_DEFINITIONS, ~ dplyr::tibble(
+        Selection = .x$is_default,
+        Type = .x$type,
+        Dataset = .x$dataset,
+        PKid = paste0("<a href='", .x$link, "' target='_blank'>", .x$pkid, "</a>"),
+        Description = .x$description,
+        Footnote = NA_character_,
+        Stratification = NA_character_,
+        Condition = NA_character_,
+        Comment = NA_character_
+      )) %>%
+        dplyr::mutate(id = dplyr::row_number(), .before = dplyr::everything())
     })
 
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
