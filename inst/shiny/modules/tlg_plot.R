@@ -59,7 +59,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
 
 
     plot_list <- reactive({
-      plot_options <- purrr::list_modify(list(data = data()), !!!reactiveValuesToList(opts))
+      plot_options <- purrr::list_modify(list(data = data()), !!!reactiveValuesToList(options_))
 
       purrr::iwalk(plot_options, \(value, name) {
         if (isTRUE(value %in% c(NULL, "", 0)))
@@ -73,11 +73,10 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       plot_list()[[current_page()]]
     })
 
-    options <- reactiveValues()
-
+    options_ <- reactiveValues()
     option_widgets <- purrr::imap(options, function(opt_def, opt_id) {
       observeEvent(input[[opt_id]], {
-        options[[opt_id]] <- input[[opt_id]]
+        options_[[opt_id]] <- input[[opt_id]]
       })
 
       label <- if (is.null(opt_def$label)) opt_id else opt_def$label
