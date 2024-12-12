@@ -1,0 +1,103 @@
+# Configuration file containing TLG definitions. Each TLG should be a separate entry, with unique ID.
+# The TLG entry should have the following format:
+# id:
+#   is_default: # true / false whether TLG should be included as default
+#   type: # Graph / List / Table
+#   dataset: # name of the dataset
+#   pkid: # standarized id of the TLG
+#   label: # short label to display as tab name
+#   description: # longer descriptions, to be displayed in the order table
+#   link: # link to the documentation of the TLG
+#   fun: # name of the function exported by the package, responsible for generating TLG, must
+#        # return a list of plots to be displayed
+#   options:        # options that can be passed as arguments to the function
+#     optname:    # option name, the same as the argument that is passed to the rendering function
+#       type:     # type of the option/widget, one of: text, numeric, select
+#       label:    # label to be displayed in the editing widget
+#       default:  # default value to be provided in the field; if provided, will overwrite function
+#                 # argument defaults. if left empty, function defaults will be applied; if type is selected,
+#                 # '.all' keyword can be applied to select all choices
+#       multiple: # applicable to 'select' type, whether to allow for multiple values to be selected
+#       choices:  # applicable to 'select' type, choices to pick from the dropdown, either specified
+#                 # outright or using a special keyword:
+                  #   - .colnames keyword will pull the choices from the data column names
+                  #   - .COLUMN_NAME keyword will pull choices from values of a specific column
+#     There are additional keywords to allow shaping the resulting interface:
+#     .group_label_N: # will create a label to help visually group related widgets; should be a character
+#                     # string; N should be replaced with an integer to uniquely identify the keyword 
+g_pkconc_ind_lin:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg01
+  label: pkcg01 - linear
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with linear scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
+  fun: g_pkconc_ind_lin
+  options:
+    .group_label_1: "General"
+    xvar:
+      type: select
+      label: X axis
+      choices: .colnames
+    yvar:
+      type: select
+      label: Y axis
+      choices: .colnames
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - USUBJID
+    .group_label_2: "Labels"
+    footnote:
+      type: text
+      label: Footnote
+    xlab:
+      type: text
+      label: X axis label
+      default: "Test default label"
+    ylab:
+      type: text
+      label: Y axis label
+    .group_label_3: "Limits"
+    xmin:
+      type: numeric
+    xmax:
+      type: numeric
+    ymin:
+      type: numeric
+    ymax:
+      type: numeric
+g_pkconc_ind_log:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg01
+  label: pkcg01 - log
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
+  fun: g_pkconc_ind_log
+  options:
+    footnote:
+      type: text
+      label: Footnote
+    xlab:
+      type: text
+      label: X axis label
+    ylab:
+      type: text
+      label: Y axis label
+    xmin:
+      type: numeric
+    xmax:
+      type: numeric
+    ymin:
+      type: numeric
+    ymax:
+      type: numeric
