@@ -9,10 +9,10 @@ g_pkconc_ind_lin(data, ...)
 \arguments{
 \item{data}{Data to be passed into the plotting function.}
 
-\item{...}{Any other parameters to be passed into the ploting function.}
+\item{...}{Any other parameters to be passed into the plotting function.}
 }
 \value{
-ggplot2 object for pckg01.
+ggplot2 object for pkcg01.
 }
 \description{
 Wrapper around aNCA::pkcg01() function. Calls the function with \code{LIN} scale argument.

@@ -38,6 +38,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
     observeEvent(input$previous_page, current_page(current_page() - 1))
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
 
+    #' when data is provided, set page to 1 and render appropriate UI
     observeEvent(data(), {
       current_page(1)
       output$page_number <- renderUI(length(plot_list()))
@@ -51,13 +52,14 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       })
     })
 
+    #' updates UI responsible for page change
     observeEvent(current_page(), {
       shinyjs::toggleState(id = "previous_page", condition = current_page() > 1)
       shinyjs::toggleState(id = "next_page", condition = current_page() < length(plot_list()))
       updateSelectInput(session = session, inputId = "select_page", selected = current_page())
     })
 
-
+    #' keeps list of plots to render, with options gathered from the UI and applied
     plot_list <- reactive({
       plot_options <- purrr::list_modify(list(data = data()), !!!reactiveValuesToList(options_))
 
@@ -73,7 +75,10 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       plot_list()[[current_page()]]
     })
 
+    #' holds options gathered from UI widgets
     options_ <- reactiveValues()
+
+    #' creates widgets responsible for custimizing the plots
     option_widgets <- purrr::imap(options, function(opt_def, opt_id) {
       observeEvent(input[[opt_id]], {
         options_[[opt_id]] <- input[[opt_id]]

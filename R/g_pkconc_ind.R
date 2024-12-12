@@ -1,7 +1,7 @@
 #' Wrapper around aNCA::pkcg01() function. Calls the function with `LIN` scale argument.
 #' @param data Data to be passed into the plotting function.
-#' @param ...  Any other parameters to be passed into the ploting function.
-#' @returns ggplot2 object for pckg01.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg01.
 #' @export
 g_pkconc_ind_lin <- function(data, ...) {
   pkcg01(adpc = data, scale = "LIN", ...)
@@ -9,8 +9,8 @@ g_pkconc_ind_lin <- function(data, ...) {
 
 #' Wrapper around aNCA::pkcg01() function. Calls the function with `LOG` scale argument.
 #' @param data Data to be passed into the plotting function.
-#' @param ...  Any other parameters to be passed into the ploting function.
-#' @returns ggplot2 object for pckg01.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg01.
 #' @export
 g_pkconc_ind_log <- function(data, ...) {
   pkcg01(adpc = data, scale = "LOG")
