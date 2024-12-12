@@ -18,6 +18,7 @@
 #       choices:  # applicable to 'select' type, choices to pick from the dropdown, either specified
 #                 # outright or using a special keyword:
                   #   - .colnames keyword will pull the choices from the data column names
+                  #   - .COLUMN_NAME keyword will pull choices from values of a specific column
 g_pkconc_ind_lin:
   is_default: true
   type: Graph
