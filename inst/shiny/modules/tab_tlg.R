@@ -257,7 +257,10 @@ tab_tlg_server <- function(id, data) {
                            choices = "")
       }
 
-      tlg_order_graphs <- filter(tlg_order_filt, Type == "Graph")$id
+      tlg_order_graphs <- filter(tlg_order_filt, Type == "Graph") %>%
+        select("id") %>%
+        pull()
+
       panels <- lapply(tlg_order_graphs, function(g_id) {
         plot_ui <- {
           g_def <- .TLG_DEFINITIONS[[g_id]]
