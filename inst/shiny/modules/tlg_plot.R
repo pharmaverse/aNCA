@@ -98,7 +98,15 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
           )
         },
         select = {
-          choices <- if (isTRUE(opt_def$choices == ".colnames")) names(data()) else opt_def$choices
+          choices <- {
+            if (isTRUE(opt_def$choices == ".colnames")) {
+              names(data())
+            } else if (length(opt_def$choices) == 1 && grepl("^\\.", opt_def$choices)) {
+              unique(data()[, sub("^\\.", "", opt_def$choices)])
+            } else {
+              opt_def$choices
+            }
+          }
           selectInput(
             session$ns(opt_id),
             label = label,
