@@ -16,12 +16,13 @@ tab_data_ui <- function(id) {
         "Upload your PK dataset in .csv format",
         # Local upload option
         fileInput(
-                  ns("local_upload"),
-                  width = "60%",
-                  label = NULL,
-                  placeholder = ".csv",
-                  buttonLabel = list(icon("folder"), "Upload File..."),
-                  accept = c(".csv", ".rds"))
+          ns("local_upload"),
+          width = "60%",
+          label = NULL,
+          placeholder = ".csv",
+          buttonLabel = list(icon("folder"), "Upload File..."),
+          accept = c(".csv", ".rds")
+        )
       ),
       reactableOutput(ns("filecontents"))
     ),
