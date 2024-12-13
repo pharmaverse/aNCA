@@ -391,7 +391,7 @@ output$modal_units_table <- DT::renderDT({
       rowCallback = JS(
         "function(row, data, index) {",
         "  var paramsToCalculate = ", paste0("['", paste(params_to_calculate(), collapse = "','"), "']"), ";",
-        "  if (paramsToCalculate.indexOf(data[1]) === -1) {",
+        "  if (paramsToCalculate.indexOf(data[2]) === -1) {",
         "    $(row).hide();",
         "  }",
         "}"
@@ -399,7 +399,7 @@ output$modal_units_table <- DT::renderDT({
       columnDefs = list(
         list(
           visible = FALSE,
-          targets = c(0,3,6) # Hides row index, ANALYTE and row_original
+          targets = c(0) # Hides row index, ANALYTE and row_original
         )
       )
     )
