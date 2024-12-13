@@ -411,28 +411,72 @@ output$boxplot <- renderPlotly({
   )
 })
 
-# CDISC ------------------------------------------------------------------------
+# Parameter datasets ------------------------------------------------------------------------
 
-# export pp and adpp as zip file
-output$exportCDISC <- downloadHandler(
-  filename = function() {
-    paste("CDISC_", Sys.Date(), ".zip", sep = "")
-  },
-  content = function(file) {
-    # Create a temporary directory to store the CSV files
-    temp_dir <- tempdir()
+# Create CDISC parameter datasets (PP, ADPP)
+observeEvent(res_nca(), {
+  CDISC <- export_cdisc(res_nca())
 
-    CDISC <- export_cdisc(res_nca())
-    # Export the list of data frames to CSV files in the temporary directory
-    file_paths <- rio::export_list(
-      x = CDISC,
-      file = file.path(temp_dir, paste0(names(CDISC), "_", Sys.Date(), ".csv"))
+  output$pp_dataset <- DT::renderDataTable({
+    DT::datatable(
+      data = CDISC$pp,
+      rownames = FALSE,
+      extensions = c("FixedHeader", "Buttons"),
+      options = list(
+        scrollX = TRUE,
+        scrollY = TRUE,
+        searching = TRUE,
+        fixedColumns = TRUE,
+        fixedHeader = TRUE,
+        autoWidth = TRUE,
+        dom = "Bfrtip",
+        buttons = list(
+          list(
+            extend = "copy",
+            title = paste0("PP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "csv",
+            title = paste0("PP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "excel",
+            title = paste0("PP_Dataset", "_", Sys.Date())
+          )
+        )
+      )
     )
+  }, server = FALSE)
 
-    # Create a ZIP file containing the CSV files
-    zip::zipr(zipfile = file, files = file_paths)
-  }
-)
+  output$adpp_dataset <- DT::renderDataTable({
+    DT::datatable(
+      data = CDISC$adpp,
+      extensions = c("FixedHeader", "Buttons"),
+      options = list(
+        scrollX = TRUE,
+        scrollY = TRUE,
+        lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+        fixedHeader = TRUE,
+        dom = "Bfrtip",
+        buttons = list(
+          list(
+            extend = "copy",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "csv",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "excel",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          )
+        )
+      )
+    )
+  })
+})
+
 # EXPORT Report ----------------------------------------------------------------
 
 # ATTENTION: most of the blocks in the RMD are still eval = FALSE, as
