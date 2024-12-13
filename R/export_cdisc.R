@@ -203,16 +203,14 @@ export_cdisc <- function(res_nca) {
   # select pp columns
   pp <- pp_info %>%  select(all_of(pp_col))
 
-  # Include subject metadata and select adpp columns
   adpp <- pp_info %>%
     # Elude potential collapse cases with PC variables
-    .[!names(.) %in% c("AVAL", "AVALC", "AVALU")] %>%
+    select(-any_of(c("AVAL", "AVALC", "AVALU"))) %>%
     rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU)  %>%
-    merge(
+    left_join(
       res_nca$data$dose$data %>%
-        select(any_of(c("USUBJID", setdiff(names(res_nca$data$dose$data), names(pp_info))))),
-      all.x = TRUE,
-      all.y = FALSE
+        select(-any_of(setdiff(names(pp_info), "USUBJID"))),
+      by = "USUBJID"
     ) %>%
     select(any_of(adpp_col))
 

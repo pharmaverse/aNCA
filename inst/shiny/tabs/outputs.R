@@ -458,7 +458,20 @@ observeEvent(res_nca(), {
         lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
         fixedHeader = TRUE,
         dom = "Bfrtip",
-        buttons = c("copy", "csv", "excel")
+        buttons = list(
+          list(
+            extend = "copy",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "csv",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "excel",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          )
+        )
       )
     )
   })
