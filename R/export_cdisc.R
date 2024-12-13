@@ -120,11 +120,9 @@ export_cdisc <- function(res_nca) {
 
   pp_info <- res_nca$result  %>%
     filter(is.infinite(end) | PPTESTCD == "auclast") %>%
-    merge(res_nca$data$dose$data,
+    left_join(res_nca$data$dose$data,
           by = unname(unlist(res_nca$data$dose$columns$groups)),
-          all.x = TRUE,
-          all.y = FALSE,
-          suffixes = c("", ".y")) %>%
+          suffix= c("", ".y")) %>%
     group_by(
       across(all_of(c(
         unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
