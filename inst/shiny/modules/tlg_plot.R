@@ -11,16 +11,31 @@ tlg_plot_ui <- function(id) {
           align = "center",
           tags$span(
             class = "inline-select-input",
+            style = "margin-right: 1em;",
+            tags$span("Plots per page:"),
+            selectInput(
+              ns("plots_per_page"),
+              "",
+              choices = c(1, 2, 4, 6, 8, 10, "All"),
+              selected = 1
+            )
+          ),
+          tags$span(
+            class = "inline-select-input",
             tags$span("Page "),
-            uiOutput(ns("select_page_ui")),
+            selectInput(
+              inputId = ns("select_page"),
+              label = "",
+              choices = ""
+            ),
             tags$span(" out of "),
-            uiOutput(ns("page_number"), inline = TRUE)
+            uiOutput(ns("page_number"), inline = TRUE),
           )
         ),
         div(align = "right", actionButton(ns("next_page"), "Next Page"))
       ),
       # Plots display #
-      plotlyOutput(ns("plot"))
+      uiOutput(ns("plots"))
     ),
     column(
       width = 3,
@@ -38,25 +53,37 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
     observeEvent(input$previous_page, current_page(current_page() - 1))
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
 
-    #' when data is provided, set page to 1 and render appropriate UI
-    observeEvent(data(), {
-      current_page(1)
-      output$page_number <- renderUI(length(plot_list()))
-      output$select_page_ui <- renderUI({
-        selectInput(
-          inputId = session$ns("select_page"),
-          label = "",
-          choices = seq_len(length(plot_list())),
-          selected = 1
-        )
-      })
+    #' hold reactive information about the page layout
+    num_pages <- reactive({
+      req(plot_list(), plots_per_page())
+      ceiling(length(plot_list()) / plots_per_page())
+    })
+
+    plots_per_page <- reactive({
+      if (is.null(input$plots_per_page)) return(NULL)
+      if (input$plots_per_page == "All") {
+        isolate(length(plot_list()))
+      } else {
+        as.numeric(input$plots_per_page)
+      }
     })
 
     #' updates UI responsible for page change
-    observeEvent(current_page(), {
+    observeEvent(list(current_page(), num_pages()), {
+      req(num_pages(), current_page())
       shinyjs::toggleState(id = "previous_page", condition = current_page() > 1)
-      shinyjs::toggleState(id = "next_page", condition = current_page() < length(plot_list()))
+      shinyjs::toggleState(
+        id = "next_page",
+        condition = num_pages() != 1 && current_page() < num_pages()
+      )
       updateSelectInput(session = session, inputId = "select_page", selected = current_page())
+    })
+    observeEvent(plots_per_page(), {
+      req(num_pages(), plots_per_page())
+      current_page(1)
+
+      output$page_number <- renderUI(paste0(num_pages(), "."))
+      updateSelectInput(inputId = "select_page", choices = seq_len(num_pages()))
     })
 
     #' keeps list of plots to render, with options gathered from the UI and applied
@@ -71,8 +98,14 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       do.call(render_plot, plot_options)
     })
 
-    output$plot <- renderPlotly({
-      plot_list()[[current_page()]]
+    output$plots <- renderUI({
+      req(plot_list(), plots_per_page(), current_page())
+      num_plots <- length(plot_list())
+      page_end <- current_page() * plots_per_page()
+      page_start <- page_end - plots_per_page() + 1
+      if (page_end > num_plots) page_end <- num_plots
+
+      plot_list()[page_start:page_end]
     })
 
     #' holds options gathered from UI widgets
@@ -88,58 +121,67 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
         options_[[opt_id]] <- input[[opt_id]]
       })
 
-      label <- if (is.null(opt_def$label)) opt_id else opt_def$label
-
-      switch(
-        opt_def$type,
-        text = {
-          textInput(
-            session$ns(opt_id),
-            label = label,
-            value = opt_def$default
-          )
-        },
-        numeric = {
-          numericInput(
-            session$ns(opt_id),
-            label = label,
-            value = opt_def$default
-          )
-        },
-        select = {
-          choices <- {
-            if (isTRUE(opt_def$choices == ".colnames")) {
-              names(data())
-            } else if (length(opt_def$choices) == 1 && grepl("^\\.", opt_def$choices)) {
-              unique(data()[, sub("^\\.", "", opt_def$choices)])
-            } else {
-              opt_def$choices
-            }
-          }
-
-          selected <- {
-            if (!is.null(opt_def$default)) {
-              if (opt_def$default == ".all") {
-                choices
-              } else {
-                opt_def$default
-              }
-            } else {
-              ""
-            }
-          }
-
-          selectInput(
-            session$ns(opt_id),
-            label = label,
-            selected = selected,
-            choices = c("", choices),
-            multiple = isTRUE(opt_def$multiple)
-          )
-        }
-      )
+      create_edit_widget(opt_def, opt_id)
     })
 
     output$options <- renderUI(option_widgets)
   })
+}
+
+#' Creates editing widget of appropriate type.
+#' @param opt_def Definition of the option
+#' @param opt_id  Id of the option
+#' @param session Session object for namespacing the widgets
+#' @returns Shiny widget with appropriate type, label and options
+create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReactiveDomain()) {
+  label <- if (is.null(opt_def$label)) opt_id else opt_def$label
+
+  switch(
+    opt_def$type,
+    text = {
+      textInput(
+        session$ns(opt_id),
+        label = label,
+        value = opt_def$default
+      )
+    },
+    numeric = {
+      numericInput(
+        session$ns(opt_id),
+        label = label,
+        value = opt_def$default
+      )
+    },
+    select = {
+      choices <- {
+        if (isTRUE(opt_def$choices == ".colnames")) {
+          names(data())
+        } else if (length(opt_def$choices) == 1 && grepl("^\\.", opt_def$choices)) {
+          unique(data()[, sub("^\\.", "", opt_def$choices)])
+        } else {
+          opt_def$choices
+        }
+      }
+
+      selected <- {
+        if (!is.null(opt_def$default)) {
+          if (opt_def$default == ".all") {
+            choices
+          } else {
+            opt_def$default
+          }
+        } else {
+          ""
+        }
+      }
+
+      selectInput(
+        session$ns(opt_id),
+        label = label,
+        selected = selected,
+        choices = c("", choices),
+        multiple = isTRUE(opt_def$multiple)
+      )
+    }
+  )
 }
