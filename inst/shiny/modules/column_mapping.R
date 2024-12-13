@@ -196,8 +196,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
                        "ROUTE", "DOSEA", "DOSEU", "DOSNO")
 
     # Populate the static inputs with column names
-    observe({
-      req(data())
+    observeEvent(data(), {
       column_names <- names(data())
       update_selectize_inputs(session, input_ids, column_names, manual_units, desired_order)
     })
@@ -269,17 +268,18 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
       }
 
       # Reorder columns based on the desired order
-      ordered_data <- dataset[, c(desired_order, setdiff(names(dataset), desired_order))] %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT)) #TODO: Remove this after auc0 merged
-      processed_data(ordered_data)
+      dataset %>%
+        relocate(all_of(desired_order)) %>%
+        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT)) %>% #TODO: Remove this after AUC0 merged
+        processed_data()
 
       # Execute the callback function to change the tab
       on_submit()
     })
 
-    return(list(
+    list(
       processed_data = processed_data,
       grouping_variables = grouping_variables
-    ))
+    )
   })
 }

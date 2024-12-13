@@ -168,9 +168,9 @@ tab_data_server <- function(id) {
       )
     })
 
-    return(list(
+    list(
       data = data,
       grouping_variables = grouping_variables
-    ))
+    )
   })
 }
