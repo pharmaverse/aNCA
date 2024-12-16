@@ -1,34 +1,5 @@
-# Configuration file containing TLG definitions. Each TLG should be a separate entry, with unique ID.
-# The TLG entry should have the following format:
-# id:
-#   is_default: # true / false whether TLG should be included as default
-#   type: # Graph / List / Table
-#   dataset: # name of the dataset
-#   pkid: # standarized id of the TLG
-#   label: # short label to display as tab name
-#   description: # longer descriptions, to be displayed in the order table
-#   link: # link to the documentation of the TLG
-#   fun: # name of the function exported by the package, responsible for generating TLG, must
-#        # return a list of plots to be displayed
-#   options:        # options that can be passed as arguments to the function
-#     optname:    # option name, the same as the argument that is passed to the rendering function
-#       type:     # type of the option/widget, one of: text, numeric, select
-#       label:    # label to be displayed in the editing widget
-#       default:  # default value to be provided in the field; if provided, will overwrite function
-#                 # argument defaults. if left empty, function defaults will be applied; if type is selected,
-#                 # '.all' keyword can be applied to select all choices
-#       multiple: # applicable to 'select' type, whether to allow for multiple values to be selected
-#       choices:  # applicable to 'select' type, choices to pick from the dropdown, either specified
-#                 # outright or using a special keyword:
-                  #   - .colnames keyword will pull the choices from the data column names
-                  #   - .COLUMN_NAME keyword will pull choices from values of a specific column
-#     There are additional keywords to allow shaping the resulting interface:
-#     .group_label_N: # will create a label to help visually group related widgets; should be a character
-#                     # string; N should be replaced with an integer to uniquely identify the keyword
-#
-#   template: # You can also specify template definitions. This is a character string with id of another TLG definition.
-#             # All options will be copied over from template id. Any provided parameters will be a) overwritten if existing
-#             # in the template or b) added as new.
+# Configuration file containing TLG definitions.
+# To learn more, please check .github/contributing/adding-tlg.md
 g_pkconc_ind_lin:
   is_default: true
   type: Graph
