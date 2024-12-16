@@ -6,12 +6,11 @@ tlg_plot_ui <- function(id) {
       width = 9,
       fluidRow(
         class = "plot-widgets-container",
-        div(align = "left", shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page"))),
         div(
-          align = "center",
+          align = "left",
           tags$span(
             class = "inline-select-input",
-            style = "margin-right: 1em;",
+            style = "margin-right: 5em;",
             tags$span("Plots per page:"),
             selectInput(
               ns("plots_per_page"),
@@ -19,6 +18,10 @@ tlg_plot_ui <- function(id) {
               choices = c("All", 1, 2, 4, 6, 8, 10)
             )
           ),
+          shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page"))
+        ),
+        div(
+          align = "center",
           tags$span(
             class = "inline-select-input",
             tags$span("Page "),
