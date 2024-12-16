@@ -182,7 +182,7 @@ tab_visuals_ui <- function(id) {
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
 
-tab_visuals_server <- function(id, data, res_nca) {
+tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -214,7 +214,7 @@ tab_visuals_server <- function(id, data, res_nca) {
       )
       
       # Update the colorby picker input
-      param_choices_colorby <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID"))
+      param_choices_colorby <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars()))
       
       updatePickerInput(
         session,
@@ -246,7 +246,7 @@ tab_visuals_server <- function(id, data, res_nca) {
       )
       
       # Update the selectidvar select input
-      idvar_choices <- c("PCSPEC", "DOSEA", "TRT01A", "TRT01P")
+      idvar_choices <- c("PCSPEC", "DOSEA", grouping_vars())
       
       updateSelectInput(
         session,
@@ -297,6 +297,7 @@ tab_visuals_server <- function(id, data, res_nca) {
 
     # Update the cyclesmean select input based on selected analyte
     observeEvent(input$analytemean, {
+      req(data())
       cycle_choices <- data() %>%
         filter(ANALYTE %in% input$analytemean) %>%
         pull(DOSNO) %>%
@@ -368,7 +369,7 @@ tab_visuals_server <- function(id, data, res_nca) {
       
       # Define the relevant columns for the group by picker
       group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
-      classification_cols <- sort(c("SEX", "RACE", "ACTARM", "AGE", "TRT01P", "TRT01A", "DOSEA"))
+      classification_cols <- sort(grouping_vars())
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]

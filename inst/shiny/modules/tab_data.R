@@ -1,36 +1,47 @@
-#' The data navbar tab loads a dummy data set by default.
 #' The user can upload a new data set by clicking the "Browse" button.
 #' The data set must be in CSV format and contain the following columns:
 #' STUDYID, USUBJID, ANALYTE, PCSPEC, DOSEFRQ, DOSNO, AFRLT, ARRLT, NRRLT, NFRLT,
 #' AVAL, AVALU, ROUTE, DOSEA, AGE
 
 source(system.file("/shiny/modules/input_filter.R", package = "aNCA"))
+source(system.file("/shiny/modules/column_mapping.R", package = "aNCA"))
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
-  sidebarLayout(
-    sidebarPanel(
-      actionButton(ns("login"), "Login and Select File Path"),
-      br(), br(), br(),
-      # Local upload option
-      fileInput(
-        ns("local_upload"),
-        width = "60%",
-        label = NULL,
-        placeholder = "CSV rds",
-        buttonLabel = list(icon("folder"), "Upload File..."),
-        accept = c(".csv", ".rds")
+  navset_pill(
+    id = ns("data_navset"),
+    nav_panel("Raw Data Upload",
+      card(
+        "Upload your PK dataset in .csv format",
+        # Local upload option
+        fileInput(
+          ns("local_upload"),
+          width = "60%",
+          label = NULL,
+          placeholder = ".csv",
+          buttonLabel = list(icon("folder"), "Upload File..."),
+          accept = c(".csv", ".rds")
+        )
       ),
-      br(),
-      # Add filter UI elements
-      actionButton(ns("add_filter"), "Add filter"),
-      actionButton(ns("submit_filters"), "Submit filters"),
-      tags$div(id = ns("filters")),
-      br(), br(),
+      reactableOutput(ns("filecontents"))
     ),
-    mainPanel(
-      DTOutput(ns("filecontents"))
+    nav_panel("Mapping and Filters",
+      card(
+        column_mapping_ui(ns("column_mapping"))
+      ),
+
+      card(
+        # Add filter UI elements
+        actionButton(ns("add_filter"), "Add filter"),
+        tags$div(id = ns("filters")),
+        actionButton(ns("submit_filters"), "Submit filters"),
+      )
+    ),
+    nav_panel("Review Data",
+      "This is the data set that will be used for the analysis.
+      If you want to make any changes, please do so in the Mapping and Filters tab.",
+      reactableOutput(ns("data_processed"))
     )
   )
 
@@ -38,15 +49,15 @@ tab_data_ui <- function(id) {
 
 tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
     # DATA LOADING -----------------------------------------------------------------
     # Load the dummy ADNCA example for the user as default
     ADNCA <- reactiveVal(
       read.csv(
         system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"),
         na.strings = c("", "NA")
-      ) %>%
-        # Make sure PCSTRESC is numeric and TIME is derived from the first dose
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))
+      )
     )
 
     # Load data provided by user
@@ -58,41 +69,58 @@ tab_data_server <- function(id) {
         validate("Invalid file type. Only accepted are .csv and .rds")
       )
 
-      # TODO: Make sure the dataset includes all the neded column names
-
-      # Disconsider events that do not contain drug information (i.e, Follow-up visits)
-      new_adnca <- new_adnca %>%
-        filter(
-          if ("AVISIT" %in% names(new_adnca) && !all(is.na(AVISIT))) {
-            tolower(gsub("[^a-zA-Z]", "", AVISIT)) != "followup"
-          } else {
-            TRUE
-          }
-        )
-
-      # Make sure AVAL is numeric and TIME is derived from the first dose
-      new_adnca <- new_adnca  %>%
-        mutate(
-          AVAL = {
-            if ("AVAL" %in% names(new_adnca)) {
-              as.numeric(AVAL)
-            } else {
-              ifelse(
-                PCSTRESC %in% c("BLQ", "Negative", "negative", "NEGATIVE"),
-                0,
-                as.numeric(PCSTRESC)
-              )
-            }
-          }
-        ) %>%
-        mutate(
-          TIME = ifelse(DOSNO == 1, AFRLT, ARRLT),
-          NDOSEDUR = as.numeric(NDOSEDUR),
-          ADOSEDUR = as.numeric(ADOSEDUR)
-        )
-
       ADNCA(new_adnca)
     })
+
+    output$filecontents <- renderReactable({
+      req(ADNCA())
+      reactable(
+        ADNCA(),
+        searchable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        wrap = FALSE,
+        resizable = TRUE,
+        defaultPageSize = 25,
+        showPageSizeOptions = TRUE,
+        striped = TRUE,
+        bordered = TRUE,
+        height = "98vh"
+      )
+    })
+
+    # Column Mapping ----
+
+    # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
+    manual_units <- list(
+      concentration = c("mg/L", "µg/mL", "ng/mL", "pg/mL",
+                        "mol/L", "mmol/L", "µmol/L", "nmol/L",
+                        "pmol/L", "mg/dL", "µg/dL", "ng/dL"),
+      dose = c("mg", "g", "µg", "ng", "pg", "mol", "mmol",
+               "µmol", "nmol", "pmol", "mg/kg", "g/kg",
+               "µg/kg", "ng/kg", "pg/kg", "mol/kg", "mmol/kg",
+               "µmol/kg", "nmol/kg", "pmol/kg"),
+      time = c("sec", "min", "hr", "day", "week", "month", "year")
+    )
+
+    # Define the callback function to change the tab
+    change_to_review_tab <- function() {
+      updateTabsetPanel(session, "data_navset", selected = "Review Data")
+    }
+
+    # Call the column mapping module
+    column_mapping <- column_mapping_server(
+      id = "column_mapping",
+      data = ADNCA,
+      manual_units = manual_units,
+      on_submit = change_to_review_tab
+    )
+
+    # Reactive value for the processed dataset
+    processed_data <- column_mapping$processed_data
+
+    # Global variable to store grouping variables
+    grouping_variables <- column_mapping$grouping_variables
 
     # Handle user-provided filters
     filters <- reactiveValues()
@@ -104,40 +132,46 @@ tab_data_server <- function(id) {
       # Insert a new filter UI
       insertUI(
         selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), colnames(ADNCA()))
+        ui = input_filter_ui(session$ns(filter_id), colnames(processed_data()))
       )
 
       filters[[filter_id]] <- input_filter_server(filter_id)
     })
 
-    # create reactive value with applied filters
+    # Create reactive value with applied filters
     data <- reactiveVal(NULL)
-    observeEvent(list(input$submit_filters, ADNCA()), {
-      # extract filters from reactive #
+    observeEvent(list(input$submit_filters, processed_data()), {
+      # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
 
-      # filter and overwrite data #
+      # Filter and overwrite data
       filtered_data <- apply_filters(
-        ADNCA(), applied_filters
+        processed_data(), applied_filters
       )
       data(filtered_data)
     }, ignoreInit = FALSE)
 
-    # update the data table object with the filtered data #
-    output$filecontents <- DT::renderDataTable({
+    # Update the data table object with the filtered data
+    output$data_processed <- renderReactable({
       req(data())
-      DT::datatable(
+      reactable(
         data(),
-        extensions = "FixedHeader",
-        options = list(
-          scrollX = TRUE,
-          scrollY = TRUE,
-          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-          fixedHeader = TRUE
-        )
+        searchable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        wrap = FALSE,
+        resizable = TRUE,
+        defaultPageSize = 25,
+        showPageSizeOptions = TRUE,
+        striped = TRUE,
+        bordered = TRUE,
+        height = "98vh"
       )
     })
 
-    return(data)
+    list(
+      data = data,
+      grouping_variables = grouping_variables
+    )
   })
 }

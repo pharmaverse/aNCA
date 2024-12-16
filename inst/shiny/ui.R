@@ -207,14 +207,19 @@ fluidPage(
                 "Exclusions",
                 tableOutput("manual_slopes2")
               ),
-              tabPanel("CDISC",
-                downloadButton("exportCDISC", "Export CDISC")
-              )
+              tabPanel("Parameter Datasets",
+                       tabsetPanel(
+                         tabPanel("PP",
+                                  DTOutput("pp_dataset")),
+                         tabPanel("ADPP",
+                                  DTOutput("adpp_dataset"))
+                       ))
             )
           )
         )
       )
     ),
+
     # VISUALISATION ----
     nav_panel("Visualisation",
       fluid = TRUE,

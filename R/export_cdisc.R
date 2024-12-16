@@ -27,11 +27,21 @@ pptestcd_dict <- setNames(
     "Last Nonzero Conc", "Time of CMAX", "R Squared", "R Squared Adjusted", "Max Conc Norm by Dose",
     "AUC to Last Nonzero Conc Norm by Dose", "Lambda z", "AUC to Last Nonzero Conc",
     "Half-Life Lambda z", "Number of points used for Lambda z", "Last Nonzero Conc Predicted",
-    "Span Ratio", "Lambda z lower limit (time)"
+    "Span Ratio", "Lambda z lower limit (time)",
+
+    # Manually filled
+    "Trough Concentration", "Average Concentration", "AUC Infinity Predicted",
+    "AUMC Infinity Observed", "AUC Percent Extrapolated Observed",
+    "AUC Percent Extrapolated Predicted", "Clearance Observed",
+    "Clearance Predicted", "Mean Residence Time Intravenous Observed",
+    "Volume of Distribution Observed",
+    "Steady-State Volume of Distribution Intravenous Observed",
+    "AUC Infinity Observed Dose-Normalized", "Maximum Concentration Dose-Normalized"
   ),
-  c(
-    "CLFO", "TLST", "CMAX", "VZFO", "AUCIFO", "CLST", "TMAX", "R2", "R2ADJ", "CMAXD", "AUCLSTD",
-    "LAMZ", "AUCLST", "LAMZHL", "LAMZNPT", "CLSTP", "LAMZSPNR", "LAMZLL"
+  c("CLFO", "TLST", "CMAX", "VZFO", "AUCIFO", "CLST", "TMAX", "R2", "R2ADJ", "CMAXD", "AUCLSTD",
+    "LAMZ", "AUCLST", "LAMZHL", "LAMZNPT", "CLSTP", "LAMZSPNR", "LAMZLL",
+    "CTROUGH", "CAV", "AUCIFP", "AUMCINF.OBS", "AUCPEO", "AUCPEP", "CL.OBS", "CL.PRED",
+    "MRT.IV.OBS", "VZ.OBS", "VSS.IV.OBS", "AUCINF.OBS.DN", "CMAX.DN"
   )
 )
 
@@ -54,23 +64,17 @@ export_cdisc <- function(res_nca) {
   }
 
 
-
-
   # define columns needed for pp
   pp_col <- c(
     "STUDYID",
     "DOMAIN",
     "USUBJID",
     "PPSEQ",
+    "PPCAT",
     "PPGRPID",
-    # "DRUG",
-    # "PARAM",
-    # "PPSPEC",
-    # "PPDOSNO",
     "PPSPID",
     "PPTESTCD",
     "PPTEST",
-    "PPCAT",
     "PPSCAT",
     "PPORRES",
     "PPORRESU",
@@ -87,13 +91,14 @@ export_cdisc <- function(res_nca) {
 
   # define columns needed for adpp
   adpp_col <- c("STUDYID",
+                "DOMAIN",
                 "USUBJID",
-                "PPGRPID",
-                # "DRUG",
-                # "PARAM",
-                # "PPDOSNO",
-                # "PPSPEC",
+                "PPSEQ",
                 "PPCAT",
+                "PPGRPID",
+                "PPSPID",
+                "PPTESTCD",
+                "PPTEST",
                 "PPSCAT",
                 "PPREASND",
                 "PPSPEC",
@@ -109,15 +114,15 @@ export_cdisc <- function(res_nca) {
                 "AAGEU",
                 "TRT01P",
                 "TRT01A",
-                "PARAM",
-                "PARAMCD",
                 "AVAL",
                 "AVALC",
                 "AVALU")
 
-
   pp_info <- res_nca$result  %>%
     filter(is.infinite(end) | PPTESTCD == "auclast") %>%
+    left_join(res_nca$data$dose$data,
+              by = unname(unlist(res_nca$data$dose$columns$groups)),
+              suffix = c("", ".y")) %>%
     group_by(
       across(all_of(c(
         unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
@@ -127,8 +132,7 @@ export_cdisc <- function(res_nca) {
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) %>%
     ungroup() %>%
-    #  mutate PPTESTCD to match metadata and recode the PPTESTCD to
-    #  match the PPTESTCD in the PPTESTCD data frame
+    #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     mutate(
       PPTESTCD = recode(
         PPTESTCD %>% toupper,
@@ -169,7 +173,7 @@ export_cdisc <- function(res_nca) {
       PPSTAT = ifelse(is.na(PPORRES) | (PPORRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
       PPREASND = case_when(
         !is.na(exclude) ~ exclude,
-        is.na(PPORRES) ~ "Unespecified",
+        is.na(PPORRES) ~ "Unspecified",
         TRUE ~ ""
       ),
       # Datetime
@@ -184,13 +188,11 @@ export_cdisc <- function(res_nca) {
       # Matrix
       PPSPEC = PCSPEC,
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
-      PPSTINT = ifelse(end != Inf, start, NA),
+      PPSTINT = ifelse(start != Inf, start, NA),
       PPENINT = ifelse(end != Inf, end, NA)
     )  %>%
-    # Include PPTEST (PPTESTCD descriptions)
+    # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     mutate(PPTEST = pptestcd_dict[PPTESTCD])  %>%
-    # Make all numeric columns with 3 decimals
-    mutate(across(where(is.numeric), ~ signif(.x, 3)))  %>%
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
@@ -199,17 +201,16 @@ export_cdisc <- function(res_nca) {
   # select pp columns
   pp <- pp_info %>%  select(all_of(pp_col))
 
-  # Include subject metadata and select adpp columns
   adpp <- pp_info %>%
+    # Elude potential collapse cases with PC variables
+    select(-any_of(c("AVAL", "AVALC", "AVALU"))) %>%
     rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU)  %>%
-    merge(
+    left_join(
       res_nca$data$dose$data %>%
-        select(any_of(c("USUBJID", setdiff(names(res_nca$data$dose$data), names(pp_info))))),
-      all.x = TRUE,
-      all.y = FALSE
+        select(-any_of(setdiff(names(pp_info), "USUBJID"))),
+      by = "USUBJID"
     ) %>%
     select(any_of(adpp_col))
-
 
   return(list(pp = pp, adpp = adpp))
 }
