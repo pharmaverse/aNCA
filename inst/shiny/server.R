@@ -5,11 +5,16 @@ function(input, output, session) {
 
   # DATA ----
   data <- tab_data_server("data")
+
+  #' Create global data object. This is accessible by all modules, without the need to pass
+  #' data reactive directly.
+  session$userData$data <- reactive(data())
+
   # NCA ----
   source(system.file("shiny/tabs/nca.R", package = "aNCA"), local = TRUE)
   # OUTPUT ----
   source(system.file("shiny/tabs/outputs.R", package = "aNCA"), local = TRUE)
 
   # TLG
-  tab_tlg_server("tlg", data)
+  tab_tlg_server("tlg")
 }

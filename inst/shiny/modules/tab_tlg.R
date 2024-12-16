@@ -63,9 +63,11 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data) {
+tab_tlg_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
+
+    data <- session$userData$data
 
     #' Load TLG orders definitions
     tlg_order <- reactiveVal({
@@ -271,7 +273,7 @@ tab_tlg_server <- function(id, data) {
           g_def <- .TLG_DEFINITIONS[[g_id]]
 
           if (exists(g_def$fun)) {
-            tlg_plot_server(g_id, get(g_def$fun), g_def$options, data)
+            tlg_plot_server(g_id, get(g_def$fun), g_def$options)
             tlg_plot_ui(session$ns(g_id))
           } else {
             tags$div("Plot not implemented yet")

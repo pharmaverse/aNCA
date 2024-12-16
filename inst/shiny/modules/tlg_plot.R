@@ -47,8 +47,10 @@ tlg_plot_ui <- function(id) {
   )
 }
 
-tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
+tlg_plot_server <- function(id, render_plot, options = NULL) {
   moduleServer(id, function(input, output, session) {
+    data <- session$userData$data
+
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
@@ -171,9 +173,9 @@ create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReact
     select = {
       choices <- {
         if (isTRUE(opt_def$choices == ".colnames")) {
-          names(data())
+          names(session$userData$data())
         } else if (length(opt_def$choices) == 1 && grepl("^\\.", opt_def$choices)) {
-          unique(data()[, sub("^\\.", "", opt_def$choices)])
+          unique(session$userData$data()[, sub("^\\.", "", opt_def$choices)])
         } else {
           opt_def$choices
         }
