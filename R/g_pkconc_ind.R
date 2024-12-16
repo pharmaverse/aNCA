@@ -157,7 +157,7 @@ pkcg01 <- function(
     scale_x_continuous(
       guide = guide_axis(n.dodge = 1),
       breaks = filter_breaks(
-        x_breaks = plot_data[[xbreaks_var]],
+        plot_data[[xbreaks_var]],
         min_cm_distance = xbreaks_mindist,
         plot = plot
       ),
