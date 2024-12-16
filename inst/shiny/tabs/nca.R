@@ -356,15 +356,13 @@ observeEvent(list(mydata()$units, input$select_unitstable_analyte) ,{
   req(mydata()$units)
   req(input$select_unitstable_analyte)
   modal_units_table <- mydata()$units %>%
-    mutate(row_original = 1:n()) %>% 
     dplyr::group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>% 
     dplyr::filter(!!sym(mydata()$conc$columns$groups$group_analyte) == input$select_unitstable_analyte) %>% 
     dplyr::rename(`Parameter` = PPTESTCD,
                   `Default unit` = PPORRESU,
                   `Conversion Factor` = conversion_factor,
                   `Custom unit` = PPSTRESU) %>% 
-    dplyr::mutate(Analytes = paste(!!sym(mydata()$conc$columns$groups$group_analyte), collapse = ", "),
-                  row_original = paste(row_original, collapse = ",")) %>% 
+    dplyr::mutate(Analytes = paste(!!sym(mydata()$conc$columns$groups$group_analyte), collapse = ", ")) %>% 
     dplyr::ungroup() %>% 
     dplyr::select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
   modal_units_table(modal_units_table)
@@ -373,7 +371,9 @@ observeEvent(list(mydata()$units, input$select_unitstable_analyte) ,{
 
 output$modal_units_table <- DT::renderDT({
   datatable(
-    data = modal_units_table(),
+    data = modal_units_table() %>% 
+      # Round numeric information so the table does not display all numbers
+      dplyr::mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)),
     escape = FALSE,
     class = "table table-striped table-bordered",
     editable = list(
@@ -408,18 +408,45 @@ output$modal_units_table <- DT::renderDT({
 # Save table changes from the UI into the server
 observeEvent(input$modal_units_table_cell_edit, {
   info <- input$modal_units_table_cell_edit
-  print(info)
+
   # Change modal_units_table() accordingly
   modal_units_table <- modal_units_table()
   modal_units_table[info$row, info$col] <- info$value
+  
+  # If the column changed was an unit measure modify as well the conversion factor
+  if (names(modal_units_table)[info$col] == "Custom unit") {
+    default_unit <- modal_units_table[info$row, "Default unit"]
+    custom_unit <- modal_units_table[info$row, "Custom unit"]
+    modal_units_table[info$row, "Conversion Factor"] <- transform_unit(default_unit, custom_unit)
+  }
+  
   modal_units_table(modal_units_table)
-  print(modal_units_table() %>% filter(Parameter=="tmax"))
 })
 
 observeEvent(input$save_units_table, {
+  
+  # Notification: Prevent user leaving user NAs in the column `Conversion Factor`
+  if (any(is.na(modal_units_table()["Conversion Factor"]))) {
+    
+    invalid_entries <- modal_units_table() %>% 
+      filter(is.na(`Conversion Factor`)) %>% 
+      mutate(entry = paste0(Parameter, " (", Analytes, ")")) %>% 
+      pull(entry)
+    
+    showNotification(
+      paste0("Please, make sure to use only recognised convertible units in `Custom Unit` (i.e, day, hr, min, sec, g/L).
+      If not, introduce yourself the corresponding `Conversion Factor` value in: ",
+             paste0(invalid_entries, ", ")
+      ),
+      duration = NULL,
+      closeButton = TRUE,
+      type = "warning"
+    )
+    return()
+  }
+
   # Transform modal_units_table() back to the format of mydata()$units
   modal_units_table <- modal_units_table() %>%
-      # Separate analytes column into a list of analytes and based on each analyte, expand the rows
       dplyr::mutate(Analytes = strsplit(Analytes, ", ")) %>%
       tidyr::unnest(Analytes) %>%
       dplyr::rename(ANALYTE = `Analytes`,
@@ -427,15 +454,12 @@ observeEvent(input$save_units_table, {
                     PPORRESU = `Default unit`,
                     PPSTRESU = `Custom unit`,
                     conversion_factor = `Conversion Factor`)
-    
 
   # Update mydata$units with the transformed modal_units_table
-  mydata$units <- mydata$units %>%
-    dplyr::left_join(modal_units_table, by = c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))
+  mydata <- mydata()
+  mydata$units <- model_units_table
 
-  print(mydata$untis)
   mydata(mydata())
-
   removeModal()
 })
 
