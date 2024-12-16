@@ -28,9 +28,9 @@
 tab_tlg_ui <- function(id) {
   ns <- NS(id)
 
-  tabsetPanel(
+  navset_pill(
     id = ns("tlg_tabs"),
-    tabPanel(
+    nav_panel(
       "Order details",
       actionButton(ns("add_tlg"), "Add TLG"),
       actionButton(ns("remove_tlg"), "Remove TLG"),
@@ -38,53 +38,9 @@ tab_tlg_ui <- function(id) {
       DTOutput(ns("selected_tlg_table")),
       actionButton(ns("submit_tlg_order_alt"), "Submit Order Details")
     ),
-    tabPanel(
-      "Tables",
-      fluidRow(
-        column(
-          2,  # Left column for plot selection
-          radioButtons(
-            inputId = ns("buttons_Tables"),
-            label = "Choose Table\n",
-            choices = ""
-          )
-        ),
-        column(
-          6,  # Middle column for plot output
-          h4("Table to display"),
-          plotOutput(ns("plot_Tables"))
-        ),
-        column(
-          2,  # Right column for plot customization inputs
-          h4("Inputs with selected vals linked to downloadable obj (i.e, tlg_order())"),
-          textInput(ns("footnote_Tables"), label = "Footnote")
-        )
-      )
-    ),
-    tabPanel(
-      "Listings",
-      fluidRow(
-        column(
-          2,  # Left column for plot selection
-          radioButtons(
-            inputId = ns("buttons_Listings"),
-            label = "Choose List\n",
-            choices = ""
-          )
-        ),
-        column(
-          6,  # Middle column for plot output
-          h4("Listing to display"),
-          plotOutput(ns("plot_Listings"))
-        ),
-        column(
-          2,  # Right column for plot customization inputs
-          h4("Inputs with selected vals linked to downloadable obj (i.e, tlg_order())"),
-          textInput(ns("footnote_Listings"), label = "Footnote")
-        )
-      )
-    ),
-    tabPanel("Graphs", uiOutput(ns("graphs")))
+    nav_panel("Tables", "To be added"),
+    nav_panel("Listings", "To be added"),
+    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"))
   )
 }
 
@@ -306,18 +262,20 @@ tab_tlg_server <- function(id) {
           }
         }
 
-        tabPanel(g_def$label, plot_ui)
+        nav_panel(g_def$label, plot_ui)
       })
 
       panels$"widths" <- c(2, 10)
       output$graphs <- renderUI({
-        do.call(navlistPanel, panels)
+        do.call(navset_pill_list, panels)
       })
 
       #' change tab to first populated tab
       #' NOTE: currently only plots implemented, will change to Graphs tab
       #' TODO: when Tables and/or Listings are implemented, detect which tab is populated and adjust
-      updateTabsetPanel(inputId = "tlg_tabs", selected = "Graphs")
+      #' FIXME: for some reason this does not work with bslib
+      nav_select(id = "tlg_tabs", selected = "Graphs")
+      updateTabsetPanel(session, "tlg_tabs", selected = "Graphs")
     })
   })
 }

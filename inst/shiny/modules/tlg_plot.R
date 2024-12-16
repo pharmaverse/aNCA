@@ -1,49 +1,44 @@
 tlg_plot_ui <- function(id) {
   ns <- NS(id)
 
-  fluidRow(
-    class = "tlg-plot-module",
-    column(
-      width = 9,
-      fluidRow(
-        class = "plot-widgets-container",
-        div(
-          align = "left",
-          tags$span(
-            class = "inline-select-input",
-            style = "margin-right: 5em;",
-            tags$span("Plots per page:"),
-            selectInput(
-              ns("plots_per_page"),
-              "",
-              choices = c("All", 1, 2, 4, 6, 8, 10)
-            )
-          ),
-          shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page"))
-        ),
-        div(
-          align = "center",
-          tags$span(
-            class = "inline-select-input",
-            tags$span("Page "),
-            selectInput(
-              inputId = ns("select_page"),
-              label = "",
-              choices = ""
-            ),
-            tags$span(" out of "),
-            uiOutput(ns("page_number"), inline = TRUE),
+  layout_sidebar(
+    sidebar = sidebar(
+      position = "right",
+      uiOutput(ns("options"), class = "plot-options-container")
+    ),
+    div(
+      class = "plot-widgets-container",
+      div(
+        align = "left",
+        tags$span(
+          class = "inline-select-input",
+          style = "margin-right: 5em;",
+          tags$span("Plots per page:"),
+          selectInput(
+            ns("plots_per_page"),
+            "",
+            choices = c("All", 1, 2, 4, 6, 8, 10)
           )
         ),
-        div(align = "right", actionButton(ns("next_page"), "Next Page"))
+        shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page"))
       ),
-      # Plots display #
-      uiOutput(ns("plots"))
+      div(
+        align = "center",
+        tags$span(
+          class = "inline-select-input",
+          tags$span("Page "),
+          selectInput(
+            inputId = ns("select_page"),
+            label = "",
+            choices = ""
+          ),
+          tags$span(" out of "),
+          uiOutput(ns("page_number"), inline = TRUE),
+        )
+      ),
+      div(align = "right", actionButton(ns("next_page"), "Next Page"))
     ),
-    column(
-      width = 3,
-      uiOutput(ns("options"), class = "plot-options-container")
-    )
+    uiOutput(ns("plots"))
   )
 }
 

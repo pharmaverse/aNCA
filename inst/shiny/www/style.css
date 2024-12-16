@@ -147,6 +147,13 @@
 
 
 .tlg-plot-module {
+  margin-top: 1em;
+
+  /* Well containing tabs for each tlg */
+  div.well {
+    height: min-content;
+  }
+
   .plot-widgets-container {
     display: flex;
     justify-content: space-around;
@@ -157,9 +164,10 @@
   /* tlg tab */
   h1.tlg-group-label {
     font-weight: bold;
-    font-size: 3rem;
+    font-size: 2rem;
     border-bottom: thin solid #337ab7;
     border-radius: 0 0 .25em 0;
+    margin-top: 0.75em;
   }
 
   .plot-options-container {
@@ -167,6 +175,15 @@
       width: 75%;
       margin-left: 15%;
       margin-top: 1em;
+      padding: 0.75em 0 0.75em 0;
+    }
+
+    .form-group.shiny-input-container {
+      margin-bottom: 0.5em;
+
+      label {
+        margin: 0;
+      }
     }
   }
 }
