@@ -16,8 +16,7 @@ tlg_plot_ui <- function(id) {
             selectInput(
               ns("plots_per_page"),
               "",
-              choices = c(1, 2, 4, 6, 8, 10, "All"),
-              selected = 1
+              choices = c("All", 1, 2, 4, 6, 8, 10)
             )
           ),
           tags$span(
