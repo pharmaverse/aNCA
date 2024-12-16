@@ -93,7 +93,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
 
     #' keeps list of plots to render, with options gathered from the UI and applied
     plot_list <- reactive({
-      plot_options <- purrr::list_modify(list(data = data()), !!!reactiveValuesToList(options_))
+      plot_options <- purrr::list_modify(list(data = data()), !!!options_())
 
       purrr::iwalk(plot_options, \(value, name) {
         if (isTRUE(value %in% c(NULL, "", 0)))
@@ -119,30 +119,23 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
     })
 
     #' holds options gathered from UI widgets
-    options_ <- reactiveValues()
+    options_ <- reactive({
+      lapply(names(options), \(opt_id) input[[opt_id]]) |>
+        setNames(names(options)) |>
+        purrr::keep(\(x) !is.null(x))
+    }) |>
+      shiny::debounce(750)
 
     #' creates widgets responsible for custimizing the plots
-    option_widgets <- purrr::imap(options, function(opt_def, opt_id) {
-      if (grepl(".group_label", opt_id)) {
-        return(tags$h1(opt_def, class = "tlg-group-label"))
-      }
-
-      observeEvent(input[[opt_id]], {
-        options_[[opt_id]] <- input[[opt_id]]
-      })
-
-      create_edit_widget(opt_def, opt_id)
+    output$options <- renderUI({
+      tagList(
+        actionButton(
+          inputId = session$ns("reset_widgets"),
+          label = "Reset to defaults"
+        ),
+        purrr::imap(options, create_edit_widget)
+      )
     })
-
-    option_widgets <- tagList(
-      actionButton(
-        inputId = session$ns("reset_widgets"),
-        label = "Reset to defaults"
-      ),
-      option_widgets
-    )
-
-    output$options <- renderUI(option_widgets)
   })
 }
 
@@ -152,6 +145,10 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
 #' @param session Session object for namespacing the widgets
 #' @returns Shiny widget with appropriate type, label and options
 create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReactiveDomain()) {
+  if (grepl(".group_label", opt_id)) {
+    return(tags$h1(opt_def, class = "tlg-group-label"))
+  }
+
   label <- if (is.null(opt_def$label)) opt_id else opt_def$label
 
   switch(
