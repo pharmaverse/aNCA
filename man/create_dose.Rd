@@ -4,10 +4,15 @@
 \alias{create_dose}
 \title{Create PK Dose Dataset}
 \usage{
-create_dose(adnca_conc)
+create_dose(
+  df_conc,
+  group_columns,
+  time_column = "AFRLT",
+  since_lastdose_time_column = "ARRLT"
+)
 }
 \arguments{
-\item{adnca_conc}{A data frame containing the concentration data.}
+\item{ADNCA_conc}{A data frame containing the concentration data.}
 }
 \value{
 A data frame containing the dose data.

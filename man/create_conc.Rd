@@ -4,15 +4,12 @@
 \alias{create_conc}
 \title{Create PK Concentration Dataset}
 \usage{
-create_conc(ADNCA, analyte, proftype)
+create_conc(ADNCA, group_columns, time_column = "AFRLT")
 }
 \arguments{
 \item{ADNCA}{A data frame containing the ADNCA data.}
 
 \item{analyte}{A character string specifying the analyte of interest.}
-
-\item{proftype}{A character string specifying the profile type
-(not used in the function but kept for consistency).}
 }
 \value{
 A data frame containing the filtered and processed concentration data.
