@@ -54,6 +54,12 @@ g_pkconc_ind_lin:
         - PCSPEC
         - PARAM
         - USUBJID
+    # TODO: splitting variable
+    color_var:
+      type: select
+      label: "Color variable"
+      choices: .colnames
+
     .group_label_2: "Labels"
     footnote:
       type: text
@@ -61,10 +67,18 @@ g_pkconc_ind_lin:
     xlab:
       type: text
       label: X axis label
-      default: "Test default label"
     ylab:
       type: text
       label: Y axis label
+    xbreaks_var:
+      type: select
+      label: "X ticks"
+      choices: .colnames
+      default: "NFRLT"
+    color_var_label:
+      type: text
+      label: Color variable label
+
     .group_label_3: "Limits"
     xmin:
       type: numeric
