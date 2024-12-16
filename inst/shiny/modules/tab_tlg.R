@@ -4,6 +4,7 @@ tab_tlg_ui <- function(id) {
   ns <- NS(id)
 
   tabsetPanel(
+    id = ns("tlg_tabs"),
     tabPanel(
       "Order details",
       actionButton(ns("add_tlg"), "Add TLG"),
@@ -64,9 +65,9 @@ tab_tlg_ui <- function(id) {
 
 tab_tlg_server <- function(id, data) {
   moduleServer(id, function(input, output, session) {
-    ns <- session$ns
+    log_trace("{session$ns(id)}: Attaching server.")
 
-    # Make available the CSV file with the TLG list and available links to NEST
+    #' Load TLG orders definitions
     tlg_order <- reactiveVal({
       purrr::map_dfr(.TLG_DEFINITIONS, ~ dplyr::tibble(
         Selection = .x$is_default,
@@ -101,6 +102,7 @@ tab_tlg_server <- function(id, data) {
 
     # Render the TLG list for the user's inspection
     output$selected_tlg_table <- DT::renderDT({
+      log_trace("Rendering TLG table.")
       datatable(
         elementId = "selected_tlg_datatable",
         class = "table table-striped table-bordered",
@@ -229,8 +231,11 @@ tab_tlg_server <- function(id, data) {
     })
 
     # When the user submits the TLG order...
-    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), {
+    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+      log_trace("Submitting TLG order...")
+
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
+      log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
       if (sum(tlg_order_filt$Type == "Table") > 0) {
         updateRadioButtons(
@@ -280,6 +285,11 @@ tab_tlg_server <- function(id, data) {
       output$graphs <- renderUI({
         do.call(navlistPanel, panels)
       })
+
+      #' change tab to first populated tab
+      #' NOTE: currently only plots implemented, will change to Graphs tab
+      #' TODO: when Tables and/or Listings are implemented, detect which tab is populated and adjust
+      updateTabsetPanel(inputId = "tlg_tabs", selected = "Graphs")
     })
   })
 }
