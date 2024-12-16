@@ -44,10 +44,6 @@ g_pkconc_ind_lin:
       type: select
       label: X axis
       choices: .colnames
-    yvar:
-      type: select
-      label: Y axis
-      choices: .colnames
     plotgroup_vars:
       type: select
       label: "Grouping variables"
