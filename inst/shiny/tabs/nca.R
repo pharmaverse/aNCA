@@ -208,9 +208,9 @@ observeEvent(input$submit_analyte, priority = 2, {
     data.conc = myconc,
     data.dose = mydose,
     units = PKNCA::pknca_units_table(
-      concu = myconc$data$PCSTRESU[1],
+      concu = myconc$data$AVALU[1],
       doseu = myconc$data$DOSEU[1],
-      amountu = myconc$data$PCSTRESU[1],
+      amountu = myconc$data$AVALU[1],
       timeu = myconc$data$RRLTU[1]
     )
   )

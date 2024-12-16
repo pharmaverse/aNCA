@@ -17,17 +17,17 @@ fluidPage(
 
   includeCSS(file.path(assets, "style.css")),
 
-  navbarPage(
+  page_navbar(
     id = "page",
     title = "",
     # DATA ----
-    tabPanel(
+    nav_panel(
       "Data",
       fluid = TRUE,
       tab_data_ui("data")
     ),
     # NCA ----
-    tabPanel("NCA", fluid = TRUE,
+    nav_panel("NCA", fluid = TRUE,
       fluidPage(
         actionButton("nca", "Run NCA", class = "run-nca-btn"),
 
