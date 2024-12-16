@@ -351,7 +351,6 @@ observeEvent(mydata()$intervals, {
   print(mydata()$units)
 })
 
-
 modal_units_table <- reactiveVal(NULL)
 observeEvent(list(mydata()$units, input$select_unitstable_analyte) ,{
   req(mydata()$units)
@@ -407,19 +406,38 @@ output$modal_units_table <- DT::renderDT({
 })
 
 # Save table changes from the UI into the server
-observeEvent(input$selected_modal_units_table_cell_edit, {
-  info <- input$selected_modal_units_table_cell_edit
-  # 
-  # new_tlg_order <- tlg_order()
-  # new_tlg_order[new_tlg_order$Selection, ][info$row, info$col] <- info$value
-  # tlg_order(new_tlg_order)
+observeEvent(input$modal_units_table_cell_edit, {
+  info <- input$modal_units_table_cell_edit
+  print(info)
+  # Change modal_units_table() accordingly
+  modal_units_table <- modal_units_table()
+  modal_units_table[info$row, info$col] <- info$value
+  modal_units_table(modal_units_table)
+  print(modal_units_table() %>% filter(Parameter=="tmax"))
 })
 
-# observeEvent(input$save_units_table, {
-#   
-#   removeModal()
-# })
+observeEvent(input$save_units_table, {
+  # Transform modal_units_table() back to the format of mydata()$units
+  modal_units_table <- modal_units_table() %>%
+      # Separate analytes column into a list of analytes and based on each analyte, expand the rows
+      dplyr::mutate(Analytes = strsplit(Analytes, ", ")) %>%
+      tidyr::unnest(Analytes) %>%
+      dplyr::rename(ANALYTE = `Analytes`,
+                    PPTESTCD = `Parameter`,
+                    PPORRESU = `Default unit`,
+                    PPSTRESU = `Custom unit`,
+                    conversion_factor = `Conversion Factor`)
+    
 
+  # Update mydata$units with the transformed modal_units_table
+  mydata$units <- mydata$units %>%
+    dplyr::left_join(modal_units_table, by = c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))
+
+  print(mydata$untis)
+  mydata(mydata())
+
+  removeModal()
+})
 
 # Partial AUC Selection
 auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
@@ -868,7 +886,6 @@ observeEvent(input$dir, {
     }
   })
 })
-
 
 # confirm path
 observeEvent(input$confirmBtn, {
