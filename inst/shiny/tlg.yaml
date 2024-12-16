@@ -24,13 +24,17 @@
                   #   - .COLUMN_NAME keyword will pull choices from values of a specific column
 #     There are additional keywords to allow shaping the resulting interface:
 #     .group_label_N: # will create a label to help visually group related widgets; should be a character
-#                     # string; N should be replaced with an integer to uniquely identify the keyword 
+#                     # string; N should be replaced with an integer to uniquely identify the keyword
+#
+#   template: # You can also specify template definitions. This is a character string with id of another TLG definition.
+#             # All options will be copied over from template id. Any provided parameters will be a) overwritten if existing
+#             # in the template or b) added as new.
 g_pkconc_ind_lin:
   is_default: true
   type: Graph
   dataset: ADPC
   pkid: pkcg01
-  label: pkcg01 - linear
+  label: "pkcg01 - linear"
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with linear scale"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkconc_ind_lin
@@ -89,29 +93,7 @@ g_pkconc_ind_lin:
     ymax:
       type: numeric
 g_pkconc_ind_log:
-  is_default: true
-  type: Graph
-  dataset: ADPC
-  pkid: pkcg01
+  template: g_pkconc_ind_lin
   label: pkcg01 - log
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkconc_ind_log
-  options:
-    footnote:
-      type: text
-      label: Footnote
-    xlab:
-      type: text
-      label: X axis label
-    ylab:
-      type: text
-      label: Y axis label
-    xmin:
-      type: numeric
-    xmax:
-      type: numeric
-    ymin:
-      type: numeric
-    ymax:
-      type: numeric
