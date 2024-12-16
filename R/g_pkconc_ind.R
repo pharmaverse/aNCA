@@ -52,7 +52,7 @@ g_pkconc_ind_log <- function(data, ...) {
 #' \dontrun {
 #'   adpc <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
 #'   attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
-#'   attr(adpc[["AVAL"]], "label") <- "Analysis val
+#'   attr(adpc[["AVAL"]], "label") <- "Analysis val"
 #'
 #'   plots_lin <- pkcg01(adpc = adpc, xmax = 1)
 #'   plots_log <- pkcg01(adpc = adpc, color_var = "USUBJID", scale = "LOG)
@@ -296,55 +296,4 @@ add_figure_details <- function(
       subtitle = paste0("Treatment Group: ", !!sym(trt_var), " (N=", n(), ")\n", subtitle)
     ) %>%
     ungroup()
-}
-
-#' Filter Breaks for X-Axis
-#'
-#' Filters X-axis for consecutive breaks with at least the specified distance.
-#'
-#' @param x_breaks        A numeric vector of x-axis breaks.
-#' @param plot            A ggplot object used to extract plot dimensions and scales.
-#' @param min_cm_distance A numeric of the minimum distance between breaks.
-#' @returns A numeric vector of filtered x-axis breaks.
-#' @importFrom ggplot2 ggplot_build ggplot_gtable
-#' @importFrom grid convertUnit
-#' @author Gerardo Rodriguez
-filter_breaks <- function(x_breaks = NA, plot = plot, min_cm_distance = 0.5) {
-  x_breaks <- unique(na.omit(sort(x_breaks)))
-  plot_build <- ggplot_build(plot)
-  plot_table <- ggplot_gtable(plot_build)
-
-  # Extract x-axis scale information
-  x_scale <- plot_build$layout$panel_params[[1]]$x.range
-
-  # Identify the panel grob
-  panel_index <- which(sapply(plot_table$grobs, \(x) grepl("panel", x$name)))
-
-  if (length(panel_index) == 0) {
-    stop("Error: Panel grob not found.")
-  }
-  panel <- plot_table$grobs[[panel_index]]
-
-  # Extract the panel border grob to get the width
-  panel_border <- panel$children[[
-    which(sapply(panel$children, \(x) grepl("panel.border", x$name)))
-  ]]
-
-  # Convert panel width to cm
-  panel_width_cm <- grid::convertUnit(panel_border$width, unitTo =  "cm", valueOnly = TRUE)
-
-  # Filter only breaks that satisfy the minimum distance
-  filt_breaks <- x_breaks[1]
-
-  for (i in 2:length(x_breaks)) {
-    # Take latest selected break and calculate its distance
-    b0 <- filt_breaks[length(filt_breaks)]
-    bdist <- (x_breaks[i] - b0) / diff(x_scale) * panel_width_cm
-
-    if (bdist >= min_cm_distance) {
-      filt_breaks <- c(filt_breaks, x_breaks[i])
-    }
-  }
-
-  filt_breaks
 }
