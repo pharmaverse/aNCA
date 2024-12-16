@@ -2,6 +2,7 @@ tlg_plot_ui <- function(id) {
   ns <- NS(id)
 
   fluidRow(
+    class = "tlg-plot-module",
     column(
       width = 9,
       fluidRow(
@@ -41,7 +42,7 @@ tlg_plot_ui <- function(id) {
     ),
     column(
       width = 3,
-      uiOutput(ns("options"))
+      uiOutput(ns("options"), class = "plot-options-container")
     )
   )
 }
@@ -110,6 +111,11 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
       plot_list()[page_start:page_end]
     })
 
+    #' resets the options to defaults
+    observeEvent(input$reset_widgets, {
+      purrr::walk(names(options), shinyjs::reset)
+    })
+
     #' holds options gathered from UI widgets
     options_ <- reactiveValues()
 
@@ -125,6 +131,14 @@ tlg_plot_server <- function(id, render_plot, options = NULL, data = NULL) {
 
       create_edit_widget(opt_def, opt_id)
     })
+
+    option_widgets <- tagList(
+      actionButton(
+        inputId = session$ns("reset_widgets"),
+        label = "Reset to defaults"
+      ),
+      option_widgets
+    )
 
     output$options <- renderUI(option_widgets)
   })
