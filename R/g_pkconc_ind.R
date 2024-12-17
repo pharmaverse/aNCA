@@ -87,6 +87,8 @@ pkcg01 <- function(
   #                          " (", unique(adpc[[yvar_unit]]), ")")),
   xlab = paste0(xvar, " [", unique(adpc[[xvar_unit]]), "]"),
   ylab = paste0(yvar, " [", unique(adpc[[yvar_unit]]), "]"),
+  title = NULL,
+  subtitle = NULL,
   footnote = NULL,
   # Inputs to split-by/seggregate plots
   plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM", "USUBJID"),
@@ -103,20 +105,27 @@ pkcg01 <- function(
   ymax <- as.numeric(ymax)
 
   # Title for the plots based on display option
-  title <- paste0(
-    "Plot of PK Concentration-Time Profile ",
-    dplyr::case_when(
-      scale == "LIN" ~ "linear",
-      scale == "LOG" ~ "logarithmic",
-      TRUE ~ "linear and logarithmic"
-    ),
-    " scale"
-  )
+  title <- {
+    if (is.null(title)) {
+      paste0(
+        "Plot of PK Concentration-Time Profile ",
+        dplyr::case_when(
+          scale == "LIN" ~ "linear",
+          scale == "LOG" ~ "logarithmic",
+          TRUE ~ "linear and logarithmic"
+        ),
+        " scale"
+      )
+    } else {
+      title
+    }
+  }
 
   # Include in data figure details: title, subtitle, footnote/caption
   adpc <- add_figure_details(
     adpc = adpc,
     title = title,
+    subtitle = subtitle,
     collapse_subtitle = ", ",
     studyid = studyid, # Includes cohort in title
     trt_var = trt_var, # Includes treatment in subtitle
@@ -218,15 +227,46 @@ pkcg01 <- function(
   # Create the list of plots for each unique group
   lapply(unique(adpc[["id_plot"]]), \(id_val) {
     plot_data <- adpc %>% dplyr::filter(id_plot ==  id_val)
-    plot %+%
-      labs(
-        title = unique(plot_data$title),
-        subtitle = unique(plot_data$subtitle),
-        caption = unique(plot_data$footnote),
-      ) %+%
-      plot_data %>%
-      ggplotly(tooltip = c("x", "y"))
 
+    #' TODO: find good magic numbers for title margin.
+    #' TODO: large margins make the plotting area smaller, adjust plot height
+    title <- paste0(
+      unique(plot_data$title), "<br>",
+      "<sup>", unique(plot_data$subtitle), "</sup>"
+    )
+    title_margin <- (0.5 * length(unlist(strsplit(title, "\n|<br>"))))
+
+    #' magic numbers for footnote position and margin, work in app up to 4 lines
+    footnote <- unique(plot_data$footnote)
+    footnote_y <- 0.175 + (0.1 * length(unlist(strsplit(footnote, "\n|<br>"))))
+
+    plot %+%
+      plot_data %+%
+      theme(
+        # add margin to make space for subtitle and footnote #
+        plot.margin = margin(
+          title_margin,
+          0,
+          footnote_y * 5,
+          0,
+          "cm"
+        )
+      ) %>%
+      ggplotly(tooltip = c("x", "y")) %>%
+      layout(
+        # title and subtitle #
+        title = list(text = title),
+        # footnote #
+        annotations = list(
+          x = 0,
+          y =  -footnote_y,
+          text = footnote,
+          showarrow = FALSE,
+          yref = "paper",
+          xref = "paper",
+          align = "left"
+        )
+      )
   }) |>
     setNames(unique(adpc[["id_plot"]]))
 }
@@ -251,6 +291,7 @@ pkcg01 <- function(
 add_figure_details <- function(
   adpc,
   title = "", # Specified by metadata
+  subtitle = "",
   collapse_subtitle = "\n",
   studyid = NULL, # Include or not in t
   trt_var, # Include or not in subtitle
@@ -266,10 +307,16 @@ add_figure_details <- function(
     rowwise() %>%
     dplyr::mutate(
       title = if (is.null(studyid)) title else paste0(title, ", by Cohort: ", !!sym(studyid)),
-      subtitle = paste(
-        paste(c(plotgroup_names), ": ", c_across(all_of(plotgroup_vars)), sep = ""),
-        collapse = collapse_subtitle
-      ),
+      subtitle = {
+        if (is.null(subtitle)) {
+          paste(
+            paste(c(plotgroup_names), ": ", c_across(all_of(plotgroup_vars)), sep = ""),
+            collapse = collapse_subtitle
+          )
+        } else {
+          subtitle
+        }
+      },
       footnote = {
         footnote <- if (is.null(footnote)) "" else paste0(footnote, "\n")
 
