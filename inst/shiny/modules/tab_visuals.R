@@ -11,6 +11,7 @@ tab_visuals_ui <- function(id) {
     nav_panel("Individual Plots",
       layout_sidebar(
         sidebar = sidebar(
+          position = "right", open = TRUE,
           pickerInput(
             inputId = ns("generalplot_analyte"),
             label = "Select Analyte:",
@@ -36,20 +37,22 @@ tab_visuals_ui <- function(id) {
             options = list(`actions-box` = TRUE)
           ),
           radioButtons(
-            ns("log"), "Select the Plot type:", choices = c("Lin", "Log")),
+            ns("log"),
+            "Select the Plot type:",
+            choices = c("Lin", "Log")
+          ),
           radioButtons(
-            ns("timescale"), "Choose the Timescale",
-            choices = c("All Time", "By Cycle"), selected = "All Time"
+            ns("timescale"),
+            "Choose the Timescale",
+            choices = c("All Time", "By Cycle")
           ),
           conditionalPanel(
-           condition = "input.timescale == 'By Cycle'",
-           uiOutput(ns("cycleselect")),
-           ns = NS(id)
-          ),
-          position = "right",
-          open = TRUE),
+            condition = "input.timescale == 'By Cycle'",
+            uiOutput(ns("cycleselect"))
+          )
+        ),
         plotlyOutput(ns("individualplot"))
-        )
+      )
     ),
     nav_panel("Mean Plots",
       layout_sidebar(
@@ -79,16 +82,17 @@ tab_visuals_ui <- function(id) {
           checkboxInput(ns("sdmeanplot"), label = "Show SD"),
           checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
           position = "right",
-          open = TRUE),
+          open = TRUE
+        ),
         plotlyOutput(ns("meanplot")),
         br(),
-        helpText("If n<3 at the specified time point 
-                 then the mean value is not displayed.")
-        )
-      ),
+        helpText("If n<3 at the specified time point then the mean value is not displayed.")
+      )
+    ),
     nav_panel("Descriptive Statistics",
       layout_sidebar(
         sidebar = sidebar(
+          position = "right", open = TRUE,
           pickerInput(
             inputId = ns("paramselect"),
             label = "Filter parameters to display:",
@@ -96,9 +100,8 @@ tab_visuals_ui <- function(id) {
             selected = NULL,
             multiple = TRUE,
             options = list(`actions-box` = TRUE)
-          ),
-          position = "right",
-          open = TRUE),
+          )
+        ),
         card(
           orderInput(
             ns("summarygroupbysource"),
@@ -117,17 +120,18 @@ tab_visuals_ui <- function(id) {
           )
         ),
         card(
-             reactableOutput(ns("descriptivestats"))
-             ),
+          reactableOutput(ns("descriptivestats"))
+        ),
         card(
-             actionButton(ns("download_improve"), "Download the NCA Summary Data to Improve"),
-             downloadButton(ns("download_browser"), "Download the NCA Summary Data")
-             )
+          actionButton(ns("download_improve"), "Download the NCA Summary Data to Improve"),
+          downloadButton(ns("download_browser"), "Download the NCA Summary Data")
+        )
       )
     ),
     nav_panel("Boxplot",
       layout_sidebar(
         sidebar = sidebar(
+          position = "right", open = TRUE,
           pickerInput(
             inputId = ns("selected_param_boxplot"),
             label = "Choose the parameter to display:",
@@ -166,14 +170,12 @@ tab_visuals_ui <- function(id) {
             value = TRUE,
             onLabel = "Boxplot",
             offLabel = "Violinplot"
-          ),
-          position = "right",
-          open = TRUE),
+          )
+        ),
         plotlyOutput(ns("boxplot"))
       )
     )
   )
-
 }
 
 # SERVER LOGIC OF NAVBAR OUTPUT TAB ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,60 +196,62 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       param_choices_analyte <- data() %>%
         pull(ANALYTE) %>%
         unique()
-      
+
       updatePickerInput(
         session,
         "generalplot_analyte",
         choices = param_choices_analyte
       )
-      
+
       # Update the usubjid picker input
       param_choices_usubjid <- data() %>%
         pull(USUBJID) %>%
         unique()
-      
+
       updatePickerInput(
         session,
         "generalplot_usubjid",
         choices = param_choices_usubjid,
         selected = param_choices_usubjid[1]
       )
-      
+
       # Update the colorby picker input
-      param_choices_colorby <- sort(c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars()))
-      
+      param_choices_colorby <- sort(
+        c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
+      )
+
       updatePickerInput(
         session,
         "generalplot_colorby",
         choices = param_choices_colorby,
         selected = param_choices_colorby[length(param_choices_colorby)]
       )
-      
+
       # Update the analytemean select input
       analyte_choices <- data() %>%
         pull(ANALYTE) %>%
         unique()
-      
+
       updateSelectInput(
         session,
         "analytemean",
         choices = sort(analyte_choices)
       )
-      
+
       # Update the studyidmean select input
       studyid_choices <- data() %>%
         pull(STUDYID) %>%
         unique()
-      
+
       updateSelectInput(
         session,
         "studyidmean",
         choices = sort(studyid_choices)
       )
-      
+
       # Update the selectidvar select input
       idvar_choices <- c("PCSPEC", "DOSEA", grouping_vars())
-      
+
       updateSelectInput(
         session,
         "selectidvar",
@@ -265,9 +269,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
                   multiple = TRUE, selected = y[1])
-
     })
-    
+
     # TAB: General Lineplot --------------------------------------------------------
 
     # render the general lineplot output in plotly
@@ -302,7 +305,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         filter(ANALYTE %in% input$analytemean) %>%
         pull(DOSNO) %>%
         unique()
-      
+
       updateSelectInput(
         session,
         "cyclesmean",
@@ -331,20 +334,23 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
             filter(N >= 3) %>%
             nrow(.) > 0,
           message = paste0(
-          "Data issue: No data with more than 3 points to calculate average based on
-          nominal time (NRRLT) and selected variable: ",
-          input$selectidvar)
+            "Data issue: No data with more than 3 points to calculate average based on",
+            "nominal time (NRRLT) and selected variable: ",
+            input$selectidvar
+          )
         )
       )
 
-      general_meanplot(data = data(),
-                       selected_studyids = input$studyidmean,
-                       selected_analytes = input$analytemean,
-                       selected_cycles = input$cyclesmean,
-                       id_variable = input$selectidvar,
-                       plot_ylog = input$logmeanplot,
-                       plot_sd = input$sdmeanplot,
-                       plot_ci = input$mean_plot_ci) %>%
+      general_meanplot(
+        data = data(),
+        selected_studyids = input$studyidmean,
+        selected_analytes = input$analytemean,
+        selected_cycles = input$cyclesmean,
+        id_variable = input$selectidvar,
+        plot_ylog = input$logmeanplot,
+        plot_sd = input$sdmeanplot,
+        plot_ci = input$mean_plot_ci
+      ) %>%
         ggplotly() %>%
         plotly_build()
 
@@ -356,17 +362,17 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
     # Update inputs based on what is available in the data
     observeEvent(res_nca(), {
-      
+
       # Update the paramselect picker input
       paramselection <- unique(res_nca()$result$PPTESTCD)
-      
+
       updatePickerInput(
         session,
         "paramselect",
         choices = paramselection,
         selected = paramselection
       )
-      
+
       # Define the relevant columns for the group by picker
       group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
       classification_cols <- sort(grouping_vars())
@@ -459,26 +465,26 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       param_choices <- boxplotdata() %>%
         pull(PPTESTCD) %>%
         unique()
-      
+
       updatePickerInput(
         session,
         "selected_param_boxplot",
         choices = param_choices
       )
-      
+
       # Update the selected_xvars_boxplot picker input
       xvar_choices <- intersect(names(boxplotdata()), names(data()))
-      
+
       updatePickerInput(
         session,
         "selected_xvars_boxplot",
         choices = xvar_choices,
         selected = "DOSEA"
       )
-      
+
       # Update the selected_colorvars_boxplot picker input
       colorvar_choices <- intersect(names(boxplotdata()), names(data()))
-      
+
       updatePickerInput(
         session,
         "selected_colorvars_boxplot",
@@ -500,8 +506,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         label = "Select values to display for grouping",
         choices = xvar_options_list,
         selected = unlist(xvar_options_list)
-        )
-      })
+      )
+    })
 
     # compute the box plot
     output$boxplot <- renderPlotly({

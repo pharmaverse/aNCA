@@ -46,27 +46,40 @@ column_mapping_ui <- function(id) {
   tagList(
     h3("Data Mapping"),
     br(),
-    "The following columns are required for data analysis.
-Please ensure each of these columns has been assigned
-a corresponding column from your dataset",
+    p(
+      "The following columns are required for data analysis. Please ensure each of these columns",
+      " has been assigned a corresponding column from your dataset"
+    ),
     br(),
     fluidRow(
       h4("Group Identifiers"),
       column(12,
         tooltip(
-          selectizeInput(ns("select_STUDYID"), "STUDYID",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_STUDYID"),
+            "STUDYID",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Select Study ID Column"
         ),
         tooltip(
-          selectizeInput(ns("select_USUBJID"), "USUBJID",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_USUBJID"),
+            "USUBJID",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Unique subject identifier."
         ),
         tooltip(
-          selectizeInput(ns("select_Grouping_Variables"), "Grouping Variables",
-                         choices = NULL, multiple = TRUE,
-                         options = list(placeholder = "Select Column(s)")),
+          selectizeInput(
+            ns("select_Grouping_Variables"),
+            "Grouping Variables",
+            choices = NULL,
+            multiple = TRUE,
+            options = list(placeholder = "Select Column(s)")
+          ),
           "Select the additional column(s) that will be used to group the data
   for tables, listings and graphs. E.g. Treatment Arm, Age, Sex, Race"
         )
@@ -76,18 +89,29 @@ a corresponding column from your dataset",
       h4("Sample Variables"),
       column(12,
         tooltip(
-          selectizeInput(ns("select_ANALYTE"), "ANALYTE",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_ANALYTE"),
+            "ANALYTE",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Analyte"
         ),
         tooltip(
-          selectizeInput(ns("select_PCSPEC"), "PCSPEC",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_PCSPEC"),
+            "PCSPEC",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Matrix"
         ),
         tooltip(
-          selectizeInput(ns("select_AVAL"), "AVAL",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_AVAL"), "AVAL",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Analysis value in numeric format."
         )
       )
@@ -96,24 +120,38 @@ a corresponding column from your dataset",
       h4("Dose Variables"),
       column(12,
         tooltip(
-          selectizeInput(ns("select_DOSNO"), "DOSNO",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_DOSNO"),
+            "DOSNO",
+            choices = NULL, options = list(placeholder = "Select Column")
+          ),
           "Numeric format."
         ),
         tooltip(
-          selectizeInput(ns("select_ROUTE"), "ROUTE",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_ROUTE"),
+            "ROUTE",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Route of administration, stating either 'intravascular' or 'extravascular'."
         ),
         tooltip(
-          selectizeInput(ns("select_DOSEA"), "DOSEA",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_DOSEA"),
+            "DOSEA",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Actual Dose amount in numeric format."
         ),
         tooltip(
-          selectizeInput(ns("select_ADOSEDUR"), "ADOSEDUR",
-                         choices = c("Select Column" = "", "NA"),
-                         options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_ADOSEDUR"),
+            "ADOSEDUR",
+            choices = c("Select Column" = "", "NA"),
+            options = list(placeholder = "Select Column")
+          ),
           "Duration of dose administration. Only required for infusion studies,
 otherwise select NA"
         )
@@ -123,23 +161,39 @@ otherwise select NA"
       h4("Time Variables"),
       column(12,
         tooltip(
-          selectizeInput(ns("select_AFRLT"), "AFRLT",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_AFRLT"),
+            "AFRLT",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Numeric format"
         ),
         tooltip(
-          selectizeInput(ns("select_ARRLT"), "ARRLT",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_ARRLT"),
+            "ARRLT",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Numeric format"
         ),
         tooltip(
-          selectizeInput(ns("select_NFRLT"), "NFRLT",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_NFRLT"),
+            "NFRLT",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Numeric format"
         ),
         tooltip(
-          selectizeInput(ns("select_NRRLT"), "NRRLT",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_NRRLT"),
+            "NRRLT",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Numeric format"
         )
       )
@@ -148,20 +202,32 @@ otherwise select NA"
       h4("Unit Variables"),
       column(12,
         tooltip(
-          selectizeInput(ns("select_AVALU"), "AVALU",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_AVALU"),
+            "AVALU",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Unit of analysis value. If a column is not available, type and select the unit
 used in the dataset from the manual units."
         ),
         tooltip(
-          selectizeInput(ns("select_DOSEU"), "DOSEU",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_DOSEU"),
+            "DOSEU",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Unit of dose amount. If a column is not available, type and select the unit
 used in the dataset from the manual units"
         ),
         tooltip(
-          selectizeInput(ns("select_RRLTU"), "RRLTU",
-                         choices = NULL, options = list(placeholder = "Select Column")),
+          selectizeInput(
+            ns("select_RRLTU"),
+            "RRLTU",
+            choices = NULL,
+            options = list(placeholder = "Select Column")
+          ),
           "Unit of time. If a column is not available, type and select the unit
 used in the dataset from the manual units"
         )
