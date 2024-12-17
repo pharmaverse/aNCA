@@ -1,3 +1,20 @@
+
+# Apply manual labels to data$adpc
+apply_labels <- function(data){
+  
+  labels_app <- read.csv("inst/shiny/www/data/labels_app.csv")
+  # Create the label_ADNCA list from labels_app
+  label_ADNCA <- labels_app %>%
+    distinct(Variable, Label) %>%
+    deframe()
+      
+  for (var in names(label_ADNCA)) {
+    if (var %in% colnames(data)) {
+      attr(data[[var]], "label") <- data[[var]]
+      }
+    }
+  }
+
 #' Convert to Factor While Preserving Label
 #'
 #' This function converts a vector to a factor while preserving its "label" attribute.
