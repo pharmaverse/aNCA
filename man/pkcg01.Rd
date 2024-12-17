@@ -20,6 +20,8 @@ pkcg01(
   ymax = NA,
   xlab = paste0(xvar, " [", unique(adpc[[xvar_unit]]), "]"),
   ylab = paste0(yvar, " [", unique(adpc[[yvar_unit]]), "]"),
+  title = NULL,
+  subtitle = NULL,
   footnote = NULL,
   plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM", "USUBJID"),
   plotgroup_names = c("Route", "Specimen", "Analyte", "Subject ID"),
@@ -77,4 +79,7 @@ This function generates a list of ggplots for PK concentration-time profiles.
 }
 \author{
 Gerardo Rodriguez
+TODO: find good magic numbers for title margin.
+TODO: large margins make the plotting area smaller, adjust plot height
+magic numbers for footnote position and margin, work in app up to 4 lines
 }

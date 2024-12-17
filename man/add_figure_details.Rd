@@ -7,6 +7,7 @@
 add_figure_details(
   adpc,
   title = "",
+  subtitle = "",
   collapse_subtitle = "\\n",
   studyid = NULL,
   trt_var,
