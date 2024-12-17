@@ -48,7 +48,8 @@ tab_visuals_ui <- function(id) {
           ),
           conditionalPanel(
             condition = "input.timescale == 'By Cycle'",
-            uiOutput(ns("cycleselect"))
+            uiOutput(ns("cycleselect")),
+            ns = NS(id)
           )
         ),
         plotlyOutput(ns("individualplot"))

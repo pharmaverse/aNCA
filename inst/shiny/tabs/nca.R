@@ -707,7 +707,7 @@ output$manual_slopes2 <- renderTable({
 # Create CDISC parameter datasets (PP, ADPP)
 observeEvent(res_nca(), {
   CDISC <- export_cdisc(res_nca())
-  
+
   output$pp_dataset <- DT::renderDataTable({
     DT::datatable(
       data = CDISC$pp,
@@ -738,7 +738,7 @@ observeEvent(res_nca(), {
       )
     )
   }, server = FALSE)
-  
+
   output$adpp_dataset <- DT::renderDataTable({
     DT::datatable(
       data = CDISC$adpp,
