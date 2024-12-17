@@ -65,6 +65,7 @@ fluidPage(
                   ),
                   selected = "lin up/log down"
                 ),
+                units_table_ui("units_table"),
                 br(),
                 checkboxInput("AUCoptions", "Select Partial AUC"),
                 conditionalPanel(
