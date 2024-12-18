@@ -61,15 +61,15 @@ calculate_summary_stats <- function(res_pknca, input_groups = "DOSNO") {
     group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
     unique() %>%
     summarise(
-      geomean = exp(mean(log(PPORRES), na.rm = TRUE)), # nolint
-      geocv = (sd(PPORRES, na.rm = TRUE) / exp(mean(log(PPORRES), na.rm = TRUE))) * 100,
-      mean = mean(PPORRES, na.rm = TRUE),
-      CV = (sd(PPORRES, na.rm = TRUE) / mean(PPORRES, na.rm = TRUE)) * 100,
-      sd = sd(PPORRES, na.rm = TRUE),
-      min = min(PPORRES, na.rm = TRUE),
-      max = max(PPORRES, na.rm = TRUE),
-      median = median(PPORRES, na.rm = TRUE),
-      count.missing = sum(is.na(PPORRES)),
+      geomean = exp(mean(log(PPSTRES), na.rm = TRUE)), # nolint
+      geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
+      mean = mean(PPSTRES, na.rm = TRUE),
+      CV = (sd(PPSTRES, na.rm = TRUE) / mean(PPSTRES, na.rm = TRUE)) * 100,
+      sd = sd(PPSTRES, na.rm = TRUE),
+      min = min(PPSTRES, na.rm = TRUE),
+      max = max(PPSTRES, na.rm = TRUE),
+      median = median(PPSTRES, na.rm = TRUE),
+      count.missing = sum(is.na(PPSTRES)),
       count.total = n()
     ) %>%
     ungroup() %>%

@@ -123,7 +123,7 @@ export_cdisc <- function(res_nca) {
         unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
       )))
     )  %>%
-    arrange(USUBJID, DOSNO, !is.na(PPORRES)) %>%
+    arrange(USUBJID, DOSNO, !is.na(PPSTRES)) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) %>%
     ungroup() %>%
@@ -162,14 +162,14 @@ export_cdisc <- function(res_nca) {
       # Specific ID variables
       PPSPID = "TBD",
       # TODO Results in Standard Units if ORRESU is not in standard units
-      PPSTRESN = as.numeric(PPORRES),
-      PPSTRESC = as.character(PPORRES),
-      PPSTRESU = PPORRESU,
+      PPSTRESN = as.numeric(PPSTRES),
+      PPSTRESC = as.character(PPSTRES),
+      PPSTRESU = PPSTRESU,
       # Status and Reason for Exclusion
-      PPSTAT = ifelse(is.na(PPORRES) | (PPORRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
+      PPSTAT = ifelse(is.na(PPSTRES) | (PPSTRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
       PPREASND = case_when(
         !is.na(exclude) ~ exclude,
-        is.na(PPORRES) ~ "Unespecified",
+        is.na(PPSTRES) ~ "Unespecified",
         TRUE ~ ""
       ),
       # Datetime

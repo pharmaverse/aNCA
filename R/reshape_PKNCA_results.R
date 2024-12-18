@@ -16,20 +16,23 @@
 #' @export
 #'
 reshape_pknca_results <- function(res_nca) {
-  print("FUNCTION STARTS reshape_pknca_results")
 
+  # Keep only custom units and custom values in the data (discard original ones)
+  res_nca$result <- res_nca$result %>% 
+    dplyr::select(-PPORRES, -PPORRESU)
+  
   # Get all names with units and make a dictionary structure
   dict_pttestcd_with_units <- res_nca$result %>%
-    select(PPTESTCD, PPORRESU) %>%
+    select(PPTESTCD, PPSTRESU) %>%
     unique() %>%
-    pull(PPORRESU, PPTESTCD)
+    pull(PPSTRESU, PPTESTCD)
 
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
   infinite_aucs_vals <- res_nca$result %>%
     filter(end == Inf)  %>%
-    select(-PPORRESU, -exclude) %>%
-    pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
+    select(-PPSTRESU, -exclude) %>%
+    pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
   infinite_aucs_exclude <- res_nca$result %>%
     filter(end == Inf) %>%
@@ -68,8 +71,8 @@ reshape_pknca_results <- function(res_nca) {
         interval_name = paste0(start, "-", end),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
-      select(-exclude, -PPORRESU, -start, -end, -PPTESTCD, -interval_name) %>%
-      pivot_wider(names_from = interval_name_col, values_from = PPORRES)
+      select(-exclude, -PPSTRESU, -start, -end, -PPTESTCD, -interval_name) %>%
+      pivot_wider(names_from = interval_name_col, values_from = PPSTRES)
 
     interval_aucs_exclude <- res_nca$result %>%
       filter(PPTESTCD == "aucint.last") %>%
@@ -77,7 +80,7 @@ reshape_pknca_results <- function(res_nca) {
         interval_name = paste0(start, "-", end),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       )  %>%
-      select(-PPORRES, -PPORRESU, -start, -end, -PPTESTCD, -interval_name) %>%
+      select(-PPSTRES, -PPSTRESU, -start, -end, -PPTESTCD, -interval_name) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
     interval_aucs <- merge(interval_aucs_vals, interval_aucs_exclude) %>%
