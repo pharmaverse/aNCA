@@ -154,6 +154,22 @@
     height: min-content;
   }
 
+  .sw-dropdown {
+    font-size: 1em;
+    display: block;
+    position: relative;
+    top: -2.5em;
+    right: -0.5em;
+    margin-bottom: -1.25em;
+    height: 2em;
+    width: 2em;
+    float: right;
+  }
+
+  .sw-dropdown-in {
+    width: 200px;
+  }
+
   .plot-widgets-container {
     display: flex;
     justify-content: space-around;
@@ -171,7 +187,7 @@
   }
 
   .plot-options-container {
-    button {
+     & > button {
       width: 75%;
       margin-left: 15%;
       margin-top: 1em;

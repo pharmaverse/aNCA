@@ -4,7 +4,37 @@ tlg_plot_ui <- function(id) {
   layout_sidebar(
     sidebar = sidebar(
       position = "right",
-      uiOutput(ns("options"), class = "plot-options-container")
+      div(
+        class = "plot-options-container",
+        dropdown(
+          div(
+            tags$h2("Plot options"),
+            tags$p("
+              You can specify any plot customization options that are supported by the specific
+              plot module.
+            "),
+            tags$p("Leaving a widget empty will allow default behaviour of the plotting function."),
+            tags$p(
+              "In text fields, you can reference values / columns in the dataset by using
+              the dollar sign (", tags$b("$"), ") and providing column name, e.g. ",
+              tags$b("$DOSEU"), "."
+            ),
+            tags$p("
+              You can also reference ", tags$i("label"), " attribute of any column by prefacing the
+              column name by exclamation mark (", tags$b("!"), "), e.g. ", tags$b("!DOSEU"), ".
+            ")
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary"
+        ),
+        actionButton(
+          inputId = ns("reset_widgets"),
+          label = "Reset to defaults"
+        ),
+        uiOutput(ns("options"), class = "plot-options-container")
+      )
     ),
     div(
       class = "plot-widgets-container",
@@ -123,13 +153,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
-      tagList(
-        actionButton(
-          inputId = session$ns("reset_widgets"),
-          label = "Reset to defaults"
-        ),
-        purrr::imap(options, create_edit_widget)
-      )
+      purrr::imap(options, create_edit_widget)
     })
   })
 }
