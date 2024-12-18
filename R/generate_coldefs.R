@@ -1,0 +1,42 @@
+#' Generate Column Definitions for Tables
+#'
+#' This function generates column definitions for a reactable table,
+#' including both the column heading and the label (if available).
+#'
+#' @param data A data frame containing the data to be displayed in the reactable table.
+#'
+#' @return A named list of column definitions for the reactable table.
+#'
+#' @examples
+#' \dontrun{
+#'   data <- data.frame(
+#'     USUBJID = c(1, 2, 3),
+#'     AVAL = c(4, 5, 6)
+#'   )
+#'   attr(data$USUBJID, "label") <- "Unique Subject Identifier"
+#'   attr(data$AVAL, "label") <- "Analysis Value"
+#'   col_defs <- generate_col_defs(data)
+#' }
+#'
+#' @export
+generate_col_defs <- function(data) {
+
+  # Extract labels from the dataset
+  labels <- sapply(data, function(col) attr(col, "label"))
+  labels[!is.na(labels)]
+  
+  # Generate column definitions
+  col_defs <- lapply(names(data), function(col) {
+    label <- labels[[col]]
+    if (!is.null(label)) {
+      colDef(
+        name = paste0(col, " : ", label)
+      )
+    } else {
+      colDef(name = col)
+    }
+  })
+  names(col_defs) <- names(data)
+  
+  return(col_defs)
+}

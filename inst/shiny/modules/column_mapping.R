@@ -251,10 +251,10 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         return(col)
       })
 
-      # Handle ADOSEDUR == NA case
-      if (input$select_ADOSEDUR == "NA") {
-        dataset$ADOSEDUR <- 0
-      }
+      # # Handle ADOSEDUR == NA case
+      # if (input$select_ADOSEDUR == "NA") {
+      #   dataset$ADOSEDUR <- 0
+      # }
 
       # Update dataset columns if manual units are selected
       if (input$select_AVALU %in% manual_units$concentration) {
@@ -268,10 +268,22 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
       }
 
       # Reorder columns based on the desired order
-      dataset %>%
+      dataset <- dataset %>%
         relocate(all_of(desired_order)) %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT)) %>% #TODO: Remove this after AUC0 merged
-        processed_data()
+        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
+
+      # Apply labels to the dataset
+      if (exists("apply_labels") && is.function(apply_labels)) {
+        message("Calling apply_labels function")
+        dataset <- apply_labels(dataset)
+        shiny::showNotification("Labels applied successfully.", type = "message")
+      } else {
+        warning("apply_labels function is not defined or not a function.")
+        shiny::showNotification("apply_labels function is not defined or not a function.", type = "error")
+      }
+
+      # Update the processed data
+      processed_data(dataset)
 
       # Execute the callback function to change the tab
       on_submit()
