@@ -65,7 +65,7 @@ fluidPage(
                   ),
                   selected = "lin up/log down"
                 ),
-                units_table_ui("units_table"),
+                units_table_ui("units_table_preNCA"),
                 br(),
                 checkboxInput("AUCoptions", "Select Partial AUC"),
                 conditionalPanel(
@@ -195,6 +195,7 @@ fluidPage(
                   multiple = TRUE,
                   options = list(`actions-box` = TRUE)
                 ),
+                units_table_ui("units_table_postNCA"),
                 DTOutput("myresults"),
                 tableOutput("summaryTable"),
                 actionButton("download", "Download the NCA Data"),

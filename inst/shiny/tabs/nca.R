@@ -175,7 +175,7 @@ observeEvent(input$settings_upload, {
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
-  print("trigered")
+
   # Segregate the data into concentration and dose records
   df_conc <- create_conc(data(), input$analyte, input$proftype)
   df_dose <- create_dose(df_conc)
@@ -214,7 +214,6 @@ observeEvent(input$submit_analyte, priority = 2, {
       timeu = myconc$data$RRLTU[1]
     )
   )
-  print(mydata$conc$columns$groups$group_analyte)
   
   # Redefine units for each analyte and for potential customizations
   unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
@@ -293,7 +292,7 @@ observe({
 # Choose dosenumbers to be analyzed
 
 observeEvent(input$submit_analyte, priority = -1, {
-  print(mydata())
+
   req(mydata())
   updateSelectInput(
     session,
@@ -304,7 +303,8 @@ observeEvent(input$submit_analyte, priority = -1, {
 })
 
 # If the user requests it allows to change the units of the parameters using a modal message table
-units_table_server("units_table", mydata, params_to_calculate)
+units_table_server("units_table_preNCA", mydata, reactive(NULL), params_to_calculate)
+res_nca <- units_table_server("units_table_postNCA", mydata, res_nca, params_to_calculate)
 
 # Partial AUC Selection
 auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
@@ -476,9 +476,9 @@ observeEvent(res_nca(), {
   
   # Include units for all column names
   dict_pttestcd_with_units <- res_nca()$result %>%
-    select(PPTESTCD, PPORRESU) %>%
+    select(PPTESTCD, PPSTRESU) %>%
     unique() %>%
-    pull(PPORRESU, PPTESTCD)
+    pull(PPSTRESU, PPTESTCD)
   
   final_res_nca <- final_res_nca %>%
     rename_with(~ifelse(

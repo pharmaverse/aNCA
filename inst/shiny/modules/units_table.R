@@ -8,7 +8,6 @@ units_table_ui <- function(id) {
       label = "Parameter Units",
       disabled = TRUE
     )
-    # uiOutput(ns("modal_ui"))
   )
 }
 
@@ -17,13 +16,14 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    # Enable the button when data is available
+    # Enable the units table button when data is available
     observeEvent(mydata(),{
       updateActionButton(session = session, 
                          inputId = "open_units_table",
                          disabled = FALSE)
     })
     
+    # Open modal message when units table button is pressed
     observeEvent(input$open_units_table, {
       showModal(modalDialog(
         title = tagList(
@@ -51,7 +51,8 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
         size = "l"
       ))
     })
-
+    
+    # Reformat how the units table is displayed to the user
     modal_units_table <- reactiveVal(NULL)
     observeEvent(list(mydata(), input$select_unitstable_analyte), {
       req(mydata())
@@ -69,6 +70,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       modal_units_table(modal_units_table_data)
     })
     
+    # Define which parameters where choosen by the user
     params_to_calculate <- reactiveVal(NULL)
     observeEvent(mydata()$intervals, {
       params_to_calculate(names(purrr::keep(mydata()$intervals, 
@@ -76,6 +78,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
                           )
     })
 
+    # Render the modal units table to the user
     output$modal_units_table <- DT::renderDT({
       datatable(
         data = modal_units_table() %>%
@@ -115,10 +118,9 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       )
     })
 
+    # Accept user modifications in the modal units table
     observeEvent(input$modal_units_table_cell_edit, {
       info <- input$modal_units_table_cell_edit
-      print(info)
-      print(modal_units_table()[info$row,])
       modal_units_table <- modal_units_table()
       modal_units_table[info$row, info$col + 1] <- info$value
 
@@ -131,8 +133,11 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       modal_units_table(modal_units_table)
     })
 
+    # When save button is pressed substitute the original units table based on the modal one
+    new_res_nca <- reactiveVal(NULL)
     observeEvent(input$save_units_table, {
 
+      # Make sure there are no missing entries (no NA in conversion factor)
       if (any(is.na(modal_units_table()$`Conversion Factor`))) {
 
         invalid_entries <- modal_units_table() %>%
@@ -151,6 +156,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
         return()
       }
 
+      # Tranform the modal units table back to the original one
       modal_units_table <- modal_units_table() %>%
         dplyr::mutate(Analytes = strsplit(Analytes, ", ")) %>%
         tidyr::unnest(Analytes) %>%
@@ -160,10 +166,29 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
                       PPSTRESU = `Custom unit`,
                       conversion_factor = `Conversion Factor`)
 
+      # Save the modified units table in my data object
       mydata <- mydata()
       mydata$units <- modal_units_table
       mydata(mydata)
+      
+      # Close the module window once all saving actions are done
       removeModal()
+      
+      # If there are already results produced, make sure they are also adapted
+      if (!is.null(res_nca())) {
+        res_nca <- res_nca()
+        res_nca$data$units <- modal_units_table
+        res_nca$result <- res_nca$result %>%
+          dplyr::select(-PPSTRESU, -PPSTRES) %>%
+          dplyr::left_join(
+            modal_units_table,
+            by=intersect(names(.), names(modal_units_table))
+          ) %>%
+          dplyr::mutate(PPSTRES = PPORRES * conversion_factor) %>% 
+          dplyr::select(-conversion_factor)
+        new_res_nca(res_nca)
+      }
     })
+    return(reactive(new_res_nca()))
   })
 }
