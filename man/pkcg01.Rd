@@ -79,7 +79,6 @@ This function generates a list of ggplots for PK concentration-time profiles.
 }
 \author{
 Gerardo Rodriguez
-TODO: find good magic numbers for title margin.
-TODO: large margins make the plotting area smaller, adjust plot height
 magic numbers for footnote position and margin, work in app up to 4 lines
+NOTE: might require some fine tuning down the line, looks fine now
 }

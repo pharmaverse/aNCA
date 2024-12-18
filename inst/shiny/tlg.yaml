@@ -25,13 +25,18 @@ g_pkconc_ind_lin:
         - PCSPEC
         - PARAM
         - USUBJID
-    # TODO: splitting variable
     color_var:
       type: select
       label: "Color variable"
       choices: .colnames
 
     .group_label_2: "Labels"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
     footnote:
       type: text
       label: Footnote

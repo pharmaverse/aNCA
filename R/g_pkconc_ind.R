@@ -13,7 +13,7 @@ g_pkconc_ind_lin <- function(data, ...) {
 #' @returns ggplot2 object for pkcg01.
 #' @export
 g_pkconc_ind_log <- function(data, ...) {
-  pkcg01(adpc = data, scale = "LOG")
+  pkcg01(adpc = data, scale = "LOG", ...)
 }
 
 #' Generate PK Concentration-Time Profile Plots
@@ -81,10 +81,6 @@ pkcg01 <- function(
   xmax = NA,
   ymin = NA,
   ymax = NA,
-  # xlab = substitute(paste0(attr(adpc[[xvar]], "label"),
-  #                          " (", unique(adpc[[xvar_unit]]), ")")),
-  # ylab = substitute(paste0(attr(adpc[[yvar]], "label"),
-  #                          " (", unique(adpc[[yvar_unit]]), ")")),
   xlab = paste0(xvar, " [", unique(adpc[[xvar_unit]]), "]"),
   ylab = paste0(yvar, " [", unique(adpc[[yvar_unit]]), "]"),
   title = NULL,
@@ -104,38 +100,10 @@ pkcg01 <- function(
   ymin <- as.numeric(ymin)
   ymax <- as.numeric(ymax)
 
-  # Title for the plots based on display option
-  title <- {
-    if (is.null(title)) {
-      paste0(
-        "Plot of PK Concentration-Time Profile ",
-        dplyr::case_when(
-          scale == "LIN" ~ "linear",
-          scale == "LOG" ~ "logarithmic",
-          TRUE ~ "linear and logarithmic"
-        ),
-        " scale"
-      )
-    } else {
-      title
-    }
-  }
-
-  # Include in data figure details: title, subtitle, footnote/caption
-  adpc <- add_figure_details(
-    adpc = adpc,
-    title = title,
-    subtitle = subtitle,
-    collapse_subtitle = ", ",
-    studyid = studyid, # Includes cohort in title
-    trt_var = trt_var, # Includes treatment in subtitle
-    plotgroup_vars = plotgroup_vars,
-    plotgroup_names = plotgroup_names,
-    xvar_unit = xvar_unit,
-    xmin = as.numeric(xmin),
-    xmax = as.numeric(xmax),
-    footnote = footnote
-  )
+  adpc <- adpc %>%
+    mutate(across(all_of(plotgroup_vars), as.character)) %>%
+    rowwise() %>%
+    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
 
   # Construct the reference ggplot object
   plot_data <- adpc %>% filter(id_plot == id_plot[1])
@@ -144,9 +112,9 @@ pkcg01 <- function(
     df = plot_data,
     xvar = xvar,
     yvar = yvar,
-    xlab = xlab,
-    ylab = ylab,
-    id_var = "subtitle",
+    xlab = parse_annotation(plot_data, xlab),
+    ylab = parse_annotation(plot_data, ylab),
+    id_var = "USUBJID",
     add_baseline_hline = FALSE,
     yvar_baseline = yvar,
     plotting_choices = "separate_by_obs"
@@ -228,17 +196,48 @@ pkcg01 <- function(
   lapply(unique(adpc[["id_plot"]]), \(id_val) {
     plot_data <- adpc %>% dplyr::filter(id_plot ==  id_val)
 
-    #' TODO: find good magic numbers for title margin.
-    #' TODO: large margins make the plotting area smaller, adjust plot height
-    title <- paste0(
-      unique(plot_data$title), "<br>",
-      "<sup>", unique(plot_data$subtitle), "</sup>"
-    )
-    title_margin <- (0.5 * length(unlist(strsplit(title, "\n|<br>"))))
+    title <- {
+      if (is.null(title)) {
+        paste0(
+          "Plot of PK Concentration-Time Profile ",
+          dplyr::case_when(
+            scale == "LIN" ~ "linear",
+            scale == "LOG" ~ "logarithmic",
+            TRUE ~ "linear and logarithmic"
+          ),
+          " scale, by Cohort: ", unique(plot_data[[studyid]])
+        )
+      } else {
+        parse_annotation(plot_data, title)
+      }
+    }
+
+    subtitle <- {
+      if (is.null(subtitle)) {
+        paste0(
+          "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
+          paste(
+            c(plotgroup_names), ": ", unique(plot_data[, plotgroup_vars]),
+            sep = "",  collapse = ", "
+          )
+        )
+      } else {
+        parse_annotation(plot_data, subtitle)
+      }
+    }
+
+    title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
+    title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
 
     #' magic numbers for footnote position and margin, work in app up to 4 lines
-    footnote <- unique(plot_data$footnote)
-    footnote_y <- 0.175 + (0.1 * length(unlist(strsplit(footnote, "\n|<br>"))))
+    footnote <- {
+      if (is.null(footnote)) {
+        ""
+      } else {
+        parse_annotation(plot_data, footnote)
+      }
+    }
+    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
 
     plot %+%
       plot_data %+%
@@ -252,10 +251,15 @@ pkcg01 <- function(
           "cm"
         )
       ) %>%
-      ggplotly(tooltip = c("x", "y")) %>%
+      ggplotly(
+        tooltip = c("x", "y"),
+        dynamicTicks = TRUE,
+        #' NOTE: might require some fine tuning down the line, looks fine now
+        height = 500 + (footnote_y * 25) + title_margin * 50
+      ) %>%
       layout(
         # title and subtitle #
-        title = list(text = title),
+        title = list(text = title_text),
         # footnote #
         annotations = list(
           x = 0,
@@ -269,78 +273,4 @@ pkcg01 <- function(
       )
   }) |>
     setNames(unique(adpc[["id_plot"]]))
-}
-
-#' Add Figure Details to Data Frame
-#'
-#' This function adds figure details; title, subtitle, and caption to the data.
-#'
-#' @param adpc            A data frame containing the data.
-#' @param plotgroup_vars  A character vector of the grouping data variables.
-#' @param plotgroup_names A character vector for the grouping variables names.
-#' @param studyid         A character string specifying the study ID variable.
-#' @param xvar_unit       A character string for the unit for the x-axis variable.
-#' @param xmin            A numeric value specifying the minimum x-axis limit.
-#' @param xmax            A numeric value specifying the maximum x-axis limit.
-#' @param footnote        A character string specifying plot's manual footnote.
-#' @param trt_var         A character string specifying the treatment variable.
-#' @param title           A character string specifying the title for the plot.
-#' @returns A data frame with added figure details.
-#' @importFrom dplyr mutate across rowwise ungroup group_by n
-#' @author Gerardo Rodriguez
-add_figure_details <- function(
-  adpc,
-  title = "", # Specified by metadata
-  subtitle = "",
-  collapse_subtitle = "\n",
-  studyid = NULL, # Include or not in t
-  trt_var, # Include or not in subtitle
-  plotgroup_vars,
-  plotgroup_names,
-  xvar_unit,
-  xmin = NA,
-  xmax = NA,
-  footnote = NULL
-) {
-  adpc %>%
-    mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    rowwise() %>%
-    dplyr::mutate(
-      title = if (is.null(studyid)) title else paste0(title, ", by Cohort: ", !!sym(studyid)),
-      subtitle = {
-        if (is.null(subtitle)) {
-          paste(
-            paste(c(plotgroup_names), ": ", c_across(all_of(plotgroup_vars)), sep = ""),
-            collapse = collapse_subtitle
-          )
-        } else {
-          subtitle
-        }
-      },
-      footnote = {
-        footnote <- if (is.null(footnote)) "" else paste0(footnote, "\n")
-
-        if (!is.na(xmax)) {
-          footnote <- paste0(
-            footnote,
-            "Plot not showing observations beyond ", xmax, " ", !!sym(xvar_unit), ".\n"
-          )
-        }
-
-        if (!is.na(xmin)) {
-          footnote <- paste0(
-            footnote, "Plot not showing observations before ", xmin, " ", !!sym(xvar_unit), ".\n"
-          )
-        }
-
-        footnote
-      }
-    ) %>%
-    ungroup() %>%
-    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars))) %>%
-    dplyr::group_by(!!!syms(c(trt_var, plotgroup_vars))) %>%
-    dplyr::mutate(
-      subtitle = paste0("Treatment Group: ", !!sym(trt_var), " (N=", n(), ")\n", subtitle)
-    ) %>%
-    ungroup()
 }
