@@ -402,7 +402,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$descriptive_stats <- renderReactable({
       req(summary_stats())
       log_info("Rendering descriptive statistics table")
-      
+
       reactable(
         summary_stats(),
         searchable = TRUE,
@@ -431,7 +431,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     # alternatively: save locally
     output$download_browser <- downloadHandler(
       filename = function() {
-        paste("NCA_summary.csv", sep = "_")
+        paste("NCA_summary.csv")
       },
       content = function(file) {
         log_info("Downloading summary statistics as CSV")
