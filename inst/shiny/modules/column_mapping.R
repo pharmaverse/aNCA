@@ -273,14 +273,8 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
 
       # Apply labels to the dataset
-      if (exists("apply_labels") && is.function(apply_labels)) {
-        message("Calling apply_labels function")
-        dataset <- apply_labels(dataset)
-        shiny::showNotification("Labels applied successfully.", type = "message")
-      } else {
-        warning("apply_labels function is not defined or not a function.")
-        shiny::showNotification("apply_labels function is not defined or not a function.", type = "error")
-      }
+      message("Calling apply_labels function")
+      dataset <- apply_labels(dataset)
 
       # Update the processed data
       processed_data(dataset)
