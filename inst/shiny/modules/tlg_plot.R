@@ -166,8 +166,8 @@ create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReact
       choices <- {
         if (isTRUE(opt_def$choices == ".colnames")) {
           names(session$userData$data())
-        } else if (length(opt_def$choices) == 1 && grepl("^\\.", opt_def$choices)) {
-          unique(session$userData$data()[, sub("^\\.", "", opt_def$choices)])
+        } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
+          unique(session$userData$data()[, sub("^\\$", "", opt_def$choices)])
         } else {
           opt_def$choices
         }

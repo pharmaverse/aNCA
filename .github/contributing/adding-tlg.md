@@ -51,7 +51,7 @@ id:
       multiple:
       # applicable to 'select' type, choices to pick from the dropdown, either specified outright or using a special keyword:
       # - '.colnames' keyword will pull the choices from the data column names
-      # - '.COLUMN_NAME' keyword will pull choices from values of a specific column
+      # - '$COLUMN_NAME' keyword will pull choices from values of a specific column
       choices:
     # will create a label to help visually group related widgets; should be a character string; N should be replaced with an integer to uniquely identify the keyword    
     .group_label_N:
