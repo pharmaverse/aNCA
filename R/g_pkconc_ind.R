@@ -88,7 +88,13 @@ pkcg01 <- function(
   footnote = NULL,
   # Inputs to split-by/seggregate plots
   plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM", "USUBJID"),
-  plotgroup_names = c("Route", "Specimen", "Analyte", "Subject ID"),
+  # TODO(mateusz): Refactor when label attributes are implemented.
+  plotgroup_names = list(
+    "ROUTE" = "Route",
+    "PCSPEC" = "Specimen",
+    "PARAM" = "Analyte",
+    "USUBJID" = "Subject ID"
+  ),
 
   # Specific inputs (needs metadata specification),
   scale = c("LIN", "LOG", "SBS")[1],
@@ -205,8 +211,10 @@ pkcg01 <- function(
       if (is.null(subtitle)) {
         paste0(
           "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
+          # TODO(mateusz): Refactor when label attributes are implemented.
           paste(
-            c(plotgroup_names), ": ", unique(plot_data[, plotgroup_vars]),
+            unlist(unname(plotgroup_names[plotgroup_vars])), ": ",
+            unique(plot_data[, plotgroup_vars]),
             sep = "",  collapse = ", "
           )
         )
