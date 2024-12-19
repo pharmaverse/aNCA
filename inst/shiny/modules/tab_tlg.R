@@ -224,8 +224,15 @@ tab_tlg_server <- function(id) {
       }
     })
 
+    # Toggle submit button depending on whether the data is available #
+    observeEvent(session$userData$data(), ignoreInit = FALSE, ignoreNULL = FALSE, {
+      shinyjs::toggleState("submit_tlg_order", !is.null(session$userData$data()))
+      shinyjs::toggleState("submit_tlg_order_alt", !is.null(session$userData$data()))
+    })
+
     # When the user submits the TLG order...
     observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+      req(session$userData$data())
       log_trace("Submitting TLG order...")
 
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
