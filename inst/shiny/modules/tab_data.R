@@ -41,7 +41,12 @@ tab_data_ui <- function(id) {
     nav_panel("Review Data",
       "This is the data set that will be used for the analysis.
       If you want to make any changes, please do so in the Mapping and Filters tab.",
-      reactableOutput(ns("data_processed"))
+      reactableOutput(ns("data_processed")),
+      tags$script(HTML("
+        $(document).ready(function(){
+          $('[data-toggle=\"tooltip\"]').tooltip(); 
+        });
+      "))
     )
   )
 
