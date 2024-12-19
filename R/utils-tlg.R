@@ -3,8 +3,8 @@
 #' (e.g. plotly).
 #'
 #' @details
-#' * `\n` character is substituted for `<br>` tag in order to add new lines in redered image.
-#' * `$COLNAME` is parsed to privde unique data value from the mentioned column.
+#' * `\n` character is substituted for `<br>` tag in order to add new lines in rendered image.
+#' * `$COLNAME` is parsed to provide unique data value from the mentioned column.
 #' * `!COLNAME` is parsed to provide `label` attribute for a given column name.
 #' If any values are missing from the provided data, they are substituted for `ERR` string.
 #'
