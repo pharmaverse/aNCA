@@ -99,7 +99,6 @@ tab_tlg_server <- function(id) {
     output$selected_tlg_table <- DT::renderDT({
       log_trace("Rendering TLG table.")
       datatable(
-        elementId = "selected_tlg_datatable",
         class = "table table-striped table-bordered",
         data = dplyr::filter(tlg_order(), Selection),
         editable = list(
