@@ -43,24 +43,25 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @returns A list of ggplot objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
-#' @importFrom tern g_ipp     # Can be substituted by regular ggplot easily!!
+#' @importFrom tern g_ipp
 #' @importFrom checkmate assert_numeric
-#' @importFrom scales breaks_log label_log trans_breaks trans_formats
+#' @importFrom scales breaks_log label_log
 #' @importFrom ggh4x scale_y_facet
 #'
 #' @examples
-#' \dontrun {
+#' \dontrun{
 #'   adpc <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
 #'   attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
 #'   attr(adpc[["AVAL"]], "label") <- "Analysis val"
 #'
-#'   plots_lin <- pkcg01(adpc = adpc, xmax = 1)
-#'   plots_log <- pkcg01(adpc = adpc, color_var = "USUBJID", scale = "LOG)
-#'   plots_sbs <- pkcg01(
+#'   plots_lin <- pckg01(adpc = adpc, xmax = 1)
+#'   plots_log <- pckg01(adpc = adpc, color_var = "USUBJID", scale = "LOG")
+#'   plots_sbs <- pckg01(
 #'     adpc = adpc,
 #'     color_var = "USUBJID",
 #'     xbreaks_var = "NFRLT",
-#'     xmin = 100, xmax = 1000,
+#'     xmin = 100,
+#'     xmax = 1000,
 #'     scale = "SBS"
 #'   )
 #' }

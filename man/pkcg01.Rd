@@ -78,6 +78,25 @@ A list of ggplot objects for each unique group.
 \description{
 This function generates a list of ggplots for PK concentration-time profiles.
 }
+\examples{
+\dontrun{
+  adpc <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
+  attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
+  attr(adpc[["AVAL"]], "label") <- "Analysis val"
+
+  plots_lin <- pckg01(adpc = adpc, xmax = 1)
+  plots_log <- pckg01(adpc = adpc, color_var = "USUBJID", scale = "LOG")
+  plots_sbs <- pckg01(
+    adpc = adpc,
+    color_var = "USUBJID",
+    xbreaks_var = "NFRLT",
+    xmin = 100,
+    xmax = 1000,
+    scale = "SBS"
+  )
+}
+
+}
 \author{
 Gerardo Rodriguez
 magic numbers for footnote position and margin, work in app up to 4 lines
