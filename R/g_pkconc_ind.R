@@ -162,11 +162,7 @@ pkcg01 <- function(
       dplyr::mutate(across(all_of(yvar), ~ ifelse(. < 1e-3, 1e-3, .)))
 
     plot <- plot %+% dplyr::filter(adpc, id_plot == id_plot[1]) +
-      scale_y_continuous(
-        trans = scales::log10_trans(),
-        breaks = scales::trans_breaks("log10", \(x) 10^x),
-        labels = scales::trans_format("log10", scales::math_format(10^.x))
-      ) +
+      scale_y_continuous(trans = scales::log10_trans()) +
       labs(y = paste0("Log 10 - ", plot$labels$y))
   }
 
@@ -268,7 +264,8 @@ pkcg01 <- function(
           showarrow = FALSE,
           yref = "paper",
           xref = "paper",
-          align = "left"
+          align = "left",
+          parse = TRUE
         )
       )
   }) |>
