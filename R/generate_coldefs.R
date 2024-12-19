@@ -23,7 +23,7 @@ generate_col_defs <- function(data) {
 
   # Extract labels from the dataset
   labels <- sapply(data, function(col) attr(col, "label"))
-  
+
   # Generate column definitions
   col_defs <- lapply(names(data), function(col) {
     label <- labels[[col]]
@@ -42,6 +42,6 @@ generate_col_defs <- function(data) {
     }
   })
   names(col_defs) <- names(data)
-  
+
   return(col_defs)
 }

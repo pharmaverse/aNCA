@@ -14,7 +14,7 @@ A named list of column definitions for the reactable table.
 }
 \description{
 This function generates column definitions for a reactable table,
-including both the column heading and the label (if available).
+including both the column heading and the label (if available) as a tooltip.
 }
 \examples{
 \dontrun{

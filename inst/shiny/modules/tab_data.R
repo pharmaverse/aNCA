@@ -159,10 +159,10 @@ tab_data_server <- function(id) {
     # Update the data table object with the filtered data
     output$data_processed <- renderReactable({
       req(data())
-      
+
       # Generate column definitions
       col_defs <- generate_col_defs(data())
-      
+
       reactable(
         data(),
         columns = col_defs,

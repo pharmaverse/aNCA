@@ -251,10 +251,10 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         return(col)
       })
 
-      # # Handle ADOSEDUR == NA case
-      # if (input$select_ADOSEDUR == "NA") {
-      #   dataset$ADOSEDUR <- 0
-      # }
+      # Handle ADOSEDUR == NA case
+      if (input$select_ADOSEDUR == "NA") {
+        dataset$ADOSEDUR <- 0
+      }
 
       # Update dataset columns if manual units are selected
       if (input$select_AVALU %in% manual_units$concentration) {
