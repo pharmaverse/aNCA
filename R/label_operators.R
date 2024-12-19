@@ -1,3 +1,43 @@
+#' Apply Labels to a dataset
+#'
+#' This function adds "label" attributes to all columns in a dataset
+#' Using the labels_app.csv file which contains common labels for ADPP
+#' and ADPC column names
+#'
+#' @param data The dataset to which labels will be applied.
+#'
+#' @return The same dataset with label attributes applied to all columns.
+#' If a column is not present in the labels list, it will be assigned the name of the col.
+#'
+#' @examples
+#' \dontrun{
+#'   # Example usage:
+#'   data <- data.frame(USUBJID = c(1, 2, 3), AVAL = c(4, 5, 6))
+#'   data <- apply_labels(data)
+#'   print(attr(data$A, "label"))
+#' }
+#'
+#' @export
+apply_labels <- function(data) {
+
+  labels_app <- read.csv(system.file("shiny/www/data/labels_app.csv", package = "aNCA"))
+
+  # Create the label_ADNCA named vector from labels_app
+  label_adnca <- setNames(labels_app$Label, labels_app$Variable)
+
+  log_info("Applying labels to data")
+
+  for (col in colnames(data)) {
+    if (col %in% names(label_adnca)) {
+      attr(data[[col]], "label") <- label_adnca[[col]]
+    } else {
+      attr(data[[col]], "label") <- col
+    }
+  }
+
+  return(data)
+}
+
 #' Convert to Factor While Preserving Label
 #'
 #' This function converts a vector to a factor while preserving its "label" attribute.

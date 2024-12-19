@@ -334,10 +334,16 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
       }
 
       # Reorder columns based on the desired order
-      dataset %>%
+      dataset <- dataset %>%
         relocate(all_of(desired_order)) %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT)) %>% #TODO: Remove this after AUC0 merged
-        processed_data()
+        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
+
+      # Apply labels to the dataset
+      message("Calling apply_labels function")
+      dataset <- apply_labels(dataset)
+
+      # Update the processed data
+      processed_data(dataset)
 
       # Execute the callback function to change the tab
       on_submit()
