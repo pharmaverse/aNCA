@@ -157,12 +157,7 @@ pkcg01 <- function(
 
 
   if (scale == "LOG") {
-    # Create LOG version of data and plot
-    adpc <- adpc %>%
-      dplyr::mutate(across(all_of(yvar), ~ ifelse(. < 1e-3, 1e-3, .)))
-
-    plot <- plot %+% dplyr::filter(adpc, id_plot == id_plot[1]) +
-      scale_y_continuous(trans = scales::log10_trans()) +
+    plot <- plot +
       labs(y = paste0("Log 10 - ", plot$labels$y))
   }
 
@@ -233,9 +228,7 @@ pkcg01 <- function(
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
 
-    # TODO: implement logtics in plotly
-
-    plot %+%
+    plotly_plot <- plot %+%
       plot_data %+%
       theme(
         # add margin to make space for subtitle and footnote #
@@ -268,6 +261,13 @@ pkcg01 <- function(
           parse = TRUE
         )
       )
+
+    if (scale == "LOG") {
+      plotly_plot <- plotly_plot %>%
+        layout(yaxis = list(type = "log"))
+    }
+
+    plotly_plot
   }) |>
     setNames(unique(adpc[["id_plot"]]))
 }
