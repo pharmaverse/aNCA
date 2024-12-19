@@ -700,67 +700,70 @@ output$manual_slopes2 <- renderTable({
   slope_rules()
 })
 
-# Save summary stats to improve
-observeEvent(input$downloadsum, {
-  showModal(modalDialog(
-    title = "Please enter the path to the folder on improve for your results:",
-    textInput("pathresults", "Path:"),
-    textInput("filename", "Enter filename of choice:", ""),
-    actionButton("go2", "GO"),
-    footer = modalButton("Close")
-  ))
-})
+# CDISC ------------------------------------------------------------------------
 
-# Save to working directory
+# Parameter datasets ------------------------------------------------------------------------
 
-shinyDirChoose(input, "dir", roots = c(home = "~"))
+# Create CDISC parameter datasets (PP, ADPP)
+observeEvent(res_nca(), {
+  CDISC <- export_cdisc(res_nca())
 
-observeEvent(input$downloadsum_csv, {
-  showModal(
-    modalDialog(
-      title = "Local Download",
-      shinyDirButton("dir", "Select directory", "Download"),
-      textInput("fileNameInput", "Enter filename", value = "data_summary.csv"),
-      textOutput("selectedDirText"),
-      footer = tagList(
-        actionButton("confirmBtn", "Save"),
-        modalButton("Cancel")
+  output$pp_dataset <- DT::renderDataTable({
+    DT::datatable(
+      data = CDISC$pp,
+      rownames = FALSE,
+      extensions = c("FixedHeader", "Buttons"),
+      options = list(
+        scrollX = TRUE,
+        scrollY = TRUE,
+        searching = TRUE,
+        fixedColumns = TRUE,
+        fixedHeader = TRUE,
+        autoWidth = TRUE,
+        dom = "Bfrtip",
+        buttons = list(
+          list(
+            extend = "copy",
+            title = paste0("PP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "csv",
+            title = paste0("PP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "excel",
+            title = paste0("PP_Dataset", "_", Sys.Date())
+          )
+        )
       )
     )
-  )
-})
+  }, server = FALSE)
 
-# path of selected directory
-observeEvent(input$dir, {
-  output$selectedDirText <- renderText({
-    if (!is.null(input$dir)) {
-      paste0("Path:", parseDirPath(roots = c(wd = "."), input$dir), "/",  input$fileNameInput)
-    } else {
-      "No directory selected"
-    }
+  output$adpp_dataset <- DT::renderDataTable({
+    DT::datatable(
+      data = CDISC$adpp,
+      extensions = c("FixedHeader", "Buttons"),
+      options = list(
+        scrollX = TRUE,
+        scrollY = TRUE,
+        lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+        fixedHeader = TRUE,
+        dom = "Bfrtip",
+        buttons = list(
+          list(
+            extend = "copy",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "csv",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          ),
+          list(
+            extend = "excel",
+            title = paste0("ADPP_Dataset", "_", Sys.Date())
+          )
+        )
+      )
+    )
   })
 })
-
-
-# confirm path
-observeEvent(input$confirmBtn, {
-  req(input$dir)
-  req(input$fileNameInput)
-  file_path <- file.path(parseDirPath(roots = c(wd = "~"), input$dir), input$fileNameInput)
-  write.csv(summary_stats(), file_path)
-  session$sendCustomMessage(
-    type = "downloadFile",
-    message = list(fileName = input$fileNameInput, filePath = file_path)
-  )
-  removeModal()
-})
-
-# alternatively: save to browser
-output$downloadsum_browser <- downloadHandler(
-  filename = function() {
-    paste("NCA_summary.csv", sep = "_")
-  },
-  content = function(file) {
-    write.csv(summary_stats(), file)
-  }
-)
