@@ -32,11 +32,22 @@ tab_tlg_ui <- function(id) {
     id = ns("tlg_tabs"),
     nav_panel(
       "Order details",
-      actionButton(ns("add_tlg"), "Add TLG"),
-      actionButton(ns("remove_tlg"), "Remove TLG"),
-      actionButton(ns("submit_tlg_order"), "Submit Order Details"),
-      DTOutput(ns("selected_tlg_table")),
-      actionButton(ns("submit_tlg_order_alt"), "Submit Order Details")
+      card(
+        style = "margin-top: 1em;",
+        div(
+          actionButton(ns("add_tlg"), "Add TLG"),
+          actionButton(ns("remove_tlg"), "Remove TLG"),
+          actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
+        )
+      ),
+      card(
+        DTOutput(ns("selected_tlg_table"))
+      ),
+      card(
+        div(
+          actionButton(ns("submit_tlg_order_alt"), "Submit Order Details", class = "btn-primary")
+        )
+      )
     ),
     nav_panel("Tables", "To be added"),
     nav_panel("Listings", "To be added"),
