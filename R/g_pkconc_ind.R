@@ -167,7 +167,6 @@ pkcg01 <- function(
         breaks = scales::trans_breaks("log10", \(x) 10^x),
         labels = scales::trans_format("log10", scales::math_format(10^.x))
       ) +
-      annotation_logticks(sides = "l") +
       labs(y = paste0("Log 10 - ", plot$labels$y))
   }
 
@@ -183,7 +182,6 @@ pkcg01 <- function(
 
     plot <- plot %+% dplyr::filter(adpc, id_plot == unique(id_plot)[1]) +
       facet_wrap(~ view, scales = "free_y") +
-      annotation_logticks(sides = "l", linewidth = 0.1, alpha = c(0, 1)) +
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
         trans  = "log10",
@@ -238,6 +236,8 @@ pkcg01 <- function(
       }
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
+
+    # TODO: implement logtics in plotly
 
     plot %+%
       plot_data %+%
