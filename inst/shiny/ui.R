@@ -17,17 +17,17 @@ fluidPage(
 
   includeCSS(file.path(assets, "style.css")),
 
-  navbarPage(
+  page_navbar(
     id = "page",
-    title = "",
+    title = "aNCA",
     # DATA ----
-    tabPanel(
+    nav_panel(
       "Data",
       fluid = TRUE,
       tab_data_ui("data")
     ),
     # NCA ----
-    tabPanel("NCA", fluid = TRUE,
+    nav_panel("NCA", fluid = TRUE,
       fluidPage(
         actionButton("nca", "Run NCA", class = "run-nca-btn"),
 
@@ -219,132 +219,27 @@ fluidPage(
               tabPanel(
                 "Exclusions",
                 tableOutput("manual_slopes2")
-              )
+              ),
+              tabPanel("Parameter Datasets",
+                       tabsetPanel(
+                         tabPanel("PP",
+                                  DTOutput("pp_dataset")),
+                         tabPanel("ADPP",
+                                  DTOutput("adpp_dataset"))
+                       ))
             )
           )
         )
       )
     ),
-    # OUTPUTS ----
-    tabPanel("Outputs", fluid = TRUE,
-      navlistPanel(
-        tabPanel("General Plotting",
-          tabsetPanel(
-            tabPanel("Individual Plots",
-              fluidRow(
-                column(
-                  4, # This column will take 4/12 of the width of the row
-                  uiOutput("generalplot_analyte"),
-                  uiOutput("generalplot_usubjid"),
-                  uiOutput("generalplot_colorby"),
-                  radioButtons("log", "Select the Plot type:", choices = c("Lin", "Log")),
-                  radioButtons(
-                    "timescale",
-                    "Choose the Timescale",
-                    choices = c("All Time", "By Cycle"),
-                    selected = "All Time"
-                  ),
-                  conditionalPanel(
-                    condition = "input.timescale == 'By Cycle'",
-                    uiOutput("cycleselect")
-                  )
-                ),
-                column(8, plotlyOutput("individualplot", height = "400px"))
-              )
-            ),
-            tabPanel("Mean Plots",
-              uiOutput("studyidmean"),
-              uiOutput("analytemean"),
-              uiOutput("cyclemean"),
-              uiOutput("selectidvar"),
-              checkboxInput("logmeanplot", label = "Scale y Log"),
-              checkboxInput("sdmeanplot", label = "Show SD"),
-              checkboxInput("mean_plot_ci", label = "Show CI 95%"),
-              plotlyOutput("meanplot", height = "100%"),
-              br(),
-              helpText("If n<3 at the specified time point then the mean value is not displayed.")
-            )
-          )
-        ),
-        tabPanel("Dose Escalation",
-          tabsetPanel(
-            tabPanel("Descriptive Statistics",
-              fluidRow(
-                column(
-                  width = 9,
-                  orderInput(
-                    "summarygroupbysource",
-                    "Drag and drop these variables...",
-                    items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
-                    width = shiny::validateCssUnit("100%"),
-                    connect = "summarygroupby"
-                  ),
-                  orderInput(
-                    "summarygroupby",
-                    "..to hierarchically group by (order matters!):",
-                    items = c("DOSNO"),
-                    width = shiny::validateCssUnit("100%"),
-                    connect = "summarygroupbysource",
-                    placeholder = "Drag items here to group hierarchically..."
-                  )
-                ),
-                column(
-                  width = 3,
-                  uiOutput("summaryselect")
-                )
-              ),
-              br(),
-              DTOutput("descriptivestats"),
-              actionButton("downloadsum", "Download the NCA Summary Data"),
-              actionButton("downloadsum_csv", "Save NCA Summary Data to Directory"),
-              downloadButton("downloadsum_browser", "Download Summary Data")
-            ),
-            tabPanel(
-              "Box Plots",
-              uiOutput("selectboxplot"),
-              uiOutput("select_xvars_boxplot"),
-              uiOutput("select_colorvars_boxplot"),
-              pickerInput(
-                inputId = "selected_varvalstofilter_boxplot",
-                label = "Select values to display",
-                multiple = TRUE,
-                choices = NULL,
-                selected = NULL,
-                options = list(`actions-box` = TRUE)
-              ),
-              uiOutput("violin_toggle"),
-              plotlyOutput("boxplot")
-            )
-          )
-        ),
-        tabPanel("Parameter Datasets",
-                 tabsetPanel(
-                   tabPanel("PP",
-                            DTOutput("pp_dataset")),
-                   tabPanel("ADPP",
-                            DTOutput("adpp_dataset"))
-                 )),
-        tabPanel("Report",
-          tabsetPanel(
-            tabPanel("Configuration",
-              # add radio buttons with single or multiple dose as choice
-              radioButtons(
-                "report_studytype",
-                "Select the study type:",
-                choices = c("SD", "MD")
-              ),
-              actionButton("generate_report", "Generate Report")
-            ),
-            tabPanel("Report",
-              downloadButton("download_rmd", "Export Report "),
-              uiOutput("rmd_content")
-            )
-          )
-        )
-      )
+
+    # VISUALISATION ----
+    nav_panel("Visualisation",
+      fluid = TRUE,
+      tab_visuals_ui("visuals")
     ),
     # New TLG tab
-    tabPanel("TLG",
+    nav_panel("TLG",
       tab_tlg_ui("tlg")
     )
   ),
