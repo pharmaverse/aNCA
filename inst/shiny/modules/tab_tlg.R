@@ -51,7 +51,7 @@ tab_tlg_ui <- function(id) {
     ),
     nav_panel("Tables", "To be added"),
     nav_panel("Listings", "To be added"),
-    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"))
+    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"), value = "Graphs")
   )
 }
 
@@ -288,11 +288,9 @@ tab_tlg_server <- function(id) {
       })
 
       #' change tab to first populated tab
-      #' NOTE: currently only plots implemented, will change to Graphs tab
-      #' TODO: when Tables and/or Listings are implemented, detect which tab is populated and adjust
-      #' FIXME: for some reason this does not work with bslib
-      nav_select(id = "tlg_tabs", selected = "Graphs")
-      updateTabsetPanel(session, "tlg_tabs", selected = "Graphs")
+      #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
+      #' so solved this using JavaScript
+      shinyjs::runjs(paste0("$(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click()"))
     })
   })
 }
