@@ -35,7 +35,7 @@ apply_labels <- function(data, labels_file) {
       data[[col]] <- as_factor_preserve_label(data[[col]])
     }
   }
-  
+
   data
 }
 

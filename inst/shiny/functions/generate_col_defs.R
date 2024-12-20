@@ -20,7 +20,6 @@
 #'
 #' @export
 generate_col_defs <- function(data) {
-
   # Extract labels from the dataset
   labels <- sapply(data, function(col) attr(col, "label"))
 
@@ -40,8 +39,6 @@ generate_col_defs <- function(data) {
     } else {
       colDef(name = col)
     }
-  })
-  names(col_defs) <- names(data)
-
-  return(col_defs)
+  }) |>
+    setNames(names(data))
 }
