@@ -40,8 +40,6 @@ generate_col_defs <- function(data) {
     } else {
       colDef(name = col)
     }
-  })
-  names(col_defs) <- names(data)
-
-  return(col_defs)
+  }) |>
+    setNames(names(data))
 }
