@@ -2,6 +2,7 @@
 
 export(anonymize_pk_data)
 export(apply_filters)
+export(apply_labels)
 export(as_factor_preserve_label)
 export(calculate_summary_stats)
 export(create_conc)

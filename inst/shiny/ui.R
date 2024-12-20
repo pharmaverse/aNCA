@@ -48,7 +48,7 @@ fluidPage(
                 selectInput("analyte", "Choose the analyte :", choices = NULL),
                 br(),
                 actionButton("submit_analyte", "Submit"),
-                DTOutput("datatable"),
+                reactableOutput("datatable"),
               ),
               tabPanel("Settings",
                 selectInput(

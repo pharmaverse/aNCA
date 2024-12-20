@@ -41,7 +41,12 @@ tab_data_ui <- function(id) {
     nav_panel("Review Data",
       "This is the data set that will be used for the analysis.
       If you want to make any changes, please do so in the Mapping and Filters tab.",
-      reactableOutput(ns("data_processed"))
+      reactableOutput(ns("data_processed")),
+      tags$script(HTML("
+        $(document).ready(function(){
+          $('[data-toggle=\"tooltip\"]').tooltip(); 
+        });
+      "))
     )
   )
 
@@ -154,8 +159,13 @@ tab_data_server <- function(id) {
     # Update the data table object with the filtered data
     output$data_processed <- renderReactable({
       req(data())
+
+      # Generate column definitions
+      col_defs <- generate_col_defs(data())
+
       reactable(
         data(),
+        columns = col_defs,
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
