@@ -40,7 +40,7 @@ apply_labels <- function(data) {
     }
   }
 
-  return(data)
+  data
 }
 
 #' Convert to Factor While Preserving Label
