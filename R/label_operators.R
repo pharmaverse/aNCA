@@ -18,14 +18,10 @@
 #' }
 #'
 #' @export
-apply_labels <- function(data) {
-
-  labels_app <- read.csv(system.file("shiny/www/data/labels_app.csv", package = "aNCA"))
+apply_labels <- function(data, labels_file) {
 
   # Create the label_ADNCA named vector from labels_app
-  label_adnca <- setNames(labels_app$Label, labels_app$Variable)
-
-  log_info("Applying labels to data")
+  label_adnca <- setNames(labels_file$Label, labels_file$Variable)
 
   for (col in colnames(data)) {
     if (col %in% names(label_adnca)) {
@@ -39,8 +35,8 @@ apply_labels <- function(data) {
       data[[col]] <- as_factor_preserve_label(data[[col]])
     }
   }
-
-  return(data)
+  
+  data
 }
 
 #' Convert to Factor While Preserving Label

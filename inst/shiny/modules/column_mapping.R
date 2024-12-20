@@ -272,9 +272,10 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         relocate(all_of(desired_order)) %>%
         mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
 
+      #Load labels
+      labels_file <- read.csv(system.file("shiny/www/data/adnca_labels.csv", package = "aNCA"))
       # Apply labels to the dataset
-      message("Calling apply_labels function")
-      dataset <- apply_labels(dataset)
+      dataset <- apply_labels(dataset, labels_file)
 
       # Update the processed data
       processed_data(dataset)
