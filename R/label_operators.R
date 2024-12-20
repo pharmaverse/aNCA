@@ -33,6 +33,11 @@ apply_labels <- function(data) {
     } else {
       attr(data[[col]], "label") <- col
     }
+
+    # Check if the column is a factor and keep the levels order
+    if (is.factor(data[[col]])) {
+      data[[col]] <- as_factor_preserve_label(data[[col]])
+    }
   }
 
   return(data)
