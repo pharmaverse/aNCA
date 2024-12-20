@@ -26,8 +26,10 @@ PKNCA_impute_method_start_log <- function(conc, time, start, end, ..., options =
     all_times <- time[time >= start  &  time <= end]
     if (!all(is.na(all_concs))) {
       c0 <- PKNCA::pk.calc.c0(all_concs, all_times, method = "logslope")
-      ret <- rbind(ret, data.frame(time = start, conc = c0))
-      ret <- ret[order(ret$time), ]
+      if (!is.na(c0)) {
+        ret <- rbind(ret, data.frame(time = start, conc = c0))
+        ret <- ret[order(ret$time), ]
+      }
     }
   }
   ret
