@@ -107,13 +107,22 @@ pkcg01 <- function(
   ymin <- as.numeric(ymin)
   ymax <- as.numeric(ymax)
 
-  adpc <- adpc %>%
+  # save col labels, as further adpc tranformations cause them to be lost #
+  col_labels <- purrr::map(adpc, ~ attr(.x, "label"))
+
+  adpc_grouped <- adpc %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
     rowwise() %>%
     dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
 
+  # reapply col labels to grouped data #
+  adpc_grouped <- purrr::map2_dfc(adpc_grouped, names(adpc_grouped), ~ {
+    attr(.x, "label") <- col_labels[[.y]]
+    .x
+  })
+
   # Construct the reference ggplot object
-  plot_data <- adpc %>% filter(id_plot == id_plot[1])
+  plot_data <- adpc_grouped %>% filter(id_plot == id_plot[1])
 
   plot <- tern::g_ipp(
     df = plot_data,
@@ -170,15 +179,18 @@ pkcg01 <- function(
 
   if (scale == "SBS") {
     # Create SBS version of data and plot
-    adpc <- rbind(adpc, adpc) %>%
+    adpc_grouped <- rbind(adpc_grouped, adpc_grouped) %>%
       dplyr::mutate(
-        view = c(rep("Linear view", nrow(adpc)), rep("Semilogarithmic view (Log10)", nrow(adpc))),
+        view = c(
+          rep("Linear view", nrow(adpc_grouped)),
+          rep("Semilogarithmic view (Log10)", nrow(adpc_grouped))
+        ),
         !!sym(yvar) := ifelse(
           !!sym(yvar) < 1e-3 & view == "Semilogarithmic view (Log10)", yes = 1e-3, no = !!sym(yvar)
         )
       )
 
-    plot <- plot %+% dplyr::filter(adpc, id_plot == unique(id_plot)[1]) +
+    plot <- plot %+% dplyr::filter(adpc_grouped, id_plot == unique(id_plot)[1]) +
       facet_wrap(~ view, scales = "free_y") +
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
@@ -189,8 +201,8 @@ pkcg01 <- function(
   }
 
   # Create the list of plots for each unique group
-  lapply(unique(adpc[["id_plot"]]), \(id_val) {
-    plot_data <- adpc %>% dplyr::filter(id_plot ==  id_val)
+  lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
+    plot_data <- adpc_grouped %>% dplyr::filter(id_plot ==  id_val)
 
     title <- {
       if (is.null(title)) {
