@@ -223,7 +223,7 @@ output$datatable <- renderReactable({
   data <- mydata()$conc$data
   # Generate column definitions
   col_defs <- generate_col_defs(data)
-  
+
   reactable(
     data,
     columns = col_defs,
