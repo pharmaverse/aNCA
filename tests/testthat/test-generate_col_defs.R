@@ -1,3 +1,6 @@
+root <- rprojroot::find_root(rprojroot::is_r_package)
+source(file.path(root, "/inst/shiny/functions/generate_col_defs.R"))
+
 describe("generate_col_defs", {
   it("generates column definitions with labels", {
     data <- data.frame(

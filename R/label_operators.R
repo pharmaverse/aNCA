@@ -13,7 +13,11 @@
 #' \dontrun{
 #'   # Example usage:
 #'   data <- data.frame(USUBJID = c(1, 2, 3), AVAL = c(4, 5, 6))
-#'   data <- apply_labels(data)
+#'   labels <- data.frame(
+#'   Variable = c("USUBJID", "AVAL"),
+#'   Label = c("Unique Subject Identifier", "Analysis Value")
+#'   )
+#'   data <- apply_labels(data, labels)
 #'   print(attr(data$A, "label"))
 #' }
 #'
