@@ -1,4 +1,4 @@
-describe("apply labels works correctly", {
+describe("apply_labels", {
   it("applies labels to matching data", {
     data <- data.frame(
       USUBJID = c(1, 2, 3),
