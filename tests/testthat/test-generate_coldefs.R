@@ -1,4 +1,4 @@
-describe("column definitions generated correctly", {
+describe("generate_col_defs", {
   it("generates column definitions with labels", {
     data <- data.frame(
       USUBJID = c(1, 2, 3),
