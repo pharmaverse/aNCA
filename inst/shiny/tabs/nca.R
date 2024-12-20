@@ -307,6 +307,7 @@ observe({
 # Choose dosenumbers to be analyzed
 
 observeEvent(input$select_analyte, priority = -1, {
+  req(data())
   doses_options <- data() %>%
     filter(ANALYTE == input$select_analyte) %>%
     pull(DOSNO) %>%
