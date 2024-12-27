@@ -24,7 +24,7 @@ test_that("PKNCA_impute_method_start_log", {
   )
   # No modification if C1 = C2 in samples
   expect_equal(
-    PKNCA_impute_method_start_log(conc = c(3,3,1), time = 1:3, start = 0, end = 3),
+    PKNCA_impute_method_start_log(conc = c(3, 3, 1), time = 1:3, start = 0, end = 3),
     data.frame(conc = c(3, 3, 1), time = 1:3),
     ignore_attr = TRUE
   )

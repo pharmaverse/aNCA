@@ -8,7 +8,8 @@ create_dose(
   df_conc,
   group_columns,
   time_column = "AFRLT",
-  since_lastdose_time_column = "ARRLT"
+  since_lastdose_time_column = "ARRLT",
+  route_column = "ROUTE"
 )
 }
 \arguments{

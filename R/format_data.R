@@ -34,12 +34,12 @@ create_conc <- function(ADNCA,
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
-  
+
   missing_columns <- setdiff(c(group_columns, time_column), colnames(ADNCA))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
-  
+
   data <- ADNCA %>%
     dplyr::mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     dplyr::arrange(!!sym(time_column)) %>%
@@ -83,7 +83,7 @@ create_dose <- function(df_conc,
   if (nrow(df_conc) == 0) {
     stop("Input dataframe is empty. Please provide a valid concentration dataframe.")
   }
-  
+
   required_columns <- c(group_columns, time_column, since_lastdose_time_column, route_column)
   missing_columns <- setdiff(required_columns, colnames(df_conc))
   if (length(missing_columns) > 0) {
@@ -135,7 +135,7 @@ create_dose_intervals <- function(mydose = mydose,
   if (!inherits(mydose, "PKNCAdose")) {
     stop("Input must be a PKNCAdose object from the PKNCA package.")
   }
-  
+
   required_columns <- c(unname(unlist(mydose$columns$groups)), mydose$columns$time)
   missing_columns <- setdiff(required_columns, colnames(mydose$data))
   if (length(missing_columns) > 0) {
