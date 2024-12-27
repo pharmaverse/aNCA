@@ -208,7 +208,7 @@ observeEvent(res_nca(), {
 # Reactive expression for summary table based on selected group and parameters
 summary_stats <- reactive({
   req(input$summarygroupby, input$paramselect)
-
+  req(!is.null(res_nca()))
   # Calculate summary stats and filter by selected parameters
   calculate_summary_stats(res_nca(), input$summarygroupby) %>%
     filter(PPTESTCD %in% input$paramselect)  %>%

@@ -171,9 +171,6 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       mydata$units <- modal_units_table
       mydata(mydata)
       
-      # Close the module window once all saving actions are done
-      removeModal()
-      
       # If there are already results produced, make sure they are also adapted
       if (!is.null(res_nca())) {
         res_nca <- res_nca()
@@ -186,9 +183,13 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           ) %>%
           dplyr::mutate(PPSTRES = PPORRES * conversion_factor) %>% 
           dplyr::select(-conversion_factor)
+ 
         new_res_nca(res_nca)
       }
+      # Close the module window once all saving actions are done
+      removeModal()
+
     })
-    return(reactive(new_res_nca()))
+    return(reactive({new_res_nca()}))
   })
 }

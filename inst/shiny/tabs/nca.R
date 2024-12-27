@@ -304,7 +304,8 @@ observeEvent(input$submit_analyte, priority = -1, {
 
 # If the user requests it allows to change the units of the parameters using a modal message table
 units_table_server("units_table_preNCA", mydata, reactive(NULL), params_to_calculate)
-res_nca <- units_table_server("units_table_postNCA", mydata, res_nca, params_to_calculate)
+res_nca2 <- units_table_server("units_table_postNCA", mydata, res_nca, params_to_calculate)
+observeEvent(res_nca2(), res_nca(res_nca2()))
 
 # Partial AUC Selection
 auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
@@ -384,8 +385,8 @@ observeEvent(input$nca, {
 })
 
 # run the nca upon button click
-
-res_nca <- eventReactive(rv$trigger, {
+res_nca <- reactiveVal(NULL)
+observeEvent(rv$trigger, {
   req(!is.null(input$cyclenca))
   
   withProgress(message = "Calculating NCA...", value = 0, {
@@ -436,7 +437,7 @@ res_nca <- eventReactive(rv$trigger, {
     incProgress(0.5, detail = "NCA calculations complete!")
     
     # Return the result
-    return(myres)
+    res_nca(myres)
   })
 })
 
@@ -452,7 +453,7 @@ final_res_nca <- reactiveVal(NULL)
 
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
-  
+  req(!is.null(res_nca()))
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- reshape_pknca_results(res_nca())
   
