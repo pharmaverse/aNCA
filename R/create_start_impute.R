@@ -1,4 +1,19 @@
-create_c0_impute <- function(mydata) {
+#' Create C0 Impute Column
+#'
+#' Defines an impute column in the intervals of the PKNCAdata object based on data
+#'
+#' @param mydata A PKNCAdata object containing concentration and dose data.
+#' @return A PKNCAdata object with updated intervals table including start imputation strategies.
+#' @import dplyr
+#' @importFrom rlang sym
+#' @importFrom PKNCA pk.calc.c0
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' mydata <- create_start_impute(mydata)
+#' }
+create_start_impute <- function(mydata) {
 
   # Define columns
   conc_column <- mydata$conc$columns$conc
@@ -7,18 +22,44 @@ create_c0_impute <- function(mydata) {
   route_column <- mydata$dose$columns$route
   duration_column <- mydata$dose$columns$duration
   drug_column <- "DRUG"  # At some point should be added at least manually in PKNCA mydata object
-  group_columns <- unique(c(unname(unlist(mydata$conc$columns$groups)),
-                            unname(unlist(mydata$dose$columns$groups))))
+  conc_group_columns <- unname(unlist(mydata$conc$columns$groups))
+  dose_group_columns <- unname(unlist(mydata$dose$columns$groups))
+  group_columns <- unique(c(conc_group_columns, dose_group_columns))
+
+  # Define dose number (DOSNO) if not present in dose data
+  if (!"DOSNO" %in% mydata$dose$data) {
+    mydata$dose$data <- mydata$dose$data %>%
+      group_by(across(all_of(c(unname(unlist(mydata$dose$columns$groups)))))) %>%
+      mutate(DOSNO = row_number()) %>%
+      ungroup()
+  }
 
   mydata_with_int <- merge(
-    x = mydata$conc$data,
-    y = mydata$dose$data[, group_columns]
+    x = mydata$conc$data %>%
+      dplyr::select(any_of(c(conc_group_columns, conc_column, time_column))),
+    y = mydata$dose$data %>%
+      dplyr::select(any_of(c(dose_group_columns, route_column,
+                             duration_column, "DOSNO", "DRUG")))
   ) %>%
     merge(mydata$intervals)
 
+  # Define dosing drug as analyte if not present
+  if (!"DRUG" %in% colnames(mydata_with_int)) {
+    if (length(analyte_column) == 1) {
+      mydata_with_int <- mydata_with_int %>%
+        mutate(DRUG = !!sym(analyte_column))
+      drug_column <- "DRUG"
+    } else {
+      mydata_with_int <- mydata_with_int %>%
+        mutate(DRUG = "A", ANALYTE = "A")
+      drug_column <- "DRUG"
+      analyte_column <- "ANALYTE"
+    }
+  }
+
   # Process imputation strategy based on each interval
   new_intervals <- mydata_with_int %>%
-    group_by(across(all_of(c(group_columns, "start", "end")))) %>%
+    group_by(across(all_of(c(group_columns, "DOSNO", "start", "end")))) %>%
     arrange(across(all_of(c(group_columns, time_column)))) %>%
     dplyr::mutate(
       vr_avals = paste0("c(", paste0(!!sym(conc_column), collapse = ","), ")"),
@@ -28,6 +69,7 @@ create_c0_impute <- function(mydata) {
             (!!sym(time_column) - start)) %>%
     slice(1) %>%
     ungroup() %>%
+    rowwise() %>%
     mutate(
       impute = case_when(
         !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ NA,
@@ -44,7 +86,7 @@ create_c0_impute <- function(mydata) {
           !!sym(analyte_column) == !!sym(drug_column) &
           !is.na(PKNCA::pk.calc.c0(conc = eval(parse(text = vr_avals)),
                                    time = eval(parse(text = vr_times)),
-                                   time.dose = start[1],
+                                   time.dose = start,
                                    method = "logslope")) ~ "start_logslope",
         tolower(!!sym(route_column)) == "intravascular" &
           !!sym(duration_column) == 0 &

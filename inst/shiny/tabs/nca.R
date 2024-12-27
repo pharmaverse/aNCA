@@ -399,7 +399,7 @@ observeEvent(input$nca, {
 
   # Define start imputations on intervals if specified by the user
   if (input$should_impute_c0) {
-    mydata <- create_c0_impute(mydata = mydata)
+    mydata <- create_start_impute(mydata = mydata)
     mydata$impute <- "impute"
 
   } else {
