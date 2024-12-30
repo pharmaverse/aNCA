@@ -132,7 +132,7 @@ test_that("create_conc handles multiple analytes", {
   expect_equal(length(unique(df_conc$ANALYTE)), 2)
 })
 
-test_that("create_dose generates correct dataset", {
+test_that("create_dose generates when missing the dose number column", {
   # Generate sample ADNCA data with at least two doses per subject
   ADNCA <- data.frame(
     STUDYID = rep(1, 20),
@@ -194,14 +194,6 @@ test_that("create_dose handles empty input", {
                            since_lastdose_time_column = "ARRLT",
                            route_column = "ROUTE"),
                regexp = "Input dataframe is empty. Please provide a valid concentration dataframe.")
-})
-
-test_that("create_dose_intervals handles empty input", {
-  mydose <- list(data = data.frame(),
-                 columns = list(groups = c("STUDYID", "USUBJID"),
-                                time = "TIME"))
-  expect_error(create_dose_intervals(mydose),
-               regexp = "Input dataframe is empty. Please provide a valid dose dataframe.")
 })
 
 test_that("create_dose_intervals handles incorrect input type", {

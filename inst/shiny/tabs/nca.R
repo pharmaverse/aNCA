@@ -496,14 +496,13 @@ observeEvent(res_nca(), {
 
   # Sort alphabetically all columns but the grouping and the exclude columns
   group_cols <- c(unname(unique(c(unlist(res_nca()$data$conc$columns$groups),
-                                  unlist(res_nca()$data$dose$columns$groups)))),
-                  "start", "end")
+                                  unlist(res_nca()$data$dose$columns$groups)))))
+  int_cols <- c("DOSNO", "start", "end")
   exclude_cols <- names(final_res_nca)[startsWith(names(final_res_nca), "exclude.")]
-  final_res_nca <- final_res_nca[, c(
-    group_cols,
-    sort(setdiff(names(final_res_nca), c(group_cols, exclude_cols))),
-    sort(exclude_cols)
-  )]
+  param_cols <- names(final_res_nca)[endsWith(names(final_res_nca), "]")]
+  other_cols <- setdiff(names(final_res_nca), c(group_cols, int_cols, exclude_cols, param_cols))
+  final_res_nca <- final_res_nca %>%
+    dplyr::select(any_of(c(group_cols, int_cols, param_cols, exclude_cols, other_cols)))
 
   # Create a reshaped object
   final_res_nca(
