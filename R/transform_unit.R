@@ -6,9 +6,10 @@
 #' @param target_unit A character string representing the target unit.
 #' @return A numeric value for the conversion factor from the initial to the target unit,
 #' or NA if the units are not convertible.
-#' @emples
+#' @examples
 #' transform_unit("meter", "kilometer")
-#' transform_unit("second", "minute")
+#' transform_unit("sec", "min")
+#' @importFrom units set_units ud_are_convertible
 #' @export
 transform_unit <- function(initial_unit, target_unit) {
   vec_fun <- Vectorize(function(initial_unit, target_unit) {

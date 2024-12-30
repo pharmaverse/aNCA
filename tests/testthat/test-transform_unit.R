@@ -1,6 +1,3 @@
-library(testthat)
-library(units)
-
 test_that("transform_unit handles simple time units", {
   expect_equal(transform_unit("hr", "minute"), 60)
   expect_equal(transform_unit("minute", "second"), 60)
