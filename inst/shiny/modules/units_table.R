@@ -15,14 +15,14 @@ units_table_ui <- function(id) {
 units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_calculate) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Enable the units table button when data is available
-    observeEvent(mydata(),{
-      updateActionButton(session = session, 
+    observeEvent(mydata(), {
+      updateActionButton(session = session,
                          inputId = "open_units_table",
                          disabled = FALSE)
     })
-    
+
     # Open modal message when units table button is pressed
     observeEvent(input$open_units_table, {
       showModal(modalDialog(
@@ -51,31 +51,31 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
         size = "l"
       ))
     })
-    
+
     # Reformat how the units table is displayed to the user
     modal_units_table <- reactiveVal(NULL)
     observeEvent(list(mydata(), input$select_unitstable_analyte), {
       req(mydata())
       req(input$select_unitstable_analyte)
+      analyte_column <- mydata()$conc$columns$groups$group_analyte
       modal_units_table_data <- mydata()$units %>%
         dplyr::group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
-        dplyr::filter(!!sym(mydata()$conc$columns$groups$group_analyte) == input$select_unitstable_analyte) %>%
+        dplyr::filter(!!sym(analyte_column) %in% input$select_unitstable_analyte) %>%
         dplyr::rename(`Parameter` = PPTESTCD,
                       `Default unit` = PPORRESU,
                       `Conversion Factor` = conversion_factor,
                       `Custom unit` = PPSTRESU) %>%
-        dplyr::mutate(Analytes = paste(!!sym(mydata()$conc$columns$groups$group_analyte), collapse = ", ")) %>%
+        dplyr::mutate(Analytes = paste(!!sym(analyte_column), collapse = ", ")) %>%
         dplyr::ungroup() %>%
         dplyr::select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
       modal_units_table(modal_units_table_data)
     })
-    
+
     # Define which parameters where choosen by the user
     params_to_calculate <- reactiveVal(NULL)
     observeEvent(mydata()$intervals, {
-      params_to_calculate(names(purrr::keep(mydata()$intervals, 
-                                            ~ is.logical(.x) && any(.x)))
-                          )
+      params_to_calculate(names(purrr::keep(mydata()$intervals,
+                                            ~ is.logical(.x) && any(.x))))
     })
 
     # Render the modal units table to the user
@@ -101,7 +101,9 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           rowCallback = JS(
             paste0(
               "function(row, data, index) {",
-              "  var paramsToCalculate = ", paste0("['", paste(params_to_calculate(), collapse = "','"), "']"), ";",
+              "  var paramsToCalculate = ",
+              paste0("['", paste(params_to_calculate(), collapse = "','"), "']"),
+              ";",
               "  if (paramsToCalculate.indexOf(data[1]) === -1) {",
               "    $(row).hide();",
               "  }",
@@ -125,9 +127,9 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       modal_units_table[info$row, info$col + 1] <- info$value
 
       if (names(modal_units_table)[info$col + 1] == "Custom unit") {
-        default_unit <- modal_units_table[info$row, "Default unit"]
-        custom_unit <- modal_units_table[info$row, "Custom unit"]
-        modal_units_table[info$row, "Conversion Factor"] <- transform_unit(default_unit, custom_unit)
+        def_unit <- modal_units_table[info$row, "Default unit"]
+        cust_unit <- modal_units_table[info$row, "Custom unit"]
+        modal_units_table[info$row, "Conversion Factor"] <- transform_unit(def_unit, cust_unit)
       }
 
       modal_units_table(modal_units_table)
@@ -146,7 +148,8 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           pull(entry)
 
         showNotification(
-          paste0("Please, make sure to use only recognised convertible units in `Custom Unit` (i.e, day, hr, min, sec, g/L).",
+          paste0("Please, make sure to use only recognised convertible units in `Custom Unit`",
+                 "(i.e, day, hr, min, sec, g/L).",
                  " If not, introduce yourself the corresponding `Conversion Factor` value in: ",
                  paste(invalid_entries, collapse = ", ")),
           duration = NULL,
@@ -170,7 +173,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       mydata <- mydata()
       mydata$units <- modal_units_table
       mydata(mydata)
-      
+
       # If there are already results produced, make sure they are also adapted
       if (!is.null(res_nca())) {
         res_nca <- res_nca()
@@ -179,17 +182,18 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           dplyr::select(-PPSTRESU, -PPSTRES) %>%
           dplyr::left_join(
             modal_units_table,
-            by=intersect(names(.), names(modal_units_table))
+            by = intersect(names(.), names(modal_units_table))
           ) %>%
-          dplyr::mutate(PPSTRES = PPORRES * conversion_factor) %>% 
+          dplyr::mutate(PPSTRES = PPORRES * conversion_factor) %>%
           dplyr::select(-conversion_factor)
- 
+
         new_res_nca(res_nca)
       }
       # Close the module window once all saving actions are done
       removeModal()
 
     })
-    return(reactive({new_res_nca()}))
+
+    return(reactive(new_res_nca()))
   })
 }

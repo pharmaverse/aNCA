@@ -392,7 +392,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     summary_stats <- reactive({
       req(input$summary_groupby, input$select_display_parameters)
       req(!is.null(res_nca()))
-      
+
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(res_nca(), input$summary_groupby) %>%
         filter(PPTESTCD %in% input$select_display_parameters)  %>%

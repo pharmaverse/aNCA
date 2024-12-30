@@ -5,9 +5,9 @@ test_that("transform_unit handles simple time units", {
   expect_equal(transform_unit("hr", "minute"), 60)
   expect_equal(transform_unit("minute", "second"), 60)
   expect_equal(transform_unit("day", "hour"), 24)
-  expect_equal(transform_unit("second", "minute"), 1/60)
+  expect_equal(transform_unit("second", "minute"), 1 / 60)
   expect_equal(transform_unit("hour", "second"), 3600)
-  expect_equal(transform_unit("minute", "hour"), 1/60)
+  expect_equal(transform_unit("minute", "hour"), 1 / 60)
   expect_equal(transform_unit("day", "minute"), 1440)
 })
 
@@ -45,7 +45,7 @@ test_that("transform_unit returns NA for non-convertible units", {
 test_that("transform_unit handles vector inputs", {
   expect_equal(transform_unit(c("hr", "minute"), c("minute", "second")), c(60, 60))
   expect_equal(transform_unit(c("day", "mg/L"), c("hour", "g/L")), c(24, 0.001))
-  expect_equal(transform_unit(c("second", "kg/L"), c("minute", "g/L")), c(1/60, 1000))
+  expect_equal(transform_unit(c("second", "kg/L"), c("minute", "g/L")), c(1 / 60, 1000))
   expect_equal(transform_unit(c("hour", "ug/mL"), c("second", "mg/L")), c(3600, 1))
   expect_equal(transform_unit(c("minute", "day"), c("second", "hour")), c(60, 24))
   expect_equal(transform_unit(c("g/L", "kg/L"), c("mg/L", "g/L")), c(1000, 1000))
