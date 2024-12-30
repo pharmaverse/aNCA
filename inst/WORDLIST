@@ -1,9 +1,6 @@
 ADNCA
 ADPP
-AFRLT
 AUClast
-AVAL
-BLQ
 Bärtschi
 CDISC
 DOSEA
@@ -13,6 +10,8 @@ IQROUTE
 NCA
 PCSPEC
 PKNCA
+PKNCAdata
+PKNCAdose
 Pharmacokinetic
 Pre
 RO
@@ -25,8 +24,8 @@ analyte
 analytes
 anonymized
 anonymizes
-cheatsheet
 cmax
+codebase
 csv
 customizable
 ggplot
@@ -44,6 +43,3 @@ summarization
 timepoint
 visualizable
 xpt
-codebase
-PKNCAdose
-UI
