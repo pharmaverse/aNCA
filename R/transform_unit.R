@@ -9,20 +9,23 @@
 #' @examples
 #' transform_unit("meter", "kilometer")
 #' transform_unit("sec", "min")
-#' @import units
+#' @importFrom units set_units
 #' @export
 transform_unit <- function(initial_unit, target_unit) {
   vec_fun <- Vectorize(function(initial_unit, target_unit) {
-    if (units::ud_are_convertible(initial_unit, target_unit)) {
-      units::set_units(
+    tryCatch({
+      conversion <- units::set_units(
         units::set_units(1, initial_unit, mode = "standard"),
         target_unit, mode = "standard"
       )
-    } else if (initial_unit == target_unit) {
+      as.numeric(conversion)
+    }, error = function(e) {
+      if (initial_unit == target_unit) {
       1
     } else {
       NA
     }
+    })
   })
   unname(vec_fun(initial_unit, target_unit))
 }
