@@ -9,7 +9,7 @@
 #' @examples
 #' transform_unit("meter", "kilometer")
 #' transform_unit("sec", "min")
-#' @importFrom units set_units ud_are_convertible
+#' @import units
 #' @export
 transform_unit <- function(initial_unit, target_unit) {
   vec_fun <- Vectorize(function(initial_unit, target_unit) {
