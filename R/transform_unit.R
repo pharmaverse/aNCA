@@ -21,10 +21,10 @@ transform_unit <- function(initial_unit, target_unit) {
       as.numeric(conversion)
     }, error = function(e) {
       if (initial_unit == target_unit) {
-      1
-    } else {
-      NA
-    }
+        1
+      } else {
+        NA
+      }
     })
   })
   unname(vec_fun(initial_unit, target_unit))
