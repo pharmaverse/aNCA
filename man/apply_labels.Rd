@@ -8,6 +8,9 @@ apply_labels(data, labels_file)
 }
 \arguments{
 \item{data}{The dataset to which labels will be applied.}
+
+\item{labels_file}{A data frame with two columns: Variable and Label,
+for the dataset you are applying it .}
 }
 \value{
 The same dataset with label attributes applied to all columns.
@@ -15,8 +18,6 @@ If a column is not present in the labels list, it will be assigned the name of t
 }
 \description{
 This function adds "label" attributes to all columns in a dataset
-Using the labels_app.csv file which contains common labels for ADPP
-and ADPC column names
 }
 \examples{
 \dontrun{
