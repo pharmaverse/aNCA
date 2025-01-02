@@ -1,5 +1,4 @@
-root <- rprojroot::find_root(rprojroot::is_r_package)
-source(file.path(root, "/inst/shiny/functions/generate_col_defs.R"))
+source(system.file("shiny/functions/generate_col_defs.R", package = "aNCA"))
 
 describe("generate_col_defs", {
   it("generates column definitions with labels", {

@@ -27,7 +27,7 @@ generate_col_defs <- function(data) {
   col_defs <- lapply(names(data), function(col) {
     label <- labels[[col]]
     if (!is.null(label)) {
-      colDef(
+      reactable::colDef(
         html = TRUE,
         header = htmltools::tags$span(
           col,
@@ -37,7 +37,7 @@ generate_col_defs <- function(data) {
         )
       )
     } else {
-      colDef(name = col)
+      reactable::colDef(name = col)
     }
   }) |>
     setNames(names(data))
