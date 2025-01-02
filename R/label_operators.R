@@ -1,3 +1,48 @@
+#' Apply Labels to a dataset
+#'
+#' This function adds "label" attributes to all columns in a dataset
+#'
+#' @param data The dataset to which labels will be applied.
+#' @param labels_file A data frame with two columns: Variable and Label,
+#'  for the dataset you are applying it .
+#'
+#' @return The same dataset with label attributes applied to all columns.
+#' If a column is not present in the labels list, it will be assigned the name of the col.
+#'
+#' @examples
+#' \dontrun{
+#'   # Example usage:
+#'   data <- data.frame(USUBJID = c(1, 2, 3), AVAL = c(4, 5, 6))
+#'   labels <- data.frame(
+#'   Variable = c("USUBJID", "AVAL"),
+#'   Label = c("Unique Subject Identifier", "Analysis Value")
+#'   )
+#'   data <- apply_labels(data, labels)
+#'   print(attr(data$A, "label"))
+#' }
+#'
+#' @export
+apply_labels <- function(data, labels_file) {
+
+  # Create the label_ADNCA named vector from labels_app
+  label_adnca <- setNames(labels_file$Label, labels_file$Variable)
+
+  for (col in colnames(data)) {
+    if (col %in% names(label_adnca)) {
+      attr(data[[col]], "label") <- label_adnca[[col]]
+    } else {
+      attr(data[[col]], "label") <- col
+    }
+
+    # Check if the column is a factor and keep the levels order
+    if (is.factor(data[[col]])) {
+      data[[col]] <- as_factor_preserve_label(data[[col]])
+    }
+  }
+
+  data
+}
+
 #' Convert to Factor While Preserving Label
 #'
 #' This function converts a vector to a factor while preserving its "label" attribute.

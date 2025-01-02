@@ -334,10 +334,17 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
       }
 
       # Reorder columns based on the desired order
-      dataset %>%
+      dataset <- dataset %>%
         relocate(all_of(desired_order)) %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT)) %>% #TODO: Remove this after AUC0 merged
-        processed_data()
+        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
+
+      #Load labels
+      labels_file <- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
+      # Apply labels to the dataset
+      dataset <- apply_labels(dataset, labels_file)
+
+      # Update the processed data
+      processed_data(dataset)
 
       # Execute the callback function to change the tab
       on_submit()
