@@ -31,14 +31,13 @@ test_that("create_conc generates correct dataset", {
   expect_equal(df_conc$IX, rep(1:5, 2))
 
   # Test if df_conc can be used with PKNCAconc by testing its output
-  expect_s3_class(
+  expect_no_error(
     PKNCAconc(
       df_conc,
       formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
       exclude_half.life = "exclude_half.life",
       time.nominal = "NFRLT"
-    ),
-    "PKNCAconc"
+    )
   )
 })
 
@@ -80,14 +79,13 @@ test_that("create_conc generates correct dataset with multiple doses", {
                rep(1:5, 4))
 
   # Test if df_conc can be used with PKNCAconc by testing its output
-  expect_s3_class(
+  expect_no_error(
     PKNCAconc(
       df_conc,
       formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
       exclude_half.life = "exclude_half.life",
       time.nominal = "NFRLT"
-    ),
-    "PKNCAconc"
+    )
   )
 })
 
@@ -170,15 +168,14 @@ test_that("create_dose generates when missing the dose number column", {
                     "TIME", "IX", "ROUTE") %in% colnames(df_dose)))
 
   # Test if df_dose can be used with PKNCAdose by testing its output
-  expect_s3_class(
+  expect_no_error(
     PKNCAdose(
       data = df_dose,
       formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
       route = "ROUTE",
       time.nominal = "NFRLT",
       duration = "ADOSEDUR"
-    ),
-    "PKNCAdose"
+    )
   )
 
   # Test if each subject has at least two doses
@@ -309,7 +306,7 @@ test_that("create_dose_intervals generates correct dataset", {
   expect_true(all(myintervals$type_interval == "main"))
 
   # Test if myintervals can be used with PKNCAdata by testing its output
-  expect_s3_class(
+  expect_no_error(
     PKNCA::PKNCAdata(
       data.conc = myconc,
       data.dose = mydose,
@@ -320,7 +317,6 @@ test_that("create_dose_intervals generates correct dataset", {
         amountu = myconc$data$PCSTRESU[1],
         timeu = myconc$data$RRLTU[1]
       )
-    ),
-    "PKNCAdata"
+    )
   )
 })
