@@ -131,3 +131,76 @@ jobs:
               stop("Lints detected. Please review and adjust code according to the comments provided.", call. = FALSE)
           }
         shell: Rscript {0}
+
+  man-pages:
+    name: Man Pages
+    runs-on: ubuntu-latest
+    needs: get_r_version
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ needs.get_r_version.outputs.r-version }}:latest"
+    steps:
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+
+      - name: Checkout repo
+        uses: actions/checkout@v4.2.2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.staged.dependencies
+          key: staged-deps
+
+      - name: Run Staged dependencies
+        uses: insightsengineering/staged-dependencies-action@v1
+        with:
+          run-system-dependencies: false
+          renv-restore: false
+          enable-check: false
+          direction: upstream
+          git-ref: ${{ steps.branch-name.outputs.current_branch }}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies from DESCRIPTION
+        run: |
+          remotes::install_local(force = TRUE, dependencies = TRUE)
+        shell: Rscript {0}
+        env:
+          R_REMOTES_STANDALONE: "true"
+
+      - name: Generate man pages
+        run: roxygen2::roxygenize('.', roclets = c('rd', 'collate', 'namespace'))
+        shell: Rscript {0}
+
+      - name: Set-up safe dir
+        run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+        shell: bash
+
+      - name: Roxygen check
+        run: |
+          git status -s
+          if [[ -n `git status -s | grep -E "man|DESCRIPTION"` ]]
+          then {
+            ROXYGEN_VERSION="$(Rscript -e 'packageVersion("roxygen2")' | awk '{print $NF}')"
+            echo "🙈 Manuals are not up-to-date with roxygen comments!"
+            echo "🔀 The following differences were noted:"
+            git diff man/* DESCRIPTION
+            echo -e "\n💻 Please rerun the following command on your workstation and push your changes"
+            echo "--------------------------------------------------------------------"
+            echo "roxygen2::roxygenize('.', roclets = c('rd', 'collate', 'namespace'))"
+            echo "--------------------------------------------------------------------"
+            echo "ℹ roxygen2 version that was used in this workflow: $ROXYGEN_VERSION"
+            echo "🙏 Please ensure that the 'RoxygenNote' field in the DESCRIPTION file matches this version"
+            exit 1
+          } else {
+            echo "💚 Manuals are up-to-date with roxygen comments"
+          }
+          fi
+        shell: bash
+      
