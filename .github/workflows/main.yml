@@ -203,4 +203,28 @@ jobs:
           }
           fi
         shell: bash
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: get_r_version
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ needs.get_r_version.outputs.r-version }}:latest"
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Install system dependencies
+          run: |
+            apt-get install -y --no-install-recommends \
+                libudunits2-dev
+
+        - name: Install dependencies
+          run: |
+            Rscript -e 'remotes::install_deps(dependencies = TRUE)'
+
+        - name: Run tests
+          shell: Rscript {0}
+          run: |
+            devtools::load_all(".")
+            devtools::test()
       
