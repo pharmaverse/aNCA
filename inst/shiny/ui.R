@@ -23,11 +23,12 @@ fluidPage(
     # DATA ----
     nav_panel(
       "Data",
+      value = "data",
       fluid = TRUE,
       tab_data_ui("data")
     ),
     # NCA ----
-    nav_panel("NCA", fluid = TRUE,
+    nav_panel("NCA", value = "nca", fluid = TRUE,
       fluidPage(
         actionButton("nca", "Run NCA", class = "run-nca-btn"),
 
@@ -221,12 +222,12 @@ fluidPage(
     ),
 
     # VISUALISATION ----
-    nav_panel("Visualisation",
+    nav_panel("Visualisation", value = "visualisation",
       fluid = TRUE,
       tab_visuals_ui("visuals")
     ),
     # New TLG tab
-    nav_panel("TLG",
+    nav_panel("TLG", value = "tlgs",
       tab_tlg_ui("tlg")
     )
   ),

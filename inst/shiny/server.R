@@ -3,6 +3,11 @@
 function(input, output, session) {
   log_info("Startup")
 
+  # Initially disable all tabs except the 'Data' tab
+  shinyjs::disable(selector = "#page li a[data-value=nca]")
+  shinyjs::disable(selector = "#page li a[data-value=visualisation]")
+  shinyjs::disable(selector = "#page li a[data-value=tlgs]")
+  
   # DATA ----
   data_module <- tab_data_server("data")
   # Data set for analysis
