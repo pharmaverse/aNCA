@@ -63,6 +63,11 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v2
 
+        - name: Install system dependencies
+          run: |
+            apt-get install -y --no-install-recommends \
+                libudunits2-dev
+
         - name: Install dependencies
           run: |
             Rscript -e 'remotes::install_deps(dependencies = TRUE)'
