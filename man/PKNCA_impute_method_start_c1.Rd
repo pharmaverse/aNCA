@@ -27,7 +27,7 @@ This function imputes the start concentration using the first concentration afte
 }
 \examples{
 conc <- c(1, 2, 3, 4, 5)
-time <- c(0, 1, 2, 3, 4)
+time <- c(1, 2, 3, 4, 5)
 start <- 0
 end <- 4
 PKNCA_impute_method_start_c1(conc, time, start, end)

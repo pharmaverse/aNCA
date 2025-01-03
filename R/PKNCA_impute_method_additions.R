@@ -11,13 +11,13 @@
 #' @export
 #'
 #' @examples
-#' conc <- c(1, 2, 3, 4, 5)
-#' time <- c(0, 1, 2, 3, 4)
+#' conc <- c(5, 4, 3, 2, 1)
+#' time <- c(1, 2, 3, 4, 5)
 #' start <- 0
 #' end <- 4
-#' PKNCA_impute_method_start_log(conc, time, start, end)
+#' PKNCA_impute_method_start_logslope(conc, time, start, end)
 
-PKNCA_impute_method_start_log <- function(conc, time, start, end, ..., options = list()) { # nolint
+PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., options = list()) { # nolint
 
   ret <- data.frame(conc = conc, time = time)
   mask_start <- time %in% start
@@ -49,7 +49,7 @@ PKNCA_impute_method_start_log <- function(conc, time, start, end, ..., options =
 #'
 #' @examples
 #' conc <- c(1, 2, 3, 4, 5)
-#' time <- c(0, 1, 2, 3, 4)
+#' time <- c(1, 2, 3, 4, 5)
 #' start <- 0
 #' end <- 4
 #' PKNCA_impute_method_start_c1(conc, time, start, end)

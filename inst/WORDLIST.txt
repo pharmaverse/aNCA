@@ -38,5 +38,5 @@ summarization
 timepoint
 visualizable
 xpt
-PKNCA_impute_method_start_log
+PKNCA_impute_method_start_logslope
 PKNCA_impute_method_start_c1
