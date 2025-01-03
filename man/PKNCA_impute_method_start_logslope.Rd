@@ -32,6 +32,11 @@ A data frame with imputed start concentration.
 \description{
 This function imputes the start concentration using the log slope method.
 }
+\details{
+This function adheres to the structure required by the \code{PKNCA} package to work with its
+functionalities. For more information, see the
+\href{https://cran.r-project.org/web/packages/PKNCA/vignettes}{PKNCA Data Imputation Vignette}.
+}
 \examples{
 conc <- c(5, 4, 3, 2, 1)
 time <- c(1, 2, 3, 4, 5)
