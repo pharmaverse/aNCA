@@ -40,7 +40,7 @@ create_conc <- function(ADNCA,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
-  data <- ADNCA %>%
+  ADNCA %>%
     dplyr::mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     dplyr::arrange(!!sym(time_column)) %>%
     dplyr::mutate(TIME = !!sym(time_column)) %>%
