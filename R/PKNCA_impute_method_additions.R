@@ -8,6 +8,10 @@
 #' @param options List of options (currently not used).
 #'
 #' @return A data frame with imputed start concentration.
+#' @details
+#' This function adheres to the structure required by the `PKNCA` package to work with its
+#' functionalities. For more information, see the
+#' [PKNCA Data Imputation Vignette](https://cran.r-project.org/web/packages/PKNCA/vignettes).
 #' @export
 #'
 #' @examples
@@ -19,20 +23,19 @@
 
 PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., options = list()) { # nolint
 
-  ret <- data.frame(conc = conc, time = time)
-  mask_start <- time %in% start
-  if (!any(mask_start)) {
+  d_conc_time <- data.frame(conc = conc, time = time)
+  if (!any(time == start)) {
     all_concs <- conc[time >= start  &  time <= end]
     all_times <- time[time >= start  &  time <= end]
     if (!all(is.na(all_concs))) {
       c0 <- PKNCA::pk.calc.c0(all_concs, all_times, method = "logslope")
       if (!is.na(c0)) {
-        ret <- rbind(ret, data.frame(time = start, conc = c0))
-        ret <- ret[order(ret$time), ]
+        d_conc_time <- rbind(d_conc_time, data.frame(time = start, conc = c0))
+        d_conc_time <- d_conc_time[order(d_conc_time$time), ]
       }
     }
   }
-  ret
+  d_conc_time
 }
 
 #' This function imputes the start concentration using the first concentration after dose
@@ -45,6 +48,10 @@ PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., opti
 #' @param options List of options (currently not used).
 #'
 #' @return A data frame with imputed start concentration.
+#' @details
+#' This function adheres to the structure required by the `PKNCA` package to work with its
+#' functionalities.For more information, see the
+#' [PKNCA Data Imputation Vignette](https://cran.r-project.org/web/packages/PKNCA/vignettes).
 #' @export
 #'
 #' @examples
@@ -54,16 +61,15 @@ PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., opti
 #' end <- 4
 #' PKNCA_impute_method_start_c1(conc, time, start, end)
 PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = list()) { # nolint
-  ret <- data.frame(conc = conc, time = time)
-  mask_start <- time %in% start
-  if (!any(mask_start)) {
+  d_conc_time <- data.frame(conc = conc, time = time)
+  if (!any(time == start)) {
     all_concs <- conc[time >= start  &  time <= end]
     all_times <- time[time >= start  &  time <= end]
     if (!all(is.na(all_concs))) {
       c1 <- all_concs[which.min(all_times)]
-      ret <- rbind(ret, data.frame(time = start, conc = c1))
-      ret <- ret[order(ret$time), ]
+      d_conc_time <- rbind(d_conc_time, data.frame(time = start, conc = c1))
+      d_conc_time <- d_conc_time[order(d_conc_time$time), ]
     }
   }
-  ret
+  d_conc_time
 }
