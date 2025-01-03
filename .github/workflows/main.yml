@@ -3,7 +3,7 @@
 # the developement process. When package is ready to
 # be published, revisit and add release-related
 # workflows.
-name: admiral CI/CD Workflows
+name: admiral CI/CD Wortkflows
 
 on:
   workflow_dispatch:
@@ -32,49 +32,46 @@ jobs:
         id: get_r_version
         run: echo "R_VERSION=$R_VERSION" >> $GITHUB_OUTPUT
         shell: bash
+
   spellcheck:
     name: Spelling
-    uses: pharmaverse/admiralci/.github/workflows/spellcheck.yml@main
-    if: github.event_name == 'pull_request'
-    needs: get_r_version
-    with:
-      r-version: "${{ needs.get_r_version.outputs.r-version }}"
-  linter:
-    name: Lint
-    uses: pharmaverse/admiralci/.github/workflows/lintr.yml@main
-    needs: get_r_version
-    if: github.event_name == 'pull_request'
-    with:
-      r-version: "${{ needs.get_r_version.outputs.r-version }}"
-  man-pages:
-    name: Man Pages
-    uses: pharmaverse/admiralci/.github/workflows/man-pages.yml@main
-    if: github.event_name == 'pull_request'
-    needs: get_r_version
-    with:
-      r-version: "${{ needs.get_r_version.outputs.r-version }}"
-  tests:
-    name: Tests
     runs-on: ubuntu-latest
     needs: get_r_version
     container:
       image: "ghcr.io/pharmaverse/admiralci-${{ needs.get_r_version.outputs.r-version }}:latest"
     steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
 
-        - name: Install dependencies
-          run: |
-            Rscript -e 'remotes::install_deps(dependencies = TRUE)'
+      - name: Checkout repo
+        uses: actions/checkout@v4.2.2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-        - name: Run tests
-          shell: Rscript {0}
-          run: |
-            devtools::load_all(".")
-            devtools::test()
-  check:
-    name: Check
-    uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
-    if: github.event_name == 'pull_request'
-    with:
-        error-on: error
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        if: github.event_name != 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.staged.dependencies
+          key: staged-deps
+
+      - name: Run Staged dependencies
+        uses: insightsengineering/staged-dependencies-action@v1
+        with:
+          run-system-dependencies: true
+          renv-restore: false
+          enable-check: false
+          direction: upstream
+          git-ref: ${{ steps.branch-name.outputs.current_branch }}
+
+      - name: Run Spellcheck
+        uses: insightsengineering/r-spellcheck-action@v3
