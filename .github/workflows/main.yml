@@ -48,11 +48,20 @@ jobs:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
   man-pages:
     name: Man Pages
-    uses: pharmaverse/admiralci/.github/workflows/man-pages.yml@main
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     needs: get_r_version
-    with:
-      r-version: "${{ needs.get_r_version.outputs.r-version }}"
+    steps:
+      - name: Install dependencies
+        run: |
+            apt-get install -y --no-install-recommends \
+                libudunits2-dev
+
+      - name: Run Man Pages Workflow
+        uses: pharmaverse/admiralci/.github/workflows/man-pages.yml@main
+        with:
+          r-version: "${{ needs.get_r_version.outputs.r-version }}"
+    
   tests:
     name: Tests
     runs-on: ubuntu-latest
