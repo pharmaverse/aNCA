@@ -52,15 +52,14 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: get_r_version
     steps:
-      - name: Install dependencies
-        run: |
+        - name: Install system dependencies
+          run: |
             apt-get install -y --no-install-recommends \
                 libudunits2-dev
-
-      - name: Run Man Pages Workflow
-        uses: pharmaverse/admiralci/.github/workflows/man-pages.yml@main
-        with:
-          r-version: "${{ needs.get_r_version.outputs.r-version }}"
+        - name: Run Man Pages Workflow
+          uses: pharmaverse/admiralci/.github/workflows/man-pages.yml@main
+          with:
+            r-version: "${{ needs.get_r_version.outputs.r-version }}"
     
   tests:
     name: Tests
