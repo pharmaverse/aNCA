@@ -227,7 +227,7 @@ fluidPage(
       tab_visuals_ui("visuals")
     ),
     # New TLG tab
-    nav_panel("TLG", value = "tlgs",
+    nav_panel("TLG", value = "tlg",
       tab_tlg_ui("tlg")
     )
   ),

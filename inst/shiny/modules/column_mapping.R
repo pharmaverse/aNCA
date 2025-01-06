@@ -278,9 +278,9 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
 
       # Enable other tabs
-      shinyjs::enable(selector = "#page li a[data-value=nca]")
-      shinyjs::enable(selector = "#page li a[data-value=visualisation]")
-      shinyjs::enable(selector = "#page li a[data-value=tlgs]")
+      purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
+        shinyjs::disable(selector = paste0("#page li a[data-value=", tab, "]"))
+      })
 
       req(data())
       dataset <- data()
