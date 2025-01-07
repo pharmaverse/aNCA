@@ -3,6 +3,8 @@
 # the developement process. When package is ready to
 # be published, revisit and add release-related
 # workflows.
+# The below workflows are based on those provided by admiralci.
+# The testing workflow is custom.
 # Instead of using reusable actions provided by admiralci,
 # the actions are inlined in the workflow file. This is
 # because some of the R dependencies required system packages
