@@ -3,7 +3,14 @@
 # the developement process. When package is ready to
 # be published, revisit and add release-related
 # workflows.
-name: admiral CI/CD Wortkflows
+# Instead of using reusable actions provided by admiralci,
+# the actions are inlined in the workflow file. This is
+# because some of the R dependencies required system packages
+# not available/installable using reusable actions.
+# If any updates are available, the workflow should be
+# updated manually.
+# Last update: 2025-01-07
+name: Modfified Admiral CI/CD Wortkflows
 
 on:
   workflow_dispatch:
@@ -51,12 +58,6 @@ jobs:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-        if: github.event_name != 'pull_request'
-        with:
-          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
-
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -94,12 +95,6 @@ jobs:
             ref: ${{ steps.branch-name.outputs.head_ref_branch }}
             repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-        if: github.event_name != 'pull_request'
-        with:
-            ref: ${{ steps.branch-name.outputs.head_ref_branch }}
-
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -115,22 +110,21 @@ jobs:
             enable-check: false
             direction: upstream
             git-ref: ${{ steps.branch-name.outputs.current_branch }}
-        env:
-            GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install latest release of lintr
+        shell: Rscript {0}
         run: |
             install.packages("lintr", repos = "https://packagemanager.posit.co/cran/latest/")
-        shell: Rscript {0}
+        
 
       - name: Lint
+        shell: Rscript {0}
         run: |
           lints <- lintr::lint_package()
           if (length(lints) > 0L) {
               print(lints)
               stop("Lints detected. Please review and adjust code according to the comments provided.", call. = FALSE)
           }
-        shell: Rscript {0}
 
   man-pages:
     name: Man Pages
@@ -164,15 +158,10 @@ jobs:
           enable-check: false
           direction: upstream
           git-ref: ${{ steps.branch-name.outputs.current_branch }}
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies from DESCRIPTION
+      - name: Install dependencies
         run: |
-          pak::local_install_deps(dependencies = TRUE)
-        shell: Rscript {0}
-        env:
-          R_REMOTES_STANDALONE: "true"
+          Rscript -e 'pak::local_install_deps(dependencies = TRUE)'
 
       - name: Generate man pages
         run: roxygen2::roxygenize('.', roclets = c('rd', 'collate', 'namespace'))
@@ -203,6 +192,7 @@ jobs:
           }
           fi
         shell: bash
+
   tests:
     name: Tests
     runs-on: ubuntu-latest
@@ -215,7 +205,7 @@ jobs:
 
         - name: Install dependencies
           run: |
-            pak::local_install_deps(dependencies = TRUE)
+            Rscript -e 'pak::local_install_deps(dependencies = TRUE)'
 
         - name: Run tests
           shell: Rscript {0}
@@ -260,13 +250,6 @@ jobs:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-        if: |
-          github.event_name != 'pull_request'
-        with:
-          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
-
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -286,16 +269,13 @@ jobs:
           enable-check: false
           cran-repos: "https://cloud.r-project.org"
           direction: upstream
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies from DESCRIPTION
         if: |
           (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
           matrix.r_version != 'devel'
         run: |
-          pak::local_install_deps(dependencies = TRUE)
-        shell: Rscript {0}
+          Rscript -e 'pak::local_install_deps(dependencies = TRUE)'
 
       - name: Upload dependencies artifact
         if: |
