@@ -119,7 +119,7 @@ tab_data_server <- function(id) {
       manual_units = manual_units,
       on_submit = change_to_review_tab
     )
-    
+
     output$reviewDataContent <- renderUI({
       if (!is.null(processed_data()) && nrow(processed_data()) > 0) {
         tagList(
