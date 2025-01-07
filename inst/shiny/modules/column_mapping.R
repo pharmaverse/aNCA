@@ -75,7 +75,7 @@ column_mapping_ui <- function(id) {
         tooltip(
           selectizeInput(
             ns("select_Grouping_Variables"),
-            "Grouping_Variables",
+            "Grouping Variables",
             choices = NULL,
             multiple = TRUE,
             options = list(placeholder = "Select Column(s)")

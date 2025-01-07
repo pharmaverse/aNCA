@@ -7,7 +7,7 @@ function(input, output, session) {
   data_module <- tab_data_server("data")
   # Data set for analysis
   data <- data_module$data
-  # Grouping_Variables
+  # Grouping Variables
   grouping_vars <- data_module$grouping_variables
   # NCA ----
   source(system.file("shiny/tabs/nca.R", package = "aNCA"), local = TRUE)
