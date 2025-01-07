@@ -113,6 +113,15 @@ column_mapping_ui <- function(id) {
             options = list(placeholder = "Select Column")
           ),
           "Analysis value in numeric format."
+        ),
+        tooltip(
+          selectizeInput(
+            ns("select_LLOQ"),
+            "LLOQ",
+            choices = NULL,
+            options = list(placeholder = "Select Column or Enter Value")
+          ),
+          "Specify the column for Lower Limit Of Quantification (LLOQ). If unavailable, enter a value to use as LLOQ. Default is 0."
         )
       )
     ),
@@ -244,7 +253,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
     # Define the required columns and group them into categories
     column_groups <- list(
       "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping Variables"),
-      "Sample Variables" = c("ANALYTE", "PCSPEC", "ROUTE", "AVAL"),
+      "Sample Variables" = c("ANALYTE", "PCSPEC", "ROUTE", "AVAL", "LLOQ"),
       "Dose Variables" = c("DOSNO", "DOSEA", "ADOSEDUR"),
       "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
       "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
@@ -256,10 +265,10 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
     }))
 
     # Define the desired column order
-    desired_order <- c("STUDYID", "USUBJID", "ANALYTE",
+    desired_order <- c("STUDYID", "USUBJID", "ANALYTE", "DOSNO",
                        "PCSPEC", "AVAL", "AVALU", "AFRLT",
                        "ARRLT", "NRRLT", "NFRLT", "RRLTU",
-                       "ROUTE", "DOSEA", "DOSEU", "DOSNO")
+                       "ROUTE", "DOSEA", "DOSEU", "LLOQ")
 
     # Populate the static inputs with column names
     observeEvent(data(), {
@@ -320,6 +329,15 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
       # Handle ADOSEDUR == NA case
       if (input$select_ADOSEDUR == "NA") {
         dataset$ADOSEDUR <- 0
+      }
+
+      # Handle LLOQ input
+      if (input$select_LLOQ %in% colnames(data())) {
+        # dataset$LLOQ <- data()[[input$select_LLOQ]]
+      } else if (!is.na(as.numeric(input$select_LLOQ))) {
+        dataset$LLOQ <- as.numeric(input$select_LLOQ)
+      } else {
+        dataset$LLOQ <- 0
       }
 
       # Update dataset columns if manual units are selected
