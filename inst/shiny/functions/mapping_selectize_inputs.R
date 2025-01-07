@@ -34,8 +34,6 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
       # For other columns, use basic logic
       selected_values <- if (column_name %in% column_names) column_name else NULL
     }
-    print(paste("Updating input:", input_id))
-    print(paste("Selected values:", paste(selected_values, collapse = ", ")))
     # Update the Selectize input with the new choices and selected values
     updateSelectizeInput(
       session,
