@@ -169,7 +169,7 @@ jobs:
 
       - name: Install dependencies from DESCRIPTION
         run: |
-          remotes::install_local(force = TRUE, dependencies = TRUE)
+          pak::local_install_deps(dependencies = TRUE)
         shell: Rscript {0}
         env:
           R_REMOTES_STANDALONE: "true"
@@ -213,14 +213,9 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v2
 
-        - name: Install system dependencies
-          run: |
-            apt-get install -y --no-install-recommends \
-                libudunits2-dev
-
         - name: Install dependencies
           run: |
-            Rscript -e 'remotes::install_deps(dependencies = TRUE)'
+            pak::local_install_deps(dependencies = TRUE)
 
         - name: Run tests
           shell: Rscript {0}
@@ -230,10 +225,10 @@ jobs:
   
   check:
     runs-on: ubuntu-latest
-    needs: get_r_version
+    needs: tests
     container:
       image: "ghcr.io/pharmaverse/admiralci-${{ matrix.r_version }}:latest"
-    name: (${{ matrix.r_version }})
+    name: Check (${{ matrix.r_version }})
     strategy:
       fail-fast: false
       matrix:
@@ -257,7 +252,7 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8
 
-      - name: Checkout repo (PR) 🛎
+      - name: Checkout repo
         uses: actions/checkout@v4.2.2
         if: |
           github.event_name == 'pull_request'
@@ -299,7 +294,7 @@ jobs:
           (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
           matrix.r_version != 'devel'
         run: |
-          remotes::install_local(force = TRUE, dependencies = TRUE)
+          pak::local_install_deps(dependencies = TRUE)
         shell: Rscript {0}
 
       - name: Upload dependencies artifact

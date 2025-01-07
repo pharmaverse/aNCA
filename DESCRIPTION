@@ -55,6 +55,7 @@ Imports:
     tidyr,
     tools,
     utils,
+    units,
     zip
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
