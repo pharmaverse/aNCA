@@ -10,7 +10,7 @@
 # If any updates are available, the workflow should be
 # updated manually.
 # Last update: 2025-01-07
-name: Modfified Admiral CI/CD Wortkflows
+name: Modified Admiral CI/CD Wortkflows
 
 on:
   workflow_dispatch:
@@ -215,7 +215,11 @@ jobs:
   
   check:
     runs-on: ubuntu-latest
-    needs: tests
+    needs: 
+      - spellcheck
+      - tests
+      - lint
+      - man-pages
     container:
       image: "ghcr.io/pharmaverse/admiralci-${{ matrix.r_version }}:latest"
     name: Check (${{ matrix.r_version }})
