@@ -39,14 +39,14 @@ tab_data_ui <- function(id) {
       )
     ),
     nav_panel("Review Data",
-              id = ns("data_navset-review"),
-              uiOutput(ns("reviewDataContent")),
-              tags$script(HTML("
-              $(document).ready(function(){
-              $('[data-toggle=\"tooltip\"]').tooltip();
-              });
-                               ")
-                          )
+      id = ns("data_navset-review"),
+      uiOutput(ns("reviewDataContent")),
+      tags$script(HTML("
+      $(document).ready(function(){
+      $('[data-toggle=\"tooltip\"]').tooltip();
+      });
+                    ")
+      )
     )
   )
 
