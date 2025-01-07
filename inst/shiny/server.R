@@ -6,7 +6,7 @@ function(input, output, session) {
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
   shinyjs::disable(selector = "#page li a[data-value=visualisation]")
-  shinyjs::disable(selector = "#page li a[data-value=tlgs]")
+  shinyjs::disable(selector = "#page li a[data-value=tlg]")
 
   # DATA ----
   data_module <- tab_data_server("data")

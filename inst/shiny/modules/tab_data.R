@@ -8,7 +8,7 @@ source(system.file("/shiny/modules/column_mapping.R", package = "aNCA"))
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
-
+  
   navset_pill(
     id = ns("data_navset"),
     nav_panel("Raw Data Upload",
@@ -39,14 +39,13 @@ tab_data_ui <- function(id) {
       )
     ),
     nav_panel("Review Data",
-      "This is the data set that will be used for the analysis.
-      If you want to make any changes, please do so in the Mapping and Filters tab.",
-      reactableOutput(ns("data_processed")),
-      tags$script(HTML("
-        $(document).ready(function(){
-          $('[data-toggle=\"tooltip\"]').tooltip(); 
-        });
-      "))
+              id = ns("data_navset-review"),
+              uiOutput(ns("reviewDataContent")),
+              tags$script(HTML("
+              $(document).ready(function(){
+              $('[data-toggle=\"tooltip\"]').tooltip();
+              });
+                               "))
     )
   )
 
@@ -93,7 +92,7 @@ tab_data_server <- function(id) {
         height = "98vh"
       )
     })
-
+    
     # Column Mapping ----
 
     # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
@@ -120,6 +119,20 @@ tab_data_server <- function(id) {
       manual_units = manual_units,
       on_submit = change_to_review_tab
     )
+    
+    output$reviewDataContent <- renderUI({
+      if (!is.null(processed_data()) && nrow(processed_data()) > 0) {
+        tagList(
+          "This is the data set that will be used for the analysis.
+          If you would like to make any changes please return to the 'Mapping and Filters' tab.",
+          reactableOutput(ns("data_processed"))
+        )
+      } else {
+        div(
+          "Please map your data in the 'Mapping and Filters' section before reviewing it."
+        )
+      }
+    })
 
     # Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data

@@ -279,7 +279,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
       # Enable other tabs
       purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
-        shinyjs::disable(selector = paste0("#page li a[data-value=", tab, "]"))
+        shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
       })
 
       req(data())
