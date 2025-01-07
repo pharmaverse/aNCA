@@ -38,6 +38,18 @@ tab_data_ui <- function(id) {
         actionButton(ns("submit_filters"), "Submit filters"),
       )
     ),
+    nav_panel("Data Imputation",
+              # ToDo: Missing data tab imputation
+              card(
+                h4("Missing data imputation"),
+              ),
+              
+              card(
+                # Add BLQ imputation UI elements
+                h4("BLQ imputation"),
+                blq_imputation_ui(ns("blq_imputation"))
+              )
+    ),
     nav_panel("Review Data",
       "This is the data set that will be used for the analysis.
       If you want to make any changes, please do so in the Mapping and Filters tab.",
@@ -177,6 +189,25 @@ tab_data_server <- function(id) {
         bordered = TRUE,
         height = "98vh"
       )
+    })
+
+    # Call the BLQ imputation module
+    blq_rule <- blq_imputation_server("blq_imputation")
+
+    observeEvent(blq_rule(), {
+      req(blq_rule())
+      
+      updated_data <- processed_data() %>%
+        mutate(original_order = 1:n()) %>% 
+        group_by(across(any_of(c("STUDYID", "USUBJID", "DOSNO",
+                                 "PCSPEC", "ROUTE", grouping_variables())))) %>%
+        arrange(ARRLT) %>%
+        mutate(AVAL = PKNCA::clean.conc.blq(AVAL, ARRLT, conc.blq = blq_rule())) %>%
+        ungroup() %>% 
+        arrange(original_order) %>% 
+        select(-original_order)
+      
+      data(updated_data)
     })
 
     list(
