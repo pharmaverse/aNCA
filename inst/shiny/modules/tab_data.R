@@ -8,7 +8,7 @@ source(system.file("/shiny/modules/column_mapping.R", package = "aNCA"))
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
-  
+
   navset_pill(
     id = ns("data_navset"),
     nav_panel("Raw Data Upload",
@@ -45,7 +45,8 @@ tab_data_ui <- function(id) {
               $(document).ready(function(){
               $('[data-toggle=\"tooltip\"]').tooltip();
               });
-                               "))
+                               ")
+                          )
     )
   )
 
@@ -92,7 +93,7 @@ tab_data_server <- function(id) {
         height = "98vh"
       )
     })
-    
+
     # Column Mapping ----
 
     # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
