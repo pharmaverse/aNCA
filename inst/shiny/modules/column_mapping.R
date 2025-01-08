@@ -243,7 +243,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
     # Define the required columns and group them into categories
     column_groups <- list(
-      "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping Variables"),
+      "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
       "Sample Variables" = c("ANALYTE", "PCSPEC", "ROUTE", "AVAL"),
       "Dose Variables" = c("DOSNO", "DOSEA", "ADOSEDUR"),
       "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
@@ -299,12 +299,12 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         return()
       }
 
-      # Extract and store the "Grouping Variables" column
+      # Extract and store the "Grouping_Variables" column
       grouping_variables(input$select_Grouping_Variables)
 
-      # Remove "Grouping Variables" from selected columns to prevent renaming
+      # Remove "Grouping_Variables" from selected columns to prevent renaming
       selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-        names(selected_cols[["Group Identifiers"]]) != "Grouping Variables"
+        names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
       ]
 
       # Rename columns
