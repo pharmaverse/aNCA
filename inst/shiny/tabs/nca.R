@@ -183,14 +183,8 @@ observeEvent(input$submit_analyte, priority = 2, {
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
 
-  # Filter data based on selected analyte and dose numbers
-  data_filt <- data() %>%
-    dplyr::filter(!!sym(analyte_column) == input$select_analyte,
-                  DOSNO %in% input$select_dosno,
-                  if ("EVID" %in% names(data())) EVID == 0 else TRUE)
-
   # Segregate the data into concentration and dose records
-  df_conc <- create_conc(ADNCA = data_filt,
+  df_conc <- create_conc(ADNCA = data(),
                          group_columns = c(group_columns, usubjid_column, analyte_column),
                          time_column = time_column) %>%
     dplyr::arrange(across(all_of(c(usubjid_column, time_column))))
@@ -206,6 +200,12 @@ observeEvent(input$submit_analyte, priority = 2, {
   df_conc$REASON <- NA  # Exclusions will have preferential reason statements than inclusions
   df_conc$exclude_half.life <- FALSE
 
+  # Filter data based on selected analyte and dose numbers
+  df_conc <- df_conc %>%
+    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte,
+                  DOSNO %in% input$select_dosno,
+                  if ("EVID" %in% names(data())) EVID == 0 else TRUE)
+  
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
