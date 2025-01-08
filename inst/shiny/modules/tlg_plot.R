@@ -83,7 +83,10 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
     #' updating current page based on user input
     observeEvent(input$next_page, current_page(current_page() + 1))
     observeEvent(input$previous_page, current_page(current_page() - 1))
-    observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
+    observeEvent(input$select_page, {
+      if (input$select_page == "") return(NULL)
+      current_page(as.numeric(input$select_page))
+    })
 
     #' hold reactive information about the page layout
     num_pages <- reactive({
@@ -93,6 +96,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
 
     plots_per_page <- reactive({
       if (is.null(input$plots_per_page)) return(NULL)
+      if (is.null(plot_list())) return(NULL)
       if (input$plots_per_page == "All") {
         isolate(length(plot_list()))
       } else {
@@ -120,6 +124,8 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
 
     #' keeps list of plots to render, with options gathered from the UI and applied
     plot_list <- reactive({
+      if (length(options_()) == 0) return(NULL)
+
       plot_options <- purrr::list_modify(list(data = data()), !!!options_())
 
       purrr::iwalk(plot_options, \(value, name) {

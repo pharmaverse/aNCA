@@ -51,7 +51,9 @@ tab_tlg_ui <- function(id) {
     ),
     nav_panel("Tables", "To be added"),
     nav_panel("Listings", "To be added"),
-    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"), value = "Graphs")
+    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"), value = "Graphs"),
+    # disable loader for initial empty UI render #
+    tags$style(HTML(paste0(".tlg-plot-module .load-container {opacity: 0;}")))
   )
 }
 
@@ -291,7 +293,15 @@ tab_tlg_server <- function(id) {
       #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
       #' so solved this using JavaScript
       shinyjs::runjs(
-        paste0("$(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click();")
+        paste0("
+          // change the tab to graphs //
+          $(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click();
+
+          // enable spinner, as it was disabled for initial empty UI render //
+          setTimeout(function() {
+            $('.tlg-plot-module .load-container').css('opacity', 1);
+          }, 500);  
+        ")
       )
     })
   })
