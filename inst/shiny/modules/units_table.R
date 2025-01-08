@@ -132,7 +132,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       if (names(modal_units_table)[info$col + 1] == "Custom unit") {
         def_unit <- modal_units_table[info$row, "Default unit"]
         cust_unit <- modal_units_table[info$row, "Custom unit"]
-        modal_units_table[info$row, "Conversion Factor"] <- transform_unit(def_unit, cust_unit)
+        modal_units_table[info$row, "Conversion Factor"] <- get_conversion_factor(def_unit, cust_unit)
       }
 
       modal_units_table(modal_units_table)
