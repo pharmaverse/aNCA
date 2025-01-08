@@ -25,6 +25,11 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
 
     # Open modal message when units table button is pressed
     observeEvent(input$open_units_table, {
+      
+      # Keep in a variable all analytes available
+      analyte_choices <- unique(mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]])
+      
+      # Show the modal message with the units table and an analyte selector
       showModal(modalDialog(
         title = tagList(
           span("Units of NCA parameter results"),
@@ -40,8 +45,6 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           inputId = ns("select_unitstable_analyte"),
           multiple = TRUE,
           label = "Select Analyte:",
-    analyte_choices <- unique(mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]])
- # ...
           choices = analyte_choices,
           selected = analyte_choices
         ),
