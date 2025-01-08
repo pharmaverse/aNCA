@@ -49,6 +49,7 @@ Imports:
     scales,
     shiny,
     shinyBS,
+    shinycssloaders,
     shinyFiles,
     shinyjqui,
     shinyjs,

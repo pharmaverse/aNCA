@@ -68,7 +68,9 @@ tlg_plot_ui <- function(id) {
       ),
       div(align = "right", actionButton(ns("next_page"), "Next Page"))
     ),
-    uiOutput(ns("plots"))
+    shinycssloaders::withSpinner(
+      uiOutput(ns("plots"))
+    )
   )
 }
 
