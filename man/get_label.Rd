@@ -26,6 +26,5 @@ This function retrieves the label of a heading from a labels file.
  get_label("USUBJID")  # Returns "Unique Subject Identifier"
  get_label("AGE")  # Returns "No label available"
  }
- 
- @export
+
 }

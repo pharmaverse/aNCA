@@ -136,7 +136,7 @@ set_empty_label <- function(x) {
 #'  get_label("AGE")  # Returns "No label available"
 #'  }
 #'
-#'  @export
+#' @export
 get_label <- function(variable) {
   label <- unique(labels_file$Label[labels_file$Variable == variable])
   if (length(label) == 0) {
