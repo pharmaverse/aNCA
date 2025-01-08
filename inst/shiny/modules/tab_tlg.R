@@ -287,15 +287,11 @@ tab_tlg_server <- function(id) {
         do.call(navset_pill_list, panels)
       })
 
-      #' change tab to first populated tab
+      #' change tab to first populated tab (currently only Graphs)
       #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
       #' so solved this using JavaScript
-      #' TODO: Somehow detect when UI for plots is ready, only then change the tab
       shinyjs::runjs(
-        paste0("
-          setTimeout(() => {
-           $(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click()
-          }, 3000);")
+        paste0("$(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click();")
       )
     })
   })
