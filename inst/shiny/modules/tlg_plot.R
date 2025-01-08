@@ -50,7 +50,7 @@ tlg_plot_ui <- function(id) {
             choices = c("All", 1, 2, 4, 6, 8, 10)
           )
         ),
-        shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page"))
+        shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page", class = "btn-page"))
       ),
       div(
         align = "center",
@@ -66,7 +66,7 @@ tlg_plot_ui <- function(id) {
           uiOutput(ns("page_number"), inline = TRUE),
         )
       ),
-      div(align = "right", actionButton(ns("next_page"), "Next Page"))
+      div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
     ),
     shinycssloaders::withSpinner(
       uiOutput(ns("plots"))
