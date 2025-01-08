@@ -452,7 +452,7 @@ final_res_nca <- reactiveVal(NULL)
 
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
-  req(!is.null(res_nca()))
+  req(res_nca())
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- reshape_pknca_results(res_nca())
 
