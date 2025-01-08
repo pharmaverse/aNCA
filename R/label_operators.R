@@ -115,3 +115,32 @@ set_empty_label <- function(x) {
   }
   return(x)
 }
+
+#' Get the Label of a Heading
+#' 
+#' This function retrieves the label of a heading from a labels file.
+#' 
+#' @param variable The variable for which the label is to be retrieved.
+#' 
+#' @return The label of the heading if it exists in the labels file,
+#' otherwise "No label available".
+#' 
+#' @examples
+#' \dontrun{
+#'  # Example usage:
+#'  labels_file <- data.frame(
+#'  Variable = c("USUBJID", "AVAL"),
+#'  Label = c("Unique Subject Identifier", "Analysis Value")
+#'  )
+#'  get_label("USUBJID")  # Returns "Unique Subject Identifier"
+#'  get_label("AGE")  # Returns "No label available"
+#'  }
+#'  
+#'  @export
+get_label <- function(variable) {
+  label <- unique(labels_file$Label[labels_file$Variable == variable])
+  if (length(label) == 0) {
+    return("No label available")
+  }
+  return(label)
+}
