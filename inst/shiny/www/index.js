@@ -4,7 +4,7 @@
  * This is to prevent the user changing the pages
  * too fast, which will cause glitches.
  */
-const togglePageButtons = function() {
+function togglePageButtons() {
   const page_buttons = $('.btn-page');
   page_buttons.prop('disabled', true);
   setTimeout(function() {
