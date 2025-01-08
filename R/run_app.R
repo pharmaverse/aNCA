@@ -22,6 +22,7 @@
 #' @importFrom shinyFiles shinyDirChoose
 #' @importFrom shinyjqui orderInput updateOrderInput
 #' @importFrom shinyWidgets dropdown pickerInput switchInput updatePickerInput
+#' @importFrom stringi stri_rand_strings
 #' @importFrom tools file_ext
 #' @importFrom utils read.csv write.csv
 #' @importFrom zip zipr

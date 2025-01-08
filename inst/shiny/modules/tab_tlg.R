@@ -272,10 +272,11 @@ tab_tlg_server <- function(id) {
       panels <- lapply(tlg_order_graphs, function(g_id) {
         plot_ui <- {
           g_def <- .TLG_DEFINITIONS[[g_id]]
+          module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
           if (exists(g_def$fun)) {
-            tlg_plot_server(g_id, get(g_def$fun), g_def$options)
-            tlg_plot_ui(session$ns(g_id))
+            tlg_plot_server(module_id, get(g_def$fun), g_def$options)
+            tlg_plot_ui(session$ns(module_id))
           } else {
             tags$div("Plot not implemented yet")
           }
