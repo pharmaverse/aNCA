@@ -53,7 +53,7 @@ tab_tlg_ui <- function(id) {
     nav_panel("Listings", "To be added"),
     nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"), value = "Graphs"),
     # disable loader for initial empty UI render #
-    tags$style(HTML(paste0(".tlg-plot-module .load-container {opacity: 0;}")))
+    footer = tags$style(HTML(paste0(".tlg-plot-module .load-container {opacity: 0;}")))
   )
 }
 
