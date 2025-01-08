@@ -74,7 +74,7 @@ slope_selector_ui <- function(id) {
           options = list(`actions-box` = TRUE)
         ),
       ),
-      div(align = "left", actionButton(ns("previous_page"), "Previous Page")),
+      div(align = "left", actionButton(ns("previous_page"), "Previous Page", class = "btn-page")),
       div(
         align = "center",
         tags$span(
@@ -85,7 +85,7 @@ slope_selector_ui <- function(id) {
           uiOutput(ns("page_number"), inline = TRUE)
         )
       ),
-      div(align = "right", actionButton(ns("next_page"), "Next Page"))
+      div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
     ),
     # Plots display #
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container", style = "height:70%;"),
