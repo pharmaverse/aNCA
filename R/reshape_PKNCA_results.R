@@ -18,8 +18,7 @@
 reshape_pknca_results <- function(res_nca) {
 
   # Keep only custom units and custom values in the data (discard original ones)
-  res_nca$result <- res_nca$result %>%
-    dplyr::select(-PPORRES, -PPORRESU)
+  res_nca$result <- dplyr::select(res_nca$result, -PPORRES, -PPORRESU)
 
   # Get all names with units and make a dictionary structure
   dict_pttestcd_with_units <- res_nca$result %>%

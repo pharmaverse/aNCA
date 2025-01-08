@@ -61,7 +61,7 @@ calculate_summary_stats <- function(res_pknca, input_groups = "DOSNO") {
     group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
     unique() %>%
     summarise(
-      geomean = exp(mean(log(PPSTRES), na.rm = TRUE)), # nolint
+      geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
       geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
       mean = mean(PPSTRES, na.rm = TRUE),
       CV = (sd(PPSTRES, na.rm = TRUE) / mean(PPSTRES, na.rm = TRUE)) * 100,

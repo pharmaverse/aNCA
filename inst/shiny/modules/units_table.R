@@ -40,8 +40,10 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           inputId = ns("select_unitstable_analyte"),
           multiple = TRUE,
           label = "Select Analyte:",
-          choices = mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]] %>% unique(),
-          selected = mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]] %>% unique()
+    analyte_choices <- unique(mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]])
+ # ...
+          choices = analyte_choices,
+          selected = analyte_choices
         ),
         DTOutput(ns("modal_units_table")),
         footer = tagList(
@@ -72,10 +74,8 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
     })
 
     # Define which parameters where choosen by the user
-    params_to_calculate <- reactiveVal(NULL)
-    observeEvent(mydata()$intervals, {
-      params_to_calculate(names(purrr::keep(mydata()$intervals,
-                                            ~ is.logical(.x) && any(.x))))
+    params_to_calculate <- reactive({
+      names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
     })
 
     # Render the modal units table to the user
