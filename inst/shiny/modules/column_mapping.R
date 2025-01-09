@@ -11,9 +11,7 @@
 #' @examples
 #' column_mapping_widget(ns = NS("example"), id = "STUDYID",
 #' tooltip_text = "Select the study identifier column.")
-#'
-#' @export
-column_mapping_widget <- function(ns, id, tooltip_text) {
+.column_mapping_widget <- function(ns, id, tooltip_text) {
   div(
     class = "column-mapping-row",
     tooltip(
@@ -28,11 +26,11 @@ column_mapping_widget <- function(ns, id, tooltip_text) {
     ),
     div(
       class = "column-mapping-output",
-      span(paste0(id, ":"), style = "color: black; font-size: normal;")
+      span(paste0(id, ":"))
     ),
     div(
       class = "column-mapping-label",
-      span(textOutput(ns(paste0("label_", id))), style = "color: grey;")
+      span(textOutput(ns(paste0("label_", id))))
     )
   )
 }

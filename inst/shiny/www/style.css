@@ -29,16 +29,12 @@
 }
 
 .column-mapping-output {
-  margin-left: 0.625rem;
-  margin-top: 1.25rem;
-  margin-bottom: 0;
+  margin: 1.25rem 0 0 0.625rem;
   color: black;
 }
 
 .column-mapping-label {
-  margin-left: 0.625rem;
-  margin-top: 1.25rem;
-  margin-bottom: 0;
+  margin: 1.25rem 0 0 0.625rem;
   color: grey;
 }
 
