@@ -1,3 +1,7 @@
+# Source:
+# https://github.com/pharmaverse/admiralci/blob/main/.github/workflows/spellcheck.yml
+# Modified to install system dependencies.
+
 name: Spelling
 
 on:

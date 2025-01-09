@@ -1,3 +1,9 @@
+# Source:
+# https://github.com/pharmaverse/admiralci/blob/main/.github/workflows/man-pages.yml
+# Modified to install system dependencies.
+
+name: Man Pages
+
 on:
   workflow_dispatch:
     inputs:
@@ -16,8 +22,6 @@ on:
         default: "release"
         required: false
         type: string
-
-name: Man Pages
 
 concurrency:
   group: roxygen-${{ github.event.pull_request.number || github.ref }}

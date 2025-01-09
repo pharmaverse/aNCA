@@ -1,3 +1,9 @@
+# Source:
+# https://github.com/pharmaverse/admiralci/blob/main/.github/workflows/lintr.yml
+# Modified to install system dependencies.
+
+name: Lint
+
 on:
   workflow_dispatch:
     inputs:
@@ -46,8 +52,6 @@ on:
         default: "false"
         required: false
         type: string
-
-name: Lint
 
 concurrency:
   group: lint-${{ github.event.pull_request.number || github.ref }}

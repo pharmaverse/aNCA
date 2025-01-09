@@ -3,6 +3,13 @@
 # the developement process. When package is ready to
 # be published, revisit and add release-related
 # workflows.
+# Due to the need of some customization, instead of
+# referencing the workflows directly, they are copied
+# over and modified to install needed system dependencies.
+# This means that in case of an update, the changes
+# will need to be applied manually.
+#
+# Last workflow update: 2025-09-01
 name: admiral CI/CD Workflows
 
 on:
