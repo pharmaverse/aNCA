@@ -19,7 +19,41 @@
   width: 100%;
 }
 
-/* column mapping on data page */
+/* column mapping UI */
+
+.column-mapping-row {
+  display: flex;
+  align-items: center;
+  margin-top: -15px;
+  margin-bottom: -25px;
+}
+
+.column-mapping-output {
+  margin-left: 10px;
+  margin-top: 20px;
+  margin-bottom: 0px;
+  color: black;
+}
+
+.column-mapping-label {
+  margin-left: 10px;
+  margin-top: 20px;
+  margin-bottom: 0px;
+  color: grey;
+}
+
+/* Style adjustments for headings */
+h4 {
+  margin-bottom: -40px;
+}
+
+.fluidRow {
+  margin-top: -5px;
+}
+
+.shiny-input-container {
+  margin-bottom: 0px;
+}
 
 
 /* filters on data page */

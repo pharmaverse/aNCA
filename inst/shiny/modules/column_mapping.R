@@ -43,7 +43,7 @@
 # Define a reusable widget function
 column_mapping_widget <- function(ns, id, tooltip_text) {
   div(
-    style = "display: flex; align-items: center; margin-bottom: -25px; margin-top: -15px;",
+    class = "column-mapping-row",
     tooltip(
       selectizeInput(
         ns(paste0("select_", id)),
@@ -55,11 +55,11 @@ column_mapping_widget <- function(ns, id, tooltip_text) {
       tooltip_text
     ),
     div(
-      style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
+      class = "column-mapping-output",
       span(paste0(id, ":"), style = "color: black; font-size: normal;")
     ),
     div(
-      style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
+      class = "column-mapping-label",
       span(textOutput(ns(paste0("label_", id))), style = "color: grey;")
     )
   )
@@ -104,7 +104,7 @@ column_mapping_ui <- function(id) {
         column(
           8,
           div(
-            style = "display: flex; align-items: center; margin-bottom: -15px;",
+            class = "column-mapping-row",
             tooltip(
               selectizeInput(
                 ns("select_Grouping_Variables"),
@@ -117,8 +117,8 @@ column_mapping_ui <- function(id) {
               "Select the additional column(s) that will be used to group the data\nfor tables, listings, and graphs. E.g. Treatment Arm, Age, Sex, Race"
             ),
             div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("Additional Grouping Variables", style = "color: black; font-size: normal;")
+              class = "column-mapping-output",
+              span("Additional Grouping Variables")
             )
           )
         )
