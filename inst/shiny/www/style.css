@@ -37,9 +37,10 @@
   color: grey;
 }
 
-.column-mapping-section {
-  margin-bottom: 1rem;
+.column-mapping-section h5 {
+  font-weight: bold;
 }
+
 /* Style adjustments for headings */
 h5 {
   margin-bottom: -1.5rem;

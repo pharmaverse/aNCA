@@ -109,11 +109,17 @@ column_mapping_ui <- function(id) {
           class = "column-mapping-output",
           span("Additional Grouping Variables")
         )
-      ),
+      )
+    ),
+    tags$section(
+      class = "column-mapping-section",
       h5("Sample Variables"),
       .column_mapping_widget(ns, "ANALYTE", "Analyte"),
       .column_mapping_widget(ns, "PCSPEC", "Matrix"),
-      .column_mapping_widget(ns, "AVAL", "Analysis value in numeric format."),
+      .column_mapping_widget(ns, "AVAL", "Analysis value in numeric format.")
+    ),
+    tags$section(
+      class = "column-mapping-section",
       h5("Dose Variables"),
       .column_mapping_widget(ns, "DOSNO", "Numeric format."),
       .column_mapping_widget(
@@ -125,12 +131,18 @@ column_mapping_ui <- function(id) {
         ns, "ADOSEDUR",
         "Duration of dose administration.\nOnly required for infusion studies,
         otherwise select NA"
-      ),
+      )
+    ),
+    tags$section(
+      class = "column-mapping-section",
       h5("Time Variables"),
       .column_mapping_widget(ns, "AFRLT", "Numeric format"),
       .column_mapping_widget(ns, "ARRLT", "Numeric format"),
       .column_mapping_widget(ns, "NFRLT", "Numeric format"),
-      .column_mapping_widget(ns, "NRRLT", "Numeric format"),
+      .column_mapping_widget(ns, "NRRLT", "Numeric format")
+    ),
+    tags$section(
+      class = "column-mapping-section",
       h5("Unit Variables"),
       .column_mapping_widget(ns, "AVALU", "Unit of analysis value."),
       .column_mapping_widget(ns, "DOSEU", "Unit of dose amount."),
