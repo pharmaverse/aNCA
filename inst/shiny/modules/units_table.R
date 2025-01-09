@@ -1,6 +1,6 @@
-# UI function for the units table module
 units_table_ui <- function(id) {
   ns <- NS(id)
+  # Button to open a module message with the parameter units table #
   tagList(
     actionButton(
       ns("open_units_table"),
@@ -11,19 +11,18 @@ units_table_ui <- function(id) {
   )
 }
 
-# Server function for the units table module
 units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_calculate) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    # Enable the units table button when data is available
+    #' Allow user to open the units table when data is available
     observeEvent(mydata(), {
       updateActionButton(session = session,
                          inputId = "open_units_table",
                          disabled = FALSE)
     })
 
-    # Open modal message when units table button is pressed
+    # Define the modal message displayed with the parameter units table #
     observeEvent(input$open_units_table, {
       
       # Keep in a variable all analytes available
@@ -57,7 +56,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       ))
     })
 
-    # Reformat how the units table is displayed to the user
+    # Define the parameter units table and how is displayed to the user #
     modal_units_table <- reactiveVal(NULL)
     observeEvent(list(mydata(), input$select_unitstable_analyte), {
       req(mydata())
@@ -85,7 +84,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       paste0("['", paste(params_to_calculate(), collapse = "','"), "']")
     })
 
-    # Render the modal units table to the user
+    #' Rendering the modal units table
     output$modal_units_table <- DT::renderDT({
       datatable(
         data = modal_units_table() %>%
@@ -105,6 +104,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           searching = TRUE,
           autoWidth = TRUE,
           dom = "ft",
+          # Display only rows with the parameters to run for the NCA
           rowCallback = htmlwidgets::JS(
             paste0("
               function(row, data, index) {
@@ -164,7 +164,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
         return()
       }
 
-      # Tranform the modal units table back to the original one
+      # Tranforms the modal units table back to the original one
       modal_units_table <- modal_units_table() %>%
         dplyr::mutate(Analytes = strsplit(Analytes, ", ")) %>%
         tidyr::unnest(Analytes) %>%
@@ -174,7 +174,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
                       PPSTRESU = `Custom unit`,
                       conversion_factor = `Conversion Factor`)
 
-      # Save the modified units table in my data object
+      # Updates units table of mydata and res_nca according to the user's changes
       mydata <- mydata()
       mydata$units <- modal_units_table
       mydata(mydata)
@@ -194,8 +194,6 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
         res_nca(res_nca)
 
       }
-      
-      # Create a reactive list with the updated objects
 
       # Close the module window once all saving actions are done
       removeModal()
