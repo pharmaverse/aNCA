@@ -1,5 +1,4 @@
 ADNCA
-ADPC
 ADPP
 AFRLT
 AUClast
@@ -30,6 +29,7 @@ cmax
 codebase
 csv
 customizable
+df
 ggplot
 nca
 pharmacokinetic
@@ -37,13 +37,11 @@ pknca
 plotly
 pptest
 pre
-reactable
 reupload
 ruleset
 rulesets
 sas
 summarization
 timepoint
-tooltip
 visualizable
 xpt
