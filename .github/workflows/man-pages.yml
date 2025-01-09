@@ -1,0 +1,111 @@
+on:
+  workflow_dispatch:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: choice
+        options:
+          - devel
+          - latest
+  workflow_call:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: string
+
+name: Man Pages
+
+concurrency:
+  group: roxygen-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Roxygen
+    runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
+    if: >
+      !contains(github.event.commits[0].message, '[skip lint]')
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      ##################### BEGIN boilerplate steps #####################
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+
+      - name: Checkout repo (PR) 🛎
+        uses: actions/checkout@v4.2.2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        if: github.event_name != 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.staged.dependencies
+          key: staged-deps
+
+      - name: Run Staged dependencies
+        uses: insightsengineering/staged-dependencies-action@v1
+        with:
+          run-system-dependencies: true
+          renv-restore: false
+          enable-check: false
+          direction: upstream
+          git-ref: ${{ steps.branch-name.outputs.current_branch }}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies from DESCRIPTION
+        run: |
+          remotes::install_local(force = TRUE, dependencies = TRUE)
+        shell: Rscript {0}
+        env:
+          R_REMOTES_STANDALONE: "true"
+
+      ##################### END boilerplate steps #####################
+
+      - name: Generate man pages
+        run: roxygen2::roxygenize('.', roclets = c('rd', 'collate', 'namespace'))
+        shell: Rscript {0}
+
+      - name: Set-up safe dir
+        run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+        shell: bash
+
+      - name: Roxygen check
+        if: "!startsWith(github.event.comment.body, '/roxygenize')"
+        run: |
+          git status -s
+          if [[ -n `git status -s | grep -E "man|DESCRIPTION"` ]]
+          then {
+            ROXYGEN_VERSION="$(Rscript -e 'packageVersion("roxygen2")' | awk '{print $NF}')"
+            echo "🙈 Manuals are not up-to-date with roxygen comments!"
+            echo "🔀 The following differences were noted:"
+            git diff man/* DESCRIPTION
+            echo -e "\n💻 Please rerun the following command on your workstation and push your changes"
+            echo "--------------------------------------------------------------------"
+            echo "roxygen2::roxygenize('.', roclets = c('rd', 'collate', 'namespace'))"
+            echo "--------------------------------------------------------------------"
+            echo "ℹ roxygen2 version that was used in this workflow: $ROXYGEN_VERSION"
+            echo "🙏 Please ensure that the 'RoxygenNote' field in the DESCRIPTION file matches this version"
+            exit 1
+          } else {
+            echo "💚 Manuals are up-to-date with roxygen comments"
+          }
+          fi
+        shell: bash
