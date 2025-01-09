@@ -114,9 +114,9 @@ column_mapping_ui <- function(id) {
     tags$section(
       class = "column-mapping-section",
       h5("Sample Variables"),
-      .column_mapping_widget(ns, "ANALYTE", "Analyte"),
-      .column_mapping_widget(ns, "PCSPEC", "Matrix"),
-      .column_mapping_widget(ns, "AVAL", "Analysis value in numeric format.")
+      .column_mapping_widget(ns, "ANALYTE", "Character format"),
+      .column_mapping_widget(ns, "PCSPEC", "Character format"),
+      .column_mapping_widget(ns, "AVAL", "Numeric format.")
     ),
     tags$section(
       class = "column-mapping-section",
@@ -124,12 +124,12 @@ column_mapping_ui <- function(id) {
       .column_mapping_widget(ns, "DOSNO", "Numeric format."),
       .column_mapping_widget(
         ns, "ROUTE",
-        "Route of administration, stating either 'intravascular' or 'extravascular'."
+        "Character format, stating either 'intravascular' or 'extravascular'."
       ),
-      .column_mapping_widget(ns, "DOSEA", "Actual Dose amount in numeric format."),
+      .column_mapping_widget(ns, "DOSEA", "Numeric format."),
       .column_mapping_widget(
         ns, "ADOSEDUR",
-        "Duration of dose administration.\nOnly required for infusion studies,
+        "Numeric format. Only required for infusion studies,
         otherwise select NA"
       )
     ),
@@ -144,9 +144,9 @@ column_mapping_ui <- function(id) {
     tags$section(
       class = "column-mapping-section",
       h5("Unit Variables"),
-      .column_mapping_widget(ns, "AVALU", "Unit of analysis value."),
-      .column_mapping_widget(ns, "DOSEU", "Unit of dose amount."),
-      .column_mapping_widget(ns, "RRLTU", "Unit of time.")
+      .column_mapping_widget(ns, "AVALU", "Character format."),
+      .column_mapping_widget(ns, "DOSEU", "Character format."),
+      .column_mapping_widget(ns, "RRLTU", "Character format.")
     ),
     input_task_button(ns("submit_columns"), "Submit Mapping")
   )
