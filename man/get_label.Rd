@@ -7,6 +7,8 @@
 get_label(labels_df, variable, type)
 }
 \arguments{
+\item{labels_df}{A data frame with three columns: Variable, Label, and Dataset.}
+
 \item{variable}{The variable for which the label is to be retrieved.}
 
 \item{type}{The type of the dataset for which the label is to be retrieved.}

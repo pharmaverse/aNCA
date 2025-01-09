@@ -3,8 +3,9 @@
 #' This function adds "label" attributes to all columns in a dataset
 #'
 #' @param data The dataset to which labels will be applied.
-#' @param labels_df A data frame with two columns: Variable and Label,
+#' @param labels_df A data frame with three columns: Variable, Label, and Dataset,
 #'  for the dataset you are applying it .
+#' @param type The type variable in labels_df for which the labels are to be applied.
 #'
 #' @return The same dataset with label attributes applied to all columns.
 #' If a column is not present in the labels list, it will be assigned the name of the col.
@@ -125,6 +126,7 @@ set_empty_label <- function(x) {
 #'
 #' @param variable The variable for which the label is to be retrieved.
 #' @param type The type of the dataset for which the label is to be retrieved.
+#' @param labels_df A data frame with three columns: Variable, Label, and Dataset.
 #'
 #' @return The label of the heading if it exists in the labels file,
 #' otherwise "No label available".

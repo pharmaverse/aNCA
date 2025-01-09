@@ -25,7 +25,6 @@
   display: flex;
   align-items: center;
   margin-top: -1rem;
-  margin-bottom: -1.5rem;
 }
 
 .column-mapping-output {
@@ -38,6 +37,9 @@
   color: grey;
 }
 
+.column-mapping-section {
+  margin-bottom: 1rem;
+}
 /* Style adjustments for headings */
 h5 {
   margin-bottom: -1.5rem;

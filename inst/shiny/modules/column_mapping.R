@@ -86,142 +86,56 @@ column_mapping_ui <- function(id) {
       " has been assigned a corresponding column from your dataset"
     ),
     # Adjusted layout using CSS flexbox
-    tagList(
+    tags$section(
+      class = "column-mapping-section",
       h5("Group Identifiers"),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format.")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "USUBJID", "Character or Numeric format")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          div(
-            class = "column-mapping-row",
-            tooltip(
-              selectizeInput(
-                ns("select_Grouping_Variables"),
-                "",
-                choices = NULL,
-                multiple = TRUE,
-                options = list(placeholder = "Select Column(s)"),
-                width = "40%"
-              ),
-              "Select the additional column(s) that will be used to group the data 
-              for tables, listings, and graphs. E.g. Treatment Arm, Age, Sex, Race"
-            ),
-            div(
-              class = "column-mapping-output",
-              span("Additional Grouping Variables")
-            )
-          )
+      column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
+      column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
+      div(
+        class = "column-mapping-row",
+        tooltip(
+          selectizeInput(
+            ns("select_Grouping_Variables"),
+            "",
+            choices = NULL,
+            multiple = TRUE,
+            options = list(placeholder = "Select Column(s)"),
+            width = "40%"
+          ),
+          "Select the additional column(s) that will be used to group the data 
+          for tables, listings, and graphs. E.g. Treatment Arm, Age, Sex, Race"
+        ),
+        div(
+          class = "column-mapping-output",
+          span("Additional Grouping Variables")
         )
       ),
       h5("Sample Variables"),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "ANALYTE", "Analyte")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "PCSPEC", "Matrix")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "AVAL", "Analysis value in numeric format.")
-        )
-      ),
+      column_mapping_widget(ns, "ANALYTE", "Analyte"),
+      column_mapping_widget(ns, "PCSPEC", "Matrix"),
+      column_mapping_widget(ns, "AVAL", "Analysis value in numeric format."),
       h5("Dose Variables"),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "DOSNO", "Numeric format.")
-        )
+      column_mapping_widget(ns, "DOSNO", "Numeric format."),
+      column_mapping_widget(
+        ns, "ROUTE",
+        "Route of administration, stating either 'intravascular' or 'extravascular'."
       ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(
-            ns, "ROUTE",
-            "Route of administration, stating either 'intravascular' or 'extravascular'."
-          )
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "DOSEA", "Actual Dose amount in numeric format.")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(
-            ns, "ADOSEDUR",
-            "Duration of dose administration.\nOnly required for infusion studies,
-            otherwise select NA"
-          )
-        )
+      column_mapping_widget(ns, "DOSEA", "Actual Dose amount in numeric format."),
+      column_mapping_widget(
+        ns, "ADOSEDUR",
+        "Duration of dose administration.\nOnly required for infusion studies,
+        otherwise select NA"
       ),
       h5("Time Variables"),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "AFRLT", "Numeric format")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "ARRLT", "Numeric format")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "NFRLT", "Numeric format")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "NRRLT", "Numeric format")
-        )
-      ),
+      column_mapping_widget(ns, "AFRLT", "Numeric format"),
+      column_mapping_widget(ns, "ARRLT", "Numeric format"),
+      column_mapping_widget(ns, "NFRLT", "Numeric format"),
+      column_mapping_widget(ns, "NRRLT", "Numeric format"),
       h5("Unit Variables"),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "AVALU", "Unit of analysis value.")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "DOSEU", "Unit of dose amount.")
-        )
-      ),
-      fluidRow(
-        column(
-          12,
-          column_mapping_widget(ns, "RRLTU", "Unit of time.")
-        )
-      )
+      column_mapping_widget(ns, "AVALU", "Unit of analysis value."),
+      column_mapping_widget(ns, "DOSEU", "Unit of dose amount."),
+      column_mapping_widget(ns, "RRLTU", "Unit of time.")
     ),
-
-    br(),
     input_task_button(ns("submit_columns"), "Submit Mapping")
   )
 }
