@@ -4,12 +4,12 @@
 \alias{apply_labels}
 \title{Apply Labels to a dataset}
 \usage{
-apply_labels(data, labels_file)
+apply_labels(data, labels_df)
 }
 \arguments{
 \item{data}{The dataset to which labels will be applied.}
 
-\item{labels_file}{A data frame with two columns: Variable and Label,
+\item{labels_df}{A data frame with two columns: Variable and Label,
 for the dataset you are applying it .}
 }
 \value{

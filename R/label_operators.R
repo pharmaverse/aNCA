@@ -3,7 +3,7 @@
 #' This function adds "label" attributes to all columns in a dataset
 #'
 #' @param data The dataset to which labels will be applied.
-#' @param labels_file A data frame with two columns: Variable and Label,
+#' @param labels_df A data frame with two columns: Variable and Label,
 #'  for the dataset you are applying it .
 #'
 #' @return The same dataset with label attributes applied to all columns.
@@ -22,10 +22,10 @@
 #' }
 #'
 #' @export
-apply_labels <- function(data, labels_file) {
+apply_labels <- function(data, labels_df) {
 
   # Create the label_ADNCA named vector from labels_app
-  label_adnca <- setNames(labels_file$Label, labels_file$Variable)
+  label_adnca <- setNames(labels_df$Label, labels_df$Variable)
 
   for (col in colnames(data)) {
     if (col %in% names(label_adnca)) {
@@ -128,7 +128,7 @@ set_empty_label <- function(x) {
 #' @examples
 #' \dontrun{
 #'  # Example usage:
-#'  labels_file <- data.frame(
+#'  LABELS <- data.frame(
 #'  Variable = c("USUBJID", "AVAL"),
 #'  Label = c("Unique Subject Identifier", "Analysis Value")
 #'  )
@@ -138,9 +138,9 @@ set_empty_label <- function(x) {
 #'
 #' @export
 get_label <- function(variable) {
-  label <- unique(labels_file$Label[labels_file$Variable == variable])
+  label <- unique(LABELS$Label[LABELS$Variable == variable])
   if (length(label) == 0) {
     return("No label available")
   }
-  return(label)
+  label
 }

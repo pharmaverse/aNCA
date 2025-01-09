@@ -19,7 +19,7 @@ This function retrieves the label of a heading from a labels file.
 \examples{
 \dontrun{
  # Example usage:
- labels_file <- data.frame(
+ LABELS <- data.frame(
  Variable = c("USUBJID", "AVAL"),
  Label = c("Unique Subject Identifier", "Analysis Value")
  )

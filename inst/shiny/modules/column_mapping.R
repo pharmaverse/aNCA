@@ -645,7 +645,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
 
       # Apply labels to the dataset
-      dataset <- apply_labels(dataset, labels_file)
+      dataset <- apply_labels(dataset, LABELS)
 
       # Update the processed data
       processed_data(dataset)

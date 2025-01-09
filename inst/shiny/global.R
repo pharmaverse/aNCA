@@ -1,6 +1,6 @@
 source("modules/tab_data.R")
 #Load labels
-labels_file <- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
+LABELS <- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 
 source("modules/slope_selector.R")
 
