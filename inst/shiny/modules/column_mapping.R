@@ -40,6 +40,31 @@
 #' }
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 
+# Define a reusable widget function
+column_mapping_widget <- function(ns, id, tooltip_text) {
+  div(
+    style = "display: flex; align-items: center; margin-bottom: -25px; margin-top: -15px;",
+    tooltip(
+      selectizeInput(
+        ns(paste0("select_", id)),
+        "",
+        choices = NULL,
+        options = list(placeholder = "Select Column"),
+        width = "25%"
+      ),
+      tooltip_text
+    ),
+    div(
+      style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
+      span(paste0(id, ":"), style = "color: black; font-size: normal;")
+    ),
+    div(
+      style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
+      span(textOutput(ns(paste0("label_", id))), style = "color: grey;")
+    )
+  )
+}
+
 column_mapping_ui <- function(id) {
   ns <- NS(id)
 
@@ -55,7 +80,7 @@ column_mapping_ui <- function(id) {
         type = "text/css",
         "
         h4 {
-            margin-bottom: -40px; /* Reduce space below h4 headings */
+          margin-bottom: -20px; /* Reduce space below h4 headings */
         }
         .fluidRow {
             margin-top: -5px; /* Reduce space above rows */
@@ -66,55 +91,13 @@ column_mapping_ui <- function(id) {
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_STUDYID"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Select Corresponding Column, in character format."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("STUDYID:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_STUDYID")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format.")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_USUBJID"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Character or Numeric format"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("USUBJID:", style = "color: black; font-size: normal;"),
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_USUBJID")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "USUBJID", "Character or Numeric format")
         )
       ),
       fluidRow(
@@ -131,13 +114,12 @@ column_mapping_ui <- function(id) {
                 options = list(placeholder = "Select Column(s)"),
                 width = "25%"
               ),
-              "Select the additional column(s) that will be used to group the data\n
-              for tables, listings and graphs. E.g. Treatment Arm, Age, Sex, Race"
+              "Select the additional column(s) that will be used to group the data\nfor tables, listings, and graphs. E.g. Treatment Arm, Age, Sex, Race"
             ),
             div(
               style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
               span("Additional Grouping Variables", style = "color: black; font-size: normal;")
-            ),
+            )
           )
         )
       ),
@@ -145,387 +127,93 @@ column_mapping_ui <- function(id) {
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_ANALYTE"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Analyte"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("ANALYTE:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_ANALYTE")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "ANALYTE", "Analyte")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_PCSPEC"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Matrix"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("PCSPEC:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_PCSPEC")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "PCSPEC", "Matrix")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -15px;",
-            tooltip(
-              selectizeInput(
-                ns("select_AVAL"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Analysis value in numeric format."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("AVAL:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_AVAL")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "AVAL", "Analysis value in numeric format.")
         )
       ),
       h4("Dose Variables"),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_DOSNO"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Numeric format."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("DOSNO:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_DOSNO")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "DOSNO", "Numeric format.")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_ROUTE"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Route of administration, stating either 'intravascular' or 'extravascular'."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("ROUTE:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_ROUTE")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "ROUTE", "Route of administration, stating either 'intravascular' or 'extravascular'.")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_DOSEA"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Actual Dose amount in numeric format."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("DOSEA:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_DOSEA")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "DOSEA", "Actual Dose amount in numeric format.")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -15px;",
-            tooltip(
-              selectizeInput(
-                ns("select_ADOSEDUR"),
-                "",
-                choices = c("Select Column" = "", "NA"),
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Duration of dose administration. 
-              Only required for infusion studies,\notherwise select NA"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("ADOSEDUR:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_ADOSEDUR")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "ADOSEDUR", "Duration of dose administration.\nOnly required for infusion studies, otherwise select NA")
         )
       ),
       h4("Time Variables"),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_AFRLT"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Numeric format"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("AFRLT:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_AFRLT")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "AFRLT", "Numeric format")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_ARRLT"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Numeric format"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("ARRLT:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_ARRLT")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "ARRLT", "Numeric format")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_NFRLT"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Numeric format"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("NFRLT:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_NFRLT")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "NFRLT", "Numeric format")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -15px;",
-            tooltip(
-              selectizeInput(
-                ns("select_NRRLT"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Numeric format"
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("NRRLT:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_NRRLT")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "NRRLT", "Numeric format")
         )
       ),
       h4("Unit Variables"),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_AVALU"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Unit of analysis value."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("AVALU:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_AVALU")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "AVALU", "Unit of analysis value.")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -45px;",
-            tooltip(
-              selectizeInput(
-                ns("select_DOSEU"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Unit of dose amount."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("DOSEU:", style = "color: black; font-size: normal;")
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_DOSEU")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "DOSEU", "Unit of dose amount.")
         )
       ),
       fluidRow(
         column(
           8,
-          div(
-            style = "display: flex; align-items: center; margin-bottom: -15px;",
-            tooltip(
-              selectizeInput(
-                ns("select_RRLTU"),
-                "",
-                choices = NULL,
-                options = list(placeholder = "Select Column"),
-                width = "25%"
-              ),
-              "Unit of time."
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span("RRLTU:", style = "color: black; font-size: normal;"),
-            ),
-            div(
-              style = "margin-left: 10px; margin-top: 20px; margin-bottom: 0px;",
-              span(textOutput(ns("label_RRLTU")),
-                   style = "color: grey;")
-            )
-          )
+          column_mapping_widget(ns, "RRLTU", "Unit of time.")
         )
       )
     ),
 
+    br(),
     input_task_button(ns("submit_columns"), "Submit Mapping")
   )
 }
@@ -557,15 +245,9 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
                        "ADOSEDUR")
 
     # Loop through each label and create the renderText outputs
-    for (label in desired_order) {
-      local({
-        current_label <- label
-        output_name <- paste0("label_", current_label)
-        output[[output_name]] <- renderText({
-          get_label(current_label)
-        })
-      })
-    }
+    purrr::walk(desired_order, \(label) {
+      output[[paste0("label_", label)]] <- renderText(get_label(label))
+    })
 
     # Populate the static inputs with column names
     observeEvent(data(), {
