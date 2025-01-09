@@ -80,6 +80,10 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
     params_to_calculate <- reactive({
       names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
     })
+    
+    params_to_calculate_array_str <- reactive({
+      paste0("['", paste(params_to_calculate(), collapse = "','"), "']")
+    })
 
     # Render the modal units table to the user
     output$modal_units_table <- DT::renderDT({
@@ -101,16 +105,15 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           searching = TRUE,
           autoWidth = TRUE,
           dom = "ft",
-          rowCallback = JS(
-            paste0(
-              "function(row, data, index) {",
-              "  var paramsToCalculate = ",
-              paste0("['", paste(params_to_calculate(), collapse = "','"), "']"),
-              ";",
-              "  if (paramsToCalculate.indexOf(data[1]) === -1) {",
-              "    $(row).hide();",
-              "  }",
-              "}"
+          rowCallback = htmlwidgets::JS(
+            paste0("
+              function(row, data, index) {
+              var paramsToCalculate = ", params_to_calculate_array_str(),
+              ";
+              if (paramsToCalculate.indexOf(data[1]) === -1) {
+              $(row).hide();
+              }
+              }"
             )
           ),
           columnDefs = list(
