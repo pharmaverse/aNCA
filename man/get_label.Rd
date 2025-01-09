@@ -23,7 +23,7 @@ This function retrieves the label of a heading from a labels file.
  # Example usage:
  LABELS <- data.frame(
  Variable = c("USUBJID", "AVAL"),
- Label = c("Unique Subject Identifier", "Analysis Value")
+ Label = c("Unique Subject Identifier", "Analysis Value"),
  Dataset = c("ADPC", "ADPC")
  )
  get_label("USUBJID", "ADPC")  # Returns "Unique Subject Identifier"

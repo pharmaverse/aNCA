@@ -9,7 +9,8 @@
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
-#' column_mapping_widget(ns = NS("example"), id = "STUDYID", tooltip_text = "Select the study identifier column.")
+#' column_mapping_widget(ns = NS("example"), id = "STUDYID",
+#' tooltip_text = "Select the study identifier column.")
 #'
 #' @export
 column_mapping_widget <- function(ns, id, tooltip_text) {
@@ -154,7 +155,10 @@ column_mapping_ui <- function(id) {
       fluidRow(
         column(
           12,
-          column_mapping_widget(ns, "ROUTE", "Route of administration, stating either 'intravascular' or 'extravascular'.")
+          column_mapping_widget(
+            ns, "ROUTE",
+            "Route of administration, stating either 'intravascular' or 'extravascular'."
+          )
         )
       ),
       fluidRow(
@@ -166,7 +170,11 @@ column_mapping_ui <- function(id) {
       fluidRow(
         column(
           12,
-          column_mapping_widget(ns, "ADOSEDUR", "Duration of dose administration.\nOnly required for infusion studies, otherwise select NA")
+          column_mapping_widget(
+            ns, "ADOSEDUR",
+            "Duration of dose administration.\nOnly required for infusion studies,
+            otherwise select NA"
+          )
         )
       ),
       h5("Time Variables"),

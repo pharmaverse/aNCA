@@ -73,7 +73,6 @@ PARCAT1,Parameter Category 1,ADPC
 AVAL,Analysis Value,ADPC
 AVALCAT1,Analysis Value Category 1,ADPC
 AVALU,Analysis Value Unit,ADPC
-AVALU,Analysis Value Unit,ADPC
 BASE,Baseline Value,ADPC
 BASETYPE,Baseline Type,ADPC
 ABLFL,Baseline Record Flag,ADPC
@@ -323,6 +322,7 @@ PARAMCD,Parameter Code,ADPP
 PARCAT1,Parameter Category 1,ADPP
 PARCAT1,Parameter Category 1,ADPP
 AVAL,Analysis Value,ADPP
+AVALU,Analysis Value Unit,ADPP
 AVALC,Analysis Value (C),ADPP
 ADTM,Analysis Datetime,ADPP
 ADT,Analysis Date,ADPP

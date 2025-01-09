@@ -27,7 +27,7 @@ apply_labels <- function(data, labels_df, type) {
   # Create the label_ADNCA named vector from labels_app
   labels_df %>%
     filter(Dataset == type)
-    
+
   label_adnca <- setNames(labels_df$Label, labels_df$Variable)
 
   for (col in colnames(data)) {
