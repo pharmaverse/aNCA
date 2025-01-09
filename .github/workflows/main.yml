@@ -32,6 +32,7 @@ jobs:
         id: get_r_version
         run: echo "R_VERSION=$R_VERSION" >> $GITHUB_OUTPUT
         shell: bash
+
   spellcheck:
     name: Spelling
     uses: ./.github/workflows/spellcheck.yml
@@ -39,6 +40,7 @@ jobs:
     needs: get_r_version
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
+
   linter:
     name: Lint
     uses: ./.github/workflows/lintr.yml
@@ -46,6 +48,7 @@ jobs:
     if: github.event_name == 'pull_request'
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
+
   man-pages:
     name: Man Pages
     uses: ./.github/workflows/man-pages.yml
@@ -56,28 +59,12 @@ jobs:
     
   tests:
     name: Tests
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/test.yml
     needs: get_r_version
-    container:
-      image: "ghcr.io/pharmaverse/admiralci-${{ needs.get_r_version.outputs.r-version }}:latest"
-    steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+    if: github.event_name == 'pull_request'
+    with:
+      r-version: "${{ needs.get_r_version.outputs.r-version }}"
 
-        - name: Install system dependencies
-          run: |
-            apt-get install -y --no-install-recommends \
-                libudunits2-dev
-
-        - name: Install dependencies
-          run: |
-            Rscript -e 'remotes::install_deps(dependencies = TRUE)'
-
-        - name: Run tests
-          shell: Rscript {0}
-          run: |
-            devtools::load_all(".")
-            devtools::test()
   check:
     name: Check
     uses: ./.github/workflows/r-cmd-check.yml
