@@ -4,7 +4,7 @@
 \alias{apply_labels}
 \title{Apply Labels to a dataset}
 \usage{
-apply_labels(data, labels_df)
+apply_labels(data, labels_df, type)
 }
 \arguments{
 \item{data}{The dataset to which labels will be applied.}

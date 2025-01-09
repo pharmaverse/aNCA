@@ -6,9 +6,10 @@ describe("apply_labels", {
     )
     labels <- data.frame(
       Variable = c("USUBJID", "AVAL"),
-      Label = c("Unique Subject Identifier", "Analysis Value")
+      Label = c("Unique Subject Identifier", "Analysis Value"),
+      Dataset = c("ADPC", "ADPC")
     )
-    data <- apply_labels(data, labels)
+    data <- apply_labels(data, labels, "ADPC")
     expect_equal(attr(data$USUBJID, "label"), "Unique Subject Identifier")
     expect_equal(attr(data$AVAL, "label"), "Analysis Value")
 
@@ -20,9 +21,10 @@ describe("apply_labels", {
     )
     labels <- data.frame(
       Variable = c("USUBJID", "AVAL"),
-      Label = c("Unique Subject Identifier", "Analysis Value")
+      Label = c("Unique Subject Identifier", "Analysis Value"),
+      Dataset = c("ADPC", "ADPC")
     )
-    data <- apply_labels(data, labels)
+    data <- apply_labels(data, labels, "ADPC")
     expect_equal(attr(data$COL1, "label"), "COL1")
     expect_equal(attr(data$COL2, "label"), "COL2")
   })

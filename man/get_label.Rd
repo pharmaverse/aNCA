@@ -4,10 +4,12 @@
 \alias{get_label}
 \title{Get the Label of a Heading}
 \usage{
-get_label(variable)
+get_label(variable, type)
 }
 \arguments{
 \item{variable}{The variable for which the label is to be retrieved.}
+
+\item{type}{The type of the dataset for which the label is to be retrieved.}
 }
 \value{
 The label of the heading if it exists in the labels file,
@@ -22,9 +24,10 @@ This function retrieves the label of a heading from a labels file.
  LABELS <- data.frame(
  Variable = c("USUBJID", "AVAL"),
  Label = c("Unique Subject Identifier", "Analysis Value")
+ Dataset = c("ADPC", "ADPC")
  )
- get_label("USUBJID")  # Returns "Unique Subject Identifier"
- get_label("AGE")  # Returns "No label available"
+ get_label("USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
+ get_label("AGE", "ADPC")  # Returns "No label available"
  }
 
 }

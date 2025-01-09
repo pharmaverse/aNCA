@@ -22,9 +22,12 @@
 #' }
 #'
 #' @export
-apply_labels <- function(data, labels_df) {
+apply_labels <- function(data, labels_df, type) {
 
   # Create the label_ADNCA named vector from labels_app
+  labels_df %>%
+    filter(Dataset == type)
+    
   label_adnca <- setNames(labels_df$Label, labels_df$Variable)
 
   for (col in colnames(data)) {
@@ -121,6 +124,7 @@ set_empty_label <- function(x) {
 #' This function retrieves the label of a heading from a labels file.
 #'
 #' @param variable The variable for which the label is to be retrieved.
+#' @param type The type of the dataset for which the label is to be retrieved.
 #'
 #' @return The label of the heading if it exists in the labels file,
 #' otherwise "No label available".
@@ -130,15 +134,16 @@ set_empty_label <- function(x) {
 #'  # Example usage:
 #'  LABELS <- data.frame(
 #'  Variable = c("USUBJID", "AVAL"),
-#'  Label = c("Unique Subject Identifier", "Analysis Value")
+#'  Label = c("Unique Subject Identifier", "Analysis Value"),
+#'  Dataset = c("ADPC", "ADPC")
 #'  )
-#'  get_label("USUBJID")  # Returns "Unique Subject Identifier"
-#'  get_label("AGE")  # Returns "No label available"
+#'  get_label("USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
+#'  get_label("AGE", "ADPC")  # Returns "No label available"
 #'  }
 #'
 #' @export
-get_label <- function(variable) {
-  label <- unique(LABELS$Label[LABELS$Variable == variable])
+get_label <- function(variable, type) {
+  label <- LABELS$Label[LABELS$Variable == variable & LABELS$Dataset == type]
   if (length(label) == 0) {
     return("No label available")
   }

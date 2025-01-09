@@ -1,3 +1,41 @@
+#' Column Mapping Widget
+#'
+#' A reusable UI component for mapping dataset columns to specific identifiers or roles.
+#'
+#' @param ns A namespace function to generate IDs for Shiny inputs.
+#' @param id A string representing the unique identifier for the widget.
+#' @param tooltip_text A string containing the tooltip text to guide users.
+#'
+#' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
+#'
+#' @examples
+#' column_mapping_widget(ns = NS("example"), id = "STUDYID", tooltip_text = "Select the study identifier column.")
+#'
+#' @export
+column_mapping_widget <- function(ns, id, tooltip_text) {
+  div(
+    class = "column-mapping-row",
+    tooltip(
+      selectizeInput(
+        ns(paste0("select_", id)),
+        "",
+        choices = NULL,
+        options = list(placeholder = "Select Column"),
+        width = "40%"
+      ),
+      tooltip_text
+    ),
+    div(
+      class = "column-mapping-output",
+      span(paste0(id, ":"), style = "color: black; font-size: normal;")
+    ),
+    div(
+      class = "column-mapping-label",
+      span(textOutput(ns(paste0("label_", id))), style = "color: grey;")
+    )
+  )
+}
+
 #' Column Mapping Module
 #' #' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
@@ -39,32 +77,6 @@
 #' \item Reordering columns according to a desired order.
 #' }
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
-
-# Define a reusable widget function
-column_mapping_widget <- function(ns, id, tooltip_text) {
-  div(
-    class = "column-mapping-row",
-    tooltip(
-      selectizeInput(
-        ns(paste0("select_", id)),
-        "",
-        choices = NULL,
-        options = list(placeholder = "Select Column"),
-        width = "25%"
-      ),
-      tooltip_text
-    ),
-    div(
-      class = "column-mapping-output",
-      span(paste0(id, ":"), style = "color: black; font-size: normal;")
-    ),
-    div(
-      class = "column-mapping-label",
-      span(textOutput(ns(paste0("label_", id))), style = "color: grey;")
-    )
-  )
-}
-
 column_mapping_ui <- function(id) {
   ns <- NS(id)
 
@@ -76,33 +88,22 @@ column_mapping_ui <- function(id) {
     ),
     # Adjusted layout using CSS flexbox
     tagList(
-      tags$style(
-        type = "text/css",
-        "
-        h4 {
-          margin-bottom: -20px; /* Reduce space below h4 headings */
-        }
-        .fluidRow {
-            margin-top: -5px; /* Reduce space above rows */
-        }
-        .shiny-input-container {margin-bottom: 0px; }"
-      ),
-      h4("Group Identifiers"),
+      h5("Group Identifiers"),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format.")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "USUBJID", "Character or Numeric format")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           div(
             class = "column-mapping-row",
             tooltip(
@@ -112,9 +113,10 @@ column_mapping_ui <- function(id) {
                 choices = NULL,
                 multiple = TRUE,
                 options = list(placeholder = "Select Column(s)"),
-                width = "25%"
+                width = "40%"
               ),
-              "Select the additional column(s) that will be used to group the data\nfor tables, listings, and graphs. E.g. Treatment Arm, Age, Sex, Race"
+              "Select the additional column(s) that will be used to group the data 
+              for tables, listings, and graphs. E.g. Treatment Arm, Age, Sex, Race"
             ),
             div(
               class = "column-mapping-output",
@@ -123,91 +125,91 @@ column_mapping_ui <- function(id) {
           )
         )
       ),
-      h4("Sample Variables"),
+      h5("Sample Variables"),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "ANALYTE", "Analyte")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "PCSPEC", "Matrix")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "AVAL", "Analysis value in numeric format.")
         )
       ),
-      h4("Dose Variables"),
+      h5("Dose Variables"),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "DOSNO", "Numeric format.")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "ROUTE", "Route of administration, stating either 'intravascular' or 'extravascular'.")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "DOSEA", "Actual Dose amount in numeric format.")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "ADOSEDUR", "Duration of dose administration.\nOnly required for infusion studies, otherwise select NA")
         )
       ),
-      h4("Time Variables"),
+      h5("Time Variables"),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "AFRLT", "Numeric format")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "ARRLT", "Numeric format")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "NFRLT", "Numeric format")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "NRRLT", "Numeric format")
         )
       ),
-      h4("Unit Variables"),
+      h5("Unit Variables"),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "AVALU", "Unit of analysis value.")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "DOSEU", "Unit of dose amount.")
         )
       ),
       fluidRow(
         column(
-          8,
+          12,
           column_mapping_widget(ns, "RRLTU", "Unit of time.")
         )
       )
@@ -246,7 +248,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
     # Loop through each label and create the renderText outputs
     purrr::walk(desired_order, \(label) {
-      output[[paste0("label_", label)]] <- renderText(get_label(label))
+      output[[paste0("label_", label)]] <- renderText(get_label(label, "ADPC"))
     })
 
     # Populate the static inputs with column names
@@ -327,7 +329,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
 
       # Apply labels to the dataset
-      dataset <- apply_labels(dataset, LABELS)
+      dataset <- apply_labels(dataset, LABELS, "ADPC")
 
       # Update the processed data
       processed_data(dataset)
