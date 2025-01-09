@@ -4,7 +4,7 @@
 \alias{get_label}
 \title{Get the Label of a Heading}
 \usage{
-get_label(variable, type)
+get_label(labels_df, variable, type)
 }
 \arguments{
 \item{variable}{The variable for which the label is to be retrieved.}
@@ -26,8 +26,8 @@ This function retrieves the label of a heading from a labels file.
  Label = c("Unique Subject Identifier", "Analysis Value"),
  Dataset = c("ADPC", "ADPC")
  )
- get_label("USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
- get_label("AGE", "ADPC")  # Returns "No label available"
+ get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
+ get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
  }
 
 }

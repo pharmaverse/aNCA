@@ -256,7 +256,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
     # Loop through each label and create the renderText outputs
     purrr::walk(desired_order, \(label) {
-      output[[paste0("label_", label)]] <- renderText(get_label(label, "ADPC"))
+      output[[paste0("label_", label)]] <- renderText(get_label(LABELS, label, "ADPC"))
     })
 
     # Populate the static inputs with column names

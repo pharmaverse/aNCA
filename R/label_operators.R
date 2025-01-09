@@ -137,13 +137,13 @@ set_empty_label <- function(x) {
 #'  Label = c("Unique Subject Identifier", "Analysis Value"),
 #'  Dataset = c("ADPC", "ADPC")
 #'  )
-#'  get_label("USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
-#'  get_label("AGE", "ADPC")  # Returns "No label available"
+#'  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
+#'  get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
 #'  }
 #'
 #' @export
-get_label <- function(variable, type) {
-  label <- LABELS$Label[LABELS$Variable == variable & LABELS$Dataset == type]
+get_label <- function(labels_df, variable, type) {
+  label <- labels_df$Label[labels_df$Variable == variable & labels_df$Dataset == type]
   if (length(label) == 0) {
     return("No label available")
   }
