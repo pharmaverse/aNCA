@@ -1,4 +1,6 @@
-name: Spelling
+# Custom workflow created based on jobs available in `admiralci` package.
+
+name: Tests
 
 on:
   workflow_dispatch:
