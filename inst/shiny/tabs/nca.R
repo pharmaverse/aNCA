@@ -302,9 +302,8 @@ observeEvent(input$submit_analyte, priority = -1, {
 })
 
 # If the user requests it allows to change the units of the parameters using a modal message table
-units_table_server("units_table_preNCA", mydata, reactive(NULL), params_to_calculate)
-res_nca2 <- units_table_server("units_table_postNCA", mydata, res_nca, params_to_calculate)
-observeEvent(res_nca2(), res_nca(res_nca2()))
+units_table_server("units_table_preNCA", mydata, res_nca, params_to_calculate)
+units_table_server("units_table_postNCA", mydata, res_nca, params_to_calculate)
 
 # Partial AUC Selection
 auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs

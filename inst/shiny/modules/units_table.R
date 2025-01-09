@@ -15,7 +15,7 @@ units_table_ui <- function(id) {
 units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_calculate) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     # Enable the units table button when data is available
     observeEvent(mydata(), {
       updateActionButton(session = session,
@@ -142,7 +142,6 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
     })
 
     # When save button is pressed substitute the original units table based on the modal one
-    new_res_nca <- reactiveVal(NULL)
     observeEvent(input$save_units_table, {
 
       # Make sure there are no missing entries (no NA in conversion factor)
@@ -192,14 +191,16 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
           ) %>%
           dplyr::mutate(PPSTRES = PPORRES * conversion_factor) %>%
           dplyr::select(-conversion_factor)
+        res_nca(res_nca)
 
-        new_res_nca(res_nca)
       }
+      
+      # Create a reactive list with the updated objects
+
       # Close the module window once all saving actions are done
       removeModal()
 
     })
 
-    return(reactive(new_res_nca()))
   })
 }
