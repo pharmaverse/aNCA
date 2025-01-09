@@ -103,7 +103,7 @@ column_mapping_ui <- function(id) {
             width = "40%"
           ),
           "Select the additional column(s) that will be used to group the data 
-          for tables, listings, and graphs. E.g. Treatment Arm, Age, Sex, Race"
+          in the outputs. E.g. Treatment Arm, Age, Sex, Race"
         ),
         div(
           class = "column-mapping-output",
