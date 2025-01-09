@@ -89,8 +89,8 @@ column_mapping_ui <- function(id) {
     tags$section(
       class = "column-mapping-section",
       h5("Group Identifiers"),
-      column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
-      column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
+      .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
+      .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
       div(
         class = "column-mapping-row",
         tooltip(
@@ -111,30 +111,30 @@ column_mapping_ui <- function(id) {
         )
       ),
       h5("Sample Variables"),
-      column_mapping_widget(ns, "ANALYTE", "Analyte"),
-      column_mapping_widget(ns, "PCSPEC", "Matrix"),
-      column_mapping_widget(ns, "AVAL", "Analysis value in numeric format."),
+      .column_mapping_widget(ns, "ANALYTE", "Analyte"),
+      .column_mapping_widget(ns, "PCSPEC", "Matrix"),
+      .column_mapping_widget(ns, "AVAL", "Analysis value in numeric format."),
       h5("Dose Variables"),
-      column_mapping_widget(ns, "DOSNO", "Numeric format."),
-      column_mapping_widget(
+      .column_mapping_widget(ns, "DOSNO", "Numeric format."),
+      .column_mapping_widget(
         ns, "ROUTE",
         "Route of administration, stating either 'intravascular' or 'extravascular'."
       ),
-      column_mapping_widget(ns, "DOSEA", "Actual Dose amount in numeric format."),
-      column_mapping_widget(
+      .column_mapping_widget(ns, "DOSEA", "Actual Dose amount in numeric format."),
+      .column_mapping_widget(
         ns, "ADOSEDUR",
         "Duration of dose administration.\nOnly required for infusion studies,
         otherwise select NA"
       ),
       h5("Time Variables"),
-      column_mapping_widget(ns, "AFRLT", "Numeric format"),
-      column_mapping_widget(ns, "ARRLT", "Numeric format"),
-      column_mapping_widget(ns, "NFRLT", "Numeric format"),
-      column_mapping_widget(ns, "NRRLT", "Numeric format"),
+      .column_mapping_widget(ns, "AFRLT", "Numeric format"),
+      .column_mapping_widget(ns, "ARRLT", "Numeric format"),
+      .column_mapping_widget(ns, "NFRLT", "Numeric format"),
+      .column_mapping_widget(ns, "NRRLT", "Numeric format"),
       h5("Unit Variables"),
-      column_mapping_widget(ns, "AVALU", "Unit of analysis value."),
-      column_mapping_widget(ns, "DOSEU", "Unit of dose amount."),
-      column_mapping_widget(ns, "RRLTU", "Unit of time.")
+      .column_mapping_widget(ns, "AVALU", "Unit of analysis value."),
+      .column_mapping_widget(ns, "DOSEU", "Unit of dose amount."),
+      .column_mapping_widget(ns, "RRLTU", "Unit of time.")
     ),
     input_task_button(ns("submit_columns"), "Submit Mapping")
   )
