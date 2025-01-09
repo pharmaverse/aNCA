@@ -39,14 +39,14 @@ tab_data_ui <- function(id) {
       )
     ),
     nav_panel("Review Data",
-      "This is the data set that will be used for the analysis.
-      If you want to make any changes, please do so in the Mapping and Filters tab.",
-      reactableOutput(ns("data_processed")),
+      id = ns("data_navset-review"),
+      uiOutput(ns("reviewDataContent")),
       tags$script(HTML("
-        $(document).ready(function(){
-          $('[data-toggle=\"tooltip\"]').tooltip(); 
-        });
-      "))
+      $(document).ready(function(){
+      $('[data-toggle=\"tooltip\"]').tooltip();
+      });
+                    ")
+      )
     )
   )
 
@@ -120,6 +120,20 @@ tab_data_server <- function(id) {
       manual_units = manual_units,
       on_submit = change_to_review_tab
     )
+
+    output$reviewDataContent <- renderUI({
+      if (!is.null(processed_data()) && nrow(processed_data()) > 0) {
+        tagList(
+          "This is the data set that will be used for the analysis.
+          If you would like to make any changes please return to the 'Mapping and Filters' tab.",
+          reactableOutput(ns("data_processed"))
+        )
+      } else {
+        div(
+          "Please map your data in the 'Mapping and Filters' section before reviewing it."
+        )
+      }
+    })
 
     # Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data

@@ -277,6 +277,11 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
     observeEvent(input$submit_columns, {
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
 
+      # Enable other tabs
+      purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
+        shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+      })
+
       req(data())
       dataset <- data()
 
@@ -348,6 +353,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
       # Execute the callback function to change the tab
       on_submit()
+
     })
 
     list(
