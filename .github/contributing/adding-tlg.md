@@ -14,10 +14,10 @@ Currently not implemented
 
 ## Graphs
 ### yaml
-The `Graph` entry should have the following format:
+The `Graph` entry should have the following format. Identifying keys (wrapped in `<>`) should be provided by the creator and be unique within their scope (indentation level).
  ```yaml
 # unique identifier for given entry
-id:
+<entry id>:
   # true / false whether TLG should be included as default
   is_default:
   # type of the TLG, in this case must be Graph
@@ -37,7 +37,7 @@ id:
   # options that can be passed as arguments to the function    
   options:
     # option id, the same as the argument that is passed to the rendering function, must be unique in the scope of the TLG entry
-    optid:
+    <option id>:
       # type of the option/widget, one of: text, numeric, select
       type:
       # label to be displayed in the editing widget
