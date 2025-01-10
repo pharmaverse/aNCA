@@ -232,40 +232,38 @@ tab_tlg_server <- function(id) {
       shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
     })
 
-    # When the user submits the TLG order...
+    #' change tab to first populated tab (currently only Graphs)
+    #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
+    #' so solved this using JavaScript
     observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
-      req(data())
-      log_trace("Submitting TLG order...")
+      shinyjs::runjs(
+        paste0("
+          // change the tab to graphs //
+          console.log('HEYAH');
+          $(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click();
 
+          // enable spinner, as it was disabled for initial empty UI render //
+          setTimeout(function() {
+            $('.tlg-plot-module .load-container').css('opacity', 1);
+          }, 500);  
+        ")
+      )
+    })
+
+    # Submit the TLG order, filter selected TLGs
+    tlg_order_filtered <- reactive({
+      req(data())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
-      if (sum(tlg_order_filt$Type == "Table") > 0) {
-        updateRadioButtons(
-          session = session,
-          inputId = "buttons_Tables",
-          label = "Table to display",
-          choices = tlg_order_filt$Label[tlg_order_filt$Type == "Table"]
-        )
-      } else {
-        updateRadioButtons(session = session, inputId = "buttons_Tables", label = "", choices = "")
-      }
+      tlg_order_filt
+    }) |>
+      bindEvent(c(input$submit_tlg_order, input$submit_tlg_order_alt))
 
-      if (sum(tlg_order_filt$Type == "Listing") > 0) {
-        updateRadioButtons(
-          session = session,
-          inputId = "buttons_Listings",
-          label = "Listing to display",
-          choices = tlg_order_filt$Label[tlg_order_filt$Type == "Listing"]
-        )
-      } else {
-        updateRadioButtons(session = session,
-                           inputId = "buttons_Listings",
-                           label = "",
-                           choices = "")
-      }
-
-      tlg_order_graphs <- filter(tlg_order_filt, Type == "Graph") %>%
+    # Create and render Graph interface and modules
+    output$graphs <- renderUI({
+      req(tlg_order_filtered())
+      tlg_order_graphs <- filter(tlg_order_filtered(), Type == "Graph") %>%
         select("id") %>%
         pull()
 
@@ -286,24 +284,8 @@ tab_tlg_server <- function(id) {
       })
 
       panels$"widths" <- c(2, 10)
-      output$graphs <- renderUI({
-        do.call(navset_pill_list, panels)
-      })
 
-      #' change tab to first populated tab (currently only Graphs)
-      #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
-      #' so solved this using JavaScript
-      shinyjs::runjs(
-        paste0("
-          // change the tab to graphs //
-          $(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click();
-
-          // enable spinner, as it was disabled for initial empty UI render //
-          setTimeout(function() {
-            $('.tlg-plot-module .load-container').css('opacity', 1);
-          }, 500);  
-        ")
-      )
+      do.call(navset_pill_list, panels)
     })
   })
 }
