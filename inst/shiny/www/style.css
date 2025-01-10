@@ -187,7 +187,7 @@
   }
 
   .plot-options-container {
-     & > button {
+    & > button {
       width: 75%;
       margin-left: 15%;
       margin-top: 1em;
