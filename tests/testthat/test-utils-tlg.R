@@ -25,3 +25,66 @@ describe("parse_annotation", {
     )
   })
 })
+
+describe("parse_tlg_definitions", {
+  it("parses TLG definitions correctly", {
+    defs <- list(
+      TLG1 = list(
+        options = list(
+          option1 = "value1"
+        )
+      ),
+      TLG2 = list(
+        option2 = "value2"
+      )
+    )
+
+    # If no special keys are provided, the function should return the same list
+    expect_equal(parse_tlg_definitions(defs = defs), defs)
+  })
+
+  it("deals with templates correctly", {
+    defs <- list(
+      TLG1 = list(
+        is_default = TRUE,
+        type = "Graph",
+        label = "TLG1",
+        options = list(
+          xvar = "X",
+          yvar = "Y"
+        )
+      ),
+      TLG2 = list(
+        template = "TLG1",
+        label = "TLG2",
+        options = list(
+          yvar = "Z"
+        )
+      )
+    )
+
+    expect_equal(
+      parse_tlg_definitions(defs = defs),
+      list(
+        TLG1 = list(
+          is_default = TRUE,
+          type = "Graph",
+          label = "TLG1",
+          options = list(
+            xvar = "X",
+            yvar = "Y"
+          )
+        ),
+        TLG2 = list(
+          is_default = TRUE,
+          type = "Graph",
+          label = "TLG2",
+          options = list(
+            xvar = "X",
+            yvar = "Z"
+          )
+        )
+      )
+    )
+  })
+})

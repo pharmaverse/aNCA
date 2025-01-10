@@ -1,29 +1,4 @@
-.TLG_DEFINITIONS <- {
-  defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
-
-  defs <- purrr::imap(defs, \(opt_def, opt_id) {
-    if ("template" %in% names(opt_def)) {
-      template_def <- defs[[opt_def$template]]
-
-      for (d in names(opt_def)) {
-        if (d == "template") next
-
-        if (d == "options") {
-          for (o in names(opt_def$options)) {
-            template_def$options[[o]] <- opt_def$options[[o]]
-          }
-        } else {
-          template_def[[d]] <- opt_def[[d]]
-        }
-      }
-
-      opt_def <- template_def
-    }
-
-    opt_def
-  }) |>
-    setNames(defs)
-}
+.TLG_DEFINITIONS <- parse_tlg_definitions()
 
 tab_tlg_ui <- function(id) {
   ns <- NS(id)
