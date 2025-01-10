@@ -98,7 +98,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
       if (is.null(input$plots_per_page)) return(NULL)
       if (is.null(plot_list())) return(NULL)
       if (input$plots_per_page == "All") {
-        isolate(length(plot_list()))
+        length(plot_list())
       } else {
         as.numeric(input$plots_per_page)
       }
