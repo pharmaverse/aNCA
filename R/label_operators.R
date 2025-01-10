@@ -3,8 +3,9 @@
 #' This function adds "label" attributes to all columns in a dataset
 #'
 #' @param data The dataset to which labels will be applied.
-#' @param labels_file A data frame with two columns: Variable and Label,
+#' @param labels_df A data frame with three columns: Variable, Label, and Dataset,
 #'  for the dataset you are applying it .
+#' @param type The type variable in labels_df for which the labels are to be applied.
 #'
 #' @return The same dataset with label attributes applied to all columns.
 #' If a column is not present in the labels list, it will be assigned the name of the col.
@@ -22,10 +23,13 @@
 #' }
 #'
 #' @export
-apply_labels <- function(data, labels_file) {
+apply_labels <- function(data, labels_df, type) {
 
   # Create the label_ADNCA named vector from labels_app
-  label_adnca <- setNames(labels_file$Label, labels_file$Variable)
+  labels_df %>%
+    filter(Dataset == type)
+
+  label_adnca <- setNames(labels_df$Label, labels_df$Variable)
 
   for (col in colnames(data)) {
     if (col %in% names(label_adnca)) {
@@ -114,4 +118,36 @@ set_empty_label <- function(x) {
     attr(x, "label") <- ""
   }
   return(x)
+}
+
+#' Get the Label of a Heading
+#'
+#' This function retrieves the label of a heading from a labels file.
+#'
+#' @param variable The variable for which the label is to be retrieved.
+#' @param type The type of the dataset for which the label is to be retrieved.
+#' @param labels_df A data frame with three columns: Variable, Label, and Dataset.
+#'
+#' @return The label of the heading if it exists in the labels file,
+#' otherwise "No label available".
+#'
+#' @examples
+#' \dontrun{
+#'  # Example usage:
+#'  LABELS <- data.frame(
+#'  Variable = c("USUBJID", "AVAL"),
+#'  Label = c("Unique Subject Identifier", "Analysis Value"),
+#'  Dataset = c("ADPC", "ADPC")
+#'  )
+#'  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
+#'  get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
+#'  }
+#'
+#' @export
+get_label <- function(labels_df, variable, type) {
+  label <- labels_df$Label[labels_df$Variable == variable & labels_df$Dataset == type]
+  if (length(label) == 0) {
+    return("No label available")
+  }
+  label
 }

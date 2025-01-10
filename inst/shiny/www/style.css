@@ -19,6 +19,48 @@
   width: 100%;
 }
 
+/* column mapping UI */
+
+.column-mapping-row {
+  display: flex;
+  align-items: center;
+  margin-top: -1rem;
+}
+
+.column-mapping-output {
+  margin: 1.25rem 0 0 0.625rem;
+  color: black;
+}
+
+.column-mapping-label {
+  margin: 1.25rem 0 0 0.625rem;
+  color: grey;
+}
+
+.column-mapping-section h5 {
+  font-weight: bold;
+}
+
+/* Style adjustments for headings */
+h5 {
+  margin-bottom: -1.5rem;
+}
+
+.fluidRow {
+  margin-top: -0.25rem;
+}
+
+.shiny-input-container {
+  margin-bottom: 0;
+}
+
+/* card layout in filters section */
+.card-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ensures the card stretches to match its sibling cards */
+}
+
 /* filters on data page */
 #data-filters {
   padding: 1em;
@@ -56,6 +98,17 @@
 .btn-help-icon {
   font-size: 20px; /* Increase font size */
   padding: 10px 20px; /* Increase padding */
+}
+
+.filters-submit-button {
+  margin-top: auto; /* Pushes the button to the bottom */
+  width: 100%; /* Ensures the div spans the full width of the card */
+  display: block; /* Ensures proper layout inside the card */
+}
+
+.filters-submit-button .btn {
+  width: 100%; /* Forces the button to fill the div's width */
+  box-sizing: border-box; /* Ensures padding doesn’t overflow */
 }
 
 /* modals */

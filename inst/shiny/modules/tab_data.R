@@ -27,15 +27,25 @@ tab_data_ui <- function(id) {
       reactableOutput(ns("filecontents"))
     ),
     nav_panel("Mapping and Filters",
-      card(
-        column_mapping_ui(ns("column_mapping"))
-      ),
-
-      card(
-        # Add filter UI elements
-        actionButton(ns("add_filter"), "Add filter"),
-        tags$div(id = ns("filters")),
-        actionButton(ns("submit_filters"), "Submit filters"),
+      layout_columns(
+        card(
+          column_mapping_ui(ns("column_mapping"))
+        ),
+        card(
+          div(
+            class = "card-container",
+            h3("Filters"),
+            p("Click the 'Add Filters' button to add filters to your data.
+            Be sure to click 'Submit' in order to apply the changes.\n
+          Any filters added here will be applied across the whole analysis."),
+            actionButton(ns("add_filter"), "Add Filter"),
+            tags$div(id = ns("filters")),
+            div(
+              class = "filters-submit-button",
+              input_task_button(ns("submit_filters"), "Submit Filters")
+            )
+          )
+        )
       )
     ),
     nav_panel("Review Data",
