@@ -42,6 +42,7 @@ Imports:
     nestcolor,
     PKNCA,
     plotly,
+    purrr,
     reactable,
     reactable.extras,
     rio,
@@ -55,11 +56,13 @@ Imports:
     shinyjs,
     shinyWidgets,
     stats,
+    stringi,
     stringr,
     tern,
     tidyr,
     tools,
     utils,
+    yaml,
     zip
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

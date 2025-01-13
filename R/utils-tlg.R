@@ -40,7 +40,7 @@ parse_annotation <- function(data, text) {
 #'
 #' @returns A full list of available TLG definitions.
 #'
-#' @importFrom purr imap
+#' @importFrom purrr imap
 #' @importFrom yaml read_yaml
 #'
 #' @export
