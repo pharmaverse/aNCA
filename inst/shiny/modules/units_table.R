@@ -14,7 +14,7 @@ units_table_ui <- function(id) {
 units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_calculate) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     #' Allow user to open the units table when data is available
     observeEvent(mydata(), {
       updateActionButton(session = session,
@@ -24,10 +24,10 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
 
     # Define the modal message displayed with the parameter units table #
     observeEvent(input$open_units_table, {
-      
+
       # Keep in a variable all analytes available
       analyte_choices <- unique(mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]])
-      
+
       # Show the modal message with the units table and an analyte selector
       showModal(modalDialog(
         title = tagList(
@@ -79,7 +79,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
     params_to_calculate <- reactive({
       names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
     })
-    
+
     params_to_calculate_array_str <- reactive({
       paste0("['", paste(params_to_calculate(), collapse = "','"), "']")
     })
@@ -135,7 +135,8 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
       if (names(modal_units_table)[info$col + 1] == "Custom unit") {
         def_unit <- modal_units_table[info$row, "Default unit"]
         cust_unit <- modal_units_table[info$row, "Custom unit"]
-        modal_units_table[info$row, "Conversion Factor"] <- get_conversion_factor(def_unit, cust_unit)
+        modal_units_table[info$row, "Conversion Factor"] <- get_conversion_factor(def_unit,
+                                                                                  cust_unit)
       }
 
       modal_units_table(modal_units_table)

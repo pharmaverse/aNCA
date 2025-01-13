@@ -436,6 +436,7 @@ observeEvent(rv$trigger, {
 })
 
 # Parameter unit changes option: Opens a modal message with a units table to edit
+# It updates $units table of mydata & res_nca when the user saves their changes
 units_table_server("units_table_preNCA", mydata, res_nca, params_to_calculate)
 units_table_server("units_table_postNCA", mydata, res_nca, params_to_calculate)
 
