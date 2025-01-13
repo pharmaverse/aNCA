@@ -29,7 +29,7 @@ create_start_impute <- function(mydata) {
   # Define dose number (DOSNO) if not present in dose data
   if (!"DOSNO" %in% mydata$dose$data) {
     mydata$dose$data <- mydata$dose$data %>%
-      group_by(across(all_of(c(unname(unlist(mydata$dose$columns$groups)))))) %>%
+      group_by(across(all_of(dose_group_columns))) %>%
       mutate(DOSNO = row_number()) %>%
       ungroup()
   }
@@ -44,7 +44,7 @@ create_start_impute <- function(mydata) {
     merge(mydata$intervals)
 
   # Define dosing drug as analyte if not present
-  if (!"DRUG" %in% colnames(mydata_with_int)) {
+  if (!drug_column %in% colnames(mydata_with_int)) {
     if (length(analyte_column) == 1) {
       mydata_with_int <- mydata_with_int %>%
         mutate(DRUG = !!sym(analyte_column))
