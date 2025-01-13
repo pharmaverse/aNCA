@@ -1,96 +1,58 @@
+.TLG_DEFINITIONS <- parse_tlg_definitions()
+
 tab_tlg_ui <- function(id) {
   ns <- NS(id)
 
-  tabsetPanel(
-    tabPanel(
+  navset_pill(
+    id = ns("tlg_tabs"),
+    nav_panel(
       "Order details",
-      actionButton(ns("add_tlg"), "Add TLG"),
-      actionButton(ns("remove_tlg"), "Remove TLG"),
-      actionButton(ns("submit_tlg_order"), "Submit Order Details"),
-      DTOutput(ns("selected_tlg_table")),
-      actionButton(ns("submit_tlg_order_alt"), "Submit Order Details")
-    ),
-    tabPanel(
-      "Tables",
-      fluidRow(
-        column(
-          2,  # Left column for plot selection
-          radioButtons(
-            inputId = ns("buttons_Tables"),
-            label = "Choose Table\n",
-            choices = ""
-          )
-        ),
-        column(
-          6,  # Middle column for plot output
-          h4("Table to display"),
-          plotOutput(ns("plot_Tables"))
-        ),
-        column(
-          2,  # Right column for plot customization inputs
-          h4("Inputs with selected vals linked to downloadable obj (i.e, tlg_order())"),
-          textInput(ns("footnote_Tables"), label = "Footnote")
+      card(
+        style = "margin-top: 1em;",
+        div(
+          actionButton(ns("add_tlg"), "Add TLG"),
+          actionButton(ns("remove_tlg"), "Remove TLG"),
+          actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
+        )
+      ),
+      card(
+        DTOutput(ns("selected_tlg_table"))
+      ),
+      card(
+        div(
+          actionButton(ns("submit_tlg_order_alt"), "Submit Order Details", class = "btn-primary")
         )
       )
     ),
-    tabPanel(
-      "Listings",
-      fluidRow(
-        column(
-          2,  # Left column for plot selection
-          radioButtons(
-            inputId = ns("buttons_Listings"),
-            label = "Choose List\n",
-            choices = ""
-          )
-        ),
-        column(
-          6,  # Middle column for plot output
-          h4("Listing to display"),
-          plotOutput(ns("plot_Listings"))
-        ),
-        column(
-          2,  # Right column for plot customization inputs
-          h4("Inputs with selected vals linked to downloadable obj (i.e, tlg_order())"),
-          textInput(ns("footnote_Listings"), label = "Footnote")
-        )
-      )
-    ),
-    tabPanel(
-      "Graphs",
-      fluidRow(
-        column(
-          2,  # Left column for plot selection
-          radioButtons(
-            inputId = ns("buttons_Graphs"),
-            label = "Choose Graph\n",
-            choices = ""
-          )
-        ),
-        column(
-          6,  # Middle column for plot output
-          h4("Graph to display"),
-          plotOutput(ns("plot_Graphs"))
-        ),
-        column(
-          2,  # Right column for plot customization inputs
-          h4("Inputs with selected vals linked to downloadable obj (i.e, tlg_order())"),
-          textInput(ns("footnote_Graphs"), label = "Footnote")
-        )
-      )
-    )
+    nav_panel("Tables", "To be added"),
+    nav_panel("Listings", "To be added"),
+    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"), value = "Graphs"),
+    # disable loader for initial empty UI render #
+    footer = tags$style(HTML(paste0(".tlg-plot-module .load-container {opacity: 0;}")))
   )
 }
 
-tab_tlg_server <- function(id, data) {
+tab_tlg_server <- function(id) {
   moduleServer(id, function(input, output, session) {
-    ns <- session$ns
+    log_trace("{session$ns(id)}: Attaching server.")
 
-    # Make available the CSV file with the TLG list and available links to NEST
-    tlg_order <- reactiveVal(
-      read.csv(system.file("www/data/TLG_order_details.csv", package = "aNCA")) %>%
-        mutate(PKid = paste0("<a href='", Catalog_Link, "' target='_blank'>", PKid, "</a>"))
-    )
+    data <- session$userData$data
+
+    #' Load TLG orders definitions
+    tlg_order <- reactiveVal({
+      purrr::map_dfr(.TLG_DEFINITIONS, ~ dplyr::tibble(
+        Selection = .x$is_default,
+        Type = .x$type,
+        Dataset = .x$dataset,
+        PKid = paste0("<a href='", .x$link, "' target='_blank'>", .x$pkid, "</a>"),
+        Description = .x$description,
+        Footnote = NA_character_,
+        Stratification = NA_character_,
+        Condition = NA_character_,
+        Comment = NA_character_
+      )) %>%
+        dplyr::mutate(id = dplyr::row_number(), .before = dplyr::everything())
+    })
 
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
     observeEvent(list(tlg_order(), data()), {
@@ -112,8 +74,8 @@ tab_tlg_server <- function(id, data) {
 
     # Render the TLG list for the user's inspection
     output$selected_tlg_table <- DT::renderDT({
+      log_trace("Rendering TLG table.")
       datatable(
-        elementId = "selected_tlg_datatable",
         class = "table table-striped table-bordered",
         data = dplyr::filter(tlg_order(), Selection),
         editable = list(
@@ -239,48 +201,66 @@ tab_tlg_server <- function(id, data) {
       }
     })
 
-    # When the user submits the TLG order...
-    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), {
+    # Toggle submit button depending on whether the data is available #
+    observeEvent(data(), ignoreInit = FALSE, ignoreNULL = FALSE, {
+      shinyjs::toggleState("submit_tlg_order", !is.null(data()))
+      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
+    })
+
+    #' change tab to first populated tab (currently only Graphs)
+    #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
+    #' so solved this using JavaScript
+    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+      shinyjs::runjs(
+        paste0("
+          // change the tab to graphs //
+          console.log('HEYAH');
+          $(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click();
+
+          // enable spinner, as it was disabled for initial empty UI render //
+          setTimeout(function() {
+            $('.tlg-plot-module .load-container').css('opacity', 1);
+          }, 500);  
+        ")
+      )
+    })
+
+    # Submit the TLG order, filter selected TLGs
+    tlg_order_filtered <- reactive({
+      req(data())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
+      log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
-      if (sum(tlg_order_filt$Type == "Table") > 0) {
-        updateRadioButtons(
-          session = session,
-          inputId = "buttons_Tables",
-          label = "Table to display",
-          choices = tlg_order_filt$Label[tlg_order_filt$Type == "Table"]
-        )
-      } else {
-        updateRadioButtons(session = session, inputId = "buttons_Tables", label = "", choices = "")
-      }
+      tlg_order_filt
+    }) |>
+      bindEvent(c(input$submit_tlg_order, input$submit_tlg_order_alt))
 
-      if (sum(tlg_order_filt$Type == "Listing") > 0) {
-        updateRadioButtons(
-          session = session,
-          inputId = "buttons_Listings",
-          label = "Listing to display",
-          choices = tlg_order_filt$Label[tlg_order_filt$Type == "Listing"]
-        )
-      } else {
-        updateRadioButtons(session = session,
-                           inputId = "buttons_Listings",
-                           label = "",
-                           choices = "")
-      }
+    # Create and render Graph interface and modules
+    output$graphs <- renderUI({
+      req(tlg_order_filtered())
+      tlg_order_graphs <- filter(tlg_order_filtered(), Type == "Graph") %>%
+        select("id") %>%
+        pull()
 
-      if (sum(tlg_order_filt$Type == "Graph") > 0) {
-        updateRadioButtons(
-          session = session,
-          inputId = "buttons_Graphs",
-          label = "Graph to display",
-          choices = tlg_order_filt$Label[tlg_order_filt$Type == "Graph"]
-        )
-      } else {
-        updateRadioButtons(session = session,
-                           inputId = "buttons_Graphs",
-                           label = "",
-                           choices = "")
-      }
+      panels <- lapply(tlg_order_graphs, function(g_id) {
+        plot_ui <- {
+          g_def <- .TLG_DEFINITIONS[[g_id]]
+          module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
+
+          if (exists(g_def$fun)) {
+            tlg_plot_server(module_id, get(g_def$fun), g_def$options)
+            tlg_plot_ui(session$ns(module_id))
+          } else {
+            tags$div("Plot not implemented yet")
+          }
+        }
+
+        nav_panel(g_def$label, plot_ui)
+      })
+
+      panels$"widths" <- c(2, 10)
+
+      do.call(navset_pill_list, panels)
     })
   })
 }

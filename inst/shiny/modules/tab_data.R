@@ -27,21 +27,36 @@ tab_data_ui <- function(id) {
       reactableOutput(ns("filecontents"))
     ),
     nav_panel("Mapping and Filters",
-      card(
-        column_mapping_ui(ns("column_mapping"))
-      ),
-
-      card(
-        # Add filter UI elements
-        actionButton(ns("add_filter"), "Add filter"),
-        tags$div(id = ns("filters")),
-        actionButton(ns("submit_filters"), "Submit filters"),
+      layout_columns(
+        card(
+          column_mapping_ui(ns("column_mapping"))
+        ),
+        card(
+          div(
+            class = "card-container",
+            h3("Filters"),
+            p("Click the 'Add Filters' button to add filters to your data.
+            Be sure to click 'Submit' in order to apply the changes.\n
+          Any filters added here will be applied across the whole analysis."),
+            actionButton(ns("add_filter"), "Add Filter"),
+            tags$div(id = ns("filters")),
+            div(
+              class = "filters-submit-button",
+              input_task_button(ns("submit_filters"), "Submit Filters")
+            )
+          )
+        )
       )
     ),
     nav_panel("Review Data",
-      "This is the data set that will be used for the analysis.
-      If you want to make any changes, please do so in the Mapping and Filters tab.",
-      reactableOutput(ns("data_processed"))
+      id = ns("data_navset-review"),
+      uiOutput(ns("reviewDataContent")),
+      tags$script(HTML("
+      $(document).ready(function(){
+      $('[data-toggle=\"tooltip\"]').tooltip();
+      });
+                    ")
+      )
     )
   )
 
@@ -116,6 +131,20 @@ tab_data_server <- function(id) {
       on_submit = change_to_review_tab
     )
 
+    output$reviewDataContent <- renderUI({
+      if (!is.null(processed_data()) && nrow(processed_data()) > 0) {
+        tagList(
+          "This is the data set that will be used for the analysis.
+          If you would like to make any changes please return to the 'Mapping and Filters' tab.",
+          reactableOutput(ns("data_processed"))
+        )
+      } else {
+        div(
+          "Please map your data in the 'Mapping and Filters' section before reviewing it."
+        )
+      }
+    })
+
     # Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data
 
@@ -154,8 +183,13 @@ tab_data_server <- function(id) {
     # Update the data table object with the filtered data
     output$data_processed <- renderReactable({
       req(data())
+
+      # Generate column definitions
+      col_defs <- generate_col_defs(data())
+
       reactable(
         data(),
+        columns = col_defs,
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
