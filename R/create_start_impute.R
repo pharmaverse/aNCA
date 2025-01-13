@@ -44,16 +44,14 @@ create_start_impute <- function(mydata) {
     merge(mydata$intervals)
 
   # Define dosing drug as analyte if not present
-  if (!drug_column %in% colnames(mydata_with_int) || is.null(drug_column)) {
-    if (length(analyte_column) == 1) {
-      mydata_with_int <- dplyr::mutate(mydata_with_int,
-                                       DRUG = !!sym(analyte_column))
-      drug_column <- "DRUG"
+  if (!drug_column %in% colnames(mydata_with_int)) {
+    if (analyte_column %in% colnames(mydata_with_int)) {
+      drug_column <- analyte_column
     } else {
-      mydata_with_int <- mydata_with_int %>%
-        mutate(DRUG = "A", ANALYTE = "A")
-      drug_column <- "DRUG"
+      mydata_with_int <- dplyr::mutate(mydata_with_int,
+                                       ANALYTE = "A")
       analyte_column <- "ANALYTE"
+      drug_column <- analyte_column
     }
   }
 
