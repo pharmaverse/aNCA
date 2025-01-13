@@ -59,9 +59,10 @@ create_start_impute <- function(mydata) {
   new_intervals <- mydata_with_int %>%
     group_by(across(all_of(c(group_columns, "DOSNO", "start", "end")))) %>%
     arrange(across(all_of(c(group_columns, time_column)))) %>%
-    dplyr::mutate(
-      vr_avals = paste0("c(", paste0(!!sym(conc_column), collapse = ","), ")"),
-      vr_times = paste0("c(", paste0(!!sym(time_column), collapse = ","), ")")
+    dplyr::mutate(is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
+                                                              time = !!sym(time_column),
+                                                              time.dose = start[1],
+                                                              method = "logslope"))
     ) %>%
     arrange((!!sym(time_column) - start) < 0,
             (!!sym(time_column) - start)) %>%
@@ -82,10 +83,7 @@ create_start_impute <- function(mydata) {
         tolower(!!sym(route_column)) == "intravascular" &
           !!sym(duration_column) == 0 &
           !!sym(analyte_column) == !!sym(drug_column) &
-          !is.na(PKNCA::pk.calc.c0(conc = eval(parse(text = vr_avals)),
-                                   time = eval(parse(text = vr_times)),
-                                   time.dose = start,
-                                   method = "logslope")) ~ "start_logslope",
+          is.possible.c0.logslope ~ "start_logslope",
         tolower(!!sym(route_column)) == "intravascular" &
           !!sym(duration_column) == 0 &
           !!sym(analyte_column) == !!sym(drug_column) ~ "start_c1"
