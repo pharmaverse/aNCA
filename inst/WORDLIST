@@ -18,8 +18,10 @@ Pre
 RO
 RStudio
 STUDYID
+TLG
 USUBJID
 USUBJIDs
+YAML
 analysing
 analyte
 analytes
@@ -31,8 +33,10 @@ csv
 customizable
 df
 ggplot
+ggplots
 nca
 pharmacokinetic
+pkcg
 pknca
 plotly
 pptest
@@ -42,6 +46,9 @@ ruleset
 rulesets
 sas
 summarization
+templating
 timepoint
+tlg
 visualizable
 xpt
+yaml
