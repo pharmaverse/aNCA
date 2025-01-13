@@ -21,7 +21,7 @@ create_start_impute <- function(mydata) {
   analyte_column <- mydata$conc$columns$groups$group_analyte
   route_column <- mydata$dose$columns$route
   duration_column <- mydata$dose$columns$duration
-  drug_column <- "DRUG"  # At some point should be added at least manually in PKNCA mydata object
+  drug_column <- "DRUG"  # TODO: At some point should be mapped manually in the App
   conc_group_columns <- unname(unlist(mydata$conc$columns$groups))
   dose_group_columns <- unname(unlist(mydata$dose$columns$groups))
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
@@ -44,10 +44,10 @@ create_start_impute <- function(mydata) {
     merge(mydata$intervals)
 
   # Define dosing drug as analyte if not present
-  if (!drug_column %in% colnames(mydata_with_int)) {
+  if (!drug_column %in% colnames(mydata_with_int) | is.null(drug_column)) {
     if (length(analyte_column) == 1) {
-      mydata_with_int <- mydata_with_int %>%
-        mutate(DRUG = !!sym(analyte_column))
+      mydata_with_int <- dplyr::mutate(mydata_with_int,
+                                       DRUG = !!sym(analyte_column))
       drug_column <- "DRUG"
     } else {
       mydata_with_int <- mydata_with_int %>%
