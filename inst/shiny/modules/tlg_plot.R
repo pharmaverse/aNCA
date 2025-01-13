@@ -132,8 +132,15 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
         if (isTRUE(value %in% c(NULL, "", 0)))
           plot_options[[name]] <<- NULL
       })
-
-      do.call(render_plot, plot_options)
+      tryCatch({
+        do.call(render_plot, plot_options)
+      },
+      error = function(e) {
+        log_error("Error in plot rendering:")
+        print(e)
+        "Error: plot rendering failed with current options.
+        Check the R console for more information."
+      })
     })
 
     output$plots <- renderUI({
