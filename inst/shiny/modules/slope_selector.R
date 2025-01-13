@@ -74,7 +74,7 @@ slope_selector_ui <- function(id) {
           options = list(`actions-box` = TRUE)
         ),
       ),
-      div(align = "left", actionButton(ns("previous_page"), "Previous Page")),
+      div(align = "left", actionButton(ns("previous_page"), "Previous Page", class = "btn-page")),
       div(
         align = "center",
         tags$span(
@@ -85,7 +85,7 @@ slope_selector_ui <- function(id) {
           uiOutput(ns("page_number"), inline = TRUE)
         )
       ),
-      div(align = "right", actionButton(ns("next_page"), "Next Page"))
+      div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
     ),
     # Plots display #
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container", style = "height:70%;"),
@@ -106,8 +106,14 @@ slope_selector_server <- function(
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
-    observeEvent(input$next_page, current_page(current_page() + 1))
-    observeEvent(input$previous_page, current_page(current_page() - 1))
+    observeEvent(input$next_page, {
+      current_page(current_page() + 1)
+      shinyjs::disable(selector = ".btn-page")
+    })
+    observeEvent(input$previous_page, {
+      current_page(current_page() - 1)
+      shinyjs::disable(selector = ".btn-page")
+    })
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
     observeEvent(list(input$plots_per_page, input$search_patient), current_page(1))
 
@@ -169,6 +175,7 @@ slope_selector_server <- function(
       })
 
       output$slope_plots_ui <- renderUI({
+        shinyjs::enable(selector = ".btn-page")
         plot_outputs
       })
 

@@ -16,6 +16,7 @@ fluidPage(
   "),
 
   includeCSS(file.path(assets, "style.css")),
+  includeScript(file.path(assets, "index.js")),
 
   page_navbar(
     id = "page",
