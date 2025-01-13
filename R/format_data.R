@@ -92,7 +92,7 @@ create_dose <- function(df_conc,
 
   df_conc %>%
     dplyr::mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
-    dplyr::group_by(!!!syms(c(group_columns, "TIME"))) %>%
+    dplyr::group_by(!!!syms(c(group_columns))) %>%
     dplyr::arrange(!!sym(since_lastdose_time_column) < 0,
                    !!sym(since_lastdose_time_column)) %>%
     dplyr::slice(1) %>%
