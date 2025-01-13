@@ -95,10 +95,9 @@ reshape_pknca_results <- function(myres) {
   }
 
   # Do a final standardization of the results reshaped
-  reshaped_results <- all_aucs  %>%
+  all_aucs  %>%
     # Define the number of decimals to round the results
     mutate(across(where(is.numeric), ~ round(.x, 3)))  %>%
     ungroup()
 
-  return(reshaped_results)
 }

@@ -56,7 +56,7 @@ create_start_impute <- function(mydata) {
   }
 
   # Process imputation strategy based on each interval
-  new_intervals <- mydata_with_int %>%
+  mydata$intervals <- mydata_with_int %>%
     group_by(across(all_of(c(group_columns, "DOSNO", "start", "end")))) %>%
     arrange(across(all_of(c(group_columns, time_column)))) %>%
     dplyr::mutate(is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
@@ -91,8 +91,6 @@ create_start_impute <- function(mydata) {
     ) %>%
     # Select only the columns of interest
     select(any_of(c(names(mydata$intervals), "impute")))
-
-  mydata$intervals <- new_intervals
 
   return(mydata)
 }

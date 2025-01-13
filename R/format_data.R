@@ -10,13 +10,11 @@
 #'
 #' @details
 #' The function performs the following steps:
-#' \itemize{
-#'   \item Filters the data for the specified analyte and event ID (EVID == 0).
-#'   \item Creates a 'groups' column by concatenating 'USUBJID' and 'DOSNO'.
-#'   \item Filters out negative time values.
-#'   \item Arranges the data by 'STUDYID', 'USUBJID', 'PCSPEC', 'DOSNO', and 'TIME'.
-#'   \item Adds an index column ('IX') within each group.
-#' }
+#'   - Filters the data for the specified analyte and event ID (EVID == 0).
+#'   - Creates a 'groups' column by concatenating 'USUBJID' and 'DOSNO'.
+#'   - Filters out negative time values.
+#'   - Arranges the data by 'STUDYID', 'USUBJID', 'PCSPEC', 'DOSNO', and 'TIME'.
+#'   - Adds an index column ('IX') within each group.
 #'
 #' @examples
 #' \dontrun{
@@ -59,12 +57,10 @@ create_conc <- function(ADNCA,
 #'
 #' @details
 #' The function performs the following steps:
-#' \itemize{
-#'   \item Arranges the data by 'USUBJID' and 'DOSNO'.
-#'   \item Groups the data by 'USUBJID' and 'DOSNO'.
-#'   \item Selects the first row within each group.
-#'   \item Converts 'DOSEA' to numeric and retains the 'ROUTE' as 'IQROUTE'.
-#' }
+#'   - Arranges the data by 'USUBJID' and 'DOSNO'.
+#'   - Groups the data by 'USUBJID' and 'DOSNO'.
+#'   - Selects the first row within each group.
+#'   - Converts 'DOSEA' to numeric and retains the 'ROUTE' as 'IQROUTE'.
 #'
 #' @examples
 #' \dontrun{
@@ -112,11 +108,9 @@ create_dose <- function(df_conc,
 #'
 #' @details
 #' The function performs the following steps:
-#' \itemize{
-#'   \item Creates a vector with all pharmacokinetic parameters.
-#'   \item Based on dose times, creates a data frame with start and end times.
-#'   \item Adds logical columns for each specified parameter.
-#' }
+#'   - Creates a vector with all pharmacokinetic parameters.
+#'   - Based on dose times, creates a data frame with start and end times.
+#'   - Adds logical columns for each specified parameter.
 #'
 #' @examples
 #' \dontrun{
@@ -158,6 +152,6 @@ create_dose_intervals <- function(mydose = mydose,
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
-  return(dose_intervals)
+  dose_intervals
 }
 
