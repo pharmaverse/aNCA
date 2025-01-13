@@ -1,4 +1,3 @@
-system.file("shiny/data/DummyRO_ADNCA.csv") |> print()
 adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
 attr(adpc$USUBJID, "label") <- "Subject ID"
 attr(adpc$DOSEU, "label") <- "Dose unit"
