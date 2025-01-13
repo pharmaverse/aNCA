@@ -175,7 +175,7 @@ observeEvent(input$settings_upload, {
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
-  print("trigered")
+
   # Segregate the data into concentration and dose records
   df_conc <- create_conc(data(), input$analyte, input$proftype)
   df_dose <- create_dose(df_conc)
@@ -189,14 +189,14 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID / DOSNO,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + USUBJID + DOSNO / ANALYTE,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + ANALYTE + USUBJID + DOSNO,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + USUBJID + DOSNO,
     route = ifelse(toupper(df_dose$IQROUTE) == "EXTRAVASCULAR", "extravascular", "intravascular"),
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
@@ -214,6 +214,14 @@ observeEvent(input$submit_analyte, priority = 2, {
       timeu = myconc$data$RRLTU[1]
     )
   )
+
+  # Redefine units for each analyte and for potential customizations
+  unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
+  analyte_column <- mydata$conc$columns$groups$group_analyte
+  mydata$units <- tidyr::crossing(mydata$units,
+                                  !!sym(analyte_column) := unique_analytes)  %>%
+    dplyr::mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
+
   mydata(mydata)
 })
 
@@ -290,7 +298,7 @@ observe({
 # Choose dosenumbers to be analyzed
 
 observeEvent(input$submit_analyte, priority = -1, {
-  print(mydata())
+
   req(mydata())
   updateSelectInput(
     session,
@@ -319,8 +327,8 @@ observeEvent(input$removeAUC, {
     auc_counter(auc_counter() - 1)
   }
 })
-# NCA button object
 
+# NCA button object
 # Create a reactive values object
 rv <- reactiveValues(trigger = 0)
 # Update the trigger whenever either button is clicked
@@ -378,8 +386,8 @@ observeEvent(input$nca, {
 })
 
 # run the nca upon button click
-
-res_nca <- eventReactive(rv$trigger, {
+res_nca <- reactiveVal(NULL)
+observeEvent(rv$trigger, {
   req(!is.null(input$cyclenca))
 
   withProgress(message = "Calculating NCA...", value = 0, {
@@ -430,9 +438,14 @@ res_nca <- eventReactive(rv$trigger, {
     incProgress(0.5, detail = "NCA calculations complete!")
 
     # Return the result
-    return(myres)
+    res_nca(myres)
   })
 })
+
+# Parameter unit changes option: Opens a modal message with a units table to edit
+# It updates $units table of mydata & res_nca when the user saves their changes
+units_table_server("units_table_preNCA", mydata, res_nca, params_to_calculate)
+units_table_server("units_table_postNCA", mydata, res_nca, params_to_calculate)
 
 # TABSET: Results ==============================================================
 
@@ -446,7 +459,7 @@ final_res_nca <- reactiveVal(NULL)
 
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
-
+  req(res_nca())
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- reshape_pknca_results(res_nca())
 
@@ -470,9 +483,9 @@ observeEvent(res_nca(), {
 
   # Include units for all column names
   dict_pttestcd_with_units <- res_nca()$result %>%
-    select(PPTESTCD, PPORRESU) %>%
+    select(PPTESTCD, PPSTRESU) %>%
     unique() %>%
-    pull(PPORRESU, PPTESTCD)
+    pull(PPSTRESU, PPTESTCD)
 
   final_res_nca <- final_res_nca %>%
     rename_with(~ifelse(
