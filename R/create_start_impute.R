@@ -64,8 +64,10 @@ create_start_impute <- function(mydata) {
                                                               time.dose = start[1],
                                                               method = "logslope"))
     ) %>%
-    arrange((!!sym(time_column) - start) < 0,
-            (!!sym(time_column) - start)) %>%
+    arrange(
+      (!!sym(time_column) - start) < 0,
+      (!!sym(time_column) - start)
+    ) %>%
     slice(1) %>%
     ungroup() %>%
     rowwise() %>%
@@ -94,5 +96,5 @@ create_start_impute <- function(mydata) {
 
   mydata$intervals <- new_intervals
 
-  return(mydata)
+  mydata
 }

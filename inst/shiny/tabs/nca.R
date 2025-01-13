@@ -421,8 +421,7 @@ observeEvent(input$nca, {
   mydata(mydata)
 
   # Perform NCA on the profiles selected
-  pk_nca_trigger <- pk_nca_trigger()
-  pk_nca_trigger(pk_nca_trigger + 1)
+  pk_nca_trigger(pk_nca_trigger() + 1)
 
   # Update panel to show results page
   updateTabsetPanel(session, "ncapanel", selected = "Results")

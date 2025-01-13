@@ -354,8 +354,7 @@ slope_selector_server <- function(
     #' saves and implements provided ruleset
     observeEvent(input$save_ruleset, {
       mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
-      pk_nca_trigger <- pk_nca_trigger()
-      pk_nca_trigger(pk_nca_trigger + 1)
+      pk_nca_trigger(pk_nca_trigger() + 1)
     })
 
     #' Plot data is a local reactive copy of full data. The purpose is to display data that

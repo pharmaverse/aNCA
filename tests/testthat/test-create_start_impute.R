@@ -38,15 +38,19 @@ dose_obj <- PKNCAdose(dose_data, dose ~ time | USUBJID + DOSNO,
 mydata <- PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)
 
 # Apply the function
-result <- create_start_impute(mydata)
+test_that("create_start_impute works without issue", {
+  expect_no_error({
+    result <<- create_start_impute(mydata)
+  })
+})
 
 
 test_that("create_start_impute does not add impute (NA) when start is in PKNCAconc", {
   # Check the values in the impute column
-  expect_equal(result$intervals %>%
-                 dplyr::filter(USUBJID == 1, DOSNO == 1) %>%
-                 dplyr::pull(impute),
-               NA_character_)
+  not_imputed <- result$intervals %>%
+     dplyr::filter(USUBJID == 1, DOSNO == 1) %>%
+     dplyr::pull(impute)
+  expect_equal(not_imputed, NA_character_)
 })
 
 test_that("create_start_impute: conc0 when route is extravascular (first dose)", {
