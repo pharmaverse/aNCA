@@ -1,5 +1,5 @@
-root <- rprojroot::find_root(rprojroot::is_r_package)
-adpc <- read.csv(file.path(root, "inst/shiny/data/DummyRO_ADNCA.csv"))
+system.file("shiny/data/DummyRO_ADNCA.csv") |> print()
+adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
 attr(adpc$USUBJID, "label") <- "Subject ID"
 attr(adpc$DOSEU, "label") <- "Dose unit"
 adpc_single <- dplyr::filter(adpc, USUBJID == "11101")
