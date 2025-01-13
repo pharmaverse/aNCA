@@ -1,7 +1,3 @@
-library(testthat)
-library(dplyr)
-library(PKNCA)
-
 test_that("create_conc generates correct dataset", {
   # Generate sample ADNCA data
   ADNCA <- data.frame(

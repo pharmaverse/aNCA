@@ -6,7 +6,7 @@
 #' @param analyte A character string specifying the analyte of interest.
 
 #'
-#' @return A data frame containing the filtered and processed concentration data.
+#' @returns A data frame containing the filtered and processed concentration data.
 #'
 #' @details
 #' The function performs the following steps:
@@ -25,10 +25,7 @@
 #' @import dplyr
 #' @export
 
-#create pknca concentration dataset
-create_conc <- function(ADNCA,
-                        group_columns,
-                        time_column = "AFRLT") {
+create_conc <- function(ADNCA, group_columns, time_column = "AFRLT") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -53,7 +50,7 @@ create_conc <- function(ADNCA,
 #'
 #' @param ADNCA_conc A data frame containing the concentration data.
 #'
-#' @return A data frame containing the dose data.
+#' @returns A data frame containing the dose data.
 #'
 #' @details
 #' The function performs the following steps:
@@ -104,7 +101,7 @@ create_dose <- function(df_conc,
 #' @param params A character vector specifying the pharmacokinetic parameters to include.
 #' @param start_from_last_dose Logical defining if start is at time of last dose or C1.
 #'
-#' @return A data frame containing the dose intervals and specified pharmacokinetic parameters.
+#' @returns A data frame containing the dose intervals and specified pharmacokinetic parameters.
 #'
 #' @details
 #' The function performs the following steps:
@@ -120,7 +117,7 @@ create_dose <- function(df_conc,
 #'
 #' @import dplyr
 #' @export
-create_dose_intervals <- function(mydose = mydose,
+create_dose_intervals <- function(mydose,
                                   params =  c("aucinf.obs", "aucint.last", "auclast", "cmax",
                                               "half.life", "tmax", "lambda.z", "lambda.z.n.points",
                                               "r.squared", "adj.r.squared", "lambda.z.time.first",
