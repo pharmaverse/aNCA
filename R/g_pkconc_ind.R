@@ -268,6 +268,8 @@ pkcg01 <- function(
         height = 500 + (footnote_y * 25) + title_margin * 50
       ) %>%
       layout(
+        yaxis = list(autorange = FALSE),
+        xaxis = list(autorange = FALSE),
         # title and subtitle #
         title = list(text = title_text),
         # footnote #
