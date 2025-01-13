@@ -205,7 +205,7 @@ observeEvent(input$submit_analyte, priority = 2, {
     dplyr::filter(!!sym(analyte_column) %in% input$select_analyte,
                   DOSNO %in% input$select_dosno,
                   if ("EVID" %in% names(data())) EVID == 0 else TRUE)
-  
+
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,

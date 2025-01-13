@@ -144,11 +144,11 @@ create_dose_intervals <- function(mydose = mydose,
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- mydose$data %>%
-    mutate(start = if (start_from_last_dose) !!sym(mydose$columns$time) 
-                   else !!sym(mydose$columns$time) + !!sym("ARRLT")) %>%
+    mutate(start = if (start_from_last_dose) !!sym(mydose$columns$time)
+           else !!sym(mydose$columns$time) + !!sym("ARRLT")) %>%
     group_by(!!!syms(unname(unlist(mydose$columns$groups)))) %>%
     dplyr::arrange(!!sym(mydose$columns$time)) %>%
-    dplyr::mutate(end = lead(as.numeric(!!sym(mydose$columns$time)), default = Inf)) %>% 
+    dplyr::mutate(end = lead(as.numeric(!!sym(mydose$columns$time)), default = Inf)) %>%
     ungroup() %>%
     select(any_of(c("start", "end", unname(unlist(mydose$columns$groups)), "DOSNO"))) %>%
 
