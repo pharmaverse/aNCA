@@ -1,5 +1,5 @@
 Package: aNCA
-Title: (Pre-)clinical NCA in a dynamic shiny app
+Title: (Pre-)Clinical NCA in a Dynamic Shiny App
 Version: 0.0.0.9000
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
@@ -62,6 +62,7 @@ Imports:
     tidyr,
     tools,
     utils,
+    rlang,
     yaml,
     zip
 Encoding: UTF-8
