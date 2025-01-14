@@ -1,7 +1,3 @@
-library(testthat)
-library(dplyr)
-library(PKNCA)
-
 # Create concentration, dose and interval datasets with all imputation cases
 conc_data <- data.frame(
   conc = c(1:3, c(1, 2, 0.5), 1:3, 6:4, 6:4, rep(2, 3), 1:3, 6:4),

@@ -460,7 +460,7 @@ final_res_nca <- reactiveVal(NULL)
 observeEvent(res_nca(), {
 
   # Create a reshaped object that will be used to display the results in the UI
-  final_res_nca <- reshape_pknca_results(res_nca())
+  final_res_nca <- pivot_wider_pknca_results(res_nca())
 
   # Get all inputs which are TRUE and start with 'rule_'
   for (rule_input in grep("^rule_", names(input), value = TRUE)) {
@@ -676,7 +676,7 @@ observe({
 # Slope settings
 output$preslopesettings <- DT::renderDataTable({
   # Reshape results and only choose the columns that are relevant to half life calculation
-  preslopesettings <- reshape_pknca_results(res_nca())  %>%
+  preslopesettings <- pivot_wider_pknca_results(res_nca())  %>%
     select(
       any_of(c("USUBJID", "DOSNO")),
       starts_with("lambda.z"),
