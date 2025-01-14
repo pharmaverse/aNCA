@@ -39,7 +39,8 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
     dplyr::mutate(TIME = !!sym(time_column)) %>%
     dplyr::group_by(!!!syms(group_columns)) %>%
     dplyr::mutate(IX = seq_len(n())) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>% 
+    dplyr::arrange(!!!syms(group_columns))
 }
 
 #' Create PK Dose Dataset
@@ -61,27 +62,37 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
 
 format_pkncadose_data <- function(pkncaconc_data,
                                   group_columns,
+                                  dosno_column = NULL,
                                   time_column = "AFRLT",
-                                  since_lastdose_time_column = "ARRLT",
-                                  route_column = "ROUTE") {
+                                  since_lastdose_time_column = "ARRLT") {
+  
+  # Check: Dataset is not empty
   if (nrow(pkncaconc_data) == 0) {
     stop("Input dataframe is empty. Please provide a valid concentration dataframe.")
   }
-
-  required_columns <- c(group_columns, time_column, since_lastdose_time_column, route_column)
+  
+  # Check: All necessary columns are present
+  required_columns <- c(group_columns, time_column, since_lastdose_time_column)
   missing_columns <- setdiff(required_columns, colnames(pkncaconc_data))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
+  
+  # Make sure there is a slice of the data by dose number even if the column does not exist
+  if (!is.null(dosno_column) && dosno_column %in% names(pkncaconc_data)) {
+    group_columns <- c(group_columns, dosno_column)
+  } else {
+    group_columns <- c(group_columns, "TIME")
+  }
 
   pkncaconc_data %>%
     dplyr::mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
-    dplyr::group_by(!!!syms(c(group_columns))) %>%
+    dplyr::group_by(!!!syms(group_columns)) %>%
     dplyr::arrange(!!sym(since_lastdose_time_column) < 0,
                    !!sym(since_lastdose_time_column)) %>%
     dplyr::slice(1) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(ROUTE = !!sym(route_column))
+    dplyr::arrange(!!!syms(group_columns))
 }
 
 #' Create Dose Intervals Dataset

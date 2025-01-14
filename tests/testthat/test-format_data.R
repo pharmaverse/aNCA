@@ -160,8 +160,7 @@ test_that("format_pkncadose_data generates when missing the dose number column",
   df_dose <- format_pkncadose_data(df_conc,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "ANALYTE"),
-                                   time_column = "AFRLT", since_lastdose_time_column = "ARRLT",
-                                   route_column = "ROUTE")
+                                   time_column = "AFRLT", since_lastdose_time_column = "ARRLT")
 
   # Test if df_dose is a data frame
   expect_s3_class(df_dose, "data.frame")
@@ -192,10 +191,9 @@ test_that("format_pkncadose_data handles empty input", {
   df_conc <- data.frame()
   expect_error(format_pkncadose_data(df_conc,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "ANALYTE"),
+                                                       "DRUG"),
                                      time_column = "AFRLT",
-                                     since_lastdose_time_column = "ARRLT",
-                                     route_column = "ROUTE"),
+                                     since_lastdose_time_column = "ARRLT"),
                regexp = "Input dataframe is empty. Please provide a valid concentration dataframe.")
 })
 
@@ -224,8 +222,7 @@ test_that("format_pkncadose_data handles negative time values", {
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "ANALYTE"),
                                    time_column = "AFRLT",
-                                   since_lastdose_time_column = "ARRLT",
-                                   route_column = "ROUTE")
+                                   since_lastdose_time_column = "ARRLT")
   expect_true(all(df_dose$AFRLT >= 0))
 })
 
@@ -246,8 +243,7 @@ test_that("format_pkncadose_data handles multiple analytes", {
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "ANALYTE"),
                                    time_column = "AFRLT",
-                                   since_lastdose_time_column = "ARRLT",
-                                   route_column = "ROUTE")
+                                   since_lastdose_time_column = "ARRLT")
   expect_equal(nrow(df_dose), 4)
   expect_equal(length(unique(df_dose$ANALYTE)), 2)
 })
@@ -280,8 +276,7 @@ test_that("format_pkncadata_intervals generates correct dataset", {
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "ANALYTE"),
                                    time_column = "AFRLT",
-                                   since_lastdose_time_column = "ARRLT",
-                                   route_column = "ROUTE")
+                                   since_lastdose_time_column = "ARRLT")
 
   # Generate PKNCAconc and PKNCAdose objects
   myconc <- PKNCAconc(

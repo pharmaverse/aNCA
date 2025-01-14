@@ -177,9 +177,10 @@ mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
 
   # Define explicetely input columns until there are input definitions
-  group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "DOSNO", "ROUTE", "DRUG"))
+  group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
+  dosno_column <- "DOSNO"
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
 
@@ -187,11 +188,14 @@ observeEvent(input$submit_analyte, priority = 2, {
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
                                    time_column = time_column) %>%
-    dplyr::arrange(across(all_of(c(usubjid_column, time_column))))
+    dplyr::arrange(across(all_of(c(usubjid_column, time_column)))) %>% 
+    # Consider only the analytes requested by the user
+    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte)
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
                                    group_columns = c(group_columns, usubjid_column),
                                    time_column = time_column,
+                                   dosno_column = dosno_column,
                                    since_lastdose_time_column = "ARRLT")
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
@@ -199,12 +203,6 @@ observeEvent(input$submit_analyte, priority = 2, {
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- NA  # Exclusions will have preferential reason statements than inclusions
   df_conc$exclude_half.life <- FALSE
-
-  # Filter data based on selected analyte and dose numbers
-  df_conc <- df_conc %>%
-    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte,
-                  DOSNO %in% input$select_dosno,
-                  if ("EVID" %in% names(data())) EVID == 0 else TRUE)
 
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
@@ -222,7 +220,11 @@ observeEvent(input$submit_analyte, priority = 2, {
     duration = "ADOSEDUR"
   )
 
-  myintervals <- format_pkncadata_intervals(mydose)
+  myintervals <- format_pkncadata_intervals(mydose) %>%
+    # Filter only the doses requested by the user
+    dplyr::filter(
+      !!sym(dosno_column) %in% input$select_dosno
+    )
 
   # Combine the PKNCA objects into the PKNCAdata object
   # TODO think of case with different units for different analytes
@@ -413,6 +415,11 @@ observeEvent(input$nca, {
           start_from_last_dose = FALSE
         ),
         intervals_userinput()
+      ) %>% 
+      # Filter only the analytes and doses requested by the user
+      dplyr::filter(
+        DOSNO %in% input$select_dosno,
+        if ("EVID" %in% names(data())) EVID == 0 else TRUE
       ),
       units = PKNCA::pknca_units_table(
         concu = mydata$conc$data$PCSTRESU[1],
