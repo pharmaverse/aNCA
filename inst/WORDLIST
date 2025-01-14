@@ -5,10 +5,7 @@ Bärtschi
 CDISC
 DOSEA
 DOSNO
-EVID
-IQROUTE
 NCA
-PCSPEC
 PKNCA
 PKNCAdata
 PKNCAdose
@@ -16,7 +13,6 @@ Pharmacokinetic
 Pre
 RO
 RStudio
-STUDYID
 TLG
 USUBJID
 USUBJIDs
@@ -33,6 +29,7 @@ customizable
 df
 ggplot
 ggplots
+lastdose
 nca
 pharmacokinetic
 pkcg
