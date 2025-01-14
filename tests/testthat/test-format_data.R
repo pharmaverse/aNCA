@@ -1,4 +1,4 @@
-test_that("create_conc generates correct dataset", {
+test_that("format_pkncaconc_data generates correct dataset", {
   # Generate sample ADNCA data
   ADNCA <- data.frame(
     STUDYID = rep(1, 10),
@@ -10,10 +10,11 @@ test_that("create_conc generates correct dataset", {
     AVAL = runif(10)
   )
 
-  # Call create_conc
-  df_conc <- create_conc(ADNCA,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT")
+  # Call format_pkncaconc_data
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
 
   # Test if df_conc is a data frame
   expect_s3_class(df_conc, "data.frame")
@@ -37,7 +38,7 @@ test_that("create_conc generates correct dataset", {
   )
 })
 
-test_that("create_conc generates correct dataset with multiple doses", {
+test_that("format_pkncaconc_data generates correct dataset with multiple doses", {
   # Generate sample ADNCA data with at least two doses per subject
   ADNCA <- data.frame(
     STUDYID = rep(1, 20),
@@ -52,11 +53,11 @@ test_that("create_conc generates correct dataset with multiple doses", {
     AVAL = runif(20)
   )
 
-  # Call create_conc
-  df_conc <- create_conc(ADNCA,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                           "DRUG", "ANALYTE", "DOSNO"),
-                         time_column = "AFRLT")
+  # Call format_pkncaconc_data
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE", "DOSNO"),
+                                   time_column = "AFRLT")
 
   # Test if df_conc is a data frame
   expect_s3_class(df_conc, "data.frame")
@@ -85,15 +86,16 @@ test_that("create_conc generates correct dataset with multiple doses", {
   )
 })
 
-test_that("create_conc handles empty input", {
+test_that("format_pkncaconc_data handles empty input", {
   ADNCA <- data.frame()
-  expect_error(create_conc(ADNCA,
-                           group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                           time_column = "AFRLT"),
+  expect_error(format_pkncaconc_data(ADNCA,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DRUG", "ANALYTE"),
+                                     time_column = "AFRLT"),
                regexp = "Input dataframe is empty. Please provide a valid ADNCA dataframe.")
 })
 
-test_that("create_conc handles missing columns", {
+test_that("format_pkncaconc_data handles missing columns", {
   ADNCA <- data.frame(
     STUDYID = rep(1, 10),
     USUBJID = rep(1:2, each = 5),
@@ -102,13 +104,17 @@ test_that("create_conc handles missing columns", {
     AFRLT = seq(0, 9),
     AVAL = runif(10)
   )
-  expect_error(create_conc(ADNCA,
-                           group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                           time_column = "AFRLT"),
-               regexp = "Missing required columns: ANALYTE")
+  expect_error(
+    format_pkncaconc_data(
+      ADNCA,
+      group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
+      time_column = "AFRLT"
+    ),
+    regexp = "Missing required columns: ANALYTE"
+  )
 })
 
-test_that("create_conc handles multiple analytes", {
+test_that("format_pkncaconc_data handles multiple analytes", {
   ADNCA <- data.frame(
     STUDYID = rep(1, 20),
     USUBJID = rep(1, each = 10),
@@ -119,14 +125,15 @@ test_that("create_conc handles multiple analytes", {
     ARRLT = rep(seq(0, 9), 2),
     AVAL = runif(20)
   )
-  df_conc <- create_conc(ADNCA,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT")
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
   expect_equal(nrow(df_conc), 20)
   expect_equal(length(unique(df_conc$ANALYTE)), 2)
 })
 
-test_that("create_dose generates when missing the dose number column", {
+test_that("format_pkncadose_data generates when missing the dose number column", {
   # Generate sample ADNCA data with at least two doses per subject
   ADNCA <- data.frame(
     STUDYID = rep(1, 20),
@@ -143,16 +150,18 @@ test_that("create_dose generates when missing the dose number column", {
     AVAL = runif(20)
   )
 
-  # Call create_conc
-  df_conc <- create_conc(ADNCA,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT")
+  # Call format_pkncaconc_data
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
 
-  # Call create_dose
-  df_dose <- create_dose(df_conc,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT", since_lastdose_time_column = "ARRLT",
-                         route_column = "ROUTE")
+  # Call format_pkncadose_data
+  df_dose <- format_pkncadose_data(df_conc,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT", since_lastdose_time_column = "ARRLT",
+                                   route_column = "ROUTE")
 
   # Test if df_dose is a data frame
   expect_s3_class(df_dose, "data.frame")
@@ -179,25 +188,26 @@ test_that("create_dose generates when missing the dose number column", {
   expect_true(all(dose_counts$n >= 2))
 })
 
-test_that("create_dose handles empty input", {
+test_that("format_pkncadose_data handles empty input", {
   df_conc <- data.frame()
-  expect_error(create_dose(df_conc,
-                           group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                           time_column = "AFRLT",
-                           since_lastdose_time_column = "ARRLT",
-                           route_column = "ROUTE"),
+  expect_error(format_pkncadose_data(df_conc,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DRUG", "ANALYTE"),
+                                     time_column = "AFRLT",
+                                     since_lastdose_time_column = "ARRLT",
+                                     route_column = "ROUTE"),
                regexp = "Input dataframe is empty. Please provide a valid concentration dataframe.")
 })
 
-test_that("create_dose_intervals handles incorrect input type", {
+test_that("format_pkncadata_intervals handles incorrect input type", {
   mydose <- list(data = data.frame(STUDYID = 1, USUBJID = 1, TIME = 0),
                  columns = list(groups = c("STUDYID", "USUBJID"),
                                 time = "TIME"))
-  expect_error(create_dose_intervals(mydose),
+  expect_error(format_pkncadata_intervals(mydose),
                regexp = "Input must be a PKNCAdose object from the PKNCA package.")
 })
 
-test_that("create_dose handles negative time values", {
+test_that("format_pkncadose_data handles negative time values", {
   df_conc <- data.frame(
     STUDYID = rep(1, 10),
     USUBJID = rep(1:2, each = 5),
@@ -210,15 +220,16 @@ test_that("create_dose handles negative time values", {
     DOSEA = 10,
     AVAL = runif(10)
   )
-  df_dose <- create_dose(df_conc,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT",
-                         since_lastdose_time_column = "ARRLT",
-                         route_column = "ROUTE")
+  df_dose <- format_pkncadose_data(df_conc,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT",
+                                   since_lastdose_time_column = "ARRLT",
+                                   route_column = "ROUTE")
   expect_true(all(df_dose$AFRLT >= 0))
 })
 
-test_that("create_dose handles multiple analytes", {
+test_that("format_pkncadose_data handles multiple analytes", {
   df_conc <- data.frame(
     STUDYID = rep(1, 20),
     USUBJID = rep(1:2, each = 10),
@@ -231,16 +242,17 @@ test_that("create_dose handles multiple analytes", {
     DOSEA = 10,
     AVAL = runif(20)
   )
-  df_dose <- create_dose(df_conc,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT",
-                         since_lastdose_time_column = "ARRLT",
-                         route_column = "ROUTE")
+  df_dose <- format_pkncadose_data(df_conc,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT",
+                                   since_lastdose_time_column = "ARRLT",
+                                   route_column = "ROUTE")
   expect_equal(nrow(df_dose), 4)
   expect_equal(length(unique(df_dose$ANALYTE)), 2)
 })
 
-test_that("create_dose_intervals generates correct dataset", {
+test_that("format_pkncadata_intervals generates correct dataset", {
   # Generate sample ADNCA data with at least two doses per subject
   ADNCA <- data.frame(
     STUDYID = rep(1, 20),
@@ -257,17 +269,19 @@ test_that("create_dose_intervals generates correct dataset", {
     AVAL = runif(20)
   )
 
-  # Call create_conc
-  df_conc <- create_conc(ADNCA,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT")
+  # Call format_pkncaconc_data
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
 
-  # Call create_dose
-  df_dose <- create_dose(df_conc,
-                         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "ANALYTE"),
-                         time_column = "AFRLT",
-                         since_lastdose_time_column = "ARRLT",
-                         route_column = "ROUTE")
+  # Call format_pkncadose_data
+  df_dose <- format_pkncadose_data(df_conc,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT",
+                                   since_lastdose_time_column = "ARRLT",
+                                   route_column = "ROUTE")
 
   # Generate PKNCAconc and PKNCAdose objects
   myconc <- PKNCAconc(
@@ -288,8 +302,8 @@ test_that("create_dose_intervals generates correct dataset", {
   # Define the other arguments for the dose intervals
   params <- c("cmax", "tmax", "half.life")
 
-  # Call create_dose_intervals
-  myintervals <- create_dose_intervals(mydose, params = params, start_from_last_dose = TRUE)
+  # Call format_pkncadata_intervals
+  myintervals <- format_pkncadata_intervals(mydose, params = params, start_from_last_dose = TRUE)
 
   # Test if myintervals is a data frame
   expect_s3_class(myintervals, "data.frame")

@@ -3,7 +3,7 @@
 #' This function reshapes the structure of the results produced by the main function
 #' of the PKNCA package (pk.nca) in a way that each row represents all the main results
 #' summarized for each profile in each individual/patient. Excluding the ID variables,
-#' each column name corresponds with a calculated parameter and between brackets its 
+#' each column name corresponds with a calculated parameter and between brackets its
 #' corresponding units. AUC intervals, if present, are be added as additional columns.
 #'
 #' @param myres The output of PKNCA::pk.nca
@@ -70,8 +70,10 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
-      dplyr::select(-exclude, -PPORRESU, -start, -end, -PPTESTCD, -interval_name, -type_interval) %>%
-      tidyr::pivot_wider(names_from = interval_name_col, values_from = PPORRES)
+      dplyr::select(-exclude, -PPORRESU, -start, -end,
+                    -PPTESTCD, -interval_name, -type_interval) %>%
+      tidyr::pivot_wider(names_from = interval_name_col,
+                         values_from = PPORRES)
 
     interval_aucs_exclude <- myres$result %>%
       dplyr::filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
@@ -79,7 +81,8 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       )  %>%
-      dplyr::select(-PPORRES, -PPORRESU, -start, -end, -PPTESTCD, -interval_name, -type_interval) %>%
+      dplyr::select(-PPORRES, -PPORRESU, -start, -end,
+                    -PPTESTCD, -interval_name, -type_interval) %>%
       tidyr::pivot_wider(names_from = interval_name_col, values_from = exclude)
 
     interval_aucs <- merge(interval_aucs_vals, interval_aucs_exclude) %>%

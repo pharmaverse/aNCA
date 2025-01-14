@@ -184,15 +184,15 @@ observeEvent(input$submit_analyte, priority = 2, {
   analyte_column <- "ANALYTE"
 
   # Segregate the data into concentration and dose records
-  df_conc <- create_conc(ADNCA = data(),
-                         group_columns = c(group_columns, usubjid_column, analyte_column),
-                         time_column = time_column) %>%
+  df_conc <- format_pkncaconc_data(ADNCA = data(),
+                                   group_columns = c(group_columns, usubjid_column, analyte_column),
+                                   time_column = time_column) %>%
     dplyr::arrange(across(all_of(c(usubjid_column, time_column))))
 
-  df_dose <- create_dose(df_conc = df_conc,
-                         group_columns = c(group_columns, usubjid_column),
-                         time_column = time_column,
-                         since_lastdose_time_column = "ARRLT")
+  df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
+                                   group_columns = c(group_columns, usubjid_column),
+                                   time_column = time_column,
+                                   since_lastdose_time_column = "ARRLT")
 
   # Define initially a inclusions/exclusions for lambda slope estimation (with no input)
   df_conc$is.excluded.hl <- FALSE
@@ -222,7 +222,7 @@ observeEvent(input$submit_analyte, priority = 2, {
     duration = "ADOSEDUR"
   )
 
-  myintervals <- create_dose_intervals(mydose)
+  myintervals <- format_pkncadata_intervals(mydose)
 
   # Combine the PKNCA objects into the PKNCAdata object
   # TODO think of case with different units for different analytes
@@ -407,9 +407,13 @@ observeEvent(input$nca, {
     mydata <- PKNCA::PKNCAdata(
       data.conc = mydata$conc,
       data.dose = mydata$dose,
-      intervals = bind_rows(create_dose_intervals(mydata$dose,
-                                                  start_from_last_dose = FALSE),
-                            intervals_userinput()),
+      intervals = bind_rows(
+        format_pkncadata_intervals(
+          mydata$dose,
+          start_from_last_dose = FALSE
+        ),
+        intervals_userinput()
+      ),
       units = PKNCA::pknca_units_table(
         concu = mydata$conc$data$PCSTRESU[1],
         doseu = mydata$dose$data$DOSEU[1],

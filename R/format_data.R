@@ -10,22 +10,20 @@
 #'
 #' @details
 #' The function performs the following steps:
-#'   - Filters the data for the specified analyte and event ID (EVID == 0).
 #'   - Creates a 'groups' column by concatenating 'USUBJID' and 'DOSNO'.
-#'   - Filters out negative time values.
-#'   - Arranges the data by 'STUDYID', 'USUBJID', 'PCSPEC', 'DOSNO', and 'TIME'.
-#'   - Adds an index column ('IX') within each group.
+#'   - Arranges and groups the data by groups_column.
+#'   - Adds an index column ('IX') 1:n within each group of length n.
 #'
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   conc_data <- create_conc(ADNCA, "analyte_name", "profile_type")
+#'   conc_data <- format_pkncaconc_data(ADNCA, "analyte_name", "profile_type")
 #' }
 #'
 #' @import dplyr
 #' @export
 
-create_conc <- function(ADNCA, group_columns, time_column = "AFRLT") {
+format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -54,36 +52,29 @@ create_conc <- function(ADNCA, group_columns, time_column = "AFRLT") {
 #'
 #' @details
 #' The function performs the following steps:
-#'   - Arranges the data by 'USUBJID' and 'DOSNO'.
-#'   - Groups the data by 'USUBJID' and 'DOSNO'.
-#'   - Selects the first row within each group.
-#'   - Converts 'DOSEA' to numeric and retains the 'ROUTE' as 'IQROUTE'.
-#'
-#' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   dose_data <- create_dose(conc_data)
-#' }
+#'   - Arranges and groups the data by group_columns
+#'   - Derives the dose time as: time_column - since_lastdose_time_column
+#'   - Selects the first row within each group (arranged by since_lastdose_time_column)
 #'
 #' @import dplyr
 #' @export
 
-create_dose <- function(df_conc,
-                        group_columns,
-                        time_column = "AFRLT",
-                        since_lastdose_time_column = "ARRLT",
-                        route_column = "ROUTE") {
-  if (nrow(df_conc) == 0) {
+format_pkncadose_data <- function(pkncaconc_data,
+                                  group_columns,
+                                  time_column = "AFRLT",
+                                  since_lastdose_time_column = "ARRLT",
+                                  route_column = "ROUTE") {
+  if (nrow(pkncaconc_data) == 0) {
     stop("Input dataframe is empty. Please provide a valid concentration dataframe.")
   }
 
   required_columns <- c(group_columns, time_column, since_lastdose_time_column, route_column)
-  missing_columns <- setdiff(required_columns, colnames(df_conc))
+  missing_columns <- setdiff(required_columns, colnames(pkncaconc_data))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
-  df_conc %>%
+  pkncaconc_data %>%
     dplyr::mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
     dplyr::group_by(!!!syms(c(group_columns))) %>%
     dplyr::arrange(!!sym(since_lastdose_time_column) < 0,
@@ -97,7 +88,7 @@ create_dose <- function(df_conc,
 #'
 #' This function creates a dataset with dose intervals and specified pharmacokinetic parameters.
 #'
-#' @param df_dose A PKNCAdose object. Default from the app is `mydose`.
+#' @param df_dose A PKNCAdose object
 #' @param params A character vector specifying the pharmacokinetic parameters to include.
 #' @param start_from_last_dose Logical defining if start is at time of last dose or C1.
 #'
@@ -112,36 +103,37 @@ create_dose <- function(df_conc,
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   dose_intervals <- create_dose_intervals(df_dose, params)
+#'   dose_intervals <- format_pkncadata_intervals(df_dose, params)
 #' }
 #'
 #' @import dplyr
 #' @export
-create_dose_intervals <- function(mydose,
-                                  params =  c("aucinf.obs", "aucint.last", "auclast", "cmax",
-                                              "half.life", "tmax", "lambda.z", "lambda.z.n.points",
-                                              "r.squared", "adj.r.squared", "lambda.z.time.first",
-                                              "aucpext.obs", "aucpext.pred", "clast.obs"),
-                                  start_from_last_dose = TRUE) {
-  if (!inherits(mydose, "PKNCAdose")) {
+format_pkncadata_intervals <- function(pknca_dose,
+                                       params =  c("aucinf.obs", "aucint.last", "auclast",
+                                                   "cmax", "half.life", "tmax", "lambda.z",
+                                                   "lambda.z.n.points", "r.squared",
+                                                   "adj.r.squared", "lambda.z.time.first",
+                                                   "aucpext.obs", "aucpext.pred", "clast.obs"),
+                                       start_from_last_dose = TRUE) {
+  if (!inherits(pknca_dose, "PKNCAdose")) {
     stop("Input must be a PKNCAdose object from the PKNCA package.")
   }
 
-  required_columns <- c(unname(unlist(mydose$columns$groups)), mydose$columns$time)
-  missing_columns <- setdiff(required_columns, colnames(mydose$data))
+  required_columns <- c(unname(unlist(pknca_dose$columns$groups)), pknca_dose$columns$time)
+  missing_columns <- setdiff(required_columns, colnames(pknca_dose$data))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
   # Based on dose times create a data frame with start and end times
-  dose_intervals <- mydose$data %>%
-    mutate(start = if (start_from_last_dose) !!sym(mydose$columns$time)
-           else !!sym(mydose$columns$time) + !!sym("ARRLT")) %>%
-    group_by(!!!syms(unname(unlist(mydose$columns$groups)))) %>%
-    dplyr::arrange(!!sym(mydose$columns$time)) %>%
-    dplyr::mutate(end = lead(as.numeric(!!sym(mydose$columns$time)), default = Inf)) %>%
+  dose_intervals <- pknca_dose$data %>%
+    mutate(start = if (start_from_last_dose) !!sym(pknca_dose$columns$time)
+           else !!sym(pknca_dose$columns$time) + !!sym("ARRLT")) %>%
+    group_by(!!!syms(unname(unlist(pknca_dose$columns$groups)))) %>%
+    dplyr::arrange(!!sym(pknca_dose$columns$time)) %>%
+    dplyr::mutate(end = lead(as.numeric(!!sym(pknca_dose$columns$time)), default = Inf)) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", unname(unlist(mydose$columns$groups)), "DOSNO"))) %>%
+    select(any_of(c("start", "end", unname(unlist(pknca_dose$columns$groups)), "DOSNO"))) %>%
 
     # Create logical columns with the TRUE and as names params argument
     mutate(!!!setNames(rep(TRUE, length(params)), params)) %>%

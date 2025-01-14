@@ -44,8 +44,8 @@ test_that("create_start_impute works without issue", {
 test_that("create_start_impute does not add impute (NA) when start is in PKNCAconc", {
   # Check the values in the impute column
   not_imputed <- result$intervals %>%
-     dplyr::filter(USUBJID == 1, DOSNO == 1) %>%
-     dplyr::pull(impute)
+    dplyr::filter(USUBJID == 1, DOSNO == 1) %>%
+    dplyr::pull(impute)
   expect_equal(not_imputed, NA_character_)
 })
 
