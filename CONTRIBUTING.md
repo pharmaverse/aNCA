@@ -74,3 +74,8 @@ When the change is done, pull request is open and the description is filled, ple
 
 #### For reviewers
 When reviewing a pull request, please do try to follow the [conventional comments](https://conventionalcomments.org/) guidelines. Ideas and labels described in that convention can be very helpful in getting your thoughts across and facilitate meaningful cooperation. That said, they are not applicable in every circumstance and you are free to do whatever you feel is suitable, as long as it aims to provide valid discussion.
+
+# In-depth guides
+Here are some useful links with in-depth documentation regarding specific parts of the pacakage and how to utilise in-build tools to extend the capabilities of the application:
+
+- [Adding TLGs](.github/contributing/adding-tlg.md)

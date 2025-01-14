@@ -1,0 +1,71 @@
+# Configuration file containing TLG definitions.
+# To learn more, please check .github/contributing/adding-tlg.md
+g_pkconc_ind_lin:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg01
+  label: "pkcg01 - linear"
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with linear scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
+  fun: g_pkconc_ind_lin
+  options:
+    .group_label_1: "General"
+    xvar:
+      type: select
+      label: X axis
+      choices: .colnames
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - USUBJID
+    color_var:
+      type: select
+      label: "Color variable"
+      choices: .colnames
+
+    .group_label_2: "Labels"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    xlab:
+      type: text
+      label: X axis label
+    ylab:
+      type: text
+      label: Y axis label
+    xbreaks_var:
+      type: select
+      label: "X ticks"
+      choices: .colnames
+      default: "NFRLT"
+    color_var_label:
+      type: text
+      label: Color variable label
+
+    .group_label_3: "Limits"
+    xmin:
+      type: numeric
+    xmax:
+      type: numeric
+    ymin:
+      type: numeric
+    ymax:
+      type: numeric
+g_pkconc_ind_log:
+  template: g_pkconc_ind_lin
+  label: pkcg01 - log
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
+  fun: g_pkconc_ind_log
