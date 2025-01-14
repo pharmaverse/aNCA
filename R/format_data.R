@@ -39,7 +39,7 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
     dplyr::mutate(TIME = !!sym(time_column)) %>%
     dplyr::group_by(!!!syms(group_columns)) %>%
     dplyr::mutate(IX = seq_len(n())) %>%
-    dplyr::ungroup() %>% 
+    dplyr::ungroup() %>%
     dplyr::arrange(!!!syms(group_columns))
 }
 
@@ -65,19 +65,19 @@ format_pkncadose_data <- function(pkncaconc_data,
                                   dosno_column = NULL,
                                   time_column = "AFRLT",
                                   since_lastdose_time_column = "ARRLT") {
-  
+
   # Check: Dataset is not empty
   if (nrow(pkncaconc_data) == 0) {
     stop("Input dataframe is empty. Please provide a valid concentration dataframe.")
   }
-  
+
   # Check: All necessary columns are present
   required_columns <- c(group_columns, time_column, since_lastdose_time_column)
   missing_columns <- setdiff(required_columns, colnames(pkncaconc_data))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
-  
+
   # Make sure there is a slice of the data by dose number even if the column does not exist
   if (!is.null(dosno_column) && dosno_column %in% names(pkncaconc_data)) {
     group_columns <- c(group_columns, dosno_column)

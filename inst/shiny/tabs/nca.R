@@ -188,7 +188,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
                                    time_column = time_column) %>%
-    dplyr::arrange(across(all_of(c(usubjid_column, time_column)))) %>% 
+    dplyr::arrange(across(all_of(c(usubjid_column, time_column)))) %>%
     # Consider only the analytes requested by the user
     dplyr::filter(!!sym(analyte_column) %in% input$select_analyte)
 
@@ -415,12 +415,12 @@ observeEvent(input$nca, {
           start_from_last_dose = FALSE
         ),
         intervals_userinput()
-      ) %>% 
-      # Filter only the analytes and doses requested by the user
-      dplyr::filter(
-        DOSNO %in% input$select_dosno,
-        if ("EVID" %in% names(data())) EVID == 0 else TRUE
-      ),
+      ) %>%
+        # Filter only the analytes and doses requested by the user
+        dplyr::filter(
+          DOSNO %in% input$select_dosno,
+          if ("EVID" %in% names(data())) EVID == 0 else TRUE
+        ),
       units = PKNCA::pknca_units_table(
         concu = mydata$conc$data$PCSTRESU[1],
         doseu = mydata$dose$data$DOSEU[1],

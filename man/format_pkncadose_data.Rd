@@ -7,9 +7,9 @@
 format_pkncadose_data(
   pkncaconc_data,
   group_columns,
+  dosno_column = NULL,
   time_column = "AFRLT",
-  since_lastdose_time_column = "ARRLT",
-  route_column = "ROUTE"
+  since_lastdose_time_column = "ARRLT"
 )
 }
 \arguments{
