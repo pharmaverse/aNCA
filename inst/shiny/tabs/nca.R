@@ -244,17 +244,24 @@ observeEvent(input$submit_analyte, priority = 2, {
 })
 
 # Display the PKNCA data object for the user (concentration records)
-output$datatable <- DT::renderDataTable({
+output$datatable <- renderReactable({
   req(mydata())
-  DT::datatable(
-    data = mydata()$conc$data,
-    extensions = "FixedHeader",
-    options = list(
-      scrollX = TRUE,
-      scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-      fixedHeader = TRUE
-    )
+  data <- mydata()$conc$data
+  # Generate column definitions
+  col_defs <- generate_col_defs(data)
+
+  reactable(
+    data,
+    columns = col_defs,
+    searchable = TRUE,
+    sortable = TRUE,
+    highlight = TRUE,
+    wrap = FALSE,
+    resizable = TRUE,
+    showPageSizeOptions = TRUE,
+    striped = TRUE,
+    bordered = TRUE,
+    height = "60vh"
   )
 })
 
