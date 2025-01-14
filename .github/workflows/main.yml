@@ -3,6 +3,13 @@
 # the developement process. When package is ready to
 # be published, revisit and add release-related
 # workflows.
+# Due to the need of some customization, instead of
+# referencing the workflows directly, they are copied
+# over and modified to install needed system dependencies.
+# This means that in case of an update, the changes
+# will need to be applied manually.
+#
+# Last workflow update: 2025-09-01
 name: admiral CI/CD Workflows
 
 on:
@@ -32,49 +39,42 @@ jobs:
         id: get_r_version
         run: echo "R_VERSION=$R_VERSION" >> $GITHUB_OUTPUT
         shell: bash
+
   spellcheck:
     name: Spelling
-    uses: pharmaverse/admiralci/.github/workflows/spellcheck.yml@main
+    uses: ./.github/workflows/spellcheck.yml
     if: github.event_name == 'pull_request'
     needs: get_r_version
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
+
   linter:
     name: Lint
-    uses: pharmaverse/admiralci/.github/workflows/lintr.yml@main
+    uses: ./.github/workflows/lintr.yml
     needs: get_r_version
     if: github.event_name == 'pull_request'
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
+
   man-pages:
     name: Man Pages
-    uses: pharmaverse/admiralci/.github/workflows/man-pages.yml@main
-    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/man-pages.yml
     needs: get_r_version
+    if: github.event_name == 'pull_request'
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
+    
   tests:
     name: Tests
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/test.yml
     needs: get_r_version
-    container:
-      image: "ghcr.io/pharmaverse/admiralci-${{ needs.get_r_version.outputs.r-version }}:latest"
-    steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+    if: github.event_name == 'pull_request'
+    with:
+      r-version: "${{ needs.get_r_version.outputs.r-version }}"
 
-        - name: Install dependencies
-          run: |
-            Rscript -e 'remotes::install_deps(dependencies = TRUE)'
-
-        - name: Run tests
-          shell: Rscript {0}
-          run: |
-            devtools::load_all(".")
-            devtools::test()
   check:
     name: Check
-    uses: pharmaverse/admiralci/.github/workflows/r-cmd-check.yml@main
+    uses: ./.github/workflows/r-cmd-check.yml
     if: github.event_name == 'pull_request'
     with:
         error-on: error
