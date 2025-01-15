@@ -3,7 +3,7 @@
 #' Defines an impute column in the intervals of the PKNCAdata object based on data
 #'
 #' @param mydata A PKNCAdata object containing concentration and dose data.
-#' @return A PKNCAdata object with updated intervals table including start imputation strategies.
+#' @returns A PKNCAdata object with updated intervals table including start imputation strategies.
 #' @import dplyr
 #' @importFrom rlang sym
 #' @importFrom PKNCA pk.calc.c0
@@ -36,9 +36,9 @@ create_start_impute <- function(mydata) {
 
   mydata_with_int <- merge(
     x = mydata$conc$data %>%
-      dplyr::select(any_of(c(conc_group_columns, conc_column, time_column))),
+      select(any_of(c(conc_group_columns, conc_column, time_column))),
     y = mydata$dose$data %>%
-      dplyr::select(any_of(c(dose_group_columns, route_column,
+      select(any_of(c(dose_group_columns, route_column,
                              duration_column, "DOSNO", "DRUG")))
   ) %>%
     merge(mydata$intervals)
@@ -48,7 +48,7 @@ create_start_impute <- function(mydata) {
     if (analyte_column %in% colnames(mydata_with_int)) {
       drug_column <- analyte_column
     } else {
-      mydata_with_int <- dplyr::mutate(mydata_with_int,
+      mydata_with_int <- mutate(mydata_with_int,
                                        ANALYTE = "A")
       analyte_column <- "ANALYTE"
       drug_column <- analyte_column

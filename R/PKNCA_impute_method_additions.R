@@ -7,7 +7,7 @@
 #' @param ... Additional arguments (currently not used).
 #' @param options List of options (currently not used).
 #'
-#' @return A data frame with imputed start concentration.
+#' @returns A data frame with imputed start concentration.
 #' @details
 #' This function adheres to the structure required by the `PKNCA` package to work with its
 #' functionalities. For more information, see the
@@ -47,7 +47,7 @@ PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., opti
 #' @param ... Additional arguments (currently not used).
 #' @param options List of options (currently not used).
 #'
-#' @return A data frame with imputed start concentration.
+#' @returns A data frame with imputed start concentration.
 #' @details
 #' This function adheres to the structure required by the `PKNCA` package to work with its
 #' functionalities.For more information, see the
@@ -63,8 +63,8 @@ PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., opti
 PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = list()) { # nolint
   d_conc_time <- data.frame(conc = conc, time = time)
   if (!any(time == start)) {
-    all_concs <- conc[time >= start  &  time <= end]
-    all_times <- time[time >= start  &  time <= end]
+    all_concs <- conc[time >= start & time <= end]
+    all_times <- time[time >= start & time <= end]
     if (!all(is.na(all_concs))) {
       c1 <- all_concs[which.min(all_times)]
       d_conc_time <- rbind(d_conc_time, data.frame(time = start, conc = c1))
