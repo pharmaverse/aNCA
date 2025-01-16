@@ -39,7 +39,7 @@ create_start_impute <- function(mydata) {
       select(any_of(c(conc_group_columns, conc_column, time_column))),
     y = mydata$dose$data %>%
       select(any_of(c(dose_group_columns, route_column,
-                             duration_column, "DOSNO", "DRUG")))
+                      duration_column, "DOSNO", "DRUG")))
   ) %>%
     merge(mydata$intervals)
 
@@ -49,7 +49,7 @@ create_start_impute <- function(mydata) {
       drug_column <- analyte_column
     } else {
       mydata_with_int <- mutate(mydata_with_int,
-                                       ANALYTE = "A")
+                                ANALYTE = "A")
       analyte_column <- "ANALYTE"
       drug_column <- analyte_column
     }
@@ -83,13 +83,13 @@ create_start_impute <- function(mydata) {
         # 1st dose with not IV bolus or analyte =! drug : Start concentration is 0
         is.first.dose & (!is.ivbolus | !is.analyte.drug) ~ "start_conc0",
 
-        # Posterior doses not IV bolus or analyte =! drug : Start concentration is a predose concentration
+        # Posterior doses not IV bolus or analyte =! drug : Start concentration shifts to predose
         !is.first.dose & (!is.ivbolus | !is.analyte.drug) ~ "start_predose",
 
-        # IV bolus with analyte = drug : Start concentration is the log-extrapolated concentration (if possible)
+        # IV bolus with analyte = drug : Start concentration is log-backextrapolated (if possible)
         is.ivbolus & is.analyte.drug & is.possible.c0.logslope ~ "start_logslope",
 
-        # IV bolus with analyte = drug and not possible log-extrapolation: Start concentration is first observed concentration
+        # IV bolus with analyte = drug and not possible logslope: Start concentration is 1st conc
         is.ivbolus & is.analyte.drug ~ "start_c1"
       )
     ) %>%

@@ -457,7 +457,7 @@ res_nca <- eventReactive(pk_nca_trigger(), {
 
     # Make the starts and ends of results relative to last dose using the dose data
     myres$result <- myres$result %>%
-      inner_join(select(mydata()$dose$data, -exclude)) %>% 
+      inner_join(select(mydata()$dose$data, -exclude)) %>%
       dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
                     end = end - !!sym(mydata()$dose$columns$time)) %>%
       dplyr::select(names(myres$result))
