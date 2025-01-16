@@ -363,13 +363,13 @@ observeEvent(input$nca, {
     input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
     input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
 
-    starts <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
-    ends <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
+    starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
+    ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
 
     # Make a list of dataframes with each of the intervals requested
     intervals_list <- lapply(seq_along(starts), function(i) {
       mydata()$intervals %>%
-        dplyr::mutate(
+        mutate(
           start = start + as.numeric(starts[i]),
           end = start + as.numeric(ends[i])
         ) %>%
