@@ -455,12 +455,12 @@ res_nca <- eventReactive(pk_nca_trigger(), {
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
 
-    # Make the starts and ends of results relative to last dose
-    myres$result <- merge(myres$result, mydata()$dose$data) %>%
+    # Make the starts and ends of results relative to last dose using the dose data
+    myres$result <- myres$result %>%
+      inner_join(select(mydata()$dose$data, -exclude)) %>% 
       dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
                     end = end - !!sym(mydata()$dose$columns$time)) %>%
       dplyr::select(names(myres$result))
-    
 
     # Return the result
     return(myres)
