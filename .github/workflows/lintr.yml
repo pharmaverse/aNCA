@@ -1,0 +1,149 @@
+# Source:
+# https://github.com/pharmaverse/admiralci/blob/main/.github/workflows/lintr.yml
+# Modified to install system dependencies.
+
+name: Lint
+
+on:
+  workflow_dispatch:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: choice
+        options:
+          - devel
+          - latest
+      lint-all-files:
+        description: "Lint all files every time"
+        default: "false"
+        required: false
+        type: string
+      latest-lintr:
+        description: "Latest lintr CRAN release"
+        default: "false"
+        required: false
+        type: string
+      install-package:
+        description: "Install package locally."
+        default: "false"
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: string
+      lint-all-files:
+        description: "Lint all files every time"
+        default: "false"
+        required: false
+        type: string
+      latest-lintr:
+        description: "Latest lintr CRAN release"
+        default: "false"
+        required: false
+        type: string
+      install-package:
+        description: "Install package locally."
+        default: "false"
+        required: false
+        type: string
+
+concurrency:
+  group: lint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
+    if: >
+      !contains(github.event.commits[0].message, '[skip lint]')
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      ##################### BEGIN boilerplate steps #####################
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+
+      - name: Checkout repo (PR) 🛎
+        uses: actions/checkout@v4.2.2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        if: github.event_name != 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.staged.dependencies
+          key: staged-deps
+
+      - name: Run Staged dependencies
+        uses: insightsengineering/staged-dependencies-action@v1
+        with:
+          run-system-dependencies: true
+          renv-restore: false
+          enable-check: false
+          direction: upstream
+          git-ref: ${{ steps.branch-name.outputs.current_branch }}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install latest release of lintr
+        run: |
+          install.packages("lintr", repos = "https://packagemanager.posit.co/cran/latest/")
+        shell: Rscript {0}
+        if: ${{ inputs.latest-lintr == 'true' }}
+
+      - name: Install package
+        run: renv::install(".", dependencies = "no-deps")
+        shell: Rscript {0}
+        if: ${{ inputs.install-package == 'true' }}
+      ##################### END boilerplate steps #####################
+
+      - name: Changed files
+        id: files
+        uses: Ana06/get-changed-files@v2.2.0
+        with:
+          format: "json"
+          filter: "*"
+
+      - name: Lint
+        run: |
+          exclusions_list <- NULL
+          if (!identical("${{ inputs.lint-all-files }}", "true")) {
+            changed_files <- jsonlite::fromJSON('${{ steps.files.outputs.added_modified }}')
+            all_files <- list.files(recursive = TRUE)
+            exclusions_list <- if (any(changed_files %in% c(".lintr", "renv.lock"))) {
+              as.list(setdiff(all_files, changed_files))
+            } else {
+              NULL
+            }
+          }
+          lints <- lintr::lint_package(exclusions = exclusions_list)
+          saveRDS(lints, file = "lints.rds")
+        shell: Rscript {0}
+
+      - name: Error if lints are detected
+        run: |
+          lints <- readRDS("lints.rds")
+          if (length(lints) > 0L) {
+            print(lints)
+            stop("Lints detected. Please review and adjust code according to the comments provided.", call. = FALSE)
+          }
+        shell: Rscript {0}
