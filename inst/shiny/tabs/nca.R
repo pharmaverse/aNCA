@@ -246,7 +246,9 @@ observeEvent(input$submit_analyte, priority = 2, {
 # Display the PKNCA data object for the user (concentration records)
 output$datatable <- renderReactable({
   req(mydata())
-  data <- mydata()$conc$data
+  data <- mydata()$conc$data %>%
+    filter(DOSNO %in% input$select_dosno,
+           ANALYTE %in% input$select_analyte)
   # Generate column definitions
   col_defs <- generate_col_defs(data)
 
@@ -458,6 +460,7 @@ res_nca <- eventReactive(pk_nca_trigger(), {
       dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
                     end = end - !!sym(mydata()$dose$columns$time)) %>%
       dplyr::select(names(myres$result))
+    
 
     # Return the result
     return(myres)
