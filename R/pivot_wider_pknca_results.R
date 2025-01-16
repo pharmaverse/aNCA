@@ -71,9 +71,9 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
       select(-exclude, -PPORRESU, -start, -end,
-                    -PPTESTCD, -interval_name, -type_interval) %>%
+             -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col,
-                         values_from = PPORRES)
+                  values_from = PPORRES)
 
     interval_aucs_exclude <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
@@ -82,7 +82,7 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       )  %>%
       select(-PPORRES, -PPORRESU, -start, -end,
-                    -PPTESTCD, -interval_name, -type_interval) %>%
+             -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
     interval_aucs <- inner_join(interval_aucs_vals, interval_aucs_exclude) %>%

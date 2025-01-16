@@ -89,7 +89,7 @@ format_pkncadose_data <- function(pkncaconc_data,
     mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
     group_by(!!!syms(group_columns)) %>%
     arrange(!!sym(since_lastdose_time_column) < 0,
-                   !!sym(since_lastdose_time_column)) %>%
+            !!sym(since_lastdose_time_column)) %>%
     slice(1) %>%
     ungroup() %>%
     arrange(!!!syms(group_columns))
