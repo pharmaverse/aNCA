@@ -34,13 +34,13 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
   }
 
   ADNCA %>%
-    dplyr::mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
-    dplyr::arrange(!!sym(time_column)) %>%
-    dplyr::mutate(TIME = !!sym(time_column)) %>%
-    dplyr::group_by(!!!syms(group_columns)) %>%
-    dplyr::mutate(IX = seq_len(n())) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(!!!syms(group_columns))
+    mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
+    arrange(!!sym(time_column)) %>%
+    mutate(TIME = !!sym(time_column)) %>%
+    group_by(!!!syms(group_columns)) %>%
+    mutate(IX = seq_len(n())) %>%
+    ungroup() %>%
+    arrange(!!!syms(group_columns))
 }
 
 #' Create PK Dose Dataset
@@ -86,13 +86,13 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   pkncaconc_data %>%
-    dplyr::mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
-    dplyr::group_by(!!!syms(group_columns)) %>%
-    dplyr::arrange(!!sym(since_lastdose_time_column) < 0,
+    mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
+    group_by(!!!syms(group_columns)) %>%
+    arrange(!!sym(since_lastdose_time_column) < 0,
                    !!sym(since_lastdose_time_column)) %>%
-    dplyr::slice(1) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(!!!syms(group_columns))
+    slice(1) %>%
+    ungroup() %>%
+    arrange(!!!syms(group_columns))
 }
 
 #' Create Dose Intervals Dataset
@@ -141,8 +141,8 @@ format_pkncadata_intervals <- function(pknca_dose,
     mutate(start = if (start_from_last_dose) !!sym(pknca_dose$columns$time)
            else !!sym(pknca_dose$columns$time) + !!sym("ARRLT")) %>%
     group_by(!!!syms(unname(unlist(pknca_dose$columns$groups)))) %>%
-    dplyr::arrange(!!sym(pknca_dose$columns$time)) %>%
-    dplyr::mutate(end = lead(as.numeric(!!sym(pknca_dose$columns$time)), default = Inf)) %>%
+    arrange(!!sym(pknca_dose$columns$time)) %>%
+    mutate(end = lead(as.numeric(!!sym(pknca_dose$columns$time)), default = Inf)) %>%
     ungroup() %>%
     select(any_of(c("start", "end", unname(unlist(pknca_dose$columns$groups)), "DOSNO"))) %>%
 
