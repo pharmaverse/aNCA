@@ -59,10 +59,14 @@ create_start_impute <- function(mydata) {
   mydata$intervals <- mydata_with_int %>%
     group_by(across(all_of(c(group_columns, "DOSNO", "start", "end")))) %>%
     arrange(across(all_of(c(group_columns, time_column)))) %>%
-    dplyr::mutate(is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
-                                                              time = !!sym(time_column),
-                                                              time.dose = start[1],
-                                                              method = "logslope"))
+    mutate(
+      is.first.dose = DOSNO == 1,
+      is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
+      is.analyte.drug = !!sym(analyte_column) == !!sym(drug_column),
+      is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
+                                                  time = !!sym(time_column),
+                                                  time.dose = start[1],
+                                                  method = "logslope"))
     ) %>%
     arrange(
       (!!sym(time_column) - start) < 0,
@@ -73,22 +77,20 @@ create_start_impute <- function(mydata) {
     rowwise() %>%
     mutate(
       impute = case_when(
+        # Start concentration already present: No imputation (NA)
         !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ NA,
-        DOSNO == 1 &
-          (tolower(!!sym(route_column)) == "extravascular" |
-             !!sym(duration_column) > 0 |
-             !!sym(analyte_column) != !!sym(drug_column)) ~ "start_conc0",
-        DOSNO > 1 &
-          (tolower(!!sym(route_column)) == "extravascular" |
-             !!sym(duration_column) > 0 |
-             !!sym(analyte_column) != !!sym(drug_column)) ~ "start_predose",
-        tolower(!!sym(route_column)) == "intravascular" &
-          !!sym(duration_column) == 0 &
-          !!sym(analyte_column) == !!sym(drug_column) &
-          is.possible.c0.logslope ~ "start_logslope",
-        tolower(!!sym(route_column)) == "intravascular" &
-          !!sym(duration_column) == 0 &
-          !!sym(analyte_column) == !!sym(drug_column) ~ "start_c1"
+
+        # 1st dose with not IV bolus or analyte =! drug : Start concentration is 0
+        is.first.dose & (!is.ivbolus | !is.analyte.drug) ~ "start_conc0",
+
+        # Posterior doses not IV bolus or analyte =! drug : Start concentration is a predose concentration
+        !is.first.dose & (!is.ivbolus | !is.analyte.drug) ~ "start_predose",
+
+        # IV bolus with analyte = drug : Start concentration is the log-extrapolated concentration (if possible)
+        is.ivbolus & is.analyte.drug & is.possible.c0.logslope ~ "start_logslope",
+
+        # IV bolus with analyte = drug and not possible log-extrapolation: Start concentration is first observed concentration
+        is.ivbolus & is.analyte.drug ~ "start_c1"
       )
     ) %>%
     # Select only the columns of interest
