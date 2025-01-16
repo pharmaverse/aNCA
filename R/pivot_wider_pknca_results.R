@@ -40,7 +40,7 @@ pivot_wider_pknca_results <- function(myres) {
     mutate(PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
     pivot_wider(names_from = PPTESTCD, values_from = exclude)
 
-  infinite_aucs <- merge(infinite_aucs_vals, infinite_aucs_exclude)
+  infinite_aucs <- inner_join(infinite_aucs_vals, infinite_aucs_exclude)
 
   infinite_aucs_with_lambda <- inner_join(myres$data$conc$data, infinite_aucs) %>%
     group_by(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO) %>%
@@ -85,7 +85,7 @@ pivot_wider_pknca_results <- function(myres) {
                     -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
-    interval_aucs <- merge(interval_aucs_vals, interval_aucs_exclude) %>%
+    interval_aucs <- inner_join(interval_aucs_vals, interval_aucs_exclude) %>%
       # Rename column names to include the units in parenthesis
       rename_with(~ifelse(
         .x %in% names(dict_pttestcd_with_units),
@@ -93,7 +93,7 @@ pivot_wider_pknca_results <- function(myres) {
         .x
       ))
 
-    all_aucs <- merge(infinite_aucs_with_lambda, interval_aucs, all = TRUE)
+    all_aucs <- inner_join(infinite_aucs_with_lambda, interval_aucs, all = TRUE)
   } else {
     all_aucs <- infinite_aucs_with_lambda
   }
