@@ -61,12 +61,12 @@ flexible_violinboxplot <- function(boxplotdata,
 
   # ylabel of violin/boxplot
   ylabel <- {
-    if (box_data$PPORRESU[1] == "unitless" ||
-          is.na(box_data$PPORRESU[1]) ||
-          is.null(box_data$PPORRESU)) {
+    if (box_data$PPSTRESU[1] == "unitless" ||
+          is.na(box_data$PPSTRESU[1]) ||
+          is.null(box_data$PPSTRESU)) {
       parameter
     } else {
-      paste(parameter, " [", box_data$PPORRESU[1], "]")
+      paste(parameter, " [", box_data$PPSTRESU[1], "]")
     }
   }
 
@@ -75,7 +75,7 @@ flexible_violinboxplot <- function(boxplotdata,
     data = box_data %>% arrange(!!!syms(colorvars)),
     aes(
       x = interaction(!!!syms(xvars), sep = "\n"),
-      y = PPORRES,
+      y = PPSTRES,
       color = interaction(!!!syms(colorvars))
     )
   )

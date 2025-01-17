@@ -123,6 +123,7 @@ slope_selector_server <- function(
     observeEvent(list(
       plot_data(), res_nca(), input$plots_per_page, input$search_patient, current_page()
     ), {
+      req(res_nca())
       log_trace("{id}: Updating displayed plots")
 
       # Make sure the search_patient input is not NULL

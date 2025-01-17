@@ -240,6 +240,13 @@ observeEvent(input$submit_analyte, priority = 2, {
     )
   )
 
+  # Redefine units for each analyte and for potential customizations
+  unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
+  analyte_column <- mydata$conc$columns$groups$group_analyte
+  mydata$units <- tidyr::crossing(mydata$units,
+                                  !!sym(analyte_column) := unique_analytes)  %>%
+    dplyr::mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
+
   mydata(mydata)
 })
 
@@ -353,8 +360,10 @@ observeEvent(input$removeAUC, {
     auc_counter(auc_counter() - 1)
   }
 })
+
 # NCA button object
 myres <- reactiveVal(NULL)
+
 observeEvent(input$nca, {
   req(mydata())
 
@@ -447,7 +456,8 @@ observeEvent(input$nca, {
   updateTabsetPanel(session, "ncapanel", selected = "Results")
 })
 
-res_nca <- eventReactive(pk_nca_trigger(), {
+res_nca <- reactiveVal(NULL)
+observeEvent(pk_nca_trigger(), {
   req(mydata())
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
@@ -463,9 +473,14 @@ res_nca <- eventReactive(pk_nca_trigger(), {
       dplyr::select(names(myres$result))
 
     # Return the result
-    return(myres)
+    res_nca(myres)
   })
 })
+
+# Parameter unit changes option: Opens a modal message with a units table to edit
+# It updates $units table of mydata & res_nca when the user saves their changes
+units_table_server("units_table_preNCA", mydata, res_nca)
+units_table_server("units_table_postNCA", mydata, res_nca)
 
 # TABSET: Results ==============================================================
 
@@ -479,7 +494,7 @@ final_res_nca <- reactiveVal(NULL)
 
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
-
+  req(res_nca())
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- pivot_wider_pknca_results(res_nca())
 
@@ -503,9 +518,9 @@ observeEvent(res_nca(), {
 
   # Include units for all column names
   dict_pttestcd_with_units <- res_nca()$result %>%
-    select(PPTESTCD, PPORRESU) %>%
+    select(PPTESTCD, PPSTRESU) %>%
     unique() %>%
-    pull(PPORRESU, PPTESTCD)
+    pull(PPSTRESU, PPTESTCD)
 
   final_res_nca <- final_res_nca %>%
     rename_with(~ifelse(

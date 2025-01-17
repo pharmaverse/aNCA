@@ -21,24 +21,24 @@ pivot_wider_pknca_results <- function(myres) {
 
   # Get all names with units and make a dictionary structure
   dict_pttestcd_with_units <- myres$result %>%
-    select(PPTESTCD, PPORRESU) %>%
+    select(PPTESTCD, PPSTRESU) %>%
     distinct() %>%
-    pull(PPORRESU, PPTESTCD)
+    pull(PPSTRESU, PPTESTCD)
 
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
   infinite_aucs_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
-    select(-PPORRESU, -exclude, -type_interval) %>%
-    pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
+    select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
+    pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
   infinite_aucs_exclude <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main") %>%
-    select(-PPORRES, -PPORRESU, -type_interval)  %>%
-    mutate(PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
-    pivot_wider(names_from = PPTESTCD, values_from = exclude)
+    select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
+    mutate(exclude.PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
+    pivot_wider(names_from = exclude.PPTESTCD, values_from = exclude)
 
   infinite_aucs <- inner_join(infinite_aucs_vals, infinite_aucs_exclude)
 
@@ -70,10 +70,10 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
-      select(-exclude, -PPORRESU, -start, -end,
+      select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col,
-                  values_from = PPORRES)
+                  values_from = PPSTRES)
 
     interval_aucs_exclude <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
@@ -81,7 +81,7 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       )  %>%
-      select(-PPORRES, -PPORRESU, -start, -end,
+      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
@@ -93,7 +93,7 @@ pivot_wider_pknca_results <- function(myres) {
         .x
       ))
 
-    all_aucs <- inner_join(infinite_aucs_with_lambda, interval_aucs, all = TRUE)
+    all_aucs <- inner_join(infinite_aucs_with_lambda, interval_aucs)
   } else {
     all_aucs <- infinite_aucs_with_lambda
   }

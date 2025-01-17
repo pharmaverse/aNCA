@@ -391,6 +391,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     # Reactive expression for summary table based on selected group and parameters
     summary_stats <- reactive({
       req(input$summary_groupby, input$select_display_parameters)
+      req(res_nca())
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(res_nca(), input$summary_groupby) %>%
@@ -444,7 +445,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     # Create formatted Box plot data: PKNCA + PP results, linking DOSEA + PPTESTCD
     boxplotdata <- reactive({
       group_columns <- unname(unlist(res_nca()$data$conc$columns$groups))
-
+      req(res_nca())
       left_join(
         res_nca()$result %>%
           filter(
