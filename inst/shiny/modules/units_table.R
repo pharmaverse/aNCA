@@ -85,7 +85,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
     })
 
     #' Rendering the modal units table
-    output$modal_units_table <- renderDT({
+    output$modal_units_table <- DT::renderDT({
       datatable(
         data = modal_units_table() %>%
           mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)),
