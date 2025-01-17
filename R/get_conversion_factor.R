@@ -4,7 +4,7 @@
 #'
 #' @param initial_unit A character string representing the initial unit.
 #' @param target_unit A character string representing the target unit.
-#' @return A numeric value for the conversion factor from the initial to the target unit,
+#' @returns A numeric value for the conversion factor from the initial to the target unit,
 #' or NA if the units are not convertible.
 #' @examples
 #' get_conversion_factor("meter", "kilometer")
