@@ -4,7 +4,7 @@ units_table_ui <- function(id) {
   tagList(
     actionButton(
       ns("open_units_table"),
-      icon = shiny::icon("scale-balanced"),
+      icon = icon("scale-balanced"),
       label = "Parameter Units",
       disabled = TRUE
     )
@@ -63,15 +63,15 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
       req(input$select_unitstable_analyte)
       analyte_column <- mydata()$conc$columns$groups$group_analyte
       modal_units_table_data <- mydata()$units %>%
-        dplyr::group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
-        dplyr::filter(!!sym(analyte_column) %in% input$select_unitstable_analyte) %>%
-        dplyr::rename(`Parameter` = PPTESTCD,
+        group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
+        filter(!!sym(analyte_column) %in% input$select_unitstable_analyte) %>%
+        rename(`Parameter` = PPTESTCD,
                       `Default unit` = PPORRESU,
                       `Conversion Factor` = conversion_factor,
                       `Custom unit` = PPSTRESU) %>%
-        dplyr::mutate(Analytes = paste(!!sym(analyte_column), collapse = ", ")) %>%
-        dplyr::ungroup() %>%
-        dplyr::select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
+        mutate(Analytes = paste(!!sym(analyte_column), collapse = ", ")) %>%
+        ungroup() %>%
+        select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
       modal_units_table(modal_units_table_data)
     })
 
@@ -85,10 +85,10 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
     })
 
     #' Rendering the modal units table
-    output$modal_units_table <- DT::renderDT({
+    output$modal_units_table <- renderDT({
       datatable(
         data = modal_units_table() %>%
-          dplyr::mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)),
+          mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)),
         escape = FALSE,
         class = "table table-striped table-bordered",
         rownames = FALSE,
@@ -167,9 +167,9 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
 
       # Tranforms the modal units table back to the original one
       modal_units_table <- modal_units_table() %>%
-        dplyr::mutate(Analytes = strsplit(Analytes, ", ")) %>%
-        tidyr::unnest(Analytes) %>%
-        dplyr::rename(ANALYTE = `Analytes`,
+        mutate(Analytes = strsplit(Analytes, ", ")) %>%
+        unnest(Analytes) %>%
+        rename(ANALYTE = `Analytes`,
                       PPTESTCD = `Parameter`,
                       PPORRESU = `Default unit`,
                       PPSTRESU = `Custom unit`,
@@ -188,13 +188,13 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
         res_nca <- res_nca()
         res_nca$data$units <- modal_units_table
         res_nca$result <- res_nca$result %>%
-          dplyr::select(-PPSTRESU, -PPSTRES) %>%
-          dplyr::left_join(
+          select(-PPSTRESU, -PPSTRES) %>%
+          left_join(
             modal_units_table,
             by = intersect(names(.), names(modal_units_table))
           ) %>%
-          dplyr::mutate(PPSTRES = PPORRES * conversion_factor) %>%
-          dplyr::select(-conversion_factor)
+          mutate(PPSTRES = PPORRES * conversion_factor) %>%
+          select(-conversion_factor)
         res_nca(res_nca)
 
       }
