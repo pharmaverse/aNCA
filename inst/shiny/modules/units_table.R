@@ -121,10 +121,28 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
 
     # Accept user modifications in the modal units table
     observeEvent(input$modal_units_table_cell_edit, {
+
       info <- input$modal_units_table_cell_edit
       modal_units_table <- modal_units_table()
+      
+      # If the edited cell is in the 'Conversion Factor' only accept numeric values
+      if (names(modal_units_table)[info$col + 1] == "Conversion Factor" && !is.numeric(info$value)) {
+        
+        # Report the user the expected numeric format
+        showNotification(
+          "Please enter a valid numeric value for the Conversion Factor.",
+          type = "error",
+          duration = 5
+        )
+      
+        # Elude further actions
+        return()
+      }
+      
+      # Make the edition in the units table
       modal_units_table[info$row, info$col + 1] <- info$value
 
+      # If the custom unit was changed recalculate the conversion factor
       if (names(modal_units_table)[info$col + 1] == "Custom unit") {
         def_unit <- modal_units_table[info$row, "Default unit"]
         cust_unit <- modal_units_table[info$row, "Custom unit"]
@@ -132,6 +150,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
                                                                                   cust_unit)
       }
 
+      # Update the server table
       modal_units_table(modal_units_table)
     })
 
