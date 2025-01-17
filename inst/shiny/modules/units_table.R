@@ -66,9 +66,9 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
         group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
         filter(!!sym(analyte_column) %in% input$select_unitstable_analyte) %>%
         rename(`Parameter` = PPTESTCD,
-                      `Default unit` = PPORRESU,
-                      `Conversion Factor` = conversion_factor,
-                      `Custom unit` = PPSTRESU) %>%
+               `Default unit` = PPORRESU,
+               `Conversion Factor` = conversion_factor,
+               `Custom unit` = PPSTRESU) %>%
         mutate(Analytes = paste(!!sym(analyte_column), collapse = ", ")) %>%
         ungroup() %>%
         select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
@@ -170,10 +170,10 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
         mutate(Analytes = strsplit(Analytes, ", ")) %>%
         unnest(Analytes) %>%
         rename(ANALYTE = `Analytes`,
-                      PPTESTCD = `Parameter`,
-                      PPORRESU = `Default unit`,
-                      PPSTRESU = `Custom unit`,
-                      conversion_factor = `Conversion Factor`)
+               PPTESTCD = `Parameter`,
+               PPORRESU = `Default unit`,
+               PPSTRESU = `Custom unit`,
+               conversion_factor = `Conversion Factor`)
 
       # Close the modal message window for the user
       removeModal()
