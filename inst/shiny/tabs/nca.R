@@ -18,8 +18,17 @@ observeEvent(data(), {
   updateSelectInput(
     session,
     inputId = "select_analyte",
-    label = "Choose the analyte :",
+    label = "Choose the Analyte(s) :",
     choices = unique(data()$ANALYTE)
+  )
+})
+
+observeEvent(data(), {
+  updateSelectInput(
+    session,
+    inputId = "select_pcspec",
+    label = "Choose the Specimen Type(s) :",
+    choices = unique(data()$PCSPEC)
   )
 })
 
@@ -183,14 +192,16 @@ observeEvent(input$submit_analyte, priority = 2, {
   dosno_column <- "DOSNO"
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
+  matrix_column <- "PCSPEC"
 
   # Segregate the data into concentration and dose records
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
                                    time_column = time_column) %>%
     dplyr::arrange(across(all_of(c(usubjid_column, time_column)))) %>%
-    # Consider only the analytes requested by the user
-    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte)
+    # Consider only the analytes and matrix requested by the user
+    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte,
+                  !!sym(matrix_column) %in% input$select_pcspec)
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
@@ -248,7 +259,8 @@ output$datatable <- renderReactable({
   req(mydata())
   data <- mydata()$conc$data %>%
     filter(DOSNO %in% input$select_dosno,
-           ANALYTE %in% input$select_analyte)
+           ANALYTE %in% input$select_analyte,
+           PCSPEC %in% input$select_pcspec)
   # Generate column definitions
   col_defs <- generate_col_defs(data)
 
@@ -644,7 +656,7 @@ output$settings_save <- downloadHandler(
     # Include the rule settings as additional columns
     setts <- setts_lambda %>%
       mutate(
-        ANALYTE = input$select_analyte,
+        ANALYTE %in% input$select_analyte,
         doses_selected = ifelse(
           !is.null(input$select_dosno),
           paste0(input$select_dosno, collapse = ","),

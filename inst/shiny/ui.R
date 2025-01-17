@@ -51,7 +51,13 @@ fluidPage(
                 # Selection of analyte
                 selectInput(
                   "select_analyte",
-                  "Choose the analyte :",
+                  "Choose the Analyte :",
+                  choices = NULL,
+                  multiple = TRUE),
+                # Selection of matrix
+                selectInput(
+                  "select_pcspec",
+                  "Choose the Matrix:",
                   choices = NULL,
                   multiple = TRUE),
                 selectInput(
