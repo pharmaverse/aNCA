@@ -11,7 +11,7 @@ units_table_ui <- function(id) {
   )
 }
 
-units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_to_calculate) {
+units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
