@@ -174,7 +174,7 @@ units_table_server <- function(id, mydata, res_nca = reactive(NULL), params_to_c
                       PPORRESU = `Default unit`,
                       PPSTRESU = `Custom unit`,
                       conversion_factor = `Conversion Factor`)
-      
+
       # Close the modal message window for the user
       removeModal()
 
