@@ -456,8 +456,8 @@ observeEvent(input$nca, {
   updateTabsetPanel(session, "ncapanel", selected = "Results")
 })
 
-
-res_nca <- eventReactive(pk_nca_trigger(), {
+res_nca <- reactiveVal(NULL)
+observeEvent(pk_nca_trigger(), {
   req(mydata())
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
@@ -473,7 +473,7 @@ res_nca <- eventReactive(pk_nca_trigger(), {
       dplyr::select(names(myres$result))
 
     # Return the result
-    myres
+    res_nca(myres)
   })
 })
 
