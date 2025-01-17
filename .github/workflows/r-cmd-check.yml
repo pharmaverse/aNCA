@@ -1,0 +1,231 @@
+# Source:
+# https://github.com/pharmaverse/admiralci/blob/main/.github/workflows/r-cmd-check.yml
+# Modified to install system dependencies.
+
+name: R CMD Check
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      error-on:
+        description: Input for the 'error_on' parameter in rcmdcheck::rcmdcheck()
+        required: false
+        default: note
+        type: string
+
+concurrency:
+  group: r-cmd-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  R-CMD-check:
+    runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ matrix.r_version }}:latest"
+    name: (${{ matrix.r_version }})
+    if: >
+      !contains(github.event.commits[0].message, '[skip r-cmd-check]')
+    strategy:
+      fail-fast: false
+      matrix:
+        r_version: ["release", "devel", "oldrel"]
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: true
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      R_REPOS: "https://cran.r-project.org"
+      DEPS_IGNORE: >-
+        pharmaversesdtm,
+        pharmaverseadam,
+        admiral,
+        admiraldev,
+        admiralophtha,
+        admiralonco,
+        admiralvaccine,
+        staged.dependencies
+
+      # DEPS_IGNORE: env variable to ignore package when building renv.lock (step Upload dependencies artifact)
+      # (improvments ideas : get this list of deps to ignore from staged.dependencies yml file)
+
+    steps:
+      ##################### BEGIN boilerplate steps #####################
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+
+      - name: Checkout repo (PR) 🛎
+        uses: actions/checkout@v4.2.2
+        if: |
+          github.event_name == 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        if: |
+          github.event_name != 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.staged.dependencies
+          key: staged-deps
+
+      - name: Run Staged dependencies
+        uses: insightsengineering/staged-dependencies-action@v1
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        with:
+          git-ref: ${{ steps.branch-name.outputs.current_branch }}
+          run-system-dependencies: true
+          renv-restore: false
+          enable-check: false
+          cran-repos: "https://cloud.r-project.org"
+          direction: upstream
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies from DESCRIPTION
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        run: |
+          remotes::install_local(force = TRUE, dependencies = TRUE)
+        shell: Rscript {0}
+
+      ##################### END boilerplate steps #####################
+
+      - name: Upload dependencies artifact
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        run: |
+          dir.create("/workspace/tmp")
+          library(dplyr)
+          installed_packages <- as.data.frame(installed.packages())
+          packages_to_remove <- Sys.getenv("DEPS_IGNORE", "")
+          packages_to_remove <- unlist(strsplit(packages_to_remove, ","))
+          installed_packages <- installed_packages %>% filter(LibPath != "/usr/local/lib/R/library") %>%  # remove pre-built deps
+          filter(!Package %in% packages_to_remove)
+          # save deps as csv file
+          write.csv(installed_packages, "/workspace/tmp/deps-${{ matrix.r_version }}.csv", row.names = FALSE)
+          # create also renv.lock file
+          setwd("/workspace/tmp")
+
+          renv_lock <- list(
+            "R" = list(
+              "Version" = paste(R.version$major, R.version$minor, sep=".")
+            ),
+            "Repositories" = list(
+                list(Name = "CRAN", URL = Sys.getenv("R_REPOS"))
+              ),
+            "Packages" = list()
+          )
+
+          # Populate with information about each package
+          for (package in installed_packages$Package) {
+            dep_name <- package
+            dep_version <- installed_packages[installed_packages$Package == package, "Version"]
+
+            version_parts <- strsplit(dep_version, "\\.")[[1]]
+            if (length(version_parts) == 4) {
+              print(sprintf("skipping installation of dep %s", dep_name))
+            } else {
+              print(sprintf("append dependency %s - version %s", dep_name, dep_version))
+              requirements <- tools::package_dependencies(dep_name, recursive = TRUE)
+              have_requirements <- length(requirements[[1]]) > 0
+              if (have_requirements) {
+                  renv_lock[["Packages"]][[dep_name]] <- list(
+                      "Package" = dep_name,
+                      "Version" = dep_version,
+                      "Source" = "Repository",
+                      "Repository" = "CRAN",
+                      "Requirements" = requirements[[dep_name]]
+                  )
+              } else {
+                  renv_lock[["Packages"]][[dep_name]] <- list(
+                      "Package" = dep_name,
+                      "Version" = dep_version,
+                      "Source" = "Repository",
+                      "Repository" = "CRAN"
+                  )
+              }
+            }
+          }
+
+          # Write the list to a JSON file (renv.lock)
+          writeLines(jsonlite::toJSON(renv_lock, pretty = TRUE, auto_unbox = TRUE), "renv-${{ matrix.r_version }}.lock")
+          print("generated renv.lock content")
+          system("cat renv-${{ matrix.r_version }}.lock")
+        shell: Rscript {0}
+
+      - name: Upload deps.csv and renv.lock artifacts
+        uses: actions/upload-artifact@v4
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        with:
+          name: deps-${{ matrix.r_version }}
+          path: |
+            /workspace/tmp/
+
+      - name: Check Version
+        id: check_version
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        run: |
+          maintenance_version="F"
+          description_dat <- readLines("DESCRIPTION")
+          for (i in seq_along(description_dat)) {
+            if (grepl("^Version:", description_dat[i])) {
+              current_version <- sub("^Version: ", "", description_dat[i])
+              version_parts <- strsplit(current_version, "\\.")[[1]]
+              # check if maintenance version
+              if (length(version_parts) == 4) {
+                print("Maintenance version detected (format X.Y.Z.M with M >= 9000)")
+                maintenance_version="T"
+              }
+            }
+          }
+          cat(sprintf("maintenance_version=%s", maintenance_version), file = Sys.getenv("GITHUB_OUTPUT"), append = TRUE)
+        shell: Rscript {0}
+
+      - name: Check
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        env:
+          _R_CHECK_CRAN_INCOMING_REMOTE_: false
+          _R_CHECK_FORCE_SUGGESTS_: false
+        run: |
+          unlink("tmp",recursive=TRUE)
+          if ("${{steps.check_version.outputs.maintenance_version}}" == "T"){
+            Sys.setenv("_R_CHECK_CRAN_INCOMING_SKIP_LARGE_VERSION_" = TRUE)
+          }
+          if (!requireNamespace("rcmdcheck", quietly = TRUE)) install.packages("rcmdcheck")
+          options(crayon.enabled = TRUE)
+          check_error_on <- "${{ inputs.error-on }}"
+          if (check_error_on == "") {
+            check_error_on <- "note"
+          }
+          rcmdcheck::rcmdcheck(
+            args = c("--no-manual", "--as-cran"),
+            error_on = check_error_on,
+            check_dir = "check"
+          )
+        shell: Rscript {0}
+
+      - name: Upload check results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r${{ matrix.r_version }}-results
+          path: check

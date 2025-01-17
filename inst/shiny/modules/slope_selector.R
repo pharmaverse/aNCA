@@ -74,7 +74,7 @@ slope_selector_ui <- function(id) {
           options = list(`actions-box` = TRUE)
         ),
       ),
-      div(align = "left", actionButton(ns("previous_page"), "Previous Page")),
+      div(align = "left", actionButton(ns("previous_page"), "Previous Page", class = "btn-page")),
       div(
         align = "center",
         tags$span(
@@ -85,7 +85,7 @@ slope_selector_ui <- function(id) {
           uiOutput(ns("page_number"), inline = TRUE)
         )
       ),
-      div(align = "right", actionButton(ns("next_page"), "Next Page"))
+      div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
     ),
     # Plots display #
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container", style = "height:70%;"),
@@ -95,7 +95,7 @@ slope_selector_ui <- function(id) {
 .SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
 
 slope_selector_server <- function(
-  id, mydata, res_nca, profiles_per_patient, cycle_nca, rv, settings_upload
+  id, mydata, res_nca, profiles_per_patient, cycle_nca, pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -106,8 +106,14 @@ slope_selector_server <- function(
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
-    observeEvent(input$next_page, current_page(current_page() + 1))
-    observeEvent(input$previous_page, current_page(current_page() - 1))
+    observeEvent(input$next_page, {
+      current_page(current_page() + 1)
+      shinyjs::disable(selector = ".btn-page")
+    })
+    observeEvent(input$previous_page, {
+      current_page(current_page() - 1)
+      shinyjs::disable(selector = ".btn-page")
+    })
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
     observeEvent(list(input$plots_per_page, input$search_patient), current_page(1))
 
@@ -135,9 +141,9 @@ slope_selector_server <- function(
           DOSNO %in% cycle_nca,
           USUBJID %in% search_patient
         ) %>%
-        select(USUBJID, DOSNO) %>%
+        dplyr::select(USUBJID, DOSNO) %>%
         unique() %>%
-        arrange(USUBJID, DOSNO)
+        dplyr::arrange(USUBJID, DOSNO)
 
       num_plots <- nrow(patient_profile_plot_ids)
 
@@ -170,6 +176,7 @@ slope_selector_server <- function(
       })
 
       output$slope_plots_ui <- renderUI({
+        shinyjs::enable(selector = ".btn-page")
         plot_outputs
       })
 
@@ -355,7 +362,7 @@ slope_selector_server <- function(
     #' saves and implements provided ruleset
     observeEvent(input$save_ruleset, {
       mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
-      rv$trigger <- rv$trigger + 1
+      pk_nca_trigger(pk_nca_trigger() + 1)
     })
 
     #' Plot data is a local reactive copy of full data. The purpose is to display data that

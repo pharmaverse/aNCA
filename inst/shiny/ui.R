@@ -16,6 +16,7 @@ fluidPage(
   "),
 
   includeCSS(file.path(assets, "style.css")),
+  includeScript(file.path(assets, "index.js")),
 
   page_navbar(
     id = "page",
@@ -45,19 +46,21 @@ fluidPage(
                   buttonLabel = list(icon("folder"), "Browse"),
                   accept = c(".csv", ".xpt")
                 ),
+                br(),
+
                 # Selection of analyte
-                selectInput("analyte", "Choose the analyte :", choices = NULL),
+                selectInput("select_analyte", "Choose the analyte :", choices = NULL),
+                selectInput(
+                  "select_dosno",
+                  "Choose the Dose Number:",
+                  multiple = TRUE,
+                  choices = c("Please specify ANALYTE in Data Selection" = "")
+                ),
                 br(),
                 actionButton("submit_analyte", "Submit"),
                 reactableOutput("datatable"),
               ),
               tabPanel("Settings",
-                selectInput(
-                  "cyclenca",
-                  "Choose the Dose Number:",
-                  multiple = TRUE,
-                  choices = c("Please specify ANALYTE in Data Selection" = "")
-                ),
                 selectInput(
                   "method",
                   "Extrapolation Method:",
@@ -67,6 +70,24 @@ fluidPage(
                   selected = "lin up/log down"
                 ),
                 units_table_ui("units_table_preNCA"),
+                h4("Data imputation"),
+                tags$div(
+                  checkboxInput(
+                    inputId = "should_impute_c0",
+                    label = "Impute concentration at t0 when missing",
+                    value = TRUE
+                  ),
+                  id = "checkbox_id",
+                  title = paste(
+                    "Imputes a start-of-interval concentration 
+                    to calculate non-observational parameters:",
+                    "If DOSNO = 1 & IV bolus: C0 = 0",
+                    "If DOSNO > 1 & not IV bolus: C0 = predose",
+                    "If IV bolus & monoexponential data: logslope",
+                    "If IV bolus & not monoexponential data: C0 = C1",
+                    sep = "\n"
+                  )
+                ),
                 br(),
                 checkboxInput("AUCoptions", "Select Partial AUC"),
                 conditionalPanel(
@@ -132,7 +153,7 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_aucpext_pred", "AUCPEP (% ext.predicted): "),
+                    checkboxInput("rule_aucpext_pred", "AUCPEP (% ext.predicted): ")
                   ),
                   column(
                     width = 6,
@@ -156,7 +177,7 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_span_ratio", "SPAN: "),
+                    checkboxInput("rule_span_ratio", "SPAN: ")
                   ),
                   column(
                     width = 6,
@@ -178,7 +199,7 @@ fluidPage(
                 )
               ),
 
-              tabPanel("Slope Selector", slope_selector_ui("slope_selector")),
+              tabPanel("Slope Selector", slope_selector_ui("slope_selector"))
 
             )
           ),
@@ -200,7 +221,7 @@ fluidPage(
                 DTOutput("myresults"),
                 tableOutput("summaryTable"),
                 actionButton("download", "Download the NCA Data"),
-                downloadButton("local_download_NCAres", "Download locally the NCA Data"),
+                downloadButton("local_download_NCAres", "Download locally the NCA Data")
               ),
               tabPanel(
                 "Slopes",
