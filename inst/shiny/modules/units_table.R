@@ -31,14 +31,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL), params_t
       # Show the modal message with the units table and an analyte selector
       showModal(modalDialog(
         title = tagList(
-          span("Units of NCA parameter results"),
-          tags$button(
-            type = "button",
-            class = "close",
-            `data-dismiss` = "modal",
-            `aria-label` = "Close",
-            span(`aria-hidden` = "true", HTML("&times;"))
-          )
+          span("Units of NCA parameter results")
         ),
         selectInput(
           inputId = ns("select_unitstable_analyte"),
