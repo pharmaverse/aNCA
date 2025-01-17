@@ -193,7 +193,7 @@ observeEvent(input$submit_analyte, priority = 2, {
     dplyr::filter(!!sym(analyte_column) %in% input$select_analyte)
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
-                                   group_columns = c(group_columns, usubjid_column),
+                                   group_columns = c(group_columns, usubjid_column, analyte_column),
                                    time_column = time_column,
                                    dosno_column = dosno_column,
                                    since_lastdose_time_column = "ARRLT")
@@ -214,7 +214,7 @@ observeEvent(input$submit_analyte, priority = 2, {
 
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID + ANALYTE,
     route = route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
@@ -320,7 +320,7 @@ observe({
 observeEvent(input$select_analyte, priority = -1, {
   req(data())
   doses_options <- data() %>%
-    filter(ANALYTE == input$select_analyte) %>%
+    filter(ANALYTE %in% input$select_analyte) %>%
     pull(DOSNO) %>%
     sort() %>%
     unique()
@@ -458,9 +458,9 @@ res_nca <- eventReactive(pk_nca_trigger(), {
     # Make the starts and ends of results relative to last dose using the dose data
     myres$result <- myres$result %>%
       inner_join(select(mydata()$dose$data, -exclude)) %>%
-      dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
+      mutate(start = start - !!sym(mydata()$dose$columns$time),
                     end = end - !!sym(mydata()$dose$columns$time)) %>%
-      dplyr::select(names(myres$result))
+      select(names(myres$result))
 
     # Return the result
     return(myres)

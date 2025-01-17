@@ -49,7 +49,11 @@ fluidPage(
                 br(),
 
                 # Selection of analyte
-                selectInput("select_analyte", "Choose the analyte :", choices = NULL),
+                selectInput(
+                  "select_analyte",
+                  "Choose the analyte :",
+                  choices = NULL,
+                  multiple = TRUE),
                 selectInput(
                   "select_dosno",
                   "Choose the Dose Number:",

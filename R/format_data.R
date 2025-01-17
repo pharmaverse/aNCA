@@ -64,7 +64,8 @@ format_pkncadose_data <- function(pkncaconc_data,
                                   group_columns,
                                   dosno_column = NULL,
                                   time_column = "AFRLT",
-                                  since_lastdose_time_column = "ARRLT") {
+                                  since_lastdose_time_column = "ARRLT",
+                                  nominal_time = "NFRLT") {
 
   # Check: Dataset is not empty
   if (nrow(pkncaconc_data) == 0) {
@@ -85,7 +86,7 @@ format_pkncadose_data <- function(pkncaconc_data,
     group_columns <- c(group_columns, "TIME")
   }
 
-  pkncaconc_data %>%
+  dose_data <- pkncaconc_data %>%
     mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
     group_by(!!!syms(group_columns)) %>%
     arrange(!!sym(since_lastdose_time_column) < 0,
@@ -93,6 +94,8 @@ format_pkncadose_data <- function(pkncaconc_data,
     slice(1) %>%
     ungroup() %>%
     arrange(!!!syms(group_columns))
+  
+  dose_data
 }
 
 #' Create Dose Intervals Dataset
