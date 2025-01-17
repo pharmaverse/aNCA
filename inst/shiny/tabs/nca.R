@@ -176,8 +176,6 @@ observeEvent(input$settings_upload, {
 mydata <- reactiveVal(NULL)
 observeEvent(input$submit_analyte, priority = 2, {
 
-<<<<<<< HEAD
-=======
   # Define explicetely input columns until there are input definitions
   group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
@@ -186,7 +184,6 @@ observeEvent(input$submit_analyte, priority = 2, {
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
 
->>>>>>> origin/main
   # Segregate the data into concentration and dose records
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
@@ -210,24 +207,15 @@ observeEvent(input$submit_analyte, priority = 2, {
   # Make the PKNCA concentration and dose objects
   myconc <- PKNCA::PKNCAconc(
     df_conc,
-<<<<<<< HEAD
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + USUBJID + DOSNO / ANALYTE,
-=======
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
->>>>>>> origin/main
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-<<<<<<< HEAD
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + USUBJID + DOSNO,
-    route = ifelse(toupper(df_dose$IQROUTE) == "EXTRAVASCULAR", "extravascular", "intravascular"),
-=======
     formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
     route = route_column,
->>>>>>> origin/main
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
@@ -252,7 +240,6 @@ observeEvent(input$submit_analyte, priority = 2, {
     )
   )
 
-<<<<<<< HEAD
   # Redefine units for each analyte and for potential customizations
   unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
   analyte_column <- mydata$conc$columns$groups$group_analyte
@@ -260,8 +247,6 @@ observeEvent(input$submit_analyte, priority = 2, {
                                   !!sym(analyte_column) := unique_analytes)  %>%
     dplyr::mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
-=======
->>>>>>> origin/main
   mydata(mydata)
 })
 
@@ -339,11 +324,6 @@ observe({
 
 # Choose dosenumbers to be analyzed
 
-<<<<<<< HEAD
-observeEvent(input$submit_analyte, priority = -1, {
-
-  req(mydata())
-=======
 observeEvent(input$select_analyte, priority = -1, {
   req(data())
   doses_options <- data() %>%
@@ -352,7 +332,6 @@ observeEvent(input$select_analyte, priority = -1, {
     sort() %>%
     unique()
 
->>>>>>> origin/main
   updateSelectInput(
     session,
     inputId = "select_dosno",
@@ -381,16 +360,10 @@ observeEvent(input$removeAUC, {
     auc_counter(auc_counter() - 1)
   }
 })
-<<<<<<< HEAD
 
 # NCA button object
-# Create a reactive values object
-rv <- reactiveValues(trigger = 0)
-# Update the trigger whenever either button is clicked
-=======
-# NCA button object
 myres <- reactiveVal(NULL)
->>>>>>> origin/main
+
 observeEvent(input$nca, {
   req(mydata())
 
@@ -483,16 +456,9 @@ observeEvent(input$nca, {
   updateTabsetPanel(session, "ncapanel", selected = "Results")
 })
 
-<<<<<<< HEAD
-# run the nca upon button click
-res_nca <- reactiveVal(NULL)
-observeEvent(rv$trigger, {
-  req(!is.null(input$cyclenca))
 
-=======
 res_nca <- eventReactive(pk_nca_trigger(), {
   req(mydata())
->>>>>>> origin/main
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
@@ -507,7 +473,7 @@ res_nca <- eventReactive(pk_nca_trigger(), {
       dplyr::select(names(myres$result))
 
     # Return the result
-    res_nca(myres)
+    myres
   })
 })
 
