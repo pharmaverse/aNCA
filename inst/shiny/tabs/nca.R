@@ -287,7 +287,12 @@ output$datatable <- renderReactable({
 # Define the profiles (dosno) associated with each patient (usubjid) for the selected analyte
 profiles_per_patient <- reactiveVal(NULL)
 observeEvent(mydata(), {
-  profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
+  profiles_per_patient(
+    mydata()$conc$data %>%
+      mutate(USUBJID = as.character(USUBJID)) %>%
+      group_by(USUBJID, ANALYTE, PCSPEC) %>%
+      summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
+  )
 })
 
 # Include keyboard limits for the settings GUI display
@@ -401,7 +406,12 @@ observeEvent(input$nca, {
   }
 
   # Update profiles per patient considering the profiles selected
-  profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
+  profiles_per_patient(
+    mydata()$conc$data %>%
+      mutate(USUBJID = as.character(USUBJID)) %>%
+      group_by(USUBJID, ANALYTE, PCSPEC) %>%
+      summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
+  )
 
   # Use the user inputs to determine the NCA settings to apply
   PKNCA::PKNCA.options(
@@ -744,6 +754,8 @@ slope_rules <- slope_selector_server(
   res_nca,
   profiles_per_patient,
   input$select_dosno,
+  input$select_analyte,
+  input$select_pcspec,
   pk_nca_trigger,
   reactive(input$settings_upload)
 )

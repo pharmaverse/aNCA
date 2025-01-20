@@ -92,10 +92,10 @@ slope_selector_ui <- function(id) {
   )
 }
 
-.SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "PROFILE", "IXrange", "REASON")
+.SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "ANALYTE", "PCSPEC", "PROFILE", "IXrange", "REASON")
 
 slope_selector_server <- function(
-  id, mydata, res_nca, profiles_per_patient, cycle_nca, pk_nca_trigger, settings_upload
+  id, mydata, res_nca, profiles_per_patient, cycle_nca, analyte_nca, pcspec_nca, pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -138,11 +138,13 @@ slope_selector_server <- function(
       patient_profile_plot_ids <- mydata()$conc$data %>%
         filter(
           DOSNO %in% cycle_nca,
+          ANALYTE %in% analyte_nca,
+          PCSPEC %in% pcspec_nca,
           USUBJID %in% search_patient
         ) %>%
-        dplyr::select(USUBJID, DOSNO) %>%
+        dplyr::select(USUBJID, ANALYTE, PCSPEC, DOSNO) %>%
         unique() %>%
-        dplyr::arrange(USUBJID, DOSNO)
+        dplyr::arrange(USUBJID, ANALYTE, PCSPEC, DOSNO)
 
       num_plots <- nrow(patient_profile_plot_ids)
 
@@ -160,6 +162,8 @@ slope_selector_server <- function(
           plot_data()$conc$data,
           row["DOSNO"],
           row["USUBJID"],
+          row["ANALYTE"],
+          row["PCSPEC"],
           0.7
         ) |>
           htmlwidgets::onRender(
@@ -216,7 +220,12 @@ slope_selector_server <- function(
 
       # Define the profiles selected (dosno) that each patient (usubjid) has
       profiles_per_patient(
-        tapply(res_nca()$result$DOSNO, res_nca()$result$USUBJID, unique, simplify = FALSE)
+        res_nca()$result %>%
+          mutate(USUBJID = as.character(USUBJID),
+                 DOSNO = as.character(DOSNO)) %>%
+          group_by(USUBJID, ANALYTE, PCSPEC) %>%
+          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
+          unnest(DOSNO)  # Convert lists into individual rows
       )
 
       # Update the patient search input to make available choices for the user
@@ -233,6 +242,8 @@ slope_selector_server <- function(
       data.frame(
         TYPE = character(),
         PATIENT = character(),
+        ANALYTE = character(),
+        PCSPEC = character(),
         PROFILE = character(),
         IXrange = character(),
         REASON = character()
@@ -247,11 +258,14 @@ slope_selector_server <- function(
 
       new_row <- data.frame(
         TYPE = "Selection",
-        PATIENT = names(profiles_per_patient())[1],
-        PROFILE = unique(unlist(profiles_per_patient()))[1],
+        PATIENT = as.character(unique(profiles_per_patient()$USUBJID)[1]),
+        ANALYTE = unique(profiles_per_patient()$ANALYTE)[1],
+        PCSPEC = unique(profiles_per_patient()$PCSPEC)[1],
+        PROFILE = as.character(unique(profiles_per_patient()$DOSNO)[1]),
         IXrange = "1:3",
         REASON = "",
-        stringsAsFactors = FALSE
+        stringsAsFactors = FALSE,
+        check.names = FALSE
       )
       updated_data <- rbind(manual_slopes(), new_row)
       manual_slopes(updated_data)
@@ -278,8 +292,6 @@ slope_selector_server <- function(
         data <- manual_slopes()
       })
 
-      profiles <- unique(unlist(profiles_per_patient()))
-
       reactable(
         data = data,
         defaultColDef = colDef(
@@ -297,15 +309,31 @@ slope_selector_server <- function(
           PATIENT = colDef(
             cell = dropdown_extra(
               id = session$ns("edit_PATIENT"),
-              choices = names(profiles_per_patient()),
+              choices = unique(profiles_per_patient()$USUBJID),
+              class = "dropdown-extra"
+            ),
+            minWidth = 75
+          ),
+          ANALYTE = colDef(
+            cell = dropdown_extra(
+              id = session$ns("edit_ANALYTE"),
+              choices = unique(profiles_per_patient()$ANALYTE),
+              class = "dropdown-extra"
+            ),
+            minWidth = 75
+          ),
+          PCSPEC = colDef(
+            cell = dropdown_extra(
+              id = session$ns("edit_PCSPEC"),
+              choices = unique(profiles_per_patient()$PCSPEC),
               class = "dropdown-extra"
             ),
             minWidth = 75
           ),
           PROFILE = colDef(
             cell = dropdown_extra(
-              id = session$ns("dropdown_PROFILE"),
-              choices = profiles,
+              id = session$ns("edit_PROFILE"),
+              choices = unique(profiles_per_patient()$DOSNO),
               class = "dropdown-extra"
             ),
             minWidth = 75
@@ -342,7 +370,7 @@ slope_selector_server <- function(
       )
     })
 
-    #' For each of the columns in slope selector data frame, attach an even that will read
+    #' For each of the columns in slope selector data frame, attach an event that will read
     #' edits for that column made in the reactable.
     purrr::walk(.SLOPE_SELECTOR_COLUMNS, \(colname) {
       observeEvent(input[[paste0("edit_", colname)]], {
@@ -374,7 +402,7 @@ slope_selector_server <- function(
       shiny::debounce(750)
 
     # Define the click events for the point exclusion and selection in the slope plots
-    last_click_data <- reactiveValues(patient = "", profile = "", idx_pnt = "")
+    last_click_data <- reactiveValues(patient = "", profile = "", analyte = "", pcspec =  "", idx_pnt = "")
     observeEvent(event_data("plotly_click", priority = "event"), {
       # Store the information of the last click event #
       click_data <- event_data("plotly_click")
@@ -388,6 +416,8 @@ slope_selector_server <- function(
       # Get identifiers of the clicked plot #
       patient <- gsub("(.*)_.*_.*", "\\1",  click_data$customdata)
       profile <- gsub(".*_(.*)_.*", "\\1",  click_data$customdata)
+      analyte <- gsub(".*_.*_(.*)_.*", "\\1",  click_data$customdata)
+      pcspec <- gsub(".*_.*_.*_(.*)", "\\1",  click_data$customdata)
       idx_pnt <- gsub(".*_.*_(.*)", "\\1",  click_data$customdata)
 
       #' If not data was previously provided, or user clicked on different plot,
@@ -395,6 +425,8 @@ slope_selector_server <- function(
       if (patient != last_click_data$patient || profile != last_click_data$profile) {
         last_click_data$patient <- patient
         last_click_data$profile <- profile
+        last_click_data$analyte <- analyte
+        last_click_data$pcspec <- pcspec
         last_click_data$idx_pnt <- idx_pnt
         return(NULL)
       }
@@ -402,7 +434,9 @@ slope_selector_server <- function(
       # If valid selection is provided, construct new row
       new_slope_rule <- data.frame(
         TYPE = if (idx_pnt != last_click_data$idx_pnt) "Selection" else "Exclusion",
-        PATIENT = patient,
+        PATIENT = as.character(patient),
+        ANALYTE = analyte,
+        PCSPEC = pcspec,
         PROFILE = as.character(profile),
         IXrange = paste0(last_click_data$idx_pnt, ":", idx_pnt),
         REASON = "[Graphical selection. Click here to include a reason]"
@@ -416,6 +450,8 @@ slope_selector_server <- function(
       # after adding new rule, reset last click data #
       last_click_data$patient <- ""
       last_click_data$profile <- ""
+      last_click_data$analyte <- ""
+      last_click_data$pcspec <- ""
       last_click_data$idx_pnt <- ""
 
       # render rectable anew #
@@ -433,11 +469,11 @@ slope_selector_server <- function(
       #' modularized and improved further.
       setts <- read.csv(settings_upload()$datapath)
       imported_slopes <- setts %>%
-        select(TYPE, USUBJID, DOSNO, IX, REASON) %>%
+        select(TYPE, USUBJID, ANALYTE, PCSPEC, DOSNO, IX, REASON) %>%
         mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
-        group_by(TYPE, PATIENT, PROFILE, REASON) %>%
+        group_by(TYPE, PATIENT, ANALYTE, PCSPEC, PROFILE, REASON) %>%
         summarise(IXrange = .compress_range(IX), .groups = "keep") %>%
-        select(TYPE, PATIENT, PROFILE, IXrange, REASON) %>%
+        select(TYPE, PATIENT, ANALYTE, PCSPEC, PROFILE, IXrange, REASON) %>%
         na.omit()
 
       manual_slopes(imported_slopes)
