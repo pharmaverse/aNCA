@@ -47,7 +47,11 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
 #'
 #' This function creates a pharmacokinetic dose dataset from the provided concentration data.
 #'
-#' @param ADNCA_conc A data frame containing the concentration data.
+#' @param pkncaconc_data A data frame containing the concentration data.
+#' @param group_columns A character vector specifying the columns to group by.
+#' @param dosno_column A character string specifying the dose number column.
+#' @param time_column A character string specifying the time column.
+#' @param since_lastdose_time_column A character string specifying the time since last dose column.
 #'
 #' @returns A data frame containing the dose data.
 #'
@@ -64,8 +68,7 @@ format_pkncadose_data <- function(pkncaconc_data,
                                   group_columns,
                                   dosno_column = NULL,
                                   time_column = "AFRLT",
-                                  since_lastdose_time_column = "ARRLT",
-                                  nominal_time = "NFRLT") {
+                                  since_lastdose_time_column = "ARRLT") {
 
   # Check: Dataset is not empty
   if (nrow(pkncaconc_data) == 0) {
@@ -86,7 +89,7 @@ format_pkncadose_data <- function(pkncaconc_data,
     group_columns <- c(group_columns, "TIME")
   }
 
-  dose_data <- pkncaconc_data %>%
+  pkncaconc_data %>%
     mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
     group_by(!!!syms(group_columns)) %>%
     arrange(!!sym(since_lastdose_time_column) < 0,
@@ -95,7 +98,6 @@ format_pkncadose_data <- function(pkncaconc_data,
     ungroup() %>%
     arrange(!!!syms(group_columns))
   
-  dose_data
 }
 
 #' Create Dose Intervals Dataset

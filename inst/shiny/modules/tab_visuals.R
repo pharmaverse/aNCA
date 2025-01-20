@@ -121,7 +121,7 @@ tab_visuals_ui <- function(id) {
           orderInput(
             ns("summary_groupby_source"),
             "Drag and drop these variables...",
-            items = c("STUDYID", "USUBJID", "DOSEA",),
+            items = c("STUDYID", "USUBJID", "DOSEA"),
             width = shiny::validateCssUnit("100%"),
             connect = ns("summary_groupby")
           ),

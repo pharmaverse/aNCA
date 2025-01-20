@@ -7,6 +7,7 @@
 #' @param data              A data frame containing the ADNCA dataset.
 #' @param selected_studyids A character vector of selected study IDs to be included in the plot.
 #' @param selected_analytes A character vector of selected analytes to be included in the plot.
+#' @param selected_pcspecs  A character vector of selected pcspecs to be included in the plot.
 #' @param selected_cycles   A character vector or numeric vector of selected cycles to be
 #'                          included in the plot.
 #' @param id_variable       A character string specifying the variable by which to color the lines

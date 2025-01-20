@@ -9,6 +9,8 @@
 #' @param conc_pknca_df  Data frame containing the concentration data
 #'                      (default is `mydata$conc$data`).
 #' @param dosno         Numeric value representing the dose number (default is `profile`).
+#' @param analyte       Character value representing the analyte (default is `analyte`).
+#' @param pcspec        Character value representing the pcspec (default is `pcspec`).
 #' @param usubjid       Character value representing the unique subject identifier
 #'                      (default is `patient`).
 #' @param R2ADJTHRESHOL Numeric value representing the R-squared adjusted threshold for determining
@@ -37,6 +39,8 @@
 #'   # Example usage:
 #'   plot <- lambda_slope_plot(res_pknca_df = myres$result,
 #'                             conc_pknca_df = mydata$conc$data,
+#'                             analyte = "analyte_1",
+#'                             pcspec = "pcspec_1",
 #'                             dosno = 1,
 #'                             usubjid = "subject_1",
 #'                             R2ADJTHRESHOL = 0.7)

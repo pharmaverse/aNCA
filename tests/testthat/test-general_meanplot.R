@@ -1,20 +1,21 @@
 # Sample data for testing
 sample_data <- data.frame(
-  STUDYID = rep("Study1", 24),
-  USUBJID = rep(c("Subject1", "Subject2", "Subject3", "Subject4"), each = 6),
-  ANALYTE = rep("Analyte1", 24),
-  DOSNO = rep(1, 24),
-  EVID = rep(0, 24),
-  NRRLT = rep(1:6, 4),
-  AVAL = c(
+  STUDYID = rep("Study1", 48),
+  USUBJID = rep(c("Subject1", "Subject2", "Subject3", "Subject4"), each = 12),
+  ANALYTE = rep(c("Analyte1", "Analyte 2"), each = 24),
+  PCSPEC = rep(c("Spec1", "Spec2"), each = 24),
+  DOSNO = rep(1, 48),
+  EVID = rep(0, 48),
+  NRRLT = rep(1:6, 8),
+  AVAL = rep(c(
     10, 20, 30, 40, 50, 60,
     15, 25, 35, 45, 55, 65,
     12, 22, 32, 42, 52, 62,
     18, 28, 38, 48, 58, 68
-  ),
-  RRLTU = rep("hours", 24),
-  AVALU = rep("ng/mL", 24),
-  DOSEA = rep(35, 24)
+  ), 2),
+  RRLTU = rep("hours", 48),
+  AVALU = rep("ng/mL", 48),
+  DOSEA = rep(35, 48)
 )
 
 describe("general_meanplot functions correctly", {
@@ -23,6 +24,7 @@ describe("general_meanplot functions correctly", {
       data = sample_data,
       selected_studyids = "Study1",
       selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
       selected_cycles = 1
     )
     expect_s3_class(p, "ggplot")
@@ -34,6 +36,7 @@ describe("general_meanplot functions correctly", {
       data = empty_data,
       selected_studyids = "Study1",
       selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
       selected_cycles = 1
     )
     expect_s3_class(p, "ggplot")
@@ -47,6 +50,7 @@ describe("general_meanplot functions correctly", {
         data = incomplete_data,
         selected_studyids = "Study1",
         selected_analytes = "Analyte1",
+        selected_pcspecs = "Spec1",
         selected_cycles = 1
       ),
       "object 'AVAL' not found"
@@ -57,6 +61,7 @@ describe("general_meanplot functions correctly", {
       data = sample_data,
       selected_studyids = "Study1",
       selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
       selected_cycles = 1,
       plot_sd = TRUE
     )
@@ -72,6 +77,7 @@ describe("general_meanplot functions correctly", {
       data = sample_data,
       selected_studyids = "Study1",
       selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
       selected_cycles = 1,
       plot_ci = TRUE
     )
@@ -90,6 +96,7 @@ describe("general_meanplot functions correctly", {
       data = sample_data,
       selected_studyids = "Study1",
       selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
       selected_cycles = 1,
       plot_ylog = TRUE
     )

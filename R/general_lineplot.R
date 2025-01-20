@@ -6,6 +6,7 @@
 #'
 #' @param data              A data frame containing the ADNCA dataset.
 #' @param selected_analytes A character vector of selected analytes to be included in the plot.
+#' @param selected_pcspec   A character vector of selected pcspec to be included in the plot.
 #' @param selected_usubjids A character vector of selected unique subject identifiers (USUBJIDs)
 #'                          to be included in the plot.
 #' @param colorby_var       A character string specifying the variable by which to color
@@ -22,7 +23,7 @@
 #' @details
 #' The function performs the following steps:a
 #' \itemize{
-#'   \item Filters the data based on the selected analytes and subjects.
+#'   \item Filters the data based on the selected analytes, matrices, and subjects.
 #'   \item Selects relevant columns and removes rows with missing concentration values.
 #'   \item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
 #'   \item Filters the data by cycle if `time_scale` is "By Cycle".
@@ -36,6 +37,7 @@
 #'   # Example usage:
 #'   plot <- general_lineplot(data = adnca_data,
 #'                            selected_analytes = c("Analyte1", "Analyte2"),
+#'                            selected_pcspec = c("Spec1", "Spec2"),
 #'                            selected_usubjids = c("Subject1", "Subject2"),
 #'                            colorby_var = "DOSNO",
 #'                            time_scale = "By Cycle",

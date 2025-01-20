@@ -26,6 +26,10 @@ analysis (default is \code{PKNCA::pk.nca(.)$result}).}
 \item{usubjid}{Character value representing the unique subject identifier
 (default is \code{patient}).}
 
+\item{analyte}{Character value representing the analyte (default is \code{analyte}).}
+
+\item{pcspec}{Character value representing the pcspec (default is \code{pcspec}).}
+
 \item{R2ADJTHRESHOL}{Numeric value representing the R-squared adjusted threshold for determining
 the subtitle color (default is 0.7).}
 }
@@ -58,6 +62,8 @@ linear regression line, and annotations.
   # Example usage:
   plot <- lambda_slope_plot(res_pknca_df = myres$result,
                             conc_pknca_df = mydata$conc$data,
+                            analyte = "analyte_1",
+                            pcspec = "pcspec_1",
                             dosno = 1,
                             usubjid = "subject_1",
                             R2ADJTHRESHOL = 0.7)

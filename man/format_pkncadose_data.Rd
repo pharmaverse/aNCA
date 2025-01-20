@@ -9,12 +9,19 @@ format_pkncadose_data(
   group_columns,
   dosno_column = NULL,
   time_column = "AFRLT",
-  since_lastdose_time_column = "ARRLT",
-  nominal_time = "NFRLT"
+  since_lastdose_time_column = "ARRLT"
 )
 }
 \arguments{
-\item{ADNCA_conc}{A data frame containing the concentration data.}
+\item{pkncaconc_data}{A data frame containing the concentration data.}
+
+\item{group_columns}{A character vector specifying the columns to group by.}
+
+\item{dosno_column}{A character string specifying the dose number column.}
+
+\item{time_column}{A character string specifying the time column.}
+
+\item{since_lastdose_time_column}{A character string specifying the time since last dose column.}
 }
 \value{
 A data frame containing the dose data.
