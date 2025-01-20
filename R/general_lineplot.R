@@ -52,7 +52,8 @@
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
-  data, selected_analytes, selected_pcspec, selected_usubjids, colorby_var, time_scale, yaxis_scale, cycle = NULL
+  data, selected_analytes, selected_pcspec, selected_usubjids,
+  colorby_var, time_scale, yaxis_scale, cycle = NULL
 ) {
 
   # Check if the data is empty
@@ -75,6 +76,10 @@ general_lineplot <- function(
       DOSEA = factor(DOSEA),
       id_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
+  # Check if the data is empty
+  if (nrow(preprocessed_data) == 0) {
+    return(ggplot() + ggtitle("No data available for selected parameters"))
+  }
 
   # If there are predose records duplicate them in the previous line so they are considered
   if ("ARRLT" %in% names(preprocessed_data) &&

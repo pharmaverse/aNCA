@@ -97,7 +97,7 @@ format_pkncadose_data <- function(pkncaconc_data,
     slice(1) %>%
     ungroup() %>%
     arrange(!!!syms(group_columns))
-  
+
 }
 
 #' Create Dose Intervals Dataset

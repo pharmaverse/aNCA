@@ -95,7 +95,9 @@ slope_selector_ui <- function(id) {
 .SLOPE_SELECTOR_COLUMNS <- c("TYPE", "PATIENT", "ANALYTE", "PCSPEC", "PROFILE", "IXrange", "REASON")
 
 slope_selector_server <- function(
-  id, mydata, res_nca, profiles_per_patient, cycle_nca, analyte_nca, pcspec_nca, pk_nca_trigger, settings_upload
+  id, mydata, res_nca, profiles_per_patient,
+  cycle_nca, analyte_nca, pcspec_nca,
+  pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -402,7 +404,11 @@ slope_selector_server <- function(
       shiny::debounce(750)
 
     # Define the click events for the point exclusion and selection in the slope plots
-    last_click_data <- reactiveValues(patient = "", profile = "", analyte = "", pcspec =  "", idx_pnt = "")
+    last_click_data <- reactiveValues(
+      patient = "", profile = "",
+      analyte = "", pcspec =  "",
+      idx_pnt = ""
+    )
     observeEvent(event_data("plotly_click", priority = "event"), {
       # Store the information of the last click event #
       click_data <- event_data("plotly_click")

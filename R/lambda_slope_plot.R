@@ -63,7 +63,8 @@ lambda_slope_plot <- function(
 
   # Obtain all information relevant regarding lambda calculation
   lambda_res <- res_pknca_df %>%
-    filter(DOSNO == dosno, USUBJID == usubjid, ANALYTE == analyte, PCSPEC == pcspec, type_interval == "main")  %>%
+    filter(DOSNO == dosno, USUBJID == usubjid, ANALYTE == analyte,
+           PCSPEC == pcspec, type_interval == "main")  %>%
     arrange(USUBJID, DOSNO, ANALYTE, PCSPEC, start, desc(end)) %>%
     filter(!duplicated(paste0(USUBJID, DOSNO, PCSPEC, ANALYTE, PPTESTCD)))
 
@@ -236,7 +237,7 @@ lambda_slope_plot <- function(
   pl <- pl %>%
     # Make this trace the only one
     add_trace(
-      data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid, 
+      data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid,
                                   ANALYTE == analyte, PCSPEC == pcspec),
       x = ~TIME, y = ~log10(AVAL),
       customdata = ~paste0(USUBJID, "_", DOSNO, "_", IX),

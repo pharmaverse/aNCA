@@ -19,7 +19,8 @@ observeEvent(data(), {
     session,
     inputId = "select_analyte",
     label = "Choose the Analyte(s) :",
-    choices = unique(data()$ANALYTE)
+    choices = unique(data()$ANALYTE),
+    selected = unique(data()$ANALYTE)[1]
   )
 })
 
@@ -28,7 +29,8 @@ observeEvent(data(), {
     session,
     inputId = "select_pcspec",
     label = "Choose the Specimen Type(s) :",
-    choices = unique(data()$PCSPEC)
+    choices = unique(data()$PCSPEC),
+    selected = unique(data()$PCSPEC)[1]
   )
 })
 
@@ -481,7 +483,7 @@ res_nca <- eventReactive(pk_nca_trigger(), {
     myres$result <- myres$result %>%
       inner_join(select(mydata()$dose$data, -exclude)) %>%
       mutate(start = start - !!sym(mydata()$dose$columns$time),
-                    end = end - !!sym(mydata()$dose$columns$time)) %>%
+             end = end - !!sym(mydata()$dose$columns$time)) %>%
       select(names(myres$result))
 
     # Return the result

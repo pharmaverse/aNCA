@@ -128,7 +128,7 @@ tab_visuals_ui <- function(id) {
           orderInput(
             ns("summary_groupby"),
             "..to hierarchically group by (order matters!):",
-            items = c( "ANALYTE", "PCSPEC", "DOSNO"),
+            items = c("ANALYTE", "PCSPEC", "DOSNO"),
             width = shiny::validateCssUnit("100%"),
             connect = ns("summary_groupby_source"),
             placeholder = "Drag items here to group hierarchically..."
@@ -223,13 +223,14 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       param_choices_pcspec <- data() %>%
         pull(PCSPEC) %>%
         unique()
-      
+
       updatePickerInput(
         session,
         "generalplot_pcspec",
         choices = param_choices_pcspec,
+        selected = param_choices_pcspec[1]
       )
-      
+
       # Update the usubjid picker input
       param_choices_usubjid <- data() %>%
         pull(USUBJID) %>%
@@ -244,7 +245,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
       # Update the colorby picker input
       param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars()) 
+        c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
       )
 
       updatePickerInput(
@@ -262,7 +263,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       updateSelectInput(
         session,
         "analyte_mean",
-        choices = sort(analyte_choices)
+        choices = sort(analyte_choices),
+        selected = analyte_choices[1]
       )
 
       # Update the studyidmean select input
@@ -275,20 +277,21 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         "studyid_mean",
         choices = sort(studyid_choices)
       )
-      
+
       # Update pcspec mean choices
       pcspec_choices <- data() %>%
         pull(PCSPEC) %>%
         unique()
-      
+
       updateSelectInput(
         session,
         "pcspec_mean",
-        choices = sort(pcspec_choices)
+        choices = sort(pcspec_choices),
+        selected = pcspec_choices[1]
       )
 
       # Update the selectidvar select input
-      idvar_choices <- c("ANALYTE","PCSPEC", "DOSEA", grouping_vars())
+      idvar_choices <- c("ANALYTE", "PCSPEC", "DOSEA", grouping_vars())
 
       updateSelectInput(
         session,
