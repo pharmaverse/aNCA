@@ -41,7 +41,7 @@ observeEvent(input$settings_upload, {
   doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
   # Check that match with the data currently loaded
-  if (!setts$ANALYTE[1] %in% unique(data()$ANALYTE) ||
+  if (!analyte %in% unique(data()$ANALYTE) ||
         !all(doses_selected %in% unique(data()$DOSNO))) {
 
     showNotification(

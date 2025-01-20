@@ -7,6 +7,7 @@
 general_lineplot(
   data,
   selected_analytes,
+  selected_pcspec,
   selected_usubjids,
   colorby_var,
   time_scale,

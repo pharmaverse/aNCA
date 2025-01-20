@@ -17,7 +17,15 @@ tab_visuals_ui <- function(id) {
             label = "Select Analyte:",
             choices = NULL,
             selected = NULL,
-            multiple = FALSE,
+            multiple = TRUE,
+            options = list(`actions-box` = TRUE)
+          ),
+          pickerInput(
+            inputId = ns("generalplot_pcspec"),
+            label = "Select Matrix:",
+            choices = NULL,
+            selected = NULL,
+            multiple = TRUE,
             options = list(`actions-box` = TRUE)
           ),
           pickerInput(
@@ -61,7 +69,14 @@ tab_visuals_ui <- function(id) {
           selectInput(
             inputId = ns("analyte_mean"),
             label = "Choose the Analyte:",
-            choices = NULL
+            choices = NULL,
+            multiple = TRUE
+          ),
+          selectInput(
+            inputId = ns("pcspec_mean"),
+            label = "Choose the Matrix:",
+            choices = NULL,
+            multiple = TRUE
           ),
           selectInput(
             inputId = ns("studyid_mean"),
@@ -71,8 +86,8 @@ tab_visuals_ui <- function(id) {
           selectInput(
             inputId = ns("select_id_var"),
             label = "Choose the variable to group by:",
-            choices = c("PCSPEC", "DOSEA", "TRT01A", "TRT01P"),
-            selected = "DOSEA"
+            choices = NULL,
+            multiple = TRUE
           ),
           selectInput(
             inputId = ns("cycles_mean"),
@@ -201,9 +216,21 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       updatePickerInput(
         session,
         "generalplot_analyte",
-        choices = param_choices_analyte
+        choices = param_choices_analyte,
+        selected = param_choices_analyte[1]
       )
 
+      # Update pcspec picker input
+      param_choices_pcspec <- data() %>%
+        pull(PCSPEC) %>%
+        unique()
+      
+      updatePickerInput(
+        session,
+        "generalplot_pcspec",
+        choices = param_choices_pcspec,
+      )
+      
       # Update the usubjid picker input
       param_choices_usubjid <- data() %>%
         pull(USUBJID) %>%
@@ -218,7 +245,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
       # Update the colorby picker input
       param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
+        c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars()) 
       )
 
       updatePickerInput(
@@ -249,9 +276,20 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         "studyid_mean",
         choices = sort(studyid_choices)
       )
+      
+      # Update pcspec mean choices
+      pcspec_choices <- data() %>%
+        pull(PCSPEC) %>%
+        unique()
+      
+      updateSelectInput(
+        session,
+        "pcspec_mean",
+        choices = sort(pcspec_choices)
+      )
 
       # Update the selectidvar select input
-      idvar_choices <- c("PCSPEC", "DOSEA", grouping_vars())
+      idvar_choices <- c("ANALYTE","PCSPEC", "DOSEA", grouping_vars())
 
       updateSelectInput(
         session,
@@ -265,7 +303,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$cycle_select <- renderUI({
       req(input$generalplot_analyte)
       y <- data() %>%
-        filter(ANALYTE == input$generalplot_analyte) %>%
+        filter(ANALYTE %in% input$generalplot_analyte) %>%
         pull(DOSNO) %>%
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
@@ -278,6 +316,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$individualplot <- renderPlotly({
       req(data())
       req(input$generalplot_analyte)
+      req(input$generalplot_pcspec)
       req(input$generalplot_usubjid)
       req(input$generalplot_colorby)
       req(input$timescale)
@@ -287,6 +326,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       general_lineplot(
         data(),
         input$generalplot_analyte,
+        input$generalplot_pcspec,
         input$generalplot_usubjid,
         input$generalplot_colorby,
         input$timescale,
@@ -319,6 +359,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$mean_plot <- renderPlotly({
       req(input$studyid_mean)
       req(input$analyte_mean)
+      req(input$pcspec_mean)
       req(input$cycles_mean)
       log_info("Rendering mean plot")
 
@@ -328,6 +369,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
             filter(
               STUDYID %in% input$studyid_mean,
               ANALYTE %in% input$analyte_mean,
+              PCSPEC %in% input$pcspec_mean,
               DOSNO %in% input$cycles_mean,
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
@@ -348,6 +390,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         data = data(),
         selected_studyids = input$studyid_mean,
         selected_analytes = input$analyte_mean,
+        selected_pcspecs = input$pcspec_mean,
         selected_cycles = input$cycles_mean,
         id_variable = input$select_id_var,
         plot_ylog = input$log_mean_plot,

@@ -50,7 +50,7 @@
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
-  data, selected_analytes, selected_usubjids, colorby_var, time_scale, yaxis_scale, cycle = NULL
+  data, selected_analytes, selected_pcspec, selected_usubjids, colorby_var, time_scale, yaxis_scale, cycle = NULL
 ) {
 
   # Check if the data is empty
@@ -63,6 +63,7 @@ general_lineplot <- function(
     filter(
       USUBJID %in% selected_usubjids,
       ANALYTE %in% selected_analytes,
+      PCSPEC %in% selected_pcspec,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE
     ) %>%
     filter(!is.na(AVAL)) %>%
@@ -125,8 +126,8 @@ general_lineplot <- function(
     subtitle = paste0(
       "Subjects: ",
       paste(unique(preprocessed_data$USUBJID), collapse = ", "),
-      "\nAnalyte: ",
-      unique(preprocessed_data$ANALYTE)
+      "\nAnalyte(s): ",
+      paste(unique(preprocessed_data$ANALYTE), collapse = ", ")
     ),
     caption = NULL,
     add_baseline_hline = FALSE,
