@@ -52,14 +52,16 @@ lambda_slope_plot <- function(
   conc_pknca_df = mydata$conc$data,
   dosno = profile,
   usubjid = patient,
+  analyte = analyte,
+  pcspec = pcspec,
   R2ADJTHRESHOL = 0.7
 ) {
 
   # Obtain all information relevant regarding lambda calculation
   lambda_res <- res_pknca_df %>%
-    filter(DOSNO == dosno, USUBJID == usubjid, type_interval == "main")  %>%
-    arrange(USUBJID, DOSNO, start, desc(end)) %>%
-    filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD)))
+    filter(DOSNO == dosno, USUBJID == usubjid, ANALYTE == analyte, PCSPEC == pcspec, type_interval == "main")  %>%
+    arrange(USUBJID, DOSNO, ANALYTE, PCSPEC, start, desc(end)) %>%
+    filter(!duplicated(paste0(USUBJID, DOSNO, PCSPEC, ANALYTE, PPTESTCD)))
 
   # Obtain the number of data points used to calculate lambda
   lambda_z_n_points <- as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
@@ -141,7 +143,7 @@ lambda_slope_plot <- function(
 
   # Include in the data the aesthetics for the plot
   plot_data <- conc_pknca_df %>%
-    filter(DOSNO == dosno, USUBJID == usubjid) %>%
+    filter(DOSNO == dosno, USUBJID == usubjid, ANALYTE == analyte, PCSPEC == pcspec) %>%
     arrange(IX) %>%
     mutate(
       IX_shape = ifelse(is.excluded.hl, "excluded", "included"),
@@ -174,7 +176,8 @@ lambda_slope_plot <- function(
       size = 5
     ) +
     labs(
-      title = paste0("USUBJID: ", usubjid, ", DOSNO: ", dosno),
+      title = paste0("USUBJID: ", usubjid, ", DOSNO: ", dosno,
+                     ", ANALYTE: ", analyte, ", PCSPEC: ", pcspec),
       y = paste0("Log10 Concentration (", conc_pknca_df $PCSTRESU[1], ")"),
       x = paste0("Actual time post dose (", conc_pknca_df $RRLTU[1], ")")
     ) +
@@ -229,7 +232,8 @@ lambda_slope_plot <- function(
   pl <- pl %>%
     # Make this trace the only one
     add_trace(
-      data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid),
+      data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid, 
+                                  ANALYTE == analyte, PCSPEC == pcspec),
       x = ~TIME, y = ~log10(AVAL),
       customdata = ~paste0(USUBJID, "_", DOSNO, "_", IX),
       text = ~paste0("Data Point: ", IX, "\n", "(", signif(TIME, 2), " , ", signif(AVAL, 2), ")"),

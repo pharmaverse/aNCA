@@ -71,7 +71,7 @@ tab_data_server <- function(id) {
     ADNCA <- reactiveVal(
       read.csv(
         system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"),
-        na.strings = c("", "NA")
+        # na.strings = c("", "NA")
       )
     )
 

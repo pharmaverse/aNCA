@@ -721,7 +721,7 @@ output$preslopesettings <- DT::renderDataTable({
   # Reshape results and only choose the columns that are relevant to half life calculation
   preslopesettings <- pivot_wider_pknca_results(res_nca())  %>%
     select(
-      any_of(c("USUBJID", "DOSNO")),
+      any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
       starts_with("lambda.z"),
       starts_with("span.ratio"),
       starts_with("half.life"),

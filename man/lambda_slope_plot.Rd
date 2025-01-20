@@ -9,6 +9,8 @@ lambda_slope_plot(
   conc_pknca_df = mydata$conc$data,
   dosno = profile,
   usubjid = patient,
+  analyte = analyte,
+  pcspec = pcspec,
   R2ADJTHRESHOL = 0.7
 )
 }
