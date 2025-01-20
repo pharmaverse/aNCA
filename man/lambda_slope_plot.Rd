@@ -28,7 +28,7 @@ analysis (default is \code{PKNCA::pk.nca(.)$result}).}
 
 \item{analyte}{Character value representing the analyte (default is \code{analyte}).}
 
-\item{pcspec}{Character value representing the pcspec (default is \code{pcspec}).}
+\item{pcspec}{Character value representing the matrix (default is \code{pcspec}).}
 
 \item{R2ADJTHRESHOL}{Numeric value representing the R-squared adjusted threshold for determining
 the subtitle color (default is 0.7).}

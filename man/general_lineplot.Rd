@@ -20,7 +20,7 @@ general_lineplot(
 
 \item{selected_analytes}{A character vector of selected analytes to be included in the plot.}
 
-\item{selected_pcspec}{A character vector of selected pcspec to be included in the plot.}
+\item{selected_pcspec}{A character vector of selected matrix to be included in the plot.}
 
 \item{selected_usubjids}{A character vector of selected unique subject identifiers (USUBJIDs)
 to be included in the plot.}

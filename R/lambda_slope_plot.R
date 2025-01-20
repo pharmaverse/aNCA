@@ -10,7 +10,7 @@
 #'                      (default is `mydata$conc$data`).
 #' @param dosno         Numeric value representing the dose number (default is `profile`).
 #' @param analyte       Character value representing the analyte (default is `analyte`).
-#' @param pcspec        Character value representing the pcspec (default is `pcspec`).
+#' @param pcspec        Character value representing the matrix (default is `pcspec`).
 #' @param usubjid       Character value representing the unique subject identifier
 #'                      (default is `patient`).
 #' @param R2ADJTHRESHOL Numeric value representing the R-squared adjusted threshold for determining

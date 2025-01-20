@@ -23,7 +23,7 @@ general_meanplot(
 
 \item{selected_analytes}{A character vector of selected analytes to be included in the plot.}
 
-\item{selected_pcspecs}{A character vector of selected pcspecs to be included in the plot.}
+\item{selected_pcspecs}{A character vector of selected matrices to be included in the plot.}
 
 \item{selected_cycles}{A character vector or numeric vector of selected cycles to be
 included in the plot.}
