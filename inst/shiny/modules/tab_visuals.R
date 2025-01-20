@@ -86,8 +86,7 @@ tab_visuals_ui <- function(id) {
           selectInput(
             inputId = ns("select_id_var"),
             label = "Choose the variable to group by:",
-            choices = NULL,
-            multiple = TRUE
+            choices = NULL
           ),
           selectInput(
             inputId = ns("cycles_mean"),
@@ -122,14 +121,14 @@ tab_visuals_ui <- function(id) {
           orderInput(
             ns("summary_groupby_source"),
             "Drag and drop these variables...",
-            items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
+            items = c("STUDYID", "USUBJID", "DOSEA",),
             width = shiny::validateCssUnit("100%"),
             connect = ns("summary_groupby")
           ),
           orderInput(
             ns("summary_groupby"),
             "..to hierarchically group by (order matters!):",
-            items = c("DOSNO"),
+            items = c( "ANALYTE", "PCSPEC", "DOSNO"),
             width = shiny::validateCssUnit("100%"),
             connect = ns("summary_groupby_source"),
             placeholder = "Drag items here to group hierarchically..."

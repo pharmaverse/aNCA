@@ -8,6 +8,7 @@ general_meanplot(
   data,
   selected_studyids,
   selected_analytes,
+  selected_pcspecs,
   selected_cycles,
   id_variable = "DOSEA",
   plot_ylog = FALSE,
