@@ -47,6 +47,8 @@ In the **NCA** tab, start off by loading the pre-processed data using *Submit* b
 
 After the setup is done and analysis is performed, you are free to explore the results in the **Outputs** tab. Application supports various customizable plots, as well as report exporting.
 
+For more detailed instructions, you can find a pdf guide [here](docs/aNCA-User-Guide.pdf) in the docs folder.
+
 ## Contributing 
 ### As developer 
 To ensure a clean codebase and smooth cooperation, please adhere to the [contributing guidelines](CONTRIBUTING.md).
