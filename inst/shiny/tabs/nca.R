@@ -227,7 +227,7 @@ observeEvent(input$submit_analyte, priority = 2, {
 
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID + ANALYTE,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
     route = route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
