@@ -83,6 +83,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         data = modal_units_table() %>%
           mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)),
         escape = FALSE,
+        selection = list(mode = "single", target = "cell"),
         class = "table table-striped table-bordered",
         rownames = FALSE,
         editable = list(
