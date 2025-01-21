@@ -125,21 +125,22 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
 
       info <- input$modal_units_table_cell_edit
       modal_units_table <- modal_units_table()
-      
+
       # If the edited cell is in the 'Conversion Factor' only accept numeric values
-      if (names(modal_units_table)[info$col + 1] == "Conversion Factor" && !is.numeric(info$value)) {
-        
+      if (names(modal_units_table)[info$col + 1] == "Conversion Factor" &&
+            !is.numeric(info$value)) {
+
         # Report the user the expected numeric format
         showNotification(
           "Please enter a valid numeric value for the Conversion Factor.",
           type = "error",
           duration = 5
         )
-      
+
         # Elude further actions
         return()
       }
-      
+
       # Make the edition in the units table
       modal_units_table[info$row, info$col + 1] <- info$value
 
@@ -149,18 +150,19 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         cust_unit <- modal_units_table[info$row, "Custom unit"]
         conversion_factor_value <- get_conversion_factor(def_unit, cust_unit)
 
-      
-      # If the modification lead to an unexpected conversion factor notify the user
-      if (is.na(conversion_factor_value)) {
-        showNotification(
-          paste0(
-          "Unrecognised conversion: ",  def_unit, " > ", cust_unit,
-          ". Either make sure both units are defined in the UNIDATA 
-          library or impute a conversion factor yourself"),
-          type = "error",
-          duration = 5
-        )
-      }
+
+        # If the modification lead to an unexpected conversion factor notify the user
+        if (is.na(conversion_factor_value)) {
+          showNotification(
+            paste0(
+              "Unrecognised conversion: ",  def_unit, " > ", cust_unit,
+              ". Either make sure both units are defined in the UNIDATA 
+              library or impute a conversion factor yourself"
+            ),
+            type = "error",
+            duration = 5
+          )
+        }
 
         modal_units_table[info$row, "Conversion Factor"] <- conversion_factor_value
       }
