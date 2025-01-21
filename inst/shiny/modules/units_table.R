@@ -146,8 +146,22 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       if (names(modal_units_table)[info$col + 1] == "Custom unit") {
         def_unit <- modal_units_table[info$row, "Default unit"]
         cust_unit <- modal_units_table[info$row, "Custom unit"]
-        modal_units_table[info$row, "Conversion Factor"] <- get_conversion_factor(def_unit,
-                                                                                  cust_unit)
+        conversion_factor_value <- get_conversion_factor(def_unit, cust_unit)
+
+      
+      # If the modification lead to an unexpected conversion factor notify the user
+      if (is.na(conversion_factor_value)) {
+        showNotification(
+          paste0(
+          "Unrecognised conversion: ",  def_unit, " > ", cust_unit,
+          ". Either make sure both units are defined in the UNIDATA 
+          library or impute a conversion factor yourself"),
+          type = "error",
+          duration = 5
+        )
+      }
+
+        modal_units_table[info$row, "Conversion Factor"] <- conversion_factor_value
       }
 
       # Update the server table
@@ -166,7 +180,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
           pull(entry)
 
         showNotification(
-          paste0("Please, make sure to use only recognised convertible units in `Custom Unit`",
+          paste0("Please, make sure to use only recognised convertible units in `Custom Unit` ",
                  "(i.e, day, hr, min, sec, g/L).",
                  " If not, introduce yourself the corresponding `Conversion Factor` value in: ",
                  paste(invalid_entries, collapse = ", ")),
