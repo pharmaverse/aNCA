@@ -55,6 +55,7 @@ lambda_slope_plot <- function(
   R2ADJTHRESHOL = 0.7
 ) {
 
+  conc_pknca_df <- create_duplicates(conc_pknca_df)
   # Obtain all information relevant regarding lambda calculation
   lambda_res <- res_pknca_df %>%
     filter(DOSNO == dosno, USUBJID == usubjid, type_interval == "main")  %>%
@@ -67,16 +68,20 @@ lambda_slope_plot <- function(
 
   # Identify in the data the points used to calculate lambda
   lambda_z_ix_rows <- conc_pknca_df %>%
+    mutate(ARRLT = round(ARRLT, 3)) %>%
     filter(
       DOSNO == dosno,
       USUBJID == usubjid,
       !exclude_half.life,
-      TIME >= sum(
+      ARRLT >= round(
+        sum(
         subset(
           lambda_res,
           lambda_res$PPTESTCD == "lambda.z.time.first",
           select = c("start", "PPORRES")
-        )
+          )
+        ),
+        3
       )
     ) %>%
     arrange(IX) %>%
@@ -85,11 +90,10 @@ lambda_slope_plot <- function(
   # Calculate the base and adjusted fitness, half life and time span estimated
   r2_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "r.squared"]), 3)
   r2adj_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
-  half_life_value <- signif(
-    log(2) / as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "lambda.z"]), 3
+  half_life_value <- signif( as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "half.life"]), 3
   )
   time_span <- signif(
-    abs(lambda_z_ix_rows$TIME[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$TIME[1]), 3
+    abs(lambda_z_ix_rows$ARRLT[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$ARRLT[1]), 3
   )
 
   # Determine the color based on the conditions
@@ -157,7 +161,7 @@ lambda_slope_plot <- function(
 
   # Generate the base scatter ggplot
   p <- plot_data %>%
-    ggplot(aes(x = TIME, y = AVAL)) +
+    ggplot(aes(x = ARRLT, y = AVAL)) +
     geom_line(color = "gray70", linetype = "solid", linewidth = 1) +
     geom_smooth(
       data = subset(plot_data, IX_color == "hl.included"),
@@ -176,7 +180,7 @@ lambda_slope_plot <- function(
     labs(
       title = paste0("USUBJID: ", usubjid, ", DOSNO: ", dosno),
       y = paste0("Log10 Concentration (", conc_pknca_df $PCSTRESU[1], ")"),
-      x = paste0("Actual time post dose (", conc_pknca_df $RRLTU[1], ")")
+      x = paste0("Actual Time Post Dose (", conc_pknca_df $RRLTU[1], ")")
     ) +
     theme_bw() +
 
@@ -230,9 +234,9 @@ lambda_slope_plot <- function(
     # Make this trace the only one
     add_trace(
       data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid),
-      x = ~TIME, y = ~log10(AVAL),
+      x = ~ARRLT, y = ~log10(AVAL),
       customdata = ~paste0(USUBJID, "_", DOSNO, "_", IX),
-      text = ~paste0("Data Point: ", IX, "\n", "(", signif(TIME, 2), " , ", signif(AVAL, 2), ")"),
+      text = ~paste0("Data Point: ", IX, "\n", "(", signif(ARRLT, 2), " , ", signif(AVAL, 2), ")"),
       type = "scatter",
       mode = "markers",
       name = "Data Points",
