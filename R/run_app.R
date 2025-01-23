@@ -27,6 +27,6 @@
 #' @importFrom utils read.csv write.csv
 #' @importFrom zip zipr
 #' @export
-run_app <- function() {
-  shiny::runApp(system.file("shiny", package = "aNCA"))
+run_app <- function(...) {
+  shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }
