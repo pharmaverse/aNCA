@@ -69,6 +69,7 @@ fluidPage(
                   ),
                   selected = "lin up/log down"
                 ),
+                units_table_ui("units_table_preNCA"),
                 h4("Data imputation"),
                 tags$div(
                   checkboxInput(
@@ -152,7 +153,7 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_aucpext_pred", "AUCPEP (% ext.predicted): "),
+                    checkboxInput("rule_aucpext_pred", "AUCPEP (% ext.predicted): ")
                   ),
                   column(
                     width = 6,
@@ -176,7 +177,7 @@ fluidPage(
                 fluidRow(
                   column(
                     width = 6,
-                    checkboxInput("rule_span_ratio", "SPAN: "),
+                    checkboxInput("rule_span_ratio", "SPAN: ")
                   ),
                   column(
                     width = 6,
@@ -198,7 +199,7 @@ fluidPage(
                 )
               ),
 
-              tabPanel("Slope Selector", slope_selector_ui("slope_selector")),
+              tabPanel("Slope Selector", slope_selector_ui("slope_selector"))
 
             )
           ),
@@ -216,10 +217,11 @@ fluidPage(
                   multiple = TRUE,
                   options = list(`actions-box` = TRUE)
                 ),
+                units_table_ui("units_table_postNCA"),
                 DTOutput("myresults"),
                 tableOutput("summaryTable"),
                 actionButton("download", "Download the NCA Data"),
-                downloadButton("local_download_NCAres", "Download locally the NCA Data"),
+                downloadButton("local_download_NCAres", "Download locally the NCA Data")
               ),
               tabPanel(
                 "Slopes",

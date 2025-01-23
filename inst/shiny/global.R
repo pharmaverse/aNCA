@@ -4,6 +4,8 @@ LABELS <- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 
 source("modules/slope_selector.R")
 
+source("modules/units_table.R")
+
 source("functions/partial_auc_input.R")
 
 source("modules/tlg_plot.R")

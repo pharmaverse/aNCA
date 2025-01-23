@@ -124,7 +124,8 @@ format_pkncadata_intervals <- function(pknca_dose,
                                                    "cmax", "half.life", "tmax", "lambda.z",
                                                    "lambda.z.n.points", "r.squared",
                                                    "adj.r.squared", "lambda.z.time.first",
-                                                   "aucpext.obs", "aucpext.pred", "clast.obs"),
+                                                   "aucpext.obs", "aucpext.pred", "clast.obs",
+                                                   "cl.obs"),
                                        start_from_last_dose = TRUE) {
   if (!inherits(pknca_dose, "PKNCAdose")) {
     stop("Input must be a PKNCAdose object from the PKNCA package.")
