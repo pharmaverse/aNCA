@@ -136,17 +136,17 @@ format_pkncadata_intervals <- function(pknca_dose,
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
-  
+
   # Obtain all possible pknca parameters
   all_pknca_params <- setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
                               c("start", "end"))
-  
+
   # Obtain all grouping variables
   dose_group_vars <- unname(unlist(pknca_dose$columns$groups))
-  
+
   # Based on dose times create a data frame with start and end times
   dose_intervals <- pknca_dose$data %>%
-    
+
     # Compute the interval times starting either from dose or first observation
     mutate(start = if (start_from_last_dose) !!sym(pknca_dose$columns$time)
            else !!sym(pknca_dose$columns$time) + !!sym("ARRLT")) %>%
@@ -154,20 +154,21 @@ format_pkncadata_intervals <- function(pknca_dose,
     arrange(!!sym(pknca_dose$columns$time)) %>%
     mutate(end = lead(as.numeric(!!sym(pknca_dose$columns$time)), default = Inf)) %>%
     ungroup() %>%
-    
+
     # Select only neccesary columns: start, end, groupping variables and dose number
     select(any_of(c("start", "end", dose_group_vars, "DOSNO"))) %>%
-    
+
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
     mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
-    
+
     # Prevent any potential attributes associated to the column names
     mutate(across(everything(), ~ {
-      attributes(.) <- NULL
-      .
-    })) %>% 
-    
+      column <- .
+      attributes(column) <- NULL
+      column
+    })) %>%
+
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 

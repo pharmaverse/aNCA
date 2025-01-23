@@ -175,7 +175,7 @@ observeEvent(input$settings_upload, {
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
 observeEvent(data(), priority = 2, {
-  
+
   req(data())
 
   # Define explicetely input columns until there are input definitions
@@ -354,13 +354,14 @@ observeEvent(input$removeAUC, {
 })
 
 # NCA settings dynamic changes
-observeEvent(list(auc_counter(), input$method, input$nca_params, 
-                  input$should_impute_c0, input$select_dosno),{
-  req(mydata())
-  
+observeEvent(list(
+  auc_counter(), input$method, input$nca_params, input$should_impute_c0, input$select_dosno
+), {
+
   # Load mydata reactive and modify it accordingly to user's request
+  req(mydata())
   mydata <- mydata()
-  
+
   # Use the intervals defined by the user if so
   if (input$AUCoptions && auc_counter() > 0) {
 
@@ -407,18 +408,17 @@ observeEvent(list(auc_counter(), input$method, input$nca_params,
   # Include main intervals as specified by the user
   mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
                                                  # Compute only parameters specified
-                                                 params = input$nca_params, 
+                                                 params = input$nca_params,
                                                  # Start at t0 when requested by the user
                                                  start_from_last_dose = input$should_impute_c0)
-  
+
   # Join custom AUC partial intervals specified by the user
   mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
-  
+  mydata$impute <- NA
+
   # Filter only the analytes and doses requested
   mydata$intervals <- mydata$intervals %>%
-    dplyr::filter(
-      DOSNO %in% input$select_dosno
-      )
+    dplyr::filter(DOSNO %in% input$select_dosno)
 
   # Define start imputations on intervals if specified by the user
   if (input$should_impute_c0) {
@@ -439,7 +439,7 @@ observeEvent(input$nca, {
 
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
-    
+
     # Update panel to show results page
     updateTabsetPanel(session, "ncapanel", selected = "Results")
 

@@ -37,29 +37,29 @@ fluidPage(
           tabPanel("Setup", fluid = TRUE,
 
             navlistPanel(
-              
+
               tabPanel("Settings",
-                
-                 # Local upload option
-                 fileInput(
-                   "settings_upload",
-                   width = "60%",
-                   label = "Upload Settings",
-                   buttonLabel = list(icon("folder"), "Browse"),
-                   accept = c(".csv", ".xpt")
-                 ),
-                 br(),
-                 
-                 # Selection of analyte
-                 selectInput("select_analyte", "Choose the analyte :", choices = NULL),
-                 selectInput(
-                   "select_dosno",
-                   "Choose the Dose Number:",
-                   multiple = TRUE,
-                   choices = c("Please specify ANALYTE in Data Selection" = "")
-                 ),
-                 br(),
-                
+
+                # Local upload option
+                fileInput(
+                  "settings_upload",
+                  width = "60%",
+                  label = "Upload Settings",
+                  buttonLabel = list(icon("folder"), "Browse"),
+                  accept = c(".csv", ".xpt")
+                ),
+                br(),
+
+                # Selection of analyte
+                selectInput("select_analyte", "Choose the analyte :", choices = NULL),
+                selectInput(
+                  "select_dosno",
+                  "Choose the Dose Number:",
+                  multiple = TRUE,
+                  choices = c("Please specify ANALYTE in Data Selection" = "")
+                ),
+                br(),
+
                 selectInput(
                   "method",
                   "Extrapolation Method:",
@@ -72,7 +72,7 @@ fluidPage(
                   inputId = "nca_params",
                   label = "NCA parameters to calculate:",
                   choices = setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
-                            c("start","end")) %>% sort(),
+                                    c("start", "end")) %>% sort(),
                   options = list(`live-search` = TRUE),
                   multiple = TRUE,
                   selected = c("cmax", "tmax", "half.life", "cl.obs")
