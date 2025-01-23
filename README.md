@@ -28,19 +28,33 @@ This application enables users to upload their datasets and perform Non-Compartm
 * **Save your analysis settings** and reupload them later to keep on analysing!
 
 ## Installation
-To install the application, clone the repository and load it locally using the following commands in your terminal:
-``` sh
-git clone https://github.com/pharmaverse/aNCA.git # Clone the repository
+### Via pak (recommended)
+We recommend using [pak](https://github.com/r-lib/pak) for package installation, along with all system dependencies. If you do not have `pak` available, you will need to set it up first:
+```R
+install.packages("pak")
 ```
-You can then run the application from the R console anytime. Just make sure first your working directory is set to the aNCA folder:
-``` r
-# install devtools if not present
-if (!requireNamespace('devtools', quietly = TRUE)) install.packages('devtools')
-devtools::load_all() # load all dependencies
-aNCA::run_app() # run the application
+then you can install  [aNCA](.) by running:
+```R
+pak::install("pharmaverse/aNCA")
+```
+in your R console.
+
+### Via cloning the repository (for contributors)
+Alternatively, you can set up the package by cloning the repository:
+```bash
+git clone https://github.com/pharmaverse/aNCA.git
+```
+and then loading it directly using [devtools](https://github.com/r-lib/devtools):
+```R
+devtools::load_all()
 ```
 
 ## Quick start
+To run the application, simply invoke:
+```R
+aNCA::run_app()
+```
+
 The testing data will be automatically loaded upon application startup. You can provide your own dataset in the **data** tab. Here you can also specify pre-processing filters.
 
 In the **NCA** tab, start off by loading the pre-processed data using *Submit* button. You will also need to choose dose number in the *Settings*. Then, you will be able to run the NCA analysis. From there, you can also specify different analysis options, like applying flag rule sets and selecting slopes.
