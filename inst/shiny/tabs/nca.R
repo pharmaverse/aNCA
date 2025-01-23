@@ -286,17 +286,23 @@ output$datatable <- renderReactable({
 # IN this tab we can set the dose number to be analyzed, the extrapolation
 # method, potenital partial AUC and all the flag rule sets
 
-# Define the profiles (dosno) associated with each patient (usubjid) for the selected analyte
-profiles_per_patient <- reactiveVal(NULL)
-observeEvent(mydata(), {
-  profiles_per_patient(
+# Define a profiles per patient
+profiles_per_patient <- reactive({
+  # Check if res_nca() is available and valid
+  if (!is.null(res_nca())) {
+    res_nca()$result %>%
+      mutate(USUBJID = as.character(USUBJID),
+             DOSNO = as.character(DOSNO)) %>%
+      group_by(USUBJID, ANALYTE, PCSPEC) %>%
+      summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
+      unnest(DOSNO)  # Convert lists into individual rows
+  } else {
     mydata()$conc$data %>%
       mutate(USUBJID = as.character(USUBJID)) %>%
       group_by(USUBJID, ANALYTE, PCSPEC) %>%
       summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
-  )
+  }
 })
-
 # Include keyboard limits for the settings GUI display
 
 # Define a function that simplifies the action
@@ -407,13 +413,6 @@ observeEvent(input$nca, {
     intervals_userinput(intervals_list)
   }
 
-  # Update profiles per patient considering the profiles selected
-  profiles_per_patient(
-    mydata()$conc$data %>%
-      mutate(USUBJID = as.character(USUBJID)) %>%
-      group_by(USUBJID, ANALYTE, PCSPEC) %>%
-      summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
-  )
 
   # Use the user inputs to determine the NCA settings to apply
   PKNCA::PKNCA.options(

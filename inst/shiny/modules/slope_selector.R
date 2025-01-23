@@ -217,19 +217,6 @@ slope_selector_server <- function(
       )
       log_trace("{id}: Rendering plots")
 
-      # TODO(mateusz): do we need to update the `profiles_per_patient()` reactiveVal?
-      # or can we just have it locally?
-
-      # Define the profiles selected (dosno) that each patient (usubjid) has
-      profiles_per_patient(
-        res_nca()$result %>%
-          mutate(USUBJID = as.character(USUBJID),
-                 DOSNO = as.character(DOSNO)) %>%
-          group_by(USUBJID, ANALYTE, PCSPEC) %>%
-          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-          unnest(DOSNO)  # Convert lists into individual rows
-      )
-
       # Update the patient search input to make available choices for the user
       updatePickerInput(
         session = session,
