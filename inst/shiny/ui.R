@@ -69,6 +69,15 @@ fluidPage(
                   ),
                   selected = "lin up/log down"
                 ),
+                pickerInput(
+                  inputId = "nca_params",
+                  label = "NCA parameters to calculate:",
+                  choices = setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
+                            c("start","end")) %>% sort(),
+                  options = list(`live-search` = TRUE),
+                  multiple = TRUE,
+                  selected = c("cmax", "tmax", "half.life", "cl.obs")
+                ),
                 units_table_ui("units_table_preNCA"),
                 h4("Data imputation"),
                 tags$div(
