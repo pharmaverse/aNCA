@@ -18,19 +18,8 @@ observeEvent(data(), {
   updateSelectInput(
     session,
     inputId = "select_analyte",
-    label = "Choose the Analyte(s) :",
-    choices = unique(data()$ANALYTE),
-    selected = unique(data()$ANALYTE)[1]
-  )
-})
-
-observeEvent(data(), {
-  updateSelectInput(
-    session,
-    inputId = "select_pcspec",
-    label = "Choose the Specimen Type(s) :",
-    choices = unique(data()$PCSPEC),
-    selected = unique(data()$PCSPEC)[1]
+    label = "Choose the analyte :",
+    choices = unique(data()$ANALYTE)
   )
 })
 
@@ -43,7 +32,7 @@ observeEvent(input$settings_upload, {
   doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
   # Check that match with the data currently loaded
-  if (!analyte %in% unique(data()$ANALYTE) ||
+  if (!setts$ANALYTE[1] %in% unique(data()$ANALYTE) ||
         !all(doses_selected %in% unique(data()$DOSNO))) {
 
     showNotification(
@@ -194,16 +183,14 @@ observeEvent(input$submit_analyte, priority = 2, {
   dosno_column <- "DOSNO"
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
-  matrix_column <- "PCSPEC"
 
   # Segregate the data into concentration and dose records
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
                                    time_column = time_column) %>%
     dplyr::arrange(across(all_of(c(usubjid_column, time_column)))) %>%
-    # Consider only the analytes and matrix requested by the user
-    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte,
-                  !!sym(matrix_column) %in% input$select_pcspec)
+    # Consider only the analytes requested by the user
+    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte)
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
                                    group_columns = c(group_columns, usubjid_column),
@@ -268,8 +255,7 @@ output$datatable <- renderReactable({
   req(mydata())
   data <- mydata()$conc$data %>%
     filter(DOSNO %in% input$select_dosno,
-           ANALYTE %in% input$select_analyte,
-           PCSPEC %in% input$select_pcspec)
+           ANALYTE %in% input$select_analyte)
   # Generate column definitions
   col_defs <- generate_col_defs(data)
 
@@ -293,23 +279,12 @@ output$datatable <- renderReactable({
 # IN this tab we can set the dose number to be analyzed, the extrapolation
 # method, potenital partial AUC and all the flag rule sets
 
-# Define a profiles per patient
-profiles_per_patient <- reactive({
-  # Check if res_nca() is available and valid
-  if (!is.null(res_nca())) {
-    res_nca()$result %>%
-      mutate(USUBJID = as.character(USUBJID),
-             DOSNO = as.character(DOSNO)) %>%
-      group_by(USUBJID, ANALYTE, PCSPEC) %>%
-      summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-      unnest(DOSNO)  # Convert lists into individual rows
-  } else {
-    mydata()$conc$data %>%
-      mutate(USUBJID = as.character(USUBJID)) %>%
-      group_by(USUBJID, ANALYTE, PCSPEC) %>%
-      summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
-  }
+# Define the profiles (dosno) associated with each patient (usubjid) for the selected analyte
+profiles_per_patient <- reactiveVal(NULL)
+observeEvent(mydata(), {
+  profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
 })
+
 # Include keyboard limits for the settings GUI display
 
 # Define a function that simplifies the action
@@ -352,7 +327,7 @@ observe({
 observeEvent(input$select_analyte, priority = -1, {
   req(data())
   doses_options <- data() %>%
-    filter(ANALYTE %in% input$select_analyte) %>%
+    filter(ANALYTE == input$select_analyte) %>%
     pull(DOSNO) %>%
     sort() %>%
     unique()
@@ -422,6 +397,8 @@ observeEvent(input$nca, {
     intervals_userinput(intervals_list)
   }
 
+  # Update profiles per patient considering the profiles selected
+  profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
 
   # Use the user inputs to determine the NCA settings to apply
   PKNCA::PKNCA.options(
@@ -491,9 +468,9 @@ observeEvent(pk_nca_trigger(), {
     # Make the starts and ends of results relative to last dose using the dose data
     myres$result <- myres$result %>%
       inner_join(select(mydata()$dose$data, -exclude)) %>%
-      mutate(start = start - !!sym(mydata()$dose$columns$time),
-             end = end - !!sym(mydata()$dose$columns$time)) %>%
-      select(names(myres$result))
+      dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
+                    end = end - !!sym(mydata()$dose$columns$time)) %>%
+      dplyr::select(names(myres$result))
 
     # Return the result
     res_nca(myres)
@@ -682,7 +659,7 @@ output$settings_save <- downloadHandler(
     # Include the rule settings as additional columns
     setts <- setts_lambda %>%
       mutate(
-        ANALYTE %in% input$select_analyte,
+        ANALYTE = input$select_analyte,
         doses_selected = ifelse(
           !is.null(input$select_dosno),
           paste0(input$select_dosno, collapse = ","),
@@ -737,7 +714,7 @@ output$preslopesettings <- DT::renderDataTable({
   # Reshape results and only choose the columns that are relevant to half life calculation
   preslopesettings <- pivot_wider_pknca_results(res_nca())  %>%
     select(
-      any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
+      any_of(c("USUBJID", "DOSNO")),
       starts_with("lambda.z"),
       starts_with("span.ratio"),
       starts_with("half.life"),
@@ -770,8 +747,6 @@ slope_rules <- slope_selector_server(
   res_nca,
   profiles_per_patient,
   input$select_dosno,
-  input$select_analyte,
-  input$select_pcspec,
   pk_nca_trigger,
   reactive(input$settings_upload)
 )

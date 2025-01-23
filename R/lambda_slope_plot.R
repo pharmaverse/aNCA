@@ -9,8 +9,6 @@
 #' @param conc_pknca_df  Data frame containing the concentration data
 #'                      (default is `mydata$conc$data`).
 #' @param dosno         Numeric value representing the dose number (default is `profile`).
-#' @param analyte       Character value representing the analyte (default is `analyte`).
-#' @param pcspec        Character value representing the matrix (default is `pcspec`).
 #' @param usubjid       Character value representing the unique subject identifier
 #'                      (default is `patient`).
 #' @param R2ADJTHRESHOL Numeric value representing the R-squared adjusted threshold for determining
@@ -39,8 +37,6 @@
 #'   # Example usage:
 #'   plot <- lambda_slope_plot(res_pknca_df = myres$result,
 #'                             conc_pknca_df = mydata$conc$data,
-#'                             analyte = "analyte_1",
-#'                             pcspec = "pcspec_1",
 #'                             dosno = 1,
 #'                             usubjid = "subject_1",
 #'                             R2ADJTHRESHOL = 0.7)
@@ -56,17 +52,14 @@ lambda_slope_plot <- function(
   conc_pknca_df = mydata$conc$data,
   dosno = profile,
   usubjid = patient,
-  analyte = analyte,
-  pcspec = pcspec,
   R2ADJTHRESHOL = 0.7
 ) {
 
   # Obtain all information relevant regarding lambda calculation
   lambda_res <- res_pknca_df %>%
-    filter(DOSNO == dosno, USUBJID == usubjid, ANALYTE == analyte,
-           PCSPEC == pcspec, type_interval == "main")  %>%
-    arrange(USUBJID, DOSNO, ANALYTE, PCSPEC, start, desc(end)) %>%
-    filter(!duplicated(paste0(USUBJID, DOSNO, PCSPEC, ANALYTE, PPTESTCD)))
+    filter(DOSNO == dosno, USUBJID == usubjid, type_interval == "main")  %>%
+    arrange(USUBJID, DOSNO, start, desc(end)) %>%
+    filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD)))
 
   # Obtain the number of data points used to calculate lambda
   lambda_z_n_points <- as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
@@ -148,7 +141,7 @@ lambda_slope_plot <- function(
 
   # Include in the data the aesthetics for the plot
   plot_data <- conc_pknca_df %>%
-    filter(DOSNO == dosno, USUBJID == usubjid, ANALYTE == analyte, PCSPEC == pcspec) %>%
+    filter(DOSNO == dosno, USUBJID == usubjid) %>%
     arrange(IX) %>%
     mutate(
       IX_shape = ifelse(is.excluded.hl, "excluded", "included"),
@@ -181,8 +174,7 @@ lambda_slope_plot <- function(
       size = 5
     ) +
     labs(
-      title = paste0("USUBJID: ", usubjid, ", DOSNO: ", dosno,
-                     ", ANALYTE: ", analyte, ", PCSPEC: ", pcspec),
+      title = paste0("USUBJID: ", usubjid, ", DOSNO: ", dosno),
       y = paste0("Log10 Concentration (", conc_pknca_df $PCSTRESU[1], ")"),
       x = paste0("Actual time post dose (", conc_pknca_df $RRLTU[1], ")")
     ) +
@@ -237,8 +229,7 @@ lambda_slope_plot <- function(
   pl <- pl %>%
     # Make this trace the only one
     add_trace(
-      data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid,
-                                  ANALYTE == analyte, PCSPEC == pcspec),
+      data = plot_data %>% filter(DOSNO == dosno, USUBJID == usubjid),
       x = ~TIME, y = ~log10(AVAL),
       customdata = ~paste0(USUBJID, "_", DOSNO, "_", IX),
       text = ~paste0("Data Point: ", IX, "\n", "(", signif(TIME, 2), " , ", signif(AVAL, 2), ")"),

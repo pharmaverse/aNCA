@@ -49,24 +49,12 @@ fluidPage(
                 br(),
 
                 # Selection of analyte
-                selectInput(
-                  "select_analyte",
-                  "Choose the Analyte(s) :",
-                  choices = c("Please specify ANALYTE" = ""),
-                  multiple = TRUE
-                ),
-                # Selection of matrix
-                selectInput(
-                  "select_pcspec",
-                  "Choose the Specimen Type(s):",
-                  choices = c("Please specify PCSPEC" = ""),
-                  multiple = TRUE
-                ),
+                selectInput("select_analyte", "Choose the analyte :", choices = NULL),
                 selectInput(
                   "select_dosno",
                   "Choose the Dose Number:",
                   multiple = TRUE,
-                  choices = c("Please specify ANALYTE first" = "")
+                  choices = c("Please specify ANALYTE in Data Selection" = "")
                 ),
                 br(),
                 actionButton("submit_analyte", "Submit"),
