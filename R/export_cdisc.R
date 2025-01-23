@@ -18,34 +18,6 @@
 #'
 #' @import dplyr
 #' @export
-
-
-# Define the unique combinations
-pptestcd_dict <- setNames(
-  c(
-    "Total CL Obs by F", "Time of Last Nonzero Conc", "Max Conc", "Vz Obs by F", "AUC Infinity Obs",
-    "Last Nonzero Conc", "Time of CMAX", "R Squared", "R Squared Adjusted", "Max Conc Norm by Dose",
-    "AUC to Last Nonzero Conc Norm by Dose", "Lambda z", "AUC to Last Nonzero Conc",
-    "Half-Life Lambda z", "Number of points used for Lambda z", "Last Nonzero Conc Predicted",
-    "Span Ratio", "Lambda z lower limit (time)",
-
-    # Manually filled
-    "Trough Concentration", "Average Concentration", "AUC Infinity Predicted",
-    "AUMC Infinity Observed", "AUC Percent Extrapolated Observed",
-    "AUC Percent Extrapolated Predicted", "Clearance Observed",
-    "Clearance Predicted", "Mean Residence Time Intravenous Observed",
-    "Volume of Distribution Observed",
-    "Steady-State Volume of Distribution Intravenous Observed",
-    "AUC Infinity Observed Dose-Normalized", "Maximum Concentration Dose-Normalized"
-  ),
-  c("CLFO", "TLST", "CMAX", "VZFO", "AUCIFO", "CLST", "TMAX", "R2", "R2ADJ", "CMAXD", "AUCLSTD",
-    "LAMZ", "AUCLST", "LAMZHL", "LAMZNPT", "CLSTP", "LAMZSPNR", "LAMZLL",
-    "CTROUGH", "CAV", "AUCIFP", "AUMCINF.OBS", "AUCPEO", "AUCPEP", "CL.OBS", "CL.PRED",
-    "MRT.IV.OBS", "VZ.OBS", "VSS.IV.OBS", "AUCINF.OBS.DN", "CMAX.DN"
-  )
-)
-
-
 export_cdisc <- function(res_nca) {
   if (FALSE) {
     # uncomment in case of more added variables
@@ -192,7 +164,7 @@ export_cdisc <- function(res_nca) {
       PPENINT = ifelse(end != Inf, end, NA)
     )  %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
-    mutate(PPTEST = pptestcd_dict[PPTESTCD])  %>%
+    mutate(PPTEST = .pptestcd_dict[PPTESTCD])  %>%
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
@@ -214,3 +186,27 @@ export_cdisc <- function(res_nca) {
 
   return(list(pp = pp, adpp = adpp))
 }
+
+.pptestcd_dict <- setNames(
+  c(
+    "Total CL Obs by F", "Time of Last Nonzero Conc", "Max Conc", "Vz Obs by F", "AUC Infinity Obs",
+    "Last Nonzero Conc", "Time of CMAX", "R Squared", "R Squared Adjusted", "Max Conc Norm by Dose",
+    "AUC to Last Nonzero Conc Norm by Dose", "Lambda z", "AUC to Last Nonzero Conc",
+    "Half-Life Lambda z", "Number of points used for Lambda z", "Last Nonzero Conc Predicted",
+    "Span Ratio", "Lambda z lower limit (time)",
+
+    # Manually filled
+    "Trough Concentration", "Average Concentration", "AUC Infinity Predicted",
+    "AUMC Infinity Observed", "AUC Percent Extrapolated Observed",
+    "AUC Percent Extrapolated Predicted", "Clearance Observed",
+    "Clearance Predicted", "Mean Residence Time Intravenous Observed",
+    "Volume of Distribution Observed",
+    "Steady-State Volume of Distribution Intravenous Observed",
+    "AUC Infinity Observed Dose-Normalized", "Maximum Concentration Dose-Normalized"
+  ),
+  c("CLFO", "TLST", "CMAX", "VZFO", "AUCIFO", "CLST", "TMAX", "R2", "R2ADJ", "CMAXD", "AUCLSTD",
+    "LAMZ", "AUCLST", "LAMZHL", "LAMZNPT", "CLSTP", "LAMZSPNR", "LAMZLL",
+    "CTROUGH", "CAV", "AUCIFP", "AUMCINF.OBS", "AUCPEO", "AUCPEP", "CL.OBS", "CL.PRED",
+    "MRT.IV.OBS", "VZ.OBS", "VSS.IV.OBS", "AUCINF.OBS.DN", "CMAX.DN"
+  )
+)
