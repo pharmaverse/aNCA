@@ -174,7 +174,9 @@ observeEvent(input$settings_upload, {
 # When an analyte is selected and the user clicks the "Submit" button,
 # create the PKNCA data object
 mydata <- reactiveVal(NULL)
-observeEvent(input$submit_analyte, priority = 2, {
+observeEvent(data(), priority = 2, {
+  
+  req(data())
 
   # Define explicetely input columns until there are input definitions
   group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
@@ -188,9 +190,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
                                    time_column = time_column) %>%
-    dplyr::arrange(across(all_of(c(usubjid_column, time_column)))) %>%
-    # Consider only the analytes requested by the user
-    dplyr::filter(!!sym(analyte_column) %in% input$select_analyte)
+    dplyr::arrange(across(all_of(c(usubjid_column, time_column))))
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
                                    group_columns = c(group_columns, usubjid_column),
@@ -337,7 +337,6 @@ observeEvent(input$select_analyte, priority = -1, {
 # Partial AUC Selection
 auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
 intervals_userinput <- reactiveVal(NULL)
-pk_nca_trigger <- reactiveVal(0)
 
 # Add a new partial AUC input
 observeEvent(input$addAUC, {
@@ -354,12 +353,14 @@ observeEvent(input$removeAUC, {
   }
 })
 
-# NCA button object
-myres <- reactiveVal(NULL)
-
-observeEvent(input$nca, {
+# NCA settings dynamic changes
+observeEvent(list(auc_counter(), input$method, input$nca_params, 
+                  input$should_impute_c0, input$select_dosno),{
   req(mydata())
-
+  
+  # Load mydata reactive and modify it accordingly to user's request
+  mydata <- mydata()
+  
   # Use the intervals defined by the user if so
   if (input$AUCoptions && auc_counter() > 0) {
 
@@ -393,8 +394,7 @@ observeEvent(input$nca, {
   # Update profiles per patient considering the profiles selected
   profiles_per_patient(tapply(mydata()$conc$data$DOSNO, mydata()$conc$data$USUBJID, unique))
 
-  # Use the user inputs to determine the NCA settings to apply
-  PKNCA::PKNCA.options(
+  mydata$options <- list(
     auc.method = input$method,
     allow.tmax.in.half.life = TRUE,
     keep_interval_cols = c("DOSNO", "type_interval"),
@@ -403,9 +403,6 @@ observeEvent(input$nca, {
     min.span.ratio = Inf,
     min.hl.points = 3
   )
-
-  # Load mydata reactive
-  mydata <- mydata()
 
   # Include main intervals as specified by the user
   mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
@@ -420,34 +417,31 @@ observeEvent(input$nca, {
   # Filter only the analytes and doses requested
   mydata$intervals <- mydata$intervals %>%
     dplyr::filter(
-      DOSNO %in% input$select_dosno,
-      if ("EVID" %in% names(data())) EVID == 0 else TRUE
+      DOSNO %in% input$select_dosno
       )
 
   # Define start imputations on intervals if specified by the user
   if (input$should_impute_c0) {
     mydata <- create_start_impute(mydata = mydata)
     mydata$impute <- "impute"
-
   }
 
   mydata(mydata)
-
-  # Perform NCA on the profiles selected
-  pk_nca_trigger(pk_nca_trigger() + 1)
-
-  # Update panel to show results page
-  updateTabsetPanel(session, "ncapanel", selected = "Results")
 })
 
+# NCA running and obtention of results
+myres <- reactiveVal(NULL)
 res_nca <- reactiveVal(NULL)
-observeEvent(pk_nca_trigger(), {
+observeEvent(input$nca, {
   req(mydata())
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
     # Increment progress to 100% after NCA calculations are complete
     incProgress(0.5, detail = "NCA calculations complete!")
+    
+    # Update panel to show results page
+    updateTabsetPanel(session, "ncapanel", selected = "Results")
 
     # Make the starts and ends of results relative to last dose using the dose data
     myres$result <- myres$result %>%

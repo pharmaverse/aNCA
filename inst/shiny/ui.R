@@ -37,30 +37,29 @@ fluidPage(
           tabPanel("Setup", fluid = TRUE,
 
             navlistPanel(
-              tabPanel("Data Selection",
-                # Local upload option
-                fileInput(
-                  "settings_upload",
-                  width = "60%",
-                  label = "Upload Settings",
-                  buttonLabel = list(icon("folder"), "Browse"),
-                  accept = c(".csv", ".xpt")
-                ),
-                br(),
-
-                # Selection of analyte
-                selectInput("select_analyte", "Choose the analyte :", choices = NULL),
-                selectInput(
-                  "select_dosno",
-                  "Choose the Dose Number:",
-                  multiple = TRUE,
-                  choices = c("Please specify ANALYTE in Data Selection" = "")
-                ),
-                br(),
-                actionButton("submit_analyte", "Submit"),
-                reactableOutput("datatable"),
-              ),
+              
               tabPanel("Settings",
+                
+                 # Local upload option
+                 fileInput(
+                   "settings_upload",
+                   width = "60%",
+                   label = "Upload Settings",
+                   buttonLabel = list(icon("folder"), "Browse"),
+                   accept = c(".csv", ".xpt")
+                 ),
+                 br(),
+                 
+                 # Selection of analyte
+                 selectInput("select_analyte", "Choose the analyte :", choices = NULL),
+                 selectInput(
+                   "select_dosno",
+                   "Choose the Dose Number:",
+                   multiple = TRUE,
+                   choices = c("Please specify ANALYTE in Data Selection" = "")
+                 ),
+                 br(),
+                
                 selectInput(
                   "method",
                   "Extrapolation Method:",
@@ -205,7 +204,8 @@ fluidPage(
                       )
                     )
                   )
-                )
+                ),
+                reactableOutput("datatable")
               ),
 
               tabPanel("Slope Selector", slope_selector_ui("slope_selector"))
