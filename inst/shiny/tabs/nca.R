@@ -206,7 +206,7 @@ observeEvent(input$submit_analyte, priority = 2, {
                   !!sym(matrix_column) %in% input$select_pcspec)
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
-                                   group_columns = c(group_columns, usubjid_column, analyte_column),
+                                   group_columns = c(group_columns, usubjid_column),
                                    time_column = time_column,
                                    dosno_column = dosno_column,
                                    since_lastdose_time_column = "ARRLT")
