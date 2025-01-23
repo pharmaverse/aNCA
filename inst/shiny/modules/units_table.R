@@ -160,7 +160,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
               library or impute a conversion factor yourself"
             ),
             type = "error",
-            duration = 5
+            duration = 12.5
           )
         }
 
