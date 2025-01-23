@@ -28,10 +28,9 @@
 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
-    dplyr::filter(TYPE %in% c("Selection", "Exclusion")) %>%
+    filter(TYPE %in% c("Selection", "Exclusion")) %>%
     semi_join(
-      profiles %>%
-        select(profiles, USUBJID, ANALYTE, PCSPEC, DOSNO),
+      select(profiles, USUBJID, ANALYTE, PCSPEC, DOSNO),
       by = c("PATIENT" = "USUBJID", "ANALYTE", "PCSPEC", "PROFILE" = "DOSNO")
     ) %>%
     filter(all(!is.na(sapply(IXrange, .eval_range))))
