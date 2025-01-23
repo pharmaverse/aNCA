@@ -220,18 +220,11 @@ observeEvent(input$submit_analyte, priority = 2, {
     duration = "ADOSEDUR"
   )
 
-  myintervals <- format_pkncadata_intervals(mydose) %>%
-    # Filter only the doses requested by the user
-    dplyr::filter(
-      !!sym(dosno_column) %in% input$select_dosno
-    )
-
   # Combine the PKNCA objects into the PKNCAdata object
   # TODO think of case with different units for different analytes
   mydata <- PKNCA::PKNCAdata(
     data.conc = myconc,
     data.dose = mydose,
-    intervals = myintervals,
     units = PKNCA::pknca_units_table(
       concu = myconc$data$AVALU[1],
       doseu = myconc$data$DOSEU[1],
@@ -414,39 +407,30 @@ observeEvent(input$nca, {
   # Load mydata reactive
   mydata <- mydata()
 
-  # Include manual intervals if specified by the user
+  # Include main intervals as specified by the user
+  mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
+                                                 # Compute only parameters specified
+                                                 params = input$nca_params, 
+                                                 # Start at t0 when requested by the user
+                                                 start_from_last_dose = input$should_impute_c0)
+  
+  # Join custom AUC partial intervals specified by the user
   mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
+  
+  # Filter only the analytes and doses requested
+  mydata$intervals <- mydata$intervals %>%
+    dplyr::filter(
+      DOSNO %in% input$select_dosno,
+      if ("EVID" %in% names(data())) EVID == 0 else TRUE
+      )
 
   # Define start imputations on intervals if specified by the user
   if (input$should_impute_c0) {
     mydata <- create_start_impute(mydata = mydata)
     mydata$impute <- "impute"
 
-  } else {
-    # Otherwise, the original intervals should start at C1 for all calculations
-    mydata <- PKNCA::PKNCAdata(
-      data.conc = mydata$conc,
-      data.dose = mydata$dose,
-      intervals = bind_rows(
-        format_pkncadata_intervals(
-          mydata$dose,
-          start_from_last_dose = FALSE
-        ),
-        intervals_userinput()
-      ) %>%
-        # Filter only the analytes and doses requested by the user
-        dplyr::filter(
-          DOSNO %in% input$select_dosno,
-          if ("EVID" %in% names(data())) EVID == 0 else TRUE
-        ),
-      units = PKNCA::pknca_units_table(
-        concu = mydata$conc$data$PCSTRESU[1],
-        doseu = mydata$dose$data$DOSEU[1],
-        amountu = mydata$conc$data$PCSTRESU[1],
-        timeu = mydata$conc$data$RRLTU[1]
-      )
-    )
   }
+
   mydata(mydata)
 
   # Perform NCA on the profiles selected
