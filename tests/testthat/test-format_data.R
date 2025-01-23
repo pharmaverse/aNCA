@@ -29,7 +29,7 @@ test_that("format_pkncaconc_data generates correct dataset", {
 
   # Test if df_conc can be used with PKNCAconc by testing its output
   expect_no_error(
-    PKNCAconc(
+    PKNCA::PKNCAconc(
       df_conc,
       formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
       exclude_half.life = "exclude_half.life",
@@ -77,7 +77,7 @@ test_that("format_pkncaconc_data generates correct dataset with multiple doses",
 
   # Test if df_conc can be used with PKNCAconc by testing its output
   expect_no_error(
-    PKNCAconc(
+    PKNCA::PKNCAconc(
       df_conc,
       formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
       exclude_half.life = "exclude_half.life",
@@ -173,7 +173,7 @@ test_that("format_pkncadose_data generates when missing the dose number column",
 
   # Test if df_dose can be used with PKNCAdose by testing its output
   expect_no_error(
-    PKNCAdose(
+    PKNCA::PKNCAdose(
       data = df_dose,
       formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
       route = "ROUTE",
@@ -279,14 +279,14 @@ test_that("format_pkncadata_intervals generates correct dataset", {
                                    since_lastdose_time_column = "ARRLT")
 
   # Generate PKNCAconc and PKNCAdose objects
-  myconc <- PKNCAconc(
+  myconc <- PKNCA::PKNCAconc(
     df_conc,
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
-  mydose <- PKNCAdose(
+  mydose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
     route = "ROUTE",
