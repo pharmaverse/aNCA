@@ -1,4 +1,4 @@
-eDATA_FIXTURE <- list(
+DATA_FIXTURE <- list(
   conc = list(
     data = data.frame(
       STUDYID = 1,
