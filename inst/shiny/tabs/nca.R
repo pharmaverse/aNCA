@@ -448,7 +448,9 @@ observeEvent(input$nca, {
       inner_join(select(mydata()$dose$data, -exclude)) %>%
       dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
                     end = end - !!sym(mydata()$dose$columns$time)) %>%
-      dplyr::select(names(myres$result))
+      dplyr::select(names(myres$result)) %>%
+      # Filter from results the analytes that the user did not request
+      dplyr::filter(ANALYTE %in% input$select_analyte)
 
     # Return the result
     res_nca(myres)
