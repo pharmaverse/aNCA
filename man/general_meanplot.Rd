@@ -8,6 +8,7 @@ general_meanplot(
   data,
   selected_studyids,
   selected_analytes,
+  selected_pcspecs,
   selected_cycles,
   id_variable = "DOSEA",
   plot_ylog = FALSE,
@@ -21,6 +22,8 @@ general_meanplot(
 \item{selected_studyids}{A character vector of selected study IDs to be included in the plot.}
 
 \item{selected_analytes}{A character vector of selected analytes to be included in the plot.}
+
+\item{selected_pcspecs}{A character vector of selected matrices to be included in the plot.}
 
 \item{selected_cycles}{A character vector or numeric vector of selected cycles to be
 included in the plot.}

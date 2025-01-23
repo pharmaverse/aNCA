@@ -6,6 +6,7 @@ DATA_FIXTURE <- list(
       USUBJID = rep(1:4, each = 4),
       DOSNO = 1,
       IX = rep(1:4, times = 4),
+      ANALYTE = rep("A", 16),
       is.included.hl = FALSE,
       is.excluded.hl = FALSE,
       exclude_half.life = FALSE,
@@ -14,11 +15,11 @@ DATA_FIXTURE <- list(
   )
 )
 
-PROFILES_FIXTURE <- list(
-  "1" = list(1),
-  "2" = list(1),
-  "3" = list(1),
-  "4" = list(1)
+PROFILES_FIXTURE <- data.frame(
+  USUBJID = rep(1:4, each = 1),
+  ANALYTE = rep("A", 4),
+  PCSPEC = rep(1, 4),
+  DOSNO = rep(1, 4)
 )
 
 describe(".filter_slopes", {
@@ -27,6 +28,8 @@ describe(".filter_slopes", {
       TYPE = rep("Selection", 2),
       PATIENT = c(1, 3),
       PROFILE = c(1, 1),
+      ANALYTE = c("A", "A"),
+      PCSPEC = c(1, 1),
       IXrange = c("1:3", "2:4"),
       REASON = "Test selection"
     )
@@ -41,6 +44,8 @@ describe(".filter_slopes", {
       TYPE = rep("Exclusion", 2),
       PATIENT = c(2, 4),
       PROFILE = c(1, 1),
+      ANALYTE = c("A", "A"),
+      PCSPEC = c(1, 1),
       IXrange = c("1:2", "2:3"),
       REASON = "Test exclusion"
     )
@@ -66,6 +71,8 @@ EXISTING_FIXTURE <- data.frame(
   TYPE = "Exclusion",
   PATIENT = 1,
   PROFILE = 1,
+  ANALYTE = "A",
+  PCSPEC = 1,
   IXrange = "3:6"
 )
 
@@ -76,6 +83,8 @@ describe(".check_slope_rule_overlap", {
       TYPE = "Selection",
       PATIENT = 1,
       PROFILE = 1,
+      ANALYTE = "A",
+      PCSPEC = 1,
       IXrange = "1:3"
     )
     expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
@@ -85,6 +94,8 @@ describe(".check_slope_rule_overlap", {
       TYPE = "Exclusion",
       PATIENT = 2,
       PROFILE = 1,
+      ANALYTE = "A",
+      PCSPEC = 1,
       IXrange = "1:3"
     )
     expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
@@ -94,6 +105,8 @@ describe(".check_slope_rule_overlap", {
       TYPE = "Exclusion",
       PATIENT = 1,
       PROFILE = 2,
+      ANALYTE = "A",
+      PCSPEC = 1,
       IXrange = "1:3"
     )
     expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
@@ -104,6 +117,8 @@ describe(".check_slope_rule_overlap", {
       TYPE = "Exclusion",
       PATIENT = 1,
       PROFILE = 1,
+      ANALYTE = "A",
+      PCSPEC = 1,
       IXrange = "4:5"
     )
     expect_equal(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "3,6")
@@ -112,6 +127,8 @@ describe(".check_slope_rule_overlap", {
       TYPE = "Exclusion",
       PATIENT = 1,
       PROFILE = 1,
+      ANALYTE = "A",
+      PCSPEC = 1,
       IXrange = "3:4"
     )
     expect_equal(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "5:6")
@@ -122,6 +139,8 @@ describe(".check_slope_rule_overlap", {
       TYPE = "Exclusion",
       PATIENT = 1,
       PROFILE = 1,
+      ANALYTE = "A",
+      PCSPEC = 1,
       IXrange = "4:9"
     )
     expect_equal(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "3:9")
@@ -132,6 +151,8 @@ describe(".check_slope_rule_overlap", {
       TYPE = "Exclusion",
       PATIENT = 1,
       PROFILE = 1,
+      ANALYTE = "A",
+      PCSPEC = 1,
       IXrange = "3:6"
     )
     expect_equal(nrow(.check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 0)
