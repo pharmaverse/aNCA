@@ -31,11 +31,10 @@
     dplyr::filter(TYPE %in% c("Selection", "Exclusion")) %>%
     semi_join(
       profiles %>%
-        select(USUBJID, ANALYTE, PCSPEC, DOSNO) %>%
-        rename(PATIENT = USUBJID, PROFILE = DOSNO),
-      by = c("PATIENT", "ANALYTE", "PCSPEC", "PROFILE")
+        select(profiles, USUBJID, ANALYTE, PCSPEC, DOSNO),
+      by = c("PATIENT" = "USUBJID", "ANALYTE", "PCSPEC", "PROFILE" = "DOSNO")
     ) %>%
-    filter(all(!is.na(sapply(IXrange, function(x) .eval_range(x)))))
+    filter(all(!is.na(sapply(IXrange, .eval_range))))
 
   if (nrow(slopes) != 0) {
     # Go over all rules and check if there is no overlap - if there is, edit accordingly

@@ -144,9 +144,9 @@ slope_selector_server <- function(
           PCSPEC %in% pcspec_nca,
           USUBJID %in% search_patient
         ) %>%
-        dplyr::select(USUBJID, ANALYTE, PCSPEC, DOSNO) %>%
+        select(USUBJID, ANALYTE, PCSPEC, DOSNO) %>%
         unique() %>%
-        dplyr::arrange(USUBJID, ANALYTE, PCSPEC, DOSNO)
+        arrange(USUBJID, ANALYTE, PCSPEC, DOSNO)
 
       num_plots <- nrow(patient_profile_plot_ids)
 
@@ -156,7 +156,7 @@ slope_selector_server <- function(
       page_start <- page_end - plots_per_page + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      plots_to_render <- dplyr::slice(ungroup(patient_profile_plot_ids), page_start:page_end)
+      plots_to_render <- slice(ungroup(patient_profile_plot_ids), page_start:page_end)
 
       plot_outputs <- apply(plots_to_render, 1, function(row) {
         lambda_slope_plot(

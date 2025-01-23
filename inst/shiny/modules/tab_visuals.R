@@ -264,7 +264,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         session,
         "analyte_mean",
         choices = sort(analyte_choices),
-        selected = analyte_choices[1]
+        selected = sort(analyte_choices)[1]
       )
 
       # Update the studyidmean select input
@@ -287,7 +287,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         session,
         "pcspec_mean",
         choices = sort(pcspec_choices),
-        selected = pcspec_choices[1]
+        selected = sort(pcspec_choices)[1]
       )
 
       # Update the selectidvar select input
