@@ -9,7 +9,7 @@ run_app <- function(...) {
 
   require(dplyr)
   require(DT)
-  require(ggpplot2)
+  require(ggplot2)
   require(htmlwidgets)
   require(PKNCA)
   require(plotly)
@@ -23,6 +23,6 @@ run_app <- function(...) {
   require(stringi)
   require(tools)
   require(utils)
-  require(zipr)
+  require(zip)
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }
