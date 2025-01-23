@@ -3,6 +3,8 @@
 #' List of functions imported for the shiny application.
 #' When adding new imports, please keep the alphabetical order, at lest for packages.
 #'
+#' @param ... Arguments passed to `shiny::runApp()`
+#'
 #' @import shiny
 #' @import bslib
 #' @importFrom dplyr mutate filter select group_by summarise pull arrange ungroup
@@ -28,5 +30,26 @@
 #' @importFrom zip zipr
 #' @export
 run_app <- function(...) {
+  require(aNCA)
+
+  require(shiny)
+  require(bslib)
+
+  require(dplyr)
+  require(DT)
+  require(ggpplot2)
+  require(htmlwidgets)
+  require(PKNCA)
+  require(plotly)
+  require(reactable)
+  require(rio)
+  require(rmarkdown)
+  require(shinyBS)
+  require(shinycssloaders)
+  require(shinyjqui)
+  require(stringi)
+  require(tools)
+  require(utils)
+  require(zipr)
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }

@@ -4,7 +4,10 @@
 \alias{run_app}
 \title{Run the Shiny app}
 \usage{
-run_app()
+run_app(...)
+}
+\arguments{
+\item{...}{Arguments passed to \code{shiny::runApp()}}
 }
 \description{
 List of functions imported for the shiny application.
