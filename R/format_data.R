@@ -47,7 +47,11 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
 #'
 #' This function creates a pharmacokinetic dose dataset from the provided concentration data.
 #'
-#' @param ADNCA_conc A data frame containing the concentration data.
+#' @param pkncaconc_data A data frame containing the concentration data.
+#' @param group_columns A character vector specifying the columns to group by.
+#' @param dosno_column A character string specifying the dose number column.
+#' @param time_column A character string specifying the time column.
+#' @param since_lastdose_time_column A character string specifying the time since last dose column.
 #'
 #' @returns A data frame containing the dose data.
 #'
@@ -93,6 +97,7 @@ format_pkncadose_data <- function(pkncaconc_data,
     slice(1) %>%
     ungroup() %>%
     arrange(!!!syms(group_columns))
+
 }
 
 #' Create Dose Intervals Dataset
@@ -124,7 +129,8 @@ format_pkncadata_intervals <- function(pknca_dose,
                                                    "cmax", "half.life", "tmax", "lambda.z",
                                                    "lambda.z.n.points", "r.squared",
                                                    "adj.r.squared", "lambda.z.time.first",
-                                                   "aucpext.obs", "aucpext.pred", "clast.obs"),
+                                                   "aucpext.obs", "aucpext.pred", "clast.obs",
+                                                   "cl.obs"),
                                        start_from_last_dose = TRUE) {
   if (!inherits(pknca_dose, "PKNCAdose")) {
     stop("Input must be a PKNCAdose object from the PKNCA package.")

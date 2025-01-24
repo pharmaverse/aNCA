@@ -6,6 +6,7 @@
 #'
 #' @param data              A data frame containing the ADNCA dataset.
 #' @param selected_analytes A character vector of selected analytes to be included in the plot.
+#' @param selected_pcspec   A character vector of selected matrix to be included in the plot.
 #' @param selected_usubjids A character vector of selected unique subject identifiers (USUBJIDs)
 #'                          to be included in the plot.
 #' @param colorby_var       A character string specifying the variable by which to color
@@ -22,7 +23,7 @@
 #' @details
 #' The function performs the following steps:a
 #' \itemize{
-#'   \item Filters the data based on the selected analytes and subjects.
+#'   \item Filters the data based on the selected analytes, matrices, and subjects.
 #'   \item Selects relevant columns and removes rows with missing concentration values.
 #'   \item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
 #'   \item Filters the data by cycle if `time_scale` is "By Cycle".
@@ -36,6 +37,7 @@
 #'   # Example usage:
 #'   plot <- general_lineplot(data = adnca_data,
 #'                            selected_analytes = c("Analyte1", "Analyte2"),
+#'                            selected_pcspec = c("Spec1", "Spec2"),
 #'                            selected_usubjids = c("Subject1", "Subject2"),
 #'                            colorby_var = "DOSNO",
 #'                            time_scale = "By Cycle",
@@ -50,7 +52,8 @@
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
-  data, selected_analytes, selected_usubjids, colorby_var, time_scale, yaxis_scale, cycle = NULL
+  data, selected_analytes, selected_pcspec, selected_usubjids,
+  colorby_var, time_scale, yaxis_scale, cycle = NULL
 ) {
 
   # Check if the data is empty
@@ -63,6 +66,7 @@ general_lineplot <- function(
     filter(
       USUBJID %in% selected_usubjids,
       ANALYTE %in% selected_analytes,
+      PCSPEC %in% selected_pcspec,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE
     ) %>%
     filter(!is.na(AVAL)) %>%
@@ -72,6 +76,10 @@ general_lineplot <- function(
       DOSEA = factor(DOSEA),
       id_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
+  # Check if the data is empty
+  if (nrow(preprocessed_data) == 0) {
+    return(ggplot() + ggtitle("No data available for selected parameters"))
+  }
 
   # If there are predose records duplicate them in the previous line so they are considered
   if ("ARRLT" %in% names(preprocessed_data) &&
@@ -125,8 +133,8 @@ general_lineplot <- function(
     subtitle = paste0(
       "Subjects: ",
       paste(unique(preprocessed_data$USUBJID), collapse = ", "),
-      "\nAnalyte: ",
-      unique(preprocessed_data$ANALYTE)
+      "\nAnalyte(s): ",
+      paste(unique(preprocessed_data$ANALYTE), collapse = ", ")
     ),
     caption = NULL,
     add_baseline_hline = FALSE,
