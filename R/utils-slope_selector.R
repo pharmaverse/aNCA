@@ -28,12 +28,12 @@
 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
-    dplyr::filter(
-      TYPE %in% c("Selection", "Exclusion"),
-      PATIENT %in% names(profiles),
-      PROFILE %in% unname(unlist(profiles[PATIENT])),
-      all(!is.na(sapply(IXrange, function(x) .eval_range(x))))
-    )
+    filter(TYPE %in% c("Selection", "Exclusion")) %>%
+    semi_join(
+      select(profiles, USUBJID, ANALYTE, PCSPEC, DOSNO),
+      by = c("PATIENT" = "USUBJID", "ANALYTE", "PCSPEC", "PROFILE" = "DOSNO")
+    ) %>%
+    filter(all(!is.na(sapply(IXrange, .eval_range))))
 
   if (nrow(slopes) != 0) {
     # Go over all rules and check if there is no overlap - if there is, edit accordingly
@@ -47,6 +47,8 @@
   for (i in seq_len(nrow(slopes))) {
     selection_index <- which(
       data$conc$data$USUBJID == slopes$PATIENT[i] &
+        data$conc$data$ANALYTE == slopes$ANALYTE[i] &
+        data$conc$data$PCSPEC == slopes$PCSPEC[i] &
         data$conc$data$DOSNO == slopes$PROFILE[i] &
         data$conc$data$IX %in% .eval_range(slopes$IXrange[i])
     )
@@ -61,7 +63,7 @@
   }
 
   data$conc$data <- data$conc$data %>%
-    dplyr::group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
+    dplyr::group_by(STUDYID, USUBJID, ANALYTE, PCSPEC, DOSNO) %>%
     dplyr::mutate(exclude_half.life = {
       if (any(is.included.hl)) {
         is.excluded.hl | !is.included.hl
@@ -89,6 +91,8 @@
   existing_index <- which(
     existing$TYPE == new$TYPE &
       existing$PATIENT == new$PATIENT &
+      existing$ANALYTE == new$ANALYTE &
+      existing$PCSPEC == new$PCSPEC &
       existing$PROFILE == new$PROFILE
   )
 
