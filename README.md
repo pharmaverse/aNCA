@@ -40,11 +40,11 @@ pak::pak("pharmaverse/aNCA")
 in your R console.
 
 ### Via cloning the repository (for contributors)
-Alternatively, you can set up the package by cloning the repository:
+Alternatively, you can set up the package by cloning the repository through your terminal/shell:
 ```bash
 git clone https://github.com/pharmaverse/aNCA.git
 ```
-and then loading it directly using [devtools](https://github.com/r-lib/devtools):
+and then loading it directly using [devtools](https://github.com/r-lib/devtools) in your IDE (e.g. RStudio) console:
 ```R
 devtools::load_all()
 ```
