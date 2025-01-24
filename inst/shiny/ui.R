@@ -50,34 +50,41 @@ fluidPage(
                 ),
                 br(),
 
-                # Selection of analyte
-                selectInput("select_analyte", "Choose the analyte :", choices = NULL),
-                selectInput(
-                  "select_dosno",
-                  "Choose the Dose Number:",
-                  multiple = TRUE,
-                  choices = c("Please specify ANALYTE in Data Selection" = "")
+                # Selection of analyte and dose number
+                fluidRow(
+                  column(6, selectInput("select_analyte", "Choose the analyte :", choices = NULL)),
+                  column(6, selectInput(
+                    "select_dosno",
+                    "Choose the Dose Number:",
+                    multiple = TRUE,
+                    choices = c("Please specify ANALYTE in Data Selection" = "")
+                  ))
                 ),
                 br(),
 
-                selectInput(
-                  "method",
-                  "Extrapolation Method:",
-                  choices = c(
-                    "lin-log", "lin up/log down", "linear", "Linear LinearLogInterpolation"
-                  ),
-                  selected = "lin up/log down"
+                # Method, NCA parameters, and units table
+                fluidRow(
+                  column(4, selectInput(
+                    "method",
+                    "Extrapolation Method:",
+                    choices = c(
+                      "lin-log", "lin up/log down", "linear", "Linear LinearLogInterpolation"
+                    ),
+                    selected = "lin up/log down"
+                  )),
+                  column(4, pickerInput(
+                    inputId = "nca_params",
+                    label = "NCA parameters to calculate:",
+                    choices = setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
+                                      c("start", "end")) %>% sort(),
+                    options = list(`live-search` = TRUE),
+                    multiple = TRUE,
+                    selected = c("cmax", "tmax", "half.life", "cl.obs")
+                  )),
+                  column(4, units_table_ui("units_table_preNCA"))
                 ),
-                pickerInput(
-                  inputId = "nca_params",
-                  label = "NCA parameters to calculate:",
-                  choices = setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
-                                    c("start", "end")) %>% sort(),
-                  options = list(`live-search` = TRUE),
-                  multiple = TRUE,
-                  selected = c("cmax", "tmax", "half.life", "cl.obs")
-                ),
-                units_table_ui("units_table_preNCA"),
+                br(),
+
                 h4("Data imputation"),
                 tags$div(
                   checkboxInput(
