@@ -156,7 +156,8 @@ format_pkncadata_intervals <- function(pknca_dose,
     ungroup() %>%
 
     # Select only neccesary columns: start, end, groupping variables and dose number
-    select(any_of(c("start", "end", dose_group_vars, "DOSNO"))) %>%
+    # ToDo (Gerardo): Adjust the function to include multiple analytes without hardcoding
+    select(any_of(c("start", "end", dose_group_vars, "DOSNO", "ANALYTE"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
