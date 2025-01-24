@@ -92,8 +92,8 @@ observeEvent(input$settings_upload, {
     choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(DOSNO))),
     selected = doses_selected
   )
-  
-  # Specimen/Matrix
+
+  # Specimen or Matrix
   updateSelectInput(
     session,
     inputId = "select_pcspec",
@@ -352,14 +352,14 @@ observeEvent(data(), priority = -1, {
     choices = unique(data()$DOSNO),
     selected = unique(data()$DOSNO)
   )
-  
+
   updateSelectInput(
     session,
     inputId = "select_analyte",
     choices = unique(data()$ANALYTE),
     selected = unique(data()$ANALYTE)
   )
-  
+
   updateSelectInput(
     session,
     inputId = "select_pcspec",
@@ -389,7 +389,7 @@ observeEvent(input$removeAUC, {
 
 # NCA settings dynamic changes
 observeEvent(list(
-  auc_counter(), input$method, input$nca_params, input$should_impute_c0, 
+  auc_counter(), input$method, input$nca_params, input$should_impute_c0,
   input$select_analyte, input$select_dosno, input$select_pcspec
 ), {
 

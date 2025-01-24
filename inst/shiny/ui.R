@@ -56,7 +56,7 @@ fluidPage(
                                         choices = NULL)),
                   column(4, selectInput("select_dosno", "Choose the Dose Number:", multiple = TRUE,
                                         choices = NULL)),
-                  column(4, selectInput("select_pcspec", "Choose the Specimen/Matrix:", multiple = TRUE,
+                  column(4, selectInput("select_pcspec", "Choose the Specimen:", multiple = TRUE,
                                         choices = NULL)),
                 ),
                 br(),
