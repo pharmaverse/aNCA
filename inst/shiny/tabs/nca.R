@@ -246,15 +246,26 @@ observeEvent(data(), priority = 2, {
 # Display the PKNCA data object for the user (concentration records)
 output$datatable <- renderReactable({
   req(mydata())
-  data <- mydata()$conc$data %>%
-    filter(DOSNO %in% input$select_dosno,
-           ANALYTE %in% input$select_analyte)
-  # Generate column definitions
-  col_defs <- generate_col_defs(data)
 
+  # Redefine the data object to be displayed
+  data <- mydata()$intervals %>%
+    # Include labels for the column definitions/tooltips
+    apply_labels(LABELS, "ADPC") %>%
+    # Select only columns relevant to the user
+    select(where(~!is.logical(.) | any(. == TRUE)))
+
+  data <- data %>%     
+    # Represent start with reference as the start dose of the group (same as results)
+    left_join(y = mydata()$dose$data) %>%
+    group_by(across(all_of(unname(unlist(mydata()$conc$columns$groups))))) %>%
+    arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
+    mutate(start = start - first(TIME), end = end - first(TIME)) %>%
+    select(!!!syms(colnames(data)))
+  
+  # Render the output as a reactable object
   reactable(
     data,
-    columns = col_defs,
+    columns = generate_col_defs(data),
     searchable = TRUE,
     sortable = TRUE,
     highlight = TRUE,
@@ -434,26 +445,35 @@ myres <- reactiveVal(NULL)
 res_nca <- reactiveVal(NULL)
 observeEvent(input$nca, {
   req(mydata())
+
   withProgress(message = "Calculating NCA...", value = 0, {
-    myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
-
-    # Increment progress to 100% after NCA calculations are complete
-    incProgress(0.5, detail = "NCA calculations complete!")
-
-    # Update panel to show results page
-    updateTabsetPanel(session, "ncapanel", selected = "Results")
-
-    # Make the starts and ends of results relative to last dose using the dose data
-    myres$result <- myres$result %>%
-      inner_join(select(mydata()$dose$data, -exclude)) %>%
-      dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
-                    end = end - !!sym(mydata()$dose$columns$time)) %>%
-      dplyr::select(names(myres$result)) %>%
-      # Filter from results the analytes that the user did not request
-      dplyr::filter(ANALYTE %in% input$select_analyte)
-
-    # Return the result
-    res_nca(myres)
+    tryCatch({
+      myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
+      
+      # Increment progress to 100% after NCA calculations are complete
+      incProgress(0.5, detail = "NCA calculations complete!")
+      
+      # Make the starts and ends of results relative to last dose using the dose data
+      myres$result <- myres$result %>%
+        inner_join(select(mydata()$dose$data, -exclude)) %>%
+        dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
+                      end = end - !!sym(mydata()$dose$columns$time)) %>%
+        dplyr::select(names(myres$result)) %>%
+        # Filter from results the analytes that the user did not request
+        dplyr::filter(ANALYTE %in% input$select_analyte)
+      
+      # Return the results and update panel to show results page
+      res_nca(myres)
+      updateTabsetPanel(session, "ncapanel", selected = "Results")
+      
+    }, error = function(e) {
+      full_error <- e$parent$message
+      showNotification(
+        paste("Error during NCA calculation:", full_error),
+        type = "error",
+        duration = NULL
+      )
+    })
   })
 })
 
