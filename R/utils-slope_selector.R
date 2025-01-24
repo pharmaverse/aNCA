@@ -11,8 +11,8 @@
 #' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
 #'          columns modified in accordance to the provided slope filters.
 #' @importFrom dplyr filter group_by mutate
-#'
-.filter_slopes <- function(data, slopes, profiles) {
+#' @export
+filter_slopes <- function(data, slopes, profiles) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
 
@@ -39,7 +39,7 @@
     # Go over all rules and check if there is no overlap - if there is, edit accordingly
     slopes <- purrr::reduce(
       split(slopes, seq_len(nrow(slopes))),
-      .f = ~ .check_slope_rule_overlap(.x, .y, .keep = TRUE)
+      .f = ~ check_slope_rule_overlap(.x, .y, .keep = TRUE)
     )
   }
 
@@ -86,7 +86,8 @@
 #'                 that the user wants to remove rule if new range already exists in the dataset.
 #'                 If TRUE, in that case full range will be kept.
 #' @returns Data frame with full ruleset, adjusted for new rules.
-.check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
+#' @export
+check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   # check if any rule already exists for specific patient and profile #
   existing_index <- which(
     existing$TYPE == new$TYPE &

@@ -28,10 +28,10 @@ intervals_data <- data.frame(
   auc.pred = TRUE
 )
 
-conc_obj <- PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / analyte)
-dose_obj <- PKNCAdose(dose_data, dose ~ time | USUBJID + DOSNO,
-                      duration = "duration", route = "route")
-mydata <- PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)
+conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / analyte)
+dose_obj <- PKNCA::PKNCAdose(dose_data, dose ~ time | USUBJID + DOSNO,
+                             duration = "duration", route = "route")
+mydata <- PKNCA::PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)
 
 # Apply the function
 describe("create_start_impute", {

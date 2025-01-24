@@ -373,12 +373,12 @@ slope_selector_server <- function(
 
     # Observe input$nca
     observeEvent(profiles_per_patient(), {
-      mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
+      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
     })
 
     #' saves and implements provided ruleset
     observeEvent(input$save_ruleset, {
-      mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
+      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
       pk_nca_trigger(pk_nca_trigger() + 1)
     })
 
@@ -387,7 +387,7 @@ slope_selector_server <- function(
     #' and exclusions before applying them to the actual dataset.
     plot_data <- reactive({
       req(mydata(), manual_slopes(), profiles_per_patient())
-      .filter_slopes(mydata(), manual_slopes(), profiles_per_patient())
+      filter_slopes(mydata(), manual_slopes(), profiles_per_patient())
     }) %>%
       shiny::debounce(750)
 
@@ -437,7 +437,7 @@ slope_selector_server <- function(
       )
 
       # Check if there is any overlap with existing rules, adda new or edit accordingly
-      new_manual_slopes <- .check_slope_rule_overlap(manual_slopes(), new_slope_rule)
+      new_manual_slopes <- check_slope_rule_overlap(manual_slopes(), new_slope_rule)
 
       manual_slopes(new_manual_slopes)
 

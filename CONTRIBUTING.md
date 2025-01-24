@@ -75,6 +75,10 @@ When the change is done, pull request is open and the description is filled, ple
 #### For reviewers
 When reviewing a pull request, please do try to follow the [conventional comments](https://conventionalcomments.org/) guidelines. Ideas and labels described in that convention can be very helpful in getting your thoughts across and facilitate meaningful cooperation. That said, they are not applicable in every circumstance and you are free to do whatever you feel is suitable, as long as it aims to provide valid discussion.
 
+# Beware
+- The package is split into two parts: the R package and a shiny application. Logic code, which is useful on its own and can be easily run via the console should be placed in the `R/` directory. Code that is strictly related to **Shiny** application, especially code that generates some interface elements, should be placed in `inst/shiny/` folder. 
+- The package requires some dependencies for which there are no explicit `@import` statements in the `NAMESPACE` file. This is because some of those functions are not used in the **package** itself, but rather in the **Shiny application**. Please beware of this situation when managing the package dependencies - some functions might be used in the app, even though they are not verbosely imported.
+
 # In-depth guides
 Here are some useful links with in-depth documentation regarding specific parts of the pacakage and how to utilise in-build tools to extend the capabilities of the application:
 
