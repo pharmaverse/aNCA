@@ -295,7 +295,7 @@ test_that("format_pkncadata_intervals generates correct dataset", {
   )
 
   # Define the other arguments for the dose intervals
-  params <- c("cmax", "tmax", "half.life")
+  params <- c("cmax", "tmax", "half.life", "cl.obs")
 
   # Call format_pkncadata_intervals
   myintervals <- format_pkncadata_intervals(mydose, params = params, start_from_last_dose = TRUE)
