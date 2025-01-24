@@ -244,7 +244,7 @@ observeEvent(data(), priority = 2, {
 })
 
 # Display the PKNCA data object for the user (concentration records)
-output$datatable <- renderReactable({
+output$nca_intervals <- renderReactable({
   req(mydata())
 
   # Redefine the data object to be displayed

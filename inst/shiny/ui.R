@@ -205,7 +205,8 @@ fluidPage(
                     )
                   )
                 ),
-                reactableOutput("datatable")
+                h4("View of NCA settings"),
+                reactableOutput("nca_intervals")
               ),
 
               tabPanel("Slope Selector", slope_selector_ui("slope_selector"))
