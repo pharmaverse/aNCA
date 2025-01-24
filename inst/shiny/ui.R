@@ -50,16 +50,14 @@ fluidPage(
                 ),
                 br(),
 
-                # Selection of analyte and dose number
+                # Selection of analyte, dose number and specimen
                 fluidRow(
-                  column(6, selectInput("select_analyte", "Choose the analyte :", choices = NULL)),
-                  column(6, selectInput(
-                    "select_dosno",
-                    "Choose the Dose Number:",
-                    multiple = TRUE,
-                    choices = c("Please specify ANALYTE in Data Selection" = "")
-                  ))
-
+                  column(4, selectInput("select_analyte", "Choose the analyte :", multiple = FALSE,
+                                        choices = NULL)),
+                  column(4, selectInput("select_dosno", "Choose the Dose Number:", multiple = TRUE,
+                                        choices = NULL)),
+                  column(4, selectInput("select_pcspec", "Choose the Specimen/Matrix:", multiple = TRUE,
+                                        choices = NULL)),
                 ),
                 br(),
 

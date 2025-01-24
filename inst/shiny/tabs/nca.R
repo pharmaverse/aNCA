@@ -14,25 +14,6 @@
 # In this tab we select the analyte to be analyzed or can upload settings
 # Update analyte selection input based on the data
 
-observeEvent(data(), {
-  updateSelectInput(
-    session,
-    inputId = "select_analyte",
-    label = "Choose the Analyte(s) :",
-    choices = unique(data()$ANALYTE),
-    selected = unique(data()$ANALYTE)[1]
-  )
-})
-
-observeEvent(data(), {
-  updateSelectInput(
-    session,
-    inputId = "select_pcspec",
-    label = "Choose the Specimen Type(s) :",
-    choices = unique(data()$PCSPEC),
-    selected = unique(data()$PCSPEC)[1]
-  )
-})
 
 # Make GUI change when new settings are uploaded
 observeEvent(input$settings_upload, {
@@ -97,7 +78,7 @@ observeEvent(input$settings_upload, {
   # Analyte
   updateSelectInput(
     session,
-    inputId = "analyte",
+    inputId = "select_analyte",
     label = "Choose the analyte:",
     choices = data()$ANALYTE[1],
     selected = setts$ANALYTE[1]
@@ -110,6 +91,15 @@ observeEvent(input$settings_upload, {
     label = "Choose the Dose Number:",
     choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(DOSNO))),
     selected = doses_selected
+  )
+  
+  # Specimen/Matrix
+  updateSelectInput(
+    session,
+    inputId = "select_pcspec",
+    label = "Choose the Specimen/Matrix:",
+    choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))),
+    selected = unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))
   )
 
   # Extrapolation Method
@@ -353,20 +343,28 @@ observe({
 
 # Choose dosenumbers to be analyzed
 
-observeEvent(input$select_analyte, priority = -1, {
+observeEvent(data(), priority = -1, {
   req(data())
-  doses_options <- data() %>%
-    filter(ANALYTE %in% input$select_analyte) %>%
-    pull(DOSNO) %>%
-    sort() %>%
-    unique()
 
   updateSelectInput(
     session,
     inputId = "select_dosno",
-    label = "Choose the Dose Number:",
-    choices = doses_options,
-    selected = doses_options[1]
+    choices = unique(data()$DOSNO),
+    selected = unique(data()$DOSNO)
+  )
+  
+  updateSelectInput(
+    session,
+    inputId = "select_analyte",
+    choices = unique(data()$ANALYTE),
+    selected = unique(data()$ANALYTE)
+  )
+  
+  updateSelectInput(
+    session,
+    inputId = "select_pcspec",
+    choices = unique(data()$PCSPEC),
+    selected = unique(data()$PCSPEC)
   )
 })
 
@@ -391,7 +389,8 @@ observeEvent(input$removeAUC, {
 
 # NCA settings dynamic changes
 observeEvent(list(
-  auc_counter(), input$method, input$nca_params, input$should_impute_c0, input$select_dosno
+  auc_counter(), input$method, input$nca_params, input$should_impute_c0, 
+  input$select_analyte, input$select_dosno, input$select_pcspec
 ), {
 
   # Load mydata reactive and modify it accordingly to user's request
@@ -452,7 +451,9 @@ observeEvent(list(
 
   # Filter only the analytes and doses requested
   mydata$intervals <- mydata$intervals %>%
-    dplyr::filter(DOSNO %in% input$select_dosno)
+    dplyr::filter(DOSNO %in% input$select_dosno,
+                  ANALYTE %in% input$select_analyte,
+                  PCSPEC %in% input$select_pcspec)
 
   # Define start imputations on intervals if specified by the user
   if (input$should_impute_c0) {
@@ -481,9 +482,7 @@ observeEvent(input$nca, {
         inner_join(select(mydata()$dose$data, -exclude)) %>%
         dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
                       end = end - !!sym(mydata()$dose$columns$time)) %>%
-        dplyr::select(names(myres$result)) %>%
-        # Filter from results the analytes that the user did not request
-        dplyr::filter(ANALYTE %in% input$select_analyte)
+        dplyr::select(names(myres$result))
 
       # Return the results and update panel to show results page
       res_nca(myres)
