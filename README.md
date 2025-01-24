@@ -35,7 +35,7 @@ install.packages("pak")
 ```
 then you can install  [aNCA](.) by running:
 ```R
-pak::install("pharmaverse/aNCA")
+pak::pak("pharmaverse/aNCA")
 ```
 in your R console.
 
