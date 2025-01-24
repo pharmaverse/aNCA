@@ -288,6 +288,8 @@ output$datatable <- renderReactable({
 
 # Define a profiles per patient
 profiles_per_patient <- reactive({
+  req(mydate())
+
   # Check if res_nca() is available and valid
   if (!is.null(res_nca())) {
     res_nca()$result %>%
