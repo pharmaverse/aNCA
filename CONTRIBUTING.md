@@ -60,14 +60,24 @@ This part is here as a reminder to perform basic tasks and checks before the cod
 - Code passes all unit tests
 - New logic covered is by unit tests
 - New logic is documented
+- Package version is bumped
 
 The above rules will help keep our work organized, as well as allow for quick information flow between related issues, branches and pull requests.
 
 #### Notes to reviewer
 If there is anything that the reviewer should know before tackling the pull request, please provide it here. This could include things like pointing to specific parts of the code that require special attention, explaining decisions behind unusual implementations or providing logic behind changing the scope of the task.
 
+### Bumping package version
+Package versioning must use the semantic versioning schema, with developement extension: **X.Y.Z.9NNN**
+
+#### Developement version
+In each PR that introduces changes to the code, dependencies or the function documentation, it is required that the developement package version is incremented by 1 (this is the .9NNN number, the last part of the versioning schema). As the current feature branch might be outdated, before merging please cross-check with the **main** branch that the version you are submitting is correct.
+
+#### Semantic versioning
+The versioning schema for major / minor / patch releases must adhere to [semantic versioning](https://semver.org/) guidelines.
+
 ## Code review
-Each pull request must be accepted by at least one reviewer before it can be merged to the main branch.
+Each pull request must be accepted by at least two reviewers before it can be merged to the main branch.
 
 #### For reviewee
 When the change is done, pull request is open and the description is filled, please move your issue from **In Progress** to **Needs review** status, so it can be picked up by a reviewer. From this point it is up to the contributor and the person validating the change to work out any kinks and lead to merging the changes.
