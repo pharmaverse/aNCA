@@ -57,7 +57,7 @@ lambda_slope_plot <- function(
 ) {
 
   #Create duplicates for predose and last dose points per profile
-  conc_pknca_df <- create_duplicates(conc_pknca_df)
+  conc_pknca_df <- create_duplicates(conc_pknca_df, column_names)
   
   #Obtain values for slopes selection
   lambda_res <- res_pknca_df %>%
