@@ -7,56 +7,28 @@
 
 # check which formats for listings + create function
 # check how many signif figures for listings, formats arg does not work
-datasets = list(adpc = read.csv("inst/shiny/data/DummyRO_ADNCA.csv"))
-l_pkconc <- function(datasets, manual_footnote = NULL){
-  assert_emptydf(datasets$adpc)
-  assert_patients_exist(datasets$adpc)
-  assert_unique(datasets$adpc,"AVALU")
-  assert_unique(datasets$adpc,"PARAM")
-  
-  
-  AVALC_label   = paste0(unique(datasets$adpc$ANALYTE), ' Concentration\n (', unique(datasets$adpc$AVALU), ')')
-  datasets$adpc = datasets$adpc  %>% mutate(AVALC = ifelse(AVAL == 0, "BLQ", as.character(AVAL)))
-  attr(datasets$adpc[["AVALC"]], "label") <- AVALC_label
-  
-  AVAL_label   = paste0(unique(datasets$adpc$ANALYTE), ' Concentration\n (', unique(datasets$adpc$AVALU), ')')
-  attr(datasets$adpc[["AVAL"]], "label") <- AVAL_label
-  
-  
-  lst = as_listing(datasets$adpc,
-                   key_cols = c("AVALC"),
-                   disp_cols = c("TRT01A", "USUBJID", "AVISIT"))
-  # formats = list("xx.xx", "xx.xx", "xx.xx"))
-  
-  return(lst)
-  
-}
-export_as_pdf(lst, "lst.pdf")
-
-library(rlistings)
-
-as_listing(df = ,
-           key_cols = ,
-           disp_cols = ,
-           non_disp_cols = ,
-           unique_rows = ,
-           default_formatting = fmt_config(format = "xx.xx" "xx.xx - xx.xx" or format_fun(),
-                                           na_str = "-",
-                                           align = "left"),
-           col_formatting = ,
-           main_title = ,
-           subtitles = ,
-           main_footer = ,
-           prov_footer = ,
-           split_into_pages_by_var = )
 
 
 
+# Define variables
+adpc = read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
+listgroup_vars = c("PARAM", "PCSPEC", "ROUTE")
+grouping_vars = c("TRT01A", "USUBJID", "AVISIT")
+displaying_vars = c("NFRLT", "AFRLT", "AVAL")
+formatting_vars_table = NULL
+title_table = NULL
+footnote_table = "*: Patients excluded from the summary table and mean plots"
+
+# Define labels
 attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
+attr(adpc[["NFRLT"]], "label") <- "Planned time from first dose"
 attr(adpc[["AVAL"]], "label") <- "Analysis value" 
 attr(adpc[["PARAM"]], "label") <- "Analyte"
+attr(adpc[["TRT01A"]], "label") <- "Actual treatment"
 attr(adpc[["PCSPEC"]], "label") <- "Specimen" 
 attr(adpc[["ROUTE"]], "label") <- "Administration" 
+attr(adpc[["USUBJID"]], "label") <- "Unique Subject ID" 
+attr(adpc[["AVISIT"]], "label") <- "Actual visit" 
 
 l_pkconc <- function(
     adpc = read.csv("inst/shiny/data/DummyRO_ADNCA.csv"),
@@ -81,31 +53,51 @@ l_pkconc <- function(
     # Create a dataframe with rows c(grouping_Vars, displaying_vars) and columns c("Variable name", "Label", "Digits")
     formatting_vars_table <-  data.frame(
       Variable_name = c(grouping_vars, displaying_vars)
-    ) %>% 
+    ) %>%
       rowwise()  %>% 
       # Create a label column
       mutate(Label = parse_annotation(adpc, paste0("!", Variable_name)),
              na_str = "NA",
-             cero_str = "BLQ",
+             cero_str = ifelse(Variable_name == "AVAL", "BLQ", "0"),
              align = "center",
-             format = ifelse(is.numeric(adpc[[Variable_name]]), "xx.xx", NA)
+             # ToDo: Mateusz // Check formatters::list_valid_format_labels() for input list
+             format = "NA"
       ) %>%
       ungroup()
-    
-    # Create a digits column
-    
   }
   
-  # Split the data based on the listgroup_vars variables
+  # Create the proper object from the UI table for col_formatting
+  formatting_vars_list <- lapply(1:nrow(formatting_vars_table), function(i){
+    row <- formatting_vars_table[i,]
+    fmt_config(format = if (row$format == "NA") NULL else row$format,
+               na_str = row$na_str,
+               align = row$align
+               )
+  }) %>%
+    setNames(nm = formatting_vars_table$Variable_name)
+  
+  # Create a special object to map 0 string values and use it to format values
+  formatting_vars_cero <- formatting_vars_table %>%
+    rowwise() %>%
+    select(Variable_name, cero_str) %>%
+    deframe()
+  
+  # Group the data based on the listgroup_vars
   adpc_grouped <- adpc %>%
     mutate(across(all_of(listgroup_vars), as.character)) %>%
     rowwise() %>%
-    dplyr::mutate(id_list = interaction(!!!syms(listgroup_vars)))
-  
-  
+    dplyr::mutate(id_list = interaction(!!!syms(listgroup_vars))) %>% 
+    
+    # Format 0 values as defined by formatting_vars_cero
+    mutate(across(all_of(names(formatting_vars_cero)), ~
+                    ifelse(. == 0, formatting_vars_cero[cur_column()], as.character(.))
+    ))
+
+  # Split the lists based on the listgroup_vars
   lapply(unique(adpc_grouped[["id_list"]]), \(id_val) {
     
-    list_data <- adpc_grouped %>% dplyr::filter(id_plot ==  id_val)
+    # id_val = unique(adpc_grouped$id_list)[1]
+    list_data <- adpc_grouped %>% dplyr::filter(id_list ==  id_val)
     
     as_listing(
       df = list_data,
@@ -113,8 +105,10 @@ l_pkconc <- function(
       disp_cols = displaying_vars,
       main_title = parse_annotation(data = list_data,
                                     text = title_table),
-      main_footer = parse_annotation(footnote_table)
-    )  
+      main_footer = parse_annotation(data = list_data,
+                                     text = footnote_table),
+      col_formatting = formatting_vars_list
+    )
   })  %>%
     setNames(unique(adpc_grouped[["id_list"]]))
-} 
+}
