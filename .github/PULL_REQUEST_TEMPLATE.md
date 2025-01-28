@@ -19,6 +19,7 @@ How to test features not covered by unit tests.
 - [ ] Code passes all unit tests
 - [ ] New logic covered by unit tests
 - [ ] New logic is documented
+- [ ] Package version is incremented
 
 ## Notes to reviewer
 

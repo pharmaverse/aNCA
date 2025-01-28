@@ -13,7 +13,6 @@
 #'          columns modified in accordance to the provided slope filters.
 #' @importFrom dplyr filter group_by mutate
 #' @importFrom purrr reduce map
-#'
 .filter_slopes <- function(data, slopes, profiles, slope_groups) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
@@ -88,7 +87,6 @@
 #'                 If TRUE, in that case full range will be kept.
 #' @returns Data frame with full ruleset, adjusted for new rules.
 .check_slope_rule_overlap <- function(existing, new, slope_group_columns, .keep = FALSE) {
-  
 
   # check if any rule already exists for specific patient and profile #
     existing_index <- which(

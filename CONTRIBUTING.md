@@ -60,20 +60,34 @@ This part is here as a reminder to perform basic tasks and checks before the cod
 - Code passes all unit tests
 - New logic covered is by unit tests
 - New logic is documented
+- Package version is bumped
 
 The above rules will help keep our work organized, as well as allow for quick information flow between related issues, branches and pull requests.
 
 #### Notes to reviewer
 If there is anything that the reviewer should know before tackling the pull request, please provide it here. This could include things like pointing to specific parts of the code that require special attention, explaining decisions behind unusual implementations or providing logic behind changing the scope of the task.
 
+### Bumping package version
+Package versioning must use the semantic versioning schema, with developement extension: **X.Y.Z.9NNN**
+
+#### Developement version
+In each PR that introduces changes to the code, dependencies or the function documentation, it is required that the developement package version is incremented by 1 (this is the .9NNN number, the last part of the versioning schema). As the current feature branch might be outdated, before merging please cross-check with the **main** branch that the version you are submitting is correct.
+
+#### Semantic versioning
+The versioning schema for major / minor / patch releases must adhere to [semantic versioning](https://semver.org/) guidelines.
+
 ## Code review
-Each pull request must be accepted by at least one reviewer before it can be merged to the main branch.
+Each pull request must be accepted by at least two reviewers before it can be merged to the main branch.
 
 #### For reviewee
 When the change is done, pull request is open and the description is filled, please move your issue from **In Progress** to **Needs review** status, so it can be picked up by a reviewer. From this point it is up to the contributor and the person validating the change to work out any kinks and lead to merging the changes.
 
 #### For reviewers
 When reviewing a pull request, please do try to follow the [conventional comments](https://conventionalcomments.org/) guidelines. Ideas and labels described in that convention can be very helpful in getting your thoughts across and facilitate meaningful cooperation. That said, they are not applicable in every circumstance and you are free to do whatever you feel is suitable, as long as it aims to provide valid discussion.
+
+# Beware
+- The package is split into two parts: the R package and a shiny application. Logic code, which is useful on its own and can be easily run via the console should be placed in the `R/` directory. Code that is strictly related to **Shiny** application, especially code that generates some interface elements, should be placed in `inst/shiny/` folder. 
+- The package requires some dependencies for which there are no explicit `@import` statements in the `NAMESPACE` file. This is because some of those functions are not used in the **package** itself, but rather in the **Shiny application**. Please beware of this situation when managing the package dependencies - some functions might be used in the app, even though they are not verbosely imported.
 
 # In-depth guides
 Here are some useful links with in-depth documentation regarding specific parts of the pacakage and how to utilise in-build tools to extend the capabilities of the application:
