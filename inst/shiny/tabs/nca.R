@@ -299,15 +299,15 @@ profiles_per_patient <- reactive({
   # Check if res_nca() is available and valid
   if (!is.null(res_nca())) {
     res_nca()$result %>%
-      mutate(USUBJID = as.character(USUBJID),
-             DOSNO = as.character(DOSNO)) %>%
-      group_by(USUBJID, ANALYTE, PCSPEC) %>%
+       mutate(USUBJID = as.character(USUBJID),
+              DOSNO = as.character(DOSNO)) %>%
+      group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
       summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
       unnest(DOSNO)  # Convert lists into individual rows
   } else {
     mydata()$conc$data %>%
       mutate(USUBJID = as.character(USUBJID)) %>%
-      group_by(USUBJID, ANALYTE, PCSPEC) %>%
+      group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
       summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
   }
 })
@@ -440,6 +440,7 @@ observeEvent(input$nca, {
 
   # Include manual intervals if specified by the user
   mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
+
 
   # Define start imputations on intervals if specified by the user
   if (input$should_impute_c0) {
@@ -712,21 +713,24 @@ output$settings_save <- downloadHandler(
 )
 
 # Keep the UI table constantly actively updated
-observe({
+observeEvent(input, {
+  req(mydata())
+  dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
   for (input_name in grep(
-    "(TYPE|PATIENT|PROFILE|IXrange|REASON)_Ex\\d+$", names((input)), value = TRUE
+    paste0("(", paste(c("TYPE", dynamic_columns, "RANGE", "REASON"), collapse = "|"), ")_Ex\\d+$"),
+    names(input), value = TRUE
   )) {
     observeEvent(input[[input_name]], {
       # Get the ID of the exclusion
       id <- gsub("_(Ex\\d+)$", "", input_name)
-
+      
       # Update the reactive list of exclusion IDs
       manual_slopes <- manual_slopes()
       set_selected_value(
         manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
       ) <- manual_slopes[manual_slopes$id == id, ]
       manual_slopes(manual_slopes)
-
+      
     })
   }
 })

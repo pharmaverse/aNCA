@@ -7,10 +7,8 @@
 lambda_slope_plot(
   res_pknca_df = myres$result,
   conc_pknca_df = mydata$conc$data,
-  dosno = profile,
-  usubjid = patient,
-  analyte = analyte,
-  pcspec = pcspec,
+  column_names = slopes_groups(),
+  row_values,
   R2ADJTHRESHOL = 0.7
 )
 }
@@ -21,14 +19,10 @@ analysis (default is \code{PKNCA::pk.nca(.)$result}).}
 \item{conc_pknca_df}{Data frame containing the concentration data
 (default is \code{mydata$conc$data}).}
 
-\item{dosno}{Numeric value representing the dose number (default is \code{profile}).}
+\item{column_names}{A character vector containing the column names used for grouping the data.}
 
-\item{usubjid}{Character value representing the unique subject identifier
+\item{row_values}{A list containing the values for the column_names used for filtering the data.
 (default is \code{patient}).}
-
-\item{analyte}{Character value representing the analyte (default is \code{analyte}).}
-
-\item{pcspec}{Character value representing the matrix (default is \code{pcspec}).}
 
 \item{R2ADJTHRESHOL}{Numeric value representing the R-squared adjusted threshold for determining
 the subtitle color (default is 0.7).}
@@ -44,6 +38,7 @@ a linear regression line and additional plot annotations.
 \details{
 The function performs the following steps:
 \itemize{
+\item{Creates duplicates of the predose and last doses of concentration data.}
 \item{Filters and arranges the input data to obtain relevant lambda calculation information.}
 \item{Identifies the data points used for lambda calculation.}
 \item{Calculates the fitness, intercept, and time span of the half-life estimate.}
@@ -62,10 +57,8 @@ linear regression line, and annotations.
   # Example usage:
   plot <- lambda_slope_plot(res_pknca_df = myres$result,
                             conc_pknca_df = mydata$conc$data,
-                            analyte = "analyte_1",
-                            pcspec = "pcspec_1",
-                            dosno = 1,
-                            usubjid = "subject_1",
+                            column_names = c("USUBJID" , "STUDYID", "DOSENO"),
+                            row_values = list(USUBJID = "001", STUDYID = "A", DOSENO = 1),
                             R2ADJTHRESHOL = 0.7)
   plot
 }

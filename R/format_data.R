@@ -150,7 +150,7 @@ format_pkncadata_intervals <- function(pknca_dose,
     arrange(!!sym(pknca_dose$columns$time)) %>%
     mutate(end = lead(as.numeric(!!sym(pknca_dose$columns$time)), default = Inf)) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", unname(unlist(pknca_dose$columns$groups)), "DOSNO"))) %>%
+    select(any_of(c("start", "end", unname(unlist(pknca_dose$columns$groups)), "DOSNO", "ANALYTE"))) %>% #TODO: Gerardo adjust to remove hardcoding
 
     # Create logical columns with the TRUE and as names params argument
     mutate(!!!setNames(rep(TRUE, length(params)), params)) %>%

@@ -4,12 +4,14 @@
 \alias{.check_slope_rule_overlap}
 \title{Check overlap between existing and new slope rulesets}
 \usage{
-.check_slope_rule_overlap(existing, new, .keep = FALSE)
+.check_slope_rule_overlap(existing, new, slope_group_columns, .keep = FALSE)
 }
 \arguments{
 \item{existing}{Data frame with existing selections and exclusions.}
 
 \item{new}{Data frame with new rule to be added or removed.}
+
+\item{slope_group_columns}{List with column names that define the groups.}
 
 \item{.keep}{Whether to force keep fully overlapping rulesets. If FALSE, it will be assumed
 that the user wants to remove rule if new range already exists in the dataset.
