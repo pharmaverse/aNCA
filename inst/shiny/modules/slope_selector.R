@@ -104,7 +104,13 @@ slope_selector_server <- function(
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
       req(mydata())
-      c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
+      groups <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO", "ROUTE")
+      
+      # Filter columns with more than one unique value
+      filtered_groups <- groups[sapply(groups, function(col) {
+        length(unique(mydata()$conc$data[[col]])) > 1
+      })]
+      filtered_groups
     })
     
     # Reactive for .SLOPE_SELECTOR_COLUMNS
@@ -157,9 +163,9 @@ slope_selector_server <- function(
           PCSPEC %in% pcspec_nca,
           USUBJID %in% search_patient
         ) %>%
-        select(slopes_groups(), ROUTE) %>%
+        select(slopes_groups()) %>%
         unique() %>%
-        arrange(USUBJID, ANALYTE, PCSPEC, DOSNO)
+        arrange(USUBJID)
 
       num_plots <- nrow(patient_profile_plot_ids)
 
