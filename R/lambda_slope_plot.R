@@ -51,17 +51,17 @@
 lambda_slope_plot <- function(
     res_pknca_df = myres$result,
     conc_pknca_df = mydata$conc$data,
-    column_names = slopes_groups(),
     row_values,
     R2ADJTHRESHOL = 0.7
 ) {
 
+  column_names <- names(row_values)
   #Create duplicates for predose and last dose points per profile
   conc_pknca_df <- create_duplicates(conc_pknca_df, column_names)
   
   #Obtain values for slopes selection
   lambda_res <- res_pknca_df %>%
-    filter(across(all_of(column_names), ~ .x == row_values[[cur_column()]])) %>%
+    filter(if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])) %>%
     arrange(across(all_of(column_names)), start, desc(end)) %>%
     filter(!duplicated(paste0(!!!rlang::syms(column_names), PPTESTCD)))
   

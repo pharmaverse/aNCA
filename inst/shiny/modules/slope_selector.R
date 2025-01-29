@@ -181,7 +181,6 @@ slope_selector_server <- function(
         lambda_slope_plot(
           res_nca()$result,
           plot_data()$conc$data,
-          column_names = slopes_groups(), # Dynamically pass all column names
           row_values = as.list(row),
           R2ADJTHRESHOL = 0.7
         ) |>
