@@ -350,7 +350,7 @@ observeEvent(data(), priority = -1, {
     session,
     inputId = "select_dosno",
     choices = unique(data()$DOSNO),
-    selected = unique(data()$DOSNO)
+    selected = unique(data()$DOSNO)[1]
   )
 
   updateSelectInput(
@@ -386,6 +386,24 @@ observeEvent(input$removeAUC, {
     auc_counter(auc_counter() - 1)
   }
 })
+
+# If flag rules or AUC intervals are set, their corresponding parameters must be calculated
+observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
+                  input$rule_aucpext_pred, input$AUCoptions, input$nca_params), {
+
+  nca_params <- input$nca_params
+  if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
+  if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
+  if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
+  if (input$AUCoptions) nca_params <- c(nca_params, "aucint.last", "aucint.inf.obs",
+                                        "aucint.inf.pred", "aucint.all")
+  
+  updatePickerInput(session = session,
+                    inputId = "nca_params",
+                    selected = nca_params)
+  print("session updated for nca_params")
+})
+
 
 # NCA settings dynamic changes
 observeEvent(list(
@@ -427,7 +445,6 @@ observeEvent(list(
     intervals_userinput(intervals_list)
   }
 
-
   mydata$options <- list(
     auc.method = input$method,
     allow.tmax.in.half.life = TRUE,
@@ -437,7 +454,7 @@ observeEvent(list(
     min.span.ratio = Inf,
     min.hl.points = 3
   )
-
+    
   # Include main intervals as specified by the user
   mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
                                                  # Compute only parameters specified
