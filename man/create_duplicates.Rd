@@ -6,7 +6,7 @@
 \usage{
 create_duplicates(
   conc_data,
-  groups = c("USUBJID", "ANALYTE", "PCSPEC"),
+  groups = slopes_groups(),
   dosno = "DOSNO",
   arrlt = "ARRLT",
   afrlt = "AFRLT",
@@ -17,7 +17,8 @@ create_duplicates(
 \arguments{
 \item{conc_data}{A data frame containing concentration data.}
 
-\item{groups}{A character vector of column names to use for grouping (e.g., c("USUBJID", "ANALYTE", "PCSPEC")).}
+\item{groups}{A character vector of column names to use for grouping
+(e.g., c("USUBJID", "ANALYTE", "PCSPEC")).}
 
 \item{dosno}{Column name for the dose number (default: "DOSNO").}
 
@@ -44,6 +45,7 @@ analyses where dosing intervals and concentration values need to be aligned for 
 }
 \examples{
 # Example usage
-result <- adjust_concentration_data(conc_data, groups = c("USUBJID", "ANALYTE", "PCSPEC"), dosno = "DOSNO")
+result <- create_duplicates(conc_data,
+                            groups = c("USUBJID", "ANALYTE", "PCSPEC"), dosno = "DOSNO")
 
 }

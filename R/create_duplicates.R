@@ -5,7 +5,8 @@
 #' analyses where dosing intervals and concentration values need to be aligned for each dose.
 #'
 #' @param conc_data A data frame containing concentration data.
-#' @param groups A character vector of column names to use for grouping (e.g., c("USUBJID", "ANALYTE", "PCSPEC")).
+#' @param groups A character vector of column names to use for grouping
+#'               (e.g., c("USUBJID", "ANALYTE", "PCSPEC")).
 #' @param dosno Column name for the dose number (default: "DOSNO").
 #' @param arrlt Column name for time from the most recent dose (default: "ARRLT").
 #' @param afrlt Column name for time from the first dose (default: "AFRLT").
@@ -19,7 +20,8 @@
 #'
 #' @examples
 #' # Example usage
-#' result <- adjust_concentration_data(conc_data, groups = c("USUBJID", "ANALYTE", "PCSPEC"), dosno = "DOSNO")
+#' result <- create_duplicates(conc_data,
+#'                             groups = c("USUBJID", "ANALYTE", "PCSPEC"), dosno = "DOSNO")
 #'
 #' @export
 create_duplicates <- function(conc_data,

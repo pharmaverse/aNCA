@@ -7,7 +7,6 @@
 lambda_slope_plot(
   res_pknca_df = myres$result,
   conc_pknca_df = mydata$conc$data,
-  column_names = slopes_groups(),
   row_values,
   R2ADJTHRESHOL = 0.7
 )
@@ -19,13 +18,13 @@ analysis (default is \code{PKNCA::pk.nca(.)$result}).}
 \item{conc_pknca_df}{Data frame containing the concentration data
 (default is \code{mydata$conc$data}).}
 
-\item{column_names}{A character vector containing the column names used for grouping the data.}
-
-\item{row_values}{A list containing the values for the column_names used for filtering the data.
+\item{row_values}{A list containing the values for the column_names used for filtering.
 (default is \code{patient}).}
 
 \item{R2ADJTHRESHOL}{Numeric value representing the R-squared adjusted threshold for determining
 the subtitle color (default is 0.7).}
+
+\item{column_names}{A character vector containing the column names used for grouping the data.}
 }
 \value{
 A plotly object representing the lambda slope plot.

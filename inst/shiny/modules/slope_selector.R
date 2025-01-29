@@ -7,88 +7,111 @@ slope_selector_ui <- function(id) {
     includeCSS(file.path(assets, "slope_selector.css")),
     fluidRow(
       # Selection and exclusion controls #
-      actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success"),
-      actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning"),
-      actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary"),
-      # Help widget #
-      dropdown(
-        div(
-          tags$h1("Slope selector guide"),
-          p("
-            Upon initial NCA run, the plots will display the optimal slope selection.
-            However, you have the flexibility to change it. Remember to apply your
-            changes once you are done!
-          "),
-          div(class = "gif-grid",
-            div(class = "gif-container",
-              tags$h1("Check"),
-              img(src = "images/slope_plot_check.gif", alt = "Check")
-            ),
-            div(class = "gif-container",
-              tags$h1("Zoom"),
-              img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
-            ),
-            div(class = "gif-container",
-              tags$h1("Select"),
-              img(src = "images/slope_plot_select.gif", alt = "Select")
-            ),
-            div(class = "gif-container",
-              tags$h1("Exclude"),
-              img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
-            )
-          )
+      column(
+        width = 4,
+        actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
         ),
-        style = "unite",
-        right = TRUE,
-        icon = icon("question"),
-        status = "primary"
+      column(
+        width = 4,
+        actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
+        ),
+      column(
+        width = 4,
+        actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary")
       )
     ),
     # Table with selections and exclusions #
-    fluidRow(
+    card(
       reactableOutput(ns("manual_slopes")),
     ),
     # Widgets for manipulating plots display #
     fluidRow(
       class = "plot-widgets-container",
+      
       div(
-        tags$span(
-          class = "inline-select-input",
-          tags$label(
-            "Plots per page: "
-          ),
-          selectInput(
-            ns("plots_per_page"),
-            "",
-            choices = c(1, 2, 4, 6, 8, 10),
-            selected = 1
-          )
-        )
+        class = "plot-widget-group",
+        tags$label("Plots per page: "),
+        selectInput(
+          ns("plots_per_page"),
+          "",
+          choices = c(1, 2, 4, 6, 8, 10),
+          selected = 1)
       ),
+      
       div(
+        class = "plot-widget-group",
         pickerInput(
           ns("search_patient"),
           label = "Search Patient",
           choices = NULL,
           multiple = TRUE,
           options = list(`actions-box` = TRUE)
-        ),
-      ),
-      div(align = "left", actionButton(ns("previous_page"), "Previous Page", class = "btn-page")),
-      div(
-        align = "center",
-        tags$span(
-          class = "inline-select-input",
-          tags$span("Page "),
-          selectInput(ns("select_page"), "", choices = c()),
-          tags$span(" out of "),
-          uiOutput(ns("page_number"), inline = TRUE)
         )
+      )
+    ),
+    br(),
+    fluidRow(
+      class = "plot-widgets-container",
+      div(
+        class = "plot-widget-group",
+        actionButton(
+          ns("previous_page"),
+          "Previous Page",
+          class = "btn-page")
+        ),
+      
+      div(
+        class = "plot-widget-group",
+        tags$span("Page "),
+        selectInput(ns("select_page"), "", choices = c()),
+        tags$span(" out of "),
+        uiOutput(ns("page_number"), inline = TRUE)
       ),
-      div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
+      
+      div(
+        class = "plot-widget-group",
+        actionButton(
+          ns("next_page"),
+          "Next Page",
+          class = "btn-page")
+        )
     ),
     # Plots display #
-    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
+    # Help widget #
+    dropdown(
+      div(
+        tags$h1("Slope selector guide"),
+        p("
+            Upon initial NCA run, the plots will display the optimal slope selection.
+            However, you have the flexibility to change it. Remember to apply your
+            changes once you are done!
+          "),
+        div(class = "gif-grid",
+            div(class = "gif-container",
+                tags$h1("Check"),
+                img(src = "images/slope_plot_check.gif", alt = "Check")
+            ),
+            div(class = "gif-container",
+                tags$h1("Zoom"),
+                img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
+            ),
+            div(class = "gif-container",
+                tags$h1("Select"),
+                img(src = "images/slope_plot_select.gif", alt = "Select")
+            ),
+            div(class = "gif-container",
+                tags$h1("Exclude"),
+                img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
+            )
+        )
+      ),
+      style = "unite",
+      right = TRUE,
+      icon = icon("question"),
+      status = "primary"
+    ),
+    br(),
+    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container")
   )
 }
 
@@ -100,25 +123,25 @@ slope_selector_server <- function(
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
-    
+
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
       req(mydata())
-      groups <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO", "ROUTE")
-      
+      groups <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
+
       # Filter columns with more than one unique value
       filtered_groups <- groups[sapply(groups, function(col) {
         length(unique(mydata()$conc$data[[col]])) > 1
       })]
       filtered_groups
     })
-    
+
     # Reactive for .SLOPE_SELECTOR_COLUMNS
     .SLOPE_SELECTOR_COLUMNS <- reactive({
       req(slopes_groups())
       c("TYPE", slopes_groups(), "RANGE", "REASON")
     })
-    
+
     # HACK: workaround to avoid plotly_click not being registered warning
     session$userData$plotlyShinyEventIDs <- "plotly_click-A"
 
@@ -251,9 +274,9 @@ slope_selector_server <- function(
         stringsAsFactors = FALSE
       )
     })
-    
+
     observeEvent(mydata(), {
-      
+
       current_slopes <- manual_slopes()
       # Add missing dynamic columns with default values (e.g., NA_character_)
       for (col in slopes_groups()) {
@@ -261,8 +284,8 @@ slope_selector_server <- function(
           current_slopes[[col]] <- character()
         }
       }
-      
-      # Update the reactiveVal
+
+      # Update the reactive Val
       manual_slopes(current_slopes)
     })
 
@@ -277,9 +300,9 @@ slope_selector_server <- function(
         value <- unique(profiles_per_patient()[[col]])
         if (length(value) > 0) value[1] else NA_character_  # Handle empty or NULL cases
       })
-      
+
       names(dynamic_values) <- slopes_groups()
-      
+
       # Create the new row with both fixed and dynamic columns
       new_row <- as.data.frame(c(
         TYPE = "Selection",
@@ -287,7 +310,7 @@ slope_selector_server <- function(
         RANGE = "1:3",
         REASON = ""
       ), stringsAsFactors = FALSE)
-      
+
       updated_data <- as.data.frame(rbind(manual_slopes(), new_row), stringsAsFactors = FALSE)
       manual_slopes(updated_data)
     })
@@ -312,7 +335,7 @@ slope_selector_server <- function(
       isolate({
         data <- manual_slopes()
       })
-      
+
       # Fixed columns (TYPE, RANGE, REASON)
       fixed_columns <- list(
         TYPE = colDef(
@@ -336,7 +359,7 @@ slope_selector_server <- function(
           minWidth = 300
         )
       )
-      
+
       # Dynamic group column definitions
       dynamic_columns <- lapply(slopes_groups(), function(col) {
         colDef(
@@ -349,17 +372,17 @@ slope_selector_server <- function(
         )
       })
       names(dynamic_columns) <- slopes_groups()
-      
+
       # Combine columns in the desired order
       all_columns <- c(
         list(TYPE = fixed_columns$TYPE),
         dynamic_columns,
         list(
           RANGE = fixed_columns$RANGE,
-          REASON = fixed_columns$REASON 
+          REASON = fixed_columns$REASON
         )
       )
-      
+
       # Render reactable
       reactable(
         data = data,
@@ -423,7 +446,7 @@ slope_selector_server <- function(
 
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveValues()
-    
+
     observeEvent(slopes_groups(), {
       # Reinitialize dynamic columns when slopes_groups changes
       for (col in tolower(slopes_groups())) {
@@ -433,70 +456,7 @@ slope_selector_server <- function(
     })
 
     observeEvent(event_data("plotly_click", priority = "event"), {
-      # Store the information of the last click event #
-      click_data <- event_data("plotly_click")
-
-      # If no information is present, exit #
-      if (is.null(click_data) || is.null(click_data$customdata))
-        return(NULL)
-
-      log_trace("{id}: plotly click with data detected")
-
-      identifiers <- strsplit(click_data$customdata, "_")[[1]]
-
-      if (length(identifiers) < length(slopes_groups) + 1) {
-        stop("Error: Insufficient data in customdata for dynamic columns.")
-      }
-      
-      # Map identifiers to dynamic column values
-      dynamic_values <- setNames(identifiers[1:length(slopes_groups())], slopes_groups())
-      # Extract additional information for idx_pnt
-      idx_pnt <- identifiers[length(identifiers)]
-      
-      
-      #' If not data was previously provided, or user clicked on different plot,
-      #' update last data and exit
-      updated <- FALSE
-
-      for (col in slopes_groups()) {
-        if (dynamic_values[[col]] != last_click_data[[tolower(col)]]) {
-          updated <- TRUE
-          break
-        }
-      }
-      
-      if (updated || idx_pnt != last_click_data$idx_pnt) {
-        for (col in names(dynamic_values)) {
-          last_click_data[[tolower(col)]] <- dynamic_values[[col]]
-        }
-        last_click_data$idx_pnt <- idx_pnt
-        return(NULL)
-      }
-
-      # If valid selection is provided, construct new row dynamically
-      # Construct the new row dynamically with proper mapping
-      new_slope_rule <- as.data.frame(
-        c(
-          list(
-            TYPE = if (idx_pnt != last_click_data$idx_pnt) "Selection" else "Exclusion",
-            RANGE = paste0(last_click_data$idx_pnt, ":", idx_pnt),
-            REASON = "[Graphical selection. Click here to include a reason]"
-          ),
-          setNames(lapply(slopes_groups(), function(col) dynamic_values[[col]]), slopes_groups())
-        ),
-        stringsAsFactors = FALSE
-      )
-
-      # Check if there is any overlap with existing rules, adda new or edit accordingly
-      new_manual_slopes <- .check_slope_rule_overlap(manual_slopes(), new_slope_rule, slopes_groups())
-
-      manual_slopes(new_manual_slopes)
-
-      # After adding new rule, reset last click data dynamically
-      for (col in names(dynamic_values)) {
-        last_click_data[[tolower(col)]] <- ""
-      }
-      last_click_data$idx_pnt <- ""
+      .handle_plotly_click(id, last_click_data, manual_slopes, slopes_groups)
 
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets

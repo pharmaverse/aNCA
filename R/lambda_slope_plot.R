@@ -9,7 +9,7 @@
 #' @param conc_pknca_df  Data frame containing the concentration data
 #'                      (default is `mydata$conc$data`).
 #' @param column_names   A character vector containing the column names used for grouping the data.
-#' @param row_values     A list containing the values for the column_names used for filtering the data.
+#' @param row_values     A list containing the values for the column_names used for filtering.
 #'                      (default is `patient`).
 #' @param R2ADJTHRESHOL Numeric value representing the R-squared adjusted threshold for determining
 #'                      the subtitle color (default is 0.7).
@@ -58,7 +58,6 @@ lambda_slope_plot <- function(
   column_names <- names(row_values)
   #Create duplicates for predose and last dose points per profile
   conc_pknca_df <- create_duplicates(conc_pknca_df, column_names)
-  
   #Obtain values for slopes selection
   lambda_res <- res_pknca_df %>%
     filter(if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])) %>%
@@ -109,10 +108,11 @@ lambda_slope_plot <- function(
     "    (T<sub>", lambda_z_ix_rows$IX[2], "</sub> - T<sub>",
     lambda_z_ix_rows$IX[1], "</sub>)/2 = ", time_span / 2, "h"
   )
-  
+
   #Create error text if Cmax used in calculation
   cmax_error_text <- NULL
-  if (lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"] <= max(lambda_z_ix_rows$AVAL)) {
+  cmax_value <- lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"]
+  if (!is.na(cmax_value) && cmax_value <= max(lambda_z_ix_rows$AVAL, na.rm = TRUE)) {
     subtitle_color <- "red"
     cmax_error_text <- list(
       text = "Cmax should not be included in lambda calculation",
@@ -151,6 +151,11 @@ lambda_slope_plot <- function(
     ) %>%
     filter(AVAL > 0) %>%
     as.data.frame()
+
+  if (nrow(plot_data) == 0) {
+    warning("Not enough data for plotting. Returning empty plot.")
+    return(.plotly_empty_plot("No valid lambda calculations available"))
+  }
   
   #Create initial plot
   p <- plot_data %>%
