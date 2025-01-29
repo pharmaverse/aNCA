@@ -74,9 +74,27 @@ fluidPage(
                   column(4, pickerInput(
                     inputId = "nca_params",
                     label = "NCA parameters to calculate:",
-                    choices = setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
-                                      c("start", "end")) %>% sort(),
-                    options = list(`live-search` = TRUE),
+                    choices = {
+                      params <- sort(setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
+                                             c("start", "end")))
+                      group_params <- case_when(
+                        grepl("((auc|aum))", params) ~ "Exposure",
+                        grepl("((lambda|half|thalf|cl\\.|clr))", params) ~ "Clearance",
+                        grepl("^(cm|tm|clast|ceoi|cth|tl)", params) ~ "Concentration-Time",
+                        grepl("^(vz|vs)", params) ~ "Volume-Distribution",
+                        TRUE ~ "Miscellaneous",
+                      )
+                      grouped_params <- split(params, group_params)
+                      grouped_params[order(names(grouped_params))]
+                    },
+                    options = list(
+                      `live-search` = TRUE,
+                      `dropup-auto` = FALSE,
+                      `size` = 10,
+                      `noneSelectedText` = "No parameters selected",
+                      `windowPadding` = 10,
+                      `dropdownAlignRight` = TRUE
+                    ),
                     multiple = TRUE,
                     selected = c("cmax", "tmax", "half.life", "cl.obs")
                   )),
