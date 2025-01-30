@@ -1,17 +1,8 @@
-<<<<<<< HEAD
 # automated Non-Compartmental Analysis (aNCA) <img src="man/figures/aNCA_logo_wbg.png" align="right" alt="" width="200" />
 
 <!-- badges: start -->
 
 [![Pharmaverse](https://pharmaverse.org/shields/aNCA.svg)](https://pharmaverse.org)
-=======
-# automated Non-Compartmental Analysis (aNCA)
-![img](man/figures/aNCA_logo_bbg.png | width=100)
-
-<!-- badges: start -->
-
-[<img src="https://pharmaverse.org/shields/aNCA.svg">](https://pharmaverse.org)
->>>>>>> 33564da (fix: logo in the readme)
 [![License](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CRAN status](https://www.r-pkg.org/badges/version/aNCA)](https://CRAN.R-project.org/package=aNCA)
 [![R build status](https://github.com/pharmaverse/aNCA/actions/workflows/main.yml/badge.svg)](https://github.com/pharmaverse/aNCA/actions)
@@ -22,10 +13,6 @@
 <br/>
 
 > Our aim is to develop and share an open-source R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets worldwide and across pharmaceutical companies.
-<<<<<<< HEAD
-=======
-
->>>>>>> 33564da (fix: logo in the readme)
 <br/>
 
 ## Description
