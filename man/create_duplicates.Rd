@@ -34,7 +34,8 @@ create_duplicates(
 A data frame with adjusted concentration data, including:
 \itemize{
 \item Duplicated predose values assigned to the previous dose.
-\item Duplicated last values assigned to the next dose if predose values are missing.
+\item Duplicated last values assigned to the next dose if predose values are missing,
+filtered so only samples within 24 hours of the next dose are included.
 \item Sorted by the grouping variables and relative time.
 }
 }
@@ -45,7 +46,14 @@ analyses where dosing intervals and concentration values need to be aligned for 
 }
 \examples{
 # Example usage
+conc_data <- data.frame(
+ USUBJID = c("001", "001", "001", "001", "001", "001"),
+ DOSNO = c(1, 1, 1, 2, 2, 2),
+ ARRLT = c(-1, 0, 1, 1, 2, 3),
+ AFRLT = c(0, 0.5, 1, 3, 4, 5),
+ NRRLT = c(0, 1, 2, 1, 2, 3),
+ NFRLT = c(0, 0.5, 1, 3, 4, 5),
 result <- create_duplicates(conc_data,
-                            groups = c("USUBJID", "ANALYTE", "PCSPEC"), dosno = "DOSNO")
+                            groups = c("USUBJID"), dosno = "DOSNO")
 
 }
