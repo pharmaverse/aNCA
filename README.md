@@ -71,7 +71,7 @@ In the **NCA** tab, start off by loading the pre-processed data using _Submit_ b
 
 After the setup is done and analysis is performed, you are free to explore the results in the **Outputs** tab. Application supports various customizable plots, as well as report exporting.
 
-For more detailed instructions, check out the [Get Starged](https://pharmaverse.github.io/aNCA/articles/aNCA.html) page.
+For more detailed instructions, check out the [Get Started](https://pharmaverse.github.io/aNCA/articles/aNCA.html) page.
 
 ## Contributing
 
