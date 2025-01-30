@@ -26,3 +26,13 @@ blockquote.warning {
     content: "🚨 Warning: ";
   }
 }
+
+p > img {
+  border-radius: 1.5em;
+  padding: 1em;
+  margin: 1em 0;
+}
+
+html[data-bs-theme="light"] p > img {
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
