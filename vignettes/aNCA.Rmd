@@ -14,24 +14,25 @@ This guide will provide users with information on how to get started with the aN
 # Step 1: Prepare Dataset
 1. Click “Upload File” and select the dataset you would like to use. The data must be in .csv or .rds format. The best input for the app is data that follows the ADNCA format. Other formats of data will also work.
 
-(imager here)
-
-
+<img src = "images/get_started/01.png" alt = "Data upload">
 
 2. Once the dataset has been uploaded, you can check that the data is as expected, and then click on the “Mapping and Filters” tab. 
    - Map the correct columns in your dataset to the corresponding label. For more information on what the column requires, hover over the input boxes.
    - For Unit Variables, if your dataset has a defined column for units, select it, otherwise manually input the units for the corresponding columns.
    - Click “Submit Mapping”. You will automatically be directed to the next tab.
 
-(image here)
+<img src = "images/get_started/02.png" alt = "Mapping tab">
+<img src = "images/get_started/03.png" alt = "Mapping">
 
 3. Review Data: Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, return to the “Mapping and Filters” page, and scroll down to add filters.
 
-(image here)
+<img src = "images/get_started/04.png" alt = "Adding filters">
 
+<blockquote class = "important">
 Don’t forget to scroll down and click submit!
+</blockquote>
 
-(image here)
+<img src = "images/get_started/05.png" alt = "Submitting filters">
 
 # Step 2: Run NCA
 Click on the “NCA” Tab at the top of the screen to switch to the next section.
@@ -45,14 +46,15 @@ Click on "Authorize" next to Sanofi-Github and follow the instructions.
 The current version of the app only works with one matrix (PCSPEC) at a time. If you are having problems when clicking “Submit”, ensure that your data has been filtered to fit these specifications. You can return to the “Mapping and Filtering” tab in Data to do this.
 </blockquote>
 
-
-(image here)
+<img src = "images/get_started/06.png" alt = "NCA tab">
 
 3. Move to “Settings” in the menu on the left hand side. Choose the Dose Number(s) you would like to run the NCA on, and the extrapolation method. Select additional options including partial AUCs, or rule sets to Flag the data.
 
-(image here)
+<img src = "images/get_started/07.png" alt = "NCA settings">
 
 4. Click “Run NCA”. You will automatically be redirected to the Results tab.
+
+<img src = "images/get_started/08.png" alt = "Running NCA">
 
 # Step 3: NCA Results
 ## 3.1. Main Results
@@ -65,33 +67,37 @@ In Parameter datasets you can see and export the ADPP and PP datasets.
 ## 3.2. Exclusions and Manual Slopes
 To add exclusions or manual slope selections, redirect to the Slope Selector tab in the Setup Page.
  
-(image here)
+<img src = "images/get_started/09.png" alt = "Slope selection">
 
-There are two different ways to add exclusions/selections to the slopes:
+There are two different ways to add exclusions/selections to the slopes.
 
 #### 3.2.1. Via the Buttons.
 1. Click “+ Exclusion/Selection”
 2. Input the information: Type, Patient, Profile, Range, Reason. IXrange is the Data Point number in the slope, which can be seen by hovering over the points in the plots below.
 
-(image here)
+<img src = "images/get_started/10.png" alt = "Slope selection buttons">
 
 3. To remove, select the sample row and click “-Remove selected rows”
 
-(image here)
+<img src = "images/get_started/11.png" alt = "Removing selections">
 
-#### 3.2.2. Via the Plots (Click the ? Button for guidance)
+#### 3.2.2. Via the Plots
+For in-app guidence, you can click the <span style="border-radius:1em;font-weight:bold;font-color:#1f6feb">?</span> button.
+
 1. For selection, click the first point and then the last point you want included in the slope. The plot should then update and a row should be added to the table. There you can add your reason for selection.
 2. For exclusion, double click the point you want to exclude. The plot should update along with the table.
 3. To remove, either remove via the table selection, or repeat the same action (ie select a new slope, double click the same point).
 
-(img here)
+<img src = "images/get_started/12.png" alt = "Slope plots">
 
 #### 3.2.3. Applying the exclusions
 Once the exclusions/selections have been added, click “Apply” to apply them.
 
-(img here)
+<img src = "images/get_started/13.png" alt = "Applying exlusions/selections">
 
 You can check if they have been applied in the Results -> Exclusions Tab.
+
+<img src = "images/get_started/14.png" alt = "Inspecting exlusions/selections">
 
 <blockquote class="important">
 If you don’t click “Apply”, the manual slopes will not be added!
@@ -101,11 +107,11 @@ If you don’t click “Apply”, the manual slopes will not be added!
 After completing an NCA and creating manual slopes, you may want to save these for next time. This is very easy:
 1. Click Results -> NCA Results -> Save Project Settings. This will download a .csv file.
 
-(img here)
+<img src = "images/get_started/15.png" alt = "Saving settings">
 
 2. To upload settings next time, after column mapping, Setup -> Data Selection -> Upload settings. The inclusions and exclusions will be automatically added to the data.
 
-(img here)
+<img src = "images/get_started/16.png" alt = "Uploading settings">
 
 ## Step 4: Visualisation
 In the “Visualisation” tab, you will find the different visualisation options, including individual plots, mean plots, descriptive statistics, and boxplots.
