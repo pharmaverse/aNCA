@@ -1,0 +1,28 @@
+body {
+  text-align: justify;
+}
+
+blockquote::before {
+  font-weight: bold;
+}
+
+blockquote.note {
+  border-color: #1f6feb;
+  &::before {
+    content: "ℹ️ Note: ";
+  }
+}
+
+blockquote.important {
+  border-color: #9e6a03;
+  &::before {
+    content: "⚠️ Important: ";
+  }
+}
+
+blockquote.warning {
+  border-color: #da3633;
+  &::before {
+    content: "🚨 Warning: ";
+  }
+}
