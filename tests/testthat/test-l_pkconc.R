@@ -145,19 +145,18 @@ describe("l_pkconc", {
     expect_warning(l_pkconc(non_unique_units_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
                             grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL")),
-                   "pkcl01, but not unique unit in ")
+                   "pkcl01, but not unique label in B.Plasma.IV for AVAL. Make sure when")
   })
 
   it("handles custom formatting_vars_table", {
     custom_formatting_vars_table <- data.frame(
       var_name = c("TRT01A", "USUBJID", "AVISIT", "NFRLT", "AFRLT", "AVAL"),
-      Label = c("Treatment", "Subject ID", "Visit", "Nominal Time", "Actual Time", "Value"),
+      Label = c("Treatment", "Subject ID", "Visit", "Nominal Time", "Actual Time", "Value ($AVALU)"),
       na_str = c("missing", "missing", "missing", "missing", "missing", "missing"),
       cero_str = c("0", "0", "0", "0", "0", "BLQ"),
       align = c("center", "center", "center", "center", "center", "center"),
       format_fun = c(NA, NA, NA, NA, "round", "signif"),
       digits = c(NA, NA, NA, NA, 2, 2),
-      unit = c(NA, NA, NA, NA, NA, "AVALU"),
       stringsAsFactors = FALSE
     )
 
@@ -192,20 +191,20 @@ describe("l_pkconc", {
                  "*: Patients excluded from the summary table and mean plots")
 
     # Check the attributes of the columns
-    expect_equal(attr(listings$`A.Plasma.Oral`$TRT01A, "label"), "Actual treatment")
-    expect_equal(attr(listings$`A.Plasma.Oral`$USUBJID, "label"), "Unique Subject ID")
-    expect_equal(attr(listings$`A.Plasma.Oral`$AVISIT, "label"), "Actual visit")
-    expect_equal(attr(listings$`A.Plasma.Oral`$NFRLT, "label"), "Planned time from first dose")
-    expect_equal(attr(listings$`A.Plasma.Oral`$AFRLT, "label"), "Actual time from first dose")
-    expect_equal(attr(listings$`A.Plasma.Oral`$AVAL, "label"), "Analysis value (mg/L)")
+    expect_equal(attr(listings$`A.Plasma.Oral`$TRT01A, "label"), "Treatment")
+    expect_equal(attr(listings$`A.Plasma.Oral`$USUBJID, "label"), "Subject ID")
+    expect_equal(attr(listings$`A.Plasma.Oral`$AVISIT, "label"), "Visit")
+    expect_equal(attr(listings$`A.Plasma.Oral`$NFRLT, "label"), "Nominal Time")
+    expect_equal(attr(listings$`A.Plasma.Oral`$AFRLT, "label"), "Actual Time")
+    expect_equal(attr(listings$`A.Plasma.Oral`$AVAL, "label"), "Value (mg/L)")
     expect_equal(attr(listings$`A.Plasma.Oral`$AVALU, "label"), "AVALU")
 
-    expect_equal(attr(listings$`B.Plasma.IV`$TRT01A, "label"), "Actual treatment")
-    expect_equal(attr(listings$`B.Plasma.IV`$USUBJID, "label"), "Unique Subject ID")
-    expect_equal(attr(listings$`B.Plasma.IV`$AVISIT, "label"), "Actual visit")
-    expect_equal(attr(listings$`B.Plasma.IV`$NFRLT, "label"), "Planned time from first dose")
-    expect_equal(attr(listings$`B.Plasma.IV`$AFRLT, "label"), "Actual time from first dose")
-    expect_equal(attr(listings$`B.Plasma.IV`$AVAL, "label"), "Analysis value (mg/L)")
+    expect_equal(attr(listings$`B.Plasma.IV`$TRT01A, "label"), "Treatment")
+    expect_equal(attr(listings$`B.Plasma.IV`$USUBJID, "label"), "Subject ID")
+    expect_equal(attr(listings$`B.Plasma.IV`$AVISIT, "label"), "Visit")
+    expect_equal(attr(listings$`B.Plasma.IV`$NFRLT, "label"), "Nominal Time")
+    expect_equal(attr(listings$`B.Plasma.IV`$AFRLT, "label"), "Actual Time")
+    expect_equal(attr(listings$`B.Plasma.IV`$AVAL, "label"), "Value (mg/L)")
     expect_equal(attr(listings$`B.Plasma.IV`$AVALU, "label"), "AVALU")
 
   })

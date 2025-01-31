@@ -8,6 +8,7 @@
 #' @param grouping_vars A character vector specifying the grouping variables for the listing.
 #' @param displaying_vars A character vector specifying the variables to display in the listing.
 #' @param formatting_vars_table A data frame specifying the formatting options for the variables.
+#' @param main_title A character string specifying the main title of the listing table.
 #' @param subtitle_lists A character string specifying the subtitle of the listing table.
 #' @param footnote_table A character string specifying the footnote of the listing table.
 #'
@@ -16,9 +17,8 @@
 #' @details
 #' The function performs the following steps:
 #'   - Groups the data based on the specified grouping variables.
-#'   - Formats the 0 values as defined by the formatting table.
+#'   - Formats the 0 and NA values as defined by the formatting table.
 #'   - Creates a listing for each unique combination of the grouping variables.
-#'   - Adds units to the variable labels in the listing.
 #'
 #' The `formatting_vars_table` should be a data frame with the following columns:
 #'   - `var_name`: The name of the variable.
@@ -28,7 +28,6 @@
 #'   - `align`: The alignment for the variable (e.g., "center").
 #'   - `format_fun`: The formatting function to use ("round" or "signif").
 #'   - `digits`: The number of digits to use for numeric formatting.
-#'   - `unit`: The unit column for the variable (if applicable).
 #'
 #' @examples
 #' \dontrun{
@@ -45,6 +44,8 @@ l_pkconc <- function(
   grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
   formatting_vars_table = NULL,
+  main_title = paste0("Listing of PK Concentration by Treatment Group,",
+                      "Subject and Nominal Time, PK Population"),
   subtitle_lists = NULL,
   footnote_table = "*: Patients excluded from the summary table and mean plots"
 ) {
@@ -78,10 +79,13 @@ l_pkconc <- function(
         format_fun =  ifelse(is.numeric(adpc[[var_name]]) &&
                                !is.integer(adpc[[var_name]]), "round", NA),
         digits = ifelse(is.numeric(adpc[[var_name]]) &&
-                          !is.integer(adpc[[var_name]]), 3, NA),
-        unit = case_when(var_name == "AVAL" & "AVALU" %in% names(adpc) ~ "AVALU",
-                         var_name %in% c("NFRLT", "AFRLT") & "RRLTU" %in% names(adpc) ~ "RRLTU",
-                         TRUE ~ NA)
+                          !is.integer(adpc[[var_name]]), 3, NA)
+      ) %>%
+      # For the default case (when possible) label includes unit
+      mutate(
+        Label = if ("AVALU" %in% names(adpc)) ifelse(var_name == "AVAL", paste0(Label, " ($AVALU)"), Label) else Label,
+        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "AFRLT", paste0(Label, " ($RRLTU)"), Label) else Label,
+        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "NFRLT", paste0(Label, " ($RRLTU)"), Label) else Label
       ) %>%
       ungroup()
   }
@@ -94,6 +98,12 @@ l_pkconc <- function(
                align = row$align)
   }) %>%
     setNames(nm = formatting_vars_table$var_name)
+  
+  # Create a special object to map labels to each variable
+  format_labs <- formatting_vars_table %>%
+    filter(!is.na(Label)) %>%
+    select(var_name, Label) %>%
+    pull(Label, var_name)
 
   # Create a special object to map 0 string values to each variable
   format_cero <- formatting_vars_table %>%
@@ -110,12 +120,6 @@ l_pkconc <- function(
     filter(!is.na(format_fun) & !is.na(digits)) %>%
     select(var_name, format_fun) %>%
     pull(format_fun, var_name)
-
-  # Create a special object to map unit columns to each variable
-  format_unit <- formatting_vars_table %>%
-    select(var_name, unit) %>%
-    filter(!is.na(unit)) %>%
-    pull(unit, var_name)
 
   # Group the data based on the listgroup_vars
   adpc_grouped <- adpc %>%
@@ -138,35 +142,47 @@ l_pkconc <- function(
 
   # Make sure the data stays labelled
   var_labels(adpc_grouped) <- c(var_labels(adpc), id_list = "id")
+  var_labels(adpc_grouped) <- ifelse(is.na(var_labels(adpc_grouped)),
+                                     names(adpc_grouped),
+                                     var_labels(adpc_grouped))
 
   # Split the lists based on the listgroup_vars
   lapply(unique(adpc_grouped[["id_list"]]), \(id_val) {
 
     list_data <- adpc_grouped %>% dplyr::filter(id_list ==  id_val)
 
-    # For those variables with units specified include them in their labels for the table
-    for (var_with_unit in names(format_unit)) {
-      unit_val <- unique(list_data[[format_unit[var_with_unit]]])
-      if (length(unit_val) != 1) {
-        warning(paste0("pkcl01, but not unique unit in ", id_val, " for ",
-                       var_with_unit, " :", paste(unit_val, collapse = ", ")))
+    # Assign the labels requested by the user
+    for (var_with_lab in names(format_labs)) {
+  
+      # Do the label
+      label <- parse_annotation(list_data, format_labs[var_with_lab])
+      attr(list_data[[var_with_lab]], "label") <- paste0(label, collapse = " \nor ")
+      
+      # Check label is unique for the list
+      if (length(label) != 1) {
+        # ToDo: Warning to display as notification in the App
+        warning(paste0("pkcl01, but not unique label in ", id_val, " for ",
+                       var_with_lab, ". Make sure when using $var that for each",
+                       " list group only 1 expression applies. Here there are many: ", 
+                       paste(label, collapse = ", ")))
       }
-      attr(list_data[[var_with_unit]], "label") <- paste0(attr(list_data[[var_with_unit]], "label"),
-                                                          " (",
-                                                          paste0(unit_val, collapse = ","),
-                                                          ")")
     }
 
+    # Make all text definitions and filter columns
+    main_title <- parse_annotation(data = list_data, text = main_title)
+    list_titles <- gsub("<br>", "\n", parse_annotation(data = list_data,
+                                                       text = subtitle_lists))
+    footnote_table <- parse_annotation(data = list_data, text = footnote_table)
+
+
+    # Build the listing object
     rl <- rlistings::as_listing(
       df = list_data,
       key_cols = grouping_vars,
       disp_cols = displaying_vars,
-      main_title = paste0("Listing of PK Concentration by Treatment Group,",
-                          "Subject and Nominal Time, PK Population"),
-      subtitles = gsub("<br>", "\n", parse_annotation(data = list_data,
-                                                      text = subtitle_lists)),
-      main_footer = parse_annotation(data = list_data,
-                                     text = footnote_table),
+      main_title = main_title,
+      subtitles = list_titles,
+      main_footer = footnote_table,
       col_formatting = formatting_vars_list
     )
 
