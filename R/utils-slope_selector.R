@@ -153,7 +153,7 @@
 .handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_groups) {
   click_data <- event_data("plotly_click")
   req(click_data, click_data$customdata)
-  
+
   log_trace("{id}: plotly click detected")
   
   identifiers <- strsplit(click_data$customdata, "_")[[1]]
@@ -161,7 +161,11 @@
     stop("Error: Insufficient data in customdata for dynamic columns.")
   }
   # Map identifiers to dynamic column values
-  dynamic_values <- setNames(identifiers[seq_along(slopes_groups())], slopes_groups())
+  dynamic_values <- lapply(seq_along(slopes_groups()), function(i) {
+    identifiers[i]  # Extract the corresponding identifier
+  })
+  
+  names(dynamic_values) <- slopes_groups()
   # Extract additional information for idx_pnt
   idx_pnt <- identifiers[length(identifiers)]
   
@@ -174,7 +178,7 @@
     )
   
   # Update last click data
-  if (updated || idx_pnt != last_click_data$idx_pnt) {
+  if (updated) {
     for (col in slopes_groups()) {
       last_click_data[[tolower(col)]] <- dynamic_values[[col]]
     }
@@ -182,11 +186,12 @@
     return(NULL)
   }
   
-  new_rule <- data.frame(
-    TYPE = "Selection",
+  new_rule <- as.data.frame(c(
+    dynamic_values,
+    TYPE = if (idx_pnt != last_click_data$idx_pnt) "Selection" else "Exclusion",
     RANGE = paste0(last_click_data$idx_pnt, ":", idx_pnt),
-    REASON = "[Graphical selection]") %>%
-    mutate(across(slopes_groups(), ~ dynamic_values[[.x]]))
+    REASON = "[Graphical selection]"
+    ), stringsAsFactors = FALSE)
   
   manual_slopes(.check_slope_rule_overlap(
     manual_slopes(),

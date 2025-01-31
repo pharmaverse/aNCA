@@ -6,77 +6,25 @@ slope_selector_ui <- function(id) {
     class = "slope-selector-module",
     includeCSS(file.path(assets, "slope_selector.css")),
     fluidRow(
+      class = "slopes-widgets-container",
       # Selection and exclusion controls #
-      column(
-        width = 4,
+      div(
+        class = "plot-widget-group",
         actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
         ),
-      column(
-        width = 4,
+      div(
+        class = "plot-widget-group",
         actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
         ),
-      column(
-        width = 4,
+      div(
+        class = "plot-widget-group",
         actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary")
       )
     ),
     # Table with selections and exclusions #
-    card(
+    fluidRow(
       reactableOutput(ns("manual_slopes")),
     ),
-    # Widgets for manipulating plots display #
-    fluidRow(
-      class = "plot-widgets-container",
-      
-      div(
-        class = "plot-widget-group",
-        tags$label("Plots per page: "),
-        selectInput(
-          ns("plots_per_page"),
-          "",
-          choices = c(1, 2, 4, 6, 8, 10),
-          selected = 1)
-      ),
-      
-      div(
-        class = "plot-widget-group",
-        pickerInput(
-          ns("search_patient"),
-          label = "Search Patient",
-          choices = NULL,
-          multiple = TRUE,
-          options = list(`actions-box` = TRUE)
-        )
-      )
-    ),
-    br(),
-    fluidRow(
-      class = "plot-widgets-container",
-      div(
-        class = "plot-widget-group",
-        actionButton(
-          ns("previous_page"),
-          "Previous Page",
-          class = "btn-page")
-        ),
-      
-      div(
-        class = "plot-widget-group",
-        tags$span("Page "),
-        selectInput(ns("select_page"), "", choices = c()),
-        tags$span(" out of "),
-        uiOutput(ns("page_number"), inline = TRUE)
-      ),
-      
-      div(
-        class = "plot-widget-group",
-        actionButton(
-          ns("next_page"),
-          "Next Page",
-          class = "btn-page")
-        )
-    ),
-    # Plots display #
     # Help widget #
     dropdown(
       div(
@@ -110,8 +58,60 @@ slope_selector_ui <- function(id) {
       icon = icon("question"),
       status = "primary"
     ),
+    # Widgets for manipulating plots display #
+    fluidRow(
+      class = "plot-widgets-container",
+      
+      div(
+        class = "plot-widget-group",
+        selectInput(
+          ns("plots_per_page"),
+          "Plots per page:",
+          choices = c(1, 2, 4, 6, 8, 10),
+          selected = 1)
+      ),
+      
+      div(
+        class = "plot-widget-group",
+        selectInput(
+          ns("search_patient"),
+          label = "Search Patient",
+          choices = NULL,
+          multiple = TRUE
+        )
+      )
+    ),
     br(),
-    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container")
+    # Plots display #
+    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
+    fluidRow(
+      class = "plot-widgets-container",
+      div(
+        class = "plot-widget-group",
+        actionButton(
+          ns("previous_page"),
+          "Previous Page",
+          class = "btn-page")
+      ),
+      
+      div(
+        class = "plot-widget-group",
+        tags$span("Page "),
+        selectInput(ns("select_page"), "", choices = c(),
+                    width = "100px"),
+        tags$span("of "),
+        uiOutput(ns("page_number"), inline = TRUE)
+      ),
+      
+      div(
+        class = "plot-widget-group",
+        actionButton(
+          ns("next_page"),
+          "Next Page",
+          class = "btn-page")
+      )
+    ),
+    br()
   )
 }
 
@@ -257,7 +257,7 @@ slope_selector_server <- function(
       log_trace("{id}: Rendering plots")
 
       # Update the patient search input to make available choices for the user
-      updatePickerInput(
+      updateSelectInput(
         session = session,
         inputId = "search_patient",
         label = "Search Patient",
@@ -305,8 +305,8 @@ slope_selector_server <- function(
 
       # Create the new row with both fixed and dynamic columns
       new_row <- as.data.frame(c(
-        TYPE = "Selection",
         dynamic_values,
+        TYPE = "Selection",
         RANGE = "1:3",
         REASON = ""
       ), stringsAsFactors = FALSE)
@@ -344,19 +344,18 @@ slope_selector_server <- function(
             choices = c("Selection", "Exclusion"),
             class = "dropdown-extra"
           ),
-          minWidth = 75
+          width = 100
         ),
         RANGE = colDef(
           cell = text_extra(
             id = session$ns("edit_RANGE")
-          ),
-          minWidth = 75
+          )
         ),
         REASON = colDef(
           cell = text_extra(
             id = session$ns("edit_REASON")
           ),
-          minWidth = 300
+          width = 300
         )
       )
 
@@ -367,17 +366,16 @@ slope_selector_server <- function(
             id = session$ns(paste0("edit_", col)),
             choices = unique(profiles_per_patient()[[col]]), # Dynamically set choices
             class = "dropdown-extra"
-          ),
-          minWidth = 75
+          )
         )
       })
       names(dynamic_columns) <- slopes_groups()
 
       # Combine columns in the desired order
       all_columns <- c(
-        list(TYPE = fixed_columns$TYPE),
         dynamic_columns,
         list(
+          TYPE = fixed_columns$TYPE,
           RANGE = fixed_columns$RANGE,
           REASON = fixed_columns$REASON
         )
@@ -391,6 +389,7 @@ slope_selector_server <- function(
         ),
         columns = all_columns,
         selection = "multiple",
+        defaultExpanded = TRUE,
         borderless = TRUE,
         theme = reactableTheme(
           rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
