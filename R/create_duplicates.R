@@ -47,6 +47,10 @@ create_duplicates <- function(conc_data,
       group_by(across(all_of(keys)))
   }
 
+  #If only one dose, return the original data
+  if (n_distinct(conc_data[[dosno]]) == 1) {
+    return(conc_data)
+  }
   # Step 1: Identify the dosing times (ARRLT == 0)
   dose_times <- conc_data %>%
     mutate(dose_time = .data[[afrlt]] - .data[[arrlt]],
@@ -117,5 +121,5 @@ create_duplicates <- function(conc_data,
     bind_rows(predose_duplicates, last_values) %>%
     arrange(across(all_of(c(groups, arrlt))))
 
-  return(conc_data)
+  conc_data
 }

@@ -156,18 +156,19 @@
 
   log_trace("{id}: plotly click detected")
 
-  identifiers <- strsplit(click_data$customdata, "_")[[1]]
-  if (length(identifiers) < length(slopes_groups) + 1) {
-    stop("Error: Insufficient data in customdata for dynamic columns.")
+  #browser()
+  identifiers <- jsonlite::fromJSON(click_data$customdata)
+  if (!all(names(identifiers) %in% c(slopes_groups(), "IX"))) {
+    stop("Error: Missing expected keys in customdata")
   }
-  # Map identifiers to dynamic column values
-  dynamic_values <- lapply(seq_along(slopes_groups()), function(i) {
-    identifiers[i]  # Extract the corresponding identifier
-  })
+  # Map identifiers dynamically
+  dynamic_values <- setNames(
+    lapply(slopes_groups(), function(col) identifiers[[col]]),
+    slopes_groups()
+  )
 
-  names(dynamic_values) <- slopes_groups()
   # Extract additional information for idx_pnt
-  idx_pnt <- identifiers[length(identifiers)]
+  idx_pnt <- identifiers$IX
 
   #Update data only if there is a change in the selection
   updated <- any(
@@ -190,7 +191,7 @@
     dynamic_values,
     TYPE = if (idx_pnt != last_click_data$idx_pnt) "Selection" else "Exclusion",
     RANGE = paste0(last_click_data$idx_pnt, ":", idx_pnt),
-    REASON = "[Graphical selection]"
+    REASON = "[Graphical selection: Please add reason]"
   ), stringsAsFactors = FALSE)
 
   manual_slopes(.check_slope_rule_overlap(

@@ -226,12 +226,10 @@ lambda_slope_plot <- function(
       style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = i)
   }
 
-  customdata <- paste0(
-    apply(
-      plot_data[, c(column_names, "IX"), drop = FALSE],
-      1,
-      function(row) paste(row, collapse = "_")
-    )
+  customdata <- apply(
+    plot_data[, c(column_names, "IX"), drop = FALSE],
+    1,
+    function(row) jsonlite::toJSON(as.list(setNames(row, c(column_names, "IX"))), auto_unbox = TRUE)
   )
 
   # Add tracing for interactive plots
