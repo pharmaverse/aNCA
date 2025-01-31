@@ -9,7 +9,6 @@ slope_selector_ui <- function(id) {
       # Selection and exclusion controls #
       actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success"),
       actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning"),
-      actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary"),
       # Help widget #
       dropdown(
         div(
@@ -96,8 +95,7 @@ slope_selector_ui <- function(id) {
 
 slope_selector_server <- function(
   id, mydata, res_nca, profiles_per_patient,
-  cycle_nca, analyte_nca, pcspec_nca,
-  pk_nca_trigger, settings_upload
+  cycle_nca, analyte_nca, pcspec_nca, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -369,17 +367,6 @@ slope_selector_server <- function(
         edited_slopes[edit$row, edit$column] <- edit$value
         manual_slopes(edited_slopes)
       })
-    })
-
-    # Observe input$nca
-    observeEvent(profiles_per_patient(), {
-      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
-    })
-
-    #' saves and implements provided ruleset
-    observeEvent(input$save_ruleset, {
-      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient()))
-      pk_nca_trigger(pk_nca_trigger() + 1)
     })
 
     #' Plot data is a local reactive copy of full data. The purpose is to display data that

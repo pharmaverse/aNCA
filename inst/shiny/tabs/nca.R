@@ -393,6 +393,8 @@ myres <- reactiveVal(NULL)
 observeEvent(input$nca, {
   req(mydata())
 
+  removeNotification("setup_change_warning")
+
   # Use the intervals defined by the user if so
   if (input$AUCoptions && auc_counter() > 0) {
 
@@ -481,9 +483,15 @@ observeEvent(input$nca, {
 })
 
 res_nca <- reactiveVal(NULL)
+#' TODO(mateusz): I believe this should be included in the observer triggered by input$nca.
+#'                This should be refactored when the nca tab is modularized.
 observeEvent(pk_nca_trigger(), {
   req(mydata())
   withProgress(message = "Calculating NCA...", value = 0, {
+    # Filter slopes
+    filter_slopes(mydata(), slope_rules(), profiles_per_patient()) |>
+      mydata()
+
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
     # Increment progress to 100% after NCA calculations are complete
@@ -773,13 +781,21 @@ slope_rules <- slope_selector_server(
   input$select_dosno,
   input$select_analyte,
   input$select_pcspec,
-  pk_nca_trigger,
   reactive(input$settings_upload)
 )
 
-#' display rules on Results -> rules tab
-output$manual_slopes2 <- renderTable({
-  slope_rules()
+slope_rules_server("slope_rules", slope_rules, reactive(input$nca))
+
+#' look for any changes to analysis settins and display a warning if those occur.
+observeEvent(list(slope_rules()), ignoreInit = TRUE, {
+  req(res_nca())
+  showNotification(
+    "Analysis setup has been changed. Please re-run the analysis to see updated results.",
+    id = "setup_change_warning",
+    type = "warning",
+    closeButton = FALSE,
+    duration = 0
+  )
 })
 
 # CDISC ------------------------------------------------------------------------
