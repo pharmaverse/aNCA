@@ -11,11 +11,11 @@ slope_selector_ui <- function(id) {
       div(
         class = "plot-widget-group",
         actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
-        ),
+      ),
       div(
         class = "plot-widget-group",
         actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
-        ),
+      ),
       div(
         class = "plot-widget-group",
         actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary")
@@ -35,22 +35,22 @@ slope_selector_ui <- function(id) {
             changes once you are done!
           "),
         div(class = "gif-grid",
-            div(class = "gif-container",
-                tags$h1("Check"),
-                img(src = "images/slope_plot_check.gif", alt = "Check")
-            ),
-            div(class = "gif-container",
-                tags$h1("Zoom"),
-                img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
-            ),
-            div(class = "gif-container",
-                tags$h1("Select"),
-                img(src = "images/slope_plot_select.gif", alt = "Select")
-            ),
-            div(class = "gif-container",
-                tags$h1("Exclude"),
-                img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
-            )
+          div(class = "gif-container",
+              tags$h1("Check"),
+              img(src = "images/slope_plot_check.gif", alt = "Check")
+          ),
+          div(class = "gif-container",
+              tags$h1("Zoom"),
+              img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
+          ),
+          div(class = "gif-container",
+              tags$h1("Select"),
+              img(src = "images/slope_plot_select.gif", alt = "Select")
+          ),
+          div(class = "gif-container",
+              tags$h1("Exclude"),
+              img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
+          )
         )
       ),
       style = "unite",
@@ -344,7 +344,7 @@ slope_selector_server <- function(
             choices = c("Selection", "Exclusion"),
             class = "dropdown-extra"
           ),
-          width = 100
+          width = 200
         ),
         RANGE = colDef(
           cell = text_extra(
