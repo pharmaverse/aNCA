@@ -165,7 +165,7 @@ l_pkconc <- function(
                           "Subject and Nominal Time, PK Population"),
       subtitles = gsub("<br>", "\n", parse_annotation(data = list_data,
                                                       text = subtitle_lists)),
-      main_footer = parse_annotation(data = data,
+      main_footer = parse_annotation(data = list_data,
                                      text = footnote_table),
       col_formatting = formatting_vars_list
     )
