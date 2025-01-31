@@ -8,7 +8,10 @@ parameter_datasets_ui <- function(id) {
 
 parameter_datasets_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
-    CDISC <- reactive(export_cdisc(res_nca()))
+    CDISC <- reactive({
+      req(res_nca())
+      export_cdisc(res_nca())
+    })
 
     output$pp_dataset <- DT::renderDataTable({
       DT::datatable(
@@ -39,7 +42,7 @@ parameter_datasets_server <- function(id, res_nca) {
           )
         )
       )
-    }, server = FALSE)
+    })
 
     output$adpp_dataset <- DT::renderDataTable({
       DT::datatable(
