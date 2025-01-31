@@ -163,7 +163,7 @@ l_pkconc <- function(
       disp_cols = displaying_vars,
       main_title = "Listing of PK Concentration by Treatment Group, 
       Subject and Nominal Time, PK Population",
-      subtitles = gsub("<br>", "\n", parse_annotation(data = data,
+      subtitles = gsub("<br>", "\n", parse_annotation(data = list_data,
                                                       text = subtitle_lists)),
       main_footer = parse_annotation(data = data,
                                      text = footnote_table),
