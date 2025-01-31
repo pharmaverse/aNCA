@@ -1,8 +1,8 @@
 parameter_datasets_ui <- function(id) {
   ns <- NS(id)
-  tabsetPanel(
-    tabPanel("PP", DTOutput(ns("pp_dataset"))),
-    tabPanel("ADPP", DTOutput(ns("adpp_dataset")))
+  navset_pill(
+    nav_panel("PP", DTOutput(ns("pp_dataset"))),
+    nav_panel("ADPP", DTOutput(ns("adpp_dataset")))
   )
 }
 
