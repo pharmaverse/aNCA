@@ -10,6 +10,8 @@ l_pkconc(
   grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
   formatting_vars_table = NULL,
+  main_title = paste0("Listing of PK Concentration by Treatment Group,",
+    "Subject and Nominal Time, PK Population"),
   subtitle_lists = NULL,
   footnote_table = "*: Patients excluded from the summary table and mean plots"
 )
@@ -24,6 +26,8 @@ l_pkconc(
 \item{displaying_vars}{A character vector specifying the variables to display in the listing.}
 
 \item{formatting_vars_table}{A data frame specifying the formatting options for the variables.}
+
+\item{main_title}{A character string specifying the main title of the listing table.}
 
 \item{subtitle_lists}{A character string specifying the subtitle of the listing table.}
 
@@ -40,9 +44,8 @@ subject, and nominal time.
 The function performs the following steps:
 \itemize{
 \item Groups the data based on the specified grouping variables.
-\item Formats the 0 values as defined by the formatting table.
+\item Formats the 0 and NA values as defined by the formatting table.
 \item Creates a listing for each unique combination of the grouping variables.
-\item Adds units to the variable labels in the listing.
 }
 
 The \code{formatting_vars_table} should be a data frame with the following columns:
@@ -54,7 +57,6 @@ The \code{formatting_vars_table} should be a data frame with the following colum
 \item \code{align}: The alignment for the variable (e.g., "center").
 \item \code{format_fun}: The formatting function to use ("round" or "signif").
 \item \code{digits}: The number of digits to use for numeric formatting.
-\item \code{unit}: The unit column for the variable (if applicable).
 }
 }
 \examples{

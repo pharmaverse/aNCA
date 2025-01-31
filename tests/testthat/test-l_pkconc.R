@@ -151,7 +151,8 @@ describe("l_pkconc", {
   it("handles custom formatting_vars_table", {
     custom_formatting_vars_table <- data.frame(
       var_name = c("TRT01A", "USUBJID", "AVISIT", "NFRLT", "AFRLT", "AVAL"),
-      Label = c("Treatment", "Subject ID", "Visit", "Nominal Time", "Actual Time", "Value ($AVALU)"),
+      Label = c("Treatment", "Subject ID", "Visit", "Nominal Time", "Actual Time",
+                "Value ($AVALU)"),
       na_str = c("missing", "missing", "missing", "missing", "missing", "missing"),
       cero_str = c("0", "0", "0", "0", "0", "BLQ"),
       align = c("center", "center", "center", "center", "center", "center"),

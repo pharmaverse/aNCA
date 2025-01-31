@@ -83,9 +83,12 @@ l_pkconc <- function(
       ) %>%
       # For the default case (when possible) label includes unit
       mutate(
-        Label = if ("AVALU" %in% names(adpc)) ifelse(var_name == "AVAL", paste0(Label, " ($AVALU)"), Label) else Label,
-        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "AFRLT", paste0(Label, " ($RRLTU)"), Label) else Label,
-        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "NFRLT", paste0(Label, " ($RRLTU)"), Label) else Label
+        Label = if ("AVALU" %in% names(adpc)) ifelse(var_name == "AVAL",
+                                                     paste0(Label, " ($AVALU)"), Label) else Label,
+        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "AFRLT",
+                                                     paste0(Label, " ($RRLTU)"), Label) else Label,
+        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "NFRLT",
+                                                     paste0(Label, " ($RRLTU)"), Label) else Label
       ) %>%
       ungroup()
   }
@@ -98,7 +101,7 @@ l_pkconc <- function(
                align = row$align)
   }) %>%
     setNames(nm = formatting_vars_table$var_name)
-  
+
   # Create a special object to map labels to each variable
   format_labs <- formatting_vars_table %>%
     filter(!is.na(Label)) %>%
@@ -153,17 +156,17 @@ l_pkconc <- function(
 
     # Assign the labels requested by the user
     for (var_with_lab in names(format_labs)) {
-  
+
       # Do the label
       label <- parse_annotation(list_data, format_labs[var_with_lab])
       attr(list_data[[var_with_lab]], "label") <- paste0(label, collapse = " \nor ")
-      
+
       # Check label is unique for the list
       if (length(label) != 1) {
         # ToDo: Warning to display as notification in the App
         warning(paste0("pkcl01, but not unique label in ", id_val, " for ",
                        var_with_lab, ". Make sure when using $var that for each",
-                       " list group only 1 expression applies. Here there are many: ", 
+                       " list group only 1 expression applies. Here there are many: ",
                        paste(label, collapse = ", ")))
       }
     }
