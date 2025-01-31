@@ -239,10 +239,7 @@ fluidPage(
                 "Slopes",
                 DTOutput("preslopesettings")
               ),
-              tabPanel(
-                "Exclusions",
-                tableOutput("manual_slopes2")
-              ),
+              tabPanel("Slope rules", slope_rules_ui("slope_rules")),
               tabPanel("Parameter Datasets",
                        tabsetPanel(
                          tabPanel("PP",
