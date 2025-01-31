@@ -304,7 +304,7 @@ slope_selector_server <- function(
 
       # Create a named list for dynamic columns based on `profiles_per_patient`
       dynamic_values <- lapply(slopes_groups(), function(col) {
-        value <- unique(profiles_per_patient()[[col]])
+        value <- as.character(unique(profiles_per_patient()[[col]]))
         if (length(value) > 0) value[1] else NA_character_  # Handle empty or NULL cases
       })
 

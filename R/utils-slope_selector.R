@@ -69,12 +69,12 @@
 #'                 that the user wants to remove rule if new range already exists in the dataset.
 #'                 If TRUE, in that case full range will be kept.
 #' @returns Data frame with full ruleset, adjusted for new rules.
-.check_slope_rule_overlap <- function(existing, new, slope_group_columns, .keep = FALSE) {
+.check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE) {
 
   # check if any rule already exists for specific patient and profile #
   existing_index <- which(
     existing$TYPE == new$TYPE &
-      Reduce(`&`, lapply(slope_group_columns, function(col) {
+      Reduce(`&`, lapply(slope_groups, function(col) {
         existing[[col]] == new[[col]]
       }))
   )
@@ -135,102 +135,5 @@
     data$conc$data$REASON[selection_index] <- slopes$REASON[i]
   }
 
-  return(data)
-}
-
-#' Update Last Click Data for Slope Selection
-#'
-#' Checks if the user clicked on a different plot or dataset and updates
-#' `last_click_data` accordingly. If an update is needed, the function exits early.
-#'
-#' @param last_click_data A reactive Values object storing the last clicked data.
-#' @param dynamic_values A named list containing values from the current click event.
-#' @param idx_pnt The index of the clicked data point.
-#' @param slopes_groups A character vector of slope grouping column names.
-#'
-#' @returns Returns `NULL` and exits early if data was updated. Otherwise, continues execution.
-#'
-.handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_groups) {
-  click_data <- event_data("plotly_click")
-  req(click_data, click_data$customdata)
-
-  log_trace("{id}: plotly click detected")
-
-  identifiers <- jsonlite::fromJSON(click_data$customdata)
-  if (!all(names(identifiers) %in% c(slopes_groups(), "IX"))) {
-    stop("Error: Missing expected keys in customdata")
-  }
-  # Map identifiers dynamically
-  dynamic_values <- setNames(
-    lapply(slopes_groups(), function(col) identifiers[[col]]),
-    slopes_groups()
-  )
-
-  # Extract additional information for idx_pnt
-  idx_pnt <- identifiers$IX
-
-  #Update data only if there is a change in the selection
-  updated <- any(
-    sapply(
-      slopes_groups(),
-      function(col) dynamic_values[[col]] != last_click_data[[tolower(col)]]
-    )
-  )
-
-  # Update last click data
-  if (updated) {
-    for (col in slopes_groups()) {
-      last_click_data[[tolower(col)]] <- dynamic_values[[col]]
-    }
-    last_click_data$idx_pnt <- idx_pnt
-    return(NULL)
-  }
-
-  new_rule <- as.data.frame(c(
-    dynamic_values,
-    TYPE = if (idx_pnt != last_click_data$idx_pnt) "Selection" else "Exclusion",
-    RANGE = paste0(last_click_data$idx_pnt, ":", idx_pnt),
-    REASON = "[Graphical selection: Please add reason]"
-  ), stringsAsFactors = FALSE)
-
-  manual_slopes(.check_slope_rule_overlap(
-    manual_slopes(),
-    new_rule,
-    slopes_groups()
-  )
-  )
-
-  # After adding new rule, reset last click data dynamically
-  for (col in names(dynamic_values)) {
-    last_click_data[[tolower(col)]] <- ""
-  }
-  last_click_data$idx_pnt <- ""
-}
-
-#' Generate an Empty Plotly Object
-#'
-#' This function returns a blank Plotly plot with optional annotation text.
-#' It ensures that when no valid data is available, a meaningful placeholder plot is displayed
-#' instead of causing an error.
-#'
-#' @param message A character string specifying the text to display in the center of the empty plot.
-#'                Defaults to `"No data available"`.
-#'
-#' @returns A Plotly object representing an empty plot with hidden axes.
-.plotly_empty_plot <- function(message = "No data available") {
-  plot_ly() %>%
-    layout(
-      title = "",
-      xaxis = list(visible = FALSE),
-      yaxis = list(visible = FALSE),
-      annotations = list(
-        text = message,
-        x = 0.5,
-        y = 0.5,
-        showarrow = FALSE,
-        font = list(size = 18, color = "red"),
-        xref = "paper",
-        yref = "paper"
-      )
-    )
+  data
 }
