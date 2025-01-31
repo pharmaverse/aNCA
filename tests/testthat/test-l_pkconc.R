@@ -84,11 +84,15 @@ describe("l_pkconc", {
                  expected = c(TRT01A = attr(adpc$TRT01A, "label"),
                               USUBJID = attr(adpc$USUBJID, "label"),
                               AVISIT = attr(adpc$AVISIT, "label"),
+                              PARAM = attr(adpc$PARAM, "label"),
+                              PCSPEC = attr(adpc$PCSPEC, "label"),
+                              ROUTE = attr(adpc$ROUTE, "label"),
                               NFRLT = attr(adpc$NFRLT, "label"),
                               AFRLT = attr(adpc$AFRLT, "label"),
                               AVAL = paste0(attr(adpc$AVAL, "label"),
                                             " (", unique(adpc$AVALU), ")"),
-                              AVALU = "AVALU"))
+                              AVALU = "AVALU",
+                              id_list = "id"))
   })
 
   it("handles missing subtitle_lists and creates a default", {
