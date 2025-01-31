@@ -25,7 +25,7 @@ l_pkconc(
 
 \item{displaying_vars}{A character vector specifying the variables to display in the listing.}
 
-\item{formatting_vars_table}{A data frame specifying the formatting options for the variables.}
+\item{formatting_vars_table}{A data frame with the formatting of each variable. See details.}
 
 \item{main_title}{A character string specifying the main title of the listing table.}
 
@@ -37,8 +37,9 @@ l_pkconc(
 A list of listings, each corresponding to a unique combination of the grouping variables.
 }
 \description{
-This function creates a listing of pharmacokinetic (PK) concentration data by treatment group,
-subject, and nominal time.
+This function creates a listing of pharmacokinetic (PK) concentration data seggregating a dataset
+in lists that are customizible in title, footnotes, grouping/displayed variables, missing/cero
+values and/or number of digits displayed.
 }
 \details{
 The function performs the following steps:

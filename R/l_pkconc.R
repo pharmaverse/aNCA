@@ -1,13 +1,14 @@
 #' Create PK Concentration Listing
 #'
-#' This function creates a listing of pharmacokinetic (PK) concentration data by treatment group,
-#' subject, and nominal time.
+#' This function creates a listing of pharmacokinetic (PK) concentration data seggregating a dataset
+#' in lists that are customizible in title, footnotes, grouping/displayed variables, missing/cero
+#' values and/or number of digits displayed.
 #'
 #' @param adpc A data frame containing the PK concentration data.
 #' @param listgroup_vars A character vector specifying the variables to group by in the listing.
 #' @param grouping_vars A character vector specifying the grouping variables for the listing.
 #' @param displaying_vars A character vector specifying the variables to display in the listing.
-#' @param formatting_vars_table A data frame specifying the formatting options for the variables.
+#' @param formatting_vars_table A data frame with the formatting of each variable. See details.
 #' @param main_title A character string specifying the main title of the listing table.
 #' @param subtitle_lists A character string specifying the subtitle of the listing table.
 #' @param footnote_table A character string specifying the footnote of the listing table.
