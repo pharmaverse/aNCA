@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_duplicates.R
 \name{create_duplicates}
 \alias{create_duplicates}
-\title{Create duplicates in concentration data with Predose and Last Values for Dosing Cycles}
+\title{Create duplicates in concentration data with Pre-dose and Last Values for Dosing Cycles}
 \usage{
 create_duplicates(
   conc_data,
@@ -18,33 +18,34 @@ create_duplicates(
 \item{conc_data}{A data frame containing concentration data.}
 
 \item{groups}{A character vector of column names to use for grouping
-(e.g., c("USUBJID", "ANALYTE", "PCSPEC")).}
+(e.g., c("USUBJID", "ANALYTE")).}
 
 \item{dosno}{Column name for the dose number (default: "DOSNO").}
 
-\item{arrlt}{Column name for time from the most recent dose (default: "ARRLT").}
+\item{arrlt}{Column name for time from the most recent dose.}
 
-\item{afrlt}{Column name for time from the first dose (default: "AFRLT").}
+\item{afrlt}{Column name for time from the first dose.}
 
-\item{nrrlt}{Column name for the numeric relative time (default: "NRRLT").}
+\item{nrrlt}{Column name for the numeric relative time.}
 
-\item{nfrlt}{Column name for the nominal relative time (default: "NFRLT").}
+\item{nfrlt}{Column name for the nominal relative time.}
 }
 \value{
 A data frame with adjusted concentration data, including:
 \itemize{
-\item Duplicated predose values assigned to the previous dose.
-\item Duplicated last values assigned to the next dose if predose values are missing,
+\item Duplicated pre-dose values assigned to the previous dose.
+\item Duplicated last values assigned to the next dose if pre-dose values are missing,
 filtered so only samples within 24 hours of the next dose are included.
 \item Sorted by the grouping variables and relative time.
 }
 }
 \description{
 This function duplicates and adjusts concentration data to ensure all dosing cycles have
-complete predose and last concentration values. It is designed for use in pharmacokinetic
+complete pre-dose and last concentration values. It is designed for use in pharmacokinetic
 analyses where dosing intervals and concentration values need to be aligned for each dose.
 }
 \examples{
+\dontrun{
 # Example usage
 conc_data <- data.frame(
  USUBJID = c("001", "001", "001", "001", "001", "001"),
@@ -55,5 +56,6 @@ conc_data <- data.frame(
  NFRLT = c(0, 0.5, 1, 3, 4, 5),
 result <- create_duplicates(conc_data,
                             groups = c("USUBJID"), dosno = "DOSNO")
+}
 
 }

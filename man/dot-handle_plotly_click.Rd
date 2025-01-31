@@ -7,7 +7,7 @@
 .handle_plotly_click(id, last_click_data, manual_slopes, slopes_groups)
 }
 \arguments{
-\item{last_click_data}{A reactiveValues object storing the last clicked data.}
+\item{last_click_data}{A reactive Values object storing the last clicked data.}
 
 \item{slopes_groups}{A character vector of slope grouping column names.}
 

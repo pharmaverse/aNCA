@@ -35,21 +35,25 @@ slope_selector_ui <- function(id) {
             changes once you are done!
           "),
         div(class = "gif-grid",
-          div(class = "gif-container",
-              tags$h1("Check"),
-              img(src = "images/slope_plot_check.gif", alt = "Check")
+          div(
+            class = "gif-container",
+            tags$h1("Check"),
+            img(src = "images/slope_plot_check.gif", alt = "Check")
           ),
-          div(class = "gif-container",
-              tags$h1("Zoom"),
-              img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
+          div(
+            class = "gif-container",
+            tags$h1("Zoom"),
+            img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
           ),
-          div(class = "gif-container",
-              tags$h1("Select"),
-              img(src = "images/slope_plot_select.gif", alt = "Select")
+          div(
+            class = "gif-container",
+            tags$h1("Select"),
+            img(src = "images/slope_plot_select.gif", alt = "Select")
           ),
-          div(class = "gif-container",
-              tags$h1("Exclude"),
-              img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
+          div(
+            class = "gif-container",
+            tags$h1("Exclude"),
+            img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
           )
         )
       ),
@@ -61,16 +65,17 @@ slope_selector_ui <- function(id) {
     # Widgets for manipulating plots display #
     fluidRow(
       class = "plot-widgets-container",
-      
+
       div(
         class = "plot-widget-group",
         selectInput(
           ns("plots_per_page"),
           "Plots per page:",
           choices = c(1, 2, 4, 6, 8, 10),
-          selected = 1)
+          selected = 1
+        )
       ),
-      
+
       div(
         class = "plot-widget-group",
         selectInput(
@@ -91,9 +96,10 @@ slope_selector_ui <- function(id) {
         actionButton(
           ns("previous_page"),
           "Previous Page",
-          class = "btn-page")
+          class = "btn-page"
+        )
       ),
-      
+
       div(
         class = "plot-widget-group",
         tags$span("Page "),
@@ -102,13 +108,14 @@ slope_selector_ui <- function(id) {
         tags$span("of "),
         uiOutput(ns("page_number"), inline = TRUE)
       ),
-      
+
       div(
         class = "plot-widget-group",
         actionButton(
           ns("next_page"),
           "Next Page",
-          class = "btn-page")
+          class = "btn-page"
+        )
       )
     ),
     br()

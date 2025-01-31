@@ -37,7 +37,7 @@ a linear regression line and additional plot annotations.
 \details{
 The function performs the following steps:
 \itemize{
-\item{Creates duplicates of the predose and last doses of concentration data.}
+\item{Creates duplicates of the pre-dose and last doses of concentration data.}
 \item{Filters and arranges the input data to obtain relevant lambda calculation information.}
 \item{Identifies the data points used for lambda calculation.}
 \item{Calculates the fitness, intercept, and time span of the half-life estimate.}

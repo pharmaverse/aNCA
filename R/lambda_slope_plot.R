@@ -19,7 +19,7 @@
 #' @details
 #' The function performs the following steps:
 #' \itemize{
-#'   \item{Creates duplicates of the predose and last doses of concentration data.}
+#'   \item{Creates duplicates of the pre-dose and last doses of concentration data.}
 #'   \item{Filters and arranges the input data to obtain relevant lambda calculation information.}
 #'   \item{Identifies the data points used for lambda calculation.}
 #'   \item{Calculates the fitness, intercept, and time span of the half-life estimate.}
@@ -49,10 +49,10 @@
 #' @import plotly
 #' @export
 lambda_slope_plot <- function(
-    res_pknca_df = myres$result,
-    conc_pknca_df = mydata$conc$data,
-    row_values,
-    R2ADJTHRESHOL = 0.7
+  res_pknca_df = myres$result,
+  conc_pknca_df = mydata$conc$data,
+  row_values,
+  R2ADJTHRESHOL = 0.7
 ) {
 
   column_names <- names(row_values)
@@ -63,7 +63,7 @@ lambda_slope_plot <- function(
     filter(if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])) %>%
     arrange(across(all_of(column_names)), start, desc(end)) %>%
     filter(!duplicated(paste0(!!!rlang::syms(column_names), PPTESTCD)))
-  
+
   lambda_z_n_points <- as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
   if (is.na(lambda_z_n_points)) lambda_z_n_points <- 0
 
@@ -88,7 +88,7 @@ lambda_slope_plot <- function(
     ) %>%
     arrange(IX) %>%
     slice(0:lambda_z_n_points)
-  
+
   #Obtain parameter values for subtitle
   r2_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "r.squared"]), 3)
   r2adj_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
@@ -96,7 +96,7 @@ lambda_slope_plot <- function(
   time_span <- signif(
     abs(lambda_z_ix_rows$ARRLT[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$ARRLT[1]), 3
   )
-  
+
   subtitle_color <- ifelse(
     r2adj_value < R2ADJTHRESHOL | half_life_value > (time_span / 2),
     "red",
@@ -126,16 +126,16 @@ lambda_slope_plot <- function(
       showarrow = FALSE
     )
   }
-  
+
   # Create the title
   title_text <- paste(
     paste0(column_names, ": ", sapply(column_names, function(col) row_values[[col]])),
     collapse = ", "
   )
-  
+
   #Filter the data set for patient profile
   plot_data <- conc_pknca_df %>%
-    ungroup()%>%
+    ungroup() %>%
     filter(
       across(all_of(column_names), ~ .x == row_values[[cur_column()]])
     ) %>%
@@ -156,7 +156,7 @@ lambda_slope_plot <- function(
     warning("Not enough data for plotting. Returning empty plot.")
     return(.plotly_empty_plot("No valid lambda calculations available"))
   }
-  
+
   #Create initial plot
   p <- plot_data %>%
     ggplot(aes(x = ARRLT, y = AVAL)) +
@@ -196,7 +196,7 @@ lambda_slope_plot <- function(
       "hl.included" = "green4", "hl.excluded" = "black", "excluded" = "red3"
     )) +
     scale_y_log10()
-  
+
   pl <- ggplotly(p) %>%
     layout(
       margin = list(t = 80),
@@ -218,18 +218,18 @@ lambda_slope_plot <- function(
       hoverlabel = list(font = list(family = "times", size = 20))
     ) %>%
     config(mathjax = "cdn")
-  
+
   num_traces <- length(pl$x$data)
-  
+
   for (i in seq_len(num_traces)) {
     pl <- pl %>%
       style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = i)
   }
-  
-  customdata = paste0(
+
+  customdata <- paste0(
     apply(
-      plot_data[, c(column_names, "IX"), drop = FALSE], 
-      1, 
+      plot_data[, c(column_names, "IX"), drop = FALSE],
+      1,
       function(row) paste(row, collapse = "_")
     )
   )
@@ -255,6 +255,6 @@ lambda_slope_plot <- function(
       ), size = 15, opacity = 0), # Make points semi-transparent
       showlegend = FALSE
     )
-  
+
   pl
 }

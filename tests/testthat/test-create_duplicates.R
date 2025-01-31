@@ -12,19 +12,19 @@ conc_data <- data.frame(
 result <- create_duplicates(conc_data, groups = c("USUBJID", "DOSNO"), dosno = "DOSNO")
 
 describe("create_duplicates", {
-  
+
   it("should maintain the original columns", {
     expect_true(all(colnames(conc_data) %in% colnames(result)))
   })
-  
+
   it("should add predose duplicates correctly", {
     predose_rows <- result[result$DOSNO == 1, ]
     expect_equal(nrow(predose_rows), 4)
   })
-  
+
   it("should add last dose values when predose is missing", {
     last_dose_rows <- result[result$DOSNO == 3, ]
     expect_equal(nrow(last_dose_rows), 4)
   })
-  
+
 })

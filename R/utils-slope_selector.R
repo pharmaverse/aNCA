@@ -72,12 +72,12 @@
 .check_slope_rule_overlap <- function(existing, new, slope_group_columns, .keep = FALSE) {
 
   # check if any rule already exists for specific patient and profile #
-    existing_index <- which(
-      existing$TYPE == new$TYPE & 
+  existing_index <- which(
+    existing$TYPE == new$TYPE &
       Reduce(`&`, lapply(slope_group_columns, function(col) {
         existing[[col]] == new[[col]]
       }))
-    )
+  )
 
   if (length(existing_index) != 1) {
     if (length(existing_index) > 1)
@@ -108,13 +108,13 @@
 #' This function iterates over the given slopes and updates the `data$conc$data` object
 #' by setting inclusion or exclusion flags based on the slope conditions.
 #'
-#' @param data A list containing concentration data (`data$conc$data`) with columns that 
+#' @param data A list containing concentration data (`data$conc$data`) with columns that
 #'        need to be updated based on the slope rules.
-#' @param slopes A data frame containing slope rules, including `TYPE`, `RANGE`, 
+#' @param slopes A data frame containing slope rules, including `TYPE`, `RANGE`,
 #'        and `REASON` columns.
 #' @param slope_groups A character vector specifying the group columns used for filtering.
 #'
-#' @returns description The modified `data` object with updated inclusion/exclusion flags 
+#' @returns description The modified `data` object with updated inclusion/exclusion flags
 #'         and reasons in `data$conc$data`.
 .apply_slope_rules <- function(data, slopes, slope_groups) {
   for (i in seq_len(nrow(slopes))) {
@@ -125,16 +125,16 @@
       })) &
         data$conc$data$IX %in% .eval_range(slopes$RANGE[i])
     )
-    
+
     if (slopes$TYPE[i] == "Selection") {
       data$conc$data$is.included.hl[selection_index] <- TRUE
     } else {
       data$conc$data$is.excluded.hl[selection_index] <- TRUE
     }
-    
+
     data$conc$data$REASON[selection_index] <- slopes$REASON[i]
   }
-  
+
   return(data)
 }
 
@@ -143,7 +143,7 @@
 #' Checks if the user clicked on a different plot or dataset and updates
 #' `last_click_data` accordingly. If an update is needed, the function exits early.
 #'
-#' @param last_click_data A reactiveValues object storing the last clicked data.
+#' @param last_click_data A reactive Values object storing the last clicked data.
 #' @param dynamic_values A named list containing values from the current click event.
 #' @param idx_pnt The index of the clicked data point.
 #' @param slopes_groups A character vector of slope grouping column names.
@@ -155,7 +155,7 @@
   req(click_data, click_data$customdata)
 
   log_trace("{id}: plotly click detected")
-  
+
   identifiers <- strsplit(click_data$customdata, "_")[[1]]
   if (length(identifiers) < length(slopes_groups) + 1) {
     stop("Error: Insufficient data in customdata for dynamic columns.")
@@ -164,19 +164,19 @@
   dynamic_values <- lapply(seq_along(slopes_groups()), function(i) {
     identifiers[i]  # Extract the corresponding identifier
   })
-  
+
   names(dynamic_values) <- slopes_groups()
   # Extract additional information for idx_pnt
   idx_pnt <- identifiers[length(identifiers)]
-  
+
   #Update data only if there is a change in the selection
   updated <- any(
     sapply(
       slopes_groups(),
       function(col) dynamic_values[[col]] != last_click_data[[tolower(col)]]
-      )
     )
-  
+  )
+
   # Update last click data
   if (updated) {
     for (col in slopes_groups()) {
@@ -185,19 +185,21 @@
     last_click_data$idx_pnt <- idx_pnt
     return(NULL)
   }
-  
+
   new_rule <- as.data.frame(c(
     dynamic_values,
     TYPE = if (idx_pnt != last_click_data$idx_pnt) "Selection" else "Exclusion",
     RANGE = paste0(last_click_data$idx_pnt, ":", idx_pnt),
     REASON = "[Graphical selection]"
-    ), stringsAsFactors = FALSE)
-  
+  ), stringsAsFactors = FALSE)
+
   manual_slopes(.check_slope_rule_overlap(
     manual_slopes(),
     new_rule,
-    slopes_groups()))
-  
+    slopes_groups()
+  )
+  )
+
   # After adding new rule, reset last click data dynamically
   for (col in names(dynamic_values)) {
     last_click_data[[tolower(col)]] <- ""

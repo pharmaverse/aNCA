@@ -299,8 +299,8 @@ profiles_per_patient <- reactive({
   # Check if res_nca() is available and valid
   if (!is.null(res_nca())) {
     res_nca()$result %>%
-       mutate(USUBJID = as.character(USUBJID),
-              DOSNO = as.character(DOSNO)) %>%
+      mutate(USUBJID = as.character(USUBJID),
+             DOSNO = as.character(DOSNO)) %>%
       group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
       summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
       unnest(DOSNO)  # Convert lists into individual rows
@@ -723,14 +723,14 @@ observeEvent(input, {
     observeEvent(input[[input_name]], {
       # Get the ID of the exclusion
       id <- gsub("_(Ex\\d+)$", "", input_name)
-      
+
       # Update the reactive list of exclusion IDs
       manual_slopes <- manual_slopes()
       set_selected_value(
         manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
       ) <- manual_slopes[manual_slopes$id == id, ]
       manual_slopes(manual_slopes)
-      
+
     })
   }
 })
