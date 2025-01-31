@@ -10,8 +10,8 @@ adpc <- data.frame(
   USUBJID = c("1", "2", "3", "4"),
   AVISIT = c("Visit1", "Visit1", "Visit2", "Visit2"),
   NFRLT = c(0, 1, 0, 1),
-  AFRLT = c(0, 1, 0, 1),
-  AVAL = c(0, 20, 30, NA),
+  AFRLT = c(0, 1.12, 0, 1.055),
+  AVAL = c(0, 20.12, 30.55, NA),
   AVALU = "mg/L",
   stringsAsFactors = FALSE
 )
@@ -29,8 +29,6 @@ attr(adpc[["AVISIT"]], "label") <- "Actual visit"
 
 describe("l_pkconc", {
   it("creates listings for each unique combination of grouping variables", {
-    
-    
     # For 1 case
     listings_1l <- l_pkconc(adpc, listgroup_vars = c("PCSPEC"),
                             grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
@@ -50,7 +48,7 @@ describe("l_pkconc", {
                             grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
     
-    # Include lenghts and names expected
+    # Include lengths and names expected
     expect_length(listings_4l, length(unique(interaction(adpc$PARAM, adpc$PCSPEC, adpc$ROUTE, adpc$USUBJID))))
     expect_named(listings_4l, expected = as.character(interaction(adpc$PARAM, adpc$PCSPEC, adpc$ROUTE, adpc$USUBJID)))
     
@@ -81,13 +79,13 @@ describe("l_pkconc", {
                               AVALU = "AVALU"))
   })
   
-  it("handles missing title_table and creates a default", {
+  it("handles missing subtitle_lists and creates a default", {
     listings <- l_pkconc(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
                          grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
-                         title_table = NULL)
+                         subtitle_lists = NULL)
     
-    # Check if the title is in the correct format
+    # Check if the subtitle is in the correct format
     expect_equal(attr(listings[[1]], "subtitles"),
                  expected = "Analyte: A\nSpecimen: Plasma\nAdministration: Oral")
     
@@ -125,24 +123,24 @@ describe("l_pkconc", {
                  "Missing required columns: AFRLT")
   })
   
-  it("handles non-unique units per list group", {
+  it("handles non-unique units", {
     non_unique_units_adpc <- adpc
-    non_unique_units_adpc$AVALU <- c("ng/mL", "mg/mL", "mg/L", "mg/L")
-    expect_warning(l_pkconc(non_unique_units_adpc,
-                            listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+    non_unique_units_adpc$AVALU <- c("ng/mL", "ng/mL", "ng/L", "g/L")
+    expect_warning(l_pkconc(non_unique_units_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
                             grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL")),
-                   "pkcl01, but not unique unit in A.Plasma.Oral for AVAL :ng/mL, mg/mL")
+                   "pkcl01, but not unique unit in ")
   })
   
   it("handles custom formatting_vars_table", {
     custom_formatting_vars_table <- data.frame(
-      Variable_name = c("TRT01A", "USUBJID", "AVISIT", "NFRLT", "AFRLT", "AVAL"),
+      var_name = c("TRT01A", "USUBJID", "AVISIT", "NFRLT", "AFRLT", "AVAL"),
       Label = c("Treatment", "Subject ID", "Visit", "Nominal Time", "Actual Time", "Value"),
-      na_str = c("NA", "NA", "NA", "NA", "NA", "NA"),
+      na_str = c("missing", "missing", "missing", "missing", "missing", "missing"),
       cero_str = c("0", "0", "0", "0", "0", "BLQ"),
       align = c("center", "center", "center", "center", "center", "center"),
-      format = c("NA", "NA", "NA", "NA", "NA", "missing"),
+      format_fun = c(NA, NA, NA, NA, "round", "signif"),
+      digits = c(NA, NA, NA, NA, 2, 2),
       unit = c(NA, NA, NA, NA, NA, "AVALU"),
       stringsAsFactors = FALSE
     )
@@ -152,23 +150,45 @@ describe("l_pkconc", {
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
                          formatting_vars_table = custom_formatting_vars_table)
     
-    expect_length(listings, 4)
-    expect_true(all(sapply(listings, inherits, "listing")))
+    # Check if 0s, NAs, and units are formatted correctly
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$NFRLT), c("0", "1"))
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AFRLT), c("0", "1.12"))
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20"))
+    expect_equal(as.vector(listings$`B.Plasma.IV`$NFRLT), c("0", "1"))
+    expect_equal(as.vector(listings$`B.Plasma.IV`$AFRLT), c("0", "1.05"))
+    expect_equal(as.vector(listings$`B.Plasma.IV`$AVAL), c("31", NA))
+    expect_equal(attr(listings$`B.Plasma.IV`$AVAL, "format_na_str"), "missing")
     
-    # Check if 0s, NAs, and units are not present in the rlisting after formatting
-    for (listing in listings) {
-      data <- listing$data
-      expect_true(all(data$NFRLT != 0))
-      expect_true(all(data$AFRLT != 0))
-      expect_true(all(data$AVAL != 0))
-      expect_true(all(data$NFRLT != "NA"))
-      expect_true(all(data$AFRLT != "NA"))
-      expect_true(all(data$AVAL != "NA"))
-      expect_true(all(grepl("RRLTU", names(data))))
-      expect_true(all(grepl("AVALU", names(data))))
-    }
-    # Check if in the intial adpc rows with 0 and NA values in AVAL are substituted by BLQ and "missing"
-    expect_true(all(adpc$AVAL == c("BLQ", 20, 30, "missing")))
+    # Check the structure of the listings
+    expect_equal(attr(listings$`A.Plasma.Oral`, "main_title"), 
+                 "Listing of PK Concentration by Treatment Group, Subject and Nominal Time, PK Population")
+    expect_equal(attr(listings$`A.Plasma.Oral`, "subtitles"), 
+                 "Analyte: A\nSpecimen: Plasma\nAdministration: Oral")
+    expect_equal(attr(listings$`A.Plasma.Oral`, "main_footer"), 
+                 "*: Patients excluded from the summary table and mean plots")
+    expect_equal(attr(listings$`B.Plasma.IV`, "main_title"), 
+                 "Listing of PK Concentration by Treatment Group, Subject and Nominal Time, PK Population")
+    expect_equal(attr(listings$`B.Plasma.IV`, "subtitles"), 
+                 "Analyte: B\nSpecimen: Plasma\nAdministration: IV")
+    expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), 
+                 "*: Patients excluded from the summary table and mean plots")
+    
+    # Check the attributes of the columns
+    expect_equal(attr(listings$`A.Plasma.Oral`$TRT01A, "label"), "Actual treatment")
+    expect_equal(attr(listings$`A.Plasma.Oral`$USUBJID, "label"), "Unique Subject ID")
+    expect_equal(attr(listings$`A.Plasma.Oral`$AVISIT, "label"), "Actual visit")
+    expect_equal(attr(listings$`A.Plasma.Oral`$NFRLT, "label"), "Planned time from first dose")
+    expect_equal(attr(listings$`A.Plasma.Oral`$AFRLT, "label"), "Actual time from first dose")
+    expect_equal(attr(listings$`A.Plasma.Oral`$AVAL, "label"), "Analysis value (mg/L)")
+    expect_equal(attr(listings$`A.Plasma.Oral`$AVALU, "label"), "AVALU")
+    
+    expect_equal(attr(listings$`B.Plasma.IV`$TRT01A, "label"), "Actual treatment")
+    expect_equal(attr(listings$`B.Plasma.IV`$USUBJID, "label"), "Unique Subject ID")
+    expect_equal(attr(listings$`B.Plasma.IV`$AVISIT, "label"), "Actual visit")
+    expect_equal(attr(listings$`B.Plasma.IV`$NFRLT, "label"), "Planned time from first dose")
+    expect_equal(attr(listings$`B.Plasma.IV`$AFRLT, "label"), "Actual time from first dose")
+    expect_equal(attr(listings$`B.Plasma.IV`$AVAL, "label"), "Analysis value (mg/L)")
+    expect_equal(attr(listings$`B.Plasma.IV`$AVALU, "label"), "AVALU")
     
   })
 })
