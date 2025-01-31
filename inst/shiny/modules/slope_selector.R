@@ -143,8 +143,8 @@ slope_selector_server <- function(
       filtered_groups
     })
 
-    # Reactive for .SLOPE_SELECTOR_COLUMNS
-    .SLOPE_SELECTOR_COLUMNS <- reactive({
+    # Reactive for SLOPE_SELECTOR_COLUMNS
+    SLOPE_SELECTOR_COLUMNS <- reactive({
       req(slopes_groups())
       c("TYPE", slopes_groups(), "RANGE", "REASON")
     })
@@ -418,9 +418,9 @@ slope_selector_server <- function(
     #' For each of the columns in slope selector data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
-      req(.SLOPE_SELECTOR_COLUMNS())
+      req(SLOPE_SELECTOR_COLUMNS())
       # Dynamically attach observers for each column
-      purrr::walk(.SLOPE_SELECTOR_COLUMNS(), \(colname) {
+      purrr::walk(SLOPE_SELECTOR_COLUMNS(), \(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
           edit <- input[[paste0("edit_", colname)]]
           edited_slopes <- manual_slopes()
@@ -462,7 +462,7 @@ slope_selector_server <- function(
     })
 
     observeEvent(event_data("plotly_click", priority = "event"), {
-      .handle_plotly_click(id, last_click_data, manual_slopes, slopes_groups)
+      handle_plotly_click(id, last_click_data, manual_slopes, slopes_groups)
 
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
