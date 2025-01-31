@@ -156,7 +156,6 @@
 
   log_trace("{id}: plotly click detected")
 
-  #browser()
   identifiers <- jsonlite::fromJSON(click_data$customdata)
   if (!all(names(identifiers) %in% c(slopes_groups(), "IX"))) {
     stop("Error: Missing expected keys in customdata")
