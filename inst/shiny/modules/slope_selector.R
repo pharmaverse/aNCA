@@ -96,7 +96,6 @@ slope_selector_ui <- function(id) {
 
 slope_selector_server <- function(
   id, mydata, res_nca, profiles_per_patient,
-  cycle_nca, analyte_nca, pcspec_nca,
   pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
@@ -127,7 +126,7 @@ slope_selector_server <- function(
     ), {
       req(res_nca())
       log_trace("{id}: Updating displayed plots")
-      browser()
+
       # Make sure the search_patient input is not NULL
       search_patient <- {
         if (is.null(input$search_patient) || length(input$search_patient) == 0) {
@@ -138,16 +137,13 @@ slope_selector_server <- function(
       }
 
       # create plot ids based on available data #
-      patient_profile_plot_ids <- mydata()$conc$data %>%
-        filter(
-          DOSNO %in% cycle_nca,
-          ANALYTE %in% analyte_nca,
-          PCSPEC %in% pcspec_nca,
-          USUBJID %in% search_patient
-        ) %>%
-        select(USUBJID, ANALYTE, PCSPEC, DOSNO) %>%
+      patient_profile_plot_ids <- mydata()$intervals %>%
+        select(any_of(c(unname(unlist(mydata()$dose$columns$groups)), 
+                        unname(unlist(mydata()$conc$columns$groups)),
+                        "DOSNO"))) %>%
         unique() %>%
-        arrange(USUBJID, ANALYTE, PCSPEC, DOSNO)
+        select(USUBJID, ANALYTE, PCSPEC, DOSNO)
+        # select(where(~ n_distinct(.) > 1)) # This would be the good one!
 
       num_plots <- nrow(patient_profile_plot_ids)
 

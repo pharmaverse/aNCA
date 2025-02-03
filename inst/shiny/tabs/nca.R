@@ -794,9 +794,6 @@ slope_rules <- slope_selector_server(
   mydata,
   res_nca,
   profiles_per_patient,
-  input$select_dosno,
-  input$select_analyte,
-  input$select_pcspec,
   pk_nca_trigger,
   reactive(input$settings_upload)
 )
