@@ -16,161 +16,161 @@
 
 
 # Make GUI change when new settings are uploaded
-observeEvent(input$settings_upload, {
+# # observeEvent(input$settings_upload, {
 
-  setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
-  # Set the basic settings
-  analyte <- setts$ANALYTE[1]
-  doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
+# #   setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
+# #   # Set the basic settings
+# #   analyte <- setts$ANALYTE[1]
+# #   doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
-  # Check that match with the data currently loaded
-  if (!analyte %in% unique(data()$ANALYTE) ||
-        !all(doses_selected %in% unique(data()$DOSNO))) {
+# #   # Check that match with the data currently loaded
+# #   if (!analyte %in% unique(data()$ANALYTE) ||
+# #         !all(doses_selected %in% unique(data()$DOSNO))) {
 
-    showNotification(
-      validate("The analyte selected in the settings file is not present in the data. Please, if
-                you want to use this settings for a different file, make sure all meaningful
-                variables in the file are in the data (ANALYTE, DOSNO...)"),
-      type = "error"
-    )
-  }
+# #     showNotification(
+# #       validate("The analyte selected in the settings file is not present in the data. Please, if
+# #                 you want to use this settings for a different file, make sure all meaningful
+# #                 variables in the file are in the data (ANALYTE, DOSNO...)"),
+# #       type = "error"
+# #     )
+# #   }
 
-  # Compare the dataset with settings for inclusions and exclusions
-  new_data <- data() %>%
-    filter(
-      ANALYTE == analyte,
-      if ("EVID" %in% names(data())) EVID == 0 else TRUE
-    ) %>%
-    mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
-    filter(TIME >= 0) %>%
-    arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
-    group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-    mutate(IX = seq_len(n())) %>% # Assuming data() returns the newly uploaded dataset
-    select(STUDYID, USUBJID, AVAL, DOSNO, TIME, IX)
+# #   # Compare the dataset with settings for inclusions and exclusions
+# #   new_data <- data() %>%
+# #     filter(
+# #       ANALYTE == analyte,
+# #       if ("EVID" %in% names(data())) EVID == 0 else TRUE
+# #     ) %>%
+# #     mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
+# #     filter(TIME >= 0) %>%
+# #     arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
+# #     group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
+# #     mutate(IX = seq_len(n())) %>% # Assuming data() returns the newly uploaded dataset
+# #     select(STUDYID, USUBJID, AVAL, DOSNO, TIME, IX)
 
-  setts_lambda <- setts %>%
-    select(STUDYID, USUBJID, DOSNO, IX, AVAL, TIME) %>%
-    na.omit()
+# #   setts_lambda <- setts %>%
+# #     select(STUDYID, USUBJID, DOSNO, IX, AVAL, TIME) %>%
+# #     na.omit()
 
-  # Identify mismatched data points
-  mismatched_points <- setts_lambda %>%
-    anti_join(new_data, by = c("USUBJID", "DOSNO", "IX", "AVAL", "TIME"))
+# #   # Identify mismatched data points
+# #   mismatched_points <- setts_lambda %>%
+# #     anti_join(new_data, by = c("USUBJID", "DOSNO", "IX", "AVAL", "TIME"))
 
-  if (nrow(mismatched_points) > 0) {
-    showModal(modalDialog(
-      title = "Mismatched Data Points",
-      tags$h4("The following data points in the settings file do not match the uploaded dataset.
-              The slopes for these profiles will be reset to best slope:"),
-      DTOutput("mismatched_table"),
-      easyClose = TRUE,
-      footer = NULL
-    ))
+# #   if (nrow(mismatched_points) > 0) {
+# #     showModal(modalDialog(
+# #       title = "Mismatched Data Points",
+# #       tags$h4("The following data points in the settings file do not match the uploaded dataset.
+# #               The slopes for these profiles will be reset to best slope:"),
+# #       DTOutput("mismatched_table"),
+# #       easyClose = TRUE,
+# #       footer = NULL
+# #     ))
 
-    output$mismatched_table <- DT::renderDT({
-      datatable(mismatched_points %>%
-                  select(-IX))
-    })
+# #     output$mismatched_table <- DT::renderDT({
+# #       datatable(mismatched_points %>%
+# #                   select(-IX))
+# #     })
 
-    setts <- setts %>%
-      anti_join(mismatched_points, by = c("USUBJID", "DOSNO"))
-  }
+# #     setts <- setts %>%
+# #       anti_join(mismatched_points, by = c("USUBJID", "DOSNO"))
+# #   }
 
-  # Analyte
-  updateSelectInput(
-    session,
-    inputId = "select_analyte",
-    label = "Choose the analyte:",
-    choices = data()$ANALYTE[1],
-    selected = setts$ANALYTE[1]
-  )
+# #   # Analyte
+# #   updateSelectInput(
+# #     session,
+# #     inputId = "select_analyte",
+# #     label = "Choose the analyte:",
+# #     choices = data()$ANALYTE[1],
+# #     selected = setts$ANALYTE[1]
+# #   )
 
-  # Dose number
-  updateSelectInput(
-    session,
-    inputId = "select_dosno",
-    label = "Choose the Dose Number:",
-    choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(DOSNO))),
-    selected = doses_selected
-  )
+# #   # Dose number
+# #   updateSelectInput(
+# #     session,
+# #     inputId = "select_dosno",
+# #     label = "Choose the Dose Number:",
+# #     choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(DOSNO))),
+# #     selected = doses_selected
+# #   )
 
-  # Specimen or Matrix
-  updateSelectInput(
-    session,
-    inputId = "select_pcspec",
-    label = "Choose the Specimen/Matrix:",
-    choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))),
-    selected = unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))
-  )
+# #   # Specimen or Matrix
+# #   updateSelectInput(
+# #     session,
+# #     inputId = "select_pcspec",
+# #     label = "Choose the Specimen/Matrix:",
+# #     choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))),
+# #     selected = unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))
+# #   )
 
-  # Extrapolation Method
-  method_choices <- c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation")
-  updateSelectInput(
-    session,
-    inputId = "method",
-    label = "Extrapolation Method:",
-    choices = c("lin-log", "lin up/log down", "linear"),
-    selected = setts$method
-  )
+# #   # Extrapolation Method
+# #   method_choices <- c("Linear Log", "LinearUp LogDown", "Linear LinearInterpolation")
+# #   updateSelectInput(
+# #     session,
+# #     inputId = "method",
+# #     label = "Extrapolation Method:",
+# #     choices = c("lin-log", "lin up/log down", "linear"),
+# #     selected = setts$method
+# #   )
 
-  # AUC intervals
-  if (!is.na(setts$auc_mins[1])) {
-    updateCheckboxInput(session, inputId = "AUCoptions", label = "Select Partial AUC", value = TRUE)
-    auc_mins <- as.character(setts$auc_mins[1])
-    auc_maxs <- as.character(setts$auc_maxs[1])
-    auc_mins <- strsplit(auc_mins, split = ",")[[1]]
-    auc_maxs <- strsplit(auc_maxs, split = ",")[[1]]
+# #   # AUC intervals
+# #   if (!is.na(setts$auc_mins[1])) {
+# #     updateCheckboxInput(session, inputId = "AUCoptions", label = "Select Partial AUC", value = TRUE)
+# #     auc_mins <- as.character(setts$auc_mins[1])
+# #     auc_maxs <- as.character(setts$auc_maxs[1])
+# #     auc_mins <- strsplit(auc_mins, split = ",")[[1]]
+# #     auc_maxs <- strsplit(auc_maxs, split = ",")[[1]]
 
-    for (i in seq_along(auc_mins)) {
-      auc_counter(auc_counter() + 1)
-      insertUI(
-        selector = "#AUCInputs",
-        where = "beforeEnd",
-        ui = partial_auc_input(
-          id = paste0("AUC_", auc_counter()),
-          min_sel_value = as.numeric(auc_mins[i]),
-          max_sel_value = as.numeric(auc_maxs[i])
-        )
-      )
-    }
-  }
+# #     for (i in seq_along(auc_mins)) {
+# #       auc_counter(auc_counter() + 1)
+# #       insertUI(
+# #         selector = "#AUCInputs",
+# #         where = "beforeEnd",
+# #         ui = partial_auc_input(
+# #           id = paste0("AUC_", auc_counter()),
+# #           min_sel_value = as.numeric(auc_mins[i]),
+# #           max_sel_value = as.numeric(auc_maxs[i])
+# #         )
+# #       )
+# #     }
+# #   }
 
-  # RSADJ
-  if (!is.na(setts$adj.r.squared_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = TRUE)
-    updateNumericInput(
-      session,
-      "adj.r.squared_threshold",
-      "",
-      value = setts$adj.r.squared_threshold[1]
-    )
-  } else {
-    updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = FALSE)
-  }
+# #   # RSADJ
+# #   if (!is.na(setts$adj.r.squared_threshold[1])) {
+# #     updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = TRUE)
+# #     updateNumericInput(
+# #       session,
+# #       "adj.r.squared_threshold",
+# #       "",
+# #       value = setts$adj.r.squared_threshold[1]
+# #     )
+# #   } else {
+# #     updateCheckboxInput(session, inputId = "rule_adj_r_squared", label = "RSQADJ:", value = FALSE)
+# #   }
 
-  # AUCPE.Obs
-  if (!is.na(setts$aucpext.obs_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_aucpext_obs", value = TRUE)
-    updateNumericInput(session, "aucpext.obs_threshold", value = setts$aucpext.obs_threshold[1])
-  } else {
-    updateCheckboxInput(session, inputId = "rule_aucpext_obs", label = "", value = FALSE)
-  }
+# #   # AUCPE.Obs
+# #   if (!is.na(setts$aucpext.obs_threshold[1])) {
+# #     updateCheckboxInput(session, inputId = "rule_aucpext_obs", value = TRUE)
+# #     updateNumericInput(session, "aucpext.obs_threshold", value = setts$aucpext.obs_threshold[1])
+# #   } else {
+# #     updateCheckboxInput(session, inputId = "rule_aucpext_obs", label = "", value = FALSE)
+# #   }
 
-  # AUCPE.Pred
-  if (!is.na(setts$aucpext.pred_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_aucpext_pred",  value = TRUE)
-    updateNumericInput(session, "aucpext.pred_threshold", value = setts$aucpext.pred_threshold[1])
-  } else {
-    updateCheckboxInput(session, inputId = "rule_aucpext_pred", value = FALSE)
-  }
+# #   # AUCPE.Pred
+# #   if (!is.na(setts$aucpext.pred_threshold[1])) {
+# #     updateCheckboxInput(session, inputId = "rule_aucpext_pred",  value = TRUE)
+# #     updateNumericInput(session, "aucpext.pred_threshold", value = setts$aucpext.pred_threshold[1])
+# #   } else {
+# #     updateCheckboxInput(session, inputId = "rule_aucpext_pred", value = FALSE)
+# #   }
 
-  # SPAN
-  if (!is.na(setts$span.ratio_threshold[1])) {
-    updateCheckboxInput(session, inputId = "rule_span_ratio", label = "SPAN: ", value = TRUE)
-    updateNumericInput(session, "span.ratio_threshold", "", value = setts$span.ratio_threshold[1])
-  } else {
-    updateCheckboxInput(session, inputId = "rule_span_ratio", label = "SPAN:", value = FALSE)
-  }
-})
+# #   # SPAN
+# #   if (!is.na(setts$span.ratio_threshold[1])) {
+# #     updateCheckboxInput(session, inputId = "rule_span_ratio", label = "SPAN: ", value = TRUE)
+# #     updateNumericInput(session, "span.ratio_threshold", "", value = setts$span.ratio_threshold[1])
+# #   } else {
+# #     updateCheckboxInput(session, inputId = "rule_span_ratio", label = "SPAN:", value = FALSE)
+# #   }
+# # })
 
 # When an analyte is selected and the user clicks the "Submit" button,
 # create the PKNCA data object
@@ -246,40 +246,46 @@ observeEvent(data(), priority = 2, {
   mydata(mydata)
 })
 
-# Display the PKNCA data object for the user (concentration records)
-output$nca_intervals <- renderReactable({
-  req(mydata())
 
-  # Redefine the data object to be displayed
-  data <- mydata()$intervals %>%
-    # Include labels for the column definitions/tooltips
-    apply_labels(LABELS, "ADPC") %>%
-    # Select only columns relevant to the user
-    select(where(~!is.logical(.) | any(. == TRUE)))
+# NCA settings tab actions
+nca_settings_server("nca_settings", data, mydata)
 
-  data <- data %>%
-    # Represent start with reference as the start dose of the group (same as results)
-    left_join(y = mydata()$dose$data) %>%
-    group_by(across(all_of(unname(unlist(mydata()$conc$columns$groups))))) %>%
-    arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
-    mutate(start = start - first(TIME), end = end - first(TIME)) %>%
-    select(!!!syms(colnames(data)))
 
-  # Render the output as a reactable object
-  reactable(
-    data,
-    columns = generate_col_defs(data),
-    searchable = TRUE,
-    sortable = TRUE,
-    highlight = TRUE,
-    wrap = FALSE,
-    resizable = TRUE,
-    showPageSizeOptions = TRUE,
-    striped = TRUE,
-    bordered = TRUE,
-    height = "60vh"
-  )
-})
+
+# # # Display the PKNCA data object for the user (concentration records)
+# # output$nca_intervals <- renderReactable({
+# #   req(mydata())
+
+# #   # Redefine the data object to be displayed
+# #   data <- mydata()$intervals %>%
+# #     # Include labels for the column definitions/tooltips
+# #     apply_labels(LABELS, "ADPC") %>%
+# #     # Select only columns relevant to the user
+# #     select(where(~!is.logical(.) | any(. == TRUE)))
+
+# #   data <- data %>%
+# #     # Represent start with reference as the start dose of the group (same as results)
+# #     left_join(y = mydata()$dose$data) %>%
+# #     group_by(across(all_of(unname(unlist(mydata()$conc$columns$groups))))) %>%
+# #     arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
+# #     mutate(start = start - first(TIME), end = end - first(TIME)) %>%
+# #     select(!!!syms(colnames(data)))
+
+# #   # Render the output as a reactable object
+# #   reactable(
+# #     data,
+# #     columns = generate_col_defs(data),
+# #     searchable = TRUE,
+# #     sortable = TRUE,
+# #     highlight = TRUE,
+# #     wrap = FALSE,
+# #     resizable = TRUE,
+# #     showPageSizeOptions = TRUE,
+# #     striped = TRUE,
+# #     bordered = TRUE,
+# #     height = "60vh"
+# #   )
+# # })
 
 # TAB: Settings ----------------------------------------------------------------
 
@@ -304,182 +310,181 @@ profiles_per_patient <- reactive({
       summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
   }
 })
-# Include keyboard limits for the settings GUI display
+# # # Include keyboard limits for the settings GUI display
 
-# Define a function that simplifies the action
-input_limit <- function(input_id, max = Inf, min = -Inf, update_fun = updateNumericInput) {
-  observeEvent(input[[input_id]], {
-    if (input[[input_id]] < min & !is.na(input[[input_id]])) {
-      update_fun(session, input_id, "", value = min)
-    }
-    if (input[[input_id]] > max & !is.na(input[[input_id]])) {
-      update_fun(session, input_id, "", value = max)
-    }
-  })
-}
+# # # Define a function that simplifies the action
+# # input_limit <- function(input_id, max = Inf, min = -Inf, update_fun = updateNumericInput) {
+# #   observeEvent(input[[input_id]], {
+# #     if (input[[input_id]] < min & !is.na(input[[input_id]])) {
+# #       update_fun(session, input_id, "", value = min)
+# #     }
+# #     if (input[[input_id]] > max & !is.na(input[[input_id]])) {
+# #       update_fun(session, input_id, "", value = max)
+# #     }
+# #   })
+# # }
 
-# Keyboard limits for the setting thresholds
-input_limit("adj.r.squared_threshold", max = 1, min = 0)
-input_limit("aucpext.obs_threshold", max = 100, min = 0)
-input_limit("aucpext.pred_threshold", max = 100, min = 0)
-input_limit("span.ratio_threshold", min = 0)
+# # # Keyboard limits for the setting thresholds
+# # input_limit("adj.r.squared_threshold", max = 1, min = 0)
+# # input_limit("aucpext.obs_threshold", max = 100, min = 0)
+# # input_limit("aucpext.pred_threshold", max = 100, min = 0)
+# # input_limit("span.ratio_threshold", min = 0)
 
-# Keyboard limits for the dynamically created partial AUC ranges
-observe({
-  inputs_list <- reactiveValuesToList(input)
-  for (input_id in names(inputs_list)) {
-    if (startsWith(input_id, "timeInput")) {
-      local({
-        my_input_id <- input_id
-        observeEvent(input[[my_input_id]], {
-          if (is.numeric(input[[my_input_id]]) && input[[my_input_id]] < 0) {
-            input_limit(my_input_id, min = 0)
-          }
-        })
-      })
-    }
-  }
-})
+# # # Keyboard limits for the dynamically created partial AUC ranges
+# # observe({
+# #   inputs_list <- reactiveValuesToList(input)
+# #   for (input_id in names(inputs_list)) {
+# #     if (startsWith(input_id, "timeInput")) {
+# #       local({
+# #         my_input_id <- input_id
+# #         observeEvent(input[[my_input_id]], {
+# #           if (is.numeric(input[[my_input_id]]) && input[[my_input_id]] < 0) {
+# #             input_limit(my_input_id, min = 0)
+# #           }
+# #         })
+# #       })
+# #     }
+# #   }
+# # })
 
-# Choose dosenumbers to be analyzed
+# # # Choose dosenumbers to be analyzed
 
-observeEvent(data(), priority = -1, {
-  req(data())
+# # observeEvent(data(), priority = -1, {
+# #   req(data())
 
-  updateSelectInput(
-    session,
-    inputId = "select_dosno",
-    choices = unique(data()$DOSNO),
-    selected = unique(data()$DOSNO)[1]
-  )
+# #   updateSelectInput(
+# #     session,
+# #     inputId = "select_dosno",
+# #     choices = unique(data()$DOSNO),
+# #     selected = unique(data()$DOSNO)[1]
+# #   )
 
-  updateSelectInput(
-    session,
-    inputId = "select_analyte",
-    choices = unique(data()$ANALYTE),
-    selected = unique(data()$ANALYTE)
-  )
+# #   updateSelectInput(
+# #     session,
+# #     inputId = "select_analyte",
+# #     choices = unique(data()$ANALYTE),
+# #     selected = unique(data()$ANALYTE)
+# #   )
 
-  updateSelectInput(
-    session,
-    inputId = "select_pcspec",
-    choices = unique(data()$PCSPEC),
-    selected = unique(data()$PCSPEC)
-  )
-})
+# #   updateSelectInput(
+# #     session,
+# #     inputId = "select_pcspec",
+# #     choices = unique(data()$PCSPEC),
+# #     selected = unique(data()$PCSPEC)
+# #   )
+# # })
 
-# Partial AUC Selection
-auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
-intervals_userinput <- reactiveVal(NULL)
+# # # Partial AUC Selection
+# # auc_counter <- reactiveVal(0) # Initialize a counter for the number of partial AUC inputs
+# # intervals_userinput <- reactiveVal(NULL)
 
-# Add a new partial AUC input
-observeEvent(input$addAUC, {
-  auc_counter(auc_counter() + 1)
-  id <- paste0("AUC_", auc_counter())
-  insertUI(selector = "#AUCInputs", where = "beforeEnd", ui = partial_auc_input(id))
-})
+# # # Add a new partial AUC input
+# # observeEvent(input$addAUC, {
+# #   auc_counter(auc_counter() + 1)
+# #   id <- paste0("AUC_", auc_counter())
+# #   insertUI(selector = "#AUCInputs", where = "beforeEnd", ui = partial_auc_input(id))
+# # })
 
-# Remove the last partial AUC input
-observeEvent(input$removeAUC, {
-  if (auc_counter() > 0) {
-    removeUI(selector = paste0("#", paste0("AUC_", auc_counter())))
-    auc_counter(auc_counter() - 1)
-  }
-})
+# # # Remove the last partial AUC input
+# # observeEvent(input$removeAUC, {
+# #   if (auc_counter() > 0) {
+# #     removeUI(selector = paste0("#", paste0("AUC_", auc_counter())))
+# #     auc_counter(auc_counter() - 1)
+# #   }
+# # })
 
-# If flag rules or AUC intervals are set, their corresponding parameters must be calculated
-observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
-                  input$rule_aucpext_pred, input$AUCoptions, input$nca_params), {
+# # # If flag rules or AUC intervals are set, their corresponding parameters must be calculated
+# # observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
+# #                   input$rule_aucpext_pred, input$AUCoptions, input$nca_params), {
 
-  nca_params <- input$nca_params
-  if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
-  if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
-  if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
-  if (input$AUCoptions) nca_params <- c(nca_params, "aucint.last", "aucint.inf.obs",
-                                        "aucint.inf.pred", "aucint.all")
+# #   nca_params <- input$nca_params
+# #   if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
+# #   if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
+# #   if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
+# #   if (input$AUCoptions) nca_params <- c(nca_params, "aucint.last", "aucint.inf.obs",
+# #                                         "aucint.inf.pred", "aucint.all")
   
-  updatePickerInput(session = session,
-                    inputId = "nca_params",
-                    selected = nca_params)
-  print("session updated for nca_params")
-})
+# #   updatePickerInput(session = session,
+# #                     inputId = "nca_params",
+# #                     selected = nca_params)
+# # })
 
 
-# NCA settings dynamic changes
-observeEvent(list(
-  auc_counter(), input$method, input$nca_params, input$should_impute_c0,
-  input$select_analyte, input$select_dosno, input$select_pcspec
-), {
+# # # NCA settings dynamic changes
+# # observeEvent(list(
+# #   auc_counter(), input$method, input$nca_params, input$should_impute_c0,
+# #   input$select_analyte, input$select_dosno, input$select_pcspec
+# # ), {
 
-  # Load mydata reactive and modify it accordingly to user's request
-  req(mydata())
-  mydata <- mydata()
+# #   # Load mydata reactive and modify it accordingly to user's request
+# #   req(mydata())
+# #   mydata <- mydata()
 
-  # Use the intervals defined by the user if so
-  if (input$AUCoptions && auc_counter() > 0) {
+# #   # Use the intervals defined by the user if so
+# #   if (input$AUCoptions && auc_counter() > 0) {
 
-    # Collect all inputs for the AUC intervals
-    input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-    input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
+# #     # Collect all inputs for the AUC intervals
+# #     input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
+# #     input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
 
-    starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
-    ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
+# #     starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
+# #     ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
 
-    # Make a list of dataframes with each of the intervals requested
-    intervals_list <- lapply(seq_along(starts), function(i) {
-      mydata()$intervals %>%
-        mutate(
-          start = start + as.numeric(starts[i]),
-          end = start + as.numeric(ends[i])
-        ) %>%
-        # only TRUE for columns specified in params
-        mutate(across(where(is.logical), ~FALSE)) %>%
-        # Intervals will always only compute AUC values
-        mutate(across(c("aucint.last", "aucint.inf.obs",
-                        "aucint.inf.pred", "aucint.all"), ~TRUE)) %>%
-        # Identify the intervals as the manual ones created by the user
-        mutate(type_interval = "manual")
-    })
+# #     # Make a list of dataframes with each of the intervals requested
+# #     intervals_list <- lapply(seq_along(starts), function(i) {
+# #       mydata()$intervals %>%
+# #         mutate(
+# #           start = start + as.numeric(starts[i]),
+# #           end = start + as.numeric(ends[i])
+# #         ) %>%
+# #         # only TRUE for columns specified in params
+# #         mutate(across(where(is.logical), ~FALSE)) %>%
+# #         # Intervals will always only compute AUC values
+# #         mutate(across(c("aucint.last", "aucint.inf.obs",
+# #                         "aucint.inf.pred", "aucint.all"), ~TRUE)) %>%
+# #         # Identify the intervals as the manual ones created by the user
+# #         mutate(type_interval = "manual")
+# #     })
 
-    # Save intervals as a dataframe
-    intervals_userinput(intervals_list)
-  }
+# #     # Save intervals as a dataframe
+# #     intervals_userinput(intervals_list)
+# #   }
 
-  mydata$options <- list(
-    auc.method = input$method,
-    allow.tmax.in.half.life = TRUE,
-    keep_interval_cols = c("DOSNO", "type_interval"),
-    # Make sure the standard options do not prohibit results
-    min.hl.r.squared = 0.001,
-    min.span.ratio = Inf,
-    min.hl.points = 3
-  )
+# #   mydata$options <- list(
+# #     auc.method = input$method,
+# #     allow.tmax.in.half.life = TRUE,
+# #     keep_interval_cols = c("DOSNO", "type_interval"),
+# #     # Make sure the standard options do not prohibit results
+# #     min.hl.r.squared = 0.001,
+# #     min.span.ratio = Inf,
+# #     min.hl.points = 3
+# #   )
     
-  # Include main intervals as specified by the user
-  mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
-                                                 # Compute only parameters specified
-                                                 params = input$nca_params,
-                                                 # Start at t0 when requested by the user
-                                                 start_from_last_dose = input$should_impute_c0)
+# #   # Include main intervals as specified by the user
+# #   mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
+# #                                                  # Compute only parameters specified
+# #                                                  params = input$nca_params,
+# #                                                  # Start at t0 when requested by the user
+# #                                                  start_from_last_dose = input$should_impute_c0)
 
-  # Join custom AUC partial intervals specified by the user
-  mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
-  mydata$impute <- NA
+# #   # Join custom AUC partial intervals specified by the user
+# #   mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
+# #   mydata$impute <- NA
 
-  # Filter only the analytes and doses requested
-  mydata$intervals <- mydata$intervals %>%
-    dplyr::filter(DOSNO %in% input$select_dosno,
-                  ANALYTE %in% input$select_analyte,
-                  PCSPEC %in% input$select_pcspec)
+# #   # Filter only the analytes and doses requested
+# #   mydata$intervals <- mydata$intervals %>%
+# #     dplyr::filter(DOSNO %in% input$select_dosno,
+# #                   ANALYTE %in% input$select_analyte,
+# #                   PCSPEC %in% input$select_pcspec)
 
-  # Define start imputations on intervals if specified by the user
-  if (input$should_impute_c0) {
-    mydata <- create_start_impute(mydata = mydata)
-    mydata$impute <- "impute"
-  }
+# #   # Define start imputations on intervals if specified by the user
+# #   if (input$should_impute_c0) {
+# #     mydata <- create_start_impute(mydata = mydata)
+# #     mydata$impute <- "impute"
+# #   }
 
-  mydata(mydata)
-})
+# #   mydata(mydata)
+# # })
 
 # NCA running and obtention of results
 myres <- reactiveVal(NULL)
@@ -514,12 +519,13 @@ observeEvent(input$nca, {
       )
     })
   })
+  print("res_nca generated")
 })
 
-# Parameter unit changes option: Opens a modal message with a units table to edit
-# It updates $units table of mydata & res_nca when the user saves their changes
-units_table_server("units_table_preNCA", mydata, res_nca)
-units_table_server("units_table_postNCA", mydata, res_nca)
+# # # Parameter unit changes option: Opens a modal message with a units table to edit
+# # # It updates $units table of mydata & res_nca when the user saves their changes
+# # units_table_server("units_table_preNCA", mydata, res_nca)
+# # units_table_server("units_table_postNCA", mydata, res_nca)
 
 # TABSET: Results ==============================================================
 
@@ -534,6 +540,7 @@ final_res_nca <- reactiveVal(NULL)
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
   req(res_nca())
+  print("res_nca results reshaped and represented -start")
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- pivot_wider_pknca_results(res_nca())
 
@@ -603,6 +610,8 @@ observeEvent(res_nca(), {
     choices = sort(colnames(final_res_nca())),
     selected = sort(colnames(final_res_nca()))
   )
+  
+  print("res_nca results reshaped and represented")
 })
 
 # Render the reshaped results as a DT datatable

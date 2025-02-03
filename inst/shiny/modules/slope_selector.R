@@ -127,7 +127,7 @@ slope_selector_server <- function(
     ), {
       req(res_nca())
       log_trace("{id}: Updating displayed plots")
-
+      browser()
       # Make sure the search_patient input is not NULL
       search_patient <- {
         if (is.null(input$search_patient) || length(input$search_patient) == 0) {
