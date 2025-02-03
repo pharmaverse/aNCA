@@ -137,7 +137,6 @@ observeEvent(input$nca, {
       )
     })
   })
-  print("res_nca generated")
 })
 
 # TABSET: Results ==============================================================
@@ -153,7 +152,6 @@ final_res_nca <- reactiveVal(NULL)
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
   req(res_nca())
-  print("res_nca results reshaped and represented -start")
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- pivot_wider_pknca_results(res_nca())
 
@@ -223,8 +221,6 @@ observeEvent(res_nca(), {
     choices = sort(colnames(final_res_nca())),
     selected = sort(colnames(final_res_nca()))
   )
-  
-  print("res_nca results reshaped and represented")
 })
 
 # Render the reshaped results as a DT datatable
