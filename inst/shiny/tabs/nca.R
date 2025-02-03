@@ -120,9 +120,9 @@ observeEvent(input$nca, {
       # Make the starts and ends of results relative to last dose using the dose data
       myres$result <- myres$result %>%
         inner_join(select(mydata()$dose$data, -exclude)) %>%
-        dplyr::mutate(start = start - !!sym(mydata()$dose$columns$time),
+        mutate(start = start - !!sym(mydata()$dose$columns$time),
                       end = end - !!sym(mydata()$dose$columns$time)) %>%
-        dplyr::select(names(myres$result))
+        select(names(myres$result))
 
       # Return the results and update panel to show results page
       res_nca(myres)
