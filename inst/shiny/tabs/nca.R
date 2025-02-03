@@ -25,7 +25,7 @@ observeEvent(data(), priority = 2, {
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
                                    time_column = time_column) %>%
-    dplyr::arrange(across(all_of(c(usubjid_column, time_column))))
+    arrange(across(all_of(c(usubjid_column, time_column))))
 
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
@@ -74,7 +74,7 @@ observeEvent(data(), priority = 2, {
   analyte_column <- mydata$conc$columns$groups$group_analyte
   mydata$units <- tidyr::crossing(mydata$units,
                                   !!sym(analyte_column) := unique_analytes)  %>%
-    dplyr::mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
+    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
   mydata(mydata)
 })
@@ -115,7 +115,6 @@ observeEvent(input$nca, {
       myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
       # Increment progress to 100% after NCA calculations are complete
-      incProgress(0.5, detail = "NCA calculations complete!")
 
       # Make the starts and ends of results relative to last dose using the dose data
       myres$result <- myres$result %>%
@@ -194,7 +193,7 @@ observeEvent(res_nca(), {
   param_cols <- names(final_res_nca)[endsWith(names(final_res_nca), "]")]
   other_cols <- setdiff(names(final_res_nca), c(group_cols, int_cols, exclude_cols, param_cols))
   final_res_nca <- final_res_nca %>%
-    dplyr::select(any_of(c(group_cols, int_cols, param_cols, exclude_cols, other_cols)))
+    select(any_of(c(group_cols, int_cols, param_cols, exclude_cols, other_cols)))
 
   # Create a reshaped object
   final_res_nca(
