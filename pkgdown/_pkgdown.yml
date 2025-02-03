@@ -1,0 +1,8 @@
+template:
+  bootstrap: 5
+  light-switch: true
+url: "https://pharmaverse.github.io/aNCA/"
+navbar:
+  structure:
+    left:  [intro, articles, reference]
+    right: [search, github, lightswitch]
