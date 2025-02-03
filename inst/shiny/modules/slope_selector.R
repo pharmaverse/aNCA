@@ -134,13 +134,13 @@ slope_selector_server <- function(
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
       req(mydata())
-      groups <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
 
-      # Filter columns with more than one unique value
-      filtered_groups <- groups[sapply(groups, function(col) {
-        length(unique(mydata()$conc$data[[col]])) > 1
-      })]
-      filtered_groups
+      mydata()$conc$columns$groups %>%
+        purrr::list_c() %>%
+        append("DOSNO") %>%
+        purrr::keep(\(col) {
+          !is.null(col) && col != "DRUG" && length(unique(mydata()$conc$data[[col]])) > 1
+        })
     })
 
     # Reactive for SLOPE_SELECTOR_COLUMNS

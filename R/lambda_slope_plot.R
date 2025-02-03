@@ -73,7 +73,7 @@ lambda_slope_plot <- function(
     ungroup() %>%
     mutate(ARRLT = round(ARRLT, 3)) %>%
     filter(
-      across(all_of(column_names), ~ .x == row_values[[cur_column()]]),
+      if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
       ARRLT >= round(
         sum(
@@ -137,7 +137,7 @@ lambda_slope_plot <- function(
   plot_data <- conc_pknca_df %>%
     ungroup() %>%
     filter(
-      across(all_of(column_names), ~ .x == row_values[[cur_column()]])
+      if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])
     ) %>%
     arrange(IX) %>%
     mutate(
