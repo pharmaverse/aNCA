@@ -8,7 +8,8 @@ lambda_slope_plot(
   res_pknca_df = myres$result,
   conc_pknca_df = mydata$conc$data,
   row_values,
-  R2ADJTHRESHOL = 0.7
+  R2ADJTHRESHOL = 0.7,
+  myres = myres
 )
 }
 \arguments{
