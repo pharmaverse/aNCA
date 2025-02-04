@@ -20,7 +20,6 @@
 #'   - Sorted by the grouping variables and relative time.
 #'
 #' @import dplyr
-#' 
 #' @examples
 #' \dontrun{
 #' # Example usage

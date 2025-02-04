@@ -13,9 +13,9 @@
 handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_groups) {
   click_data <- event_data("plotly_click")
   req(click_data, click_data$customdata)
-  
+
   log_trace("{id}: plotly click detected")
-  
+
   identifiers <- jsonlite::fromJSON(click_data$customdata)
   if (!all(names(identifiers) %in% c(slopes_groups(), "IX"))) {
     stop("Error: Missing expected keys in customdata")
@@ -25,10 +25,10 @@ handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_group
     lapply(slopes_groups(), function(col) identifiers[[col]]),
     slopes_groups()
   )
-  
+
   # Extract additional information for idx_pnt
   idx_pnt <- identifiers$IX
-  
+
   #Update data only if there is a change in the selection
   updated <- any(
     sapply(
@@ -36,7 +36,7 @@ handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_group
       function(col) dynamic_values[[col]] != last_click_data[[tolower(col)]]
     )
   )
-  
+
   # Update last click data
   if (updated) {
     for (col in slopes_groups()) {
@@ -45,7 +45,7 @@ handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_group
     last_click_data$idx_pnt <- idx_pnt
     return(NULL)
   }
-  
+
   new_rule <- as.data.frame(
     lapply(
       c(
@@ -58,14 +58,14 @@ handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_group
     ),
     stringsAsFactors = FALSE
   )
-  
+
   manual_slopes(.check_slope_rule_overlap(
     manual_slopes(),
     new_rule,
     slopes_groups()
   )
   )
-  
+
   # After adding new rule, reset last click data dynamically
   for (col in names(dynamic_values)) {
     last_click_data[[tolower(col)]] <- ""
