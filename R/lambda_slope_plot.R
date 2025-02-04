@@ -52,7 +52,8 @@ lambda_slope_plot <- function(
   res_pknca_df = myres$result,
   conc_pknca_df = mydata$conc$data,
   row_values,
-  R2ADJTHRESHOL = 0.7
+  R2ADJTHRESHOL = 0.7,
+  myres = myres
 ) {
 
   column_names <- names(row_values)
@@ -64,7 +65,7 @@ lambda_slope_plot <- function(
     arrange(across(all_of(column_names)), start, desc(end)) %>%
     filter(!duplicated(paste0(!!!rlang::syms(column_names), PPTESTCD)))
 
-  lambda_z_n_points <- as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
+  lambda_z_n_points <- as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
   if (is.na(lambda_z_n_points)) lambda_z_n_points <- 0
 
   row_values <- row_values[column_names]
@@ -80,7 +81,7 @@ lambda_slope_plot <- function(
           subset(
             lambda_res,
             lambda_res$PPTESTCD == "lambda.z.time.first",
-            select = c("start", "PPORRES")
+            select = c("start", "PPSTRES")
           )
         ),
         3
@@ -90,9 +91,9 @@ lambda_slope_plot <- function(
     slice(0:lambda_z_n_points)
 
   #Obtain parameter values for subtitle
-  r2_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "r.squared"]), 3)
-  r2adj_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
-  half_life_value <- signif(as.numeric(lambda_res$PPORRES[lambda_res$PPTESTCD == "half.life"]), 3)
+  r2_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "r.squared"]), 3)
+  r2adj_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
+  half_life_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "half.life"]), 3)
   time_span <- signif(
     abs(lambda_z_ix_rows$ARRLT[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$ARRLT[1]), 3
   )
@@ -104,14 +105,16 @@ lambda_slope_plot <- function(
   )
   subtitle_text <- paste0(
     "    R<sup>2</sup><sub>adj</sub>: ", r2adj_value,
-    "    HL \u03BB<sub>z</sub> = ", half_life_value, "h",
+    "    HL \u03BB<sub>z</sub> = ", half_life_value,
+    lambda_res$PPSTRESU[lambda_res$PPTESTCD == "half.life"],
     "    (T<sub>", lambda_z_ix_rows$IX[nrow(lambda_z_ix_rows)], "</sub> - T<sub>",
-    lambda_z_ix_rows$IX[1], "</sub>)/2 = ", time_span / 2, "h"
+    lambda_z_ix_rows$IX[1], "</sub>)/2 = ", time_span / 2,
+    lambda_res$PPSTRESU[lambda_res$PPTESTCD == "half.life"]
   )
 
   #Create error text if Cmax used in calculation
   cmax_error_text <- NULL
-  cmax_value <- lambda_res$PPORRES[lambda_res$PPTESTCD == "cmax"]
+  cmax_value <- lambda_res$PPSTRES[lambda_res$PPTESTCD == "cmax"]
   if (!is.na(cmax_value) && cmax_value <= max(lambda_z_ix_rows$AVAL, na.rm = TRUE)) {
     subtitle_color <- "red"
     cmax_error_text <- list(

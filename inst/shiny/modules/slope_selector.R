@@ -212,7 +212,8 @@ slope_selector_server <- function(
           res_nca()$result,
           plot_data()$conc$data,
           row_values = as.list(row),
-          R2ADJTHRESHOL = 0.7
+          R2ADJTHRESHOL = 0.7,
+          res_nca()
         ) |>
           htmlwidgets::onRender(
             # nolint start

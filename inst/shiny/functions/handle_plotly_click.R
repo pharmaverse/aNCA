@@ -3,18 +3,20 @@
 #' Checks if the user clicked on a different plot or dataset and updates
 #' `last_click_data` accordingly. If an update is needed, the function exits early.
 #'
+#' @param id The ID of the plotly object.
 #' @param last_click_data A reactive Values object storing the last clicked data.
 #' @param dynamic_values A named list containing values from the current click event.
 #' @param idx_pnt The index of the clicked data point.
+#' @param manual_slopes A reactive Values object storing the manually added slope rules.
 #' @param slopes_groups A character vector of slope grouping column names.
 #'
 #' @returns Returns `NULL` and exits early if data was updated. Otherwise, continues execution.
 #'
-handle_plotly_click <- function(id, last_click_data, manual_slopes, slopes_groups) {
+handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups) {
   click_data <- event_data("plotly_click")
   req(click_data, click_data$customdata)
 
-  log_trace("{id}: plotly click detected")
+  log_trace("slope_selector: plotly click detected")
 
   identifiers <- jsonlite::fromJSON(click_data$customdata)
   if (!all(names(identifiers) %in% c(slopes_groups(), "IX"))) {
