@@ -124,7 +124,8 @@ format_pkncadose_data <- function(pkncaconc_data,
 #'
 #' @import dplyr
 #' @export
-format_pkncadata_intervals <- function(pknca_dose,
+format_pkncadata_intervals <- function(pknca_conc,
+                                       pknca_dose,
                                        params =  c("aucinf.obs", "aucint.last", "auclast",
                                                    "cmax", "half.life", "tmax", "lambda.z",
                                                    "lambda.z.n.points", "r.squared",
@@ -142,19 +143,34 @@ format_pkncadata_intervals <- function(pknca_dose,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
-  # Based on dose times create a data frame with start and end times
-  dose_intervals <- pknca_dose$data %>%
-    mutate(start = if (start_from_last_dose) !!sym(pknca_dose$columns$time)
-           else !!sym(pknca_dose$columns$time) + !!sym("ARRLT")) %>%
-    group_by(!!!syms(unname(unlist(pknca_dose$columns$groups)))) %>%
-    arrange(!!sym(pknca_dose$columns$time)) %>%
-    mutate(end = lead(as.numeric(!!sym(pknca_dose$columns$time)), default = Inf)) %>%
-    ungroup() %>%
-    select(any_of(c("start", "end", unname(unlist(pknca_dose$columns$groups)), "DOSNO"))) %>%
+conc_groups <- unname(unlist(pknca_conc$columns$groups))
 
+  sub_pknca_conc <- pknca_conc$data %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "DOSNO"))) %>%
+    arrange(!!!syms(conc_groups), ARRLT<0, AFRLT) %>%
+    group_by(!!!syms(c(conc_groups, "DOSNO"))) %>%
+    slice(1) %>% 
+    ungroup()
+
+  # Based on dose times create a data frame with start and end times
+  dose_intervals <- left_join(sub_pknca_conc,
+                              pknca_dose$data %>% select(any_of(c(unname(unlist(pknca_dose$columns$groups)),
+                                                                  pknca_dose$columns$time, "DOSNO"))) %>% 
+                                rename_with(~ "time_dose", pknca_dose$columns$time), by = c(intersect(unname(unlist(pknca_conc$columns$groups)),
+                                                                                                  unname(unlist(pknca_dose$columns$groups))
+                                                                                                  ), "DOSNO")
+  ) %>%
+    mutate(start = if (start_from_last_dose) time_dose
+           else time_dose + !!sym("ARRLT")) %>%
+    group_by(!!!syms(c(conc_groups))) %>%
+    arrange(time_dose) %>%
+    mutate(end = lead(as.numeric(time_dose), default = Inf)) %>%
+    ungroup() %>%
+    select(any_of(c("start", "end", unname(unlist(pknca_conc$columns$groups)), "DOSNO"))) %>%
+    
     # Create logical columns with the TRUE and as names params argument
     mutate(!!!setNames(rep(TRUE, length(params)), params)) %>%
-
+    
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
