@@ -233,7 +233,7 @@ observeEvent(input$submit_analyte, priority = 2, {
     duration = "ADOSEDUR"
   )
 
-  myintervals <- format_pkncadata_intervals(mydose) %>%
+  myintervals <- format_pkncadata_intervals(pknca_conc = myconc, pknca_dose = mydose) %>%
     # Filter only the doses requested by the user
     dplyr::filter(
       !!sym(dosno_column) %in% input$select_dosno
