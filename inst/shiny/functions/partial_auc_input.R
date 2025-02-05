@@ -11,10 +11,12 @@ partial_auc_input <- function(id, ns, min_sel_value = 0, max_sel_value = NULL) {
   fluidRow(
     id = id,
     column(
-      width = 6, numericInput(ns(paste0("timeInputMin_", id)), "Min:", min = 0, value = min_sel_value)
+      width = 6, numericInput(ns(paste0("timeInputMin_", id)),
+                              "Min:", min = 0, value = min_sel_value)
     ),
     column(
-      width = 6, numericInput(ns(paste0("timeInputMax_", id)), "Max:", min = 0, value = max_sel_value)
+      width = 6, numericInput(ns(paste0("timeInputMax_", id)),
+                              "Max:", min = 0, value = max_sel_value)
     )
   )
 }
