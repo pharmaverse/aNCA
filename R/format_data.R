@@ -148,15 +148,18 @@ format_pkncadata_intervals <- function(pknca_conc,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
+  # Select relevant group columns
   conc_groups <- unname(unlist(pknca_conc$columns$groups))
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
   time_dose_seg <- if ("DOSNO" %in% names(pknca_dose$data)) "DOSNO" else "time_dose"
 
+  # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
     select(any_of(c(conc_groups, "AFRLT", "ARRLT", "DOSNO"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
     ungroup()
 
+  # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
     select(any_of(c(unname(unlist(pknca_dose$columns$groups)),
                     pknca_dose$columns$time, "DOSNO"))) %>%
@@ -173,7 +176,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     slice(1) %>%
     ungroup() %>%
 
-    # Make start from last dose or first concentration
+    # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
     mutate(start = if (start_from_last_dose) time_dose
            else time_dose + !!sym("ARRLT")) %>%
     group_by(!!!syms(c(conc_groups))) %>%
