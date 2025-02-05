@@ -198,11 +198,39 @@ test_that("format_pkncadose_data handles empty input", {
 })
 
 test_that("format_pkncadata_intervals handles incorrect input type", {
-  mydose <- list(data = data.frame(STUDYID = 1, USUBJID = 1, TIME = 0),
-                 columns = list(groups = c("STUDYID", "USUBJID"),
-                                time = "TIME"))
-  expect_error(format_pkncadata_intervals(mydose),
-               regexp = "Input must be a PKNCAdose object from the PKNCA package.")
+  ADNCA <- data.frame(
+    STUDYID = rep(1, 20),
+    USUBJID = rep(1:2, each = 10),
+    PCSPEC = rep("Plasma", 20),
+    DRUG = rep("DrugA", 20),
+    ANALYTE = rep("Analyte1", 20),
+    AFRLT = rep(seq(0, 9), 2),
+    ARRLT = rep(seq(0, 4), 4),
+    NFRLT = rep(seq(0, 9), 2),
+    ROUTE = "extravascular",
+    DOSEA = 10,
+    ADOSEDUR = 0,
+    AVAL = runif(20)
+  )
+
+  # Call format_pkncaconc_data
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
+
+  # Generate PKNCAconc and PKNCAdose objects
+  pknca_conc <- PKNCA::PKNCAconc(
+    df_conc,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
+    exclude_half.life = "exclude_half.life",
+    time.nominal = "NFRLT"
+  )
+  expect_error(format_pkncadata_intervals(pknca_conc = df_conc, data.frame()),
+               regexp = "Input pknca_conc must be a PKNCAconc object from the PKNCA package.")
+
+  expect_error(format_pkncadata_intervals(pknca_conc = pknca_conc, data.frame()),
+               regexp = "Input pknca_dose must be a PKNCAdose object from the PKNCA package.")
 })
 
 test_that("format_pkncadose_data handles negative time values", {
