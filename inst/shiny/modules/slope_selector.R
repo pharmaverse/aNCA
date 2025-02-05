@@ -138,12 +138,12 @@ slope_selector_server <- function(
 
       # create plot ids based on available data #
       patient_profile_plot_ids <- mydata()$intervals %>%
-        select(any_of(c(unname(unlist(mydata()$dose$columns$groups)), 
+        select(any_of(c(unname(unlist(mydata()$dose$columns$groups)),
                         unname(unlist(mydata()$conc$columns$groups)),
                         "DOSNO"))) %>%
         unique() %>%
         select(USUBJID, ANALYTE, PCSPEC, DOSNO)
-        # select(where(~ n_distinct(.) > 1)) # This would be the good one!
+
 
       num_plots <- nrow(patient_profile_plot_ids)
 

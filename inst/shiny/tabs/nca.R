@@ -80,7 +80,7 @@ observeEvent(data(), priority = 2, {
 })
 
 # TAB: NCA Settings -------------------------------------------------------------
-# Specifies how to run NCA (method, dose/analyte selection, AUC intervals, parameter units, settings upload)
+# Specifies how to run NCA (method, selections, AUC intervals, parameter units, settings upload)
 # Other modules within: units_table_server()
 nca_settings_server("nca_settings", data, mydata)
 
@@ -120,7 +120,7 @@ observeEvent(input$nca, {
       myres$result <- myres$result %>%
         inner_join(select(mydata()$dose$data, -exclude)) %>%
         mutate(start = start - !!sym(mydata()$dose$columns$time),
-                      end = end - !!sym(mydata()$dose$columns$time)) %>%
+               end = end - !!sym(mydata()$dose$columns$time)) %>%
         select(names(myres$result))
 
       # Return the results and update panel to show results page
@@ -129,14 +129,14 @@ observeEvent(input$nca, {
 
     }, error = function(e) {
       full_error <- e$parent$message
-      
+
       # If the problem is related with a particular parameter notify the user
       if (grepl("pk.calc.", x = full_error)) {
         param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
         full_error <- paste0("Problem in calculation of NCA parameter: ", param_of_error,
                              "<br><br>", full_error)
       }
-      
+
       # Modify PKNCA to tell the user only report unexpected bugs
       modified_error <- gsub("Please report a bug",
                              "If the error is unexpected, please report a bug:\n",
