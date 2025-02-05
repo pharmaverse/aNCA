@@ -37,7 +37,7 @@ mydata <- PKNCA::PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)
 describe("create_start_impute", {
   it("works without issue", {
     expect_no_error({
-      result <<- create_start_impute(mydata)
+      result <- create_start_impute(mydata)
     })
   })
 

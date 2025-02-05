@@ -1,6 +1,6 @@
 nca_settings_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
              # Local upload option
              fileInput(
@@ -11,7 +11,7 @@ nca_settings_ui <- function(id) {
                accept = c(".csv", ".xpt")
              ),
              br(),
-             
+
              # Selection of analyte, dose number and specimen
              fluidRow(
                column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = FALSE,
@@ -22,7 +22,7 @@ nca_settings_ui <- function(id) {
                                      choices = NULL))
              ),
              br(),
-             
+
              # Method, NCA parameters, and units table
              fluidRow(
                column(4, selectInput(
@@ -63,7 +63,7 @@ nca_settings_ui <- function(id) {
                column(4, units_table_ui(ns("units_table_preNCA")))
              ),
              br(),
-             
+
              h4("Data imputation"),
              tags$div(
                checkboxInput(
@@ -195,9 +195,6 @@ nca_settings_ui <- function(id) {
              reactableOutput(ns("nca_intervals"))
     )
 }
-
-
-
 
 nca_settings_server <- function(id, data, mydata) {
   
@@ -402,14 +399,14 @@ nca_settings_server <- function(id, data, mydata) {
         session,
         inputId = "select_analyte",
         choices = unique(data()$ANALYTE),
-        selected = unique(data()$ANALYTE)
+        selected = unique(data()$ANALYTE)[1]
       )
       
       updateSelectInput(
         session,
         inputId = "select_pcspec",
         choices = unique(data()$PCSPEC),
-        selected = unique(data()$PCSPEC)
+        selected = unique(data()$PCSPEC)[1]
       )
     })
 
@@ -430,7 +427,38 @@ nca_settings_server <- function(id, data, mydata) {
         auc_counter(auc_counter() - 1)
       }
     })
-    
+
+    observe({
+      # Collect all inputs for the AUC intervals
+      input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
+      input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
+      
+      starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
+      ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
+
+      # Make a list of dataframes with each of the intervals requested
+      intervals_list <- lapply(seq_along(starts), function(i) {
+        mydata()$intervals %>%
+          mutate(
+            start = start + as.numeric(starts[i]),
+            end = start + as.numeric(ends[i])
+          ) %>%
+          # only TRUE for columns specified in params
+          mutate(across(where(is.logical), ~FALSE)) %>%
+          # Intervals will always only compute AUC values
+          mutate(across(c("aucint.last", "aucint.inf.obs",
+                          "aucint.inf.pred", "aucint.all"), ~TRUE)) %>%
+          # Identify the intervals as the manual ones created by the user
+          mutate(type_interval = "manual")
+      })
+
+      # Make sure NAs were not left by the user
+      intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
+      print(intervals_list)
+
+      intervals_userinput(intervals_list)
+    })
+
 
     # Updating Checkbox and Numeric Inputs
     observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
@@ -447,14 +475,15 @@ nca_settings_server <- function(id, data, mydata) {
                                           inputId = ns("nca_params"),
                                           selected = nca_params)
                       })
-    
+
 
 
 
     # NCA settings dynamic changes
     observeEvent(list(
       input$method, input$nca_params, input$should_impute_c0,
-      input$select_analyte, input$select_dosno, input$select_pcspec
+      input$select_analyte, input$select_dosno, input$select_pcspec,
+      intervals_userinput()
     ), {
 
       # Load mydata reactive and modify it accordingly to user's request
@@ -471,45 +500,16 @@ nca_settings_server <- function(id, data, mydata) {
         min.hl.points = 3
       )
       
-      # Collect the AUC intervals defined by the user
-      if (input$AUCoptions && auc_counter() > 0) {
-        
-        # Collect all inputs for the AUC intervals
-        input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-        input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-        
-        starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
-        ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
-        
-        # Make a list of dataframes with each of the intervals requested
-        intervals_list <- lapply(seq_along(starts), function(i) {
-          mydata()$intervals %>%
-            mutate(
-              start = start + as.numeric(starts[i]),
-              end = start + as.numeric(ends[i])
-            ) %>%
-            # only TRUE for columns specified in params
-            mutate(across(where(is.logical), ~FALSE)) %>%
-            # Intervals will always only compute AUC values
-            mutate(across(c("aucint.last", "aucint.inf.obs",
-                            "aucint.inf.pred", "aucint.all"), ~TRUE)) %>%
-            # Identify the intervals as the manual ones created by the user
-            mutate(type_interval = "manual")
-        })
-        
-        # Save intervals as a dataframe
-        intervals_userinput(intervals_list)
-      }
-      
       # Include main intervals as specified by the user
       mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
                                                      # Compute only parameters specified
                                                      params = input$nca_params,
                                                      # Start at t0 when requested by the user
                                                      start_from_last_dose = input$should_impute_c0)
-      
+
       # Join custom AUC partial intervals specified by the user
-      mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput())
+      mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput()) %>%
+        unique()
       mydata$impute <- NA
       
       # Filter only the analytes and doses requested
@@ -531,23 +531,22 @@ nca_settings_server <- function(id, data, mydata) {
     # It updates $units table of mydata & res_nca when the user saves their changes
     units_table_server("units_table_preNCA", mydata, res_nca)
     units_table_server("units_table_postNCA", mydata, res_nca)
-    
-    
+
     # Rendering Reactable Output
     output$nca_intervals <- renderReactable({
       req(mydata())
-      
+  
       data <- mydata()$intervals %>%
         apply_labels(LABELS, "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE)))
-      
+
       data <- data %>%
         left_join(y = mydata()$dose$data) %>%
         group_by(across(all_of(unname(unlist(mydata()$conc$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
         select(!!!syms(colnames(data)))
-      
+
       reactable(
         data,
         columns = generate_col_defs(data),
@@ -562,6 +561,6 @@ nca_settings_server <- function(id, data, mydata) {
         height = "60vh"
       )
     })
-    
+
   })
 }
