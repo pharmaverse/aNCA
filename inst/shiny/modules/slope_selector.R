@@ -71,7 +71,7 @@ slope_selector_ui <- function(id) {
         selectInput(
           ns("plots_per_page"),
           "Plots per page:",
-          choices = c(1, 2, 4, 6, 8, 10),
+          choices = c(1, 2, 4, 8, 16),
           selected = 1
         )
       ),
@@ -89,8 +89,9 @@ slope_selector_ui <- function(id) {
     br(),
     # Plots display #
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
+    br(),
     fluidRow(
-      class = "plot-widgets-container",
+      class = "plot-widgets-container-2",
       div(
         class = "plot-widget-group",
         actionButton(
@@ -131,6 +132,7 @@ slope_selector_server <- function(
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
 
+    ns <- session$ns
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
       req(mydata())
@@ -252,8 +254,8 @@ slope_selector_server <- function(
       )
 
       # disable buttons if necessary #
-      shinyjs::toggleState(id = "previous_page", condition = current_page() > 1)
-      shinyjs::toggleState(id = "next_page", condition = current_page() < num_pages)
+      shinyjs::toggleState(id = ns("previous_page"), condition = current_page() == 1)
+      shinyjs::toggleState(id = ns("next_page"), condition = current_page() == num_pages)
     })
 
     #' Rendering slope plots based on nca data.
