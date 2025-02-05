@@ -134,8 +134,12 @@ format_pkncadata_intervals <- function(pknca_conc,
                                                    "aucpext.obs", "aucpext.pred", "clast.obs",
                                                    "cl.obs"),
                                        start_from_last_dose = TRUE) {
+  if (!inherits(pknca_conc, "PKNCAconc")) {
+    stop("Input pknca_conc must be a PKNCAconc object from the PKNCA package.")
+  }
+
   if (!inherits(pknca_dose, "PKNCAdose")) {
-    stop("Input must be a PKNCAdose object from the PKNCA package.")
+    stop("Input pknca_dose must be a PKNCAdose object from the PKNCA package.")
   }
 
   required_columns <- c(unname(unlist(pknca_dose$columns$groups)), pknca_dose$columns$time)
@@ -151,8 +155,6 @@ format_pkncadata_intervals <- function(pknca_conc,
   sub_pknca_conc <- pknca_conc$data %>%
     select(any_of(c(conc_groups, "AFRLT", "ARRLT", "DOSNO"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
-    #group_by(!!!syms(c(conc_groups, "DOSNO"))) %>%
-    #slice(1) %>%
     ungroup()
 
   sub_pknca_dose <- pknca_dose$data %>%
@@ -171,10 +173,13 @@ format_pkncadata_intervals <- function(pknca_conc,
     slice(1) %>%
     ungroup() %>%
 
+    # Make start from last dose or first concentration
     mutate(start = if (start_from_last_dose) time_dose
            else time_dose + !!sym("ARRLT")) %>%
     group_by(!!!syms(c(conc_groups))) %>%
     arrange(time_dose) %>%
+
+    # Make end based on next dose time (if no more, Inf)
     mutate(end = lead(as.numeric(time_dose), default = Inf)) %>%
     ungroup() %>%
     select(any_of(c("start", "end", unname(unlist(pknca_conc$columns$groups)), "DOSNO"))) %>%
