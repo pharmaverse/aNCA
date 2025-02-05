@@ -129,8 +129,21 @@ observeEvent(input$nca, {
 
     }, error = function(e) {
       full_error <- e$parent$message
+      
+      # If the problem is related with a particular parameter notify the user
+      if (grepl("pk.calc.", x = full_error)) {
+        param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
+        full_error <- paste0("Problem in calculation of NCA parameter: ", param_of_error,
+                             "<br><br>", full_error)
+      }
+      
+      # Modify PKNCA to tell the user only report unexpected bugs
+      modified_error <- gsub("Please report a bug",
+                             "If the error is unexpected, please report a bug:\n",
+                             full_error)
+
       showNotification(
-        paste("Error during NCA calculation:", full_error),
+        HTML(modified_error),
         type = "error",
         duration = NULL
       )
