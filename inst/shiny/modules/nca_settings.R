@@ -285,6 +285,7 @@ nca_settings_server <- function(id, data, mydata) { # nolint : complexity / need
         selected = setts$method
       )
 
+
       if (!is.na(setts$auc_mins[1])) {
         updateCheckboxInput(session, inputId = ns("AUCoptions"),
                             label = "Select Partial AUC", value = TRUE)
