@@ -40,9 +40,9 @@ describe("create_start_impute", {
       result <- create_start_impute(mydata)
     })
   })
-  
+
   result <- create_start_impute(mydata)
-  
+
   it("does not add impute (NA) when start is in PKNCAconc", {
     not_imputed <- result$intervals %>%
       dplyr::filter(USUBJID == 1, DOSNO == 1) %>%
