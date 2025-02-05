@@ -485,6 +485,7 @@ res_nca <- reactiveVal(NULL)
 observeEvent(pk_nca_trigger(), {
   req(mydata())
 
+  browser()
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
@@ -495,8 +496,8 @@ observeEvent(pk_nca_trigger(), {
     myres$result <- myres$result %>%
       left_join(select(mydata()$dose$data, any_of(c(unname(unlist(mydata()$dose$columns$groups)),
                                                     mydata()$dose$columns$time)))) %>%
-      mutate(start = start - !!sym(mydata()$dose$columns$time),
-             end = end - !!sym(mydata()$dose$columns$time)) %>%
+      mutate(start = start + !!sym(mydata()$dose$columns$time),
+             end = end + !!sym(mydata()$dose$columns$time)) %>%
       select(names(myres$result))
 
     # Return the result
