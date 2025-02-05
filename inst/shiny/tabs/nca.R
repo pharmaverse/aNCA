@@ -484,6 +484,7 @@ observeEvent(input$nca, {
 res_nca <- reactiveVal(NULL)
 observeEvent(pk_nca_trigger(), {
   req(mydata())
+
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
@@ -492,7 +493,8 @@ observeEvent(pk_nca_trigger(), {
 
     # Make the starts and ends of results relative to last dose using the dose data
     myres$result <- myres$result %>%
-      inner_join(select(mydata()$dose$data, -exclude)) %>%
+      left_join(select(mydata()$dose$data, any_of(c(unname(unlist(mydata()$dose$columns$groups)),
+                                                    mydata()$dose$columns$time)))) %>%
       mutate(start = start - !!sym(mydata()$dose$columns$time),
              end = end - !!sym(mydata()$dose$columns$time)) %>%
       select(names(myres$result))
@@ -520,6 +522,7 @@ final_res_nca <- reactiveVal(NULL)
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
   req(res_nca())
+  
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- pivot_wider_pknca_results(res_nca())
 
