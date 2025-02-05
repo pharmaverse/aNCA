@@ -485,7 +485,6 @@ res_nca <- reactiveVal(NULL)
 observeEvent(pk_nca_trigger(), {
   req(mydata())
 
-  browser()
   withProgress(message = "Calculating NCA...", value = 0, {
     myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 

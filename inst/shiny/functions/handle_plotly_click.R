@@ -19,13 +19,13 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups) {
   log_trace("slope_selector: plotly click detected")
 
   identifiers <- jsonlite::fromJSON(click_data$customdata)
-  if (!all(names(identifiers) %in% c(slopes_groups(), "IX"))) {
+  if (!all(names(identifiers) %in% c(slopes_groups, "IX"))) {
     stop("Error: Missing expected keys in customdata")
   }
   # Map identifiers dynamically
   dynamic_values <- setNames(
-    lapply(slopes_groups(), function(col) identifiers[[col]]),
-    slopes_groups()
+    lapply(slopes_groups, function(col) identifiers[[col]]),
+    slopes_groups
   )
 
   # Extract additional information for idx_pnt
@@ -34,14 +34,14 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups) {
   #Update data only if there is a change in the selection
   updated <- any(
     sapply(
-      slopes_groups(),
+      slopes_groups,
       function(col) dynamic_values[[col]] != last_click_data[[tolower(col)]]
     )
   )
 
   # Update last click data
   if (updated) {
-    for (col in slopes_groups()) {
+    for (col in slopes_groups) {
       last_click_data[[tolower(col)]] <- dynamic_values[[col]]
     }
     last_click_data$idx_pnt <- idx_pnt
@@ -64,7 +64,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups) {
   manual_slopes(.check_slope_rule_overlap(
     manual_slopes(),
     new_rule,
-    slopes_groups()
+    slopes_groups
   )
   )
 

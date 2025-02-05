@@ -465,7 +465,7 @@ slope_selector_server <- function(
     })
 
     observeEvent(event_data("plotly_click", priority = "event"), {
-      handle_plotly_click(id, last_click_data, manual_slopes, slopes_groups)
+      handle_plotly_click(last_click_data, manual_slopes, slopes_groups())
 
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets

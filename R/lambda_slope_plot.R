@@ -72,11 +72,11 @@ lambda_slope_plot <- function(
 
   lambda_z_ix_rows <- conc_pknca_df %>%
     ungroup() %>%
-    mutate(ARRLT = round(ARRLT, 3)) %>%
+    mutate(TIME = round(TIME, 3)) %>%
     filter(
       if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
-      ARRLT >= round(
+      TIME >= round(
         sum(
           subset(
             lambda_res,
@@ -95,7 +95,7 @@ lambda_slope_plot <- function(
   r2adj_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
   half_life_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "half.life"]), 3)
   time_span <- signif(
-    abs(lambda_z_ix_rows$ARRLT[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$ARRLT[1]), 3
+    abs(lambda_z_ix_rows$TIME[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$TIME[1]), 3
   )
 
   subtitle_color <- ifelse(
@@ -162,7 +162,7 @@ lambda_slope_plot <- function(
 
   #Create initial plot
   p <- plot_data %>%
-    ggplot(aes(x = ARRLT, y = AVAL)) +
+    ggplot(aes(x = TIME, y = AVAL)) +
     geom_line(color = "gray70", linetype = "solid", linewidth = 1) +
     geom_smooth(
       data = subset(plot_data, IX_color == "hl.included"),
@@ -239,11 +239,11 @@ lambda_slope_plot <- function(
   pl <- pl %>%
     add_trace(
       plot_data,
-      x = ~ARRLT, y = ~log10(AVAL),
+      x = ~TIME, y = ~log10(AVAL),
       customdata = customdata,
       text = ~paste0(
         "Data Point: ", IX, "\n",
-        "(", signif(ARRLT, 2), " , ", signif(AVAL, 2), ")"
+        "(", signif(TIME, 2), " , ", signif(AVAL, 2), ")"
       ),
       type = "scatter",
       mode = "markers",
