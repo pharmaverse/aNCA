@@ -37,7 +37,7 @@ nca_settings_ui <- function(id) {
         inputId = ns("nca_params"),
         label = "NCA parameters to calculate:",
         choices = {
-          params <- sort(setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
+          params <- sort(setdiff(names(PKNCA::get.interval.cols()),
                                  c("start", "end")))
           group_params <- case_when(
             grepl("((auc|aum))", params) ~ "Exposure",
@@ -58,7 +58,11 @@ nca_settings_ui <- function(id) {
           `dropdownAlignRight` = TRUE
         ),
         multiple = TRUE,
-        selected = c("cmax", "tmax", "half.life", "cl.obs")
+        selected = c("cmax", "tmax", "half.life", "cl.obs",
+                     "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
+                     "adj.r.squared", "lambda.z", "lambda.z.n.points",
+                     "cav", "cl.all", "cl.obs", "aucpext.obs",
+                     "clast", "tlast")
       )),
       column(4, units_table_ui(ns("units_table_preNCA")))
     ),
