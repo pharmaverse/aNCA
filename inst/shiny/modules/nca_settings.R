@@ -257,6 +257,11 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
           anti_join(mismatched_points, by = c("USUBJID", "DOSNO"))
       }
 
+      rows_for_selected_analytes <- data() %>%
+        filter(ANALYTE %in% setts$ANALYTE) %>%
+        select(ANALYTE, DOSNO, PCSPEC) %>%
+        unique()
+
       updateSelectInput(
         session,
         inputId = "select_analyte",
@@ -264,12 +269,12 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         choices = data()$ANALYTE[1],
         selected = setts$ANALYTE[1]
       )
-
+      
       updateSelectInput(
         session,
         inputId = "select_dosno",
         label = "Choose the Dose Number:",
-        choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(DOSNO))),
+        choices = rows_for_selected_analytes$DOSNO,
         selected = doses_selected
       )
 
@@ -277,8 +282,8 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         session,
         inputId = "select_pcspec",
         label = "Choose the Specimen/Matrix:",
-        choices = sort(unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))),
-        selected = unique(data() %>% filter(ANALYTE == setts$ANALYTE[1]) %>% pull(PCSPEC))
+        choices = rows_for_selected_analytes$PCSPEC,
+        selected = rows_for_selected_analytes$PCSPEC
       )
 
       updateSelectInput(
