@@ -211,7 +211,8 @@ fluidPage(
                 )
               ),
 
-              tabPanel("Slope Selector", slope_selector_ui("slope_selector"))
+              tabPanel("Slope Selector", slope_selector_ui("slope_selector")),
+              tabPanel("Non-NCA Analysis", non_nca_ui("non_nca"))
 
             )
           ),
