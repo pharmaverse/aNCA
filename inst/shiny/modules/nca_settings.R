@@ -14,7 +14,7 @@ nca_settings_ui <- function(id) {
 
     # Selection of analyte, dose number and specimen
     fluidRow(
-      column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = FALSE,
+      column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = TRUE,
                             choices = NULL)),
       column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
                             choices = NULL)),
