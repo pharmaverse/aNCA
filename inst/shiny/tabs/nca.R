@@ -289,12 +289,24 @@ output$local_download_NCAres <- downloadHandler(
 # Save the project settings
 output$settings_save <- downloadHandler(
   filename = function() {
-    paste(mydata()$conc$data$STUDYID[1], "NCA_settings.csv", sep = "_")
+    paste0(mydata()$conc$data$STUDYID[1],
+           "_aNCAsettings_",Sys.Date(), "rds")
   },
   content = function(file) {
 
     # Get the data settings from the NCA results (data run)
-    myconc <- res_nca()$data$conc
+    pknca_res_data <- res_nca()$data
+    
+    # Delete all sensitive data, except those for exclusions
+    exclude_colname <- pknca_res_data$conc$columns$exclude
+    exclude.hl_colname <- pknca_res_data$conc$columns$exclude.hl
+    exclude.hl_colname <- if (!exclude.hl_colname %in% colnames(pknca_res_data$conc$data)) NULL else exclude.hl_colname
+    pknca_res_data$conc$data <- pknca_res_data$conc$data %>%
+      filter(!!sym(exclude_colname) | !!sym(exclude.hl_colname))
+    
+    # Save the settings file
+    saveRDS(pknca_res_data, file)
+    
 
     # Create a settings file that the user can download/upload
     #for establishing the same configuration
