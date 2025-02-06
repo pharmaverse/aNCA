@@ -196,7 +196,7 @@ nca_settings_ui <- function(id) {
   )
 }
 
-nca_settings_server <- function(id, data, mydata) { # nolint : complexity / needs further modularization
+nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns

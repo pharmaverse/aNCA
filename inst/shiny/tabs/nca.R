@@ -82,7 +82,7 @@ observeEvent(data(), priority = 2, {
 # TAB: NCA Settings -------------------------------------------------------------
 # Specifies how to run NCA (method, selections, AUC intervals, parameter units, settings upload)
 # Other modules within: units_table_server()
-nca_settings_server("nca_settings", data, mydata)
+nca_settings_server("nca_settings", data, mydata, res_nca)
 
 
 # Define a profiles per patient
