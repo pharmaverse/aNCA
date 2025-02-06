@@ -290,82 +290,31 @@ output$local_download_NCAres <- downloadHandler(
 output$settings_save <- downloadHandler(
   filename = function() {
     paste0(mydata()$conc$data$STUDYID[1],
-           "_aNCAsettings_",Sys.Date(), "rds")
+           "_aNCAsettings_",Sys.Date(), ".rds")
   },
   content = function(file) {
 
     # Get the data settings from the NCA results (data run)
     pknca_res_data <- res_nca()$data
+
+    conc_cols <- unname(unlist(pknca_res_data$conc$columns))
+    conc_logical_cols <- sapply(pknca_res_data$conc$data[conc_cols], is.logical) |>
+      which() |> names()
     
-    # Delete all sensitive data, except those for exclusions
-    exclude_colname <- pknca_res_data$conc$columns$exclude
-    exclude.hl_colname <- pknca_res_data$conc$columns$exclude.hl
-    exclude.hl_colname <- if (!exclude.hl_colname %in% colnames(pknca_res_data$conc$data)) NULL else exclude.hl_colname
     pknca_res_data$conc$data <- pknca_res_data$conc$data %>%
-      filter(!!sym(exclude_colname) | !!sym(exclude.hl_colname))
+      # Select only the columns that are relevant for NCA
+      select(unname(unlist(pknca_res_data$conc$columns))) %>%
+      # Filter rows across conc_logical_cols with at least 1 TRUE value
+      filter(rowSums(select(., conc_logical_cols)) > 0)
+
+    pknca_res_data$dose$data <- pknca_res_data$dose$data %>%
+      # Select only the columns that are relevant for NCA
+      select(unname(unlist(pknca_res_data$dose$columns)))
     
-    # Save the settings file
+    # Save the NCA settings file
     saveRDS(pknca_res_data, file)
-    
-
-    # Create a settings file that the user can download/upload
-    #for establishing the same configuration
-    setts_lambda <- myconc$data %>%
-      # Identify the points that the user has manually selected for the half-life calculation
-      mutate(
-        TYPE = case_when(is.excluded.hl ~ "Exclusion", is.included.hl ~ "Selection", TRUE ~ NA)
-      ) %>%
-      filter(is.excluded.hl | is.included.hl)  %>%
-      select(any_of(c(
-        unname(unlist(myconc$columns$groups)),
-        "IX",
-        myconc$columns$time,
-        myconc$columns$concentration,
-        "TYPE",
-        "REASON"
-      )))
-
-    # Make sure that there is at least one row so the settings can be considered
-    if (nrow(setts_lambda) == 0) {
-      setts_lambda <- setts_lambda %>%
-        add_row()
-    }
-
-    # Consider the intervals defined by the user for the AUC calculation
-    input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-    input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-    auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
-    auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
-
-    # Include the rule settings as additional columns
-    setts <- setts_lambda %>%
-      mutate(
-        ANALYTE %in% input$select_analyte,
-        doses_selected = ifelse(
-          !is.null(input$select_dosno),
-          paste0(input$select_dosno, collapse = ","),
-          unique(mydata()$conc$data$DOSNO)
-        ),
-        method = input$method,
-        adj.r.squared_threshold = ifelse(
-          input$rule_adj_r_squared, input$adj.r.squared_threshold, NA
-        ),
-        aucpext.obs_threshold = ifelse(
-          input$rule_aucpext_obs, input$aucpext.obs_threshold, NA
-        ),
-        aucpext.pred_threshold = ifelse(
-          input$rule_aucpext_pred, input$aucpext.pred_threshold, NA
-        ),
-        span.ratio_threshold = ifelse(
-          input$rule_span_ratio, input$span.ratio_threshold, NA
-        ),
-        auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
-        auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
-      )
-
-    write.csv(setts, file, row.names = FALSE)
   },
-  contentType = "text/csv"
+  contentType = "rds"
 )
 
 # Keep the UI table constantly actively updated
