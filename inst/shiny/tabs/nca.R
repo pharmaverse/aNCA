@@ -138,9 +138,9 @@ observeEvent(input$nca, {
       }
 
       # Modify PKNCA to tell the user only report unexpected bugs
-      modified_error <- gsub("Please report a bug",
-                             "If the error is unexpected, please report a bug:\n",
-                             full_error)
+      modified_error <- gsub("Please report a bug.\n:", "",
+                             x = full_error, fixed = TRUE) |>
+        paste0("<br><br>If the error is unexpected, please report a bug.")
 
       showNotification(
         HTML(modified_error),
