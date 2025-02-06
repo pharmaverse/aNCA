@@ -784,7 +784,7 @@ output$manual_slopes2 <- renderTable({
 
 # Non NCA Analysis -------------------------------------------------------------
 
-non_nca_server("non_nca", data())
+non_nca_server("non_nca", data)
 
 # CDISC ------------------------------------------------------------------------
 
