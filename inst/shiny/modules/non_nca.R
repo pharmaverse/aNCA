@@ -1,7 +1,7 @@
-# UI function for the non-nca analysis 
+# UI function for the non-nca analysis
 non_nca_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
     tabsetPanel(
       id = ns("non_nca_tabs"),
@@ -11,7 +11,7 @@ non_nca_ui <- function(id) {
         card(
           card_header("BPP Analysis"),
           card_body(
-            
+
           )
         )
       ),
@@ -21,7 +21,7 @@ non_nca_ui <- function(id) {
         card(
           card_header("Excretion Analysis"),
           card_body(
-            
+
           )
         )
       ),
@@ -51,46 +51,47 @@ non_nca_ui <- function(id) {
 non_nca_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     #Tissue-Plasma Analysis
     # Dynamically generate the tissue selection input
     output$tissue_selector <- renderUI({
       req(data())
-      
+
       tissue_options <- unique(data()$PCSPEC)
       selectInput(ns("selected_tissues"), "Choose Tissues",
                   choices = tissue_options, multiple = TRUE,
                   selected = tissue_options)
     })
-    
+
     output$plasma_selector <- renderUI({
       req(data())
-      
+
       tissue_options <- unique(data()$PCSPEC)
       selectInput(ns("selected_plasma"), "Choose Plasma",
                   choices = tissue_options)
     })
-  
+
     # Filter & prepare data for tissue-plasma ratio calculation
     filtered_samples <- reactive({
       req(data(), input$selected_tissues)
 
       plasma <- input$selected_plasma
       tissue <- input$selected_tissues
-      
+
       df_filtered <- data() %>%
         filter(PCSPEC %in% c(input$selected_plasma, input$selected_tissues))
-      
+
       df_filtered
     })
-    
+
     # Perform Ratio Calculation on Submit
     ratio_results <- eventReactive(input$submit_ratio, {
       req(filtered_samples())
 
       plasma <- input$selected_plasma
       tissue <- input$selected_tissues
-      ratio_groups <- c(grouping_vars(), "USUBJID", "ANALYTE", "DOSEA", "DOSNO", "AFRLT") #TODO: update this to mydata()$ obj when parameters branch merged
+      ratio_groups <- c(grouping_vars(), "USUBJID", "ANALYTE", "DOSEA", "DOSNO", "AFRLT")
+      #TODO: update this to mydata()$ obj when parameters branch merged
 
       # Separate Tissue and Plasma Samples
       df_plasma <- filtered_samples() %>%
@@ -98,7 +99,7 @@ non_nca_server <- function(id, data, grouping_vars) {
         rename(PLASMA_CONC = AVAL,
                PLASMA = PCSPEC) %>%
         select(ratio_groups, PLASMA_CONC)
-      
+
       df_tissue <- filtered_samples() %>%
         filter(PCSPEC %in% tissue) %>%
         rename(TISSUE_CONC = AVAL) %>%
@@ -106,23 +107,23 @@ non_nca_server <- function(id, data, grouping_vars) {
 
       # Merge Plasma and Tissue Data
       df_ratio <- left_join(df_tissue, df_plasma, by = ratio_groups) %>%
-        filter(!is.na(TISSUE_CONC) & !is.na(PLASMA_CONC)) %>% 
+        filter(!is.na(TISSUE_CONC) & !is.na(PLASMA_CONC)) %>%
         mutate(
           RATIO = signif(TISSUE_CONC / PLASMA_CONC, 3)
         ) %>%
         select(ratio_groups, PCSPEC,
                TISSUE_CONC, PLASMA_CONC, RATIO) %>%
-        rename(TIME = AFRLT)%>%
+        rename(TIME = AFRLT) %>%
         arrange(USUBJID, ANALYTE, TIME)
-      
+
       df_ratio
     })
-    
+
     # Display results
     output$matrix_ratio_results <- renderDT({
       req(ratio_results())
       datatable(ratio_results(), options = list(pageLength = 5))
     })
-    
+
   })
 }
