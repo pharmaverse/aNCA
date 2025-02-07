@@ -207,7 +207,76 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
 
     # File Upload Handling
     observeEvent(input$settings_upload, {
-      setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
+      setts <- readRDS(input$settings_upload$datapath)
+      
+
+      # Update when pertinent the data() object
+
+
+
+      conc_cols <- unlist(setts$conc$columns)
+      dose_cols <- unlist(setts$dose$columns)
+      
+      # Update when pertinent analyte selector
+      analyte_col <- setts$conc$columns$groups$group_analyte
+      if (!is.null(analyte_col) && analyte_col %in% names(data())) {
+        analytes_selected <- setts$intervals[[analyte_col]]
+        updateSelectInput(
+          session,
+          inputId = "select_analyte",
+          label = "Choose the analyte:",
+          selected = unique(analytes_selected)
+        )
+      }
+
+      # Update when pertinent dose number selector
+      dose_col <- setts$conc$columns$groups$group_dose
+      if (!is.null(dose_col) && dose_col %in% names(data())) {
+        doses_selected <- setts$intervals[[dose_col]]
+        updateSelectInput(
+          session,
+          inputId = "select_dosno",
+          label = "Choose the Dose Number:",
+          selected = unique(doses_selected)
+        )
+      }
+
+      # Update when pertinent specimen selector
+      pcspec_col <- setts$conc$columns$groups$group_pcspec
+      if (!is.null(pcspec_col) && pcspec_col %in% names(data())) {
+        pcspecs_selected <- setts$intervals[[pcspec_col]]
+        updateSelectInput(
+          session,
+          inputId = "select_pcspec",
+          label = "Choose the Specimen/Matrix:",
+          selected = unique(pcspecs_selected)
+        )
+      }
+
+      # Update when present manual intervals defined
+      intervals_userinput <- setts$intervals %>%
+        filter(type_interval == "manual")  %>%
+        select(start, end) %>%
+        unique()  %>% 
+        split(1:nrow(.))
+      
+      if (nrow(intervals_userinput) > 0) {
+        intervals_userinput(intervals_userinput)
+      }
+
+      
+
+
+
+      
+
+
+
+
+
+      
+      
+      
       analyte <- setts$ANALYTE[1]
       doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
