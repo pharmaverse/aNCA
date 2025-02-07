@@ -25,6 +25,8 @@ parameter_datasets_server <- function(id, res_nca) {
           fixedColumns = TRUE,
           fixedHeader = TRUE,
           autoWidth = TRUE,
+          pageLength = -1,
+          lengthMenu = -1,
           dom = "Bfrtip",
           buttons = list(
             list(
@@ -47,11 +49,13 @@ parameter_datasets_server <- function(id, res_nca) {
     output$adpp_dataset <- DT::renderDataTable({
       DT::datatable(
         data = CDISC()$adpp,
+        rownames = FALSE,
         extensions = c("FixedHeader", "Buttons"),
         options = list(
           scrollX = TRUE,
           scrollY = TRUE,
-          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+          pageLength = -1,
+          lengthMenu = -1,
           fixedHeader = TRUE,
           dom = "Bfrtip",
           buttons = list(
