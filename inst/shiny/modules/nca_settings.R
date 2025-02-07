@@ -269,7 +269,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         choices = data()$ANALYTE[1],
         selected = setts$ANALYTE[1]
       )
-      
+
       updateSelectInput(
         session,
         inputId = "select_dosno",
@@ -457,7 +457,6 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
       id <- paste0("AUC_", auc_counter())
       insertUI(selector = paste0("#", ns("AUCInputs")),
                where = "beforeEnd", ui = partial_auc_input(id, ns = ns))
-      print(sort(names(input)))
     })
 
     observeEvent(input$removeAUC, {
@@ -493,7 +492,6 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
 
       # Make sure NAs were not left by the user
       intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
-      print(intervals_list)
 
       intervals_userinput(intervals_list)
     })
