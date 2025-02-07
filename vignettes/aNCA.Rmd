@@ -51,7 +51,7 @@ Once the dataset has been uploaded, you can verify that the data is as expected,
 <img src = "images/get_started/02.png" alt = "Mapping tab">
 <img src = "images/get_started/03.png" alt = "Mapping">
 
-### Veryfing adding filters
+### Verifying adding filters
 Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, return to the *Mapping and Filters* page, then scroll down to add filters.
 
 <img src = "images/get_started/04.png" alt = "Adding filters">
@@ -66,7 +66,7 @@ Don’t forget to scroll down and click submit!
 Click on the *NCA* tab at the top of the screen to switch to the next section.
 
 ## Data selection
-1. Choose the analyte you would like to run the NCA on (it is currently only possible to analyse one analyte at a time).
+1. Choose the analyte you would like to run the NCA on (it is currently only possible to analyze one analyte at a time).
 2. Click *Submit* and check that the data is as expected.
 
 <blockquote class="note">
@@ -109,7 +109,7 @@ There are two different ways to add exclusions/selections to the slopes.
 <img src = "images/get_started/11.png" alt = "Removing selections">
 
 #### Via the Plots
-For in-app guidence, you can click the <span style="border:thin solid #1f6feb;border-radius:1em;font-weight:bold;color:#1f6feb;margin:.1em .5em .1em .5em;">?</span> button.
+For in-app guidance, you can click the <span style="border:thin solid #1f6feb;border-radius:1em;font-weight:bold;color:#1f6feb;margin:.1em .5em .1em .5em;">?</span> button.
 
 1. For selection, click the first point and then the last point you want included in the slope. The plot should then update and a row should be added to the table. There you can add your reason for selection.
 2. For exclusion, double click the point you want to exclude. The plot should update along with the table.
@@ -143,8 +143,8 @@ To upload settings next time, after column mapping, *Setup* -> *Data Selection* 
 
 <img src = "images/get_started/16.png" alt = "Uploading settings">
 
-## Step 4: Visualisation
-In the *Visualisation* tab, you will find the different visualisation options, including individual plots, mean plots, descriptive statistics, and boxplots.
+## Step 4: Visualization
+In the *Visualization* tab, you will find the different visualization options, including individual plots, mean plots, descriptive statistics, and boxplots.
 
 <blockquote class="warning">
 Currently work in progress
