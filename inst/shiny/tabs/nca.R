@@ -258,7 +258,6 @@ output$myresults <- DT::renderDataTable({
     )
 })
 
-
 # Download final results
 observeEvent(input$download, {
   showModal(modalDialog(
@@ -270,7 +269,6 @@ observeEvent(input$download, {
 })
 
 ## Add download locally option
-
 output$local_download_NCAres <- downloadHandler(
   filename = function() {
     paste0(mydata()$conc$data$STUDYID[1], "PK_Parameters.csv")
@@ -290,7 +288,7 @@ output$local_download_NCAres <- downloadHandler(
 output$settings_save <- downloadHandler(
   filename = function() {
     paste0(mydata()$conc$data$STUDYID[1],
-           "_aNCAsettings_",Sys.Date(), ".rds")
+           "_aNCAsetts_",Sys.Date(), ".rds")
   },
   content = function(file) {
 
@@ -300,7 +298,7 @@ output$settings_save <- downloadHandler(
     conc_cols <- unname(unlist(pknca_res_data$conc$columns))
     conc_logical_cols <- sapply(pknca_res_data$conc$data[conc_cols], is.logical) |>
       which() |> names()
-    
+
     pknca_res_data$conc$data <- pknca_res_data$conc$data %>%
       # Select only the columns that are relevant for NCA
       select(unname(unlist(pknca_res_data$conc$columns))) %>%
@@ -310,6 +308,19 @@ output$settings_save <- downloadHandler(
     pknca_res_data$dose$data <- pknca_res_data$dose$data %>%
       # Select only the columns that are relevant for NCA
       select(unname(unlist(pknca_res_data$dose$columns)))
+
+    # Until they are adapted to PKNCA formats, save flag rule sets
+    pknca_res_data$options$flag_rules <- input %>%
+      keep(~startsWith(.x, "rule_")) %>%
+      map(~{
+        pptestcd <- gsub("^rule_", "", x = .x) |>
+          gsub("_", ".", x = _, fixed = TRUE)
+        if (startsWith(pptestcd, "auc")) {
+          list(pptestcd = pptestcd, threshold = input[[paste0(pptestcd, "_threshold")]])
+        } else {
+          list(pptestcd = pptestcd, threshold = input[[paste0(pptestcd, "_threshold")]])
+        }
+      })
     
     # Save the NCA settings file
     saveRDS(pknca_res_data, file)
