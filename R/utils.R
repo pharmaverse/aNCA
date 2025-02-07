@@ -47,3 +47,31 @@
 
   paste0(subranges, collapse = ",")
 }
+
+#' Generate an Empty Plotly Object
+#'
+#' This function returns a blank Plotly plot with optional annotation text.
+#' It ensures that when no valid data is available, a meaningful placeholder plot is displayed
+#' instead of causing an error.
+#'
+#' @param message A character string specifying the text to display in the center of the empty plot.
+#'                Defaults to `"No data available"`.
+#'
+#' @returns A Plotly object representing an empty plot with hidden axes.
+.plotly_empty_plot <- function(message = "No data available") {
+  plot_ly() %>%
+    layout(
+      title = "",
+      xaxis = list(visible = FALSE),
+      yaxis = list(visible = FALSE),
+      annotations = list(
+        text = message,
+        x = 0.5,
+        y = 0.5,
+        showarrow = FALSE,
+        font = list(size = 18, color = "red"),
+        xref = "paper",
+        yref = "paper"
+      )
+    )
+}
