@@ -32,6 +32,7 @@ fluidPage(
     nav_panel("NCA", value = "nca", fluid = TRUE,
       fluidPage(
         actionButton("nca", "Run NCA", class = "run-nca-btn"),
+        downloadButton("settings_save", "Save Project Settings"),
 
         tabsetPanel(id = "ncapanel",
           tabPanel("Setup", fluid = TRUE,
@@ -217,24 +218,7 @@ fluidPage(
           ),
           tabPanel("Results", fluid = TRUE,
             navlistPanel(
-              tabPanel(
-                "NCA Results",
-                downloadButton("settings_save", "Save Project Settings"),
-                br(),
-                pickerInput(
-                  "params",
-                  "Select Parameters :",
-                  choices = list("Run NCA first" = ""),
-                  selected = list("Run NCA first" = ""),
-                  multiple = TRUE,
-                  options = list(`actions-box` = TRUE)
-                ),
-                units_table_ui("units_table_postNCA"),
-                DTOutput("myresults"),
-                tableOutput("summaryTable"),
-                actionButton("download", "Download the NCA Data"),
-                downloadButton("local_download_NCAres", "Download locally the NCA Data")
-              ),
+              nca_results_ui("nca_results"),
               tabPanel(
                 "Slopes",
                 DTOutput("preslopesettings")

@@ -506,140 +506,7 @@ observeEvent(pk_nca_trigger(), {
 units_table_server("units_table_preNCA", mydata, res_nca)
 units_table_server("units_table_postNCA", mydata, res_nca)
 
-# TABSET: Results ==============================================================
-
-# In the result tabset we can view the NCA results, slope caclulation und exclusions table.
-
-# TAB: NCA Results -------------------------------------------------------------
-
-# Create a reactive expression to store the reshaped form of the results that
-# will be displayed in the UI
-final_res_nca <- reactiveVal(NULL)
-
-# creative final_res_nca, aiming to present the results in a more comprehensive way
-observeEvent(res_nca(), {
-  req(res_nca())
-  # Create a reshaped object that will be used to display the results in the UI
-  final_res_nca <- pivot_wider_pknca_results(res_nca())
-
-  # Get all inputs which are TRUE and start with 'rule_'
-  for (rule_input in grep("^rule_", names(input), value = TRUE)) {
-    if (!input[[rule_input]]) next
-
-    pptestcd <- rule_input |>
-      gsub("^rule_", "", x = _) |>
-      gsub("_", ".", x = _, fixed = TRUE)
-    if (startsWith(pptestcd, "auc")) {
-      final_res_nca[[paste0("flag_", pptestcd)]] <- {
-        final_res_nca[[pptestcd]] >= input[[paste0(pptestcd, "_threshold")]]
-      }
-    } else {
-      final_res_nca[[paste0("flag_", pptestcd)]] <- {
-        final_res_nca[[pptestcd]] <= input[[paste0(pptestcd, "_threshold")]]
-      }
-    }
-  }
-
-  # Include units for all column names
-  dict_pttestcd_with_units <- res_nca()$result %>%
-    select(PPTESTCD, PPSTRESU) %>%
-    unique() %>%
-    pull(PPSTRESU, PPTESTCD)
-
-  final_res_nca <- final_res_nca %>%
-    rename_with(~ifelse(
-      gsub("_.*", "", .x) %in% names(dict_pttestcd_with_units),
-      paste0(.x, "[", dict_pttestcd_with_units[gsub("_.*", "", .x)], "]"),
-      .x
-    ))
-
-  # Sort alphabetically all columns but the grouping and the exclude columns
-  group_cols <- c(unname(unique(c(unlist(res_nca()$data$conc$columns$groups),
-                                  unlist(res_nca()$data$dose$columns$groups)))))
-  int_cols <- c("DOSNO", "start", "end")
-  exclude_cols <- names(final_res_nca)[startsWith(names(final_res_nca), "exclude.")]
-  param_cols <- names(final_res_nca)[endsWith(names(final_res_nca), "]")]
-  other_cols <- setdiff(names(final_res_nca), c(group_cols, int_cols, exclude_cols, param_cols))
-  final_res_nca <- final_res_nca %>%
-    dplyr::select(any_of(c(group_cols, int_cols, param_cols, exclude_cols, other_cols)))
-
-  # Create a reshaped object
-  final_res_nca(
-    final_res_nca %>%
-      # Create a flag_ column when input$rule_r2adj is TRUE, and make it TRUE when the only column
-      # that starts with r2adj is below the threshold input$r2adj_threshold
-      mutate(flag_onlyFalse = FALSE)  %>%
-      # Create a flagged column that informs if any of the variables starting as 'flag_' are TRUE
-      # Only if there is at least one column that stats with flag_
-      mutate(
-        flagged = case_when(
-          rowSums(is.na(select(., starts_with("flag_")))) > 0 ~ "MISSING",
-          rowSums(select(., starts_with("flag_")), na.rm = TRUE) > 0 ~ "FLAGGED",
-          TRUE ~ "ACCEPTED"
-        )
-      )
-  )
-
-  # Allow user to choose the parameters to display of final_res_nca
-  updatePickerInput(
-    session = session,
-    inputId = "params",
-    label = "Select Parameters :",
-    choices = sort(colnames(final_res_nca())),
-    selected = sort(colnames(final_res_nca()))
-  )
-})
-
-# Render the reshaped results as a DT datatable
-output$myresults <- DT::renderDataTable({
-  req(final_res_nca())
-  DT::datatable(
-    data = final_res_nca(),
-    extensions = "FixedHeader",
-    options = list(
-      scrollX = TRUE,
-      scrollY = TRUE,
-      lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-      fixedHeader = TRUE,
-      columnDefs = list(list(
-        visible = FALSE, targets = setdiff(colnames(final_res_nca()), input$params)
-      ))
-    )
-  ) %>%
-    formatStyle(
-      "flagged",
-      target = "row",
-      backgroundColor = styleEqual(c("FLAGGED", "MISSING"), c("#f5b4b4", "#cbaddd"))
-    )
-})
-
-
-# Download final results
-observeEvent(input$download, {
-  showModal(modalDialog(
-    title = "Please enter the path to the folder on Improve for your results:",
-    textInput("pathresults", "Path:"),
-    actionButton("go", "GO"),
-    footer = modalButton("Close")
-  ))
-})
-
-## Add download locally option
-
-output$local_download_NCAres <- downloadHandler(
-  filename = function() {
-    paste0(mydata()$conc$data$STUDYID[1], "PK_Parameters.csv")
-  },
-  content = function(file) {
-    old_wd <- getwd()  # save old working directory
-    tempdir <- tempdir()  # create a temporary directory
-    setwd(tempdir)  # change working directory to temporary directory
-
-    write.csv(final_res_nca(), file, row.names = FALSE)
-
-    setwd(old_wd)  # change working directory back to original
-  }
-)
+nca_results_server("nca_results", res_nca)
 
 # Save the project settings
 output$settings_save <- downloadHandler(
@@ -742,7 +609,7 @@ output$preslopesettings <- DT::renderDataTable({
       starts_with("lambda.z"),
       starts_with("span.ratio"),
       starts_with("half.life"),
-      "exclude.lambda.z"
+      "Exclude"
     )
 
   # Render the DT datatable object
@@ -758,7 +625,7 @@ output$preslopesettings <- DT::renderDataTable({
     )
   ) %>%
     formatStyle(
-      "exclude.lambda.z",
+      "Exclude",
       target = "row",
       backgroundColor = styleEqual(NA, NA, default = "#f5b4b4")
     )
