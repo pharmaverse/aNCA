@@ -17,6 +17,31 @@ Click *Upload File* and select the dataset you would like to use. The data must 
 
 <img src = "images/get_started/01.png" alt = "Data upload">
 
+### Data format
+|                          | **Variable** | **Description**                                                    | **Format**        |
+|--------------------------|--------------|--------------------------------------------------------------------|-------------------|
+|                          | STUDYID      | Study Identifier                                                   | character         |
+| **Grouping Identifiers** | USUBJID      | Unique Subject Identifier                                          | character/numeric |
+|                          | TRT01A       | Treatment Group Identifier (Actual)                                | character         |
+|                          | TRT01P       | Treatment Group Identifier (Planned)                               | character         |
+|                          | AGE          | Age of Subject                                                     | numeric           |
+|                          | RACE         | Race pf Subject                                                    | character         |
+|                          | SEX          | Sex of Subject                                                     | character         |
+| **Sample variables**     | ANALYTE      | Analyte                                                            | character         |
+|                          | PCSPEC       | Specimen Material Type                                             | character         |
+|                          | AVAL         | Analysis Value                                                     | numeric           |
+| **Dose Variables**       | DOSNO        | Dose Number                                                        | numeric           |
+|                          | ROUTE        | Route of Administration, either {intravascular} or {extravascular} | character         |
+|                          | DOSEA        | Actual Treatment Dose                                              | numeric           |
+|                          | ADOSEDUR     | Actual Treatment Dose                                              | numeric           |
+| **Time Variables**       | AFRLT        | Actual Relative Time from Analyte First Dose                       | numeric           |
+|                          | ARRLT        | Actual Relative Time from Reference Dose                           | numeric           |
+|                          | NFRLT        | Nominal Relative Time from Analyte First Dose                      | numeric           |
+|                          | NRRLT        | Nominal Relative Time from Reference Dose                          | numeric           |
+|                          | AVALU        | Analysis Value Unit                                                | character         |
+|                          | DOSEU        | Treatment Dose Units                                               | character         |
+|                          | RRLTU        | Relative Time from Reference Dose Unit                             | character         |
+
 ### Data mapping
 Once the dataset has been uploaded, you can verify that the data is as expected, and click on the *Mapping and Filters* tab. 
   - Map the correct columns in your dataset to the corresponding label. For more information on what the column requires, hover over the input boxes.
