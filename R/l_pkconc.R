@@ -1,7 +1,7 @@
 #' Create PK Concentration Listing
 #'
-#' This function creates a listing of pharmacokinetic (PK) concentration data seggregating a dataset
-#' in lists that are customizible in title, footnotes, grouping/displayed variables, missing/zero
+#' This function creates a listing of pharmacokinetic (PK) concentration data segregating a dataset
+#' in lists that are customizable in title, footnotes, grouping/displayed variables, missing/zero
 #' values and/or number of digits displayed.
 #'
 #' @param adpc A data frame containing the PK concentration data.

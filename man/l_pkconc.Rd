@@ -5,40 +5,40 @@
 \title{Create PK Concentration Listing}
 \usage{
 l_pkconc(
-  adpc = read.csv("inst/shiny/data/DummyRO_ADNCA.csv"),
+  adpc,
   listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
   grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
   formatting_vars_table = NULL,
-  main_title = paste0("Listing of PK Concentration by Treatment Group,",
+  title = paste0("Listing of PK Concentration by Treatment Group,",
     "Subject and Nominal Time, PK Population"),
-  subtitle_lists = NULL,
-  footnote_table = "*: Patients excluded from the summary table and mean plots"
+  subtitle = NULL,
+  footnote = "*: Patients excluded from the summary table and mean plots"
 )
 }
 \arguments{
 \item{adpc}{A data frame containing the PK concentration data.}
 
-\item{listgroup_vars}{A character vector specifying the variables to group by in the listing.}
+\item{listgroup_vars}{A character vector specifying the variables to separate lists.}
 
-\item{grouping_vars}{A character vector specifying the grouping variables for the listing.}
+\item{grouping_vars}{A character vector specifying the grouping variables within each list.}
 
 \item{displaying_vars}{A character vector specifying the variables to display in the listing.}
 
 \item{formatting_vars_table}{A data frame with the formatting of each variable. See details.}
 
-\item{main_title}{A character string specifying the main title of the listing table.}
+\item{title}{A character string to parse specifying the main title for the entire listing.}
 
-\item{subtitle_lists}{A character string specifying the subtitle of the listing table.}
+\item{subtitle}{A character string to parse specifying the subtitle to use for each list.}
 
-\item{footnote_table}{A character string specifying the footnote of the listing table.}
+\item{footnote}{A character string to parse specifying the footnote of the listing table.}
 }
 \value{
 A list of listings, each corresponding to a unique combination of the grouping variables.
 }
 \description{
-This function creates a listing of pharmacokinetic (PK) concentration data seggregating a dataset
-in lists that are customizible in title, footnotes, grouping/displayed variables, missing/cero
+This function creates a listing of pharmacokinetic (PK) concentration data segregating a dataset
+in lists that are customizable in title, footnotes, grouping/displayed variables, missing/zero
 values and/or number of digits displayed.
 }
 \details{
@@ -54,17 +54,50 @@ The \code{formatting_vars_table} should be a data frame with the following colum
 \item \code{var_name}: The name of the variable.
 \item \code{Label}: The label for the variable.
 \item \code{na_str}: The string to use for NA values.
-\item \code{cero_str}: The string to use for 0 values.
+\item \code{zero_str}: The string to use for 0 values.
 \item \code{align}: The alignment for the variable (e.g., "center").
 \item \code{format_fun}: The formatting function to use ("round" or "signif").
 \item \code{digits}: The number of digits to use for numeric formatting.
 }
 }
 \examples{
-\dontrun{
-  # Example usage:
-  listings <- l_pkconc(adpc, listgroup_vars, grouping_vars, displaying_vars)
-}
+  # Create a sample dataframe 'adpc' with the required variables
+  set.seed(123)
+  adpc <- data.frame(
+    PARAM = rep(c("Param1", "Param2"), each = 6),
+    PCSPEC = rep(c("Blood", "Urine"), each = 6),
+    TRT01A = rep(c("Treatment1", "Treatment2"), each = 6),
+    USUBJID = rep(c(rep(1, 3), rep(2, 3)), 2),
+    NFRLT = rep(1:3, 4),
+    AFRLT = rep(1:3, 4) + runif(12, 0, 0.5),
+    TIMEU = "hours",
+    AVAL = rep(0:2, 4) + runif(12, 0, 0.5),
+    AVALU = "mg/L"
+  )
+
+  # Define the formatting table
+  formatting_vars_table <- data.frame(var_name = names(adpc),
+                                      Label = c("Parameter", "Specimen", "Treatment Arm",
+                                                "Unique Subject ID", "Norminal Time ($TIMEU)",
+                                                "Actual Time ($TIMEU)", "Time Unit",
+                                                "Analyte Value ($AVALU)", "Analyte Unit"),
+                                      na_str = "Missing",
+                                      zero_str = c(rep("0", 7), "BLQ", "0"),
+                                      align = "center",
+                                      format_fun = c(NA, NA, NA, NA,
+                                                     "round", "round", NA, "round", NA),
+                                      digits = c(NA, NA, NA, NA, 2, 2, NA, 3, NA))
+
+  # Call the l_pkconc function with the sample data
+  listing_ex <- l_pkconc(adpc = adpc,
+                         listgroup_vars = c("PARAM", "PCSPEC"),
+                         grouping_vars = c("TRT01A", "USUBJID"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         formatting_vars_table = formatting_vars_table,
+                         title = "Listing of PK Concentration",
+                         subtitle = "Patients with !PARAM: $PARAM (!PCSPEC: $PCSPEC)"
+                         )
+  print(listing_ex)
 
 }
 \author{
