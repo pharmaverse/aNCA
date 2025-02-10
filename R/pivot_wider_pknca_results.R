@@ -37,14 +37,14 @@ pivot_wider_pknca_results <- function(myres) {
     distinct() %>%
     filter(type_interval == "main") %>%
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
-    pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")%>%
+    pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.") %>%
     mutate(Exclude = pmap_chr(across(starts_with("exclude.")), function(...) {
       raw_values <- unique(c(...))  # Get unique exclude values from different columns
       raw_values <- raw_values[!is.na(raw_values)]  # Remove NAs
-      
+
       # Split each entry into individual phrases using "; " as a separator
       split_values <- unlist(strsplit(raw_values, "; "))
-      
+
       # Remove duplicate messages
       unique_values <- unique(trimws(split_values))
       if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
@@ -94,14 +94,14 @@ pivot_wider_pknca_results <- function(myres) {
       )  %>%
       select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
              -PPTESTCD, -interval_name, -type_interval) %>%
-      pivot_wider(names_from = interval_name_col, values_from = exclude)%>%
+      pivot_wider(names_from = interval_name_col, values_from = exclude) %>%
       mutate(Exclude = pmap_chr(across(starts_with("exclude.")), function(...) {
         raw_values <- unique(c(...))  # Get unique exclude values from different columns
         raw_values <- raw_values[!is.na(raw_values)]  # Remove NAs
-        
+
         # Split each entry into individual phrases using "; " as a separator
         split_values <- unlist(strsplit(raw_values, "; "))
-        
+
         # Remove duplicate messages
         unique_values <- unique(trimws(split_values))
         if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")

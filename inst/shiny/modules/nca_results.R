@@ -1,8 +1,8 @@
 # nca_results UI Module
 nca_results_ui <- function(id) {
   ns <- NS(id)
-  
-  tabPanel(
+
+  nav_panel(
     "NCA Results",
     pickerInput(
       ns("params"),
@@ -23,40 +23,42 @@ nca_results_ui <- function(id) {
 nca_results_server <- function(id, res_nca, rules) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     final_res_nca <- reactiveVal(NULL)
-    
+
     observeEvent(res_nca(), {
       req(res_nca())
-      
+
       # Transform results
       final_results <- pivot_wider_pknca_results(res_nca())
 
       # Apply rules
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
         if (!rules[[rule_input]]) next
-        
+
         print(rule_input)
-        
+
         pptestcd <- rule_input |>
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
-        
+
         print(pptestcd)
-        
+
         if (startsWith(pptestcd, "auc")) {
-          final_results[[paste0("flag_", pptestcd)]] <- final_results[[pptestcd]] >= rules[[paste0(pptestcd, "_threshold")]]
+          final_results[[paste0("flag_", pptestcd)]] <-
+            final_results[[pptestcd]] >= rules[[paste0(pptestcd, "_threshold")]]
         } else {
-          final_results[[paste0("flag_", pptestcd)]] <- final_results[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
+          final_results[[paste0("flag_", pptestcd)]] <-
+            final_results[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
         }
       }
-      
+
       # Include units in column names
       dict_pttestcd_with_units <- res_nca()$result %>%
         select(PPTESTCD, PPSTRESU) %>%
         unique() %>%
         pull(PPSTRESU, PPTESTCD)
-      
+
       final_results <- final_results %>%
         rename_with(~ifelse(
           gsub("_.*", "", .x) %in% names(dict_pttestcd_with_units),
@@ -70,10 +72,10 @@ nca_results_server <- function(id, res_nca, rules) {
       int_cols <- c("DOSNO", "start", "end")
       param_cols <- names(final_results)[endsWith(names(final_results), "]")]
       other_cols <- setdiff(names(final_results), c(group_cols, int_cols, param_cols))
-      
+
       final_results <- final_results %>%
         select(any_of(c(group_cols, int_cols, param_cols, other_cols)))
-      
+
       # Add flagged column
       final_results <- final_results %>%
         mutate(
@@ -83,9 +85,9 @@ nca_results_server <- function(id, res_nca, rules) {
             TRUE ~ "ACCEPTED"
           )
         )
-      
+
       final_res_nca(final_results)
-      
+
       updatePickerInput(
         session = session,
         inputId = "params",
@@ -124,7 +126,7 @@ nca_results_server <- function(id, res_nca, rules) {
         }
       )
     })
-    
+
     observeEvent(input$download, {
       showModal(modalDialog(
         title = "Please enter the path to the folder on Improve for your results:",
@@ -133,7 +135,7 @@ nca_results_server <- function(id, res_nca, rules) {
         footer = modalButton("Close")
       ))
     })
-    
+
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
         paste0(mydata()$conc$data$STUDYID[1], "PK_Parameters.csv")
@@ -142,9 +144,9 @@ nca_results_server <- function(id, res_nca, rules) {
         old_wd <- getwd()
         tempdir <- tempdir()
         setwd(tempdir)
-        
+
         write.csv(final_res_nca(), file, row.names = FALSE)
-        
+
         setwd(old_wd)
       }
     )

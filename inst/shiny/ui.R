@@ -34,8 +34,8 @@ fluidPage(
         actionButton("nca", "Run NCA", class = "run-nca-btn"),
         downloadButton("settings_save", "Save Project Settings"),
 
-        tabsetPanel(id = "ncapanel",
-          tabPanel("Setup", fluid = TRUE,
+        navset_tab(id = "ncapanel",
+          nav_panel("Setup", fluid = TRUE,
 
             navlistPanel(
               tabPanel("Data Selection",
@@ -216,24 +216,30 @@ fluidPage(
 
             )
           ),
-          tabPanel("Results", fluid = TRUE,
-            navlistPanel(
+          nav_panel("Results", fluid = TRUE,
+            navset_pill_list(
               nca_results_ui("nca_results"),
-              tabPanel(
+              nav_panel(
                 "Slopes",
                 DTOutput("preslopesettings")
               ),
-              tabPanel(
+              nav_panel(
                 "Exclusions",
                 tableOutput("manual_slopes2")
               ),
-              tabPanel("Parameter Datasets",
-                       tabsetPanel(
-                         tabPanel("PP",
-                                  DTOutput("pp_dataset")),
-                         tabPanel("ADPP",
-                                  DTOutput("adpp_dataset"))
-                       ))
+              nav_panel(
+                "Parameter Datasets",
+                tabsetPanel(
+                  tabPanel(
+                    "PP",
+                    DTOutput("pp_dataset")
+                  ),
+                  tabPanel(
+                    "ADPP",
+                    DTOutput("adpp_dataset")
+                  )
+                )
+              )
             )
           )
         )
