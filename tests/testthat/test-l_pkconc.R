@@ -47,21 +47,21 @@ describe("l_pkconc", {
       )
     )
     )
-    
+
     # For 3 case
-    listings_3l <- l_pkconc(adpc[1:3,], listgroup_vars = c("PARAM", "PCSPEC", "ROUTE", "USUBJID"),
+    listings_3l <- l_pkconc(adpc[1:3, ], listgroup_vars = c("PARAM", "PCSPEC", "ROUTE", "USUBJID"),
                             grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
-    
-    expect_length(listings_3l, length(unique(interaction(adpc[1:3,]$PARAM,
-                                                         adpc[1:3,]$PCSPEC,
-                                                         adpc[1:3,]$ROUTE,
-                                                         adpc[1:3,]$USUBJID))))
-    expect_named(listings_3l, expected = as.character(interaction(adpc[1:3,]$PARAM,
-                                                                  adpc[1:3,]$PCSPEC,
-                                                                  adpc[1:3,]$ROUTE,
-                                                                  adpc[1:3,]$USUBJID)))
-    
+
+    expect_length(listings_3l, length(unique(interaction(adpc[1:3, ]$PARAM,
+                                                         adpc[1:3, ]$PCSPEC,
+                                                         adpc[1:3, ]$ROUTE,
+                                                         adpc[1:3, ]$USUBJID))))
+    expect_named(listings_3l, expected = as.character(interaction(adpc[1:3, ]$PARAM,
+                                                                  adpc[1:3, ]$PCSPEC,
+                                                                  adpc[1:3, ]$ROUTE,
+                                                                  adpc[1:3, ]$USUBJID)))
+
 
     # For 4 case
     listings_4l <- l_pkconc(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE", "USUBJID"),
@@ -94,7 +94,7 @@ describe("l_pkconc", {
                          formatting_vars_table = NULL)
 
     # Adds labels as column names & includes units when obvious and present  (i.e, AVALU for AVAL)
-    
+
     label_strings_with_aval_units <- c(TRT01A = attr(adpc$TRT01A, "label"),
                                        USUBJID = attr(adpc$USUBJID, "label"),
                                        AVISIT = attr(adpc$AVISIT, "label"),
@@ -105,10 +105,10 @@ describe("l_pkconc", {
                                        AFRLT = attr(adpc$AFRLT, "label"),
                                        # AVAL should include AVALU in parenthesis
                                        AVAL = paste0(attr(adpc$AVAL, "label"),
-                                                    " (", unique(adpc$AVALU), ")"),
+                                                     " (", unique(adpc$AVALU), ")"),
                                        AVALU = "AVALU",
                                        id_list = "id")
-    
+
     expect_equal(var_labels(listings[[1]]),
                  expected = label_strings_with_aval_units)
   })
@@ -137,7 +137,7 @@ describe("l_pkconc", {
 
     # Define the input for the function
     empty_adpc <- adpc[0, ]
-    
+
     # Run the empty input and store the output
     empty_res <- l_pkconc(empty_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
                           grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
