@@ -1,17 +1,17 @@
 #' Create PK Concentration Listing
 #'
 #' This function creates a listing of pharmacokinetic (PK) concentration data seggregating a dataset
-#' in lists that are customizible in title, footnotes, grouping/displayed variables, missing/cero
+#' in lists that are customizible in title, footnotes, grouping/displayed variables, missing/zero
 #' values and/or number of digits displayed.
 #'
 #' @param adpc A data frame containing the PK concentration data.
-#' @param listgroup_vars A character vector specifying the variables to group by in the listing.
-#' @param grouping_vars A character vector specifying the grouping variables for the listing.
+#' @param listgroup_vars A character vector specifying the variables to separate lists.
+#' @param grouping_vars A character vector specifying the grouping variables within each list.
 #' @param displaying_vars A character vector specifying the variables to display in the listing.
 #' @param formatting_vars_table A data frame with the formatting of each variable. See details.
-#' @param main_title A character string specifying the main title of the listing table.
-#' @param subtitle_lists A character string specifying the subtitle of the listing table.
-#' @param footnote_table A character string specifying the footnote of the listing table.
+#' @param title A character string to parse specifying the main title for the entire listing.
+#' @param subtitle A character string to parse specifying the subtitle to use for each list.
+#' @param footnote A character string to parse specifying the footnote of the listing table.
 #'
 #' @return A list of listings, each corresponding to a unique combination of the grouping variables.
 #'
@@ -25,30 +25,63 @@
 #'   - `var_name`: The name of the variable.
 #'   - `Label`: The label for the variable.
 #'   - `na_str`: The string to use for NA values.
-#'   - `cero_str`: The string to use for 0 values.
+#'   - `zero_str`: The string to use for 0 values.
 #'   - `align`: The alignment for the variable (e.g., "center").
 #'   - `format_fun`: The formatting function to use ("round" or "signif").
 #'   - `digits`: The number of digits to use for numeric formatting.
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   listings <- l_pkconc(adpc, listgroup_vars, grouping_vars, displaying_vars)
-#' }
+#'   # Create a sample dataframe 'adpc' with the required variables
+#'   set.seed(123)
+#'   adpc <- data.frame(
+#'     PARAM = rep(c("Param1", "Param2"), each = 6),
+#'     PCSPEC = rep(c("Blood", "Urine"), each = 6),
+#'     TRT01A = rep(c("Treatment1", "Treatment2"), each = 6),
+#'     USUBJID = rep(c(rep(1, 3), rep(2, 3)), 2),
+#'     NFRLT = rep(1:3, 4),
+#'     AFRLT = rep(1:3, 4) + runif(12, 0, 0.5),
+#'     TIMEU = "hours",
+#'     AVAL = rep(0:2, 4) + runif(12, 0, 0.5),
+#'     AVALU = "mg/L"
+#'   )
+#'
+#'   # Define the formatting table
+#'   formatting_vars_table <- data.frame(var_name = names(adpc),
+#'                                       Label = c("Parameter", "Specimen", "Treatment Arm",
+#'                                                 "Unique Subject ID", "Norminal Time ($TIMEU)",
+#'                                                 "Actual Time ($TIMEU)", "Time Unit",
+#'                                                 "Analyte Value ($AVALU)", "Analyte Unit"),
+#'                                       na_str = "Missing",
+#'                                       zero_str = c(rep("0", 7), "BLQ", "0"),
+#'                                       align = "center",
+#'                                       format_fun = c(NA, NA, NA, NA,
+#'                                                      "round", "round", NA, "round", NA),
+#'                                       digits = c(NA, NA, NA, NA, 2, 2, NA, 3, NA))
+#'
+#'   # Call the l_pkconc function with the sample data
+#'   listing_ex <- l_pkconc(adpc = adpc,
+#'                          listgroup_vars = c("PARAM", "PCSPEC"),
+#'                          grouping_vars = c("TRT01A", "USUBJID"),
+#'                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+#'                          formatting_vars_table = formatting_vars_table,
+#'                          title = "Listing of PK Concentration",
+#'                          subtitle = "Patients with !PARAM: $PARAM (!PCSPEC: $PCSPEC)"
+#'                          )
+#'   print(listing_ex)
 #'
 #' @import dplyr formatters rlistings
 #' @export
 #' @author Gerardo Rodriguez
 l_pkconc <- function(
-  adpc = read.csv("inst/shiny/data/DummyRO_ADNCA.csv"),
+  adpc,
   listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
   grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
   formatting_vars_table = NULL,
-  main_title = paste0("Listing of PK Concentration by Treatment Group,",
-                      "Subject and Nominal Time, PK Population"),
-  subtitle_lists = NULL,
-  footnote_table = "*: Patients excluded from the summary table and mean plots"
+  title = paste0("Listing of PK Concentration by Treatment Group,",
+                 "Subject and Nominal Time, PK Population"),
+  subtitle = NULL,
+  footnote = "*: Patients excluded from the summary table and mean plots"
 ) {
 
   # If there are columns defined in the function that are not in the data, throw an error
@@ -58,11 +91,11 @@ l_pkconc <- function(
   }
 
   # If the title was not user defined use the listgroup_vars argument to do it
-  if (is.null(subtitle_lists)) {
-    subtitle_lists <- paste(paste0("!", listgroup_vars),
-                            paste0("$", listgroup_vars),
-                            sep = ": ",
-                            collapse = "\n")
+  if (is.null(subtitle)) {
+    subtitle <- paste(paste0("!", listgroup_vars),
+                      paste0("$", listgroup_vars),
+                      sep = ": ",
+                      collapse = "\n")
   }
 
   # If the formatting table was not user defined make one standard
@@ -75,7 +108,7 @@ l_pkconc <- function(
       mutate(
         Label = parse_annotation(adpc, paste0("!", var_name)),
         na_str = "NA",
-        cero_str = ifelse(var_name == "AVAL", "BLQ", "0"),
+        zero_str = ifelse(var_name == "AVAL", "BLQ", "0"),
         align = "center",
         format_fun =  ifelse(is.numeric(adpc[[var_name]]) &&
                                !is.integer(adpc[[var_name]]), "round", NA),
@@ -110,9 +143,9 @@ l_pkconc <- function(
     pull(Label, var_name)
 
   # Create a special object to map 0 string values to each variable
-  format_cero <- formatting_vars_table %>%
-    select(var_name, cero_str) %>%
-    pull(cero_str, var_name)
+  format_zero <- formatting_vars_table %>%
+    select(var_name, zero_str) %>%
+    pull(zero_str, var_name)
 
   # Create a special pair of objects to map number of digits to each variable
   format_digits <- formatting_vars_table %>%
@@ -138,10 +171,10 @@ l_pkconc <- function(
                 list(x = ., digits = format_digits[cur_column()]))
     )) %>%
 
-    # Format 0 values as defined by format_cero
+    # Format 0 values as defined by format_zero
     mutate(across(
-      all_of(names(format_cero)), ~
-        ifelse(. == 0, format_cero[cur_column()], as.character(.))
+      all_of(names(format_zero)), ~
+        ifelse(. == 0, format_zero[cur_column()], as.character(.))
     ))
 
   # Make sure the data stays labelled
@@ -173,10 +206,10 @@ l_pkconc <- function(
     }
 
     # Make all text definitions and filter columns
-    main_title <- parse_annotation(data = list_data, text = main_title)
+    title <- parse_annotation(data = list_data, text = title)
     list_titles <- gsub("<br>", "\n", parse_annotation(data = list_data,
-                                                       text = subtitle_lists))
-    footnote_table <- parse_annotation(data = list_data, text = footnote_table)
+                                                       text = subtitle))
+    footnote <- parse_annotation(data = list_data, text = footnote)
 
 
     # Build the listing object
@@ -184,9 +217,9 @@ l_pkconc <- function(
       df = list_data,
       key_cols = grouping_vars,
       disp_cols = displaying_vars,
-      main_title = main_title,
+      main_title = title,
       subtitles = list_titles,
-      main_footer = footnote_table,
+      main_footer = footnote,
       col_formatting = formatting_vars_list
     )
 
