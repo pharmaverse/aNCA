@@ -6,22 +6,23 @@ non_nca_ui <- function(id) {
     tabsetPanel(
       id = ns("non_nca_tabs"),
       tabPanel(
-        title = "BPP Analysis",
+        title = "Blood-Plasma Partitioning Analysis",
         value = "bpp_analysis",
         card(
           card_header("BPP Analysis"),
           card_body(
+            uiOutput(ns("blood_selector")),
+            uiOutput(ns("plasmaforbpp_selector")),
+            p("Timepoints will automatically be selected by
+              taking the shared timeponts for both variables"),
+            actionButton(ns("submit_bpp"), "Submit", class = "btn-primary")
 
           )
-        )
-      ),
-      tabPanel(
-        title = "Excretion Analysis",
-        value = "excretion_analysis",
+        ),
         card(
-          card_header("Excretion Analysis"),
+          card_header("BPP Results"),
           card_body(
-
+            DTOutput(ns("bpp_results"))
           )
         )
       ),
@@ -42,6 +43,16 @@ non_nca_ui <- function(id) {
             DTOutput(ns("matrix_ratio_results"))
           )
         )
+      ),
+      tabPanel(
+        title = "Excretion Analysis",
+        value = "excretion_analysis",
+        card(
+          card_header("Excretion Analysis"),
+          card_body(
+
+          )
+        )
       )
     )
   )
@@ -52,7 +63,74 @@ non_nca_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    #Tissue-Plasma Analysis
+    #TODO: Remove hardcoding of columns ?? Ensure only non-distinct grouping columns are shown ?
+    # BPP Analysis #########################################
+    output$blood_selector <- renderUI({
+      req(data())
+
+      blood_options <- unique(data()$PCSPEC)
+      selectInput(ns("selected_blood"), "Choose Blood column for BPP",
+                  choices = blood_options)
+    })
+
+    output$plasmaforbpp_selector <- renderUI({
+      req(data())
+
+      plasma_options <- unique(data()$PCSPEC)
+      selectInput(ns("selected_plasmaforbpp"), "Choose Plasma column for BPP",
+                  choices = plasma_options)
+    })
+
+
+    # Filter & prepare data for BPP calculation
+    filtered_samples_bpp <- reactive({
+      req(data(), input$selected_blood, input$selected_plasmaforbpp)
+
+      df_filtered <- data() %>%
+        filter(PCSPEC %in% c(input$selected_blood, input$selected_plasmaforbpp))
+
+      df_filtered
+    })
+
+    # Perform BPP Calculation on Submit
+    bpp_results <- eventReactive(input$submit_bpp, {
+      req(filtered_samples_bpp())
+
+      blood <- input$selected_blood
+      plasma <- input$selected_plasmaforbpp
+      bpp_groups <- c(grouping_vars(), "USUBJID", "ANALYTE", "ROUTE", "DOSEA", "DOSNO", "AFRLT")
+
+      # Separate Blood and Plasma Samples
+      df_blood <- filtered_samples_bpp() %>%
+        filter(PCSPEC == blood) %>%
+        rename(BLOOD_CONC = AVAL) %>%
+        select(bpp_groups, BLOOD_CONC)
+
+      df_plasma <- filtered_samples_bpp() %>%
+        filter(PCSPEC == plasma) %>%
+        rename(PLASMA_CONC = AVAL) %>%
+        select(bpp_groups, PLASMA_CONC)
+
+      # Merge Blood and Plasma Data
+      df_bpp <- left_join(df_blood, df_plasma, by = bpp_groups) %>%
+        filter(!is.na(BLOOD_CONC) & !is.na(PLASMA_CONC)) %>%
+        mutate(
+          BPP_RATIO = signif(BLOOD_CONC / PLASMA_CONC, 3)
+        ) %>%
+        select(bpp_groups, PLASMA_CONC, BLOOD_CONC, BPP_RATIO) %>%
+        rename(TIME = AFRLT) %>%
+        arrange(USUBJID, ANALYTE, TIME)
+
+      df_bpp
+    })
+
+    # Display results
+    output$bpp_results <- renderDT({
+      req(bpp_results())
+      datatable(bpp_results(), options = list(pageLength = 5))
+    })
+
+    #Tissue-Plasma Analysis ###############################
     # Dynamically generate the tissue selection input
     output$tissue_selector <- renderUI({
       req(data())
