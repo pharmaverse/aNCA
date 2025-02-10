@@ -558,7 +558,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         mydata <- create_start_impute(mydata = mydata)
         mydata$impute <- "impute"
       }
-      
+
       # If the user filtered all intervals or there are not left, show a notification
       if (nrow(mydata$intervals) == 0) {
         showNotification(paste0("All intervals have been filtered. Please reconsider ",

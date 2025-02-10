@@ -14,12 +14,12 @@
 #' mydata <- create_start_impute(mydata)
 #' }
 create_start_impute <- function(mydata) {
-  
+
   if (nrow(mydata$intervals) == 0) {
     warning("No intervals provided. No modification performed")
     return(mydata)
   }
-  
+
   # Define column names
   conc_column <- mydata$conc$columns$conc
   time_column <- mydata$conc$columns$time

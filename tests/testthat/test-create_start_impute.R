@@ -42,7 +42,7 @@ describe("create_start_impute", {
   })
 
   result <- create_start_impute(mydata)
-  
+
   it("provides a warning when data$intervals is empty or has no rows", {
     mydata_noints <- mydata
     mydata_noints$intervals <- data.frame()
