@@ -121,14 +121,14 @@ tab_visuals_ui <- function(id) {
           orderInput(
             ns("summary_groupby_source"),
             "Drag and drop these variables...",
-            items = c("STUDYID", "USUBJID", "DOSEA"),
+            items = c("STUDYID", "DOSEA"),
             width = shiny::validateCssUnit("100%"),
             connect = ns("summary_groupby")
           ),
           orderInput(
             ns("summary_groupby"),
             "..to hierarchically group by (order matters!):",
-            items = c("ANALYTE", "PCSPEC", "DOSNO"),
+            items = c("DOSNO"),
             width = shiny::validateCssUnit("100%"),
             connect = ns("summary_groupby_source"),
             placeholder = "Drag items here to group hierarchically..."
@@ -423,7 +423,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
       # Define the relevant columns for the group by picker
       group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
-      classification_cols <- sort(grouping_vars())
+      classification_cols <- sort(c(grouping_vars(), "DOSEA"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
@@ -439,9 +439,9 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(res_nca())
 
       # Calculate summary stats and filter by selected parameters
-      calculate_summary_stats(res_nca(), input$summary_groupby) %>%
-        filter(PPTESTCD %in% input$select_display_parameters)  %>%
-        rename(PARAM = PPTESTCD)
+      calculate_summary_stats(res_nca()
+                              %>% filter(PPTESTCD %in% input$select_display_parameters),
+                              input$summary_groupby)
     })
 
     # render the reactive summary table in a data table
@@ -459,7 +459,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        height = "60vh"
+        height = "70vh"
       )
     })
 

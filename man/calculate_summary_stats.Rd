@@ -25,15 +25,13 @@ The function calculates the following statistics for numeric variables:
 \item Geometric mean (\code{geomean})
 \item Geometric coefficient of variation (\code{geocv})
 \item Arithmetic mean (\code{mean})
-\item Coefficient of variation (\code{CV})
 \item Standard deviation (\code{sd})
 \item Minimum value (\code{min})
 \item Maximum value (\code{max})
 \item Median value (\code{median})
+\item Count of missing values (\code{count.missing})
 \item Count (\code{count})
 }
-The function excludes the columns \code{ANALYTE}, \code{DOSEA}, \code{PCSPEC}, \code{STUDYID}, and \code{USUBJID}
-from the numeric summarization because they are possible grouping variables
 The resulting summary statistics are rounded to three decimal places.
 }
 \examples{
