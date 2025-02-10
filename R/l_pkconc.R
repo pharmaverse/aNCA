@@ -110,30 +110,27 @@ l_pkconc <- function(
         na_str = "NA",
         zero_str = ifelse(var_name == "AVAL", "BLQ", "0"),
         align = "center",
-        format_fun =  ifelse(is.numeric(adpc[[var_name]]) &&
-                               !is.integer(adpc[[var_name]]), "round", NA),
-        digits = ifelse(is.numeric(adpc[[var_name]]) &&
-                          !is.integer(adpc[[var_name]]), 3, NA)
+        format_fun =  ifelse(is.double(adpc[[var_name]]), "round", NA),
+        digits = ifelse(is.double(adpc[[var_name]]), 3, NA)
       ) %>%
       # For the default case (when possible) label includes unit
       mutate(
-        Label = if ("AVALU" %in% names(adpc)) ifelse(var_name == "AVAL",
-                                                     paste0(Label, " ($AVALU)"), Label) else Label,
-        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "AFRLT",
-                                                     paste0(Label, " ($RRLTU)"), Label) else Label,
-        Label = if ("RRLTU" %in% names(adpc)) ifelse(var_name == "NFRLT",
-                                                     paste0(Label, " ($RRLTU)"), Label) else Label
+        Label = case_when(
+          "AVALU" %in% names(adpc) & var_name == "AVAL" ~ paste0(Label, " ($AVALU)"),
+          "RRLTU" %in% names(adpc) & var_name == "AFRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(adpc) & var_name == "NFRLT" ~ paste0(Label, " ($RRLTU)"),
+          .default = Label
+        )
       ) %>%
       ungroup()
   }
 
   # Create the proper object from the UI table for col_formatting
-  formatting_vars_list <- lapply(seq_len(nrow(formatting_vars_table)), function(i) {
-    row <- formatting_vars_table[i, ]
-    fmt_config(na_str = row$na_str,
-               format = NULL,
-               align = row$align)
-  }) %>%
+  formatting_vars_list <- formatting_vars_table %>%
+    dplyr::rowwise() %>%
+    group_map( ~ {
+      fmt_config(na_str = .x$na_str, format = NULL, align = .x$align)
+    }) %>%
     setNames(nm = formatting_vars_table$var_name)
 
   # Create a special object to map labels to each variable
