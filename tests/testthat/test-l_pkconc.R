@@ -47,6 +47,21 @@ describe("l_pkconc", {
       )
     )
     )
+    
+    # For 3 case
+    listings_3l <- l_pkconc(adpc[1:3,], listgroup_vars = c("PARAM", "PCSPEC", "ROUTE", "USUBJID"),
+                            grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                            displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
+    
+    expect_length(listings_3l, length(unique(interaction(adpc[1:3,]$PARAM,
+                                                         adpc[1:3,]$PCSPEC,
+                                                         adpc[1:3,]$ROUTE,
+                                                         adpc[1:3,]$USUBJID))))
+    expect_named(listings_3l, expected = as.character(interaction(adpc[1:3,]$PARAM,
+                                                                  adpc[1:3,]$PCSPEC,
+                                                                  adpc[1:3,]$ROUTE,
+                                                                  adpc[1:3,]$USUBJID)))
+    
 
     # For 4 case
     listings_4l <- l_pkconc(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE", "USUBJID"),
@@ -64,9 +79,8 @@ describe("l_pkconc", {
                                                                   adpc$USUBJID)))
 
     # All in correct format (list) and each internal element internally inherits listing_df
-    expect_true(class(listings_1l) == "list" &&
-                  class(listings_2l) == "list" &&
-                  class(listings_4l) == "list")
+    purrr::walk(list(listings_1l, listings_2l, listings_4l), \(x) expect_true(class(x) == "list"))
+
     expect_true(all(sapply(listings_1l, inherits, "listing_df")) &&
                   all(sapply(listings_2l, inherits, "listing_df")) &&
                   all(sapply(listings_4l, inherits, "listing_df")))
@@ -80,26 +94,30 @@ describe("l_pkconc", {
                          formatting_vars_table = NULL)
 
     # Adds labels as column names & includes units when obvious and present  (i.e, AVALU for AVAL)
+    
+    label_strings_with_aval_units <- c(TRT01A = attr(adpc$TRT01A, "label"),
+                                       USUBJID = attr(adpc$USUBJID, "label"),
+                                       AVISIT = attr(adpc$AVISIT, "label"),
+                                       PARAM = attr(adpc$PARAM, "label"),
+                                       PCSPEC = attr(adpc$PCSPEC, "label"),
+                                       ROUTE = attr(adpc$ROUTE, "label"),
+                                       NFRLT = attr(adpc$NFRLT, "label"),
+                                       AFRLT = attr(adpc$AFRLT, "label"),
+                                       # AVAL should include AVALU in parenthesis
+                                       AVAL = paste0(attr(adpc$AVAL, "label"),
+                                                    " (", unique(adpc$AVALU), ")"),
+                                       AVALU = "AVALU",
+                                       id_list = "id")
+    
     expect_equal(var_labels(listings[[1]]),
-                 expected = c(TRT01A = attr(adpc$TRT01A, "label"),
-                              USUBJID = attr(adpc$USUBJID, "label"),
-                              AVISIT = attr(adpc$AVISIT, "label"),
-                              PARAM = attr(adpc$PARAM, "label"),
-                              PCSPEC = attr(adpc$PCSPEC, "label"),
-                              ROUTE = attr(adpc$ROUTE, "label"),
-                              NFRLT = attr(adpc$NFRLT, "label"),
-                              AFRLT = attr(adpc$AFRLT, "label"),
-                              AVAL = paste0(attr(adpc$AVAL, "label"),
-                                            " (", unique(adpc$AVALU), ")"),
-                              AVALU = "AVALU",
-                              id_list = "id"))
+                 expected = label_strings_with_aval_units)
   })
 
-  it("handles missing subtitle_lists and creates a default", {
+  it("handles missing subtitle and creates a default", {
     listings <- l_pkconc(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
                          grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
-                         subtitle_lists = NULL)
+                         subtitle = NULL)
 
     # Check if the subtitle is in the correct format
     expect_equal(attr(listings[[1]], "subtitles"),
@@ -107,11 +125,11 @@ describe("l_pkconc", {
 
   })
 
-  it("handles missing footnote_table (no footnote)", {
+  it("handles missing footnote (no footnote)", {
     listings <- l_pkconc(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
                          grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
-                         footnote_table = NULL)
+                         footnote = NULL)
     expect_equal(attr(listings[[1]], "main_footer"), expected =  character())
   })
 
@@ -119,15 +137,18 @@ describe("l_pkconc", {
 
     # Define the input for the function
     empty_adpc <- adpc[0, ]
+    
+    # Run the empty input and store the output
+    empty_res <- l_pkconc(empty_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                          grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
 
-    # Define the expected output
+    # Define the expected output (empty object)
     empty_list <- list()
     names(empty_list) <- character()
 
     # Check if the output is as expected
-    expect_equal(l_pkconc(empty_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                          grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
-                          displaying_vars = c("NFRLT", "AFRLT", "AVAL")),
+    expect_equal(empty_res,
                  expected = empty_list)
   })
 
@@ -154,7 +175,7 @@ describe("l_pkconc", {
       Label = c("Treatment", "Subject ID", "Visit", "Nominal Time", "Actual Time",
                 "Value ($AVALU)"),
       na_str = c("missing", "missing", "missing", "missing", "missing", "missing"),
-      cero_str = c("0", "0", "0", "0", "0", "BLQ"),
+      zero_str = c("0", "0", "0", "0", "0", "BLQ"),
       align = c("center", "center", "center", "center", "center", "center"),
       format_fun = c(NA, NA, NA, NA, "round", "signif"),
       digits = c(NA, NA, NA, NA, 2, 2),
