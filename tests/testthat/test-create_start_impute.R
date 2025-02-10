@@ -42,6 +42,13 @@ describe("create_start_impute", {
   })
 
   result <- create_start_impute(mydata)
+  
+  it("provides a warning when data$intervals is empty or has no rows", {
+    mydata_noints <- mydata
+    mydata_noints$intervals <- data.frame()
+    mydata_noints_res <- suppressWarnings(create_start_impute(mydata_noints))
+    expect_warning(create_start_impute(mydata_noints), "No intervals provided. No modification")
+  })
 
   it("does not add impute (NA) when start is in PKNCAconc", {
     not_imputed <- result$intervals %>%

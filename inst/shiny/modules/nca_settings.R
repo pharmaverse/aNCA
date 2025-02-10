@@ -380,10 +380,6 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
       }
     })
 
-
-    observeEvent(input$rule_adj_r_squared, print(input$rule_adj_r_squared))
-    observeEvent(input$rule_adj_r_squared, print(names(input)))
-
     # Include keyboard limits for the settings GUI display
 
     # Define a function that simplifies the action
