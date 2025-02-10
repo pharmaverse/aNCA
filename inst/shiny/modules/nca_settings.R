@@ -484,8 +484,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
           # only TRUE for columns specified in params
           mutate(across(where(is.logical), ~FALSE)) %>%
           # Intervals will always only compute AUC values
-          mutate(across(c("aucint.last", "aucint.inf.obs",
-                          "aucint.inf.pred", "aucint.all"), ~TRUE)) %>%
+          mutate(across(c("aucint.last"), ~TRUE)) %>%
           # Identify the intervals as the manual ones created by the user
           mutate(type_interval = "manual")
       })
