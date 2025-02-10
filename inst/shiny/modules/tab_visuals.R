@@ -438,14 +438,14 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$summary_groupby, input$select_display_parameters)
       req(res_nca())
 
-      stats_data <- res_pknca$result %>%
+      stats_data <- res_nca()$result %>%
         filter(PPTESTCD %in% input$select_display_parameters)
 
       # Join subject data to allow the user to group by it
       stats_data <- merge(
         stats_data,
-        res_pknca$data$conc$data %>%
-          select(any_of(c(input_groups, unname(unlist(res_pknca$data$conc$columns$groups)))))
+        res_nca()$data$conc$data %>%
+          select(any_of(c(input_groups, unname(unlist(res_nca()$data$conc$columns$groups)))))
       )
 
       # Calculate summary stats and filter by selected parameters
@@ -500,10 +500,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       group_columns <- unname(unlist(res_nca()$data$conc$columns$groups))
       req(res_nca())
       left_join(
-        res_nca()$result %>%
-          filter(
-            end == Inf | startsWith(PPTESTCD, "aucint")
-          ),
+        res_nca()$result,
         res_nca()$data$conc$data %>%
           distinct(across(all_of(group_columns)), .keep_all = TRUE),
         by = group_columns,
