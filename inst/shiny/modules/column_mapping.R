@@ -262,8 +262,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
       # Reorder columns based on the desired order
       dataset <- dataset %>%
-        relocate(all_of(desired_order)) %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
+        relocate(all_of(desired_order))
 
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
