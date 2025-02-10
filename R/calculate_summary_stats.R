@@ -28,27 +28,15 @@
 #' @examples
 #' \dontrun{
 #' data <- data.frame(
-#'   STUDYID = rep(1, 10),
-#'   USUBJID = rep(1:2, each = 5),
-#'   DOSEA = rep(c(10, 20), each = 5),
-#'   ANALYTE = rep(c("A", "B"), each = 5),
-#'   PCSPEC = rep(c("X", "Y"), each = 5),
-#'   VALUE = rnorm(10)
+#' DOSNO = c(1, 1, 1, 1, 1, 1),
+#' PPTESTCD = c("A", "A", "B", "B", "C", "C"),
+#' PPSTRES = c(10, 20, 5, 15, NA, 30),
+#' PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 #' )
-#' input_groups <- c("STUDYID", "USUBJID", "DOSEA", "ANALYTE", "PCSPEC")
-#' calculate_summary_stats(data, input_groups)
+#' calculate_summary_stats(data)
 #' }
 
-calculate_summary_stats <- function(res_pknca, input_groups = "DOSNO") {
-
-  data <- res_pknca$result
-
-  # Join subject data to allow the user to group by it
-  data <- merge(
-    data,
-    res_pknca$data$conc$data %>%
-      select(any_of(c(input_groups, unname(unlist(res_pknca$data$conc$columns$groups)))))
-  )
+calculate_summary_stats <- function(data, input_groups = "DOSNO") {
 
   # Calculate summary statistics, using all value rows
   # (note: this will give more weight to subjects with more valid records)
@@ -60,14 +48,14 @@ calculate_summary_stats <- function(res_pknca, input_groups = "DOSNO") {
       Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
       Mean = mean(PPSTRES, na.rm = TRUE),
       SD = sd(PPSTRES, na.rm = TRUE),
-      Min = min(PPSTRES, na.rm = TRUE),
-      Max = max(PPSTRES, na.rm = TRUE),
+      Min = ifelse(all(is.na(PPSTRES)), NA, min(PPSTRES, na.rm = TRUE)),
+      Max = ifelse(all(is.na(PPSTRES)), NA, max(PPSTRES, na.rm = TRUE)),
       Median = median(PPSTRES, na.rm = TRUE),
       Count.missing = sum(is.na(PPSTRES)),
       Count.total = n()
     ) %>%
     ungroup() %>%
-    mutate(across(where(is.numeric), round, digits = 3))%>%
+    mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
     pivot_longer(
       cols = c(Geomean, Geocv, Mean, SD, Min, Max, Median, Count.missing, Count.total),
       names_to = "Statistic",
@@ -77,13 +65,13 @@ calculate_summary_stats <- function(res_pknca, input_groups = "DOSNO") {
       names_from = PPTESTCD,
       values_from = Value
     )
-  
+
   # Include units for all column names
   pttestcd_with_units <- data %>%
     select(PPTESTCD, PPSTRESU) %>%
     unique() %>%
     pull(PPSTRESU, PPTESTCD)
-  
+
   summary_stats <- summary_stats %>%
     rename_with(~ifelse(
       gsub("_.*", "", .x) %in% names(pttestcd_with_units),

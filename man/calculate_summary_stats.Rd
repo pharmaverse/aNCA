@@ -4,14 +4,14 @@
 \alias{calculate_summary_stats}
 \title{Calculate Summary Statistics}
 \usage{
-calculate_summary_stats(res_pknca, input_groups = "DOSNO")
+calculate_summary_stats(data, input_groups = "DOSNO")
 }
 \arguments{
-\item{res_pknca}{A data frame containing results of
-Non Compartmental Analysis using PKNCA package}
-
 \item{input_groups}{A character vector specifying the columns to group by.
 Here. the hierarchical order matters}
+
+\item{res_pknca}{A data frame containing results of
+Non Compartmental Analysis using PKNCA package}
 }
 \value{
 A data frame with summary statistics for each group and parameter.
@@ -37,14 +37,11 @@ The resulting summary statistics are rounded to three decimal places.
 \examples{
 \dontrun{
 data <- data.frame(
-  STUDYID = rep(1, 10),
-  USUBJID = rep(1:2, each = 5),
-  DOSEA = rep(c(10, 20), each = 5),
-  ANALYTE = rep(c("A", "B"), each = 5),
-  PCSPEC = rep(c("X", "Y"), each = 5),
-  VALUE = rnorm(10)
+DOSNO = c(1, 1, 1, 1, 1, 1),
+PPTESTCD = c("A", "A", "B", "B", "C", "C"),
+PPSTRES = c(10, 20, 5, 15, NA, 30),
+PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 )
-input_groups <- c("STUDYID", "USUBJID", "DOSEA", "ANALYTE", "PCSPEC")
-calculate_summary_stats(data, input_groups)
+calculate_summary_stats(data)
 }
 }

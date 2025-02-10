@@ -438,10 +438,18 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$summary_groupby, input$select_display_parameters)
       req(res_nca())
 
+      stats_data <- res_pknca$result %>%
+        filter(PPTESTCD %in% input$select_display_parameters)
+
+      # Join subject data to allow the user to group by it
+      stats_data <- merge(
+        stats_data,
+        res_pknca$data$conc$data %>%
+          select(any_of(c(input_groups, unname(unlist(res_pknca$data$conc$columns$groups)))))
+      )
+
       # Calculate summary stats and filter by selected parameters
-      calculate_summary_stats(res_nca()
-                              %>% filter(PPTESTCD %in% input$select_display_parameters),
-                              input$summary_groupby)
+      calculate_summary_stats(stats_data, input$summary_groupby)
     })
 
     # render the reactive summary table in a data table
