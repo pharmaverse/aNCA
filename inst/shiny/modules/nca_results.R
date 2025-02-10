@@ -13,15 +13,14 @@ nca_results_ui <- function(id) {
       options = list(`actions-box` = TRUE)
     ),
     units_table_ui(ns("units_table_postNCA")),
-    DTOutput(ns("myresults")),
-    tableOutput(ns("summaryTable")),
+    reactableOutput(ns("myresults")),
     actionButton(ns("download"), "Download the NCA Data"),
     downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
   )
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, res_nca) {
+nca_results_server <- function(id, res_nca, rules) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -32,19 +31,23 @@ nca_results_server <- function(id, res_nca) {
       
       # Transform results
       final_results <- pivot_wider_pknca_results(res_nca())
-      
+
       # Apply rules
-      for (rule_input in grep("^rule_", names(input), value = TRUE)) {
-        if (!input[[rule_input]]) next
+      for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
+        if (!rules[[rule_input]]) next
+        
+        print(rule_input)
         
         pptestcd <- rule_input |>
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
         
+        print(pptestcd)
+        
         if (startsWith(pptestcd, "auc")) {
-          final_results[[paste0("flag_", pptestcd)]] <- final_results[[pptestcd]] >= input[[paste0(pptestcd, "_threshold")]]
+          final_results[[paste0("flag_", pptestcd)]] <- final_results[[pptestcd]] >= rules[[paste0(pptestcd, "_threshold")]]
         } else {
-          final_results[[paste0("flag_", pptestcd)]] <- final_results[[pptestcd]] <= input[[paste0(pptestcd, "_threshold")]]
+          final_results[[paste0("flag_", pptestcd)]] <- final_results[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
         }
       }
       
@@ -69,7 +72,7 @@ nca_results_server <- function(id, res_nca) {
       other_cols <- setdiff(names(final_results), c(group_cols, int_cols, param_cols))
       
       final_results <- final_results %>%
-        dplyr::select(any_of(c(group_cols, int_cols, param_cols, other_cols)))
+        select(any_of(c(group_cols, int_cols, param_cols, other_cols)))
       
       # Add flagged column
       final_results <- final_results %>%
@@ -91,27 +94,35 @@ nca_results_server <- function(id, res_nca) {
         selected = sort(colnames(final_res_nca()))
       )
     })
-    
-    output$myresults <- DT::renderDataTable({
+
+    output$myresults <- reactable::renderReactable({
       req(final_res_nca())
-      DT::datatable(
-        data = final_res_nca(),
-        extensions = "FixedHeader",
-        options = list(
-          scrollX = TRUE,
-          scrollY = TRUE,
-          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-          fixedHeader = TRUE,
-          columnDefs = list(list(
-            visible = FALSE, targets = setdiff(colnames(final_res_nca()), input$params)
-          ))
-        )
-      ) %>%
-        formatStyle(
-          "flagged",
-          target = "row",
-          backgroundColor = styleEqual(c("FLAGGED", "MISSING"), c("#f5b4b4", "#cbaddd"))
-        )
+
+      col_defs <- setdiff(generate_col_defs(final_res_nca()), input$params)
+      reactable(
+        final_res_nca(),
+        columns = col_defs,
+        searchable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        wrap = FALSE,
+        resizable = TRUE,
+        defaultPageSize = 25,
+        showPageSizeOptions = TRUE,
+        striped = TRUE,
+        bordered = TRUE,
+        height = "98vh",
+        rowStyle = function(index) {
+          flagged_value <- final_res_nca()$flagged[index]
+          if (flagged_value == "FLAGGED") {
+            list(backgroundColor = "#f5b4b4")
+          } else if (flagged_value == "MISSING") {
+            list(backgroundColor = "#cbaddd")
+          } else {
+            NULL
+          }
+        }
+      )
     })
     
     observeEvent(input$download, {

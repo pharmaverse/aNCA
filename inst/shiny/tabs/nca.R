@@ -506,7 +506,24 @@ observeEvent(pk_nca_trigger(), {
 units_table_server("units_table_preNCA", mydata, res_nca)
 units_table_server("units_table_postNCA", mydata, res_nca)
 
-nca_results_server("nca_results", res_nca)
+# RESULTS -----
+# Create list of rules to apply to the NCA results
+rules = reactive({
+  list(
+  rule_adj_r_squared = input$rule_adj_r_squared,
+  adj.r.squared_threshold = input$adj.r.squared_threshold,
+  
+  rule_aucpext_obs = input$rule_aucpext_obs,
+  aucpext.obs_threshold = input$aucpext.obs_threshold,
+  
+  rule_aucpext_pred = input$rule_aucpext_pred,
+  aucpext.pred_threshold = input$aucpext.pred_threshold,
+  
+  rule_span_ratio = input$rule_span_ratio,
+  span.ratio_threshold = input$span.ratio_threshold)
+})
+
+nca_results_server("nca_results", res_nca, rules())
 
 # Save the project settings
 output$settings_save <- downloadHandler(
