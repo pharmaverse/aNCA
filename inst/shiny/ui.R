@@ -227,19 +227,7 @@ fluidPage(
                 "Exclusions",
                 tableOutput("manual_slopes2")
               ),
-              nav_panel(
-                "Parameter Datasets",
-                tabsetPanel(
-                  tabPanel(
-                    "PP",
-                    DTOutput("pp_dataset")
-                  ),
-                  tabPanel(
-                    "ADPP",
-                    DTOutput("adpp_dataset")
-                  )
-                )
-              )
+              tabPanel("Parameter Datasets", parameter_datasets_ui("parameter_datasets"))
             )
           )
         )
