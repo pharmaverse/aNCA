@@ -524,7 +524,7 @@ rules <- reactive({
   )
 })
 
-nca_results_server("nca_results", res_nca, rules())
+nca_results_server("nca_results", res_nca, rules(), grouping_vars)
 
 # Save the project settings
 output$settings_save <- downloadHandler(

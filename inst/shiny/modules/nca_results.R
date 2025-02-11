@@ -20,7 +20,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, res_nca, rules) {
+nca_results_server <- function(id, res_nca, rules, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -72,9 +72,17 @@ nca_results_server <- function(id, res_nca, rules) {
       int_cols <- c("DOSNO", "start", "end")
       param_cols <- names(final_results)[endsWith(names(final_results), "]")]
       other_cols <- setdiff(names(final_results), c(group_cols, int_cols, param_cols))
+      id_cols <- grouping_vars()
+
+      # Join subject data to allow the user to group by it
+      final_results <- merge(
+        final_results,
+        res_nca()$data$conc$data %>%
+          select(any_of(c(id_cols, unname(unlist(res_nca()$data$conc$columns$groups)))))
+      )
 
       final_results <- final_results %>%
-        select(any_of(c(group_cols, int_cols, param_cols, other_cols)))
+        select(any_of(c(group_cols, id_cols, int_cols, param_cols, other_cols)))
 
       # Add flagged column
       final_results <- final_results %>%
