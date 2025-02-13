@@ -437,7 +437,12 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         res_nca()$result,
         res_nca()$data$conc$data %>%
           select(any_of(c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))))
-      )
+      ) %>%
+        filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
+        mutate(PPTESTCD = case_when(
+          type_interval == "manual" ~ paste0(PPTESTCD, signif(start), "-", signif(end)),
+          TRUE ~ PPTESTCD
+        ))
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)

@@ -40,16 +40,10 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
 
   # Calculate summary statistics, using all value rows
   # (note: this will give more weight to subjects with more valid records)
-  data <- data %>%
-    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
-    unique() %>%
-    filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
-    mutate(PPTESTCD = case_when(
-      type_interval == "manual" ~ paste0(PPTESTCD, signif(start), "-", signif(end)),
-      TRUE ~ PPTESTCD
-    ))
 
   summary_stats <- data %>%
+    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
+    unique() %>%
     summarise(
       Geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
       Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
