@@ -442,7 +442,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
     })
-    
+
     observeEvent(summary_stats(), {
       req(summary_stats())
       # Update the select display parameters picker input
@@ -453,7 +453,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected = setdiff(colnames(summary_stats()), "Statistic")
       )
     })
-    
+
 
     # render the reactive summary table in a data table
     output$descriptive_stats <- renderReactable({

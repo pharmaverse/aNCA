@@ -53,7 +53,7 @@ describe("calculate_summary_stats", {
   it("handles missing values correctly", {
     expect_equal(
       result %>% filter(Statistic == "Count.missing") %>% pull(`C[µg/L]`) %>% as.numeric(),
-      c(1,1)
+      c(1, 1)
     )
   })
 
