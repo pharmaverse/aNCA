@@ -110,7 +110,7 @@ tab_visuals_ui <- function(id) {
           position = "right", open = TRUE,
           pickerInput(
             inputId = ns("select_display_parameters"),
-            label = "Filter parameters to display:",
+            label = "Filter columns to display:",
             choices = NULL,
             selected = NULL,
             multiple = TRUE,
@@ -138,7 +138,6 @@ tab_visuals_ui <- function(id) {
           reactableOutput(ns("descriptive_stats"))
         ),
         card(
-          actionButton(ns("download_improve"), "Download the NCA Summary Data to Improve"),
           downloadButton(ns("download_browser"), "Download the NCA Summary Data")
         )
       )
@@ -411,15 +410,6 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     # Update inputs based on what is available in the data
     observeEvent(res_nca(), {
 
-      # Update the paramselect picker input
-      paramselection <- unique(res_nca()$result$PPTESTCD)
-
-      updatePickerInput(
-        session,
-        "select_display_parameters",
-        choices = paramselection,
-        selected = paramselection
-      )
 
       # Define the relevant columns for the group by picker
       group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
@@ -435,30 +425,45 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
     # Reactive expression for summary table based on selected group and parameters
     summary_stats <- reactive({
-      req(input$summary_groupby, input$select_display_parameters)
+      req(input$summary_groupby)
       req(res_nca())
 
-      stats_data <- res_nca()$result %>%
-        filter(PPTESTCD %in% input$select_display_parameters)
-
+      classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose))
+      classification_cols <- classification_cols[
+        classification_cols %in% names(res_nca()$data$conc$data)
+      ]
       # Join subject data to allow the user to group by it
       stats_data <- merge(
-        stats_data,
+        res_nca()$result,
         res_nca()$data$conc$data %>%
-          select(any_of(c(input_groups, unname(unlist(res_nca()$data$conc$columns$groups)))))
+          select(any_of(c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))))
       )
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
     })
+    
+    observeEvent(summary_stats(), {
+      req(summary_stats())
+      # Update the select display parameters picker input
+      updatePickerInput(
+        session,
+        "select_display_parameters",
+        choices = setdiff(colnames(summary_stats()), "Statistic"),
+        selected = setdiff(colnames(summary_stats()), "Statistic")
+      )
+    })
+    
 
     # render the reactive summary table in a data table
     output$descriptive_stats <- renderReactable({
       req(summary_stats())
       log_info("Rendering descriptive statistics table")
 
+      data <- summary_stats() %>%
+        select(input$select_display_parameters)
       reactable(
-        summary_stats(),
+        data,
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -466,20 +471,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         resizable = TRUE,
         showPageSizeOptions = TRUE,
         striped = TRUE,
-        bordered = TRUE,
-        height = "70vh"
+        bordered = TRUE
       )
-    })
-
-    # Save summary stats to improve
-    observeEvent(input$download_improve, {
-      showModal(modalDialog(
-        title = "Please enter the path to the folder on improve for your results:",
-        textInput(ns("pathresults"), "Path:"),
-        textInput(ns("filename"), "Enter filename of choice:", ""),
-        actionButton(ns("go2"), "GO"),
-        footer = modalButton("Close")
-      ))
     })
 
     # alternatively: save locally

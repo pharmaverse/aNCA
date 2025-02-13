@@ -1,8 +1,8 @@
 test_data <- data.frame(
-  DOSNO = c(1, 1, 1, 1, 1, 1),
-  PPTESTCD = c("A", "A", "B", "B", "C", "C"),
-  PPSTRES = c(10, 20, 5, 15, NA, 30),
-  PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
+  DOSNO = rep(1:2, each = 6),
+  PPTESTCD = rep(c("A", "A", "B", "B", "C", "C"), 2),
+  PPSTRES = rep(c(10, 20, 5, 15, NA, 30), 2),
+  PPSTRESU = rep(c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L"), 2)
 )
 
 result <- calculate_summary_stats(test_data)
@@ -28,24 +28,24 @@ describe("calculate_summary_stats", {
 
   it("correctly calculates summary statistics", {
 
-    a_data <- test_data %>% filter(PPTESTCD == "A") %>% pull(PPSTRES)
+    a_data <- test_data %>% filter(PPTESTCD == "A", DOSNO == 1) %>% pull(PPSTRES)
 
     expected_geomean <- round(exp(mean(log(a_data), na.rm = TRUE)), 3)
     expected_mean <- round(mean(a_data, na.rm = TRUE), 3)
     expected_sd <- round(sd(a_data, na.rm = TRUE), 3)
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "Geomean") %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "Geomean", DOSNO == 1) %>% pull(`A[mg/L]`)),
       expected_geomean
     )
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "Mean") %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "Mean", DOSNO == 1) %>% pull(`A[mg/L]`)),
       expected_mean
     )
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "SD") %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "SD", DOSNO == 1) %>% pull(`A[mg/L]`)),
       expected_sd
     )
   })
@@ -53,7 +53,7 @@ describe("calculate_summary_stats", {
   it("handles missing values correctly", {
     expect_equal(
       result %>% filter(Statistic == "Count.missing") %>% pull(`C[µg/L]`) %>% as.numeric(),
-      1
+      c(1,1)
     )
   })
 
