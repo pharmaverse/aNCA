@@ -137,12 +137,12 @@ non_nca_server <- function(id, data, grouping_vars) {
       # Separate Blood and Plasma Samples
       df_blood <- filtered_samples_bpp() %>%
         filter(PCSPEC == blood) %>%
-        rename(BLOOD_CONC = AVAL) %>% 
+        rename(BLOOD_CONC = data()$conc$columns$concentration) %>% 
         select(bpp_groups, BLOOD_CONC)
 
       df_plasma <- filtered_samples_bpp() %>%
         filter(PCSPEC == plasma) %>%
-        rename(PLASMA_CONC = AVAL) %>%
+        rename(PLASMA_CONC = data()$conc$columns$concentration) %>%
         select(bpp_groups, PLASMA_CONC)
 
       # Merge Blood and Plasma Data
@@ -163,78 +163,84 @@ non_nca_server <- function(id, data, grouping_vars) {
       datatable(bpp_results(), options = list(pageLength = 5))
     })
 
-#     #Tissue-Plasma Analysis ###############################
-#     # Dynamically generate the tissue selection input
-#     output$tissue_selector <- renderUI({
-#       req(data())
-# 
-#       tissue_options <- unique(data()$PCSPEC)
-#       selectInput(ns("selected_tissues"), "Choose Tissues",
-#                   choices = tissue_options, multiple = TRUE,
-#                   selected = tissue_options)
-#     })
-# 
-#     output$plasma_selector <- renderUI({
-#       req(data())
-# 
-#       tissue_options <- unique(data()$PCSPEC)
-#       selectInput(ns("selected_plasma"), "Choose Plasma",
-#                   choices = tissue_options)
-#     })
-# 
-#     # Filter & prepare data for tissue-plasma ratio calculation
-#     filtered_samples <- reactive({
-#       req(data(), input$selected_tissues)
-# 
-#       plasma <- input$selected_plasma
-#       tissue <- input$selected_tissues
-# 
-#       df_filtered <- data() %>%
-#         filter(PCSPEC %in% c(input$selected_plasma, input$selected_tissues))
-# 
-#       df_filtered
-#     })
-# 
-#     # Perform Ratio Calculation on Submit
-#     ratio_results <- eventReactive(input$submit_ratio, {
-#       req(filtered_samples())
-# 
-#       plasma <- input$selected_plasma
-#       tissue <- input$selected_tissues
-#       ratio_groups <- c(grouping_vars(), "USUBJID", "ANALYTE", "DOSEA", "DOSNO", "AFRLT")
-#       #TODO: update this to mydata()$ obj when parameters branch merged
-# 
-#       # Separate Tissue and Plasma Samples
-#       df_plasma <- filtered_samples() %>%
-#         filter(PCSPEC == plasma) %>%
-#         rename(PLASMA_CONC = AVAL,
-#                PLASMA = PCSPEC) %>%
-#         select(ratio_groups, PLASMA_CONC)
-# 
-#       df_tissue <- filtered_samples() %>%
-#         filter(PCSPEC %in% tissue) %>%
-#         rename(TISSUE_CONC = AVAL) %>%
-#         select(ratio_groups, PCSPEC, TISSUE_CONC)
-# 
-#       # Merge Plasma and Tissue Data
-#       df_ratio <- left_join(df_tissue, df_plasma, by = ratio_groups) %>%
-#         filter(!is.na(TISSUE_CONC) & !is.na(PLASMA_CONC)) %>%
-#         mutate(
-#           RATIO = signif(TISSUE_CONC / PLASMA_CONC, 3)
-#         ) %>%
-#         select(ratio_groups, PCSPEC,
-#                TISSUE_CONC, PLASMA_CONC, RATIO) %>%
-#         rename(TIME = AFRLT) %>%
-#         arrange(USUBJID, ANALYTE, TIME)
-# 
-#       df_ratio
-#     })
-# 
-#     # Display results
-#     output$matrix_ratio_results <- renderDT({
-#       req(ratio_results())
-#       datatable(ratio_results(), options = list(pageLength = 5))
-#     })
-# 
+    #Tissue-Plasma Analysis ###############################
+    # Dynamically generate the tissue selection input
+    output$tissue_selector <- renderUI({
+      req(data())
+
+      tissue_options <- unique(data()$conc$data$PCSPEC)
+      selectInput(ns("selected_tissues"), "Choose Tissues",
+                  choices = tissue_options, multiple = TRUE,
+                  selected = tissue_options)
+    })
+
+    output$plasma_selector <- renderUI({
+      req(data())
+
+      tissue_options <- unique(data()$conc$data$PCSPEC)
+      selectInput(ns("selected_plasma"), "Choose Plasma",
+                  choices = tissue_options)
+    })
+
+    # Filter & prepare data for tissue-plasma ratio calculation
+    filtered_samples <- reactive({
+      req(data(), input$selected_tissues)
+
+      plasma <- input$selected_plasma
+      tissue <- input$selected_tissues
+
+      df_filtered <- data()$conc$data %>%
+        filter(PCSPEC %in% c(input$selected_plasma, input$selected_tissues))
+
+      df_filtered
+    })
+
+    # Perform Ratio Calculation on Submit
+    ratio_results <- eventReactive(input$submit_ratio, {
+      req(filtered_samples())
+
+      plasma <- input$selected_plasma
+      tissue <- input$selected_tissues
+      
+      id_groups <- data()$conc$columns$groups %>%
+        purrr::list_c() %>%
+        append("DOSNO") %>%
+        purrr::keep(\(col) {
+          !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
+        })
+      
+      ratio_groups <- c(grouping_vars(), id_groups,
+                      data()$dose$columns$dose, data()$dose$columns$time)
+
+      # Separate Tissue and Plasma Samples
+      df_plasma <- filtered_samples() %>%
+        filter(PCSPEC == plasma) %>%
+        rename(PLASMA_CONC = data()$conc$columns$concentration) %>%
+        select(ratio_groups, PLASMA_CONC)
+
+      df_tissue <- filtered_samples() %>%
+        filter(PCSPEC %in% tissue) %>%
+        rename(TISSUE_CONC = data()$conc$columns$concentration) %>%
+        select(ratio_groups, PCSPEC, TISSUE_CONC)
+
+      # Merge Plasma and Tissue Data
+      df_ratio <- left_join(df_tissue, df_plasma, by = ratio_groups) %>%
+        filter(!is.na(TISSUE_CONC) & !is.na(PLASMA_CONC)) %>%
+        mutate(
+          RATIO = signif(TISSUE_CONC / PLASMA_CONC, 3)
+        ) %>%
+        select(ratio_groups, PCSPEC,
+               TISSUE_CONC, PLASMA_CONC, RATIO) %>%
+        arrange(USUBJID, TIME)
+
+      df_ratio
+    })
+
+    # Display results
+    output$matrix_ratio_results <- renderDT({
+      req(ratio_results())
+      datatable(ratio_results(), options = list(pageLength = 5))
+    })
+
   })
  }
