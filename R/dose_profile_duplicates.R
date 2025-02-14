@@ -38,12 +38,12 @@
 #'
 #' @export
 dose_profile_duplicates <- function(conc_data,
-                              groups = c("USUBJID", "DOSNO", "ANALYTE"),
-                              dosno = "DOSNO",
-                              arrlt = "ARRLT",
-                              afrlt = "AFRLT",
-                              nrrlt = "NRRLT",
-                              nfrlt = "NFRLT") {
+                                    groups = c("USUBJID", "DOSNO", "ANALYTE"),
+                                    dosno = "DOSNO",
+                                    arrlt = "ARRLT",
+                                    afrlt = "AFRLT",
+                                    nrrlt = "NRRLT",
+                                    nfrlt = "NFRLT") {
 
   #If only one dose, return the original data
   if (n_distinct(conc_data[[dosno]]) == 1) {
