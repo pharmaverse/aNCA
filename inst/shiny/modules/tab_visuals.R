@@ -425,7 +425,6 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
     # Reactive expression for summary table based on selected group and parameters
     summary_stats <- reactive({
-      req(input$summary_groupby)
       req(res_nca())
 
       classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose))
@@ -454,8 +453,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       updatePickerInput(
         session,
         "select_display_parameters",
-        choices = setdiff(colnames(summary_stats()), "Statistic"),
-        selected = setdiff(colnames(summary_stats()), "Statistic")
+        choices = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby)),
+        selected = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
       )
     })
 
@@ -466,7 +465,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       log_info("Rendering descriptive statistics table")
 
       data <- summary_stats() %>%
-        select(input$select_display_parameters)
+        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters)
+      
       reactable(
         data,
         searchable = TRUE,
