@@ -60,13 +60,13 @@ non_nca_ui <- function(id) {
         card(
           card_header("Bioavailability Calculations"),
           card_body(
-            
+
           )
         ),
         card(
           card_header("AUC profile ratios"),
           card_body(
-            
+
           )
         )
       ),
@@ -76,7 +76,7 @@ non_nca_ui <- function(id) {
         card(
           card_header("Metabolite-Parent Ratios"),
           card_body(
-            
+
           )
         )
       ),
@@ -122,14 +122,14 @@ non_nca_server <- function(id, data, grouping_vars) {
 
       blood <- input$selected_blood
       plasma <- input$selected_plasmaforbpp
-      
+
       id_groups <- data()$conc$columns$groups %>%
         purrr::list_c() %>%
         append("DOSNO") %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
         })
-      
+
       bpp_groups <- c(grouping_vars(), id_groups,
                       data()$dose$columns$dose, data()$dose$columns$time,
                       data()$dose$columns$route)
@@ -137,7 +137,7 @@ non_nca_server <- function(id, data, grouping_vars) {
       # Separate Blood and Plasma Samples
       df_blood <- filtered_samples_bpp() %>%
         filter(PCSPEC == blood) %>%
-        rename(BLOOD_CONC = data()$conc$columns$concentration) %>% 
+        rename(BLOOD_CONC = data()$conc$columns$concentration) %>%
         select(bpp_groups, BLOOD_CONC)
 
       df_plasma <- filtered_samples_bpp() %>%
@@ -201,16 +201,16 @@ non_nca_server <- function(id, data, grouping_vars) {
 
       plasma <- input$selected_plasma
       tissue <- input$selected_tissues
-      
+
       id_groups <- data()$conc$columns$groups %>%
         purrr::list_c() %>%
         append("DOSNO") %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
         })
-      
+
       ratio_groups <- c(grouping_vars(), id_groups,
-                      data()$dose$columns$dose, data()$dose$columns$time)
+                        data()$dose$columns$dose, data()$dose$columns$time)
 
       # Separate Tissue and Plasma Samples
       df_plasma <- filtered_samples() %>%
@@ -243,4 +243,4 @@ non_nca_server <- function(id, data, grouping_vars) {
     })
 
   })
- }
+}
