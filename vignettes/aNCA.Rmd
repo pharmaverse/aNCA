@@ -25,7 +25,7 @@ Click *Upload File* and select the dataset you would like to use. The data must 
 |                          | TRT01A       | Treatment Group Identifier (Actual)                                | character         |
 |                          | TRT01P       | Treatment Group Identifier (Planned)                               | character         |
 |                          | AGE          | Age of Subject                                                     | numeric           |
-|                          | RACE         | Race pf Subject                                                    | character         |
+|                          | RACE         | Race of Subject                                                    | character         |
 |                          | SEX          | Sex of Subject                                                     | character         |
 | **Sample variables**     | ANALYTE      | Analyte                                                            | character         |
 |                          | PCSPEC       | Specimen Material Type                                             | character         |
@@ -66,12 +66,9 @@ Don’t forget to scroll down and click submit!
 Click on the *NCA* tab at the top of the screen to switch to the next section.
 
 ## Data selection
-1. Choose the analyte you would like to run the NCA on (it is currently only possible to analyze one analyte at a time).
-2. Click *Submit* and check that the data is as expected.
+1. Choose the analytes you would like to run the NCA on.
 
-<blockquote class="note">
-The current version of the app only works with one matrix (PCSPEC) at a time. If you are having problems when clicking *Submit*, ensure that your data has been filtered to fit these specifications. You can return to the *Mapping and Filtering* tab in *Data* to do this.
-</blockquote>
+2. Click *Submit* and check that the data is as expected.
 
 <img src = "images/get_started/06.png" alt = "NCA tab">
 
@@ -120,11 +117,11 @@ For in-app guidance, you can click the <span style="border:thin solid #1f6feb;bo
 #### Applying the exclusions
 Once the exclusions/selections have been added, click *Apply*.
 
-<img src = "images/get_started/13.png" alt = "Applying exlusions/selections">
+<img src = "images/get_started/13.png" alt = "Applying exclusions/selections">
 
 You can check if they have been applied in the *Results* -> *Exclusions* tab.
 
-<img src = "images/get_started/14.png" alt = "Inspecting exlusions/selections">
+<img src = "images/get_started/14.png" alt = "Inspecting exclusions/selections">
 
 <blockquote class="important">
 If you do not click *Apply*, the manual slopes will not be added!
