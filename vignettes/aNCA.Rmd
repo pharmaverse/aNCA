@@ -1,0 +1,154 @@
+---
+title: "aNCA Shiny App User Guide"
+description: >
+  Learn how to get started with the basics of aNCA Shiny application.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{aNCA Shiny App User Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This guide will provide users with information on how to get started with the aNCA app.
+
+# Step 1: Prepare Dataset
+### Uploading a dataset
+Click *Upload File* and select the dataset you would like to use. The data must be in `.csv` or `.rds` format. The best input for the app is data that follows the ADNCA format. Other formats of data will also work.
+
+<img src = "images/get_started/01.png" alt = "Data upload">
+
+### Data format
+|                          | **Variable** | **Description**                                                    | **Format**        |
+|--------------------------|--------------|--------------------------------------------------------------------|-------------------|
+|                          | STUDYID      | Study Identifier                                                   | character         |
+| **Grouping Identifiers** | USUBJID      | Unique Subject Identifier                                          | character/numeric |
+|                          | TRT01A       | Treatment Group Identifier (Actual)                                | character         |
+|                          | TRT01P       | Treatment Group Identifier (Planned)                               | character         |
+|                          | AGE          | Age of Subject                                                     | numeric           |
+|                          | RACE         | Race of Subject                                                    | character         |
+|                          | SEX          | Sex of Subject                                                     | character         |
+| **Sample variables**     | ANALYTE      | Analyte                                                            | character         |
+|                          | PCSPEC       | Specimen Material Type                                             | character         |
+|                          | AVAL         | Analysis Value                                                     | numeric           |
+| **Dose Variables**       | DOSNO        | Dose Number                                                        | numeric           |
+|                          | ROUTE        | Route of Administration, either {intravascular} or {extravascular} | character         |
+|                          | DOSEA        | Actual Treatment Dose                                              | numeric           |
+|                          | ADOSEDUR     | Actual Treatment Dose                                              | numeric           |
+| **Time Variables**       | AFRLT        | Actual Relative Time from Analyte First Dose                       | numeric           |
+|                          | ARRLT        | Actual Relative Time from Reference Dose                           | numeric           |
+|                          | NFRLT        | Nominal Relative Time from Analyte First Dose                      | numeric           |
+|                          | NRRLT        | Nominal Relative Time from Reference Dose                          | numeric           |
+|                          | AVALU        | Analysis Value Unit                                                | character         |
+|                          | DOSEU        | Treatment Dose Units                                               | character         |
+|                          | RRLTU        | Relative Time from Reference Dose Unit                             | character         |
+
+### Data mapping
+Once the dataset has been uploaded, you can verify that the data is as expected, and click on the *Mapping and Filters* tab. 
+  - Map the correct columns in your dataset to the corresponding label. For more information on what the column requires, hover over the input boxes.
+  - For Unit Variables, if your dataset has a defined column for units, select it. Otherwise manually input the units for the corresponding columns.
+  - Click *Submit Mapping*. You will be automatically directed to the next tab.
+
+<img src = "images/get_started/02.png" alt = "Mapping tab">
+<img src = "images/get_started/03.png" alt = "Mapping">
+
+### Verifying adding filters
+Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, return to the *Mapping and Filters* page, then scroll down to add filters.
+
+<img src = "images/get_started/04.png" alt = "Adding filters">
+
+<blockquote class = "important">
+Don’t forget to scroll down and click submit!
+</blockquote>
+
+<img src = "images/get_started/05.png" alt = "Submitting filters">
+
+# Step 2: Run NCA
+Click on the *NCA* tab at the top of the screen to switch to the next section.
+
+## Data selection
+1. Choose the analytes you would like to run the NCA on.
+
+2. Click *Submit* and check that the data is as expected.
+
+<img src = "images/get_started/06.png" alt = "NCA tab">
+
+3. Move to *Settings* in the menu on the left hand side. Choose the Dose Number(s) you would like to run the NCA on and the extrapolation method. Select additional options including partial AUCs, or rule sets to flag the data.
+
+<img src = "images/get_started/07.png" alt = "NCA settings">
+
+4. Click *Run NCA*. You will automatically be redirected to the *Results* tab.
+
+<img src = "images/get_started/08.png" alt = "Running NCA">
+
+# Step 3: NCA Results
+## Main Results
+The NCA results tab shows the individual results of the NCA. You can select which parameters you would like to view. Results in red have been flagged as *False* for the rule sets selected, results in purple are flagged as *Missing*, and results in white are not flagged.
+
+Click on the *Slopes* tab to view more detailed information about the slopes selected in the NCA.
+
+In *Parameter datasets* you can see and export the ADPP and PP datasets.
+
+## Exclusions and Manual Slopes
+To add exclusions or manual slope selections, redirect to the *Slope Selector* tab in the *Setup* page.
+ 
+<img src = "images/get_started/09.png" alt = "Slope selection">
+
+There are two different ways to add exclusions/selections to the slopes.
+
+#### Via the Buttons.
+1. Click *+ Exclusion/Selection*
+2. Input required information: Type, Patient, Profile, Range, Reason. IXrange is the Data Point number in the slope, which can be seen by hovering over the points in the plots below.
+
+<img src = "images/get_started/10.png" alt = "Slope selection buttons">
+
+3. To remove, select the sample row and click *-Remove selected rows*
+
+<img src = "images/get_started/11.png" alt = "Removing selections">
+
+#### Via the Plots
+For in-app guidance, you can click the <span style="border:thin solid #1f6feb;border-radius:1em;font-weight:bold;color:#1f6feb;margin:.1em .5em .1em .5em;">?</span> button.
+
+1. For selection, click the first point and then the last point you want included in the slope. The plot should then update and a row should be added to the table. There you can add your reason for selection.
+2. For exclusion, double click the point you want to exclude. The plot should update along with the table.
+3. To remove, either remove via the table selection, or repeat the same action (i.e. select a new slope, double click the same point).
+
+<img src = "images/get_started/12.png" alt = "Slope plots">
+
+#### Applying the exclusions
+Once the exclusions/selections have been added, click *Apply*.
+
+<img src = "images/get_started/13.png" alt = "Applying exclusions/selections">
+
+You can check if they have been applied in the *Results* -> *Exclusions* tab.
+
+<img src = "images/get_started/14.png" alt = "Inspecting exclusions/selections">
+
+<blockquote class="important">
+If you do not click *Apply*, the manual slopes will not be added!
+</blockquote>
+
+## Saving and uploading settings
+After completing an NCA and creating manual slopes, you may want to save these for next time.
+
+#### Saving
+Click *Results* -> *NCA Results* -> *Save Project* Settings. This will download a .csv file.
+
+<img src = "images/get_started/15.png" alt = "Saving settings">
+
+#### Uploading
+To upload settings next time, after column mapping, *Setup* -> *Data Selection* -> *Upload* settings. The inclusions and exclusions will be automatically added to the data.
+
+<img src = "images/get_started/16.png" alt = "Uploading settings">
+
+## Step 4: Visualization
+In the *Visualization* tab, you will find the different visualization options, including individual plots, mean plots, descriptive statistics, and boxplots.
+
+<blockquote class="warning">
+Currently work in progress
+</blockquote>
+
+## Step 5: TLG
+<blockquote class="warning">
+Currently work in progress
+</blockquote>
+
