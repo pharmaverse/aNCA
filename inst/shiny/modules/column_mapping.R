@@ -45,7 +45,7 @@
 #' @param manual_units A list containing manual units for concentration, dose, and time.
 #' @param on_submit A callback function to be executed when the submit button is clicked.
 #'
-#' @return A list containing:
+#' @returns A list containing:
 #' \item{processed_data}{A reactive expression that returns the processed dataset.}
 #' \item{grouping_variables}{A reactive expression that returns the selected grouping variables.}
 #'

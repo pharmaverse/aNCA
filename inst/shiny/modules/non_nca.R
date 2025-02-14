@@ -1,3 +1,11 @@
+#' This module provides a user interface and server function for additional analysis outside of NCA
+#' calculations. It includes functions for blood-plasma partitioning, matrix ratios, excretion,
+#' AUC ratios, and metabolite-parent ratios.
+#' @param id A character string used to uniquely identify the module.
+#' @param data A PKNCA data object that returns the data list containing the concentration and
+#' dose data.
+#' @param grouping_vars A character vector of grouping variables to use for the analysis.
+
 # UI function for the non-nca analysis
 non_nca_ui <- function(id) {
   ns <- NS(id)
