@@ -19,8 +19,14 @@
   width: 100%;
 }
 
-/* column mapping UI */
+/* outputs */
+.custom-download-button {
+  width: 30%;
+  height: 60%;
+  margin-top: 2rem;
+}
 
+/* column mapping UI */
 .column-mapping-row {
   display: flex;
   align-items: center;

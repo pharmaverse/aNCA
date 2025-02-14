@@ -46,7 +46,6 @@ fluidPage(
             navlistPanel(
               tabPanel(
                 "NCA Results",
-                downloadButton("settings_save", "Save Project Settings"),
                 br(),
                 pickerInput(
                   "params",
@@ -60,15 +59,7 @@ fluidPage(
                 DTOutput("myresults"),
                 tableOutput("summaryTable"),
                 actionButton("download", "Download the NCA Data"),
-                downloadButton("local_download_NCAres", "Download locally the NCA Data")
-              ),
-              tabPanel(
-                "Slopes",
-                DTOutput("preslopesettings")
-              ),
-              tabPanel(
-                "Exclusions",
-                tableOutput("manual_slopes2")
+                downloadButton("local_download_NCAres", "Download locally the NCA Data", style = "width:10%;")
               ),
               tabPanel("Parameter Datasets",
                        tabsetPanel(
@@ -76,7 +67,19 @@ fluidPage(
                                   DTOutput("pp_dataset")),
                          tabPanel("ADPP",
                                   DTOutput("adpp_dataset"))
-                       ))
+                       )),
+              tabPanel("Slopes",
+                       DTOutput("preslopesettings")
+              ),
+              tabPanel(
+                "Result Settings",
+                fluidRow(
+                  pickerInput("settings_save_fmt", "Download format", choices = c("xlsx", "rds"), width = "50%"),
+                  downloadButton("settings_save", class = "custom-download-button")
+                ),
+                h4("Half life customizations"),
+                tableOutput("manual_slopes2")
+              )
             )
           )
         )
