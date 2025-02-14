@@ -12,7 +12,7 @@ observeEvent(data(), priority = 2, {
 
   req(data())
 
-  # Define explicetely input columns until there are input definitions
+  # Define explicetely %>% columns until there are input definitions
   group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
@@ -288,44 +288,82 @@ output$local_download_NCAres <- downloadHandler(
 output$settings_save <- downloadHandler(
   filename = function() {
     paste0(mydata()$conc$data$STUDYID[1],
-           "_aNCAsetts_",Sys.Date(), ".rds")
+           "_aNCAsetts_",Sys.Date(), ".xlsx")
   },
   content = function(file) {
 
     # Get the data settings from the NCA results (data run)
-    pknca_res_data <- res_nca()$data
+    res <- res_nca()$data
 
-    conc_cols <- unname(unlist(pknca_res_data$conc$columns))
-    conc_logical_cols <- sapply(pknca_res_data$conc$data[conc_cols], is.logical) |>
+    # Select only rows in concentration with relevant modifications
+    conc_cols <- c(unname(unlist(res$conc$columns)),
+                   # Consider also the App self-made columns
+                   "is.included.hl", "is.excluded.hl", "REASON")
+    conc_logical_cols <- sapply(res$conc$data[conc_cols], is.logical) |>
       which() |> names()
 
-    pknca_res_data$conc$data <- pknca_res_data$conc$data %>%
+    res$conc$data <- res$conc$data %>%
       # Select only the columns that are relevant for NCA
-      select(unname(unlist(pknca_res_data$conc$columns))) %>%
+      select(any_of(conc_cols)) %>%
       # Filter rows across conc_logical_cols with at least 1 TRUE value
       filter(rowSums(select(., conc_logical_cols)) > 0)
 
-    pknca_res_data$dose$data <- pknca_res_data$dose$data %>%
+    res$dose$data <- res$dose$data %>%
       # Select only the columns that are relevant for NCA
-      select(unname(unlist(pknca_res_data$dose$columns)))
+      select(unname(unlist(res$dose$columns)))
 
     # Until they are adapted to PKNCA formats, save flag rule sets
-    pknca_res_data$options$flag_rules <- input %>%
-      keep(~startsWith(.x, "rule_")) %>%
+    res$flag_rules <- names(input) %>%
+      keep(~startsWith(.x, "nca_settings-") & endsWith(.x, "_threshold")) %>%
       map(~{
-        pptestcd <- gsub("^rule_", "", x = .x) |>
-          gsub("_", ".", x = _, fixed = TRUE)
-        if (startsWith(pptestcd, "auc")) {
-          list(pptestcd = pptestcd, threshold = input[[paste0(pptestcd, "_threshold")]])
-        } else {
-          list(pptestcd = pptestcd, threshold = input[[paste0(pptestcd, "_threshold")]])
-        }
-      })
+        l_thres <- list(pptestcd = input[[.x]])
+        names(l_thres) <- gsub("nca_settings-(.*)_threshold", "\\1", .x)
+        l_thres
+        }) %>%
+      unlist()
     
-    # Save the NCA settings file
-    saveRDS(pknca_res_data, file)
-  },
-  contentType = "rds"
+    # Simplify options
+    res$options <- as.data.frame(c(as.list(res$options$single.dose.aucs),
+                                   res$options[which(names(res$options) != "single.dose.aucs")]))
+    
+    setts_res <- reactiveVal(res)
+    
+    ## SAVE IN .RDS
+    if (input$settings_save_fmt == "rds"){
+      save(setts_res, file)
+    }
+
+    ## SAVE IN EXCEL
+    if (input$settings_save_fmt == "xlsx"){
+    res$intervals <- replace(res$intervals, res$intervals == Inf, 1e99)
+    res$options <- replace(res$options, res$options == Inf, 1e99)
+
+    # Format an object with all needed settings information based on the results PKNCA object
+    setts_list = list(intervals = res$intervals,
+                   units = res$units,
+                   conc_data = res$conc$data,
+                   conc_columns = unlist(res$conc$columns),
+                   dose_data = res$dose$data,
+                   dose_columns = unlist(res$dose$columns),
+                   flag_rules = res$flag_rules,
+                   options = res$options
+                   )
+
+    # Separate all infomration in different Excel sheets
+    wb <- openxlsx::createWorkbook(file)
+    for (i in seq_len(length(setts_list))) {
+      openxlsx::addWorksheet(wb = wb,
+                             sheetName = names(setts_list[i]))
+      openxlsx::writeData(wb = wb,
+                          sheet = names(setts_list[i]),
+                          x = setts_list[[i]])
+    }
+    # Save the Excel file
+    openxlsx::saveWorkbook(wb, file)
+
+    }
+
+  }
 )
 
 # Keep the UI table constantly actively updated
