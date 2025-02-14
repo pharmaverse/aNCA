@@ -45,7 +45,7 @@
 #' @param manual_units A list containing manual units for concentration, dose, and time.
 #' @param on_submit A callback function to be executed when the submit button is clicked.
 #'
-#' @return A list containing:
+#' @returns A list containing:
 #' \item{processed_data}{A reactive expression that returns the processed dataset.}
 #' \item{grouping_variables}{A reactive expression that returns the selected grouping variables.}
 #'
@@ -262,8 +262,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
       # Reorder columns based on the desired order
       dataset <- dataset %>%
-        relocate(all_of(desired_order)) %>%
-        mutate(TIME = ifelse(DOSNO == 1, AFRLT, ARRLT))#TODO: Remove this after AUC0 merged
+        relocate(all_of(desired_order))
 
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
