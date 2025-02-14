@@ -32,12 +32,12 @@
 #' NRRLT = c(-1, 0, 1, -1, 0, 1, 2, 0, 1, 2),
 #' NFRLT = c(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8)
 #' )
-#' result <- create_duplicates(conc_data,
+#' result <- dose_profile_duplicates(conc_data,
 #'                             groups = c("USUBJID", "DOSNO"), dosno = "DOSNO")
 #' }
 #'
 #' @export
-create_duplicates <- function(conc_data,
+dose_profile_duplicates <- function(conc_data,
                               groups = c("USUBJID", "DOSNO", "ANALYTE"),
                               dosno = "DOSNO",
                               arrlt = "ARRLT",
