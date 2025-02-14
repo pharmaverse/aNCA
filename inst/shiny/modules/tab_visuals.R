@@ -433,10 +433,10 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
       # Join subject data to allow the user to group by it
-      stats_data <- merge(
+      cols_to_join <- c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))
+      stats_data <- inner_join(
         res_nca()$result,
-        res_nca()$data$conc$data %>%
-          select(any_of(c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))))
+        select(res_nca()$data$conc$data, any_of(cols_to_join))
       ) %>%
         filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
         mutate(PPTESTCD = case_when(
