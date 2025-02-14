@@ -466,7 +466,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
       data <- summary_stats() %>%
         select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters)
-      
+
       reactable(
         data,
         searchable = TRUE,
