@@ -322,10 +322,6 @@ output$settings_save <- downloadHandler(
         }) %>%
       unlist()
     
-    # Simplify options
-    res$options <- as.data.frame(c(as.list(res$options$single.dose.aucs),
-                                   res$options[which(names(res$options) != "single.dose.aucs")]))
-    
     setts_res <- reactiveVal(res)
     
     ## SAVE IN .RDS
@@ -335,6 +331,10 @@ output$settings_save <- downloadHandler(
 
     ## SAVE IN EXCEL
     if (input$settings_save_fmt == "xlsx"){
+    # Simplify options
+    res$options <- as.data.frame(c(as.list(res$options$single.dose.aucs),
+                                   res$options[which(names(res$options) != "single.dose.aucs")]))
+    # Save in an alternative way Inf values in Excel (start, end)
     res$intervals <- replace(res$intervals, res$intervals == Inf, 1e99)
     res$options <- replace(res$options, res$options == Inf, 1e99)
 
@@ -342,10 +342,10 @@ output$settings_save <- downloadHandler(
     setts_list = list(intervals = res$intervals,
                    units = res$units,
                    conc_data = res$conc$data,
-                   conc_columns = unlist(res$conc$columns),
+                   conc_columns = data.frame(unlist(res$conc$columns)),
                    dose_data = res$dose$data,
-                   dose_columns = unlist(res$dose$columns),
-                   flag_rules = res$flag_rules,
+                   dose_columns = data.frame(unlist(res$dose$columns)),
+                   flag_rules = data.frame(res$flag_rules),
                    options = res$options
                    )
 
