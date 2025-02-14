@@ -782,9 +782,9 @@ output$manual_slopes2 <- renderTable({
   slope_rules()
 })
 
-# Non NCA Analysis -------------------------------------------------------------
+# Additional Analysis -------------------------------------------------------------
 
-non_nca_server("non_nca", data, grouping_vars)
+non_nca_server("non_nca", mydata, grouping_vars)
 
 # CDISC ------------------------------------------------------------------------
 
