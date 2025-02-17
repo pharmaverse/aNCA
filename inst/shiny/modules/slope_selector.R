@@ -148,7 +148,7 @@ slope_selector_server <- function(
     # Reactive for SLOPE_SELECTOR_COLUMNS
     SLOPE_SELECTOR_COLUMNS <- reactive({
       req(slopes_groups())
-      c("TYPE", slopes_groups(), "RANGE", "REASON")
+      c(slopes_groups(), "TYPE","RANGE", "REASON")
     })
 
     # HACK: workaround to avoid plotly_click not being registered warning
@@ -294,6 +294,10 @@ slope_selector_server <- function(
           current_slopes[[col]] <- character()
         }
       }
+      
+      # Define the desired column order
+      ordered_cols <- c(slopes_groups(), "TYPE", "RANGE", "REASON")
+      current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
 
       # Update the reactive Val
       manual_slopes(current_slopes)
@@ -365,7 +369,7 @@ slope_selector_server <- function(
           cell = text_extra(
             id = session$ns("edit_REASON")
           ),
-          width = 300
+          width = 400
         )
       )
 
@@ -376,7 +380,8 @@ slope_selector_server <- function(
             id = session$ns(paste0("edit_", col)),
             choices = unique(profiles_per_patient()[[col]]), # Dynamically set choices
             class = "dropdown-extra"
-          )
+          ),
+          width = 150
         )
       })
       names(dynamic_columns) <- slopes_groups()
