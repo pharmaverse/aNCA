@@ -385,16 +385,16 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
-    limit_input_value("adj.r.squared_threshold", max = 1, min = 0, label = "R.SQ.ADJ")
-    limit_input_value("aucpext.obs_threshold", max = 100, min = 0, label = "AUCPEO")
-    limit_input_value("aucpext.pred_threshold", max = 100, min = 0, label = "AUCPEP")
-    limit_input_value("span.ratio_threshold", min = 0, "SPAN")
+    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, label = "R.SQ.ADJ")
+    limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, label = "AUCPEO")
+    limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, label = "AUCPEP")
+    limit_input_value(input, session, "span.ratio_threshold", min = 0, "SPAN")
 
     # Keyboard limits for the dynamically created partial AUC ranges
     observeEvent(auc_counter(), {
       for (i in auc_counter()) {
-        limit_input_value(paste0("timeInputMin_AUC_", i), min = 0, label = "AUC")
-        limit_input_value(paste0("timeInputMax_AUC_", i), min = 0, label = "AUC")
+        limit_input_value(input, session, paste0("timeInputMin_AUC_", i), min = 0, label = "AUC")
+        limit_input_value(input, session, paste0("timeInputMax_AUC_", i), min = 0, label = "AUC")
       }
     })
 

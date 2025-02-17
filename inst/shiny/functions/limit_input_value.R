@@ -4,6 +4,7 @@
 #' If the input value is outside these limits, it updates the input value to the nearest limit and shows a notification.
 #'
 #' @param input The Shiny input object.
+#' @param input The Shiny session.
 #' @param input_id The ID of the input to be limited.
 #' @param max_value The maximum allowed value for the input (default is Inf).
 #' @param min_value The minimum allowed value for the input (default is -Inf).
@@ -12,7 +13,7 @@
 #'
 #' @importFrom shiny observeEvent showNotification
 #' @export
-limit_input_value <- function(input, id, max_value = Inf, min_value = -Inf, label = "", update_function = updateNumericInput) {
+limit_input_value <- function(input, session, id, max_value = Inf, min_value = -Inf, label = "", update_function = updateNumericInput) {
   observeEvent(input[[id]], {
     input_value <- input[[id]]
     
