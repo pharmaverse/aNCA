@@ -784,7 +784,7 @@ output$manual_slopes2 <- renderTable({
 
 # Additional Analysis -------------------------------------------------------------
 
-non_nca_server("non_nca", mydata, grouping_vars)
+additional_analysis_server("non_nca", mydata, grouping_vars)
 
 # CDISC ------------------------------------------------------------------------
 
