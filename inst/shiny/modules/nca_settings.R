@@ -196,10 +196,26 @@ nca_settings_ui <- function(id) {
   )
 }
 
+
+#' NCA Settings Server Module
+#'
+#' This module handles the server-side logic for the NCA settings, including file uploads,
+#' analyte/dose/specimen selection, AUC intervals, NCA parameters and their unit specifications.
+#' Then it integrates them to mydata and updates the object.
+#'
+#' - id The module's ID.
+#' - data A reactive expression containing the read and mapped data from the app. 
+#'        It is only used for the file uploads and the analyte/dose/specimen selection.
+#' - mydata A reactive expression of the PKNCAdata object, which contains data and NCA specications.
+#'          Main reactive object, is used as input and also modified. 
+#' - res_nca A reactive expression containing the PKNCA results output generated from mydata. 
+#'           Only used for the units_table submodule
+#' 
 nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    conc_data <- reactive(mydata()$conc$data)
 
     # File Upload Handling
     observeEvent(input$settings_upload, {
@@ -393,7 +409,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
     })
 
     # Choose dosenumbers to be analyzed
-    observeEvent(data(), priority = -1, {
+    observeEvent(data()$DOSNO, priority = -1, {
       req(data())
 
       updateSelectInput(
