@@ -321,9 +321,9 @@ output$settings_save <- downloadHandler(
         l_thres
         }) %>%
       unlist()
-    
+
     setts_res <- reactiveVal(res)
-    
+
     ## SAVE IN .RDS
     if (input$settings_save_fmt == "rds"){
       save(setts_res, file)
@@ -337,19 +337,25 @@ output$settings_save <- downloadHandler(
     # Save in an alternative way Inf values in Excel (start, end)
     res$intervals <- replace(res$intervals, res$intervals == Inf, 1e99)
     res$options <- replace(res$options, res$options == Inf, 1e99)
+    
+    # Create a stuck function that does not rename the values
+    perfect_stack <- function(columns_list) {
+      stack(unlist(columns_list)) %>%
+        mutate(ind = sub("[0-9]+$", "", ind))
+    }
 
     # Format an object with all needed settings information based on the results PKNCA object
     setts_list = list(intervals = res$intervals,
                    units = res$units,
                    conc_data = res$conc$data,
-                   conc_columns = data.frame(unlist(res$conc$columns)),
+                   conc_columns = perfect_stack(res$conc$columns),
                    dose_data = res$dose$data,
-                   dose_columns = data.frame(unlist(res$dose$columns)),
+                   dose_columns = perfect_stack(res$dose$columns),
                    flag_rules = data.frame(res$flag_rules),
                    options = res$options
                    )
 
-    # Separate all infomration in different Excel sheets
+    # Separate all information in different Excel sheets
     wb <- openxlsx::createWorkbook(file)
     for (i in seq_len(length(setts_list))) {
       openxlsx::addWorksheet(wb = wb,
@@ -360,9 +366,7 @@ output$settings_save <- downloadHandler(
     }
     # Save the Excel file
     openxlsx::saveWorkbook(wb, file)
-
     }
-
   }
 )
 

@@ -219,9 +219,40 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         sheets <- openxlsx::getSheetNames(file_path)
         setts <- lapply(sheets, function(sheet) openxlsx::read.xlsx(file_path, sheet = sheet))
         names(setts) <- sheets
-
-      }
 browser()
+        # Rearrange the list as in a PKNCAdata object
+        setts <- list(
+          conc = list(
+            data = setts$conc_data,
+            columns = list(
+              groups = list(
+                group_analyte = setts$conc_columns  %>% filter(ind == "groups.group_vars")  %>% pull(values),
+                group_group_vars = setts$conc_columns  %>% filter(ind == "groups.group_vars")  %>% pull(values)
+              ),
+              time = setts$conc_columns  %>% filter(ind == "time")  %>% pull(values),
+              concentration = setts$conc_columns  %>% filter(ind == "concentration")  %>% pull(values),
+              subject = setts$conc_columns  %>% filter(ind == "subject")  %>% pull(values),
+              time.nominal = setts$conc_columns  %>% filter(ind == "time.nominal")  %>% pull(values),
+              exclude = setts$conc_columns  %>% filter(ind == "exclude")  %>% pull(values),
+              duration = setts$conc_columns  %>% filter(ind == "duration")  %>% pull(values),
+              exclude_half.life = setts$conc_columns  %>% filter(ind == "exclude_half.life")  %>% pull(values)
+            )
+          ),
+          dose = list(
+            data = setts$dose_data,
+            columns = list(
+              groups = list(
+                group_vars = setts$dose_columns  %>% filter(ind == "groups.group_vars")  %>% pull(values)
+              )
+            )
+          ),
+          intervals = setts$intervals,
+          options = setts$options,
+          units = setts$units,
+          flag_rules = setts$flag_rules
+        )
+      }
+
       update_with_setts_selector_selected <- function(var_setts_col, var_data_col, setts, data, session, inputId) {
         if (!is.null(var_data_col) && !is.null(var_setts_col)) {
           vals_data <- unique(data$conc[[var_data_col]])
@@ -248,6 +279,8 @@ browser()
           )
         } else return()
       }
+      
+      data <- mydata()
 
       # Update selected values for the data selectors
       update_with_setts_selector_selected(setts$conc$columns$groups$group_analyte, data$conc$columns$groups$group_analyte, setts, data, session, "select_analyte")
@@ -427,7 +460,6 @@ browser()
 
 
     # Choose dosenumbers to be analyzed
-
     observeEvent(data(), priority = -1, {
       req(data())
 
@@ -607,6 +639,5 @@ browser()
         height = "60vh"
       )
     })
-
   })
 }
