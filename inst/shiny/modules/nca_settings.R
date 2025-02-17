@@ -110,8 +110,7 @@ nca_settings_ui <- function(id) {
         conditionalPanel(
           condition = paste0("input['", ns("rule_adj_r_squared"), "'] == true"),
           div(
-            style = "display: flex; align-items: center;",
-            span(">=", style = "margin-right: 5px;"),
+            class = "nca-numeric-container",
             numericInput(
               ns("adj.r.squared_threshold"),
               "",
@@ -134,8 +133,7 @@ nca_settings_ui <- function(id) {
         conditionalPanel(
           condition = paste0("input['", ns("rule_aucpext_obs"), "'] == true"),
           div(
-            style = "display: flex; align-items: center;",
-            span(">=", style = "margin-right: 5px;"),
+            class = "nca-numeric-container",
             numericInput(
               ns("aucpext.obs_threshold"),
               "",
@@ -158,8 +156,7 @@ nca_settings_ui <- function(id) {
         conditionalPanel(
           condition = paste0("input['", ns("rule_aucpext_pred"), "'] == true"),
           div(
-            style = "display: flex; align-items: center;",
-            span(">=", style = "margin-right: 5px;"),
+            class = "nca-numeric-container",
             numericInput(
               ns("aucpext.pred_threshold"),
               "",
@@ -182,8 +179,7 @@ nca_settings_ui <- function(id) {
         conditionalPanel(
           condition = paste0("input['", ns("rule_span_ratio"), "'] == true"),
           div(
-            style = "display: flex; align-items: center;",
-            span(">=", style = "margin-right: 5px;"),
+            class = "nca-numeric-container",
             numericInput(
               ns("span.ratio_threshold"),
               "",
