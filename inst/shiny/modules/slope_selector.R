@@ -148,7 +148,7 @@ slope_selector_server <- function(
     # Reactive for SLOPE_SELECTOR_COLUMNS
     SLOPE_SELECTOR_COLUMNS <- reactive({
       req(slopes_groups())
-      c(slopes_groups(), "TYPE","RANGE", "REASON")
+      c(slopes_groups(), "TYPE", "RANGE", "REASON")
     })
 
     # HACK: workaround to avoid plotly_click not being registered warning
@@ -294,7 +294,7 @@ slope_selector_server <- function(
           current_slopes[[col]] <- character()
         }
       }
-      
+
       # Define the desired column order
       ordered_cols <- c(slopes_groups(), "TYPE", "RANGE", "REASON")
       current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
