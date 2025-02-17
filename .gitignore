@@ -9,3 +9,4 @@ inst/shiny/data
 !inst/shiny/data/DummyRO_ADNCA.csv
 !inst/shiny/data/adnca_labels.csv
 .Rprofile
+/page
