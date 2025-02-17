@@ -448,7 +448,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
     })
 
     # Handling AUC Intervals
-    intervals_userinput <- reactiveVal(NULL)
+    # TODO: Make all this actions and related into a module called handle_custom_auc_intervals
     auc_counter <- reactiveVal(0)
     observeEvent(input$addAUC, {
       auc_counter(auc_counter() + 1)
@@ -464,7 +464,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
       }
     })
 
-    observe({
+    intervals_userinput <- reactive({
       # Collect all inputs for the AUC intervals
       input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
       input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
@@ -489,8 +489,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
 
       # Make sure NAs were not left by the user
       intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
-
-      intervals_userinput(intervals_list)
+      intervals_list
     })
 
 
