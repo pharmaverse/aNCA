@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9003
+Version: 0.0.0.9006
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -32,6 +32,7 @@ Imports:
     dplyr,
     DT,
     forcats,
+    formatters,
     ggh4x,
     ggplot2,
     glue,
@@ -46,6 +47,7 @@ Imports:
     reactable,
     reactable.extras,
     rio,
+    rlistings,
     rmarkdown,
     scales,
     shiny,
@@ -75,4 +77,4 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Language: en-US
-URL: https://pharmaverse.github.io/aNCA/
+URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
