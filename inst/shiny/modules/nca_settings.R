@@ -204,13 +204,13 @@ nca_settings_ui <- function(id) {
 #' Then it integrates them to mydata and updates the object.
 #'
 #' - id The module's ID.
-#' - data A reactive expression containing the read and mapped data from the app. 
+#' - data A reactive expression containing the read and mapped data from the app.
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
 #' - mydata A reactive expression of the PKNCAdata object, which contains data and NCA specications.
-#'          Main reactive object, is used as input and also modified. 
-#' - res_nca A reactive expression containing the PKNCA results output generated from mydata. 
+#'          Main reactive object, is used as input and also modified.
+#' - res_nca A reactive expression containing the PKNCA results output generated from mydata.
 #'           Only used for the units_table submodule
-#' 
+#'
 nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
@@ -395,16 +395,16 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
-    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, label = "R.SQ.ADJ")
-    limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, label = "AUCPEO")
-    limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, label = "AUCPEP")
-    limit_input_value(input, session, "span.ratio_threshold", min = 0, "SPAN")
+    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "R.SQ.ADJ")
+    limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, lab = "AUCPEO")
+    limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
+    limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
 
     # Keyboard limits for the dynamically created partial AUC ranges
     observeEvent(auc_counter(), {
       for (i in auc_counter()) {
-        limit_input_value(input, session, paste0("timeInputMin_AUC_", i), min = 0, label = "AUC")
-        limit_input_value(input, session, paste0("timeInputMax_AUC_", i), min = 0, label = "AUC")
+        limit_input_value(input, session, paste0("timeInputMin_AUC_", i), min = 0, lab = "AUC")
+        limit_input_value(input, session, paste0("timeInputMax_AUC_", i), min = 0, lab = "AUC")
       }
     })
 
@@ -435,9 +435,9 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
     })
 
     # Handling AUC Intervals
-    
+
     # TODO: Modularise all 'Handling AUC Intervals' and its related actions
-    
+
     #' Define the UI function for a single partial AUC input
     #'
     #' @param id A unique identifier for the input.
@@ -460,7 +460,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
         )
       )
     }
-    
+
     auc_counter <- reactiveVal(0)
     observeEvent(input$addAUC, {
       auc_counter(auc_counter() + 1)
