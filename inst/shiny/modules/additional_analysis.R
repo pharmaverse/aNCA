@@ -16,21 +16,25 @@ additional_analysis_ui <- function(id) {
       nav_panel(
         title = "Blood-Plasma Partitioning",
         value = "bpp_analysis",
-        non_nca_ratio_ui(ns("bpp_analysis"), 
-                        title = "Blood-Plasma Partitioning", 
-                        select_label1 = "Choose Blood column for BPP", 
-                        select_label2 = "Choose Plasma column for BPP",
-                        multiple = FALSE)
-        ),
+        non_nca_ratio_ui(
+          ns("bpp_analysis"),
+          title = "Blood-Plasma Partitioning",
+          select_label1 = "Choose Blood column for BPP",
+          select_label2 = "Choose Plasma column for BPP",
+          multiple = FALSE
+        )
+      ),
       nav_panel(
         title = "Matrix Ratios",
         value = "matrix_ratio_analysis",
-        non_nca_ratio_ui(ns("matrix_ratio_analysis"), 
-                        title = "Matrix Ratios", 
-                        select_label1 = "Choose Tissues", 
-                        select_label2 = "Choose Plasma",
-                        multiple = TRUE)
-        ),
+        non_nca_ratio_ui(
+          ns("matrix_ratio_analysis"),
+          title = "Matrix Ratios",
+          select_label1 = "Choose Tissues",
+          select_label2 = "Choose Plasma",
+          multiple = TRUE
+        )
+      ),
       nav_panel(
         title = "Excretion",
         value = "excretion_analysis",
@@ -75,11 +79,11 @@ additional_analysis_server <- function(id, data, grouping_vars) {
 
     # Call module for BPP Analysis
     non_nca_ratio_server(id = "bpp_analysis", data, grouping_vars,
-                        func = single_matrix_ratio)
+                         func = single_matrix_ratio)
 
     # Call module for Matrix Ratio Analysis
     non_nca_ratio_server(id = "matrix_ratio_analysis", data, grouping_vars,
-                        func = multiple_matrix_ratios)
+                         func = multiple_matrix_ratios)
 
   })
 }

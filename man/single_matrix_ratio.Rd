@@ -29,9 +29,11 @@ single_matrix_ratio(
 \item{groups}{A character vector of grouping variables to use for the analysis.
 Must include TIME, USUBJID, and optionally, other grouping variables.}
 
-\item{spec1}{A character string specifying the value for the first specimen type in the matrix_col.}
+\item{spec1}{A character string specifying the value for
+the first specimen type in the matrix_col.}
 
-\item{spec2}{A character string specifying the value for the second specimen type in the matrix_col.}
+\item{spec2}{A character string specifying the value for
+the second specimen type in the matrix_col.}
 }
 \value{
 A data frame containing the ratios.
