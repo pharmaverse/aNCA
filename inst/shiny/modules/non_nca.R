@@ -138,9 +138,10 @@ non_nca_server <- function(id, data, grouping_vars) {
                       data()$dose$columns$dose, data()$dose$columns$time,
                       data()$dose$columns$route)
 
-      bpp_ratios(data = filtered_samples_bpp(), matrix_col = "PCSPEC",
-                conc_col = data()$conc$columns$concentration, bpp_groups = bpp_groups,
-                blood = blood, plasma = plasma)
+      single_matrix_ratio(data = filtered_samples_bpp(), matrix_col = "PCSPEC",
+                conc_col = data()$conc$columns$concentration, units_col = "AVALU",
+                groups = bpp_groups,
+                spec1 = blood, spec2 = plasma)
 
     })
 
@@ -188,28 +189,32 @@ non_nca_server <- function(id, data, grouping_vars) {
       ratio_groups <- c(grouping_vars(), id_groups,
                         data()$dose$columns$dose, data()$dose$columns$time)
 
-      # Separate Tissue and Plasma Samples
-      df_plasma <- filtered_samples() %>%
-        filter(PCSPEC == plasma) %>%
-        rename(PLASMA_CONC = data()$conc$columns$concentration) %>%
-        select(ratio_groups, PLASMA_CONC)
-
-      df_tissue <- filtered_samples() %>%
-        filter(PCSPEC %in% tissue) %>%
-        rename(TISSUE_CONC = data()$conc$columns$concentration) %>%
-        select(ratio_groups, PCSPEC, TISSUE_CONC)
-
-      # Merge Plasma and Tissue Data
-      df_ratio <- left_join(df_tissue, df_plasma, by = ratio_groups) %>%
-        filter(!is.na(TISSUE_CONC) & !is.na(PLASMA_CONC)) %>%
-        mutate(
-          RATIO = signif(TISSUE_CONC / PLASMA_CONC, 3)
-        ) %>%
-        select(ratio_groups, PCSPEC,
-               TISSUE_CONC, PLASMA_CONC, RATIO) %>%
-        arrange(USUBJID, TIME)
-
-      df_ratio
+      multiple_matrix_ratios(data = filtered_samples(), matrix_col = "PCSPEC",
+                             conc_col = data()$conc$columns$concentration, units_col = "AVALU",
+                             groups = ratio_groups,
+                             spec1 = tissue, spec2 = plasma)
+      # # Separate Tissue and Plasma Samples
+      # df_plasma <- filtered_samples() %>%
+      #   filter(PCSPEC == plasma) %>%
+      #   rename(PLASMA_CONC = data()$conc$columns$concentration) %>%
+      #   select(ratio_groups, PLASMA_CONC)
+      # 
+      # df_tissue <- filtered_samples() %>%
+      #   filter(PCSPEC %in% tissue) %>%
+      #   rename(TISSUE_CONC = data()$conc$columns$concentration) %>%
+      #   select(ratio_groups, PCSPEC, TISSUE_CONC)
+      # 
+      # # Merge Plasma and Tissue Data
+      # df_ratio <- left_join(df_tissue, df_plasma, by = ratio_groups) %>%
+      #   filter(!is.na(TISSUE_CONC) & !is.na(PLASMA_CONC)) %>%
+      #   mutate(
+      #     RATIO = signif(TISSUE_CONC / PLASMA_CONC, 3)
+      #   ) %>%
+      #   select(ratio_groups, PCSPEC,
+      #          TISSUE_CONC, PLASMA_CONC, RATIO) %>%
+      #   arrange(USUBJID, TIME)
+      # 
+      # df_ratio
     })
 
     # Display results
