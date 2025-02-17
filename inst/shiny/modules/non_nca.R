@@ -11,16 +11,22 @@ non_nca_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    tabsetPanel(
+    navset_pill(
       id = ns("non_nca_tabs"),
-      tabPanel(
+      nav_panel(
         title = "Blood-Plasma Partitioning",
         value = "bpp_analysis",
         card(
           card_header("BPP Analysis"),
           card_body(
-            uiOutput(ns("blood_selector")),
-            uiOutput(ns("plasmaforbpp_selector")),
+            selectInput(
+              ns("selected_blood"),
+              "Choose Blood column for BPP",
+              choices = NULL),
+            selectInput(
+              ns("selected_plasmaforbpp"),
+              "Choose Plasma column for BPP",
+              choices = NULL),
             p("Timepoints will automatically be selected by
               taking the shared timeponts for both variables"),
             actionButton(ns("submit_bpp"), "Submit", class = "btn-primary")
@@ -34,14 +40,16 @@ non_nca_ui <- function(id) {
           )
         )
       ),
-      tabPanel(
+      nav_panel(
         title = "Matrix Ratios",
         value = "matrix_ratio_analysis",
         card(
           card_header("Matrix Ratio Setup"),
           card_body(
-            uiOutput(ns("tissue_selector")),
-            uiOutput(ns("plasma_selector")),
+            selectInput(ns("selected_tissues"), "Choose Tissues",
+                        choices = NULL, multiple = TRUE),
+            selectInput(ns("selected_plasma"), "Choose Plasma",
+                        choices = NULL),
             actionButton(ns("submit_ratio"), "Submit", class = "btn-primary")
           )
         ),
@@ -52,39 +60,36 @@ non_nca_ui <- function(id) {
           )
         )
       ),
-      tabPanel(
+      nav_panel(
         title = "Excretion",
         value = "excretion_analysis",
         card(
           card_header("Excretion Analysis"),
           card_body(
 
+            p("To be added")
           )
         )
       ),
-      tabPanel(
+      nav_panel(
         title = "AUC Ratios",
         value = "auc_analysis",
         card(
           card_header("Bioavailability Calculations"),
           card_body(
 
+            p("To be added")
           )
         ),
-        card(
-          card_header("AUC profile ratios"),
-          card_body(
-
-          )
-        )
       ),
-      tabPanel(
+      nav_panel(
         title = "Metabolite-Parent Ratios",
         value = "metabolite_analysis",
         card(
           card_header("Metabolite-Parent Ratios"),
           card_body(
 
+            p("To be added")
           )
         )
       ),
@@ -97,21 +102,12 @@ non_nca_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    #TODO: Remove hardcoding of columns ?? Ensure only non-distinct grouping columns are shown ?
     # BPP Analysis #########################################
-    output$blood_selector <- renderUI({
-      req(data())
-      blood_options <- unique(data()$conc$data$PCSPEC)
-      selectInput(ns("selected_blood"), "Choose Blood column for BPP",
-                  choices = blood_options)
-    })
-
-    output$plasmaforbpp_selector <- renderUI({
-
-      req(data())
-      plasma_options <- unique(data()$conc$data$PCSPEC)
-      selectInput(ns("selected_plasmaforbpp"), "Choose Plasma column for BPP",
-                  choices = plasma_options)
+    observeEvent(data(), {
+      spec_options <- unique(data()$conc$data$PCSPEC)
+      
+      updateSelectInput(session, "selected_blood", choices = spec_options)
+      updateSelectInput(session, "selected_plasmaforbpp", choices = spec_options)
     })
 
 
@@ -142,27 +138,10 @@ non_nca_server <- function(id, data, grouping_vars) {
                       data()$dose$columns$dose, data()$dose$columns$time,
                       data()$dose$columns$route)
 
-      # Separate Blood and Plasma Samples
-      df_blood <- filtered_samples_bpp() %>%
-        filter(PCSPEC == blood) %>%
-        rename(BLOOD_CONC = data()$conc$columns$concentration) %>%
-        select(bpp_groups, BLOOD_CONC)
+      bpp_ratios(data = filtered_samples_bpp(), matrix_col = "PCSPEC",
+                conc_col = data()$conc$columns$concentration, bpp_groups = bpp_groups,
+                blood = blood, plasma = plasma)
 
-      df_plasma <- filtered_samples_bpp() %>%
-        filter(PCSPEC == plasma) %>%
-        rename(PLASMA_CONC = data()$conc$columns$concentration) %>%
-        select(bpp_groups, PLASMA_CONC)
-
-      # Merge Blood and Plasma Data
-      df_bpp <- left_join(df_blood, df_plasma, by = bpp_groups) %>%
-        filter(!is.na(BLOOD_CONC) & !is.na(PLASMA_CONC)) %>%
-        mutate(
-          BPP_RATIO = signif(BLOOD_CONC / PLASMA_CONC, 3)
-        ) %>%
-        select(bpp_groups, PLASMA_CONC, BLOOD_CONC, BPP_RATIO) %>%
-        arrange(USUBJID, TIME)
-
-      df_bpp
     })
 
     # Display results
@@ -173,21 +152,11 @@ non_nca_server <- function(id, data, grouping_vars) {
 
     #Tissue-Plasma Analysis ###############################
     # Dynamically generate the tissue selection input
-    output$tissue_selector <- renderUI({
-      req(data())
-
-      tissue_options <- unique(data()$conc$data$PCSPEC)
-      selectInput(ns("selected_tissues"), "Choose Tissues",
-                  choices = tissue_options, multiple = TRUE,
-                  selected = tissue_options)
-    })
-
-    output$plasma_selector <- renderUI({
-      req(data())
-
-      tissue_options <- unique(data()$conc$data$PCSPEC)
-      selectInput(ns("selected_plasma"), "Choose Plasma",
-                  choices = tissue_options)
+    observeEvent(data(), {
+      spec_options <- unique(data()$conc$data$PCSPEC)
+      
+      updateSelectInput(session, "selected_tissues", choices = spec_options)
+      updateSelectInput(session, "selected_plasma", choices = spec_options)
     })
 
     # Filter & prepare data for tissue-plasma ratio calculation
@@ -197,10 +166,9 @@ non_nca_server <- function(id, data, grouping_vars) {
       plasma <- input$selected_plasma
       tissue <- input$selected_tissues
 
-      df_filtered <- data()$conc$data %>%
+      data()$conc$data %>%
         filter(PCSPEC %in% c(input$selected_plasma, input$selected_tissues))
 
-      df_filtered
     })
 
     # Perform Ratio Calculation on Submit
