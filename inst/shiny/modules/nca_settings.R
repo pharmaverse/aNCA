@@ -384,31 +384,17 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
 
     # Include keyboard limits for the settings GUI display
 
-    # Define a function that simplifies the action
-    input_limit <- function(input_id, max = Inf, min = -Inf, input_label = "", update_fun = updateNumericInput) {
-      observeEvent(input[[input_id]], {
-        if (input[[input_id]] < min & !is.na(input[[input_id]])) {
-          update_fun(session, input_id, "", value = min)
-          showNotification(paste0(input_label, " input min value is ", min))
-        }
-        if (input[[input_id]] > max & !is.na(input[[input_id]])) {
-          update_fun(session, input_id, "", value = max)
-          showNotification(paste0(input_label, " input max value is ", max))
-        }
-      })
-    }
-
     # Keyboard limits for the setting thresholds
-    input_limit("adj.r.squared_threshold", max = 1, min = 0, input_label = "R.SQ.ADJ")
-    input_limit("aucpext.obs_threshold", max = 100, min = 0, input_label = "AUCPEO")
-    input_limit("aucpext.pred_threshold", max = 100, min = 0, input_label = "AUCPEP")
-    input_limit("span.ratio_threshold", min = 0, "SPAN")
+    limit_input_value("adj.r.squared_threshold", max = 1, min = 0, label = "R.SQ.ADJ")
+    limit_input_value("aucpext.obs_threshold", max = 100, min = 0, label = "AUCPEO")
+    limit_input_value("aucpext.pred_threshold", max = 100, min = 0, label = "AUCPEP")
+    limit_input_value("span.ratio_threshold", min = 0, "SPAN")
 
     # Keyboard limits for the dynamically created partial AUC ranges
     observeEvent(auc_counter(), {
       for (i in auc_counter()) {
-        input_limit(paste0("timeInputMin_AUC_", i), min = 0, input_label = "AUC")
-        input_limit(paste0("timeInputMax_AUC_", i), min = 0, input_label = "AUC")
+        limit_input_value(paste0("timeInputMin_AUC_", i), min = 0, label = "AUC")
+        limit_input_value(paste0("timeInputMax_AUC_", i), min = 0, label = "AUC")
       }
     })
 
