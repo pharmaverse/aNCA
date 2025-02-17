@@ -3,12 +3,14 @@ nca_settings_ui <- function(id) {
 
   tagList(
     # Local upload option
-    fileInput(
-      ns("settings_upload"),
-      width = "60%",
-      label = "Upload Settings",
-      buttonLabel = list(icon("folder"), "Browse"),
-      accept = c(".csv", ".xpt")
+    fluidRow(
+      fileInput(
+        ns("settings_upload"),
+        width = "60%",
+        label = "Upload Settings",
+        buttonLabel = list(icon("folder"), "Browse"),
+        accept = c(".csv", ".xpt")
+      )
     ),
     br(),
 
@@ -99,7 +101,7 @@ nca_settings_ui <- function(id) {
       ),
       tags$div(id = ns("AUCInputs")) # Container for dynamic partial AUC inputs
     ),
-    h4("Flag Rule Sets:"),
+    h4("Flag Rule Sets"),
     fluidRow(
       column(
         width = 6,
@@ -200,7 +202,7 @@ nca_settings_ui <- function(id) {
   )
 }
 
-nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexity / needs further modularization
+nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
