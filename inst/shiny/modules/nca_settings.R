@@ -12,7 +12,6 @@ nca_settings_ui <- function(id) {
         accept = c(".csv", ".xpt")
       )
     ),
-    br(),
 
     # Selection of analyte, dose number and specimen
     fluidRow(
@@ -23,7 +22,6 @@ nca_settings_ui <- function(id) {
       column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                             choices = NULL))
     ),
-    br(),
 
     # Method, NCA parameters, and units table
     fluidRow(
