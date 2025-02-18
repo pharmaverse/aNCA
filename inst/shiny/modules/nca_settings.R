@@ -346,7 +346,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         filter(!duplicated(paste0(start, end)))
 
       if ((nrow(intervals_userinput_setts) > 0)) {
-        browser()
+
         updateCheckboxInput(session, inputId = "AUCoptions",
                             label = "Select Partial AUC", value = TRUE)
 
@@ -370,9 +370,12 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         # Update the auc_counter reactive variable
         auc_counter(nrow(intervals_userinput_setts))
       }
-
+browser()
       # Update the flag rules
-      if (!is.null(setts$flag_rules$adj.r.squared)) {
+      setts$flag_rules %>%
+        filter(setts$flag_rules, !is.na(values))
+        
+      if (!is.na(setts$flag_rules$adj.r.squared)) {
         updateCheckboxInput(session, inputId = "rule_adj_r_squared", value = TRUE)
         updateNumericInput(session, inputId = "adj.r.squared_threshold", value = setts$options$flag_rules$adj.r.squared)
       } else {

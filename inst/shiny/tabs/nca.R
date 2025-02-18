@@ -311,18 +311,17 @@ output$settings_save <- downloadHandler(
     res$dose$data <- res$dose$data %>%
       # Select only the columns that are relevant for NCA
       select(any_of(c(unname(unlist(res$dose$columns)), "DOSNO")))
-
+browser()
     # Until they are adapted to PKNCA formats, save flag rule sets
-    res$flag_rules <- names(input) %>%
-      keep(~startsWith(.x, "nca_settings-") & endsWith(.x, "_threshold")) %>%
-      map(~{
-        l_thres <- list(pptestcd = input[[.x]])
-        names(l_thres) <- gsub("nca_settings-(.*)_threshold", "\\1", .x)
-        l_thres
-        }) %>%
-      unlist()
-
-    setts_res <- reactiveVal(res)
+    rule_inputs_logical <-  names(input) %>%
+      keep(~startsWith(.x, "nca_settings-rule")) %>%
+      sapply(., \(x) input[[x]])
+    
+    threshold_inputs <- names(input) %>%
+      keep(~startsWith(.x, "nca_settings-") & endsWith(.x, "_threshold"))
+    
+    res$flag_rules <- ifelse(rule_inputs_logical, input[[threshold_inputs]], NA) %>%
+      stack
 
     ## SAVE IN .RDS
     if (input$settings_save_fmt == "rds"){
@@ -351,7 +350,7 @@ output$settings_save <- downloadHandler(
                    conc_columns = perfect_stack(res$conc$columns),
                    dose_data = res$dose$data,
                    dose_columns = perfect_stack(res$dose$columns),
-                   flag_rules = data.frame(res$flag_rules),
+                   flag_rules = res$flag_rules,
                    options = res$options
                    )
 
