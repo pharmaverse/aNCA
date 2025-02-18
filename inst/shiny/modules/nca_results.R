@@ -143,15 +143,6 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
       )
     })
 
-    observeEvent(input$download, {
-      showModal(modalDialog(
-        title = "Please enter the path to the folder on Improve for your results:",
-        textInput(ns("pathresults"), "Path:"),
-        actionButton(ns("go"), "GO"),
-        footer = modalButton("Close")
-      ))
-    })
-
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
         paste0(mydata()$conc$data$STUDYID[1], "PK_Parameters.csv")
