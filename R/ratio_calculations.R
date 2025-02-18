@@ -25,7 +25,7 @@
 #'  MATRIX = c("BLOOD", "BLOOD", "BLOOD", "PLASMA", "PLASMA", "PLASMA"),
 #'  CONC = c(10, 20, 15, 25, 30, 40)
 #'  )
-#' ratios(data, "MATRIX", "CONC", groups = c("TIME", "USUBJID"), "BLOOD", "PLASMA")
+#' single_matrix_ratios(data, "MATRIX", "CONC", groups = c("TIME", "USUBJID"), "BLOOD", "PLASMA")
 #'
 #' @import dplyr
 #' @export
