@@ -69,12 +69,12 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
           )
         )
     })
-    
+
     observeEvent(final_results(), {
       req(final_results())
-      
+
       param_cols <- unique(res_nca()$result$PPTESTCD)
-      
+
       updatePickerInput(
         session = session,
         inputId = "params",
@@ -82,29 +82,23 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
         choices = sort(param_cols),
         selected = sort(param_cols)
       )
-      
+
     })
-    
+
     final_res_nca <- reactive({
       req(final_results(), input$params)
 
-      # Sort columns
-      group_cols <- c(unname(unique(c(unlist(res_nca()$data$conc$columns$groups),
-                                      unlist(res_nca()$data$dose$columns$groups)))))
       param_cols <- unique(res_nca()$result$PPTESTCD)
-      int_cols <- c("DOSNO", "start", "end")
-      other_cols <- setdiff(names(final_results), c(group_cols, int_cols, param_cols))
-      id_cols <- grouping_vars()
-      
+
       final_results <- final_results() %>%
         select(-all_of(setdiff(param_cols, input$params)))
-      
+
       # Include units in column names
       dict_pttestcd_with_units <- res_nca()$result %>%
         select(PPTESTCD, PPSTRESU) %>%
         unique() %>%
         pull(PPSTRESU, PPTESTCD)
-      
+
       final_results %>%
         rename_with(~ifelse(
           gsub("_.*", "", .x) %in% names(dict_pttestcd_with_units),
@@ -112,12 +106,12 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
           .x
         ))
     })
-    
+
     output$myresults <- reactable::renderReactable({
       req(final_res_nca())
-      
+
       col_defs <- generate_col_defs(final_res_nca())
-      
+
       reactable(
         final_res_nca(),
         columns = col_defs,
