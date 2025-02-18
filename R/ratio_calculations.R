@@ -36,6 +36,15 @@ single_matrix_ratio <- function(data,
                                 groups = c("TIME", "USUBJID"),
                                 spec1, spec2) {
 
+  # Check that matrices are different
+  if (spec1 == spec2) {
+    showNotification(
+      validate("Ratios cannot be calculated for the same samples.
+                Please select two different sample types."),
+      type = "error"
+    )
+  }
+
   # Separate Matrix Samples
   df_spec1 <- data %>%
     filter(!!sym(matrix_col) == spec1) %>%

@@ -94,22 +94,23 @@ non_nca_ratio_server <- function(id, data, grouping_vars, func) {
     # Display results
     output$results <- renderDT({
       req(results())
-      datatable(results(),
-                extensions = "Buttons",
-                options = list(
-                  pageLength = 5,
-                  dom = "Bfrtip",
-                  buttons = list(
-                    list(
-                      extend = "copy",
-                      title = paste0("Ratios_result", Sys.Date())
-                    ),
-                    list(
-                      extend = "csv",
-                      filename = paste0("Ratios_result_", Sys.Date())
-                      )
-                    )
-                  ),
+      datatable(
+        results(),
+        extensions = "Buttons",
+        options = list(
+          pageLength = 5,
+          dom = "Bfrtip",
+          buttons = list(
+            list(
+              extend = "copy",
+              title = paste0("Ratios_result", Sys.Date())
+            ),
+            list(
+              extend = "csv",
+              filename = paste0("Ratios_result_", Sys.Date())
+            )
+          )
+        ),
       )
     })
 
