@@ -23,7 +23,8 @@
 #' @import dplyr
 #' @export
 
-format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT", dosno_column = "DOSNO") {
+format_pkncaconc_data <- function(ADNCA, group_columns,
+                                  time_column = "AFRLT", dosno_column = "DOSNO") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
