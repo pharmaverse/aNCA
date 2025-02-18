@@ -24,9 +24,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    final_res_nca <- reactiveVal(NULL)
-
-    observeEvent(res_nca(), {
+    final_results <- reactive({
       req(res_nca())
 
       # Transform results
@@ -53,39 +51,16 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
         }
       }
 
-      # Include units in column names
-      dict_pttestcd_with_units <- res_nca()$result %>%
-        select(PPTESTCD, PPSTRESU) %>%
-        unique() %>%
-        pull(PPSTRESU, PPTESTCD)
-
-      final_results <- final_results %>%
-        rename_with(~ifelse(
-          gsub("_.*", "", .x) %in% names(dict_pttestcd_with_units),
-          paste0(.x, "[", dict_pttestcd_with_units[gsub("_.*", "", .x)], "]"),
-          .x
-        ))
-
-      # Sort columns
-      group_cols <- c(unname(unique(c(unlist(res_nca()$data$conc$columns$groups),
-                                      unlist(res_nca()$data$dose$columns$groups)))))
-      int_cols <- c("DOSNO", "start", "end")
-      param_cols <- names(final_results)[endsWith(names(final_results), "]")]
-      other_cols <- setdiff(names(final_results), c(group_cols, int_cols, param_cols))
-      id_cols <- grouping_vars()
-
       # Join subject data to allow the user to group by it
       final_results <- merge(
         final_results,
         res_nca()$data$conc$data %>%
-          select(any_of(c(id_cols, unname(unlist(res_nca()$data$conc$columns$groups)))))
-      )
-
-      final_results <- final_results %>%
-        select(any_of(c(group_cols, id_cols, int_cols, param_cols, other_cols)))
+          select(any_of(c(grouping_vars(), unname(unlist(res_nca()$data$conc$columns$groups)))))
+      ) %>%
+        unique()
 
       # Add flagged column
-      final_results <- final_results %>%
+      final_results %>%
         mutate(
           flagged = case_when(
             rowSums(is.na(select(., starts_with("flag_")))) > 0 ~ "MISSING",
@@ -93,35 +68,68 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
             TRUE ~ "ACCEPTED"
           )
         )
-
-      final_res_nca(final_results)
-
+    })
+    
+    observeEvent(final_results(), {
+      req(final_results())
+      
+      param_cols <- unique(res_nca()$result$PPTESTCD)
+      
       updatePickerInput(
         session = session,
         inputId = "params",
         label = "Select Parameters :",
-        choices = sort(colnames(final_res_nca())),
-        selected = sort(colnames(final_res_nca()))
+        choices = sort(param_cols),
+        selected = sort(param_cols)
       )
+      
     })
+    
+    final_res_nca <- reactive({
+      req(final_results(), input$params)
 
+      # Sort columns
+      group_cols <- c(unname(unique(c(unlist(res_nca()$data$conc$columns$groups),
+                                      unlist(res_nca()$data$dose$columns$groups)))))
+      param_cols <- unique(res_nca()$result$PPTESTCD)
+      int_cols <- c("DOSNO", "start", "end")
+      other_cols <- setdiff(names(final_results), c(group_cols, int_cols, param_cols))
+      id_cols <- grouping_vars()
+      
+      final_results <- final_results() %>%
+        select(-all_of(setdiff(param_cols, input$params)))
+      
+      # Include units in column names
+      dict_pttestcd_with_units <- res_nca()$result %>%
+        select(PPTESTCD, PPSTRESU) %>%
+        unique() %>%
+        pull(PPSTRESU, PPTESTCD)
+      
+      final_results %>%
+        rename_with(~ifelse(
+          gsub("_.*", "", .x) %in% names(dict_pttestcd_with_units),
+          paste0(.x, "[", dict_pttestcd_with_units[gsub("_.*", "", .x)], "]"),
+          .x
+        ))
+    })
+    
     output$myresults <- reactable::renderReactable({
       req(final_res_nca())
-
-      col_defs <- setdiff(generate_col_defs(final_res_nca()), input$params)
+      
+      col_defs <- generate_col_defs(final_res_nca())
+      
       reactable(
         final_res_nca(),
         columns = col_defs,
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = FALSE,
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        height = "98vh",
+        height = "68vh",
         rowStyle = function(index) {
           flagged_value <- final_res_nca()$flagged[index]
           if (flagged_value == "FLAGGED") {
