@@ -49,7 +49,6 @@ non_nca_ratio_server <- function(id, data, grouping_vars, func) {
     # Update select inputs dynamically
     observeEvent(data(), {
       spec_options <- unique(data()$conc$data$PCSPEC)
-      print(spec_options)
 
       updateSelectInput(session, "selected_spec1", choices = spec_options)
       updateSelectInput(session, "selected_spec2", choices = spec_options)
@@ -95,7 +94,23 @@ non_nca_ratio_server <- function(id, data, grouping_vars, func) {
     # Display results
     output$results <- renderDT({
       req(results())
-      datatable(results(), options = list(pageLength = 5))
+      datatable(results(),
+                extensions = "Buttons",
+                options = list(
+                  pageLength = 5,
+                  dom = "Bfrtip",
+                  buttons = list(
+                    list(
+                      extend = "copy",
+                      title = paste0("Ratios_result", Sys.Date())
+                    ),
+                    list(
+                      extend = "csv",
+                      filename = paste0("Ratios_result_", Sys.Date())
+                      )
+                    )
+                  ),
+      )
     })
 
   })
