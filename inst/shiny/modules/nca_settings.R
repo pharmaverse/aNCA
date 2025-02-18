@@ -219,14 +219,14 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : complexi
         sheets <- openxlsx::getSheetNames(file_path)
         setts <- lapply(sheets, function(sheet) openxlsx::read.xlsx(file_path, sheet = sheet))
         names(setts) <- sheets
-browser()
+
         # Rearrange the list as in a PKNCAdata object
         setts <- list(
           conc = list(
             data = setts$conc_data,
             columns = list(
               groups = list(
-                group_analyte = setts$conc_columns  %>% filter(ind == "groups.group_vars")  %>% pull(values),
+                group_analyte = setts$conc_columns  %>% filter(ind == "groups.group_analyte")  %>% pull(values),
                 group_group_vars = setts$conc_columns  %>% filter(ind == "groups.group_vars")  %>% pull(values)
               ),
               time = setts$conc_columns  %>% filter(ind == "time")  %>% pull(values),
@@ -243,7 +243,12 @@ browser()
             columns = list(
               groups = list(
                 group_vars = setts$dose_columns  %>% filter(ind == "groups.group_vars")  %>% pull(values)
-              )
+              ),
+              time = setts$dose_columns  %>% filter(ind == "time")  %>% pull(values),
+              dose = setts$dose_columns  %>% filter(ind == "dose")  %>% pull(values),
+              time.nominal = setts$dose_columns  %>% filter(ind == "time.nominal")  %>% pull(values),
+              exclude = setts$dose_columns  %>% filter(ind == "exclude")  %>% pull(values),
+              duration = setts$dose_columns  %>% filter(ind == "duration")  %>% pull(values)
             )
           ),
           intervals = setts$intervals,
@@ -253,17 +258,17 @@ browser()
         )
       }
 
-      update_with_setts_selector_selected <- function(var_setts_col, var_data_col, setts, data, session, inputId) {
+      update_with_setts_selector_selected <- function(var_setts_col, var_data_col, setts.df, data.df, session, inputId) {
         if (!is.null(var_data_col) && !is.null(var_setts_col)) {
-          vals_data <- unique(data$conc[[var_data_col]])
-          vals_setts <- unique(setts$intervals[[var_setts_col]])
+          vals_data <- unique(data.df[[var_data_col]])
+          vals_setts <- unique(setts.df[[var_setts_col]])
 
-          selected_analytes <- intersect(analytes_setts, analytes_data)
+          selected_analytes <- intersect(vals_setts, vals_data)
 
           # Produce a warning if any value in settings is not in data
-          if (length(selected_analytes) < length(analytes_setts)) {
+          if (length(selected_analytes) < length(vals_setts)) {
             showNotification(
-              validate("The ", attr(data$conc[[var_data_col]], "label"), ":",
+              validate("The ", attr(data.df[[var_data_col]], "label"), ":",
                       setdiff(analytes_setts, selected_analytes),
                       "selected in the settings file is not present in the data."),
               type = "warning"
@@ -283,7 +288,9 @@ browser()
       data <- mydata()
 
       # Update selected values for the data selectors
-      update_with_setts_selector_selected(setts$conc$columns$groups$group_analyte, data$conc$columns$groups$group_analyte, setts, data, session, "select_analyte")
+      update_with_setts_selector_selected(var_setts_col = setts$conc$columns$groups$group_analyte,
+                                          var_data_col = mydata()$conc$columns$groups$group_analyte,
+                                          setts.df = setts$intervals, data.df = mydata()$conc$data, session, "select_analyte")
       update_with_setts_selector_selected("DOSNO", "DOSNO", setts, data, session, "select_dosno")
       update_with_setts_selector_selected("PCSPEC", "PCSPEC", setts, data, session, "select_pcspec")
 
@@ -308,7 +315,7 @@ browser()
       updatePickerInput(
         session,
         inputId = "nca_params",
-        selected = param_setts
+        selected = params_setts
       )
 
       # Update the units table
@@ -336,31 +343,36 @@ browser()
         mutate(start = start - !!sym(dose_time_col),
                end = end - !!sym(dose_time_col)) %>%
         select(start, end) %>%
-        filter(!duplicated(paste0(start, end))) %>%
-        split(1:nrow(.))
+        filter(!duplicated(paste0(start, end)))
 
-      if ((nrow(intervals_userinput_setts)>0)) {
-        updateCheckboxInput(session, inputId = ns("AUCoptions"),
+      if ((nrow(intervals_userinput_setts) > 0)) {
+        browser()
+        updateCheckboxInput(session, inputId = "AUCoptions",
                             label = "Select Partial AUC", value = TRUE)
 
-        auc_counter(0)
         for (i in seq_along(nrow(intervals_userinput_setts))) {
-          auc_counter(auc_counter() + 1)
+
+          if (auc_counter() >= i){
+            removeUI(selector = paste0("#", ns(paste0("AUC_", i))))
+          }
+
           insertUI(
             selector = paste0("#", ns("AUCInputs")),
             where = "beforeEnd",
             ui = partial_auc_input(
               id = paste0("AUC_", auc_counter()),
               ns = ns,
-              min_sel_value = as.numeric(auc_mins[i]),
-              max_sel_value = as.numeric(auc_maxs[i])
+              min_sel_value = as.numeric(intervals_userinput_setts$start[i]),
+              max_sel_value = as.numeric(intervals_userinput_setts$end[i])
             )
           )
         }
+        # Update the auc_counter reactive variable
+        auc_counter(nrow(intervals_userinput_setts))
       }
 
       # Update the flag rules
-      if (!is.null(setts$options$flag_rules$adj.r.squared)) {
+      if (!is.null(setts$flag_rules$adj.r.squared)) {
         updateCheckboxInput(session, inputId = "rule_adj_r_squared", value = TRUE)
         updateNumericInput(session, inputId = "adj.r.squared_threshold", value = setts$options$flag_rules$adj.r.squared)
       } else {
@@ -391,35 +403,36 @@ browser()
       # Update the exclusions and inclusions (when matching with data)
       # ToDo: Make corrections after #177 merged
       conc_setts_columns <- unname(unlist(setts$conc$columns[c("groups", "time", "concentration")]))
-          
-      data$conc$data <- data$conc$data  %>% 
-        dplyr::left_join(data$conc$data,
-                         setts$conc$data  %>% select(any_of(c(conc_setts_columns, "is.included.hl", "is.excluded.hl", "exclude_half.life"))), 
-                         by = conc_setts_columns,
-                         suffix = c(".data", ".setts")) %>%
-      mutate(across(ends_with(".setts"), ~coalesce(., get(str_replace(cur_column(), ".setts", ".data"))))) %>%
-      select(-ends_with(".data"))  %>%
-      rename_with(~str_remove(., ".setts"))
-
-      mismatched_rows <- setts$conc$data %>%
-        anti_join(data$conc$data, by = conc_setts_columns)
       
-      if (nrow(mismatched_rows) > 0) {
-        showModal(modalDialog(
-          title = "Mismatched Data Points",
-          tags$h4("The following data points in the settings file do not match the uploaded dataset.
-                  The slopes for these profiles will be reset to best slope:"),
-          DTOutput(ns("mismatched_table")),
-          easyClose = TRUE,
-          footer = NULL
-        ))
 
-        output$mismatched_table <- DT::renderDT({
-          datatable(mismatched_points %>% select(-IX))
-        })
+      if (nrow(setts$conc$data) > 0) {
+        data$conc$data <- dplyr::left_join(data$conc$data,
+                           setts$conc$data  %>% select(any_of(c(conc_setts_columns, "is.included.hl", "is.excluded.hl", "exclude_half.life"))), 
+                           by = conc_setts_columns,
+                           suffix = c(".data", ".setts")) %>%
+        mutate(across(ends_with(".setts"), ~coalesce(., get(str_replace(cur_column(), ".setts", ".data"))))) %>%
+        select(-ends_with(".data"))  %>%
+        rename_with(~str_remove(., ".setts"))
+  
+        mismatched_rows <- setts$conc$data %>%
+          anti_join(data$conc$data, by = conc_setts_columns)
+        
+        if (nrow(mismatched_rows) > 0) {
+          showModal(modalDialog(
+            title = "Mismatched Data Points",
+            tags$h4("The following data points in the settings file do not match the uploaded dataset.
+                    The slopes for these profiles will be reset to best slope:"),
+            DTOutput(ns("mismatched_table")),
+            easyClose = TRUE,
+            footer = NULL
+          ))
+  
+          output$mismatched_table <- DT::renderDT({
+            datatable(mismatched_points %>% select(-IX))
+          })
+        }
       }
     })
-
 
     # Include keyboard limits for the settings GUI display
 

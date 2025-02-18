@@ -304,13 +304,13 @@ output$settings_save <- downloadHandler(
 
     res$conc$data <- res$conc$data %>%
       # Select only the columns that are relevant for NCA
-      select(any_of(conc_cols)) %>%
+      select(any_of(c(conc_cols, "DOSNO"))) %>%
       # Filter rows across conc_logical_cols with at least 1 TRUE value
       filter(rowSums(select(., conc_logical_cols)) > 0)
 
     res$dose$data <- res$dose$data %>%
       # Select only the columns that are relevant for NCA
-      select(unname(unlist(res$dose$columns)))
+      select(any_of(c(unname(unlist(res$dose$columns)), "DOSNO")))
 
     # Until they are adapted to PKNCA formats, save flag rule sets
     res$flag_rules <- names(input) %>%
