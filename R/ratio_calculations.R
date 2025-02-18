@@ -39,13 +39,13 @@ single_matrix_ratio <- function(data,
     filter(!!sym(matrix_col) == spec1) %>%
     rename(!!spec1 := !!sym(conc_col),
            Spec1_Unit = !!sym(units_col)) %>%
-    select(groups, !!sym(spec1), Spec1_Unit)
+    select(all_of(groups), !!sym(spec1), Spec1_Unit)
 
   df_spec2 <- data %>%
     filter(!!sym(matrix_col) == spec2) %>%
     rename(!!spec2 := !!sym(conc_col),
            Spec2_Unit = !!sym(units_col)) %>%
-    select(groups, !!sym(spec2), Spec2_Unit)
+    select(all_of(groups), !!sym(spec2), Spec2_Unit)
 
   # Merge  Data
   df_ratio <- left_join(df_spec1, df_spec2, by = groups) %>%
@@ -54,7 +54,7 @@ single_matrix_ratio <- function(data,
       Ratio = signif(!!sym(spec1) / !!sym(spec2), 3),
       Unit = paste0("(", Spec1_Unit, ") / (", Spec2_Unit, ")")
     ) %>%
-    select(groups, !!sym(spec1), !!sym(spec2), Ratio, Unit)
+    select(all_of(groups), !!sym(spec1), !!sym(spec2), Ratio, Unit)
 
   df_ratio
 }
@@ -91,24 +91,24 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
     rename(Spec1_Value = !!sym(conc_col),
            Spec1_Label = !!sym(matrix_col),
            Spec1_Units = !!sym(units_col)) %>%
-    select(groups, Spec1_Value, Spec1_Label, Spec1_Units)
+    select(all_of(groups), Spec1_Value, Spec1_Label, Spec1_Units)
 
   df_spec2 <- data %>%
     filter(!!sym(matrix_col) %in% spec2) %>%
     rename(Spec2_Value = !!sym(conc_col),
            Spec2_Label = !!sym(matrix_col),
            Spec2_Units = !!sym(units_col)) %>%
-    select(groups, Spec2_Value, Spec2_Label, Spec2_Units)
+    select(all_of(groups), Spec2_Value, Spec2_Label, Spec2_Units)
 
   # Merge Data
-  df_ratio <- left_join(df_spec1, df_spec2, by = groups) %>%
+  df_ratio <- left_join(df_spec1, df_spec2, by = groups, relationship = "many-to-many") %>%
     filter(!is.na(Spec1_Value) & !is.na(Spec2_Value)) %>%
     mutate(
       Ratio = signif(Spec1_Value / Spec2_Value, 3),
       `Spec1:Spec2` = paste0(Spec1_Label, "-", Spec2_Label),
       Unit = paste0("(", Spec1_Units, ") / (", Spec2_Units, ")")
     ) %>%
-    select(groups, `Spec1:Spec2`, Spec1_Value, Spec2_Value, Ratio, Unit)
+    select(all_of(groups), `Spec1:Spec2`, Spec1_Value, Spec2_Value, Ratio, Unit)
 
   df_ratio
 }
