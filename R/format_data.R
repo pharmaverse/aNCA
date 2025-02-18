@@ -23,7 +23,7 @@
 #' @import dplyr
 #' @export
 
-format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
+format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT", dosno_column = "DOSNO") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -37,7 +37,7 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT") {
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
     mutate(TIME = !!sym(time_column)) %>%
-    group_by(!!!syms(group_columns)) %>%
+    group_by(!!!syms(group_columns), !!sym(dosno_column)) %>%
     mutate(IX = seq_len(n())) %>%
     ungroup() %>%
     arrange(!!!syms(group_columns))

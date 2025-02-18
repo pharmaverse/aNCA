@@ -198,8 +198,10 @@ observeEvent(input$submit_analyte, priority = 2, {
 
   # Segregate the data into concentration and dose records
   df_conc <- format_pkncaconc_data(ADNCA = data(),
-                                   group_columns = c(group_columns, usubjid_column, analyte_column),
-                                   time_column = time_column) %>%
+                                   group_columns = c(group_columns, usubjid_column,
+                                                     analyte_column),
+                                   time_column = time_column,
+                                   dosno_column = dosno_column) %>%
     dplyr::arrange(across(all_of(c(usubjid_column, time_column)))) %>%
     # Consider only the analytes and matrix requested by the user
     dplyr::filter(!!sym(analyte_column) %in% input$select_analyte,

@@ -69,7 +69,7 @@ lambda_slope_plot <- function(
   if (is.na(lambda_z_n_points)) lambda_z_n_points <- 0
 
   row_values <- row_values[column_names]
-
+browser()
   lambda_z_ix_rows <- conc_pknca_df %>%
     ungroup() %>%
     mutate(TIME = round(TIME, 3)) %>%
