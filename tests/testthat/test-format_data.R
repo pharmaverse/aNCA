@@ -6,6 +6,7 @@ test_that("format_pkncaconc_data generates correct dataset", {
     PCSPEC = rep("Plasma", 10),
     DRUG = rep("DrugA", 10),
     ANALYTE = rep("Analyte1", 10),
+    DOSNO = rep(1, 10),
     AFRLT = seq(0, 9),
     AVAL = runif(10)
   )
@@ -56,7 +57,7 @@ test_that("format_pkncaconc_data generates correct dataset with multiple doses",
   # Call format_pkncaconc_data
   df_conc <- format_pkncaconc_data(ADNCA,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DRUG", "ANALYTE", "DOSNO"),
+                                                     "DRUG", "ANALYTE"),
                                    time_column = "AFRLT")
 
   # Test if df_conc is a data frame
@@ -101,6 +102,7 @@ test_that("format_pkncaconc_data handles missing columns", {
     USUBJID = rep(1:2, each = 5),
     PCSPEC = rep("Plasma", 10),
     DRUG = rep("DrugA", 10),
+    DOSNO = rep(1, 10),
     AFRLT = seq(0, 9),
     AVAL = runif(10)
   )
@@ -120,6 +122,7 @@ test_that("format_pkncaconc_data handles multiple analytes", {
     USUBJID = rep(1, each = 10),
     PCSPEC = rep("Plasma", 20),
     DRUG = rep("DrugA", 20),
+    DOSNO = rep(1, 20),
     ANALYTE = rep(c("Analyte1", "Analyte2"), each = 10),
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 9), 2),
@@ -144,6 +147,7 @@ test_that("format_pkncadose_data generates when missing the dose number column",
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 4), 4),
     NFRLT = rep(seq(0, 9), 2),
+    DOSNO = rep(1, 20),
     DOSEA = rep(c(5, 10), each = 10),
     ROUTE = rep(c("intravascular", "extravascular"), each = 10),
     ADOSEDUR = rep(c(0, 0), each = 10),
@@ -208,6 +212,7 @@ test_that("format_pkncadata_intervals handles incorrect input type", {
     ARRLT = rep(seq(0, 4), 4),
     NFRLT = rep(seq(0, 9), 2),
     ROUTE = "extravascular",
+    DOSNO = rep(1, 20),
     DOSEA = 10,
     ADOSEDUR = 0,
     AVAL = runif(20)
@@ -287,6 +292,7 @@ test_that("format_pkncadata_intervals generates correct dataset", {
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 4), 4),
     NFRLT = rep(seq(0, 9), 2),
+    DOSNO = rep(1, 20),
     ROUTE = "extravascular",
     DOSEA = 10,
     ADOSEDUR = 0,
@@ -366,6 +372,7 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
     PCSPEC = rep("Plasma", 20),
     DRUG = rep("DrugA", 20),
     DOSEA = 10,
+    DOSNO = rep(1, 20),
     ANALYTE = rep(c("Analyte1", "Metabolite1"), each = 10),
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 4), 4),
@@ -408,18 +415,19 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
   expect_equal(
     as.data.frame(result),
     data.frame(
-      start = c(0, 0, 5, 5),
-      end = c(5, 5, Inf, Inf),
-      STUDYID = c(1, 1, 1, 1),
-      PCSPEC = c("Plasma", "Plasma", "Plasma", "Plasma"),
-      DRUG = c("DrugA", "DrugA", "DrugA", "DrugA"),
-      USUBJID = c(1, 1, 1, 1),
-      ANALYTE = c("Analyte1", "Metabolite1", "Analyte1", "Metabolite1"),
-      cmax = c(TRUE, TRUE, TRUE, TRUE),
-      tmax = c(TRUE, TRUE, TRUE, TRUE),
-      half.life = c(TRUE, TRUE, TRUE, TRUE),
-      cl.obs = c(TRUE, TRUE, TRUE, TRUE),
-      type_interval = c("main", "main", "main", "main")
+      start = c(0, 0),
+      end = c(Inf, Inf),
+      STUDYID = c(1, 1),
+      PCSPEC = c("Plasma", "Plasma"),
+      DRUG = c("DrugA", "DrugA"),
+      USUBJID = c(1, 1),
+      ANALYTE = c("Analyte1", "Metabolite1"),
+      DOSNO = rep(1, 2),
+      cmax = c(TRUE, TRUE),
+      tmax = c(TRUE, TRUE),
+      half.life = c(TRUE, TRUE),
+      cl.obs = c(TRUE, TRUE),
+      type_interval = c("main", "main")
     )
   )
 
