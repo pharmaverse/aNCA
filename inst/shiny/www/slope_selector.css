@@ -85,6 +85,7 @@
 
   .slope-plots-container.multiple {
     margin-top: 2em;
+    margin-bottom: 2em;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(33em, 1fr));
     height: calc(100vh - 220px);
