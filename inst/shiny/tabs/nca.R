@@ -195,6 +195,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
   matrix_column <- "PCSPEC"
+  std_route_column <- "std_route"
 
   # Segregate the data into concentration and dose records
   df_conc <- format_pkncaconc_data(ADNCA = data(),
@@ -228,7 +229,7 @@ observeEvent(input$submit_analyte, priority = 2, {
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
-    route = route_column,
+    route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
