@@ -52,7 +52,7 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
   # Merge Data
   df_ratio <- left_join(df_spec1, df_spec2, by = groups, relationship = "many-to-many") %>%
     filter(!is.na(Spec1_Value) & !is.na(Spec2_Value)) %>%
-    rowwise() %>% 
+    rowwise() %>%
     mutate(
       Spec1_Value = set_units(Spec1_Value, Spec1_Units, mode = "character"),
       Spec2_Value = set_units(Spec2_Value, Spec2_Units, mode = "character"),
