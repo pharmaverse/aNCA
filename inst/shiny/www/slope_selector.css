@@ -80,6 +80,7 @@
   .slope-plots-container {
     margin-top: 2em;
     height: calc(100vh - 220px);
+    margin-bottom: 2em;
   }
 
   .slope-plots-container.multiple {

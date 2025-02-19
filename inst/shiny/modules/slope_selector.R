@@ -104,7 +104,7 @@ slope_selector_ui <- function(id) {
       div(
         class = "plot-widget-group",
         tags$span("Page "),
-        selectInput(ns("select_page"), "", choices = c(),
+        pickerInput(ns("select_page"), "", choices = c(),
                     width = "100px"),
         tags$span("of "),
         uiOutput(ns("page_number"), inline = TRUE)
@@ -239,7 +239,7 @@ slope_selector_server <- function(
       output$page_number <- renderUI(num_pages)
 
       # update jump to page selector #
-      updateSelectInput(
+      updatePickerInput(
         session = session,
         inputId = "select_page",
         choices = 1:num_pages,

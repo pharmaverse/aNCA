@@ -109,7 +109,7 @@ dose_profile_duplicates <- function(conc_data,
       !!arrlt := !!sym(afrlt) - next_dose,
       !!nrrlt := !!sym(nfrlt) - next_nom_dose
     ) %>%
-    filter(arrlt >= -24) %>%
+    filter(!!sym(arrlt) >= -24) %>%
     select(-interval_prev, -nom_interval_prev, -interval_next,
            -nom_interval_next, -next_dose, -next_nom_dose,
            -dose_time, -nom_dose_time)
