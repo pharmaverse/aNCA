@@ -311,7 +311,7 @@ output$settings_save <- downloadHandler(
     res$dose$data <- res$dose$data %>%
       # Select only the columns that are relevant for NCA
       select(any_of(c(unname(unlist(res$dose$columns)), "DOSNO")))
-browser()
+
     # Until they are adapted to PKNCA formats, save flag rule sets
     rule_inputs_logical <-  names(input) %>%
       keep(~startsWith(.x, "nca_settings-rule")) %>%
@@ -319,9 +319,13 @@ browser()
     
     threshold_inputs <- names(input) %>%
       keep(~startsWith(.x, "nca_settings-") & endsWith(.x, "_threshold"))
-    
-    res$flag_rules <- ifelse(rule_inputs_logical, input[[threshold_inputs]], NA) %>%
-      stack
+
+    res$flag_rules <- ifelse(rule_inputs_logical,
+                             sapply(threshold_inputs, \(x) input[[x]]),
+                             NA) %>%
+      setNames(nm = gsub("nca_settings-(.*)_threshold$", "\\1", threshold_inputs)) %>%
+      as_list() %>% 
+      as.data.frame()
 
     ## SAVE IN .RDS
     if (input$settings_save_fmt == "rds"){
