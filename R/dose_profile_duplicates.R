@@ -118,9 +118,9 @@ dose_profile_duplicates <- function(conc_data,
   conc_data <- conc_data %>%
     bind_rows(predose_duplicates, last_values) %>%
     group_by(across(all_of(groups))) %>%
+    arrange(across(all_of(c(groups, arrlt)))) %>%
     mutate(IX = seq_len(n())) %>%
-    ungroup() %>%
-    arrange(across(all_of(c(groups, arrlt))))
+    ungroup()
 
   conc_data
 }

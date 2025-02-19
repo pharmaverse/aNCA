@@ -105,7 +105,7 @@ lambda_slope_plot <- function(
   )
   subtitle_text <- paste0(
     "    R<sup>2</sup><sub>adj</sub>: ", r2adj_value,
-    "    HL \u03BB<sub>z</sub> = ", half_life_value," ",
+    "    HL \u03BB<sub>z</sub> = ", half_life_value, " ",
     lambda_res$PPSTRESU[lambda_res$PPTESTCD == "half.life"],
     "    (T<sub>", lambda_z_ix_rows$IX[nrow(lambda_z_ix_rows)], "</sub> - T<sub>",
     lambda_z_ix_rows$IX[1], "</sub>)/2 = ", time_span / 2, " ",
