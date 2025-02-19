@@ -4,7 +4,7 @@
 #' @param select_label1 A character string used to label the first selectInput.
 #' @param select_label2 A character string used to label the second selectInput.
 #' @param multiple A logical value indicating if multiple selections are allowed.
-non_nca_ratio_ui <- function(id, title, select_label1, select_label2, multiple = FALSE) {
+non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
   ns <- NS(id)
 
   tagList(
@@ -16,12 +16,13 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2, multiple =
             ns("selected_spec1"),
             select_label1,
             choices = NULL,
-            multiple = multiple
+            multiple = TRUE
           ),
           selectInput(
             ns("selected_spec2"),
             select_label2,
-            choices = NULL
+            choices = NULL,
+            multiple = TRUE
           )
         ),
         actionButton(ns("submit"), "Submit", class = "btn-primary")
@@ -42,7 +43,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2, multiple =
 #' @param grouping_vars A reactiveVal containing a character vector of grouping variables
 #' @param func The function used to perform the ratio calculation
 
-non_nca_ratio_server <- function(id, data, grouping_vars, func) {
+non_nca_ratio_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -79,8 +80,8 @@ non_nca_ratio_server <- function(id, data, grouping_vars, func) {
                         data()$dose$columns$dose, data()$dose$columns$time,
                         data()$dose$columns$route)
 
-      # Choose function dynamically
-      func(
+      # Calculate ratios
+      multiple_matrix_ratios(
         data = filtered_samples(),
         matrix_col = "PCSPEC",
         conc_col = data()$conc$columns$concentration,
