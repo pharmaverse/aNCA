@@ -17,7 +17,7 @@
 #'               the second specimen type(s) in the matrix_col.
 #'
 #' @returns A data frame containing the ratios.
-#' #' @examples
+#' @examples
 #' data <- data.frame(
 #' USUBJID = c("A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"),
 #' TIME = c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2),
