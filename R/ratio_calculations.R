@@ -54,12 +54,17 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
     filter(!is.na(Spec1_Value) & !is.na(Spec2_Value)) %>%
     rowwise() %>%
     mutate(
-      Spec1_Value = set_units(Spec1_Value, Spec1_Units, mode = "character"),
-      Spec2_Value = set_units(Spec2_Value, Spec2_Units, mode = "character"),
-      Ratio = signif(Spec1_Value / Spec2_Value, 3),
       Ratio_Type = paste0(Spec1_Label, "/", Spec2_Label),
-      Unit = ifelse(as.character(units(Ratio)) == "1",
-                    "unitless", as.character(units(Ratio))),
+      Ratio =
+        set_units(Spec1_Value,
+                  as_units(Spec1_Units),
+                  mode = "character") /
+        set_units(Spec2_Value,
+                  as_units(Spec2_Units),
+                  mode = "character"),
+      Unit = as.character(units(Ratio)),
+      Unit = ifelse(Unit == "1", "unitless", Unit),
+      Ratio = signif(Ratio, 3)
     ) %>%
     filter(Spec1_Label != Spec2_Label) %>%
     select(all_of(groups), Ratio_Type, Spec1_Value, Spec2_Value, Ratio, Unit)
