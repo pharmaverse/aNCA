@@ -29,6 +29,7 @@
 #' multiple_matrix_ratios(data, "MATRIX", "CONC", "UNITS", c("TIME", "USUBJID"), "BLOOD", "PLASMA")
 #'
 #' @import dplyr
+#' @importFrom units set_units as_units
 #' @export
 multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
                                    groups = c("TIME", "USUBJID"),
