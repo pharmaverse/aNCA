@@ -144,8 +144,8 @@ slope_selector_server <- function(
         })
     })
 
-    # Reactive for SLOPE_SELECTOR_COLUMNS
-    SLOPE_SELECTOR_COLUMNS <- reactive({
+    # Reactive for Slope selector columns
+    slope_selector_columns <- reactive({
       req(slopes_groups())
       c(slopes_groups(), "TYPE", "RANGE", "REASON")
     })
@@ -423,9 +423,9 @@ slope_selector_server <- function(
     #' For each of the columns in slope selector data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
-      req(SLOPE_SELECTOR_COLUMNS())
+      req(slope_selector_columns())
       # Dynamically attach observers for each column
-      purrr::walk(SLOPE_SELECTOR_COLUMNS(), \(colname) {
+      purrr::walk(slope_selector_columns(), \(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
           edit <- input[[paste0("edit_", colname)]]
           edited_slopes <- manual_slopes()
