@@ -12,15 +12,13 @@
 #'   \item Geometric mean (`geomean`)
 #'   \item Geometric coefficient of variation (`geocv`)
 #'   \item Arithmetic mean (`mean`)
-#'   \item Coefficient of variation (`CV`)
 #'   \item Standard deviation (`sd`)
 #'   \item Minimum value (`min`)
 #'   \item Maximum value (`max`)
 #'   \item Median value (`median`)
+#'   \item Count of missing values (`count.missing`)
 #'   \item Count (`count`)
 #' }
-#' The function excludes the columns `ANALYTE`, `DOSEA`, `PCSPEC`, `STUDYID`, and `USUBJID`
-#' from the numeric summarization because they are possible grouping variables
 #' The resulting summary statistics are rounded to three decimal places.
 #'
 #' @import dplyr
@@ -30,54 +28,58 @@
 #' @examples
 #' \dontrun{
 #' data <- data.frame(
-#'   STUDYID = rep(1, 10),
-#'   USUBJID = rep(1:2, each = 5),
-#'   DOSEA = rep(c(10, 20), each = 5),
-#'   ANALYTE = rep(c("A", "B"), each = 5),
-#'   PCSPEC = rep(c("X", "Y"), each = 5),
-#'   VALUE = rnorm(10)
+#' DOSNO = c(1, 1, 1, 1, 1, 1),
+#' PPTESTCD = c("A", "A", "B", "B", "C", "C"),
+#' PPSTRES = c(10, 20, 5, 15, NA, 30),
+#' PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 #' )
-#' input_groups <- c("STUDYID", "USUBJID", "DOSEA", "ANALYTE", "PCSPEC")
-#' calculate_summary_stats(data, input_groups)
+#' calculate_summary_stats(data)
 #' }
 
-calculate_summary_stats <- function(res_pknca, input_groups = "DOSNO") {
-
-  # Disconsider interval records for the summary statistics
-  data <- res_pknca$result %>%
-    filter(end == Inf) %>%
-    mutate(start = 0)
-
-  # Join subject data to allow the user to group by it
-  data <- merge(
-    data,
-    res_pknca$data$conc$data %>%
-      select(any_of(c(input_groups, unname(unlist(res_pknca$data$conc$columns$groups)))))
-  )
+calculate_summary_stats <- function(data, input_groups = "DOSNO") {
 
   # Calculate summary statistics, using all value rows
   # (note: this will give more weight to subjects with more valid records)
+
   summary_stats <- data %>%
     group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
     unique() %>%
     summarise(
-      geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
-      geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
-      mean = mean(PPSTRES, na.rm = TRUE),
-      CV = (sd(PPSTRES, na.rm = TRUE) / mean(PPSTRES, na.rm = TRUE)) * 100,
-      sd = sd(PPSTRES, na.rm = TRUE),
-      min = min(PPSTRES, na.rm = TRUE),
-      max = max(PPSTRES, na.rm = TRUE),
-      median = median(PPSTRES, na.rm = TRUE),
-      count.missing = sum(is.na(PPSTRES)),
-      count.total = n()
+      Geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
+      Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
+      Mean = mean(PPSTRES, na.rm = TRUE),
+      SD = sd(PPSTRES, na.rm = TRUE),
+      Min = ifelse(all(is.na(PPSTRES)), NA, min(PPSTRES, na.rm = TRUE)),
+      Max = ifelse(all(is.na(PPSTRES)), NA, max(PPSTRES, na.rm = TRUE)),
+      Median = median(PPSTRES, na.rm = TRUE),
+      Count.missing = sum(is.na(PPSTRES)),
+      Count.total = n()
     ) %>%
     ungroup() %>%
-    mutate(across(where(is.numeric), round, digits = 3))
+    mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
+    pivot_longer(
+      cols = c(Geomean, Geocv, Mean, SD, Min, Max, Median, Count.missing, Count.total),
+      names_to = "Statistic",
+      values_to = "Value"
+    ) %>%
+    pivot_wider(
+      names_from = PPTESTCD,
+      values_from = Value
+    )
+
+  # Include units for all column names
+  pttestcd_with_units <- data %>%
+    select(PPTESTCD, PPSTRESU) %>%
+    unique() %>%
+    pull(PPSTRESU, PPTESTCD)
+
+  summary_stats <- summary_stats %>%
+    rename_with(~ifelse(
+      gsub("_.*", "", .x) %in% names(pttestcd_with_units),
+      paste0(.x, "[", pttestcd_with_units[gsub("_.*", "", .x)], "]"),
+      .x
+    ))
 
   return(summary_stats)
-  # Note: It is not producing the same results as old function...
-  # Maybe you did give the same weight to each subject?
-  # (calculate stat of each subkect and then aggregate)
-  # Should we first make descriptive stats for each subject and then summarize those?
+
 }
