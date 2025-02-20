@@ -15,7 +15,7 @@ dose_data <- data.frame(
   DRUG = "A",
   duration = c(0, 0, 0, 0, 0, 0, 1, 0),
   USUBJID = c(1, rep(2, 2), rep(3, 2), 4, 5, 6),
-  DOSNO = c(1, rep(c(1, 2), each = 2), 1, 1, 1)
+  DOSNO = c(1, c(1, 2), c(1, 2), 1, 1, 1)
 )
 
 intervals_data <- data.frame(
@@ -37,8 +37,17 @@ mydata <- PKNCA::PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)
 describe("create_start_impute", {
   it("works without issue", {
     expect_no_error({
-      result <<- create_start_impute(mydata)
+      result <- create_start_impute(mydata)
     })
+  })
+
+  result <- create_start_impute(mydata)
+
+  it("provides a warning when data$intervals is empty or has no rows", {
+    mydata_noints <- mydata
+    mydata_noints$intervals <- data.frame()
+    mydata_noints_res <- suppressWarnings(create_start_impute(mydata_noints))
+    expect_warning(create_start_impute(mydata_noints), "No intervals provided. No modification")
   })
 
   it("does not add impute (NA) when start is in PKNCAconc", {
