@@ -171,8 +171,8 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_conc,
-            sub_pknca_dose,
-            relationship = "many-to-many") %>%
+                              sub_pknca_dose,
+                              relationship = "many-to-many") %>%
 
     # Pick 1 per concentration group and dose number
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
@@ -204,7 +204,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
-  
+
   dose_intervals
 }
 
