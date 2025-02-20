@@ -109,7 +109,7 @@ res_nca <- reactiveVal(NULL)
 pk_nca_trigger <- reactiveVal(0)
 
 observeEvent(input$nca, {
-  
+
   pk_nca_trigger(pk_nca_trigger() + 1)
 })
 
@@ -122,7 +122,7 @@ observeEvent(pk_nca_trigger(), {
 
       # Increment progress to 100% after NCA calculations are complete
 
-    # Make the starts and ends of results relative to last dose using the dose data
+      # Make the starts and ends of results relative to last dose using the dose data
 
       # Make the starts and ends of results relative to last dose using the dose data
       myres$result <- myres$result %>%

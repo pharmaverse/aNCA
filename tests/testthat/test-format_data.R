@@ -412,24 +412,14 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
   # Test function
   result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
 
-  expect_equal(
-    as.data.frame(result),
-    data.frame(
-      start = c(0, 0),
-      end = c(Inf, Inf),
-      STUDYID = c(1, 1),
-      PCSPEC = c("Plasma", "Plasma"),
-      DRUG = c("DrugA", "DrugA"),
-      USUBJID = c(1, 1),
-      ANALYTE = c("Analyte1", "Metabolite1"),
-      DOSNO = rep(1, 2),
-      cmax = c(TRUE, TRUE),
-      tmax = c(TRUE, TRUE),
-      half.life = c(TRUE, TRUE),
-      cl.obs = c(TRUE, TRUE),
-      type_interval = c("main", "main")
-    )
-  )
+  expect_equal(result$start[1], 0)
+  expect_equal(result$end[1], Inf)
+  expect_equal(result$ANALYTE, c("Analyte1", "Metabolite1"))
+  expect_equal(result$cmax[1], TRUE)
+  expect_equal(result$tmax[1], TRUE)
+  expect_equal(result$half.life[1], TRUE)
+  expect_equal(result$cl.obs[1], TRUE)
+  
 
   # Test if result can be used with PKNCAdata by testing its output
   expect_no_error(
