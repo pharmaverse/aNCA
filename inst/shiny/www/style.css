@@ -54,6 +54,12 @@ h5 {
   margin-bottom: 0;
 }
 
+.nca-numeric-container {
+  display: flex;
+  align-items: center;
+  margin-right: 5px;
+}
+
 /* card layout in filters section */
 .card-container {
   display: flex;

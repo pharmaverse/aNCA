@@ -3,16 +3,21 @@
 #' This function creates a pharmacokinetic concentration dataset from the provided ADNCA data.
 #'
 #' @param ADNCA A data frame containing the ADNCA data.
-#' @param analyte A character string specifying the analyte of interest.
+#' @param group_columns A character vector specifying the columns to group by.
+#' @param time_column A character string specifying the time column.
+#' @param route_column A character string specifying the route column.
 
 #'
 #' @returns A data frame containing the filtered and processed concentration data.
 #'
 #' @details
 #' The function performs the following steps:
-#'   - Creates a 'groups' column by concatenating 'USUBJID' and 'DOSNO'.
-#'   - Arranges and groups the data by groups_column.
+#'   - Groups the data by groups_column.
+#'   - Arranges the data by time_column.
+#'   - Adds a 'TIME' column.
+#'   - Adds a 'std_route' column based on the 'route_column', taking values "intravascular" or "extravascular".
 #'   - Adds an index column ('IX') 1:n within each group of length n.
+#'   - Arranges the data by group_columns.
 #'
 #' @examples
 #' \dontrun{
@@ -150,18 +155,38 @@ format_pkncadata_intervals <- function(pknca_dose,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
+  # Obtain all possible pknca parameters
+  all_pknca_params <- setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
+                              c("start", "end"))
+
+  # Obtain all grouping variables
+  dose_group_vars <- unname(unlist(pknca_dose$columns$groups))
+
   # Based on dose times create a data frame with start and end times
   dose_intervals <- pknca_dose$data %>%
+
+    # Compute the interval times starting either from dose or first observation
     mutate(start = if (start_from_last_dose) !!sym(pknca_dose$columns$time)
            else !!sym(pknca_dose$columns$time) + !!sym("ARRLT")) %>%
-    group_by(!!!syms(unname(unlist(pknca_dose$columns$groups)))) %>%
+    group_by(!!!syms(dose_group_vars)) %>%
     arrange(!!sym(pknca_dose$columns$time)) %>%
     mutate(end = lead(as.numeric(!!sym(pknca_dose$columns$time)), default = Inf)) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", unname(unlist(pknca_dose$columns$groups)), "DOSNO"))) %>%
 
-    # Create logical columns with the TRUE and as names params argument
-    mutate(!!!setNames(rep(TRUE, length(params)), params)) %>%
+    # Select only neccesary columns: start, end, groupping variables and dose number
+    # ToDo (Gerardo): Adjust the function to include multiple analytes without hardcoding
+    select(any_of(c("start", "end", dose_group_vars, "DOSNO", "ANALYTE"))) %>%
+
+    # Create logical columns with only TRUE for the NCA parameters requested by the user
+    mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
+    mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
+
+    # Prevent any potential attributes associated to the column names
+    mutate(across(everything(), ~ {
+      column <- .
+      attributes(column) <- NULL
+      column
+    })) %>%
 
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
