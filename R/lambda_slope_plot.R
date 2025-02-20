@@ -8,7 +8,7 @@
 #'                      (default is `mydata$conc$data`).
 #' @param row_values     A list containing the values for the column_names used for filtering.
 #'                      (default is `patient`).
-#' @param myres          A PKNCAnca object containing the results of the NCA analysis
+#' @param myres          A PKNCAresults object containing the results of the NCA analysis
 #' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
 #'                      determining the subtitle color (default is 0.7).
 #'

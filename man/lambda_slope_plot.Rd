@@ -18,10 +18,10 @@ lambda_slope_plot(
 \item{row_values}{A list containing the values for the column_names used for filtering.
 (default is \code{patient}).}
 
-\item{myres}{A PKNCAnca object containing the results of the NCA analysis}
+\item{myres}{A PKNCAresults object containing the results of the NCA analysis}
 
-\item{r2adj_threshold}{Numeric value representing the R-squared adjusted threshold for determining
-the subtitle color (default is 0.7).}
+\item{r2adj_threshold}{Numeric value representing the R-squared adjusted threshold for
+determining the subtitle color (default is 0.7).}
 }
 \value{
 A plotly object representing the lambda slope plot.
