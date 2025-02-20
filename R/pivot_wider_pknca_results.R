@@ -38,6 +38,7 @@ pivot_wider_pknca_results <- function(myres) {
     filter(type_interval == "main") %>%
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
     mutate(exclude.PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
+    select(-PPTESTCD) %>%
     pivot_wider(names_from = exclude.PPTESTCD, values_from = exclude)
 
   infinite_aucs <- inner_join(infinite_aucs_vals, infinite_aucs_exclude)
