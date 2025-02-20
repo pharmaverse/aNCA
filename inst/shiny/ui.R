@@ -72,7 +72,8 @@ fluidPage(
               ),
               tabPanel("Parameter Datasets", parameter_datasets_ui("parameter_datasets"))
             )
-          )
+          ),
+          tabPanel("Additional Analysis", additional_analysis_ui("non_nca"))
         )
       )
     ),

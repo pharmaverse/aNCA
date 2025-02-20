@@ -70,7 +70,7 @@ tab_data_server <- function(id) {
     # Load the dummy ADNCA example for the user as default
     ADNCA <- reactiveVal(
       read.csv(
-        system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"),
+        system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
         na.strings = c("", "NA")
       )
     )
