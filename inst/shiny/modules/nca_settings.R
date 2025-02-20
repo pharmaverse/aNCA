@@ -572,7 +572,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
 
       data <- data %>%
         left_join(y = mydata()$dose$data) %>%
-        group_by(across(all_of(unname(unlist(mydata()$conc$columns$groups))))) %>%
+        group_by(across(all_of(unname(unlist(mydata()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
         select(!!!syms(colnames(data)))

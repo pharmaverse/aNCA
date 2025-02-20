@@ -165,12 +165,12 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
-    select(any_of(c(conc_groups,
+    select(any_of(c(dose_groups,
                     pknca_dose$columns$time, "DOSNO"))) %>%
     rename_with(~ "time_dose", pknca_dose$columns$time)
 
   # Based on dose times create a data frame with start and end times
-  left_join(sub_pknca_conc,
+  dose_intervals <- left_join(sub_pknca_conc,
             sub_pknca_dose,
             relationship = "many-to-many") %>%
 
@@ -204,5 +204,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
+  
+  dose_intervals
 }
 
