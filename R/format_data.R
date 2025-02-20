@@ -23,7 +23,10 @@
 #' @import dplyr
 #' @export
 
-format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT", route_column = "ROUTE") {
+format_pkncaconc_data <- function(ADNCA,
+                                  group_columns,
+                                  time_column = "AFRLT",
+                                  route_column = "ROUTE") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -32,15 +35,16 @@ format_pkncaconc_data <- function(ADNCA, group_columns, time_column = "AFRLT", r
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
-  
+
   ADNCA %>%
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
     mutate(TIME = !!sym(time_column)) %>%
-    mutate(std_route = ifelse( 
-      grepl('intra', gsub('[^[:alnum:]]', '', tolower(!!sym(route_column)))),
-      'intravascular',
-      'extravascular')) %>% 
+    mutate(std_route = ifelse(
+                              grepl("intra",
+                                    gsub("[^[:alnum:]]", "", tolower(!!sym(route_column)))),
+                              "intravascular",
+                              "extravascular")) %>%
     group_by(!!!syms(group_columns)) %>%
     mutate(IX = seq_len(n())) %>%
     ungroup() %>%
