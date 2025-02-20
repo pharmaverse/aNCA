@@ -351,7 +351,7 @@ slope_selector_server <- function(
       fixed_columns <- list(
         TYPE = colDef(
           cell = dropdown_extra(
-            id = session$ns("edit_TYPE"),
+            id = ns("edit_TYPE"),
             choices = c("Selection", "Exclusion"),
             class = "dropdown-extra"
           ),
@@ -359,12 +359,12 @@ slope_selector_server <- function(
         ),
         RANGE = colDef(
           cell = text_extra(
-            id = session$ns("edit_RANGE")
+            id = ns("edit_RANGE")
           )
         ),
         REASON = colDef(
           cell = text_extra(
-            id = session$ns("edit_REASON")
+            id = ns("edit_REASON")
           ),
           width = 400
         )
@@ -374,7 +374,7 @@ slope_selector_server <- function(
       dynamic_columns <- lapply(slopes_groups(), function(col) {
         colDef(
           cell = dropdown_extra(
-            id = session$ns(paste0("edit_", col)),
+            id = ns(paste0("edit_", col)),
             choices = unique(profiles_per_patient()[[col]]), # Dynamically set choices
             class = "dropdown-extra"
           ),
