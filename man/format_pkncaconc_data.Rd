@@ -4,12 +4,21 @@
 \alias{format_pkncaconc_data}
 \title{Create PK Concentration Dataset}
 \usage{
-format_pkncaconc_data(ADNCA, group_columns, time_column = "AFRLT")
+format_pkncaconc_data(
+  ADNCA,
+  group_columns,
+  time_column = "AFRLT",
+  route_column = "ROUTE"
+)
 }
 \arguments{
 \item{ADNCA}{A data frame containing the ADNCA data.}
 
-\item{analyte}{A character string specifying the analyte of interest.}
+\item{group_columns}{A character vector specifying the columns to group by.}
+
+\item{time_column}{A character string specifying the time column.}
+
+\item{route_column}{A character string specifying the route column.}
 }
 \value{
 A data frame containing the filtered and processed concentration data.
@@ -20,15 +29,21 @@ This function creates a pharmacokinetic concentration dataset from the provided 
 \details{
 The function performs the following steps:
 \itemize{
-\item Creates a 'groups' column by concatenating 'USUBJID' and 'DOSNO'.
-\item Arranges and groups the data by groups_column.
+\item Groups the data by groups_column.
+\item Arranges the data by time_column.
+\item Adds a 'TIME' column.
+\item Adds a 'std_route' column taking values "intravascular" or "extravascular".
 \item Adds an index column ('IX') 1:n within each group of length n.
+\item Arranges the data by group_columns.
 }
 }
 \examples{
 \dontrun{
   # Example usage:
-  conc_data <- format_pkncaconc_data(ADNCA, "analyte_name", "profile_type")
+  conc_data <- format_pkncaconc_data(ADNCA,
+                                     group_columns,
+                                     "AFRLT",
+                                     "ROUTE")
 }
 
 }

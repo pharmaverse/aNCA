@@ -22,7 +22,10 @@
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   conc_data <- format_pkncaconc_data(ADNCA, "analyte_name", "profile_type")
+#'   conc_data <- format_pkncaconc_data(ADNCA,
+#'                                      group_columns,
+#'                                      "AFRLT",
+#'                                      "ROUTE")
 #' }
 #'
 #' @import dplyr
