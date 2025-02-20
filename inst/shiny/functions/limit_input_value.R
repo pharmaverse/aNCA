@@ -11,8 +11,6 @@
 #' @param label A label for the input, used in the notification message. Default is an empty char.
 #' @param update_fun The input updating function (default is `updateNumericInput`).
 #'
-#' @importFrom shiny observeEvent showNotification
-#' @export
 limit_input_value <- function(input, session, id, max_value = Inf, min_value = -Inf, label = "",
                               update_fun = updateNumericInput) {
   observeEvent(input[[id]], {
