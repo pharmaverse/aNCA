@@ -165,7 +165,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
-    select(any_of(c(unname(unlist(pknca_dose$columns$groups)),
+    select(any_of(c(conc_groups,
                     pknca_dose$columns$time, "DOSNO"))) %>%
     rename_with(~ "time_dose", pknca_dose$columns$time)
 
@@ -189,7 +189,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Make end based on next dose time (if no more, Inf)
     mutate(end = lead(as.numeric(time_dose), default = Inf)) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", unname(unlist(pknca_conc$columns$groups)), "DOSNO"))) %>%
+    select(any_of(c("start", "end", conc_groups, "DOSNO"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
