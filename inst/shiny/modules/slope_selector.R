@@ -437,12 +437,12 @@ slope_selector_server <- function(
 
     # Observe input$nca
     observeEvent(profiles_per_patient(), {
-      mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
+      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
     })
 
     #' saves and implements provided ruleset
     observeEvent(input$save_ruleset, {
-      mydata(.filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
+      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
       pk_nca_trigger(pk_nca_trigger() + 1)
     })
 
@@ -451,7 +451,7 @@ slope_selector_server <- function(
     #' and exclusions before applying them to the actual dataset.
     plot_data <- reactive({
       req(mydata(), manual_slopes(), profiles_per_patient())
-      .filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups())
+      filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups())
     }) %>%
       shiny::debounce(750)
 
@@ -467,8 +467,15 @@ slope_selector_server <- function(
     })
 
     observeEvent(event_data("plotly_click", priority = "event"), {
-      handle_plotly_click(last_click_data, manual_slopes, slopes_groups())
+      log_trace("slope_selector: plotly click detected")
 
+      result <- handle_plotly_click(last_click_data,
+                                    manual_slopes, 
+                                    slopes_groups(), 
+                                    event_data("plotly_click"))
+      # Update reactive values in the observer
+      last_click_data <- result$last_click_data
+      manual_slopes(result$manual_slopes)
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
       refresh_reactable(refresh_reactable() + 1)

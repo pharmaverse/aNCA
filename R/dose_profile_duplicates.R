@@ -21,7 +21,6 @@
 #'
 #' @import dplyr
 #' @examples
-#' \dontrun{
 #' # Example usage
 #' conc_data <- data.frame(
 #' USUBJID = c("001", "001", "001", "001", "001", "001", "001", "001", "001", "001"),
@@ -34,7 +33,6 @@
 #' )
 #' result <- dose_profile_duplicates(conc_data,
 #'                             groups = c("USUBJID", "DOSNO"), dosno = "DOSNO")
-#' }
 #'
 #' @export
 dose_profile_duplicates <- function(conc_data,
