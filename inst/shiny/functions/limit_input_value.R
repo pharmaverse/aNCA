@@ -18,12 +18,12 @@ limit_input_value <- function(input, session, id, max_value = Inf, min_value = -
 
     if (!is.na(input_value)) {
       if (input_value < min_value) {
-        update_fun(session, id, "", value = min_value)
-        showNotification(paste0(label, " input min value is ", min_value))
+        update_fun(session, id, value = min_value)
+        showNotification(paste0(label, " input min value is ", min_value), type = "warning")
       }
       if (input_value > max_value) {
-        update_fun(session, id, "", value = max_value)
-        showNotification(paste0(label, " input max value is ", max_value))
+        update_fun(session, id, value = max_value)
+        showNotification(paste0(label, " input max value is ", max_value), type = "warning")
       }
     }
   })
