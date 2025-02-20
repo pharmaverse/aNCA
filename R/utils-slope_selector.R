@@ -65,7 +65,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups) {
 #'
 #' @param existing Data frame with existing selections and exclusions.
 #' @param new      Data frame with new rule to be added or removed.
-#' @param slope_group_columns List with column names that define the groups.
+#' @param slope_groups List with column names that define the groups.
 #' @param .keep    Whether to force keep fully overlapping rulesets. If FALSE, it will be assumed
 #'                 that the user wants to remove rule if new range already exists in the dataset.
 #'                 If TRUE, in that case full range will be kept.

@@ -45,7 +45,6 @@ complete pre-dose and last concentration values. It is designed for use in pharm
 analyses where dosing intervals and concentration values need to be aligned for each dose.
 }
 \examples{
-\dontrun{
 # Example usage
 conc_data <- data.frame(
 USUBJID = c("001", "001", "001", "001", "001", "001", "001", "001", "001", "001"),
@@ -58,6 +57,5 @@ NFRLT = c(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8)
 )
 result <- dose_profile_duplicates(conc_data,
                             groups = c("USUBJID", "DOSNO"), dosno = "DOSNO")
-}
 
 }

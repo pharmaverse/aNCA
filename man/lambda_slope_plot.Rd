@@ -5,27 +5,23 @@
 \title{Generate a Lambda Slope Plot}
 \usage{
 lambda_slope_plot(
-  res_pknca_df = myres$result,
-  conc_pknca_df = mydata$conc$data,
+  conc_pknca_df,
   row_values,
-  R2ADJTHRESHOL = 0.7,
-  myres = myres
+  myres = myres,
+  r2adj_threshold = 0.7
 )
 }
 \arguments{
-\item{res_pknca_df}{Data frame containing the results of the pharmacokinetic non-compartmental
-analysis (default is \code{PKNCA::pk.nca(.)$result}).}
-
 \item{conc_pknca_df}{Data frame containing the concentration data
 (default is \code{mydata$conc$data}).}
 
 \item{row_values}{A list containing the values for the column_names used for filtering.
 (default is \code{patient}).}
 
-\item{R2ADJTHRESHOL}{Numeric value representing the R-squared adjusted threshold for determining
-the subtitle color (default is 0.7).}
+\item{myres}{A PKNCAnca object containing the results of the NCA analysis}
 
-\item{column_names}{A character vector containing the column names used for grouping the data.}
+\item{r2adj_threshold}{Numeric value representing the R-squared adjusted threshold for determining
+the subtitle color (default is 0.7).}
 }
 \value{
 A plotly object representing the lambda slope plot.
@@ -55,11 +51,10 @@ linear regression line, and annotations.
 \examples{
 \dontrun{
   # Example usage:
-  plot <- lambda_slope_plot(res_pknca_df = myres$result,
-                            conc_pknca_df = mydata$conc$data,
-                            column_names = c("USUBJID" , "STUDYID", "DOSENO"),
+  plot <- lambda_slope_plot(conc_pknca_df = mydata$conc$data,
                             row_values = list(USUBJID = "001", STUDYID = "A", DOSENO = 1),
-                            R2ADJTHRESHOL = 0.7)
+                            myres = res_nca,
+                            r2adj_threshold = 0.7)
   plot
 }
 
