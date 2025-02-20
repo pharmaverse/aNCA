@@ -15,7 +15,7 @@
 #'   - Groups the data by groups_column.
 #'   - Arranges the data by time_column.
 #'   - Adds a 'TIME' column.
-#'   - Adds a 'std_route' column based on the 'route_column', taking values "intravascular" or "extravascular".
+#'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
 #'   - Adds an index column ('IX') 1:n within each group of length n.
 #'   - Arranges the data by group_columns.
 #'

@@ -336,17 +336,21 @@ test_that("format_pkncaconc_data generates a correct temporary route column", {
     PCSPEC = rep("Plasma", 20),
     DRUG = rep("DrugA", 20),
     ANALYTE = rep("Analyte1", 10),
-    ROUTE = rep(c("INTRAVASCULAR", "INTRAVENOUS", "INTRAVENOUS BOLUS", "INTRAVENOUS DRIP", "EXTRAVASCULAR" ), 2),
+    ROUTE = rep(c("INTRAVASCULAR",
+                  "INTRAVENOUS",
+                  "INTRAVENOUS BOLUS",
+                  "INTRAVENOUS DRIP",
+                  "EXTRAVASCULAR"), 2),
     DOSEA = 10,
     AVAL = runif(20),
-    AFRLT = rep(seq(0, 9),2)
+    AFRLT = rep(seq(0, 9), 2)
   )
 
   df_conc <- format_pkncaconc_data(ADNCA,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "ANALYTE"),
                                    time_column = "AFRLT")
-  
-  expect_true(all(df_conc$std_route == "intravascular" | 
-                df_conc$std_route == "extravascular"))
+
+  expect_true(all(df_conc$std_route == "intravascular" |
+                    df_conc$std_route == "extravascular"))
 })
