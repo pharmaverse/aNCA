@@ -20,13 +20,14 @@ observeEvent(data(), priority = 2, {
   route_column <- "ROUTE"
   analyte_column <- "ANALYTE"
   matrix_column <- "PCSPEC"
+  std_route_column <- "std_route"
 
   # Segregate the data into concentration and dose records
   df_conc <- format_pkncaconc_data(ADNCA = data(),
                                    group_columns = c(group_columns, usubjid_column, analyte_column),
-                                   time_column = time_column) %>%
+                                   time_column = time_column,
+                                   route_column = route_column) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
-
 
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
                                    group_columns = c(group_columns, usubjid_column),
@@ -51,7 +52,7 @@ observeEvent(data(), priority = 2, {
   mydose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
-    route = route_column,
+    route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
   )
