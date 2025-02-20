@@ -4,7 +4,12 @@
 \alias{format_pkncaconc_data}
 \title{Create PK Concentration Dataset}
 \usage{
-format_pkncaconc_data(ADNCA, group_columns, time_column = "AFRLT")
+format_pkncaconc_data(
+  ADNCA,
+  group_columns,
+  time_column = "AFRLT",
+  dosno_column = "DOSNO"
+)
 }
 \arguments{
 \item{ADNCA}{A data frame containing the ADNCA data.}

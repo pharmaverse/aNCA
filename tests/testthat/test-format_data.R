@@ -6,6 +6,7 @@ test_that("format_pkncaconc_data generates correct dataset", {
     PCSPEC = rep("Plasma", 10),
     DRUG = rep("DrugA", 10),
     ANALYTE = rep("Analyte1", 10),
+    DOSNO = rep(1, 10),
     AFRLT = seq(0, 9),
     AVAL = runif(10)
   )
@@ -56,7 +57,7 @@ test_that("format_pkncaconc_data generates correct dataset with multiple doses",
   # Call format_pkncaconc_data
   df_conc <- format_pkncaconc_data(ADNCA,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DRUG", "ANALYTE", "DOSNO"),
+                                                     "DRUG", "ANALYTE"),
                                    time_column = "AFRLT")
 
   # Test if df_conc is a data frame
@@ -101,6 +102,7 @@ test_that("format_pkncaconc_data handles missing columns", {
     USUBJID = rep(1:2, each = 5),
     PCSPEC = rep("Plasma", 10),
     DRUG = rep("DrugA", 10),
+    DOSNO = rep(1, 10),
     AFRLT = seq(0, 9),
     AVAL = runif(10)
   )
@@ -120,6 +122,7 @@ test_that("format_pkncaconc_data handles multiple analytes", {
     USUBJID = rep(1, each = 10),
     PCSPEC = rep("Plasma", 20),
     DRUG = rep("DrugA", 20),
+    DOSNO = rep(1, 20),
     ANALYTE = rep(c("Analyte1", "Analyte2"), each = 10),
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 9), 2),
@@ -144,6 +147,7 @@ test_that("format_pkncadose_data generates when missing the dose number column",
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 4), 4),
     NFRLT = rep(seq(0, 9), 2),
+    DOSNO = rep(1, 20),
     DOSEA = rep(c(5, 10), each = 10),
     ROUTE = rep(c("intravascular", "extravascular"), each = 10),
     ADOSEDUR = rep(c(0, 0), each = 10),
@@ -198,11 +202,40 @@ test_that("format_pkncadose_data handles empty input", {
 })
 
 test_that("format_pkncadata_intervals handles incorrect input type", {
-  mydose <- list(data = data.frame(STUDYID = 1, USUBJID = 1, TIME = 0),
-                 columns = list(groups = c("STUDYID", "USUBJID"),
-                                time = "TIME"))
-  expect_error(format_pkncadata_intervals(mydose),
-               regexp = "Input must be a PKNCAdose object from the PKNCA package.")
+  ADNCA <- data.frame(
+    STUDYID = rep(1, 20),
+    USUBJID = rep(1:2, each = 10),
+    PCSPEC = rep("Plasma", 20),
+    DRUG = rep("DrugA", 20),
+    ANALYTE = rep("Analyte1", 20),
+    AFRLT = rep(seq(0, 9), 2),
+    ARRLT = rep(seq(0, 4), 4),
+    NFRLT = rep(seq(0, 9), 2),
+    ROUTE = "extravascular",
+    DOSNO = rep(1, 20),
+    DOSEA = 10,
+    ADOSEDUR = 0,
+    AVAL = runif(20)
+  )
+
+  # Call format_pkncaconc_data
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
+
+  # Generate PKNCAconc and PKNCAdose objects
+  pknca_conc <- PKNCA::PKNCAconc(
+    df_conc,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
+    exclude_half.life = "exclude_half.life",
+    time.nominal = "NFRLT"
+  )
+  expect_error(format_pkncadata_intervals(pknca_conc = df_conc, data.frame()),
+               regexp = "Input pknca_conc must be a PKNCAconc object from the PKNCA package.")
+
+  expect_error(format_pkncadata_intervals(pknca_conc = pknca_conc, data.frame()),
+               regexp = "Input pknca_dose must be a PKNCAdose object from the PKNCA package.")
 })
 
 test_that("format_pkncadose_data handles negative time values", {
@@ -257,8 +290,9 @@ test_that("format_pkncadata_intervals generates correct dataset", {
     DRUG = rep("DrugA", 20),
     ANALYTE = rep("Analyte1", 20),
     AFRLT = rep(seq(0, 9), 2),
-    ARRLT = c(rep(seq(0, 4), 2), rep(seq(5, 9), 2)),
+    ARRLT = rep(seq(0, 4), 4),
     NFRLT = rep(seq(0, 9), 2),
+    DOSNO = rep(1, 20),
     ROUTE = "extravascular",
     DOSEA = 10,
     ADOSEDUR = 0,
@@ -279,14 +313,14 @@ test_that("format_pkncadata_intervals generates correct dataset", {
                                    since_lastdose_time_column = "ARRLT")
 
   # Generate PKNCAconc and PKNCAdose objects
-  myconc <- PKNCA::PKNCAconc(
+  pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
-  mydose <- PKNCA::PKNCAdose(
+  pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
     route = "ROUTE",
@@ -298,7 +332,10 @@ test_that("format_pkncadata_intervals generates correct dataset", {
   params <- c("cmax", "tmax", "half.life", "cl.obs")
 
   # Call format_pkncadata_intervals
-  myintervals <- format_pkncadata_intervals(mydose, params = params, start_from_last_dose = TRUE)
+  myintervals <- format_pkncadata_intervals(pknca_conc,
+                                            pknca_dose,
+                                            params = params,
+                                            start_from_last_dose = TRUE)
 
   # Test if myintervals is a data frame
   expect_s3_class(myintervals, "data.frame")
@@ -313,15 +350,90 @@ test_that("format_pkncadata_intervals generates correct dataset", {
   # Test if myintervals can be used with PKNCAdata by testing its output
   expect_no_error(
     PKNCA::PKNCAdata(
-      data.conc = myconc,
-      data.dose = mydose,
+      data.conc = pknca_conc,
+      data.dose = pknca_dose,
       intervals = myintervals,
       units = PKNCA::pknca_units_table(
-        concu = myconc$data$PCSTRESU[1],
-        doseu = myconc$data$DOSEU[1],
-        amountu = myconc$data$PCSTRESU[1],
-        timeu = myconc$data$RRLTU[1]
+        concu = pknca_conc$data$PCSTRESU[1],
+        doseu = pknca_conc$data$DOSEU[1],
+        amountu = pknca_conc$data$PCSTRESU[1],
+        timeu = pknca_conc$data$RRLTU[1]
       )
     )
   )
 })
+
+test_that("format_pkncadata_intervals handles multiple analytes with metabolites", {
+
+  # Create mock data with multiple analytes and metabolites
+  ADNCA <- data.frame(
+    STUDYID = rep(1, 20),
+    USUBJID = rep(1, 20),
+    PCSPEC = rep("Plasma", 20),
+    DRUG = rep("DrugA", 20),
+    DOSEA = 10,
+    DOSNO = rep(1, 20),
+    ANALYTE = rep(c("Analyte1", "Metabolite1"), each = 10),
+    AFRLT = rep(seq(0, 9), 2),
+    ARRLT = rep(seq(0, 4), 4),
+    AVAL = c(rep(seq(0, 8, 2), 2),
+             rep(seq(0, 4), 2))
+  )
+
+  # Call format_pkncaconc_data
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
+
+  # Call format_pkncadose_data
+  df_dose <- format_pkncadose_data(df_conc,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG"),
+                                   time_column = "AFRLT",
+                                   since_lastdose_time_column = "ARRLT")
+
+  # Generate PKNCAconc and PKNCAdose objects
+  pknca_conc <- PKNCA::PKNCAconc(
+    df_conc,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
+    exclude_half.life = "exclude_half.life",
+    time.nominal = "NFRLT"
+  )
+
+  pknca_dose <- PKNCA::PKNCAdose(
+    data = df_dose,
+    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID
+  )
+
+  # Define the parameters for the dose intervals
+  params <- c("cmax", "tmax", "half.life", "cl.obs")
+
+  # Test function
+  result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
+
+  expect_equal(result$start[1], 0)
+  expect_equal(result$end[1], Inf)
+  expect_equal(result$ANALYTE, c("Analyte1", "Metabolite1"))
+  expect_equal(result$cmax[1], TRUE)
+  expect_equal(result$tmax[1], TRUE)
+  expect_equal(result$half.life[1], TRUE)
+  expect_equal(result$cl.obs[1], TRUE)
+
+
+  # Test if result can be used with PKNCAdata by testing its output
+  expect_no_error(
+    PKNCA::PKNCAdata(
+      data.conc = pknca_conc,
+      data.dose = pknca_dose,
+      intervals = result,
+      units = PKNCA::pknca_units_table(
+        concu = "ng/mL",
+        doseu = "mg",
+        amountu = "ng",
+        timeu = "h"
+      )
+    )
+  )
+})
+
