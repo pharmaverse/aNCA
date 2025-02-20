@@ -9,8 +9,8 @@
 #' @param row_values     A list containing the values for the column_names used for filtering.
 #'                      (default is `patient`).
 #' @param myres          A PKNCAnca object containing the results of the NCA analysis
-#' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for determining
-#'                      the subtitle color (default is 0.7).
+#' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
+#'                      determining the subtitle color (default is 0.7).
 #'
 #' @return A plotly object representing the lambda slope plot.
 #'
@@ -68,11 +68,11 @@ lambda_slope_plot <- function(
 
   lambda_z_ix_rows <- conc_pknca_df %>%
     ungroup() %>%
-    mutate(TIME = round(TIME, 3)) %>%
+    mutate(ARRLT = round(ARRLT, 3)) %>%
     filter(
       if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
-      TIME >= round(
+      ARRLT >= round(
         sum(
           subset(
             lambda_res,

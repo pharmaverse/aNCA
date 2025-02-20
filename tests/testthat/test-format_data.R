@@ -419,7 +419,7 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
   expect_equal(result$tmax[1], TRUE)
   expect_equal(result$half.life[1], TRUE)
   expect_equal(result$cl.obs[1], TRUE)
-  
+
 
   # Test if result can be used with PKNCAdata by testing its output
   expect_no_error(

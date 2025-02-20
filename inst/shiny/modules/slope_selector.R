@@ -470,8 +470,8 @@ slope_selector_server <- function(
       log_trace("slope_selector: plotly click detected")
 
       result <- handle_plotly_click(last_click_data,
-                                    manual_slopes, 
-                                    slopes_groups(), 
+                                    manual_slopes,
+                                    slopes_groups(),
                                     event_data("plotly_click"))
       # Update reactive values in the observer
       last_click_data <- result$last_click_data

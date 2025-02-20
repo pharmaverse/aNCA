@@ -17,19 +17,19 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, c
   if (!all(names(identifiers) %in% c(slopes_groups, "IX"))) {
     stop("Error: Missing expected keys in customdata")
   }
-  
+
   # Map identifiers dynamically
   dynamic_values <- setNames(
     lapply(slopes_groups, function(col) identifiers[[col]]),
     slopes_groups
   )
-  
+
   # Extract additional information for idx_pnt
   idx_pnt <- identifiers$IX
-  
-  # Create a copy of last_click_data 
+
+  # Create a copy of last_click_data
   updated_click_data <- last_click_data
-  
+
   # Check if the selection has changed
   updated <- any(
     sapply(
@@ -37,17 +37,17 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, c
       function(col) dynamic_values[[col]] != updated_click_data[[tolower(col)]]
     )
   )
-  
+
   if (updated) {
     for (col in slopes_groups) {
       updated_click_data[[tolower(col)]] <- dynamic_values[[col]]
     }
     updated_click_data$idx_pnt <- idx_pnt
-    
+
     # Return updated last_click_data, but do not modify global state
     return(list(last_click_data = updated_click_data, manual_slopes = manual_slopes()))
   }
-  
+
   # Create new rule as a local object
   new_rule <- as.data.frame(
     lapply(
@@ -61,16 +61,16 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, c
     ),
     stringsAsFactors = FALSE
   )
-  
+
   # Update manual_slopes without modifying it globally
   updated_slopes <- check_slope_rule_overlap(manual_slopes(), new_rule, slopes_groups)
-  
+
   # Reset last_click_data dynamically
   for (col in names(dynamic_values)) {
     updated_click_data[[tolower(col)]] <- ""
   }
   updated_click_data$idx_pnt <- ""
-  
+
   # Return updated values
   return(list(last_click_data = updated_click_data, manual_slopes = updated_slopes))
 }

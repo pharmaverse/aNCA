@@ -38,7 +38,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups) {
     # Go over all rules and check if there is no overlap - if there is, edit accordingly
     slopes <- purrr::reduce(
       split(slopes, seq_len(nrow(slopes))),
-      .f = ~ .check_slope_rule_overlap(.x, .y, slope_groups, .keep = TRUE)
+      .f = ~ check_slope_rule_overlap(.x, .y, slope_groups, .keep = TRUE)
     )
   }
 

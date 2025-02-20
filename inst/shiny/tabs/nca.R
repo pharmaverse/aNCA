@@ -121,9 +121,6 @@ observeEvent(pk_nca_trigger(), {
       myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
       # Increment progress to 100% after NCA calculations are complete
-
-      # Make the starts and ends of results relative to last dose using the dose data
-
       # Make the starts and ends of results relative to last dose using the dose data
       myres$result <- myres$result %>%
         inner_join(select(mydata()$dose$data, -exclude)) %>%
