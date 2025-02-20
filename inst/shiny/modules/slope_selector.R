@@ -207,12 +207,12 @@ slope_selector_server <- function(
       plots_to_render <- slice(ungroup(patient_profile_plot_ids), page_start:page_end)
 
       plot_outputs <- apply(plots_to_render, 1, function(row) {
+
         lambda_slope_plot(
-          res_nca()$result,
-          plot_data()$conc$data,
+          conc_pknca_df = plot_data()$conc$data,
           row_values = as.list(row),
-          R2ADJTHRESHOL = 0.7,
-          res_nca()
+          myres = res_nca(),
+          r2adj_threshold = 0.7
         ) |>
           htmlwidgets::onRender(
             # nolint start

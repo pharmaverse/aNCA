@@ -4,14 +4,12 @@
 #' lambda parameters and visualizes the data points used for lambda calculation, along with
 #' a linear regression line and additional plot annotations.
 #'
-#' @param res_pknca_df   Data frame containing the results of the pharmacokinetic non-compartmental
-#'                      analysis (default is `PKNCA::pk.nca(.)$result`).
 #' @param conc_pknca_df  Data frame containing the concentration data
 #'                      (default is `mydata$conc$data`).
-#' @param column_names   A character vector containing the column names used for grouping the data.
 #' @param row_values     A list containing the values for the column_names used for filtering.
 #'                      (default is `patient`).
-#' @param R2ADJTHRESHOL Numeric value representing the R-squared adjusted threshold for determining
+#' @param myres          A PKNCAnca object containing the results of the NCA analysis
+#' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for determining
 #'                      the subtitle color (default is 0.7).
 #'
 #' @return A plotly object representing the lambda slope plot.
@@ -36,11 +34,10 @@
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   plot <- lambda_slope_plot(res_pknca_df = myres$result,
-#'                             conc_pknca_df = mydata$conc$data,
-#'                             column_names = c("USUBJID" , "STUDYID", "DOSENO"),
+#'   plot <- lambda_slope_plot(conc_pknca_df = mydata$conc$data,
 #'                             row_values = list(USUBJID = "001", STUDYID = "A", DOSENO = 1),
-#'                             R2ADJTHRESHOL = 0.7)
+#'                             myres = res_nca,
+#'                             r2adj_threshold = 0.7)
 #'   plot
 #' }
 #'
@@ -49,18 +46,17 @@
 #' @import plotly
 #' @export
 lambda_slope_plot <- function(
-  res_pknca_df = myres$result,
-  conc_pknca_df = mydata$conc$data,
+  conc_pknca_df,
   row_values,
-  R2ADJTHRESHOL = 0.7,
-  myres = myres
+  myres = myres,
+  r2adj_threshold = 0.7
 ) {
 
   column_names <- names(row_values)
   #Create duplicates for predose and last dose points per profile
   conc_pknca_df <- dose_profile_duplicates(conc_pknca_df, column_names)
   #Obtain values for slopes selection
-  lambda_res <- res_pknca_df %>%
+  lambda_res <- myres$result %>%
     filter(if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])) %>%
     arrange(across(all_of(column_names)), start, desc(end)) %>%
     filter(!duplicated(paste0(!!!rlang::syms(column_names), PPTESTCD)))
@@ -99,7 +95,7 @@ lambda_slope_plot <- function(
   )
 
   subtitle_color <- ifelse(
-    r2adj_value < R2ADJTHRESHOL | half_life_value > (time_span / 2),
+    r2adj_value < r2adj_threshold | half_life_value > (time_span / 2),
     "red",
     "black"
   )
