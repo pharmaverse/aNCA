@@ -31,7 +31,8 @@ fluidPage(
     # NCA ----
     nav_panel("NCA", value = "nca", fluid = TRUE,
       fluidPage(
-        actionButton("nca", "Run NCA", class = "run-nca-btn"),
+        downloadButton("settings_save", "Save Settings", class = "download-setts-btn"),
+        actionButton("nca", "Run NCA", class = "run-nca-btn", icon = icon("play")),
 
         tabsetPanel(id = "ncapanel",
           tabPanel("Setup", fluid = TRUE,
@@ -46,8 +47,6 @@ fluidPage(
             navlistPanel(
               tabPanel(
                 "NCA Results",
-                downloadButton("settings_save", "Save Project Settings"),
-                br(),
                 pickerInput(
                   "params",
                   "Select Parameters :",
