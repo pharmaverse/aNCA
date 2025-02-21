@@ -131,7 +131,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
-        paste0(mydata()$conc$data$STUDYID[1], "PK_Parameters.csv")
+        paste0(res_nca()$data$conc$data$STUDYID[1], "PK_Parameters.csv")
       },
       content = function(file) {
         old_wd <- getwd()
