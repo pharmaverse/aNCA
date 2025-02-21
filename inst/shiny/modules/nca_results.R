@@ -14,7 +14,6 @@ nca_results_ui <- function(id) {
     ),
     units_table_ui(ns("units_table_postNCA")),
     reactableOutput(ns("myresults")),
-    actionButton(ns("download"), "Download the NCA Data"),
     downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
   )
 }
@@ -26,7 +25,6 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
 
     final_results <- reactive({
       req(res_nca())
-
       # Transform results
       final_results <- pivot_wider_pknca_results(res_nca())
 
@@ -34,13 +32,9 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
         if (!rules[[rule_input]]) next
 
-        print(rule_input)
-
         pptestcd <- rule_input |>
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
-
-        print(pptestcd)
 
         if (startsWith(pptestcd, "auc")) {
           final_results[[paste0("flag_", pptestcd)]] <-

@@ -58,10 +58,10 @@ nca_settings_ui <- function(id) {
           `dropdownAlignRight` = TRUE
         ),
         multiple = TRUE,
-        selected = c("cmax", "tmax", "half.life", "cl.obs",
+        selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
                      "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
                      "adj.r.squared", "lambda.z", "lambda.z.n.points",
-                     "cav", "cl.all", "cl.obs", "aucpext.obs",
+                     "cav", "cl.all", "cl.obs",
                      "clast", "tlast")
       )),
       column(4, units_table_ui(ns("units_table_preNCA")))
@@ -215,6 +215,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
     conc_data <- reactive(mydata()$conc$data)
 
     # File Upload Handling
@@ -493,7 +494,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
                                                          "aucint.all")
 
                    updatePickerInput(session = session,
-                                     inputId = ns("nca_params"),
+                                     inputId = "nca_params",
                                      selected = nca_params)
                  })
 
@@ -590,6 +591,24 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
         height = "60vh"
       )
     })
+    
+    rules <- reactive({
+      list(
+        rule_adj_r_squared = input$rule_adj_r_squared,
+        adj.r.squared_threshold = input$adj.r.squared_threshold,
+        
+        rule_aucpext_obs = input$rule_aucpext_obs,
+        aucpext.obs_threshold = input$aucpext.obs_threshold,
+        
+        rule_aucpext_pred = input$rule_aucpext_pred,
+        aucpext.pred_threshold = input$aucpext.pred_threshold,
+        
+        rule_span_ratio = input$rule_span_ratio,
+        span.ratio_threshold = input$span.ratio_threshold
+      )
+    })
+    
+    rules
 
   })
 }

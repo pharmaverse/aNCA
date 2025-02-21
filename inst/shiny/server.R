@@ -19,7 +19,8 @@ function(input, output, session) {
   grouping_vars <- data_module$grouping_variables
 
   # NCA ----
-  source(system.file("shiny/tabs/nca.R", package = "aNCA"), local = TRUE)
+  #source(system.file("shiny/tabs/nca.R", package = "aNCA"), local = TRUE)
+  res_nca <- tab_nca_server("nca", data, grouping_vars)
   # OUTPUT ----
   tab_visuals_server("visuals", data, grouping_vars, res_nca)
 
