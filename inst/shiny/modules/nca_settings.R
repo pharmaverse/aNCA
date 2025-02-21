@@ -215,7 +215,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     conc_data <- reactive(mydata()$conc$data)
 
     # File Upload Handling
@@ -586,23 +586,23 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         height = "60vh"
       )
     })
-    
+
     rules <- reactive({
       list(
         rule_adj_r_squared = input$rule_adj_r_squared,
         adj.r.squared_threshold = input$adj.r.squared_threshold,
-        
+
         rule_aucpext_obs = input$rule_aucpext_obs,
         aucpext.obs_threshold = input$aucpext.obs_threshold,
-        
+
         rule_aucpext_pred = input$rule_aucpext_pred,
         aucpext.pred_threshold = input$aucpext.pred_threshold,
-        
+
         rule_span_ratio = input$rule_span_ratio,
         span.ratio_threshold = input$span.ratio_threshold
       )
     })
-    
+
     rules
 
   })
