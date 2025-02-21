@@ -36,22 +36,20 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
 
-        if (startsWith(pptestcd, "auc")) {
-          final_results[[paste0("flag_", pptestcd)]] <-
-            final_results[[pptestcd]] >= rules[[paste0(pptestcd, "_threshold")]]
-        } else {
-          final_results[[paste0("flag_", pptestcd)]] <-
-            final_results[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
-        }
+        final_results <- final_results %>%
+          mutate(!!paste0("flag_", pptestcd) := case_when(
+            startsWith(pptestcd, "auc") ~ .data[[pptestcd]] >= rules[[paste0(pptestcd, "_threshold")]],
+            TRUE ~ .data[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
+          ))
       }
 
       # Join subject data to allow the user to group by it
-      final_results <- merge(
-        final_results,
-        res_nca()$data$conc$data %>%
-          select(any_of(c(grouping_vars(), unname(unlist(res_nca()$data$conc$columns$groups)))))
-      ) %>%
-        unique()
+      final_results <- final_results %>%
+        inner_join(
+          res_nca()$data$conc$data %>%
+            select(any_of(c(grouping_vars(), unname(unlist(res_nca()$data$conc$columns$groups)))))
+        ) %>%
+        distinct()
 
       # Add flagged column
       final_results %>%
