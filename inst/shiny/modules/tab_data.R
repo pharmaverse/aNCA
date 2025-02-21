@@ -24,27 +24,27 @@ tab_data_ui <- function(id) {
           accept = c(".csv", ".rds")
         )
       ),
+      card(
+        div(
+          class = "card-container",
+          h3("Filters"),
+          p("Click the 'Add Filters' button to add filters to your data.
+            Be sure to click 'Submit' in order to apply the changes.\n
+          Any filters added here will be applied across the whole analysis."),
+          actionButton(ns("add_filter"), "Add Filter"),
+          tags$div(id = ns("filters")),
+          div(
+            class = "filters-submit-button",
+            input_task_button(ns("submit_filters"), "Submit Filters")
+          )
+        )
+      ),
       reactableOutput(ns("filecontents"))
     ),
     nav_panel("Mapping and Filters",
       layout_columns(
         card(
           column_mapping_ui(ns("column_mapping"))
-        ),
-        card(
-          div(
-            class = "card-container",
-            h3("Filters"),
-            p("Click the 'Add Filters' button to add filters to your data.
-            Be sure to click 'Submit' in order to apply the changes.\n
-          Any filters added here will be applied across the whole analysis."),
-            actionButton(ns("add_filter"), "Add Filter"),
-            tags$div(id = ns("filters")),
-            div(
-              class = "filters-submit-button",
-              input_task_button(ns("submit_filters"), "Submit Filters")
-            )
-          )
         )
       )
     ),
@@ -88,9 +88,9 @@ tab_data_server <- function(id) {
     })
 
     output$filecontents <- renderReactable({
-      req(ADNCA())
+      req(ADNCA_filt())
       reactable(
-        ADNCA(),
+        ADNCA_filt(),
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -161,7 +161,7 @@ tab_data_server <- function(id) {
       # Insert a new filter UI
       insertUI(
         selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), colnames(processed_data()))
+        ui = input_filter_ui(session$ns(filter_id), colnames(ADNCA()))
       )
 
       filters[[filter_id]] <- input_filter_server(filter_id)
@@ -169,15 +169,16 @@ tab_data_server <- function(id) {
 
     # Create reactive value with applied filters
     data <- reactiveVal(NULL)
-    observeEvent(list(input$submit_filters, processed_data()), {
+    ADNCA_filt <- reactiveVal(NULL)
+    observeEvent(list(input$submit_filters, ADNCA()), {
       # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
 
       # Filter and overwrite data
       filtered_data <- apply_filters(
-        processed_data(), applied_filters
+        ADNCA(), applied_filters
       )
-      data(filtered_data)
+      ADNCA_filt(filtered_data)
     }, ignoreInit = FALSE)
 
     # Update the data table object with the filtered data
