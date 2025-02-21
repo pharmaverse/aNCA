@@ -30,52 +30,7 @@ fluidPage(
     ),
     # NCA ----
     nav_panel("NCA", value = "nca", fluid = TRUE,
-      fluidPage(
-        actionButton("nca", "Run NCA", class = "run-nca-btn"),
-
-        tabsetPanel(id = "ncapanel",
-          tabPanel("Setup", fluid = TRUE,
-
-            navlistPanel(
-              tabPanel("NCA settings", nca_settings_ui("nca_settings")),
-              tabPanel("Slope Selector", slope_selector_ui("slope_selector"))
-
-            )
-          ),
-          tabPanel("Results", fluid = TRUE,
-            navlistPanel(
-              tabPanel(
-                "NCA Results",
-                downloadButton("settings_save", "Save Project Settings"),
-                br(),
-                pickerInput(
-                  "params",
-                  "Select Parameters :",
-                  choices = list("Run NCA first" = ""),
-                  selected = list("Run NCA first" = ""),
-                  multiple = TRUE,
-                  options = list(`actions-box` = TRUE)
-                ),
-                units_table_ui("units_table_postNCA"),
-                DTOutput("myresults"),
-                tableOutput("summaryTable"),
-                actionButton("download", "Download the NCA Data"),
-                downloadButton("local_download_NCAres", "Download locally the NCA Data")
-              ),
-              tabPanel(
-                "Slopes",
-                DTOutput("preslopesettings")
-              ),
-              tabPanel(
-                "Exclusions",
-                tableOutput("manual_slopes2")
-              ),
-              tabPanel("Parameter Datasets", parameter_datasets_ui("parameter_datasets"))
-            )
-          ),
-          tabPanel("Additional Analysis", additional_analysis_ui("non_nca"))
-        )
-      )
+      tab_nca_ui("nca")
     ),
 
     # VISUALISATION ----
