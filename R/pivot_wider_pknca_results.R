@@ -123,12 +123,12 @@ pivot_wider_pknca_results <- function(myres) {
 extract_exclude_values <- function(...) {
   raw_values <- unique(c(...))  # Get unique exclude values from different columns
   raw_values <- raw_values[!is.na(raw_values)]  # Remove NAs
-  
+
   # Split each entry into individual phrases using "; " as a separator
   split_values <- unlist(strsplit(raw_values, "; "))
-  
+
   # Remove duplicate messages
   unique_values <- unique(trimws(split_values))
-  
+
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }

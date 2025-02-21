@@ -38,7 +38,8 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
 
         final_results <- final_results %>%
           mutate(!!paste0("flag_", pptestcd) := case_when(
-            startsWith(pptestcd, "auc") ~ .data[[pptestcd]] >= rules[[paste0(pptestcd, "_threshold")]],
+            startsWith(pptestcd, "auc") ~ .data[[pptestcd]]
+            >= rules[[paste0(pptestcd, "_threshold")]],
             TRUE ~ .data[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
           ))
       }
