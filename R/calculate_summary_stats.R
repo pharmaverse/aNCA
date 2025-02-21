@@ -6,7 +6,7 @@
 #'                     Here. the hierarchical order matters
 #' @param res_pknca     A data frame containing results of
 #'                     Non Compartmental Analysis using PKNCA package
-#' @return A data frame with summary statistics for each group and parameter.
+#' @returns A data frame with summary statistics for each group and parameter.
 #' @details The function calculates the following statistics for numeric variables:
 #' \itemize{
 #'   \item Geometric mean (`geomean`)

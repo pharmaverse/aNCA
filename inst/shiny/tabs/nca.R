@@ -435,6 +435,10 @@ output$manual_slopes2 <- renderTable({
   slope_rules()
 })
 
+# Additional Analysis -------------------------------------------------------------
+
+additional_analysis_server("non_nca", mydata, grouping_vars)
+
 # CDISC ------------------------------------------------------------------------
 
 # Parameter datasets ------------------------------------------------------------------------
