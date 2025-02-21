@@ -1,6 +1,6 @@
 # NCA TAB -----
 # This module contains nested modules and all the ui and server code for the NCA tab
-
+# NCA UI function ----
 tab_nca_ui <- function(id) {
   ns <- NS(id)
   
@@ -12,7 +12,7 @@ tab_nca_ui <- function(id) {
                nav_panel("Setup", fluid = TRUE,
                          
                          navlistPanel(
-                           tabPanel("NCA settings", nca_settings_ui(ns("nca_settings"))),
+                           tabPanel("NCA settings", nca_setup_ui(ns("nca_settings"))),
                            tabPanel("Slope Selector", slope_selector_ui(ns("slope_selector")))
                            
                          )
@@ -37,15 +37,20 @@ tab_nca_ui <- function(id) {
   
 }
 
+# NCA Server Function ----
+# Requires processed data and grouping vars from tab_data module
 tab_nca_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
+# Initialize PKNCAdata ----
     
     mydata <- reactiveVal(NULL)
     
     observeEvent(data(), priority = 2, {
       req(data())
       
+      # Define column names
       group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
       usubjid_column <- "USUBJID"
       time_column <- "AFRLT"
@@ -54,21 +59,29 @@ tab_nca_server <- function(id, data, grouping_vars) {
       analyte_column <- "ANALYTE"
       matrix_column <- "PCSPEC"
       
-      df_conc <- format_pkncaconc_data(ADNCA = data(),
-                                       group_columns = c(group_columns, usubjid_column, analyte_column),
-                                       time_column = time_column) %>%
+      # Create concentration data
+      df_conc <- format_pkncaconc_data(
+        ADNCA = data(),
+        group_columns = c(group_columns, usubjid_column, analyte_column),
+        time_column = time_column) %>%
         arrange(across(all_of(c(usubjid_column, time_column))))
       
-      df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
-                                       group_columns = c(group_columns, usubjid_column),
-                                       time_column = time_column,
-                                       dosno_column = dosno_column,
-                                       since_lastdose_time_column = "ARRLT")
+      # Create dosing data
+      df_dose <- format_pkncadose_data(
+        pkncaconc_data = df_conc,
+        group_columns = c(group_columns, usubjid_column),
+        time_column = time_column,
+        dosno_column = dosno_column,
+        since_lastdose_time_column = "ARRLT"
+        )
       
+      # Set default settings
       df_conc$is.excluded.hl <- FALSE
       df_conc$is.included.hl <- FALSE
       df_conc$REASON <- NA
       df_conc$exclude_half.life <- FALSE
+      
+      # Create PKNCA objects
       
       myconc <- PKNCA::PKNCAconc(
         df_conc,
@@ -96,6 +109,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
         )
       )
       
+      # Update units
       unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
       analyte_column <- mydata$conc$columns$groups$group_analyte
       mydata$units <- tidyr::crossing(mydata$units,
@@ -105,27 +119,12 @@ tab_nca_server <- function(id, data, grouping_vars) {
       mydata(mydata)
     })
     
-    rules <- nca_settings_server("nca_settings", data, mydata, res_nca)
+
+    # NCA SETUP MODULE ---- 
+    rules <- nca_setup_server("nca_settings", data, mydata, res_nca)
     
-    # Define a profiles per patient
-    profiles_per_patient <- reactive({
-      req(mydata())
-      # Check if res_nca() is available and valid
-      if (!is.null(res_nca())) {
-        res_nca()$result %>%
-          mutate(USUBJID = as.character(USUBJID),
-                 DOSNO = as.character(DOSNO)) %>%
-          group_by(USUBJID, ANALYTE, PCSPEC) %>%
-          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-          unnest(DOSNO)  # Convert lists into individual rows
-      } else {
-        mydata()$conc$data %>%
-          mutate(USUBJID = as.character(USUBJID)) %>%
-          group_by(USUBJID, ANALYTE, PCSPEC) %>%
-          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
-      }
-    })
     
+    # NCA RESULTS ----
     res_nca <- reactiveVal(NULL)
     observeEvent(input$nca, {
       req(mydata())
@@ -159,6 +158,27 @@ tab_nca_server <- function(id, data, grouping_vars) {
     
     nca_results_server("nca_results", res_nca, rules(), grouping_vars)
     
+    # Profiles per Patient ----
+    # Define a profiles per patient
+    profiles_per_patient <- reactive({
+      req(mydata())
+      # Check if res_nca() is available and valid
+      if (!is.null(res_nca())) {
+        res_nca()$result %>%
+          mutate(USUBJID = as.character(USUBJID),
+                 DOSNO = as.character(DOSNO)) %>%
+          group_by(USUBJID, ANALYTE, PCSPEC) %>%
+          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
+          unnest(DOSNO)  # Convert lists into individual rows
+      } else {
+        mydata()$conc$data %>%
+          mutate(USUBJID = as.character(USUBJID)) %>%
+          group_by(USUBJID, ANALYTE, PCSPEC) %>%
+          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
+      }
+    })
+    
+    # SLOPE SELECTOR ----
     slope_rules <- slope_selector_server(
       "slope_selector",
       mydata,
@@ -188,9 +208,85 @@ tab_nca_server <- function(id, data, grouping_vars) {
       slope_rules()
     })
     
+    # NCA SETTINGS ----
+    # TODO: move this section to a new module
+    # Save the project settings
+    output$settings_save <- downloadHandler(
+      filename = function() {
+        paste(mydata()$conc$data$STUDYID[1], "NCA_settings.csv", sep = "_")
+      },
+      content = function(file) {
+        
+        # Get the data settings from the NCA results (data run)
+        myconc <- res_nca()$data$conc
+        
+        # Create a settings file that the user can download/upload
+        #for establishing the same configuration
+        setts_lambda <- myconc$data %>%
+          # Identify the points that the user has manually selected for the half-life calculation
+          mutate(
+            TYPE = case_when(is.excluded.hl ~ "Exclusion", is.included.hl ~ "Selection", TRUE ~ NA)
+          ) %>%
+          filter(is.excluded.hl | is.included.hl)  %>%
+          select(any_of(c(
+            unname(unlist(myconc$columns$groups)),
+            "IX",
+            myconc$columns$time,
+            myconc$columns$concentration,
+            "TYPE",
+            "REASON"
+          )))
+        
+        # Make sure that there is at least one row so the settings can be considered
+        if (nrow(setts_lambda) == 0) {
+          setts_lambda <- setts_lambda %>%
+            add_row()
+        }
+        
+        # Consider the intervals defined by the user for the AUC calculation
+        input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
+        input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
+        auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
+        auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
+        
+        # Include the rule settings as additional columns
+        setts <- setts_lambda %>%
+          mutate(
+            ANALYTE %in% input$select_analyte,
+            doses_selected = ifelse(
+              !is.null(input$select_dosno),
+              paste0(input$select_dosno, collapse = ","),
+              unique(mydata()$conc$data$DOSNO)
+            ),
+            method = input$method,
+            adj.r.squared_threshold = ifelse(
+              input$rule_adj_r_squared, input$adj.r.squared_threshold, NA
+            ),
+            aucpext.obs_threshold = ifelse(
+              input$rule_aucpext_obs, input$aucpext.obs_threshold, NA
+            ),
+            aucpext.pred_threshold = ifelse(
+              input$rule_aucpext_pred, input$aucpext.pred_threshold, NA
+            ),
+            span.ratio_threshold = ifelse(
+              input$rule_span_ratio, input$span.ratio_threshold, NA
+            ),
+            auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
+            auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
+          )
+        
+        write.csv(setts, file, row.names = FALSE)
+      },
+      contentType = "text/csv"
+    )
+    
+    # ADDITIONAL ANALYSIS ----
     additional_analysis_server("non_nca", mydata, grouping_vars)
+    
+    # PARAMETER DATASETS ---- 
     parameter_datasets_server("parameter_datasets", res_nca)
     
+    # return results for use in other modules
     res_nca
   })
 }

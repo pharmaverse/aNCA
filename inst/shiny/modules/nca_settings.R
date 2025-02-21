@@ -1,4 +1,4 @@
-nca_settings_ui <- function(id) {
+nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
@@ -211,7 +211,7 @@ nca_settings_ui <- function(id) {
 #' - res_nca A reactive expression containing the PKNCA results output generated from mydata.
 #'           Only used for the units_table submodule
 #'
-nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
+nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -487,11 +487,6 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
                    if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
                    if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
                    if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
-                   if (input$AUCoptions) nca_params <- c(nca_params,
-                                                         "aucint.last",
-                                                         "aucint.inf.obs",
-                                                         "aucint.inf.pred",
-                                                         "aucint.all")
 
                    updatePickerInput(session = session,
                                      inputId = "nca_params",
