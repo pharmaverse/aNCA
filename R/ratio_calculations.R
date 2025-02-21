@@ -51,7 +51,7 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
     select(all_of(groups), Spec2_Value, Spec2_Label, Spec2_Units)
 
   # Merge Data
-  df_ratio <- left_join(df_spec1, df_spec2, by = groups, relationship = "many-to-many") %>%
+  left_join(df_spec1, df_spec2, by = groups, relationship = "many-to-many") %>%
     filter(!is.na(Spec1_Value) & !is.na(Spec2_Value)) %>%
     rowwise() %>%
     mutate(
@@ -69,6 +69,4 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
     ) %>%
     filter(Spec1_Label != Spec2_Label) %>%
     select(all_of(groups), Ratio_Type, Spec1_Value, Spec2_Value, Ratio, Unit)
-
-  df_ratio
 }

@@ -10,50 +10,48 @@
 additional_analysis_ui <- function(id) {
   ns <- NS(id)
 
-  tagList(
-    navset_pill(
-      id = ns("non_nca_tabs"),
-      nav_panel(
-        title = "Concentration Ratios",
-        value = "matrix_ratio_analysis",
-        non_nca_ratio_ui(
-          ns("matrix_ratio_analysis"),
-          title = "Matrix Ratios",
-          select_label1 = "Choose Numerator Specimens",
-          select_label2 = "Choose Denominator Specimens"
+  navset_pill(
+    id = ns("non_nca_tabs"),
+    nav_panel(
+      title = "Concentration Ratios",
+      value = "matrix_ratio_analysis",
+      non_nca_ratio_ui(
+        ns("matrix_ratio_analysis"),
+        title = "Matrix Ratios",
+        select_label1 = "Choose Numerator Specimens",
+        select_label2 = "Choose Denominator Specimens"
+      )
+    ),
+    nav_panel(
+      title = "Excretion",
+      value = "excretion_analysis",
+      card(
+        card_header("Excretion Analysis"),
+        card_body(
+
+          p("To be added")
+        )
+      )
+    ),
+    nav_panel(
+      title = "AUC Ratios",
+      value = "auc_analysis",
+      card(
+        card_header("Bioavailability Calculations"),
+        card_body(
+
+          p("To be added")
         )
       ),
-      nav_panel(
-        title = "Excretion",
-        value = "excretion_analysis",
-        card(
-          card_header("Excretion Analysis"),
-          card_body(
+    ),
+    nav_panel(
+      title = "Metabolite-Parent Ratios",
+      value = "metabolite_analysis",
+      card(
+        card_header("Metabolite-Parent Ratios"),
+        card_body(
 
-            p("To be added")
-          )
-        )
-      ),
-      nav_panel(
-        title = "AUC Ratios",
-        value = "auc_analysis",
-        card(
-          card_header("Bioavailability Calculations"),
-          card_body(
-
-            p("To be added")
-          )
-        ),
-      ),
-      nav_panel(
-        title = "Metabolite-Parent Ratios",
-        value = "metabolite_analysis",
-        card(
-          card_header("Metabolite-Parent Ratios"),
-          card_body(
-
-            p("To be added")
-          )
+          p("To be added")
         )
       )
     )
