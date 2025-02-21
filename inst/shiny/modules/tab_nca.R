@@ -126,7 +126,13 @@ tab_nca_server <- function(id, data, grouping_vars) {
 
     # NCA RESULTS ----
     res_nca <- reactiveVal(NULL)
+    pk_nca_trigger <- reactiveVal(0)
+
     observeEvent(input$nca, {
+      pk_nca_trigger(pk_nca_trigger() + 1)
+    })
+
+    observeEvent(pk_nca_trigger(), {
       req(mydata())
 
       withProgress(message = "Calculating NCA...", value = 0, {
@@ -134,7 +140,8 @@ tab_nca_server <- function(id, data, grouping_vars) {
           myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
 
           myres$result <- myres$result %>%
-            inner_join(select(mydata()$dose$data, -exclude)) %>%
+            inner_join(select(mydata()$dose$data, -exclude,
+                              -mydata()$conc$columns$groups$group_analyte)) %>%
             mutate(start = start - !!sym(mydata()$dose$columns$time),
                    end = end - !!sym(mydata()$dose$columns$time)) %>%
             select(names(myres$result))
@@ -167,18 +174,41 @@ tab_nca_server <- function(id, data, grouping_vars) {
         res_nca()$result %>%
           mutate(USUBJID = as.character(USUBJID),
                  DOSNO = as.character(DOSNO)) %>%
-          group_by(USUBJID, ANALYTE, PCSPEC) %>%
+          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
           summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
           unnest(DOSNO)  # Convert lists into individual rows
       } else {
         mydata()$conc$data %>%
           mutate(USUBJID = as.character(USUBJID)) %>%
-          group_by(USUBJID, ANALYTE, PCSPEC) %>%
+          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
           summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
       }
     })
 
     # SLOPE SELECTOR ----
+    # Keep the UI table constantly actively updated
+    observeEvent(input, {
+      req(mydata())
+      dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
+      for (input_name in grep(
+        paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"), collapse = "|"), ")_Ex\\d+$"),
+        names(input), value = TRUE
+      )) {
+        observeEvent(input[[input_name]], {
+          # Get the ID of the exclusion
+          id <- gsub("_(Ex\\d+)$", "", input_name)
+          
+          # Update the reactive list of exclusion IDs
+          manual_slopes <- manual_slopes()
+          set_selected_value(
+            manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
+          ) <- manual_slopes[manual_slopes$id == id, ]
+          manual_slopes(manual_slopes)
+          
+        })
+      }
+    })
+    
     slope_rules <- slope_selector_server(
       "slope_selector",
       mydata,
