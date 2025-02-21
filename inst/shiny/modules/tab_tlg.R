@@ -86,6 +86,7 @@ tab_tlg_server <- function(id) {
         ),
         rownames = TRUE,
         escape = FALSE,
+        fillContainer = TRUE,
         selection = list(
           mode = "multiple"
         ),
@@ -158,6 +159,7 @@ tab_tlg_server <- function(id) {
         editable = FALSE,
         class = "table table-striped table-bordered",
         extensions = c("RowGroup", "Select"),
+        fillContainer = TRUE,
         options = list(
           paging = FALSE,
           searching = TRUE,

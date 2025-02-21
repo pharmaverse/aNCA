@@ -241,6 +241,7 @@ output$myresults <- DT::renderDataTable({
   DT::datatable(
     data = final_res_nca(),
     extensions = "FixedHeader",
+    fillContainer = TRUE,
     options = list(
       scrollX = TRUE,
       scrollY = TRUE,

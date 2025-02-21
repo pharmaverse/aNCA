@@ -262,7 +262,8 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
         ))
 
         output$mismatched_table <- DT::renderDT({
-          datatable(mismatched_points %>% select(-IX))
+          datatable(mismatched_points %>% select(-IX),
+                    fillContainer = TRUE)
         })
 
         setts <- setts %>%
