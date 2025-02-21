@@ -15,7 +15,12 @@
 #' }
 create_start_impute <- function(mydata) {
 
-  # Define columns
+  if (nrow(mydata$intervals) == 0) {
+    warning("No intervals provided. No modification performed")
+    return(mydata)
+  }
+
+  # Define column names
   conc_column <- mydata$conc$columns$conc
   time_column <- mydata$conc$columns$time
   analyte_column <- mydata$conc$columns$groups$group_analyte
@@ -27,7 +32,7 @@ create_start_impute <- function(mydata) {
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
 
   # Define dose number (DOSNO) if not present in dose data
-  if (!"DOSNO" %in% mydata$dose$data) {
+  if (!"DOSNO" %in% names(mydata$dose$data)) {
     mydata$dose$data <- mydata$dose$data %>%
       group_by(across(all_of(dose_group_columns))) %>%
       mutate(DOSNO = row_number()) %>%
@@ -57,7 +62,7 @@ create_start_impute <- function(mydata) {
 
   # Process imputation strategy based on each interval
   mydata$intervals <- mydata_with_int %>%
-    group_by(across(all_of(c(group_columns, "DOSNO", "start", "end")))) %>%
+    group_by(across(any_of(c(group_columns, "DOSNO", "start", "end", "type_interval")))) %>%
     arrange(across(all_of(c(group_columns, time_column)))) %>%
     mutate(
       is.first.dose = DOSNO == 1,
