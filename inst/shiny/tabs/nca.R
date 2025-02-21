@@ -27,7 +27,6 @@ observeEvent(data(), priority = 2, {
                                    time_column = time_column) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
 
-
   df_dose <- format_pkncadose_data(pkncaconc_data = df_conc,
                                    group_columns = c(group_columns, usubjid_column),
                                    time_column = time_column,
@@ -93,13 +92,13 @@ profiles_per_patient <- reactive({
     res_nca()$result %>%
       mutate(USUBJID = as.character(USUBJID),
              DOSNO = as.character(DOSNO)) %>%
-      group_by(USUBJID, ANALYTE, PCSPEC) %>%
+      group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
       summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
       unnest(DOSNO)  # Convert lists into individual rows
   } else {
     mydata()$conc$data %>%
       mutate(USUBJID = as.character(USUBJID)) %>%
-      group_by(USUBJID, ANALYTE, PCSPEC) %>%
+      group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
       summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
   }
 })
@@ -107,7 +106,14 @@ profiles_per_patient <- reactive({
 # NCA running and obtention of results
 myres <- reactiveVal(NULL)
 res_nca <- reactiveVal(NULL)
+pk_nca_trigger <- reactiveVal(0)
+
 observeEvent(input$nca, {
+
+  pk_nca_trigger(pk_nca_trigger() + 1)
+})
+
+observeEvent(pk_nca_trigger(), {
   req(mydata())
 
   withProgress(message = "Calculating NCA...", value = 0, {
@@ -118,7 +124,8 @@ observeEvent(input$nca, {
 
       # Make the starts and ends of results relative to last dose using the dose data
       myres$result <- myres$result %>%
-        inner_join(select(mydata()$dose$data, -exclude)) %>%
+        inner_join(select(mydata()$dose$data, -exclude,
+                          -mydata()$conc$columns$groups$group_analyte)) %>%
         mutate(start = start - !!sym(mydata()$dose$columns$time),
                end = end - !!sym(mydata()$dose$columns$time)) %>%
         select(names(myres$result))
@@ -164,6 +171,7 @@ final_res_nca <- reactiveVal(NULL)
 # creative final_res_nca, aiming to present the results in a more comprehensive way
 observeEvent(res_nca(), {
   req(res_nca())
+
   # Create a reshaped object that will be used to display the results in the UI
   final_res_nca <- pivot_wider_pknca_results(res_nca())
 
@@ -357,9 +365,12 @@ output$settings_save <- downloadHandler(
 )
 
 # Keep the UI table constantly actively updated
-observe({
+observeEvent(input, {
+  req(mydata())
+  dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
   for (input_name in grep(
-    "(TYPE|PATIENT|PROFILE|IXrange|REASON)_Ex\\d+$", names((input)), value = TRUE
+    paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"), collapse = "|"), ")_Ex\\d+$"),
+    names(input), value = TRUE
   )) {
     observeEvent(input[[input_name]], {
       # Get the ID of the exclusion
