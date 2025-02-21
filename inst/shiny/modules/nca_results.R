@@ -134,13 +134,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
         paste0(res_nca()$data$conc$data$STUDYID[1], "PK_Parameters.csv")
       },
       content = function(file) {
-        old_wd <- getwd()
-        tempdir <- tempdir()
-        setwd(tempdir)
-
         write.csv(final_res_nca(), file, row.names = FALSE)
-
-        setwd(old_wd)
       }
     )
   })
