@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,6 +46,7 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">format_pkncadata_intervals</span><span class="op">(</span></span>
+<span>  <span class="va">pknca_conc</span>,</span>
 <span>  <span class="va">pknca_dose</span>,</span>
 <span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"aucinf.obs"</span>, <span class="st">"aucint.last"</span>, <span class="st">"auclast"</span>, <span class="st">"cmax"</span>, <span class="st">"half.life"</span>, <span class="st">"tmax"</span>,</span>
 <span>    <span class="st">"lambda.z"</span>, <span class="st">"lambda.z.n.points"</span>, <span class="st">"r.squared"</span>, <span class="st">"adj.r.squared"</span>, <span class="st">"lambda.z.time.first"</span>,</span>
@@ -58,16 +59,20 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
+<dl><dt id="arg-pknca-conc">pknca_conc<a class="anchor" aria-label="anchor" href="#arg-pknca-conc"></a></dt>
+<dd><p>A PKNCAdose object containing the concentration data.</p></dd>
+
+
+<dt id="arg-pknca-dose">pknca_dose<a class="anchor" aria-label="anchor" href="#arg-pknca-dose"></a></dt>
+<dd><p>A PKNCAdose object containing the dose data.</p></dd>
+
+
+<dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
 <dd><p>A character vector specifying the pharmacokinetic parameters to include.</p></dd>
 
 
 <dt id="arg-start-from-last-dose">start_from_last_dose<a class="anchor" aria-label="anchor" href="#arg-start-from-last-dose"></a></dt>
 <dd><p>Logical defining if start is at time of last dose or C1.</p></dd>
-
-
-<dt id="arg-df-dose">df_dose<a class="anchor" aria-label="anchor" href="#arg-df-dose"></a></dt>
-<dd><p>A PKNCAdose object</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -85,7 +90,7 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span>  <span class="co"># Example usage:</span></span></span>
-<span class="r-in"><span>  <span class="va">dose_intervals</span> <span class="op">&lt;-</span> <span class="fu">format_pkncadata_intervals</span><span class="op">(</span><span class="va">df_dose</span>, <span class="va">params</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">dose_intervals</span> <span class="op">&lt;-</span> <span class="fu">format_pkncadata_intervals</span><span class="op">(</span><span class="va">pknca_conc</span>, <span class="va">pknca_dose</span>, <span class="va">params</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
