@@ -191,24 +191,25 @@ tab_nca_server <- function(id, data, grouping_vars) {
       req(mydata())
       dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
       for (input_name in grep(
-        paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"), collapse = "|"), ")_Ex\\d+$"),
+        paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"),
+                          collapse = "|"), ")_Ex\\d+$"),
         names(input), value = TRUE
       )) {
         observeEvent(input[[input_name]], {
           # Get the ID of the exclusion
           id <- gsub("_(Ex\\d+)$", "", input_name)
-          
+
           # Update the reactive list of exclusion IDs
           manual_slopes <- manual_slopes()
           set_selected_value(
             manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
           ) <- manual_slopes[manual_slopes$id == id, ]
           manual_slopes(manual_slopes)
-          
+
         })
       }
     })
-    
+
     slope_rules <- slope_selector_server(
       "slope_selector",
       mydata,
