@@ -39,8 +39,8 @@ fluidPage(
 
             navlistPanel(
               tabPanel("NCA settings", nca_settings_ui("nca_settings")),
-              tabPanel("Slope Selector", slope_selector_ui("slope_selector"))
-
+              tabPanel("Slope Selector", slope_selector_ui("slope_selector")),
+              tabPanel("Ratio Analysis", additional_analysis_ui("non_nca"))
             )
           ),
           tabPanel("Results", fluid = TRUE,
@@ -71,8 +71,7 @@ fluidPage(
               ),
               tabPanel("Parameter Datasets", parameter_datasets_ui("parameter_datasets"))
             )
-          ),
-          tabPanel("Additional Analysis", additional_analysis_ui("non_nca"))
+          )
         )
       )
     ),
