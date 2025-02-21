@@ -588,7 +588,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       )
     })
 
-    rules <- reactive({
+    reactive({
       list(
         rule_adj_r_squared = input$rule_adj_r_squared,
         adj.r.squared_threshold = input$adj.r.squared_threshold,
@@ -603,8 +603,6 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         span.ratio_threshold = input$span.ratio_threshold
       )
     })
-
-    rules
 
   })
 }
