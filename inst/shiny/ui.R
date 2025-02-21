@@ -61,15 +61,23 @@ fluidPage(
                 actionButton("download", "Download the NCA Data"),
                 downloadButton("local_download_NCAres", "Download locally the NCA Data")
               ),
+              tabPanel("Parameter Datasets", parameter_datasets_ui("parameter_datasets")),
               tabPanel(
-                "Slopes",
-                DTOutput("preslopesettings")
-              ),
-              tabPanel(
-                "Exclusions",
-                tableOutput("manual_slopes2")
-              ),
-              tabPanel("Parameter Datasets", parameter_datasets_ui("parameter_datasets"))
+                "Slope calculations",
+                navset_pill(
+                  id = "slope_calculations_tabs",
+                  nav_panel(
+                    title = "Slopes",
+                    value = "slopes",
+                    DTOutput("preslopesettings")
+                  ),
+                  nav_panel(
+                    title = "Manual Adjustments",
+                    value = "manual_adjustments",
+                    tableOutput("manual_slopes2")
+                  )
+                )
+              )
             )
           )
         )
