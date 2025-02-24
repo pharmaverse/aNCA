@@ -9,7 +9,7 @@
 # UI function for the non-nca analysis
 additional_analysis_ui <- function(id) {
   ns <- NS(id)
-
+  
   navset_pill(
     id = ns("non_nca_tabs"),
     nav_panel(
@@ -23,35 +23,39 @@ additional_analysis_ui <- function(id) {
       )
     ),
     nav_panel(
-      title = "Excretion",
-      value = "excretion_analysis",
-      card(
-        card_header("Excretion Analysis"),
-        card_body(
-
-          p("To be added")
-        )
-      )
-    ),
-    nav_panel(
-      title = "AUC Ratios",
-      value = "auc_analysis",
-      card(
-        card_header("Bioavailability Calculations"),
-        card_body(
-
-          p("To be added")
-        )
-      ),
-    ),
-    nav_panel(
-      title = "Metabolite-Parent Ratios",
-      value = "metabolite_analysis",
-      card(
-        card_header("Metabolite-Parent Ratios"),
-        card_body(
-
-          p("To be added")
+      title = "Parameter Ratios",
+      value = "parameter_ratios",
+      navset_pill(
+        id = ns("parameter_ratios_tabs"),
+        nav_panel(
+          title = "AUC Ratios",
+          value = "auc_analysis",
+          card(
+            card_header("AUC Ratios"),
+            card_body(
+              p("To be added")
+            )
+          )
+        ),
+        nav_panel(
+          title = "Metabolite-Parent",
+          value = "metabolite_analysis",
+          card(
+            card_header("Metabolite-Parent Ratios"),
+            card_body(
+              p("To be added")
+            )
+          )
+        ),
+        nav_panel(
+          title = "Bioavailability",
+          value = "bioavailability_analysis",
+          card(
+            card_header("Bioavailability Calculations"),
+            card_body(
+              p("To be added")
+            )
+          )
         )
       )
     )
@@ -62,9 +66,9 @@ additional_analysis_ui <- function(id) {
 additional_analysis_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     # Call module for Matrix Ratio Analysis
     non_nca_ratio_server(id = "matrix_ratio_analysis", data, grouping_vars)
-
+    
   })
 }

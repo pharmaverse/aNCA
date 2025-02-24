@@ -216,8 +216,6 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    conc_data <- reactive(mydata()$conc$data)
-
     # File Upload Handling
     observeEvent(input$settings_upload, {
       setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
@@ -263,7 +261,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         ))
 
         output$mismatched_table <- DT::renderDT({
-          datatable(mismatched_points %>% select(-IX))
+          datatable(mismatched_points %>% select(-IX),
+                    fillContainer = TRUE)
         })
 
         setts <- setts %>%

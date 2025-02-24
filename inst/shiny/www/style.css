@@ -94,6 +94,13 @@ h5 {
   width: auto;
 }
 
+.download-setts-btn {
+  position: absolute;
+  right: 250px;
+  top: 65px;
+  z-index: 100;
+}
+
 .run-nca-btn {
   position: absolute;
   right: 100px;

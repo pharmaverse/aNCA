@@ -155,7 +155,6 @@ column_mapping_ui <- function(id) {
 column_mapping_server <- function(id, data, manual_units, on_submit) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
     # Define the required columns and group them into categories
     column_groups <- list(
       "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
@@ -197,6 +196,7 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
 
     # Observe submit button click and update processed_data
     observeEvent(input$submit_columns, {
+
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
 
       # Enable other tabs

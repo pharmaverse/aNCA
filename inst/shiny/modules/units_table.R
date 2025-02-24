@@ -85,6 +85,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         escape = FALSE,
         selection = list(mode = "single", target = "cell"),
         class = "table table-striped table-bordered",
+        fillContainer = TRUE,
         rownames = FALSE,
         editable = list(
           target = "cell",
@@ -110,6 +111,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
               }"
             )
           ),
+          container =TRUE,
           columnDefs = list(
             list(
               visible = FALSE,
