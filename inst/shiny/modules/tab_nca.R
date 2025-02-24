@@ -14,7 +14,8 @@ tab_nca_ui <- function(id) {
         "Setup", fluid = TRUE,
         navset_pill_list(
           nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
-          nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
+          nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
+          nav_panel("Ratio Analysis", additional_analysis_ui("non_nca"))
         )
       ),
       nav_panel(
@@ -31,11 +32,9 @@ tab_nca_ui <- function(id) {
           ),
           nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
         )
-      ),
-      nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
+      )
     )
   )
-
 }
 
 # NCA Server Function ----
@@ -45,7 +44,6 @@ tab_nca_server <- function(id, data, grouping_vars) {
     ns <- session$ns
 
     # Initialize PKNCAdata ----
-
     mydata <- reactiveVal(NULL)
 
     observeEvent(data(), priority = 2, {

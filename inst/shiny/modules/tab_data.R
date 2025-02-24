@@ -65,7 +65,7 @@ tab_data_ui <- function(id) {
 tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Reactive values
     ADNCA <- reactiveVal(
       read.csv(
@@ -179,7 +179,7 @@ tab_data_server <- function(id) {
         )
       } else {
         div(
-          "Please map your data in the 'Mapping and Filters' section before reviewing it."
+          "Please map your data in the 'Mapping' section before reviewing it."
         )
       }
     })
