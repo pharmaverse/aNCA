@@ -8,11 +8,8 @@ format_pkncaconc_data(
   ADNCA,
   group_columns,
   time_column = "AFRLT",
-<<<<<<< HEAD
-  route_column = "ROUTE"
-=======
+  route_column = "ROUTE",
   dosno_column = "DOSNO"
->>>>>>> main
 )
 }
 \arguments{
@@ -23,6 +20,8 @@ format_pkncaconc_data(
 \item{time_column}{A character string specifying the time column.}
 
 \item{route_column}{A character string specifying the route column.}
+
+\item{dosno_column}{A character string specifying the dose number column.}
 }
 \value{
 A data frame containing the filtered and processed concentration data.
@@ -47,7 +46,8 @@ The function performs the following steps:
   conc_data <- format_pkncaconc_data(ADNCA,
                                      group_columns,
                                      "AFRLT",
-                                     "ROUTE")
+                                     "ROUTE",
+                                     "DOSNO")
 }
 
 }
