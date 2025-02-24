@@ -18,7 +18,7 @@
 #' @export
 #'
 pivot_wider_pknca_results <- function(myres) {
-
+browser()
   # Get all names with units and make a dictionary structure
   dict_pttestcd_with_units <- myres$result %>%
     select(PPTESTCD, PPSTRESU) %>%
@@ -30,6 +30,7 @@ pivot_wider_pknca_results <- function(myres) {
   infinite_aucs_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
+    mutate(PPTESTCD = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
