@@ -37,7 +37,7 @@ tlg_list_ui <- function(id) {
       )
     ),
     div(
-      class = "plot-widgets-container",
+      class = "tlg-widgets-container",
       div(
         align = "left",
         tags$span(

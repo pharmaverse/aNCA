@@ -229,7 +229,7 @@ h5 {
     width: 200px;
   }
 
-  .plot-widgets-container {
+  .tlg-widgets-container {
     display: flex;
     justify-content: space-around;
     align-items: baseline;
