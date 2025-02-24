@@ -1,4 +1,4 @@
-tlg_plot_ui <- function(id) {
+tlg_graph_ui <- function(id) {
   ns <- NS(id)
 
   layout_sidebar(
@@ -74,7 +74,7 @@ tlg_plot_ui <- function(id) {
   )
 }
 
-tlg_plot_server <- function(id, render_plot, options = NULL) {
+tlg_graph_server <- function(id, render_graph, options = NULL) {
   moduleServer(id, function(input, output, session) {
     data <- session$userData$data
 
@@ -133,7 +133,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
           plot_options[[name]] <<- NULL
       })
       tryCatch({
-        do.call(render_plot, plot_options)
+        do.call(render_graph, plot_options)
       },
       error = function(e) {
         log_error("Error in plot rendering:")

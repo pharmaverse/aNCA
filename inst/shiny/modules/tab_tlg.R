@@ -242,19 +242,19 @@ tab_tlg_server <- function(id) {
         pull()
 
       panels <- lapply(tlg_order_graphs, function(g_id) {
-        plot_ui <- {
+        graph_ui <- {
           g_def <- .TLG_DEFINITIONS[[g_id]]
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
           if (exists(g_def$fun)) {
-            tlg_plot_server(module_id, get(g_def$fun), g_def$options)
-            tlg_plot_ui(session$ns(module_id))
+            tlg_graph_server(module_id, get(g_def$fun), g_def$options)
+            tlg_graph_ui(session$ns(module_id))
           } else {
-            tags$div("Plot not implemented yet")
+            tags$div("Graph not implemented yet")
           }
         }
 
-        nav_panel(g_def$label, plot_ui)
+        nav_panel(g_def$label, graph_ui)
       })
 
       panels$"widths" <- c(2, 10)
