@@ -25,10 +25,10 @@ tab_tlg_ui <- function(id) {
       )
     ),
     nav_panel("Tables", "To be added"),
-    nav_panel("Listings", uiOutput(ns("lists"), class = "tlg-plot-module"), value = "Lists"),
-    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"), value = "Graphs"),
+    nav_panel("Listings", uiOutput(ns("lists"), class = "tlg-module"), value = "Lists"),
+    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-module"), value = "Graphs"),
     # disable loader for initial empty UI render #
-    footer = tags$style(HTML(paste0(".tlg-plot-module .load-container {opacity: 0;}")))
+    footer = tags$style(HTML(paste0(".tlg-module .load-container {opacity: 0;}")))
   )
 }
 
@@ -218,7 +218,7 @@ tab_tlg_server <- function(id) {
 
           // enable spinner, as it was disabled for initial empty UI render //
           setTimeout(function() {
-            $('.tlg-plot-module .load-container').css('opacity', 1);
+            $('.tlg-module .load-container').css('opacity', 1);
           }, 500);  
         ")
       )
