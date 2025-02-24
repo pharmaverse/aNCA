@@ -142,7 +142,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
           myres$result <- myres$result %>%
             inner_join(select(mydata()$dose$data, -exclude,
                               -mydata()$conc$columns$groups$group_analyte)) %>%
-            mutate(start = start - !!sym(mydata()$dose$columns$time),
+            mutate(start = start - !!sym(mydata()$dose$columns$time), #mutate to time from MRD
                    end = end - !!sym(mydata()$dose$columns$time)) %>%
             select(names(myres$result))
 
