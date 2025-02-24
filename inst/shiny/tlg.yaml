@@ -12,10 +12,16 @@ l_pkconc:
   link: TBA
   fun: l_pkconc
   options:
-    .group_label_1: "General"
+    .group_label_1: "Labs"
     title:
       type: text
       label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 # GRAPHS #
 g_pkconc_ind_lin:
