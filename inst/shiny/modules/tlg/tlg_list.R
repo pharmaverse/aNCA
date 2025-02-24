@@ -5,7 +5,7 @@ tlg_list_ui <- function(id) {
     sidebar = sidebar(
       position = "right",
       div(
-        class = "plot-options-container",
+        class = "tlg-options-container",
         dropdown(
           div(
             tags$h2("List options"),
@@ -33,7 +33,7 @@ tlg_list_ui <- function(id) {
           inputId = ns("reset_widgets"),
           label = "Reset to defaults"
         ),
-        uiOutput(ns("options"), class = "plot-options-container")
+        uiOutput(ns("options"), class = "tlg-options-container")
       )
     ),
     div(
