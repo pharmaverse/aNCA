@@ -1,5 +1,23 @@
 # Configuration file containing TLG definitions.
 # To learn more, please check .github/contributing/adding-tlg.md
+
+# LISTS #
+l_pkconc:
+  is_default: true
+  type: Listing
+  dataset: ADPC
+  pkid: pkconc
+  label: "pkconc"
+  description: "TBA"
+  link: TBA
+  fun: l_pkconc
+  options:
+    .group_label_1: "General"
+    title:
+      type: text
+      label: Title
+
+# GRAPHS #
 g_pkconc_ind_lin:
   is_default: true
   type: Graph
