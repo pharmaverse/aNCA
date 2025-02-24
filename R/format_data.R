@@ -51,8 +51,10 @@ format_pkncaconc_data <- function(ADNCA,
     arrange(!!sym(time_column)) %>%
     mutate(TIME = !!sym(time_column)) %>%
     mutate(std_route = ifelse(
-                              grepl("intra",
-                                    gsub("[^[:alnum:]]", "", tolower(!!sym(route_column)))),
+                              toupper(!!(sym(route_column))) %in% c("INTRAVASCULAR",
+                                                                    "INTRAVENOUS",
+                                                                    "INTRAVENOUS BOLUS",
+                                                                    "INTRAVENOUS DRIP"),
                               "intravascular",
                               "extravascular")) %>%
     group_by(!!!syms(group_columns), !!sym(dosno_column)) %>%

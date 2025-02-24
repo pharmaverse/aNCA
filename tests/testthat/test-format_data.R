@@ -389,8 +389,10 @@ test_that("format_pkncaconc_data generates a correct temporary route column", {
                                                      "DRUG", "ANALYTE"),
                                    time_column = "AFRLT")
 
-  expect_true(all(df_conc$std_route == "intravascular" |
-                    df_conc$std_route == "extravascular"))
+  translated_routes <- df_conc$std_route
+
+  purrr::walk(1:4, \(i) expect_equal(translated_routes[i], "intravascular"))
+  expect_equal(translated_routes[5], "extravascular")
 })
 
 test_that("format_pkncadata_intervals handles multiple analytes with metabolites", {
