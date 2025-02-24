@@ -30,58 +30,7 @@ fluidPage(
     ),
     # NCA ----
     nav_panel("NCA", value = "nca", fluid = TRUE,
-      fluidPage(
-        downloadButton("settings_save", "Save Settings", class = "download-setts-btn"),
-        actionButton("nca", "Run NCA", class = "run-nca-btn", icon = icon("play")),
-
-        tabsetPanel(id = "ncapanel",
-          tabPanel("Setup", fluid = TRUE,
-
-            navlistPanel(
-              tabPanel("NCA settings", nca_settings_ui("nca_settings")),
-              tabPanel("Slope Selector", slope_selector_ui("slope_selector")),
-              tabPanel("Ratio Analysis", additional_analysis_ui("non_nca"))
-            )
-          ),
-          tabPanel("Results", fluid = TRUE,
-            navlistPanel(
-              tabPanel(
-                "NCA Results",
-                pickerInput(
-                  "params",
-                  "Select Parameters :",
-                  choices = list("Run NCA first" = ""),
-                  selected = list("Run NCA first" = ""),
-                  multiple = TRUE,
-                  options = list(`actions-box` = TRUE)
-                ),
-                units_table_ui("units_table_postNCA"),
-                DTOutput("myresults"),
-                tableOutput("summaryTable"),
-                actionButton("download", "Download the NCA Data"),
-                downloadButton("local_download_NCAres", "Download locally the NCA Data")
-              ),
-              tabPanel("Parameter Datasets", parameter_datasets_ui("parameter_datasets")),
-              tabPanel(
-                "Slope calculations",
-                navset_pill(
-                  id = "slope_calculations_tabs",
-                  nav_panel(
-                    title = "Slopes",
-                    value = "slopes",
-                    DTOutput("preslopesettings")
-                  ),
-                  nav_panel(
-                    title = "Manual Adjustments",
-                    value = "manual_adjustments",
-                    tableOutput("manual_slopes2")
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
+      tab_nca_ui("nca")
     ),
 
     # VISUALISATION ----

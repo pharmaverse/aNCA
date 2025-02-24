@@ -15,26 +15,29 @@ DATA_FIXTURE <- list(
   )
 )
 
-PROFILES_FIXTURE <- data.frame(
+DOSNOS_FIXTURE <- data.frame(
   USUBJID = rep(1:4, each = 1),
   ANALYTE = rep("A", 4),
   PCSPEC = rep(1, 4),
   DOSNO = rep(1, 4)
 )
 
-describe("filter_slopes", {
+slope_groups <- c("USUBJID", "ANALYTE", "PCSPEC", "DOSNO")
+
+describe(".filter_slopes", {
   it("should handle slope selection", {
     selection <- data.frame(
       TYPE = rep("Selection", 2),
-      PATIENT = c(1, 3),
-      PROFILE = c(1, 1),
+      USUBJID = c(1, 3),
+      DOSNO = c(1, 1),
       ANALYTE = c("A", "A"),
       PCSPEC = c(1, 1),
-      IXrange = c("1:3", "2:4"),
+      RANGE = c("1:3", "2:4"),
       REASON = "Test selection"
     )
 
-    res <- filter_slopes(DATA_FIXTURE, selection, PROFILES_FIXTURE)
+    res <- filter_slopes(DATA_FIXTURE, selection, DOSNOS_FIXTURE, slope_groups)
+
     expect_true(all(res$is.included.hl[c(1:3, 6:8)]))
     expect_true(all(res$REASON[c(1:3, 6:8)] == "Test selection"))
   })
@@ -42,38 +45,40 @@ describe("filter_slopes", {
   it("should handle slope exclusion", {
     exclusion <- data.frame(
       TYPE = rep("Exclusion", 2),
-      PATIENT = c(2, 4),
-      PROFILE = c(1, 1),
+      USUBJID = c(2, 4),
+      DOSNO = c(1, 1),
       ANALYTE = c("A", "A"),
       PCSPEC = c(1, 1),
-      IXrange = c("1:2", "2:3"),
+      RANGE = c("1:2", "2:3"),
       REASON = "Test exclusion"
     )
 
-    res <- filter_slopes(DATA_FIXTURE, exclusion, PROFILES_FIXTURE)
+    res <- filter_slopes(DATA_FIXTURE, exclusion, DOSNOS_FIXTURE, slope_groups)
+
     expect_true(all(res$is.excluded.hl[c(5, 6, 14, 15)]))
     expect_true(all(res$REASON[c(5, 6, 14, 15)] == "Test exclusion"))
   })
 
   it("should throw an error for invalid data", {
-    expect_error(filter_slopes(NULL, NULL, PROFILES_FIXTURE), "Please provide valid data.")
-    expect_error(filter_slopes(list(), NULL, PROFILES_FIXTURE), "Please provide valid data.")
+
+    expect_error(filter_slopes(NULL, NULL, DOSNOS_FIXTURE), "Please provide valid data.")
+    expect_error(filter_slopes(list(), NULL, DOSNOS_FIXTURE), "Please provide valid data.")
     expect_error(
-      filter_slopes(list(conc = list()), NULL, PROFILES_FIXTURE), "Please provide valid data."
+      filter_slopes(list(conc = list()), NULL, DOSNOS_FIXTURE), "Please provide valid data."
     )
     expect_error(
-      filter_slopes(list(conc = list()), NULL, PROFILES_FIXTURE), "Please provide valid data."
+      filter_slopes(list(conc = list()), NULL, DOSNOS_FIXTURE), "Please provide valid data."
     )
   })
 })
 
 EXISTING_FIXTURE <- data.frame(
   TYPE = "Exclusion",
-  PATIENT = 1,
-  PROFILE = 1,
+  USUBJID = 1,
+  DOSNO = 1,
   ANALYTE = "A",
   PCSPEC = 1,
-  IXrange = "3:6"
+  RANGE = "3:6"
 )
 
 describe("check_slope_rule_overlap", {
@@ -81,80 +86,91 @@ describe("check_slope_rule_overlap", {
     # different type #
     NEW <- data.frame(
       TYPE = "Selection",
-      PATIENT = 1,
-      PROFILE = 1,
+      USUBJID = 1,
+      DOSNO = 1,
       ANALYTE = "A",
       PCSPEC = 1,
-      IXrange = "1:3"
+      RANGE = "1:3"
     )
-    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
 
-    # different patient #
+    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)), 2)
+
+    # different USUBJID #
     NEW <- data.frame(
       TYPE = "Exclusion",
-      PATIENT = 2,
-      PROFILE = 1,
+      USUBJID = 2,
+      DOSNO = 1,
       ANALYTE = "A",
       PCSPEC = 1,
-      IXrange = "1:3"
+      RANGE = "1:3"
     )
-    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
 
-    # different profile #
+    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)), 2)
+
+    # different DOSNO #
     NEW <- data.frame(
       TYPE = "Exclusion",
-      PATIENT = 1,
-      PROFILE = 2,
+      USUBJID = 1,
+      DOSNO = 2,
       ANALYTE = "A",
       PCSPEC = 1,
-      IXrange = "1:3"
+      RANGE = "1:3"
     )
-    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
+
+    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)), 2)
+
   })
 
   it("should remove overlapping points if no new points are detected", {
     NEW <- data.frame(
       TYPE = "Exclusion",
-      PATIENT = 1,
-      PROFILE = 1,
+      USUBJID = 1,
+      DOSNO = 1,
       ANALYTE = "A",
       PCSPEC = 1,
-      IXrange = "4:5"
+      RANGE = "4:5"
     )
-    expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "3,6")
+
+    expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)$RANGE, "3,6")
 
     NEW <- data.frame(
       TYPE = "Exclusion",
-      PATIENT = 1,
-      PROFILE = 1,
+      USUBJID = 1,
+      DOSNO = 1,
       ANALYTE = "A",
       PCSPEC = 1,
-      IXrange = "3:4"
+      RANGE = "3:4"
     )
-    expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "5:6")
+
+    expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)$RANGE, "5:6")
+
   })
 
   it("should add new points of partial overlap is detected", {
     NEW <- data.frame(
       TYPE = "Exclusion",
-      PATIENT = 1,
-      PROFILE = 1,
+      USUBJID = 1,
+      DOSNO = 1,
       ANALYTE = "A",
       PCSPEC = 1,
-      IXrange = "4:9"
+      RANGE = "4:9"
     )
-    expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$IXrange, "3:9")
+
+    expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)$RANGE, "3:9")
+
   })
 
   it("should remove full row if full range of rule is removed", {
     NEW <- data.frame(
       TYPE = "Exclusion",
-      PATIENT = 1,
-      PROFILE = 1,
+      USUBJID = 1,
+      DOSNO = 1,
       ANALYTE = "A",
       PCSPEC = 1,
-      IXrange = "3:6"
+      RANGE = "3:6"
     )
-    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 0)
+
+    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)), 0)
+
   })
 })

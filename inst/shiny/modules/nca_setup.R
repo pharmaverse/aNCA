@@ -1,4 +1,4 @@
-nca_settings_ui <- function(id) {
+nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
@@ -58,10 +58,10 @@ nca_settings_ui <- function(id) {
           `dropdownAlignRight` = TRUE
         ),
         multiple = TRUE,
-        selected = c("cmax", "tmax", "half.life", "cl.obs",
+        selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
                      "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
                      "adj.r.squared", "lambda.z", "lambda.z.n.points",
-                     "cav", "cl.all", "cl.obs", "aucpext.obs",
+                     "cav", "cl.all", "cl.obs",
                      "clast", "tlast")
       )),
       column(4, units_table_ui(ns("units_table_preNCA")))
@@ -211,10 +211,11 @@ nca_settings_ui <- function(id) {
 #' - res_nca A reactive expression containing the PKNCA results output generated from mydata.
 #'           Only used for the units_table submodule
 #'
-nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
+nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
     conc_data <- reactive(mydata()$conc$data)
 
     # File Upload Handling
@@ -487,14 +488,9 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
                    if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
                    if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
                    if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
-                   if (input$AUCoptions) nca_params <- c(nca_params,
-                                                         "aucint.last",
-                                                         "aucint.inf.obs",
-                                                         "aucint.inf.pred",
-                                                         "aucint.all")
 
                    updatePickerInput(session = session,
-                                     inputId = ns("nca_params"),
+                                     inputId = "nca_params",
                                      selected = nca_params)
                  })
 
@@ -523,7 +519,8 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
       )
 
       # Include main intervals as specified by the user
-      mydata$intervals <- format_pkncadata_intervals(pknca_dose = mydata$dose,
+      mydata$intervals <- format_pkncadata_intervals(pknca_conc = mydata$conc,
+                                                     pknca_dose = mydata$dose,
                                                      # Compute only parameters specified
                                                      params = input$nca_params,
                                                      # Start at t0 when requested by the user
@@ -572,7 +569,7 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
 
       data <- data %>%
         left_join(y = mydata()$dose$data) %>%
-        group_by(across(all_of(unname(unlist(mydata()$conc$columns$groups))))) %>%
+        group_by(across(all_of(unname(unlist(mydata()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
         select(!!!syms(colnames(data)))
@@ -589,6 +586,22 @@ nca_settings_server <- function(id, data, mydata, res_nca) { # nolint : TODO: co
         striped = TRUE,
         bordered = TRUE,
         height = "60vh"
+      )
+    })
+
+    reactive({
+      list(
+        rule_adj_r_squared = input$rule_adj_r_squared,
+        adj.r.squared_threshold = input$adj.r.squared_threshold,
+
+        rule_aucpext_obs = input$rule_aucpext_obs,
+        aucpext.obs_threshold = input$aucpext.obs_threshold,
+
+        rule_aucpext_pred = input$rule_aucpext_pred,
+        aucpext.pred_threshold = input$aucpext.pred_threshold,
+
+        rule_span_ratio = input$rule_span_ratio,
+        span.ratio_threshold = input$span.ratio_threshold
       )
     })
 
