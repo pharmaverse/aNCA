@@ -53,25 +53,25 @@ pivot_wider_pknca_results <- function(myres) {
 
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
-  infinite_aucs_vals <- myres$result %>%
+  main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
     mutate(PPTESTCD = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
-  infinite_aucs_exclude <- myres$result %>%
+  main_intervals_exclude <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main") %>%
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
     pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
 
-  infinite_aucs <- left_join(infinite_aucs_vals, infinite_aucs_exclude)
+  main_intervals <- left_join(main_intervals_vals, main_intervals_exclude)
 
   # If there were intervals defined, make independent columns for each
   if (any(myres$result$type_interval == "manual")) {
 
-    interval_aucs_vals <- myres$result %>%
+    manual_aucs_vals <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
@@ -82,7 +82,7 @@ pivot_wider_pknca_results <- function(myres) {
       pivot_wider(names_from = interval_name_col,
                   values_from = PPSTRES)
 
-    interval_aucs_exclude <- myres$result %>%
+    manual_aucs_exclude <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
@@ -92,11 +92,11 @@ pivot_wider_pknca_results <- function(myres) {
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
-    interval_aucs <- inner_join(interval_aucs_vals, interval_aucs_exclude)
+    manual_aucs <- inner_join(manual_aucs_vals, manual_aucs_exclude)
 
-    all_aucs <- left_join(infinite_aucs, interval_aucs)
+    all_aucs <- left_join(main_intervals, manual_aucs)
   } else {
-    all_aucs <- infinite_aucs
+    all_aucs <- main_intervals
   }
 
   # If derived, merge lambda.z.ix & lambda.z.method
