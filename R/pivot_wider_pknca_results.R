@@ -26,10 +26,12 @@ pivot_wider_pknca_results <- function(myres) {
     pull(PPSTRESU, PPTESTCD)
 
   # Create duplicates for accurate lambda.z.ix calculation
-  data_with_duplicates <- dose_profile_duplicates(myres$data$conc$data,
-                                                  c(unlist(unname(myres$data$conc$columns$groups)),
-                                                  "DOSNO"))
-  
+  data_with_duplicates <- dose_profile_duplicates(
+    myres$data$conc$data,
+    c(unlist(unname(myres$data$conc$columns$groups)),
+      "DOSNO")
+  )
+
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
   infinite_aucs_vals <- myres$result %>%

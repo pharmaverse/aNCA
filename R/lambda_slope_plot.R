@@ -72,11 +72,11 @@ lambda_slope_plot <- function(
       if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
       TIME >= sum(
-          subset(
-            lambda_res,
-            lambda_res$PPTESTCD == "lambda.z.time.first",
-            select = c("start", "PPSTRES")
-          )
+        subset(
+          lambda_res,
+          lambda_res$PPTESTCD == "lambda.z.time.first",
+          select = c("start", "PPSTRES")
+        )
       )
     ) %>%
     arrange(IX) %>%

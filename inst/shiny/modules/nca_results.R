@@ -27,7 +27,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
       req(res_nca())
       # Transform results
       final_results <- pivot_wider_pknca_results(res_nca())
-      
+
       # Apply rules
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
         if (!rules[[rule_input]]) next
