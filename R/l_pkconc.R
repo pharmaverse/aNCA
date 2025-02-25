@@ -4,7 +4,7 @@
 #' in lists that are customizable in title, footnotes, grouping/displayed variables, missing/zero
 #' values and/or number of digits displayed.
 #'
-#' @param adpc A data frame containing the PK concentration data.
+#' @param data A data frame containing the PK concentration data.
 #' @param listgroup_vars A character vector specifying the variables to separate lists.
 #' @param grouping_vars A character vector specifying the grouping variables within each list.
 #' @param displaying_vars A character vector specifying the variables to display in the listing.
@@ -31,9 +31,9 @@
 #'   - `digits`: The number of digits to use for numeric formatting.
 #'
 #' @examples
-#'   # Create a sample dataframe 'adpc' with the required variables
+#'   # Create a sample dataframe 'data' with the required variables
 #'   set.seed(123)
-#'   adpc <- data.frame(
+#'   data <- data.frame(
 #'     PARAM = rep(c("Param1", "Param2"), each = 6),
 #'     PCSPEC = rep(c("Blood", "Urine"), each = 6),
 #'     TRT01A = rep(c("Treatment1", "Treatment2"), each = 6),
@@ -46,7 +46,7 @@
 #'   )
 #'
 #'   # Define the formatting table
-#'   formatting_vars_table <- data.frame(var_name = names(adpc),
+#'   formatting_vars_table <- data.frame(var_name = names(data),
 #'                                       Label = c("Parameter", "Specimen", "Treatment Arm",
 #'                                                 "Unique Subject ID", "Norminal Time ($TIMEU)",
 #'                                                 "Actual Time ($TIMEU)", "Time Unit",
@@ -59,7 +59,7 @@
 #'                                       digits = c(NA, NA, NA, NA, 2, 2, NA, 3, NA))
 #'
 #'   # Call the l_pkconc function with the sample data
-#'   listing_ex <- l_pkconc(adpc = adpc,
+#'   listing_ex <- l_pkconc(data = data,
 #'                          listgroup_vars = c("PARAM", "PCSPEC"),
 #'                          grouping_vars = c("TRT01A", "USUBJID"),
 #'                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
@@ -73,7 +73,7 @@
 #' @export
 #' @author Gerardo Rodriguez
 l_pkconc <- function(
-  adpc,
+  data,
   listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
   grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
@@ -85,7 +85,7 @@ l_pkconc <- function(
 ) {
 
   # If there are columns defined in the function that are not in the data, throw an error
-  missing_cols <- setdiff(c(grouping_vars, displaying_vars), colnames(adpc))
+  missing_cols <- setdiff(c(grouping_vars, displaying_vars), colnames(data))
   if (length(missing_cols) > 0) {
     stop(paste("Missing required columns:", paste(missing_cols, collapse = ",")))
   }
@@ -106,19 +106,19 @@ l_pkconc <- function(
       rowwise() %>%
       # Create a label column
       mutate(
-        Label = parse_annotation(adpc, paste0("!", var_name)),
+        Label = parse_annotation(data, paste0("!", var_name)),
         na_str = "NA",
         zero_str = ifelse(var_name == "AVAL", "BLQ", "0"),
         align = "center",
-        format_fun =  ifelse(is.double(adpc[[var_name]]), "round", NA),
-        digits = ifelse(is.double(adpc[[var_name]]), 3, NA)
+        format_fun =  ifelse(is.double(data[[var_name]]), "round", NA),
+        digits = ifelse(is.double(data[[var_name]]), 3, NA)
       ) %>%
       # For the default case (when possible) label includes unit
       mutate(
         Label = case_when(
-          "AVALU" %in% names(adpc) & var_name == "AVAL" ~ paste0(Label, " ($AVALU)"),
-          "RRLTU" %in% names(adpc) & var_name == "AFRLT" ~ paste0(Label, " ($RRLTU)"),
-          "RRLTU" %in% names(adpc) & var_name == "NFRLT" ~ paste0(Label, " ($RRLTU)"),
+          "AVALU" %in% names(data) & var_name == "AVAL" ~ paste0(Label, " ($AVALU)"),
+          "RRLTU" %in% names(data) & var_name == "AFRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(data) & var_name == "NFRLT" ~ paste0(Label, " ($RRLTU)"),
           .default = Label
         )
       ) %>%
@@ -156,7 +156,7 @@ l_pkconc <- function(
     pull(format_fun, var_name)
 
   # Group the data based on the listgroup_vars
-  adpc_grouped <- adpc %>%
+  data_grouped <- data %>%
     mutate(across(all_of(listgroup_vars), as.character)) %>%
     rowwise() %>%
     dplyr::mutate(id_list = interaction(!!!syms(listgroup_vars))) %>%
@@ -175,15 +175,15 @@ l_pkconc <- function(
     ))
 
   # Make sure the data stays labelled
-  var_labels(adpc_grouped) <- c(var_labels(adpc), id_list = "id")
-  var_labels(adpc_grouped) <- ifelse(is.na(var_labels(adpc_grouped)),
-                                     names(adpc_grouped),
-                                     var_labels(adpc_grouped))
+  var_labels(data_grouped) <- c(var_labels(data), id_list = "id")
+  var_labels(data_grouped) <- ifelse(is.na(var_labels(data_grouped)),
+                                     names(data_grouped),
+                                     var_labels(data_grouped))
 
   # Split the lists based on the listgroup_vars
-  lapply(unique(adpc_grouped[["id_list"]]), \(id_val) {
+  lapply(unique(data_grouped[["id_list"]]), \(id_val) {
 
-    list_data <- adpc_grouped %>% dplyr::filter(id_list ==  id_val)
+    list_data <- data_grouped %>% dplyr::filter(id_list ==  id_val)
 
     # Assign the labels requested by the user
     for (var_with_lab in names(format_labs)) {
@@ -222,5 +222,5 @@ l_pkconc <- function(
 
   })  %>%
 
-    setNames(unique(adpc_grouped[["id_list"]]))
+    setNames(unique(data_grouped[["id_list"]]))
 }

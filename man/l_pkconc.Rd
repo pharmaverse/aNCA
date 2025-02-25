@@ -5,7 +5,7 @@
 \title{Create PK Concentration Listing}
 \usage{
 l_pkconc(
-  adpc,
+  data,
   listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
   grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
@@ -17,7 +17,7 @@ l_pkconc(
 )
 }
 \arguments{
-\item{adpc}{A data frame containing the PK concentration data.}
+\item{data}{A data frame containing the PK concentration data.}
 
 \item{listgroup_vars}{A character vector specifying the variables to separate lists.}
 
@@ -61,9 +61,9 @@ The \code{formatting_vars_table} should be a data frame with the following colum
 }
 }
 \examples{
-  # Create a sample dataframe 'adpc' with the required variables
+  # Create a sample dataframe 'data' with the required variables
   set.seed(123)
-  adpc <- data.frame(
+  data <- data.frame(
     PARAM = rep(c("Param1", "Param2"), each = 6),
     PCSPEC = rep(c("Blood", "Urine"), each = 6),
     TRT01A = rep(c("Treatment1", "Treatment2"), each = 6),
@@ -76,7 +76,7 @@ The \code{formatting_vars_table} should be a data frame with the following colum
   )
 
   # Define the formatting table
-  formatting_vars_table <- data.frame(var_name = names(adpc),
+  formatting_vars_table <- data.frame(var_name = names(data),
                                       Label = c("Parameter", "Specimen", "Treatment Arm",
                                                 "Unique Subject ID", "Norminal Time ($TIMEU)",
                                                 "Actual Time ($TIMEU)", "Time Unit",
@@ -89,7 +89,7 @@ The \code{formatting_vars_table} should be a data frame with the following colum
                                       digits = c(NA, NA, NA, NA, 2, 2, NA, 3, NA))
 
   # Call the l_pkconc function with the sample data
-  listing_ex <- l_pkconc(adpc = adpc,
+  listing_ex <- l_pkconc(data = data,
                          listgroup_vars = c("PARAM", "PCSPEC"),
                          grouping_vars = c("TRT01A", "USUBJID"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
