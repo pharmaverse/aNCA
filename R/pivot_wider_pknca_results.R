@@ -19,33 +19,37 @@
 #'
 pivot_wider_pknca_results <- function(myres) {
 
-  ################################################################################################################## 
+  ############################################################################################
   # Derive lambda.z.n.points & lambda.z.method
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   added_params <- NULL
-  if (all(c("lambda.z", "lambda.z.n.points", "lambda.z.time.first") %in% unique(myres$result$PPTESTCD))) {
+  if (all(c("lambda.z",
+            "lambda.z.n.points",
+            "lambda.z.time.first") %in% unique(myres$result$PPTESTCD))) {
     added_params <- myres$result %>%
       filter(PPTESTCD %in% c("lambda.z.n.points", "lambda.z.time.first", "lambda.z"),
              type_interval == "main") %>%
-      select(unname(unlist(myres$data$conc$columns$groups)), PPTESTCD, PPSTRES, DOSNO, start, end) %>%
+      select(unname(unlist(myres$data$conc$columns$groups)),
+             PPTESTCD, PPSTRES, DOSNO, start, end) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
       left_join(myres$data$conc$data) %>%
       # Derive lambda.z.method: was lambda.z manually customized?
       mutate(lambda.z.method = ifelse(
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
-        )) %>% 
-        # Derive lambda.z.ix: If present consider inclusions and disconsider exclusions
-        group_by(!!!syms(unname(unlist(myres$data$conc$columns$groups))), DOSNO) %>%
-        filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
-        filter(TIME >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
-        filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
-        mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
-        mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
-        select(unname(unlist(myres$data$conc$columns$groups)), DOSNO, start, end, lambda.z.ix, lambda.z.method) %>%
-        unique()
+      )) %>%
+      # Derive lambda.z.ix: If present consider inclusions and disconsider exclusions
+      group_by(!!!syms(unname(unlist(myres$data$conc$columns$groups))), DOSNO) %>%
+      filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
+      filter(TIME >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
+      filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
+      mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
+      mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
+      select(unname(unlist(myres$data$conc$columns$groups)),
+             DOSNO, start, end, lambda.z.ix, lambda.z.method) %>%
+      unique()
   }
-  ##################################################################################################################  
+  ############################################################################################
 
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
@@ -94,7 +98,7 @@ pivot_wider_pknca_results <- function(myres) {
   } else {
     all_aucs <- infinite_aucs
   }
-  
+
   # If derived, merge lambda.z.ix & lambda.z.method
   if (!is.null(added_params)) all_aucs <- left_join(all_aucs, added_params)
 

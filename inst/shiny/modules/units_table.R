@@ -135,7 +135,8 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         filter(Analytes %in% analytes) %>%
         slice(info$row) %>%
         pull(Parameter)
-      rows_to_change <- which(modal_units_table$Analytes %in% analytes & modal_units_table$Parameter %in% param)
+      rows_to_change <- with(modal_units_table,
+                             which(Analytes %in% analytes & Parameter %in% param))
       col_to_change <- names(modal_units_table)[info$col + 1]
 
       # If the edited cell is in the 'Conversion Factor' only accept numeric values
