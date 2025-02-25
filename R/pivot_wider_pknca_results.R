@@ -62,7 +62,7 @@ pivot_wider_pknca_results <- function(myres) {
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
     pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
 
-  infinite_aucs <- inner_join(infinite_aucs_vals, infinite_aucs_exclude)
+  infinite_aucs <- left_join(infinite_aucs_vals, infinite_aucs_exclude)
 
   # If there were intervals defined, make independent columns for each
   if (any(myres$result$type_interval == "manual")) {
