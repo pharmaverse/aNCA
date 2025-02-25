@@ -509,12 +509,9 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
       mydata$options <- list(
         auc.method = input$method,
-        allow.tmax.in.half.life = FALSE,
         keep_interval_cols = c("DOSNO", "type_interval"),
         # Make sure the standard options do not prohibit results
-        min.hl.r.squared = 0.001,
-        min.span.ratio = Inf,
-        min.hl.points = 3
+        min.hl.r.squared = 0.7
       )
 
       # Include main intervals as specified by the user
