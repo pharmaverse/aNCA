@@ -58,7 +58,7 @@ lambda_slope_plot <- function(
   #Obtain values for slopes selection
   lambda_res <- myres$result %>%
     filter(if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])) %>%
-    arrange(across(all_of(column_names)), start, desc(end)) %>%
+    arrange(across(all_of(column_names)), start_dose, desc(end_dose)) %>%
     filter(!duplicated(paste0(!!!rlang::syms(column_names), PPTESTCD)))
 
   lambda_z_n_points <- as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
@@ -68,19 +68,15 @@ lambda_slope_plot <- function(
 
   lambda_z_ix_rows <- conc_pknca_df %>%
     ungroup() %>%
-    mutate(ARRLT = round(ARRLT, 3)) %>%
     filter(
       if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
-      ARRLT >= round(
-        sum(
+      TIME >= sum(
           subset(
             lambda_res,
             lambda_res$PPTESTCD == "lambda.z.time.first",
             select = c("start", "PPSTRES")
           )
-        ),
-        3
       )
     ) %>%
     arrange(IX) %>%
@@ -158,7 +154,7 @@ lambda_slope_plot <- function(
 
   #Create initial plot
   p <- plot_data %>%
-    ggplot(aes(x = TIME, y = AVAL)) +
+    ggplot(aes(x = ARRLT, y = AVAL)) +
     geom_line(color = "gray70", linetype = "solid", linewidth = 1) +
     geom_smooth(
       data = subset(plot_data, IX_color == "hl.included"),
@@ -235,11 +231,11 @@ lambda_slope_plot <- function(
   pl <- pl %>%
     add_trace(
       plot_data,
-      x = ~TIME, y = ~log10(AVAL),
+      x = ~ARRLT, y = ~log10(AVAL),
       customdata = customdata,
       text = ~paste0(
         "Data Point: ", IX, "\n",
-        "(", round(TIME, 0), " , ", signif(AVAL, 3), ")"
+        "(", round(ARRLT, 1), " , ", signif(AVAL, 3), ")"
       ),
       type = "scatter",
       mode = "markers",
@@ -249,7 +245,7 @@ lambda_slope_plot <- function(
         plot_data$is.excluded.hl ~ "red",
         plot_data$IX %in% lambda_z_ix_rows$IX ~ "green",
         TRUE ~ "black"
-      ), size = 15, opacity = 0), # Make points semi-transparent
+      ), size = 12, opacity = 0), # Make points semi-transparent
       showlegend = FALSE
     )
 
