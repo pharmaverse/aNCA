@@ -18,12 +18,6 @@
 #' @export
 #'
 pivot_wider_pknca_results <- function(myres) {
-browser()
-  # Get all names with units and make a dictionary structure
-  dict_pttestcd_with_units <- myres$result %>%
-    select(PPTESTCD, PPSTRESU) %>%
-    distinct() %>%
-    pull(PPSTRESU, PPTESTCD)
 
   # Filter out infinite AUCs and pivot the data to incorporate
   # the parameters into columns with their units
@@ -42,23 +36,26 @@ browser()
 
   infinite_aucs <- inner_join(infinite_aucs_vals, infinite_aucs_exclude)
 
-  infinite_aucs_with_lambda <- inner_join(myres$data$conc$data, infinite_aucs) %>%
-    group_by(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO) %>%
-    arrange(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, IX) %>%
-    # Deduce if the user perform an exclusion/selection to indicate if the slope
-    # is manually selected
-    mutate(lambda.z.method = ifelse(
-      any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
-    )) %>%
-    # filter out the rows that do not have relation with lambda calculation (when calculated)
-    # and derive the IX
-    filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
-    filter(TIME >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
-    filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
-    mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
-    mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
-    slice(1) %>%
-    select(any_of(c(names(infinite_aucs), "lambda.z.method", "lambda.z.ix")))
+  
+  # # ToDo: At some point this code inside the conditional would be integrated in PKNCA
+  # if (all(c("lambda.z.time.first", "lambda.z.n.points", )))
+  # infinite_aucs_with_lambda <- inner_join(myres$data$conc$data, infinite_aucs) %>%
+  #   group_by(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO) %>%
+  #   arrange(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, IX) %>%
+  #   # Deduce if the user perform an exclusion/selection to indicate if the slope
+  #   # is manually selected
+  #   mutate(lambda.z.method = ifelse(
+  #     any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
+  #   )) %>%
+  #   # filter out the rows that do not have relation with lambda calculation (when calculated)
+  #   # and derive the IX
+  #   filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
+  #   filter(TIME >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
+  #   filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
+  #   mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
+  #   mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
+  #   slice(1) %>%
+  #   select(any_of(c(names(infinite_aucs), "lambda.z.method", "lambda.z.ix")))
 
   # If there were intervals defined, make independent columns for each
   if (any(myres$result$type_interval == "manual")) {
@@ -84,15 +81,9 @@ browser()
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
-    interval_aucs <- inner_join(interval_aucs_vals, interval_aucs_exclude) %>%
-      # Rename column names to include the units in parenthesis
-      rename_with(~ifelse(
-        .x %in% names(dict_pttestcd_with_units),
-        paste0(.x, "_", "[", dict_pttestcd_with_units[.x], "]"),
-        .x
-      ))
+    interval_aucs <- inner_join(interval_aucs_vals, interval_aucs_exclude)
 
-    all_aucs <- inner_join(infinite_aucs_with_lambda, interval_aucs)
+    all_aucs <- inner_join(infinite_aucs, interval_aucs)
   } else {
     all_aucs <- infinite_aucs_with_lambda
   }
