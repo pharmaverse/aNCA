@@ -22,6 +22,25 @@ l_pkconc:
     footnote:
       type: text
       label: Footnote
+    .group_label_2: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC", "ROUTE"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "USUBJID", "AVISIT"]
+    displaying_vars:
+      label: "Displayed variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["NFRLT", "AFRLT", "AVALC"]
 
 # GRAPHS #
 g_pkconc_ind_lin:

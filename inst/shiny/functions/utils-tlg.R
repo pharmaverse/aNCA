@@ -39,7 +39,7 @@ create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReact
 
       selected <- {
         if (!is.null(opt_def$default)) {
-          if (opt_def$default == ".all") {
+          if (isTRUE(opt_def$default == ".all")) {
             choices
           } else {
             opt_def$default
