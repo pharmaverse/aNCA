@@ -3,7 +3,7 @@ d_conc <- data.frame(
   conc = c(1, 0.6, 0.2, 0.1, 0.9, 0.4, 1.2, 0.8, 0.3, 0.2, 1.1, 0.5),
   time = rep(0:5, 2),
   analyte = rep(c("Analyte1", "Analyte2"), each = 6),
-  include_hl = c(FALSE, NA, TRUE, TRUE, TRUE, TRUE, FALSE, NA, TRUE, TRUE, TRUE, TRUE),
+  include_hl = c(FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE),
   ID = rep(1:2, each = 6)
 )
 
@@ -46,7 +46,7 @@ test_that("interval_add_impute throws an error for unknown target_params", {
   expect_error(interval_add_impute(o_data, target_impute = "start_conc0", target_params = "unknown_param"))
 })
 
-test_that("interval_add_impute handles impute column with NA values correctly", {
+test_that("interval_add_impute handles impute column with FALSE values correctly", {
   o_data_with_na_impute <- o_data
   o_data_with_na_impute$intervals$impute <- NA_character_
   result <- interval_add_impute(o_data_with_na_impute, target_impute = "new_impute")
@@ -157,8 +157,8 @@ test_that("interval_add_impute includes new rows with added imputations right af
   result <- interval_add_impute(o_data, target_impute = "new_impute", target_param = "cmax")
   expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
                data.frame(analyte = c("Analyte1", "Analyte1", "Analyte2", "Analyte2", "Analyte1", "Analyte1"),
-                          half.life = c(TRUE, NA, TRUE, NA, TRUE, NA),
-                          cmax = c(NA, TRUE, NA, TRUE, NA, TRUE),
+                          half.life = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+                          cmax = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),
                           impute = c("start_conc0,start_predose",
                                      "start_conc0,start_predose,new_impute",
                                      "start_predose",
@@ -208,7 +208,7 @@ test_that("interval_remove_impute throws an error for unknown target_params", {
   expect_error(interval_remove_impute(o_data, target_impute = "start_conc0", target_params = "unknown_param"))
 })
 
-test_that("interval_remove_impute handles impute column with NA values correctly", {
+test_that("interval_remove_impute handles impute column with FALSE values correctly", {
   o_data_with_na_impute <- o_data
   o_data_with_na_impute$intervals$impute <- NA_character_
   result <- interval_remove_impute(o_data_with_na_impute, target_impute = "start_conc0")
@@ -362,8 +362,8 @@ test_that("interval_remove_impute includes new rows with added imputations right
   result <- interval_remove_impute(o_data, target_impute = "start_conc0", target_param = "cmax")
   expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
                data.frame(analyte = c("Analyte1", "Analyte1", "Analyte2", "Analyte1", "Analyte1"),
-                          half.life = c(TRUE, NA, TRUE, TRUE, NA),
-                          cmax = c(NA, TRUE, TRUE, NA, TRUE),
+                          half.life = c(TRUE, FALSE, TRUE, TRUE, FALSE),
+                          cmax = c(FALSE, TRUE, TRUE, FALSE, TRUE),
                           impute = c("start_conc0,start_predose",
                                      "start_predose",
                                      "start_predose", 
