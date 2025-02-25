@@ -36,7 +36,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         selectInput(
           inputId = ns("select_unitstable_analyte"),
           multiple = TRUE,
-          label = "Select Analyte:",
+          label = "Select Analytes:",
           choices = analyte_choices,
           selected = analyte_choices
         ),
@@ -51,20 +51,20 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
 
     # Define the parameter units table and how is displayed to the user #
     modal_units_table <- reactiveVal(NULL)
-    observeEvent(list(mydata(), input$select_unitstable_analyte), {
-      req(mydata())
-      req(input$select_unitstable_analyte)
+    observeEvent(mydata(), {
+      req(mydata()$units)
       analyte_column <- mydata()$conc$columns$groups$group_analyte
+
       modal_units_table_data <- mydata()$units %>%
-        group_by(PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
-        filter(!!sym(analyte_column) %in% input$select_unitstable_analyte) %>%
-        rename(`Parameter` = PPTESTCD,
-               `Default unit` = PPORRESU,
-               `Conversion Factor` = conversion_factor,
-               `Custom unit` = PPSTRESU) %>%
-        mutate(Analytes = paste(!!sym(analyte_column), collapse = ", ")) %>%
-        ungroup() %>%
+        rename(
+          `Parameter` = PPTESTCD,
+          `Default unit` = PPORRESU,
+          `Conversion Factor` = conversion_factor,
+          `Custom unit` = PPSTRESU,
+          `Analytes` = analyte_column
+        ) %>%
         select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
+
       modal_units_table(modal_units_table_data)
     })
 
@@ -81,7 +81,11 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
     output$modal_units_table <- DT::renderDT({
       datatable(
         data = modal_units_table() %>%
-          mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)),
+          mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
+          filter(`Analytes` %in% input$select_unitstable_analyte) %>%
+          group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
+          mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
+          ungroup(),
         escape = FALSE,
         selection = list(mode = "single", target = "cell"),
         class = "table table-striped table-bordered",
@@ -126,9 +130,17 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       info <- input$modal_units_table_cell_edit
       modal_units_table <- modal_units_table()
 
+      analytes <- input$select_unitstable_analyte
+      param <- modal_units_table %>%
+        filter(Analytes %in% analytes) %>%
+        slice(info$row) %>%
+        pull(Parameter)
+      rows_to_change <- with(modal_units_table,
+                             which(Analytes %in% analytes & Parameter %in% param))
+      col_to_change <- names(modal_units_table)[info$col + 1]
+
       # If the edited cell is in the 'Conversion Factor' only accept numeric values
-      if (names(modal_units_table)[info$col + 1] == "Conversion Factor" &&
-            !is.numeric(info$value)) {
+      if (col_to_change == "Conversion Factor" && !is.numeric(info$value)) {
 
         # Report the user the expected numeric format
         showNotification(
@@ -142,17 +154,16 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       }
 
       # Make the edition in the units table
-      modal_units_table[info$row, info$col + 1] <- info$value
+      modal_units_table[rows_to_change, col_to_change] <- info$value
 
       # If the custom unit was changed recalculate the conversion factor
-      if (names(modal_units_table)[info$col + 1] == "Custom unit") {
-        def_unit <- modal_units_table[info$row, "Default unit"]
-        cust_unit <- modal_units_table[info$row, "Custom unit"]
+      if (col_to_change == "Custom unit") {
+        def_unit <- modal_units_table[rows_to_change, ][["Default unit"]]
+        cust_unit <- modal_units_table[rows_to_change, ][["Custom unit"]]
         conversion_factor_value <- get_conversion_factor(def_unit, cust_unit)
 
-
         # If the modification lead to an unexpected conversion factor notify the user
-        if (is.na(conversion_factor_value)) {
+        if (any(is.na(conversion_factor_value))) {
           showNotification(
             paste0(
               "Unrecognised conversion: ",  def_unit, " > ", cust_unit,
@@ -164,7 +175,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
           )
         }
 
-        modal_units_table[info$row, "Conversion Factor"] <- conversion_factor_value
+        modal_units_table[rows_to_change, "Conversion Factor"] <- conversion_factor_value
       }
 
       # Update the server table
@@ -195,9 +206,8 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       }
 
       # Tranforms the modal units table back to the original one
+      analyte_column <- mydata()$conc$columns$groups$group_analyte
       modal_units_table <- modal_units_table() %>%
-        mutate(Analytes = strsplit(Analytes, ", ")) %>%
-        unnest(Analytes) %>%
         rename(ANALYTE = `Analytes`,
                PPTESTCD = `Parameter`,
                PPORRESU = `Default unit`,
