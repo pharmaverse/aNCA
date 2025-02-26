@@ -247,8 +247,8 @@ tab_tlg_server <- function(id) {
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
           if (exists(g_def$fun)) {
-            tlg_graph_server(module_id, get(g_def$fun), g_def$options)
-            tlg_graph_ui(session$ns(module_id))
+            tlg_module_server(module_id, "graph", get(g_def$fun), g_def$options)
+            tlg_module_ui(session$ns(module_id), "graph", g_def$options)
           } else {
             tags$div("Graph not implemented yet")
           }
@@ -275,8 +275,8 @@ tab_tlg_server <- function(id) {
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
           if (exists(g_def$fun)) {
-            tlg_list_server(module_id, get(g_def$fun), g_def$options)
-            tlg_list_ui(session$ns(module_id))
+            tlg_module_server(module_id, "listing", get(g_def$fun), g_def$options)
+            tlg_module_ui(session$ns(module_id), "listing", g_def$options)
           } else {
             tags$div("Listing not implemented yet")
           }
