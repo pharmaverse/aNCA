@@ -135,17 +135,15 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
     #' keeps list of plots to render, with options gathered from the UI and applied
     tlg_list <- reactive({
-      if (length(options_()) == 0) return(NULL)
+      list_options <- purrr::imap(reactiveValuesToList(options_values), \(value, name) value()) %>%
+        purrr::keep(\(x) !is.null(x))
 
-      list_options <- purrr::list_modify(list(data = data()), !!!options_())
+      if (length(list_options) == 0) return(NULL)
 
-      purrr::iwalk(list_options, \(value, name) {
-        if (isTRUE(value %in% c(NULL, "", 0)))
-          list_options[[name]] <<- NULL
-      })
+      list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0)))
 
       tryCatch({
-        do.call(render_list, list_options)
+        do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")
@@ -153,7 +151,8 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
         "Error: list rendering failed with current options.
         Check the R console for more information."
       })
-    })
+    }) %>%
+      debounce(750)
 
     output$tlg_output <- render_fn({
       req(tlg_list(), entries_per_page(), current_page())
@@ -171,27 +170,14 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
       purrr::walk(names(options), shinyjs::reset)
     })
 
-    #' holds options gathered from UI widgets
-    options_ <- reactive({
-      lapply(names(options), \(opt_id) {
-        if (is.null(options_returns[[opt_id]])) {
-          NULL
-        } else {
-          options_returns[[opt_id]]()
-        }
-      }) |>
-        setNames(names(options)) |>
-        purrr::keep(\(x) !is.null(x))
-    }) |>
-      shiny::debounce(750)
-
-    options_returns <- reactiveValues()
-
-    for (option in names(options)) {
-      if (is.character(options[[option]])) next
+    options_values <- lapply(names(options), \(option) {
+      if (is.character(options[[option]])) return(NULL)
       fn <- get(glue("tlg_option_{options[[option]]$type}_server"))
-      options_returns[[option]] <- fn(option, options[[option]], data)
-    }
+      fn(option, options[[option]], data)
+    }) %>%
+      setNames(names(options)) %>%
+      purrr::keep(\(x) !is.null(x)) %>%
+      do.call(reactiveValues, .)
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
