@@ -8,12 +8,14 @@ tlg_module_ui <- function(id, type, options) {
         class = "tlg-options-container",
         dropdown(
           div(
-            tags$h2("Plot options"),
-            tags$p("
-              You can specify any plot customization options that are supported by the specific
-              plot module.
-            "),
-            tags$p("Leaving a widget empty will allow default behaviour of the plotting function."),
+            tags$h2(glue("{type} options")),
+            tags$p(glue("
+              You can specify any {type} customization options that are supported by the specific
+              {type} implementation function.
+            ")),
+            tags$p(glue(
+              "Leaving a widget empty will allow default behaviour of the {type} function."
+            )),
             tags$p(
               "In text fields, you can reference values / columns in the dataset by using
               the dollar sign (", tags$b("$"), ") and providing column name, e.g. ",
@@ -45,7 +47,7 @@ tlg_module_ui <- function(id, type, options) {
           style = "margin-right: 5em;",
           tags$span("Plots per page:"),
           selectInput(
-            ns("plots_per_page"),
+            ns("entries_per_page"),
             "",
             choices = c("All", 1, 2, 4, 6, 8, 10)
           )
@@ -69,12 +71,11 @@ tlg_module_ui <- function(id, type, options) {
       div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
     ),
     shinycssloaders::withSpinner(
-      verbatimTextOutput(ns("tlg_output"))
-      # switch(
-      #   type,
-      #   "graph" = uiOutput(ns("tlg_output")),
-      #   "listing" = verbatimTextOutput(ns("tlg_output"))
-      # )
+      switch(
+        type,
+        "graph" = uiOutput(ns("tlg_output")),
+        "listing" = verbatimTextOutput(ns("tlg_output"))
+      )
     )
   )
 }
@@ -100,17 +101,17 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
     #' hold reactive information about the page layout
     num_pages <- reactive({
-      req(list_list(), lists_per_page())
-      ceiling(length(list_list()) / lists_per_page())
+      req(tlg_list(), entries_per_page())
+      ceiling(length(tlg_list()) / entries_per_page())
     })
 
-    lists_per_page <- reactive({
-      if (is.null(input$lists_per_page)) return(NULL)
-      if (is.null(list_list())) return(NULL)
-      if (input$lists_per_page == "All") {
-        length(list_list())
+    entries_per_page <- reactive({
+      if (is.null(input$entries_per_page)) return(NULL)
+      if (is.null(tlg_list())) return(NULL)
+      if (input$entries_per_page == "All") {
+        length(tlg_list())
       } else {
-        as.numeric(input$lists_per_page)
+        as.numeric(input$entries_per_page)
       }
     })
 
@@ -124,8 +125,8 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
       )
       updateSelectInput(session = session, inputId = "select_page", selected = current_page())
     })
-    observeEvent(lists_per_page(), {
-      req(num_pages(), lists_per_page())
+    observeEvent(entries_per_page(), {
+      req(num_pages(), entries_per_page())
       current_page(1)
 
       output$page_number <- renderUI(paste0(num_pages(), "."))
@@ -133,7 +134,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
     })
 
     #' keeps list of plots to render, with options gathered from the UI and applied
-    list_list <- reactive({
+    tlg_list <- reactive({
       if (length(options_()) == 0) return(NULL)
 
       list_options <- purrr::list_modify(list(data = data()), !!!options_())
@@ -142,6 +143,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
         if (isTRUE(value %in% c(NULL, "", 0)))
           list_options[[name]] <<- NULL
       })
+
       tryCatch({
         do.call(render_list, list_options)
       },
@@ -153,14 +155,15 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
       })
     })
 
-    output$tlg_output <- renderPrint({
-      req(list_list(), lists_per_page(), current_page())
-      num_plots <- length(list_list())
-      page_end <- current_page() * lists_per_page()
-      page_start <- page_end - lists_per_page() + 1
+    output$tlg_output <- render_fn({
+      req(tlg_list(), entries_per_page(), current_page())
+
+      num_plots <- length(tlg_list())
+      page_end <- current_page() * entries_per_page()
+      page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      list_list()[page_start:page_end]
+      tlg_list()[page_start:page_end]
     })
 
     #' resets the options to defaults
@@ -170,7 +173,6 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
     #' holds options gathered from UI widgets
     options_ <- reactive({
-      list(title = "")
       lapply(names(options), \(opt_id) {
         if (is.null(options_returns[[opt_id]])) {
           NULL
