@@ -8,54 +8,20 @@ create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReact
     return(tags$h1(opt_def, class = "tlg-group-label"))
   }
 
-  label <- if (is.null(opt_def$label)) opt_id else opt_def$label
-
   switch(
     opt_def$type,
     text = {
-      textInput(
-        session$ns(opt_id),
-        label = label,
-        value = opt_def$default
-      )
+      tlg_option_text_ui(session$ns(opt_id), opt_def)
     },
     numeric = {
-      numericInput(
-        session$ns(opt_id),
-        label = label,
-        value = opt_def$default
-      )
+      tlg_option_numeric_ui(session$ns(opt_id), opt_def)
     },
     select = {
-      choices <- {
-        if (isTRUE(opt_def$choices == ".colnames")) {
-          names(session$userData$data())
-        } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
-          unique(session$userData$data()[, sub("^\\$", "", opt_def$choices)])
-        } else {
-          opt_def$choices
-        }
-      }
-
-      selected <- {
-        if (!is.null(opt_def$default)) {
-          if (isTRUE(opt_def$default == ".all")) {
-            choices
-          } else {
-            opt_def$default
-          }
-        } else {
-          ""
-        }
-      }
-
-      selectInput(
-        session$ns(opt_id),
-        label = label,
-        selected = selected,
-        choices = c("", choices),
-        multiple = isTRUE(opt_def$multiple)
-      )
+      tlg_option_select_ui(session$ns(opt_id), opt_def)
     }
   )
+}
+
+get_option_function <- function(opt_def) {
+  if (opt_def$type == "text") return(tlg_option_text_server)
 }

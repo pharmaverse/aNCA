@@ -159,11 +159,26 @@ tlg_list_server <- function(id, render_list, options = NULL) {
 
     #' holds options gathered from UI widgets
     options_ <- reactive({
-      lapply(names(options), \(opt_id) input[[opt_id]]) |>
+      list(title = "")
+      lapply(names(options), \(opt_id) {
+        if (is.null(options_returns[[opt_id]])) {
+          NULL
+        } else {
+          options_returns[[opt_id]]()
+        }
+      }) |>
         setNames(names(options)) |>
         purrr::keep(\(x) !is.null(x))
     }) |>
       shiny::debounce(750)
+
+    options_returns <- reactiveValues()
+
+    for (option in names(options)) {
+      if (is.character(options[[option]])) next
+      fn <- get_option_function(options[[option]])
+      options_returns[[option]] <- fn(option, options[[option]], data)
+    }
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
