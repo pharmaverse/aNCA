@@ -315,7 +315,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     # ADDITIONAL ANALYSIS ----
-    additional_analysis_server("non_nca", mydata, grouping_vars)
+    additional_analysis_server("non_nca", mydata, res_nca, grouping_vars)
 
     # PARAMETER DATASETS ----
     parameter_datasets_server("parameter_datasets", res_nca)
