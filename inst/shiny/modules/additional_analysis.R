@@ -87,7 +87,7 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
       purrr::list_c() %>%
       append("DOSNO") %>%
       purrr::keep(\(col) {
-        !is.null(col) && length(unique(data()$conc$data[[col]])) > 1
+        !is.null(col) && col != "DRUG" &&length(unique(data()$conc$data[[col]])) > 1
       })
     })
     
@@ -152,7 +152,6 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
           filter(!is.na(AUC_IV) & !is.na(Dose_IV)) %>%  # Ensure IV data exists
           mutate(
             f = pk.calc.f(Dose_IV, AUC_IV, Dose_EX, AUC_EX),
-            Percentage = f * 100,
             Type = "Individual",
             AUC_Type = auc_type
           )
@@ -174,7 +173,6 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
           ex_without_match <- ex_without_match %>%
             mutate(
               f = pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX),
-              Percentage = f * 100,
               Type = "Ind/Mean",
               AUC_Type = auc_type
             )
@@ -190,23 +188,28 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
         
         mean_summary <- cross_join(mean_ex, mean_iv) %>%
           mutate(
+            USUBJID = "Mean",
             f = pk.calc.f(Mean_Dose_IV, Mean_AUC_IV, Mean_Dose_EX, Mean_AUC_EX),
-            Percentage = f * 100,
-            Type = "Mean",
             AUC_Type = auc_type
           ) %>%
-          select(Grouping_EX, Grouping_IV, AUC_Type, f, Percentage, Type)
+          select(USUBJID, Grouping_IV, AUC_Type, f)
         
-        browser()
         # Combine individual and mean-based results for this AUC type
         auc_results <- bind_rows(
-          individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV, AUC_Type, f, Percentage, Type),
-          ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV, AUC_Type, f, Percentage, Type),
+          individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV, AUC_Type, f, Type),
+          ex_without_match %>% select(USUBJID, Grouping_EX, AUC_Type, f, Type),
           mean_summary
         )
+        browser()
+        
+        auc_results_wide <- auc_results %>%
+          pivot_wider(
+            names_from = USUBJID, 
+            values_from = f
+          )
         
         # Append to results list
-        results_list[[auc_type]] <- auc_results
+        results_list[[auc_type]] <- auc_results_wide
       }
       
       final_results <- bind_rows(results_list)
