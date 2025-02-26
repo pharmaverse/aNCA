@@ -36,7 +36,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         selectInput(
           inputId = ns("select_unitstable_analyte"),
           multiple = TRUE,
-          label = "Select Analytes:",
+          label = "Select Analytes to modify:",
           choices = analyte_choices,
           selected = analyte_choices
         ),
@@ -77,15 +77,22 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       paste0("['", paste(params_to_calculate(), collapse = "','"), "']")
     })
 
+    # Create a function to provide a clean display of the modal units table
+    clean_display_units_table <- function(data, selected_analytes) {
+      data %>%
+        mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
+        filter(`Analytes` %in% selected_analytes) %>%
+        group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
+        mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
+        ungroup() %>%
+        unique()
+    }
+
     #' Rendering the modal units table
     output$modal_units_table <- DT::renderDT({
       datatable(
-        data = modal_units_table() %>%
-          mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
-          filter(`Analytes` %in% input$select_unitstable_analyte) %>%
-          group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
-          mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
-          ungroup(),
+        data = clean_display_units_table(modal_units_table(),
+                                         input$select_unitstable_analyte),
         escape = FALSE,
         selection = list(mode = "single", target = "cell"),
         class = "table table-striped table-bordered",
@@ -131,8 +138,8 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       modal_units_table <- modal_units_table()
 
       analytes <- input$select_unitstable_analyte
-      param <- modal_units_table %>%
-        filter(Analytes %in% analytes) %>%
+      param <- clean_display_units_table(modal_units_table,
+                                         input$select_unitstable_analyte) %>%
         slice(info$row) %>%
         pull(Parameter)
       rows_to_change <- with(modal_units_table,
