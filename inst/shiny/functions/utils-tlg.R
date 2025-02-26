@@ -24,4 +24,6 @@ create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReact
 
 get_option_function <- function(opt_def) {
   if (opt_def$type == "text") return(tlg_option_text_server)
+  if (opt_def$type == "numeric") return(tlg_option_numeric_server)
+  if (opt_def$type == "select") return(tlg_option_select_server)
 }

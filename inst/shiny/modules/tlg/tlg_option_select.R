@@ -1,13 +1,13 @@
-tlg_option_select_ui <- function(id, opt_def) {
+tlg_option_select_ui <- function(id, opt_def, data) {
   ns <- NS(id)
 
   label <- if (is.null(opt_def$label)) id else opt_def$label
 
   choices <- {
     if (isTRUE(opt_def$choices == ".colnames")) {
-      names(session$userData$data())
+      names(data())
     } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
-      unique(session$userData$data()[, sub("^\\$", "", opt_def$choices)])
+      unique(data()[, sub("^\\$", "", opt_def$choices)])
     } else {
       opt_def$choices
     }

@@ -45,7 +45,7 @@ tlg_module_ui <- function(id, type, options) {
         tags$span(
           class = "inline-select-input",
           style = "margin-right: 5em;",
-          tags$span("Plots per page:"),
+          tags$span("Entries per page:"),
           selectInput(
             ns("entries_per_page"),
             "",
@@ -195,7 +195,24 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
-      purrr::imap(options, create_edit_widget)
+      purrr::imap(options, \(opt_def, opt_id) {
+        if (grepl(".group_label", opt_id)) {
+          return(tags$h1(opt_def, class = "tlg-group-label"))
+        }
+
+        switch(
+          opt_def$type,
+          text = {
+            tlg_option_text_ui(session$ns(opt_id), opt_def, data)
+          },
+          numeric = {
+            tlg_option_numeric_ui(session$ns(opt_id), opt_def, data)
+          },
+          select = {
+            tlg_option_select_ui(session$ns(opt_id), opt_def, data)
+          }
+        )
+      })
     })
   })
 }
