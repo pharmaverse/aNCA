@@ -73,8 +73,8 @@ tlg_module_ui <- function(id, type, options) {
     shinycssloaders::withSpinner(
       switch(
         type,
-        "graph" = uiOutput(ns("tlg_output")),
-        "listing" = verbatimTextOutput(ns("tlg_output"))
+        graph = uiOutput(ns("tlg_output")),
+        listing = verbatimTextOutput(ns("tlg_output"))
       )
     )
   )
@@ -189,30 +189,33 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
     for (option in names(options)) {
       if (is.character(options[[option]])) next
-      fn <- get_option_function(options[[option]])
+      fn <- get(glue("tlg_option_{options[[option]]$type}_server"))
       options_returns[[option]] <- fn(option, options[[option]], data)
     }
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
-      purrr::imap(options, \(opt_def, opt_id) {
-        if (grepl(".group_label", opt_id)) {
-          return(tags$h1(opt_def, class = "tlg-group-label"))
-        }
-
-        switch(
-          opt_def$type,
-          text = {
-            tlg_option_text_ui(session$ns(opt_id), opt_def, data)
-          },
-          numeric = {
-            tlg_option_numeric_ui(session$ns(opt_id), opt_def, data)
-          },
-          select = {
-            tlg_option_select_ui(session$ns(opt_id), opt_def, data)
-          }
-        )
-      })
+      purrr::imap(options, \(def, id) .tlg_module_edit_widget(session$ns(id), def, data))
     })
   })
+}
+
+#' Creates editing widget of appropriate type.
+#' @param opt_def Definition of the option
+#' @param opt_id  Id of the option
+#' @param session Session object for namespacing the widgets
+#' @returns Shiny widget with appropriate type, label and options
+.tlg_module_edit_widget <- function(opt_id, opt_def, data) {
+  if (grepl(".group_label", opt_id)) {
+    return(tags$h1(opt_def, class = "tlg-group-label"))
+  }
+
+  ui_fn <- switch(
+    opt_def$type,
+    text = tlg_option_text_ui,
+    numeric = tlg_option_numeric_ui,
+    select = tlg_option_select_ui
+  )
+
+  ui_fn(opt_id, opt_def, data)
 }
