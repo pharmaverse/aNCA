@@ -22,6 +22,7 @@ pivot_wider_pknca_results <- function(myres) {
   ############################################################################################
   # Derive lambda.z.n.points & lambda.z.method
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
+  conc_groups <- unname(unlist(myres$data$conc$columns$groups))
   added_params <- NULL
   if (all(c("lambda.z",
             "lambda.z.n.points",
@@ -29,8 +30,7 @@ pivot_wider_pknca_results <- function(myres) {
     added_params <- myres$result %>%
       filter(PPTESTCD %in% c("lambda.z.n.points", "lambda.z.time.first", "lambda.z"),
              type_interval == "main") %>%
-      select(unname(unlist(myres$data$conc$columns$groups)),
-             PPTESTCD, PPSTRES, DOSNO, start, end) %>%
+      select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
       left_join(myres$data$conc$data) %>%
@@ -39,20 +39,18 @@ pivot_wider_pknca_results <- function(myres) {
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
       )) %>%
       # Derive lambda.z.ix: If present consider inclusions and disconsider exclusions
-      group_by(!!!syms(unname(unlist(myres$data$conc$columns$groups))), DOSNO) %>%
+      group_by(!!!syms(conc_groups), DOSNO) %>%
       filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
       filter(TIME >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
       filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
       mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
       mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
-      select(unname(unlist(myres$data$conc$columns$groups)),
-             DOSNO, start, end, lambda.z.ix, lambda.z.method) %>%
+      select(conc_groups, DOSNO, start, end, lambda.z.ix, lambda.z.method) %>%
       unique()
   }
   ############################################################################################
 
-  # Filter out infinite AUCs and pivot the data to incorporate
-  # the parameters into columns with their units
+  # Pivot main interval columns by Parameter and consider each exclude column separately
   main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
@@ -68,7 +66,7 @@ pivot_wider_pknca_results <- function(myres) {
 
   main_intervals <- left_join(main_intervals_vals, main_intervals_exclude)
 
-  # If there were intervals defined, make independent columns for each
+  # If present: Pivot manual AUC interval columns and their respective exclude column
   if (any(myres$result$type_interval == "manual")) {
 
     manual_aucs_vals <- myres$result %>%
@@ -94,12 +92,13 @@ pivot_wider_pknca_results <- function(myres) {
 
     manual_aucs <- inner_join(manual_aucs_vals, manual_aucs_exclude)
 
+    # If present: Merge main and manual intervals together
     all_aucs <- left_join(main_intervals, manual_aucs)
   } else {
     all_aucs <- main_intervals
   }
 
-  # If derived, merge lambda.z.ix & lambda.z.method
+  # If derived: Merge lambda.z.ix & lambda.z.method
   if (!is.null(added_params)) all_aucs <- left_join(all_aucs, added_params)
 
   # Do a final standardization of the results reshaped
