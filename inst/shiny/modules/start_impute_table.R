@@ -13,20 +13,37 @@ start_impute_table_ui <- function(id) {
 start_impute_table_server <- function(id, mydata) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     observeEvent(mydata(), {
       updateActionButton(session, "open_start_impute_table", disabled = FALSE)
     })
-    
+
     observeEvent(input$open_start_impute_table, {
+
+      param_choices <- setdiff(names(get.interval.cols()), c("start", "end"))
+      param_choices <- sapply(param_choices, \(param) {
+        vals <- mydata()$intervals[[param]]
+        replace(vals, is.na(vals), FALSE)
+        any(mydata()$intervals[[param]])
+      })
+      param_choices <- names(param_choices)[param_choices]
+
       showModal(modalDialog(
         title = tagList(span("Start Impute Table")),
+        pickerInput(
+          inputId = ns("select_imputetable_params"),
+          multiple = TRUE,
+          label = "Parameters to impute:",
+          choices = param_choices,
+          selected = setdiff(param_choices, c("cmax", "tmax")),
+          options = list(`actions-box` = TRUE)
+        ),
         reactableOutput(ns("modal_intervals_start")),
         footer = modalButton("Close"),
         size = "l"
       ))
     })
-    
+
     intervals_df <- reactive({
       req(mydata())
 
