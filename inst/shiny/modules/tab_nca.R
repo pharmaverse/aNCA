@@ -22,18 +22,24 @@ tab_nca_ui <- function(id) {
         navset_pill_list(
           nca_results_ui(ns("nca_results")),
           nav_panel(
-            "Slopes",
-            DTOutput(ns("preslopesettings"))
-          ),
-          nav_panel(
-            "Exclusions",
-            tableOutput(ns("manual_slopes2"))
+            "Slopes Information",
+            navset_pill(
+              nav_panel(
+              "Slopes",
+              DTOutput(ns("preslopesettings"))
+              ),
+              nav_panel(
+                "Exclusions",
+                tableOutput(ns("manual_slopes2"))
+              ),
+            )
           ),
           nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
         )
       ),
       nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
     )
+
   )
 
 }

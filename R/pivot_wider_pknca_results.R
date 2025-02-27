@@ -19,6 +19,7 @@
 #'
 pivot_wider_pknca_results <- function(myres) {
 
+  req(myres)
   # Get all names with units and make a dictionary structure
   dict_pttestcd_with_units <- myres$result %>%
     select(PPTESTCD, PPSTRESU) %>%
