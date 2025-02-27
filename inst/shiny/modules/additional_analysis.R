@@ -155,7 +155,7 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
             Type = "Individual",
             AUC_Type = auc_type
           )
-        
+
         # 2. Compute mean IV AUC for subjects with EX but no matching IV
         ex_without_match <- merged_data %>%
           filter(is.na(AUC_IV) | is.na(Dose_IV))  # Keep only subjects missing IV
@@ -174,7 +174,8 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
             mutate(
               f = pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX),
               Type = "Ind/Mean",
-              AUC_Type = auc_type
+              AUC_Type = auc_type,
+              Grouping_IV = mean_iv$Grouping_IV
             )
         }
         
@@ -188,28 +189,27 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
         
         mean_summary <- cross_join(mean_ex, mean_iv) %>%
           mutate(
-            USUBJID = "Mean",
+            USUBJID = "Mean EX/IV",
             f = pk.calc.f(Mean_Dose_IV, Mean_AUC_IV, Mean_Dose_EX, Mean_AUC_EX),
             AUC_Type = auc_type
           ) %>%
-          select(USUBJID, Grouping_IV, AUC_Type, f)
+          select(USUBJID, Grouping_EX, Grouping_IV, AUC_Type, f)
         
         # Combine individual and mean-based results for this AUC type
         auc_results <- bind_rows(
-          individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV, AUC_Type, f, Type),
-          ex_without_match %>% select(USUBJID, Grouping_EX, AUC_Type, f, Type),
+          individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV, AUC_Type, f),
+          ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV,  AUC_Type, f),
           mean_summary
         )
-        browser()
         
         auc_results_wide <- auc_results %>%
           pivot_wider(
-            names_from = USUBJID, 
+            names_from = USUBJID,
             values_from = f
           )
         
         # Append to results list
-        results_list[[auc_type]] <- auc_results_wide
+        results_list[[auc_type]] <- auc_results #_wide
       }
       
       final_results <- bind_rows(results_list)
