@@ -78,21 +78,10 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       paste0("['", paste(params_to_calculate(), collapse = "','"), "']")
     })
 
-    # Create a function to provide a clean display of the modal units table
-    clean_display_units_table <- function(data, selected_analytes) {
-      data %>%
-        mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
-        filter(`Analytes` %in% selected_analytes) %>%
-        group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
-        mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
-        ungroup() %>%
-        unique()
-    }
-
     #' Rendering the modal units table
     output$modal_units_table <- DT::renderDT({
       datatable(
-        data = clean_display_units_table(modal_units_table(),
+        data = .clean_display_units_table(modal_units_table(),
                                          input$select_unitstable_analyte),
         escape = FALSE,
         selection = list(mode = "single", target = "cell"),
@@ -139,7 +128,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       modal_units_table <- modal_units_table()
 
       analytes <- input$select_unitstable_analyte
-      param <- clean_display_units_table(modal_units_table,
+      param <- .clean_display_units_table(modal_units_table,
                                          input$select_unitstable_analyte) %>%
         slice(info$row) %>%
         pull(Parameter)
@@ -249,4 +238,15 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
     })
 
   })
+}
+
+# Create a function to provide a clean display of the modal units table
+.clean_display_units_table <- function(modal_units_table, selected_analytes) {
+  modal_units_table %>%
+    mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
+    filter(`Analytes` %in% selected_analytes) %>%
+    group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
+    mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
+    ungroup() %>%
+    unique()
 }
