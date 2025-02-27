@@ -1,3 +1,8 @@
+#' Function generating UI for a TLG module.
+#'
+#' @param id      id of the module, preferably with randomly generated part to avoid conflicts
+#' @param type    type of the module, either "graph" or "listing", decides the rendering funciton
+#' @param options list of options to customize input parameters
 tlg_module_ui <- function(id, type, options) {
   ns <- NS(id)
 
@@ -80,6 +85,13 @@ tlg_module_ui <- function(id, type, options) {
   )
 }
 
+#' Function generating a server function for a TLG module.
+#' @param id          id of the module, preferably with randomly generated part to avoid conflicts
+#' @param type        type of the module, either "graph" or "listing",
+#'                    decides the rendering funciton
+#' @param render_list function that renders the list of entries, actual implementation of the TLG
+#' @param options     list of options to customize input parameters
+#'
 tlg_module_server <- function(id, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
