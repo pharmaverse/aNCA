@@ -1,4 +1,9 @@
-tlg_list_ui <- function(id) {
+#' Function generating UI for a TLG module.
+#'
+#' @param id      id of the module, preferably with randomly generated part to avoid conflicts
+#' @param type    type of the module, either "graph" or "listing", decides the rendering funciton
+#' @param options list of options to customize input parameters
+tlg_module_ui <- function(id, type, options) {
   ns <- NS(id)
 
   layout_sidebar(
@@ -8,12 +13,14 @@ tlg_list_ui <- function(id) {
         class = "tlg-options-container",
         dropdown(
           div(
-            tags$h2("List options"),
-            tags$p("
-              You can specify any plot customization options that are supported by the specific
-              plot module.
-            "),
-            tags$p("Leaving a widget empty will allow default behaviour of the listing function."),
+            tags$h2(glue("{type} options")),
+            tags$p(glue("
+              You can specify any {type} customization options that are supported by the specific
+              {type} implementation function.
+            ")),
+            tags$p(glue(
+              "Leaving a widget empty will allow default behaviour of the {type} function."
+            )),
             tags$p(
               "In text fields, you can reference values / columns in the dataset by using
               the dollar sign (", tags$b("$"), ") and providing column name, e.g. ",
@@ -43,9 +50,9 @@ tlg_list_ui <- function(id) {
         tags$span(
           class = "inline-select-input",
           style = "margin-right: 5em;",
-          tags$span("Plots per page:"),
+          tags$span("Entries per page:"),
           selectInput(
-            ns("lists_per_page"),
+            ns("entries_per_page"),
             "",
             choices = c("All", 1, 2, 4, 6, 8, 10)
           )
@@ -69,13 +76,30 @@ tlg_list_ui <- function(id) {
       div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
     ),
     shinycssloaders::withSpinner(
-      verbatimTextOutput(ns("lists"))
+      switch(
+        type,
+        graph = uiOutput(ns("tlg_output")),
+        listing = verbatimTextOutput(ns("tlg_output"))
+      )
     )
   )
 }
 
-tlg_list_server <- function(id, render_list, options = NULL) {
+#' Function generating a server function for a TLG module.
+#' @param id          id of the module, preferably with randomly generated part to avoid conflicts
+#' @param type        type of the module, either "graph" or "listing",
+#'                    decides the rendering funciton
+#' @param render_list function that renders the list of entries, actual implementation of the TLG
+#' @param options     list of options to customize input parameters
+#'
+tlg_module_server <- function(id, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
+    render_fn <- switch(
+      type,
+      "graph" = renderPlotly,
+      "listing" = renderPrint
+    )
+
     data <- session$userData$data
     current_page <- reactiveVal(1)
 
@@ -89,17 +113,17 @@ tlg_list_server <- function(id, render_list, options = NULL) {
 
     #' hold reactive information about the page layout
     num_pages <- reactive({
-      req(list_list(), lists_per_page())
-      ceiling(length(list_list()) / lists_per_page())
+      req(tlg_list(), entries_per_page())
+      ceiling(length(tlg_list()) / entries_per_page())
     })
 
-    lists_per_page <- reactive({
-      if (is.null(input$lists_per_page)) return(NULL)
-      if (is.null(list_list())) return(NULL)
-      if (input$lists_per_page == "All") {
-        length(list_list())
+    entries_per_page <- reactive({
+      if (is.null(input$entries_per_page)) return(NULL)
+      if (is.null(tlg_list())) return(NULL)
+      if (input$entries_per_page == "All") {
+        length(tlg_list())
       } else {
-        as.numeric(input$lists_per_page)
+        as.numeric(input$entries_per_page)
       }
     })
 
@@ -113,8 +137,8 @@ tlg_list_server <- function(id, render_list, options = NULL) {
       )
       updateSelectInput(session = session, inputId = "select_page", selected = current_page())
     })
-    observeEvent(lists_per_page(), {
-      req(num_pages(), lists_per_page())
+    observeEvent(entries_per_page(), {
+      req(num_pages(), entries_per_page())
       current_page(1)
 
       output$page_number <- renderUI(paste0(num_pages(), "."))
@@ -122,17 +146,16 @@ tlg_list_server <- function(id, render_list, options = NULL) {
     })
 
     #' keeps list of plots to render, with options gathered from the UI and applied
-    list_list <- reactive({
-      if (length(options_()) == 0) return(NULL)
+    tlg_list <- reactive({
+      list_options <- purrr::imap(reactiveValuesToList(options_values), \(value, name) value()) %>%
+        purrr::keep(\(x) !is.null(x))
 
-      list_options <- purrr::list_modify(list(data = data()), !!!options_())
+      if (length(list_options) == 0) return(NULL)
 
-      purrr::iwalk(list_options, \(value, name) {
-        if (isTRUE(value %in% c(NULL, "", 0)))
-          list_options[[name]] <<- NULL
-      })
+      list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0)))
+
       tryCatch({
-        do.call(render_list, list_options)
+        do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")
@@ -140,16 +163,18 @@ tlg_list_server <- function(id, render_list, options = NULL) {
         "Error: list rendering failed with current options.
         Check the R console for more information."
       })
-    })
+    }) %>%
+      debounce(750)
 
-    output$lists <- renderPrint({
-      req(list_list(), lists_per_page(), current_page())
-      num_plots <- length(list_list())
-      page_end <- current_page() * lists_per_page()
-      page_start <- page_end - lists_per_page() + 1
+    output$tlg_output <- render_fn({
+      req(tlg_list(), entries_per_page(), current_page())
+
+      num_plots <- length(tlg_list())
+      page_end <- current_page() * entries_per_page()
+      page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      list_list()[page_start:page_end]
+      tlg_list()[page_start:page_end]
     })
 
     #' resets the options to defaults
@@ -157,17 +182,38 @@ tlg_list_server <- function(id, render_list, options = NULL) {
       purrr::walk(names(options), shinyjs::reset)
     })
 
-    #' holds options gathered from UI widgets
-    options_ <- reactive({
-      lapply(names(options), \(opt_id) input[[opt_id]]) |>
-        setNames(names(options)) |>
-        purrr::keep(\(x) !is.null(x))
-    }) |>
-      shiny::debounce(750)
+    options_values <- lapply(names(options), \(option) {
+      if (is.character(options[[option]])) return(NULL)
+      fn <- get(glue("tlg_option_{options[[option]]$type}_server"))
+      fn(option, options[[option]], data)
+    }) %>%
+      setNames(names(options)) %>%
+      purrr::keep(\(x) !is.null(x)) %>%
+      do.call(reactiveValues, .)
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
-      purrr::imap(options, create_edit_widget)
+      purrr::imap(options, \(def, id) .tlg_module_edit_widget(session$ns(id), def, data))
     })
   })
+}
+
+#' Creates editing widget of appropriate type.
+#' @param opt_def Definition of the option
+#' @param opt_id  Id of the option
+#' @param session Session object for namespacing the widgets
+#' @returns Shiny widget with appropriate type, label and options
+.tlg_module_edit_widget <- function(opt_id, opt_def, data) {
+  if (grepl(".group_label", opt_id)) {
+    return(tags$h1(opt_def, class = "tlg-group-label"))
+  }
+
+  ui_fn <- switch(
+    opt_def$type,
+    text = tlg_option_text_ui,
+    numeric = tlg_option_numeric_ui,
+    select = tlg_option_select_ui
+  )
+
+  ui_fn(opt_id, opt_def, data)
 }
