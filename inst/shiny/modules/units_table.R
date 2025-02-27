@@ -82,7 +82,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
     output$modal_units_table <- DT::renderDT({
       datatable(
         data = .clean_display_units_table(modal_units_table(),
-                                         input$select_unitstable_analyte),
+                                          input$select_unitstable_analyte),
         escape = FALSE,
         selection = list(mode = "single", target = "cell"),
         class = "table table-striped table-bordered",
@@ -129,7 +129,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
 
       analytes <- input$select_unitstable_analyte
       param <- .clean_display_units_table(modal_units_table,
-                                         input$select_unitstable_analyte) %>%
+                                          input$select_unitstable_analyte) %>%
         slice(info$row) %>%
         pull(Parameter)
       rows_to_change <- with(modal_units_table,
