@@ -26,7 +26,8 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
     observeEvent(input$open_units_table, {
 
       # Keep in a variable all analytes available
-      analyte_choices <- unique(mydata()$conc$data[[mydata()$conc$columns$groups$group_analyte]])
+      analyte_column <- mydata()$conc$columns$groups$group_analyte
+      analyte_choices <- unique(mydata()$units[[analyte_column]])
 
       # Show the modal message with the units table and an analyte selector
       showModal(modalDialog(
