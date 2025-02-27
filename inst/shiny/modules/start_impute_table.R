@@ -29,45 +29,60 @@ start_impute_table_server <- function(id, mydata) {
     
     intervals_df <- reactive({
       req(mydata())
+      
+      # Column names from the main object
       duration_col <- mydata()$dose$columns$duration
       route_col <- mydata()$dose$columns$route
       drug_col <- "DRUG"
       analyte_col <- mydata()$conc$columns$groups$group_analyte
       if (is.null(analyte_col)) analyte_col <- drug_col
+      conc_group_cols <- unname(unlist(mydata()$conc$columns$groups))
       dosno_col <- "DOSNO"
-      mydata()$intervals %>%
-        mutate(is.first.dose = ifelse(!!sym(dosno_col) > 1, ">1", "1"),
-               is.iv.bolus = tolower(.[[route_col]]) == "intravascular" & .[[duration_col]] == 0,
-               is.analyte.drug = !!sym(analyte_col) == !!sym(drug_col)
-               )
-    })
-
-    output$modal_intervals_start <- renderReactable({
-      req(mydata())
-
+      conc_col <- unname(unlist(mydata()$conc$columns$concentration))
+      time_col <- unname(unlist(mydata()$conc$columns$time))
+      
       group_cols <- unname(unlist(mydata()$conc$columns$groups)) |>
         append(unname(unlist(mydata()$dose$columns$groups))) |>
         setdiff(mydata()$conc$columns$subject) |>
         unique()
       all_cols <- c(group_cols, "is.iv.bolus", "is.analyte.drug", "is.first.dose")
-      list_coldef <- setNames(lapply(all_cols, function(col) colDef(name = col)), all_cols)
-browser()
+      
+      # Return the intervals table with some additional informative columns
+      mydata()$intervals %>%
+        # Take needed variables from concentration data to choose a good imputation strategy
+        left_join(mydata()$conc$data %>%
+                    group_by(!!!syms(c(conc_group_cols, dosno_col))) %>%
+                    arrange(.[[time_col]]) %>%
+                    slice(1:2) %>%
+                    mutate(is.c1c2.decay = all(diff(.[[conc_col]]) > 0)) %>%
+                    slice(1) %>%
+                    ungroup()
+                  ) %>%
+        select(names(mydata()$intervals), is.c1c2.decay, route_col, duration_col) %>%
+        # Create for the user clear columns that inform about the characteristics of each interval
+        mutate(is.first.dose = ifelse(!!sym(dosno_col) > 1, ">1", "1"),
+               is.iv.bolus = !!sym(route_col) == "intravascular" & !!sym(duration_col) == 0,
+               is.analyte.drug = !!sym(analyte_col) == !!sym(drug_col)
+               ) %>%
+        select(all_cols, impute) %>%
+        unique()
+    })
+
+    output$modal_intervals_start <- renderReactable({
+      req(mydata())
+      list_coldef <- setNames(lapply(names(intervals_df()),
+                                     function(col) colDef(name = col)),
+                              nm = names(intervals_df()))
+
       reactable(
         intervals_df(),
         columns = c(
           list_coldef,
           list(
-            select = colDef(
-              name = "Select",
-              cell = function(value, index) {
-                selectInput(
-                  ns(paste0("select_", index)),
-                  label = "aaa",
-                  choices = c("a", "b", "c"),
-                  selected = value,
-                  width = "100%"
-                )
-              }
+            impute = colDef(
+              cell = reactable.extras::dropdown_extra(id = "select_start_modal",
+                                                      choices = c("start_conc0", "start_predose", "start_cmax",
+                                                                  "start_c1", "start_logslope", ""))
             )
           )
         ),
@@ -81,8 +96,9 @@ browser()
         bordered = TRUE,
         height = "60vh"
       )
+
     })
-    
+
     # Accept user modifications in the modal units table
     observeEvent(input$modal_units_table_cell_edit, {
 
