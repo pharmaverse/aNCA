@@ -37,9 +37,7 @@ pivot_wider_pknca_results <- function(myres) {
     distinct() %>%
     filter(type_interval == "main") %>%
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
-    mutate(exclude.PPTESTCD = paste0("exclude.", PPTESTCD)) %>%
-    select(-PPTESTCD) %>%
-    pivot_wider(names_from = exclude.PPTESTCD, values_from = exclude)
+    pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
 
   infinite_aucs <- inner_join(infinite_aucs_vals, infinite_aucs_exclude)
 
@@ -54,13 +52,12 @@ pivot_wider_pknca_results <- function(myres) {
     # filter out the rows that do not have relation with lambda calculation (when calculated)
     # and derive the IX
     filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
-    filter(TIME >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
+    filter(ARRLT >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
     filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
     mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
     mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
     slice(1) %>%
     select(any_of(c(names(infinite_aucs), "lambda.z.method", "lambda.z.ix")))
-
 
   # If there were intervals defined, make independent columns for each
   if (any(myres$result$type_interval == "manual")) {
@@ -81,7 +78,7 @@ pivot_wider_pknca_results <- function(myres) {
       mutate(
         interval_name = paste0(signif(start), "-", signif(end)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
-      )  %>%
+      ) %>%
       select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
@@ -101,8 +98,24 @@ pivot_wider_pknca_results <- function(myres) {
 
   # Do a final standardization of the results reshaped
   all_aucs  %>%
+    mutate(Exclude = pmap_chr(across(starts_with("exclude.")), .extract_exclude_values)) %>%
+    select(-starts_with("exclude.")) %>%
     # Define the number of decimals to round the results
     mutate(across(where(is.numeric), ~ round(.x, 3)))  %>%
     ungroup()
 
+}
+
+#' Helper function to extract exclude values
+.extract_exclude_values <- function(...) {
+  raw_values <- unique(c(...))  # Get unique exclude values from different columns
+  raw_values <- raw_values[!is.na(raw_values)]  # Remove NAs
+
+  # Split each entry into individual phrases using "; " as a separator
+  split_values <- unlist(strsplit(raw_values, "; "))
+
+  # Remove duplicate messages
+  unique_values <- unique(trimws(split_values))
+
+  if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }
