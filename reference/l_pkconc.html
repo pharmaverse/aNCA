@@ -11,7 +11,7 @@ values and/or number of digits displayed."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9011</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ values and/or number of digits displayed.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">l_pkconc</span><span class="op">(</span></span>
-<span>  <span class="va">adpc</span>,</span>
+<span>  <span class="va">data</span>,</span>
 <span>  listgroup_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PARAM"</span>, <span class="st">"PCSPEC"</span>, <span class="st">"ROUTE"</span><span class="op">)</span>,</span>
 <span>  grouping_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRT01A"</span>, <span class="st">"USUBJID"</span>, <span class="st">"AVISIT"</span><span class="op">)</span>,</span>
 <span>  displaying_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NFRLT"</span>, <span class="st">"AFRLT"</span>, <span class="st">"AVAL"</span><span class="op">)</span>,</span>
@@ -68,7 +68,7 @@ values and/or number of digits displayed.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-adpc">adpc<a class="anchor" aria-label="anchor" href="#arg-adpc"></a></dt>
+<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame containing the PK concentration data.</p></dd>
 
 
@@ -124,9 +124,9 @@ values and/or number of digits displayed.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span>  <span class="co"># Create a sample dataframe 'adpc' with the required variables</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span>  <span class="co"># Create a sample dataframe 'data' with the required variables</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">adpc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    PARAM <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Param1"</span>, <span class="st">"Param2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    PCSPEC <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Blood"</span>, <span class="st">"Urine"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    TRT01A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Treatment1"</span>, <span class="st">"Treatment2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,</span></span>
@@ -139,7 +139,7 @@ values and/or number of digits displayed.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Define the formatting table</span></span></span>
-<span class="r-in"><span>  <span class="va">formatting_vars_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>var_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">adpc</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="va">formatting_vars_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>var_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                                      Label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Parameter"</span>, <span class="st">"Specimen"</span>, <span class="st">"Treatment Arm"</span>,</span></span>
 <span class="r-in"><span>                                                <span class="st">"Unique Subject ID"</span>, <span class="st">"Norminal Time ($TIMEU)"</span>,</span></span>
 <span class="r-in"><span>                                                <span class="st">"Actual Time ($TIMEU)"</span>, <span class="st">"Time Unit"</span>,</span></span>
@@ -152,7 +152,7 @@ values and/or number of digits displayed.</p>
 <span class="r-in"><span>                                      digits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="cn">NA</span>, <span class="fl">3</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Call the l_pkconc function with the sample data</span></span></span>
-<span class="r-in"><span>  <span class="va">listing_ex</span> <span class="op">&lt;-</span> <span class="fu">l_pkconc</span><span class="op">(</span>adpc <span class="op">=</span> <span class="va">adpc</span>,</span></span>
+<span class="r-in"><span>  <span class="va">listing_ex</span> <span class="op">&lt;-</span> <span class="fu">l_pkconc</span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>,</span></span>
 <span class="r-in"><span>                         listgroup_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PARAM"</span>, <span class="st">"PCSPEC"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                         grouping_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRT01A"</span>, <span class="st">"USUBJID"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                         displaying_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NFRLT"</span>, <span class="st">"AFRLT"</span>, <span class="st">"AVAL"</span><span class="op">)</span>,</span></span>
