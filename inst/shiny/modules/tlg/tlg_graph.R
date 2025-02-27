@@ -1,11 +1,11 @@
-tlg_plot_ui <- function(id) {
+tlg_graph_ui <- function(id) {
   ns <- NS(id)
 
   layout_sidebar(
     sidebar = sidebar(
       position = "right",
       div(
-        class = "plot-options-container",
+        class = "tlg-options-container",
         dropdown(
           div(
             tags$h2("Plot options"),
@@ -33,11 +33,11 @@ tlg_plot_ui <- function(id) {
           inputId = ns("reset_widgets"),
           label = "Reset to defaults"
         ),
-        uiOutput(ns("options"), class = "plot-options-container")
+        uiOutput(ns("options"), class = "tlg-options-container")
       )
     ),
     div(
-      class = "plot-widgets-container",
+      class = "tlg-widgets-container",
       div(
         align = "left",
         tags$span(
@@ -74,7 +74,7 @@ tlg_plot_ui <- function(id) {
   )
 }
 
-tlg_plot_server <- function(id, render_plot, options = NULL) {
+tlg_graph_server <- function(id, render_graph, options = NULL) {
   moduleServer(id, function(input, output, session) {
     data <- session$userData$data
 
@@ -133,7 +133,7 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
           plot_options[[name]] <<- NULL
       })
       tryCatch({
-        do.call(render_plot, plot_options)
+        do.call(render_graph, plot_options)
       },
       error = function(e) {
         log_error("Error in plot rendering:")
@@ -171,66 +171,4 @@ tlg_plot_server <- function(id, render_plot, options = NULL) {
       purrr::imap(options, create_edit_widget)
     })
   })
-}
-
-#' Creates editing widget of appropriate type.
-#' @param opt_def Definition of the option
-#' @param opt_id  Id of the option
-#' @param session Session object for namespacing the widgets
-#' @returns Shiny widget with appropriate type, label and options
-create_edit_widget <- function(opt_def, opt_id, session = shiny::getDefaultReactiveDomain()) {
-  if (grepl(".group_label", opt_id)) {
-    return(tags$h1(opt_def, class = "tlg-group-label"))
-  }
-
-  label <- if (is.null(opt_def$label)) opt_id else opt_def$label
-
-  switch(
-    opt_def$type,
-    text = {
-      textInput(
-        session$ns(opt_id),
-        label = label,
-        value = opt_def$default
-      )
-    },
-    numeric = {
-      numericInput(
-        session$ns(opt_id),
-        label = label,
-        value = opt_def$default
-      )
-    },
-    select = {
-      choices <- {
-        if (isTRUE(opt_def$choices == ".colnames")) {
-          names(session$userData$data())
-        } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
-          unique(session$userData$data()[, sub("^\\$", "", opt_def$choices)])
-        } else {
-          opt_def$choices
-        }
-      }
-
-      selected <- {
-        if (!is.null(opt_def$default)) {
-          if (opt_def$default == ".all") {
-            choices
-          } else {
-            opt_def$default
-          }
-        } else {
-          ""
-        }
-      }
-
-      selectInput(
-        session$ns(opt_id),
-        label = label,
-        selected = selected,
-        choices = c("", choices),
-        multiple = isTRUE(opt_def$multiple)
-      )
-    }
-  )
 }
