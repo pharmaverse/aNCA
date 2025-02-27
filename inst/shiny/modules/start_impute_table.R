@@ -29,7 +29,7 @@ start_impute_table_server <- function(id, mydata) {
     
     intervals_df <- reactive({
       req(mydata())
-      
+
       # Column names from the main object
       duration_col <- mydata()$dose$columns$duration
       route_col <- mydata()$dose$columns$route
@@ -40,13 +40,16 @@ start_impute_table_server <- function(id, mydata) {
       dosno_col <- "DOSNO"
       conc_col <- unname(unlist(mydata()$conc$columns$concentration))
       time_col <- unname(unlist(mydata()$conc$columns$time))
-      
       group_cols <- unname(unlist(mydata()$conc$columns$groups)) |>
         append(unname(unlist(mydata()$dose$columns$groups))) |>
         setdiff(mydata()$conc$columns$subject) |>
         unique()
-      all_cols <- c(group_cols, "is.iv.bolus", "is.analyte.drug", "is.first.dose")
-      
+      group_cols_non_redundant <- group_cols[apply(mydata()$intervals[,group_cols],
+                                                   2,
+                                                   \(x) length(unique(x)) > 1)]
+      cols_to_keep <- c(group_cols_non_redundant, "is.iv.bolus",
+                        "is.analyte.drug", "is.first.dose", "impute")
+
       # Return the intervals table with some additional informative columns
       mydata()$intervals %>%
         # Take needed variables from concentration data to choose a good imputation strategy
@@ -64,7 +67,7 @@ start_impute_table_server <- function(id, mydata) {
                is.iv.bolus = !!sym(route_col) == "intravascular" & !!sym(duration_col) == 0,
                is.analyte.drug = !!sym(analyte_col) == !!sym(drug_col)
                ) %>%
-        select(all_cols, impute) %>%
+        select(cols_to_keep) %>%
         unique()
     })
 
@@ -73,28 +76,24 @@ start_impute_table_server <- function(id, mydata) {
       list_coldef <- setNames(lapply(names(intervals_df()),
                                      function(col) colDef(name = col)),
                               nm = names(intervals_df()))
+      list_coldef <- list_coldef[3:length(list_coldef)]
 
       reactable(
         intervals_df(),
-        columns = c(
-          list_coldef,
+        columns = 
           list(
             impute = colDef(
               cell = reactable.extras::dropdown_extra(id = "select_start_modal",
                                                       choices = c("start_conc0", "start_predose", "start_cmax",
                                                                   "start_c1", "start_logslope", ""))
             )
-          )
-        ),
-        searchable = TRUE,
+          ),
         sortable = TRUE,
         highlight = TRUE,
         wrap = FALSE,
         resizable = TRUE,
         showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "60vh"
+        striped = TRUE
       )
 
     })
