@@ -1,4 +1,4 @@
-start_impute_table_ui <- function(id) {
+  start_impute_table_ui <- function(id) {
   ns <- NS(id)
   tagList(
     actionButton(
@@ -39,7 +39,9 @@ start_impute_table_server <- function(id, mydata) {
           options = list(`actions-box` = TRUE)
         ),
         reactableOutput(ns("modal_intervals_start")),
-        footer = modalButton("Close"),
+        footer = tagList(modalButton("Close"),
+                         actionButton(ns("save_impute_table"), "Save")
+                         ),
         size = "l"
       ))
     })
@@ -93,11 +95,10 @@ start_impute_table_server <- function(id, mydata) {
       list_coldef <- setNames(lapply(names(intervals_df()),
                                      function(col) colDef(name = col)),
                               nm = names(intervals_df()))
-      list_coldef <- list_coldef[3:length(list_coldef)]
 
       reactable(
         intervals_df(),
-        columns = 
+        columns =
           list(
             impute = colDef(
               cell = reactable.extras::dropdown_extra(id = "select_start_modal",
@@ -112,12 +113,12 @@ start_impute_table_server <- function(id, mydata) {
         showPageSizeOptions = TRUE,
         striped = TRUE
       )
-
     })
 
     # Accept user modifications in the modal units table
-    observeEvent(input$modal_units_table_cell_edit, {
-
+    observeEvent(input$save_impute_table, {
+      browser()
+      state <- getReactableState("modal_intervals_start")
       info <- input$modal_units_table_cell_edit
       intervals_df <- mydata()$intervals
 
