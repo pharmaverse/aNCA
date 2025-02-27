@@ -29,6 +29,9 @@ tab_nca_ui <- function(id) {
             "Exclusions",
             tableOutput(ns("manual_slopes2"))
           ),
+          nav_panel("Descriptive Statistics",
+                    descriptive_statistics_ui(ns("descriptive_stats"))
+          ),
           nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
         )
       ),
@@ -242,6 +245,11 @@ tab_nca_server <- function(id, data, grouping_vars) {
       slope_rules()
     })
 
+    # TAB: Descriptive Statistics ---------------------------------------------
+    # This tab computes and visualizes output data from the NCA analysis
+    
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
+    
     # NCA SETTINGS ----
     # TODO: move this section to a new module
     # Save the project settings
