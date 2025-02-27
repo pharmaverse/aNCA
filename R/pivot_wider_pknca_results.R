@@ -41,7 +41,7 @@ pivot_wider_pknca_results <- function(myres) {
       # Derive lambda.z.ix: If present consider inclusions and disconsider exclusions
       group_by(!!!syms(conc_groups), DOSNO) %>%
       filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
-      filter(TIME >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
+      filter(ARRLT >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
       filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
       mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
       mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
