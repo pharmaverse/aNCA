@@ -21,7 +21,7 @@ start_impute_table_server <- function(id, mydata) {
     observeEvent(input$open_start_impute_table, {
       showModal(modalDialog(
         title = tagList(span("Start Impute Table")),
-        reactableOutput(ns("modal_start_impute_table")),
+        reactableOutput(ns("modal_intervals_start")),
         footer = modalButton("Close"),
         size = "l"
       ))
@@ -29,39 +29,46 @@ start_impute_table_server <- function(id, mydata) {
     
     intervals_df <- reactive({
       req(mydata())
-      mydata$intervals %>%
-        mutate(DOSNOs = ifelse(DOSNO > 1, ">1", 1))
+      duration_col <- mydata()$dose$columns$duration
+      route_col <- mydata()$dose$columns$route
+      drug_col <- "DRUG"
+      analyte_col <- mydata()$conc$columns$groups$group_analyte
+      if (is.null(analyte_col)) analyte_col <- drug_col
+      dosno_col <- "DOSNO"
+      mydata()$intervals %>%
+        mutate(is.first.dose = ifelse(!!sym(dosno_col) > 1, ">1", "1"),
+               is.iv.bolus = tolower(.[[route_col]]) == "intravascular" & .[[duration_col]] == 0,
+               is.analyte.drug = !!sym(analyte_col) == !!sym(drug_col)
+               )
     })
-    
+
     output$modal_intervals_start <- renderReactable({
       req(mydata())
-      browser()
 
       group_cols <- unname(unlist(mydata()$conc$columns$groups)) |>
         append(unname(unlist(mydata()$dose$columns$groups))) |>
         setdiff(mydata()$conc$columns$subject) |>
         unique()
-
+      all_cols <- c(group_cols, "is.iv.bolus", "is.analyte.drug", "is.first.dose")
+      list_coldef <- setNames(lapply(all_cols, function(col) colDef(name = col)), all_cols)
+browser()
       reactable(
-        intervals_df %>%
-          select(group_cols, DOSNOs, impute) %>%
-          unique(),
-        columns = list(
-          start = colDef(name = "Start"),
-          end = colDef(name = "End"),
-          DOSNO = colDef(name = "Dose Number"),
-          ANALYTE = colDef(name = "Analyte"),
-          select = colDef(
-            name = "Select",
-            cell = function(value, index) {
-              selectInput(
-                ns(paste0("select_", index)),
-                label = NULL,
-                choices = c("a", "b", "c"),
-                selected = value,
-                width = "100%"
-              )
-            }
+        intervals_df(),
+        columns = c(
+          list_coldef,
+          list(
+            select = colDef(
+              name = "Select",
+              cell = function(value, index) {
+                selectInput(
+                  ns(paste0("select_", index)),
+                  label = "aaa",
+                  choices = c("a", "b", "c"),
+                  selected = value,
+                  width = "100%"
+                )
+              }
+            )
           )
         ),
         searchable = TRUE,
@@ -78,7 +85,7 @@ start_impute_table_server <- function(id, mydata) {
     
     # Accept user modifications in the modal units table
     observeEvent(input$modal_units_table_cell_edit, {
-      
+
       info <- input$modal_units_table_cell_edit
       intervals_df <- mydata()$intervals
 
