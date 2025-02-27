@@ -1,5 +1,48 @@
 # Configuration file containing TLG definitions.
 # To learn more, please check .github/contributing/adding-tlg.md
+
+# LISTS #
+l_pkconc:
+  is_default: true
+  type: Listing
+  dataset: ADPC
+  pkid: pkconc
+  label: "pkconc"
+  description: "TBA"
+  link: TBA
+  fun: l_pkconc
+  options:
+    .group_label_1: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    .group_label_2: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC", "ROUTE"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "USUBJID", "AVISIT"]
+    displaying_vars:
+      label: "Displayed variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["NFRLT", "AFRLT", "AVALC"]
+
+# GRAPHS #
 g_pkconc_ind_lin:
   is_default: true
   type: Graph
