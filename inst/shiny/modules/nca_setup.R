@@ -75,6 +75,7 @@ nca_setup_ui <- function(id) {
         label = "Impute concentration at t0 when missing",
         value = TRUE
       ),
+      start_impute_table_ui(ns("start_impute_table")),
       id = ns("checkbox_id"),
       title = paste(
         "Imputes a start-of-interval concentration",
@@ -557,6 +558,10 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     # It updates $units table of mydata & res_nca when the user saves their changes
     units_table_server("units_table_preNCA", mydata, res_nca)
     units_table_server("units_table_postNCA", mydata, res_nca)
+    
+    # Start impute addition option: Opens a modal message showing intervals
+    # It updates mydata$intervals$impute column to include the start_impute actions
+    start_impute_table_server("start_impute_table", mydata)
 
     # Rendering Reactable Output
     output$nca_intervals <- renderReactable({
