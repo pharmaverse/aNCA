@@ -25,8 +25,8 @@ tab_nca_ui <- function(id) {
             "Slopes Information",
             navset_pill(
               nav_panel(
-              "Slopes",
-              DTOutput(ns("preslopesettings"))
+                "Slopes",
+                DTOutput(ns("preslopesettings"))
               ),
               nav_panel(
                 "Exclusions",
