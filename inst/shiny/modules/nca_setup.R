@@ -263,7 +263,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         ))
 
         output$mismatched_table <- DT::renderDT({
-          datatable(mismatched_points %>% select(-IX))
+          datatable(mismatched_points %>% select(-IX),
+                    fillContainer = TRUE)
         })
 
         setts <- setts %>%
@@ -576,12 +577,11 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = FALSE,
+        wrap = TRUE,
         resizable = TRUE,
         showPageSizeOptions = TRUE,
         striped = TRUE,
-        bordered = TRUE,
-        height = "60vh"
+        bordered = TRUE
       )
     })
 
