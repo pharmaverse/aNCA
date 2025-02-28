@@ -99,15 +99,15 @@ tab_nca_server <- function(id, data, grouping_vars) {
         time.nominal = "NFRLT",
         duration = "ADOSEDUR"
       )
-      
+
       #create basic intervals so that PKNCAdata can be created
       intervals <-
         data.frame(
-          start=0, end = Inf,
-          cmax= TRUE,
-          tmax= TRUE,
-          auclast= FALSE,
-          aucinf.obs= FALSE
+          start = 0, end = Inf,
+          cmax = TRUE,
+          tmax = TRUE,
+          auclast = FALSE,
+          aucinf.obs = FALSE
         )
 
       mydata <- PKNCA::PKNCAdata(

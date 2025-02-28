@@ -87,39 +87,39 @@ tab_data_server <- function(id) {
       ADNCA(new_adnca)
     })
 
-    ADNCA_filt <- reactiveVal(NULL)
+    adnca_filter <- reactiveVal(NULL)
     # Handle user-provided filters
     filters <- reactiveValues()
-    
+
     observeEvent(input$add_filter, {
       # Create a unique ID for each filter
       filter_id <- paste0("filter_", input$add_filter)
-      
+
       # Insert a new filter UI
       insertUI(
         selector = paste0("#", session$ns("filters")),
         ui = input_filter_ui(session$ns(filter_id), colnames(ADNCA()))
       )
-      
+
       filters[[filter_id]] <- input_filter_server(filter_id)
     })
-    
+
     # Create reactive value with applied filters
     observeEvent(list(input$submit_filters, processed_data()), {
       # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
-      
+
       # Filter and overwrite data
       filtered_data <- apply_filters(
         ADNCA(), applied_filters
       )
-      ADNCA_filt(filtered_data)
+      adnca_filter(filtered_data)
     }, ignoreInit = FALSE)
-    
+
     output$filecontents <- renderReactable({
-      req(ADNCA_filt())
+      req(adnca_filter())
       reactable(
-        ADNCA_filt(),
+        adnca_filter(),
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -155,7 +155,7 @@ tab_data_server <- function(id) {
     # Call the column mapping module
     column_mapping <- column_mapping_server(
       id = "column_mapping",
-      data = ADNCA_filt,
+      data = adnca_filter,
       manual_units = manual_units,
       on_submit = change_to_review_tab
     )
