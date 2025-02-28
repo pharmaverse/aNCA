@@ -226,6 +226,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     output$preslopesettings <- DT::renderDataTable({
+      req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
           any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
