@@ -171,7 +171,7 @@ interval_add_impute.data.frame <- function(intervals, target_impute, after = Inf
   # Order the intervals by the index column and then remove it
   intervals <- intervals[order(intervals[[index_colname]]), ]
   rownames(intervals) <- seq_len(nrow(intervals))
-  as.data.frame(intervals[, !names(intervals) %in% index_colname])
+  intervals[, !names(intervals) %in% index_colname]
 }
 
 #' Remove specified imputation from the intervals in a PKNCAdata or data.frame (intervals) object.
@@ -264,9 +264,12 @@ remove_impute_method <- function(impute_vals, target_impute) {
 
   # Remove the impute from the other methods in each value
   impute_vals <- ifelse(is.na(impute_vals), "", impute_vals)
-  strsplit(impute_vals, split = "[ ,]+") |>
+  impute_vals <- strsplit(impute_vals, split = "[ ,]+") |>
     lapply(FUN = setdiff, target_impute) |>
     vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
+  
+  # Replace empty strings with NA_character_
+  ifelse(impute_vals == "", NA_character_, impute_vals)
 }
 
 #' @export
@@ -353,5 +356,5 @@ interval_remove_impute.data.frame <- function(intervals,
   # Order the intervals by the index column and then remove it
   intervals <- intervals[order(intervals[[index_colname]]), ]
   rownames(intervals) <- seq_len(nrow(intervals))
-  as.data.frame(intervals[, !names(intervals) %in% index_colname])
+  intervals[, !names(intervals) %in% index_colname]
 }
