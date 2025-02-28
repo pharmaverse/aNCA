@@ -142,9 +142,9 @@ tab_nca_server <- function(id, data, grouping_vars) {
           myres$result <- myres$result %>%
             inner_join(select(mydata()$dose$data, -exclude,
                               -mydata()$conc$columns$groups$group_analyte)) %>%
-            mutate(start = start - !!sym(mydata()$dose$columns$time),
-                   end = end - !!sym(mydata()$dose$columns$time)) %>%
-            select(names(myres$result))
+            mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
+                   end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
+            select(names(myres$result), start_dose, end_dose)
 
           res_nca(myres)
           updateTabsetPanel(session, "ncapanel", selected = "Results")

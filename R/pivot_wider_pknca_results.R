@@ -23,6 +23,12 @@ pivot_wider_pknca_results <- function(myres) {
   # Derive lambda.z.n.points & lambda.z.method
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
+
+  data_with_duplicates <- dose_profile_duplicates(
+    myres$data$conc$data,
+    c(unlist(unname(myres$data$conc$columns$groups)),
+      "DOSNO")
+  )
   added_params <- NULL
   if (all(c("lambda.z",
             "lambda.z.n.points",
@@ -33,7 +39,7 @@ pivot_wider_pknca_results <- function(myres) {
       select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
-      left_join(myres$data$conc$data) %>%
+      left_join(data_with_duplicates) %>%
       # Derive lambda.z.method: was lambda.z manually customized?
       mutate(lambda.z.method = ifelse(
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
@@ -72,7 +78,7 @@ pivot_wider_pknca_results <- function(myres) {
     manual_aucs_vals <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
-        interval_name = paste0(signif(start), "-", signif(end)),
+        interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
       select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
@@ -83,10 +89,10 @@ pivot_wider_pknca_results <- function(myres) {
     manual_aucs_exclude <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
-        interval_name = paste0(signif(start), "-", signif(end)),
+        interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
-      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
+      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, start_dose, end_dose,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
@@ -104,7 +110,7 @@ pivot_wider_pknca_results <- function(myres) {
   # Do a final standardization of the results reshaped
   all_aucs  %>%
     mutate(Exclude = pmap_chr(across(starts_with("exclude.")), .extract_exclude_values)) %>%
-    select(-starts_with("exclude.")) %>%
+    select(-starts_with("exclude."), -start_dose, -end_dose) %>%
     # Define the number of decimals to round the results
     mutate(across(where(is.numeric), ~ round(.x, 3)))  %>%
     ungroup()
