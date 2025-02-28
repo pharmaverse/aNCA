@@ -7,7 +7,7 @@
 #' @param res_nca A reactive expression that returns the NCA results.
 #' @param grouping_vars A reactive expression that returns the grouping variables.
 #'
-#' @return A list containing the reactive expression for the summary statistics table.
+#' @returns A list containing the reactive expression for the summary statistics table.
 
 # UI function for the summary statistics module
 descriptive_statistics_ui <- function(id) {
@@ -84,9 +84,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         select(res_nca()$data$conc$data, any_of(cols_to_join))
       ) %>%
         filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
-        mutate(PPTESTCD = case_when(
-          type_interval == "manual" ~ paste0(PPTESTCD, signif(start), "-", signif(end)),
-          TRUE ~ PPTESTCD
+        mutate(PPTESTCD = ifelse(
+          type_interval == "manual", paste0(PPTESTCD, signif(start), "-", signif(end)),
+          PPTESTCD
         ))
       
       # Calculate summary stats and filter by selected parameters
@@ -137,8 +137,5 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       }
     )
     
-    list(
-      summary_stats = summary_stats
-    )
   })
 }
