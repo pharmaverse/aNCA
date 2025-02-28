@@ -12,7 +12,7 @@
 # UI function for the summary statistics module
 descriptive_statistics_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
     pickerInput(
       inputId = ns("select_display_parameters"),
@@ -52,31 +52,31 @@ descriptive_statistics_ui <- function(id) {
 descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Update the input for the group by picker
     observeEvent(res_nca(), {
       req(res_nca())
-      
+
       group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
                             "USUBJID")
       classification_cols <- sort(c(grouping_vars(), "DOSEA"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
-      
+
       updateOrderInput(session, "summary_groupby",
                        items = c(group_cols, classification_cols))
     })
-    
+
     # Reactive expression for summary table based on selected group and parameters
     summary_stats <- reactive({
       req(res_nca())
-      
+
       classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
-      
+
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))
       stats_data <- inner_join(
@@ -88,14 +88,14 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
           type_interval == "manual", paste0(PPTESTCD, signif(start), "-", signif(end)),
           PPTESTCD
         ))
-      
+
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
     })
-    
+
     observeEvent(summary_stats(), {
       req(summary_stats())
-      
+
       # Update the select display parameters picker input
       updatePickerInput(
         session,
@@ -104,15 +104,15 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         selected = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
       )
     })
-    
+
     # Render the reactive summary table in a data table
     output$descriptive_stats <- renderReactable({
       req(summary_stats())
       log_info("Rendering descriptive statistics table")
-      
+
       data <- summary_stats() %>%
         select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters)
-      
+
       reactable(
         data,
         searchable = TRUE,
@@ -125,7 +125,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         bordered = TRUE
       )
     })
-    
+
     # Download summary statistics as CSV
     output$download_browser <- downloadHandler(
       filename = function() {
@@ -136,6 +136,6 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         write.csv(summary_stats(), file)
       }
     )
-    
+
   })
 }
