@@ -325,7 +325,7 @@ test_that("interval_remove_impute with no optional parameters uses all relevant 
                data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1"),
                           half.life = c(TRUE, TRUE, TRUE),
                           cmax = c(TRUE, TRUE, TRUE),
-                          impute = c("start_predose", "start_predose", "")))
+                          impute = c("start_predose", "start_predose", NA_character_)))
 })
 
 test_that("interval_remove_impute handles specified target_params correctly", {
@@ -339,7 +339,7 @@ test_that("interval_remove_impute handles specified target_params correctly", {
                  `rownames<-`(NULL),
                data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1"),
                           half.life = c(TRUE, TRUE, TRUE),
-                          impute = c("start_predose", "start_predose", "")))
+                          impute = c("start_predose", "start_predose", NA_character_)))
 
   # Non-target parameter has the same impute
   cmax_rows <- result$intervals$cmax & !is.na(result$intervals$cmax)
@@ -358,7 +358,7 @@ test_that("interval_remove_impute handles target_groups correctly", {
                data.frame(analyte = c("Analyte1", "Analyte1"),
                           half.life = c(TRUE, TRUE),
                           cmax = c(TRUE, TRUE),
-                          impute = c("start_predose", "")))
+                          impute = c("start_predose", NA_character_)))
   expect_equal(result$intervals[result$intervals$analyte == "Analyte2",
                                 c("analyte", "half.life", "cmax", "impute")],
                o_data$intervals[o_data$intervals$analyte == "Analyte2",
@@ -373,7 +373,7 @@ test_that("interval_remove_impute handles multiple target_params correctly", {
                data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1"),
                           half.life = c(TRUE, TRUE, TRUE),
                           cmax = c(TRUE, TRUE, TRUE),
-                          impute = c("start_predose", "start_predose", "")))
+                          impute = c("start_predose", "start_predose", NA_character_)))
 })
 
 test_that("interval_remove_impute makes no changes and warns when no matching intervals found", {
@@ -424,7 +424,7 @@ test_that("interval_remove_impute handles mixed TRUE/FALSE for cmax and half.lif
                data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1", "Analyte2"),
                           half.life = c(TRUE, FALSE, TRUE, FALSE),
                           cmax = c(FALSE, TRUE, FALSE, TRUE),
-                          impute = c("start_predose", "start_predose", "", "start_predose")))
+                          impute = c("start_predose", "start_predose", NA_character_, "start_predose")))
 })
 
 test_that("interval_remove_impute removes properly all target_impute even if is several times", {
@@ -448,7 +448,7 @@ test_that("interval_remove_impute includes new rows right after the original one
                                      "start_predose",
                                      "start_predose",
                                      "start_conc0",
-                                     "")))
+                                     NA_character_)))
 })
 
 test_that("interval_add_impute and interval_remove_impute are inverses of each other", {
