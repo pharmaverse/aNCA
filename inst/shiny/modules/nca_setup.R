@@ -529,7 +529,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
       # Filter only the analytes and doses requested
       mydata$intervals <- mydata$intervals %>%
-        dplyr::filter(DOSNO %in% input$select_dosno,
+        filter(DOSNO %in% input$select_dosno,
                       ANALYTE %in% input$select_analyte,
                       PCSPEC %in% input$select_pcspec)
 
