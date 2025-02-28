@@ -22,12 +22,17 @@ tab_nca_ui <- function(id) {
         navset_pill_list(
           nca_results_ui(ns("nca_results")),
           nav_panel(
-            "Slopes",
-            DTOutput(ns("preslopesettings"))
-          ),
-          nav_panel(
-            "Exclusions",
-            tableOutput(ns("manual_slopes2"))
+            "Slopes Information",
+            navset_pill(
+              nav_panel(
+                "Slopes Results",
+                DTOutput(ns("preslopesettings"))
+              ),
+              nav_panel(
+                "Manual Adjustments",
+                tableOutput(ns("manual_slopes2"))
+              ),
+            )
           ),
           nav_panel(
             "Descriptive Statistics",
@@ -38,6 +43,7 @@ tab_nca_ui <- function(id) {
       ),
       nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
     )
+
   )
 
 }
@@ -224,6 +230,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     output$preslopesettings <- DT::renderDataTable({
+      req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
           any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
