@@ -182,7 +182,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
           mutate(USUBJID = as.character(USUBJID)) %>%
           group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
           summarise(DOSNO = list(unique(DOSNO)), .groups = "drop") %>%
-          unnest(DOSNO)%>%
+          unnest(DOSNO) %>%
           mutate(DOSNO = as.character(DOSNO))
       }
     })
