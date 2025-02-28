@@ -68,7 +68,7 @@ manual_slopes_table_server <- function(
     #' Adds new row to the selection/exclusion datatable
     observeEvent(input$add_rule, {
       log_trace("{id}: adding manual slopes row")
-      
+
       # Create a named list for dynamic columns based on `profiles_per_patient`
       dynamic_values <- lapply(slopes_groups(), function(col) {
         value <- as.character(unique(profiles_per_patient()[[col]]))

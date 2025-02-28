@@ -106,13 +106,37 @@ slope_selector_ui <- function(id) {
 
 
 slope_selector_server <- function(
-  id, mydata, res_nca, profiles_per_patient,
+  id, mydata, res_nca,
   pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
 
     ns <- session$ns
+    
+    # Profiles per Patient ----
+    # Define a profiles per patient
+    profiles_per_patient <- reactive({
+      req(mydata())
+
+      # Check if res_nca() is available and valid
+      if (!is.null(res_nca())) {
+        res_nca()$result %>%
+          mutate(USUBJID = as.character(USUBJID),
+                 DOSNO = as.character(DOSNO)) %>%
+          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
+          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
+          unnest(DOSNO)  # Convert lists into individual rows
+      } else {
+        mydata()$conc$data %>%
+          mutate(USUBJID = as.character(USUBJID)) %>%
+          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
+          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop") %>%
+          unnest(DOSNO) %>%
+          mutate(DOSNO = as.character(DOSNO))
+      }
+    })
+    
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
       req(mydata())

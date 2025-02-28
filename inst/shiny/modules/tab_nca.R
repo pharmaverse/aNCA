@@ -165,28 +165,6 @@ tab_nca_server <- function(id, data, grouping_vars) {
 
     nca_results_server("nca_results", res_nca, rules(), grouping_vars)
 
-    # Profiles per Patient ----
-    # Define a profiles per patient
-    profiles_per_patient <- reactive({
-      req(mydata())
-      # Check if res_nca() is available and valid
-      if (!is.null(res_nca())) {
-        res_nca()$result %>%
-          mutate(USUBJID = as.character(USUBJID),
-                 DOSNO = as.character(DOSNO)) %>%
-          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
-          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-          unnest(DOSNO)  # Convert lists into individual rows
-      } else {
-        mydata()$conc$data %>%
-          mutate(USUBJID = as.character(USUBJID)) %>%
-          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
-          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop") %>%
-          unnest(DOSNO) %>%
-          mutate(DOSNO = as.character(DOSNO))
-      }
-    })
-
     # SLOPE SELECTOR ----
     # Keep the UI table constantly actively updated
     observeEvent(input, {
@@ -216,7 +194,6 @@ tab_nca_server <- function(id, data, grouping_vars) {
       "slope_selector",
       mydata,
       res_nca,
-      profiles_per_patient,
       pk_nca_trigger,
       reactive(input$settings_upload)
     )
