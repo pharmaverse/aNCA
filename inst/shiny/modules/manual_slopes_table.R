@@ -1,22 +1,19 @@
 manual_slopes_table_ui <- function(id) {
   ns <- NS(id)
   
-  div(
-    fluidRow(
-      class = "slopes-widgets-container",
-      # Selection and exclusion controls #
-      div(
-        class = "plot-widget-group",
-        actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
-      ),
-      div(
-        class = "plot-widget-group",
-        actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
-      ),
-      div(
-        class = "plot-widget-group",
-        actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary")
-      )
+  fluidRow(
+    # Selection and exclusion controls #
+    div(
+      class = "plot-widget-group",
+      actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
+    ),
+    div(
+      class = "plot-widget-group",
+      actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
+    ),
+    div(
+      class = "plot-widget-group",
+      actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary")
     ),
     # Table with selections and exclusions #
     fluidRow(
@@ -33,20 +30,6 @@ manual_slopes_table_server <- function(
 
     ns <- session$ns
   
-    observe({
-      print("Manual Slopes Data:")
-      print(manual_slopes())
-    })
-    
-    observe({
-      print("Profiles Per Patient:")
-      print(profiles_per_patient())
-    })
-    
-    observe({
-      print("Slopes Groups:")
-      print(slopes_groups())
-    })
     # Reactive for Slope selector columns
     slope_selector_columns <- reactive({
       req(slopes_groups())
@@ -72,7 +55,6 @@ manual_slopes_table_server <- function(
           current_slopes[[col]] <- character()
         }
       }
-      
       # Define the desired column order
       ordered_cols <- c(slopes_groups(), "TYPE", "RANGE", "REASON")
       current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
@@ -107,6 +89,10 @@ manual_slopes_table_server <- function(
       manual_slopes(updated_data)
     })
     
+    output$debug_output <- renderPrint({
+      manual_slopes()
+    })
+    
     #' Removes selected row
     observeEvent(input$remove_rule, {
       log_trace("{id}: removing manual slopes row")
@@ -121,7 +107,6 @@ manual_slopes_table_server <- function(
     #' Render manual slopes table
     refresh_reactable <- reactiveVal(1)
     output$manual_slopes <- renderReactable({
-      
       log_trace("{id}: rendering slope edit data table")
       # Isolate to prevent unnecessary re-renders on every edit
       isolate({
@@ -195,6 +180,7 @@ manual_slopes_table_server <- function(
     #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
     #' the table would mean losing focus on text inputs when entering values.
     observeEvent(manual_slopes(), {
+
       reactable::updateReactable(
         outputId = "manual_slopes",
         data = manual_slopes()

@@ -5,27 +5,7 @@ slope_selector_ui <- function(id) {
   div(
     class = "slope-selector-module",
     includeCSS(file.path(assets, "slope_selector.css")),
-    manual_slopes_table_ui("manual_slopes"),
-    # fluidRow(
-    #   class = "slopes-widgets-container",
-    #   # Selection and exclusion controls #
-    #   div(
-    #     class = "plot-widget-group",
-    #     actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
-    #   ),
-    #   div(
-    #     class = "plot-widget-group",
-    #     actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
-    #   ),
-    #   div(
-    #     class = "plot-widget-group",
-    #     actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary")
-    #   )
-    # ),
-    # # Table with selections and exclusions #
-    # fluidRow(
-    #   reactableOutput(ns("manual_slopes")),
-    # ),
+    manual_slopes_table_ui(ns("manual_slopes")),
     # Help widget #
     dropdown(
       div(
