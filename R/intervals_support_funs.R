@@ -26,8 +26,9 @@
 #'   ID = c(1, 2)
 #' )
 #'
-#' o_conc <- PKNCAconc(d_conc, conc ~ time | ID / analyte)
-#' o_dose <- PKNCAdose(d_dose, dose ~ time | ID)
+#' library(PKNCA)
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
+#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
 #'
 #' intervals <- data.frame(
 #'   start = c(0, 0, 0),
@@ -194,8 +195,9 @@ interval_add_impute.data.frame <- function(intervals, target_impute, after = Inf
 #'   ID = c(1, 2)
 #' )
 #'
-#' o_conc <- PKNCAconc(d_conc, conc ~ time | ID / analyte)
-#' o_dose <- PKNCAdose(d_dose, dose ~ time | ID)
+#' library(PKNCA)
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
+#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
 #'
 #' intervals <- data.frame(
 #'   start = c(0, 0, 0),

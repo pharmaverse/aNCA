@@ -7,13 +7,13 @@
 interval_add_impute(data, ...)
 }
 \arguments{
-\item{data}{A PKNCAdata object containing the intervals and data components, or a data frame of intervals.}
+\item{data}{A PKNCAdata object containing the intervals data frame, or a data frame of intervals.}
 
 \item{...}{arguments passed to \code{interval_add_impute}.}
 
 \item{target_impute}{A character string specifying the imputation method to be added.}
 
-\item{after}{Numeric value specifying the position after which the imputation method should be added (optional).
+\item{after}{Numeric value specifying the index in which the imputation will be added (optional).
 First is 0, last Inf. If missing, the imputation method is added at the end (Inf).}
 
 \item{target_params}{A character vector specifying the parameters to be targeted (optional).
@@ -23,14 +23,14 @@ If missing, all TRUE in the intervals are taken.}
 If missing, all relevant groups are considered.}
 }
 \value{
-A modified PKNCAdata object with the specified imputation methods added to the targeted intervals.
+A modified PKNCAdata object with specified imputation methods on the target intervals.
 }
 \description{
 Add specified imputation methods to the intervals in a PKNCAdata or data.frame object.
 }
 \details{
-. If already present the target_impute method will be added substituting the existing one. All new intervals
-created will be added right after their original ones.
+If already present the target_impute method will be added substituting the existing one.
+All new intervals created will be added right after their original ones.
 }
 \examples{
 d_conc <- data.frame(
@@ -39,14 +39,16 @@ d_conc <- data.frame(
   ID = rep(1:2, each = 6),
   analyte = rep(c("Analyte1", "Analyte2"), each = 6)
 )
+
 d_dose <- data.frame(
   dose = c(100, 200),
   time = c(0, 0),
   ID = c(1, 2)
 )
 
-o_conc <- PKNCAconc(d_conc, conc ~ time | ID / analyte)
-o_dose <- PKNCAdose(d_dose, dose ~ time | ID)
+library(PKNCA)
+o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
+o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
 
 intervals <- data.frame(
   start = c(0, 0, 0),
