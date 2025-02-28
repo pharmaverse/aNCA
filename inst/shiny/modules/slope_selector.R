@@ -167,20 +167,43 @@ slope_selector_server <- function(
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
     observeEvent(list(input$plots_per_page, input$search_patient), current_page(1))
 
+    # Generate dynamically the minimum results you need for the lambda plots
+    lambdas_res <- reactive({
+      req(mydata())
+      if (!"type_interval" %in% names(mydata()$intervals)) {
+        NULL
+      } else {
+        mydata <- mydata()
+        all_params <- names(get.interval.cols())
+        
+        mydata$intervals <- mydata$intervals %>%
+          filter(type_interval == "main") %>%
+          # ToDo: For the newer version of PKNCA instead of ~FALSE this should be ~NA
+          mutate(across(setdiff(all_params, c("start", "end", "lambda.z.n.points",
+                                              "lambda.z.time.first", "r.squared",
+                                              "adj.r.squared", "cmax")), ~ FALSE))
+        
+        result_obj <- pk.nca(mydata) 
+        result_obj$result <- result_obj$result %>%
+          mutate(start_dose = start, end_dose = end)
+        
+        result_obj
+      }
+    })
+    
     #' Updating plot outputUI, dictating which plots get displayed to the user.
     #' Scans for any related reactives (page number, patient filter etc) and updates the plot output
     #' UI to have only plotlyOutput elements for desired plots.
     observeEvent(list(
-      plot_data(), res_nca(), input$plots_per_page, input$search_patient, current_page()
+      plot_data(), lambdas_res(), input$plots_per_page, input$search_patient, current_page()
     ), {
-
-      req(res_nca())
+      req(lambdas_res())
       log_trace("{id}: Updating displayed plots")
-
+      
       # Make sure the search_patient input is not NULL
       search_patient <- {
         if (is.null(input$search_patient) || length(input$search_patient) == 0) {
-          unique(res_nca()$result$USUBJID)
+          unique(lambdas_res()$result$USUBJID)
         } else {
           input$search_patient
         }
@@ -211,7 +234,7 @@ slope_selector_server <- function(
         lambda_slope_plot(
           conc_pknca_df = plot_data()$conc$data,
           row_values = as.list(row),
-          myres = res_nca(),
+          myres = lambdas_res(),
           r2adj_threshold = 0.7
         ) |>
           htmlwidgets::onRender(
