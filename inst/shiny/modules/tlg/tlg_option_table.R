@@ -63,7 +63,11 @@ tlg_option_table_server <- function(id, opt_def, data) {
         striped = TRUE,
         bordered = TRUE,
         highlight = TRUE,
-        columns = edit_widgets
+        columns = edit_widgets,
+        selection = "multiple",
+        theme = reactableTheme(
+          rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
+        )
       )
     })
 
@@ -78,6 +82,25 @@ tlg_option_table_server <- function(id, opt_def, data) {
           edits_table(edited_vars)
         })
       })
+    })
+
+    #' Add a new row to the edit table
+    observeEvent(input$add_row, {
+      edits_table() %>%
+        add_row() %>%
+        edits_table()
+
+      updateReactable(outputId = "table", data = edits_table())
+    })
+
+    #' Remove a row from the table
+    observeEvent(input$remove_row, {
+      selected <- getReactableState("table", "selected")
+      req(selected)
+      edits_table()[-selected, ] %>%
+        edits_table()
+      updateReactable(outputId = "table", data = edits_table())
+      shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
     })
 
     #' Confirm changes, apply the changes to output table.
@@ -99,12 +122,16 @@ tlg_option_table_server <- function(id, opt_def, data) {
 
 #' Generates modal that holds the editing table output.
 .tlg_option_table_popup <- function(session = shiny::getDefaultReactiveDomain()) {
+  ns <- session$ns
+
   showModal(modalDialog(
     title = "Edit table",
-    reactableOutput(session$ns("table")),
+    actionButton(ns("add_row"), "+ Add +", class = "btn-info"),
+    actionButton(ns("remove_row"), "- Remove -", class = "btn-warning"),
+    reactableOutput(ns("table")),
     footer = tagList(
-      actionButton(session$ns("confirm_changes"), "Confirm", class = "btn-success"),
-      actionButton(session$ns("cancel"), "Cancel", class = "btn-danger")
+      actionButton(ns("confirm_changes"), "Confirm", class = "btn-success"),
+      actionButton(ns("cancel"), "Cancel", class = "btn-danger")
     )
   ))
 }
