@@ -1,5 +1,5 @@
 ---
-title: "Adding new TLGs to the pacakge"
+title: "Adding new TLGs to the package"
 description: >
   Learn how to add a new TLG to the package.
 output: rmarkdown::html_vignette
@@ -16,7 +16,7 @@ In order to add new TLGs, two things are needed:
 - an implementation function that is responsible for generating an entry (table, list, graph).
 
 ## TLG definition
-Specified in [tlg.yaml](../../inst/shiny/tlg.yaml) file. Entry in that file is responsible for providing some metadata regarding the TLG (like name, descriptions, links), a function reference for creating the resulting TLG and options, taken as arguments by the generating function, that allow for quick and easy definition of widgets to be rendered in the application UI. This then allows the user to customize plots in accordance to their needs.
+Specified in [tlg.yaml](../../inst/shiny/tlg.yaml) file. Entry in that file is responsible for providing some metadata regarding the TLG (like name, descriptions, links), a function reference for creating the resulting TLG and options, taken as arguments by the generating function, that allow for quick and easy definition of widgets to be rendered in the application interface. This then allows the user to customize plots in accordance to their needs.
 
 ### General format
 The entry should have the following format. Identifying keys (wrapped in `<>`) should be provided by the creator and be unique within their scope (indentation level).
