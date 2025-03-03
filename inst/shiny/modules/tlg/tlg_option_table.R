@@ -62,7 +62,8 @@ tlg_option_table_server <- function(id, opt_def, data) {
               class = "dropdown-extra"
             ),
             stop("Unsupported extra")
-          )
+          ),
+          name = def$label
         )
       })
 
