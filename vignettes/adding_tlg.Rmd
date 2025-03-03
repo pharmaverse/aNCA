@@ -1,3 +1,15 @@
+---
+title: "Adding new TLGs to the pacakge"
+description: >
+  Learn how to add a new TLG to the package.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Adding new TLGs to the pacakge}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+This is an in-depth guide on contributing to the package. In order to get started with contributing, please read our [contributing guide](https://pharmaverse.github.io/aNCA/CONTRIBUTING.html)
+
 # Adding new Tables, Listing and Graphs
 In order to add new TLGs, two things are needed:
 - a TLG definition specified in the [tlg.yaml](../../inst/shiny/tlg.yaml) file
@@ -8,7 +20,7 @@ Specified in [tlg.yaml](../../inst/shiny/tlg.yaml) file. Entry in that file is r
 
 ### General format
 The entry should have the following format. Identifying keys (wrapped in `<>`) should be provided by the creator and be unique within their scope (indentation level).
- ```yaml
+```yaml
 # unique identifier for given entry
 <entry id>:
   # true / false whether TLG should be included as default
@@ -130,6 +142,7 @@ For examples of TLG definition implementations, please see [tlg.yaml](inst/shiny
 
 ## Implementation function
 Function should be defined within `aNCA` package and meet the following criteria:
+
   - name should be prefaced with letter appropriate for tlg type:
     - `t_*` for tables
     - `l_*` for listings
