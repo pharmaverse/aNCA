@@ -21,7 +21,7 @@ tlg_option_table_server <- function(id, opt_def, data) {
   moduleServer(id, function(input, output, session) {
     default_table <- lapply(opt_def$default_rows, \(x) {
       as.list(x) %>%
-        setNames(opt_def$cols) %>%
+        setNames(names(opt_def$cols)) %>%
         as_tibble() %>%
         mutate(across(everything(), as.character))
     }) %>%
@@ -36,11 +36,25 @@ tlg_option_table_server <- function(id, opt_def, data) {
     })
 
     output$table <- renderReactable({
+      edit_widgets <- imap(opt_def$cols, \(def, colname) {
+        if (def$type == "text") {
+          colDef(
+            cell = text_extra(
+              id = session$ns(colname)
+            )
+          )
+        } else {
+          stop("ERR")
+        }
+      })
+
+
       reactable(
         output_table(),
         striped = TRUE,
         bordered = TRUE,
-        highlight = TRUE
+        highlight = TRUE,
+        columns = edit_widgets
       )
     })
 
