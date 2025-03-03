@@ -19,6 +19,7 @@ tlg_option_table_ui <- function(id, opt_def, data) {
 #' @returns a reactive with the input value
 tlg_option_table_server <- function(id, opt_def, data) {
   moduleServer(id, function(input, output, session) {
+    #' Generates default table based on provided default option definition
     default_table <- lapply(opt_def$default_rows, \(x) {
       as.list(x) %>%
         setNames(names(opt_def$cols)) %>%
@@ -28,14 +29,20 @@ tlg_option_table_server <- function(id, opt_def, data) {
       bind_rows() %>%
       mutate(across(everything(), ~ ifelse(. == "$NA", NA, .)))
 
+    #' Output table with values that is returned by the module
     output_table <- reactiveVal(default_table)
+
+    #' Table for holding edits provided by the user, before confirming.
     edits_table <- reactiveVal(default_table)
 
+    #' Shows the editing table
     observeEvent(input$open_table, {
       .tlg_option_table_popup()
     })
 
+    #' Renders the editing table
     output$table <- renderReactable({
+      #' Create edit widgets using `reactable.extras` based on provided definitions
       edit_widgets <- imap(opt_def$cols, \(def, colname) {
         colDef(
           cell = switch(
@@ -60,9 +67,9 @@ tlg_option_table_server <- function(id, opt_def, data) {
       )
     })
 
+    #' Attach observers that listen to any changes provided by the user.
     observe({
       req(output_table())
-      # Dynamically attach observers for each column
       purrr::walk(names(opt_def$cols), \(colname) {
         observeEvent(input[[colname]], {
           edit <- input[[colname]]
@@ -73,11 +80,13 @@ tlg_option_table_server <- function(id, opt_def, data) {
       })
     })
 
+    #' Confirm changes, apply the changes to output table.
     observeEvent(input$confirm_changes, {
       removeModal()
       output_table(edits_table())
     })
 
+    #' Cancel changes, close the modal, reset values.
     observeEvent(input$cancel, {
       removeModal()
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
@@ -88,6 +97,7 @@ tlg_option_table_server <- function(id, opt_def, data) {
   })
 }
 
+#' Generates modal that holds the editing table output.
 .tlg_option_table_popup <- function(session = shiny::getDefaultReactiveDomain()) {
   showModal(modalDialog(
     title = "Edit table",
