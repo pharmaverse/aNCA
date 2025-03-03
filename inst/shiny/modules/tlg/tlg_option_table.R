@@ -37,15 +37,18 @@ tlg_option_table_server <- function(id, opt_def, data) {
 
     output$table <- renderReactable({
       edit_widgets <- imap(opt_def$cols, \(def, colname) {
-        if (def$type == "text") {
-          colDef(
-            cell = text_extra(
-              id = session$ns(colname)
-            )
+        colDef(
+          cell = switch(
+            def$type,
+            text = text_extra(id = session$ns(colname)),
+            select = dropdown_extra(
+              id = session$ns(colname),
+              choices = def$choices,
+              class = "dropdown-extra"
+            ),
+            stop("Unsupported extra")
           )
-        } else {
-          stop("ERR")
-        }
+        )
       })
 
       reactable(
