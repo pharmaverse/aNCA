@@ -16,7 +16,15 @@ descriptive_statistics_ui <- function(id) {
   tagList(
     pickerInput(
       inputId = ns("select_display_parameters"),
-      label = "Filter columns to display:",
+      label = "Parameter to display:",
+      choices = NULL,
+      selected = NULL,
+      multiple = TRUE,
+      options = list(`actions-box` = TRUE)
+    ),
+    pickerInput(
+      inputId = ns("select_display_statistic"),
+      label = "Statistic to display:",
       choices = NULL,
       selected = NULL,
       multiple = TRUE,
@@ -26,14 +34,14 @@ descriptive_statistics_ui <- function(id) {
       orderInput(
         ns("summary_groupby_source"),
         "Drag and drop these variables...",
-        items = "USUBJID",
+        items = c("USUBJID", "DOSNO"),
         width = shiny::validateCssUnit("100%"),
         connect = ns("summary_groupby")
       ),
       orderInput(
         ns("summary_groupby"),
         "..to hierarchically group by (order matters!):",
-        items = c("DOSNO"),
+        items = NULL,
         width = shiny::validateCssUnit("100%"),
         connect = ns("summary_groupby_source"),
         placeholder = "Drag items here to group hierarchically..."
@@ -103,6 +111,14 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         choices = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby)),
         selected = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
       )
+
+      # Update the select display parameters picker input
+      updatePickerInput(
+        session,
+        "select_display_statistic",
+        choices = unique(summary_stats()$Statistic),
+        selected = unique(summary_stats()$Statistic)
+      )
     })
 
     # Render the reactive summary table in a data table
@@ -111,7 +127,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       log_info("Rendering descriptive statistics table")
 
       data <- summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters)
+        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
+        filter(Statistic %in% input$select_display_statistic)
 
       reactable(
         data,
