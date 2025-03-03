@@ -8,7 +8,7 @@ tlg_option_table_ui <- function(id, opt_def, data) {
 
   label <- if (is.null(opt_def$label)) id else opt_def$label
 
-  reactableOutput(ns("table"))
+  actionButton(ns("open_table"), label = label)
 }
 
 #' Function generating an input widget server for TLG option.
@@ -30,10 +30,28 @@ tlg_option_table_server <- function(id, opt_def, data) {
 
     output_table <- reactiveVal(default_table)
 
+
+    observeEvent(input$open_table, {
+      .tlg_option_table_popup()
+    })
+
     output$table <- renderReactable({
-      reactable(output_table(), striped = TRUE, bordered = TRUE, highlight = TRUE)
+      reactable(
+        output_table(),
+        striped = TRUE,
+        bordered = TRUE,
+        highlight = TRUE
+      )
     })
 
     output_table
   })
+}
+
+.tlg_option_table_popup <- function(session = shiny::getDefaultReactiveDomain()) {
+  showModal(modalDialog(
+    title = "Edit table",
+    reactableOutput(session$ns("table"))
+  ))
+
 }
