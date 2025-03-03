@@ -50,7 +50,15 @@ tlg_option_table_server <- function(id, opt_def, data) {
             text = text_extra(id = session$ns(colname)),
             select = dropdown_extra(
               id = session$ns(colname),
-              choices = def$choices,
+              choices = {
+                if (isTRUE(def$choices == ".colnames")) {
+                  names(data())
+                } else if (length(def$choices) == 1 && grepl("^\\$", def$choices)) {
+                  unique(data()[, sub("^\\$", "", def$choices)])
+                } else {
+                  def$choices
+                }
+              },
               class = "dropdown-extra"
             ),
             stop("Unsupported extra")
@@ -126,12 +134,15 @@ tlg_option_table_server <- function(id, opt_def, data) {
 
   showModal(modalDialog(
     title = "Edit table",
-    actionButton(ns("add_row"), "+ Add +", class = "btn-info"),
-    actionButton(ns("remove_row"), "- Remove -", class = "btn-warning"),
+    div(style = "display: flex; gap: 1em; padding-bottom: 1em;",
+      actionButton(ns("add_row"), "+ Add +", class = "btn-info"),
+      actionButton(ns("remove_row"), "- Remove -", class = "btn-warning")
+    ),
     reactableOutput(ns("table")),
     footer = tagList(
       actionButton(ns("confirm_changes"), "Confirm", class = "btn-success"),
       actionButton(ns("cancel"), "Cancel", class = "btn-danger")
-    )
+    ),
+    size = "l"
   ))
 }
