@@ -15,7 +15,7 @@ This guide will provide users with information on how to get started with the aN
 
 ### Uploading a dataset
 
-Click *Upload File* and select the dataset you would like to use. The data must be in `.csv` or `.rds` format. The best input for the app is data that follows the ADNCA format. Other formats of data will also work. Alternatively, for exploring the app, Users can use the Dummy dataset that is already uploaded.
+Click **Upload File** and select the dataset you would like to use. The data must be in `.csv` or `.rds` format. The best input for the app is data that follows the ADNCA format. Other formats of data will also work. Alternatively, for exploring the app, Users can use the Dummy dataset that is already uploaded.
 
 <img src="images/get_started/01.png" alt="Data upload"/>
 
@@ -53,7 +53,7 @@ Once the dataset has been uploaded, you can verify that the data is as expected,
 
 -   For Unit Variables, if your dataset has a defined column for units, select it. Otherwise, by scrolling down, you can select the units for the corresponding columns.
 
--   Click *Submit Mapping*. You will be automatically directed to the next tab.
+-   Click **Submit Mapping**. You will be automatically directed to the next tab.
 
 <img src="images/get_started/02.png" alt="Mapping tab"/> <img src="images/get_started/03.png" alt="Mapping"/>
 
@@ -65,7 +65,7 @@ Check that the data contains all the information you were expecting and is mappe
 
 <blockquote class="important">
 
-Don’t forget to scroll down and click *Submit Filters*!
+Don’t forget to scroll down and click **Submit Filters**!
 
 </blockquote>
 
@@ -81,19 +81,19 @@ Click on the *NCA* tab at the top of the screen to switch to the next section.
 
 <img src="images/get_started/06.png" alt="NCA settings"/>
 
-2.  Click *Run NCA* at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
+2.  Click **Run NCA** at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
 
 <img src="images/get_started/07.png" alt="Running NCA"/>
 
 <blockquote class="note">
-The *Save Project Settings*/*Upload Settings* option is not working currently.
+The **Save Project Settings**/**Upload Settings** option is not working currently.
 </blockquote>
 
 # Step 3: NCA Results
 
 ## Main Results
 
-The *NCA Results* tab shows the individual results of the NCA. You can select which parameters you would like to view. Results in red have been flagged as *FALSE* for the rule sets selected, results in purple are flagged as *MISSING*, and results in white are not flagged.
+The *NCA Results* tab shows the individual results of the NCA. You can select which parameters you would like to view. Results in red have been flagged as "FALSE" for the rule sets selected, results in purple are flagged as "MISSING", and results in white are not flagged.
 
 ## Exclusions and Manual Slopes
 
@@ -105,8 +105,8 @@ There are two different ways to add exclusions/selections to the slopes.
 
 #### Via the Buttons
 
-1.  For selection and exclusion, click *+ Exclusion/Selection* and input the corresponding information. RANGE refers to the data point number in the slope, which can be seen by hovering over the points in the plots below.
-2.  To remove, select the sample row and click *- Remove selected rows*.
+1.  For selection and exclusion, click **+ Exclusion/Selection** and input the corresponding information. RANGE refers to the data point number in the slope, which can be seen by hovering over the points in the plots below.
+2.  To remove, select the sample row and click **- Remove selected rows**.
 
 <img src="images/get_started/09.png" alt="Slope selection buttons"/>
 
@@ -122,7 +122,7 @@ For in-app guidance, you can click the <span class="help-button">?</span> button
 
 #### Applying the exclusions
 
-Once the exclusions/selections have been added, click *Apply*.
+Once the exclusions/selections have been added, click **Apply**.
 
 <img src="images/get_started/11.png" alt="Applying exclusions/selections"/>
 
@@ -130,7 +130,7 @@ You can check if they have been applied in the *Results* page, on the *Exclusion
 
 <blockquote class="important">
 
-If you do not click *Apply*, the manual slopes will not be added!
+If you do not click **Apply**, the manual slopes will not be added!
 
 </blockquote>
 
