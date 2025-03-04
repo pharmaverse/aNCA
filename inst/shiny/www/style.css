@@ -262,3 +262,9 @@ h5 {
     }
   }
 }
+
+.modal-dialog:has(.tlg-option-table) {
+  max-width: none;
+  margin-left: 1em;
+  margin-right: 1em;
+}

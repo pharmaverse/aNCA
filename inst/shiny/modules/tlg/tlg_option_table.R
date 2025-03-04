@@ -139,16 +139,20 @@ tlg_option_table_server <- function(id, opt_def, data) {
   ns <- session$ns
 
   showModal(modalDialog(
+    class = "tlg-option-table",
     title = "Edit table",
-    div(style = "display: flex; gap: 1em; padding-bottom: 1em;",
-      actionButton(ns("add_row"), "+ Add +", class = "btn-info"),
-      actionButton(ns("remove_row"), "- Remove -", class = "btn-warning")
+    div(
+      style = "display: flex; flex-direction: column; width: 100%;",
+      div(style = "display: flex; gap: 1em; padding-bottom: 1em;",
+        actionButton(ns("add_row"), "+ Add +", class = "btn-info"),
+        actionButton(ns("remove_row"), "- Remove -", class = "btn-warning")
+      ),
+      reactableOutput(ns("table"))
     ),
-    reactableOutput(ns("table")),
     footer = tagList(
       actionButton(ns("confirm_changes"), "Confirm", class = "btn-success"),
       actionButton(ns("cancel"), "Cancel", class = "btn-danger")
     ),
-    size = "l"
+    size = "xl"
   ))
 }
