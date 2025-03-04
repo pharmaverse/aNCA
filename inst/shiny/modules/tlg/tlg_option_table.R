@@ -35,6 +35,9 @@ tlg_option_table_server <- function(id, opt_def, data) {
     #' Table for holding edits provided by the user, before confirming.
     edits_table <- reactiveVal(default_table)
 
+    #' For controling reactable re-rendering
+    refresh_reactable <- reactiveVal(0)
+
     #' Shows the editing table
     observeEvent(input$open_table, {
       .tlg_option_table_popup()
@@ -68,7 +71,7 @@ tlg_option_table_server <- function(id, opt_def, data) {
       })
 
       reactable(
-        output_table(),
+        edits_table(),
         striped = TRUE,
         bordered = TRUE,
         highlight = TRUE,
@@ -78,7 +81,8 @@ tlg_option_table_server <- function(id, opt_def, data) {
           rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
         )
       )
-    })
+    }) %>%
+      shiny::bindEvent(list(output_table(), refresh_reactable()))
 
     #' Attach observers that listen to any changes provided by the user.
     observe({
@@ -99,7 +103,8 @@ tlg_option_table_server <- function(id, opt_def, data) {
         add_row() %>%
         edits_table()
 
-      updateReactable(outputId = "table", data = edits_table())
+      shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
+      refresh_reactable(refresh_reactable() + 1)
     })
 
     #' Remove a row from the table
@@ -108,8 +113,8 @@ tlg_option_table_server <- function(id, opt_def, data) {
       req(selected)
       edits_table()[-selected, ] %>%
         edits_table()
-      updateReactable(outputId = "table", data = edits_table())
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
+      refresh_reactable(refresh_reactable() + 1)
     })
 
     #' Confirm changes, apply the changes to output table.
