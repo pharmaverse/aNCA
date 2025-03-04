@@ -48,9 +48,12 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
       final_results <- final_results %>%
         inner_join(
           res_nca()$data$conc$data %>%
-            select(any_of(c(grouping_vars(),
-                            unname(unlist(res_nca()$data$conc$columns$groups)))),
-                   ROUTE)
+            select(
+              any_of(c(grouping_vars(),
+                       unname(unlist(res_nca()$data$conc$columns$groups)),
+                       "DOSNO",
+                       "ROUTE"))
+            )
         ) %>%
         distinct()
 
