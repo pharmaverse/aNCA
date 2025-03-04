@@ -168,10 +168,45 @@ Currently work in progress
 
 </blockquote>
 
-## Step 5: TLG
-
+## Step 5: TLGs
 <blockquote class="warning">
-
-Currently work in progress
-
+Currently work in progress. Not all TLGs and features are available.
 </blockquote>
+
+After performing the analysis, you can prepare reports regarding the analysis, including various tables, listings and graphs.
+
+### Order details
+Firstly, you will need to prepare an order for TLGs. Table in the *Order details* tab will display some default TLGs with their metadata. You can add additional reports by clicking the **Add TLG** button. This will bring up a list of available, defined TLGs. Select the ones you are interested in and click the **Add TLGs to Order** button. You can also remove unwanted entries by selecting them and clicking **Remove TLG**.
+
+When you are happy with the selection, click **Submit Order Details**.
+
+<img src="images/get_started/tlg_01.png" alt="Default TLG table"/>
+
+### Navigating the TLGs
+The application provides three separate tabs for differentiating **Tables**, **Listings** and **Graphs**.
+
+Each tab will show a sidebar on the left of the screen. This will let you navigate each specific entry.
+
+<img src="images/get_started/tlg_02.png" alt="TLG navigation"/>
+
+Using the widgets at the top you can specify the number of entries per page and change the pages.
+
+<img src="images/get_started/tlg_03.png" alt="TLG pages"/>
+
+Lastly, the widgets on the right are used for customizing the resulting reports.
+
+<img src="images/get_started/tlg_04.png" alt="TLG customization"/>
+
+### Customizing the TLGs
+Exact customization options available for any given TLGs will depend on their implementation. Usually, you will be able to specify things like titles and footnotes, axis labels, limits or grouping variables.
+
+Simply provide the desired value in a given widget and the TLG will update in real time.
+
+Leaving a widget empty will induce default behavior of the TLG.
+
+Some fields will provide additional functionalities. For text fields, a special syntax might be used to reference the values or attributes of the data:
+
+- prefacing a column name with `!` will reference the **label attribute** of a given column, e.g. `!DOSEU` will translate to `Treatment Dose Units`.
+- prefacing a column name with `$` will reference the **value** for a given column, e.g. `$DOSEU` will translate to mg (for the dummy dataset).
+
+You can always click on the ? button for help.
