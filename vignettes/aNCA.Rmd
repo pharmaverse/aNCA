@@ -81,11 +81,13 @@ Click on the *NCA* tab at the top of the screen to switch to the next section.
 
 <img src="images/get_started_v2/06.png" alt="NCA settings"/>
 
-2.  Note that the *Save Project Settings*/*Upload Settings* option is not working currently.
-
-3.  Click *Run NCA* at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
+2.  Click *Run NCA* at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
 
 <img src="images/get_started_v2/07.png" alt="Running NCA"/>
+
+<blockquote class="note">
+The *Save Project Settings*/*Upload Settings* option is not working currently.
+</blockquote>
 
 # Step 3: NCA Results
 
@@ -101,7 +103,7 @@ Click on the *Slopes* tab to view more detailed information about the slopes sel
 
 There are two different ways to add exclusions/selections to the slopes.
 
-#### Via the Buttons.
+#### Via the Buttons
 
 1.  For selection and exclusion, click *+ Exclusion/Selection* and input the corresponding information. RANGE refers to the data point number in the slope, which can be seen by hovering over the points in the plots below.
 2.  To remove, select the sample row and click *- Remove selected rows*.
@@ -110,7 +112,7 @@ There are two different ways to add exclusions/selections to the slopes.
 
 #### Via the Plots
 
-For in-app guidance, you can click the [?]{style="border:thin solid #1f6feb;border-radius:1em;font-weight:bold;color:#1f6feb;margin:.1em .5em .1em .5em;"} button.
+For in-app guidance, you can click the ? button.
 
 <img src="images/get_started_v2/10.png" alt="Guidance"/>
 
@@ -132,9 +134,9 @@ If you do not click *Apply*, the manual slopes will not be added!
 
 </blockquote>
 
-#### Parameter datasets
+#### Parameter Datasets
 
-In the Parameter datasets tab you can see and export the ADPP and PP datasets.
+In the Parameter Datasets tab you can see and export the ADPP and PP datasets.
 
 <img src="images/get_started_v2/12.png" alt="Parameter Datasets"/>
 
@@ -152,17 +154,13 @@ After completing an NCA and creating manual slopes, you may want to save these f
 
 Click the button *Save Project Settings* on top of the tabs. This will download a .csv file.
 
-<img src="images/get_started/15.png" alt="Saving settings"/>
-
 #### Uploading
 
-To upload settings in a later analysis, after column mapping, in *Setup*, in the *NCA Setings* tab, click *Browse*. The inclusions and exclusions will be automatically added to the data.
-
-<img src="images/get_started/16.png" alt="Uploading settings"/>
+To upload settings in a later analysis, after column mapping, in *Setup*, in the *NCA Settings* tab, click *Browse*. The inclusions and exclusions will be automatically added to the data.
 
 ## Step 4: Visualization
 
-In the *Visualisation* tab, you will find the different visualization options, including Individual Plots, Mean Plots, Descriptive Statistics, and Boxplots.
+In the *Visualization* tab, you will find the different visualization options, including Individual Plots, Mean Plots, Descriptive Statistics, and Boxplots.
 
 <blockquote class="warning">
 
