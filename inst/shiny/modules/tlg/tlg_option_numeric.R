@@ -6,7 +6,7 @@
 tlg_option_numeric_ui <- function(id, opt_def, data) {
   ns <- NS(id)
 
-  label <- if (is.null(opt_def$label)) id else opt_def$label
+  label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
 
   numericInput(
     ns("numeric"),

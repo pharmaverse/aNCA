@@ -1,4 +1,4 @@
-adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
+adpc <- read.csv(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"))
 attr(adpc$USUBJID, "label") <- "Subject ID"
 attr(adpc$DOSEU, "label") <- "Dose unit"
 adpc_single <- dplyr::filter(adpc, USUBJID == "11101")
