@@ -241,7 +241,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
         ) %>%
         DT::datatable(
           extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = TRUE,
+          options = list(scrollX = TRUE, scrollY = "80vh",
                          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
                          pageLength = -1, fixedHeader = TRUE)
         ) %>%
