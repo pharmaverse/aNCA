@@ -192,7 +192,7 @@ slope_selector_server <- function(
                         unname(unlist(mydata()$conc$columns$groups)),
                         "DOSNO"))) %>%
         filter(USUBJID %in% search_patient) %>%
-        select(slopes_groups()) %>%
+        select(slopes_groups(), USUBJID) %>%
         unique() %>%
         arrange(USUBJID)
 
