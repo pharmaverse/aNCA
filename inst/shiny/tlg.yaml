@@ -68,8 +68,9 @@ l_pkconc:
           choices: ["", "round", "signif"]
           label: "Formatting function"
         digits:
-          type: text
+          type: select
           label: "Digits"
+          choices: ["", "0", "1", "2", "3", "4"]
       default_rows:
         - ["USUBJID", "Unique Subject Identifier",                       "NA", "0", "center", "$NA",   "$NA"]
         - ["AVISIT",  "Analysis Visit",                                  "NA", "0", "center", "$NA",   "$NA"]
