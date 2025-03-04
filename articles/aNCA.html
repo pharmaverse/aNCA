@@ -80,21 +80,23 @@ with the aNCA app.</p>
 <div class="section level4">
 <h4 id="uploading-a-dataset">Uploading a dataset<a class="anchor" aria-label="anchor" href="#uploading-a-dataset"></a>
 </h4>
-<p>Click <em>Upload File</em> and select the dataset you would like to
-use. The data must be in <code>.csv</code> or <code>.rds</code> format.
-The best input for the app is data that follows the ADNCA format. Other
-formats of data will also work.</p>
+<p>Click <strong>Upload File</strong> and select the dataset you would
+like to use. The data must be in <code>.csv</code> or <code>.rds</code>
+format. The best input for the app is data that follows the ADNCA
+format. Other formats of data will also work. Alternatively, for
+exploring the app, Users can use the Dummy dataset that is already
+uploaded.</p>
 <p><img src="images%2Fget_started%2F01.png" alt="Data upload"></p>
 </div>
 <div class="section level4">
 <h4 id="data-format">Data format<a class="anchor" aria-label="anchor" href="#data-format"></a>
 </h4>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
-<col width="20%">
-<col width="11%">
-<col width="53%">
-<col width="14%">
+<col width="24%">
+<col width="24%">
+<col width="26%">
+<col width="24%">
 </colgroup>
 <thead><tr class="header">
 <th></th>
@@ -237,17 +239,20 @@ formats of data will also work.</p>
 <h4 id="data-mapping">Data mapping<a class="anchor" aria-label="anchor" href="#data-mapping"></a>
 </h4>
 <p>Once the dataset has been uploaded, you can verify that the data is
-as expected, and click on the <em>Mapping and Filters</em> tab. - Map
-the correct columns in your dataset to the corresponding label. For more
-information on what the column requires, hover over the input boxes. -
-For Unit Variables, if your dataset has a defined column for units,
-select it. Otherwise manually input the units for the corresponding
-columns. - Click <em>Submit Mapping</em>. You will be automatically
-directed to the next tab.</p>
+as expected, and click on the <em>Mapping and Filters</em> tab.</p>
+<ul>
+<li><p>Map the correct columns in your dataset to the corresponding
+label.</p></li>
+<li><p>For Unit Variables, if your dataset has a defined column for
+units, select it. Otherwise, by scrolling down, you can select the units
+for the corresponding columns.</p></li>
+<li><p>Click <strong>Submit Mapping</strong>. You will be automatically
+directed to the next tab.</p></li>
+</ul>
 <p><img src="images%2Fget_started%2F02.png" alt="Mapping tab"><img src="images%2Fget_started%2F03.png" alt="Mapping"></p>
 </div>
 <div class="section level4">
-<h4 id="verifying-adding-filters">Verifying adding filters<a class="anchor" aria-label="anchor" href="#verifying-adding-filters"></a>
+<h4 id="verifying-and-adding-filters">Verifying and adding filters<a class="anchor" aria-label="anchor" href="#verifying-and-adding-filters"></a>
 </h4>
 <p>Check that the data contains all the information you were expecting
 and is mapped correctly. If you want to change the data by adding
@@ -255,7 +260,8 @@ filters, return to the <em>Mapping and Filters</em> page, then scroll
 down to add filters.</p>
 <p><img src="images%2Fget_started%2F04.png" alt="Adding filters"></p>
 <blockquote class="important">
-Don’t forget to scroll down and click submit!
+<p>Don’t forget to scroll down and click <strong>Submit
+Filters</strong>!</p>
 </blockquote>
 <p><img src="images%2Fget_started%2F05.png" alt="Submitting filters"></p>
 </div>
@@ -269,23 +275,24 @@ the next section.</p>
 <h3 id="data-selection">Data selection<a class="anchor" aria-label="anchor" href="#data-selection"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li><p>Choose the analytes you would like to run the NCA on.</p></li>
-<li><p>Click <em>Submit</em> and check that the data is as
-expected.</p></li>
+<li>
+<em>NCA settings</em>: Choose the Analyte, Dose Number(s) and/or
+Specimen(s) you would like to run the NCA on, the extrapolation method
+and the NCA parameters to calculate. Select additional options including
+partial AUCs, or rule sets to flag the data. A table summarizes the
+settings you have selected.</li>
 </ol>
-<p><img src="images%2Fget_started%2F06.png" alt="NCA tab"></p>
-<ol start="3" style="list-style-type: decimal">
-<li>Move to <em>Settings</em> in the menu on the left hand side. Choose
-the Dose Number(s) you would like to run the NCA on and the
-extrapolation method. Select additional options including partial AUCs,
-or rule sets to flag the data.</li>
-</ol>
-<p><img src="images%2Fget_started%2F07.png" alt="NCA settings"></p>
-<ol start="4" style="list-style-type: decimal">
-<li>Click <em>Run NCA</em>. You will automatically be redirected to the
+<p><img src="images%2Fget_started%2F06.png" alt="NCA settings"></p>
+<ol start="2" style="list-style-type: decimal">
+<li>Click <strong>Run NCA</strong> at the top of the page and check that
+the data is as expected. You will automatically be redirected to the
 <em>Results</em> tab.</li>
 </ol>
-<p><img src="images%2Fget_started%2F08.png" alt="Running NCA"></p>
+<p><img src="images%2Fget_started%2F07.png" alt="Running NCA"></p>
+<blockquote class="note">
+The <strong>Save Project Settings</strong>/<strong>Upload
+Settings</strong> option is not working currently.
+</blockquote>
 </div>
 </div>
 <div class="section level2">
@@ -294,47 +301,40 @@ or rule sets to flag the data.</li>
 <div class="section level3">
 <h3 id="main-results">Main Results<a class="anchor" aria-label="anchor" href="#main-results"></a>
 </h3>
-<p>The NCA results tab shows the individual results of the NCA. You can
-select which parameters you would like to view. Results in red have been
-flagged as <em>False</em> for the rule sets selected, results in purple
-are flagged as <em>Missing</em>, and results in white are not
+<p>The <em>NCA Results</em> tab shows the individual results of the NCA.
+You can select which parameters you would like to view. Results in red
+have been flagged as “FALSE” for the rule sets selected, results in
+purple are flagged as “MISSING”, and results in white are not
 flagged.</p>
-<p>Click on the <em>Slopes</em> tab to view more detailed information
-about the slopes selected in the NCA.</p>
-<p>In <em>Parameter datasets</em> you can see and export the ADPP and PP
-datasets.</p>
 </div>
 <div class="section level3">
 <h3 id="exclusions-and-manual-slopes">Exclusions and Manual Slopes<a class="anchor" aria-label="anchor" href="#exclusions-and-manual-slopes"></a>
 </h3>
-<p>To add exclusions or manual slope selections, redirect to the
-<em>Slope Selector</em> tab in the <em>Setup</em> page.</p>
-<p><img src="images%2Fget_started%2F09.png" alt="Slope selection"></p>
+<p>Click on the <em>Slopes</em> tab to view more detailed information
+about the slopes selected in the NCA. To add exclusions or manual slope
+selections, redirect to the <em>Slope Selector</em> tab in the
+<em>Setup</em> page.</p>
+<p><img src="images%2Fget_started%2F08.png" alt="Slope selection"></p>
 <p>There are two different ways to add exclusions/selections to the
 slopes.</p>
 <div class="section level5">
-<h5 id="via-the-buttons-">Via the Buttons.<a class="anchor" aria-label="anchor" href="#via-the-buttons-"></a>
+<h5 id="via-the-buttons">Via the Buttons<a class="anchor" aria-label="anchor" href="#via-the-buttons"></a>
 </h5>
 <ol style="list-style-type: decimal">
-<li>Click <em>+ Exclusion/Selection</em>
-</li>
-<li>Input required information: Type, Patient, Profile, Range, Reason.
-IXrange is the Data Point number in the slope, which can be seen by
+<li>For selection and exclusion, click <strong>+
+Exclusion/Selection</strong> and input the corresponding information.
+RANGE refers to the data point number in the slope, which can be seen by
 hovering over the points in the plots below.</li>
+<li>To remove, select the sample row and click <strong>- Remove selected
+rows</strong>.</li>
 </ol>
-<p><img src="images%2Fget_started%2F10.png" alt="Slope selection buttons"></p>
-<ol start="3" style="list-style-type: decimal">
-<li>To remove, select the sample row and click <em>-Remove selected
-rows</em>
-</li>
-</ol>
-<p><img src="images%2Fget_started%2F11.png" alt="Removing selections"></p>
+<p><img src="images%2Fget_started%2F09.png" alt="Slope selection buttons"></p>
 </div>
 <div class="section level5">
 <h5 id="via-the-plots">Via the Plots<a class="anchor" aria-label="anchor" href="#via-the-plots"></a>
 </h5>
-<p>For in-app guidance, you can click the <span style="border:thin solid #1f6feb;border-radius:1em;font-weight:bold;color:#1f6feb;margin:.1em .5em .1em .5em;">?</span>
-button.</p>
+<p>For in-app guidance, you can click the <span class="help-button">?</span> button.</p>
+<p><img src="images%2Fget_started%2F10.png" alt="Guidance"></p>
 <ol style="list-style-type: decimal">
 <li>For selection, click the first point and then the last point you
 want included in the slope. The plot should then update and a row should
@@ -344,59 +344,124 @@ should update along with the table.</li>
 <li>To remove, either remove via the table selection, or repeat the same
 action (i.e. select a new slope, double click the same point).</li>
 </ol>
-<p><img src="images%2Fget_started%2F12.png" alt="Slope plots"></p>
 </div>
 <div class="section level5">
 <h5 id="applying-the-exclusions">Applying the exclusions<a class="anchor" aria-label="anchor" href="#applying-the-exclusions"></a>
 </h5>
 <p>Once the exclusions/selections have been added, click
-<em>Apply</em>.</p>
-<p><img src="images%2Fget_started%2F13.png" alt="Applying exclusions/selections"></p>
-<p>You can check if they have been applied in the <em>Results</em> -&gt;
-<em>Exclusions</em> tab.</p>
-<p><img src="images%2Fget_started%2F14.png" alt="Inspecting exclusions/selections"></p>
+<strong>Apply</strong>.</p>
+<p><img src="images%2Fget_started%2F11.png" alt="Applying exclusions/selections"></p>
+<p>You can check if they have been applied in the <em>Results</em> page,
+on the <em>Exclusions</em> tab.</p>
 <blockquote class="important">
-If you do not click <em>Apply</em>, the manual slopes will not be added!
+<p>If you do not click <strong>Apply</strong>, the manual slopes will
+not be added!</p>
 </blockquote>
+</div>
+<div class="section level5">
+<h5 id="parameter-datasets">Parameter Datasets<a class="anchor" aria-label="anchor" href="#parameter-datasets"></a>
+</h5>
+<p>In the Parameter Datasets tab you can see and export the ADPP and PP
+datasets.</p>
+<p><img src="images%2Fget_started%2F12.png" alt="Parameter Datasets"></p>
 </div>
 </div>
 <div class="section level3">
 <h3 id="saving-and-uploading-settings">Saving and uploading settings<a class="anchor" aria-label="anchor" href="#saving-and-uploading-settings"></a>
 </h3>
+<blockquote class="warning">
+<p>Currently work in progress</p>
+</blockquote>
 <p>After completing an NCA and creating manual slopes, you may want to
 save these for next time.</p>
 <div class="section level5">
 <h5 id="saving">Saving<a class="anchor" aria-label="anchor" href="#saving"></a>
 </h5>
-<p>Click <em>Results</em> -&gt; <em>NCA Results</em> -&gt; <em>Save
-Project</em> Settings. This will download a .csv file.</p>
-<p><img src="images%2Fget_started%2F15.png" alt="Saving settings"></p>
+<p>Click the button <em>Save Project Settings</em> on top of the tabs.
+This will download a .csv file.</p>
 </div>
 <div class="section level5">
 <h5 id="uploading">Uploading<a class="anchor" aria-label="anchor" href="#uploading"></a>
 </h5>
-<p>To upload settings next time, after column mapping, <em>Setup</em>
--&gt; <em>Data Selection</em> -&gt; <em>Upload</em> settings. The
-inclusions and exclusions will be automatically added to the data.</p>
-<p><img src="images%2Fget_started%2F16.png" alt="Uploading settings"></p>
+<p>To upload settings in a later analysis, after column mapping, in
+<em>Setup</em>, in the <em>NCA Settings</em> tab, click <em>Browse</em>.
+The inclusions and exclusions will be automatically added to the
+data.</p>
 </div>
 </div>
 <div class="section level3">
 <h3 id="step-4-visualization">Step 4: Visualization<a class="anchor" aria-label="anchor" href="#step-4-visualization"></a>
 </h3>
 <p>In the <em>Visualization</em> tab, you will find the different
-visualization options, including individual plots, mean plots,
-descriptive statistics, and boxplots.</p>
+visualization options, including Individual Plots, Mean Plots,
+Descriptive Statistics, and Boxplots.</p>
 <blockquote class="warning">
-Currently work in progress
+<p>Currently work in progress</p>
 </blockquote>
 </div>
 <div class="section level3">
-<h3 id="step-5-tlg">Step 5: TLG<a class="anchor" aria-label="anchor" href="#step-5-tlg"></a>
+<h3 id="step-5-tlgs">Step 5: TLGs<a class="anchor" aria-label="anchor" href="#step-5-tlgs"></a>
 </h3>
 <blockquote class="warning">
-Currently work in progress
+Currently work in progress. Not all TLGs and features are available.
 </blockquote>
+<p>After performing the analysis, you can prepare reports regarding the
+analysis, including various tables, listings and graphs.</p>
+<div class="section level4">
+<h4 id="order-details">Order details<a class="anchor" aria-label="anchor" href="#order-details"></a>
+</h4>
+<p>Firstly, you will need to prepare an order for TLGs. Table in the
+<em>Order details</em> tab will display some default TLGs with their
+metadata. You can add additional reports by clicking the <strong>Add
+TLG</strong> button. This will bring up a list of available, defined
+TLGs. Select the ones you are interested in and click the <strong>Add
+TLGs to Order</strong> button. You can also remove unwanted entries by
+selecting them and clicking <strong>Remove TLG</strong>.</p>
+<p>When you are happy with the selection, click <strong>Submit Order
+Details</strong>.</p>
+<p><img src="images%2Fget_started%2Ftlg_01.png" alt="Default TLG table"></p>
+</div>
+<div class="section level4">
+<h4 id="navigating-the-tlgs">Navigating the TLGs<a class="anchor" aria-label="anchor" href="#navigating-the-tlgs"></a>
+</h4>
+<p>The application provides three separate tabs for differentiating
+<strong>Tables</strong>, <strong>Listings</strong> and
+<strong>Graphs</strong>.</p>
+<p>Each tab will show a sidebar on the left of the screen. This will let
+you navigate each specific entry.</p>
+<p><img src="images%2Fget_started%2Ftlg_02.png" alt="TLG navigation"></p>
+<p>Using the widgets at the top you can specify the number of entries
+per page and change the pages.</p>
+<p><img src="images%2Fget_started%2Ftlg_03.png" alt="TLG pages"></p>
+<p>Lastly, the widgets on the right are used for customizing the
+resulting reports.</p>
+<p><img src="images%2Fget_started%2Ftlg_04.png" alt="TLG customization"></p>
+</div>
+<div class="section level4">
+<h4 id="customizing-the-tlgs">Customizing the TLGs<a class="anchor" aria-label="anchor" href="#customizing-the-tlgs"></a>
+</h4>
+<p>Exact customization options available for any given TLGs will depend
+on their implementation. Usually, you will be able to specify things
+like titles and footnotes, axis labels, limits or grouping
+variables.</p>
+<p>Simply provide the desired value in a given widget and the TLG will
+update in real time.</p>
+<p>Leaving a widget empty will induce default behavior of the TLG.</p>
+<p>Some fields will provide additional functionalities. For text fields,
+a special syntax might be used to reference the values or attributes of
+the data:</p>
+<ul>
+<li>prefacing a column name with <code>!</code> will reference the
+<strong>label attribute</strong> of a given column,
+e.g. <code>!DOSEU</code> will translate to
+<code>Treatment Dose Units</code>.</li>
+<li>prefacing a column name with <code>$</code> will reference the
+<strong>value</strong> for a given column, e.g. <code>$DOSEU</code> will
+translate to mg (for the dummy dataset).</li>
+</ul>
+<p>You can always click on the <span class="help-button">?</span> button
+for help.</p>
+</div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
