@@ -123,6 +123,13 @@ l_pkconc <- function(
         )
       ) %>%
       ungroup()
+  } else {
+    formatting_vars_table <- formatting_vars_table %>%
+      rowwise() %>%
+      mutate(
+        Label = parse_annotation(data, Label),
+        digits = as.numeric(digits)
+      )
   }
 
   # Create the proper object from the UI table for col_formatting

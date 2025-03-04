@@ -92,4 +92,4 @@ When reviewing a pull request, please do try to follow the [conventional comment
 # In-depth guides
 Here are some useful links with in-depth documentation regarding specific parts of the pacakage and how to utilise in-build tools to extend the capabilities of the application:
 
-- [Adding TLGs](.github/contributing/adding-tlg.md)
+- [Adding TLGs](https://pharmaverse.github.io/aNCA/articles/adding_tlg.html)

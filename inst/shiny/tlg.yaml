@@ -41,6 +41,42 @@ l_pkconc:
       choices: .colnames
       multiple: true
       default: ["NFRLT", "AFRLT", "AVALC"]
+    .group_label_3: "Formatting"
+    formatting_vars_table:
+      label: "Variables formatting"
+      type: table
+      cols: 
+        var_name:
+          type: select
+          choices: .colnames
+          label: "Variable name"
+        Label:
+          type: text
+          label: Label
+        na_str:
+          type: text
+          label: "NA string"
+        zero_str:
+          type: text
+          label: "0 string"
+        align:
+          type: select
+          choices: ["", "left", "center", "right"]
+          label: "Align"
+        format_fun:
+          type: select
+          choices: ["", "round", "signif"]
+          label: "Formatting function"
+        digits:
+          type: select
+          label: "Digits"
+          choices: ["", "0", "1", "2", "3", "4"]
+      default_rows:
+        - ["USUBJID", "Unique Subject Identifier",                       "NA", "0", "center", "$NA",   "$NA"]
+        - ["AVISIT",  "Analysis Visit",                                  "NA", "0", "center", "$NA",   "$NA"]
+        - ["TRT01A",  "Actual Treatment for Period 01",                  "NA", "0", "center", "$NA",   "$NA"]
+        - ["AFRLT",   "Act. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
+        - ["NFRLT",   "Nom. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
 
 # GRAPHS #
 g_pkconc_ind_lin:
