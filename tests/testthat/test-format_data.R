@@ -8,7 +8,8 @@ test_that("format_pkncaconc_data generates correct dataset", {
     ANALYTE = rep("Analyte1", 10),
     DOSNO = rep(1, 10),
     AFRLT = seq(0, 9),
-    AVAL = runif(10)
+    AVAL = runif(10),
+    ROUTE = c("intravascular")
   )
 
   # Call format_pkncaconc_data
@@ -104,7 +105,8 @@ test_that("format_pkncaconc_data handles missing columns", {
     DRUG = rep("DrugA", 10),
     DOSNO = rep(1, 10),
     AFRLT = seq(0, 9),
-    AVAL = runif(10)
+    AVAL = runif(10),
+    ROUTE = c("intravascular")
   )
   expect_error(
     format_pkncaconc_data(
@@ -126,7 +128,8 @@ test_that("format_pkncaconc_data handles multiple analytes", {
     ANALYTE = rep(c("Analyte1", "Analyte2"), each = 10),
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 9), 2),
-    AVAL = runif(20)
+    AVAL = runif(20),
+    ROUTE = c("intravascular")
   )
   df_conc <- format_pkncaconc_data(ADNCA,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
@@ -363,6 +366,35 @@ test_that("format_pkncadata_intervals generates correct dataset", {
   )
 })
 
+test_that("format_pkncaconc_data generates a correct temporary route column", {
+  ADNCA <- data.frame(
+    STUDYID = rep(1, 20),
+    USUBJID = rep(1:2, each = 10),
+    PCSPEC = rep("Plasma", 20),
+    DRUG = rep("DrugA", 20),
+    ANALYTE = rep("Analyte1", 10),
+    ROUTE = rep(c("INTRAVASCULAR",
+                  "INTRAVENOUS",
+                  "INTRAVENOUS BOLUS",
+                  "INTRAVENOUS DRIP",
+                  "EXTRAVASCULAR"), 2),
+    DOSEA = 10,
+    DOSNO = rep(1, 20),
+    AVAL = runif(20),
+    AFRLT = rep(seq(0, 9), 2)
+  )
+
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "ANALYTE"),
+                                   time_column = "AFRLT")
+
+  translated_routes <- df_conc$std_route
+
+  purrr::walk(1:4, \(i) expect_equal(translated_routes[i], "intravascular"))
+  expect_equal(translated_routes[5], "extravascular")
+})
+
 test_that("format_pkncadata_intervals handles multiple analytes with metabolites", {
 
   # Create mock data with multiple analytes and metabolites
@@ -377,7 +409,8 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
     AFRLT = rep(seq(0, 9), 2),
     ARRLT = rep(seq(0, 4), 4),
     AVAL = c(rep(seq(0, 8, 2), 2),
-             rep(seq(0, 4), 2))
+             rep(seq(0, 4), 2)),
+    ROUTE = rep("extravascular", 20)
   )
 
   # Call format_pkncaconc_data
@@ -436,4 +469,3 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
     )
   )
 })
-

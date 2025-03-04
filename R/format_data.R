@@ -3,28 +3,40 @@
 #' This function creates a pharmacokinetic concentration dataset from the provided ADNCA data.
 #'
 #' @param ADNCA A data frame containing the ADNCA data.
-#' @param analyte A character string specifying the analyte of interest.
-
+#' @param group_columns A character vector specifying the columns to group by.
+#' @param time_column A character string specifying the time column.
+#' @param route_column A character string specifying the route column.
+#' @param dosno_column A character string specifying the dose number column.
 #'
 #' @returns A data frame containing the filtered and processed concentration data.
 #'
 #' @details
 #' The function performs the following steps:
-#'   - Creates a 'groups' column by concatenating 'USUBJID' and 'DOSNO'.
-#'   - Arranges and groups the data by groups_column.
+#'   - Groups the data by groups_column.
+#'   - Arranges the data by time_column.
+#'   - Adds a 'TIME' column.
+#'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
 #'   - Adds an index column ('IX') 1:n within each group of length n.
+#'   - Arranges the data by group_columns.
 #'
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   conc_data <- format_pkncaconc_data(ADNCA, "analyte_name", "profile_type")
+#'   conc_data <- format_pkncaconc_data(ADNCA,
+#'                                      group_columns,
+#'                                      "AFRLT",
+#'                                      "ROUTE",
+#'                                      "DOSNO")
 #' }
 #'
 #' @import dplyr
 #' @export
 
-format_pkncaconc_data <- function(ADNCA, group_columns,
-                                  time_column = "AFRLT", dosno_column = "DOSNO") {
+format_pkncaconc_data <- function(ADNCA,
+                                  group_columns,
+                                  time_column = "AFRLT",
+                                  route_column = "ROUTE",
+                                  dosno_column = "DOSNO") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -38,6 +50,11 @@ format_pkncaconc_data <- function(ADNCA, group_columns,
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
     mutate(TIME = !!sym(time_column)) %>%
+    mutate(std_route = ifelse(
+                              grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
+                                    gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
+                              "intravascular",
+                              "extravascular")) %>%
     group_by(!!!syms(group_columns), !!sym(dosno_column)) %>%
     mutate(IX = seq_len(n())) %>%
     ungroup() %>%
