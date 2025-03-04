@@ -20,7 +20,7 @@ parameter_datasets_server <- function(id, res_nca) {
         extensions = c("FixedHeader", "Buttons"),
         options = list(
           scrollX = TRUE,
-          scrollY = TRUE,
+          scrollY = "80vh",
           searching = TRUE,
           fixedColumns = TRUE,
           fixedHeader = TRUE,
@@ -53,7 +53,7 @@ parameter_datasets_server <- function(id, res_nca) {
         extensions = c("FixedHeader", "Buttons"),
         options = list(
           scrollX = TRUE,
-          scrollY = TRUE,
+          scrollY = "80vh",
           pageLength = -1,
           lengthMenu = -1,
           fixedHeader = TRUE,
