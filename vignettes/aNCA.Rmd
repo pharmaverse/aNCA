@@ -112,7 +112,7 @@ There are two different ways to add exclusions/selections to the slopes.
 
 #### Via the Plots
 
-For in-app guidance, you can click the ? button.
+For in-app guidance, you can click the <span class="help-button">?</span> button.
 
 <img src="images/get_started/10.png" alt="Guidance"/>
 
@@ -209,4 +209,4 @@ Some fields will provide additional functionalities. For text fields, a special 
 - prefacing a column name with `!` will reference the **label attribute** of a given column, e.g. `!DOSEU` will translate to `Treatment Dose Units`.
 - prefacing a column name with `$` will reference the **value** for a given column, e.g. `$DOSEU` will translate to mg (for the dummy dataset).
 
-You can always click on the ? button for help.
+You can always click on the <span class="help-button">?</span> button for help.
