@@ -23,9 +23,9 @@ intervals <- data.frame(
   ID = c(1, 2, 1)
 )
 
-o_conc <- PKNCAconc(d_conc, conc ~ time | ID / analyte, include_half.life = "include_hl")
-o_dose <- PKNCAdose(d_dose, dose ~ time | ID)
-o_data <- PKNCAdata(o_conc, o_dose, intervals = intervals)
+o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte, include_half.life = "include_hl")
+o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
+o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
 
 ### Test interval_add_impute
 
@@ -172,7 +172,7 @@ test_that("interval_add_impute handles mixed TRUE/FALSE for cmax and half.life c
     ID = c(1, 2, 1, 2)
   )
 
-  o_data_mixed <- PKNCAdata(o_conc, o_dose, intervals = intervals_mixed)
+  o_data_mixed <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals_mixed)
   result <- interval_add_impute(o_data_mixed, target_impute = "new_impute")
   expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
                data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1", "Analyte2"),
@@ -231,7 +231,7 @@ test_that(
       ID = 1
     )
 
-    o_data_mixed <- PKNCAdata(o_conc, o_dose, intervals = intervals_mixed)
+    o_data_mixed <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals_mixed)
     result <- suppressWarnings(interval_add_impute(o_data_mixed,
                                                    target_impute = "start_predose",
                                                    target_param = "cmax",
@@ -300,7 +300,7 @@ test_that("interval_remove_impute does not modify data if global impute & column
                  "No default impute column identified. No impute methods to remove")
 })
 
-test_that("interval_remove_impute.PKNCAdata handles missing impute column using global impute", {
+test_that("interval_remove_impute if impute col is missing uses global impute", {
   o_d_no_imp <- o_data
   o_d_no_imp$intervals <- o_d_no_imp$intervals[, !names(o_d_no_imp$intervals) %in% "impute"]
   o_d_no_imp$impute <- "start_conc0, start_predose"
@@ -415,7 +415,7 @@ test_that("interval_remove_impute handles mixed TRUE/FALSE for cmax and half.lif
     ID = c(1, 2, 1, 2)
   )
 
-  o_data_mixed <- PKNCAdata(o_conc, o_dose, intervals = intervals_mixed)
+  o_data_mixed <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals_mixed)
 
   result <- interval_remove_impute(o_data_mixed, target_impute = "start_conc0",
                                    target_params = c("half.life", "cmax"))
@@ -424,10 +424,11 @@ test_that("interval_remove_impute handles mixed TRUE/FALSE for cmax and half.lif
                data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1", "Analyte2"),
                           half.life = c(TRUE, FALSE, TRUE, FALSE),
                           cmax = c(FALSE, TRUE, FALSE, TRUE),
-                          impute = c("start_predose", "start_predose", NA_character_, "start_predose")))
+                          impute = c("start_predose", "start_predose",
+                                     NA_character_, "start_predose")))
 })
 
-test_that("interval_remove_impute removes properly all target_impute even if is several times", {
+test_that("interval_remove_impute removes all target_impute even if is several times", {
   o_data_multiple_imputes <- o_data
   o_data_multiple_imputes$intervals$impute <- "start_conc0,start_predose,start_conc0"
   result <- interval_remove_impute(o_data_multiple_imputes, target_impute = "start_conc0")

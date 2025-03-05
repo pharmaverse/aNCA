@@ -269,7 +269,7 @@ remove_impute_method <- function(impute_vals, target_impute) {
   impute_vals <- strsplit(impute_vals, split = "[ ,]+") |>
     lapply(FUN = setdiff, target_impute) |>
     vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
-  
+
   # Replace empty strings with NA_character_
   ifelse(impute_vals == "", NA_character_, impute_vals)
 }
