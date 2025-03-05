@@ -25,7 +25,7 @@ adpc_single <- dplyr::filter(adpc, USUBJID == "11101")
 describe("pkcg01", {
   it("generates valid plot list with default settings", {
     p_list <- pkcg01(adpc)
-    .expect_plotlist(p_list, 23)
+    .expect_plotlist(p_list, 92)
   })
 
   it("generates plot with custom labels", {
@@ -38,7 +38,7 @@ describe("pkcg01", {
       "footnote" = "Test custom footnote"
     )
 
-    .expect_plotlist(p_list, 1)
+    .expect_plotlist(p_list, 4)
 
     p_json <- .get_plotly_json(p_list[[1]])
     expect_equal(p_json$layout$xaxis$title$text, "Test custom xlab")
@@ -57,7 +57,7 @@ describe("pkcg01", {
       "footnote" = "Test !USUBJID"
     )
 
-    .expect_plotlist(p_list, 1)
+    .expect_plotlist(p_list, 4)
 
     p_json <- .get_plotly_json(p_list[[1]])
     expect_equal(p_json$layout$xaxis$title$text, "Test 11101")
@@ -68,7 +68,7 @@ describe("pkcg01", {
 
   it("generates plot list in respect to grouping variables", {
     p_list <- pkcg01(adpc, plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM"))
-    .expect_plotlist(p_list, 1)
+    .expect_plotlist(p_list, 4)
   })
 
   it("generates plots in respect to provided limits", {
@@ -80,7 +80,7 @@ describe("pkcg01", {
       ymax = 3
     )
 
-    .expect_plotlist(p_list, 1)
+    .expect_plotlist(p_list, 4)
 
     p_json <- .get_plotly_json(p_list[[1]])
 
