@@ -28,7 +28,9 @@ tab_tlg_ui <- function(id) {
     nav_panel("Listings", uiOutput(ns("lists"), class = "tlg-module"), value = "Lists"),
     nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-module"), value = "Graphs"),
     # disable loader for initial empty UI render #
-    footer = tags$style(HTML(paste0(".tlg-module .load-container {opacity: 0;}")))
+    footer = tags$style(
+      id = "tlg-load-hide", HTML(paste0(".tlg-module .load-container {opacity: 0;}"))
+    )
   )
 }
 
@@ -207,18 +209,18 @@ tab_tlg_server <- function(id) {
       shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
     })
 
-    #' change tab to first populated tab (currently only Graphs)
+    #' change tab to first populated tab
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
     observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
       shinyjs::runjs(
         paste0("
-          // change the tab to graphs //
+          // change the tab to lists //
           $(`#", session$ns("tlg_tabs"), " a[data-value='Lists']`)[0].click();
 
           // enable spinner, as it was disabled for initial empty UI render //
           setTimeout(function() {
-            $('.tlg-module .load-container').css('opacity', 1);
+            $('#tlg-load-hide').remove();
           }, 500);  
         ")
       )
