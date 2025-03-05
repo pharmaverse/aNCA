@@ -96,7 +96,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
       type,
-      "graph" = renderPlotly,
+      "graph" = renderUI,
       "listing" = renderPrint
     )
 
