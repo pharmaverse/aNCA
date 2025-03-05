@@ -108,7 +108,7 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   data[[index_colname]] <- seq_len(nrow(data))
 
   # Get all parameter column names in the data frame
-  all_param_options <- setdiff(names(get.interval.cols()), c("start", "end"))
+  all_param_options <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
   param_cols <- intersect(names(data), all_param_options)
 
   # If missing, define target parameters as all parameter columns with at least one TRUE.
@@ -301,7 +301,7 @@ interval_remove_impute.data.frame <- function(data,
   data[[index_colname]] <- seq_len(nrow(data))
 
   # Get all parameter column names in the data frame
-  all_param_options <- setdiff(names(get.interval.cols()), c("start", "end"))
+  all_param_options <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
   param_cols <- intersect(names(data), all_param_options)
 
   # Handle target_params
