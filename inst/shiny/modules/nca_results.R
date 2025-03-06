@@ -1,7 +1,7 @@
 # nca_results UI Module
 nca_results_ui <- function(id) {
   ns <- NS(id)
-  
+
   nav_panel(
     "NCA Results",
     pickerInput(
@@ -22,7 +22,7 @@ nca_results_ui <- function(id) {
 nca_results_server <- function(id, res_nca, rules, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     final_results <- reactive({
       req(res_nca())
       # Transform results
@@ -31,11 +31,11 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
       # Apply rules
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
         if (!rules[[rule_input]]) next
-        
+
         pptestcd <- rule_input |>
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
-        
+
         final_results <- final_results %>%
           mutate(!!paste0("flag_", pptestcd) := case_when(
             startsWith(pptestcd, "auc") ~ .data[[pptestcd]]
@@ -43,7 +43,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
             TRUE ~ .data[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
           ))
       }
-      
+
       # Join subject data to allow the user to group by it
       final_results <- final_results %>%
         inner_join(
@@ -55,7 +55,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
             )
         ) %>%
         distinct()
-      
+
       # Add flagged column
       final_results %>%
         mutate(
@@ -99,7 +99,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)
-      
+
       # Make the reactable object
       reactable(
         final_results,
