@@ -38,7 +38,7 @@
 #'   analyte = c("Analyte1", "Analyte2", "Analyte1")
 #' )
 #'
-#' o_data <- PKNCAdata(o_conc, o_dose, intervals = intervals)
+#' o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
 #'
 #' # Apply interval_add_impute function
 #' o_data <- interval_add_impute(o_data,
@@ -82,7 +82,7 @@ interval_add_impute <- function(data, ...) {
 #'   analyte = c("Analyte1", "Analyte2", "Analyte1")
 #' )
 #'
-#' o_data <- PKNCAdata(o_conc, o_dose, intervals = intervals)
+#' o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
 #'
 #' # Apply interval_remove_impute function
 #' o_data <- interval_remove_impute(data = o_data,
