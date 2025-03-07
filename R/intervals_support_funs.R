@@ -324,6 +324,16 @@ remove_impute_method <- function(impute_vals, target_impute) {
 }
 
 #' Identify target rows based on groups, parameters, and impute method
+#'
+#' This is an internal helper function used to identify the target rows in the data frame
+#' based on the specified groups, parameters, and impute method.
+#'
+#' @param data A data frame containing the intervals.
+#' @param target_impute The imputation method to be added or removed.
+#' @param target_params A character vector specifying the parameters to be targeted.
+#' @param target_groups A data frame specifying the intervals to be targeted.
+#' @param after Numeric value specifying the index position in which to add the impute (optional).
+#' @returns A logical vector indicating the target rows.
 #' @keywords internal
 identify_target_rows <- function(data, target_impute, target_params, target_groups, after = NULL) {
   # Identify the target interval rows based on:
