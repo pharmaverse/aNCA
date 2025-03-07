@@ -225,31 +225,21 @@ interval_remove_impute.PKNCAdata <- function(data, target_impute, target_params 
   # If the impute column is not present in the intervals...
   if (!"impute" %in% colnames(data$intervals)) {
     if (is.null(data$impute) || is.na(data$impute)) {
-      # a. If neither is in the global impute method, return the data as it is
+      # a. If there is neither a global impute, return the input as it is (nothing to remove)
       warning("No default impute column or global method identified. No impute methods to remove")
       return(data)
     }
 
-    # b & c. If global impute exists
-  # If the impute column is not present in the intervals...
-  if (!"impute" %in% colnames(data$intervals)) {
-    if (is.null(data$impute) || is.na(data$impute)) {
-      # a. If neither is in the global impute method, return the data as it is
-      warning("No default impute column or global method identified. No impute methods to remove")
-      return(data)
-    }
-
-    # b & c. If global impute exists
+    # b & c. If there is a global impute..
     if (is.null(target_params) && is.null(target_groups)) {
-      # b. If it is in the global impute and no target parameters or groups, remove global impute
+      # b. and user changes are not specific, remove global impute
       data$impute <- remove_impute_method(data$impute, target_impute)
       return(data)
     }
 
-    # c. If it is in the global impute but target parameters or groups, creates an impute column
+    # c. but user changes are specific (target parameters or groups), creates an impute column
     data$intervals$impute <- data$impute
     data$impute <- NA_character_
-  }
   }
 
   data$intervals <- interval_remove_impute.data.frame(data$intervals, target_impute,
