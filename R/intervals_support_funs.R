@@ -232,12 +232,12 @@ interval_remove_impute.PKNCAdata <- function(data, target_impute, target_params 
 
     # b & c. If there is a global impute..
     if (is.null(target_params) && is.null(target_groups)) {
-      # b. and user changes are not specific, remove global impute
+      # b. and user changes apply to all intervals, just remove global impute
       data$impute <- remove_impute_method(data$impute, target_impute)
       return(data)
     }
 
-    # c. but user changes are specific (target parameters or groups), creates an impute column
+    # c. but user changes are specific (target_params or target_groups), creates an impute column
     data$intervals$impute <- data$impute
     data$impute <- NA_character_
   }
