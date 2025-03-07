@@ -352,7 +352,7 @@ interval_remove_impute.data.frame <- function(data,
 
   # Filter rows where all row values for param_cols are NA or FALSE
   param_data <- data[, param_cols, drop = FALSE]
-  rows_no_params <- rowSums(!is.na(replace(param_data, param_data == FALSE, NA))) == 0
+  rows_no_params <- rowSums(replace(param_data, is.na(param_data), FALSE)) == 0
   data <- data[!rows_no_params, , drop = FALSE]
 
   # Order the intervals by the index column and then remove it
