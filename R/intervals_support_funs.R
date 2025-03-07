@@ -50,6 +50,50 @@ interval_add_impute <- function(data, ...) {
   UseMethod("interval_add_impute", data)
 }
 
+#' Remove specified imputation from the intervals in a PKNCAdata or data.frame (intervals) object.
+#'
+#' @inheritParams interval_add_impute
+#' @param target_impute A character string specifying the imputation method to remove.
+#' @param ... arguments passed to `interval_remove_impute`.
+#' @returns A modified object with the specified imputations removed from the targeted intervals.
+#' @examples
+#' d_conc <- data.frame(
+#'   conc = c(1, 0.6, 0.2, 0.1, 0.9, 0.4, 1.2, 0.8, 0.3, 0.2, 1.1, 0.5),
+#'   time = rep(0:5, 2),
+#'   ID = rep(1:2, each = 6),
+#'   analyte = rep(c("Analyte1", "Analyte2"), each = 6)
+#' )
+#'
+#' d_dose <- data.frame(
+#'   dose = c(100, 200),
+#'   time = c(0, 0),
+#'   ID = c(1, 2)
+#' )
+#'
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
+#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
+#'
+#' intervals <- data.frame(
+#'   start = c(0, 0, 0),
+#'   end = c(3, 5, Inf),
+#'   half.life = c(TRUE, FALSE, TRUE),
+#'   cmax = c(TRUE, TRUE, TRUE),
+#'   impute = c("start_conc0,start_predose", "start_predose", "start_conc0"),
+#'   analyte = c("Analyte1", "Analyte2", "Analyte1")
+#' )
+#'
+#' o_data <- PKNCAdata(o_conc, o_dose, intervals = intervals)
+#'
+#' # Apply interval_remove_impute function
+#' o_data <- interval_remove_impute(data = o_data,
+#'                                  target_impute = "start_conc0",
+#'                                  target_params = "half.life",
+#'                                  target_groups = data.frame(analyte = "Analyte1"))
+#' @export
+interval_remove_impute <- function(data, ...) {
+  UseMethod("interval_remove_impute", data)
+}
+
 #' @keywords internal
 interval_add_impute.PKNCAdata <- function(data, target_impute, after = Inf,
                                           target_params = NULL, target_groups = NULL, ...) {
@@ -63,26 +107,34 @@ interval_add_impute.PKNCAdata <- function(data, target_impute, after = Inf,
   data
 }
 
-#' Add impute method to the impute column
-#'
-#' This is an internal helper function used to add an impute method to the impute column.
-#'
-#' @param impute_vals Character vector of impute methods.
-#' @param target_impute The imputation method to be added.
-#' @param after Numeric value specifying the index position in which to add the impute.
-#' @returns A character string or vector with the added impute method.
 #' @keywords internal
-add_impute_method <- function(impute_vals, target_impute, after) {
-  # Make sure the character vector has length
-  if (length(impute_vals) == 0) return(impute_vals)
-
-  # Remove the impute from the other methods in each value
-  impute_vals <- ifelse(is.na(impute_vals), "", impute_vals)
-  strsplit(impute_vals, split = "[ ,]+") |>
-    lapply(FUN = setdiff, target_impute) |>
-    lapply(FUN = append, values = target_impute, after = after) |>
-    vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
+interval_remove_impute.PKNCAdata <- function(data, target_impute, target_params = NULL,
+                                             target_groups = NULL, ...) {
+  # If the impute column is not present in the intervals...
+  if (!"impute" %in% colnames(data$intervals)) {
+    if (is.null(data$impute) || is.na(data$impute)) {
+      # a. If there is neither a global impute, return the input as it is (nothing to remove)
+      warning("No default impute column or global method identified. No impute methods to remove")
+      return(data)
+    }
+    
+    # b & c. If there is a global impute..
+    if (is.null(target_params) && is.null(target_groups)) {
+      # b. and user changes apply to all intervals, just remove global impute
+      data$impute <- remove_impute_method(data$impute, target_impute)
+      return(data)
+    }
+    
+    # c. but user changes are specific (target_params or target_groups), creates an impute column
+    data$intervals$impute <- data$impute
+    data$impute <- NA_character_
+  }
+  
+  data$intervals <- interval_remove_impute.data.frame(data$intervals, target_impute,
+                                                      target_params, target_groups)
+  data
 }
+
 
 #' @keywords internal
 interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
@@ -175,102 +227,6 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   data[, !names(data) %in% index_colname]
 }
 
-#' Remove specified imputation from the intervals in a PKNCAdata or data.frame (intervals) object.
-#'
-#' @inheritParams interval_add_impute
-#' @param target_impute A character string specifying the imputation method to remove.
-#' @param ... arguments passed to `interval_remove_impute`.
-#' @returns A modified object with the specified imputations removed from the targeted intervals.
-#' @examples
-#' d_conc <- data.frame(
-#'   conc = c(1, 0.6, 0.2, 0.1, 0.9, 0.4, 1.2, 0.8, 0.3, 0.2, 1.1, 0.5),
-#'   time = rep(0:5, 2),
-#'   ID = rep(1:2, each = 6),
-#'   analyte = rep(c("Analyte1", "Analyte2"), each = 6)
-#' )
-#'
-#' d_dose <- data.frame(
-#'   dose = c(100, 200),
-#'   time = c(0, 0),
-#'   ID = c(1, 2)
-#' )
-#'
-#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
-#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
-#'
-#' intervals <- data.frame(
-#'   start = c(0, 0, 0),
-#'   end = c(3, 5, Inf),
-#'   half.life = c(TRUE, FALSE, TRUE),
-#'   cmax = c(TRUE, TRUE, TRUE),
-#'   impute = c("start_conc0,start_predose", "start_predose", "start_conc0"),
-#'   analyte = c("Analyte1", "Analyte2", "Analyte1")
-#' )
-#'
-#' o_data <- PKNCAdata(o_conc, o_dose, intervals = intervals)
-#'
-#' # Apply interval_remove_impute function
-#' o_data <- interval_remove_impute(data = o_data,
-#'                                  target_impute = "start_conc0",
-#'                                  target_params = "half.life",
-#'                                  target_groups = data.frame(analyte = "Analyte1"))
-#' @export
-interval_remove_impute <- function(data, ...) {
-  UseMethod("interval_remove_impute", data)
-}
-
-#' @keywords internal
-interval_remove_impute.PKNCAdata <- function(data, target_impute, target_params = NULL,
-                                             target_groups = NULL, ...) {
-  # If the impute column is not present in the intervals...
-  if (!"impute" %in% colnames(data$intervals)) {
-    if (is.null(data$impute) || is.na(data$impute)) {
-      # a. If there is neither a global impute, return the input as it is (nothing to remove)
-      warning("No default impute column or global method identified. No impute methods to remove")
-      return(data)
-    }
-
-    # b & c. If there is a global impute..
-    if (is.null(target_params) && is.null(target_groups)) {
-      # b. and user changes apply to all intervals, just remove global impute
-      data$impute <- remove_impute_method(data$impute, target_impute)
-      return(data)
-    }
-
-    # c. but user changes are specific (target_params or target_groups), creates an impute column
-    data$intervals$impute <- data$impute
-    data$impute <- NA_character_
-  }
-
-  data$intervals <- interval_remove_impute.data.frame(data$intervals, target_impute,
-                                                      target_params, target_groups)
-  data
-}
-
-
-#' Remove impute method from the impute column
-#'
-#' This is an internal helper function used to remove an impute method from the impute column.
-#'
-#' @param impute_vals Character vector of impute methods.
-#' @param target_impute The imputation method to be removed.
-#' @returns A character string or vector without the specified impute method.
-#' @details Resulting empty string values are replaced with NA_character_.
-#' @keywords internal
-remove_impute_method <- function(impute_vals, target_impute) {
-  # Make sure the character vector has length
-  if (length(impute_vals) == 0) return(impute_vals)
-
-  # Remove the impute from the other methods in each value
-  impute_vals <- ifelse(is.na(impute_vals), "", impute_vals)
-  impute_vals <- strsplit(impute_vals, split = "[ ,]+") |>
-    lapply(FUN = setdiff, target_impute) |>
-    vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
-
-  # Replace empty strings with NA_character_
-  ifelse(impute_vals == "", NA_character_, impute_vals)
-}
-
 #' @keywords internal
 interval_remove_impute.data.frame <- function(data,
                                               target_impute,
@@ -359,4 +315,48 @@ interval_remove_impute.data.frame <- function(data,
   data <- data[order(data[[index_colname]]), ]
   rownames(data) <- seq_len(nrow(data))
   data[, !names(data) %in% index_colname]
+}
+
+#' Add impute method to the impute column
+#'
+#' This is an internal helper function used to add an impute method to the impute column.
+#'
+#' @param impute_vals Character vector of impute methods.
+#' @param target_impute The imputation method to be added.
+#' @param after Numeric value specifying the index position in which to add the impute.
+#' @returns A character string or vector with the added impute method.
+#' @keywords internal
+add_impute_method <- function(impute_vals, target_impute, after) {
+  # Make sure the character vector has length
+  if (length(impute_vals) == 0) return(impute_vals)
+  
+  # Remove the impute from the other methods in each value
+  impute_vals <- ifelse(is.na(impute_vals), "", impute_vals)
+  strsplit(impute_vals, split = "[ ,]+") |>
+    lapply(FUN = setdiff, target_impute) |>
+    lapply(FUN = append, values = target_impute, after = after) |>
+    vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
+}
+
+#' Remove impute method from the impute column
+#'
+#' This is an internal helper function used to remove an impute method from the impute column.
+#'
+#' @param impute_vals Character vector of impute methods.
+#' @param target_impute The imputation method to be removed.
+#' @returns A character string or vector without the specified impute method.
+#' @details Resulting empty string values are replaced with NA_character_.
+#' @keywords internal
+remove_impute_method <- function(impute_vals, target_impute) {
+  # Make sure the character vector has length
+  if (length(impute_vals) == 0) return(impute_vals)
+  
+  # Remove the impute from the other methods in each value
+  impute_vals <- ifelse(is.na(impute_vals), "", impute_vals)
+  impute_vals <- strsplit(impute_vals, split = "[ ,]+") |>
+    lapply(FUN = setdiff, target_impute) |>
+    vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
+  
+  # Replace empty strings with NA_character_
+  ifelse(impute_vals == "", NA_character_, impute_vals)
 }
