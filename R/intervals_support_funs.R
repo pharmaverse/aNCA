@@ -119,26 +119,27 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
 
   # Identify the target interval rows based on:
   ## 1. The target groups (perfect match)
-  target_rows <- rep(TRUE, nrow(data))
-  if (!is.null(target_groups)) {
-    target_groups_data <- data[, names(target_groups), drop = FALSE]
-    target_rows <- target_rows & (
-      do.call(paste0, target_groups_data) %in% do.call(paste0, target_groups)
-    )
+  is_target_group <- {
+    if (!is.null(target_groups)) {
+      sapply(data[, names(target_groups), drop = FALSE], paste0) %in% sapply(target_groups, paste0)
+    } else {
+      rep(TRUE, nrow(data))
+    }
   }
+
   ## 2. The target parameters (at least one calculated: not-FALSE/not-NA)
   target_params_data <- data[, target_params, drop = FALSE]
-  target_rows <- target_rows & (
-    rowSums(!is.na(replace(target_params_data, target_params_data == FALSE, NA))) > 0
-  )
-  ## 3. The target impute method is not already present and correctly positioned
-  after_vals <- lapply(strsplit(data$impute, "[ ,]+"), function(x) {
-    after_x <- which(x == target_impute)
-    if (length(after_x) == 0) return(NA)
-    if (after_x == length(x)) Inf else after_x
-  }) |> unlist()
-  target_rows <- target_rows & (after_vals != after | is.na(after_vals))
+  is_target_param <- rowSums(replace(target_params_data, is.na(target_params_data), FALSE)) > 0
 
+  ## 3. The target impute method is not already present and correctly positioned
+  after_vals <- sapply(strsplit(data$impute, "[ ,]+"), \(x) {
+    after_x <- which(x == target_impute)
+    if (length(after_x) == 0) return(TRUE)
+    if (after_x == length(x)) Inf else after_x
+  })
+  is_after <- after_vals != after | is.na(after_vals)
+
+  target_rows <- is_target_group & is_target_param & is_after
   new_intervals <- data[target_rows, ]
 
   # If no target intervals are found, nothing to change
@@ -319,20 +320,22 @@ interval_remove_impute.data.frame <- function(data,
 
   # Identify the target interval rows based on:
   ## 1. The target groups (perfect match)
-  target_rows <- rep(TRUE, nrow(data))
-  if (!is.null(target_groups)) {
-    target_groups_data <- data[, names(target_groups), drop = FALSE]
-    target_rows <- target_rows & (
-      do.call(paste0, target_groups_data) %in% do.call(paste0, target_groups)
-    )
+  is_target_group <- {
+    if (!is.null(target_groups)) {
+      sapply(data[, names(target_groups), drop = FALSE], paste0) %in% sapply(target_groups, paste0)
+    } else {
+      rep(TRUE, nrow(data))
+    }
   }
+
   ## 2. The target parameters (at least one calculated: not-FALSE/not-NA)
   target_params_data <- data[, target_params, drop = FALSE]
-  target_rows <- target_rows & (
-    rowSums(!is.na(replace(target_params_data, target_params_data == FALSE, NA))) > 0
-  )
+  is_target_param <- rowSums(replace(target_params_data, is.na(target_params_data), FALSE)) > 0
+
   ## 3. The target impute method to be removed (contained in the string)
-  target_rows <- target_rows & grepl(target_impute, data$impute, fixed = TRUE)
+  is_target_impute <- grepl(target_impute, data$impute, fixed = TRUE)
+
+  target_rows <- is_target_group & is_target_param & is_target_impute
   new_intervals <- data[target_rows, ]
 
   # If no target intervals are found, nothing to change
