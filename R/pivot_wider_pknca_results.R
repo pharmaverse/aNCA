@@ -108,12 +108,15 @@ pivot_wider_pknca_results <- function(myres) {
   if (!is.null(added_params)) all_aucs <- left_join(all_aucs, added_params)
 
   # Do a final standardization of the results reshaped
-  all_aucs  %>%
+  pivoted_res <- all_aucs  %>%
     mutate(Exclude = pmap_chr(across(starts_with("exclude.")), .extract_exclude_values)) %>%
     select(-starts_with("exclude."), -start_dose, -end_dose) %>%
     # Define the number of decimals to round the results
     mutate(across(where(is.numeric), ~ round(.x, 3)))  %>%
     ungroup()
+  
+  # Add "label" attribute to columns
+  add_label_attribute(pivoted_res, myres)
 }
 
 #' Helper function to extract exclude values
@@ -128,4 +131,21 @@ pivot_wider_pknca_results <- function(myres) {
   unique_values <- unique(trimws(split_values))
 
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
+}
+
+#' Helper function to add "label" attribute to columns
+#' @param df The data frame to which the attributes will be added
+#' @param myres The original result set containing the PPTESTCD and PPTESTCD_unit
+add_label_attribute <- function(df, myres) {
+  browser()
+  mapping_vr <- myres$result %>%
+    mutate(PPTESTCD_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
+    select(PPTESTCD, PPTESTCD_unit) %>%
+    distinct() %>%
+    pull(PPTESTCD_unit, PPTESTCD)
+  
+  mapping_cols <- intersect(names(df), names(mapping_vr))
+  for (col in mapping_cols) {
+    attr(df[[col]], "label") <- mapping_vr[col]
+  }
 }
