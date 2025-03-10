@@ -114,7 +114,7 @@ pivot_wider_pknca_results <- function(myres) {
     # Define the number of decimals to round the results
     mutate(across(where(is.numeric), ~ round(.x, 3)))  %>%
     ungroup()
-  
+
   # Add "label" attribute to columns
   add_label_attribute(pivoted_res, myres)
 }
@@ -145,7 +145,7 @@ add_label_attribute <- function(df, myres) {
 
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])
-  
+
   df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
     attr(col, "label") <- bw
     col

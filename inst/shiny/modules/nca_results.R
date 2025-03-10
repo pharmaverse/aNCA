@@ -86,7 +86,8 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
 
       # Select columns of parameters selected, considering each can have multiple diff units
       param_label_cols <- formatters::var_labels(final_results())
-      params_selected_cols <- names(param_label_cols[param_label_cols %in% input$params])                           
+      params_sel_cols <- param_label_cols[param_label_cols %in% input$params] |>
+        names()
 
       group_cols <- setdiff(names(res_nca()$data$intervals),
                             c(names(PKNCA::get.interval.cols()))) |>
@@ -94,7 +95,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
         c("Exclude", "impute", "flagged")
 
       final_results <- final_results() %>%
-        select(any_of(c(group_cols, sort(params_selected_cols))))
+        select(any_of(c(group_cols, sort(params_sel_cols))))
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)
