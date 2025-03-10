@@ -83,7 +83,15 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
 
     output$myresults <- reactable::renderReactable({
       req(final_results(), input$params)
-
+      browser()
+      # Select columns of parameters selected, considering each can have multiple diff units
+      param_label_cols <- sapply(names(final_results()), function(x) {
+        lab = attr(x, "label")
+      }, USE.NAMES = TRUE)
+      
+      params_selected_cols <- param_label_cols[input$params]
+      
+      
       # Select columns of parameters selected, considering each can have multiple diff units
       params_selected_cols <- grep(paste0("^", "(", paste0(input$params,
                                                            collapse = "|"), ")", "\\[.*"),
