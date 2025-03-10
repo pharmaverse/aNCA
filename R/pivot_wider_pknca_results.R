@@ -116,7 +116,7 @@ pivot_wider_pknca_results <- function(myres) {
     ungroup()
 
   # Add "label" attribute to columns
-  add_label_attribute(pivoted_res, myres)
+  .add_label_attribute(pivoted_res, myres)
 }
 
 #' Helper function to extract exclude values
@@ -133,10 +133,8 @@ pivot_wider_pknca_results <- function(myres) {
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }
 
-#' Helper function to add "label" attribute to columns
-#' @param df The data frame to which the attributes will be added
-#' @param myres The original result set containing the PPTESTCD and PPTESTCD_unit
-add_label_attribute <- function(df, myres) {
+#' Helper function to add "label" attribute to columns based on PPTESTCD names
+.add_label_attribute <- function(df, myres) {
   mapping_vr <- myres$result %>%
     mutate(PPTESTCD_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
     select(PPTESTCD, PPTESTCD_unit) %>%
