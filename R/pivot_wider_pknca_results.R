@@ -137,15 +137,18 @@ pivot_wider_pknca_results <- function(myres) {
 #' @param df The data frame to which the attributes will be added
 #' @param myres The original result set containing the PPTESTCD and PPTESTCD_unit
 add_label_attribute <- function(df, myres) {
-  browser()
   mapping_vr <- myres$result %>%
     mutate(PPTESTCD_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
     select(PPTESTCD, PPTESTCD_unit) %>%
     distinct() %>%
-    pull(PPTESTCD_unit, PPTESTCD)
-  
+    pull(PPTESTCD, PPTESTCD_unit)
+
   mapping_cols <- intersect(names(df), names(mapping_vr))
-  for (col in mapping_cols) {
-    attr(df[[col]], "label") <- mapping_vr[col]
-  }
+  attrs <- unname(mapping_vr[mapping_cols])
+  
+  df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
+    attr(col, "label") <- bw
+    col
+  }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
+  df
 }
