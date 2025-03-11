@@ -36,11 +36,18 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
 
+        final_pptestcd <- res_nca()$result %>%
+          filter(PPTESTCD == pptestcd) %>%
+          slice(1) %>%
+          mutate(new_pptestcd = paste0(pptestcd, "[", PPSTRESU, "]")) %>%
+          pull(new_pptestcd) %>%
+          unique()
+
         final_results <- final_results %>%
           mutate(!!paste0("flag_", pptestcd) := case_when(
-            startsWith(pptestcd, "auc") ~ .data[[pptestcd]]
+            startsWith(pptestcd, "auc") ~ .data[[final_pptestcd]]
             >= rules[[paste0(pptestcd, "_threshold")]],
-            TRUE ~ .data[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
+            TRUE ~ .data[[final_pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
           ))
       }
 
