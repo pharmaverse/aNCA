@@ -19,57 +19,63 @@
 #'
 pivot_wider_pknca_results <- function(myres) {
 
-  # Get all names with units and make a dictionary structure
-  dict_pttestcd_with_units <- myres$result %>%
-    select(PPTESTCD, PPSTRESU) %>%
-    distinct() %>%
-    pull(PPSTRESU, PPTESTCD)
+  ############################################################################################
+  # Derive lambda.z.n.points & lambda.z.method
+  # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
+  conc_groups <- unname(unlist(myres$data$conc$columns$groups))
 
-  # Create duplicates for accurate lambda.z.ix calculation
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),
       "DOSNO")
   )
+  added_params <- NULL
+  if (all(c("lambda.z",
+            "lambda.z.n.points",
+            "lambda.z.time.first") %in% unique(myres$result$PPTESTCD))) {
+    added_params <- myres$result %>%
+      filter(PPTESTCD %in% c("lambda.z.n.points", "lambda.z.time.first", "lambda.z"),
+             type_interval == "main") %>%
+      select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
+      unique() %>%
+      pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
+      left_join(data_with_duplicates) %>%
+      # Derive lambda.z.method: was lambda.z manually customized?
+      mutate(lambda.z.method = ifelse(
+        any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
+      )) %>%
+      # Derive lambda.z.ix: If present consider inclusions and disconsider exclusions
+      group_by(!!!syms(conc_groups), DOSNO) %>%
+      filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
+      filter(ARRLT >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
+      filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
+      mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
+      mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
+      select(conc_groups, DOSNO, start, end, lambda.z.ix, lambda.z.method) %>%
+      unique()
+  }
+  ############################################################################################
 
-  # Filter out infinite AUCs and pivot the data to incorporate
-  # the parameters into columns with their units
-  infinite_aucs_vals <- myres$result %>%
+  # Pivot main interval columns by Parameter and consider each exclude column separately
+  main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
+    mutate(PPTESTCD = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
-  infinite_aucs_exclude <- myres$result %>%
+  main_intervals_exclude <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main") %>%
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
     pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
 
-  infinite_aucs <- inner_join(infinite_aucs_vals, infinite_aucs_exclude)
+  main_intervals <- left_join(main_intervals_vals, main_intervals_exclude)
 
-  infinite_aucs_with_lambda <- inner_join(data_with_duplicates, infinite_aucs) %>%
-    group_by(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO) %>%
-    arrange(STUDYID, PCSPEC, ANALYTE, USUBJID, DOSNO, IX) %>%
-    # Deduce if the user perform an exclusion/selection to indicate if the slope
-    # is manually selected
-    mutate(lambda.z.method = ifelse(
-      any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
-    )) %>%
-    # filter out the rows that do not have relation with lambda calculation (when calculated)
-    # and derive the IX
-    filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
-    filter(ARRLT >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
-    filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
-    mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
-    mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
-    slice(1) %>%
-    select(any_of(c(names(infinite_aucs), "lambda.z.method", "lambda.z.ix")))
-
-  # If there were intervals defined, make independent columns for each
+  # If present: Pivot manual AUC interval columns and their respective exclude column
   if (any(myres$result$type_interval == "manual")) {
 
-    interval_aucs_vals <- myres$result %>%
+    manual_aucs_vals <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
@@ -80,7 +86,7 @@ pivot_wider_pknca_results <- function(myres) {
       pivot_wider(names_from = interval_name_col,
                   values_from = PPSTRES)
 
-    interval_aucs_exclude <- myres$result %>%
+    manual_aucs_exclude <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
@@ -90,18 +96,16 @@ pivot_wider_pknca_results <- function(myres) {
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
-    interval_aucs <- inner_join(interval_aucs_vals, interval_aucs_exclude) %>%
-      # Rename column names to include the units in parenthesis
-      rename_with(~ifelse(
-        .x %in% names(dict_pttestcd_with_units),
-        paste0(.x, "_", "[", dict_pttestcd_with_units[.x], "]"),
-        .x
-      ))
+    manual_aucs <- inner_join(manual_aucs_vals, manual_aucs_exclude)
 
-    all_aucs <- inner_join(infinite_aucs_with_lambda, interval_aucs)
+    # If present: Merge main and manual intervals together
+    all_aucs <- left_join(main_intervals, manual_aucs)
   } else {
-    all_aucs <- infinite_aucs_with_lambda
+    all_aucs <- main_intervals
   }
+
+  # If derived: Merge lambda.z.ix & lambda.z.method
+  if (!is.null(added_params)) all_aucs <- left_join(all_aucs, added_params)
 
   # Do a final standardization of the results reshaped
   all_aucs  %>%
@@ -110,7 +114,6 @@ pivot_wider_pknca_results <- function(myres) {
     # Define the number of decimals to round the results
     mutate(across(where(is.numeric), ~ round(.x, 3)))  %>%
     ungroup()
-
 }
 
 #' Helper function to extract exclude values
