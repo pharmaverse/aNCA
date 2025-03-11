@@ -103,7 +103,7 @@ tlg_option_table_server <- function(id, opt_def, data) {
         add_row() %>%
         edits_table()
 
-      shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
+      reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
 
@@ -113,7 +113,7 @@ tlg_option_table_server <- function(id, opt_def, data) {
       req(selected)
       edits_table()[-selected, ] %>%
         edits_table()
-      shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
+      reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
 
@@ -126,7 +126,7 @@ tlg_option_table_server <- function(id, opt_def, data) {
     #' Cancel changes, close the modal, reset values.
     observeEvent(input$cancel, {
       removeModal()
-      shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
+      reset_reactable_memory()
       edits_table(output_table())
     })
 
