@@ -33,17 +33,17 @@ apply_filters <- function(data, filters) {
     if (length(missing_fields) > 0) {
       stop("Missing required filter fields: ", paste0(missing_fields, collapse = ", "))
     }
-    
+
     column <- filter$column
     value <- filter$value
-    
+
     # check if data if correct #
     if (!column %in% names(data)) stop("Data is missing filtered column: ", column)
-    
+
     if (is.numeric(data[[column]])) {
       value <- as.numeric(value)
     }
-    
+
     switch(
       filter$condition,
       "==" = {
@@ -63,6 +63,6 @@ apply_filters <- function(data, filters) {
       }
     )
   }
-  
+
   data
 }
