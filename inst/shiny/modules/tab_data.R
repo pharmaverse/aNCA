@@ -106,7 +106,7 @@ tab_data_server <- function(id) {
     adnca_filtered <- reactive({
       # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
-      
+
       # Filter and return data
       apply_filters(ADNCA(), applied_filters)
     }) |> bindEvent(input$submit_filters, processed_data())
