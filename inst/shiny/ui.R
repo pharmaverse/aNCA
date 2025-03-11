@@ -73,10 +73,7 @@ fluidPage(
               ),
               tabPanel(
                 "Result Settings",
-                fluidRow(
-                  pickerInput("settings_save_fmt", "Download format", choices = c("xlsx", "rds"), width = "50%"),
-                  downloadButton("settings_save", class = "custom-download-button")
-                ),
+                save_settings_ui("save_settings"),
                 h4("Half life customizations"),
                 tableOutput("manual_slopes2")
               )
