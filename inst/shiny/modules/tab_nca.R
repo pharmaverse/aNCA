@@ -69,12 +69,15 @@ tab_nca_server <- function(id, data, grouping_vars) {
       route_column <- "ROUTE"
       analyte_column <- "ANALYTE"
       matrix_column <- "PCSPEC"
+      std_route_column <- "std_route"
 
       # Create concentration data
       df_conc <- format_pkncaconc_data(
         ADNCA = data(),
         group_columns = c(group_columns, usubjid_column, analyte_column),
-        time_column = time_column
+        time_column = time_column,
+        route_column = route_column,
+        dosno_column = dosno_column
       ) %>%
         arrange(across(all_of(c(usubjid_column, time_column))))
 
@@ -105,7 +108,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
       mydose <- PKNCA::PKNCAdose(
         data = df_dose,
         formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
-        route = route_column,
+        route = std_route_column,
         time.nominal = "NFRLT",
         duration = "ADOSEDUR"
       )
@@ -241,7 +244,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
         ) %>%
         DT::datatable(
           extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = TRUE,
+          options = list(scrollX = TRUE, scrollY = "80vh",
                          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
                          pageLength = -1, fixedHeader = TRUE)
         ) %>%

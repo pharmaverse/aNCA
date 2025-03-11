@@ -263,7 +263,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         ))
 
         output$mismatched_table <- DT::renderDT({
-          datatable(mismatched_points %>% select(-IX))
+          datatable(mismatched_points %>% select(-IX),
+                    fillContainer = TRUE)
         })
 
         setts <- setts %>%
@@ -571,12 +572,16 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         apply_labels(LABELS, "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE)))
 
+      route_column <- "ROUTE"
+      std_route_column <- "std_route"
+
       data <- data %>%
         left_join(y = mydata()$dose$data) %>%
         group_by(across(all_of(unname(unlist(mydata()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
-        select(!!!syms(colnames(data)))
+        select(!!!syms(colnames(data)), conc_groups,
+               all_of(c(route_column, std_route_column)))
 
       reactable(
         data,
@@ -584,12 +589,11 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = FALSE,
+        wrap = TRUE,
         resizable = TRUE,
         showPageSizeOptions = TRUE,
         striped = TRUE,
-        bordered = TRUE,
-        height = "60vh"
+        bordered = TRUE
       )
     })
 

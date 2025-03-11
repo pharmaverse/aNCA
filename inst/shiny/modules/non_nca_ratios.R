@@ -29,6 +29,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
       )
     ),
     card(
+      height = "60vh",
       card_header(paste0(title, " Results")),
       card_body(
         DTOutput(ns("results"))
@@ -99,7 +100,8 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         results(),
         extensions = "Buttons",
         options = list(
-          pageLength = 5,
+          scrollX = TRUE,
+          fixedHeader = TRUE,
           dom = "Bfrtip",
           buttons = list(
             list(
