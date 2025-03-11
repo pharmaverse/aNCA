@@ -1,8 +1,11 @@
-#' Function generating an input widget for TLG option.
+#' Function generating an input widget for TLG option. The UI function will generate an
+#' `actionButton`, that will trigger a popup widget with the input table to be opened.
 #' @param id      id of the input widget
-#' @param opt_def definition of the option, as specified in the `yaml` file
+#' @param opt_def list consisting of definition of the option, as specified in the `tlg.yaml` file,
+#'                should include `label` parameter for the button triggering the table
 #' @param data    data object used for parsing labels, strings, infering placeholder values or
 #'                choices etc.
+#' @returns UI for the input module
 tlg_option_table_ui <- function(id, opt_def, data) {
   ns <- NS(id)
 
@@ -11,12 +14,14 @@ tlg_option_table_ui <- function(id, opt_def, data) {
   actionButton(ns("open_table"), label = label)
 }
 
-#' Function generating an input widget server for TLG option.
+#' Function generating an input widget server for TLG option. Handles opening the modal with
+#' table input, as well as any changes provided by the user.
 #' @param id      id of the input widget
-#' @param opt_def definition of the option, as specified in the `yaml` file
-#' @param data    data object used for parsing labels, strings, infering placeholder values or
+#' @param opt_def list consisting of definition of the option, as specified in the `tlg.yaml` file,
+#'                should include `cols` definition and `default_rows` for the table
+#' @param data    data frame used for parsing labels, strings, infering placeholder values or
 #'                choices etc.
-#' @returns a reactive with the input value
+#' @returns a reactive containing a tibble with modifications provided by the user
 tlg_option_table_server <- function(id, opt_def, data) {
   moduleServer(id, function(input, output, session) {
     #' Generates default table based on provided default option definition
