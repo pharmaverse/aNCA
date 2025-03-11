@@ -176,15 +176,10 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
       unname(tlg_list()[page_start:page_end])
     })
 
-    #' resets the options to defaults
-    observeEvent(input$reset_widgets, {
-      purrr::walk(names(options), shinyjs::reset)
-    })
-
     options_values <- lapply(names(options), \(option) {
       if (is.character(options[[option]])) return(NULL)
       fn <- get(glue("tlg_option_{options[[option]]$type}_server"))
-      fn(option, options[[option]], data)
+      fn(option, options[[option]], data, reactive(input$reset_widgets))
     }) %>%
       setNames(names(options)) %>%
       purrr::keep(\(x) !is.null(x)) %>%

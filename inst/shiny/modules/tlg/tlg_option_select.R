@@ -45,8 +45,11 @@ tlg_option_select_ui <- function(id, opt_def, data) {
 #' @param data    data object used for parsing labels, strings, infering placeholder values or
 #'                choices etc.
 #' @returns a reactive with the input value
-tlg_option_select_server <- function(id, opt_def, data) {
+tlg_option_select_server <- function(id, opt_def, data, reset_trigger) {
   moduleServer(id, function(input, output, session) {
+    #' Reset the input to default value upon reset_trigger
+    observeEvent(reset_trigger(), shinyjs::reset("select"))
+
     reactive({
       input$select
     })
