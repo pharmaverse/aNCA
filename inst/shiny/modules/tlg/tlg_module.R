@@ -96,7 +96,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
       type,
-      "graph" = renderPlotly,
+      "graph" = renderUI,
       "listing" = renderPrint
     )
 
@@ -147,12 +147,11 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
     #' keeps list of plots to render, with options gathered from the UI and applied
     tlg_list <- reactive({
-      list_options <- purrr::imap(reactiveValuesToList(options_values), \(value, name) value()) %>%
-        purrr::keep(\(x) !is.null(x))
+      list_options <- purrr::imap(reactiveValuesToList(options_values), \(value, name) value())
 
-      if (length(list_options) == 0) return(NULL)
+      if (any(sapply(list_options, is.null))) return(NULL)
 
-      list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0)))
+      list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
         do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
@@ -174,7 +173,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      tlg_list()[page_start:page_end]
+      unname(tlg_list()[page_start:page_end])
     })
 
     #' resets the options to defaults
@@ -207,13 +206,6 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
   if (grepl(".group_label", opt_id)) {
     return(tags$h1(opt_def, class = "tlg-group-label"))
   }
-
-  ui_fn <- switch(
-    opt_def$type,
-    text = tlg_option_text_ui,
-    numeric = tlg_option_numeric_ui,
-    select = tlg_option_select_ui
-  )
-
+  ui_fn <- get(glue("tlg_option_{opt_def$type}_ui"))
   ui_fn(opt_id, opt_def, data)
 }
