@@ -96,7 +96,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
       type,
-      "graph" = renderPlotly,
+      "graph" = renderUI,
       "listing" = renderPrint
     )
 
@@ -152,7 +152,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
       if (length(list_options) == 0) return(NULL)
 
-      list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0)))
+      list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
         do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
