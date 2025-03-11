@@ -87,7 +87,6 @@ tab_data_server <- function(id) {
       ADNCA(new_adnca)
     })
 
-    adnca_filtered <- reactiveVal(NULL)
     # Handle user-provided filters
     filters <- reactiveValues()
 
@@ -104,17 +103,13 @@ tab_data_server <- function(id) {
       filters[[filter_id]] <- input_filter_server(filter_id)
     })
 
-    # Create reactive value with applied filters
-    observeEvent(list(input$submit_filters, processed_data()), {
+    adnca_filtered <- reactive({
       # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
-
-      # Filter and overwrite data
-      filtered_data <- apply_filters(
-        ADNCA(), applied_filters
-      )
-      adnca_filtered(filtered_data)
-    }, ignoreInit = FALSE)
+      
+      # Filter and return data
+      apply_filters(ADNCA(), applied_filters)
+    }) |> bindEvent(input$submit_filters, processed_data())
 
     output$filecontents <- renderReactable({
       req(adnca_filtered())
