@@ -2,10 +2,10 @@
 % Please edit documentation in R/pivot_wider_pknca_results.R
 \name{.add_label_attribute}
 \alias{.add_label_attribute}
-\title{Helper function to add "label" attribute to columns based on PPTESTCD names}
+\title{Helper function to add "label" attribute to columns based on parameter names}
 \usage{
 .add_label_attribute(df, myres)
 }
 \description{
-Helper function to add "label" attribute to columns based on PPTESTCD names
+Helper function to add "label" attribute to columns based on parameter names
 }
