@@ -133,7 +133,7 @@ pivot_wider_pknca_results <- function(myres) {
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }
 
-#' Helper function to add "label" attribute to columns based on PPTESTCD names
+#' Helper function to add "label" attribute to columns based on parameter names
 .add_label_attribute <- function(df, myres) {
   mapping_vr <- myres$result %>%
     mutate(PPTESTCD_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
