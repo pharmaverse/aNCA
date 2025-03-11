@@ -64,7 +64,7 @@ tlg_option_table_server <- function(id, opt_def, data) {
               },
               class = "dropdown-extra"
             ),
-            stop("Unsupported extra")
+            stop("Unsupported table input type: ", def$type, " for column: ", colname, ".")
           ),
           name = def$label
         )
