@@ -34,7 +34,7 @@ descriptive_statistics_ui <- function(id) {
       orderInput(
         ns("summary_groupby_source"),
         "Drag and drop these variables...",
-        items = c("USUBJID", "DOSNO"),
+        items = "USUBJID",
         width = shiny::validateCssUnit("100%"),
         connect = ns("summary_groupby")
       ),
@@ -67,7 +67,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
       group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
                             "USUBJID")
-      classification_cols <- sort(c(grouping_vars(), "DOSEA"))
+      classification_cols <- sort(c(grouping_vars(), "DOSEA", "DOSNO"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
