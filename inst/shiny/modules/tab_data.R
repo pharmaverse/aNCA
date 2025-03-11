@@ -14,15 +14,7 @@ tab_data_ui <- function(id) {
     nav_panel("Raw Data Upload",
       card(
         "Upload your PK dataset in .csv format",
-        # Local upload option
-        fileInput(
-          ns("local_upload"),
-          width = "60%",
-          label = NULL,
-          placeholder = ".csv",
-          buttonLabel = list(icon("folder"), "Upload File..."),
-          accept = c(".csv", ".rds")
-        ),
+        raw_data_upload_ui(ns("raw_data")),
         card(
           div(
             class = "card-container",
@@ -66,26 +58,8 @@ tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # DATA LOADING -----------------------------------------------------------------
-    # Load the dummy ADNCA example for the user as default
-    ADNCA <- reactiveVal(
-      read.csv(
-        system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
-        na.strings = c("", "NA")
-      )
-    )
-
-    # Load data provided by user
-    observeEvent(input$local_upload, {
-      new_adnca <- switch(
-        file_ext(input$local_upload$name),
-        csv = read.csv(input$local_upload$datapath, na = c("", "NA")),
-        rds = readRDS(input$local_upload$datapath),
-        validate("Invalid file type. Only accepted are .csv and .rds")
-      )
-
-      ADNCA(new_adnca)
-    })
+    # Load raw ADNCA data
+    raw_adnca_data <- raw_data_upload_server("raw_data")
 
     # Handle user-provided filters
     filters <- reactiveValues()
@@ -97,7 +71,7 @@ tab_data_server <- function(id) {
       # Insert a new filter UI
       insertUI(
         selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), colnames(ADNCA()))
+        ui = input_filter_ui(session$ns(filter_id), colnames(raw_adnca_data()))
       )
 
       filters[[filter_id]] <- input_filter_server(filter_id)
@@ -108,7 +82,7 @@ tab_data_server <- function(id) {
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
 
       # Filter and return data
-      apply_filters(ADNCA(), applied_filters)
+      apply_filters(raw_adnca_data(), applied_filters)
     }) |> bindEvent(input$submit_filters, processed_data())
 
     output$filecontents <- renderReactable({
@@ -127,8 +101,6 @@ tab_data_server <- function(id) {
         height = "98vh"
       )
     })
-
-    # Column Mapping ----
 
     # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
     manual_units <- list(
