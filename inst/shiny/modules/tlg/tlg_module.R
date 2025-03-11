@@ -174,7 +174,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      tlg_list()[page_start:page_end]
+      unname(tlg_list()[page_start:page_end])
     })
 
     #' resets the options to defaults
