@@ -34,7 +34,7 @@ input_filter_ui <- function(id, cols) {
         selectInput(
           ns("condition"),
           "",
-          choices = c("==", ">", "<", ">=", "<=")
+          choices = c("==", ">", "<", ">=", "<=", "!=")
         )
       ),
       column(width = 5,

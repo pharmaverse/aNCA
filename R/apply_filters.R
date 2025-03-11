@@ -43,7 +43,7 @@ apply_filters <- function(data, filters) {
     if (is.numeric(data[[column]])) {
       value <- as.numeric(value)
     }
-
+browser()
     switch(
       filter$condition,
       "==" = {
@@ -60,6 +60,9 @@ apply_filters <- function(data, filters) {
       },
       "<=" = {
         data <- dplyr::filter(data, !!sym(column) <= value)
+      },
+      "!=" = {
+        data <- dplyr::filter(data, !!sym(column) != value)
       }
     )
   }
