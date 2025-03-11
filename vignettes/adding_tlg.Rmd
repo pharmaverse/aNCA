@@ -1,0 +1,151 @@
+---
+title: "Adding new TLGs to the package"
+description: >
+  Learn how to add a new TLG to the package.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Adding new TLGs to the pacakge}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+This is an in-depth guide on contributing to the package. In order to get started with contributing, please read our [contributing guide](https://pharmaverse.github.io/aNCA/CONTRIBUTING.html)
+
+# Adding new Tables, Listing and Graphs
+In order to add new TLGs, two things are needed:
+- a TLG definition specified in the [tlg.yaml](../../inst/shiny/tlg.yaml) file
+- an implementation function that is responsible for generating an entry (table, list, graph).
+
+## TLG definition
+Specified in [tlg.yaml](../../inst/shiny/tlg.yaml) file. Entry in that file is responsible for providing some metadata regarding the TLG (like name, descriptions, links), a function reference for creating the resulting TLG and options, taken as arguments by the generating function, that allow for quick and easy definition of widgets to be rendered in the application interface. This then allows the user to customize plots in accordance to their needs.
+
+### General format
+The entry should have the following format. Identifying keys (wrapped in `<>`) should be provided by the creator and be unique within their scope (indentation level).
+```yaml
+# unique identifier for given entry
+<entry id>:
+  # true / false whether TLG should be included as default
+  is_default:
+  # type of the TLG, in this case must be Graph
+  type:
+  # name of the dataset
+  dataset:
+  # standarized id of the TLG, e.g. pkcg01     
+  pkid:
+  # short label to be displayed as tab name
+  label:
+  # longer descriptions, to be displayed in the order table
+  description:
+  # link to the documentation of the TLG
+  link:
+  # name of the function exported by the package, responsible for generating TLG, must return a list of plots to be displayed
+  fun:
+  # options that can be passed as arguments to the function, will generate an editing widget on the TLG page
+  options:
+    # see below mor more information on options
+    
+  template:
+  # You can also specify template definitions. This is a character string with id of another TLG definition. All options will be copied over from template id. Any provided parameters will be a) overwritten if existing in the template or b) added as new.
+```
+
+### Options
+Options should be passable as arguments into the implementation function. Each provided option will generate a widget for the user to provide customized values. This is the main interface to allow the users to customize their reports. Options should be identified by a unique `option_id`, that is the same as the named argument provided to the implementation function. In example, if the implementation function allows to specify `xaxis_label` as an argument, the `option_id` should be the same.
+
+There are several types of input widgets that you can specify.
+
+#### text
+Standard shiny `textInput`.
+```yaml
+# option id, the same as the argument that is passed to the rendering function, must be unique in the scope of the TLG entry
+<option id>:
+  # type of the option/widget
+  type: text
+  # label to be displayed in the editing widget
+  label:
+  # default value to be provided in the field;
+  # if provided, will overwrite function argument defaults;
+  # if left empty, function defaults will be applied;
+  default: 
+```
+
+#### numeric
+Standard shiny `numericInput`.
+```yaml
+# option id, the same as the argument that is passed to the rendering function, must be unique in the scope of the TLG entry
+<option id>:
+  # type of the option/widget
+  type: numeric
+  # label to be displayed in the editing widget
+  label:
+  # default value to be provided in the field;
+  # if provided, will overwrite function argument defaults;
+  # if left empty, function defaults will be applied;
+  default: 
+```
+
+#### select
+Standard shiny `selectInput`.
+```yaml
+# option id, the same as the argument that is passed to the rendering function, must be unique in the scope of the TLG entry
+<option id>:
+  # type of the option/widget
+  type: select
+  # label to be displayed in the editing widget
+  label:
+  # choices to pick from the dropdown, either specified outright or using a special keyword:
+  # - '.colnames' keyword will pull the choices from the data column names
+  # - '$COLUMN_NAME' keyword will pull choices from values of a specific column
+  choices:
+  # whether to allow for multiple values to be selected  
+  multiple:
+  # default value to be provided in the field;
+  # if provided, will overwrite function argument defaults;
+  # if left empty, function defaults will be applied;
+  # '.all' keyword can be applied to select all choices;
+  default: 
+```
+
+#### table
+```yaml
+# option id, the same as the argument that is passed to the rendering function, must be unique in the scope of the TLG entry
+<option id>:
+  # type of the option/widget
+  type: table
+  # label to be displayed in the editing widget
+  label: "Variables formatting"
+  # column definition for the input table, specifying each column type
+  cols:
+    # colum name, as accepted in the implementation function
+    <column_name>:
+      # type of the input widget, either `text` or `select`
+      type:
+      # label for the column header
+      label:
+      # applicable to `select` type, choices to pick from the dropdown, either specified outright or using a special keyword:
+      # - '.colnames' keyword will pull the choices from the data column names
+      # - '$COLUMN_NAME' keyword will pull choices from values of a specific column
+      choices:
+  # default rows definition, should contain a list of rows that should be applied as defaults;
+  # each row should be an array containing value for each defined column;
+  # if row value for specific column should be empty, use special `$NA` keyword.
+  default_rows:
+```
+
+#### group label
+In order to group options widgets visually, you can specify `group_label`s in between the options definitions. Each group label should be specified by a special keyword `.group_label_N`, where `N` is an integer ID, incremented for each label used within the particular TLG entry.
+```yaml
+# will create a label to help visually group related widgets; should be a character string; N should be replaced with an integer to uniquely identify the keyword    
+.group_label_N:
+```
+
+### Examples
+For examples of TLG definition implementations, please see [tlg.yaml](inst/shiny/tlg.yaml) file in the repository.
+
+## Implementation function
+Function should be defined within `aNCA` package and meet the following criteria:
+
+  - name should be prefaced with letter appropriate for tlg type:
+    - `t_*` for tables
+    - `l_*` for listings
+    - `g_*` for graphs
+  - should accept a `data` argument for providing results to be rendered as a given TLG
+  - should return a list of entries or a single entry.
