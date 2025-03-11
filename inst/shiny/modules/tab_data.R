@@ -87,7 +87,7 @@ tab_data_server <- function(id) {
       ADNCA(new_adnca)
     })
 
-    adnca_filter <- reactiveVal(NULL)
+    adnca_filtered <- reactiveVal(NULL)
     # Handle user-provided filters
     filters <- reactiveValues()
 
@@ -113,13 +113,13 @@ tab_data_server <- function(id) {
       filtered_data <- apply_filters(
         ADNCA(), applied_filters
       )
-      adnca_filter(filtered_data)
+      adnca_filtered(filtered_data)
     }, ignoreInit = FALSE)
 
     output$filecontents <- renderReactable({
-      req(adnca_filter())
+      req(adnca_filtered())
       reactable(
-        adnca_filter(),
+        adnca_filtered(),
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -155,7 +155,7 @@ tab_data_server <- function(id) {
     # Call the column mapping module
     column_mapping <- column_mapping_server(
       id = "column_mapping",
-      data = adnca_filter,
+      data = adnca_filtered,
       manual_units = manual_units,
       on_submit = change_to_review_tab
     )
