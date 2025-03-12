@@ -4,7 +4,7 @@
 #'
 #' Upon upload, user data will be loaded from .csv or .rds files.
 
-raw_data_upload_ui <- function(id) {
+data_upload_ui <- function(id) {
   ns <- NS(id)
 
   fileInput(
@@ -17,7 +17,7 @@ raw_data_upload_ui <- function(id) {
   )
 }
 
-raw_data_upload_server <- function(id) {
+data_upload_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     reactive({
       #' if no data is provided by the user, load dummy data

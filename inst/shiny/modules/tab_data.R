@@ -3,9 +3,6 @@
 #' STUDYID, USUBJID, ANALYTE, PCSPEC, DOSEFRQ, DOSNO, AFRLT, ARRLT, NRRLT, NFRLT,
 #' AVAL, AVALU, ROUTE, DOSEA, AGE
 
-source(system.file("/shiny/modules/input_filter.R", package = "aNCA"))
-source(system.file("/shiny/modules/column_mapping.R", package = "aNCA"))
-
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
@@ -14,7 +11,7 @@ tab_data_ui <- function(id) {
     nav_panel("Raw Data Upload",
       card(
         "Upload your PK dataset in .csv format",
-        raw_data_upload_ui(ns("raw_data")),
+        data_upload_ui(ns("raw_data")),
         card(
           div(
             class = "card-container",
@@ -59,7 +56,7 @@ tab_data_server <- function(id) {
     ns <- session$ns
 
     # Load raw ADNCA data
-    raw_adnca_data <- raw_data_upload_server("raw_data")
+    raw_adnca_data <- data_upload_server("raw_data")
 
     # Handle user-provided filters
     filters <- reactiveValues()
