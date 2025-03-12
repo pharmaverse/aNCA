@@ -76,7 +76,7 @@
 #' \item Reordering columns according to a desired order.
 #' }
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
-column_mapping_ui <- function(id) {
+data_mapping_ui <- function(id) {
   ns <- NS(id)
 
   card(
@@ -150,7 +150,7 @@ column_mapping_ui <- function(id) {
   )
 }
 
-column_mapping_server <- function(id, data, manual_units, on_submit) {
+data_mapping_server <- function(id, data, manual_units, on_submit) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

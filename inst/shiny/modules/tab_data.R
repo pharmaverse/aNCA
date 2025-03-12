@@ -15,7 +15,7 @@ tab_data_ui <- function(id) {
         data_filtering_ui(ns("data_filtering"))
       ),
       nav_panel("Column Mapping",
-        column_mapping_ui(ns("column_mapping"))
+        data_mapping_ui(ns("column_mapping"))
       ),
       nav_panel("Review Data",
         id = ns("data_navset-review"),
@@ -59,7 +59,7 @@ tab_data_server <- function(id) {
     }
 
     # Call the column mapping module
-    column_mapping <- column_mapping_server(
+    column_mapping <- data_mapping_server(
       id = "column_mapping",
       data = adnca_filtered,
       manual_units = manual_units,
