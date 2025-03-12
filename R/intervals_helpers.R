@@ -94,7 +94,7 @@ interval_remove_impute <- function(data, ...) {
   UseMethod("interval_remove_impute", data)
 }
 
-#' @keywords internal
+#' @export
 interval_add_impute.PKNCAdata <- function(data, target_impute, after = Inf,
                                           target_params = NULL, target_groups = NULL, ...) {
   # If the impute column is not present, add it to the intervals
@@ -107,7 +107,7 @@ interval_add_impute.PKNCAdata <- function(data, target_impute, after = Inf,
   data
 }
 
-#' @keywords internal
+#' @export
 interval_remove_impute.PKNCAdata <- function(data, target_impute, target_params = NULL,
                                              target_groups = NULL, ...) {
   # If the impute column is not present in the intervals...
@@ -135,7 +135,7 @@ interval_remove_impute.PKNCAdata <- function(data, target_impute, target_params 
   data
 }
 
-#' @keywords internal
+#' @export
 interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
                                            target_params = NULL, target_groups = NULL, ...) {
   # Validate inputs
@@ -205,7 +205,7 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   data[, !names(data) %in% index_colname]
 }
 
-#' @keywords internal
+#' @export
 interval_remove_impute.data.frame <- function(data,
                                               target_impute,
                                               target_params = NULL,
