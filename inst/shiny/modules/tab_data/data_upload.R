@@ -7,13 +7,19 @@
 data_upload_ui <- function(id) {
   ns <- NS(id)
 
-  fileInput(
-    ns("data_upload"),
-    width = "60%",
-    label = NULL,
-    placeholder = ".csv",
-    buttonLabel = list(icon("folder"), "Upload File..."),
-    accept = c(".csv", ".rds")
+  card(
+    div(
+      h3("Upload"),
+      p("Upload your PK dataset in either .csv or .rds format"),
+      fileInput(
+        ns("data_upload"),
+        width = "60%",
+        label = NULL,
+        placeholder = ".csv",
+        buttonLabel = list(icon("folder"), "Upload File..."),
+        accept = c(".csv", ".rds")
+      )
+    )
   )
 }
 

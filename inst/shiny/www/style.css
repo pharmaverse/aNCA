@@ -19,28 +19,6 @@
   width: 100%;
 }
 
-/* column mapping UI */
-
-.column-mapping-row {
-  display: flex;
-  align-items: center;
-  margin-top: -1rem;
-}
-
-.column-mapping-output {
-  margin: 1.25rem 0 0 0.625rem;
-  color: black;
-}
-
-.column-mapping-label {
-  margin: 1.25rem 0 0 0.625rem;
-  color: grey;
-}
-
-.column-mapping-section h5 {
-  font-weight: bold;
-}
-
 /* Style adjustments for headings */
 h5 {
   margin-bottom: -1.5rem;
@@ -60,27 +38,75 @@ h5 {
   margin-right: 5px;
 }
 
-/* card layout in filters section */
-.card-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%; /* Ensures the card stretches to match its sibling cards */
-}
+/* data tab styling */
+.data-tab-container {
+  .card {
+    margin-top: 1em;
+    margin-bottom: 0em;
 
-/* filters on data page */
-.filter-widget-container {
-  display: flex;
-  justify-content: center;
-  gap: 1em;
-
-  .btn-danger {
-    align-self: flex-end;
-    width: 2.5em;
-    height: 2.5em;
-    padding: 0;
-    margin: 0;
+    .card-body > div {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
   }
+
+  /* filters on data page */
+  .filter-widget-container {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+
+    .btn-danger {
+      align-self: flex-end;
+      width: 2.5em;
+      height: 2.5em;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  .reactable {
+    margin-top: 2em;
+  }
+
+  /* column mapping UI */
+  .data-mapping-container {
+    .column-mapping-row {
+      display: flex;
+      align-items: center;
+      margin: -0.75rem 0 .25em 1em;
+    }
+
+    .column-mapping-output {
+      margin: 1.25rem 0 0 0.625rem;
+      color: black;
+    }
+
+    .column-mapping-label {
+      margin: 1.25rem 0 0 0.625rem;
+      color: grey;
+    }
+
+    h5 {
+      font-weight: bold;
+      margin-top: 0.75em;
+      margin-bottom: 0;
+    }
+
+    button {
+      margin-top: 1em;
+    }
+  }
+  
+
+
+
+
+
+
 }
+
 
 /* buttons */
 .input-group-btn {

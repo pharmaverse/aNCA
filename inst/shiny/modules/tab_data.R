@@ -6,34 +6,29 @@
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
-  navset_pill(
-    id = ns("data_navset"),
-    nav_panel("Raw Data Upload",
-      card(
-        "Upload your PK dataset in .csv format",
+  div(
+    class = "data-tab-container",
+    navset_pill(
+      id = ns("data_navset"),
+      nav_panel("Raw Data Upload",
         data_upload_ui(ns("raw_data")),
+        data_filtering_ui(ns("data_filtering"))
       ),
-      card(data_filtering_ui(ns("data_filtering")))
-    ),
-    nav_panel("Column Mapping",
-      layout_columns(
-        card(
-          column_mapping_ui(ns("column_mapping"))
+      nav_panel("Column Mapping",
+        column_mapping_ui(ns("column_mapping"))
+      ),
+      nav_panel("Review Data",
+        id = ns("data_navset-review"),
+        uiOutput(ns("reviewDataContent")),
+        tags$script(HTML("
+        $(document).ready(function(){
+        $('[data-toggle=\"tooltip\"]').tooltip();
+        });
+                      ")
         )
-      )
-    ),
-    nav_panel("Review Data",
-      id = ns("data_navset-review"),
-      uiOutput(ns("reviewDataContent")),
-      tags$script(HTML("
-      $(document).ready(function(){
-      $('[data-toggle=\"tooltip\"]').tooltip();
-      });
-                    ")
       )
     )
   )
-
 }
 
 tab_data_server <- function(id) {

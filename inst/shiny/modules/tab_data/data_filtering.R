@@ -3,22 +3,25 @@
 data_filtering_ui <- function(id) {
   ns <- NS(id)
 
-  div(
-    class = "card-container",
-    h3("Filters"),
-    p("
-      Click the 'Add Filters' button to add filters to your data.
-      Be sure to click 'Submit' in order to apply the changes.\n
-      Any filters added here will be applied across the whole analysis.
-    "),
+  card(
     div(
-      style = "display: grid; grid-template-columns: 49% 49%; gap: 1%;",
-      actionButton(ns("add_filter"), "Add Filter"),
-      input_task_button(ns("submit_filters"), "Submit Filters")
-    ),
-    div(id = ns("filters")),
-    reactableOutput(ns("filtered_data_display"))
+      h3("Filters"),
+      p("
+        Click the 'Add Filters' button to add filters to your data.
+        Be sure to click 'Submit' in order to apply the changes.\n
+        Any filters added here will be applied across the whole analysis.
+      "),
+      div(
+        style = "display: grid; grid-template-columns: 49% 49%; gap: 1%;",
+        actionButton(ns("add_filter"), "Add Filter"),
+        input_task_button(ns("submit_filters"), "Submit Filters")
+      ),
+      div(id = ns("filters")),
+      reactableOutput(ns("filtered_data_display"))
+    )
+
   )
+
 }
 
 data_filtering_server <- function(id, raw_adnca_data, processed_data) {
