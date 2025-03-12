@@ -68,25 +68,18 @@ h5 {
 }
 
 /* filters on data page */
-#data-filters {
-  padding: 1em;
-}
+.filter-widget-container {
+  display: flex;
+  justify-content: center;
+  gap: 1em;
 
-#data-filters .col-sm-6,
-#data-filters .col-sm-5,
-#data-filters .col-sm-4,
-#data-filters .col-sm-2,
-#data-filters .col-sm-1 {
-  padding: 0;
-}
-
-#data-filters .form-group.shiny-input-container {
-  width: 100%;
-}
-
-#data-filters button.btn-danger {
-  margin-top: 1.45em;
-  margin-left: 0.25em;
+  .btn-danger {
+    align-self: flex-end;
+    width: 2.5em;
+    height: 2.5em;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 /* buttons */
@@ -104,17 +97,6 @@ h5 {
 .btn-help-icon {
   font-size: 20px; /* Increase font size */
   padding: 10px 20px; /* Increase padding */
-}
-
-.filters-submit-button {
-  margin-top: auto; /* Pushes the button to the bottom */
-  width: 100%; /* Ensures the div spans the full width of the card */
-  display: block; /* Ensures proper layout inside the card */
-}
-
-.filters-submit-button .btn {
-  width: 100%; /* Forces the button to fill the div's width */
-  box-sizing: border-box; /* Ensures padding doesn’t overflow */
 }
 
 /* modals */
