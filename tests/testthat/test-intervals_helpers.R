@@ -152,22 +152,14 @@ describe("interval_add_impute", {
   })
 
   it("makes no changes and warns when no matching intervals are found", {
-    result <- suppressWarnings(
-      interval_remove_impute(
-        o_data,
-        target_impute = "start_conc0",
-        target_groups = data.frame(analyte = "Analyte3")
-      )
-    )
-
-    expect_equal(result, o_data)
-
-    expect_warning(
-      interval_remove_impute(o_data,
-                             target_impute = "start_conc0",
-                             target_groups = data.frame(analyte = "Analyte3")),
-      paste0("No intervals found with the specified target parameters,",
-             " groups and/or impute method. No changes made.")
+    expect_warning({
+      res <- interval_remove_impute(o_data,
+                                    target_impute = "start_conc0",
+                                    target_groups = data.frame(analyte = "Analyte3"))
+      expect_equal(res, o_data)
+    },
+    paste0("No intervals found with the specified target parameters,",
+           " groups and/or impute method. No changes made.")
     )
   })
 
@@ -310,16 +302,18 @@ describe("interval_remove_impute", {
     d_no_imp <- o_data
     d_no_imp$intervals <- d_no_imp$intervals[, !names(d_no_imp$intervals) %in% "impute"]
     d_no_imp$impute <- NA_character_
-    res <- suppressWarnings(interval_remove_impute(d_no_imp, target_impute = "start_conc0"))
-    expect_equal(res, d_no_imp)
-    res <- suppressWarnings(interval_remove_impute(d_no_imp$intervals,
-                                                   target_impute = "start_conc0"))
-    expect_equal(res, d_no_imp$intervals)
-    expect_warning(interval_remove_impute(d_no_imp, target_impute = "start_conc0"),
-                   paste0("No default impute column or global method identified.",
-                          " No impute methods to remove"))
-    expect_warning(interval_remove_impute(d_no_imp$intervals, target_impute = "start_conc0"),
-                   "No default impute column identified. No impute methods to remove")
+    expect_warning({
+      res <- interval_remove_impute(d_no_imp, target_impute = "start_conc0")
+      expect_equal(res, d_no_imp)
+    },
+    paste0("No default impute column or global method identified.",
+           " No impute methods to remove")
+    )
+
+    expect_warning({
+      res <- interval_remove_impute(d_no_imp$intervals, target_impute = "start_conc0")
+      expect_equal(res, d_no_imp$intervals)
+    }, "No default impute column identified. No impute methods to remove")
   })
 
   it("if impute col is missing uses global impute", {
@@ -400,20 +394,14 @@ describe("interval_remove_impute", {
   })
 
   it("makes no changes and warns when no matching intervals found", {
-    result <- suppressWarnings(
-      interval_remove_impute(
-        o_data,
-        target_impute = "start_conc0",
-        target_groups = data.frame(analyte = "Analyte3")
-      )
-    )
-    expect_equal(result, o_data)
-
-    expect_warning(interval_remove_impute(o_data,
-                                          target_impute = "start_conc0",
-                                          target_groups = data.frame(analyte = "Analyte3")),
-                   paste0("No intervals found with the specified target parameters,",
-                          " groups and/or impute method. No changes made."))
+    expect_warning({
+      res <- interval_remove_impute(o_data,
+                                    target_impute = "start_conc0",
+                                    target_groups = data.frame(analyte = "Analyte3"))
+      expect_equal(res, o_data)
+      paste0("No intervals found with the specified target parameters,",
+             " groups and/or impute method. No changes made.")
+    })
   })
 
   it("handles properly impute character method with multiple imputes", {
