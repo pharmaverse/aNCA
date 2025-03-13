@@ -22,14 +22,6 @@ tab_data_ui <- function(id) {
           placeholder = ".csv",
           buttonLabel = list(icon("folder"), "Upload File..."),
           accept = c(".csv", ".rds")
-        )
-      ),
-      reactableOutput(ns("filecontents"))
-    ),
-    nav_panel("Mapping and Filters",
-      layout_columns(
-        card(
-          column_mapping_ui(ns("column_mapping"))
         ),
         card(
           div(
@@ -45,6 +37,14 @@ tab_data_ui <- function(id) {
               input_task_button(ns("submit_filters"), "Submit Filters")
             )
           )
+        )
+      ),
+      reactableOutput(ns("filecontents"))
+    ),
+    nav_panel("Column Mapping",
+      layout_columns(
+        card(
+          column_mapping_ui(ns("column_mapping"))
         )
       )
     ),
@@ -87,10 +87,34 @@ tab_data_server <- function(id) {
       ADNCA(new_adnca)
     })
 
+    # Handle user-provided filters
+    filters <- reactiveValues()
+
+    observeEvent(input$add_filter, {
+      # Create a unique ID for each filter
+      filter_id <- paste0("filter_", input$add_filter)
+
+      # Insert a new filter UI
+      insertUI(
+        selector = paste0("#", session$ns("filters")),
+        ui = input_filter_ui(session$ns(filter_id), colnames(ADNCA()))
+      )
+
+      filters[[filter_id]] <- input_filter_server(filter_id)
+    })
+
+    adnca_filtered <- reactive({
+      # Extract filters from reactive values
+      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
+
+      # Filter and return data
+      apply_filters(ADNCA(), applied_filters)
+    }) |> bindEvent(input$submit_filters, processed_data())
+
     output$filecontents <- renderReactable({
-      req(ADNCA())
+      req(adnca_filtered())
       reactable(
-        ADNCA(),
+        adnca_filtered(),
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -126,7 +150,7 @@ tab_data_server <- function(id) {
     # Call the column mapping module
     column_mapping <- column_mapping_server(
       id = "column_mapping",
-      data = ADNCA,
+      data = adnca_filtered,
       manual_units = manual_units,
       on_submit = change_to_review_tab
     )
@@ -135,12 +159,12 @@ tab_data_server <- function(id) {
       if (!is.null(processed_data()) && nrow(processed_data()) > 0) {
         tagList(
           "This is the data set that will be used for the analysis.
-          If you would like to make any changes please return to the 'Mapping and Filters' tab.",
+          If you would like to make any changes please return to the previous tabs.",
           reactableOutput(ns("data_processed"))
         )
       } else {
         div(
-          "Please map your data in the 'Mapping and Filters' section before reviewing it."
+          "Please map your data in the 'Column Mapping' section before reviewing it."
         )
       }
     })
@@ -151,44 +175,15 @@ tab_data_server <- function(id) {
     # Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables
 
-    # Handle user-provided filters
-    filters <- reactiveValues()
-
-    observeEvent(input$add_filter, {
-      # Create a unique ID for each filter
-      filter_id <- paste0("filter_", input$add_filter)
-
-      # Insert a new filter UI
-      insertUI(
-        selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), colnames(processed_data()))
-      )
-
-      filters[[filter_id]] <- input_filter_server(filter_id)
-    })
-
-    # Create reactive value with applied filters
-    data <- reactiveVal(NULL)
-    observeEvent(list(input$submit_filters, processed_data()), {
-      # Extract filters from reactive values
-      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
-
-      # Filter and overwrite data
-      filtered_data <- apply_filters(
-        processed_data(), applied_filters
-      )
-      data(filtered_data)
-    }, ignoreInit = FALSE)
-
     # Update the data table object with the filtered data
     output$data_processed <- renderReactable({
-      req(data())
+      req(processed_data())
 
       # Generate column definitions
-      col_defs <- generate_col_defs(data())
+      col_defs <- generate_col_defs(processed_data())
 
       reactable(
-        data(),
+        processed_data(),
         columns = col_defs,
         searchable = TRUE,
         sortable = TRUE,
@@ -204,7 +199,7 @@ tab_data_server <- function(id) {
     })
 
     list(
-      data = data,
+      data = processed_data,
       grouping_variables = grouping_variables
     )
   })
