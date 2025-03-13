@@ -63,8 +63,6 @@ manual_slopes_table_server <- function(
       manual_slopes(current_slopes)
     })
 
-    row_counter <- reactiveVal(0)
-
     #' Adds new row to the selection/exclusion datatable
     observeEvent(input$add_rule, {
       log_trace("{id}: adding manual slopes row")
@@ -87,10 +85,8 @@ manual_slopes_table_server <- function(
 
       updated_data <- as.data.frame(rbind(manual_slopes(), new_row), stringsAsFactors = FALSE)
       manual_slopes(updated_data)
-    })
-
-    output$debug_output <- renderPrint({
-      manual_slopes()
+      reset_reactable_memory()
+      refresh_reactable(refresh_reactable() + 1)
     })
 
     #' Removes selected row
@@ -101,6 +97,8 @@ manual_slopes_table_server <- function(
       req(selected)
       edited_slopes <- manual_slopes()[-selected, ]
       manual_slopes(edited_slopes)
+      reset_reactable_memory()
+      refresh_reactable(refresh_reactable() + 1)
     })
 
     #' Render manual slopes table
