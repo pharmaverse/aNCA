@@ -263,7 +263,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         ))
 
         output$mismatched_table <- DT::renderDT({
-          datatable(mismatched_points %>% select(-IX))
+          datatable(mismatched_points %>% select(-IX),
+                    fillContainer = TRUE)
         })
 
         setts <- setts %>%
@@ -527,11 +528,19 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         unique()
       mydata$impute <- NA
 
-      # Filter only the analytes and doses requested
+      # Filter only the analytes and doses requested for intervals and units
       mydata$intervals <- mydata$intervals %>%
         filter(DOSNO %in% input$select_dosno,
                       ANALYTE %in% input$select_analyte,
                       PCSPEC %in% input$select_pcspec)
+
+      unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
+      analyte_column <- mydata$conc$columns$groups$group_analyte
+      mydata$units <- mydata$units %>%
+        select(-!!sym(analyte_column)) %>%
+        tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
+        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)  %>%
+        filter(ANALYTE %in% input$select_analyte)
 
       # Define start imputations on intervals if specified by the user
       if (input$should_impute_c0) {
@@ -563,12 +572,16 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         apply_labels(LABELS, "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE)))
 
+      route_column <- "ROUTE"
+      std_route_column <- "std_route"
+
       data <- data %>%
         left_join(y = mydata()$dose$data) %>%
         group_by(across(all_of(unname(unlist(mydata()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
-        select(!!!syms(colnames(data)))
+        select(!!!syms(colnames(data)), conc_groups,
+               all_of(c(route_column, std_route_column)))
 
       reactable(
         data,
@@ -576,12 +589,11 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = FALSE,
+        wrap = TRUE,
         resizable = TRUE,
         showPageSizeOptions = TRUE,
         striped = TRUE,
-        bordered = TRUE,
-        height = "60vh"
+        bordered = TRUE
       )
     })
 

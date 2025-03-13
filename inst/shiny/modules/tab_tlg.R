@@ -25,10 +25,12 @@ tab_tlg_ui <- function(id) {
       )
     ),
     nav_panel("Tables", "To be added"),
-    nav_panel("Listings", uiOutput(ns("lists"), class = "tlg-module"), value = "Lists"),
+    nav_panel("Listings", uiOutput(ns("listings"), class = "tlg-module"), value = "Listings"),
     nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-module"), value = "Graphs"),
     # disable loader for initial empty UI render #
-    footer = tags$style(HTML(paste0(".tlg-module .load-container {opacity: 0;}")))
+    footer = tags$style(
+      id = "tlg-load-hide", HTML(paste0(".tlg-module .load-container {opacity: 0;}"))
+    )
   )
 }
 
@@ -207,18 +209,19 @@ tab_tlg_server <- function(id) {
       shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
     })
 
-    #' change tab to first populated tab (currently only Graphs)
+    #' change tab to first populated tab
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
     observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+      tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) |> paste0("s")
       shinyjs::runjs(
         paste0("
           // change the tab to graphs //
-          $(`#", session$ns("tlg_tabs"), " a[data-value='Lists']`)[0].click();
+          $(`#", session$ns("tlg_tabs"), " a[data-value='", tab_to_switch, "']`)[0].click();
 
           // enable spinner, as it was disabled for initial empty UI render //
           setTimeout(function() {
-            $('.tlg-module .load-container').css('opacity', 1);
+            $('#tlg-load-hide').remove();
           }, 500);  
         ")
       )
@@ -262,14 +265,14 @@ tab_tlg_server <- function(id) {
       do.call(navset_pill_list, panels)
     })
 
-    output$lists <- renderUI({
+    output$listings <- renderUI({
       req(tlg_order_filtered())
 
-      tlg_order_lists <- filter(tlg_order_filtered(), Type == "Listing") %>%
+      tlg_order_listings <- filter(tlg_order_filtered(), Type == "Listing") %>%
         select("id") %>%
         pull()
 
-      panels <- lapply(tlg_order_lists, function(g_id) {
+      panels <- lapply(tlg_order_listings, function(g_id) {
         list_ui <- {
           g_def <- .TLG_DEFINITIONS[[g_id]]
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
