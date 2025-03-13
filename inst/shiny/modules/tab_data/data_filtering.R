@@ -46,6 +46,14 @@ data_filtering_server <- function(id, raw_adnca_data, processed_data) {
       # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
 
+      if (length(applied_filters) != 0) {
+        applied_filters |>
+          sapply(\(filt) str_glue("* {filt$column} {filt$condition} {filt$value}")) |>
+          paste0(collapse = "\n") %>%
+          paste0("Submitting the following filters:\n", .) %>%
+          log_info()
+      }
+
       # Filter and return data
       apply_filters(raw_adnca_data(), applied_filters)
     }) |>

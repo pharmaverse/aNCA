@@ -35,14 +35,18 @@ tab_data_server <- function(id) {
     #' Filter data
     adnca_filtered <- data_filtering_server("data_filtering", adnca_raw, processed_data)
 
-    observe(print(adnca_filtered()))
-
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
       adnca_data = adnca_filtered,
       on_submit = \() updateTabsetPanel(session, "data_navset", selected = "Review Data")
     )
+
+    #' Reactive value for the processed dataset
+    processed_data <- column_mapping$processed_data
+
+    #' Global variable to store grouping variables
+    grouping_variables <- column_mapping$grouping_variables
 
     output$reviewDataContent <- renderUI({
       if (!is.null(processed_data()) && nrow(processed_data()) > 0) {
@@ -57,12 +61,6 @@ tab_data_server <- function(id) {
         )
       }
     })
-
-    #' Reactive value for the processed dataset
-    processed_data <- column_mapping$processed_data
-
-    #' Global variable to store grouping variables
-    grouping_variables <- column_mapping$grouping_variables
 
     # Update the data table object with the filtered data
     output$data_processed <- renderReactable({

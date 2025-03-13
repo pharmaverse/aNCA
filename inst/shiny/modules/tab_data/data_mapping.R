@@ -200,6 +200,7 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
     processed_data <- reactiveVal(NULL)
     observeEvent(input$submit_columns, {
       req(adnca_data())
+      log_info("Processing data mapping...")
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
 
       # Enable other tabs
@@ -216,9 +217,18 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
         })
       }, simplify = FALSE)
 
+      lapply(selected_cols, \(group) {
+        purrr::imap(group, \(v, n) paste0("* ", n, " -> ", paste0(v, collapse = ", ")))
+      }) %>%
+        unlist(use.names = FALSE) %>%
+        paste0(collapse = "\n") %>%
+        paste0("The following mapping was applied:\n", .) %>%
+        log_info()
+
       # Check for duplicate column selections
       all_selected_columns <- unlist(selected_cols)
       if (any(duplicated(all_selected_columns))) {
+        log_warn("Duplicate column selection detected.")
         showModal(modalDialog(
           title = "Duplicate Column Selections",
           "Please ensure that each column selection is unique.",
