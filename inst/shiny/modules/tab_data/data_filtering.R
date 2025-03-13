@@ -62,6 +62,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
 
       if (length(applied_filters) != 0) {
         applied_filters |>
+          purrr::keep(\(x) !is.null(x)) |>
           sapply(\(filt) str_glue("* {filt$column} {filt$condition} {filt$value}")) |>
           paste0(collapse = "\n") %>%
           paste0("Submitting the following filters:\n", .) %>%
