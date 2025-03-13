@@ -28,6 +28,19 @@ o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
 o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
 
 describe("interval_add_impute", {
+  it("adds the impute method in the impute column of a dummy intervals dataframe", {
+    simple_df <- data.frame(
+      cmax = TRUE,
+      impute =  c("", "m0", "m0,m1")
+      )
+    expected_res <- data.frame(
+      cmax = TRUE,
+      impute = c("mlast", "m0,mlast", "m0,m1,mlast")
+      )
+    res <- interval_add_impute(simple_df,target_impute = "mlast")
+    expect_equal(res, expected_res)
+  })
+  
   it("throws an error if either data or target_impute is missing", {
     expect_error(interval_add_impute(o_data), "Both 'data' and 'target_impute' must be provided.")
   })
@@ -227,6 +240,19 @@ describe("interval_add_impute", {
 })
 
 describe("interval_remove_impute", {
+  it("removes the impute method in the impute column of a dummy intervals dataframe", {
+    simple_df <- data.frame(
+      cmax = TRUE,
+      impute =  c("", "m0", "m0,m1")
+    )
+    expected_res <- data.frame(
+      cmax = TRUE,
+      impute = c("", NA_character_, "m1")
+    )
+    res <- interval_remove_impute(simple_df, target_impute = "m0")
+    expect_equal(res, expected_res)
+  })
+  
   it("throws an error if either data or target_impute is missing", {
     expect_error(interval_remove_impute(o_data),
                  "Both 'data' and 'target_impute' must be provided.")
