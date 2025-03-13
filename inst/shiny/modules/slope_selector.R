@@ -114,29 +114,6 @@ slope_selector_server <- function(
 
     ns <- session$ns
     
-    # Profiles per Patient ----
-    # Define a profiles per patient
-    profiles_per_patient <- reactive({
-      req(mydata())
-
-      # Check if res_nca() is available and valid
-      if (!is.null(res_nca())) {
-        res_nca()$result %>%
-          mutate(USUBJID = as.character(USUBJID),
-                 DOSNO = as.character(DOSNO)) %>%
-          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
-          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-          unnest(DOSNO)  # Convert lists into individual rows
-      } else {
-        mydata()$conc$data %>%
-          mutate(USUBJID = as.character(USUBJID)) %>%
-          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
-          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop") %>%
-          unnest(DOSNO) %>%
-          mutate(DOSNO = as.character(DOSNO))
-      }
-    })
-    
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
       req(mydata())
@@ -188,6 +165,20 @@ slope_selector_server <- function(
 
         result_obj
       }
+    })
+    
+    # Profiles per Patient ----
+    # Define the profiles per patient
+    profiles_per_patient <- reactive({
+      req(lambdas_res())
+    
+      lambdas_res()$result %>%
+        mutate(USUBJID = as.character(USUBJID),
+               DOSNO = as.character(DOSNO)) %>%
+        group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
+        summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
+        unnest(DOSNO)  # Convert lists into individual rows
+
     })
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
@@ -299,175 +290,6 @@ slope_selector_server <- function(
     
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
-#' 
-#'     #' Object for storing exclusion and selection data for lambda slope calculation
-#'     manual_slopes <- reactiveVal({
-#'       data.frame(
-#'         TYPE = character(),
-#'         RANGE = character(),
-#'         REASON = character(),
-#'         stringsAsFactors = FALSE
-#'       )
-#'     })
-#' 
-#'     observeEvent(mydata(), {
-#' 
-#'       current_slopes <- manual_slopes()
-#'       # Add missing dynamic columns with default values (e.g., NA_character_)
-#'       for (col in slopes_groups()) {
-#'         if (!col %in% colnames(current_slopes)) {
-#'           current_slopes[[col]] <- character()
-#'         }
-#'       }
-#' 
-#'       # Define the desired column order
-#'       ordered_cols <- c(slopes_groups(), "TYPE", "RANGE", "REASON")
-#'       current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
-#' 
-#'       # Update the reactive Val
-#'       manual_slopes(current_slopes)
-#'     })
-#' 
-#'     row_counter <- reactiveVal(0)
-#' 
-#'     #' Adds new row to the selection/exclusion datatable
-#'     observeEvent(input$add_rule, {
-#'       log_trace("{id}: adding manual slopes row")
-#' 
-#'       # Create a named list for dynamic columns based on `profiles_per_patient`
-#'       dynamic_values <- lapply(slopes_groups(), function(col) {
-#'         value <- as.character(unique(profiles_per_patient()[[col]]))
-#'         if (length(value) > 0) value[1] else NA_character_  # Handle empty or NULL cases
-#'       })
-#' 
-#'       names(dynamic_values) <- slopes_groups()
-#' 
-#'       # Create the new row with both fixed and dynamic columns
-#'       new_row <- as.data.frame(c(
-#'         dynamic_values,
-#'         TYPE = "Selection",
-#'         RANGE = "1:3",
-#'         REASON = ""
-#'       ), stringsAsFactors = FALSE)
-#' 
-#'       updated_data <- as.data.frame(rbind(manual_slopes(), new_row), stringsAsFactors = FALSE)
-#'       manual_slopes(updated_data)
-#'     })
-#' 
-#'     #' Removes selected row
-#'     observeEvent(input$remove_rule, {
-#'       log_trace("{id}: removing manual slopes row")
-#' 
-#'       selected <- getReactableState("manual_slopes", "selected")
-#'       req(selected)
-#'       edited_slopes <- manual_slopes()[-selected, ]
-#'       manual_slopes(edited_slopes)
-#'     })
-#' 
-#' 
-#'     #' Render manual slopes table
-#'     refresh_reactable <- reactiveVal(1)
-#'     output$manual_slopes <- renderReactable({
-#' 
-#'       log_trace("{id}: rendering slope edit data table")
-#'       # Isolate to prevent unnecessary re-renders on every edit
-#'       isolate({
-#'         data <- manual_slopes()
-#'       })
-#' 
-#'       # Fixed columns (TYPE, RANGE, REASON)
-#'       fixed_columns <- list(
-#'         TYPE = colDef(
-#'           cell = dropdown_extra(
-#'             id = ns("edit_TYPE"),
-#'             choices = c("Selection", "Exclusion"),
-#'             class = "dropdown-extra"
-#'           ),
-#'           width = 200
-#'         ),
-#'         RANGE = colDef(
-#'           cell = text_extra(
-#'             id = ns("edit_RANGE")
-#'           )
-#'         ),
-#'         REASON = colDef(
-#'           cell = text_extra(
-#'             id = ns("edit_REASON")
-#'           ),
-#'           width = 400
-#'         )
-#'       )
-#' 
-#'       # Dynamic group column definitions
-#'       dynamic_columns <- lapply(slopes_groups(), function(col) {
-#'         colDef(
-#'           cell = dropdown_extra(
-#'             id = ns(paste0("edit_", col)),
-#'             choices = unique(profiles_per_patient()[[col]]), # Dynamically set choices
-#'             class = "dropdown-extra"
-#'           ),
-#'           width = 150
-#'         )
-#'       })
-#'       names(dynamic_columns) <- slopes_groups()
-#' 
-#'       # Combine columns in the desired order
-#'       all_columns <- c(
-#'         dynamic_columns,
-#'         list(
-#'           TYPE = fixed_columns$TYPE,
-#'           RANGE = fixed_columns$RANGE,
-#'           REASON = fixed_columns$REASON
-#'         )
-#'       )
-#' 
-#'       # Render reactable
-#'       reactable(
-#'         data = data,
-#'         defaultColDef = colDef(
-#'           align = "center"
-#'         ),
-#'         columns = all_columns,
-#'         selection = "multiple",
-#'         defaultExpanded = TRUE,
-#'         borderless = TRUE,
-#'         theme = reactableTheme(
-#'           rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
-#'         )
-#'       )
-#'     }) %>%
-#'       shiny::bindEvent(refresh_reactable())
-#' 
-#'     #' Separate event handling updating displayed reactable upon every change (adding and removing
-#'     #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
-#'     #' the table would mean losing focus on text inputs when entering values.
-#'     observeEvent(manual_slopes(), {
-#'       reactable::updateReactable(
-#'         outputId = "manual_slopes",
-#'         data = manual_slopes()
-#'       )
-#'     })
-#' 
-#'     #' For each of the columns in slope selector data frame, attach an event that will read
-#'     #' edits for that column made in the reactable.
-#'     observe({
-#'       req(slope_selector_columns())
-#'       # Dynamically attach observers for each column
-#'       purrr::walk(slope_selector_columns(), \(colname) {
-#'         observeEvent(input[[paste0("edit_", colname)]], {
-#'           edit <- input[[paste0("edit_", colname)]]
-#'           edited_slopes <- manual_slopes()
-#'           edited_slopes[edit$row, edit$column] <- edit$value
-#'           manual_slopes(edited_slopes)
-#'         })
-#'       })
-#'     })
-#' 
-#'     #' saves and implements provided ruleset
-#'     observeEvent(input$save_ruleset, {
-#'       mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
-#'       pk_nca_trigger(pk_nca_trigger() + 1)
-#'     })
 
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
