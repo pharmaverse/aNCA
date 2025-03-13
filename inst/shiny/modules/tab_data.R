@@ -41,16 +41,11 @@ tab_data_server <- function(id) {
     #' Filter data
     adnca_filtered <- data_filtering_server("data_filtering", adnca_raw, processed_data)
 
-    # Define the callback function to change the tab
-    change_to_review_tab <- function() {
-      updateTabsetPanel(session, "data_navset", selected = "Review Data")
-    }
-
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
       data = adnca_filtered,
-      on_submit = change_to_review_tab
+      on_submit = \() updateTabsetPanel(session, "data_navset", selected = "Review Data")
     )
 
     output$reviewDataContent <- renderUI({
