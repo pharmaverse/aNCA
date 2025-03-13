@@ -64,7 +64,7 @@ MAPPING_DESIRED_ORDER <- c(
 }
 
 #' Column Mapping Module
-#' #' This module provides implementation for mapping columns from a dataset to specific
+#' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
 #' group identifiers, sample variables, dose variables, time variables, and unit variables.
 #'

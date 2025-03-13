@@ -1,4 +1,14 @@
-#' Module responsible for
+#' Module handling raw data filtering.
+#'
+#' @details
+#' Module handles filtering UI. The user can add new filtering rules, modify their parameters,
+#' and submit the filters when ready. The module filters provided raw data based on those
+#' specifications.
+#'
+#' @param id ID of the module.
+#' @param raw_adnca_data Reactive with raw adnca data as uploaded by the user (or dummy dataset).
+#'
+#' @returns A reactive with filtered adnca data.
 
 data_filtering_ui <- function(id) {
   ns <- NS(id)

@@ -6,7 +6,10 @@
 #' @param id   A unique identifier for the filter.
 #' @param cols Character vector containing column names to display for selection.
 #'
-#' @return A Shiny UI component for creating a filter.
+#' @returns A reactive with the filter specification, a list containing provided:
+#'            - column
+#'            - condition
+#'            - value
 #'
 #' @details
 #' The function creates a UI component with the following elements:
@@ -17,6 +20,7 @@
 #'   \item A text input for specifying the filter value.
 #'   \item A remove button to remove the filter.
 #' }
+
 input_filter_ui <- function(id, cols) {
   ns <- NS(id)
 

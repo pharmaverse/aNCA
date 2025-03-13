@@ -1,7 +1,17 @@
-#' The user can upload a new data set by clicking the "Browse" button.
-#' The data set must be in CSV format and contain the following columns:
-#' STUDYID, USUBJID, ANALYTE, PCSPEC, DOSEFRQ, DOSNO, AFRLT, ARRLT, NRRLT, NFRLT,
-#' AVAL, AVALU, ROUTE, DOSEA, AGE
+#' Module handling pre-processing of data.
+#'
+#' @details
+#' Handles user upload or dummy data, filtering, mapping and reviewing. The general pipeline for
+#' the module is:
+#' 1. Upload raw adnca data (or return a dummy dataset)
+#' 2. Filter the raw data based on user input
+#' 3. Process the data based on column mapping specifications
+#' The module also allows the user to review the data after performing filtering and mapping -
+#' the processed data will go further into the analysis pipeline.
+#'
+#' @returns list containing two reactives:
+#'            - data -> processed data for further analysis
+#'            - grouping_variables -> grouping variables specified by the user.
 
 tab_data_ui <- function(id) {
   ns <- NS(id)

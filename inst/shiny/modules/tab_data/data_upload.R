@@ -1,8 +1,12 @@
 #' Module responsible for loading and validating raw ADNCA data.
-#' Upon startup, when no data is provided by the user, the module will return dummy data
-#' available with the application.
 #'
-#' Upon upload, user data will be loaded from .csv or .rds files.
+#' @details
+#' Upon startup, when no data is provided by the user, the module will return dummy data
+#' available with the application. Upon upload, user data will be loaded from .csv or .rds files.
+#'
+#' @param id ID of the module.
+#'
+#' @returns A reactive with raw adnca data as provided by the user (or dummy dataset).
 
 data_upload_ui <- function(id) {
   ns <- NS(id)
