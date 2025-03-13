@@ -113,7 +113,7 @@ slope_selector_server <- function(
     log_trace("{id}: Attaching server")
 
     ns <- session$ns
-    
+
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
       req(mydata())
@@ -166,12 +166,12 @@ slope_selector_server <- function(
         result_obj
       }
     })
-    
+
     # Profiles per Patient ----
     # Define the profiles per patient
     profiles_per_patient <- reactive({
       req(lambdas_res())
-    
+
       lambdas_res()$result %>%
         mutate(USUBJID = as.character(USUBJID),
                DOSNO = as.character(DOSNO)) %>%
@@ -284,10 +284,10 @@ slope_selector_server <- function(
         choices = unique(res_nca()$result$USUBJID)
       )
     })
-    
+
     slopes_table <- manual_slopes_table_server("manual_slopes", mydata,
-                               profiles_per_patient, slopes_groups, pk_nca_trigger)
-    
+                                               profiles_per_patient, slopes_groups, pk_nca_trigger)
+
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
 
@@ -313,7 +313,7 @@ slope_selector_server <- function(
 
     observeEvent(event_data("plotly_click", priority = "event"), {
       log_trace("slope_selector: plotly click detected")
-      
+
       result <- handle_plotly_click(last_click_data,
                                     manual_slopes,
                                     slopes_groups(),
