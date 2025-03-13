@@ -35,10 +35,12 @@ tab_data_server <- function(id) {
     #' Filter data
     adnca_filtered <- data_filtering_server("data_filtering", adnca_raw, processed_data)
 
+    observe(print(adnca_filtered()))
+
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
-      data = adnca_filtered,
+      adnca_data = adnca_filtered,
       on_submit = \() updateTabsetPanel(session, "data_navset", selected = "Review Data")
     )
 
