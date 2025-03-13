@@ -19,13 +19,7 @@ tab_data_ui <- function(id) {
       ),
       nav_panel("Review Data",
         id = ns("data_navset-review"),
-        uiOutput(ns("reviewDataContent")),
-        tags$script(HTML("
-        $(document).ready(function(){
-        $('[data-toggle=\"tooltip\"]').tooltip();
-        });
-                      ")
-        )
+        card(uiOutput(ns("reviewDataContent")))
       )
     )
   )
@@ -62,10 +56,10 @@ tab_data_server <- function(id) {
       }
     })
 
-    # Reactive value for the processed dataset
+    #' Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data
 
-    # Global variable to store grouping variables
+    #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables
 
     # Update the data table object with the filtered data
