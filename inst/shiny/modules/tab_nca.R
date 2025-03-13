@@ -114,6 +114,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
       )
 
       #create basic intervals so that PKNCAdata can be created
+      #TODO: investigate if this is required
       intervals <-
         data.frame(
           start = 0, end = Inf,
