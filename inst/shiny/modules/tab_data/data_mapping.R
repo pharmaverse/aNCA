@@ -1,3 +1,16 @@
+#' Define the manual units for concentration, dose, and time in a format recognized by PKNCA
+MANUAL_UNITS <- list(
+  concentration = c(
+    "mg/L", "µg/mL", "ng/mL", "pg/mL", "mol/L", "mmol/L", "µmol/L", "nmol/L", "pmol/L", "mg/dL",
+    "µg/dL", "ng/dL"
+  ),
+  dose = c(
+    "mg", "g", "µg", "ng", "pg", "mol", "mmol", "µmol", "nmol", "pmol", "mg/kg", "g/kg", "µg/kg",
+    "ng/kg", "pg/kg", "mol/kg", "mmol/kg", "µmol/kg", "nmol/kg", "pmol/kg"
+  ),
+  time = c("sec", "min", "hr", "day", "week", "month", "year")
+)
+
 #' Column Mapping Widget
 #'
 #' A reusable UI component for mapping dataset columns to specific identifiers or roles.
@@ -42,7 +55,6 @@
 #'
 #' @param id The module ID.
 #' @param data A reactive expression that returns the dataset to be processed.
-#' @param manual_units A list containing manual units for concentration, dose, and time.
 #' @param on_submit A callback function to be executed when the submit button is clicked.
 #'
 #' @returns A list containing:
@@ -150,7 +162,7 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, data, manual_units, on_submit) {
+data_mapping_server <- function(id, data, on_submit) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -184,7 +196,7 @@ data_mapping_server <- function(id, data, manual_units, on_submit) {
     # Populate the static inputs with column names
     observeEvent(data(), {
       column_names <- names(data())
-      update_selectize_inputs(session, input_ids, column_names, manual_units, desired_order)
+      update_selectize_inputs(session, input_ids, column_names, MANUAL_UNITS, desired_order)
     })
 
     # Global variable to store grouping variables
@@ -248,13 +260,13 @@ data_mapping_server <- function(id, data, manual_units, on_submit) {
       }
 
       # Update dataset columns if manual units are selected
-      if (input$select_AVALU %in% manual_units$concentration) {
+      if (input$select_AVALU %in% MANUAL_UNITS$concentration) {
         dataset$AVALU <- input$select_AVALU
       }
-      if (input$select_DOSEU %in% manual_units$dose) {
+      if (input$select_DOSEU %in% MANUAL_UNITS$dose) {
         dataset$DOSEU <- input$select_DOSEU
       }
-      if (input$select_RRLTU %in% manual_units$time) {
+      if (input$select_RRLTU %in% MANUAL_UNITS$time) {
         dataset$RRLTU <- input$select_RRLTU
       }
 

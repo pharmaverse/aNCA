@@ -41,18 +41,6 @@ tab_data_server <- function(id) {
     #' Filter data
     adnca_filtered <- data_filtering_server("data_filtering", adnca_raw, processed_data)
 
-    # Define the manual units for concentration, dose, and time in a format recognized by PKNCA
-    manual_units <- list(
-      concentration = c("mg/L", "µg/mL", "ng/mL", "pg/mL",
-                        "mol/L", "mmol/L", "µmol/L", "nmol/L",
-                        "pmol/L", "mg/dL", "µg/dL", "ng/dL"),
-      dose = c("mg", "g", "µg", "ng", "pg", "mol", "mmol",
-               "µmol", "nmol", "pmol", "mg/kg", "g/kg",
-               "µg/kg", "ng/kg", "pg/kg", "mol/kg", "mmol/kg",
-               "µmol/kg", "nmol/kg", "pmol/kg"),
-      time = c("sec", "min", "hr", "day", "week", "month", "year")
-    )
-
     # Define the callback function to change the tab
     change_to_review_tab <- function() {
       updateTabsetPanel(session, "data_navset", selected = "Review Data")
@@ -62,7 +50,6 @@ tab_data_server <- function(id) {
     column_mapping <- data_mapping_server(
       id = "column_mapping",
       data = adnca_filtered,
-      manual_units = manual_units,
       on_submit = change_to_review_tab
     )
 
