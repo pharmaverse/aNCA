@@ -24,7 +24,7 @@ data_filtering_ui <- function(id) {
 
 }
 
-data_filtering_server <- function(id, raw_adnca_data, processed_data) {
+data_filtering_server <- function(id, raw_adnca_data) {
   moduleServer(id, function(input, output, session) {
     # Handle user-provided filters
     filters <- reactiveValues()
@@ -42,6 +42,20 @@ data_filtering_server <- function(id, raw_adnca_data, processed_data) {
       filters[[filter_id]] <- input_filter_server(filter_id)
     })
 
+    #' When filters change, show notification reminding the user about submitting
+    filter_reminder_notification <- reactiveVal(NULL)
+    observe({
+      rv_list <- reactiveValuesToList(filters)
+      if (length(rv_list) == 0) return(NULL)
+      showNotification(
+        "Remember to submit filters before continuing.",
+        id = session$ns("filter_submit_reminder"),
+        duration = 0,
+        closeButton = FALSE,
+        type = "message"
+      ) |> filter_reminder_notification()
+    })
+
     filtered_data <- reactive({
       # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
@@ -54,10 +68,12 @@ data_filtering_server <- function(id, raw_adnca_data, processed_data) {
           log_info()
       }
 
+      removeNotification(filter_reminder_notification())
+
       # Filter and return data
       apply_filters(raw_adnca_data(), applied_filters)
     }) |>
-      bindEvent(input$submit_filters, raw_adnca_data(), processed_data())
+      bindEvent(input$submit_filters, raw_adnca_data())
 
     output$filtered_data_display <- renderReactable({
       req(filtered_data())

@@ -33,7 +33,7 @@ tab_data_server <- function(id) {
     adnca_raw <- data_upload_server("raw_data")
 
     #' Filter data
-    adnca_filtered <- data_filtering_server("data_filtering", adnca_raw, processed_data)
+    adnca_filtered <- data_filtering_server("data_filtering", adnca_raw)
 
     # Call the column mapping module
     column_mapping <- data_mapping_server(
