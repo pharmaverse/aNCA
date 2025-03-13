@@ -196,28 +196,34 @@ describe("interval_add_impute", {
 
   it("does not create duplicates but removes the originals & adds impute method based on after", {
     result <- interval_add_impute(o_data, target_impute = "start_conc0", after = Inf)
+    expected_result <- data.frame(
+      analyte = c("Analyte1", "Analyte2", "Analyte1"),
+      half.life = c(TRUE, TRUE, TRUE),
+      cmax = c(TRUE, TRUE, TRUE),
+      impute = c("start_predose,start_conc0",
+                 "start_predose,start_conc0",
+                 "start_conc0")
+    )
     expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1"),
-                            half.life = c(TRUE, TRUE, TRUE),
-                            cmax = c(TRUE, TRUE, TRUE),
-                            impute = c("start_predose,start_conc0",
-                                       "start_predose,start_conc0",
-                                       "start_conc0")))
+                 expected_result)
   })
 
   it("adds new rows with added imputations after the original ones", {
     result <- interval_add_impute(o_data, target_impute = "new_impute", target_param = "cmax")
+    expected_result <- data.frame(
+      analyte = c("Analyte1", "Analyte1", "Analyte2",
+                  "Analyte2", "Analyte1", "Analyte1"),
+      half.life = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+      cmax = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),
+      impute = c("start_conc0,start_predose",
+                 "start_conc0,start_predose,new_impute",
+                 "start_predose",
+                 "start_predose,new_impute",
+                 "start_conc0",
+                 "start_conc0,new_impute")
+    )
     expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 data.frame(analyte = c("Analyte1", "Analyte1", "Analyte2",
-                                        "Analyte2", "Analyte1", "Analyte1"),
-                            half.life = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
-                            cmax = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),
-                            impute = c("start_conc0,start_predose",
-                                       "start_conc0,start_predose,new_impute",
-                                       "start_predose",
-                                       "start_predose,new_impute",
-                                       "start_conc0",
-                                       "start_conc0,new_impute")))
+                 expected_result)
   })
 
   it("does not add new interval if non-target & target params share target impute", {
@@ -236,11 +242,14 @@ describe("interval_add_impute", {
                                                    target_impute = "start_predose",
                                                    target_param = "cmax",
                                                    after = Inf))
+    expected_result <- data.frame(
+      analyte = c("Analyte1", "Analyte2"),
+      half.life = c(TRUE, TRUE),
+      cmax = c(TRUE, TRUE),
+      impute = c("start_conc0,start_predose", "start_predose")
+    )
     expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 data.frame(analyte = c("Analyte1", "Analyte2"),
-                            half.life = c(TRUE, TRUE),
-                            cmax = c(TRUE, TRUE),
-                            impute = c("start_conc0,start_predose", "start_predose")))
+                 expected_result)
   })
 })
 
@@ -411,11 +420,14 @@ describe("interval_remove_impute", {
     o_data_multiple_imputes <- o_data
     o_data_multiple_imputes$intervals$impute <- "start_conc0,start_predose"
     result <- interval_remove_impute(o_data_multiple_imputes, target_impute = "start_conc0")
+    expected_result <- data.frame(
+      analyte = c("Analyte1", "Analyte2", "Analyte1"),
+      half.life = c(TRUE, TRUE, TRUE),
+      cmax = c(TRUE, TRUE, TRUE),
+      impute = c("start_predose", "start_predose", "start_predose")
+    )
     expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1"),
-                            half.life = c(TRUE, TRUE, TRUE),
-                            cmax = c(TRUE, TRUE, TRUE),
-                            impute = c("start_predose", "start_predose", "start_predose")))
+                 expected_result)
   })
 
   it("handles mixed TRUE/FALSE for cmax and half.life correctly", {
@@ -448,24 +460,30 @@ describe("interval_remove_impute", {
     o_data_multiple_imputes <- o_data
     o_data_multiple_imputes$intervals$impute <- "start_conc0,start_predose,start_conc0"
     result <- interval_remove_impute(o_data_multiple_imputes, target_impute = "start_conc0")
+    expected_result <- data.frame(
+      analyte = c("Analyte1", "Analyte2", "Analyte1"),
+      half.life = c(TRUE, TRUE, TRUE),
+      cmax = c(TRUE, TRUE, TRUE),
+      impute = c("start_predose", "start_predose", "start_predose")
+    )
     expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1"),
-                            half.life = c(TRUE, TRUE, TRUE),
-                            cmax = c(TRUE, TRUE, TRUE),
-                            impute = c("start_predose", "start_predose", "start_predose")))
+                 expected_result)
   })
 
   it("includes new rows right after the original ones", {
     result <- interval_remove_impute(o_data, target_impute = "start_conc0", target_param = "cmax")
+    expected_result <- data.frame(
+      analyte = c("Analyte1", "Analyte1", "Analyte2", "Analyte1", "Analyte1"),
+      half.life = c(TRUE, FALSE, TRUE, TRUE, FALSE),
+      cmax = c(FALSE, TRUE, TRUE, FALSE, TRUE),
+      impute = c("start_conc0,start_predose",
+                 "start_predose",
+                 "start_predose",
+                 "start_conc0",
+                 NA_character_)
+    )
     expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 data.frame(analyte = c("Analyte1", "Analyte1", "Analyte2", "Analyte1", "Analyte1"),
-                            half.life = c(TRUE, FALSE, TRUE, TRUE, FALSE),
-                            cmax = c(FALSE, TRUE, TRUE, FALSE, TRUE),
-                            impute = c("start_conc0,start_predose",
-                                       "start_predose",
-                                       "start_predose",
-                                       "start_conc0",
-                                       NA_character_)))
+                 expected_result)
   })
 })
 
