@@ -197,8 +197,7 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
     })
 
     # Observe submit button click and update processed_data
-    processed_data <- reactiveVal(NULL)
-    observeEvent(input$submit_columns, {
+    processed_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
@@ -279,8 +278,9 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
       # Execute the callback function to change the tab
       on_submit()
 
-      processed_data(dataset)
-    })
+      dataset
+    }) |>
+      bindEvent(input$submit_columns)
 
     list(
       processed_data = processed_data,
