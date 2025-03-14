@@ -13,7 +13,7 @@ tab_nca_ui <- function(id) {
       nav_panel(
         "Setup", fluid = TRUE,
         navset_pill_list(
-          nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
+          nav_panel("NCA settings", nca_setup_ui(ns("nca_setup"))),
           nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
           nav_panel("Save setts", save_settings_ui(ns("save_settings")))
         )
@@ -148,7 +148,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     })
 
     # NCA SETUP MODULE ----
-    rules <- nca_setup_server("nca_settings", data, mydata, res_nca)
+    rules <- nca_setup_server("nca_setup", data, mydata, res_nca)
 
     # NCA RESULTS ----
     res_nca <- reactiveVal(NULL)
