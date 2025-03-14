@@ -13,12 +13,7 @@ PKNCA_create_data_object(adnca_data)
 <<<<<<< HEAD
 <<<<<<< HEAD
 \code{PKNCAdata} object with concentration, doses, and units based on ADNCA data.
-=======
-\code{PKNCAdata} object with... TODO
->>>>>>> c5a4e95 (refactor: moved some PKNCA-related logic code to functions)
-=======
 \code{PKNCAdata} object with concentration, doses, and units based on ADNCA data.
->>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 }
 \description{
 Creates a \code{PKNCA::PKNCAdata} object.
@@ -39,12 +34,17 @@ It requires the following columns in the ADNCA data:
 \item DOSNO: Dose profile number.
 \item ANALYTE: Analyte.
 <<<<<<< HEAD
+<<<<<<< HEAD
 \item AVAL: Analysis value.
 \item AVALU: AVAL unit.
 =======
 \item AVAL: Concentration value.
 \item AVALU: Concentration unit.
 >>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
+=======
+\item AVAL: Änalysis value.
+\item AVALU: AVAL unit.
+>>>>>>> fbf4001 (add testing for pkncadata object creation)
 \item DOSEA: Dose amount.
 \item DOSEU: Dose unit.
 \item AFRLT: Actual time from first dose.
