@@ -26,7 +26,7 @@ data_filtering_ui <- function(id) {
         actionButton(ns("add_filter"), "Add Filter"),
         input_task_button(ns("submit_filters"), "Submit Filters")
       ),
-      div(id = ns("filters")),
+      div(id = ns("filters")), # container for filter widgets inserted in the server part
       reactableOutput(ns("filtered_data_display"))
     )
 
