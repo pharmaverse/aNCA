@@ -147,7 +147,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     })
 
     # NCA SETUP MODULE ----
-    rules <- nca_setup_server("nca_settings", data, mydata, res_nca)
+    setup <- nca_setup_server("nca_settings", data, mydata, res_nca)
 
     # NCA RESULTS ----
     res_nca <- reactiveVal(NULL)
@@ -188,7 +188,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
       })
     })
 
-    nca_results_server("nca_results", res_nca, rules(), grouping_vars)
+    nca_results_server("nca_results", res_nca, setup()$rules, grouping_vars)
 
     # Profiles per Patient ----
     # Define a profiles per patient
@@ -346,7 +346,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     # ADDITIONAL ANALYSIS ----
-    additional_analysis_server("non_nca", mydata, grouping_vars)
+    additional_analysis_server("non_nca", mydata, res_nca, grouping_vars)
 
     # PARAMETER DATASETS ----
     parameter_datasets_server("parameter_datasets", res_nca)
