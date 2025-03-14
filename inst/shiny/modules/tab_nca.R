@@ -169,7 +169,15 @@ tab_nca_server <- function(id, data, grouping_vars) {
                               -mydata()$conc$columns$groups$group_analyte)) %>%
             mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
                    end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
-            select(names(myres$result), start_dose, end_dose)
+            select(names(myres$result), start_dose, end_dose) %>%
+
+            # ToDo: PKNCA package should offer a better solution to this at some point
+            # Prevent that when t0 is used with non-imputed params to show off two result rows
+            # just choose the derived ones (last row always due to interval_helper funs)
+            group_by(across(-c(PPSTRES, PPORRES, exclude))) %>%
+            slice_tail(n = 1) %>%
+            ungroup()
+
 
           res_nca(myres)
           updateTabsetPanel(session, "ncapanel", selected = "Results")
