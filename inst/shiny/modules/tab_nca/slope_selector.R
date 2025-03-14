@@ -435,16 +435,20 @@ slope_selector_server <- function(
       })
     })
 
+    # nolint start
+    # TODO(mateusz): broken with current changes, is fixed with #241
+    # https://github.com/pharmaverse/aNCA/pull/241
     # Observe input$nca
-    observeEvent(profiles_per_patient(), {
-      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
-    })
+    # observeEvent(profiles_per_patient(), {
+    #   mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
+    # })
 
-    #' saves and implements provided ruleset
-    observeEvent(input$save_ruleset, {
-      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
-      pk_nca_trigger(pk_nca_trigger() + 1)
-    })
+    # #' saves and implements provided ruleset
+    # observeEvent(input$save_ruleset, {
+    #   mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
+    #   pk_nca_trigger(pk_nca_trigger() + 1)
+    # })
+    # nolint end
 
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
