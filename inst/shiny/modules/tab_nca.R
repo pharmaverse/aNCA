@@ -76,6 +76,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
     units_table <- nca_setup$units_table
+
     rules <- nca_setup$rules
 
     #' Slope rules setup module
