@@ -38,12 +38,13 @@ units_data <- data.frame(
   RRLTU = rep("hour", 12)
 )
 
+# Simple example dataset
+pknca_data <- PKNCA_create_data_object(simple_data)
+
 describe("PKNCA_create_data_object", {
   
   it("creates a PKNCAdata object with concentration, doses, and units based on ADNCA data", {
-    # Simple example dataset
-    result <- PKNCA_create_data_object(simple_data)
-    expect_s3_class(result, "PKNCAdata")
+    expect_s3_class(pknca_data, "PKNCAdata")
   })
   
   it("handles missing columns required for PKNCA in the input data", {
@@ -82,4 +83,25 @@ describe("PKNCA_create_data_object", {
   #TODO: Add test for multiple units once implemented
   
   #TODO: add test for duplicated rows error message
+})
+
+
+#Calculate NCA
+nca_results <- PKNCA_calculate_nca(pknca_data)
+
+describe("PKNCA_calculate_nca", {
+  
+  it("calculates results for PKNCA analysis", {
+    expect_s3_class(nca_results, "PKNCAresults")
+  })
+  
+  it("adds start and end from most recent dose", {
+    # Check that the results have the dosing data
+    expect_true("start_dose" %in% colnames(nca_results$result))
+    expect_true("end_dose" %in% colnames(nca_results$result))
+    
+    #check that only two items have been added to list
+    expect_equal(length(colnames(nca_results$result)), 15)
+  })
+  
 })
