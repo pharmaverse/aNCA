@@ -1,18 +1,62 @@
 #' Creates a `PKNCA::PKNCAdata` object.
 #'
 #' @details
-#' TODO
+#' This function creates a standard PKNCAdata object from ADNCA data.
+#' It requires the following columns in the ADNCA data:
+#' - STUDYID: Study identifier.
+#' - PCSPEC: Matrix.
+#' - ROUTE: Route of administration.
+#' - DRUG: Drug identifier.
+#' - USUBJID: Unique subject identifier.
+#' - DOSNO: Dose profile number.
+#' - ANALYTE: Analyte.
+#' - AVAL: Concentration value.
+#' - AVALU: Concentration unit.
+#' - DOSEA: Dose amount.
+#' - DOSEU: Dose unit.
+#' - AFRLT: Actual time from first dose.
+#' - ARRLT: Actual time from reference dose.
+#' - NFRLT: Nominal time from first dose.
+#' - ADOSEDUR: Duration of dose.
+#' - RRLTU: Time unit.
+#' 
+#' 1. Creating pk concentration data using `format_pkncaconc_data()`.
+#' 2. Creating dosing data using `format_pkncadose_data()`.
+#' 3. Creating PKNCAconc object using `PKNCA::PKNCAconc()`.
+#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE`.
+#' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
+#' with formula `DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID`.
+#' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
+#' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
 #' @param adnca_data Data table containing ADNCA data.
 #'
-#' @returns `PKNCAdata` object with... TODO
+#' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
 #'
 #' @examples
-#' TODO
-#'
+#' adnca_data <- data.frame(
+#' STUDYID = rep("STUDY001", 6),
+#' PCSPEC = rep("Plasma", 6),
+#' ROUTE = rep("IV", 6),
+#' DRUG = rep("DrugA", 6),
+#' USUBJID = rep("SUBJ001", 6),
+#' DOSNO = rep(1, 6),
+#' ANALYTE = rep("AnalyteA", 6),
+#' AVAL = c(0, 5, 10, 7, 3, 1),
+#' AVALU = rep("ng/mL", 6),
+#' DOSEA = rep(100, 6),
+#' DOSEU = rep("mg", 6),
+#' AFRLT = c(0, 1, 2, 3, 4, 6),
+#' ARRLT = c(0, 1, 2, 3, 4, 6),
+#' NFRLT = c(0, 1, 2, 3, 4, 6),
+#' ADOSEDUR = rep(0.5, 6),
+#' RRLTU = rep("hour", 6)
+#' )
+#' PKNCA_create_data_object(adnca_data)
+#' 
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
-  # Define column names
+  # Define column names based on ADNCA vars
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
@@ -77,7 +121,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   pknca_data_object <- PKNCA::PKNCAdata(
     data.conc = pknca_conc,
     data.dose = pknca_dose,
-    intervals = intervals,
+    intervals = intervals, #TODO: should be default
     units = PKNCA::pknca_units_table(
       concu = pknca_conc$data$AVALU[1],
       doseu = pknca_conc$data$DOSEU[1],
