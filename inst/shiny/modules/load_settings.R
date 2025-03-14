@@ -11,7 +11,7 @@ load_settings_ui <- function(id) {
   )
 }
 
-load_settings_server <- function(id, mydata, auc_counter) {
+load_settings_server <- function(id, mydata, input) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -69,7 +69,7 @@ load_settings_server <- function(id, mydata, auc_counter) {
           vals_setts <- unique(setts.df[[var_setts_col]])
           
           selected_vals <- intersect(vals_setts, vals_data)
-          
+
           if (length(selected_vals) < length(vals_setts)) {
             showNotification(
               validate("The ", attr(data.df[[var_data_col]], "label"), ":",
@@ -88,15 +88,17 @@ load_settings_server <- function(id, mydata, auc_counter) {
         } else return()
       }
       
-      update_with_setts_selector_selected("DOSNO", "DOSNO", setts.df = setts, data.df = mydata()$conc$data, session = session, inputId = "select_dosno")
+      update_with_setts_selector_selected("DOSNO", "DOSNO", setts.df = setts$intervals, data.df = mydata()$conc$data, session = session, inputId = "nca-nca_setup-select_dosno")
+
       update_with_setts_selector_selected(var_setts_col = setts$conc$columns$groups$group_analyte,
                                           var_data_col = mydata()$conc$columns$groups$group_analyte,
-                                          setts.df = setts$intervals, data.df = mydata()$conc$data, session, "select_analyte")
-      update_with_setts_selector_selected("PCSPEC", "PCSPEC", setts, mydata()$conc$data, session, "select_pcspec")
-      
+                                          setts.df = setts$intervals, data.df = mydata()$conc$data, session, "nca-nca_setup-select_analyte")
+      update_with_setts_selector_selected("PCSPEC", "PCSPEC", setts, mydata()$conc$data, session, "nca-nca_setup-select_pcspec")
+    
+
       updateSelectInput(
         session,
-        inputId = "method",
+        inputId = "nca-nca_setup-method",
         label = "Extrapolation Method:",
         choices = c("lin-log", "lin up/log down", "linear"),
         selected = setts$options$auc.method
@@ -113,16 +115,10 @@ load_settings_server <- function(id, mydata, auc_counter) {
       
       updatePickerInput(
         session,
-        inputId = ns("nca_params"),
+        inputId = "nca-nca_setup-nca_params",
         selected = params_setts
       )
-      
-      updatePickerInput(
-        session,
-        inputId = "nca_params",
-        selected = params_setts
-      )
-      
+
       data <- mydata()
 
       data$units <- dplyr::left_join(data$units, setts$units, 
@@ -133,9 +129,9 @@ load_settings_server <- function(id, mydata, auc_counter) {
         rename_with(~str_remove(., ".setts"))
       
       if (any(grepl("start.*", setts$intervals$impute))) {
-        updateCheckboxInput(session, inputId = "should_impute_c0", value = TRUE)
+        updateCheckboxInput(session, inputId = "nca-nca_setup-should_impute_c0", value = TRUE)
       } else {
-        updateCheckboxInput(session, inputId = "should_impute_c0", value = FALSE)
+        updateCheckboxInput(session, inputId = "nca-nca_setup-should_impute_c0", value = FALSE)
       }
       
       dose_time_col <- setts$dose$columns$time
@@ -149,7 +145,7 @@ load_settings_server <- function(id, mydata, auc_counter) {
         filter(!duplicated(paste0(start, end)))
       
       if ((nrow(intervals_userinput_setts) > 0)) {
-        updateCheckboxInput(session, inputId = "AUCoptions",
+        updateCheckboxInput(session, inputId = "nca-nca_setup-AUCoptions",
                             label = "Select Partial AUC", value = TRUE)
         
         for (i in seq_along(nrow(intervals_userinput_setts))) {
@@ -170,35 +166,35 @@ load_settings_server <- function(id, mydata, auc_counter) {
         }
         auc_counter(nrow(intervals_userinput_setts))
       }
-      
-      if (!is.na(setts$flag_rules$adj.r.squared)) {
-        updateCheckboxInput(session, inputId = "rule_adj.r.squared", value = TRUE)
-        updateNumericInput(session = session, inputId = "adj.r.squared_threshold", value = setts$flag_rules$adj.r.squared)
-      } else {
-        updateCheckboxInput(session, inputId = "rule_adj.r.squared", value = FALSE)
-      }
-      
-      if (!is.null(setts$options$flag_rules$aucpext.obs)) {
-        updateCheckboxInput(session, inputId = "rule_aucpext.obs", value = TRUE)
-        updateNumericInput(session, inputId = "aucpext.obs_threshold", value = setts$lag_rules$aucpext.obs)
-      } else {
-        updateCheckboxInput(session, inputId = "rule_aucpext.obs", value = FALSE)
-      }
-      
-      if (!is.null(setts$options$flag_rules$aucpext.pred)) {
-        updateCheckboxInput(session, inputId = "rule_aucpext.pred", value = TRUE)
-        updateNumericInput(session, inputId = "aucpext.pred_threshold", value = setts$flag_rules$aucpext.pred)
-      } else {
-        updateCheckboxInput(session, inputId = "rule_aucpext.pred", value = FALSE)
-      }
-      
-      if (!is.null(setts$options$flag_rules$span.ratio)) {
-        updateCheckboxInput(session, inputId = "rule_span.ratio", value = TRUE)
-        updateNumericInput(session, inputId = "span.ratio_threshold", value = setts$flag_rules$span.ratio)
-      } else {
-        updateCheckboxInput(session, inputId = "rule_span.ratio", value = FALSE)
-      }
-      
+      # 
+      # if (!is.na(setts$flag_rules$adj.r.squared)) {
+      #   updateCheckboxInput(session, inputId = "rule_adj.r.squared", value = TRUE)
+      #   updateNumericInput(session = session, inputId = "adj.r.squared_threshold", value = setts$flag_rules$adj.r.squared)
+      # } else {
+      #   updateCheckboxInput(session, inputId = "rule_adj.r.squared", value = FALSE)
+      # }
+      # 
+      # if (!is.null(setts$options$flag_rules$aucpext.obs)) {
+      #   updateCheckboxInput(session, inputId = "rule_aucpext.obs", value = TRUE)
+      #   updateNumericInput(session, inputId = "aucpext.obs_threshold", value = setts$lag_rules$aucpext.obs)
+      # } else {
+      #   updateCheckboxInput(session, inputId = "rule_aucpext.obs", value = FALSE)
+      # }
+      # 
+      # if (!is.null(setts$options$flag_rules$aucpext.pred)) {
+      #   updateCheckboxInput(session, inputId = "rule_aucpext.pred", value = TRUE)
+      #   updateNumericInput(session, inputId = "aucpext.pred_threshold", value = setts$flag_rules$aucpext.pred)
+      # } else {
+      #   updateCheckboxInput(session, inputId = "rule_aucpext.pred", value = FALSE)
+      # }
+      # 
+      # if (!is.null(setts$options$flag_rules$span.ratio)) {
+      #   updateCheckboxInput(session, inputId = "rule_span.ratio", value = TRUE)
+      #   updateNumericInput(session, inputId = "span.ratio_threshold", value = setts$flag_rules$span.ratio)
+      # } else {
+      #   updateCheckboxInput(session, inputId = "rule_span.ratio", value = FALSE)
+      # }
+
       conc_setts_columns <- unname(unlist(setts$conc$columns[c("groups", "time", "concentration")]))
       
       if (nrow(setts$conc$data) > 0) {
