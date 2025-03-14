@@ -49,22 +49,23 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
     #' TODO: change this to a reactive. Setup module should not modify the object directly,
     #' should return a copy instead.
-    pknca_data <- reactiveVal(NULL)
-    observeEvent(adnca_data(), {
+    pknca_data <- reactive({
       req(adnca_data())
       log_trace("Creating PKNCA::data object.")
 
-      PKNCA_create_data_object(adnca_data()) |>
-        pknca_data()
-    })
+      PKNCA_create_data_object(adnca_data())
+    }) |>
+      bindEvent(adnca_data())
 
     #' NCA Setup module
-    rules <- nca_setup_server("nca_settings", adnca_data, pknca_data, res_nca)
+    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data, res_nca)
+    processed_pknca_data <- nca_setup$processed_pknca_data
+    rules <- nca_setup$rules
 
     #' Slope rules setup module
     slope_rules <- slope_selector_server(
       "slope_selector",
-      pknca_data,
+      processed_pknca_data,
       res_nca,
       profiles_per_patient,
       pk_nca_trigger,
@@ -98,9 +99,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     # SLOPE SELECTOR ----
     # Keep the UI table constantly actively updated
     observeEvent(input, {
-      req(pknca_data())
+      req(processed_pknca_data())
       dynamic_columns <- c(
-        setdiff(unname(unlist(pknca_data()$conc$columns$groups)), "DRUG"),
+        setdiff(unname(unlist(processed_pknca_data()$conc$columns$groups)), "DRUG"),
         "DOSNO"
       )
       for (input_name in grep(
@@ -129,16 +130,16 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       pk_nca_trigger(pk_nca_trigger() + 1)
     })
     res_nca <- reactive({
-      req(pknca_data())
+      req(processed_pknca_data())
 
       withProgress(message = "Calculating NCA...", value = 0, {
         tryCatch({
-          res <- PKNCA_calculate_nca(pknca_data())
+          res <- PKNCA_calculate_nca(processed_pknca_data())
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
           res
         }, error = function(e) {
-          browser()
+          # TODO: this does not catch errors properly
           full_error <- e$parent$message
           if (grepl("pk.calc.", x = full_error)) {
             param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
@@ -158,19 +159,19 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     # TODO: This will be removed in #241
     # https://github.com/pharmaverse/aNCA/pull/241
     profiles_per_patient <- reactive({
-      req(pknca_data())
+      req(processed_pknca_data())
       # Check if res_nca() is available and valid
       if (!is.null(res_nca())) {
         res_nca()$result %>%
           mutate(USUBJID = as.character(USUBJID),
                  DOSNO = as.character(DOSNO)) %>%
-          group_by(!!!syms(unname(unlist(pknca_data()$conc$columns$groups)))) %>%
+          group_by(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups)))) %>%
           summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
           unnest(DOSNO)  # Convert lists into individual rows
       } else {
-        pknca_data()$conc$data %>%
+        processed_pknca_data()$conc$data %>%
           mutate(USUBJID = as.character(USUBJID)) %>%
-          group_by(!!!syms(unname(unlist(pknca_data()$conc$columns$groups)))) %>%
+          group_by(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups)))) %>%
           summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
       }
     })
@@ -179,10 +180,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     #' Settings download module
-    download_settings_server("download_settings", pknca_data, res_nca)
+    download_settings_server("download_settings", processed_pknca_data, res_nca)
 
     #' Additional analysis module
-    additional_analysis_server("non_nca", pknca_data, grouping_vars)
+    additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
 
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
