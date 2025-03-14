@@ -52,6 +52,12 @@ h5 {
   }
 
   /* filters on data page */
+  .filters-buttons-container {
+    display: grid;
+    grid-template-columns: 49% 49%;
+    gap: 2%;
+  }
+
   .filter-widget-container {
     display: flex;
     justify-content: center;
@@ -98,13 +104,6 @@ h5 {
       margin-top: 1em;
     }
   }
-  
-
-
-
-
-
-
 }
 
 

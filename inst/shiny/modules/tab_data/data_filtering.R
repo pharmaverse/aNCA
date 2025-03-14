@@ -22,7 +22,7 @@ data_filtering_ui <- function(id) {
         Any filters added here will be applied across the whole analysis.
       "),
       div(
-        style = "display: grid; grid-template-columns: 49% 49%; gap: 1%;",
+        class = "filters-buttons-container",
         actionButton(ns("add_filter"), "Add Filter"),
         input_task_button(ns("submit_filters"), "Submit Filters")
       ),
