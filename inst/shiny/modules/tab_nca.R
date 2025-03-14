@@ -176,7 +176,13 @@ tab_nca_server <- function(id, data, grouping_vars) {
       })
     })
 
-    nca_results_server("nca_results", res_nca, setup()$rules, grouping_vars)
+    # Retrieve bioavailability selections
+    auc_options <- reactive({
+      req(setup())
+      setup()$bioavailability
+    })
+    
+    nca_results_server("nca_results", res_nca, setup()$rules, grouping_vars, auc_options)
 
     # Profiles per Patient ----
     # Define a profiles per patient
@@ -334,12 +340,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     # ADDITIONAL ANALYSIS ----
-    auc_options <- reactive({
-      req(setup())
-      setup()$bioavailability
-    })
-    
-    additional_analysis_server("non_nca", mydata, res_nca, grouping_vars, auc_options)
+    additional_analysis_server("non_nca", mydata, res_nca, grouping_vars)
 
     # PARAMETER DATASETS ----
     parameter_datasets_server("parameter_datasets", res_nca)

@@ -19,7 +19,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, res_nca, rules, grouping_vars) {
+nca_results_server <- function(id, res_nca, rules, grouping_vars, auc_options) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -27,7 +27,21 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
       req(res_nca())
       # Transform results
       final_results <- pivot_wider_pknca_results(res_nca())
-
+browser()
+      # Calculate bioavailability if selected
+      bioavailability <- calculate_bioavailability(res_nca(), auc_options())
+      
+      # Extract ID groups
+      id_groups <- res_nca()$data$conc$columns$groups %>%
+        purrr::list_c() %>%
+        append("DOSNO") %>%
+        purrr::keep(~ !is.null(.) && . != "DRUG" && length(unique(res_nca()$data$conc$data[[.]])) > 1)
+      
+      final_results <- final_results %>%
+        mutate(Grouping_EX = apply(select(., all_of(id_groups), -USUBJID), 1, paste, collapse = " "))%>%
+        left_join(bioavailability, by = c("USUBJID", "Grouping_EX")) %>%
+        select(-Grouping_EX)
+      
       # Apply rules
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
         if (!rules[[rule_input]]) next

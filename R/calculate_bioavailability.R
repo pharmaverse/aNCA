@@ -27,7 +27,7 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
   if (is.null(selected_aucs) || length(selected_aucs) == 0) {
     return(NULL)
   }
-  browser()
+
   # Extract and clean AUC selection
   auc_vars <- gsub("^f_", "", selected_aucs)
   
@@ -62,7 +62,7 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
   for (auc_type in auc_vars) {
     
     data <- auc_data %>%
-      mutate(grouping = apply(select(., all_of(id_groups), -USUBJID), 1, paste, collapse = "_"))
+      mutate(grouping = apply(select(., all_of(id_groups), -USUBJID), 1, paste, collapse = " "))
     
     # Separate IV and EX data
     iv_data <- data %>%

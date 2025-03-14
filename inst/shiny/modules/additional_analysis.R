@@ -55,18 +55,13 @@ additional_analysis_ui <- function(id) {
 }
 
 # Server function for the module
-additional_analysis_server <- function(id, data, res_nca, grouping_vars, auc_options) {
+additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Call module for Matrix Ratio Analysis
     non_nca_ratio_server(id = "matrix_ratio_analysis", data, grouping_vars)
-    
-    # Bioavailability calculations
-    observeEvent(res_nca(), {
-      req(res_nca)
-      bio <- calculate_bioavailability(res_nca(), auc_options())
-    })
+  
     
   })
 }
