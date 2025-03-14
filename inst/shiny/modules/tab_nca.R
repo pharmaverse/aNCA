@@ -113,9 +113,21 @@ tab_nca_server <- function(id, data, grouping_vars) {
         duration = "ADOSEDUR"
       )
 
+      #create basic intervals so that PKNCAdata can be created
+      #TODO: investigate if this is required
+      intervals <-
+        data.frame(
+          start = 0, end = Inf,
+          cmax = TRUE,
+          tmax = TRUE,
+          auclast = FALSE,
+          aucinf.obs = FALSE
+        )
+
       mydata <- PKNCA::PKNCAdata(
         data.conc = myconc,
         data.dose = mydose,
+        intervals = intervals,
         units = PKNCA::pknca_units_table(
           concu = myconc$data$AVALU[1],
           doseu = myconc$data$DOSEU[1],
