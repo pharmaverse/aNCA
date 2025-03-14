@@ -334,7 +334,12 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     # ADDITIONAL ANALYSIS ----
-    additional_analysis_server("non_nca", mydata, res_nca, grouping_vars)
+    auc_options <- reactive({
+      req(setup())
+      setup()$bioavailability
+    })
+    
+    additional_analysis_server("non_nca", mydata, res_nca, grouping_vars, auc_options)
 
     # PARAMETER DATASETS ----
     parameter_datasets_server("parameter_datasets", res_nca)
