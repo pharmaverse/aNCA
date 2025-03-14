@@ -135,7 +135,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     })
 
     # NCA SETUP MODULE ----
-    rules <- nca_setup_server("nca_settings", data, mydata, res_nca)
+    setup <- nca_setup_server("nca_settings", data, mydata, res_nca)
 
     # NCA RESULTS ----
     res_nca <- reactiveVal(NULL)
@@ -175,36 +175,8 @@ tab_nca_server <- function(id, data, grouping_vars) {
         })
       })
     })
-    
-    # Calculate Bioavailability if possible
-    observeEvent(res_nca(), {
-      req(res_nca())
-      route_col <- res_nca()$data$dose$columns$route
-      dose_col <- res_nca()$data$dose$columns$dose
-      browser()
-      # Extract route information and add to AUC data
-      id_groups <- reactive({
-        res_nca()$data$conc$columns$groups %>%
-          purrr::list_c() %>%
-          append("DOSNO") %>%
-          purrr::keep(\(col) {
-            !is.null(col) && col != "DRUG" &&length(unique(res_nca()$data$conc$data[[col]])) > 1
-          })
-      })
-      
-      dose_info <- res_nca()$data$dose$data%>%
-        select(all_of(c(id_groups(), grouping_vars(), route_col, dose_col))) %>%
-        distinct()
-      
-      # Check if data contains both extravascular and intravascular routes
-      if (res_nca()$data$dose$data[[route_col]] %>% unique() %>% length() == 2) {
-        auc_data <- res_nca()$result %>%
-          filter(grepl("auc", PPTESTCD)) %>%
-          inner_join(dose_info, by = id_groups(), relationship = "many-to-many")
-      }
-    })
 
-    nca_results_server("nca_results", res_nca, rules(), grouping_vars)
+    nca_results_server("nca_results", res_nca, setup()$rules, grouping_vars)
 
     # Profiles per Patient ----
     # Define a profiles per patient
