@@ -25,10 +25,12 @@ tab_tlg_ui <- function(id) {
       )
     ),
     nav_panel("Tables", "To be added"),
-    nav_panel("Listings", "To be added"),
-    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-plot-module"), value = "Graphs"),
+    nav_panel("Listings", uiOutput(ns("listings"), class = "tlg-module"), value = "Listings"),
+    nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-module"), value = "Graphs"),
     # disable loader for initial empty UI render #
-    footer = tags$style(HTML(paste0(".tlg-plot-module .load-container {opacity: 0;}")))
+    footer = tags$style(
+      id = "tlg-load-hide", HTML(paste0(".tlg-module .load-container {opacity: 0;}"))
+    )
   )
 }
 
@@ -207,19 +209,19 @@ tab_tlg_server <- function(id) {
       shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
     })
 
-    #' change tab to first populated tab (currently only Graphs)
+    #' change tab to first populated tab
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
     observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+      tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) |> paste0("s")
       shinyjs::runjs(
         paste0("
           // change the tab to graphs //
-          console.log('HEYAH');
-          $(`#", session$ns("tlg_tabs"), " a[data-value='Graphs']`)[0].click();
+          $(`#", session$ns("tlg_tabs"), " a[data-value='", tab_to_switch, "']`)[0].click();
 
           // enable spinner, as it was disabled for initial empty UI render //
           setTimeout(function() {
-            $('.tlg-plot-module .load-container').css('opacity', 1);
+            $('#tlg-load-hide').remove();
           }, 500);  
         ")
       )
@@ -243,19 +245,47 @@ tab_tlg_server <- function(id) {
         pull()
 
       panels <- lapply(tlg_order_graphs, function(g_id) {
-        plot_ui <- {
+        graph_ui <- {
           g_def <- .TLG_DEFINITIONS[[g_id]]
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
           if (exists(g_def$fun)) {
-            tlg_plot_server(module_id, get(g_def$fun), g_def$options)
-            tlg_plot_ui(session$ns(module_id))
+            tlg_module_server(module_id, "graph", get(g_def$fun), g_def$options)
+            tlg_module_ui(session$ns(module_id), "graph", g_def$options)
           } else {
-            tags$div("Plot not implemented yet")
+            tags$div("Graph not implemented yet")
           }
         }
 
-        nav_panel(g_def$label, plot_ui)
+        nav_panel(g_def$label, graph_ui)
+      })
+
+      panels$"widths" <- c(2, 10)
+
+      do.call(navset_pill_list, panels)
+    })
+
+    output$listings <- renderUI({
+      req(tlg_order_filtered())
+
+      tlg_order_listings <- filter(tlg_order_filtered(), Type == "Listing") %>%
+        select("id") %>%
+        pull()
+
+      panels <- lapply(tlg_order_listings, function(g_id) {
+        list_ui <- {
+          g_def <- .TLG_DEFINITIONS[[g_id]]
+          module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
+
+          if (exists(g_def$fun)) {
+            tlg_module_server(module_id, "listing", get(g_def$fun), g_def$options)
+            tlg_module_ui(session$ns(module_id), "listing", g_def$options)
+          } else {
+            tags$div("Listing not implemented yet")
+          }
+        }
+
+        nav_panel(g_def$label, list_ui)
       })
 
       panels$"widths" <- c(2, 10)

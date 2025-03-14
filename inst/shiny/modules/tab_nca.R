@@ -22,18 +22,28 @@ tab_nca_ui <- function(id) {
         navset_pill_list(
           nca_results_ui(ns("nca_results")),
           nav_panel(
-            "Slopes",
-            DTOutput(ns("preslopesettings"))
+            "Slopes Information",
+            navset_pill(
+              nav_panel(
+                "Slopes Results",
+                DTOutput(ns("preslopesettings"))
+              ),
+              nav_panel(
+                "Manual Adjustments",
+                tableOutput(ns("manual_slopes2"))
+              ),
+            )
           ),
           nav_panel(
-            "Exclusions",
-            tableOutput(ns("manual_slopes2"))
+            "Descriptive Statistics",
+            descriptive_statistics_ui(ns("descriptive_stats"))
           ),
           nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
         )
       ),
       nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
     )
+
   )
 
 }
@@ -59,12 +69,15 @@ tab_nca_server <- function(id, data, grouping_vars) {
       route_column <- "ROUTE"
       analyte_column <- "ANALYTE"
       matrix_column <- "PCSPEC"
+      std_route_column <- "std_route"
 
       # Create concentration data
       df_conc <- format_pkncaconc_data(
         ADNCA = data(),
         group_columns = c(group_columns, usubjid_column, analyte_column),
-        time_column = time_column
+        time_column = time_column,
+        route_column = route_column,
+        dosno_column = dosno_column
       ) %>%
         arrange(across(all_of(c(usubjid_column, time_column))))
 
@@ -95,7 +108,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
       mydose <- PKNCA::PKNCAdose(
         data = df_dose,
         formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
-        route = route_column,
+        route = std_route_column,
         time.nominal = "NFRLT",
         duration = "ADOSEDUR"
       )
@@ -142,9 +155,9 @@ tab_nca_server <- function(id, data, grouping_vars) {
           myres$result <- myres$result %>%
             inner_join(select(mydata()$dose$data, -exclude,
                               -mydata()$conc$columns$groups$group_analyte)) %>%
-            mutate(start = start - !!sym(mydata()$dose$columns$time),
-                   end = end - !!sym(mydata()$dose$columns$time)) %>%
-            select(names(myres$result))
+            mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
+                   end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
+            select(names(myres$result), start_dose, end_dose)
 
           res_nca(myres)
           updateTabsetPanel(session, "ncapanel", selected = "Results")
@@ -248,6 +261,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     output$preslopesettings <- DT::renderDataTable({
+      req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
           any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
@@ -258,7 +272,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
         ) %>%
         DT::datatable(
           extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = TRUE,
+          options = list(scrollX = TRUE, scrollY = "80vh",
                          lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
                          pageLength = -1, fixedHeader = TRUE)
         ) %>%
@@ -269,6 +283,11 @@ tab_nca_server <- function(id, data, grouping_vars) {
     output$manual_slopes2 <- renderTable({
       slope_rules()
     })
+
+    # TAB: Descriptive Statistics ---------------------------------------------
+    # This tab computes and visualizes output data from the NCA analysis
+
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     # NCA SETTINGS ----
     # TODO: move this section to a new module

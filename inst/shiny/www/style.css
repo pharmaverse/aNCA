@@ -205,7 +205,7 @@ h5 {
 }
 
 
-.tlg-plot-module {
+.tlg-module {
   margin-top: 1em;
 
   /* Well containing tabs for each tlg */
@@ -229,7 +229,7 @@ h5 {
     width: 200px;
   }
 
-  .plot-widgets-container {
+  .tlg-widgets-container {
     display: flex;
     justify-content: space-around;
     align-items: baseline;
@@ -245,10 +245,10 @@ h5 {
     margin-top: 0.75em;
   }
 
-  .plot-options-container {
+  .tlg-options-container {
     & > button {
-      width: 75%;
-      margin-left: 15%;
+      width: 90%;
+      margin-left: 5%;
       margin-top: 1em;
       padding: 0.75em 0 0.75em 0;
     }
@@ -261,4 +261,10 @@ h5 {
       }
     }
   }
+}
+
+.modal-dialog:has(.tlg-option-table) {
+  max-width: none;
+  margin-left: 1em;
+  margin-right: 1em;
 }

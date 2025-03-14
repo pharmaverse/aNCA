@@ -4,4 +4,12 @@ template:
 navbar:
   structure:
     right: [search, github, lightswitch]
+  components:
+    articles:
+      text: Contributing
+      menu:
+        - text: Contributing
+          href: page/CONTRIBUTING.html
+        - text: Adding TLGs
+          href: articles/adding_tlg.html
 url: "https://pharmaverse.github.io/aNCA/"

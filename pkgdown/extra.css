@@ -52,3 +52,11 @@ html[data-bs-theme="dark"] {
 #package-logo-light {
   box-shadow: none;
 }
+
+span.help-button {
+  border: thin solid #1f6feb;
+  border-radius: 1em;
+  font-weight: bold;
+  color: #1f6feb;
+  padding: .25em .5em .25em .5em;
+}

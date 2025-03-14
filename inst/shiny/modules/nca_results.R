@@ -36,11 +36,18 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
 
+        final_pptestcd <- res_nca()$result %>%
+          filter(PPTESTCD == pptestcd) %>%
+          slice(1) %>%
+          mutate(new_pptestcd = paste0(pptestcd, "[", PPSTRESU, "]")) %>%
+          pull(new_pptestcd) %>%
+          unique()
+
         final_results <- final_results %>%
           mutate(!!paste0("flag_", pptestcd) := case_when(
-            startsWith(pptestcd, "auc") ~ .data[[pptestcd]]
+            startsWith(pptestcd, "auc") ~ .data[[final_pptestcd]]
             >= rules[[paste0(pptestcd, "_threshold")]],
-            TRUE ~ .data[[pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
+            TRUE ~ .data[[final_pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
           ))
       }
 
@@ -48,7 +55,13 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
       final_results <- final_results %>%
         inner_join(
           res_nca()$data$conc$data %>%
-            select(any_of(c(grouping_vars(), unname(unlist(res_nca()$data$conc$columns$groups)))), DOSEA)
+            select(
+              any_of(c(grouping_vars(),
+                       unname(unlist(res_nca()$data$conc$columns$groups)),
+                       "DOSEA",
+                       "DOSNO",
+                       "ROUTE"))
+            )
         ) %>%
         distinct()
 
@@ -66,7 +79,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
     observeEvent(final_results(), {
       req(final_results())
 
-      param_cols <- unique(res_nca()$result$PPTESTCD)
+      param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
 
       updatePickerInput(
         session = session,
@@ -75,38 +88,30 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
         choices = sort(param_cols),
         selected = sort(param_cols)
       )
-
-    })
-
-    final_res_nca <- reactive({
-      req(final_results(), input$params)
-
-      param_cols <- unique(res_nca()$result$PPTESTCD)
-
-      final_results <- final_results() %>%
-        select(-all_of(setdiff(param_cols, input$params)))
-
-      # Include units in column names
-      dict_pttestcd_with_units <- res_nca()$result %>%
-        select(PPTESTCD, PPSTRESU) %>%
-        unique() %>%
-        pull(PPSTRESU, PPTESTCD)
-
-      final_results %>%
-        rename_with(~ifelse(
-          gsub("_.*", "", .x) %in% names(dict_pttestcd_with_units),
-          paste0(.x, "[", dict_pttestcd_with_units[gsub("_.*", "", .x)], "]"),
-          .x
-        ))
     })
 
     output$myresults <- reactable::renderReactable({
-      req(final_res_nca())
+      req(final_results(), input$params)
 
-      col_defs <- generate_col_defs(final_res_nca())
+      # Select columns of parameters selected, considering each can have multiple diff units
+      param_label_cols <- formatters::var_labels(final_results())
+      params_sel_cols <- param_label_cols[param_label_cols %in% input$params] |>
+        names()
 
+      group_cols <- setdiff(names(res_nca()$data$intervals),
+                            c(names(PKNCA::get.interval.cols()))) |>
+        # Here cols of interest are also added
+        c("Exclude", "impute", "flagged")
+
+      final_results <- final_results() %>%
+        select(any_of(c(group_cols, sort(params_sel_cols))))
+
+      # Generate column definitions that can be hovered in the UI
+      col_defs <- generate_col_defs(final_results)
+
+      # Make the reactable object
       reactable(
-        final_res_nca(),
+        final_results,
         columns = col_defs,
         searchable = TRUE,
         sortable = TRUE,
@@ -118,7 +123,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
         bordered = TRUE,
         height = "68vh",
         rowStyle = function(index) {
-          flagged_value <- final_res_nca()$flagged[index]
+          flagged_value <- final_results$flagged[index]
           if (flagged_value == "FLAGGED") {
             list(backgroundColor = "#f5b4b4")
           } else if (flagged_value == "MISSING") {
