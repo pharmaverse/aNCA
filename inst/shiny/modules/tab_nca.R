@@ -6,7 +6,6 @@ tab_nca_ui <- function(id) {
 
   fluidPage(
     actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-
     download_settings_ui(ns("download_settings")),
     navset_tab(
       id = ns("ncapanel"),
