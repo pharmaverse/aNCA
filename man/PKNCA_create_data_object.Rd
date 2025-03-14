@@ -19,6 +19,7 @@ PKNCA_create_data_object(adnca_data)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 \code{PKNCAdata} object with concentration, doses, and units based on ADNCA data.
 \code{PKNCAdata} object with concentration, doses, and units based on ADNCA data.
 =======
@@ -30,6 +31,9 @@ PKNCA_create_data_object(adnca_data)
 =======
 \code{PKNCAdata} object with... TODO
 >>>>>>> c5a4e95 (refactor: moved some PKNCA-related logic code to functions)
+=======
+\code{PKNCAdata} object with concentration, doses, and units based on ADNCA data.
+>>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 }
 \description{
 Creates a \code{PKNCA::PKNCAdata} object.
@@ -40,10 +44,13 @@ Creates a \code{PKNCA::PKNCAdata} object.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 =======
 >>>>>>> 090d954 (docs: add documentation for PKNCA_create_daat_object)
+=======
+>>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 This function creates a standard PKNCAdata object from ADNCA data.
 It requires the following columns in the ADNCA data:
 \itemize{
@@ -54,6 +61,7 @@ It requires the following columns in the ADNCA data:
 \item USUBJID: Unique subject identifier.
 \item DOSNO: Dose profile number.
 \item ANALYTE: Analyte.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -84,6 +92,10 @@ It requires the following columns in the ADNCA data:
 >>>>>>> 273b240 (docs: docs)
 \item AVALU: AVAL unit.
 >>>>>>> b794533 (add testing for pkncadata object creation)
+=======
+\item AVAL: Concentration value.
+\item AVALU: Concentration unit.
+>>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 \item DOSEA: Dose amount.
 \item DOSEU: Dose unit.
 \item AFRLT: Actual time from first dose.
@@ -95,6 +107,7 @@ It requires the following columns in the ADNCA data:
 \enumerate{
 \item Creating pk concentration data using \code{format_pkncaconc_data()}.
 \item Creating dosing data using \code{format_pkncadose_data()}.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -112,12 +125,16 @@ It requires the following columns in the ADNCA data:
 =======
 \item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}.
 >>>>>>> 273b240 (docs: docs)
+=======
+\item Creating PKNCAconc object using \code{PKNCA::PKNCAconc()}.
+>>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 with formula \code{AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE}.
 \item Creating PKNCAdose object using \code{PKNCA::PKNCAdose()}.
 with formula \code{DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID}.
 \item Creating PKNCAdata object using \code{PKNCA::PKNCAdata()}.
 \item Updating units in PKNCAdata object so each analyte has its own unit.
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 }
@@ -160,6 +177,10 @@ TODO
 }
 \examples{
 >>>>>>> 090d954 (docs: add documentation for PKNCA_create_daat_object)
+=======
+}
+\examples{
+>>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 adnca_data <- data.frame(
 STUDYID = rep("STUDY001", 6),
 PCSPEC = rep("Plasma", 6),
@@ -179,7 +200,11 @@ ADOSEDUR = rep(0.5, 6),
 RRLTU = rep("hour", 6)
 )
 PKNCA_create_data_object(adnca_data)
+<<<<<<< HEAD
 =======
 
 >>>>>>> c5a4e95 (refactor: moved some PKNCA-related logic code to functions)
+=======
+
+>>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 }
