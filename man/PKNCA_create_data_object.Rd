@@ -26,8 +26,8 @@ It requires the following columns in the ADNCA data:
 \item USUBJID: Unique subject identifier.
 \item DOSNO: Dose profile number.
 \item ANALYTE: Analyte.
-\item AVAL: Concentration value.
-\item AVALU: Concentration unit.
+\item AVAL: Änalysis value.
+\item AVALU: AVAL unit.
 \item DOSEA: Dose amount.
 \item DOSEU: Dose unit.
 \item AFRLT: Actual time from first dose.
