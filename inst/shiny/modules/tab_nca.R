@@ -10,13 +10,16 @@ tab_nca_ui <- function(id) {
 
     navset_tab(
       id = ns("ncapanel"),
+      #' Pre-nca setup
       nav_panel(
-        "Setup", fluid = TRUE,
+        "Setup",
+        fluid = TRUE,
         navset_pill_list(
           nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
           nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
         )
       ),
+      #' Results
       nav_panel(
         "Results", fluid = TRUE,
         navset_pill_list(
@@ -24,23 +27,15 @@ tab_nca_ui <- function(id) {
           nav_panel(
             "Slopes Information",
             navset_pill(
-              nav_panel(
-                "Slopes Results",
-                DTOutput(ns("preslopesettings"))
-              ),
-              nav_panel(
-                "Manual Adjustments",
-                tableOutput(ns("manual_slopes2"))
-              ),
+              nav_panel("Slopes Results", DTOutput(ns("preslopesettings"))),
+              nav_panel("Manual Adjustments", tableOutput(ns("manual_slopes2"))),
             )
           ),
-          nav_panel(
-            "Descriptive Statistics",
-            descriptive_statistics_ui(ns("descriptive_stats"))
-          ),
+          nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
           nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
         )
       ),
+      #' Additional analysis
       nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
     )
 
@@ -50,19 +45,19 @@ tab_nca_ui <- function(id) {
 
 # NCA Server Function ----
 # Requires processed data and grouping vars from tab_data module
-tab_nca_server <- function(id, data, grouping_vars) {
+tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Initialize PKNCAdata ----
 
-    mydata <- reactiveVal(NULL)
+     pknca_data <- reactiveVal(NULL)
 
-    observeEvent(data(), priority = 2, {
-      req(data())
+    observeEvent(adnca_data(), priority = 2, {
+      req(adnca_data())
 
       # Define column names
-      group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
+      group_columns <- intersect(colnames(adnca_data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
       usubjid_column <- "USUBJID"
       time_column <- "AFRLT"
       dosno_column <- "DOSNO"
@@ -73,7 +68,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
 
       # Create concentration data
       df_conc <- format_pkncaconc_data(
-        ADNCA = data(),
+        ADNCA = adnca_data(),
         group_columns = c(group_columns, usubjid_column, analyte_column),
         time_column = time_column,
         route_column = route_column,
@@ -124,7 +119,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
           aucinf.obs = FALSE
         )
 
-      mydata <- PKNCA::PKNCAdata(
+      pknca_data <- PKNCA::PKNCAdata(
         data.conc = myconc,
         data.dose = mydose,
         intervals = intervals,
@@ -137,17 +132,20 @@ tab_nca_server <- function(id, data, grouping_vars) {
       )
 
       # Update units
-      unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
-      analyte_column <- mydata$conc$columns$groups$group_analyte
-      mydata$units <- tidyr::crossing(mydata$units,
-                                      !!sym(analyte_column) := unique_analytes)  %>%
+      unique_analytes <- unique(
+        pknca_data$conc$data[[pknca_data$conc$columns$groups$group_analyte]]
+      )
+      analyte_column <- pknca_data$conc$columns$groups$group_analyte
+      pknca_data$units <- tidyr::crossing(
+        pknca_data$units, !!sym(analyte_column) := unique_analytes
+      ) %>%
         mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
-      mydata(mydata)
+      pknca_data(pknca_data)
     })
 
     # NCA SETUP MODULE ----
-    rules <- nca_setup_server("nca_settings", data, mydata, res_nca)
+    rules <- nca_setup_server("nca_settings", data, pknca_data, res_nca)
 
     # NCA RESULTS ----
     res_nca <- reactiveVal(NULL)
@@ -158,15 +156,15 @@ tab_nca_server <- function(id, data, grouping_vars) {
     })
 
     observeEvent(pk_nca_trigger(), {
-      req(mydata())
+      req(pknca_data())
 
       withProgress(message = "Calculating NCA...", value = 0, {
         tryCatch({
-          myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
+          myres <- PKNCA::pk.nca(data = pknca_data(), verbose = FALSE)
 
           myres$result <- myres$result %>%
-            inner_join(select(mydata()$dose$data, -exclude,
-                              -mydata()$conc$columns$groups$group_analyte)) %>%
+            inner_join(select(pknca_data()$dose$data, -exclude,
+                              -pknca_data()$conc$columns$groups$group_analyte)) %>%
             mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
                    end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
             select(names(myres$result), start_dose, end_dose)
@@ -193,8 +191,11 @@ tab_nca_server <- function(id, data, grouping_vars) {
     # SLOPE SELECTOR ----
     # Keep the UI table constantly actively updated
     observeEvent(input, {
-      req(mydata())
-      dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
+      req(pknca_data())
+      dynamic_columns <- c(
+        setdiff(unname(unlist(pknca_data()$conc$columns$groups)), "DRUG"),
+        "DOSNO"
+      )
       for (input_name in grep(
         paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"),
                           collapse = "|"), ")_Ex\\d+$"),
@@ -217,7 +218,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
 
     slope_rules <- slope_selector_server(
       "slope_selector",
-      mydata,
+      pknca_data,
       res_nca,
       pk_nca_trigger,
       reactive(input$settings_upload)
@@ -257,7 +258,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     # Save the project settings
     output$settings_save <- downloadHandler(
       filename = function() {
-        paste(mydata()$conc$data$STUDYID[1], "NCA_settings.csv", sep = "_")
+        paste(pknca_data()$conc$data$STUDYID[1], "NCA_settings.csv", sep = "_")
       },
       content = function(file) {
 
@@ -300,7 +301,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
             doses_selected = ifelse(
               !is.null(input$select_dosno),
               paste0(input$select_dosno, collapse = ","),
-              unique(mydata()$conc$data$DOSNO)
+              unique(pknca_data()$conc$data$DOSNO)
             ),
             method = input$method,
             adj.r.squared_threshold = ifelse(
@@ -325,7 +326,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     # ADDITIONAL ANALYSIS ----
-    additional_analysis_server("non_nca", mydata, grouping_vars)
+    additional_analysis_server("non_nca", pknca_data, grouping_vars)
 
     # PARAMETER DATASETS ----
     parameter_datasets_server("parameter_datasets", res_nca)
