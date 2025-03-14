@@ -93,28 +93,17 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
     ex_without_match <- merged_data %>%
       filter(is.na(AUC_IV) | is.na(Dose_IV)) %>%
       mutate(!!paste0("f_", auc_type) := pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX))
-    
-    # Compute mean summary
-    mean_ex <- ex_data %>%
-      group_by(Grouping_EX) %>%
-      summarize(Mean_AUC_EX = mean(AUC_EX, na.rm = TRUE),
-                Mean_Dose_EX = mean(Dose_EX, na.rm = TRUE),
-                .groups = "drop")
-    
-    mean_summary <- cross_join(mean_ex, mean_iv) %>%
-      mutate(USUBJID = "Mean EX/IV",
-             !!paste0("f_", auc_type) := pk.calc.f(Mean_Dose_IV, Mean_AUC_IV, Mean_Dose_EX, Mean_AUC_EX))
-    
+
     # Combine results
     auc_results <- bind_rows(
       individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type)),
-      ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type)),
-      mean_summary %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type))
+      ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type))
     )
     
     results_list[[auc_type]] <- auc_results
   }
   
-  final_results <- purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV"))
-  return(final_results)
+  purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV"))%>%
+  select(-Grouping_IV)
+  
 }

@@ -36,25 +36,8 @@ additional_analysis_ui <- function(id) {
     nav_panel(
       title = "AUC Ratios",
       value = "auc_analysis",
-      card(
-        card_header("Bioavailability Calculations"),
-        card_body(
-          fluidRow(
-            p("Bioavailability is calculated as Extravascular_AUC / Intravascular_AUC."),
-            selectInput(ns("select_aucs"), "Select AUC types",
-                        choices = NULL,
-                        multiple = TRUE),
-            selectInput(ns("select_grouping"), "Group Summary by:",
-                        choices = NULL,
-                        multiple = TRUE)
-          ),
-          actionButton(ns("calc_auc_ratios"), "Calculate"),
-          p("The AUC ratios are calculated with AUCs for individual subjects
-              (if both routes are available), or using the Mean AUC for IV"),
-          br(),
-          h3("Results"),
-          tableOutput(ns("auc_table")),
-        )
+      card (
+        p("To be added")
       ),
     ),
     nav_panel(
@@ -84,7 +67,6 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars, auc_opt
       req(res_nca)
       bio <- calculate_bioavailability(res_nca(), auc_options())
     })
-    
     
   })
 }
