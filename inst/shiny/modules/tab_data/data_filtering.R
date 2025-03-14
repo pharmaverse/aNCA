@@ -55,15 +55,19 @@ data_filtering_server <- function(id, raw_adnca_data) {
     #' When filters change, show notification reminding the user about submitting
     filter_reminder_notification <- reactiveVal(NULL)
     observe({
-      rv_list <- reactiveValuesToList(filters)
-      if (length(rv_list) == 0) return(NULL)
-      showNotification(
-        "Remember to submit filters before continuing.",
-        id = session$ns("filter_submit_reminder"),
-        duration = 0,
-        closeButton = FALSE,
-        type = "message"
-      ) |> filter_reminder_notification()
+      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) |>
+        purrr::keep(\(x) !is.null(x))
+      if (length(applied_filters) == 0) {
+        removeNotification(filter_reminder_notification())
+      } else {
+        showNotification(
+          "Remember to submit filters before continuing.",
+          id = session$ns("filter_submit_reminder"),
+          duration = 0,
+          closeButton = FALSE,
+          type = "message"
+        ) |> filter_reminder_notification()
+      }
     })
 
     filtered_data <- reactive({
