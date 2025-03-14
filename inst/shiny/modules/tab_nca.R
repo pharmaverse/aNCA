@@ -49,11 +49,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Initialize PKNCAdata ----
-
-     pknca_data <- reactiveVal(NULL)
-
-    observeEvent(adnca_data(), priority = 2, {
+    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
+    #' TODO: change this to a reactive. Setup module should not modify the object directly,
+    #' should return a copy instead.
+    pknca_data <- reactiveVal(NULL)
+    observeEvent(adnca_data(), {
       req(adnca_data())
 
       # Define column names
@@ -93,14 +93,14 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
       # Create PKNCA objects
 
-      myconc <- PKNCA::PKNCAconc(
+      pknca_conc <- PKNCA::PKNCAconc(
         df_conc,
         formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
         exclude_half.life = "exclude_half.life",
         time.nominal = "NFRLT"
       )
 
-      mydose <- PKNCA::PKNCAdose(
+      pknca_dose <- PKNCA::PKNCAdose(
         data = df_dose,
         formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
         route = std_route_column,
@@ -119,103 +119,35 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           aucinf.obs = FALSE
         )
 
-      pknca_data <- PKNCA::PKNCAdata(
-        data.conc = myconc,
-        data.dose = mydose,
+      pknca_data_object <- PKNCA::PKNCAdata(
+        data.conc = pknca_conc,
+        data.dose = pknca_dose,
         intervals = intervals,
         units = PKNCA::pknca_units_table(
-          concu = myconc$data$AVALU[1],
-          doseu = myconc$data$DOSEU[1],
-          amountu = myconc$data$AVALU[1],
-          timeu = myconc$data$RRLTU[1]
+          concu = pknca_conc$data$AVALU[1],
+          doseu = pknca_conc$data$DOSEU[1],
+          amountu = pknca_conc$data$AVALU[1],
+          timeu = pknca_conc$data$RRLTU[1]
         )
       )
 
       # Update units
       unique_analytes <- unique(
-        pknca_data$conc$data[[pknca_data$conc$columns$groups$group_analyte]]
+        pknca_data_object$conc$data[[pknca_data_object$conc$columns$groups$group_analyte]]
       )
-      analyte_column <- pknca_data$conc$columns$groups$group_analyte
-      pknca_data$units <- tidyr::crossing(
-        pknca_data$units, !!sym(analyte_column) := unique_analytes
+      analyte_column <- pknca_data_object$conc$columns$groups$group_analyte
+      pknca_data_object$units <- tidyr::crossing(
+        pknca_data_object$units, !!sym(analyte_column) := unique_analytes
       ) %>%
         mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
-      pknca_data(pknca_data)
+      pknca_data(pknca_data_object)
     })
 
-    # NCA SETUP MODULE ----
+    #' NCA Setup module
     rules <- nca_setup_server("nca_settings", data, pknca_data, res_nca)
 
-    # NCA RESULTS ----
-    res_nca <- reactiveVal(NULL)
-    pk_nca_trigger <- reactiveVal(0)
-
-    observeEvent(input$nca, {
-      pk_nca_trigger(pk_nca_trigger() + 1)
-    })
-
-    observeEvent(pk_nca_trigger(), {
-      req(pknca_data())
-
-      withProgress(message = "Calculating NCA...", value = 0, {
-        tryCatch({
-          myres <- PKNCA::pk.nca(data = pknca_data(), verbose = FALSE)
-
-          myres$result <- myres$result %>%
-            inner_join(select(pknca_data()$dose$data, -exclude,
-                              -pknca_data()$conc$columns$groups$group_analyte)) %>%
-            mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
-                   end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
-            select(names(myres$result), start_dose, end_dose)
-
-          res_nca(myres)
-          updateTabsetPanel(session, "ncapanel", selected = "Results")
-
-        }, error = function(e) {
-          full_error <- e$parent$message
-          if (grepl("pk.calc.", x = full_error)) {
-            param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
-            full_error <- paste0("Problem in calculation of NCA parameter: ", param_of_error,
-                                 "<br><br>", full_error)
-          }
-          modified_error <- gsub("Please report a bug.\n:", "", x = full_error, fixed = TRUE) %>%
-            paste0("<br><br>If the error is unexpected, please report a bug.")
-          showNotification(HTML(modified_error), type = "error", duration = NULL)
-        })
-      })
-    })
-
-    nca_results_server("nca_results", res_nca, rules(), grouping_vars)
-
-    # SLOPE SELECTOR ----
-    # Keep the UI table constantly actively updated
-    observeEvent(input, {
-      req(pknca_data())
-      dynamic_columns <- c(
-        setdiff(unname(unlist(pknca_data()$conc$columns$groups)), "DRUG"),
-        "DOSNO"
-      )
-      for (input_name in grep(
-        paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"),
-                          collapse = "|"), ")_Ex\\d+$"),
-        names(input), value = TRUE
-      )) {
-        observeEvent(input[[input_name]], {
-          # Get the ID of the exclusion
-          id <- gsub("_(Ex\\d+)$", "", input_name)
-
-          # Update the reactive list of exclusion IDs
-          manual_slopes <- manual_slopes()
-          set_selected_value(
-            manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
-          ) <- manual_slopes[manual_slopes$id == id, ]
-          manual_slopes(manual_slopes)
-
-        })
-      }
-    })
-
+    #' Slope rules setup module
     slope_rules <- slope_selector_server(
       "slope_selector",
       pknca_data,
@@ -248,12 +180,96 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       slope_rules()
     })
 
-    # TAB: Descriptive Statistics ---------------------------------------------
-    # This tab computes and visualizes output data from the NCA analysis
+    # SLOPE SELECTOR ----
+    # Keep the UI table constantly actively updated
+    observeEvent(input, {
+      req(pknca_data())
+      dynamic_columns <- c(
+        setdiff(unname(unlist(pknca_data()$conc$columns$groups)), "DRUG"),
+        "DOSNO"
+      )
+      for (input_name in grep(
+        paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"),
+                          collapse = "|"), ")_Ex\\d+$"),
+        names(input), value = TRUE
+      )) {
+        observeEvent(input[[input_name]], {
+          # Get the ID of the exclusion
+          id <- gsub("_(Ex\\d+)$", "", input_name)
 
+          # Update the reactive list of exclusion IDs
+          manual_slopes <- manual_slopes()
+          set_selected_value(
+            manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
+          ) <- manual_slopes[manual_slopes$id == id, ]
+          manual_slopes(manual_slopes)
+
+        })
+      }
+    })
+
+    #' Triggers NCA analysis, creating res_nca reactive val
+    pk_nca_trigger <- reactiveVal(0)
+    observeEvent(input$nca, {
+      pk_nca_trigger(pk_nca_trigger() + 1)
+    })
+    res_nca <- reactive({
+      req(pknca_data())
+
+      withProgress(message = "Calculating NCA...", value = 0, {
+        tryCatch({
+          myres <- PKNCA::pk.nca(data = pknca_data(), verbose = FALSE)
+
+          myres$result <- myres$result %>%
+            inner_join(select(pknca_data()$dose$data, -exclude,
+                              -pknca_data()$conc$columns$groups$group_analyte)) %>%
+            mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
+                   end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
+            select(names(myres$result), start_dose, end_dose)
+
+          res_nca(myres)
+          updateTabsetPanel(session, "ncapanel", selected = "Results")
+
+        }, error = function(e) {
+          full_error <- e$parent$message
+          if (grepl("pk.calc.", x = full_error)) {
+            param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
+            full_error <- paste0("Problem in calculation of NCA parameter: ", param_of_error,
+                                 "<br><br>", full_error)
+          }
+          modified_error <- gsub("Please report a bug.\n:", "", x = full_error, fixed = TRUE) %>%
+            paste0("<br><br>If the error is unexpected, please report a bug.")
+          showNotification(HTML(modified_error), type = "error", duration = NULL)
+        })
+      })
+    }) |>
+      bindEvent(pk_nca_trigger())
+
+    nca_results_server("nca_results", res_nca, rules(), grouping_vars)
+
+    # TODO: This will be removed in #241
+    # https://github.com/pharmaverse/aNCA/pull/241
+    profiles_per_patient <- reactive({
+      req(pknca_data())
+      # Check if res_nca() is available and valid
+      if (!is.null(res_nca())) {
+        res_nca()$result %>%
+          mutate(USUBJID = as.character(USUBJID),
+                 DOSNO = as.character(DOSNO)) %>%
+          group_by(!!!syms(unname(unlist(pknca_data()$conc$columns$groups)))) %>%
+          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
+          unnest(DOSNO)  # Convert lists into individual rows
+      } else {
+        pknca_data()$conc$data %>%
+          mutate(USUBJID = as.character(USUBJID)) %>%
+          group_by(!!!syms(unname(unlist(pknca_data()$conc$columns$groups)))) %>%
+          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
+      }
+    })
+
+    #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
-    # NCA SETTINGS ----
     # TODO: move this section to a new module
     # Save the project settings
     output$settings_save <- downloadHandler(
@@ -325,10 +341,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       contentType = "text/csv"
     )
 
-    # ADDITIONAL ANALYSIS ----
+    #' Additional analysis module
     additional_analysis_server("non_nca", pknca_data, grouping_vars)
 
-    # PARAMETER DATASETS ----
+    #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
 
     # return results for use in other modules
