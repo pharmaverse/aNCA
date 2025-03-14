@@ -69,7 +69,7 @@ MAPPING_DESIRED_ORDER <- c(
 #' group identifiers, sample variables, dose variables, time variables, and unit variables.
 #'
 #' @param id The module ID.
-#' @param data A reactive expression that returns the dataset to be processed.
+#' @param adnca_data A reactive expression that returns the dataset to be processed.
 #' @param on_submit A callback function to be executed when the submit button is clicked.
 #'
 #' @returns A list containing:
