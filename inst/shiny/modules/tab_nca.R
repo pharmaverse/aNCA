@@ -6,7 +6,7 @@ tab_nca_ui <- function(id) {
 
   fluidPage(
     actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    download_settings(ns("download_settings")),
+    download_settings_ui(ns("download_settings")),
     navset_tab(
       id = ns("ncapanel"),
       #' Pre-nca setup
@@ -52,97 +52,14 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     pknca_data <- reactiveVal(NULL)
     observeEvent(adnca_data(), {
       req(adnca_data())
+      log_trace("Creating PKNCA::data object.")
 
-      # Define column names
-      group_columns <- intersect(colnames(adnca_data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
-      usubjid_column <- "USUBJID"
-      time_column <- "AFRLT"
-      dosno_column <- "DOSNO"
-      route_column <- "ROUTE"
-      analyte_column <- "ANALYTE"
-      matrix_column <- "PCSPEC"
-      std_route_column <- "std_route"
-
-      # Create concentration data
-      df_conc <- format_pkncaconc_data(
-        ADNCA = adnca_data(),
-        group_columns = c(group_columns, usubjid_column, analyte_column),
-        time_column = time_column,
-        route_column = route_column,
-        dosno_column = dosno_column
-      ) %>%
-        arrange(across(all_of(c(usubjid_column, time_column))))
-
-      # Create dosing data
-      df_dose <- format_pkncadose_data(
-        pkncaconc_data = df_conc,
-        group_columns = c(group_columns, usubjid_column),
-        time_column = time_column,
-        dosno_column = dosno_column,
-        since_lastdose_time_column = "ARRLT"
-      )
-
-      # Set default settings
-      df_conc$is.excluded.hl <- FALSE
-      df_conc$is.included.hl <- FALSE
-      df_conc$REASON <- NA
-      df_conc$exclude_half.life <- FALSE
-
-      # Create PKNCA objects
-
-      pknca_conc <- PKNCA::PKNCAconc(
-        df_conc,
-        formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
-        exclude_half.life = "exclude_half.life",
-        time.nominal = "NFRLT"
-      )
-
-      pknca_dose <- PKNCA::PKNCAdose(
-        data = df_dose,
-        formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
-        route = std_route_column,
-        time.nominal = "NFRLT",
-        duration = "ADOSEDUR"
-      )
-
-      #create basic intervals so that PKNCAdata can be created
-      #TODO: investigate if this is required
-      intervals <-
-        data.frame(
-          start = 0, end = Inf,
-          cmax = TRUE,
-          tmax = TRUE,
-          auclast = FALSE,
-          aucinf.obs = FALSE
-        )
-
-      pknca_data_object <- PKNCA::PKNCAdata(
-        data.conc = pknca_conc,
-        data.dose = pknca_dose,
-        intervals = intervals,
-        units = PKNCA::pknca_units_table(
-          concu = pknca_conc$data$AVALU[1],
-          doseu = pknca_conc$data$DOSEU[1],
-          amountu = pknca_conc$data$AVALU[1],
-          timeu = pknca_conc$data$RRLTU[1]
-        )
-      )
-
-      # Update units
-      unique_analytes <- unique(
-        pknca_data_object$conc$data[[pknca_data_object$conc$columns$groups$group_analyte]]
-      )
-      analyte_column <- pknca_data_object$conc$columns$groups$group_analyte
-      pknca_data_object$units <- tidyr::crossing(
-        pknca_data_object$units, !!sym(analyte_column) := unique_analytes
-      ) %>%
-        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
-
-      pknca_data(pknca_data_object)
+      PKNCA_create_data_object(adnca_data()) |>
+        pknca_data()
     })
 
     #' NCA Setup module
-    rules <- nca_setup_server("nca_settings", data, pknca_data, res_nca)
+    rules <- nca_setup_server("nca_settings", adnca_data, pknca_data, res_nca)
 
     #' Slope rules setup module
     slope_rules <- slope_selector_server(
@@ -215,19 +132,12 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
       withProgress(message = "Calculating NCA...", value = 0, {
         tryCatch({
-          myres <- PKNCA::pk.nca(data = pknca_data(), verbose = FALSE)
-
-          myres$result <- myres$result %>%
-            inner_join(select(pknca_data()$dose$data, -exclude,
-                              -pknca_data()$conc$columns$groups$group_analyte)) %>%
-            mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
-                   end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
-            select(names(myres$result), start_dose, end_dose)
-
-          res_nca(myres)
+          res <- PKNCA_calculate_nca(pknca_data())
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
+          res
         }, error = function(e) {
+          browser()
           full_error <- e$parent$message
           if (grepl("pk.calc.", x = full_error)) {
             param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
