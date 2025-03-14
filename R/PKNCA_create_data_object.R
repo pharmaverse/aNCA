@@ -10,8 +10,8 @@
 #' - USUBJID: Unique subject identifier.
 #' - DOSNO: Dose profile number.
 #' - ANALYTE: Analyte.
-#' - AVAL: Concentration value.
-#' - AVALU: Concentration unit.
+#' - AVAL: Änalysis value.
+#' - AVALU: AVAL unit.
 #' - DOSEA: Dose amount.
 #' - DOSEU: Dose unit.
 #' - AFRLT: Actual time from first dose.

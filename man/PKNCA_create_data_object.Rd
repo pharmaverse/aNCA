@@ -68,6 +68,7 @@ It requires the following columns in the ADNCA data:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 \item AVAL: Analysis value.
 \item AVALU: AVAL unit.
 =======
@@ -96,6 +97,10 @@ It requires the following columns in the ADNCA data:
 \item AVAL: Concentration value.
 \item AVALU: Concentration unit.
 >>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
+=======
+\item AVAL: Änalysis value.
+\item AVALU: AVAL unit.
+>>>>>>> fbf4001 (add testing for pkncadata object creation)
 \item DOSEA: Dose amount.
 \item DOSEU: Dose unit.
 \item AFRLT: Actual time from first dose.
