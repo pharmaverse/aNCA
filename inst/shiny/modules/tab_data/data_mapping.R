@@ -1,3 +1,31 @@
+#' Define the manual units for concentration, dose, and time in a format recognized by PKNCA
+MANUAL_UNITS <- list(
+  concentration = c(
+    "mg/L", "µg/mL", "ng/mL", "pg/mL", "mol/L", "mmol/L", "µmol/L", "nmol/L", "pmol/L", "mg/dL",
+    "µg/dL", "ng/dL"
+  ),
+  dose = c(
+    "mg", "g", "µg", "ng", "pg", "mol", "mmol", "µmol", "nmol", "pmol", "mg/kg", "g/kg", "µg/kg",
+    "ng/kg", "pg/kg", "mol/kg", "mmol/kg", "µmol/kg", "nmol/kg", "pmol/kg"
+  ),
+  time = c("sec", "min", "hr", "day", "week", "month", "year")
+)
+
+# Define the required columns and group them into categories
+MAPPING_COLUMN_GROUPS <- list(
+  "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
+  "Sample Variables" = c("ANALYTE", "PCSPEC", "ROUTE", "AVAL"),
+  "Dose Variables" = c("DOSNO", "DOSEA", "ADOSEDUR"),
+  "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
+  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
+)
+
+# Define the desired column order
+MAPPING_DESIRED_ORDER <- c(
+  "STUDYID", "USUBJID", "ANALYTE", "PCSPEC", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "RRLTU", "ROUTE", "DOSEA", "DOSEU", "DOSNO", "ADOSEDUR"
+)
+
 #' Column Mapping Widget
 #'
 #' A reusable UI component for mapping dataset columns to specific identifiers or roles.
@@ -36,13 +64,12 @@
 }
 
 #' Column Mapping Module
-#' #' This module provides implementation for mapping columns from a dataset to specific
+#' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
 #' group identifiers, sample variables, dose variables, time variables, and unit variables.
 #'
 #' @param id The module ID.
-#' @param data A reactive expression that returns the dataset to be processed.
-#' @param manual_units A list containing manual units for concentration, dose, and time.
+#' @param adnca_data A reactive expression that returns the dataset to be processed.
 #' @param on_submit A callback function to be executed when the submit button is clicked.
 #'
 #' @returns A list containing:
@@ -76,127 +103,103 @@
 #' \item Reordering columns according to a desired order.
 #' }
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
-column_mapping_ui <- function(id) {
+data_mapping_ui <- function(id) {
   ns <- NS(id)
 
-  tagList(
-    h3("Data Mapping"),
-    p(
-      "The following columns are required for data analysis. Please ensure each of these columns",
-      " has been assigned a corresponding column from your dataset"
-    ),
-    # Adjusted layout using CSS flexbox
-    tags$section(
-      class = "column-mapping-section",
-      h5("Group Identifiers"),
-      .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
-      .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
-      div(
-        class = "column-mapping-row",
-        tooltip(
-          selectizeInput(
-            ns("select_Grouping_Variables"),
-            "",
-            choices = NULL,
-            multiple = TRUE,
-            options = list(placeholder = "Select Column(s)"),
-            width = "40%"
-          ),
-          "Select the additional column(s) that will be used to group the data 
-          in the outputs. E.g. Treatment Arm, Age, Sex, Race"
-        ),
-        div(
-          class = "column-mapping-output",
-          span("Additional Grouping Variables")
-        )
-      )
-    ),
-    tags$section(
-      class = "column-mapping-section",
-      h5("Sample Variables"),
-      .column_mapping_widget(ns, "ANALYTE", "Character format"),
-      .column_mapping_widget(ns, "PCSPEC", "Character format"),
-      .column_mapping_widget(ns, "AVAL", "Numeric format.")
-    ),
-    tags$section(
-      class = "column-mapping-section",
-      h5("Dose Variables"),
-      .column_mapping_widget(ns, "DOSNO", "Numeric format."),
-      .column_mapping_widget(
-        ns, "ROUTE",
-        "Character format, stating either 'intravascular' or 'extravascular'."
+  card(
+    div(
+      class = "data-mapping-container",
+      h3("Data Mapping"),
+      p(
+        "The following columns are required for data analysis. Please ensure each of these columns",
+        " has been assigned a corresponding column from your dataset"
       ),
-      .column_mapping_widget(ns, "DOSEA", "Numeric format."),
-      .column_mapping_widget(
-        ns, "ADOSEDUR",
-        "Numeric format. Only required for infusion studies,
-        otherwise select NA"
-      )
-    ),
-    tags$section(
-      class = "column-mapping-section",
-      h5("Time Variables"),
-      .column_mapping_widget(ns, "AFRLT", "Numeric format"),
-      .column_mapping_widget(ns, "ARRLT", "Numeric format"),
-      .column_mapping_widget(ns, "NFRLT", "Numeric format"),
-      .column_mapping_widget(ns, "NRRLT", "Numeric format")
-    ),
-    tags$section(
-      class = "column-mapping-section",
-      h5("Unit Variables"),
-      .column_mapping_widget(ns, "AVALU", "Character format."),
-      .column_mapping_widget(ns, "DOSEU", "Character format."),
-      .column_mapping_widget(ns, "RRLTU", "Character format.")
-    ),
-    input_task_button(ns("submit_columns"), "Submit Mapping")
+      # Adjusted layout using CSS flexbox
+      tags$section(
+        h5("Group Identifiers"),
+        .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
+        .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
+        div(
+          class = "column-mapping-row",
+          tooltip(
+            selectizeInput(
+              ns("select_Grouping_Variables"),
+              "",
+              choices = NULL,
+              multiple = TRUE,
+              options = list(placeholder = "Select Column(s)"),
+              width = "40%"
+            ),
+            "Select the additional column(s) that will be used to group the data 
+            in the outputs. E.g. Treatment Arm, Age, Sex, Race"
+          ),
+          div(
+            class = "column-mapping-output",
+            span("Additional Grouping Variables")
+          )
+        )
+      ),
+      tags$section(
+        h5("Sample Variables"),
+        .column_mapping_widget(ns, "ANALYTE", "Character format"),
+        .column_mapping_widget(ns, "PCSPEC", "Character format"),
+        .column_mapping_widget(ns, "AVAL", "Numeric format.")
+      ),
+      tags$section(
+        h5("Dose Variables"),
+        .column_mapping_widget(ns, "DOSNO", "Numeric format."),
+        .column_mapping_widget(
+          ns, "ROUTE",
+          "Character format, stating either 'intravascular' or 'extravascular'."
+        ),
+        .column_mapping_widget(ns, "DOSEA", "Numeric format."),
+        .column_mapping_widget(
+          ns, "ADOSEDUR",
+          "Numeric format. Only required for infusion studies,
+          otherwise select NA"
+        )
+      ),
+      tags$section(
+        h5("Time Variables"),
+        .column_mapping_widget(ns, "AFRLT", "Numeric format"),
+        .column_mapping_widget(ns, "ARRLT", "Numeric format"),
+        .column_mapping_widget(ns, "NFRLT", "Numeric format"),
+        .column_mapping_widget(ns, "NRRLT", "Numeric format")
+      ),
+      tags$section(
+        h5("Unit Variables"),
+        .column_mapping_widget(ns, "AVALU", "Character format."),
+        .column_mapping_widget(ns, "DOSEU", "Character format."),
+        .column_mapping_widget(ns, "RRLTU", "Character format.")
+      ),
+      input_task_button(ns("submit_columns"), "Submit Mapping")
+    )
   )
 }
 
-column_mapping_server <- function(id, data, manual_units, on_submit) {
+data_mapping_server <- function(id, adnca_data, on_submit) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Define the required columns and group them into categories
-    column_groups <- list(
-      "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
-      "Sample Variables" = c("ANALYTE", "PCSPEC", "ROUTE", "AVAL"),
-      "Dose Variables" = c("DOSNO", "DOSEA", "ADOSEDUR"),
-      "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
-      "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
-    )
-
-
     # Derive input IDs from column_groups
-    input_ids <- unlist(lapply(column_groups, function(cols) {
-      paste0("select_", cols)
-    }))
-
-    # Define the desired column order
-    desired_order <- c("STUDYID", "USUBJID", "ANALYTE",
-                       "PCSPEC", "AVAL", "AVALU", "AFRLT",
-                       "ARRLT", "NRRLT", "NFRLT", "RRLTU",
-                       "ROUTE", "DOSEA", "DOSEU", "DOSNO",
-                       "ADOSEDUR")
+    input_ids <- lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)) |>
+      unlist()
 
     # Loop through each label and create the renderText outputs
-    purrr::walk(desired_order, \(label) {
+    purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
       output[[paste0("label_", label)]] <- renderText(get_label(LABELS, label, "ADPC"))
     })
 
     # Populate the static inputs with column names
-    observeEvent(data(), {
-      column_names <- names(data())
-      update_selectize_inputs(session, input_ids, column_names, manual_units, desired_order)
+    observeEvent(adnca_data(), {
+      column_names <- names(adnca_data())
+      update_selectize_inputs(session, input_ids, column_names, MANUAL_UNITS, MAPPING_DESIRED_ORDER)
     })
 
-    # Global variable to store grouping variables
-    grouping_variables <- reactiveVal(NULL)
-
-    # Reactive value for the processed dataset
-    processed_data <- reactiveVal(NULL)
-
     # Observe submit button click and update processed_data
-    observeEvent(input$submit_columns, {
+    processed_data <- reactive({
+      req(adnca_data())
+      log_info("Processing data mapping...")
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
 
       # Enable other tabs
@@ -204,19 +207,27 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
       })
 
-      req(data())
-      dataset <- data()
+      dataset <- adnca_data()
 
       # Get the selected columns
-      selected_cols <- sapply(names(column_groups), function(group) {
-        sapply(column_groups[[group]], function(column) {
+      selected_cols <- sapply(names(MAPPING_COLUMN_GROUPS), function(group) {
+        sapply(MAPPING_COLUMN_GROUPS[[group]], function(column) {
           input[[(paste0("select_", column))]]
         })
       }, simplify = FALSE)
 
+      lapply(selected_cols, \(group) {
+        purrr::imap(group, \(v, n) paste0("* ", n, " -> ", paste0(v, collapse = ", ")))
+      }) %>%
+        unlist(use.names = FALSE) %>%
+        paste0(collapse = "\n") %>%
+        paste0("The following mapping was applied:\n", .) %>%
+        log_info()
+
       # Check for duplicate column selections
       all_selected_columns <- unlist(selected_cols)
       if (any(duplicated(all_selected_columns))) {
+        log_warn("Duplicate column selection detected.")
         showModal(modalDialog(
           title = "Duplicate Column Selections",
           "Please ensure that each column selection is unique.",
@@ -225,9 +236,6 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
         ))
         return()
       }
-
-      # Extract and store the "Grouping_Variables" column
-      grouping_variables(input$select_Grouping_Variables)
 
       # Remove "Grouping_Variables" from selected columns to prevent renaming
       selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
@@ -250,34 +258,33 @@ column_mapping_server <- function(id, data, manual_units, on_submit) {
       }
 
       # Update dataset columns if manual units are selected
-      if (input$select_AVALU %in% manual_units$concentration) {
+      if (input$select_AVALU %in% MANUAL_UNITS$concentration) {
         dataset$AVALU <- input$select_AVALU
       }
-      if (input$select_DOSEU %in% manual_units$dose) {
+      if (input$select_DOSEU %in% MANUAL_UNITS$dose) {
         dataset$DOSEU <- input$select_DOSEU
       }
-      if (input$select_RRLTU %in% manual_units$time) {
+      if (input$select_RRLTU %in% MANUAL_UNITS$time) {
         dataset$RRLTU <- input$select_RRLTU
       }
 
       # Reorder columns based on the desired order
       dataset <- dataset %>%
-        relocate(all_of(desired_order))
+        relocate(all_of(MAPPING_DESIRED_ORDER))
 
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
 
-      # Update the processed data
-      processed_data(dataset)
-
       # Execute the callback function to change the tab
       on_submit()
 
-    })
+      dataset
+    }) |>
+      bindEvent(input$submit_columns)
 
     list(
       processed_data = processed_data,
-      grouping_variables = grouping_variables
+      grouping_variables = reactive(input$select_Grouping_Variables)
     )
   })
 }
