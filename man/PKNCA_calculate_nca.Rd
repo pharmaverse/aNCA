@@ -27,6 +27,7 @@ PKNCA_calculate_nca(pknca_data)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Results object with start and end times for each dose, from first dose
 and from most recent dose
 =======
@@ -46,6 +47,10 @@ and from most recent dose
 =======
 Results object with... TODO
 >>>>>>> c5a4e95 (refactor: moved some PKNCA-related logic code to functions)
+=======
+Results object with start and end times for each dose, from first dose
+and from most recent dose
+>>>>>>> f9793e0 (docs: documentation for PKNCA_calculate_nca)
 }
 \description{
 Calculates results for PKNCA analysis.
@@ -56,6 +61,7 @@ Calculates results for PKNCA analysis.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 This function+ calculates results for PKNCA analysis using \code{PKNCA::pk.nca()}.
 It then joins the results with the dosing data, to create a full results data frame
 with the start and end times for each dose, from first and most recent dose.
@@ -110,6 +116,13 @@ with the start and end times for each dose, from first and most recent dose.
 }
 \examples{
 >>>>>>> 978dbae (docs: documentation for PKNCA_calculate_nca)
+=======
+This function+ calculates results for PKNCA analysis using \code{PKNCA::pk.nca()}.
+It then joins the results with the dosing data, to create a full results data frame
+with the start and end times for each dose, from first and most recent dose.
+}
+\examples{
+>>>>>>> f9793e0 (docs: documentation for PKNCA_calculate_nca)
 example_data <- data.frame(
   STUDYID = rep("STUDY001", 6),
   PCSPEC = rep("Plasma", 6),
@@ -134,6 +147,7 @@ pknca_data <- PKNCA_create_data_object(example_data)
 
 # Perform NCA calculations
 nca_results <- PKNCA_calculate_nca(pknca_data)
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> f9793e0 (docs: documentation for PKNCA_calculate_nca)
 =======
@@ -142,5 +156,7 @@ nca_results <- PKNCA_calculate_nca(pknca_data)
 >>>>>>> 978dbae (docs: documentation for PKNCA_calculate_nca)
 =======
 >>>>>>> c5a4e95 (refactor: moved some PKNCA-related logic code to functions)
+=======
+>>>>>>> f9793e0 (docs: documentation for PKNCA_calculate_nca)
 
 }
