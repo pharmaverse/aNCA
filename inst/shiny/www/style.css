@@ -51,6 +51,11 @@ h5 {
     }
   }
 
+  .error-string {
+    color: var(--bs-danger);
+    font-weight: bold;
+  }
+
   /* filters on data page */
   .filters-buttons-container {
     display: grid;

@@ -14,7 +14,7 @@ data_upload_ui <- function(id) {
   card(
     div(
       h3("Upload"),
-      p("Upload your PK dataset in either .csv or .rds format"),
+      uiOutput(ns("file_loading_message")),
       fileInput(
         ns("data_upload"),
         width = "60%",
@@ -29,23 +29,46 @@ data_upload_ui <- function(id) {
 
 data_upload_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+    #' Pre-load dummy data - it is always automatically loaded on startup
+    DUMMY_DATA <- read.csv(
+      system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
+      na.strings = c("", "NA")
+    )
+
+    #' Display file loading error if any issues arise
+    file_loading_error <- reactiveVal(NULL)
+    output$file_loading_message <- renderUI({
+      if (is.null(file_loading_error())) {
+        p("Upload your PK dataset in either .csv or .rds format")
+      } else {
+        p(file_loading_error(), class = "error-string")
+      }
+    })
+
     reactive({
       #' if no data is provided by the user, load dummy data
       if (is.null(input$data_upload$datapath)) {
-        read.csv(
-          system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
-          na.strings = c("", "NA")
-        )
+        DUMMY_DATA
       } else {
-        df <- switch(
-          file_ext(input$data_upload$name),
-          csv = read.csv(input$data_upload$datapath, na = c("", "NA")),
-          rds = readRDS(input$data_upload$datapath),
-          validate("Invalid file type. Only accepted are .csv and .rds")
-        )
+        df <- tryCatch({
+          file_loading_error(NULL)
+          switch(
+            file_ext(input$data_upload$name),
+            csv = read.csv(input$data_upload$datapath, na = c("", "NA")),
+            rds = readRDS(input$data_upload$datapath),
+            stop("Invalid file type. Only accepted are .csv and .rds")
+          )
+        }, error = function(e) {
+          file_loading_error(e$message)
+        })
 
-        log_success("User data loaded successfully.")
-        df
+        if (is.null(file_loading_error())) {
+          log_success("User data loaded successfully.")
+          df
+        } else {
+          log_error("Error loading user data: ", file_loading_error())
+          DUMMY_DATA
+        }
       }
     }) |>
       bindEvent(input$data_upload, ignoreNULL = FALSE)
