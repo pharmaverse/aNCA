@@ -11,7 +11,7 @@ units_table_ui <- function(id) {
   )
 }
 
-units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
+units_table_server <- function(id, mydata) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -180,8 +180,8 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
     })
 
     # When save button is pressed substitute the original units table based on the modal one
+    units_table <- reactiveVal(NULL)
     observeEvent(input$save_units_table, {
-
       # Make sure there are no missing entries (no NA in conversion factor)
       if (any(is.na(modal_units_table()$`Conversion Factor`))) {
 
@@ -202,41 +202,19 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         return()
       }
 
-      # Tranforms the modal units table back to the original one
-      analyte_column <- mydata()$conc$columns$groups$group_analyte
-      modal_units_table <- modal_units_table() %>%
+      modal_units_table() %>%
         rename(ANALYTE = `Analytes`,
                PPTESTCD = `Parameter`,
                PPORRESU = `Default unit`,
                PPSTRESU = `Custom unit`,
-               conversion_factor = `Conversion Factor`)
+               conversion_factor = `Conversion Factor`) %>%
+        units_table()
 
       # Close the modal message window for the user
       removeModal()
-
-      # Updates units table of mydata and res_nca according to the user's changes
-      mydata <- mydata()
-      mydata$units <- modal_units_table
-      mydata(mydata)
-
-      # If there are already results produced, make sure they are also adapted
-      if (!is.null(res_nca())) {
-        res_nca <- res_nca()
-        res_nca$data$units <- modal_units_table
-        res_nca$result <- res_nca$result %>%
-          select(-PPSTRESU, -PPSTRES) %>%
-          left_join(
-            modal_units_table,
-            by = intersect(names(.), names(modal_units_table))
-          ) %>%
-          mutate(PPSTRES = PPORRES * conversion_factor) %>%
-          select(-conversion_factor)
-        res_nca(res_nca)
-
-      }
-
     })
 
+    units_table
   })
 }
 
