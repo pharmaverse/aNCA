@@ -22,7 +22,7 @@
 #'
 #' @export 
 calculate_bioavailability <- function(res_nca, selected_aucs) {
-  
+  #browser()
   #check if selected_aucs are available
   if (is.null(selected_aucs) || length(selected_aucs) == 0) {
     return(NULL)
@@ -81,7 +81,7 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
     # Compute bioavailability for individuals (F)
     individual_data <- merged_data %>%
       filter(!is.na(AUC_IV) & !is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type) := pk.calc.f(Dose_IV, AUC_IV, Dose_EX, AUC_EX))
+      mutate(!!paste0("f_", auc_type, "[%]") := (pk.calc.f(Dose_IV, AUC_IV, Dose_EX, AUC_EX))*100)
     
     # Compute mean IV AUC for missing IV subjects
     mean_iv <- iv_data %>%
@@ -92,12 +92,12 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
     
     ex_without_match <- merged_data %>%
       filter(is.na(AUC_IV) | is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type) := pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX))
+      mutate(!!paste0("f_", auc_type, "[%]") := (pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX))*100)
 
     # Combine results
     auc_results <- bind_rows(
-      individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type)),
-      ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type))
+      individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type, "[%]")),
+      ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV, !!paste0("f_", auc_type, "[%]"))
     )
     
     results_list[[auc_type]] <- auc_results
