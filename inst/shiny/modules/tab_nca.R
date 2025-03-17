@@ -47,8 +47,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     ns <- session$ns
 
     #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
-    #' TODO: change this to a reactive. Setup module should not modify the object directly,
-    #' should return a copy instead.
     pknca_data <- reactive({
       req(adnca_data())
       log_trace("Creating PKNCA::data object.")
@@ -58,8 +56,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       bindEvent(adnca_data())
 
     #' NCA Setup module
-    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data, res_nca)
+    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
+    units_table <- nca_setup$units_table
     rules <- nca_setup$rules
 
     #' Slope rules setup module
@@ -133,7 +132,22 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
       withProgress(message = "Calculating NCA...", value = 0, {
         tryCatch({
+          #' Calculate results
           res <- PKNCA_calculate_nca(processed_pknca_data())
+
+          #' Apply units
+          if (!is.null(units_table())) {
+            res$data$units <- units_table()
+            res$result <- res$result %>%
+              select(-PPSTRESU, -PPSTRES) %>%
+              left_join(
+                units_table(),
+                by = intersect(names(.), names(units_table()))
+              ) %>%
+              mutate(PPSTRES = PPORRES * conversion_factor) %>%
+              select(-conversion_factor)
+          }
+
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
           res
