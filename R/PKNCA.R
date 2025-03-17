@@ -10,7 +10,7 @@
 #' - USUBJID: Unique subject identifier.
 #' - DOSNO: Dose profile number.
 #' - ANALYTE: Analyte.
-#' - AVAL: Änalysis value.
+#' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
 #' - DOSEA: Dose amount.
 #' - DOSEU: Dose unit.
@@ -22,7 +22,7 @@
 #'
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
-#' 3. Creating PKNCAconc object using `PKNCA::PKNCAconc()`.
+#' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
 #' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
 #' with formula `DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID`.
