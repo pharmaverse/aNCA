@@ -42,47 +42,50 @@ units_data <- data.frame(
 pknca_data <- PKNCA_create_data_object(simple_data)
 
 describe("PKNCA_create_data_object", {
-  
   it("creates a PKNCAdata object with concentration, doses, and units based on ADNCA data", {
     expect_s3_class(pknca_data, "PKNCAdata")
   })
-  
+
   it("handles missing columns required for PKNCA in the input data", {
     # Missing columns in the input data
     missing_columns_data <- simple_data[, -which(names(simple_data) %in% c("AVAL", "AVALU"))]
     # expect error message to user
-    expect_error(PKNCA_create_data_object(missing_columns_data),
-    paste("All of the variables in the formula must be in the data.  Missing: AVAL"))
+    expect_error(
+      PKNCA_create_data_object(missing_columns_data),
+      paste("All of the variables in the formula must be in the data.  Missing: AVAL")
+    )
   })
-  
+
   it("handles missing columns required for the functions in the input data", {
     # Missing columns in the function
     missing_columns_conc <- simple_data[, -which(names(simple_data) %in%  c("AFRLT"))]
-    expect_error(PKNCA_create_data_object(missing_columns_conc),
-                 paste("Missing required columns: AFRLT"))
-    
+    expect_error(
+      PKNCA_create_data_object(missing_columns_conc),
+      paste("Missing required columns: AFRLT")
+    )
+
     missing_columns_dose <- simple_data[, -which(names(simple_data) %in%  c("ARRLT"))]
-    expect_error(PKNCA_create_data_object(missing_columns_dose),
-                 paste("Missing required columns: ARRLT"))
-    
+    expect_error(
+      PKNCA_create_data_object(missing_columns_dose),
+      paste("Missing required columns: ARRLT")
+    )
+
   })
-  
+
   it("handles multiple analytes", {
     # Multiple analytes and units
     results <- PKNCA_create_data_object(units_data)
-    
+
     units_table <- results$units
     #contains ANALYTE column with two unique values
     expect_true("ANALYTE" %in% colnames(units_table))
-    
+
     unique_analytes <- unique(units_table$ANALYTE)
     expect_equal(length(unique_analytes), 2)
-    
+
   })
-  
-  #TODO: Add test for multiple units once implemented
-  
-  #TODO: add test for duplicated rows error message
+  # TODO: Add test for multiple units once implemented
+  # TODO: add test for duplicated rows error message
 })
 
 
@@ -90,18 +93,84 @@ describe("PKNCA_create_data_object", {
 nca_results <- PKNCA_calculate_nca(pknca_data)
 
 describe("PKNCA_calculate_nca", {
-  
+
   it("calculates results for PKNCA analysis", {
     expect_s3_class(nca_results, "PKNCAresults")
   })
-  
+
   it("adds start and end from most recent dose", {
     # Check that the results have the dosing data
     expect_true("start_dose" %in% colnames(nca_results$result))
     expect_true("end_dose" %in% colnames(nca_results$result))
-    
+
     #check that only two items have been added to list
     expect_equal(length(colnames(nca_results$result)), 15)
   })
-  
+
+})
+
+describe("PKNCA_impute_method_start_logslope", {
+  it("does not impute when start is in the data", {
+    expect_equal(
+      PKNCA_impute_method_start_logslope(conc = 3:1, time = 0:2, start = 0, end = 2),
+      data.frame(conc = 3:1, time = 0:2)
+    )
+  })
+
+  it("imputes when start is not in the data", {
+    expect_equal(
+      PKNCA_impute_method_start_logslope(conc = 3:1, time = 1:3, start = 0, end = 3),
+      data.frame(conc = c(4.5, 3:1), time = 0:3),
+      ignore_attr = TRUE
+    )
+  })
+
+  it("ignores data outside the interval (before interval)", {
+    expect_equal(
+      PKNCA_impute_method_start_logslope(conc = c(0, 2:1), time = c(-1, 1:2), start = 0, end = 2),
+      data.frame(conc = c(0, 4, 2:1), time = c(-1, 0, 1:2)),
+      ignore_attr = TRUE
+    )
+  })
+
+  it("does not modify if no C1 -> C2 decline in samples", {
+    expect_equal(
+      PKNCA_impute_method_start_logslope(conc = c(1, 1, 1), time = 1:3, start = 0, end = 3),
+      data.frame(conc = c(1, 1, 1), time = 1:3),
+      ignore_attr = TRUE
+    )
+  })
+
+  it("does not modify if C1 = C2 in samples", {
+    expect_equal(
+      PKNCA_impute_method_start_logslope(conc = c(3, 3, 1), time = 1:3, start = 0, end = 3),
+      data.frame(conc = c(3, 3, 1), time = 1:3),
+      ignore_attr = TRUE
+    )
+  })
+})
+
+describe("PKNCA_impute_method_start_c1", {
+  it("does not impute when start is in the data", {
+    expect_equal(
+      PKNCA_impute_method_start_c1(conc = 1:3, time = 0:2, start = 0, end = 2),
+      data.frame(conc = 1:3, time = 0:2)
+    )
+  })
+
+  it("imputes when start is not in the data", {
+    expect_equal(
+      PKNCA_impute_method_start_c1(conc = 1:3, time = 1:3, start = 0, end = 3),
+      data.frame(conc = c(1, 1:3), time = 0:3),
+      ignore_attr = TRUE
+    )
+  })
+
+  it("ignores data outside the interval (before interval)", {
+    expect_equal(
+      PKNCA_impute_method_start_c1(conc = 1:3, time = c(-1, 1:2), start = 0, end = 2),
+      data.frame(conc = c(1, 2, 2:3), time = c(-1, 0, 1:2)),
+      ignore_attr = TRUE
+    )
+  })
 })
