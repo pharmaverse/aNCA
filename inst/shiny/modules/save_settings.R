@@ -29,6 +29,9 @@ save_settings_server <- function(id, mydata, res_nca) {
         res$dose$data <- res$dose$data %>%
           select(any_of(c(unname(unlist(res$dose$columns)), "DOSNO")))
 
+        
+        ########################################################################################
+        # ToDo: Flag rules needs to be modified, currently not working due to no access to nca-settings-rule
         rule_inputs_logical <- names(input) %>%
           keep(~startsWith(.x, "nca_settings-rule")) %>%
           sapply(., \(x) input[[x]])
@@ -42,6 +45,7 @@ save_settings_server <- function(id, mydata, res_nca) {
           setNames(nm = gsub("nca_settings-(.*)_threshold$", "\\1", threshold_inputs)) %>%
           as_list() %>%
           as.data.frame()
+        ########################################################################################
 
         if (input$settings_save_fmt == "rds") {
           saveRDS(res, file)
