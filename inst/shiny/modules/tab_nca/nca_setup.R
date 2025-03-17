@@ -64,7 +64,7 @@ nca_setup_ui <- function(id) {
                      "cav", "cl.all", "cl.obs",
                      "clast", "tlast")
       )),
-      column(4, units_table_ui(ns("units_table_preNCA")))
+      column(4, units_table_ui(ns("units_table")))
     ),
     br(),
 
@@ -207,10 +207,8 @@ nca_setup_ui <- function(id) {
 #' - data A reactive expression containing the read and mapped data from the app.
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
 #' - mydata A reactive expression of the PKNCAdata object, which contains data and NCA specications.
-#' - res_nca A reactive expression containing the PKNCA results output generated from mydata.
-#'           Only used for the units_table submodule
 #'
-nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
+nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -500,7 +498,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     processed_pknca_data <- eventReactive(list(
       input$method, input$nca_params, input$should_impute_c0,
       input$select_analyte, input$select_dosno, input$select_pcspec,
-      intervals_userinput(), mydata()
+      intervals_userinput(), mydata(), units_table()
     ), {
       req(mydata())
       req(
@@ -510,6 +508,18 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
       # Load mydata reactive and modify it accordingly to user's request
       processed_pknca_data <- mydata()
+
+      analyte_column <- processed_pknca_data$conc$columns$groups$group_analyte
+      unique_analytes <- unique(processed_pknca_data$conc$data[[analyte_column]])
+
+      if (!is.null(units_table())) {
+        processed_pknca_data$units <- units_table()
+      }
+      processed_pknca_data$units <- processed_pknca_data$units %>%
+        select(-!!sym(analyte_column)) %>%
+        tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
+        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)  %>%
+        filter(ANALYTE %in% input$select_analyte)
 
       processed_pknca_data$options <- list(
         auc.method = input$method,
@@ -542,16 +552,6 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
                       ANALYTE %in% input$select_analyte,
                       PCSPEC %in% input$select_pcspec)
 
-      unique_analytes <- unique(
-        processed_pknca_data$conc$data[[processed_pknca_data$conc$columns$groups$group_analyte]]
-      )
-      analyte_column <- processed_pknca_data$conc$columns$groups$group_analyte
-      processed_pknca_data$units <- processed_pknca_data$units %>%
-        select(-!!sym(analyte_column)) %>%
-        tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
-        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)  %>%
-        filter(ANALYTE %in% input$select_analyte)
-
       # Define start imputations on intervals if specified by the user
       if (input$should_impute_c0) {
         processed_pknca_data <- create_start_impute(processed_pknca_data)
@@ -570,9 +570,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
-    # It updates $units table of mydata & res_nca when the user saves their changes
-    units_table_server("units_table_preNCA", processed_pknca_data, res_nca)
-    units_table_server("units_table_postNCA", processed_pknca_data, res_nca)
+    units_table <- units_table_server("units_table", processed_pknca_data)
 
     # Rendering Reactable Output
     output$nca_intervals <- renderReactable({
@@ -609,6 +607,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
     list(
       processed_pknca_data = processed_pknca_data,
+      units_table = units_table,
       rules = reactive(list(
         rule_adj_r_squared = input$rule_adj_r_squared,
         adj.r.squared_threshold = input$adj.r.squared_threshold,
