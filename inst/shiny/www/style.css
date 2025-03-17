@@ -19,28 +19,6 @@
   width: 100%;
 }
 
-/* column mapping UI */
-
-.column-mapping-row {
-  display: flex;
-  align-items: center;
-  margin-top: -1rem;
-}
-
-.column-mapping-output {
-  margin: 1.25rem 0 0 0.625rem;
-  color: black;
-}
-
-.column-mapping-label {
-  margin: 1.25rem 0 0 0.625rem;
-  color: grey;
-}
-
-.column-mapping-section h5 {
-  font-weight: bold;
-}
-
 /* Style adjustments for headings */
 h5 {
   margin-bottom: -1.5rem;
@@ -60,34 +38,79 @@ h5 {
   margin-right: 5px;
 }
 
-/* card layout in filters section */
-.card-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%; /* Ensures the card stretches to match its sibling cards */
+/* data tab styling */
+.data-tab-container {
+  .card {
+    margin-top: 1em;
+    margin-bottom: 0em;
+
+    .card-body > div {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+  }
+
+  .error-string {
+    color: var(--bs-danger);
+    font-weight: bold;
+  }
+
+  /* filters on data page */
+  .filters-buttons-container {
+    display: grid;
+    grid-template-columns: 49% 49%;
+    gap: 2%;
+  }
+
+  .filter-widget-container {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+
+    .btn-danger {
+      align-self: flex-end;
+      width: 2.5em;
+      height: 2.5em;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  .reactable {
+    margin-top: 2em;
+  }
+
+  /* column mapping UI */
+  .data-mapping-container {
+    .column-mapping-row {
+      display: flex;
+      align-items: center;
+      margin: -0.75rem 0 .25em 1em;
+    }
+
+    .column-mapping-output {
+      margin: 1.25rem 0 0 0.625rem;
+      color: black;
+    }
+
+    .column-mapping-label {
+      margin: 1.25rem 0 0 0.625rem;
+      color: grey;
+    }
+
+    h5 {
+      font-weight: bold;
+      margin-top: 0.75em;
+      margin-bottom: 0;
+    }
+
+    button {
+      margin-top: 1em;
+    }
+  }
 }
 
-/* filters on data page */
-#data-filters {
-  padding: 1em;
-}
-
-#data-filters .col-sm-6,
-#data-filters .col-sm-5,
-#data-filters .col-sm-4,
-#data-filters .col-sm-2,
-#data-filters .col-sm-1 {
-  padding: 0;
-}
-
-#data-filters .form-group.shiny-input-container {
-  width: 100%;
-}
-
-#data-filters button.btn-danger {
-  margin-top: 1.45em;
-  margin-left: 0.25em;
-}
 
 /* buttons */
 .input-group-btn {
@@ -104,17 +127,6 @@ h5 {
 .btn-help-icon {
   font-size: 20px; /* Increase font size */
   padding: 10px 20px; /* Increase padding */
-}
-
-.filters-submit-button {
-  margin-top: auto; /* Pushes the button to the bottom */
-  width: 100%; /* Ensures the div spans the full width of the card */
-  display: block; /* Ensures proper layout inside the card */
-}
-
-.filters-submit-button .btn {
-  width: 100%; /* Forces the button to fill the div's width */
-  box-sizing: border-box; /* Ensures padding doesn’t overflow */
 }
 
 /* modals */

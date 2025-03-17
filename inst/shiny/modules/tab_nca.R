@@ -113,9 +113,21 @@ tab_nca_server <- function(id, data, grouping_vars) {
         duration = "ADOSEDUR"
       )
 
+      #create basic intervals so that PKNCAdata can be created
+      #TODO: investigate if this is required
+      intervals <-
+        data.frame(
+          start = 0, end = Inf,
+          cmax = TRUE,
+          tmax = TRUE,
+          auclast = FALSE,
+          aucinf.obs = FALSE
+        )
+
       mydata <- PKNCA::PKNCAdata(
         data.conc = myconc,
         data.dose = mydose,
+        intervals = intervals,
         units = PKNCA::pknca_units_table(
           concu = myconc$data$AVALU[1],
           doseu = myconc$data$DOSEU[1],
@@ -184,26 +196,6 @@ tab_nca_server <- function(id, data, grouping_vars) {
 
     nca_results_server("nca_results", res_nca, setup()$rules, grouping_vars, auc_options)
 
-    # Profiles per Patient ----
-    # Define a profiles per patient
-    profiles_per_patient <- reactive({
-      req(mydata())
-      # Check if res_nca() is available and valid
-      if (!is.null(res_nca())) {
-        res_nca()$result %>%
-          mutate(USUBJID = as.character(USUBJID),
-                 DOSNO = as.character(DOSNO)) %>%
-          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
-          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-          unnest(DOSNO)  # Convert lists into individual rows
-      } else {
-        mydata()$conc$data %>%
-          mutate(USUBJID = as.character(USUBJID)) %>%
-          group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
-          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
-      }
-    })
-
     # SLOPE SELECTOR ----
     # Keep the UI table constantly actively updated
     observeEvent(input, {
@@ -233,7 +225,6 @@ tab_nca_server <- function(id, data, grouping_vars) {
       "slope_selector",
       mydata,
       res_nca,
-      profiles_per_patient,
       pk_nca_trigger,
       reactive(input$settings_upload)
     )
