@@ -12,21 +12,44 @@ nca_results_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    units_table_ui(ns("units_table_postNCA")),
+    units_table_ui(ns("units_table")),
     reactableOutput(ns("myresults")),
     downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
   )
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, res_nca, rules, grouping_vars) {
+nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    units_table <- units_table_server(
+      "units_table",
+      reactive({          #' Pass `pknca_data` to the units table only when the results
+        req(res_nca())    #' are available.
+        pknca_data()
+      })
+    )
+
     final_results <- reactive({
       req(res_nca())
-      # Transform results
-      final_results <- pivot_wider_pknca_results(res_nca())
+
+      res <- res_nca()
+      #' Apply units
+      if (!is.null(units_table())) {
+        res$data$units <- units_table()
+        res$result <- res$result %>%
+          select(-PPSTRESU, -PPSTRES) %>%
+          left_join(
+            units_table(),
+            by = intersect(names(.), names(units_table()))
+          ) %>%
+          mutate(PPSTRES = PPORRES * conversion_factor) %>%
+          select(-conversion_factor)
+      }
+
+      #' Transform results
+      final_results <- pivot_wider_pknca_results(res)
 
       # Apply rules
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
