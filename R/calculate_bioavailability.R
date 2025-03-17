@@ -86,7 +86,7 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
     # Compute bioavailability for individuals (F)
     individual_data <- merged_data %>%
       filter(!is.na(AUC_IV) & !is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type, "[%]") := (pk.calc.f(Dose_IV, AUC_IV, Dose_EX, AUC_EX)) * 100)
+      mutate(!!paste0("f_", auc_type) := (pk.calc.f(Dose_IV, AUC_IV, Dose_EX, AUC_EX)) * 100)
 
     # Compute mean IV AUC for missing IV subjects
     mean_iv <- iv_data %>%
@@ -97,21 +97,64 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
 
     ex_without_match <- merged_data %>%
       filter(is.na(AUC_IV) | is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type, "[%]")
+      mutate(!!paste0("f_", auc_type)
              := (pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX)) * 100)
 
     # Combine results
     auc_results <- bind_rows(
       individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV,
-                                 !!paste0("f_", auc_type, "[%]")),
+                                 !!paste0("f_", auc_type)),
       ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV,
-                                  !!paste0("f_", auc_type, "[%]"))
+                                  !!paste0("f_", auc_type))
     )
 
     results_list[[auc_type]] <- auc_results
   }
 
-  purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV")) %>%
-    select(-Grouping_IV)
+ purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV")) %>%
+   select(-Grouping_IV)
+}
 
+#' Add bioavailbility to PKNCAresults object
+#' 
+#' This function adds bioavailability (F) data to a PKNCAresults object.
+#' The bioavailabiility is calculated with the calculate_bioavailability function.
+#' 
+#' @param res_nca A list containing non-compartmental analysis (NCA) results,
+#' including concentration and dose data.
+#' 
+#' @export 
+bioavailability_in_PKNCAresult <- function(res_nca, bioavailability) {
+  
+  if (is.null(bioavailability)) {
+    return(res_nca)
+  }
+  # Extract ID groups
+  id_groups <- res_nca$data$conc$columns$groups %>%
+    purrr::list_c() %>%
+    append("DOSNO") %>%
+    purrr::keep(~ !is.null(.) && . != "DRUG" &&
+                  length(unique(res_nca$data$conc$data[[.]])) > 1)
+  
+  # Pivot results data
+  subj_data <- res_nca$result %>%
+    select(-starts_with("PP"), -exclude)%>%
+    distinct()
+  
+  # Create bioavailability data in resnca format
+  f_results <- subj_data %>%
+    mutate(Grouping_EX = apply(select(., all_of(id_groups), -USUBJID),
+                               1, paste, collapse = " ")) %>%
+    left_join(bioavailability, by = c("USUBJID", "Grouping_EX")) %>%
+    select(-Grouping_EX) %>%
+    pivot_longer(
+      cols = starts_with("f_"),  # Select columns with calculated bioavailability
+      names_to = "PPTESTCD",
+      values_to = "PPSTRES"
+    ) %>%
+    mutate(PPSTRESU = "%")
+
+  res_nca$result <- bind_rows(res_nca$result, f_results)
+  
+  res_nca
 }
