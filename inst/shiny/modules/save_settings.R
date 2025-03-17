@@ -11,7 +11,7 @@ save_settings_ui <- function(id) {
   )
 }
 
-save_settings_server <- function(id, mydata, res_nca) {
+save_settings_server <- function(id, mydata) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -20,20 +20,20 @@ save_settings_server <- function(id, mydata, res_nca) {
         paste0(mydata()$conc$data$STUDYID[1], "_aNCAsetts_", Sys.Date(), ".xlsx")
       },
       content = function(file) {
-        res <- res_nca()$data
+        mydata <- mydata()$data
 
-        conc_cols <- c(unname(unlist(res$conc$columns)),
+        conc_cols <- c(unname(unlist(mydata$conc$columns)),
                        "is.included.hl", "is.excluded.hl", "REASON")
-        conc_logical_cols <- sapply(res$conc$data[conc_cols], is.logical) |>
+        conc_logical_cols <- sapply(mydata$conc$data[conc_cols], is.logical) |>
           which() |>
           names()
 
-        res$conc$data <- res$conc$data %>%
+        mydata$conc$data <- mydata$conc$data %>%
           select(any_of(c(conc_cols, "DOSNO"))) %>%
           filter(rowSums(select(., conc_logical_cols)) > 0)
 
-        res$dose$data <- res$dose$data %>%
-          select(any_of(c(unname(unlist(res$dose$columns)), "DOSNO")))
+        mydata$dose$data <- mydata$dose$data %>%
+          select(any_of(c(unname(unlist(mydata$dose$columns)), "DOSNO")))
 
 
         ########################################################################################
@@ -45,7 +45,7 @@ save_settings_server <- function(id, mydata, res_nca) {
         threshold_inputs <- names(input) %>%
           keep(~startsWith(.x, "nca_settings-") & endsWith(.x, "_threshold"))
 
-        res$flag_rules <- ifelse(rule_inputs_logical,
+        mydata$flag_rules <- ifelse(rule_inputs_logical,
                                  sapply(threshold_inputs, \(x) input[[x]]),
                                  NA) %>%
           setNames(nm = gsub("nca_settings-(.*)_threshold$", "\\1", threshold_inputs)) %>%
@@ -54,16 +54,16 @@ save_settings_server <- function(id, mydata, res_nca) {
         ########################################################################################
 
         if (input$settings_save_fmt == "rds") {
-          saveRDS(res, file)
+          saveRDS(mydata, file)
         }
 
         if (input$settings_save_fmt == "xlsx") {
-          res$options <- as.data.frame(
-            c(as.list(res$options$single.dose.aucs),
-              res$options[which(names(res$options) != "single.dose.aucs")])
+          mydata$options <- as.data.frame(
+            c(as.list(mydata$options$single.dose.aucs),
+              mydata$options[which(names(mydata$options) != "single.dose.aucs")])
           )
-          res$intervals <- replace(res$intervals, res$intervals == Inf, 1e99)
-          res$options <- replace(res$options, res$options == Inf, 1e99)
+          mydata$intervals <- replace(mydata$intervals, mydata$intervals == Inf, 1e99)
+          mydata$options <- replace(mydata$options, mydata$options == Inf, 1e99)
 
           perfect_stack <- function(columns_list) {
             stack(unlist(columns_list)) %>%
@@ -71,14 +71,14 @@ save_settings_server <- function(id, mydata, res_nca) {
           }
 
           setts_list <- list(
-            intervals = res$intervals,
-            units = res$units,
-            conc_data = res$conc$data,
-            conc_columns = perfect_stack(res$conc$columns),
-            dose_data = res$dose$data,
-            dose_columns = perfect_stack(res$dose$columns),
-            flag_rules = res$flag_rules,
-            options = res$options
+            intervals = mydata$intervals,
+            units = mydata$units,
+            conc_data = mydata$conc$data,
+            conc_columns = perfect_stack(mydata$conc$columns),
+            dose_data = mydata$dose$data,
+            dose_columns = perfect_stack(mydata$dose$columns),
+            flag_rules = mydata$flag_rules,
+            options = mydata$options
           )
 
           wb <- openxlsx::createWorkbook(file)
