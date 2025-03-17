@@ -530,9 +530,9 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
       # Filter only the analytes and doses requested for intervals and units
       mydata$intervals <- mydata$intervals %>%
-        dplyr::filter(DOSNO %in% input$select_dosno,
-                      ANALYTE %in% input$select_analyte,
-                      PCSPEC %in% input$select_pcspec)
+        filter(DOSNO %in% input$select_dosno,
+               ANALYTE %in% input$select_analyte,
+               PCSPEC %in% input$select_pcspec)
 
       unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
       analyte_column <- mydata$conc$columns$groups$group_analyte
