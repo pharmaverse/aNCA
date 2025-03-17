@@ -11,7 +11,7 @@ load_settings_ui <- function(id) {
   )
 }
 
-load_settings_server <- function(id, mydata, parent_session) {
+load_settings_server <- function(id, mydata, parent_session, auc_counter) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -79,7 +79,7 @@ load_settings_server <- function(id, mydata, parent_session) {
               type = "warning"
             )
           }
-          #browser()
+
           updateSelectInput(
             session,
             inputId = inputId,
@@ -150,10 +150,7 @@ load_settings_server <- function(id, mydata, parent_session) {
                             label = "Select Partial AUC", value = TRUE)
         
         for (i in seq_along(nrow(intervals_userinput_setts))) {
-          if (auc_counter() >= i){
-            removeUI(selector = paste0("#", ns(paste0("AUC_", i))))
-          }
-          
+
           insertUI(
             selector = paste0("#", ns("AUCInputs")),
             where = "beforeEnd",
@@ -168,7 +165,7 @@ load_settings_server <- function(id, mydata, parent_session) {
         auc_counter(nrow(intervals_userinput_setts))
       }
 
-      if (!is.na(setts$flag_rules$adj.r.squared)) {
+      if (!is.null(setts$flag_rules$adj.r.squared)) {
         updateCheckboxInput(parent_session, inputId = "rule_adj.r.squared", value = TRUE)
         updateNumericInput(parent_session, inputId = "adj.r.squared_threshold", value = setts$flag_rules$adj.r.squared)
       } else {
