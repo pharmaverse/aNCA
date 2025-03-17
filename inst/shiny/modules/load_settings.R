@@ -96,7 +96,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
       .update_select_with_setts(
         "DOSNO", "DOSNO",
         setts_df = setts$intervals, data_df = mydata()$conc$data,
-        parent_session, inputId = "select_dosno"
+        parent_session, "select_dosno"
       )
 
       .update_select_with_setts(
@@ -104,8 +104,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
         var_data_col = mydata()$conc$columns$groups$group_analyte,
         setts_df = setts$intervals,
         data_df = mydata()$conc$data,
-        parent_session,
-        "select_analyte"
+        parent_session, "select_analyte"
       )
       .update_select_with_setts(
         "PCSPEC", "PCSPEC",
@@ -149,13 +148,13 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
       if (any(grepl("start.*", setts$intervals$impute))) {
         updateCheckboxInput(
           parent_session,
-          inputId = "nca-nca_setup-should_impute_c0",
+          inputId = "should_impute_c0",
           value = TRUE
         )
       } else {
         updateCheckboxInput(
           parent_session,
-          inputId = "nca-nca_setup-should_impute_c0",
+          inputId = "should_impute_c0",
           value = FALSE
         )
       }
