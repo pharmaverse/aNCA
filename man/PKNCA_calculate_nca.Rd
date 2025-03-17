@@ -32,6 +32,7 @@ PKNCA_calculate_nca(pknca_data)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Results object with start and end times for each dose, from first dose
 and from most recent dose
 =======
@@ -55,6 +56,10 @@ Results object with... TODO
 Results object with start and end times for each dose, from first dose
 and from most recent dose
 >>>>>>> f9793e0 (docs: documentation for PKNCA_calculate_nca)
+=======
+Results object with start and end times for each dose, from first dose
+and from most recent dose
+>>>>>>> 9a648c7 (chore: regenerated broken docs after merge)
 }
 \description{
 Calculates results for PKNCA analysis.
@@ -66,6 +71,9 @@ Calculates results for PKNCA analysis.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9a648c7 (chore: regenerated broken docs after merge)
 This function+ calculates results for PKNCA analysis using \code{PKNCA::pk.nca()}.
 It then joins the results with the dosing data, to create a full results data frame
 with the start and end times for each dose, from first and most recent dose.
@@ -95,6 +103,7 @@ pknca_data <- PKNCA_create_data_object(example_data)
 
 # Perform NCA calculations
 nca_results <- PKNCA_calculate_nca(pknca_data)
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> fdc64a6 (refactor: moved some PKNCA-related logic code to functions)
@@ -162,5 +171,7 @@ nca_results <- PKNCA_calculate_nca(pknca_data)
 >>>>>>> c5a4e95 (refactor: moved some PKNCA-related logic code to functions)
 =======
 >>>>>>> f9793e0 (docs: documentation for PKNCA_calculate_nca)
+=======
+>>>>>>> 9a648c7 (chore: regenerated broken docs after merge)
 
 }
