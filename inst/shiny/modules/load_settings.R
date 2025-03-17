@@ -151,15 +151,15 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
       if ((nrow(intervals_userinput_setts) > 0)) {
         updateCheckboxInput(parent_session, inputId = "AUCoptions",
                             label = "Select Partial AUC", value = TRUE)
-        
+
         for (i in seq_along(nrow(intervals_userinput_setts))) {
 
           insertUI(
-            selector = paste0("#", ns("AUCInputs")),
+            selector = paste0("#", parent_session$ns("AUCInputs")),
             where = "beforeEnd",
             ui = partial_auc_input(
               id = paste0("AUC_", auc_counter()),
-              ns = ns,
+              ns = parent_session$ns,
               min_sel_value = as.numeric(intervals_userinput_setts$start[i]),
               max_sel_value = as.numeric(intervals_userinput_setts$end[i])
             )
