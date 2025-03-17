@@ -256,7 +256,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     # NCA SETTINGS ----
     # TODO: move this section to a new module
     # Save the project settings
-    save_settings_server("save_settings", mydata, res_nca)
+    save_settings_server("save_settings", mydata)
 
     # ADDITIONAL ANALYSIS ----
     additional_analysis_server("non_nca", mydata, grouping_vars)
