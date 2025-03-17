@@ -265,7 +265,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     # DESCRIPTIVE STATISTICS ---------------------------------------------
     # This tab computes and visualizes output data from the NCA analysis
 
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, auc_options)
 
     # NCA SETTINGS ----
     # TODO: move this section to a new module

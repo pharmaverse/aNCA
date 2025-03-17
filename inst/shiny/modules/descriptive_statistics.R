@@ -57,7 +57,7 @@ descriptive_statistics_ui <- function(id) {
 }
 
 # Server function for the summary statistics module
-descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
+descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_options) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -86,13 +86,13 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       ]
 
       # Calculate bioavailability if available
-      # bioavailability <- calculate_bioavailability(res_nca(), auc_options())
-      # results <- bioavailability_in_PKNCAresult(res_nca(), bioavailability)
+      bioavailability <- calculate_bioavailability(res_nca(), auc_options())
+      results <- bioavailability_in_PKNCAresult(res_nca(), bioavailability)
       
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))
       stats_data <- inner_join(
-        res_nca()$result,
+        results$result,
         select(res_nca()$data$conc$data, any_of(cols_to_join))
       ) %>%
         filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
