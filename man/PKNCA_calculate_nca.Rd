@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 % Please edit documentation in R/PKNCA.R
 =======
 % Please edit documentation in R/PKNCA_calculate_nca.R
@@ -12,6 +13,9 @@
 =======
 % Please edit documentation in R/PKNCA_calculate_nca.R
 >>>>>>> c5a4e95 (refactor: moved some PKNCA-related logic code to functions)
+=======
+% Please edit documentation in R/PKNCA.R
+>>>>>>> e19813b (docs: docs)
 \name{PKNCA_calculate_nca}
 \alias{PKNCA_calculate_nca}
 \title{Calculates results for PKNCA analysis.}
