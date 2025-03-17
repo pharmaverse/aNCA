@@ -26,8 +26,8 @@ tab_nca_ui <- function(id) {
           nav_panel(
             "Slopes Information",
             navset_pill(
-              nav_panel("Slopes Results", DTOutput(ns("preslopesettings"))),
-              nav_panel("Manual Adjustments", tableOutput(ns("manual_slopes2"))),
+              nav_panel("Slopes Results", DTOutput(ns("slope_results"))),
+              nav_panel("Manual Adjustments", tableOutput(ns("manual_slopes"))),
             )
           ),
           nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
@@ -71,63 +71,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       reactive(input$settings_upload)
     )
 
-    output$preslopesettings <- DT::renderDataTable({
-      req(res_nca())
-      pivot_wider_pknca_results(res_nca()) %>%
-        select(
-          any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
-          starts_with("lambda.z"),
-          starts_with("span.ratio"),
-          starts_with("half.life"),
-          "Exclude"
-        ) %>%
-        DT::datatable(
-          extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = "80vh",
-                         lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-                         pageLength = -1, fixedHeader = TRUE)
-        ) %>%
-        formatStyle("Exclude", target = "row",
-                    backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
-    })
-
-    output$manual_slopes2 <- renderTable({
-      slope_rules()
-    })
-
-    # SLOPE SELECTOR ----
-    # Keep the UI table constantly actively updated
-    observeEvent(input, {
-      req(processed_pknca_data())
-      dynamic_columns <- c(
-        setdiff(unname(unlist(processed_pknca_data()$conc$columns$groups)), "DRUG"),
-        "DOSNO"
-      )
-      for (input_name in grep(
-        paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"),
-                          collapse = "|"), ")_Ex\\d+$"),
-        names(input), value = TRUE
-      )) {
-        observeEvent(input[[input_name]], {
-          # Get the ID of the exclusion
-          id <- gsub("_(Ex\\d+)$", "", input_name)
-
-          # Update the reactive list of exclusion IDs
-          manual_slopes <- manual_slopes()
-          set_selected_value(
-            manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
-          ) <- manual_slopes[manual_slopes$id == id, ]
-          manual_slopes(manual_slopes)
-
-        })
-      }
-    })
+    output$manual_slopes <- renderTable(slope_rules())
 
     #' Triggers NCA analysis, creating res_nca reactive val
     pk_nca_trigger <- reactiveVal(0)
-    observeEvent(input$nca, {
-      pk_nca_trigger(pk_nca_trigger() + 1)
-    })
+    observeEvent(input$nca, pk_nca_trigger(pk_nca_trigger() + 1))
     res_nca <- reactive({
       req(processed_pknca_data())
 
@@ -168,7 +116,28 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     }) |>
       bindEvent(pk_nca_trigger())
 
-    nca_results_server("nca_results", res_nca, rules(), grouping_vars)
+    #' Show slopes results
+    output$slope_results <- DT::renderDataTable({
+      req(res_nca())
+      pivot_wider_pknca_results(res_nca()) %>%
+        select(
+          any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
+          starts_with("lambda.z"),
+          starts_with("span.ratio"),
+          starts_with("half.life"),
+          "Exclude"
+        ) %>%
+        DT::datatable(
+          extensions = "FixedHeader",
+          options = list(scrollX = TRUE, scrollY = "80vh",
+                         lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
+                         pageLength = -1, fixedHeader = TRUE)
+        ) %>%
+        formatStyle("Exclude", target = "row",
+                    backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
+    })
+
+    nca_results_server("nca_results", processed_pknca_data, res_nca, rules(), grouping_vars)
 
     # TODO: This will be removed in #241
     # https://github.com/pharmaverse/aNCA/pull/241
