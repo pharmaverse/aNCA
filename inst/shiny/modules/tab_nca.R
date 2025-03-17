@@ -51,7 +51,23 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       req(adnca_data())
       log_trace("Creating PKNCA::data object.")
 
-      PKNCA_create_data_object(adnca_data())
+      tryCatch({
+        #' Create data object
+        pknca_object <- PKNCA_create_data_object(adnca_data())
+        log_success("PKNCA data object created.")
+
+        #' Enable related tabs and updete the curent view if data is created succesfully.
+        updateTabsetPanel(session, "data_navset", selected = "Review Data")
+        purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
+          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+        })
+
+        pknca_object
+      }, error = function(e) {
+        log_error(e$message)
+        showNotification(e$message, type = "error", duration = NULL)
+        return(NULL)
+      })
     }) |>
       bindEvent(adnca_data())
 
@@ -72,7 +88,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     output$manual_slopes <- renderTable(slope_rules())
 
-    #' Triggers NCA analysis, creating res_nca reactive val
+    #' Triggers NCA analysis, creating res_nca reactive
     pk_nca_trigger <- reactiveVal(0)
     observeEvent(input$nca, pk_nca_trigger(pk_nca_trigger() + 1))
     res_nca <- reactive({
