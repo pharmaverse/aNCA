@@ -11,10 +11,11 @@ load_settings_ui <- function(id) {
   )
 }
 
-load_settings_server <- function(id, mydata, input) {
+load_settings_server <- function(id, mydata, parent_session) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
+    print(session$ns)
     observeEvent(input$settings_upload, {
 
       file_path <- input$settings_upload$datapath
@@ -64,6 +65,7 @@ load_settings_server <- function(id, mydata, input) {
       }
       
       update_with_setts_selector_selected <- function(var_setts_col, var_data_col, setts.df, data.df, session, inputId) {
+
         if (!is.null(var_data_col) && !is.null(var_setts_col)) {
           vals_data <- unique(data.df[[var_data_col]])
           vals_setts <- unique(setts.df[[var_setts_col]])
@@ -78,27 +80,27 @@ load_settings_server <- function(id, mydata, input) {
               type = "warning"
             )
           }
-          
+          #browser()
           updateSelectInput(
-            session,
+            parent_session,
             inputId = inputId,
-            choices = data.df[[var_data_col]],
+            choices = vals_data,
             selected = selected_vals
           )
         } else return()
       }
       
-      update_with_setts_selector_selected("DOSNO", "DOSNO", setts.df = setts$intervals, data.df = mydata()$conc$data, session = session, inputId = "nca-nca_setup-select_dosno")
+      update_with_setts_selector_selected("DOSNO", "DOSNO", setts.df = setts$intervals, data.df = mydata()$conc$data, session = session, inputId = "select_dosno")
 
       update_with_setts_selector_selected(var_setts_col = setts$conc$columns$groups$group_analyte,
                                           var_data_col = mydata()$conc$columns$groups$group_analyte,
-                                          setts.df = setts$intervals, data.df = mydata()$conc$data, session, "nca-nca_setup-select_analyte")
-      update_with_setts_selector_selected("PCSPEC", "PCSPEC", setts, mydata()$conc$data, session, "nca-nca_setup-select_pcspec")
+                                          setts.df = setts$intervals, data.df = mydata()$conc$data, session, "select_analyte")
+      update_with_setts_selector_selected("PCSPEC", "PCSPEC", setts, mydata()$conc$data, session, "select_pcspec")
     
 
       updateSelectInput(
-        session,
-        inputId = "nca-nca_setup-method",
+        parent_session,
+        inputId = "method",
         label = "Extrapolation Method:",
         choices = c("lin-log", "lin up/log down", "linear"),
         selected = setts$options$auc.method
@@ -114,8 +116,8 @@ load_settings_server <- function(id, mydata, input) {
         names()
       
       updatePickerInput(
-        session,
-        inputId = "nca-nca_setup-nca_params",
+        parent_session,
+        inputId = "nca_params",
         selected = params_setts
       )
 
@@ -129,9 +131,9 @@ load_settings_server <- function(id, mydata, input) {
         rename_with(~str_remove(., ".setts"))
       
       if (any(grepl("start.*", setts$intervals$impute))) {
-        updateCheckboxInput(session, inputId = "nca-nca_setup-should_impute_c0", value = TRUE)
+        updateCheckboxInput(parent_session, inputId = "nca-nca_setup-should_impute_c0", value = TRUE)
       } else {
-        updateCheckboxInput(session, inputId = "nca-nca_setup-should_impute_c0", value = FALSE)
+        updateCheckboxInput(parent_session, inputId = "nca-nca_setup-should_impute_c0", value = FALSE)
       }
       
       dose_time_col <- setts$dose$columns$time

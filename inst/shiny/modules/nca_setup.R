@@ -213,7 +213,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     conc_data <- reactive(mydata()$conc$data)
 
     # File Upload Handling
-    load_settings_server("load_settings", mydata)
+    load_settings_server("load_settings", mydata, session)
 
     # Include keyboard limits for the settings GUI display
 
