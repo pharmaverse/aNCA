@@ -93,38 +93,6 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
         )
       }
 
-      update_select_with_setts <- function(var_setts_col, var_data_col, setts_df,
-                                           data_df, session, inputid) {
-
-        if (!is.null(var_data_col) && !is.null(var_setts_col)) {
-          vals_data <- unique(data_df[[var_data_col]])
-          vals_setts <- unique(setts_df[[var_setts_col]])
-
-          selected_vals <- intersect(vals_setts, vals_data)
-
-          if (length(selected_vals) < length(vals_setts)) {
-            showNotification(
-              validate("The ", attr(data_df[[var_data_col]], "label"), ":",
-                       setdiff(analytes_setts, selected_vals),
-                       "selected in the settings file is not present in the data."),
-              type = "warning"
-            )
-          }
-
-          if (length(selected_vals) > 0) {
-            updateSelectInput(
-              session,
-              inputId = inputid,
-              choices = vals_data,
-              selected = selected_vals
-            )
-          }
-
-        } else {
-          return()
-        }
-      }
-
       update_select_with_setts(
         "DOSNO", "DOSNO",
         setts_df = setts$intervals, data_df = mydata()$conc$data,
@@ -233,21 +201,24 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
 
       if (!is.null(setts$options$flag_rules$aucpext.obs)) {
         updateCheckboxInput(parent_session, inputId = "rule_aucpext.obs", value = TRUE)
-        updateNumericInput(parent_session, inputId = "aucpext.obs_threshold", value = setts$lag_rules$aucpext.obs)
+        updateNumericInput(parent_session, inputId = "aucpext.obs_threshold",
+                           value = setts$lag_rules$aucpext.obs)
       } else {
         updateCheckboxInput(parent_session, inputId = "rule_aucpext.obs", value = FALSE)
       }
 
       if (!is.null(setts$options$flag_rules$aucpext.pred)) {
         updateCheckboxInput(parent_session, inputId = "rule_aucpext.pred", value = TRUE)
-        updateNumericInput(parent_session, inputId = "aucpext.pred_threshold", value = setts$flag_rules$aucpext.pred)
+        updateNumericInput(parent_session, inputId = "aucpext.pred_threshold",
+                           value = setts$flag_rules$aucpext.pred)
       } else {
         updateCheckboxInput(parent_session, inputId = "rule_aucpext.pred", value = FALSE)
       }
 
       if (!is.null(setts$options$flag_rules$span.ratio)) {
         updateCheckboxInput(parent_session, inputId = "rule_span.ratio", value = TRUE)
-        updateNumericInput(parent_session, inputId = "span.ratio_threshold", value = setts$flag_rules$span.ratio)
+        updateNumericInput(parent_session, inputId = "span.ratio_threshold",
+                           value = setts$flag_rules$span.ratio)
       } else {
         updateCheckboxInput(parent_session, inputId = "rule_span.ratio", value = FALSE)
       }
@@ -295,4 +266,37 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
       }
     })
   })
+}
+
+
+.update_select_with_setts <- function(var_setts_col, var_data_col, setts_df,
+                                      data_df, session, inputid) {
+
+  if (!is.null(var_data_col) && !is.null(var_setts_col)) {
+    vals_data <- unique(data_df[[var_data_col]])
+    vals_setts <- unique(setts_df[[var_setts_col]])
+
+    selected_vals <- intersect(vals_setts, vals_data)
+
+    if (length(selected_vals) < length(vals_setts)) {
+      showNotification(
+        validate("The ", attr(data_df[[var_data_col]], "label"), ":",
+                 setdiff(analytes_setts, selected_vals),
+                 "selected in the settings file is not present in the data."),
+        type = "warning"
+      )
+    }
+
+    if (length(selected_vals) > 0) {
+      updateSelectInput(
+        session,
+        inputId = inputid,
+        choices = vals_data,
+        selected = selected_vals
+      )
+    }
+
+  } else {
+    return()
+  }
 }
