@@ -67,10 +67,15 @@ nca_setup_ui <- function(id) {
       column(4, units_table_ui(ns("units_table_preNCA")))
     ),
     #pickerinput only enabled when IV and EX data present
-    shinyjs::hidden(pickerInput(ns("bioavailability"), "Calculate Bioavailability:",
-                choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
-                multiple = TRUE,
-                selected = NULL)),
+    shinyjs::hidden(
+      pickerInput(
+        ns("bioavailability"),
+        "Calculate Bioavailability:",
+        choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+        multiple = TRUE,
+        selected = NULL
+      )
+    ),
     br(),
 
     h4("Data imputation"),
@@ -517,7 +522,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       if (mydata$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show("bioavailability")
       }
-      
+
       mydata$options <- list(
         auc.method = input$method,
         keep_interval_cols = c("DOSNO", "type_interval"),
@@ -610,18 +615,18 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     reactive({
       list(
         rules = list(
-            rule_adj_r_squared = input$rule_adj_r_squared,
-            adj.r.squared_threshold = input$adj.r.squared_threshold,
-    
-            rule_aucpext_obs = input$rule_aucpext_obs,
-            aucpext.obs_threshold = input$aucpext.obs_threshold,
-    
-            rule_aucpext_pred = input$rule_aucpext_pred,
-            aucpext.pred_threshold = input$aucpext.pred_threshold,
-    
-            rule_span_ratio = input$rule_span_ratio,
-            span.ratio_threshold = input$span.ratio_threshold
-          ),
+          rule_adj_r_squared = input$rule_adj_r_squared,
+          adj.r.squared_threshold = input$adj.r.squared_threshold,
+
+          rule_aucpext_obs = input$rule_aucpext_obs,
+          aucpext.obs_threshold = input$aucpext.obs_threshold,
+
+          rule_aucpext_pred = input$rule_aucpext_pred,
+          aucpext.pred_threshold = input$aucpext.pred_threshold,
+
+          rule_span_ratio = input$rule_span_ratio,
+          span.ratio_threshold = input$span.ratio_threshold
+        ),
         bioavailability = input$bioavailability
       )
     })

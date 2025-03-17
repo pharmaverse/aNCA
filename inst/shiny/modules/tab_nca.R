@@ -181,7 +181,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
       req(setup())
       setup()$bioavailability
     })
-    
+
     nca_results_server("nca_results", res_nca, setup()$rules, grouping_vars, auc_options)
 
     # Profiles per Patient ----

@@ -35,10 +35,12 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars, auc_options) {
       id_groups <- res_nca()$data$conc$columns$groups %>%
         purrr::list_c() %>%
         append("DOSNO") %>%
-        purrr::keep(~ !is.null(.) && . != "DRUG" && length(unique(res_nca()$data$conc$data[[.]])) > 1)
-      
+        purrr::keep(~ !is.null(.) && . != "DRUG" &&
+                      length(unique(res_nca()$data$conc$data[[.]])) > 1)
+
       final_results <- final_results %>%
-        mutate(Grouping_EX = apply(select(., all_of(id_groups), -USUBJID), 1, paste, collapse = " "))%>%
+        mutate(Grouping_EX = apply(select(., all_of(id_groups), -USUBJID),
+                                   1, paste, collapse = " ")) %>%
         left_join(bioavailability, by = c("USUBJID", "Grouping_EX")) %>%
         select(-Grouping_EX)
 

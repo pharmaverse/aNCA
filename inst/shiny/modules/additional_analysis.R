@@ -36,7 +36,7 @@ additional_analysis_ui <- function(id) {
     nav_panel(
       title = "AUC Ratios",
       value = "auc_analysis",
-      card (
+      card(
         p("To be added")
       ),
     ),
@@ -61,7 +61,6 @@ additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
 
     # Call module for Matrix Ratio Analysis
     non_nca_ratio_server(id = "matrix_ratio_analysis", data, grouping_vars)
-  
-    
+
   })
 }
