@@ -1,10 +1,14 @@
 save_settings_ui <- function(id) {
   ns <- NS(id)
-
-      fluidRow(
-        pickerInput(ns("settings_save_fmt"), "Download format", choices = c("xlsx", "rds"), width = "50%"),
-        downloadButton(ns("settings_save"), class = "custom-download-button")
-    )
+  fluidRow(
+    pickerInput(
+      ns("settings_save_fmt"),
+      "Download format",
+      choices = c("xlsx", "rds"),
+      width = "50%"
+    ),
+    downloadButton(ns("settings_save"), class = "custom-download-button")
+  )
 }
 
 save_settings_server <- function(id, mydata, res_nca) {
@@ -18,9 +22,11 @@ save_settings_server <- function(id, mydata, res_nca) {
       content = function(file) {
         res <- res_nca()$data
 
-        conc_cols <- c(unname(unlist(res$conc$columns)), "is.included.hl", "is.excluded.hl", "REASON")
+        conc_cols <- c(unname(unlist(res$conc$columns)),
+                       "is.included.hl", "is.excluded.hl", "REASON")
         conc_logical_cols <- sapply(res$conc$data[conc_cols], is.logical) |>
-          which() |> names()
+          which() |>
+          names()
 
         res$conc$data <- res$conc$data %>%
           select(any_of(c(conc_cols, "DOSNO"))) %>%
@@ -29,9 +35,9 @@ save_settings_server <- function(id, mydata, res_nca) {
         res$dose$data <- res$dose$data %>%
           select(any_of(c(unname(unlist(res$dose$columns)), "DOSNO")))
 
-        
+
         ########################################################################################
-        # ToDo: Flag rules needs to be modified, currently not working due to no access to nca-settings-rule
+        # ToDo: Flag rules needs to be modified, currently not working (no access to input names)
         rule_inputs_logical <- names(input) %>%
           keep(~startsWith(.x, "nca_settings-rule")) %>%
           sapply(., \(x) input[[x]])
@@ -52,8 +58,10 @@ save_settings_server <- function(id, mydata, res_nca) {
         }
 
         if (input$settings_save_fmt == "xlsx") {
-          res$options <- as.data.frame(c(as.list(res$options$single.dose.aucs),
-                                         res$options[which(names(res$options) != "single.dose.aucs")]))
+          res$options <- as.data.frame(
+            c(as.list(res$options$single.dose.aucs),
+              res$options[which(names(res$options) != "single.dose.aucs")])
+          )
           res$intervals <- replace(res$intervals, res$intervals == Inf, 1e99)
           res$options <- replace(res$options, res$options == Inf, 1e99)
 
@@ -62,7 +70,7 @@ save_settings_server <- function(id, mydata, res_nca) {
               mutate(ind = sub("[0-9]+$", "", ind))
           }
 
-          setts_list = list(
+          setts_list <- list(
             intervals = res$intervals,
             units = res$units,
             conc_data = res$conc$data,
