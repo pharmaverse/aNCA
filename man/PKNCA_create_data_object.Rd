@@ -35,6 +35,7 @@ It requires the following columns in the ADNCA data:
 \item ANALYTE: Analyte.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 \item AVAL: Analysis value.
 \item AVALU: AVAL unit.
 =======
@@ -43,6 +44,9 @@ It requires the following columns in the ADNCA data:
 >>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
 =======
 \item AVAL: Änalysis value.
+=======
+\item AVAL: Analysis value.
+>>>>>>> e19813b (docs: docs)
 \item AVALU: AVAL unit.
 >>>>>>> fbf4001 (add testing for pkncadata object creation)
 \item DOSEA: Dose amount.
@@ -57,10 +61,14 @@ It requires the following columns in the ADNCA data:
 \item Creating pk concentration data using \code{format_pkncaconc_data()}.
 \item Creating dosing data using \code{format_pkncadose_data()}.
 <<<<<<< HEAD
+<<<<<<< HEAD
 \item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}.
 =======
 \item Creating PKNCAconc object using \code{PKNCA::PKNCAconc()}.
 >>>>>>> 2237461 (docs: add documentation for PKNCA_create_daat_object)
+=======
+\item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}.
+>>>>>>> e19813b (docs: docs)
 with formula \code{AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE}.
 \item Creating PKNCAdose object using \code{PKNCA::PKNCAdose()}.
 with formula \code{DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID}.
