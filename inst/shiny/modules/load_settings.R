@@ -93,13 +93,13 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
         )
       }
 
-      update_select_with_setts(
+      .update_select_with_setts(
         "DOSNO", "DOSNO",
         setts_df = setts$intervals, data_df = mydata()$conc$data,
         parent_session, inputId = "select_dosno"
       )
 
-      update_select_with_setts(
+      .update_select_with_setts(
         var_setts_col = setts$conc$columns$groups$group_analyte,
         var_data_col = mydata()$conc$columns$groups$group_analyte,
         setts_df = setts$intervals,
@@ -107,7 +107,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
         parent_session,
         "select_analyte"
       )
-      update_select_with_setts(
+      .update_select_with_setts(
         "PCSPEC", "PCSPEC",
         setts, mydata()$conc$data,
         parent_session, "select_pcspec"
