@@ -521,7 +521,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       # Add picker input if bioavailability calculations are possible
       if (mydata$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show("bioavailability")
-        
+
         updatePickerInput(
           session,
           inputId = "bioavailability",

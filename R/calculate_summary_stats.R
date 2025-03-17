@@ -72,7 +72,7 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
     select(PPTESTCD, PPSTRESU) %>%
     unique() %>%
     pull(PPSTRESU, PPTESTCD)
-  
+
   summary_stats <- summary_stats %>%
     rename_with(~ifelse(
       .x %in% names(pttestcd_with_units),

@@ -111,21 +111,23 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
     results_list[[auc_type]] <- auc_results
   }
 
- purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV")) %>%
-   select(-Grouping_IV)
+  purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV")) %>%
+    select(-Grouping_IV)
 }
 
-#' Add bioavailbility to PKNCAresults object
-#' 
-#' This function adds bioavailability (F) data to a PKNCAresults object.
+#' Add bioavailability to PKNCAresults object
+#' This helper function adds bioavailability (F) data to a PKNCAresults object.
 #' The bioavailabiility is calculated with the calculate_bioavailability function.
-#' 
+#'
 #' @param res_nca A list containing non-compartmental analysis (NCA) results,
 #' including concentration and dose data.
-#' 
-#' @export 
-bioavailability_in_PKNCAresult <- function(res_nca, bioavailability) {
-  
+#' @param bioavailability A data frame with calculated bioavailability values
+#'
+#' @returns A PKNCAresults object with bioavailability data added to the result slot.
+#'
+#' @export
+bioavailability_in_pkncaresult <- function(res_nca, bioavailability) {
+
   if (is.null(bioavailability)) {
     return(res_nca)
   }
@@ -135,12 +137,12 @@ bioavailability_in_PKNCAresult <- function(res_nca, bioavailability) {
     append("DOSNO") %>%
     purrr::keep(~ !is.null(.) && . != "DRUG" &&
                   length(unique(res_nca$data$conc$data[[.]])) > 1)
-  
+
   # Pivot results data
   subj_data <- res_nca$result %>%
-    select(-starts_with("PP"), -exclude)%>%
+    select(-starts_with("PP"), -exclude) %>%
     distinct()
-  
+
   # Create bioavailability data in resnca format
   f_results <- subj_data %>%
     mutate(Grouping_EX = apply(select(., all_of(id_groups), -USUBJID),
@@ -155,6 +157,6 @@ bioavailability_in_PKNCAresult <- function(res_nca, bioavailability) {
     mutate(PPSTRESU = "%")
 
   res_nca$result <- bind_rows(res_nca$result, f_results)
-  
+
   res_nca
 }
