@@ -6,7 +6,10 @@
 #' @param id   A unique identifier for the filter.
 #' @param cols Character vector containing column names to display for selection.
 #'
-#' @return A Shiny UI component for creating a filter.
+#' @returns A reactive with the filter specification, a list containing provided:
+#'            - column
+#'            - condition
+#'            - value
 #'
 #' @details
 #' The function creates a UI component with the following elements:
@@ -17,33 +20,29 @@
 #'   \item A text input for specifying the filter value.
 #'   \item A remove button to remove the filter.
 #' }
+
 input_filter_ui <- function(id, cols) {
   ns <- NS(id)
 
-  tags$div(
+  div(
     id = ns("filter_container"),
-    fluidRow(
-      column(width = 4,
-        selectInput(
-          ns("column"),
-          "",
-          choices = cols
-        )
-      ),
-      column(width = 2,
-        selectInput(
-          ns("condition"),
-          "",
-          choices = c("==", ">", "<", ">=", "<=")
-        )
-      ),
-      column(width = 5,
-        textInput(ns("value"), ""),
-      ),
-      column(width = 1,
-        actionButton(ns("remove"), "X", class = "btn-danger")
-      )
-    )
+    class = "filter-widget-container",
+    selectizeInput(
+      ns("column"),
+      "",
+      choices = cols,
+      width = "20em",
+      options = list(dropdownParent = "body")
+    ),
+    selectizeInput(
+      ns("condition"),
+      "",
+      choices = c("==", ">", "<", ">=", "<="),
+      width = "5em",
+      options = list(dropdownParent = "body")
+    ),
+    textInput(ns("value"), "", width = "15em"),
+    actionButton(ns("remove"), "X", class = "btn-danger")
   )
 }
 
