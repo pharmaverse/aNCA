@@ -6,7 +6,7 @@ tab_nca_ui <- function(id) {
 
   fluidPage(
     actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    downloadButton(ns("settings_save"), "Save Project Settings"),
+    nav_panel("Save setts", save_settings_ui(ns("save_settings"))),
 
     navset_tab(
       id = ns("ncapanel"),
@@ -14,8 +14,7 @@ tab_nca_ui <- function(id) {
         "Setup", fluid = TRUE,
         navset_pill_list(
           nav_panel("NCA settings", nca_setup_ui(ns("nca_setup"))),
-          nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
-          nav_panel("Save setts", save_settings_ui(ns("save_settings")))
+          nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
         )
       ),
       nav_panel(

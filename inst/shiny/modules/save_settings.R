@@ -3,11 +3,12 @@ save_settings_ui <- function(id) {
   fluidRow(
     pickerInput(
       ns("settings_save_fmt"),
-      "Download format",
+      "Format",
       choices = c("xlsx", "rds"),
-      width = "50%"
+      width = "30%"
     ),
-    downloadButton(ns("settings_save"), class = "custom-download-button")
+    downloadButton(ns("settings_save"), class = "custom-download-button", 
+                   label = "Save Project Settings")
   )
 }
 
@@ -20,7 +21,8 @@ save_settings_server <- function(id, mydata) {
         paste0(mydata()$conc$data$STUDYID[1], "_aNCAsetts_", Sys.Date(), ".xlsx")
       },
       content = function(file) {
-        mydata <- mydata()$data
+
+        mydata <- mydata()
 
         conc_cols <- c(unname(unlist(mydata$conc$columns)),
                        "is.included.hl", "is.excluded.hl", "REASON")
