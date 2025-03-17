@@ -16,13 +16,15 @@ tlg_option_table_ui <- function(id, opt_def, data) {
 
 #' Function generating an input widget server for TLG option. Handles opening the modal with
 #' table input, as well as any changes provided by the user.
-#' @param id      id of the input widget
-#' @param opt_def list consisting of definition of the option, as specified in the `tlg.yaml` file,
-#'                should include `cols` definition and `default_rows` for the table
-#' @param data    data frame used for parsing labels, strings, infering placeholder values or
-#'                choices etc.
+#' @param id            id of the input widget
+#' @param opt_def       list consisting of definition of the option, as specified in the `tlg.yaml`
+#'                      file, should include `cols` definition and `default_rows` for the table
+#' @param data          data frame used for parsing labels, strings, infering placeholder values or
+#'                      choices etc.
+#' @param reset_trigger a reactive expression on which the module will restore its returned value
+#'                      to the default one.
 #' @returns a reactive containing a tibble with modifications provided by the user
-tlg_option_table_server <- function(id, opt_def, data) {
+tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
   moduleServer(id, function(input, output, session) {
     #' Generates default table based on provided default option definition
     default_table <- lapply(opt_def$default_rows, \(x) {
@@ -133,6 +135,12 @@ tlg_option_table_server <- function(id, opt_def, data) {
       removeModal()
       reset_reactable_memory()
       edits_table(output_table())
+    })
+
+    #' Reset the input to default value upon reset_trigger
+    observeEvent(reset_trigger(), {
+      reset_reactable_memory()
+      output_table(default_table)
     })
 
     output_table
