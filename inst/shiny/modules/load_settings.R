@@ -79,13 +79,16 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
               type = "warning"
             )
           }
-
+          
+          if (length(selected_vals) > 0) {
           updateSelectInput(
             session,
             inputId = inputId,
             choices = vals_data,
             selected = selected_vals
           )
+          }
+
         } else return()
       }
       
@@ -144,7 +147,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
                end = end - !!sym(dose_time_col)) %>%
         select(start, end) %>%
         filter(!duplicated(paste0(start, end)))
-      
+
       if ((nrow(intervals_userinput_setts) > 0)) {
         updateCheckboxInput(parent_session, inputId = "AUCoptions",
                             label = "Select Partial AUC", value = TRUE)
