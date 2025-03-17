@@ -154,26 +154,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     nca_results_server("nca_results", processed_pknca_data, res_nca, rules(), grouping_vars)
 
-    # TODO: This will be removed in #241
-    # https://github.com/pharmaverse/aNCA/pull/241
-    profiles_per_patient <- reactive({
-      req(processed_pknca_data())
-      # Check if res_nca() is available and valid
-      if (!is.null(res_nca())) {
-        res_nca()$result %>%
-          mutate(USUBJID = as.character(USUBJID),
-                 DOSNO = as.character(DOSNO)) %>%
-          group_by(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups)))) %>%
-          summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-          unnest(DOSNO)  # Convert lists into individual rows
-      } else {
-        processed_pknca_data()$conc$data %>%
-          mutate(USUBJID = as.character(USUBJID)) %>%
-          group_by(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups)))) %>%
-          summarise(DOSNO = list(unique(DOSNO)), .groups = "drop")
-      }
-    })
-
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
