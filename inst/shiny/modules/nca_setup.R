@@ -530,9 +530,9 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
       # Filter only the analytes and doses requested for intervals and units
       mydata$intervals <- mydata$intervals %>%
-        dplyr::filter(DOSNO %in% input$select_dosno,
-                      ANALYTE %in% input$select_analyte,
-                      PCSPEC %in% input$select_pcspec)
+        filter(DOSNO %in% input$select_dosno,
+               ANALYTE %in% input$select_analyte,
+               PCSPEC %in% input$select_pcspec)
 
       unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
       analyte_column <- mydata$conc$columns$groups$group_analyte
@@ -579,12 +579,16 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         apply_labels(LABELS, "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE)))
 
+      route_column <- "ROUTE"
+      std_route_column <- "std_route"
+
       data <- data %>%
         left_join(y = mydata()$dose$data) %>%
         group_by(across(all_of(unname(unlist(mydata()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
-        select(!!!syms(colnames(data)))
+        select(!!!syms(colnames(data)), conc_groups,
+               all_of(c(route_column, std_route_column)))
 
       reactable(
         data,
