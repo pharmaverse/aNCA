@@ -221,21 +221,21 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     # File Upload Handling
     observeEvent(input$settings_upload, {
       setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
-      analyte <- setts$ANALYTE[1]
+      analyte <- setts$PARAM[1]
       doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
-      if (!analyte %in% unique(data()$ANALYTE) || !all(doses_selected %in% unique(data()$DOSNO))) {
+      if (!analyte %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$DOSNO))) {
         showNotification(
           validate("The analyte selected in the settings file is not present in the data. Please, if
                     you want to use this settings for a different file, make sure all meaningful
-                    variables in the file are in the data (ANALYTE, DOSNO...)"),
+                    variables in the file are in the data (PARAM, DOSNO...)"),
           type = "error"
         )
       }
 
       new_data <- data() %>%
         filter(
-          ANALYTE == analyte,
+          PARAM == analyte,
           if ("EVID" %in% names(data())) EVID == 0 else TRUE
         ) %>%
         mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
@@ -272,16 +272,16 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       }
 
       rows_for_selected_analytes <- data() %>%
-        filter(ANALYTE %in% setts$ANALYTE) %>%
-        select(ANALYTE, DOSNO, PCSPEC) %>%
+        filter(PARAM %in% setts$PARAM) %>%
+        select(PARAM, DOSNO, PCSPEC) %>%
         unique()
 
       updateSelectInput(
         session,
         inputId = "select_analyte",
         label = "Choose the analyte:",
-        choices = data()$ANALYTE[1],
-        selected = setts$ANALYTE[1]
+        choices = data()$PARAM[1],
+        selected = setts$PARAM[1]
       )
 
       updateSelectInput(
@@ -424,8 +424,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       updateSelectInput(
         session,
         inputId = "select_analyte",
-        choices = unique(data()$ANALYTE),
-        selected = unique(data()$ANALYTE)[1]
+        choices = unique(data()$PARAM),
+        selected = unique(data()$PARAM)[1]
       )
 
       updateSelectInput(
@@ -531,7 +531,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       # Filter only the analytes and doses requested for intervals and units
       mydata$intervals <- mydata$intervals %>%
         filter(DOSNO %in% input$select_dosno,
-               ANALYTE %in% input$select_analyte,
+               PARAM %in% input$select_analyte,
                PCSPEC %in% input$select_pcspec)
 
       unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
@@ -540,7 +540,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         select(-!!sym(analyte_column)) %>%
         tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
         mutate(PPSTRESU = PPORRESU, conversion_factor = 1)  %>%
-        filter(ANALYTE %in% input$select_analyte)
+        filter(PARAM %in% input$select_analyte)
 
       # Define start imputations on intervals if specified by the user
       if (input$should_impute_c0) {

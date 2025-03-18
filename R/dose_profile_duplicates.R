@@ -6,7 +6,7 @@
 #'
 #' @param conc_data A data frame containing concentration data.
 #' @param groups A character vector of column names to use for grouping
-#'               (e.g., c("USUBJID", "ANALYTE", "DOSNO")).
+#'               (e.g., c("USUBJID", "PARAM", "DOSNO")).
 #' @param dosno Column name for the dose number (default: "DOSNO").
 #' @param arrlt Column name for time from the most recent dose.
 #' @param afrlt Column name for time from the first dose.
@@ -36,7 +36,7 @@
 #'
 #' @export
 dose_profile_duplicates <- function(conc_data,
-                                    groups = c("USUBJID", "DOSNO", "ANALYTE"),
+                                    groups = c("USUBJID", "DOSNO", "PARAM"),
                                     dosno = "DOSNO",
                                     arrlt = "ARRLT",
                                     afrlt = "AFRLT",

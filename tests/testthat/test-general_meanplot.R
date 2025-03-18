@@ -2,7 +2,7 @@
 sample_data <- data.frame(
   STUDYID = rep("Study1", 48),
   USUBJID = rep(c("Subject1", "Subject2", "Subject3", "Subject4"), each = 12),
-  ANALYTE = rep(c("Analyte1", "Analyte 2"), each = 24),
+  PARAM = rep(c("Analyte1", "Analyte 2"), each = 24),
   PCSPEC = rep(c("Spec1", "Spec2"), each = 24),
   DOSNO = rep(1, 48),
   EVID = rep(0, 48),

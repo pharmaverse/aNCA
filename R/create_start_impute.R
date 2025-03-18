@@ -26,7 +26,7 @@ create_start_impute <- function(mydata) {
   analyte_column <- mydata$conc$columns$groups$group_analyte
   route_column <- mydata$dose$columns$route
   duration_column <- mydata$dose$columns$duration
-  drug_column <- "DRUG"  # TODO: At some point should be mapped manually in the App
+  drug_column <- "DOSETRT"
   conc_group_columns <- unname(unlist(mydata$conc$columns$groups))
   dose_group_columns <- unname(unlist(mydata$dose$columns$groups))
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
@@ -44,7 +44,7 @@ create_start_impute <- function(mydata) {
       select(any_of(c(conc_group_columns, conc_column, time_column))),
     y = mydata$dose$data %>%
       select(any_of(c(dose_group_columns, route_column,
-                      duration_column, "DOSNO", "DRUG")))
+                      duration_column, "DOSNO", "DOSETRT")))
   ) %>%
     merge(mydata$intervals)
 
@@ -54,8 +54,8 @@ create_start_impute <- function(mydata) {
       drug_column <- analyte_column
     } else {
       mydata_with_int <- mutate(mydata_with_int,
-                                ANALYTE = "A")
-      analyte_column <- "ANALYTE"
+                                PARAM = "A")
+      analyte_column <- "PARAM"
       drug_column <- analyte_column
     }
   }
