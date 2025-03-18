@@ -117,7 +117,7 @@ calculate_bioavailability <- function(res_nca, selected_aucs) {
 
 #' Add bioavailability to PKNCAresults object
 #' This helper function adds bioavailability (F) data to a PKNCAresults object.
-#' The bioavailabiility is calculated with the calculate_bioavailability function.
+#' The bioavailability is calculated with the calculate_bioavailability function.
 #'
 #' @param res_nca A list containing non-compartmental analysis (NCA) results,
 #' including concentration and dose data.
