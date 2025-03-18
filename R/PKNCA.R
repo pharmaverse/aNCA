@@ -194,7 +194,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
       start_dose = start - !!sym(results$data$dose$columns$time),
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
-    select(names(myres$result), start_dose, end_dose) %>%
+    select(names(results$result), start_dose, end_dose) %>%
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
