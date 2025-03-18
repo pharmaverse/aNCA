@@ -11,7 +11,7 @@ load_settings_ui <- function(id) {
   )
 }
 
-load_settings_server <- function(id, mydata, parent_session, auc_counter) {
+load_settings_server <- function(id, mydata, parent_session, auc_counter, manual_slopes) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -222,18 +222,20 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
         updateCheckboxInput(parent_session, inputId = "rule_span.ratio", value = FALSE)
       }
 
-      conc_setts_columns <- unname(unlist(setts$conc$columns[c("groups", "time", "concentration")]))
+      conc_setts_cols <- unname(unlist(setts$conc$columns[c("groups", "time", "concentration")]))
+      conc_data_cols <- unname(unlist(data$conc$columns[c("groups", "time", "concentration")]))
 
       if (nrow(setts$conc$data) > 0) {
-        data$conc$data <- dplyr::left_join(
+
+        new_conc_data <- dplyr::left_join(
           data$conc$data,
           setts$conc$data %>%
             select(
-              any_of(c(conc_setts_columns, "is.included.hl",
-                       "is.excluded.hl", "exclude_half.life")
+              any_of(c(conc_setts_cols, "is.included.hl",
+                       "is.excluded.hl", "exclude_half.life", "REASON")
               )
             ),
-          by = conc_setts_columns,
+          by = intersect(conc_setts_cols, conc_data_cols),
           suffix = c(".data", ".setts")
         ) %>%
           mutate(
@@ -245,8 +247,19 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
           select(-ends_with(".data")) %>%
           rename_with(~str_remove(., ".setts"))
 
-        mismatched_rows <- setts$conc$data %>%
-          anti_join(data$conc$data, by = conc_setts_columns)
+        changed_rows <- anti_join(new_conc_data, data$conc$data)
+        
+        mismatched_rows <- anti_join(setts$conc$data %>%
+                                       select(
+                                         any_of(c(conc_data_cols,
+                                                "is.included.hl","is.excluded.hl", "exclude_half.life"))
+                                       ),
+                                     new_conc_data %>%
+                                       select(
+                                         any_of(c(conc_data_cols,
+                                                "is.included.hl","is.excluded.hl", "exclude_half.life"))
+                                       )
+                                     )
 
         if (nrow(mismatched_rows) > 0) {
           showModal(modalDialog(
@@ -262,6 +275,18 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter) {
             datatable(mismatched_points %>% select(-IX))
           })
         }
+        
+        # If there were changed rows update the concentration data & exclusions table
+        if (nrow(changed_rows) > 0) {
+          browser()
+          data$conc$data <- new_conc_data
+          mydata(data)
+          
+          manual_slopes()
+          
+          
+        }
+
       }
     })
   })
