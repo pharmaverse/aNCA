@@ -86,11 +86,11 @@ anonymize_pk_data <- function(path, drug_map = NULL, overwrite = TRUE) {
 
   # columns required for NCA
   req4nca <- c(
-    "STUDYID", "USUBJID", "ANALYTE", "PCSPEC", "DOSEFRQ", "DOSNO", "AFRLT", "ARRLT", "NRRLT",
+    "STUDYID", "USUBJID", "PCSPEC", "DOSEFRQ", "DOSNO", "AFRLT", "ARRLT", "NRRLT",
     "NFRLT", "PCSTRESC", "PARAM", "TAU", "PCSTRESU", "ROUTE", "DOSEA", "AGE", "SEX", "RACE",
     "ADOSEDUR", "DOSEDURU", "NDOSEDUR", "RRLTU", "DOSEA", "DOSEU", "PCLLOQ", "DRUG",
-    "AVISIT", "AVAL", "AVALU", "DOSEU", "EVID", "ATPTREF", "SITEID", "TRT01A", "TRT01P",
-    "PCRFTDTM", "WTBL", "WTBLU", "HTBL", "HTBLU"
+    "DOSETRT", "AVISIT", "AVAL", "AVALU", "DOSEU", "EVID", "ATPTREF", "SITEID", "TRT01A",
+    "TRT01P", "PCRFTDTM", "WTBL", "WTBLU", "HTBL", "HTBLU"
   )
 
   # mutate and rename
@@ -123,7 +123,7 @@ anonymize_pk_data <- function(path, drug_map = NULL, overwrite = TRUE) {
           )) %>%
           unique() %>%
           paste(collapse = ", "),
-        toupper(". Please make sure to replace drugnames!")
+        toupper(". Please make sure to replace drug names!")
       )
     )
 

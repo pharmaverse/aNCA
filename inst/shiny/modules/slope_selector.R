@@ -122,7 +122,7 @@ slope_selector_server <- function(
         purrr::list_c() %>%
         append("DOSNO") %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "DRUG" && length(unique(mydata()$conc$data[[col]])) > 1
+          !is.null(col) && col != "DOSETRT" && length(unique(mydata()$conc$data[[col]])) > 1
         })
     })
 
@@ -336,11 +336,11 @@ slope_selector_server <- function(
       #' modularized and improved further.
       setts <- read.csv(settings_upload()$datapath)
       imported_slopes <- setts %>%
-        select(TYPE, USUBJID, ANALYTE, PCSPEC, DOSNO, IX, REASON) %>%
+        select(TYPE, USUBJID, PARAM, PCSPEC, DOSNO, IX, REASON) %>%
         mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
-        group_by(TYPE, PATIENT, ANALYTE, PCSPEC, PROFILE, REASON) %>%
+        group_by(TYPE, PATIENT, PARAM, PCSPEC, PROFILE, REASON) %>%
         summarise(RANGE = .compress_range(IX), .groups = "keep") %>%
-        select(TYPE, PATIENT, ANALYTE, PCSPEC, PROFILE, RANGE, REASON) %>%
+        select(TYPE, PATIENT, PARAM, PCSPEC, PROFILE, RANGE, REASON) %>%
         na.omit()
 
       manual_slopes(imported_slopes)

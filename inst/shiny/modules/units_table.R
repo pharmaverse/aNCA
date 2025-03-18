@@ -205,7 +205,7 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
       # Tranforms the modal units table back to the original one
       analyte_column <- mydata()$conc$columns$groups$group_analyte
       modal_units_table <- modal_units_table() %>%
-        rename(ANALYTE = `Analytes`,
+        rename(PARAM = `Analytes`,
                PPTESTCD = `Parameter`,
                PPORRESU = `Default unit`,
                PPSTRESU = `Custom unit`,

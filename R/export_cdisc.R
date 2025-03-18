@@ -129,9 +129,9 @@ export_cdisc <- function(res_nca) {
       ),
       DOMAIN = "PP",
       # Group ID
-      PPGRPID =  paste(ANALYTE, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
+      PPGRPID =  paste(PARAM, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
       # Parameter Cathegory
-      PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
+      PPCAT = PARAM,
       PPSCAT = "NON-COMPARTMENTAL",
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,

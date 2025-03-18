@@ -62,12 +62,12 @@ tab_nca_server <- function(id, data, grouping_vars) {
       req(data())
 
       # Define column names
-      group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
+      group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DOSETRT"))
       usubjid_column <- "USUBJID"
       time_column <- "AFRLT"
       dosno_column <- "DOSNO"
       route_column <- "ROUTE"
-      analyte_column <- "ANALYTE"
+      analyte_column <- "PARAM"
       matrix_column <- "PCSPEC"
       std_route_column <- "std_route"
 
@@ -100,14 +100,14 @@ tab_nca_server <- function(id, data, grouping_vars) {
 
       myconc <- PKNCA::PKNCAconc(
         df_conc,
-        formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
+        formula = AVAL ~ TIME | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
         exclude_half.life = "exclude_half.life",
         time.nominal = "NFRLT"
       )
 
       mydose <- PKNCA::PKNCAdose(
         data = df_dose,
-        formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
+        formula = DOSEA ~ TIME | STUDYID + PCSPEC + DOSETRT + USUBJID,
         route = std_route_column,
         time.nominal = "NFRLT",
         duration = "ADOSEDUR"
@@ -194,7 +194,8 @@ tab_nca_server <- function(id, data, grouping_vars) {
     # Keep the UI table constantly actively updated
     observeEvent(input, {
       req(mydata())
-      dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
+      dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DOSETRT"),
+                           "DOSNO")
       for (input_name in grep(
         paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"),
                           collapse = "|"), ")_Ex\\d+$"),
@@ -227,7 +228,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
       req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
-          any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
+          any_of(c("USUBJID", "DOSNO", "PARAM", "PCSPEC")),
           starts_with("lambda.z"),
           starts_with("span.ratio"),
           starts_with("half.life"),
@@ -296,7 +297,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
         # Include the rule settings as additional columns
         setts <- setts_lambda %>%
           mutate(
-            ANALYTE %in% input$select_analyte,
+            PARAM %in% input$select_analyte,
             doses_selected = ifelse(
               !is.null(input$select_dosno),
               paste0(input$select_dosno, collapse = ","),

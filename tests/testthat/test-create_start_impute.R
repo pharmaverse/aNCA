@@ -12,7 +12,7 @@ dose_data <- data.frame(
   time = c(0, 0, 3, 0, 3, 0, 0, 0),
   route = c(rep("extravascular", 3), rep("intravascular", 5)),
   dose = 1,
-  DRUG = "A",
+  DOSETRT = "A",
   duration = c(0, 0, 0, 0, 0, 0, 1, 0),
   USUBJID = c(1, rep(2, 2), rep(3, 2), 4, 5, 6),
   DOSNO = c(1, c(1, 2), c(1, 2), 1, 1, 1)
