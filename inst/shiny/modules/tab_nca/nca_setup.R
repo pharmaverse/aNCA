@@ -447,35 +447,42 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
         auc_counter(auc_counter() - 1)
       }
     })
+    # nolint start
+    #' TODO(mateusz): I am disabling  this part of the code, as listening on `names(input)`
+    #' causes a great deal of issues with the current reactivity schema. This should be fixed
+    #' in the scope of #249
+    #' https://github.com/pharmaverse/aNCA/issues/249
+    # intervals_userinput <- reactive({
+    #   # Collect all inputs for the AUC intervals
+    #   input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
+    #   input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
 
-    intervals_userinput <- reactive({
-      # Collect all inputs for the AUC intervals
-      input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-      input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
+    #   starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
+    #   ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
 
-      starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
-      ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
+    #   # Make a list of dataframes with each of the intervals requested
+    #   intervals_list <- lapply(seq_along(starts), function(i) {
+    #     mydata()$intervals %>%
+    #       mutate(
+    #         start = start + as.numeric(starts[i]),
+    #         end = start + as.numeric(ends[i])
+    #       ) %>%
+    #       # only TRUE for columns specified in params
+    #       mutate(across(where(is.logical), ~FALSE)) %>%
+    #       # Intervals will always only compute AUC values
+    #       mutate(across(c("aucint.last"), ~TRUE)) %>%
+    #       # Identify the intervals as the manual ones created by the user
+    #       mutate(type_interval = "manual")
+    #   })
 
-      # Make a list of dataframes with each of the intervals requested
-      intervals_list <- lapply(seq_along(starts), function(i) {
-        mydata()$intervals %>%
-          mutate(
-            start = start + as.numeric(starts[i]),
-            end = start + as.numeric(ends[i])
-          ) %>%
-          # only TRUE for columns specified in params
-          mutate(across(where(is.logical), ~FALSE)) %>%
-          # Intervals will always only compute AUC values
-          mutate(across(c("aucint.last"), ~TRUE)) %>%
-          # Identify the intervals as the manual ones created by the user
-          mutate(type_interval = "manual")
-      })
+    #   # Make sure NAs were not left by the user
+    #   intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
+    #   intervals_list
+    # })
 
-      # Make sure NAs were not left by the user
-      intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
-      intervals_list
-    })
+    intervals_userinput <- reactive(list())
 
+    # nolint end
 
     # Updating Checkbox and Numeric Inputs
     observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
