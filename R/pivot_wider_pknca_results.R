@@ -23,7 +23,7 @@ pivot_wider_pknca_results <- function(myres) {
   # Derive lambda.z.n.points & lambda.z.method
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
-
+  browser()
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),
@@ -81,7 +81,7 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
-      select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
+      select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col,
                   values_from = PPSTRES)
@@ -92,7 +92,7 @@ pivot_wider_pknca_results <- function(myres) {
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
-      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, start_dose, end_dose,
+      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 

@@ -451,38 +451,10 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       }
     })
 
-    intervals_userinput <- reactive({
-      # Collect all inputs for the AUC intervals
-      input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-      input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-
-      starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
-      ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
-
-      # Make a list of dataframes with each of the intervals requested
-      intervals_list <- lapply(seq_along(starts), function(i) {
-        mydata()$intervals %>%
-          mutate(
-            start = start + as.numeric(starts[i]),
-            end = start + as.numeric(ends[i])
-          ) %>%
-          # only TRUE for columns specified in params
-          mutate(across(where(is.logical), ~FALSE)) %>%
-          # Intervals will always only compute AUC values
-          mutate(across(c("aucint.last"), ~TRUE)) %>%
-          # Identify the intervals as the manual ones created by the user
-          mutate(type_interval = "manual")
-      })
-
-      # Make sure NAs were not left by the user
-      intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
-      intervals_list
-    })
-
 
     # Updating Checkbox and Numeric Inputs
     observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
-                      input$rule_aucpext_pred, input$AUCoptions, input$nca_params), {
+                      input$rule_aucpext_pred, input$nca_params), {
 
                    nca_params <- input$nca_params
                    if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
@@ -501,7 +473,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     observeEvent(list(
       input$method, input$nca_params, input$should_impute_c0,
       input$select_analyte, input$select_dosno, input$select_pcspec,
-      intervals_userinput()
+      input$AUCoptions
     ), {
 
       # Load mydata reactive and modify it accordingly to user's request
@@ -516,15 +488,40 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       )
 
       # Include main intervals as specified by the user
-      mydata$intervals <- format_pkncadata_intervals(pknca_conc = mydata$conc,
+      intervals <- format_pkncadata_intervals(pknca_conc = mydata$conc,
                                                      pknca_dose = mydata$dose,
                                                      # Compute only parameters specified
                                                      params = input$nca_params,
                                                      # Start at t0 when requested by the user
                                                      start_from_last_dose = input$should_impute_c0)
 
+      # Collect all inputs for the AUC intervals
+      input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
+      input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
+
+      starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
+      ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
+      
+      # Make a list of dataframes with each of the intervals requested
+      intervals_list <- lapply(seq_along(starts), function(i) {
+        intervals %>%
+          mutate(
+            start = start + as.numeric(starts[i]),
+            end = start + as.numeric(ends[i])
+          ) %>%
+          # only TRUE for columns specified in params
+          mutate(across(where(is.logical), ~FALSE)) %>%
+          # Intervals will always only compute AUC values
+          mutate(across(c("aucint.last"), ~TRUE)) %>%
+          # Identify the intervals as the manual ones created by the user
+          mutate(type_interval = "manual")
+      })
+      
+      # Make sure NAs were not left by the user
+      intervals_userinput <- intervals_list[!is.na(starts) & !is.na(ends)]
+
       # Join custom AUC partial intervals specified by the user
-      mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput()) %>%
+      mydata$intervals <- bind_rows(intervals, intervals_userinput) %>%
         unique()
       mydata$impute <- NA
 
