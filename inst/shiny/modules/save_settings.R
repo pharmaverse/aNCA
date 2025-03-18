@@ -31,15 +31,16 @@ save_settings_server <- function(id, mydata) {
           names()
 
         mydata$conc$data <- mydata$conc$data %>%
-          select(any_of(c(conc_cols, "DOSNO"))) %>%
-          filter(rowSums(select(., conc_logical_cols)) > 0)
-
+          select(any_of(c(conc_cols, "DOSNO")))
+        mydata$conc$data <- mydata$conc$data[rowSums(mydata$conc$data[, conc_logical_cols]) > 0,]
+        
         mydata$dose$data <- mydata$dose$data %>%
           select(any_of(c(unname(unlist(mydata$dose$columns)), "DOSNO")))
 
 
         ########################################################################################
         # ToDo: Flag rules needs to be modified, currently not working (no access to input names)
+        # ToDo: Needs to be bound to PKNCA object or similar strategy for a better solution
         rule_inputs_logical <- names(input) %>%
           keep(~startsWith(.x, "nca_settings-rule")) %>%
           sapply(., \(x) input[[x]])
