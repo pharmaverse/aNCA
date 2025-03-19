@@ -69,13 +69,14 @@ g_pkconc_ind_log:
   label: pkcg01 - log
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
   fun: g_pkconc_ind_log
+  
 g_pkconc_lin:
   is_default: true
   type: Graph
   dataset: ADPC
   pkid: pkcg02
   label: "pkcg02 - linear"
-  description: "plots of concentrations vs. time with linear scale BY cOHORT"
+  description: "Plots of concentrations vs. time with linear scale by cohort"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkconc_lin
   options:
@@ -133,3 +134,72 @@ g_pkconc_lin:
       type: numeric
     ymax:
       type: numeric
+g_pkconc_log:
+  template: g_pkconc_lin
+  label: pkcg02 - log
+  description: "Plots of concentrations vs. time with log10 scale"
+  fun: g_pkconc_log
+  
+# g_pkconc_mean_lin:
+#   is_default: true
+#   type: Graph
+#   dataset: ADPC
+#   pkid: pkcg03
+#   label: "pkcg03 - linear"
+#   description: "Plot of Mean PK Concentration Over Time by Cohort"
+#   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+#   fun: g_pkconc_mean_lin
+#   options:
+#     .group_label_1: "General"
+#     xvar:
+#       type: select
+#       label: X axis
+#       choices: .colnames
+#     plotgroup_vars:
+#       type: select
+#       label: "Grouping variables"
+#       default: .all
+#       multiple: true
+#       choices:
+#         - ROUTE
+#         - PCSPEC
+#         - PARAM
+#     color_var:
+#       type: select
+#       label: "Color variable"
+#       choices: .colnames
+# 
+#     .group_label_2: "Labels"
+#     title:
+#       type: text
+#       label: Title
+#     subtitle:
+#       type: text
+#       label: Subtitle
+#     footnote:
+#       type: text
+#       label: Footnote
+#     xlab:
+#       type: text
+#       label: X axis label
+#     ylab:
+#       type: text
+#       label: Y axis label
+#     xbreaks_var:
+#       type: select
+#       label: "X ticks"
+#       choices: .colnames
+#       default: "NFRLT"
+#     color_var_label:
+#       type: text
+#       label: Color variable label
+# 
+#     .group_label_3: "Limits"
+#     xmin:
+#       type: numeric
+#     xmax:
+#       type: numeric
+#     ymin:
+#       type: numeric
+#     ymax:
+#       type: numeric

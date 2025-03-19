@@ -250,7 +250,8 @@ pkcg02 <-  function(
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     
-    plotly_plot <- plot %+%
+    suppressWarnings({
+      plotly_plot <- plot %+%
       plot_data %+%
       theme(
         # add margin to make space for subtitle and footnote #
@@ -280,7 +281,7 @@ pkcg02 <-  function(
         # footnote #
         annotations = list(
           x = 0,
-          y =  -footnote_y,
+          y =  -footnote_y-0.2,
           text = footnote,
           showarrow = FALSE,
           yref = "paper",
@@ -289,7 +290,7 @@ pkcg02 <-  function(
           parse = TRUE
         )
       )
-    
+    })
     if (scale == "LOG") {
       plotly_plot <- plotly_plot %>%
         layout(yaxis = list(type = "log"))
