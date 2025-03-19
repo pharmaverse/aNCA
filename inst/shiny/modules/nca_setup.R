@@ -543,16 +543,19 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         filter(ANALYTE %in% input$select_analyte)
 
       # Define start imputations on intervals if specified by the user
-      if (input$should_impute_c0) {
+      if (input$should_impute_c0 & any(!is.na(mydata$intervals$impute))) {
         mydata <- create_start_impute(mydata = mydata)
 
         # Make sure observed parameters (cmax, tmax) are not imputed
         # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
         mydata$intervals <- Reduce(function(data, ti_arg) {
+          impute_vals <- unique(mydata$intervals$impute)
+          impute_vals <- impute_vals[!is.na(impute_vals)]
+          
           interval_remove_impute(data,
                                  target_impute = ti_arg,
                                  target_params = c("cmax", "tmax"))
-        }, unique(mydata$intervals$impute), init = mydata$intervals)
+        }, impute_vals, init = mydata$intervals)
       }
 
       # If the user filtered all intervals or there are not left, show a notification
