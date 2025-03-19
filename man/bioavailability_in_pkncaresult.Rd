@@ -4,7 +4,7 @@
 \alias{bioavailability_in_pkncaresult}
 \title{Add bioavailability to PKNCAresults object
 This helper function adds bioavailability (F) data to a PKNCAresults object.
-The bioavailabiility is calculated with the calculate_bioavailability function.}
+The bioavailability is calculated with the calculate_bioavailability function.}
 \usage{
 bioavailability_in_pkncaresult(res_nca, bioavailability)
 }
@@ -20,5 +20,5 @@ A PKNCAresults object with bioavailability data added to the result slot.
 \description{
 Add bioavailability to PKNCAresults object
 This helper function adds bioavailability (F) data to a PKNCAresults object.
-The bioavailabiility is calculated with the calculate_bioavailability function.
+The bioavailability is calculated with the calculate_bioavailability function.
 }
