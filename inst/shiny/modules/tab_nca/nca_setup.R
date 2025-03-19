@@ -505,7 +505,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     processed_pknca_data <- eventReactive(list(
       input$method, input$nca_params, input$should_impute_c0,
       input$select_analyte, input$select_dosno, input$select_pcspec,
-      intervals_userinput(), mydata(), units_table()
+      intervals_userinput(), mydata(), session$userData$units_table()
     ), {
       req(mydata())
       req(
@@ -519,8 +519,8 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       analyte_column <- processed_pknca_data$conc$columns$groups$group_analyte
       unique_analytes <- unique(processed_pknca_data$conc$data[[analyte_column]])
 
-      if (!is.null(units_table())) {
-        processed_pknca_data$units <- units_table()
+      if (!is.null(session$userData$units_table())) {
+        processed_pknca_data$units <- session$userData$units_table()
       }
       processed_pknca_data$units <- processed_pknca_data$units %>%
         select(-!!sym(analyte_column)) %>%
@@ -584,7 +584,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
-    units_table <- units_table_server("units_table", processed_pknca_data)
+    units_table_server("units_table", processed_pknca_data)
 
     # Rendering Reactable Output
     output$nca_intervals <- renderReactable({
@@ -621,7 +621,6 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
     list(
       processed_pknca_data = processed_pknca_data,
-      units_table = units_table,
       rules = reactive(list(
         rule_adj_r_squared = input$rule_adj_r_squared,
         adj.r.squared_threshold = input$adj.r.squared_threshold,

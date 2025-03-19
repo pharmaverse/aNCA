@@ -23,7 +23,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    units_table <- units_table_server(
+    units_table_server(
       "units_table",
       reactive({          #' Pass `pknca_data` to the units table only when the results
         req(res_nca())    #' are available.
@@ -36,13 +36,13 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
 
       res <- res_nca()
       #' Apply units
-      if (!is.null(units_table())) {
-        res$data$units <- units_table()
+      if (!is.null(session$userData$units_table())) {
+        res$data$units <- session$userData$units_table()
         res$result <- res$result %>%
           select(-PPSTRESU, -PPSTRES) %>%
           left_join(
-            units_table(),
-            by = intersect(names(.), names(units_table()))
+            session$userData$units_table(),
+            by = intersect(names(.), names(session$userData$units_table()))
           ) %>%
           mutate(PPSTRES = PPORRES * conversion_factor) %>%
           select(-conversion_factor)

@@ -1,3 +1,11 @@
+#' TODO: add proper documentation
+#'
+#' @details
+#' Module requires session-wide object for storing units table: `session$userData$units_table`.
+#' All copies of the module will modify this single source of truth. This is so that the units
+#' selection is respected across the whole application, regardless of where the user decides
+#' to set the units.
+#'
 units_table_ui <- function(id) {
   ns <- NS(id)
   # Button to open a module message with the parameter units table #
@@ -54,6 +62,8 @@ units_table_server <- function(id, mydata) {
     modal_units_table <- reactiveVal(NULL)
     observeEvent(mydata(), {
       req(mydata()$units)
+      if (!is.null(modal_units_table())) return()
+
       analyte_column <- mydata()$conc$columns$groups$group_analyte
 
       modal_units_table_data <- mydata()$units %>%
@@ -180,7 +190,6 @@ units_table_server <- function(id, mydata) {
     })
 
     # When save button is pressed substitute the original units table based on the modal one
-    units_table <- reactiveVal(NULL)
     observeEvent(input$save_units_table, {
       # Make sure there are no missing entries (no NA in conversion factor)
       if (any(is.na(modal_units_table()$`Conversion Factor`))) {
@@ -202,19 +211,31 @@ units_table_server <- function(id, mydata) {
         return()
       }
 
+      log_trace("Applying custom units specification.")
       modal_units_table() %>%
         rename(ANALYTE = `Analytes`,
                PPTESTCD = `Parameter`,
                PPORRESU = `Default unit`,
                PPSTRESU = `Custom unit`,
                conversion_factor = `Conversion Factor`) %>%
-        units_table()
+        session$userData$units_table()
 
       # Close the modal message window for the user
       removeModal()
     })
 
-    units_table
+    #' Update local `modal_units_table()` is the global value changes.
+    observeEvent(session$userData$units_table(), {
+      session$userData$units_table() %>%
+        rename(
+          `Analytes` = ANALYTE,
+          `Parameter` = PPTESTCD,
+          `Default unit` = PPORRESU,
+          `Custom unit` = PPSTRESU,
+          `Conversion Factor` = conversion_factor
+        ) %>%
+        modal_units_table()
+    })
   })
 }
 

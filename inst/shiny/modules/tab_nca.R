@@ -61,6 +61,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    #' Setup session-wide object for storing data units. Units can be edited by the user on
+    #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
+    #' should respect the units, regardless of location.
+    session$userData$units_table <- reactiveVal(NULL)
+
     #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
     pknca_data <- reactive({
       req(adnca_data())
@@ -88,7 +93,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' NCA Setup module
     nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
-    units_table <- nca_setup$units_table
     rules <- nca_setup$rules
 
     #' Slope rules setup module
@@ -121,13 +125,13 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             PKNCA_calculate_nca()
 
           #' Apply units
-          if (!is.null(units_table())) {
-            res$data$units <- units_table()
+          if (!is.null(session$userData$units_table())) {
+            res$data$units <- session$userData$units_table()
             res$result <- res$result %>%
               select(-PPSTRESU, -PPSTRES) %>%
               left_join(
-                units_table(),
-                by = intersect(names(.), names(units_table()))
+                session$userData$units_table(),
+                by = intersect(names(.), names(session$userData$units_table()))
               ) %>%
               mutate(PPSTRES = PPORRES * conversion_factor) %>%
               select(-conversion_factor)
