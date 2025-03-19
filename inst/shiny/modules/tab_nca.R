@@ -100,7 +100,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       reactive(input$settings_upload)
     )
 
-    output$manual_slopes <- renderTable(slope_rules())
+    output$manual_slopes <- renderTable(slope_rules$manual_slopes())
 
     #' Triggers NCA analysis, creating res_nca reactive
     pk_nca_trigger <- reactiveVal(0)
@@ -109,9 +109,16 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       req(processed_pknca_data())
 
       withProgress(message = "Calculating NCA...", value = 0, {
+        log_info("Calculating NCA results...")
         tryCatch({
           #' Calculate results
-          res <- PKNCA_calculate_nca(processed_pknca_data())
+          res <- processed_pknca_data() %>%
+            filter_slopes(
+              slope_rules$manual_slopes(),
+              slope_rules$profiles_per_patient(),
+              slope_rules$slopes_groups()
+            ) %>%
+            PKNCA_calculate_nca()
 
           #' Apply units
           if (!is.null(units_table())) {
@@ -127,6 +134,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           }
 
           updateTabsetPanel(session, "ncapanel", selected = "Results")
+
+          log_success("NCA results calculated.")
 
           res
         }, error = function(e) {
