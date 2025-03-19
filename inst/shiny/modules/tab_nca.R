@@ -1,6 +1,23 @@
-# NCA TAB -----
-# This module contains nested modules and all the ui and server code for the NCA tab
-# NCA UI function ----
+#' Module handling NCA analysis pipeline.
+#'
+#' @details
+#' Handles raw data processing into `PKNCA` objects, runs the NCA analysis and displays
+#' results in various formats.
+#' 1. `pknca_data` object is created with the help of `PKNCA` package.
+#' 2. With `nca_setup.R` and `slope_selector.R` modules, starting settings are gathered and applied
+#'    to the `pknca_data`, creating `processed_data` object.
+#' 3. `processed_data` is then used to calculate `res_nca` (the actual results of the analysis),
+#'    when the user is happy with the settings.
+#' 4. Results and other data object are passed to various sub-modules for further post-processing
+#'    and display, including modules like `nca_results.R`, `parameter_datasets.R`,
+#'    `descriptive_statistics.R` and `additional_analysis.R`
+#'
+#'
+#' @param id           ID of the module.
+#' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
+#' @param grouping_vars A character vector with grouping variables for the analysis.
+#'
+#' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
 
@@ -40,8 +57,6 @@ tab_nca_ui <- function(id) {
   )
 }
 
-# NCA Server Function ----
-# Requires processed data and grouping vars from tab_data module
 tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -116,7 +131,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
           res
         }, error = function(e) {
-          # TODO: this does not catch errors properly
+          # TODO: this does not catch errors properly sometimes
           full_error <- e$parent$message
           if (grepl("pk.calc.", x = full_error)) {
             param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
