@@ -7,7 +7,7 @@ save_settings_ui <- function(id) {
       choices = c("xlsx", "rds"),
       width = "30%"
     ),
-    downloadButton(ns("settings_save"), class = "custom-download-button", 
+    downloadButton(ns("settings_save"), class = "custom-download-button",
                    label = "Save Project Settings")
   )
 }
@@ -32,11 +32,10 @@ save_settings_server <- function(id, mydata) {
 
         mydata$conc$data <- mydata$conc$data %>%
           select(any_of(c(conc_cols, "DOSNO")))
-        mydata$conc$data <- mydata$conc$data[rowSums(mydata$conc$data[, conc_logical_cols]) > 0,]
-        
+        mydata$conc$data <- mydata$conc$data[rowSums(mydata$conc$data[, conc_logical_cols]) > 0, ]
+
         mydata$dose$data <- mydata$dose$data %>%
           select(any_of(c(unname(unlist(mydata$dose$columns)), "DOSNO")))
-
 
         ########################################################################################
         # ToDo: Flag rules needs to be modified, currently not working (no access to input names)
@@ -49,8 +48,8 @@ save_settings_server <- function(id, mydata) {
           keep(~startsWith(.x, "nca_settings-") & endsWith(.x, "_threshold"))
 
         mydata$flag_rules <- ifelse(rule_inputs_logical,
-                                 sapply(threshold_inputs, \(x) input[[x]]),
-                                 NA) %>%
+                                    sapply(threshold_inputs, \(x) input[[x]]),
+                                    NA) %>%
           setNames(nm = gsub("nca_settings-(.*)_threshold$", "\\1", threshold_inputs)) %>%
           as_list() %>%
           as.data.frame()

@@ -248,18 +248,16 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
           rename_with(~str_remove(., ".setts"))
 
         changed_rows <- anti_join(new_conc_data, data$conc$data)
-        
-        mismatched_rows <- anti_join(setts$conc$data %>%
-                                       select(
-                                         any_of(c(conc_data_cols,
-                                                "is.included.hl","is.excluded.hl", "exclude_half.life"))
-                                       ),
-                                     new_conc_data %>%
-                                       select(
-                                         any_of(c(conc_data_cols,
-                                                "is.included.hl","is.excluded.hl", "exclude_half.life"))
-                                       )
-                                     )
+
+        mismatched_rows <- anti_join(
+          setts$conc$data %>%
+            select(any_of(c(conc_data_cols, "is.included.hl",
+                            "is.excluded.hl", "exclude_half.life"))),
+
+          new_conc_data %>%
+            select(any_of(c(conc_data_cols, "is.included.hl",
+                            "is.excluded.hl", "exclude_half.life")))
+        )
 
         if (nrow(mismatched_rows) > 0) {
           showModal(modalDialog(
@@ -275,16 +273,11 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
             datatable(mismatched_points %>% select(-IX))
           })
         }
-        
+
         # If there were changed rows update the concentration data & exclusions table
         if (nrow(changed_rows) > 0) {
-          browser()
           data$conc$data <- new_conc_data
           mydata(data)
-          
-          manual_slopes()
-          
-          
         }
 
       }
