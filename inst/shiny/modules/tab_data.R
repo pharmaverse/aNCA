@@ -56,6 +56,10 @@ tab_data_server <- function(id) {
 
     #' Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data
+    observeEvent(processed_data(), {
+      req(processed_data())
+      updateTabsetPanel(session, "data_navset", selected = "Review Data")
+    })
 
     #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables

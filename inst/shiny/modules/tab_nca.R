@@ -72,7 +72,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and updete the curent view if data is created succesfully.
-        updateTabsetPanel(session, "data_navset", selected = "Review Data")
         purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
           shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
         })
