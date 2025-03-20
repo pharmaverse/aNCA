@@ -99,7 +99,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars, auc_options) {
       # Select columns of parameters selected, considering each can have multiple diff units
       param_label_cols <- formatters::var_labels(final_results())
       param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
-      remove_params <- setdiff(input$params, param_cols)
+      remove_params <- setdiff(param_cols, input$params)
       #identify parameters to be removed from final results
       params_rem_cols <- param_label_cols[param_label_cols %in% remove_params] |>
         names()
