@@ -526,7 +526,7 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       # Join custom AUC partial intervals specified by the user
       mydata$intervals <- bind_rows(mydata$intervals, intervals_userinput()) %>%
         unique()
-      mydata$impute <- NA
+      mydata$impute <- NA_character_
 
       # Filter only the analytes and doses requested for intervals and units
       mydata$intervals <- mydata$intervals %>%

@@ -145,6 +145,10 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   if (!is.character(target_impute)) {
     stop("'target_impute' must be a character string.")
   }
+  if (is.na(target_impute) || target_impute == "") {
+    warning("No impute method specified. No changes made.")
+    return(data)
+  }
 
   # Ensure the impute column exists and is a character column
   if (!"impute" %in% colnames(data)) {
@@ -217,6 +221,10 @@ interval_remove_impute.data.frame <- function(data,
   }
   if (!is.character(target_impute)) {
     stop("'target_impute' must be a character string.")
+  }
+  if (is.na(target_impute) || target_impute == "") {
+    warning("No impute method specified. No changes made.")
+    return(data)
   }
 
   # Ensure the impute column exists and is a character column
