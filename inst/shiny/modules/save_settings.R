@@ -32,8 +32,8 @@ save_settings_server <- function(id, mydata, parent_session) {
           names()
 
         mydata$conc$data <- mydata$conc$data %>%
+          filter(is.excluded.hl + is.included.hl > 0) %>%
           select(any_of(c(conc_cols, "DOSNO")))
-        mydata$conc$data <- mydata$conc$data[rowSums(mydata$conc$data[, conc_logical_cols]) > 0, ]
 
         mydata$dose$data <- mydata$dose$data %>%
           select(any_of(c(unname(unlist(mydata$dose$columns)), "DOSNO")))
