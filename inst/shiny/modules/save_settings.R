@@ -18,7 +18,9 @@ save_settings_server <- function(id, mydata) {
 
     output$settings_save <- downloadHandler(
       filename = function() {
-        paste0(mydata()$conc$data$STUDYID[1], "_aNCAsetts_", Sys.Date(), ".xlsx")
+        fname <- paste0(mydata()$conc$data$STUDYID[1], "_aNCAsetts_", Sys.Date())
+        if (input$settings_save_fmt == "rds") paste0(fname, ".rds")
+        if (input$settings_save_fmt == "xlsx") paste0(fname, ".xlsx")
       },
       content = function(file) {
 
