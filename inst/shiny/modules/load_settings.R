@@ -189,37 +189,19 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
         auc_counter(nrow(intervals_userinput_setts))
       }
 
-      if (!is.null(setts$flag_rules$adj.r.squared)) {
-        updateCheckboxInput(parent_session, inputId = "rule_adj.r.squared", value = TRUE)
-        updateNumericInput(parent_session,
-                           inputId = "adj.r.squared_threshold",
-                           value = setts$flag_rules$adj.r.squared)
-      } else {
-        updateCheckboxInput(parent_session, inputId = "rule_adj.r.squared", value = FALSE)
-      }
+      # Update Flag rules based on saved file details
+      if (any(!is.na(setts$flag_rules$values))) {
+        flag_rules_to_apply <- setNames(setts$flag_rules$values[!is.na(setts$flag_rules$values)],
+                                        nm = setts$flag_rules$ind[!is.na(setts$flag_rules$values)])
+        for (rule_input in names(flag_rules_to_apply)) {
+          threshold_input <- gsub(pattern = "rule_", replacement = "", rule_input)
+          threshold_input <- paste0(gsub("_", ".", threshold_input), "_threshold")
 
-      if (!is.null(setts$options$flag_rules$aucpext.obs)) {
-        updateCheckboxInput(parent_session, inputId = "rule_aucpext.obs", value = TRUE)
-        updateNumericInput(parent_session, inputId = "aucpext.obs_threshold",
-                           value = setts$lag_rules$aucpext.obs)
-      } else {
-        updateCheckboxInput(parent_session, inputId = "rule_aucpext.obs", value = FALSE)
-      }
-
-      if (!is.null(setts$options$flag_rules$aucpext.pred)) {
-        updateCheckboxInput(parent_session, inputId = "rule_aucpext.pred", value = TRUE)
-        updateNumericInput(parent_session, inputId = "aucpext.pred_threshold",
-                           value = setts$flag_rules$aucpext.pred)
-      } else {
-        updateCheckboxInput(parent_session, inputId = "rule_aucpext.pred", value = FALSE)
-      }
-
-      if (!is.null(setts$options$flag_rules$span.ratio)) {
-        updateCheckboxInput(parent_session, inputId = "rule_span.ratio", value = TRUE)
-        updateNumericInput(parent_session, inputId = "span.ratio_threshold",
-                           value = setts$flag_rules$span.ratio)
-      } else {
-        updateCheckboxInput(parent_session, inputId = "rule_span.ratio", value = FALSE)
+          updateCheckboxInput(parent_session, inputId = rule_input, value = TRUE)
+          updateNumericInput(parent_session,
+                             inputId = threshold_input,
+                             value = flag_rules_to_apply[[rule_input]])
+        }
       }
 
       conc_setts_cols <- unname(unlist(setts$conc$columns[c("groups", "time", "concentration")]))
