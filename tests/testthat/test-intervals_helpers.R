@@ -84,14 +84,14 @@ describe("interval_add_impute", {
       result <- interval_add_impute(o_data, target_impute = NA_character_)
       expect_equal(result, o_data)
     },
-      "No impute method specified. No changes made."
+    "No impute method specified. No changes made."
     )
 
     expect_warning({
       result <- interval_add_impute(o_data, target_impute = "")
       expect_equal(result, o_data)
     },
-      "No impute method specified. No changes made."
+    "No impute method specified. No changes made."
     )
   })
 
