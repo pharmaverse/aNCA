@@ -203,7 +203,9 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
                              value = flag_rules_to_apply[[rule_input]])
         }
       }
-
+      ########################################################################################
+      # ToDo: Loading manual slope settings still not working because of manual_slopes()
+      # Needs still to be worked on when refactoring is done
       conc_setts_cols <- unname(unlist(setts$conc$columns[c("groups", "time", "concentration")]))
       conc_data_cols <- unname(unlist(data$conc$columns[c("groups", "time", "concentration")]))
 
@@ -261,8 +263,8 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
           data$conc$data <- new_conc_data
           mydata(data)
         }
-
       }
+      ########################################################################################
     })
   })
 }
