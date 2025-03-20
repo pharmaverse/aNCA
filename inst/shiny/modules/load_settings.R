@@ -20,6 +20,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
       file_path <- input$settings_upload$datapath
 
       if (tools::file_ext(file_path) == "rds") {
+        options(shiny.maxRequestSize = 10*1024^2) # 10 Mb (generally ~5Mb)
         setts <- readRDS(input$settings_upload$datapath)
       } else if (tools::file_ext(file_path) == "xlsx") {
         sheets <- openxlsx::getSheetNames(file_path)
