@@ -37,11 +37,7 @@ additional_analysis_ui <- function(id) {
       title = "AUC Ratios",
       value = "auc_analysis",
       card(
-        card_header("Bioavailability Calculations"),
-        card_body(
-
-          p("To be added")
-        )
+        p("To be added")
       ),
     ),
     nav_panel(
@@ -59,7 +55,7 @@ additional_analysis_ui <- function(id) {
 }
 
 # Server function for the module
-additional_analysis_server <- function(id, data, grouping_vars) {
+additional_analysis_server <- function(id, data, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

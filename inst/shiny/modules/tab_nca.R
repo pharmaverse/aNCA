@@ -147,7 +147,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     })
 
     # NCA SETUP MODULE ----
-    rules <- nca_setup_server("nca_settings", data, mydata, res_nca)
+    setup <- nca_setup_server("nca_settings", data, mydata, res_nca)
 
     # NCA RESULTS ----
     res_nca <- reactiveVal(NULL)
@@ -196,7 +196,13 @@ tab_nca_server <- function(id, data, grouping_vars) {
       })
     })
 
-    nca_results_server("nca_results", res_nca, rules(), grouping_vars)
+    # Retrieve bioavailability selections
+    auc_options <- reactive({
+      req(setup())
+      setup()$bioavailability
+    })
+
+    nca_results_server("nca_results", res_nca, setup()$rules, grouping_vars, auc_options)
 
     # SLOPE SELECTOR ----
     # Keep the UI table constantly actively updated
@@ -255,10 +261,10 @@ tab_nca_server <- function(id, data, grouping_vars) {
       slope_rules()
     })
 
-    # TAB: Descriptive Statistics ---------------------------------------------
+    # DESCRIPTIVE STATISTICS ---------------------------------------------
     # This tab computes and visualizes output data from the NCA analysis
 
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, auc_options)
 
     # NCA SETTINGS ----
     # TODO: move this section to a new module
@@ -333,7 +339,7 @@ tab_nca_server <- function(id, data, grouping_vars) {
     )
 
     # ADDITIONAL ANALYSIS ----
-    additional_analysis_server("non_nca", mydata, grouping_vars)
+    additional_analysis_server("non_nca", mydata, res_nca, grouping_vars)
 
     # PARAMETER DATASETS ----
     parameter_datasets_server("parameter_datasets", res_nca)

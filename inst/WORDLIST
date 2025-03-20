@@ -9,6 +9,7 @@ AVAL
 AVALU
 Analyte
 Bärtschi
+bioavailability
 CDISC
 DOSEA
 DOSEU
@@ -39,6 +40,7 @@ analyte
 analytes
 anonymized
 anonymizes
+aucs
 cero
 cmax
 codebase
