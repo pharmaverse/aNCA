@@ -49,8 +49,9 @@ save_settings_server <- function(id, mydata, parent_session) {
           keep(~startsWith(.x, "nca_setup-") & endsWith(.x, "_threshold")) %>%
           sapply(., \(x) parent_session$input[[x]])
 
-        mydata$flag_rules <- ifelse(rule_inputs_logical, threshold_inputs, NA) %>%
-          stack()
+        mydata$flag_rules <- ifelse(rule_inputs_logical, threshold_inputs, NA)
+        names(mydata$flag_rules) <- gsub("nca_setup-", "", names(mydata$flag_rules))
+        mydata$flag_rules <- stack(mydata$flag_rules)
         ########################################################################################
 
         if (input$settings_save_fmt == "rds") {
