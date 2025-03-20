@@ -12,7 +12,7 @@ save_settings_ui <- function(id) {
   )
 }
 
-save_settings_server <- function(id, mydata) {
+save_settings_server <- function(id, mydata, parent_session) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -41,19 +41,16 @@ save_settings_server <- function(id, mydata) {
         ########################################################################################
         # ToDo: Flag rules needs to be modified, currently not working (no access to input names)
         # ToDo: Needs to be bound to PKNCA object or similar strategy for a better solution
-        rule_inputs_logical <- names(input) %>%
-          keep(~startsWith(.x, "nca_settings-rule")) %>%
-          sapply(., \(x) input[[x]])
+        rule_inputs_logical <- names(parent_session$input) %>%
+          keep(~startsWith(.x, "nca_setup-rule")) %>%
+          sapply(., \(x) parent_session$input[[x]])
 
-        threshold_inputs <- names(input) %>%
-          keep(~startsWith(.x, "nca_settings-") & endsWith(.x, "_threshold"))
+        threshold_inputs <- names(parent_session$input) %>%
+          keep(~startsWith(.x, "nca_setup-") & endsWith(.x, "_threshold")) %>%
+          sapply(., \(x) parent_session$input[[x]])
 
-        mydata$flag_rules <- ifelse(rule_inputs_logical,
-                                    sapply(threshold_inputs, \(x) input[[x]]),
-                                    NA) %>%
-          setNames(nm = gsub("nca_settings-(.*)_threshold$", "\\1", threshold_inputs)) %>%
-          as_list() %>%
-          as.data.frame()
+        mydata$flag_rules <- ifelse(rule_inputs_logical, threshold_inputs, NA) %>%
+          stack()
         ########################################################################################
 
         if (input$settings_save_fmt == "rds") {
