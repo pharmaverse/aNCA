@@ -253,9 +253,9 @@ tab_nca_server <- function(id, data, grouping_vars) {
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     # NCA SETTINGS ----
-    
+
     # SAVE & DOWNLOAD A PROJECT SETTINGS FILE
-    #' This module handles the server-side logic for saving project settings from NCA setup & slope adjustments.
+    #' The module handles the server logic for saving project settings from NCA setup & slope adj.
     #' The file can be downloaded in two formats: RDS or XLSX.
     save_settings_server("save_settings", mydata, session)
 

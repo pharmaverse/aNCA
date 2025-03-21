@@ -14,8 +14,8 @@ save_settings_ui <- function(id) {
 
 #' Save Settings Server Module
 #'
-#' This module handles the server-side logic for saving project settings, including the format selection
-#' and the actual saving process in either RDS or XLSX format.
+#' The module handles the server logic for saving project settings from NCA setup & slope adj.
+#' The file can be downloaded in two formats: RDS or XLSX.
 #'
 #' - id The module's ID.
 #' - mydata A reactive expression containing the project data to be saved.
