@@ -23,7 +23,6 @@ pivot_wider_pknca_results <- function(myres) {
   # Derive lambda.z.n.points & lambda.z.method
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
-  browser()
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),

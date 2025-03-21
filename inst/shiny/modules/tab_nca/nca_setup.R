@@ -64,7 +64,7 @@ nca_setup_ui <- function(id) {
                      "cav", "cl.all", "cl.obs",
                      "clast", "tlast")
       )),
-      column(4, units_table_ui(ns("units_table_preNCA")))
+      column(4, units_table_ui(ns("units_table")))
     ),
     br(),
 
@@ -207,11 +207,8 @@ nca_setup_ui <- function(id) {
 #' - data A reactive expression containing the read and mapped data from the app.
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
 #' - mydata A reactive expression of the PKNCAdata object, which contains data and NCA specications.
-#'          Main reactive object, is used as input and also modified.
-#' - res_nca A reactive expression containing the PKNCA results output generated from mydata.
-#'           Only used for the units_table submodule
 #'
-nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: complexity / needs further modularization
+nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -450,6 +447,41 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
         auc_counter(auc_counter() - 1)
       }
     })
+    # nolint start
+    #' TODO(mateusz): I am disabling  this part of the code, as listening on `names(input)`
+    #' causes a great deal of issues with the current reactivity schema. This should be fixed
+    #' in the scope of #249
+    #' https://github.com/pharmaverse/aNCA/issues/249
+    # intervals_userinput <- reactive({
+    #   # Collect all inputs for the AUC intervals
+    #   input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
+    #   input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
+
+    #   starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
+    #   ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
+
+    #   # Make a list of dataframes with each of the intervals requested
+    #   intervals_list <- lapply(seq_along(starts), function(i) {
+    #     mydata()$intervals %>%
+    #       mutate(
+    #         start = start + as.numeric(starts[i]),
+    #         end = start + as.numeric(ends[i])
+    #       ) %>%
+    #       # only TRUE for columns specified in params
+    #       mutate(across(where(is.logical), ~FALSE)) %>%
+    #       # Intervals will always only compute AUC values
+    #       mutate(across(c("aucint.last"), ~TRUE)) %>%
+    #       # Identify the intervals as the manual ones created by the user
+    #       mutate(type_interval = "manual")
+    #   })
+
+    #   # Make sure NAs were not left by the user
+    #   intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
+    #   intervals_list
+    # })
+
+
+    # nolint end
 
 
     # Updating Checkbox and Numeric Inputs
@@ -467,20 +499,34 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
                  })
 
 
-
-
     # NCA settings dynamic changes
-    observeEvent(list(
+    processed_pknca_data <- eventReactive(list(
       input$method, input$nca_params, input$should_impute_c0,
       input$select_analyte, input$select_dosno, input$select_pcspec,
-      input$AUCoptions
+      input$AUCoptions, mydata(), session$userData$units_table()
     ), {
+      req(mydata())
+      req(
+        input$method, input$nca_params, input$should_impute_c0, input$select_analyte,
+        input$select_dosno, input$select_pcspec
+      )
 
       # Load mydata reactive and modify it accordingly to user's request
-      req(mydata())
-      mydata <- mydata()
+      processed_pknca_data <- mydata()
 
-      mydata$options <- list(
+      analyte_column <- processed_pknca_data$conc$columns$groups$group_analyte
+      unique_analytes <- unique(processed_pknca_data$conc$data[[analyte_column]])
+
+      if (!is.null(session$userData$units_table())) {
+        processed_pknca_data$units <- session$userData$units_table()
+      }
+      processed_pknca_data$units <- processed_pknca_data$units %>%
+        select(-!!sym(analyte_column)) %>%
+        tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
+        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)  %>%
+        filter(ANALYTE %in% input$select_analyte)
+
+      processed_pknca_data$options <- list(
         auc.method = input$method,
         keep_interval_cols = c("DOSNO", "type_interval"),
         # Make sure the standard options do not prohibit results
@@ -488,12 +534,14 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       )
 
       # Include main intervals as specified by the user
-      intervals <- format_pkncadata_intervals(pknca_conc = mydata$conc,
-                                                     pknca_dose = mydata$dose,
-                                                     # Compute only parameters specified
-                                                     params = input$nca_params,
-                                                     # Start at t0 when requested by the user
-                                                     start_from_last_dose = input$should_impute_c0)
+      intervals <- format_pkncadata_intervals(
+        pknca_conc = processed_pknca_data$conc,
+        pknca_dose = processed_pknca_data$dose,
+        # Compute only parameters specified
+        params = input$nca_params,
+        # Start at t0 when requested by the user
+        start_from_last_dose = input$should_impute_c0
+      )
 
       # Collect all inputs for the AUC intervals
       input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
@@ -506,8 +554,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       intervals_list <- lapply(seq_along(starts), function(i) {
         intervals %>%
           mutate(
-            start = start + as.numeric(starts[i]),
-            end = start + as.numeric(ends[i])
+            end = start + as.numeric(ends[i]),
+            start = start + as.numeric(starts[i])
           ) %>%
           # only TRUE for columns specified in params
           mutate(across(where(is.logical), ~FALSE)) %>%
@@ -521,58 +569,52 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       intervals_userinput <- intervals_list[!is.na(starts) & !is.na(ends)]
 
       # Join custom AUC partial intervals specified by the user
-      mydata$intervals <- bind_rows(intervals, intervals_userinput) %>%
+
+      processed_pknca_data$intervals <- bind_rows(
+        intervals,
+        intervals_userinput
+      ) %>%
         unique()
-      mydata$impute <- NA
+      processed_pknca_data$impute <- NA
 
       # Filter only the analytes and doses requested for intervals and units
-      mydata$intervals <- mydata$intervals %>%
-        filter(DOSNO %in% input$select_dosno,
-               ANALYTE %in% input$select_analyte,
-               PCSPEC %in% input$select_pcspec)
-
-      unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
-      analyte_column <- mydata$conc$columns$groups$group_analyte
-      mydata$units <- mydata$units %>%
-        select(-!!sym(analyte_column)) %>%
-        tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
-        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)  %>%
-        filter(ANALYTE %in% input$select_analyte)
+      processed_pknca_data$intervals <- processed_pknca_data$intervals %>%
+        dplyr::filter(DOSNO %in% input$select_dosno,
+                      ANALYTE %in% input$select_analyte,
+                      PCSPEC %in% input$select_pcspec)
 
       # Define start imputations on intervals if specified by the user
       if (input$should_impute_c0) {
-        mydata <- create_start_impute(mydata = mydata)
+        processed_pknca_data <- create_start_impute(processed_pknca_data)
 
         # Make sure observed parameters (cmax, tmax) are not imputed
         # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
-        mydata$intervals <- Reduce(function(data, ti_arg) {
+        processed_pknca_data$intervals <- Reduce(function(data, ti_arg) {
           interval_remove_impute(data,
                                  target_impute = ti_arg,
                                  target_params = c("cmax", "tmax"))
-        }, unique(mydata$intervals$impute), init = mydata$intervals)
+        }, unique(processed_pknca_data$intervals$impute), init = processed_pknca_data$intervals)
       }
 
       # If the user filtered all intervals or there are not left, show a notification
-      if (nrow(mydata$intervals) == 0) {
+      if (nrow(processed_pknca_data$intervals) == 0) {
         showNotification(paste0("All intervals have been filtered. Please reconsider ",
                                 "populating the last input modified or report a bug"),
                          duration = 20,
                          type = "warning")
       }
 
-      mydata(mydata)
+      processed_pknca_data
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
-    # It updates $units table of mydata & res_nca when the user saves their changes
-    units_table_server("units_table_preNCA", mydata, res_nca)
-    units_table_server("units_table_postNCA", mydata, res_nca)
+    units_table_server("units_table", processed_pknca_data)
 
     # Rendering Reactable Output
     output$nca_intervals <- renderReactable({
-      req(mydata())
+      req(processed_pknca_data())
 
-      data <- mydata()$intervals %>%
+      data <- processed_pknca_data()$intervals %>%
         apply_labels(LABELS, "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE)))
 
@@ -580,9 +622,9 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       std_route_column <- "std_route"
 
       data <- data %>%
-        left_join(y = mydata()$dose$data) %>%
-        group_by(across(all_of(unname(unlist(mydata()$dose$columns$groups))))) %>%
-        arrange(!!!syms(unname(unlist(mydata()$conc$columns$groups))), TIME) %>%
+        left_join(y = processed_pknca_data()$dose$data) %>%
+        group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
+        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
         select(!!!syms(colnames(data)), conc_groups,
                all_of(c(route_column, std_route_column)))
@@ -601,8 +643,9 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
       )
     })
 
-    reactive({
-      list(
+    list(
+      processed_pknca_data = processed_pknca_data,
+      rules = reactive(list(
         rule_adj_r_squared = input$rule_adj_r_squared,
         adj.r.squared_threshold = input$adj.r.squared_threshold,
 
@@ -614,9 +657,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
 
         rule_span_ratio = input$rule_span_ratio,
         span.ratio_threshold = input$span.ratio_threshold
-      )
-    })
-
+      ))
+    )
   })
 }
 
