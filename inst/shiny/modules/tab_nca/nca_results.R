@@ -12,22 +12,43 @@ nca_results_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    units_table_ui(ns("units_table_postNCA")),
+    units_table_ui(ns("units_table")),
     reactableOutput(ns("myresults")),
     downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
   )
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, res_nca, rules, grouping_vars) {
+nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    units_table_server(
+      "units_table",
+      reactive({          #' Pass `pknca_data` to the units table only when the results
+        req(res_nca())    #' are available.
+        pknca_data()
+      })
+    )
+
     final_results <- reactive({
       req(res_nca())
-      # Transform results
-      final_results <- pivot_wider_pknca_results(res_nca())
+      res <- res_nca()
+      #' Apply units
+      if (!is.null(session$userData$units_table())) {
+        res$data$units <- session$userData$units_table()
+        res$result <- res$result %>%
+          select(-PPSTRESU, -PPSTRES) %>%
+          left_join(
+            session$userData$units_table(),
+            by = intersect(names(.), names(session$userData$units_table()))
+          ) %>%
+          mutate(PPSTRES = PPORRES * conversion_factor) %>%
+          select(-conversion_factor)
+      }
 
+      #' Transform results
+      final_results <- pivot_wider_pknca_results(res)
       # Apply rules
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
         if (!rules[[rule_input]]) next
@@ -94,16 +115,14 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
 
       # Select columns of parameters selected, considering each can have multiple diff units
       param_label_cols <- formatters::var_labels(final_results())
-      params_sel_cols <- param_label_cols[param_label_cols %in% input$params] |>
+      param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
+      remove_params <- setdiff(param_cols, input$params)
+      #identify parameters to be removed from final results
+      params_rem_cols <- param_label_cols[param_label_cols %in% remove_params] |>
         names()
 
-      group_cols <- setdiff(names(res_nca()$data$intervals),
-                            c(names(PKNCA::get.interval.cols()))) |>
-        # Here cols of interest are also added
-        c("Exclude", "impute", "flagged")
-
       final_results <- final_results() %>%
-        select(any_of(c(group_cols, sort(params_sel_cols))))
+        select(-(c(any_of(params_rem_cols), conc_groups)))
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)

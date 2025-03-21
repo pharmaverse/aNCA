@@ -201,7 +201,6 @@ manual_slopes_table_server <- function(
 
     #' saves and implements provided ruleset
     observeEvent(input$save_ruleset, {
-      mydata(filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups()))
       pk_nca_trigger(pk_nca_trigger() + 1)
     })
 
@@ -209,7 +208,5 @@ manual_slopes_table_server <- function(
       manual_slopes = manual_slopes,
       refresh_reactable = refresh_reactable
     )
-
   })
-
 }
