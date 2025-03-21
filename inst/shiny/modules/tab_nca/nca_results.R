@@ -33,7 +33,6 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
 
     final_results <- reactive({
       req(res_nca())
-
       res <- res_nca()
       #' Apply units
       if (!is.null(session$userData$units_table())) {
@@ -50,7 +49,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
 
       #' Transform results
       final_results <- pivot_wider_pknca_results(res)
-
+  
       # Apply rules
       for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
         if (!rules[[rule_input]]) next

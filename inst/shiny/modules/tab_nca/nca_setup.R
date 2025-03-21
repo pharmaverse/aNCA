@@ -547,23 +547,19 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
       input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
 
-      starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
-      ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
+      starts <- as.numeric(unlist(lapply(input_names_aucmin, \(name) input[[name]])))
+      ends <- as.numeric(unlist(lapply(input_names_aucmax, \(name) input[[name]])))
       
       # Make a list of dataframes with each of the intervals requested
-      intervals_list <- lapply(seq_along(starts), function(i) {
-        intervals %>%
-          mutate(
-            end = start + as.numeric(ends[i]),
-            start = start + as.numeric(starts[i])
-          ) %>%
-          # only TRUE for columns specified in params
-          mutate(across(where(is.logical), ~FALSE)) %>%
-          # Intervals will always only compute AUC values
-          mutate(across(c("aucint.last"), ~TRUE)) %>%
-          # Identify the intervals as the manual ones created by the user
-          mutate(type_interval = "manual")
-      })
+      intervals_list <- map2(starts, ends, ~ intervals %>%
+                               mutate(
+                                 start = start + .x,
+                                 end = start + (.y - .x),
+                                 across(where(is.logical), ~FALSE),
+                                 aucint.last = TRUE,
+                                 type_interval = "manual"
+                               )
+      )
       
       # Make sure NAs were not left by the user
       intervals_userinput <- intervals_list[!is.na(starts) & !is.na(ends)]
