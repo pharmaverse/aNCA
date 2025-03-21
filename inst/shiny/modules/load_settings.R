@@ -11,6 +11,17 @@ load_settings_ui <- function(id) {
   )
 }
 
+#' Load Settings Server Module
+#'
+#' This module handles the server-side logic for loading project settings from a file,
+#' including updating the UI elements: selectInputs, parameters, imputations, slope adj...
+#'
+#' - id The module's ID.
+#' - mydata A reactive expression containing the project data to be updated.
+#' - parent_session The parent Shiny session.
+#' - auc_counter A reactive value for counting AUC intervals.
+#' - manual_slopes A reactive value for handling manual slopes.
+#'
 load_settings_server <- function(id, mydata, parent_session, auc_counter, manual_slopes) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns

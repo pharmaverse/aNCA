@@ -213,6 +213,8 @@ nca_setup_server <- function(id, data, mydata, res_nca) { # nolint : TODO: compl
     conc_data <- reactive(mydata()$conc$data)
 
     # File Upload Handling
+    # The server handles the logic for loading project settings from a file & update UI elements
+    # from NCA setup (all inputs) & slope adjustments (manual_slopes table & concentration dataset)
     load_settings_server("load_settings", mydata, session, auc_counter, manual_slopes)
 
     # Include keyboard limits for the settings GUI display

@@ -12,6 +12,15 @@ save_settings_ui <- function(id) {
   )
 }
 
+#' Save Settings Server Module
+#'
+#' This module handles the server-side logic for saving project settings, including the format selection
+#' and the actual saving process in either RDS or XLSX format.
+#'
+#' - id The module's ID.
+#' - mydata A reactive expression containing the project data to be saved.
+#' - parent_session The parent Shiny session.
+#'
 save_settings_server <- function(id, mydata, parent_session) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
