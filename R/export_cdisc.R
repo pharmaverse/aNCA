@@ -106,31 +106,11 @@ export_cdisc <- function(res_nca) {
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     mutate(
-      PPTESTCD = recode(
-        PPTESTCD %>% toupper,
-        "AUCLAST" = "AUCLST",
-        "TLAST" = "TLST",
-        "CLAST.OBS" = "CLST",
-        "LAMBDA.Z" = "LAMZ",
-        "R.SQUARED" = "R2",
-        "ADJ.R.SQUARED" = "R2ADJ",
-        # This one does not exist right? I don't see its parameter use
-        "LAMBDA.Z.TIME.FIRST" = "LAMZLL",
-        "LAMBDA.Z.N.POINTS" = "LAMZNPT",        # The same with this one
-        "CLAST.PRED" = "CLSTP",
-        "HALF.LIFE" = "LAMZHL",
-        "SPAN.RATIO" = "LAMZSPNR",              # Is this code name correct/standard?
-        "AUCINF.OBS" = "AUCIFO",
-        "AUCINF.PRED" = "AUCIFP",
-        "AUCPEXT.OBS" = "AUCPEO",
-        "AUCPEXT.PRED" = "AUCPEP",
-        "TMAX" = "TMAX",
-        "CMAX" = "CMAX"
-      ),
+      PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "CDISC"),
       DOMAIN = "PP",
       # Group ID
       PPGRPID =  paste(ANALYTE, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
-      # Parameter Cathegory
+      # Parameter Category
       PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
       PPSCAT = "NON-COMPARTMENTAL",
       PPDOSNO = DOSNO,
@@ -168,7 +148,6 @@ export_cdisc <- function(res_nca) {
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
-
 
   # select pp columns
   pp <- pp_info %>%  select(all_of(pp_col))
