@@ -304,29 +304,6 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       )
 
 
-      if (!is.na(setts$auc_mins[1])) {
-        updateCheckboxInput(session, inputId = ns("AUCoptions"),
-                            label = "Select Partial AUC", value = TRUE)
-        auc_mins <- as.character(setts$auc_mins[1])
-        auc_maxs <- as.character(setts$auc_maxs[1])
-        auc_mins <- strsplit(auc_mins, split = ",")[[1]]
-        auc_maxs <- strsplit(auc_maxs, split = ",")[[1]]
-
-        for (i in seq_along(auc_mins)) {
-          auc_counter(auc_counter() + 1)
-          insertUI(
-            selector = paste0("#", ns("AUCInputs")),
-            where = "beforeEnd",
-            ui = partial_auc_input(
-              id = paste0("AUC_", auc_counter()),
-              ns = ns,
-              min_sel_value = as.numeric(auc_mins[i]),
-              max_sel_value = as.numeric(auc_maxs[i])
-            )
-          )
-        }
-      }
-
       if (!is.na(setts$adj.r.squared_threshold[1])) {
         updateCheckboxInput(session,
                             inputId = ns("rule_adj_r_squared"),
@@ -397,13 +374,6 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
 
-    # Keyboard limits for the dynamically created partial AUC ranges
-    observeEvent(auc_counter(), {
-      for (i in auc_counter()) {
-        limit_input_value(input, session, paste0("timeInputMin_AUC_", i), min = 0, lab = "AUC")
-        limit_input_value(input, session, paste0("timeInputMax_AUC_", i), min = 0, lab = "AUC")
-      }
-    })
 
     # Choose dosenumbers to be analyzed
     observeEvent(data()$DOSNO, priority = -1, {
