@@ -88,14 +88,8 @@ nca_setup_ui <- function(id) {
       ),
       accordion_panel( 
         title = "Partial AUCs",
-        fluidRow(
-          column(
-            width = 12,
-            actionButton(ns("addAUC"), "+"),
-            actionButton(ns("removeAUC"), "-")
-          )
-        ),
-        tags$div(id = ns("AUCInputs"))
+        reactableOutput(ns("auc_table")),
+        actionButton(ns("addRow"), "Add Row")
       ),
       accordion_panel(
         title = "Flag Rule Sets",
@@ -437,56 +431,54 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       )
     })
 
-    auc_counter <- reactiveVal(0)
-    observeEvent(input$addAUC, {
-      auc_counter(auc_counter() + 1)
-      id <- paste0("AUC_", auc_counter())
-      insertUI(selector = paste0("#", ns("AUCInputs")),
-               where = "beforeEnd", ui = partial_auc_input(id, ns = ns))
+    # Reactive value to store the AUC data table
+    auc_data <- reactiveVal(
+      tibble(Min = rep(NA_real_, 2), Max = rep(NA_real_, 2))
+    )
+    
+    # Render the editable reactable table
+    refresh_reactable <- reactiveVal(1)
+    output$auc_table <- renderReactable({
+      reactable(
+        auc_data(),
+        columns = list(
+          Min = colDef(
+            cell = text_extra(
+              id = ns("edit_Min")
+            ),
+            align = "center"
+          ),
+          Max = colDef(
+            cell = text_extra(
+              id = ns("edit_Max")
+            ),
+            align = "center"
+          )
+        )
+      )
+    }) %>%
+      shiny::bindEvent(refresh_reactable())
+    
+    # Add a blank row on button click
+    observeEvent(input$addRow, {
+      df <- auc_data()
+      auc_data(bind_rows(df, tibble(Min = NA_real_, Max = NA_real_)))
     })
-
-    observeEvent(input$removeAUC, {
-      if (auc_counter() > 0) {
-        removeUI(selector = paste0("#", paste0("AUC_", auc_counter())))
-        auc_counter(auc_counter() - 1)
-      }
+    
+    #' For each of the columns in partial aucs data frame, attach an event that will read
+    #' edits for that column made in the reactable.
+    observe({
+      req(auc_data())
+      # Dynamically attach observers for each column
+      purrr::walk(c("Min", "Max"), \(colname) {
+        observeEvent(input[[paste0("edit_", colname)]], {
+          edit <- input[[paste0("edit_", colname)]]
+          partial_aucs <- auc_data()
+          partial_aucs[edit$row, edit$column] <- as.numeric(edit$value)
+          auc_data(partial_aucs)
+        })
+      })
     })
-    # nolint start
-    #' TODO(mateusz): I am disabling  this part of the code, as listening on `names(input)`
-    #' causes a great deal of issues with the current reactivity schema. This should be fixed
-    #' in the scope of #249
-    #' https://github.com/pharmaverse/aNCA/issues/249
-    # intervals_userinput <- reactive({
-    #   # Collect all inputs for the AUC intervals
-    #   input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-    #   input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-
-    #   starts <- unlist(lapply(input_names_aucmin, \(name) input[[name]]))
-    #   ends <- unlist(lapply(input_names_aucmax, \(name) input[[name]]))
-
-    #   # Make a list of dataframes with each of the intervals requested
-    #   intervals_list <- lapply(seq_along(starts), function(i) {
-    #     mydata()$intervals %>%
-    #       mutate(
-    #         start = start + as.numeric(starts[i]),
-    #         end = start + as.numeric(ends[i])
-    #       ) %>%
-    #       # only TRUE for columns specified in params
-    #       mutate(across(where(is.logical), ~FALSE)) %>%
-    #       # Intervals will always only compute AUC values
-    #       mutate(across(c("aucint.last"), ~TRUE)) %>%
-    #       # Identify the intervals as the manual ones created by the user
-    #       mutate(type_interval = "manual")
-    #   })
-
-    #   # Make sure NAs were not left by the user
-    #   intervals_list <- intervals_list[!is.na(starts) & !is.na(ends)]
-    #   intervals_list
-    # })
-
-
-    # nolint end
-
 
     # Updating Checkbox and Numeric Inputs
     observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
@@ -507,12 +499,12 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     processed_pknca_data <- eventReactive(list(
       input$method, input$nca_params, input$should_impute_c0,
       input$select_analyte, input$select_dosno, input$select_pcspec,
-      input$AUCoptions, mydata(), session$userData$units_table()
+      mydata(), session$userData$units_table(), auc_data()
     ), {
       req(mydata())
       req(
         input$method, input$nca_params, input$should_impute_c0, input$select_analyte,
-        input$select_dosno, input$select_pcspec
+        input$select_dosno, input$select_pcspec, auc_data()
       )
 
       # Load mydata reactive and modify it accordingly to user's request
@@ -547,32 +539,27 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
         start_from_last_dose = input$should_impute_c0
       )
 
-      # Collect all inputs for the AUC intervals
-      input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-      input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-
-      starts <- as.numeric(unlist(lapply(input_names_aucmin, \(name) input[[name]])))
-      ends <- as.numeric(unlist(lapply(input_names_aucmax, \(name) input[[name]])))
+      # Collect non-NA min/max values from reactable
+      auc_ranges <- auc_data() %>%
+        filter(!is.na(Min), !is.na(Max), Min >= 0, Max > Min)
       
-      # Make a list of dataframes with each of the intervals requested
-      intervals_list <- map2(starts, ends, ~ intervals %>%
-                               mutate(
-                                 start = start + .x,
-                                 end = start + (.y - .x),
-                                 across(where(is.logical), ~FALSE),
-                                 aucint.last = TRUE,
-                                 type_interval = "manual"
-                               )
-      )
-      
-      # Make sure NAs were not left by the user
-      intervals_userinput <- intervals_list[!is.na(starts) & !is.na(ends)]
+      # Make a list of intervals from valid AUC ranges
+      intervals_list <- pmap(auc_ranges, function(Min, Max) {
+        intervals %>%
+          mutate(
+            start = start + Min,
+            end = start + (Max - Min),
+            across(where(is.logical), ~FALSE),
+            aucint.last = TRUE,
+            type_interval = "manual"
+          )
+      })
 
       # Join custom AUC partial intervals specified by the user
 
       processed_pknca_data$intervals <- bind_rows(
         intervals,
-        intervals_userinput
+        intervals_list
       ) %>%
         unique()
       processed_pknca_data$impute <- NA
@@ -660,31 +647,4 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       ))
     )
   })
-}
-
-# Handling AUC Intervals
-
-# TODO: Modularise all 'Handling AUC Intervals' and its related actions
-
-#' Define the UI function for a single partial AUC input
-#'
-#' @param id A unique identifier for the input.
-#' @param ns The namespace function.
-#' @param min_sel_value The default minimum value for the input.
-#' @param max_sel_value The default maximum value for the input.
-#'
-#' @return A Shiny UI component for creating a partial AUC input.
-#'
-partial_auc_input <- function(id, ns, min_sel_value = 0, max_sel_value = NULL) {
-  fluidRow(
-    id = id,
-    column(
-      width = 6, numericInput(ns(paste0("timeInputMin_", id)),
-                              "Min:", min = 0, value = min_sel_value)
-    ),
-    column(
-      width = 6, numericInput(ns(paste0("timeInputMax_", id)),
-                              "Max:", min = 0, value = max_sel_value)
-    )
-  )
 }
