@@ -16,13 +16,17 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
     ns <- session$ns
 
     observeEvent(input$settings_upload, {
-
+      
+      # Identify the file submited
       file_path <- input$settings_upload$datapath
-
+      
       if (tools::file_ext(file_path) == "rds") {
+        # Allow loading of big rds files into R
         options(shiny.maxRequestSize = 10*1024^2) # 10 Mb (generally ~5Mb)
         setts <- readRDS(input$settings_upload$datapath)
+
       } else if (tools::file_ext(file_path) == "xlsx") {
+        # Load and reestracture into PKNCA object the excel file
         sheets <- openxlsx::getSheetNames(file_path)
         setts <- lapply(sheets, function(sheet) openxlsx::read.xlsx(file_path, sheet = sheet))
         names(setts) <- sheets
@@ -93,13 +97,12 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
           flag_rules = setts$flag_rules
         )
       }
-
+      # Update all select inputs in the NCA setup tab
       .update_select_with_setts(
         "DOSNO", "DOSNO",
         setts_df = setts$intervals, data_df = mydata()$conc$data,
         parent_session, "select_dosno"
       )
-
       .update_select_with_setts(
         var_setts_col = setts$conc$columns$groups$group_analyte,
         var_data_col = mydata()$conc$columns$groups$group_analyte,
@@ -121,6 +124,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
         selected = setts$options$auc.method
       )
 
+      # Update the parameter picker input
       all_param_options <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
       params_setts <- setts$intervals %>%
@@ -136,8 +140,8 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
         selected = params_setts
       )
 
+      # Load the data object and update its units
       data <- mydata()
-
       data$units <- dplyr::left_join(data$units, setts$units,
                                      by = c("ANALYTE", "PPTESTCD"),
                                      suffix = c(".data", ".setts")) %>%
@@ -145,7 +149,8 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
                       ~coalesce(., get(str_replace(cur_column(), ".setts", ".data"))))) %>%
         select(-ends_with(".data")) %>%
         rename_with(~str_remove(., ".setts"))
-
+      
+      # Check if any start imputation is defined in the settings intervals
       if (any(grepl("start.*", setts$intervals$impute))) {
         updateCheckboxInput(
           parent_session,
@@ -160,6 +165,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
         )
       }
 
+      # Consider if there were any custom AUC intervals defined by the user and update
       dose_time_col <- setts$dose$columns$time
       intervals_userinput_setts <- setts$intervals %>%
         ungroup() %>%
@@ -212,6 +218,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
 
       if (nrow(setts$conc$data) > 0) {
 
+        # Using the exclusions/selections of the settings update the concentration dataset
         new_conc_data <- dplyr::left_join(
           data$conc$data,
           setts$conc$data %>%
@@ -233,7 +240,6 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
           rename_with(~str_remove(., ".setts"))
 
         changed_rows <- anti_join(new_conc_data, data$conc$data)
-
         mismatched_rows <- anti_join(
           setts$conc$data %>%
             select(any_of(c(conc_data_cols, "is.included.hl",
@@ -244,6 +250,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
                             "is.excluded.hl", "exclude_half.life")))
         )
 
+        # If there are mismatched rows between the datasets, inform the user
         if (nrow(mismatched_rows) > 0) {
           showModal(modalDialog(
             title = "Mismatched Data Points",
@@ -261,8 +268,22 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
 
         # If there were changed rows update the concentration data & exclusions table
         if (nrow(changed_rows) > 0) {
+          
+          # Update the main object value
           data$conc$data <- new_conc_data
           mydata(data)
+
+          # Update the manual slopes object
+          conc_groups <- unname(unlist(mydata()$conc$columns$groups))
+          manual_slopes <- new_conc_data %>%
+            filter(is.included.hl + is.excluded.hl > 0) %>%
+            rename(Inclusion = is.included.hl, Exclusion = is.excluded.hl) %>%
+            pivot_longer(cols = c("Inclusion", "Exclusion"), names_to = "Type", values_to = "is.selected") %>%
+            filter(is.selected) %>%
+            group_by(conc_groups, Type) %>%
+            mutate(Range = paste0(IX, collapse = ",")) %>%
+            select(any_of(c(conc_groups, "Type", "Range", "REASON"))) %>%
+            unique()
         }
       }
       ########################################################################################
@@ -270,7 +291,8 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
   })
 }
 
-
+# Create a function to update the selectInputs based on the matches between settings and data
+# If there are mismatches send a notification to the user
 .update_select_with_setts <- function(var_setts_col, var_data_col, setts_df,
                                       data_df, session, inputid) {
 
