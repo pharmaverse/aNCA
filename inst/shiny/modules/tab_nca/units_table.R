@@ -1,3 +1,11 @@
+#' TODO: add proper documentation
+#'
+#' @details
+#' Module requires session-wide object for storing units table: `session$userData$units_table`.
+#' All copies of the module will modify this single source of truth. This is so that the units
+#' selection is respected across the whole application, regardless of where the user decides
+#' to set the units.
+#'
 units_table_ui <- function(id) {
   ns <- NS(id)
   # Button to open a module message with the parameter units table #
@@ -11,7 +19,7 @@ units_table_ui <- function(id) {
   )
 }
 
-units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
+units_table_server <- function(id, mydata) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -54,6 +62,8 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
     modal_units_table <- reactiveVal(NULL)
     observeEvent(mydata(), {
       req(mydata()$units)
+      if (!is.null(modal_units_table())) return()
+
       analyte_column <- mydata()$conc$columns$groups$group_analyte
 
       modal_units_table_data <- mydata()$units %>%
@@ -181,7 +191,6 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
 
     # When save button is pressed substitute the original units table based on the modal one
     observeEvent(input$save_units_table, {
-
       # Make sure there are no missing entries (no NA in conversion factor)
       if (any(is.na(modal_units_table()$`Conversion Factor`))) {
 
@@ -202,41 +211,31 @@ units_table_server <- function(id, mydata, res_nca = reactiveVal(NULL)) {
         return()
       }
 
-      # Tranforms the modal units table back to the original one
-      analyte_column <- mydata()$conc$columns$groups$group_analyte
-      modal_units_table <- modal_units_table() %>%
+      log_trace("Applying custom units specification.")
+      modal_units_table() %>%
         rename(ANALYTE = `Analytes`,
                PPTESTCD = `Parameter`,
                PPORRESU = `Default unit`,
                PPSTRESU = `Custom unit`,
-               conversion_factor = `Conversion Factor`)
+               conversion_factor = `Conversion Factor`) %>%
+        session$userData$units_table()
 
       # Close the modal message window for the user
       removeModal()
-
-      # Updates units table of mydata and res_nca according to the user's changes
-      mydata <- mydata()
-      mydata$units <- modal_units_table
-      mydata(mydata)
-
-      # If there are already results produced, make sure they are also adapted
-      if (!is.null(res_nca())) {
-        res_nca <- res_nca()
-        res_nca$data$units <- modal_units_table
-        res_nca$result <- res_nca$result %>%
-          select(-PPSTRESU, -PPSTRES) %>%
-          left_join(
-            modal_units_table,
-            by = intersect(names(.), names(modal_units_table))
-          ) %>%
-          mutate(PPSTRES = PPORRES * conversion_factor) %>%
-          select(-conversion_factor)
-        res_nca(res_nca)
-
-      }
-
     })
 
+    #' Update local `modal_units_table()` is the global value changes.
+    observeEvent(session$userData$units_table(), {
+      session$userData$units_table() %>%
+        rename(
+          `Analytes` = ANALYTE,
+          `Parameter` = PPTESTCD,
+          `Default unit` = PPORRESU,
+          `Custom unit` = PPSTRESU,
+          `Conversion Factor` = conversion_factor
+        ) %>%
+        modal_units_table()
+    })
   })
 }
 

@@ -177,7 +177,7 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, adnca_data, on_submit) {
+data_mapping_server <- function(id, adnca_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -201,11 +201,6 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
       req(adnca_data())
       log_info("Processing data mapping...")
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
-
-      # Enable other tabs
-      purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
-        shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
-      })
 
       dataset <- adnca_data()
 
@@ -274,9 +269,6 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
 
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
-
-      # Execute the callback function to change the tab
-      on_submit()
 
       dataset
     }) |>
