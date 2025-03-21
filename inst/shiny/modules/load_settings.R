@@ -16,13 +16,13 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
     ns <- session$ns
 
     observeEvent(input$settings_upload, {
-      
+
       # Identify the file submited
       file_path <- input$settings_upload$datapath
-      
+
       if (tools::file_ext(file_path) == "rds") {
         # Allow loading of big rds files into R
-        options(shiny.maxRequestSize = 10*1024^2) # 10 Mb (generally ~5Mb)
+        options(shiny.maxRequestSize = 10 * 1024 ^ 2) # 10 Mb (generally ~5Mb)
         setts <- readRDS(input$settings_upload$datapath)
 
       } else if (tools::file_ext(file_path) == "xlsx") {
@@ -149,7 +149,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
                       ~coalesce(., get(str_replace(cur_column(), ".setts", ".data"))))) %>%
         select(-ends_with(".data")) %>%
         rename_with(~str_remove(., ".setts"))
-      
+
       # Check if any start imputation is defined in the settings intervals
       if (any(grepl("start.*", setts$intervals$impute))) {
         updateCheckboxInput(
@@ -268,7 +268,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
 
         # If there were changed rows update the concentration data & exclusions table
         if (nrow(changed_rows) > 0) {
-          
+
           # Update the main object value
           data$conc$data <- new_conc_data
           mydata(data)
@@ -278,7 +278,9 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
           manual_slopes <- new_conc_data %>%
             filter(is.included.hl + is.excluded.hl > 0) %>%
             rename(Inclusion = is.included.hl, Exclusion = is.excluded.hl) %>%
-            pivot_longer(cols = c("Inclusion", "Exclusion"), names_to = "Type", values_to = "is.selected") %>%
+            pivot_longer(cols = c("Inclusion", "Exclusion"),
+                         names_to = "Type",
+                         values_to = "is.selected") %>%
             filter(is.selected) %>%
             group_by(conc_groups, Type) %>%
             mutate(Range = paste0(IX, collapse = ",")) %>%
