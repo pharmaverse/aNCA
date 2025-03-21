@@ -24,7 +24,7 @@ nca_setup_ui <- function(id) {
           column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                                 choices = NULL))
         ),
-        
+
         # Method, NCA parameters, and units table
         fluidRow(
           column(4, selectInput(
@@ -86,7 +86,7 @@ nca_setup_ui <- function(id) {
           sep = "<br>"
         )))
       ),
-      accordion_panel( 
+      accordion_panel(
         title = "Partial AUCs",
         reactableOutput(ns("auc_table")),
         actionButton(ns("addRow"), "Add Row")
@@ -184,16 +184,15 @@ nca_setup_ui <- function(id) {
             )
           )
         ),
-      ), 
-      id = "acc",  
-      open = "General Settings"  
+      ),
+      id = "acc",
+      open = "General Settings"
     ),
-    
+
     h4("View of NCA settings"),
     reactableOutput(ns("nca_intervals"))
   )
 }
-
 
 #' NCA Settings Server Module
 #'
@@ -204,7 +203,7 @@ nca_setup_ui <- function(id) {
 #' - id The module's ID.
 #' - data A reactive expression containing the read and mapped data from the app.
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
-#' - mydata A reactive expression of the PKNCAdata object, which contains data and NCA specications.
+#' - mydata A reactive expression of the PKNCAdata object, containing data and NCA specifications.
 #'
 nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / needs further modularization
 
@@ -403,22 +402,22 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
     # Reactive value to store the AUC data table
     auc_data <- reactiveVal(
-      tibble(Min = rep(NA_real_, 2), Max = rep(NA_real_, 2))
+      tibble(min = rep(NA_real_, 2), max = rep(NA_real_, 2))
     )
-    
+
     # Render the editable reactable table
     refresh_reactable <- reactiveVal(1)
     output$auc_table <- renderReactable({
       reactable(
         auc_data(),
         columns = list(
-          Min = colDef(
+          min = colDef(
             cell = text_extra(
               id = ns("edit_Min")
             ),
             align = "center"
           ),
-          Max = colDef(
+          max = colDef(
             cell = text_extra(
               id = ns("edit_Max")
             ),
@@ -428,13 +427,13 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       )
     }) %>%
       shiny::bindEvent(refresh_reactable())
-    
+
     # Add a blank row on button click
     observeEvent(input$addRow, {
       df <- auc_data()
       auc_data(bind_rows(df, tibble(Min = NA_real_, Max = NA_real_)))
     })
-    
+
     #' For each of the columns in partial aucs data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
@@ -511,14 +510,14 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
       # Collect non-NA min/max values from reactable
       auc_ranges <- auc_data() %>%
-        filter(!is.na(Min), !is.na(Max), Min >= 0, Max > Min)
-      
+        filter(!is.na(min), !is.na(max), min >= 0, max > min)
+
       # Make a list of intervals from valid AUC ranges
-      intervals_list <- pmap(auc_ranges, function(Min, Max) {
+      intervals_list <- pmap(auc_ranges, function(min, max) {
         intervals %>%
           mutate(
-            start = start + Min,
-            end = start + (Max - Min),
+            start = start + min,
+            end = start + (max - min),
             across(where(is.logical), ~FALSE),
             aucint.last = TRUE,
             type_interval = "manual"
@@ -596,7 +595,8 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
         resizable = TRUE,
         showPageSizeOptions = TRUE,
         striped = TRUE,
-        bordered = TRUE
+        bordered = TRUE,
+        height = "98vh"
       )
     })
 
