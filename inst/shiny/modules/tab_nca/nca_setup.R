@@ -431,7 +431,10 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     # Add a blank row on button click
     observeEvent(input$addRow, {
       df <- auc_data()
-      auc_data(bind_rows(df, tibble(Min = NA_real_, Max = NA_real_)))
+      browser()
+      auc_data(bind_rows(df, tibble(max = NA_real_, min = NA_real_)))
+      reset_reactable_memory()
+      refresh_reactable(refresh_reactable() + 1)
     })
 
     #' For each of the columns in partial aucs data frame, attach an event that will read
