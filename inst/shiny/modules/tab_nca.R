@@ -1,22 +1,41 @@
-# NCA TAB -----
-# This module contains nested modules and all the ui and server code for the NCA tab
-# NCA UI function ----
+#' Module handling NCA analysis pipeline.
+#'
+#' @details
+#' Handles raw data processing into `PKNCA` objects, runs the NCA analysis and displays
+#' results in various formats.
+#' 1. `pknca_data` object is created with the help of `PKNCA` package.
+#' 2. With `nca_setup.R` and `slope_selector.R` modules, starting settings are gathered and applied
+#'    to the `pknca_data`, creating `processed_data` object.
+#' 3. `processed_data` is then used to calculate `res_nca` (the actual results of the analysis),
+#'    when the user is happy with the settings.
+#' 4. Results and other data object are passed to various sub-modules for further post-processing
+#'    and display, including modules like `nca_results.R`, `parameter_datasets.R`,
+#'    `descriptive_statistics.R` and `additional_analysis.R`
+#'
+#'
+#' @param id           ID of the module.
+#' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
+#' @param grouping_vars A character vector with grouping variables for the analysis.
+#'
+#' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
     actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    downloadButton(ns("settings_save"), "Save Project Settings"),
-
+    download_settings_ui(ns("download_settings")),
     navset_tab(
       id = ns("ncapanel"),
+      #' Pre-nca setup
       nav_panel(
-        "Setup", fluid = TRUE,
+        "Setup",
+        fluid = TRUE,
         navset_pill_list(
           nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
           nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
         )
       ),
+      #' Results
       nav_panel(
         "Results", fluid = TRUE,
         navset_pill_list(
@@ -24,168 +43,107 @@ tab_nca_ui <- function(id) {
           nav_panel(
             "Slopes Information",
             navset_pill(
-              nav_panel(
-                "Slopes Results",
-                DTOutput(ns("preslopesettings"))
-              ),
-              nav_panel(
-                "Manual Adjustments",
-                tableOutput(ns("manual_slopes2"))
-              ),
+              nav_panel("Slopes Results", DTOutput(ns("slope_results"))),
+              nav_panel("Manual Adjustments", tableOutput(ns("manual_slopes"))),
             )
           ),
-          nav_panel(
-            "Descriptive Statistics",
-            descriptive_statistics_ui(ns("descriptive_stats"))
-          ),
+          nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
           nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
         )
       ),
+      #' Additional analysis
       nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
     )
-
   )
-
 }
 
-# NCA Server Function ----
-# Requires processed data and grouping vars from tab_data module
-tab_nca_server <- function(id, data, grouping_vars) {
+tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Initialize PKNCAdata ----
+    #' Setup session-wide object for storing data units. Units can be edited by the user on
+    #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
+    #' should respect the units, regardless of location.
+    session$userData$units_table <- reactiveVal(NULL)
 
-    mydata <- reactiveVal(NULL)
+    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
+    pknca_data <- reactive({
+      req(adnca_data())
+      log_trace("Creating PKNCA::data object.")
 
-    observeEvent(data(), priority = 2, {
-      req(data())
+      tryCatch({
+        #' Create data object
+        pknca_object <- PKNCA_create_data_object(adnca_data())
+        log_success("PKNCA data object created.")
 
-      # Define column names
-      group_columns <- intersect(colnames(data()), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
-      usubjid_column <- "USUBJID"
-      time_column <- "AFRLT"
-      dosno_column <- "DOSNO"
-      route_column <- "ROUTE"
-      analyte_column <- "ANALYTE"
-      matrix_column <- "PCSPEC"
-      std_route_column <- "std_route"
+        #' Enable related tabs and update the curent view if data is created succesfully.
+        purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
+          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+        })
 
-      # Create concentration data
-      df_conc <- format_pkncaconc_data(
-        ADNCA = data(),
-        group_columns = c(group_columns, usubjid_column, analyte_column),
-        time_column = time_column,
-        route_column = route_column,
-        dosno_column = dosno_column
-      ) %>%
-        arrange(across(all_of(c(usubjid_column, time_column))))
+        pknca_object
+      }, error = function(e) {
+        log_error(e$message)
+        showNotification(e$message, type = "error", duration = NULL)
+        return(NULL)
+      })
+    }) |>
+      bindEvent(adnca_data())
 
-      # Create dosing data
-      df_dose <- format_pkncadose_data(
-        pkncaconc_data = df_conc,
-        group_columns = c(group_columns, usubjid_column),
-        time_column = time_column,
-        dosno_column = dosno_column,
-        since_lastdose_time_column = "ARRLT"
-      )
+    #' NCA Setup module
+    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
+    processed_pknca_data <- nca_setup$processed_pknca_data
+    rules <- nca_setup$rules
 
-      # Set default settings
-      df_conc$is.excluded.hl <- FALSE
-      df_conc$is.included.hl <- FALSE
-      df_conc$REASON <- NA
-      df_conc$exclude_half.life <- FALSE
+    #' Slope rules setup module
+    slope_rules <- slope_selector_server(
+      "slope_selector",
+      processed_pknca_data,
+      res_nca,
+      pk_nca_trigger,
+      reactive(input$settings_upload)
+    )
 
-      # Create PKNCA objects
+    output$manual_slopes <- renderTable(slope_rules$manual_slopes())
 
-      myconc <- PKNCA::PKNCAconc(
-        df_conc,
-        formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
-        exclude_half.life = "exclude_half.life",
-        time.nominal = "NFRLT"
-      )
-
-      mydose <- PKNCA::PKNCAdose(
-        data = df_dose,
-        formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
-        route = std_route_column,
-        time.nominal = "NFRLT",
-        duration = "ADOSEDUR"
-      )
-
-      #create basic intervals so that PKNCAdata can be created
-      #TODO: investigate if this is required
-      intervals <-
-        data.frame(
-          start = 0, end = Inf,
-          cmax = TRUE,
-          tmax = TRUE,
-          auclast = FALSE,
-          aucinf.obs = FALSE
-        )
-
-      mydata <- PKNCA::PKNCAdata(
-        data.conc = myconc,
-        data.dose = mydose,
-        intervals = intervals,
-        units = PKNCA::pknca_units_table(
-          concu = myconc$data$AVALU[1],
-          doseu = myconc$data$DOSEU[1],
-          amountu = myconc$data$AVALU[1],
-          timeu = myconc$data$RRLTU[1]
-        )
-      )
-
-      # Update units
-      unique_analytes <- unique(mydata$conc$data[[mydata$conc$columns$groups$group_analyte]])
-      analyte_column <- mydata$conc$columns$groups$group_analyte
-      mydata$units <- tidyr::crossing(mydata$units,
-                                      !!sym(analyte_column) := unique_analytes)  %>%
-        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
-
-      mydata(mydata)
-    })
-
-    # NCA SETUP MODULE ----
-    rules <- nca_setup_server("nca_settings", data, mydata, res_nca)
-
-    # NCA RESULTS ----
-    res_nca <- reactiveVal(NULL)
+    #' Triggers NCA analysis, creating res_nca reactive
     pk_nca_trigger <- reactiveVal(0)
-
-    observeEvent(input$nca, {
-      pk_nca_trigger(pk_nca_trigger() + 1)
-    })
-
-    observeEvent(pk_nca_trigger(), {
-      req(mydata())
+    observeEvent(input$nca, pk_nca_trigger(pk_nca_trigger() + 1))
+    res_nca <- reactive({
+      req(processed_pknca_data())
 
       withProgress(message = "Calculating NCA...", value = 0, {
+        log_info("Calculating NCA results...")
         tryCatch({
-          myres <- PKNCA::pk.nca(data = mydata(), verbose = FALSE)
+          #' Calculate results
+          res <- processed_pknca_data() %>%
+            filter_slopes(
+              slope_rules$manual_slopes(),
+              slope_rules$profiles_per_patient(),
+              slope_rules$slopes_groups()
+            ) %>%
+            PKNCA_calculate_nca()
 
-          myres$result <- myres$result %>%
-            inner_join(select(mydata()$dose$data, -exclude,
-                              -mydata()$conc$columns$groups$group_analyte)) %>%
-            mutate(start_dose = start - !!sym(myres$data$dose$columns$time),
-                   end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
-            select(names(myres$result), start_dose, end_dose) %>%
+          #' Apply units
+          if (!is.null(session$userData$units_table())) {
+            res$data$units <- session$userData$units_table()
+            res$result <- res$result %>%
+              select(-PPSTRESU, -PPSTRES) %>%
+              left_join(
+                session$userData$units_table(),
+                by = intersect(names(.), names(session$userData$units_table()))
+              ) %>%
+              mutate(PPSTRES = PPORRES * conversion_factor) %>%
+              select(-conversion_factor)
+          }
 
-            # Make empty strings for units that have no metric (unitless, fraction...)
-            mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
-
-            # ToDo: PKNCA package should offer a better solution to this at some point
-            # Prevent that when t0 is used with non-imputed params to show off two result rows
-            # just choose the derived ones (last row always due to interval_helper funs)
-            group_by(across(-c(PPSTRES, PPORRES, exclude))) %>%
-            slice_tail(n = 1) %>%
-            ungroup()
-
-
-          res_nca(myres)
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
+          log_success("NCA results calculated.")
+
+          res
         }, error = function(e) {
+          # TODO: this does not catch errors properly sometimes
           full_error <- e$parent$message
           if (grepl("pk.calc.", x = full_error)) {
             param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
@@ -197,44 +155,11 @@ tab_nca_server <- function(id, data, grouping_vars) {
           showNotification(HTML(modified_error), type = "error", duration = NULL)
         })
       })
-    })
+    }) |>
+      bindEvent(pk_nca_trigger())
 
-    nca_results_server("nca_results", res_nca, rules(), grouping_vars)
-
-    # SLOPE SELECTOR ----
-    # Keep the UI table constantly actively updated
-    observeEvent(input, {
-      req(mydata())
-      dynamic_columns <- c(setdiff(unname(unlist(mydata()$conc$columns$groups)), "DRUG"), "DOSNO")
-      for (input_name in grep(
-        paste0("(", paste(c(dynamic_columns, "TYPE", "RANGE", "REASON"),
-                          collapse = "|"), ")_Ex\\d+$"),
-        names(input), value = TRUE
-      )) {
-        observeEvent(input[[input_name]], {
-          # Get the ID of the exclusion
-          id <- gsub("_(Ex\\d+)$", "", input_name)
-
-          # Update the reactive list of exclusion IDs
-          manual_slopes <- manual_slopes()
-          set_selected_value(
-            manual_slopes[manual_slopes$id == id, ], paste0(input[[input_name]])
-          ) <- manual_slopes[manual_slopes$id == id, ]
-          manual_slopes(manual_slopes)
-
-        })
-      }
-    })
-
-    slope_rules <- slope_selector_server(
-      "slope_selector",
-      mydata,
-      res_nca,
-      pk_nca_trigger,
-      reactive(input$settings_upload)
-    )
-
-    output$preslopesettings <- DT::renderDataTable({
+    #' Show slopes results
+    output$slope_results <- DT::renderDataTable({
       req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
@@ -254,91 +179,18 @@ tab_nca_server <- function(id, data, grouping_vars) {
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
 
-    output$manual_slopes2 <- renderTable({
-      slope_rules()
-    })
+    nca_results_server("nca_results", processed_pknca_data, res_nca, rules(), grouping_vars)
 
-    # TAB: Descriptive Statistics ---------------------------------------------
-    # This tab computes and visualizes output data from the NCA analysis
-
+    #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
-    # NCA SETTINGS ----
-    # TODO: move this section to a new module
-    # Save the project settings
-    output$settings_save <- downloadHandler(
-      filename = function() {
-        paste(mydata()$conc$data$STUDYID[1], "NCA_settings.csv", sep = "_")
-      },
-      content = function(file) {
+    #' Settings download module
+    download_settings_server("download_settings", processed_pknca_data, res_nca)
 
-        # Get the data settings from the NCA results (data run)
-        myconc <- res_nca()$data$conc
+    #' Additional analysis module
+    additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
 
-        # Create a settings file that the user can download/upload
-        #for establishing the same configuration
-        setts_lambda <- myconc$data %>%
-          # Identify the points that the user has manually selected for the half-life calculation
-          mutate(
-            TYPE = case_when(is.excluded.hl ~ "Exclusion", is.included.hl ~ "Selection", TRUE ~ NA)
-          ) %>%
-          filter(is.excluded.hl | is.included.hl)  %>%
-          select(any_of(c(
-            unname(unlist(myconc$columns$groups)),
-            "IX",
-            myconc$columns$time,
-            myconc$columns$concentration,
-            "TYPE",
-            "REASON"
-          )))
-
-        # Make sure that there is at least one row so the settings can be considered
-        if (nrow(setts_lambda) == 0) {
-          setts_lambda <- setts_lambda %>%
-            add_row()
-        }
-
-        # Consider the intervals defined by the user for the AUC calculation
-        input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-        input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-        auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
-        auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
-
-        # Include the rule settings as additional columns
-        setts <- setts_lambda %>%
-          mutate(
-            ANALYTE %in% input$select_analyte,
-            doses_selected = ifelse(
-              !is.null(input$select_dosno),
-              paste0(input$select_dosno, collapse = ","),
-              unique(mydata()$conc$data$DOSNO)
-            ),
-            method = input$method,
-            adj.r.squared_threshold = ifelse(
-              input$rule_adj_r_squared, input$adj.r.squared_threshold, NA
-            ),
-            aucpext.obs_threshold = ifelse(
-              input$rule_aucpext_obs, input$aucpext.obs_threshold, NA
-            ),
-            aucpext.pred_threshold = ifelse(
-              input$rule_aucpext_pred, input$aucpext.pred_threshold, NA
-            ),
-            span.ratio_threshold = ifelse(
-              input$rule_span_ratio, input$span.ratio_threshold, NA
-            ),
-            auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
-            auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
-          )
-
-        write.csv(setts, file, row.names = FALSE)
-      },
-      contentType = "text/csv"
-    )
-
-    # ADDITIONAL ANALYSIS ----
-    additional_analysis_server("non_nca", mydata, grouping_vars)
-
-    # PARAMETER DATASETS ----
+    #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
 
     # return results for use in other modules
