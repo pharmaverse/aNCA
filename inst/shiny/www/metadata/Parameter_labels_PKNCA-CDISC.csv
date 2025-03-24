@@ -80,7 +80,7 @@ kel.obs,KELOS,inverse_time,"Kel (based on AUCinf,obs)","Kel (based on AUCinf,obs
 kel.pred,KELP,inverse_time,"Kel (based on AUCinf,pred)","Kel (based on AUCinf,pred)",Elimination rate (as calculated from the MRT with predicted Clast),pk.calc.kel,F,ADPP
 lambda.z,LAMZ,inverse_time,$\lambda_z$,Lambda z,The elimination rate of the terminal half-life,,T,ADPP
 lambda.z.n.points,LAMZNPT,count,Number of points used for lambda_z,Number of points used for lambda_z,The number of points used for the calculation of half-life,,T,ADPP
-lambda.z.time.first,LAMZLL,time,First time for $\lambda_z$,First time for $\lambda_z$,The first time point used for the calculation of half-life,,T,ADPP
+lambda.z.time.first,LAMZLL,time,First time for $\lambda_z$,First time for lambda_z,The first time point used for the calculation of half-life,,T,ADPP
 mrt.iv.last,MRTIVLT,time,"MRT (for IV dosing, based on AUClast)","MRT (for IV dosing, based on AUClast)",The mean residence time to the last observed concentration above the LOQ correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
 mrt.iv.obs,MRTIVIS,time,"MRT (for IV dosing, based on AUCinf,obs)","MRT (for IV dosing, based on AUCinf,obs)",The mean residence time to infinity using observed Clast correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
 mrt.iv.pred,MRTIVIP,time,"MRT (for IV dosing, based on AUCinf,pred)","MRT (for IV dosing, based on AUCinf,pred)",The mean residence time to infinity using predicted Clast correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
@@ -90,7 +90,7 @@ mrt.md.pred,MRTMDP,time,"MRT (for multiple dosing, based on AUCinf,pred)","MRT (
 mrt.obs,MRTEVIS,time,"MRT (based on AUCinf,obs)","MRT (based on AUCinf,obs)",The mean residence time to infinity using observed Clast,pk.calc.mrt,T,ADPP
 mrt.pred,MRTEVIP,time,"MRT (based on AUCinf,pred)","MRT (based on AUCinf,pred)",The mean residence time to infinity using predicted Clast,pk.calc.mrt,T,ADPP
 ptr,PTROUGHR,fraction,Peak-to-trough ratio,Peak-to-trough ratio,Peak-to-Trough ratio (fraction),pk.calc.ptr,T,ADPP
-r.squared,R2,unitless,$r^2$,$r^2$,The r^2 value of the half-life calculation,,T,ADPP
+r.squared,R2,unitless,$r^2$,r^2,The r^2 value of the half-life calculation,,T,ADPP
 span.ratio,SPANRTIO,fraction,Span ratio,Span ratio,The ratio of the half-life to the duration used for half-life calculation,,T,ADPP
 sparse_auc_df,SPARSEAD,count,Sparse AUClast degrees of freedom,Sparse AUClast degrees of freedom,"For sparse PK sampling, the standard error degrees of freedom of the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",,F,ADPP
 sparse_auc_se,SPARSEAS,auc,Sparse AUClast standard error,Sparse AUClast standard error,"For sparse PK sampling, the standard error of the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",,F,ADPP
