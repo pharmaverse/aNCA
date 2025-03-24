@@ -135,9 +135,3 @@ general_meanplot <- function(data,
   # Convert ggplot to plotly
   p
 }
-
-#' Derived function from labeller label_both: Labels in one line
-#'
-#' @param x Column names as character vector
-#' @return Corresponding labels of the facet plots split by the specified colimns (labels)
-#' @export
