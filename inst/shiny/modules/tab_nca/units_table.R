@@ -62,7 +62,6 @@ units_table_server <- function(id, mydata) {
     modal_units_table <- reactiveVal(NULL)
     observeEvent(mydata(), {
       req(mydata()$units)
-      if (!is.null(modal_units_table())) return()
 
       analyte_column <- mydata()$conc$columns$groups$group_analyte
 
@@ -75,6 +74,8 @@ units_table_server <- function(id, mydata) {
           `Analytes` = analyte_column
         ) %>%
         select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
+
+      if (.validate_current_table(modal_units_table(), modal_units_table_data)) return()
 
       modal_units_table(modal_units_table_data)
     })
@@ -248,4 +249,19 @@ units_table_server <- function(id, mydata) {
     mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
     ungroup() %>%
     unique()
+}
+
+#' Check if units table already exists.
+#' If it does, check if parameters and their default units are the same as pulled
+#' from the data. If they are, there is no need to update the table and we wish to keep
+#' the previously established units.
+#' If the tables differ in content (e.g. when new data is uploaded), then overwrite existing
+#' units table.
+#' @param current Tibble with current units table, or NULL if non-existant.
+#' @param new      Tibble with new units table to replace the current one.
+#' @returns Boolean, TRUE if current table is still valid, FALSE if it is not.
+.validate_current_table <- function(current, new) {
+  !is.null(current) &&
+    all(sort(current$`Parameter`) == sort(new$`Parameter`)) &&
+    all(sort(current$`Default unit`) == sort(new$`Default unit`))
 }

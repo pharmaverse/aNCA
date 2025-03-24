@@ -472,7 +472,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     ), {
       req(mydata())
       req(
-        input$method, input$nca_params, input$should_impute_c0, input$select_analyte,
+        input$method, input$nca_params, input$select_analyte,
         input$select_dosno, input$select_pcspec, auc_data()
       )
 
