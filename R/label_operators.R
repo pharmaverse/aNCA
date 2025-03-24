@@ -73,28 +73,6 @@ as_factor_preserve_label <- function(x) {
   return(x)
 }
 
-#' Check if a Vector Has a Label
-#'
-#' This function checks if a vector has a "label" attribute.
-#'
-#' @param x A vector to be checked for a "label" attribute.
-#'
-#' @return A logical value indicating whether the vector has a "label" attribute.
-#'
-#' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   vec <- c("A", "B", "C")
-#'   attr(vec, "label") <- "Example Label"
-#'   has_label(vec)  # Returns TRUE
-#' }
-#'
-#' @export
-
-has_label <- function(x) {
-  return(!is.null(attr(x, "label")))
-}
-
 #' Set an Empty Label if None Exists
 #'
 #' This function sets an empty "label" attribute for a vector if it does not already have one.
