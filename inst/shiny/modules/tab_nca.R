@@ -23,7 +23,7 @@ tab_nca_ui <- function(id) {
 
   fluidPage(
     actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    nav_panel("Save setts", save_settings_ui(ns("save_settings"))),
+    nav_panel("Save setts", download_settings_ui(ns("download_settings"))),
     navset_tab(
       id = ns("ncapanel"),
       #' Pre-nca setup
@@ -185,7 +185,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     #' Settings download module
-    save_settings_server("save_settings", processed_pknca_data, session)
+    download_settings_server("download_settings", processed_pknca_data, session)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)

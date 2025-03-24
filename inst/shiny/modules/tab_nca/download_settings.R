@@ -1,79 +1,106 @@
 download_settings_ui <- function(id) {
   ns <- NS(id)
-
-  downloadButton(ns("save_settings"), "Save Project Settings")
+  fluidRow(
+    pickerInput(
+      ns("settings_save_fmt"),
+      "Format",
+      choices = c("xlsx", "rds"),
+      width = "30%"
+    ),
+    downloadButton(ns("settings_save"), class = "custom-download-button",
+                   label = "Save Project Settings")
+  )
 }
 
-download_settings_server <- function(id, pknca_data, res_nca) {
+#' Save Settings Server Module
+#'
+#' The module handles the server logic for saving project settings from NCA setup & slope adj.
+#' The file can be downloaded in two formats: RDS or XLSX.
+#'
+#' - id The module's ID.
+#' - mydata A reactive expression containing the project data to be saved.
+#' - parent_session The parent Shiny session.
+#'
+download_settings_server <- function(id, mydata, parent_session) {
   moduleServer(id, function(input, output, session) {
-    #' TODO: this was migrated 1:1, the handler reads some inputs directly, and it should
-    #' not. This is broken currently. Needs deeper refactor.
-    output$save_settings <- downloadHandler(
+    ns <- session$ns
+
+    output$settings_save <- downloadHandler(
       filename = function() {
-        paste(pknca_data()$conc$data$STUDYID[1], "_NCA_settings.csv", sep = "_")
+        fname <- paste0(mydata()$conc$data$STUDYID[1], "_aNCAsetts_", Sys.Date(),
+                        ".", input$settings_save_fmt)
       },
       content = function(file) {
 
-        # Get the data settings from the NCA results (data run)
-        res_conc <- res_nca()$data$conc
+        mydata <- mydata()
+        conc_cols <- c(unname(unlist(mydata$conc$columns)),
+                       "is.included.hl", "is.excluded.hl", "REASON")
+        conc_logical_cols <- sapply(mydata$conc$data[conc_cols], is.logical) |>
+          which() |>
+          names()
 
-        # Create a settings file that the user can download/upload
-        #for establishing the same configuration
-        setts_lambda <- res_conc$data %>%
-          # Identify the points that the user has manually selected for the half-life calculation
-          mutate(
-            TYPE = case_when(is.excluded.hl ~ "Exclusion", is.included.hl ~ "Selection", TRUE ~ NA)
-          ) %>%
-          filter(is.excluded.hl | is.included.hl)  %>%
-          select(any_of(c(
-            unname(unlist(res_conc$columns$groups)),
-            "IX",
-            res_conc$columns$time,
-            res_conc$columns$concentration,
-            "TYPE",
-            "REASON"
-          )))
+        # Save only from concentration records the ones pointing the customizations
+        mydata$conc$data <- mydata$conc$data %>%
+          filter(is.excluded.hl + is.included.hl > 0) %>%
+          select(any_of(c(conc_cols, "DOSNO")))
 
-        # Make sure that there is at least one row so the settings can be considered
-        if (nrow(setts_lambda) == 0) {
-          setts_lambda <- setts_lambda %>%
-            add_row()
+        mydata$dose$data <- mydata$dose$data %>%
+          select(any_of(c(unname(unlist(mydata$dose$columns)), "DOSNO")))
+
+        # Save into mydata the information associated to the flag rules
+        rule_inputs_logical <- names(parent_session$input) %>%
+          keep(~startsWith(.x, "nca_setup-rule")) %>%
+          sapply(., \(x) parent_session$input[[x]])
+
+        threshold_inputs <- names(parent_session$input) %>%
+          keep(~startsWith(.x, "nca_setup-") & endsWith(.x, "_threshold")) %>%
+          sapply(., \(x) parent_session$input[[x]])
+
+        mydata$flag_rules <- ifelse(rule_inputs_logical, threshold_inputs, NA)
+        names(mydata$flag_rules) <- gsub("nca_setup-", "", names(mydata$flag_rules))
+        mydata$flag_rules <- stack(mydata$flag_rules)
+
+        # Save the file in the format requested by the user
+        if (input$settings_save_fmt == "rds") {
+          saveRDS(mydata, file)
         }
 
-        # Consider the intervals defined by the user for the AUC calculation
-        input_names_aucmin <- grep("^timeInputMin_", names(input), value = TRUE)
-        input_names_aucmax <- grep("^timeInputMax_", names(input), value = TRUE)
-        auc_mins <- unlist(lapply(input_names_aucmin, function(name) input[[name]]))
-        auc_maxs <- unlist(lapply(input_names_aucmax, function(name) input[[name]]))
+        if (input$settings_save_fmt == "xlsx") {
+          # Excel files have some limitations  that need to be accounted for to prevent issues
+          mydata$options <- as.data.frame(
+            c(as.list(mydata$options$single.dose.aucs),
+              mydata$options[which(names(mydata$options) != "single.dose.aucs")])
+          )
+          mydata$intervals <- replace(mydata$intervals, mydata$intervals == Inf, 1e99)
+          mydata$options <- replace(mydata$options, mydata$options == Inf, 1e99)
 
-        # Include the rule settings as additional columns
-        setts <- setts_lambda %>%
-          mutate(
-            ANALYTE %in% input$select_analyte,
-            doses_selected = ifelse(
-              !is.null(input$select_dosno),
-              paste0(input$select_dosno, collapse = ","),
-              unique(pknca_data()$conc$data$DOSNO)
-            ),
-            method = input$method,
-            adj.r.squared_threshold = ifelse(
-              input$rule_adj_r_squared, input$adj.r.squared_threshold, NA
-            ),
-            aucpext.obs_threshold = ifelse(
-              input$rule_aucpext_obs, input$aucpext.obs_threshold, NA
-            ),
-            aucpext.pred_threshold = ifelse(
-              input$rule_aucpext_pred, input$aucpext.pred_threshold, NA
-            ),
-            span.ratio_threshold = ifelse(
-              input$rule_span_ratio, input$span.ratio_threshold, NA
-            ),
-            auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
-            auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
-          ) %>%
-          write.csv(file, row.names = FALSE)
-      },
-      contentType = "text/csv"
+          # Make a standardized list with the PKNCA list elements
+          setts_list <- list(
+            intervals = mydata$intervals,
+            units = mydata$units,
+            conc_data = mydata$conc$data,
+            conc_columns = .perfect_stack(mydata$conc$columns),
+            dose_data = mydata$dose$data,
+            dose_columns = .perfect_stack(mydata$dose$columns),
+            flag_rules = mydata$flag_rules,
+            options = mydata$options
+          )
+
+          # Save the PKNCA list object elements in different sheets
+          wb <- openxlsx::createWorkbook(file)
+          for (i in seq_len(length(setts_list))) {
+            openxlsx::addWorksheet(wb = wb, sheetName = names(setts_list[i]))
+            openxlsx::writeData(wb = wb, sheet = names(setts_list[i]), x = setts_list[[i]])
+          }
+          openxlsx::saveWorkbook(wb, file)
+        }
+      }
     )
   })
+}
+
+# Create a function to pack list objects in a standard data frame format
+.perfect_stack <- function(columns_list) {
+  stack(unlist(columns_list)) %>%
+    mutate(ind = sub("[0-9]+$", "", ind))
 }
