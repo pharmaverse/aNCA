@@ -79,9 +79,9 @@ save_settings_server <- function(id, mydata, parent_session) {
             intervals = mydata$intervals,
             units = mydata$units,
             conc_data = mydata$conc$data,
-            conc_columns = perfect_stack(mydata$conc$columns),
+            conc_columns = .perfect_stack(mydata$conc$columns),
             dose_data = mydata$dose$data,
-            dose_columns = perfect_stack(mydata$dose$columns),
+            dose_columns = .perfect_stack(mydata$dose$columns),
             flag_rules = mydata$flag_rules,
             options = mydata$options
           )
