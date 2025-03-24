@@ -38,7 +38,7 @@ nca_setup_ui <- function(id) {
         label = "NCA parameters to calculate:",
         choices = {
           params <- sort(setdiff(names(PKNCA::get.interval.cols()),
-                                 c("start", "end")))
+                                 c("start", "end", "f")))
           group_params <- case_when(
             grepl("((auc|aum))", params) ~ "Exposure",
             grepl("((lambda|half|thalf|cl\\.|clr))", params) ~ "Clearance",
@@ -65,6 +65,16 @@ nca_setup_ui <- function(id) {
                      "clast", "tlast")
       )),
       column(4, units_table_ui(ns("units_table")))
+    ),
+    #pickerinput only enabled when IV and EX data present
+    shinyjs::hidden(
+      pickerInput(
+        ns("bioavailability"),
+        "Calculate Bioavailability:",
+        choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+        multiple = TRUE,
+        selected = NULL
+      )
     ),
     br(),
 
@@ -515,6 +525,19 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
       # Load mydata reactive and modify it accordingly to user's request
       processed_pknca_data <- mydata()
+      
+      # Add picker input if bioavailability calculations are possible
+      if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+        shinyjs::show("bioavailability")
+        
+        updatePickerInput(
+          session,
+          inputId = "bioavailability",
+          "Calculate Bioavailability:",
+          choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+          selected = "f_aucinf.obs"
+        )
+      }
 
       analyte_column <- processed_pknca_data$conc$columns$groups$group_analyte
       unique_analytes <- unique(processed_pknca_data$conc$data[[analyte_column]])
@@ -633,7 +656,8 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
         rule_span_ratio = input$rule_span_ratio,
         span.ratio_threshold = input$span.ratio_threshold
-      ))
+      )),
+      bioavailability = reactive(input$bioavailability)
     )
   })
 }
