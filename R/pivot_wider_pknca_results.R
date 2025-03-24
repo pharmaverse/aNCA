@@ -139,14 +139,15 @@ pivot_wider_pknca_results <- function(myres) {
 .add_label_attribute <- function(df, myres) {
   mapping_vr <- myres$result %>%
     mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
-           PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "label"))) %>%
+           PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
+                                                            mapping_col = "PKNCA",
+                                                            target_col = "label"))) %>%
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)
 
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])
-  
 
   df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
     attr(col, "label") <- bw
