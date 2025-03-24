@@ -347,8 +347,10 @@ slope_selector_server <- function(
     })
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
-    return(reactive({
-      manual_slopes()
-    }))
+    list(
+      manual_slopes = manual_slopes,
+      profiles_per_patient = profiles_per_patient,
+      slopes_groups = slopes_groups
+    )
   })
 }
