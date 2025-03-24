@@ -431,7 +431,6 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     # Add a blank row on button click
     observeEvent(input$addRow, {
       df <- auc_data()
-      browser()
       auc_data(bind_rows(df, tibble(max = NA_real_, min = NA_real_)))
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
