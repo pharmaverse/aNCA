@@ -78,14 +78,16 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
     observeEvent(final_results(), {
       req(final_results())
 
-      param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
+      param_names <- gsub("\\[.*\\]$", "", names(final_results()))
+      all_params <- setdiff(names(get.interval.cols()), c("start", "end"))
+      param_cols <- unname(var_labels(final_results()))[param_names %in% all_params]
 
       updatePickerInput(
         session = session,
         inputId = "params",
         label = "Select Parameters :",
-        choices = sort(param_cols),
-        selected = sort(param_cols)
+        choices = c(param_cols, "Exclude", "flagged"),
+        selected =  c(param_cols, "Exclude", "flagged")
       )
     })
 
@@ -103,7 +105,7 @@ nca_results_server <- function(id, res_nca, rules, grouping_vars) {
         c("Exclude", "impute", "flagged")
 
       final_results <- final_results() %>%
-        select(any_of(c(group_cols, sort(params_sel_cols))))
+        select(any_of(c(group_cols, params_sel_cols)))
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)
