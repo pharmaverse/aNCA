@@ -171,6 +171,9 @@ tab_nca_server <- function(id, data, grouping_vars) {
                    end_dose = end - !!sym(myres$data$dose$columns$time)) %>%
             select(names(myres$result), start_dose, end_dose) %>%
 
+            # Make empty strings for units that have no metric (unitless, fraction...)
+            mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
+
             # ToDo: PKNCA package should offer a better solution to this at some point
             # Prevent that when t0 is used with non-imputed params to show off two result rows
             # just choose the derived ones (last row always due to interval_helper funs)
