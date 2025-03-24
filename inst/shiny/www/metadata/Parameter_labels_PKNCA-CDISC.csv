@@ -1,462 +1,462 @@
-PKNCA,CDISC,unit_type,pretty_name,description,FUN,is_cdisc_sure,Dataset
-adj.r.squared,R2ADJ,unitless,$r^2_{adj}$,The adjusted r^2 value of the half-life calculation,,T,ADPP
-ae,RCAMINT,amount,Amount excreted,The amount excreted (typically into urine or feces),pk.calc.ae,T,ADPP
-aucabove.predose.all,AUCABVPA,auc,"AUC,above","The area under the concentration time the beginning of the interval to the last concentration above the limit of quantification plus the triangle from that last concentration to 0 at the first concentration below the limit of quantification, with a concentration subtracted from all concentrations and values below zero after subtraction set to zero",pk.calc.aucabove,F,ADPP
-aucabove.trough.all,AUCABVTA,auc,"AUC,above","The area under the concentration time the beginning of the interval to the last concentration above the limit of quantification plus the triangle from that last concentration to 0 at the first concentration below the limit of quantification, with a concentration subtracted from all concentrations and values below zero after subtraction set to zero",pk.calc.aucabove,F,ADPP
-aucall,AUCALL,auc,AUCall,The area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification plus the triangle from that last concentration to 0 at the first concentration below the limit of quantification,pk.calc.auc.all,T,ADPP
-aucall.dn,AUCALLD,auc_dosenorm,AUCall (dose-normalized),Dose normalized aucall,pk.calc.dn,T,ADPP
-aucinf.obs,AUCIFO,auc,"AUCinf,obs",The area under the concentration time curve from the beginning of the interval to infinity with extrapolation to infinity from the observed Clast,pk.calc.auc.inf.obs,T,ADPP
-aucinf.obs.dn,AUCIFOD,auc_dosenorm,"AUCinf,obs (dose-normalized)",Dose normalized aucinf.obs,pk.calc.dn,T,ADPP
-aucinf.pred,AUCIFP,auc,"AUCinf,pred",The area under the concentration time curve from the beginning of the interval to infinity with extrapolation to infinity from the predicted Clast,pk.calc.auc.inf.pred,T,ADPP
-aucinf.pred.dn,AUCIFPD,auc_dosenorm,"AUCinf,pred (dose-normalized)",Dose normalized aucinf.pred,pk.calc.dn,T,ADPP
-aucint.all,AUCINTA,auc,AUCint (based on AUCall extrapolation),The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall),pk.calc.aucint.all,F,ADPP
-aucint.all.dose,AUCINTAD,auc,"AUCint (based on AUCall extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.all,F,ADPP
-aucint.inf.obs,AUCINTIS,auc,"AUCint (based on AUCinf,obs extrapolation)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast),pk.calc.aucint.inf.obs,F,ADPP
-aucint.inf.obs.dose,AUCINTID,auc,"AUCint (based on AUCinf,obs extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.inf.obs,F,ADPP
-aucint.inf.pred,AUCINTIP,auc,"AUCint (based on AUCinf,pred extrapolation)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall),pk.calc.aucint.inf.pred,F,ADPP
-aucint.inf.pred.dose,AUCINTPD,auc,"AUCint (based on AUCinf,pred extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.inf.pred,F,ADPP
-aucint.last,AUCINT,auc,AUCint (based on AUClast extrapolation),The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast),pk.calc.aucint.last,T,ADPP
-aucint.last.dose,AUCINTD,auc,"AUCint (based on AUClast extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.last,T,ADPP
-aucivall,AUCIVA,auc,AUCall (IV dosing),The AUCall calculated with back-extrapolation for intravenous dosing using extrapolated C0,pk.calc.auciv,F,ADPP
-aucivinf.obs,AUCIVIS,auc,"AUCinf,obs (IV dosing)","The AUCinf,obs calculated with back-extrapolation for intravenous dosing using extrapolated C0",pk.calc.auciv,F,ADPP
-aucivinf.pred,AUCIVIP,auc,"AUCinf,pred (IV dosing)",The calculated with back-extrapolation for intravenous dosing using extrapolated C0,pk.calc.auciv,F,ADPP
-aucivint.all,AUCIVINA,auc,"AUCint,all (IV dosing)","The AUCint,all calculated with back-extrapolation for intravenous dosing using extrapolated C0",pk.calc.auciv,F,ADPP
-aucivint.last,AUCIVILT,auc,"AUCint,last (IV dosing)","The AUCint,last calculated with back-extrapolation for intravenous dosing using extrapolated C0",pk.calc.auciv,F,ADPP
-aucivlast,AUCIVLST,auc,AUClast (IV dosing),The AUClast calculated with back-extrapolation for intravenous dosing using extrapolated C0,pk.calc.auciv,F,ADPP
-aucivpbextall,AUCIVPEA,%,AUCbext (based on AUCall),The back-extrapolation percent for intravenous dosing based on AUCall,pk.calc.auciv_pbext,F,ADPP
-aucivpbextinf.obs,AUCIVPEI,%,"AUCbext (based on AUCinf,obs)","The back-extrapolation percent for intravenous dosing based on AUCinf,obs",pk.calc.auciv_pbext,F,ADPP
-aucivpbextinf.pred,AUCIVPEP,%,"AUCbext (based on AUCinf,pred)","The back-extrapolation percent for intravenous dosing based on AUCinf,pred",pk.calc.auciv_pbext,F,ADPP
-aucivpbextint.all,AUCIVPIA,%,"AUCbext (based on AUCint,all)","The back-extrapolation percent for intravenous dosing based on AUCint,all",pk.calc.auciv_pbext,F,ADPP
-aucivpbextint.last,AUCIVPIL,%,"AUCbext (based on AUCint,last)","The back-extrapolation percent for intravenous dosing based on AUCint,last",pk.calc.auciv_pbext,F,ADPP
-aucivpbextlast,AUCIVPLT,%,AUCbext (based on AUClast),The back-extrapolation percent for intravenous dosing based on AUClast,pk.calc.auciv_pbext,F,ADPP
-auclast,AUCLST,auc,AUClast,The area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification,pk.calc.auc.last,T,ADPP
-auclast.dn,AUCLSTD,auc_dosenorm,AUClast (dose-normalized),Dose normalized auclast,pk.calc.dn,T,ADPP
-aucpext.obs,AUCPEO,%,"AUCpext (based on AUCinf,obs)",Percent of the AUCinf that is extrapolated after Tlast calculated from the observed Clast,pk.calc.aucpext,T,ADPP
-aucpext.pred,AUCPEP,%,"AUCpext (based on AUCinf,pred)",Percent of the AUCinf that is extrapolated after Tlast calculated from the predicted Clast,pk.calc.aucpext,T,ADPP
-aumcall,AUMCALL,aumc,"AUMC,all",The area under the concentration time moment curve from the beginning of the interval to the last concentration above the limit of quantification plus the moment of the triangle from that last concentration to 0 at the first concentration below the limit of quantification,pk.calc.aumc.all,F,ADPP
-aumcall.dn,AUMCALLD,aumc_dosenorm,"AUMC,all (dose-normalized)",Dose normalized aumcall,pk.calc.dn,F,ADPP
-aumcinf.obs,AUMCIFO,aumc,"AUMC,inf,obs",The area under the concentration time moment curve from the beginning of the interval to infinity with extrapolation to infinity from the observed Clast,pk.calc.aumc.inf.obs,T,ADPP
-aumcinf.obs.dn,AUMCIFOD,aumc_dosenorm,"AUMC,inf,obs (dose-normalized)",Dose normalized aumcinf.obs,pk.calc.dn,T,ADPP
-aumcinf.pred,AUMCIFP,aumc,"AUMC,inf,pred",The area under the concentration time moment curve from the beginning of the interval to infinity with extrapolation to infinity from the predicted Clast,pk.calc.aumc.inf.pred,T,ADPP
-aumcinf.pred.dn,AUMCIFPD,aumc_dosenorm,"AUMC,inf,pred (dose-normalized)",Dose normalized aumcinf.pred,pk.calc.dn,T,ADPP
-aumclast,AUMCLST,aumc,"AUMC,last",The area under the concentration time moment curve from the beginning of the interval to the last concentration above the limit of quantification,pk.calc.aumc.last,T,ADPP
-aumclast.dn,AUMCLSTD,aumc_dosenorm,"AUMC,last (dose-normalized)",Dose normalized aumclast,pk.calc.dn,T,ADPP
-c0,C0,conc,C0,Initial concentration after an IV bolus,pk.calc.c0,T,ADPP
-cav,CAVG,conc,Cav,The average concentration during an interval (calculated with AUClast),pk.calc.cav,T,ADPP
-cav.dn,CAVGD,conc_dosenorm,Cav (dose-normalized),Dose normalized cav,pk.calc.dn,T,ADPP
-cav.int.all,CAVGINA,conc,Cav,The average concentration during an interval (calculated with AUCint.all),pk.calc.cav,F,ADPP
-cav.int.inf.obs,CAVGINO,conc,Cav,The average concentration during an interval (calculated with AUCint.inf.obs),pk.calc.cav,F,ADPP
-cav.int.inf.pred,CAVGINP,conc,Cav,The average concentration during an interval (calculated with AUCint.inf.pred),pk.calc.cav,F,ADPP
-cav.int.last,CAVGINT,conc,Cav,The average concentration during an interval (calculated with AUCint.last),pk.calc.cav,T,ADPP
-ceoi,CEOI,conc,Ceoi,Concentration at the end of infusion,pk.calc.ceoi,F,ADPP
-cl.all,CLALL,clearance,CL (based on AUCall),Clearance or observed oral clearance calculated with AUCall,pk.calc.cl,F,ADPP
-cl.last,CLLST,clearance,CL (based on AUClast),Clearance or observed oral clearance calculated to Clast,pk.calc.cl,F,ADPP
-cl.obs,CLOS,clearance,"CL (based on AUCinf,obs)",Clearance or observed oral clearance calculated with observed Clast,pk.calc.cl,T,ADPP
-cl.pred,CLP,clearance,"CL (based on AUCinf,pred)",Clearance or observed oral clearance calculated with predicted Clast,pk.calc.cl,T,ADPP
-clast.obs,CLST,conc,Clast,The last concentration observed above the limit of quantification,pk.calc.clast.obs,T,ADPP
-clast.obs.dn,CLSTD,conc_dosenorm,Clast (dose-normalized),Dose normalized clast.obs,pk.calc.dn,T,ADPP
-clast.pred,CLSTP,conc,"Clast,pred",The concentration at Tlast as predicted by the half-life,,F,ADPP
-clast.pred.dn,CLSTPD,conc_dosenorm,"Clast,pred (dose-normalized)",Dose normalized clast.pred,pk.calc.dn,F,ADPP
-clr.last,RENALCL,renal_clearance,Renal clearance (from AUClast),The renal clearance calculated using AUClast,pk.calc.clr,T,ADPP
-clr.obs,RENALCLO,renal_clearance,"Renal clearance (from AUCinf,obs)","The renal clearance calculated using AUCinf,obs",pk.calc.clr,F,ADPP
-clr.pred,RENALCLP,renal_clearance,"Renal clearance (from AUCinf,pred)","The renal clearance calculated using AUCinf,pred",pk.calc.clr,F,ADPP
-cmax,CMAX,conc,Cmax,Maximum observed concentration,pk.calc.cmax,T,ADPP
-cmax.dn,CMAXD,conc_dosenorm,Cmax (dose-normalized),Dose normalized cmax,pk.calc.dn,T,ADPP
-cmin,CMIN,conc,Cmin,Minimum observed concentration,pk.calc.cmin,T,ADPP
-cmin.dn,CMIND,conc_dosenorm,Cmin (dose-normalized),Dose normalized cmin,pk.calc.dn,T,ADPP
-count_conc,CNTCONC,count,Concentration count,Number of non-missing concentrations for a subject,pk.calc.count_conc,F,ADPP
-cstart,CSTART,conc,Cstart,The predose concentration,pk.calc.cstart,F,ADPP
-ctrough,CTROUGH,conc,Ctrough,The trough (end of interval) concentration,pk.calc.ctrough,T,ADPP
-ctrough.dn,CTROUGHD,conc_dosenorm,Ctrough (dose-normalized),Dose normalized ctrough,pk.calc.dn,T,ADPP
-deg.fluc,DEGFLUC,%,Degree of fluctuation,Degree of fluctuation,pk.calc.deg.fluc,F,ADPP
-f,FREL_FAB,fraction,Bioavailability,Bioavailability or relative bioavailability,pk.calc.f,T,ADPP
-fe,FE,fraction,Fraction excreted,The fraction of the dose excreted,pk.calc.fe,T,ADPP
-half.life,LAMZHL,time,Half-life,The (terminal) half-life,pk.calc.half.life,T,ADPP
-kel.iv.last,KELIVLT,inverse_time,"Kel (for IV dosing, based on AUClast)",Elimination rate (as calculated from the intravenous MRTlast),pk.calc.kel,F,ADPP
-kel.iv.obs,KELIVOS,inverse_time,"Kel (for IV dosing, based on AUCinf,obs)",Elimination rate (as calculated from the intravenous MRTobs),pk.calc.kel,F,ADPP
-kel.iv.pred,KELIVP,inverse_time,"Kel (for IV dosing, based on AUCinf,pred)",Elimination rate (as calculated from the intravenous MRTpred),pk.calc.kel,F,ADPP
-kel.last,KELLST,inverse_time,Kel (based on AUClast),Elimination rate (as calculated from the MRT using AUClast),pk.calc.kel,F,ADPP
-kel.obs,KELOS,inverse_time,"Kel (based on AUCinf,obs)",Elimination rate (as calculated from the MRT with observed Clast),pk.calc.kel,F,ADPP
-kel.pred,KELP,inverse_time,"Kel (based on AUCinf,pred)",Elimination rate (as calculated from the MRT with predicted Clast),pk.calc.kel,F,ADPP
-lambda.z,LAMZ,inverse_time,$\lambda_z$,The elimination rate of the terminal half-life,,T,ADPP
-lambda.z.n.points,LAMZNPT,count,Number of points used for lambda_z,The number of points used for the calculation of half-life,,T,ADPP
-lambda.z.time.first,LAMZLL,time,First time for $\lambda_z$,The first time point used for the calculation of half-life,,T,ADPP
-mrt.iv.last,MRTIVLT,time,"MRT (for IV dosing, based on AUClast)",The mean residence time to the last observed concentration above the LOQ correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
-mrt.iv.obs,MRTIVIS,time,"MRT (for IV dosing, based on AUCinf,obs)",The mean residence time to infinity using observed Clast correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
-mrt.iv.pred,MRTIVIP,time,"MRT (for IV dosing, based on AUCinf,pred)",The mean residence time to infinity using predicted Clast correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
-mrt.last,MRTLST,time,MRT (based on AUClast),The mean residence time to the last observed concentration above the LOQ,pk.calc.mrt,T,ADPP
-mrt.md.obs,MRTMDO,time,"MRT (for multiple dosing, based on AUCinf,obs)",The mean residence time with multiple dosing and nonlinear kinetics using observed Clast,pk.calc.mrt.md,F,ADPP
-mrt.md.pred,MRTMDP,time,"MRT (for multiple dosing, based on AUCinf,pred)",The mean residence time with multiple dosing and nonlinear kinetics using predicted Clast,pk.calc.mrt.md,F,ADPP
-mrt.obs,MRTEVIS,time,"MRT (based on AUCinf,obs)",The mean residence time to infinity using observed Clast,pk.calc.mrt,T,ADPP
-mrt.pred,MRTEVIP,time,"MRT (based on AUCinf,pred)",The mean residence time to infinity using predicted Clast,pk.calc.mrt,T,ADPP
-ptr,PTROUGHR,fraction,Peak-to-trough ratio,Peak-to-Trough ratio (fraction),pk.calc.ptr,T,ADPP
-r.squared,R2,unitless,$r^2$,The r^2 value of the half-life calculation,,T,ADPP
-span.ratio,SPANRTIO,fraction,Span ratio,The ratio of the half-life to the duration used for half-life calculation,,T,ADPP
-sparse_auc_df,SPARSEAD,count,Sparse AUClast degrees of freedom,"For sparse PK sampling, the standard error degrees of freedom of the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",,F,ADPP
-sparse_auc_se,SPARSEAS,auc,Sparse AUClast standard error,"For sparse PK sampling, the standard error of the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",,F,ADPP
-sparse_auclast,SPARSEAL,auc,Sparse AUClast,"For sparse PK sampling, the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",pk.calc.sparse_auclast,F,ADPP
-swing,SWING,%,Swing,Swing relative to Cmin,pk.calc.swing,T,ADPP
-tfirst,TFIRST,time,Tfirst,Time of the first concentration above the limit of quantification,pk.calc.tfirst,F,ADPP
-thalf.eff.iv.last,TEIVLHL,time,"Effective half-life (for IV dosing, based on MRTlast)",The effective half-life (as determined from the intravenous MRTlast),pk.calc.thalf.eff,F,ADPP
-thalf.eff.iv.obs,TEIVSHL,time,"Effective half-life (for IV dosing, based on MRT,obs)",The effective half-life (as determined from the intravenous MRTobs),pk.calc.thalf.eff,F,ADPP
-thalf.eff.iv.pred,TEIVPHL,time,"Effective half-life (for IV dosing, based on MRT,pred)",The effective half-life (as determined from the intravenous MRTpred),pk.calc.thalf.eff,F,ADPP
-thalf.eff.last,EFFHL,time,"Effective half-life (based on MRT,last)",The effective half-life (as determined from the MRTlast),pk.calc.thalf.eff,T,ADPP
-thalf.eff.obs,TEFFOSHL,time,"Effective half-life (based on MRT,obs)",The effective half-life (as determined from the MRTobs),pk.calc.thalf.eff,F,ADPP
-thalf.eff.pred,TEFFPHL,time,"Effective half-life (based on MRT,pred)",The effective half-life (as determined from the MRTpred),pk.calc.thalf.eff,F,ADPP
-time_above,TAT,time,Time above Concentration,Time above a given concentration,pk.calc.time_above,T,ADPP
-tlag,TLAG,time,Tlag,Lag time,pk.calc.tlag,T,ADPP
-tlast,TLST,time,Tlast,Time of the last concentration observed above the limit of quantification,pk.calc.tlast,T,ADPP
-tmax,TMAX,time,Tmax,Time of the maximum observed concentration,pk.calc.tmax,T,ADPP
-totdose,TOTDOSE,dose,Total dose,Total dose administered during an interval,pk.calc.totdose,F,ADPP
-vss.iv.last,VSSIVLST,volume,"Vss (for IV dosing, based on AUClast)",The steady-state volume of distribution with intravenous infusion calculating through Tlast,pk.calc.vss,F,ADPP
-vss.iv.obs,VSSIVO,volume,"Vss (for IV dosing, based on AUCinf,obs)",The steady-state volume of distribution with intravenous infusion using observed Clast,pk.calc.vss,F,ADPP
-vss.iv.pred,VSSIVP,volume,"Vss (for IV dosing, based on AUCinf,pred)",The steady-state volume of distribution with intravenous infusion using predicted Clast,pk.calc.vss,F,ADPP
-vss.last,VSSLST,volume,Vss (based on AUClast),The steady-state volume of distribution calculating through Tlast,pk.calc.vss,F,ADPP
-vss.md.obs,VSSMDO,volume,"Vss (for multiple-dose, based on Clast,obs)",The steady-state volume of distribution for nonlinear multiple-dose data using observed Clast,pk.calc.vss,F,ADPP
-vss.md.pred,VSSMDP,volume,"Vss (for multiple-dose, based on Clast,pred)",The steady-state volume of distribution for nonlinear multiple-dose data using predicted Clast,pk.calc.vss,F,ADPP
-vss.obs,VSSO,volume,"Vss (based on AUCinf,obs)",The steady-state volume of distribution using observed Clast,pk.calc.vss,T,ADPP
-vss.pred,VSSP,volume,"Vss (based on AUCinf,pred)",The steady-state volume of distribution using predicted Clast,pk.calc.vss,T,ADPP
-vz.obs,VZO,volume,"Vz (based on AUCinf,obs)",The terminal volume of distribution using observed Clast,pk.calc.vz,T,ADPP
-vz.pred,VZP,volume,"Vz (based on AUCinf,pred)",The terminal volume of distribution using predicted Clast,pk.calc.vz,T,ADPP
-STUDYID,,,Study Identifier,,,,ADPC
-USUBJID,,,Unique Subject Identifier,,,,ADPC
-SUBJID,,,Subject Identifier for the Study,,,,ADPC
-SITEID,,,Study Site Identifier,,,,ADPC
-ASEQ,,,Analysis Sequence Number,,,,ADPC
-REGION1,,,Geographic Region 1,,,,ADPC
-COUNTRY,,,Country,,,,ADPC
-ETHNIC,,,Ethnicity,,,,ADPC
-AGE,,,Age,,,,ADPC
-AGEU,,,Age Units,,,,ADPC
-AAGE,,,Analysis Age,,,,ADPC
-AAGEU,,,Analysis Age Unit,,,,ADPC
-AGEGR1,,,Pooled Age Group 1,,,,ADPC
-AGEGR2,,,Pooled Age Group 2,,,,ADPC
-AGEGR3,,,Pooled Age Group 3,,,,ADPC
-STRATwNM,,,Description of Stratum w,,,,ADPC
-STRATw,,,Randomized Value of Stratum w,,,,ADPC
-STRATwV,,,Verified Value of Stratum w,,,,ADPC
-SEX,,,Sex,,,,ADPC
-RACE,,,Race,,,,ADPC
-ITTFL,,,Intent-To-Treat Population Flag,,,,ADPC
-SAFFL,,,Safety Population Flag,,,,ADPC
-PPROTFL,,,Per-Protocol Population Flag,,,,ADPC
-TRT01P,,,Planned Treatment for Period 01,,,,ADPC
-TRT02P,,,Planned Treatment for Period 02,,,,ADPC
-TRT03P,,,Planned Treatment for Period 03,,,,ADPC
-TRT04P,,,Planned Treatment for Period 04,,,,ADPC
-TRT05P,,,Planned Treatment for Period 05,,,,ADPC
-TRT01A,,,Actual Treatment for Period 01,,,,ADPC
-TRT02A,,,Actual Treatment for Period 02,,,,ADPC
-TRT03A,,,Actual Treatment for Period 03,,,,ADPC
-TRT04A,,,Actual Treatment for Period 04,,,,ADPC
-TRT05A,,,Actual Treatment for Period 05,,,,ADPC
-TRTSEQP,,,Planned Sequence of Treatments,,,,ADPC
-TRTSEQA,,,Actual Sequence of Treatments,,,,ADPC
-TRTSDTM,,,Datetime of First Exposure to Treatment,,,,ADPC
-TRTSDT,,,Date of First Exposure to Treatment,,,,ADPC
-TRTEDTM,,,Datetime of Last Exposure to Treatment,,,,ADPC
-TRTEDT,,,Date of Last Exposure to Treatment,,,,ADPC
-DCUTDT,,,Date of Data Cut,,,,ADPC
-PCSEQ,,,Sequence Number,,,,ADPC
-PCGRPID,,,Group ID,,,,ADPC
-PCREFID,,,Reference ID,,,,ADPC
-PCSPID,,,Sponsor-Defined Identifier,,,,ADPC
-PCTESTCD,,,Pharmacokinetic Test Short Name,,,,ADPC
-PCTEST,,,Pharmacokinetic Test Name,,,,ADPC
-PCCAT,,,Test Category,,,,ADPC
-PCSCAT,,,Test Subcategory,,,,ADPC
-PCSTRESC,,,Character Result/Finding in Std Format,,,,ADPC
-PCSTRESN,,,Numeric Result/Finding in Standard Units,,,,ADPC
-PCSTRESU,,,Standard Units,,,,ADPC
-PCSTAT,,,Completion Status,,,,ADPC
-PCREASND,,,Reason Test Not Done,,,,ADPC
-PCSPEC,,,Specimen Material Type,,,,ADPC
-PCSPCCND,,,Specimen Condition,,,,ADPC
-PCMETHOD,,,Method of Test or Examination,,,,ADPC
-PCFAST,,,Fasting Status,,,,ADPC
-PCLLOQ,,,Lower Limit of Quantitation,,,,ADPC
-VISITNUM,,,Visit Number,,,,ADPC
-VISIT,,,Visit Name,,,,ADPC
-VISITDY,,,Planned Study Day of Visit,,,,ADPC
-EPOCH,,,Epoch,,,,ADPC
-PCDTC,,,Date/Time of Specimen Collection,,,,ADPC
-PCDY,,,Actual Study Day of Specimen Collection,,,,ADPC
-PCTPT,,,Planned Time Point Name,,,,ADPC
-PCTPTNUM,,,Planned Time Point Number,,,,ADPC
-PCSMPLID,,,Alternate Sample Identifier,,,,ADPC
-PCAINTP,,,Assay Interpretation,,,,ADPC
-PARAM,,,Parameter,,,,ADPC
-PARAMCD,,,Parameter Code,,,,ADPC
-PARCAT1,,,Parameter Category 1,,,,ADPC
-AVAL,,,Analysis Value,,,,ADPC
-AVALCAT1,,,Analysis Value Category 1,,,,ADPC
-AVALU,,,Analysis Value Unit,,,,ADPC
-BASE,,,Baseline Value,,,,ADPC
-BASETYPE,,,Baseline Type,,,,ADPC
-ABLFL,,,Baseline Record Flag,,,,ADPC
-ALLOQ,,,Analysis Lower Limit of Quantitation,,,,ADPC
-ADTM,,,Analysis Datetime,,,,ADPC
-ADT,,,Analysis Date,,,,ADPC
-ATM,,,Analysis Time,,,,ADPC
-ADY,,,Analysis Relative Day,,,,ADPC
-ADTF,,,Analysis Date Imputation Flag,,,,ADPC
-ATMF,,,Analysis Time Imputation Flag,,,,ADPC
-ASTDT,,,Analysis Start Date,,,,ADPC
-ASTTM,,,Analysis Start Time,,,,ADPC
-ASTDTM,,,Analysis Start Date/Time,,,,ADPC
-ASTDTF,,,Analysis Start Date Imputation Flag,,,,ADPC
-ASTTMF,,,Analysis Start Time Imputation Flag,,,,ADPC
-AENDT,,,Analysis End Date,,,,ADPC
-AENTM,,,Analysis End Time,,,,ADPC
-AENDTM,,,Analysis End Date/Time,,,,ADPC
-AENDTF,,,Analysis End Date Imputation Flag,,,,ADPC
-AENTMF,,,Analysis End Time Imputation Flag,,,,ADPC
-ATPT,,,Analysis Timepoint,,,,ADPC
-ATPT,,,Analysis Timepoint,,,,ADPC
-ATPTN,,,Analysis Timepoint (N),,,,ADPC
-ATPTN,,,Analysis Timepoint (N),,,,ADPC
-ATPTREF,,,Analysis Timepoint Reference,,,,ADPC
-AVISIT,,,Analysis Visit,,,,ADPC
-AVISIT,,,Analysis Visit,,,,ADPC
-AVISITN,,,Analysis Visit (N),,,,ADPC
-AVISITN,,,Analysis Visit (N),,,,ADPC
-APERIOD,,,Period,,,,ADPC
-APERIODC,,,Period (C),,,,ADPC
-FANLDT,,,First Date of Dose for Analyte,,,,ADPC
-FANLTM,,,First Time of Dose for Analyte,,,,ADPC
-FANLDTM,,,First Datetime of Dose for Analyte,,,,ADPC
-FANLDTMF,,,First Time of Dose Time Imputation Flag,,,,ADPC
-FANLEDT,,,First End Date of Dose for Analyte,,,,ADPC
-FANLETM,,,First End Time of Dose for Analyte,,,,ADPC
-FANLEDTM,,,First End Datetime of Dose for Analyte,,,,ADPC
-FANLEDTF,,,First End of Dose Time Imputation Flag,,,,ADPC
-PCRFTDT,,,Reference Date of Dose for Analyte,,,,ADPC
-PCRFTTM,,,Reference Time of Dose for Analyte,,,,ADPC
-PCRFTDTM,,,Reference Datetime of Dose for Analyte,,,,ADPC
-PCRFEDT,,,Reference End Date of Dose for Analyte,,,,ADPC
-PCRFETM,,,Reference End Time of Dose for Analyte,,,,ADPC
-PCRFEDTM,,,Ref. End Datetime of Dose for Analyte,,,,ADPC
-NFRLT,,,Nom. Rel. Time from Analyte First Dose,,,,ADPC
-AFRLT,,,Act. Rel. Time from Analyte First Dose,,,,ADPC
-TMPCTDF,,,Percent Diff. Nominal vs. Actual Time,,,,ADPC
-FRLTU,,,Rel. Time from First Dose Unit,,,,ADPC
-NEFRLT,,,Nom. Rel. End Time from First Dose,,,,ADPC
-AEFRLT,,,Act. Rel. End Time from First Dose,,,,ADPC
-NRRLT,,,Nominal Rel. Time from Ref. Dose,,,,ADPC
-ARRLT,,,Actual Rel. Time from Ref. Dose,,,,ADPC
-MRRLT,,,Modified Rel. Time from Ref. Dose,,,,ADPC
-RRLTU,,,Rel. Time from Ref. Dose Unit,,,,ADPC
-NERRLT,,,Nominal Rel. End Time from Ref. Dose,,,,ADPC
-NERRLT,,,Nominal Rel. End Time from Ref. Dose,,,,ADPC
-AERRLT,,,Actual Rel. End Time from Ref. Dose,,,,ADPC
-AERRLT,,,Actual Rel. End Time from Ref. Dose,,,,ADPC
-MERRLT,,,Modified Rel. End Time from Ref. Dose,,,,ADPC
-MERRLT,,,Modified Rel. End Time from Ref. Dose,,,,ADPC
-CHG,,,Change from Baseline,,,,ADPC
-CRIT1,,,Analysis Criterion 1,,,,ADPC
-CRIT1FL,,,Criterion 1 Evaluation Result Flag,,,,ADPC
-CRIT1FL,,,Criterion 1 Evaluation Result Flag,,,,ADPC
-DTYPE,,,Derivation Type,,,,ADPC
-SPARSFL,,,Sparse Flag,,,,ADPC
-NCAXFL,,,PK NCA Exclusion Flag,,,,ADPC
-NCAXFN,,,PK NCA Exclusion Flag (N),,,,ADPC
-NCAwXRS,,,Reason w for PK NCA Exclusion,,,,ADPC
-NCAwXRSN,,,Reason for PK NCA Exclusion of w (N),,,,ADPC
-PKSUMXF,,,PK Summary Exclusion Flag,,,,ADPC
-PKSUMXFN,,,PK Summary Exclusion Flag (N),,,,ADPC
-METABFL,,,Metabolite Flag,,,,ADPC
-COHORT,,,Subject Cohort,,,,ADPC
-COHORTN,,,Subject Cohort (N),,,,ADPC
-ROUTE,,,Route,,,,ADPC
-TRTRINT,,,Planned Treatment Interval,,,,ADPC
-TRTRINTU,,,Planned Treatment Interval Units,,,,ADPC
-DOSPCTDF,,,Percent Diff. Nominal vs. Actual Dose,,,,ADPC
-DOSEFRQ,,,Dose Frequency,,,,ADPC
-DOSEP,,,Planned Treatment Dose,,,,ADPC
-DOSEA,,,Actual Treatment Dose,,,,ADPC
-DOSEPU,,,Planned Treatment Dose Units,,,,ADPC
-DOSEAU,,,Actual Treatment Dose Units,,,,ADPC
-ACYCLE,,,Analysis Cycle,,,,ADPC
-ACYCLEC,,,Analysis Cycle (C),,,,ADPC
-ADOSEDUR,,,Actual Duration of Treatment Dose,,,,ADPC
-NDOSEDUR,,,Nominal duration of Treatment Dose,,,,ADPC
-DOSEDURU,,,Duration of Treatment Dose Units,,,,ADPC
-VOLUME,,,Volume Value,,,,ADPC
-VOLUMEU,,,Volume Value Unit,,,,ADPC
-SPWEIGHT,,,Specimen Weight Value,,,,ADPC
-SPWEIGHU,,,Specimen Weight Value Unit,,,,ADPC
-WTBL,,,Weight at Baseline,,,,ADPC
-HTBL,,,Height at Baseline,,,,ADPC
-IBWBL,,,Ideal Body Weight (IBW) at Baseline,,,,ADPC
-LBMBL,,,Lean Body Mass (LBM) at Baseline,,,,ADPC
-BMIBL,,,BMI at Baseline,,,,ADPC
-BSABL,,,BSA at Baseline,,,,ADPC
-SBPBL,,,Systolic BP at Baseline,,,,ADPC
-DBPBL,,,Diastolic BP at Baseline,,,,]
-TOBBL,,,Smoking Status at Baseline,,,,ADPC
-ALCOBL,,,Alcohol at Baseline,,,,ADPC
-TEMPBL,,,Temperature at Baseline,,,,ADPC
-PULSBL,,,Pulse rate at Baseline,,,,ADPC
-ADA,,,Treatment Emergent ADA status,,,,ADPC
-AAGBL,,,Alpha-1 Acid Glycoprotein at Baseline,,,,ADPC
-CREATBL,,,Creatinine at Baseline (BLOOD),,,,ADPC
-CRCLBL,,,CrCL at Baseline,,,,ADPC
-ALBUBL,,,Albumin at Baseline,,,,ADPC
-EOSBL,,,Eosinophils at Baseline,,,,ADPC
-BUNBL,,,Blood Urea Nitrogen at Baseline,,,,ADPC
-CALCBL,,,Calcium at Baseline,,,,ADPC
-CLBL,,,Chloride at Baseline,,,,ADPC
-PHBL,,,Phosphate at Baseline,,,,ADPC
-PLATEBL,,,Platelet Count at Baseline,,,,ADPC
-WBCBL,,,WBC Count at Baseline,,,,ADPC
-GGTBL,,,GGT at Baseline,,,,ADPC
-GLUCBL,,,Glucose at Baseline,,,,ADPC
-HCTBL,,,Hematocrit at Baseline,,,,ADPC
-HGBBL,,,Hemoglobin at Baseline,,,,ADPC
-ALKPHBL,,,Alkaline Phosphatase at Baseline,,,,ADPC
-KBL,,,Potassium at Baseline,,,,ADPC
-LYMBL,,,Lymphocytes at Baseline,,,,ADPC
-MONOBL,,,Monocytes at Baseline,,,,ADPC
-NABL,,,Sodium at Baseline,,,,ADPC
-NEUBL,,,Neutrophils at Baseline,,,,ADPC
-RBCBL,,,RBC Count at Baseline,,,,ADPC
-TBILIBL,,,Bilirubin at Baseline (BLOOD),,,,ADPC
-TPROTBL,,,Total Protein at Baseline (BLOOD),,,,ADPC
-SGOTBL,,,SGOT-AST at Baseline,,,,ADPC
-SGPTBL,,,SGPT-ALT at Baseline,,,,ADPC
-RRBL,,,RR Duration at Baseline,,,,ADPC
-PRBL,,,PR Duration at Baseline,,,,ADPC
-QRSBL,,,QRS Duration at Baseline,,,,ADPC
-QTBL,,,QT duration at Baseline,,,,ADPC
-QTCBBL,,,QTcB at Baseline,,,,ADPC
-QTCFBL,,,QTcF at Baseline,,,,ADPC
-HRBL,,,Heart Rate at Baseline,,,,ADPC
-WTBLU,,,Weight at Baseline (Unit),,,,ADPC
-HTBLU,,,Height at Baseline (Unit),,,,ADPC
-IBWBLU,,,IBW at Baseline (Unit),,,,ADPC
-LBWBLU,,,LBM at Baseline (Unit),,,,ADPC
-BMIBLU,,,BMI at Baseline (Unit),,,,ADPC
-BSABLU,,,BSA at Baseline (Unit),,,,ADPC
-SBPBLU,,,Systolic BP at Baseline (Unit),,,,ADPC
-DBPBLU,,,Diastolic BP at Baseline (Unit),,,,ADPC
-TOBBLU,,,Smoking Status at Baseline (Unit),,,,ADPC
-PULSBLU,,,Pulse rate at Baseline (Unit),,,,ADPC
-AAGBLU,,,AAG at baseline (Unit),,,,ADPC
-CREATBLU,,,Creat at baseline (BLOOD),,,,ADPC
-CRCLBLU,,,CrCL at baseline (BLOOD),,,,ADPC
-ALBUBLU,,,Albumin at baseline (Unit),,,,ADPC
-EOSBLU,,,Eosinophils at baseline (Unit),,,,ADPC
-BUNBLU,,,Blood Urea Nitrogen at baseline (Unit),,,,ADPC
-CALCBLU,,,Calcium at baseline (Unit),,,,ADPC
-CLBLU,,,Chloride at baseline (Unit),,,,ADPC
-PHBLU,,,Phosphate at baseline (Unit),,,,ADPC
-PLATEBLU,,,Platelet Count at baseline (Unit),,,,ADPC
-WBCBLU,,,WBC Count at baseline (Unit),,,,ADPC
-GGTBLU,,,GGT at Baseline (Unit),,,,ADPC
-GLUBLU,,,Glucose at Baseline (Unit),,,,ADPC
-HCTBLU,,,HCT at Baseline (Unit),,,,ADPC
-HGBBLU,,,HGB at Baseline (Unit),,,,ADPC
-ALKPHBLU,,,Alkaline Phosphatase at Baseline (Unit),,,,ADPC
-KBLU,,,Potassium at Baseline (Unit),,,,ADPC
-LYMBLU,,,Lymphocytes at Baseline (Unit),,,,ADPC
-MONOBLU,,,Monocytes at Baseline (Unit),,,,ADPC
-NABLU,,,Sodium at Baseline (Unit),,,,ADPC
-NEUBLU,,,Neutrophils at Baseline (Unit),,,,ADPC
-RBCBLU,,,RBC Count at Baseline (Unit),,,,ADPC
-TBILIBLU,,,Bilirubin at Baseline (Unit),,,,ADPC
-TPROTBLU,,,Total Protein at Baseline (Unit),,,,ADPC
-SGOTBLU,,,SGOT-AST at Baseline (Unit),,,,ADPC
-SGPTBLU,,,SGPT-ALT at Baseline (Unit),,,,ADPC
-RRBLU,,,RR Duration at Baseline (Unit),,,,ADPC
-PRBLU,,,PR Duration at Baseline (Unit),,,,ADPC
-QRSBLU,,,QRS Duration at Baseline (Unit),,,,ADPC
-QTBLU,,,QT Duration at Baseline (Unit),,,,ADPC
-QTCBBLU,,,QTcB at Baseline (Unit),,,,ADPC
-QTCFBLU,,,QTcF at Baseline (Unit),,,,ADPC
-HRBLU,,,Heart Rate at Baseline (Unit),,,,ADPC
-DRUG,,,Medication Name,,,,ADPC
-REGIME,,,Regimen of Medication,,,,ADPC
-FRMUL,,,Treatment Formulation,,,,ADPC
-DOSNO,,,Dose Number,,,,ADPC
-FEDSTATE,,,Fasted / Fed Status,,,,ADPC
-ANL01FL,,,Analysis Flag 01,,,,ADPC
-ANL02FL,,,Analysis Flag 02,,,,ADPC
-ANL03FL,,,Analysis Flag 03,,,,ADPC
-ANL04FL,,,Analysis Flag 04,,,,ADPC
-ANL05FL,,,Analysis Flag 05,,,,ADPC
-STUDYID,,,Study Identifier,,,,ADPP
-USUBJID,,,Unique Subject Identifier,,,,ADPP
-SUBJID,,,Subject Identifier for the Study,,,,ADPP
-SITEID,,,Study Site Identifier,,,,ADPP
-ASEQ,,,Analysis Sequence Number,,,,ADPP
-REGION1,,,Geographic Region 1,,,,ADPP
-COUNTRY,,,Country,,,,ADPP
-ETHNIC,,,Ethnicity,,,,ADPP
-AGE,,,Age,,,,ADPP
-AGEU,,,Age Units,,,,ADPP
-AAGE,,,Analysis Age,,,,ADPP
-AAGEU,,,Analysis Age Unit,,,,ADPP
-AGEGR1,,,Pooled Age Group 1,,,,ADPP
-AGEGR2,,,Pooled Age Group 2,,,,ADPP
-AGEGR3,,,Pooled Age Group 3,,,,ADPP
-STRATwNM,,,Description of Stratum w,,,,ADPP
-STRATw,,,Randomized Value of Stratum w,,,,ADPP
-STRATwV,,,Verified Value of Stratum w,,,,ADPP
-SEX,,,Sex,,,,ADPP
-RACE,,,Race,,,,ADPP
-ITTFL,,,Intent-To-Treat Population Flag,,,,ADPP
-SAFFL,,,Safety Population Flag,,,,ADPP
-PPROTFL,,,Per-Protocol Population Flag,,,,ADPP
-TRT01P,,,Planned Treatment for Period 01,,,,ADPP
-TRTxxP,,,Planned Treatment for Period xx,,,,ADPP
-TRT01A,,,Actual Treatment for Period 01,,,,ADPP
-TRTxxA,,,Actual Treatment for Period xx,,,,ADPP
-TRTSEQP,,,Planned Sequence of Treatments,,,,ADPP
-TRTSEQA,,,Actual Sequence of Treatments,,,,ADPP
-TRTSDTM,,,Datetime of First Exposure to Treatment,,,,ADPP
-TRTSDT,,,Date of First Exposure to Treatment,,,,ADPP
-TRTEDTM,,,Datetime of Last Exposure to Treatment,,,,ADPP
-TRTEDT,,,Date of Last Exposure to Treatment,,,,ADPP
-DCUTDT,,,Date of Data Cut,,,,ADPP
-PPSEQ,,,Sequence Number,,,,ADPP
-PPGRPID,,,Group ID,,,,ADPP
-PPSPID,,,Sponsor-Defined Identifier,,,,ADPP
-PPTESTCD,,,Parameter Short Name,,,,ADPP
-PPTEST,,,Parameter Name,,,,ADPP
-PPCAT,,,Parameter Category,,,,ADPP
-PPSCAT,,,Parameter Subcategory,,,,ADPP
-PPSTRESC,,,Character Result/Finding in Std Format,,,,ADPP
-PPSTRESN,,,Numeric Result/Finding in Standard Units,,,,ADPP
-PPSTRESU,,,Standard Units,,,,ADPP
-PPSTAT,,,Completion Status,,,,ADPP
-PPREASND,,,Reason Parameter Not Calculated,,,,ADPP
-PPSPEC,,,Specimen Material Type,,,,ADPP
-PPDTC,,,Date/Time of Parameter Calculations,,,,ADPP
-PPRFTDTC,,,Date/Time of Reference Point,,,,ADPP
-PPSTINT,,,Planned Start of Assessment Interval,,,,ADPP
-PPENINT,,,Planned End of Assessment Interval,,,,ADPP
-PARAM,,,Parameter,,,,ADPP
-PARAMCD,,,Parameter Code,,,,ADPP
-PARCAT1,,,Parameter Category 1,,,,ADPP
-PARCAT1,,,Parameter Category 1,,,,ADPP
-AVAL,,,Analysis Value,,,,ADPP
-AVALU,,,Analysis Value Unit,,,,ADPP
-AVALC,,,Analysis Value (C),,,,ADPP
-ADTM,,,Analysis Datetime,,,,ADPP
-ADT,,,Analysis Date,,,,ADPP
-ATM,,,Analysis Time,,,,ADPP
-ADY,,,Analysis Relative Day,,,,ADPP
-ADTF,,,Analysis Date Imputation Flag,,,,ADPP
-ATMF,,,Analysis Time Imputation Flag,,,,ADPP
-ATPT,,,Analysis Timepoint,,,,ADPP
-ATPT,,,Analysis Timepoint,,,,ADPP
-ATPTN,,,Analysis Timepoint (N),,,,ADPP
-ATPTN,,,Analysis Timepoint (N),,,,ADPP
-AVISIT,,,Analysis Visit,,,,ADPP
-AVISIT,,,Analysis Visit,,,,ADPP
-AVISITN,,,Analysis Visit (N),,,,ADPP
-AVISITN,,,Analysis Visit (N),,,,ADPP
-ANALYTE,,,Analyte,,,,ADPC
-EVID,,,Event ID,,,,ADPC
-DOSEU,,,Treatment Dose Units,,,,ADPC
+PKNCA,CDISC,unit_type,pretty_name,label,description,FUN,is_cdisc_sure,Dataset
+adj.r.squared,R2ADJ,unitless,$r^2_{adj}$,Adjusted r^2,The adjusted r^2 value of the half-life calculation,,T,ADPP
+ae,RCAMINT,amount,Amount excreted,Amount excreted,The amount excreted (typically into urine or feces),pk.calc.ae,T,ADPP
+aucabove.predose.all,AUCABVPA,auc,"AUC,above","AUC,above","The area under the concentration time the beginning of the interval to the last concentration above the limit of quantification plus the triangle from that last concentration to 0 at the first concentration below the limit of quantification, with a concentration subtracted from all concentrations and values below zero after subtraction set to zero",pk.calc.aucabove,F,ADPP
+aucabove.trough.all,AUCABVTA,auc,"AUC,above","AUC,above","The area under the concentration time the beginning of the interval to the last concentration above the limit of quantification plus the triangle from that last concentration to 0 at the first concentration below the limit of quantification, with a concentration subtracted from all concentrations and values below zero after subtraction set to zero",pk.calc.aucabove,F,ADPP
+aucall,AUCALL,auc,AUCall,AUCall,The area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification plus the triangle from that last concentration to 0 at the first concentration below the limit of quantification,pk.calc.auc.all,T,ADPP
+aucall.dn,AUCALLD,auc_dosenorm,AUCall (dose-normalized),AUCall (dose-normalized),Dose normalized aucall,pk.calc.dn,T,ADPP
+aucinf.obs,AUCIFO,auc,"AUCinf,obs","AUCinf,obs",The area under the concentration time curve from the beginning of the interval to infinity with extrapolation to infinity from the observed Clast,pk.calc.auc.inf.obs,T,ADPP
+aucinf.obs.dn,AUCIFOD,auc_dosenorm,"AUCinf,obs (dose-normalized)","AUCinf,obs (dose-normalized)",Dose normalized aucinf.obs,pk.calc.dn,T,ADPP
+aucinf.pred,AUCIFP,auc,"AUCinf,pred","AUCinf,pred",The area under the concentration time curve from the beginning of the interval to infinity with extrapolation to infinity from the predicted Clast,pk.calc.auc.inf.pred,T,ADPP
+aucinf.pred.dn,AUCIFPD,auc_dosenorm,"AUCinf,pred (dose-normalized)","AUCinf,pred (dose-normalized)",Dose normalized aucinf.pred,pk.calc.dn,T,ADPP
+aucint.all,AUCINTA,auc,AUCint (based on AUCall extrapolation),AUCint (based on AUCall extrapolation),The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall),pk.calc.aucint.all,F,ADPP
+aucint.all.dose,AUCINTAD,auc,"AUCint (based on AUCall extrapolation, dose-aware)","AUCint (based on AUCall extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.all,F,ADPP
+aucint.inf.obs,AUCINTIS,auc,"AUCint (based on AUCinf,obs extrapolation)","AUCint (based on AUCinf,obs extrapolation)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast),pk.calc.aucint.inf.obs,F,ADPP
+aucint.inf.obs.dose,AUCINTID,auc,"AUCint (based on AUCinf,obs extrapolation, dose-aware)","AUCint (based on AUCinf,obs extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.inf.obs,F,ADPP
+aucint.inf.pred,AUCINTIP,auc,"AUCint (based on AUCinf,pred extrapolation)","AUCint (based on AUCinf,pred extrapolation)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall),pk.calc.aucint.inf.pred,F,ADPP
+aucint.inf.pred.dose,AUCINTPD,auc,"AUCint (based on AUCinf,pred extrapolation, dose-aware)","AUCint (based on AUCinf,pred extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with the triangle from Tlast to the next point and zero thereafter (matching AUCall) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.inf.pred,F,ADPP
+aucint.last,AUCINT,auc,AUCint (based on AUClast extrapolation),AUCint (based on AUClast extrapolation),The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast),pk.calc.aucint.last,T,ADPP
+aucint.last.dose,AUCINTD,auc,"AUCint (based on AUClast extrapolation, dose-aware)","AUCint (based on AUClast extrapolation, dose-aware)",The area under the concentration time curve in the interval extrapolating from Tlast to infinity with zeros (matching AUClast) with dose-aware interpolation/extrapolation of concentrations,pk.calc.aucint.last,T,ADPP
+aucivall,AUCIVA,auc,AUCall (IV dosing),AUCall (IV dosing),The AUCall calculated with back-extrapolation for intravenous dosing using extrapolated C0,pk.calc.auciv,F,ADPP
+aucivinf.obs,AUCIVIS,auc,"AUCinf,obs (IV dosing)","AUCinf,obs (IV dosing)","The AUCinf,obs calculated with back-extrapolation for intravenous dosing using extrapolated C0",pk.calc.auciv,F,ADPP
+aucivinf.pred,AUCIVIP,auc,"AUCinf,pred (IV dosing)","AUCinf,pred (IV dosing)",The calculated with back-extrapolation for intravenous dosing using extrapolated C0,pk.calc.auciv,F,ADPP
+aucivint.all,AUCIVINA,auc,"AUCint,all (IV dosing)","AUCint,all (IV dosing)","The AUCint,all calculated with back-extrapolation for intravenous dosing using extrapolated C0",pk.calc.auciv,F,ADPP
+aucivint.last,AUCIVILT,auc,"AUCint,last (IV dosing)","AUCint,last (IV dosing)","The AUCint,last calculated with back-extrapolation for intravenous dosing using extrapolated C0",pk.calc.auciv,F,ADPP
+aucivlast,AUCIVLST,auc,AUClast (IV dosing),AUClast (IV dosing),The AUClast calculated with back-extrapolation for intravenous dosing using extrapolated C0,pk.calc.auciv,F,ADPP
+aucivpbextall,AUCIVPEA,%,AUCbext (based on AUCall),AUCbext (based on AUCall),The back-extrapolation percent for intravenous dosing based on AUCall,pk.calc.auciv_pbext,F,ADPP
+aucivpbextinf.obs,AUCIVPEI,%,"AUCbext (based on AUCinf,obs)","AUCbext (based on AUCinf,obs)","The back-extrapolation percent for intravenous dosing based on AUCinf,obs",pk.calc.auciv_pbext,F,ADPP
+aucivpbextinf.pred,AUCIVPEP,%,"AUCbext (based on AUCinf,pred)","AUCbext (based on AUCinf,pred)","The back-extrapolation percent for intravenous dosing based on AUCinf,pred",pk.calc.auciv_pbext,F,ADPP
+aucivpbextint.all,AUCIVPIA,%,"AUCbext (based on AUCint,all)","AUCbext (based on AUCint,all)","The back-extrapolation percent for intravenous dosing based on AUCint,all",pk.calc.auciv_pbext,F,ADPP
+aucivpbextint.last,AUCIVPIL,%,"AUCbext (based on AUCint,last)","AUCbext (based on AUCint,last)","The back-extrapolation percent for intravenous dosing based on AUCint,last",pk.calc.auciv_pbext,F,ADPP
+aucivpbextlast,AUCIVPLT,%,AUCbext (based on AUClast),AUCbext (based on AUClast),The back-extrapolation percent for intravenous dosing based on AUClast,pk.calc.auciv_pbext,F,ADPP
+auclast,AUCLST,auc,AUClast,AUClast,The area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification,pk.calc.auc.last,T,ADPP
+auclast.dn,AUCLSTD,auc_dosenorm,AUClast (dose-normalized),AUClast (dose-normalized),Dose normalized auclast,pk.calc.dn,T,ADPP
+aucpext.obs,AUCPEO,%,"AUCpext (based on AUCinf,obs)","AUCpext (based on AUCinf,obs)",Percent of the AUCinf that is extrapolated after Tlast calculated from the observed Clast,pk.calc.aucpext,T,ADPP
+aucpext.pred,AUCPEP,%,"AUCpext (based on AUCinf,pred)","AUCpext (based on AUCinf,pred)",Percent of the AUCinf that is extrapolated after Tlast calculated from the predicted Clast,pk.calc.aucpext,T,ADPP
+aumcall,AUMCALL,aumc,"AUMC,all","AUMC,all",The area under the concentration time moment curve from the beginning of the interval to the last concentration above the limit of quantification plus the moment of the triangle from that last concentration to 0 at the first concentration below the limit of quantification,pk.calc.aumc.all,F,ADPP
+aumcall.dn,AUMCALLD,aumc_dosenorm,"AUMC,all (dose-normalized)","AUMC,all (dose-normalized)",Dose normalized aumcall,pk.calc.dn,F,ADPP
+aumcinf.obs,AUMCIFO,aumc,"AUMC,inf,obs","AUMC,inf,obs",The area under the concentration time moment curve from the beginning of the interval to infinity with extrapolation to infinity from the observed Clast,pk.calc.aumc.inf.obs,T,ADPP
+aumcinf.obs.dn,AUMCIFOD,aumc_dosenorm,"AUMC,inf,obs (dose-normalized)","AUMC,inf,obs (dose-normalized)",Dose normalized aumcinf.obs,pk.calc.dn,T,ADPP
+aumcinf.pred,AUMCIFP,aumc,"AUMC,inf,pred","AUMC,inf,pred",The area under the concentration time moment curve from the beginning of the interval to infinity with extrapolation to infinity from the predicted Clast,pk.calc.aumc.inf.pred,T,ADPP
+aumcinf.pred.dn,AUMCIFPD,aumc_dosenorm,"AUMC,inf,pred (dose-normalized)","AUMC,inf,pred (dose-normalized)",Dose normalized aumcinf.pred,pk.calc.dn,T,ADPP
+aumclast,AUMCLST,aumc,"AUMC,last","AUMC,last",The area under the concentration time moment curve from the beginning of the interval to the last concentration above the limit of quantification,pk.calc.aumc.last,T,ADPP
+aumclast.dn,AUMCLSTD,aumc_dosenorm,"AUMC,last (dose-normalized)","AUMC,last (dose-normalized)",Dose normalized aumclast,pk.calc.dn,T,ADPP
+c0,C0,conc,C0,C0,Initial concentration after an IV bolus,pk.calc.c0,T,ADPP
+cav,CAVG,conc,Cav,Cav,The average concentration during an interval (calculated with AUClast),pk.calc.cav,T,ADPP
+cav.dn,CAVGD,conc_dosenorm,Cav (dose-normalized),Cav (dose-normalized),Dose normalized cav,pk.calc.dn,T,ADPP
+cav.int.all,CAVGINA,conc,Cav,Cav,The average concentration during an interval (calculated with AUCint.all),pk.calc.cav,F,ADPP
+cav.int.inf.obs,CAVGINO,conc,Cav,Cav,The average concentration during an interval (calculated with AUCint.inf.obs),pk.calc.cav,F,ADPP
+cav.int.inf.pred,CAVGINP,conc,Cav,Cav,The average concentration during an interval (calculated with AUCint.inf.pred),pk.calc.cav,F,ADPP
+cav.int.last,CAVGINT,conc,Cav,Cav,The average concentration during an interval (calculated with AUCint.last),pk.calc.cav,T,ADPP
+ceoi,CEOI,conc,Ceoi,Ceoi,Concentration at the end of infusion,pk.calc.ceoi,F,ADPP
+cl.all,CLALL,clearance,CL (based on AUCall),CL (based on AUCall),Clearance or observed oral clearance calculated with AUCall,pk.calc.cl,F,ADPP
+cl.last,CLLST,clearance,CL (based on AUClast),CL (based on AUClast),Clearance or observed oral clearance calculated to Clast,pk.calc.cl,F,ADPP
+cl.obs,CLOS,clearance,"CL (based on AUCinf,obs)","CL (based on AUCinf,obs)",Clearance or observed oral clearance calculated with observed Clast,pk.calc.cl,T,ADPP
+cl.pred,CLP,clearance,"CL (based on AUCinf,pred)","CL (based on AUCinf,pred)",Clearance or observed oral clearance calculated with predicted Clast,pk.calc.cl,T,ADPP
+clast.obs,CLST,conc,Clast,Clast,The last concentration observed above the limit of quantification,pk.calc.clast.obs,T,ADPP
+clast.obs.dn,CLSTD,conc_dosenorm,Clast (dose-normalized),Clast (dose-normalized),Dose normalized clast.obs,pk.calc.dn,T,ADPP
+clast.pred,CLSTP,conc,"Clast,pred","Clast,pred",The concentration at Tlast as predicted by the half-life,,F,ADPP
+clast.pred.dn,CLSTPD,conc_dosenorm,"Clast,pred (dose-normalized)","Clast,pred (dose-normalized)",Dose normalized clast.pred,pk.calc.dn,F,ADPP
+clr.last,RENALCL,renal_clearance,Renal clearance (from AUClast),Renal clearance (from AUClast),The renal clearance calculated using AUClast,pk.calc.clr,T,ADPP
+clr.obs,RENALCLO,renal_clearance,"Renal clearance (from AUCinf,obs)","Renal clearance (from AUCinf,obs)","The renal clearance calculated using AUCinf,obs",pk.calc.clr,F,ADPP
+clr.pred,RENALCLP,renal_clearance,"Renal clearance (from AUCinf,pred)","Renal clearance (from AUCinf,pred)","The renal clearance calculated using AUCinf,pred",pk.calc.clr,F,ADPP
+cmax,CMAX,conc,Cmax,Cmax,Maximum observed concentration,pk.calc.cmax,T,ADPP
+cmax.dn,CMAXD,conc_dosenorm,Cmax (dose-normalized),Cmax (dose-normalized),Dose normalized cmax,pk.calc.dn,T,ADPP
+cmin,CMIN,conc,Cmin,Cmin,Minimum observed concentration,pk.calc.cmin,T,ADPP
+cmin.dn,CMIND,conc_dosenorm,Cmin (dose-normalized),Cmin (dose-normalized),Dose normalized cmin,pk.calc.dn,T,ADPP
+count_conc,CNTCONC,count,Concentration count,Concentration count,Number of non-missing concentrations for a subject,pk.calc.count_conc,F,ADPP
+cstart,CSTART,conc,Cstart,Cstart,The predose concentration,pk.calc.cstart,F,ADPP
+ctrough,CTROUGH,conc,Ctrough,Ctrough,The trough (end of interval) concentration,pk.calc.ctrough,T,ADPP
+ctrough.dn,CTROUGHD,conc_dosenorm,Ctrough (dose-normalized),Ctrough (dose-normalized),Dose normalized ctrough,pk.calc.dn,T,ADPP
+deg.fluc,DEGFLUC,%,Degree of fluctuation,Degree of fluctuation,Degree of fluctuation,pk.calc.deg.fluc,F,ADPP
+f,FREL_FAB,fraction,Bioavailability,Bioavailability,Bioavailability or relative bioavailability,pk.calc.f,T,ADPP
+fe,FE,fraction,Fraction excreted,Fraction excreted,The fraction of the dose excreted,pk.calc.fe,T,ADPP
+half.life,LAMZHL,time,Half-life,Half-life,The (terminal) half-life,pk.calc.half.life,T,ADPP
+kel.iv.last,KELIVLT,inverse_time,"Kel (for IV dosing, based on AUClast)","Kel (for IV dosing, based on AUClast)",Elimination rate (as calculated from the intravenous MRTlast),pk.calc.kel,F,ADPP
+kel.iv.obs,KELIVOS,inverse_time,"Kel (for IV dosing, based on AUCinf,obs)","Kel (for IV dosing, based on AUCinf,obs)",Elimination rate (as calculated from the intravenous MRTobs),pk.calc.kel,F,ADPP
+kel.iv.pred,KELIVP,inverse_time,"Kel (for IV dosing, based on AUCinf,pred)","Kel (for IV dosing, based on AUCinf,pred)",Elimination rate (as calculated from the intravenous MRTpred),pk.calc.kel,F,ADPP
+kel.last,KELLST,inverse_time,Kel (based on AUClast),Kel (based on AUClast),Elimination rate (as calculated from the MRT using AUClast),pk.calc.kel,F,ADPP
+kel.obs,KELOS,inverse_time,"Kel (based on AUCinf,obs)","Kel (based on AUCinf,obs)",Elimination rate (as calculated from the MRT with observed Clast),pk.calc.kel,F,ADPP
+kel.pred,KELP,inverse_time,"Kel (based on AUCinf,pred)","Kel (based on AUCinf,pred)",Elimination rate (as calculated from the MRT with predicted Clast),pk.calc.kel,F,ADPP
+lambda.z,LAMZ,inverse_time,$\lambda_z$,Lambda z,The elimination rate of the terminal half-life,,T,ADPP
+lambda.z.n.points,LAMZNPT,count,Number of points used for lambda_z,Number of points used for lambda_z,The number of points used for the calculation of half-life,,T,ADPP
+lambda.z.time.first,LAMZLL,time,First time for $\lambda_z$,First time for $\lambda_z$,The first time point used for the calculation of half-life,,T,ADPP
+mrt.iv.last,MRTIVLT,time,"MRT (for IV dosing, based on AUClast)","MRT (for IV dosing, based on AUClast)",The mean residence time to the last observed concentration above the LOQ correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
+mrt.iv.obs,MRTIVIS,time,"MRT (for IV dosing, based on AUCinf,obs)","MRT (for IV dosing, based on AUCinf,obs)",The mean residence time to infinity using observed Clast correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
+mrt.iv.pred,MRTIVIP,time,"MRT (for IV dosing, based on AUCinf,pred)","MRT (for IV dosing, based on AUCinf,pred)",The mean residence time to infinity using predicted Clast correcting for dosing duration,pk.calc.mrt.iv,T,ADPP
+mrt.last,MRTLST,time,MRT (based on AUClast),MRT (based on AUClast),The mean residence time to the last observed concentration above the LOQ,pk.calc.mrt,T,ADPP
+mrt.md.obs,MRTMDO,time,"MRT (for multiple dosing, based on AUCinf,obs)","MRT (for multiple dosing, based on AUCinf,obs)",The mean residence time with multiple dosing and nonlinear kinetics using observed Clast,pk.calc.mrt.md,F,ADPP
+mrt.md.pred,MRTMDP,time,"MRT (for multiple dosing, based on AUCinf,pred)","MRT (for multiple dosing, based on AUCinf,pred)",The mean residence time with multiple dosing and nonlinear kinetics using predicted Clast,pk.calc.mrt.md,F,ADPP
+mrt.obs,MRTEVIS,time,"MRT (based on AUCinf,obs)","MRT (based on AUCinf,obs)",The mean residence time to infinity using observed Clast,pk.calc.mrt,T,ADPP
+mrt.pred,MRTEVIP,time,"MRT (based on AUCinf,pred)","MRT (based on AUCinf,pred)",The mean residence time to infinity using predicted Clast,pk.calc.mrt,T,ADPP
+ptr,PTROUGHR,fraction,Peak-to-trough ratio,Peak-to-trough ratio,Peak-to-Trough ratio (fraction),pk.calc.ptr,T,ADPP
+r.squared,R2,unitless,$r^2$,$r^2$,The r^2 value of the half-life calculation,,T,ADPP
+span.ratio,SPANRTIO,fraction,Span ratio,Span ratio,The ratio of the half-life to the duration used for half-life calculation,,T,ADPP
+sparse_auc_df,SPARSEAD,count,Sparse AUClast degrees of freedom,Sparse AUClast degrees of freedom,"For sparse PK sampling, the standard error degrees of freedom of the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",,F,ADPP
+sparse_auc_se,SPARSEAS,auc,Sparse AUClast standard error,Sparse AUClast standard error,"For sparse PK sampling, the standard error of the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",,F,ADPP
+sparse_auclast,SPARSEAL,auc,Sparse AUClast,Sparse AUClast,"For sparse PK sampling, the area under the concentration time curve from the beginning of the interval to the last concentration above the limit of quantification",pk.calc.sparse_auclast,F,ADPP
+swing,SWING,%,Swing,Swing,Swing relative to Cmin,pk.calc.swing,T,ADPP
+tfirst,TFIRST,time,Tfirst,Tfirst,Time of the first concentration above the limit of quantification,pk.calc.tfirst,F,ADPP
+thalf.eff.iv.last,TEIVLHL,time,"Effective half-life (for IV dosing, based on MRTlast)","Effective half-life (for IV dosing, based on MRTlast)",The effective half-life (as determined from the intravenous MRTlast),pk.calc.thalf.eff,F,ADPP
+thalf.eff.iv.obs,TEIVSHL,time,"Effective half-life (for IV dosing, based on MRT,obs)","Effective half-life (for IV dosing, based on MRT,obs)",The effective half-life (as determined from the intravenous MRTobs),pk.calc.thalf.eff,F,ADPP
+thalf.eff.iv.pred,TEIVPHL,time,"Effective half-life (for IV dosing, based on MRT,pred)","Effective half-life (for IV dosing, based on MRT,pred)",The effective half-life (as determined from the intravenous MRTpred),pk.calc.thalf.eff,F,ADPP
+thalf.eff.last,EFFHL,time,"Effective half-life (based on MRT,last)","Effective half-life (based on MRT,last)",The effective half-life (as determined from the MRTlast),pk.calc.thalf.eff,T,ADPP
+thalf.eff.obs,TEFFOSHL,time,"Effective half-life (based on MRT,obs)","Effective half-life (based on MRT,obs)",The effective half-life (as determined from the MRTobs),pk.calc.thalf.eff,F,ADPP
+thalf.eff.pred,TEFFPHL,time,"Effective half-life (based on MRT,pred)","Effective half-life (based on MRT,pred)",The effective half-life (as determined from the MRTpred),pk.calc.thalf.eff,F,ADPP
+time_above,TAT,time,Time above Concentration,Time above Concentration,Time above a given concentration,pk.calc.time_above,T,ADPP
+tlag,TLAG,time,Tlag,Tlag,Lag time,pk.calc.tlag,T,ADPP
+tlast,TLST,time,Tlast,Tlast,Time of the last concentration observed above the limit of quantification,pk.calc.tlast,T,ADPP
+tmax,TMAX,time,Tmax,Tmax,Time of the maximum observed concentration,pk.calc.tmax,T,ADPP
+totdose,TOTDOSE,dose,Total dose,Total dose,Total dose administered during an interval,pk.calc.totdose,F,ADPP
+vss.iv.last,VSSIVLST,volume,"Vss (for IV dosing, based on AUClast)","Vss (for IV dosing, based on AUClast)",The steady-state volume of distribution with intravenous infusion calculating through Tlast,pk.calc.vss,F,ADPP
+vss.iv.obs,VSSIVO,volume,"Vss (for IV dosing, based on AUCinf,obs)","Vss (for IV dosing, based on AUCinf,obs)",The steady-state volume of distribution with intravenous infusion using observed Clast,pk.calc.vss,F,ADPP
+vss.iv.pred,VSSIVP,volume,"Vss (for IV dosing, based on AUCinf,pred)","Vss (for IV dosing, based on AUCinf,pred)",The steady-state volume of distribution with intravenous infusion using predicted Clast,pk.calc.vss,F,ADPP
+vss.last,VSSLST,volume,Vss (based on AUClast),Vss (based on AUClast),The steady-state volume of distribution calculating through Tlast,pk.calc.vss,F,ADPP
+vss.md.obs,VSSMDO,volume,"Vss (for multiple-dose, based on Clast,obs)","Vss (for multiple-dose, based on Clast,obs)",The steady-state volume of distribution for nonlinear multiple-dose data using observed Clast,pk.calc.vss,F,ADPP
+vss.md.pred,VSSMDP,volume,"Vss (for multiple-dose, based on Clast,pred)","Vss (for multiple-dose, based on Clast,pred)",The steady-state volume of distribution for nonlinear multiple-dose data using predicted Clast,pk.calc.vss,F,ADPP
+vss.obs,VSSO,volume,"Vss (based on AUCinf,obs)","Vss (based on AUCinf,obs)",The steady-state volume of distribution using observed Clast,pk.calc.vss,T,ADPP
+vss.pred,VSSP,volume,"Vss (based on AUCinf,pred)","Vss (based on AUCinf,pred)",The steady-state volume of distribution using predicted Clast,pk.calc.vss,T,ADPP
+vz.obs,VZO,volume,"Vz (based on AUCinf,obs)","Vz (based on AUCinf,obs)",The terminal volume of distribution using observed Clast,pk.calc.vz,T,ADPP
+vz.pred,VZP,volume,"Vz (based on AUCinf,pred)","Vz (based on AUCinf,pred)",The terminal volume of distribution using predicted Clast,pk.calc.vz,T,ADPP
+STUDYID,,,Study Identifier,Study Identifier,,,ADPC,
+USUBJID,,,Unique Subject Identifier,Unique Subject Identifier,,,ADPC,
+SUBJID,,,Subject Identifier for the Study,Subject Identifier for the Study,,,ADPC,
+SITEID,,,Study Site Identifier,Study Site Identifier,,,ADPC,
+ASEQ,,,Analysis Sequence Number,Analysis Sequence Number,,,ADPC,
+REGION1,,,Geographic Region 1,Geographic Region 1,,,ADPC,
+COUNTRY,,,Country,Country,,,ADPC,
+ETHNIC,,,Ethnicity,Ethnicity,,,ADPC,
+AGE,,,Age,Age,,,ADPC,
+AGEU,,,Age Units,Age Units,,,ADPC,
+AAGE,,,Analysis Age,Analysis Age,,,ADPC,
+AAGEU,,,Analysis Age Unit,Analysis Age Unit,,,ADPC,
+AGEGR1,,,Pooled Age Group 1,Pooled Age Group 1,,,ADPC,
+AGEGR2,,,Pooled Age Group 2,Pooled Age Group 2,,,ADPC,
+AGEGR3,,,Pooled Age Group 3,Pooled Age Group 3,,,ADPC,
+STRATwNM,,,Description of Stratum w,Description of Stratum w,,,ADPC,
+STRATw,,,Randomized Value of Stratum w,Randomized Value of Stratum w,,,ADPC,
+STRATwV,,,Verified Value of Stratum w,Verified Value of Stratum w,,,ADPC,
+SEX,,,Sex,Sex,,,ADPC,
+RACE,,,Race,Race,,,ADPC,
+ITTFL,,,Intent-To-Treat Population Flag,Intent-To-Treat Population Flag,,,ADPC,
+SAFFL,,,Safety Population Flag,Safety Population Flag,,,ADPC,
+PPROTFL,,,Per-Protocol Population Flag,Per-Protocol Population Flag,,,ADPC,
+TRT01P,,,Planned Treatment for Period 01,Planned Treatment for Period 01,,,ADPC,
+TRT02P,,,Planned Treatment for Period 02,Planned Treatment for Period 02,,,ADPC,
+TRT03P,,,Planned Treatment for Period 03,Planned Treatment for Period 03,,,ADPC,
+TRT04P,,,Planned Treatment for Period 04,Planned Treatment for Period 04,,,ADPC,
+TRT05P,,,Planned Treatment for Period 05,Planned Treatment for Period 05,,,ADPC,
+TRT01A,,,Actual Treatment for Period 01,Actual Treatment for Period 01,,,ADPC,
+TRT02A,,,Actual Treatment for Period 02,Actual Treatment for Period 02,,,ADPC,
+TRT03A,,,Actual Treatment for Period 03,Actual Treatment for Period 03,,,ADPC,
+TRT04A,,,Actual Treatment for Period 04,Actual Treatment for Period 04,,,ADPC,
+TRT05A,,,Actual Treatment for Period 05,Actual Treatment for Period 05,,,ADPC,
+TRTSEQP,,,Planned Sequence of Treatments,Planned Sequence of Treatments,,,ADPC,
+TRTSEQA,,,Actual Sequence of Treatments,Actual Sequence of Treatments,,,ADPC,
+TRTSDTM,,,Datetime of First Exposure to Treatment,Datetime of First Exposure to Treatment,,,ADPC,
+TRTSDT,,,Date of First Exposure to Treatment,Date of First Exposure to Treatment,,,ADPC,
+TRTEDTM,,,Datetime of Last Exposure to Treatment,Datetime of Last Exposure to Treatment,,,ADPC,
+TRTEDT,,,Date of Last Exposure to Treatment,Date of Last Exposure to Treatment,,,ADPC,
+DCUTDT,,,Date of Data Cut,Date of Data Cut,,,ADPC,
+PCSEQ,,,Sequence Number,Sequence Number,,,ADPC,
+PCGRPID,,,Group ID,Group ID,,,ADPC,
+PCREFID,,,Reference ID,Reference ID,,,ADPC,
+PCSPID,,,Sponsor-Defined Identifier,Sponsor-Defined Identifier,,,ADPC,
+PCTESTCD,,,Pharmacokinetic Test Short Name,Pharmacokinetic Test Short Name,,,ADPC,
+PCTEST,,,Pharmacokinetic Test Name,Pharmacokinetic Test Name,,,ADPC,
+PCCAT,,,Test Category,Test Category,,,ADPC,
+PCSCAT,,,Test Subcategory,Test Subcategory,,,ADPC,
+PCSTRESC,,,Character Result/Finding in Std Format,Character Result/Finding in Std Format,,,ADPC,
+PCSTRESN,,,Numeric Result/Finding in Standard Units,Numeric Result/Finding in Standard Units,,,ADPC,
+PCSTRESU,,,Standard Units,Standard Units,,,ADPC,
+PCSTAT,,,Completion Status,Completion Status,,,ADPC,
+PCREASND,,,Reason Test Not Done,Reason Test Not Done,,,ADPC,
+PCSPEC,,,Specimen Material Type,Specimen Material Type,,,ADPC,
+PCSPCCND,,,Specimen Condition,Specimen Condition,,,ADPC,
+PCMETHOD,,,Method of Test or Examination,Method of Test or Examination,,,ADPC,
+PCFAST,,,Fasting Status,Fasting Status,,,ADPC,
+PCLLOQ,,,Lower Limit of Quantitation,Lower Limit of Quantitation,,,ADPC,
+VISITNUM,,,Visit Number,Visit Number,,,ADPC,
+VISIT,,,Visit Name,Visit Name,,,ADPC,
+VISITDY,,,Planned Study Day of Visit,Planned Study Day of Visit,,,ADPC,
+EPOCH,,,Epoch,Epoch,,,ADPC,
+PCDTC,,,Date/Time of Specimen Collection,Date/Time of Specimen Collection,,,ADPC,
+PCDY,,,Actual Study Day of Specimen Collection,Actual Study Day of Specimen Collection,,,ADPC,
+PCTPT,,,Planned Time Point Name,Planned Time Point Name,,,ADPC,
+PCTPTNUM,,,Planned Time Point Number,Planned Time Point Number,,,ADPC,
+PCSMPLID,,,Alternate Sample Identifier,Alternate Sample Identifier,,,ADPC,
+PCAINTP,,,Assay Interpretation,Assay Interpretation,,,ADPC,
+PARAM,,,Parameter,Parameter,,,ADPC,
+PARAMCD,,,Parameter Code,Parameter Code,,,ADPC,
+PARCAT1,,,Parameter Category 1,Parameter Category 1,,,ADPC,
+AVAL,,,Analysis Value,Analysis Value,,,ADPC,
+AVALCAT1,,,Analysis Value Category 1,Analysis Value Category 1,,,ADPC,
+AVALU,,,Analysis Value Unit,Analysis Value Unit,,,ADPC,
+BASE,,,Baseline Value,Baseline Value,,,ADPC,
+BASETYPE,,,Baseline Type,Baseline Type,,,ADPC,
+ABLFL,,,Baseline Record Flag,Baseline Record Flag,,,ADPC,
+ALLOQ,,,Analysis Lower Limit of Quantitation,Analysis Lower Limit of Quantitation,,,ADPC,
+ADTM,,,Analysis Datetime,Analysis Datetime,,,ADPC,
+ADT,,,Analysis Date,Analysis Date,,,ADPC,
+ATM,,,Analysis Time,Analysis Time,,,ADPC,
+ADY,,,Analysis Relative Day,Analysis Relative Day,,,ADPC,
+ADTF,,,Analysis Date Imputation Flag,Analysis Date Imputation Flag,,,ADPC,
+ATMF,,,Analysis Time Imputation Flag,Analysis Time Imputation Flag,,,ADPC,
+ASTDT,,,Analysis Start Date,Analysis Start Date,,,ADPC,
+ASTTM,,,Analysis Start Time,Analysis Start Time,,,ADPC,
+ASTDTM,,,Analysis Start Date/Time,Analysis Start Date/Time,,,ADPC,
+ASTDTF,,,Analysis Start Date Imputation Flag,Analysis Start Date Imputation Flag,,,ADPC,
+ASTTMF,,,Analysis Start Time Imputation Flag,Analysis Start Time Imputation Flag,,,ADPC,
+AENDT,,,Analysis End Date,Analysis End Date,,,ADPC,
+AENTM,,,Analysis End Time,Analysis End Time,,,ADPC,
+AENDTM,,,Analysis End Date/Time,Analysis End Date/Time,,,ADPC,
+AENDTF,,,Analysis End Date Imputation Flag,Analysis End Date Imputation Flag,,,ADPC,
+AENTMF,,,Analysis End Time Imputation Flag,Analysis End Time Imputation Flag,,,ADPC,
+ATPT,,,Analysis Timepoint,Analysis Timepoint,,,ADPC,
+ATPT,,,Analysis Timepoint,Analysis Timepoint,,,ADPC,
+ATPTN,,,Analysis Timepoint (N),Analysis Timepoint (N),,,ADPC,
+ATPTN,,,Analysis Timepoint (N),Analysis Timepoint (N),,,ADPC,
+ATPTREF,,,Analysis Timepoint Reference,Analysis Timepoint Reference,,,ADPC,
+AVISIT,,,Analysis Visit,Analysis Visit,,,ADPC,
+AVISIT,,,Analysis Visit,Analysis Visit,,,ADPC,
+AVISITN,,,Analysis Visit (N),Analysis Visit (N),,,ADPC,
+AVISITN,,,Analysis Visit (N),Analysis Visit (N),,,ADPC,
+APERIOD,,,Period,Period,,,ADPC,
+APERIODC,,,Period (C),Period (C),,,ADPC,
+FANLDT,,,First Date of Dose for Analyte,First Date of Dose for Analyte,,,ADPC,
+FANLTM,,,First Time of Dose for Analyte,First Time of Dose for Analyte,,,ADPC,
+FANLDTM,,,First Datetime of Dose for Analyte,First Datetime of Dose for Analyte,,,ADPC,
+FANLDTMF,,,First Time of Dose Time Imputation Flag,First Time of Dose Time Imputation Flag,,,ADPC,
+FANLEDT,,,First End Date of Dose for Analyte,First End Date of Dose for Analyte,,,ADPC,
+FANLETM,,,First End Time of Dose for Analyte,First End Time of Dose for Analyte,,,ADPC,
+FANLEDTM,,,First End Datetime of Dose for Analyte,First End Datetime of Dose for Analyte,,,ADPC,
+FANLEDTF,,,First End of Dose Time Imputation Flag,First End of Dose Time Imputation Flag,,,ADPC,
+PCRFTDT,,,Reference Date of Dose for Analyte,Reference Date of Dose for Analyte,,,ADPC,
+PCRFTTM,,,Reference Time of Dose for Analyte,Reference Time of Dose for Analyte,,,ADPC,
+PCRFTDTM,,,Reference Datetime of Dose for Analyte,Reference Datetime of Dose for Analyte,,,ADPC,
+PCRFEDT,,,Reference End Date of Dose for Analyte,Reference End Date of Dose for Analyte,,,ADPC,
+PCRFETM,,,Reference End Time of Dose for Analyte,Reference End Time of Dose for Analyte,,,ADPC,
+PCRFEDTM,,,Ref. End Datetime of Dose for Analyte,Ref. End Datetime of Dose for Analyte,,,ADPC,
+NFRLT,,,Nom. Rel. Time from Analyte First Dose,Nom. Rel. Time from Analyte First Dose,,,ADPC,
+AFRLT,,,Act. Rel. Time from Analyte First Dose,Act. Rel. Time from Analyte First Dose,,,ADPC,
+TMPCTDF,,,Percent Diff. Nominal vs. Actual Time,Percent Diff. Nominal vs. Actual Time,,,ADPC,
+FRLTU,,,Rel. Time from First Dose Unit,Rel. Time from First Dose Unit,,,ADPC,
+NEFRLT,,,Nom. Rel. End Time from First Dose,Nom. Rel. End Time from First Dose,,,ADPC,
+AEFRLT,,,Act. Rel. End Time from First Dose,Act. Rel. End Time from First Dose,,,ADPC,
+NRRLT,,,Nominal Rel. Time from Ref. Dose,Nominal Rel. Time from Ref. Dose,,,ADPC,
+ARRLT,,,Actual Rel. Time from Ref. Dose,Actual Rel. Time from Ref. Dose,,,ADPC,
+MRRLT,,,Modified Rel. Time from Ref. Dose,Modified Rel. Time from Ref. Dose,,,ADPC,
+RRLTU,,,Rel. Time from Ref. Dose Unit,Rel. Time from Ref. Dose Unit,,,ADPC,
+NERRLT,,,Nominal Rel. End Time from Ref. Dose,Nominal Rel. End Time from Ref. Dose,,,ADPC,
+NERRLT,,,Nominal Rel. End Time from Ref. Dose,Nominal Rel. End Time from Ref. Dose,,,ADPC,
+AERRLT,,,Actual Rel. End Time from Ref. Dose,Actual Rel. End Time from Ref. Dose,,,ADPC,
+AERRLT,,,Actual Rel. End Time from Ref. Dose,Actual Rel. End Time from Ref. Dose,,,ADPC,
+MERRLT,,,Modified Rel. End Time from Ref. Dose,Modified Rel. End Time from Ref. Dose,,,ADPC,
+MERRLT,,,Modified Rel. End Time from Ref. Dose,Modified Rel. End Time from Ref. Dose,,,ADPC,
+CHG,,,Change from Baseline,Change from Baseline,,,ADPC,
+CRIT1,,,Analysis Criterion 1,Analysis Criterion 1,,,ADPC,
+CRIT1FL,,,Criterion 1 Evaluation Result Flag,Criterion 1 Evaluation Result Flag,,,ADPC,
+CRIT1FL,,,Criterion 1 Evaluation Result Flag,Criterion 1 Evaluation Result Flag,,,ADPC,
+DTYPE,,,Derivation Type,Derivation Type,,,ADPC,
+SPARSFL,,,Sparse Flag,Sparse Flag,,,ADPC,
+NCAXFL,,,PK NCA Exclusion Flag,PK NCA Exclusion Flag,,,ADPC,
+NCAXFN,,,PK NCA Exclusion Flag (N),PK NCA Exclusion Flag (N),,,ADPC,
+NCAwXRS,,,Reason w for PK NCA Exclusion,Reason w for PK NCA Exclusion,,,ADPC,
+NCAwXRSN,,,Reason for PK NCA Exclusion of w (N),Reason for PK NCA Exclusion of w (N),,,ADPC,
+PKSUMXF,,,PK Summary Exclusion Flag,PK Summary Exclusion Flag,,,ADPC,
+PKSUMXFN,,,PK Summary Exclusion Flag (N),PK Summary Exclusion Flag (N),,,ADPC,
+METABFL,,,Metabolite Flag,Metabolite Flag,,,ADPC,
+COHORT,,,Subject Cohort,Subject Cohort,,,ADPC,
+COHORTN,,,Subject Cohort (N),Subject Cohort (N),,,ADPC,
+ROUTE,,,Route,Route,,,ADPC,
+TRTRINT,,,Planned Treatment Interval,Planned Treatment Interval,,,ADPC,
+TRTRINTU,,,Planned Treatment Interval Units,Planned Treatment Interval Units,,,ADPC,
+DOSPCTDF,,,Percent Diff. Nominal vs. Actual Dose,Percent Diff. Nominal vs. Actual Dose,,,ADPC,
+DOSEFRQ,,,Dose Frequency,Dose Frequency,,,ADPC,
+DOSEP,,,Planned Treatment Dose,Planned Treatment Dose,,,ADPC,
+DOSEA,,,Actual Treatment Dose,Actual Treatment Dose,,,ADPC,
+DOSEPU,,,Planned Treatment Dose Units,Planned Treatment Dose Units,,,ADPC,
+DOSEAU,,,Actual Treatment Dose Units,Actual Treatment Dose Units,,,ADPC,
+ACYCLE,,,Analysis Cycle,Analysis Cycle,,,ADPC,
+ACYCLEC,,,Analysis Cycle (C),Analysis Cycle (C),,,ADPC,
+ADOSEDUR,,,Actual Duration of Treatment Dose,Actual Duration of Treatment Dose,,,ADPC,
+NDOSEDUR,,,Nominal duration of Treatment Dose,Nominal duration of Treatment Dose,,,ADPC,
+DOSEDURU,,,Duration of Treatment Dose Units,Duration of Treatment Dose Units,,,ADPC,
+VOLUME,,,Volume Value,Volume Value,,,ADPC,
+VOLUMEU,,,Volume Value Unit,Volume Value Unit,,,ADPC,
+SPWEIGHT,,,Specimen Weight Value,Specimen Weight Value,,,ADPC,
+SPWEIGHU,,,Specimen Weight Value Unit,Specimen Weight Value Unit,,,ADPC,
+WTBL,,,Weight at Baseline,Weight at Baseline,,,ADPC,
+HTBL,,,Height at Baseline,Height at Baseline,,,ADPC,
+IBWBL,,,Ideal Body Weight (IBW) at Baseline,Ideal Body Weight (IBW) at Baseline,,,ADPC,
+LBMBL,,,Lean Body Mass (LBM) at Baseline,Lean Body Mass (LBM) at Baseline,,,ADPC,
+BMIBL,,,BMI at Baseline,BMI at Baseline,,,ADPC,
+BSABL,,,BSA at Baseline,BSA at Baseline,,,ADPC,
+SBPBL,,,Systolic BP at Baseline,Systolic BP at Baseline,,,ADPC,
+DBPBL,,,Diastolic BP at Baseline,Diastolic BP at Baseline,,,],
+TOBBL,,,Smoking Status at Baseline,Smoking Status at Baseline,,,ADPC,
+ALCOBL,,,Alcohol at Baseline,Alcohol at Baseline,,,ADPC,
+TEMPBL,,,Temperature at Baseline,Temperature at Baseline,,,ADPC,
+PULSBL,,,Pulse rate at Baseline,Pulse rate at Baseline,,,ADPC,
+ADA,,,Treatment Emergent ADA status,Treatment Emergent ADA status,,,ADPC,
+AAGBL,,,Alpha-1 Acid Glycoprotein at Baseline,Alpha-1 Acid Glycoprotein at Baseline,,,ADPC,
+CREATBL,,,Creatinine at Baseline (BLOOD),Creatinine at Baseline (BLOOD),,,ADPC,
+CRCLBL,,,CrCL at Baseline,CrCL at Baseline,,,ADPC,
+ALBUBL,,,Albumin at Baseline,Albumin at Baseline,,,ADPC,
+EOSBL,,,Eosinophils at Baseline,Eosinophils at Baseline,,,ADPC,
+BUNBL,,,Blood Urea Nitrogen at Baseline,Blood Urea Nitrogen at Baseline,,,ADPC,
+CALCBL,,,Calcium at Baseline,Calcium at Baseline,,,ADPC,
+CLBL,,,Chloride at Baseline,Chloride at Baseline,,,ADPC,
+PHBL,,,Phosphate at Baseline,Phosphate at Baseline,,,ADPC,
+PLATEBL,,,Platelet Count at Baseline,Platelet Count at Baseline,,,ADPC,
+WBCBL,,,WBC Count at Baseline,WBC Count at Baseline,,,ADPC,
+GGTBL,,,GGT at Baseline,GGT at Baseline,,,ADPC,
+GLUCBL,,,Glucose at Baseline,Glucose at Baseline,,,ADPC,
+HCTBL,,,Hematocrit at Baseline,Hematocrit at Baseline,,,ADPC,
+HGBBL,,,Hemoglobin at Baseline,Hemoglobin at Baseline,,,ADPC,
+ALKPHBL,,,Alkaline Phosphatase at Baseline,Alkaline Phosphatase at Baseline,,,ADPC,
+KBL,,,Potassium at Baseline,Potassium at Baseline,,,ADPC,
+LYMBL,,,Lymphocytes at Baseline,Lymphocytes at Baseline,,,ADPC,
+MONOBL,,,Monocytes at Baseline,Monocytes at Baseline,,,ADPC,
+NABL,,,Sodium at Baseline,Sodium at Baseline,,,ADPC,
+NEUBL,,,Neutrophils at Baseline,Neutrophils at Baseline,,,ADPC,
+RBCBL,,,RBC Count at Baseline,RBC Count at Baseline,,,ADPC,
+TBILIBL,,,Bilirubin at Baseline (BLOOD),Bilirubin at Baseline (BLOOD),,,ADPC,
+TPROTBL,,,Total Protein at Baseline (BLOOD),Total Protein at Baseline (BLOOD),,,ADPC,
+SGOTBL,,,SGOT-AST at Baseline,SGOT-AST at Baseline,,,ADPC,
+SGPTBL,,,SGPT-ALT at Baseline,SGPT-ALT at Baseline,,,ADPC,
+RRBL,,,RR Duration at Baseline,RR Duration at Baseline,,,ADPC,
+PRBL,,,PR Duration at Baseline,PR Duration at Baseline,,,ADPC,
+QRSBL,,,QRS Duration at Baseline,QRS Duration at Baseline,,,ADPC,
+QTBL,,,QT duration at Baseline,QT duration at Baseline,,,ADPC,
+QTCBBL,,,QTcB at Baseline,QTcB at Baseline,,,ADPC,
+QTCFBL,,,QTcF at Baseline,QTcF at Baseline,,,ADPC,
+HRBL,,,Heart Rate at Baseline,Heart Rate at Baseline,,,ADPC,
+WTBLU,,,Weight at Baseline (Unit),Weight at Baseline (Unit),,,ADPC,
+HTBLU,,,Height at Baseline (Unit),Height at Baseline (Unit),,,ADPC,
+IBWBLU,,,IBW at Baseline (Unit),IBW at Baseline (Unit),,,ADPC,
+LBWBLU,,,LBM at Baseline (Unit),LBM at Baseline (Unit),,,ADPC,
+BMIBLU,,,BMI at Baseline (Unit),BMI at Baseline (Unit),,,ADPC,
+BSABLU,,,BSA at Baseline (Unit),BSA at Baseline (Unit),,,ADPC,
+SBPBLU,,,Systolic BP at Baseline (Unit),Systolic BP at Baseline (Unit),,,ADPC,
+DBPBLU,,,Diastolic BP at Baseline (Unit),Diastolic BP at Baseline (Unit),,,ADPC,
+TOBBLU,,,Smoking Status at Baseline (Unit),Smoking Status at Baseline (Unit),,,ADPC,
+PULSBLU,,,Pulse rate at Baseline (Unit),Pulse rate at Baseline (Unit),,,ADPC,
+AAGBLU,,,AAG at baseline (Unit),AAG at baseline (Unit),,,ADPC,
+CREATBLU,,,Creat at baseline (BLOOD),Creat at baseline (BLOOD),,,ADPC,
+CRCLBLU,,,CrCL at baseline (BLOOD),CrCL at baseline (BLOOD),,,ADPC,
+ALBUBLU,,,Albumin at baseline (Unit),Albumin at baseline (Unit),,,ADPC,
+EOSBLU,,,Eosinophils at baseline (Unit),Eosinophils at baseline (Unit),,,ADPC,
+BUNBLU,,,Blood Urea Nitrogen at baseline (Unit),Blood Urea Nitrogen at baseline (Unit),,,ADPC,
+CALCBLU,,,Calcium at baseline (Unit),Calcium at baseline (Unit),,,ADPC,
+CLBLU,,,Chloride at baseline (Unit),Chloride at baseline (Unit),,,ADPC,
+PHBLU,,,Phosphate at baseline (Unit),Phosphate at baseline (Unit),,,ADPC,
+PLATEBLU,,,Platelet Count at baseline (Unit),Platelet Count at baseline (Unit),,,ADPC,
+WBCBLU,,,WBC Count at baseline (Unit),WBC Count at baseline (Unit),,,ADPC,
+GGTBLU,,,GGT at Baseline (Unit),GGT at Baseline (Unit),,,ADPC,
+GLUBLU,,,Glucose at Baseline (Unit),Glucose at Baseline (Unit),,,ADPC,
+HCTBLU,,,HCT at Baseline (Unit),HCT at Baseline (Unit),,,ADPC,
+HGBBLU,,,HGB at Baseline (Unit),HGB at Baseline (Unit),,,ADPC,
+ALKPHBLU,,,Alkaline Phosphatase at Baseline (Unit),Alkaline Phosphatase at Baseline (Unit),,,ADPC,
+KBLU,,,Potassium at Baseline (Unit),Potassium at Baseline (Unit),,,ADPC,
+LYMBLU,,,Lymphocytes at Baseline (Unit),Lymphocytes at Baseline (Unit),,,ADPC,
+MONOBLU,,,Monocytes at Baseline (Unit),Monocytes at Baseline (Unit),,,ADPC,
+NABLU,,,Sodium at Baseline (Unit),Sodium at Baseline (Unit),,,ADPC,
+NEUBLU,,,Neutrophils at Baseline (Unit),Neutrophils at Baseline (Unit),,,ADPC,
+RBCBLU,,,RBC Count at Baseline (Unit),RBC Count at Baseline (Unit),,,ADPC,
+TBILIBLU,,,Bilirubin at Baseline (Unit),Bilirubin at Baseline (Unit),,,ADPC,
+TPROTBLU,,,Total Protein at Baseline (Unit),Total Protein at Baseline (Unit),,,ADPC,
+SGOTBLU,,,SGOT-AST at Baseline (Unit),SGOT-AST at Baseline (Unit),,,ADPC,
+SGPTBLU,,,SGPT-ALT at Baseline (Unit),SGPT-ALT at Baseline (Unit),,,ADPC,
+RRBLU,,,RR Duration at Baseline (Unit),RR Duration at Baseline (Unit),,,ADPC,
+PRBLU,,,PR Duration at Baseline (Unit),PR Duration at Baseline (Unit),,,ADPC,
+QRSBLU,,,QRS Duration at Baseline (Unit),QRS Duration at Baseline (Unit),,,ADPC,
+QTBLU,,,QT Duration at Baseline (Unit),QT Duration at Baseline (Unit),,,ADPC,
+QTCBBLU,,,QTcB at Baseline (Unit),QTcB at Baseline (Unit),,,ADPC,
+QTCFBLU,,,QTcF at Baseline (Unit),QTcF at Baseline (Unit),,,ADPC,
+HRBLU,,,Heart Rate at Baseline (Unit),Heart Rate at Baseline (Unit),,,ADPC,
+DRUG,,,Medication Name,Medication Name,,,ADPC,
+REGIME,,,Regimen of Medication,Regimen of Medication,,,ADPC,
+FRMUL,,,Treatment Formulation,Treatment Formulation,,,ADPC,
+DOSNO,,,Dose Number,Dose Number,,,ADPC,
+FEDSTATE,,,Fasted / Fed Status,Fasted / Fed Status,,,ADPC,
+ANL01FL,,,Analysis Flag 01,Analysis Flag 01,,,ADPC,
+ANL02FL,,,Analysis Flag 02,Analysis Flag 02,,,ADPC,
+ANL03FL,,,Analysis Flag 03,Analysis Flag 03,,,ADPC,
+ANL04FL,,,Analysis Flag 04,Analysis Flag 04,,,ADPC,
+ANL05FL,,,Analysis Flag 05,Analysis Flag 05,,,ADPC,
+STUDYID,,,Study Identifier,Study Identifier,,,ADPP,
+USUBJID,,,Unique Subject Identifier,Unique Subject Identifier,,,ADPP,
+SUBJID,,,Subject Identifier for the Study,Subject Identifier for the Study,,,ADPP,
+SITEID,,,Study Site Identifier,Study Site Identifier,,,ADPP,
+ASEQ,,,Analysis Sequence Number,Analysis Sequence Number,,,ADPP,
+REGION1,,,Geographic Region 1,Geographic Region 1,,,ADPP,
+COUNTRY,,,Country,Country,,,ADPP,
+ETHNIC,,,Ethnicity,Ethnicity,,,ADPP,
+AGE,,,Age,Age,,,ADPP,
+AGEU,,,Age Units,Age Units,,,ADPP,
+AAGE,,,Analysis Age,Analysis Age,,,ADPP,
+AAGEU,,,Analysis Age Unit,Analysis Age Unit,,,ADPP,
+AGEGR1,,,Pooled Age Group 1,Pooled Age Group 1,,,ADPP,
+AGEGR2,,,Pooled Age Group 2,Pooled Age Group 2,,,ADPP,
+AGEGR3,,,Pooled Age Group 3,Pooled Age Group 3,,,ADPP,
+STRATwNM,,,Description of Stratum w,Description of Stratum w,,,ADPP,
+STRATw,,,Randomized Value of Stratum w,Randomized Value of Stratum w,,,ADPP,
+STRATwV,,,Verified Value of Stratum w,Verified Value of Stratum w,,,ADPP,
+SEX,,,Sex,Sex,,,ADPP,
+RACE,,,Race,Race,,,ADPP,
+ITTFL,,,Intent-To-Treat Population Flag,Intent-To-Treat Population Flag,,,ADPP,
+SAFFL,,,Safety Population Flag,Safety Population Flag,,,ADPP,
+PPROTFL,,,Per-Protocol Population Flag,Per-Protocol Population Flag,,,ADPP,
+TRT01P,,,Planned Treatment for Period 01,Planned Treatment for Period 01,,,ADPP,
+TRTxxP,,,Planned Treatment for Period xx,Planned Treatment for Period xx,,,ADPP,
+TRT01A,,,Actual Treatment for Period 01,Actual Treatment for Period 01,,,ADPP,
+TRTxxA,,,Actual Treatment for Period xx,Actual Treatment for Period xx,,,ADPP,
+TRTSEQP,,,Planned Sequence of Treatments,Planned Sequence of Treatments,,,ADPP,
+TRTSEQA,,,Actual Sequence of Treatments,Actual Sequence of Treatments,,,ADPP,
+TRTSDTM,,,Datetime of First Exposure to Treatment,Datetime of First Exposure to Treatment,,,ADPP,
+TRTSDT,,,Date of First Exposure to Treatment,Date of First Exposure to Treatment,,,ADPP,
+TRTEDTM,,,Datetime of Last Exposure to Treatment,Datetime of Last Exposure to Treatment,,,ADPP,
+TRTEDT,,,Date of Last Exposure to Treatment,Date of Last Exposure to Treatment,,,ADPP,
+DCUTDT,,,Date of Data Cut,Date of Data Cut,,,ADPP,
+PPSEQ,,,Sequence Number,Sequence Number,,,ADPP,
+PPGRPID,,,Group ID,Group ID,,,ADPP,
+PPSPID,,,Sponsor-Defined Identifier,Sponsor-Defined Identifier,,,ADPP,
+PPTESTCD,,,Parameter Short Name,Parameter Short Name,,,ADPP,
+PPTEST,,,Parameter Name,Parameter Name,,,ADPP,
+PPCAT,,,Parameter Category,Parameter Category,,,ADPP,
+PPSCAT,,,Parameter Subcategory,Parameter Subcategory,,,ADPP,
+PPSTRESC,,,Character Result/Finding in Std Format,Character Result/Finding in Std Format,,,ADPP,
+PPSTRESN,,,Numeric Result/Finding in Standard Units,Numeric Result/Finding in Standard Units,,,ADPP,
+PPSTRESU,,,Standard Units,Standard Units,,,ADPP,
+PPSTAT,,,Completion Status,Completion Status,,,ADPP,
+PPREASND,,,Reason Parameter Not Calculated,Reason Parameter Not Calculated,,,ADPP,
+PPSPEC,,,Specimen Material Type,Specimen Material Type,,,ADPP,
+PPDTC,,,Date/Time of Parameter Calculations,Date/Time of Parameter Calculations,,,ADPP,
+PPRFTDTC,,,Date/Time of Reference Point,Date/Time of Reference Point,,,ADPP,
+PPSTINT,,,Planned Start of Assessment Interval,Planned Start of Assessment Interval,,,ADPP,
+PPENINT,,,Planned End of Assessment Interval,Planned End of Assessment Interval,,,ADPP,
+PARAM,,,Parameter,Parameter,,,ADPP,
+PARAMCD,,,Parameter Code,Parameter Code,,,ADPP,
+PARCAT1,,,Parameter Category 1,Parameter Category 1,,,ADPP,
+PARCAT1,,,Parameter Category 1,Parameter Category 1,,,ADPP,
+AVAL,,,Analysis Value,Analysis Value,,,ADPP,
+AVALU,,,Analysis Value Unit,Analysis Value Unit,,,ADPP,
+AVALC,,,Analysis Value (C),Analysis Value (C),,,ADPP,
+ADTM,,,Analysis Datetime,Analysis Datetime,,,ADPP,
+ADT,,,Analysis Date,Analysis Date,,,ADPP,
+ATM,,,Analysis Time,Analysis Time,,,ADPP,
+ADY,,,Analysis Relative Day,Analysis Relative Day,,,ADPP,
+ADTF,,,Analysis Date Imputation Flag,Analysis Date Imputation Flag,,,ADPP,
+ATMF,,,Analysis Time Imputation Flag,Analysis Time Imputation Flag,,,ADPP,
+ATPT,,,Analysis Timepoint,Analysis Timepoint,,,ADPP,
+ATPT,,,Analysis Timepoint,Analysis Timepoint,,,ADPP,
+ATPTN,,,Analysis Timepoint (N),Analysis Timepoint (N),,,ADPP,
+ATPTN,,,Analysis Timepoint (N),Analysis Timepoint (N),,,ADPP,
+AVISIT,,,Analysis Visit,Analysis Visit,,,ADPP,
+AVISIT,,,Analysis Visit,Analysis Visit,,,ADPP,
+AVISITN,,,Analysis Visit (N),Analysis Visit (N),,,ADPP,
+AVISITN,,,Analysis Visit (N),Analysis Visit (N),,,ADPP,
+ANALYTE,,,Analyte,Analyte,,,ADPC,
+EVID,,,Event ID,Event ID,,,ADPC,
+DOSEU,,,Treatment Dose Units,Treatment Dose Units,,,ADPC,
