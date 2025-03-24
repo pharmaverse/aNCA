@@ -37,7 +37,7 @@ additional_analysis_ui <- function(id) {
       title = "AUC Ratios",
       value = "auc_analysis",
       card(
-          p("To be added")
+        p("To be added")
       ),
     ),
     nav_panel(
