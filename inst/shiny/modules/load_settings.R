@@ -99,6 +99,9 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
                 pull(values),
               duration = setts$dose_columns %>%
                 filter(ind == "duration") %>%
+                pull(values),
+              route = setts$dose_columns %>%
+                filter(ind == "route") %>%
                 pull(values)
             )
           ),
