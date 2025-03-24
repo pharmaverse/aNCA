@@ -62,7 +62,6 @@ units_table_server <- function(id, mydata) {
     modal_units_table <- reactiveVal(NULL)
     observeEvent(mydata(), {
       req(mydata()$units)
-      if (!is.null(modal_units_table())) return()
 
       analyte_column <- mydata()$conc$columns$groups$group_analyte
 
@@ -75,6 +74,18 @@ units_table_server <- function(id, mydata) {
           `Analytes` = analyte_column
         ) %>%
         select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
+
+      #' Check if units table already exists.
+      #' If it does, check if parameters and their default units are the same as pulled
+      #' from the data. If they are, there is no need to update the table and we wish to keep
+      #' the previously established units.
+      #' If the tables differ in content (e.g. when new data is uploaded), then overwrite existing
+      #' units table.
+      if (!is.null(modal_units_table()) &&
+            all(sort(modal_units_table()$`Parameter`) == sort(modal_units_table_data$`Parameter`)) && # nolint
+            all(sort(modal_units_table()$`Default unit`) == sort(modal_units_table_data$`Default unit`))) { # nolint
+        return()
+      }
 
       modal_units_table(modal_units_table_data)
     })
