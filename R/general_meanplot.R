@@ -136,19 +136,6 @@ general_meanplot <- function(data,
   p
 }
 
-#' Helper Function: Calculate the Geometric Mean
-#'
-#' @param x A numeric vector.
-#' @param na.rm A logical value indicating whether NA values should be removed.
-#' @return The geometric mean of the input vector.
-#' @export
-geometric_mean <- function(x, na.rm = FALSE) { # nolint
-  if (na.rm) {
-    x <- x[!is.na(x)]
-  }
-  exp(mean(log(x)))
-}
-
 #' Derived function from labeller label_both: Labels in one line
 #'
 #' @param x Column names as character vector
