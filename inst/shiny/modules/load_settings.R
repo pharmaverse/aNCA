@@ -37,7 +37,7 @@ load_settings_server <- function(id, mydata, parent_session, auc_counter, manual
         setts <- readRDS(input$settings_upload$datapath)
 
       } else if (tools::file_ext(file_path) == "xlsx") {
-        # Load and reestracture into PKNCA object the excel file
+        # Load and restructure into PKNCA object the excel file
         sheets <- openxlsx::getSheetNames(file_path)
         setts <- lapply(sheets, function(sheet) openxlsx::read.xlsx(file_path, sheet = sheet))
         names(setts) <- sheets
