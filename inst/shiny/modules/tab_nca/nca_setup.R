@@ -4,7 +4,7 @@ nca_setup_ui <- function(id) {
   tagList(
     # Local upload option
     fluidRow(
-      load_settings_ui(ns("load_settings"))
+      upload_settings_ui(ns("upload_settings"))
     ),
 
     # Selection of analyte, dose number and specimen
@@ -212,7 +212,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     # File Upload Handling
     # The server handles the logic for loading project settings from a file & update UI elements
     # from NCA setup (all inputs) & slope adjustments (manual_slopes table & concentration dataset)
-    load_settings_server("load_settings", mydata, session, auc_counter, manual_slopes)
+    upload_settings_server("upload_settings", mydata, session, auc_counter, manual_slopes)
 
     # Include keyboard limits for the settings GUI display
 

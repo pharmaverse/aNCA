@@ -1,4 +1,4 @@
-load_settings_ui <- function(id) {
+upload_settings_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fileInput(
@@ -22,7 +22,7 @@ load_settings_ui <- function(id) {
 #' - auc_counter A reactive value for counting AUC intervals.
 #' - manual_slopes A reactive value for handling manual slopes.
 #'
-load_settings_server <- function(id, mydata, parent_session, auc_counter, manual_slopes) {
+upload_settings_server <- function(id, mydata, parent_session, auc_counter, manual_slopes) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
