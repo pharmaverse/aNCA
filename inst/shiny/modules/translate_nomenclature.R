@@ -8,7 +8,7 @@
 #' Default is "PKNCA".
 #' @param target_col Character indicating the column name in the metadata file of the target terms.
 #' Default is "CDISC".
-#' @return A character vector of translated terms. Input terms not available in mapping_col will be
+#' @returns A character vector of translated terms. Input terms not available in mapping_col will be
 #' returned with the same value.
 #' @examples
 #' input_terms <- c("adj.r.squared", "ae", "nonexistent_term")
@@ -25,5 +25,5 @@ translate_terms <- function(input_terms, mapping_col = "PKNCA", target_col = "CD
                              translation_vector[input_terms],
                              input_terms)
 
-  return(translated_terms)
+  translated_terms
 }
