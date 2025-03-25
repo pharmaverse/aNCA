@@ -152,7 +152,6 @@ slope_selector_server <- function(
         NULL
       } else {
         all_params <- names(get.interval.cols())
-browser()
        pknca_data$options$progress <- FALSE
         result_obj <- pk.nca(data = pknca_data, verbose = FALSE)
         result_obj$result <- result_obj$result %>%
@@ -171,7 +170,6 @@ browser()
       nca_filters <- processed_pknca_data()$conc$data %>%
         select(c(any_of(unlist(unname(processed_pknca_data()$conc$columns$groups))), DOSNO)) %>%
         distinct()
-    browser()
       # Filter the full NCA results based on user-filtered selections
       nca_filtered <- semi_join(lambdas_res()$result, nca_filters, by = "USUBJID")
 
@@ -278,7 +276,6 @@ browser()
         profiles_per_patient()
       )
       log_trace("{id}: Rendering plots")
-
       # Update the patient search input to make available choices for the user
       updateSelectInput(
         session = session,

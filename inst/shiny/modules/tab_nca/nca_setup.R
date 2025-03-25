@@ -604,7 +604,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
         pknca_conc = processed_pknca_data$conc,
         pknca_dose = processed_pknca_data$dose,
         # Set user selected params
-        params = input$params,
+        params = input$nca_params,
         # Start at t0 when requested by the user
         start_from_last_dose = input$should_impute_c0
       )
