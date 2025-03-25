@@ -8,15 +8,14 @@
 #' Default is "PKNCA".
 #' @param target_col Character indicating the column name in the metadata file of the target terms.
 #' Default is "CDISC".
+#' @param metadata Dataset used to do the mapping that contains the mapping and target columns.
 #' @return A character vector of translated terms. Input terms not available in mapping_col will be
 #' returned with the same value.
 #' @examples
 #' input_terms <- c("adj.r.squared", "ae", "nonexistent_term")
 #' translate_terms(input_terms)
-translate_terms <- function(input_terms, mapping_col = "PKNCA", target_col = "CDISC") {
-  # Load the metadata file
-  metadata <- read.csv("www/metadata/Parameter_labels_PKNCA-CDISC.csv")
-
+translate_terms <- function(input_terms, mapping_col = "PKNCA", target_col = "CDISC", metadata = labels_PKNCA_CDISC) {
+  
   # Create a named vector for translation
   translation_vector <- setNames(metadata[[target_col]], metadata[[mapping_col]])
 
