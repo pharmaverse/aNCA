@@ -56,7 +56,7 @@ flexible_violinboxplot <- function(boxplotdata,
 
   # Hover text to identify each point
   hover_text <- apply(box_data[columns_to_hover] %>%
-                        mutate(across(where(is.numeric), round, digits = 2)),
+                        mutate(across(where(is.numeric), \(x) round(x, digits = 2))),
                       MARGIN = 1,
                       function(row) {
                         paste(names(row), row, sep = ": ", collapse = "<br>")
