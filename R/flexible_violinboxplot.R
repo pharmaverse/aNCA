@@ -13,6 +13,8 @@
 #'                            should be used to identify when hovering the plotly outputs
 #' @param box                 A logical value indicating whether to plot a box plot (`TRUE`) or a
 #'                            violin plot (`FALSE`). Default is `TRUE`.
+#' @param plotly              A logical value indicating wether the output is plotly (TRUE, default) 
+#'                            or ggplot otherwise (FALSE)
 #'
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
@@ -25,7 +27,8 @@ flexible_violinboxplot <- function(boxplotdata,
                                    colorvars,
                                    varvalstofilter,
                                    columns_to_hover,
-                                   box = TRUE) {
+                                   box = TRUE,
+                                   plotly = TRUE) {
 
   # Variables to use to filter
   vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
@@ -100,9 +103,12 @@ flexible_violinboxplot <- function(boxplotdata,
     theme(legend.position = "right",
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
+  
 
-
-
-  ggplotly(p + aes(text = hover_text), tooltip = "text")
-
+  # Make plotly with hover features
+  if (plotly) {
+    ggplotly(p + aes(text = hover_text), tooltip = "text")
+  } else {
+    p
+  }
 }
