@@ -89,7 +89,7 @@ flexible_violinboxplot <- function(boxplotdata,
 
   # Include points, labels and theme
   p <- p +
-    geom_point(position = position_jitterdodge(), aes(text = hover_text)) +
+    geom_point(position = position_jitterdodge()) +
     # facet_wrap(~STUDYID) +
     labs(
       x = paste(xvars, collapse = ", "),
@@ -101,6 +101,8 @@ flexible_violinboxplot <- function(boxplotdata,
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
 
-  # Make plotly with hover features
-  return(ggplotly(p, tooltip = "text"))
+
+
+  ggplotly(p + aes(text = hover_text), tooltip = "text")
+
 }
