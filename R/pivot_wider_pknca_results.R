@@ -137,11 +137,12 @@ pivot_wider_pknca_results <- function(myres) {
 
 #' Helper function to add "label" attribute to columns based on parameter names
 .add_label_attribute <- function(df, myres) {
+
   mapping_vr <- myres$result %>%
     mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
            PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
                                                             mapping_col = "PKNCA",
-                                                            target_col = "label"))) %>%
+                                                            target_col = "PPTESTCD"))) %>%
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)
