@@ -14,6 +14,7 @@
 #' @examples
 #' input_terms <- c("adj.r.squared", "ae", "nonexistent_term")
 #' translate_terms(input_terms)
+#' @export
 translate_terms <- function(input_terms,
                             mapping_col = "PKNCA",
                             target_col = "PPTESTCD",
