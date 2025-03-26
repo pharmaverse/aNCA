@@ -61,6 +61,8 @@ Suggests:
     bslib,
     htmlwidgets,
     jsonlite,
+    knitr,
+    markdown,
     pak,
     reactable,
     reactable.extras,
@@ -76,7 +78,7 @@ Suggests:
     stringi,
     tools,
     zip
-VignetteBuilder: rmarkdown
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
