@@ -3,3 +3,8 @@
 ^aNCA\.Rproj$
 ^\.Rproj\.user$
 ^\.renvignore$
+^CONTRIBUTING.md$
+^pkgdown/
+^dev/
+^\.lintr$
+^\.github/
