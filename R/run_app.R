@@ -9,8 +9,9 @@ run_app <- function(...) {
 #' Check if all dependencies required to run shiny application are installed.
 #' If not, install them.
 #' This list of packages should also be provided as `Suggests` in the DESCRIPTION file.
+#' @noRd
 check_app_dependencies <- function() {
-  #' TODO: check those packages over and make sure they are needed
+  # TODO: check those packages over and make sure they are needed
   deps <- c(
     "bslib",
     "checkmate",

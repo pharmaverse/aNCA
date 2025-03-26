@@ -3,12 +3,15 @@
 #' This function generates a  violin or box plot based on the provided data,
 #' parameter, and dose information.
 #'
-#' @param result_data         A list containing the data to be plotted. It should have a `data`
+#' @param boxplotdata         A list containing the data to be plotted. It should have a `data`
 #'                            element with dose information and a `formatted` element with the
 #'                            data to be plotted.
 #' @param parameter           A string specifying the parameter to be plotted.
-#' @param doses_included      A vector of doses to be included in the plot.
-#' @param dosenumber_included A vector of dose numbers to be included in the plot.
+#' TODO(mateusz): I have added the following three params as they were missing, this needs to
+#'                be checked over.
+#' @param xvars               Variables for the x axis.
+#' @param colorvars           Variables for the color aesthetic.
+#' @param varvalstofilter     Variables to filter on.
 #' @param columns_to_hover    A character vector indicating the column names from result_data that
 #'                            should be used to identify when hovering the plotly outputs
 #' @param box                 A logical value indicating whether to plot a box plot (`TRUE`) or a

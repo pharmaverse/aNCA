@@ -46,7 +46,7 @@
 #'                               target_params = "half.life",
 #'                               target_groups = data.frame(analyte = "Analyte1"))
 #' @export
-interval_add_impute <- function(data, ...) {
+interval_add_impute <- function(data, target_impute, after, target_params, target_groups, ...) {
   UseMethod("interval_add_impute", data)
 }
 
@@ -90,7 +90,7 @@ interval_add_impute <- function(data, ...) {
 #'                                  target_params = "half.life",
 #'                                  target_groups = data.frame(analyte = "Analyte1"))
 #' @export
-interval_remove_impute <- function(data, ...) {
+interval_remove_impute <- function(data, target_impute, ...) {
   UseMethod("interval_remove_impute", data)
 }
 
