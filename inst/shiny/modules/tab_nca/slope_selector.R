@@ -213,7 +213,10 @@ slope_selector_server <- function(
 
       plots_to_render <- slice(ungroup(patient_profile_plot_ids), page_start:page_end)
 
-      plot_outputs <- apply(plots_to_render, 1, function(row) {
+      plot_outputs <- reactive({
+        req(plot_data(), lambdas_res(), plots_to_render)
+
+        apply(plots_to_render, 1, function(row) {
 
         lambda_slope_plot(
           conc_pknca_df = plot_data()$conc$data,
@@ -231,11 +234,12 @@ slope_selector_server <- function(
             }"
             # nolint end
           )
+        })
       })
 
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs
+        plot_outputs()
       })
 
       # update page number display #
