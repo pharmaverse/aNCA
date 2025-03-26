@@ -7,7 +7,7 @@
 translate_terms(
   input_terms,
   mapping_col = "PKNCA",
-  target_col = "CDISC",
+  target_col = "PPTESTCD",
   metadata = dict_pknca_cdisc
 )
 }
@@ -18,7 +18,7 @@ translate_terms(
 Default is "PKNCA".}
 
 \item{target_col}{Character indicating the column name in the metadata file of the target terms.
-Default is "CDISC".}
+Default is "PPTESTCD".}
 
 \item{metadata}{Dataset used to do the mapping that contains the mapping and target columns.}
 }

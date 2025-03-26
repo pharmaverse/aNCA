@@ -12,21 +12,21 @@ describe("translate_terms", {
     result <- translate_terms(input_terms, "PKNCA", "PPTESTCD", metadata = dict_pknca_cdisc)
     expect_equal(result, expected_output)
   })
-  
+
   it("handles missing mapping_col gracefully", {
     expect_error(
       translate_terms(c("adj.r.squared"), mapping_col = "NONEXISTENT", metadata = dict_pknca_cdisc),
       "mapping_col and target_col must exist in metadata."
     )
   })
-  
+
   it("handles missing target_col gracefully", {
     expect_error(
       translate_terms(c("adj.r.squared"), target_col = "NONEXISTENT", metadata = dict_pknca_cdisc),
       "mapping_col and target_col must exist in metadata."
     )
   })
-  
+
   it("handles invalid mapping_col and target_col types", {
     expect_error(
       translate_terms(c("adj.r.squared"), mapping_col = 123, metadata = dict_pknca_cdisc),
@@ -37,7 +37,7 @@ describe("translate_terms", {
       "mapping_col and target_col must be single character strings."
     )
   })
-  
+
   it("handles missing metadata using the default from dict_pknca_cdisc.rds", {
     input_terms <- c("adj.r.squared", "ae", "nonexistent_term")
     expected_output <- c("R2ADJ", "RCAMINT", "nonexistent_term")
