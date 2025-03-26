@@ -94,10 +94,13 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' NCA Setup module
     # Initialise trigger to create processed data
     processing_trigger <- reactiveVal(0)
+    slopes_nca_trigger <- reactiveVal(0)
     
     observeEvent(input$setup_list, {
       if (input$setup_list == "Slope Selector") {
         processing_trigger(processing_trigger() + 1)
+        slopes_nca_trigger(slopes_nca_trigger() + 1)
+        
       }
     })
     
@@ -113,6 +116,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       processed_pknca_data,
       res_nca,
       pk_nca_trigger,
+      slopes_nca_trigger,
       reactive(input$settings_upload)
     )
 

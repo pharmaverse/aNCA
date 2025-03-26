@@ -518,7 +518,6 @@ nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : 
       req(
         input$method
       )
-      
       # Load mydata reactive and modify it accordingly to user's request
       pre_pknca_data <- mydata()
       
@@ -544,50 +543,6 @@ nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : 
       pre_pknca_data
     })
     
-    # STEP 2: Create version for slope plots
-    # Only parameters required for the slope plots are set in intervals
-    # NCA dynamic changes/filters based on user selections 
-    slopes_pknca_data <- eventReactive(list(
-      input$should_impute_c0, pre_pknca_data()
-    ), {
-      req(pre_pknca_data())
-      req(
-        input$should_impute_c0
-      )
-      
-      # Load reactive
-      slopes_pknca_data <- pre_pknca_data()
-      
-      # Include intervals required for slopes module
-      slopes_pknca_data$intervals <- format_pkncadata_intervals(
-        pknca_conc = slopes_pknca_data$conc,
-        pknca_dose = slopes_pknca_data$dose,
-        # Set params needed
-        params = c("lambda.z.n.points",
-                   "lambda.z.time.first", "r.squared",
-                   "adj.r.squared", "cmax"),
-        # Start at t0 when requested by the user
-        start_from_last_dose = input$should_impute_c0
-      )
-      
-      slopes_pknca_data$impute <- NA
-      
-      # Define start imputations on intervals if specified by the user
-      if (input$should_impute_c0) {
-        slopes_pknca_data <- create_start_impute(slopes_pknca_data)
-        
-        # Make sure observed parameters (cmax, tmax) are not imputed
-        # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
-        slopes_pknca_data$intervals <- Reduce(function(data, ti_arg) {
-          interval_remove_impute(data,
-                                 target_impute = ti_arg,
-                                 target_params = "cmax")
-        }, unique(slopes_pknca_data$intervals$impute), init = slopes_pknca_data$intervals)
-      }
-      
-      slopes_pknca_data
-    })
-
     # Trigger once initially
     observeEvent({
       list(
@@ -605,6 +560,54 @@ nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : 
       isolate({
         if (processing_trigger() == 0) processing_trigger(1)
       })
+    })
+    
+    # STEP 2: Create version for slope plots
+    # Only parameters required for the slope plots are set in intervals
+    # NCA dynamic changes/filters based on user selections 
+    slopes_pknca_data <- eventReactive(processing_trigger(), {
+      req(pre_pknca_data())
+      req(
+        input$should_impute_c0, input$select_analyte, input$select_dosno,
+        input$select_pcspec
+      )
+      # Load reactive
+      slopes_pknca_data <- pre_pknca_data()
+
+      # Include intervals required for slopes module
+      slopes_pknca_data$intervals <- format_pkncadata_intervals(
+        pknca_conc = slopes_pknca_data$conc,
+        pknca_dose = slopes_pknca_data$dose,
+        # Set params needed
+        params = c("lambda.z.n.points",
+                   "lambda.z.time.first", "r.squared",
+                   "adj.r.squared", "cmax"),
+        # Start at t0 when requested by the user
+        start_from_last_dose = input$should_impute_c0
+      )
+      
+      # Filter by analyte, dose number, and specimen
+      slopes_pknca_data$intervals <- slopes_pknca_data$intervals %>%
+        filter(DOSNO %in% input$select_dosno,
+               ANALYTE %in% input$select_analyte,
+               PCSPEC %in% input$select_pcspec)
+      
+      slopes_pknca_data$impute <- NA
+      
+      # Define start imputations on intervals if specified by the user
+      if (input$should_impute_c0) {
+        slopes_pknca_data <- create_start_impute(slopes_pknca_data)
+        
+        # Make sure observed parameters (cmax, tmax) are not imputed
+        # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
+        slopes_pknca_data$intervals <- Reduce(function(data, ti_arg) {
+          interval_remove_impute(data,
+                                 target_impute = ti_arg,
+                                 target_params = "cmax")
+        }, unique(slopes_pknca_data$intervals$impute), init = slopes_pknca_data$intervals)
+      }
+      
+      slopes_pknca_data
     })
 
     # Trigger when summary tab clicked

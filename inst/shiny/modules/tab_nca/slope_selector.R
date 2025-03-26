@@ -107,7 +107,7 @@ slope_selector_ui <- function(id) {
 
 slope_selector_server <- function(
   id, pknca_data, processed_pknca_data, res_nca,
-  pk_nca_trigger, settings_upload
+  pk_nca_trigger, slopes_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -159,24 +159,17 @@ slope_selector_server <- function(
 
         result_obj
       }
-    })|> bindEvent(pknca_data())
+    })|> bindEvent(slopes_nca_trigger())
 
     # Profiles per Patient ----
     # Define the profiles per patient
     profiles_per_patient <- reactive({
-      req(lambdas_res(), processed_pknca_data())
-      
-      # Get groups from processed_pknca_data to use as filters
-      nca_filters <- processed_pknca_data()$conc$data %>%
-        select(c(any_of(unlist(unname(processed_pknca_data()$conc$columns$groups))), DOSNO)) %>%
-        distinct()
-      # Filter the full NCA results based on user-filtered selections
-      nca_filtered <- semi_join(lambdas_res()$result, nca_filters, by = "USUBJID")
+      req(lambdas_res())
 
-      nca_filtered %>%
+      lambdas_res()$result %>%
         mutate(USUBJID = as.character(USUBJID),
                DOSNO = as.character(DOSNO)) %>%
-        group_by(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups)))) %>%
+        group_by(!!!syms(unname(unlist(lambdas_res()$data$conc$columns$groups)))) %>%
         summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
         unnest(DOSNO)  # Convert lists into individual rows
 
@@ -294,7 +287,7 @@ slope_selector_server <- function(
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
     #' and exclusions before applying them to the actual dataset.
-    plot_data <- reactive({
+    plot_data <- eventReactive(processed_pknca_data(), {
       req(processed_pknca_data(), manual_slopes(), profiles_per_patient())
       filter_slopes(processed_pknca_data(), manual_slopes(), profiles_per_patient(), slopes_groups())
     }) %>%
