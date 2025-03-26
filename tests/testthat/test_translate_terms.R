@@ -3,7 +3,7 @@ library(testthat)
 # Sample metadata for testing
 dict_pknca_cdisc <- data.frame(
   PKNCA = c("adj.r.squared", "ae", "aucabove.predose.all"),
-  CDISC = c("R2ADJ", "RCAMINT", "AUCABVPA"),
+  PPTESTCD = c("R2ADJ", "RCAMINT", "AUCABVPA"),
   stringsAsFactors = FALSE
 )
 

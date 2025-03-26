@@ -7,7 +7,7 @@
 #' @param mapping_col Character indicating the column name in the metadata file of the input terms.
 #' Default is "PKNCA".
 #' @param target_col Character indicating the column name in the metadata file of the target terms.
-#' Default is "CDISC".
+#' Default is "PPTESTCD".
 #' @param metadata Dataset used to do the mapping that contains the mapping and target columns.
 #' @returns A character vector of translated terms. Input terms not available in mapping_col will be
 #' returned with the same value.
@@ -16,7 +16,7 @@
 #' translate_terms(input_terms)
 translate_terms <- function(input_terms,
                             mapping_col = "PKNCA",
-                            target_col = "CDISC",
+                            target_col = "PPTESTCD",
                             metadata = dict_pknca_cdisc) {
 
   # Check if mapping_col and target_col are single character strings
