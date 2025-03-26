@@ -20,7 +20,8 @@ translate_terms <- function(input_terms,
                             metadata = dict_pknca_cdisc) {
 
   # Check if mapping_col and target_col are single character strings
-  if (length(c(mapping_col, target_col)) != 2 || !is.character(mapping_col) || !is.character(target_col)) {
+  if (length(c(mapping_col, target_col)) != 2 ||
+        !is.character(mapping_col) || !is.character(target_col)) {
     stop("mapping_col and target_col must be single character strings.")
   }
 
