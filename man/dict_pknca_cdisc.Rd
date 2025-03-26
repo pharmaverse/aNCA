@@ -16,6 +16,7 @@ A data frame with 120 rows and 6 variables:
 \item{pretty_name}{PKNCA pretty name of the term}
 \item{description}{PKNCA description of the term}
 \item{FUN}{PKNCA function used to calculate the parameter}
+\item{input_names}{Combination of PPTESTCD + ": " + PPTEST. Used for App inputs}
 \item{is_cdisc_sure}{Logical indicating if the term is a CDISC official name}\
 }
 }
