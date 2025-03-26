@@ -544,28 +544,21 @@ nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : 
     })
     
     # Trigger once initially
-    observeEvent({
-      list(
-        input$nca_params, input$should_impute_c0,
-        input$select_analyte, input$select_dosno,
-        input$select_pcspec, intervals_userinput(), pre_pknca_data()
+    # Debounce a trigger signal (e.g., a combined string)
+    setup_trigger <- debounce(reactive({
+      paste(
+        input$nca_params,
+        input$should_impute_c0,
+        input$select_analyte,
+        input$select_dosno,
+        input$select_pcspec
       )
-    }, {
-      req(
-        pre_pknca_data(), input$should_impute_c0, input$nca_params,
-        input$select_analyte, input$select_dosno, input$select_pcspec,
-        intervals_userinput()
-      )
-      
-      isolate({
-        if (processing_trigger() == 0) processing_trigger(1)
-      })
-    })
+    }), millis = 2500)
     
     # STEP 2: Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections 
-    slopes_pknca_data <- eventReactive(processing_trigger(), {
+    slopes_pknca_data <- eventReactive(setup_trigger(), {
       req(pre_pknca_data())
       req(
         input$should_impute_c0, input$select_analyte, input$select_dosno,
@@ -609,17 +602,10 @@ nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : 
       
       slopes_pknca_data
     })
-
-    # Trigger when summary tab clicked
-    observeEvent(input$setup_tabs, {
-      if (input$setup_tabs == "Summary") {
-        processing_trigger(processing_trigger() + 1)
-      }
-    })
     
     # STEP 3: Create version for NCA results
     # NCA dynamic changes/filters based on user selections 
-    processed_pknca_data <- eventReactive(processing_trigger(), {
+    processed_pknca_data <- eventReactive(setup_trigger(), {
       req(pre_pknca_data())
       req(
         input$should_impute_c0, input$nca_params, input$select_analyte,

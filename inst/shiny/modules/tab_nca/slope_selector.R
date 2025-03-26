@@ -106,7 +106,7 @@ slope_selector_ui <- function(id) {
 
 
 slope_selector_server <- function(
-  id, pknca_data, processed_pknca_data, res_nca,
+  id, pknca_data, res_nca,
   pk_nca_trigger, slopes_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
@@ -116,13 +116,13 @@ slope_selector_server <- function(
 
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
-      req(processed_pknca_data())
+      req(pknca_data())
 
-      processed_pknca_data()$conc$columns$groups %>%
+      pknca_data()$conc$columns$groups %>%
         purrr::list_c() %>%
         append("DOSNO") %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "DRUG" && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
+          !is.null(col) && col != "DRUG" && length(unique(pknca_data()$conc$data[[col]])) > 1
         })
     })
 
@@ -159,7 +159,7 @@ slope_selector_server <- function(
 
         result_obj
       }
-    })|> bindEvent(slopes_nca_trigger())
+    })|> bindEvent(pknca_data())
 
     # Profiles per Patient ----
     # Define the profiles per patient
@@ -194,9 +194,9 @@ slope_selector_server <- function(
       }
 
       # create plot ids based on available data #
-      patient_profile_plot_ids <- processed_pknca_data()$intervals %>%
-        select(any_of(c(unname(unlist(processed_pknca_data()$dose$columns$groups)),
-                        unname(unlist(processed_pknca_data()$conc$columns$groups)),
+      patient_profile_plot_ids <- pknca_data()$intervals %>%
+        select(any_of(c(unname(unlist(pknca_data()$dose$columns$groups)),
+                        unname(unlist(pknca_data()$conc$columns$groups)),
                         "DOSNO"))) %>%
         filter(USUBJID %in% search_patient) %>%
         select(slopes_groups(), USUBJID) %>%
@@ -282,7 +282,7 @@ slope_selector_server <- function(
       )
     })
 
-    slopes_table <- manual_slopes_table_server("manual_slopes", processed_pknca_data,
+    slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data,
                                                profiles_per_patient, slopes_groups, pk_nca_trigger)
 
     manual_slopes <- slopes_table$manual_slopes
@@ -291,9 +291,9 @@ slope_selector_server <- function(
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
     #' and exclusions before applying them to the actual dataset.
-    plot_data <- eventReactive(processed_pknca_data(), {
-      req(processed_pknca_data(), manual_slopes(), profiles_per_patient())
-      filter_slopes(processed_pknca_data(), manual_slopes(), profiles_per_patient(), slopes_groups())
+    plot_data <- eventReactive(pknca_data(), {
+      req(pknca_data(), manual_slopes(), profiles_per_patient())
+      filter_slopes(pknca_data(), manual_slopes(), profiles_per_patient(), slopes_groups())
     }) %>%
       shiny::debounce(750)
 

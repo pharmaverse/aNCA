@@ -92,28 +92,16 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       bindEvent(adnca_data())
 
     #' NCA Setup module
-    # Initialise trigger to create processed data
-    processing_trigger <- reactiveVal(0)
-    slopes_nca_trigger <- reactiveVal(0)
-    
-    observeEvent(input$setup_list, {
-      if (input$setup_list == "Slope Selector") {
-        processing_trigger(processing_trigger() + 1)
-        slopes_nca_trigger(slopes_nca_trigger() + 1)
-        
-      }
-    })
     
     nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data, processing_trigger)
     processed_pknca_data <- nca_setup$processed_pknca_data
     slopes_pknca_data <- nca_setup$slopes_pknca_data
     rules <- nca_setup$rules
-
+    
     #' Slope rules setup module
     slope_rules <- slope_selector_server(
       "slope_selector",
       slopes_pknca_data,
-      processed_pknca_data,
       res_nca,
       pk_nca_trigger,
       slopes_nca_trigger,
