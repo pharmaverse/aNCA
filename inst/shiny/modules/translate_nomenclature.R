@@ -19,6 +19,16 @@ translate_terms <- function(input_terms,
                             target_col = "CDISC",
                             metadata = dict_pknca_cdisc) {
 
+  # Check if mapping_col and target_col are single character strings
+  if (length(c(mapping_col, target_col)) != 2 || !is.character(mapping_col) || !is.character(target_col)) {
+    stop("mapping_col and target_col must be single character strings.")
+  }
+
+  # Check if mapping_col and target_col exists in metadata
+  if (!mapping_col %in% colnames(metadata) || !target_col %in% colnames(metadata)) {
+    stop("mapping_col and target_col must exist in metadata.")
+  }
+
   # Create a named vector for translation
   translation_vector <- setNames(metadata[[target_col]], metadata[[mapping_col]])
 
