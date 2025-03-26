@@ -48,7 +48,7 @@ pkcg01(
 
 \item{xbreaks_var}{A character string of the x-axis breaks.}
 
-\item{xbreaks_mindist}{A numeric value for xbreak mindist.}
+\item{xbreaks_mindist}{A numeric value for \code{xbreak_mindist}.}
 
 \item{xmin}{A numeric value specifying the minimum x-axis limit.}
 

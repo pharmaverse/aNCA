@@ -7,8 +7,8 @@
 #'                            element with dose information and a `formatted` element with the
 #'                            data to be plotted.
 #' @param parameter           A string specifying the parameter to be plotted.
-#' TODO(mateusz): I have added the following three params as they were missing, this needs to
-#'                be checked over.
+# TODO(mateusz): I have added the following three parameters as they were missing, this needs to
+#                be checked over.
 #' @param xvars               Variables for the x axis.
 #' @param colorvars           Variables for the color aesthetic.
 #' @param varvalstofilter     Variables to filter on.

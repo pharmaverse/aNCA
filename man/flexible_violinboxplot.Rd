@@ -19,9 +19,7 @@ flexible_violinboxplot(
 element with dose information and a \code{formatted} element with the
 data to be plotted.}
 
-\item{parameter}{A string specifying the parameter to be plotted.
-TODO(mateusz): I have added the following three params as they were missing, this needs to
-be checked over.}
+\item{parameter}{A string specifying the parameter to be plotted.}
 
 \item{xvars}{Variables for the x axis.}
 
