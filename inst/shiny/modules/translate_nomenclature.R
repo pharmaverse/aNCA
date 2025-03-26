@@ -17,7 +17,7 @@
 translate_terms <- function(input_terms,
                             mapping_col = "PKNCA",
                             target_col = "CDISC",
-                            metadata = labels_PKNCA_CDISC) {
+                            metadata = dict_pknca_cdisc) {
 
   # Create a named vector for translation
   translation_vector <- setNames(metadata[[target_col]], metadata[[mapping_col]])
