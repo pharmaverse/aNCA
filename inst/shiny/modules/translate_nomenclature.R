@@ -14,8 +14,11 @@
 #' @examples
 #' input_terms <- c("adj.r.squared", "ae", "nonexistent_term")
 #' translate_terms(input_terms)
-translate_terms <- function(input_terms, mapping_col = "PKNCA", target_col = "CDISC", metadata = labels_PKNCA_CDISC) {
-  
+translate_terms <- function(input_terms,
+                            mapping_col = "PKNCA",
+                            target_col = "CDISC",
+                            metadata = labels_PKNCA_CDISC) {
+
   # Create a named vector for translation
   translation_vector <- setNames(metadata[[target_col]], metadata[[mapping_col]])
 
