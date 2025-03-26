@@ -9,7 +9,7 @@
 #' @param target_col Character indicating the column name in the metadata file of the target terms.
 #' Default is "CDISC".
 #' @param metadata Dataset used to do the mapping that contains the mapping and target columns.
-#' @return A character vector of translated terms. Input terms not available in mapping_col will be
+#' @returns A character vector of translated terms. Input terms not available in mapping_col will be
 #' returned with the same value.
 #' @examples
 #' input_terms <- c("adj.r.squared", "ae", "nonexistent_term")
@@ -27,5 +27,5 @@ translate_terms <- function(input_terms,
                              translation_vector[input_terms],
                              input_terms)
 
-  return(translated_terms)
+  translated_terms
 }
