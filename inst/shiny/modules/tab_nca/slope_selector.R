@@ -107,7 +107,7 @@ slope_selector_ui <- function(id) {
 
 slope_selector_server <- function(
   id, pknca_data, res_nca,
-  pk_nca_trigger, slopes_nca_trigger, settings_upload
+  pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -236,7 +236,7 @@ slope_selector_server <- function(
 
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs#()
+        plot_outputs
       })
 
       # update page number display #

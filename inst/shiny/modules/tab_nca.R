@@ -31,7 +31,6 @@ tab_nca_ui <- function(id) {
         "Setup",
         fluid = TRUE,
         navset_pill_list(
-          id = ns("setup_list"),
           nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
           nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
         )
@@ -93,7 +92,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     #' NCA Setup module
 
-    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data, processing_trigger)
+    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
     slopes_pknca_data <- nca_setup$slopes_pknca_data
     rules <- nca_setup$rules
@@ -104,7 +103,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       slopes_pknca_data,
       res_nca,
       pk_nca_trigger,
-      slopes_nca_trigger,
       reactive(input$settings_upload)
     )
 

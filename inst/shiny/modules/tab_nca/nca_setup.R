@@ -215,10 +215,7 @@ nca_setup_ui <- function(id) {
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
 #' - adnca_data A reactive expression of the PKNCAdata object,
 #'  which contains data and NCA specifications.
-#' - processing_trigger A reactive expression that triggers the NCA
-#' processing when the user is happy with the settings.
-#'
-nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolint : TODO: complexity / needs further modularization
+nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -509,8 +506,8 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
                  })
 
 
-    # Trigger once initially
-    # Debounce a trigger signal (e.g., a combined string)
+    # Create trigger for modifications to the user setup
+    # Debounce trigger signal
     setup_trigger <- debounce(reactive({
       paste(
         adnca_data(),
@@ -523,7 +520,7 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
       )
     }), millis = 2500)
 
-    # STEP 1: Create version for slope plots
+    # Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
@@ -544,7 +541,7 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
       slopes_pknca_data
     })
 
-    # STEP 2: Create version for NCA results
+    # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
     processed_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
       log_trace("Updating PKNCA::data object.")
@@ -561,10 +558,12 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
       log_success("PKNCA data slopes object updated.")
 
       # # Add partial AUCs if any
-      # if (!is.null(partial_auc_intervals) && length(partial_auc_intervals()) > 0
-      #     && type == "processed") {
+      #TODO
+      # nolint start
+      # if (!is.null(partial_auc_intervals) && length(partial_auc_intervals()) > 0) {
       #   #TODO: add
       # }
+      # nolint end
 
       if (nrow(processed_pknca_data$intervals) == 0) {
         showNotification(
