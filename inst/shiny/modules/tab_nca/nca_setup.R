@@ -560,7 +560,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       # # Add partial AUCs if any
       #TODO
       # nolint start
-      # if (!is.null(partial_auc_intervals) && length(partial_auc_intervals()) > 0) {
+      #if (!is.null(partial_auc_intervals) && length(partial_auc_intervals()) > 0) {
       #   #TODO: add
       # }
       # nolint end

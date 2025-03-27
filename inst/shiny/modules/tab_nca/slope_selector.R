@@ -231,7 +231,7 @@ slope_selector_server <- function(
             }"
             # nolint end
           )
-        })
+      })
 
 
       output$slope_plots_ui <- renderUI({
