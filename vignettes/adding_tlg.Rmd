@@ -5,7 +5,7 @@ description: >
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Adding new TLGs to the pacakge}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 This is an in-depth guide on contributing to the package. In order to get started with contributing, please read our [contributing guide](https://pharmaverse.github.io/aNCA/CONTRIBUTING.html)

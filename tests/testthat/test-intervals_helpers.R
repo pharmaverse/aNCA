@@ -303,7 +303,9 @@ describe("interval_remove_impute", {
                                   half.life = c(TRUE, TRUE, TRUE),
                                   cmax = c(TRUE, TRUE, TRUE),
                                   impute = c(NA_character_, NA_character_, NA_character_))
-    result <- interval_remove_impute(o_data_with_na_impute, target_impute = "start_conc0")
+    result <- suppressWarnings(
+      interval_remove_impute(o_data_with_na_impute, target_impute = "start_conc0")
+    )
     expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")], expected_result)
   })
 

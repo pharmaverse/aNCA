@@ -2,46 +2,63 @@
 #' @param ... Arguments passed to `shiny::runApp()`
 #' @export
 run_app <- function(...) {
-  require(aNCA)
-
-  require(bslib)
-  require(checkmate)
-  require(dplyr)
-  require(DT)
-  require(forcats)
-  require(ggh4x)
-  require(ggplot2)
-  require(glue)
-  require(haven)
-  require(htmlwidgets)
-  require(logger)
-  require(magrittr)
-  require(nestcolor)
-  require(PKNCA)
-  require(plotly)
-  require(purrr)
-  require(reactable)
-  require(reactable.extras)
-  require(rio)
-  require(rmarkdown)
-  require(scales)
-  require(shiny)
-  require(shinyBS)
-  require(shinycssloaders)
-  require(shinyFiles)
-  require(shinyjqui)
-  require(shinyjs)
-  require(shinyWidgets)
-  require(stats)
-  require(stringi)
-  require(stringr)
-  require(tern)
-  require(tidyr)
-  require(tools)
-  require(utils)
-  require(units)
-  require(rlang)
-  require(yaml)
-  require(zip)
+  check_app_dependencies()
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
+}
+
+#' Check if all dependencies required to run shiny application are installed.
+#' If not, install them.
+#' This list of packages should also be provided as `Suggests` in the DESCRIPTION file.
+#' @noRd
+check_app_dependencies <- function() {
+  # TODO: check those packages over and make sure they are needed
+  deps <- c(
+    "bslib",
+    "checkmate",
+    "dplyr",
+    "DT",
+    "forcats",
+    "ggh4x",
+    "ggplot2",
+    "glue",
+    "haven",
+    "htmlwidgets",
+    "logger",
+    "magrittr",
+    "nestcolor",
+    "PKNCA",
+    "plotly",
+    "purrr",
+    "reactable",
+    "reactable.extras",
+    "rio",
+    "rmarkdown",
+    "scales",
+    "shiny",
+    "shinyBS",
+    "shinycssloaders",
+    "shinyFiles",
+    "shinyjqui",
+    "shinyjs",
+    "shinyWidgets",
+    "stats",
+    "stringi",
+    "stringr",
+    "tern",
+    "tidyr",
+    "tools",
+    "utils",
+    "units",
+    "rlang",
+    "yaml",
+    "zip"
+  )
+
+  purrr::walk(deps, \(dep) {
+    if (!requireNamespace(dep, quietly = TRUE)) {
+      if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+      warning("Package required for shiny application, but not available, installing: ", dep)
+      pak::pak(dep)
+    }
+  })
 }
