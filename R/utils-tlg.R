@@ -15,7 +15,7 @@
 #' @returns Parsed annotation text.
 #'
 #' @importFrom magrittr `%>%`
-#' @importFrom glue glue
+#' @importFrom stringr str_glue
 #'
 #' @export
 parse_annotation <- function(data, text) {
@@ -23,7 +23,7 @@ parse_annotation <- function(data, text) {
     gsub("\n", "<br>", .) %>%
     gsub("\\$(\\w+)", "{unique(data[['\\1']])}", .) %>%
     gsub("!(\\w+)", "{attr(data[['\\1']], 'label')}", .) %>%
-    glue::glue(.na = "ERR", .null = "ERR")
+    str_glue(.na = "ERR", .null = "ERR")
 }
 
 #' Parses the tlg definitions described in yaml file into a list object.

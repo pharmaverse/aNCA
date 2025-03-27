@@ -20,8 +20,8 @@ describe("parse_annotation", {
     )
 
     expect_equal(
-      parse_annotation(mock_data, "Label: !GROUP"),
-      "Label: ERR"
+      parse_annotation(mock_data, "Label: !GROUP, Dose: !DOSE"),
+      "Label: ERR, Dose: Administered dose"
     )
   })
 })
