@@ -402,7 +402,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
     # Reactive value to store the AUC data table
     auc_data <- reactiveVal(
-      tibble(min = rep(NA_real_, 2), max = rep(NA_real_, 2))
+      tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
     )
 
     # Render the editable reactable table
@@ -411,16 +411,14 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       reactable(
         auc_data(),
         columns = list(
-          min = colDef(
-            cell = text_extra(
-              id = ns("edit_Min")
-            ),
+          start_auc = colDef(
+            name = "Start",  # Display name
+            cell = text_extra(id = ns("edit_start_auc")),
             align = "center"
           ),
-          max = colDef(
-            cell = text_extra(
-              id = ns("edit_Max")
-            ),
+          end_auc = colDef(
+            name = "End",    # Display name
+            cell = text_extra(id = ns("edit_end_auc")),
             align = "center"
           )
         )
@@ -431,7 +429,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     # Add a blank row on button click
     observeEvent(input$addRow, {
       df <- auc_data()
-      auc_data(bind_rows(df, tibble(max = NA_real_, min = NA_real_)))
+      auc_data(bind_rows(df, tibble(start_auc = NA_real_, end_auc = NA_real_)))
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
@@ -441,7 +439,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     observe({
       req(auc_data())
       # Dynamically attach observers for each column
-      purrr::walk(c("Min", "Max"), \(colname) {
+      purrr::walk(c("start_auc", "end_auc"), \(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
           edit <- input[[paste0("edit_", colname)]]
           partial_aucs <- auc_data()
@@ -512,14 +510,14 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
       # Collect non-NA min/max values from reactable
       auc_ranges <- auc_data() %>%
-        filter(!is.na(min), !is.na(max), min >= 0, max > min)
+        filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
 
       # Make a list of intervals from valid AUC ranges
-      intervals_list <- pmap(auc_ranges, function(min, max) {
+      intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
         intervals %>%
           mutate(
-            start = start + min,
-            end = start + (max - min),
+            start = start + start_auc,
+            end = start + (end_auc - start_auc),
             across(where(is.logical), ~FALSE),
             aucint.last = TRUE,
             type_interval = "manual"
