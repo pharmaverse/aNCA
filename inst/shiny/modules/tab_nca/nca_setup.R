@@ -15,7 +15,7 @@ nca_setup_ui <- function(id) {
           accept = c(".csv", ".xpt")
         )
       ),
-  
+
       # Selection of analyte, dose number and specimen
       fluidRow(
         column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = TRUE,
@@ -25,7 +25,7 @@ nca_setup_ui <- function(id) {
         column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                               choices = NULL))
       ),
-  
+
       # Method, NCA parameters, and units table
       fluidRow(
         column(3, selectInput(
@@ -71,7 +71,7 @@ nca_setup_ui <- function(id) {
         column(4, units_table_ui(ns("units_table")))
       ),
       br(),
-  
+
       h4("Data imputation"),
       tags$div(
         checkboxInput(
@@ -213,8 +213,10 @@ nca_setup_ui <- function(id) {
 #' - id The module's ID.
 #' - data A reactive expression containing the read and mapped data from the app.
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
-#' - adnca_data A reactive expression of the PKNCAdata object, which contains data and NCA specications.
-#' - processing_trigger A reactive expression that triggers the NCA processing when the user is happy with the settings.
+#' - adnca_data A reactive expression of the PKNCAdata object,
+#'  which contains data and NCA specifications.
+#' - processing_trigger A reactive expression that triggers the NCA
+#' processing when the user is happy with the settings.
 #'
 nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolint : TODO: complexity / needs further modularization
 
@@ -506,7 +508,7 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
                                      selected = nca_params)
                  })
 
-    
+
     # Trigger once initially
     # Debounce a trigger signal (e.g., a combined string)
     setup_trigger <- debounce(reactive({
@@ -520,12 +522,11 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
         input$select_pcspec
       )
     }), millis = 2500)
-    
+
     # STEP 1: Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
-    # NCA dynamic changes/filters based on user selections 
-    slopes_pknca_data <- eventReactive(list(setup_trigger(), 
-                                            session$userData$units_table()), {
+    # NCA dynamic changes/filters based on user selections
+    slopes_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
       log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data,
@@ -535,18 +536,17 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
         selected_dosno = input$select_dosno,
         selected_pcspec = input$select_pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
-                   "r.squared","adj.r.squared", "cmax"),
+                   "r.squared", "adj.r.squared", "cmax"),
         should_impute_c0 = input$should_impute_c0
       )
       log_success("PKNCA data slopes object created.")
-      
+
       slopes_pknca_data
     })
-    
+
     # STEP 2: Create version for NCA results
-    # NCA dynamic changes/filters based on user selections 
-    processed_pknca_data <- eventReactive(list(setup_trigger(), 
-                                               session$userData$units_table()), {
+    # NCA dynamic changes/filters based on user selections
+    processed_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
       log_trace("Updating PKNCA::data object.")
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data,
@@ -565,14 +565,14 @@ nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolin
       #     && type == "processed") {
       #   #TODO: add
       # }
-      
+
       if (nrow(processed_pknca_data$intervals) == 0) {
         showNotification(
           "All intervals were filtered. Please revise your settings.",
           type = "warning", duration = 10
         )
       }
-      
+
       processed_pknca_data
     })
 

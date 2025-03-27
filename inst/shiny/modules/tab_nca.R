@@ -92,12 +92,12 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       bindEvent(adnca_data())
 
     #' NCA Setup module
-    
+
     nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data, processing_trigger)
     processed_pknca_data <- nca_setup$processed_pknca_data
     slopes_pknca_data <- nca_setup$slopes_pknca_data
     rules <- nca_setup$rules
-    
+
     #' Slope rules setup module
     slope_rules <- slope_selector_server(
       "slope_selector",

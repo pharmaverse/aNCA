@@ -158,7 +158,8 @@ slope_selector_server <- function(
 
         result_obj
       }
-    })|> bindEvent(pknca_data())
+    }) |>
+      bindEvent(pknca_data())
 
     # Profiles per Patient ----
     # Define the profiles per patient
@@ -216,22 +217,22 @@ slope_selector_server <- function(
         req(plot_data(), lambdas_res(), plots_to_render)
         apply(plots_to_render, 1, function(row) {
 
-        lambda_slope_plot(
-          conc_pknca_df = plot_data()$conc$data,
-          row_values = as.list(row),
-          myres = lambdas_res(),
-          r2adj_threshold = 0.7
-        ) |>
-          htmlwidgets::onRender(
-            # nolint start
-            "function(el, x) {
-              const plotlyElements = $('.slope-selector-module .plotly.html-widget.html-fill-item.html-widget-static-bound.js-plotly-plot');
-              plotlyElements.css('height', '100%');
-              plotlyElements.css('aspect-ratio', '1');
-              window.dispatchEvent(new Event('resize'));
-            }"
-            # nolint end
-          )
+          lambda_slope_plot(
+            conc_pknca_df = plot_data()$conc$data,
+            row_values = as.list(row),
+            myres = lambdas_res(),
+            r2adj_threshold = 0.7
+          ) |>
+            htmlwidgets::onRender(
+              # nolint start
+              "function(el, x) {
+                const plotlyElements = $('.slope-selector-module .plotly.html-widget.html-fill-item.html-widget-static-bound.js-plotly-plot');
+                plotlyElements.css('height', '100%');
+                plotlyElements.css('aspect-ratio', '1');
+                window.dispatchEvent(new Event('resize'));
+              }"
+              # nolint end
+            )
         })
       })
 

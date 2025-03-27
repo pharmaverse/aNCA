@@ -149,9 +149,14 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #'
 #' This function updates a previously prepared `PKNCAdata` object
 #' based on user selections for method, analyte, dose, specimen, and parameters.
+#' @details
+#' Step 1: Update units in the `PKNCAdata` object using units table and
+#' ensuring unique analytes have their unique units
+#' Step 2: Set PKNCAoptions
+#' Step 3: Formtat intervals using `format_pkncadata_intervals()`
+#' Step 4: Apply filtering based on user selections
+#' Step 5: Impute start values if requested
 #'
-#' The function dynamically configures units, intervals, and optional imputations.
-#' 
 #' @param adnca_data A reactive PKNCAdata object
 #' @param method NCA calculation method selection
 #' @param units_table A reactive table of units
@@ -169,26 +174,26 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @importFrom rlang sym
 #'
 #' @export
-PKNCA_update_data_object <- function(
-    adnca_data,
-    method,
-    units_table,
-    selected_analytes,
-    selected_dosno,
-    selected_pcspec,
-    params,
-    should_impute_c0 = TRUE
+PKNCA_update_data_object <- function( # nolint: object_name_linter
+  adnca_data,
+  method,
+  units_table,
+  selected_analytes,
+  selected_dosno,
+  selected_pcspec,
+  params,
+  should_impute_c0 = TRUE
 ) {
-  
+
   req(adnca_data(), method, selected_analytes,
       selected_dosno, selected_pcspec)
 
   data <- adnca_data()
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
-  
+
   if (!is.null(units_table)) {
-        data$units <- units_table
+    data$units <- units_table
   }
 
   # Add and expand units
@@ -197,14 +202,14 @@ PKNCA_update_data_object <- function(
     select(-!!sym(analyte_column)) %>%
     tidyr::crossing(!!sym(analyte_column) := unique_analytes) %>%
     mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
-  
+
   data$options <- list(
     auc.method = method,
     progress = FALSE,
     keep_interval_cols = c("DOSNO", "type_interval"),
     min.hl.r.squared = 0.01
   )
-  
+
   # Format intervals
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
@@ -212,7 +217,7 @@ PKNCA_update_data_object <- function(
     params = params,
     start_from_last_dose = should_impute_c0
   )
-  
+
   # Apply filtering
   data$intervals <- data$intervals %>%
     filter(
@@ -220,13 +225,13 @@ PKNCA_update_data_object <- function(
       DOSNO %in% selected_dosno,
       PCSPEC %in% selected_pcspec
     )
-  
+
   data$impute <- NA
-  
+
   # Impute start values if requested
   if (should_impute_c0) {
     data <- create_start_impute(data)
-    
+
     data$intervals <- Reduce(function(d, ti_arg) {
       interval_remove_impute(
         d,
@@ -235,7 +240,7 @@ PKNCA_update_data_object <- function(
       )
     }, unique(data$intervals$impute), init = data$intervals)
   }
-  
+
   data
 }
 
