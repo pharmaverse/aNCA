@@ -41,7 +41,8 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
         res$result <- res$result %>%
           select(-PPSTRESU, -PPSTRES) %>%
           left_join(
-            session$userData$units_table(),
+            session$userData$units_table() %>%
+              mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
             by = intersect(names(.), names(session$userData$units_table()))
           ) %>%
           mutate(PPSTRES = PPORRES * conversion_factor) %>%
@@ -59,8 +60,8 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
           gsub("^rule_", "", x = _) |>
           gsub("_", ".", x = _, fixed = TRUE)
 
-        final_pptestcd <- res_nca()$result %>%
-          filter(PPTESTCD == pptestcd) %>%
+        pptestcd_col <- res_nca()$result %>%
+          filter(PPTESTCD == translate_terms(pptestcd, "PKNCA", "PPTESTCD")) %>%
           slice(1) %>%
           mutate(new_pptestcd = paste0(pptestcd, "[", PPSTRESU, "]")) %>%
           pull(new_pptestcd) %>%
@@ -68,9 +69,9 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
 
         final_results <- final_results %>%
           mutate(!!paste0("flag_", pptestcd) := case_when(
-            startsWith(pptestcd, "auc") ~ .data[[final_pptestcd]]
+            startsWith(pptestcd, "auc") ~ .data[[pptestcd_col]]
             >= rules[[paste0(pptestcd, "_threshold")]],
-            TRUE ~ .data[[final_pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
+            TRUE ~ .data[[pptestcd_col]] <= rules[[paste0(pptestcd, "_threshold")]]
           ))
       }
 
@@ -101,16 +102,15 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
     observeEvent(final_results(), {
       req(final_results())
 
-      param_names <- gsub("\\[.*\\]$", "", names(final_results()))
-      all_params <- setdiff(names(get.interval.cols()), c("start", "end"))
-      param_cols <- unname(var_labels(final_results()))[param_names %in% all_params]
+      param_pptest_cols <- intersect(unname(var_labels(final_results())), dict_pknca_cdisc$PPTEST)
+      param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(
         session = session,
         inputId = "params",
         label = "Select Parameters :",
-        choices = c(param_cols, "Exclude", "flagged"),
-        selected =  c(param_cols, "Exclude", "flagged")
+        choices = param_inputnames,
+        selected =  param_inputnames
       )
     })
 
@@ -118,8 +118,9 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
-      param_label_cols <- formatters::var_labels(final_results())
-      params_sel_cols <- param_label_cols[param_label_cols %in% input$params] |>
+      label_cols <- formatters::var_labels(final_results())
+      sel_label_cols <- translate_terms(input$params, "input_names", "PPTEST")
+      sel_param_cols <- label_cols[label_cols %in% sel_label_cols] |>
         names()
 
       group_cols <- setdiff(names(res_nca()$data$intervals),
@@ -128,7 +129,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
         c("Exclude", "impute", "flagged")
 
       final_results <- final_results() %>%
-        select(any_of(c(group_cols, params_sel_cols)))
+        select(any_of(c(group_cols, sel_param_cols)))
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)

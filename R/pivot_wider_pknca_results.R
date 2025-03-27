@@ -141,8 +141,8 @@ pivot_wider_pknca_results <- function(myres) {
   mapping_vr <- myres$result %>%
     mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
            PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
-                                                            mapping_col = "PKNCA",
-                                                            target_col = "PPTESTCD"))) %>%
+                                                            mapping_col = "PPTESTCD",
+                                                            target_col = "PPTEST"))) %>%
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)
