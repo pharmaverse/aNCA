@@ -1,7 +1,6 @@
 require(aNCA)
 
 require(bslib)
-require(checkmate)
 require(dplyr)
 require(DT)
 require(ggplot2)

@@ -14,7 +14,6 @@ check_app_dependencies <- function() {
   # TODO: check those packages over and make sure they are needed
   deps <- c(
     "bslib",
-    "checkmate",
     "dplyr",
     "DT",
     "ggplot2",

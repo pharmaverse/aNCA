@@ -169,7 +169,7 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   if (is.null(target_params)) {
     target_params <- param_cols
   } else {
-    checkmate::assert_subset(target_params, choices = all_param_options, empty.ok = TRUE)
+    stopifnot(all(target_params %in% all_param_options) || length(target_params) == 0)
   }
 
   # Identify the target interval rows based on:
@@ -247,7 +247,7 @@ interval_remove_impute.data.frame <- function(data,
   if (is.null(target_params)) {
     target_params <- param_cols
   } else {
-    checkmate::assert_subset(target_params, choices = all_param_options)
+    stopifnot(all(target_params %in% all_param_options))
   }
 
   # Identify the interval rows that need to be changed

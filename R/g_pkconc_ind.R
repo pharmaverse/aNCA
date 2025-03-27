@@ -47,7 +47,6 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
-#' @importFrom checkmate assert_numeric
 #' @importFrom scales breaks_log label_log
 #'
 #' @examples
