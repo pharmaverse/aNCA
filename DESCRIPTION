@@ -40,8 +40,7 @@ Imports:
     tern,
     tidyr,
     units,
-    rlang,
-    yaml
+    rlang
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
@@ -72,6 +71,7 @@ Suggests:
     shinyjs,
     stringi,
     tools,
+    yaml,
     zip
 VignetteBuilder: knitr
 Config/testthat/edition: 3
