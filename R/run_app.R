@@ -25,7 +25,6 @@ check_app_dependencies <- function() {
     "htmlwidgets",
     "logger",
     "magrittr",
-    "nestcolor",
     "PKNCA",
     "plotly",
     "purrr",
