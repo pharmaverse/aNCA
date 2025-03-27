@@ -9,7 +9,7 @@ parameter, and dose information."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9032</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9033</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,8 +68,26 @@ parameter, and dose information.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-parameter">parameter<a class="anchor" aria-label="anchor" href="#arg-parameter"></a></dt>
+<dl><dt id="arg-boxplotdata">boxplotdata<a class="anchor" aria-label="anchor" href="#arg-boxplotdata"></a></dt>
+<dd><p>A list containing the data to be plotted. It should have a <code>data</code>
+element with dose information and a <code>formatted</code> element with the
+data to be plotted.</p></dd>
+
+
+<dt id="arg-parameter">parameter<a class="anchor" aria-label="anchor" href="#arg-parameter"></a></dt>
 <dd><p>A string specifying the parameter to be plotted.</p></dd>
+
+
+<dt id="arg-xvars">xvars<a class="anchor" aria-label="anchor" href="#arg-xvars"></a></dt>
+<dd><p>Variables for the x axis.</p></dd>
+
+
+<dt id="arg-colorvars">colorvars<a class="anchor" aria-label="anchor" href="#arg-colorvars"></a></dt>
+<dd><p>Variables for the color aesthetic.</p></dd>
+
+
+<dt id="arg-varvalstofilter">varvalstofilter<a class="anchor" aria-label="anchor" href="#arg-varvalstofilter"></a></dt>
+<dd><p>Variables to filter on.</p></dd>
 
 
 <dt id="arg-columns-to-hover">columns_to_hover<a class="anchor" aria-label="anchor" href="#arg-columns-to-hover"></a></dt>
@@ -80,20 +98,6 @@ should be used to identify when hovering the plotly outputs</p></dd>
 <dt id="arg-box">box<a class="anchor" aria-label="anchor" href="#arg-box"></a></dt>
 <dd><p>A logical value indicating whether to plot a box plot (<code>TRUE</code>) or a
 violin plot (<code>FALSE</code>). Default is <code>TRUE</code>.</p></dd>
-
-
-<dt id="arg-result-data">result_data<a class="anchor" aria-label="anchor" href="#arg-result-data"></a></dt>
-<dd><p>A list containing the data to be plotted. It should have a <code>data</code>
-element with dose information and a <code>formatted</code> element with the
-data to be plotted.</p></dd>
-
-
-<dt id="arg-doses-included">doses_included<a class="anchor" aria-label="anchor" href="#arg-doses-included"></a></dt>
-<dd><p>A vector of doses to be included in the plot.</p></dd>
-
-
-<dt id="arg-dosenumber-included">dosenumber_included<a class="anchor" aria-label="anchor" href="#arg-dosenumber-included"></a></dt>
-<dd><p>A vector of dose numbers to be included in the plot.</p></dd>
 
 </dl></div>
     <div class="section level2">
