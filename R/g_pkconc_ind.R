@@ -49,7 +49,6 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @importFrom tern g_ipp
 #' @importFrom checkmate assert_numeric
 #' @importFrom scales breaks_log label_log
-#' @importFrom ggh4x scale_y_facet
 #'
 #' @examples
 #' \dontrun{
@@ -181,6 +180,12 @@ pkcg01 <- function(
   }
 
   if (scale == "SBS") {
+    if (!requireNamespace("ggh4x", silently = TRUE))
+      stop(
+        "Side-by-side view requires `ggh4x` package, please install it with ",
+        "`install.packages('ggh4x')`"
+      )
+
     # Create SBS version of data and plot
     adpc_grouped <- rbind(adpc_grouped, adpc_grouped) %>%
       dplyr::mutate(
