@@ -29,7 +29,6 @@ License: MIT + file LICENSE
 Imports: 
     checkmate,
     dplyr,
-    forcats,
     formatters,
     ggplot2,
     glue,

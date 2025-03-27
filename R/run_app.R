@@ -17,7 +17,6 @@ check_app_dependencies <- function() {
     "checkmate",
     "dplyr",
     "DT",
-    "forcats",
     "ggplot2",
     "glue",
     "haven",

@@ -20,7 +20,6 @@
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
 #' @import ggplot2
-#' @import forcats
 #' @export
 flexible_violinboxplot <- function(boxplotdata,
                                    parameter,
