@@ -526,7 +526,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     slopes_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
       log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
-        adnca_data = adnca_data,
+        adnca_data = adnca_data(),
         method = input$method,
         units_table = session$userData$units_table(),
         selected_analytes = input$select_analyte,
@@ -546,7 +546,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     processed_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
       log_trace("Updating PKNCA::data object.")
       processed_pknca_data <- PKNCA_update_data_object(
-        adnca_data = adnca_data,
+        adnca_data = adnca_data(),
         method = input$method,
         units_table = session$userData$units_table(),
         selected_analytes = input$select_analyte,
