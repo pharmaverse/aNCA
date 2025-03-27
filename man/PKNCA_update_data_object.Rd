@@ -42,8 +42,8 @@ based on user selections for method, analyte, dose, specimen, and parameters.
 \details{
 Step 1: Update units in the \code{PKNCAdata} object using units table and
 ensuring unique analytes have their unique units
-Step 2: Set PKNCAoptions
-Step 3: Formtat intervals using \code{format_pkncadata_intervals()}
+Step 2: Set \code{PKNCAoptions} for NCA calculation
+Step 3: Format intervals using \code{format_pkncadata_intervals()}
 Step 4: Apply filtering based on user selections
 Step 5: Impute start values if requested
 }
