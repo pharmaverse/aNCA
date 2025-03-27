@@ -19,7 +19,7 @@ simple_data <- data.frame(
 )
 
 # Multiple
-units_data <- data.frame(
+multiple_data <- data.frame(
   STUDYID = rep("STUDY002", 12),
   PCSPEC = rep("Plasma", 12),
   ROUTE = rep("IV", 12),
@@ -74,7 +74,7 @@ describe("PKNCA_create_data_object", {
 
   it("handles multiple analytes", {
     # Multiple analytes and units
-    results <- PKNCA_create_data_object(units_data)
+    results <- PKNCA_create_data_object(multiple_data)
 
     units_table <- results$units
     #contains ANALYTE column with two unique values
@@ -86,6 +86,128 @@ describe("PKNCA_create_data_object", {
   })
   # TODO: Add test for multiple units once implemented
   # TODO: add test for duplicated rows error message
+})
+
+
+# Test PKNCA_update_data_object
+describe("PKNCA_update_data_object", {
+  
+  method <- "lin up log down"
+  params <- c("cmax", "tmax", "auclast", "aucinf.obs")
+  analytes <- unique(simple_data$ANALYTE)
+  dosnos <- unique(simple_data$DOSNO)
+  pcspecs <- unique(simple_data$PCSPEC)
+  default_units <- pknca_data$units
+  
+  ma_data <- PKNCA_create_data_object(multiple_data)
+  
+  it("returns a PKNCAdata object", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_dosno = dosnos,
+      selected_pcspec = pcspecs,
+      params = params,
+      should_impute_c0 = TRUE
+    )
+    expect_s3_class(updated_data, "PKNCAdata")
+  })
+  
+  it("includes only selected analytes, dosnos, and pcspecs in intervals", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = ma_data,
+      method = method,
+      selected_analytes = "AnalyteX",
+      selected_dosno = 1,
+      selected_pcspec = "Plasma",
+      params = params,
+      should_impute_c0 = FALSE
+    )
+    intervals <- updated_data$intervals
+    expect_true(all(intervals$ANALYTE == "AnalyteX"))
+    expect_true(all(intervals$DOSNO == 1))
+    expect_true(all(intervals$PCSPEC == "Plasma"))
+  })
+  
+  it("updates units for each analyte", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_dosno = dosnos,
+      selected_pcspec = pcspecs,
+      params = params,
+      should_impute_c0 = TRUE
+    )
+    unit_analytes <- unique(updated_data$units$ANALYTE)
+    expect_setequal(unit_analytes, analytes)
+  })
+  
+  it("sets NCA options correctly", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_dosno = dosnos,
+      selected_pcspec = pcspecs,
+      params = params,
+      should_impute_c0 = TRUE
+    )
+    expect_equal(updated_data$options$auc.method, "lin up log down")
+    expect_equal(updated_data$options$min.hl.r.squared, 0.01)
+    expect_true("DOSNO" %in% updated_data$options$keep_interval_cols)
+  })
+
+  it("does not impute C0 when not requested", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_dosno = dosnos,
+      selected_pcspec = pcspecs,
+      params = params,
+      should_impute_c0 = FALSE
+    )
+    expect_true("impute" %in% names(updated_data))
+    expect_true(all(is.na(updated_data$impute)))
+  })
+  
+  it("ensures units table has separate rows per analyte", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$ANALYTE),
+      selected_dosno = unique(simple_data$DOSNO),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      params = c("cmax", "tmax", "auclast", "aucinf.obs"),
+      should_impute_c0 = TRUE
+    )
+    
+    # Get units table and analyte column
+    units_table <- updated_data$units
+    analyte_col <- updated_data$conc$columns$groups$group_analyte
+    
+    # Extract number of unique analytes and parameters
+    analytes <- unique(units_table[[analyte_col]])
+    params <- unique(units_table$PPTESTCD)
+    
+    # Expect a row for every analyte-param combination
+    expected_nrows <- length(analytes) * length(params)
+    expect_equal(nrow(units_table), expected_nrows)
+    
+    # Sanity: make sure all analyte-param pairs exist
+    pair_check <- tidyr::crossing(
+      ANALYTE = analytes,
+      PPTESTCD = params
+    )
+    
+    expect_true(all(
+      dplyr::semi_join(pair_check, units_table, by = c("ANALYTE", "PPTESTCD")) %>%
+        nrow() == nrow(pair_check)
+    ))
+  })
+
 })
 
 

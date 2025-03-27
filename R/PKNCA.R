@@ -150,7 +150,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' This function updates a previously prepared `PKNCAdata` object
 #' based on user selections for method, analyte, dose, specimen, and parameters.
 #' @details
-#' Step 1: Update units in the `PKNCAdata` object using units table and
+#' Step 1: Update units in the `PKNCAdata` object
 #' ensuring unique analytes have their unique units
 #' Step 2: Set `PKNCAoptions` for NCA calculation
 #' Step 3: Format intervals using `format_pkncadata_intervals()`
@@ -159,7 +159,6 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #'
 #' @param adnca_data A reactive PKNCAdata object
 #' @param method NCA calculation method selection
-#' @param units_table A reactive table of units
 #' @param selected_analytes User selected analytes
 #' @param selected_dosno User selected dose numbers
 #' @param selected_pcspec User selected specimen
@@ -177,7 +176,6 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 PKNCA_update_data_object <- function( # nolint: object_name_linter
   adnca_data,
   method,
-  units_table,
   selected_analytes,
   selected_dosno,
   selected_pcspec,
@@ -185,16 +183,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   should_impute_c0 = TRUE
 ) {
 
-  req(adnca_data(), method, selected_analytes,
+  req(adnca_data, method, selected_analytes,
       selected_dosno, selected_pcspec)
-
-  data <- adnca_data()
+  data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
-
-  if (!is.null(units_table)) {
-    data$units <- units_table
-  }
 
   # Add and expand units
   data$units <-  data$units %>%

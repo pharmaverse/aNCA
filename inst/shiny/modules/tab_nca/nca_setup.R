@@ -523,12 +523,11 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
-    slopes_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
+    slopes_pknca_data <- eventReactive(setup_trigger(), {
       log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = input$method,
-        units_table = session$userData$units_table(),
         selected_analytes = input$select_analyte,
         selected_dosno = input$select_dosno,
         selected_pcspec = input$select_pcspec,
@@ -543,12 +542,11 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
     # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
-    processed_pknca_data <- eventReactive(list(setup_trigger(), session$userData$units_table()), {
+    processed_pknca_data <- eventReactive(setup_trigger(), {
       log_trace("Updating PKNCA::data object.")
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = input$method,
-        units_table = session$userData$units_table(),
         selected_analytes = input$select_analyte,
         selected_dosno = input$select_dosno,
         selected_pcspec = input$select_pcspec,
