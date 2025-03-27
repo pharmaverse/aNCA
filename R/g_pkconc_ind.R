@@ -47,7 +47,6 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
-#' @importFrom scales breaks_log label_log
 #'
 #' @examples
 #' \dontrun{
@@ -183,6 +182,11 @@ pkcg01 <- function(
       stop(
         "Side-by-side view requires `ggh4x` package, please install it with ",
         "`install.packages('ggh4x')`"
+      )
+    if (!requireNamespace("scales", silently = TRUE))
+      stop(
+        "Side-by-side view requires `scales` package, please install it with ",
+        "`install.packages('scales')`"
       )
 
     # Create SBS version of data and plot

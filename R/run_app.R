@@ -27,7 +27,6 @@ check_app_dependencies <- function() {
     "reactable.extras",
     "rio",
     "rmarkdown",
-    "scales",
     "shiny",
     "shinyBS",
     "shinycssloaders",
