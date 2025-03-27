@@ -31,7 +31,6 @@ Imports:
     dplyr,
     formatters,
     ggplot2,
-    haven,
     magrittr,
     PKNCA,
     plotly,

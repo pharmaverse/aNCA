@@ -18,7 +18,6 @@ check_app_dependencies <- function() {
     "dplyr",
     "DT",
     "ggplot2",
-    "haven",
     "htmlwidgets",
     "logger",
     "magrittr",
