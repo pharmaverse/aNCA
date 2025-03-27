@@ -46,33 +46,29 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Files: LICENSE
 Suggests:
-    lintr (>= 3.1.2),
-    testthat (>= 3.0.0),
-    DT,
-    bslib,
-    ggh4x,
-    htmlwidgets,
-    jsonlite,
     knitr,
-    logger,
+    lintr (>= 3.1.2),
     markdown,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    jsonlite,
     pak,
+    ggh4x,
+    scales,
+    bslib,
+    DT,
+    htmlwidgets,
+    logger,
     reactable,
     reactable.extras,
-    rio,
-    rmarkdown,
-    scales,
     shiny,
-    shinyBS,
-    shinyFiles,
-    shinyWidgets,
     shinycssloaders,
-    shinyjqui,
     shinyjs,
+    shinyjqui,
+    shinyWidgets,
     stringi,
     tools,
-    yaml,
-    zip
+    yaml
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US

@@ -11,40 +11,30 @@ run_app <- function(...) {
 #' This list of packages should also be provided as `Suggests` in the DESCRIPTION file.
 #' @noRd
 check_app_dependencies <- function() {
-  # TODO: check those packages over and make sure they are needed
   deps <- c(
     "bslib",
     "dplyr",
     "DT",
-    "ggplot2",
     "htmlwidgets",
     "logger",
     "magrittr",
-    "PKNCA",
     "plotly",
     "purrr",
     "reactable",
     "reactable.extras",
-    "rio",
-    "rmarkdown",
     "shiny",
-    "shinyBS",
     "shinycssloaders",
-    "shinyFiles",
-    "shinyjqui",
     "shinyjs",
+    "shinyjqui",
     "shinyWidgets",
     "stats",
     "stringi",
     "stringr",
-    "tern",
     "tidyr",
     "tools",
     "utils",
-    "units",
     "rlang",
-    "yaml",
-    "zip"
+    "yaml"
   )
 
   purrr::walk(deps, \(dep) {
