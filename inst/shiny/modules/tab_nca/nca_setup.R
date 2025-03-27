@@ -208,20 +208,20 @@ nca_setup_ui <- function(id) {
 #'
 #' This module handles the server-side logic for the NCA settings, including file uploads,
 #' analyte/dose/specimen selection, AUC intervals, NCA parameters and their unit specifications.
-#' Then it integrates them to mydata and updates the object.
+#' Then it integrates them to adnca_data and updates the object.
 #'
 #' - id The module's ID.
 #' - data A reactive expression containing the read and mapped data from the app.
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
-#' - mydata A reactive expression of the PKNCAdata object, which contains data and NCA specications.
+#' - adnca_data A reactive expression of the PKNCAdata object, which contains data and NCA specications.
 #' - processing_trigger A reactive expression that triggers the NCA processing when the user is happy with the settings.
 #'
-nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : TODO: complexity / needs further modularization
+nca_setup_server <- function(id, data, adnca_data, processing_trigger) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    conc_data <- reactive(mydata()$conc$data)
+    conc_data <- reactive(adnca_data()$conc$data)
 
     # File Upload Handling
     observeEvent(input$settings_upload, {
@@ -510,43 +510,46 @@ nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : 
     # STEP 1: Setup initial PKNCAdata based on settings but not filtered
     # This is the base for all further modifications
     # Initialises units and options
-    pre_pknca_data <- eventReactive(list(
-      input$method, mydata(),
-      session$userData$units_table()
-    ), {
-      req(mydata())
-      req(
-        input$method
-      )
-      # Load mydata reactive and modify it accordingly to user's request
-      pre_pknca_data <- mydata()
-      
-      analyte_column <- pre_pknca_data$conc$columns$groups$group_analyte
-      unique_analytes <- unique(pre_pknca_data$conc$data[[analyte_column]])
-      
-      if (!is.null(session$userData$units_table())) {
-        pre_pknca_data$units <- session$userData$units_table()
-      }
-
-      pre_pknca_data$units <- pre_pknca_data$units %>%
-        select(-!!sym(analyte_column)) %>%
-        tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
-        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
-      
-      pre_pknca_data$options <- list(
-        auc.method = input$method,
-        keep_interval_cols = c("DOSNO", "type_interval"),
-        # Make sure the standard options do not prohibit results
-        min.hl.r.squared = 0.01
-      )
-
-      pre_pknca_data
-    })
+    # pre_pknca_data <- eventReactive(list(
+    #   input$method, mydata(),
+    #   session$userData$units_table()
+    # ), {
+    #   req(mydata())
+    #   req(
+    #     input$method
+    #   )
+    #   # Load mydata reactive and modify it accordingly to user's request
+    #   pre_pknca_data <- mydata()
+    #   
+    #   analyte_column <- pre_pknca_data$conc$columns$groups$group_analyte
+    #   unique_analytes <- unique(pre_pknca_data$conc$data[[analyte_column]])
+    #   
+    #   if (!is.null(session$userData$units_table())) {
+    #     pre_pknca_data$units <- session$userData$units_table()
+    #   }
+    # 
+    #   pre_pknca_data$units <- pre_pknca_data$units %>%
+    #     select(-!!sym(analyte_column)) %>%
+    #     tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
+    #     mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
+    #   
+    #   pre_pknca_data$options <- list(
+    #     auc.method = input$method,
+    #     keep_interval_cols = c("DOSNO", "type_interval"),
+    #     # Make sure the standard options do not prohibit results
+    #     min.hl.r.squared = 0.01
+    #   )
+    # 
+    #   pre_pknca_data
+    # })
     
     # Trigger once initially
     # Debounce a trigger signal (e.g., a combined string)
     setup_trigger <- debounce(reactive({
       paste(
+        adnca_data(),
+        input$method,
+        session$userData$units_table(),
         input$nca_params,
         input$should_impute_c0,
         input$select_analyte,
@@ -559,108 +562,152 @@ nca_setup_server <- function(id, data, mydata, processing_trigger) { # nolint : 
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections 
     slopes_pknca_data <- eventReactive(setup_trigger(), {
-      req(pre_pknca_data())
-      req(
-        input$should_impute_c0, input$select_analyte, input$select_dosno,
-        input$select_pcspec
+      log_trace("Updating PKNCA::data object for slopes.")
+      slopes_pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data,
+        method = input$method,
+        units_table = session$userData$units_table(),
+        selected_analytes = input$select_analyte,
+        selected_dosno = input$select_dosno,
+        selected_pcspec = input$select_pcspec,
+        params = c("lambda.z.n.points", "lambda.z.time.first",
+                   "r.squared","adj.r.squared", "cmax"),
+        should_impute_c0 = input$should_impute_c0
       )
-      # Load reactive
-      slopes_pknca_data <- pre_pknca_data()
-
-      # Include intervals required for slopes module
-      slopes_pknca_data$intervals <- format_pkncadata_intervals(
-        pknca_conc = slopes_pknca_data$conc,
-        pknca_dose = slopes_pknca_data$dose,
-        # Set params needed
-        params = c("lambda.z.n.points",
-                   "lambda.z.time.first", "r.squared",
-                   "adj.r.squared", "cmax"),
-        # Start at t0 when requested by the user
-        start_from_last_dose = input$should_impute_c0
-      )
+      log_success("PKNCA data slopes object created.")
       
-      # Filter by analyte, dose number, and specimen
-      slopes_pknca_data$intervals <- slopes_pknca_data$intervals %>%
-        filter(DOSNO %in% input$select_dosno,
-               ANALYTE %in% input$select_analyte,
-               PCSPEC %in% input$select_pcspec)
-      
-      slopes_pknca_data$impute <- NA
-      
-      # Define start imputations on intervals if specified by the user
-      if (input$should_impute_c0) {
-        slopes_pknca_data <- create_start_impute(slopes_pknca_data)
-        
-        # Make sure observed parameters (cmax, tmax) are not imputed
-        # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
-        slopes_pknca_data$intervals <- Reduce(function(data, ti_arg) {
-          interval_remove_impute(data,
-                                 target_impute = ti_arg,
-                                 target_params = "cmax")
-        }, unique(slopes_pknca_data$intervals$impute), init = slopes_pknca_data$intervals)
-      }
-      
+    #   req(pre_pknca_data())
+    #   req(
+    #     input$should_impute_c0, input$select_analyte, input$select_dosno,
+    #     input$select_pcspec
+    #   )
+    #   # Load reactive
+    #   slopes_pknca_data <- pre_pknca_data()
+    # 
+    #   # Include intervals required for slopes module
+    #   slopes_pknca_data$intervals <- format_pkncadata_intervals(
+    #     pknca_conc = slopes_pknca_data$conc,
+    #     pknca_dose = slopes_pknca_data$dose,
+    #     # Set params needed
+    #     params = c("lambda.z.n.points",
+    #                "lambda.z.time.first", "r.squared",
+    #                "adj.r.squared", "cmax"),
+    #     # Start at t0 when requested by the user
+    #     start_from_last_dose = input$should_impute_c0
+    #   )
+    #   
+    #   # Filter by analyte, dose number, and specimen
+    #   slopes_pknca_data$intervals <- slopes_pknca_data$intervals %>%
+    #     filter(DOSNO %in% input$select_dosno,
+    #            ANALYTE %in% input$select_analyte,
+    #            PCSPEC %in% input$select_pcspec)
+    #   
+    #   slopes_pknca_data$impute <- NA
+    #   
+    #   # Define start imputations on intervals if specified by the user
+    #   if (input$should_impute_c0) {
+    #     slopes_pknca_data <- create_start_impute(slopes_pknca_data)
+    #     
+    #     # Make sure observed parameters (cmax, tmax) are not imputed
+    #     # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
+    #     slopes_pknca_data$intervals <- Reduce(function(data, ti_arg) {
+    #       interval_remove_impute(data,
+    #                              target_impute = ti_arg,
+    #                              target_params = "cmax")
+    #     }, unique(slopes_pknca_data$intervals$impute), init = slopes_pknca_data$intervals)
+    #   }
+    #   
       slopes_pknca_data
     })
     
     # STEP 3: Create version for NCA results
     # NCA dynamic changes/filters based on user selections 
     processed_pknca_data <- eventReactive(setup_trigger(), {
-      req(pre_pknca_data())
-      req(
-        input$should_impute_c0, input$nca_params, input$select_analyte,
-        input$select_dosno, input$select_pcspec, intervals_userinput()
-      )
-
-      # Load mydata reactive and modify it accordingly to user's request
-      processed_pknca_data <- pre_pknca_data()
-
-      processed_pknca_data$units <- processed_pknca_data$units %>%
-        filter(ANALYTE %in% input$select_analyte)
-
-      # Include main intervals as specified by the user
-      processed_pknca_data$intervals <- format_pkncadata_intervals(
-        pknca_conc = processed_pknca_data$conc,
-        pknca_dose = processed_pknca_data$dose,
-        # Set user selected params
+      log_trace("Updating PKNCA::data object.")
+      processed_pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data,
+        method = input$method,
+        units_table = session$userData$units_table(),
+        selected_analytes = input$select_analyte,
+        selected_dosno = input$select_dosno,
+        selected_pcspec = input$select_pcspec,
         params = input$nca_params,
-        # Start at t0 when requested by the user
-        start_from_last_dose = input$should_impute_c0
+        should_impute_c0 = input$should_impute_c0
       )
+      log_success("PKNCA data slopes object updated.")
       
-      #TODO: add partial aucs here
-
-      # Filter only the analytes and doses requested for intervals and units
-      processed_pknca_data$intervals <- processed_pknca_data$intervals %>%
-        dplyr::filter(DOSNO %in% input$select_dosno,
-                      ANALYTE %in% input$select_analyte,
-                      PCSPEC %in% input$select_pcspec)
+      # # Add partial AUCs if any
+      # if (!is.null(partial_auc_intervals) && length(partial_auc_intervals()) > 0
+      #     && type == "processed") {
+      #   #TODO: add
+      # }
       
-      processed_pknca_data$impute <- NA
-      
-      # Define start imputations on intervals if specified by the user
-      if (input$should_impute_c0) {
-        processed_pknca_data <- create_start_impute(processed_pknca_data)
-        
-        # Make sure observed parameters (cmax, tmax) are not imputed
-        # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
-        processed_pknca_data$intervals <- Reduce(function(data, ti_arg) {
-          interval_remove_impute(data,
-                                 target_impute = ti_arg,
-                                 target_params = c("cmax", "tmax"))
-        }, unique(processed_pknca_data$intervals$impute), init = processed_pknca_data$intervals)
-      }
-
-      # If the user filtered all intervals or there are not left, show a notification
       if (nrow(processed_pknca_data$intervals) == 0) {
-        showNotification(paste0("All intervals have been filtered. Please reconsider ",
-                                "populating the last input modified or report a bug"),
-                         duration = 20,
-                         type = "warning")
+        showNotification(
+          "All intervals were filtered. Please revise your settings.",
+          type = "warning", duration = 10
+        )
       }
-
+      
       processed_pknca_data
     })
+      
+    #   req(pre_pknca_data())
+    #   req(
+    #     input$should_impute_c0, input$nca_params, input$select_analyte,
+    #     input$select_dosno, input$select_pcspec, intervals_userinput()
+    #   )
+    # 
+    #   # Load mydata reactive and modify it accordingly to user's request
+    #   processed_pknca_data <- pre_pknca_data()
+    # 
+    #   processed_pknca_data$units <- processed_pknca_data$units %>%
+    #     filter(ANALYTE %in% input$select_analyte)
+    # 
+    #   # Include main intervals as specified by the user
+    #   processed_pknca_data$intervals <- format_pkncadata_intervals(
+    #     pknca_conc = processed_pknca_data$conc,
+    #     pknca_dose = processed_pknca_data$dose,
+    #     # Set user selected params
+    #     params = input$nca_params,
+    #     # Start at t0 when requested by the user
+    #     start_from_last_dose = input$should_impute_c0
+    #   )
+    #   
+    #   #TODO: add partial aucs here
+    # 
+    #   # Filter only the analytes and doses requested for intervals and units
+    #   processed_pknca_data$intervals <- processed_pknca_data$intervals %>%
+    #     dplyr::filter(DOSNO %in% input$select_dosno,
+    #                   ANALYTE %in% input$select_analyte,
+    #                   PCSPEC %in% input$select_pcspec)
+    #   
+    #   processed_pknca_data$impute <- NA
+    #   
+    #   # Define start imputations on intervals if specified by the user
+    #   if (input$should_impute_c0) {
+    #     processed_pknca_data <- create_start_impute(processed_pknca_data)
+    #     
+    #     # Make sure observed parameters (cmax, tmax) are not imputed
+    #     # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
+    #     processed_pknca_data$intervals <- Reduce(function(data, ti_arg) {
+    #       interval_remove_impute(data,
+    #                              target_impute = ti_arg,
+    #                              target_params = c("cmax", "tmax"))
+    #     }, unique(processed_pknca_data$intervals$impute), init = processed_pknca_data$intervals)
+    #   }
+    # 
+    #   # If the user filtered all intervals or there are not left, show a notification
+    #   if (nrow(processed_pknca_data$intervals) == 0) {
+    #     showNotification(paste0("All intervals have been filtered. Please reconsider ",
+    #                             "populating the last input modified or report a bug"),
+    #                      duration = 20,
+    #                      type = "warning")
+    #   }
+    # 
+    #   processed_pknca_data
+    # })
+    
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)

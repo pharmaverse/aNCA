@@ -143,6 +143,102 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   pknca_data_object
 }
 
+
+
+#' Create a PKNCAdata Object for NCA or Slope Analysis
+#'
+#' This function updates a previously prepared `PKNCAdata` object
+#' based on user selections for method, analyte, dose, specimen, and parameters.
+#'
+#' The function dynamically configures units, intervals, and optional imputations.
+#' 
+#' @param adnca_data A reactive PKNCAdata object
+#' @param method NCA calculation method selection
+#' @param units_table A reactive table of units
+#' @param selected_analytes User selected analytes
+#' @param selected_dosno User selected dose numbers
+#' @param selected_pcspec User selected specimen
+#' @param params A list of parameters for NCA calculation
+#' @param should_impute_c0 Logical indicating if start values should be imputed
+#'
+#' @returns A fully configured `PKNCAdata` object.
+#'
+#' @importFrom dplyr filter mutate select across all_of
+#' @importFrom tidyr crossing
+#' @importFrom shiny reactive req showNotification
+#' @importFrom rlang sym
+#'
+#' @export
+PKNCA_update_data_object <- function(
+    adnca_data,
+    method,
+    units_table,
+    selected_analytes,
+    selected_dosno,
+    selected_pcspec,
+    params,
+    should_impute_c0 = TRUE
+) {
+  
+  req(adnca_data(), method, selected_analytes,
+      selected_dosno, selected_pcspec)
+
+  browser()
+  data <- adnca_data()
+  analyte_column <- data$conc$columns$groups$group_analyte
+  unique_analytes <- unique(data$conc$data[[analyte_column]])
+  
+  if (!is.null(units_table)) {
+        data$units <- units_table
+      }
+  # Add and expand units
+  data$units <-  data$units %>%
+    select(-!!sym(analyte_column)) %>%
+    tidyr::crossing(!!sym(analyte_column) := unique_analytes) %>%
+    mutate(PPSTRESU = PPORRESU, conversion_factor = 1) %>%
+    filter(analyte_column %in% selected_analytes)
+  
+  data$options <- list(
+    auc.method = method,
+    progress = FALSE,
+    keep_interval_cols = c("DOSNO", "type_interval"),
+    min.hl.r.squared = 0.01
+  )
+  
+  # Format intervals
+  data$intervals <- format_pkncadata_intervals(
+    pknca_conc = data$conc,
+    pknca_dose = data$dose,
+    params = params,
+    start_from_last_dose = should_impute_c0
+  )
+  
+  # Apply filtering
+  data$intervals <- data$intervals %>%
+    filter(
+      ANALYTE %in% selected_analytes,
+      DOSNO %in% selected_dosno,
+      PCSPEC %in% selected_pcspec
+    )
+  
+  data$impute <- NA
+  
+  # Impute start values if requested
+  if (should_impute_c0) {
+    data <- create_start_impute(data)
+    
+    data$intervals <- Reduce(function(d, ti_arg) {
+      interval_remove_impute(
+        d,
+        target_impute = ti_arg,
+        target_params = c("cmax", "tmax")
+      )
+    }, unique(data$intervals$impute), init = data$intervals)
+  }
+  
+  data
+}
+
 #' Calculates results for PKNCA analysis.
 #'
 #' @details

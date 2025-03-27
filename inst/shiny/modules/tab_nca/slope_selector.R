@@ -152,7 +152,6 @@ slope_selector_server <- function(
         NULL
       } else {
         all_params <- names(get.interval.cols())
-       pknca_data$options$progress <- FALSE
         result_obj <- pk.nca(data = pknca_data, verbose = FALSE)
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
@@ -215,7 +214,6 @@ slope_selector_server <- function(
 
       plot_outputs <- reactive({
         req(plot_data(), lambdas_res(), plots_to_render)
-
         apply(plots_to_render, 1, function(row) {
 
         lambda_slope_plot(
@@ -291,7 +289,7 @@ slope_selector_server <- function(
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
     #' and exclusions before applying them to the actual dataset.
-    plot_data <- eventReactive(pknca_data(), {
+    plot_data <- reactive({
       req(pknca_data(), manual_slopes(), profiles_per_patient())
       filter_slopes(pknca_data(), manual_slopes(), profiles_per_patient(), slopes_groups())
     }) %>%
