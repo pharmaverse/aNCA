@@ -183,20 +183,20 @@ PKNCA_update_data_object <- function(
   req(adnca_data(), method, selected_analytes,
       selected_dosno, selected_pcspec)
 
-  browser()
   data <- adnca_data()
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
   
   if (!is.null(units_table)) {
         data$units <- units_table
-      }
+  }
+
   # Add and expand units
   data$units <-  data$units %>%
+    filter(!!sym(analyte_column) %in% selected_analytes) %>%
     select(-!!sym(analyte_column)) %>%
     tidyr::crossing(!!sym(analyte_column) := unique_analytes) %>%
-    mutate(PPSTRESU = PPORRESU, conversion_factor = 1) %>%
-    filter(analyte_column %in% selected_analytes)
+    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
   
   data$options <- list(
     auc.method = method,
