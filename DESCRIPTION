@@ -54,6 +54,7 @@ Suggests:
     jsonlite,
     pak,
     ggh4x,
+    nestcolor,
     scales,
     bslib,
     DT,
