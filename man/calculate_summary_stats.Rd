@@ -7,11 +7,11 @@
 calculate_summary_stats(data, input_groups = "DOSNO")
 }
 \arguments{
+\item{data}{A data frame containing results of
+Non Compartmental Analysis using PKNCA package}
+
 \item{input_groups}{A character vector specifying the columns to group by.
 Here. the hierarchical order matters}
-
-\item{res_pknca}{A data frame containing results of
-Non Compartmental Analysis using PKNCA package}
 }
 \value{
 A data frame with summary statistics for each group and parameter.
