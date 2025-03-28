@@ -122,6 +122,7 @@ pivot_wider_pknca_results <- function(myres) {
 }
 
 #' Helper function to extract exclude values
+#' @noRd
 .extract_exclude_values <- function(...) {
   raw_values <- unique(c(...))  # Get unique exclude values from different columns
   raw_values <- raw_values[!is.na(raw_values)]  # Remove NAs
@@ -136,6 +137,7 @@ pivot_wider_pknca_results <- function(myres) {
 }
 
 #' Helper function to add "label" attribute to columns based on parameter names
+#' @noRd
 .add_label_attribute <- function(df, myres) {
 
   mapping_vr <- myres$result %>%

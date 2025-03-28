@@ -539,7 +539,8 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
         intervals_userinput()
       ) %>%
         unique()
-      processed_pknca_data$impute <- NA
+
+      processed_pknca_data$impute <- NA_character_
 
       # Filter only the analytes and doses requested for intervals and units
       processed_pknca_data$intervals <- processed_pknca_data$intervals %>%

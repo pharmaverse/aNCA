@@ -8,6 +8,8 @@
 #'  * pknca_result_raw Output from function call `pk.nca()` (needs to be merged with upper later
 #'                      on but now we avoid merge conflict)
 #'
+#' @param res_nca Object with results of the NCA analysis.
+#'
 #' @return A list with two data frames:
 #' \describe{
 #' \item{pp}{A data frame containing the PP (Pharmacokinetic Parameters) domain data.}
