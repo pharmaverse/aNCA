@@ -14,11 +14,16 @@ upload_settings_ui <- function(id) {
 #' Load Settings Server Module
 #'
 #' This module handles the server-side logic for loading project settings from a file,
-#' including updating the UI elements: selectInputs, parameters, imputations, slope adj...
+#' including updating the UI elements: 
+#' a) selectInputs for dosno, analyte, pcspec
+#' b) NCA parameters, method, units and C0 imputation
+#' c) The flag rules and their thresholds
+#' d) The slope adjustments for the half life calculation  
 #'
+#'Its arguments are:
 #' - id The module's ID.
 #' - processed_pknca_data A reactive expression containing the project data to be updated.
-#' - parent_session The parent Shiny session.
+#' - parent_session The parent Shiny session (tab_nca). Used to update all mentioned inputs
 #' - auc_counter A reactive value for counting AUC intervals.
 #' - manual_slopes A reactive value for handling manual slopes.
 #'
