@@ -94,7 +94,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
     rules <- nca_setup$rules
-    auc_options <- nca_setup$bioavailability
+    f_auc_options <- nca_setup$bioavailability
 
     #' Slope rules setup module
     slope_rules <- slope_selector_server(
@@ -184,10 +184,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                        processed_pknca_data,
                        res_nca, rules(),
                        grouping_vars,
-                       auc_options)
+                       f_auc_options)
 
     #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, auc_options)
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, f_auc_options)
 
     #' Settings download module
     download_settings_server("download_settings", processed_pknca_data, res_nca)
