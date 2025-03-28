@@ -61,11 +61,9 @@ download_settings_server <- function(id, processed_pknca_data, parent_session) {
         processed_pknca_data$flag_rules <- stack(processed_pknca_data$flag_rules)
 
         # Save the file in the format requested by the user
-        if (input$settings_save_fmt == "rds") {
-          saveRDS(processed_pknca_data, file)
-        }
-
-        if (input$settings_save_fmt == "xlsx") {
+        switch(input$settings_save_fmt,
+               "rds" = saveRDS(processed_pknca_data, file),
+               "xlsx" = {
           # Excel files have some limitations  that need to be accounted for to prevent issues
           processed_pknca_data$options <- as.data.frame(
             c(as.list(processed_pknca_data$options$single.dose.aucs),
@@ -93,7 +91,7 @@ download_settings_server <- function(id, processed_pknca_data, parent_session) {
             openxlsx::writeData(wb = wb, sheet = names(setts_list[i]), x = setts_list[[i]])
           }
           openxlsx::saveWorkbook(wb, file)
-        }
+        })
       }
     )
   })
