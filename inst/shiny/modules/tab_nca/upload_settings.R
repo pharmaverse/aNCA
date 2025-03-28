@@ -313,11 +313,8 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
         # If there were changed rows update the concentration data & exclusions table
         if (nrow(changed_rows) > 0) {
 
-          # Update the main object value
-          data$conc$data <- new_conc_data
-          processed_pknca_data(data)
-
           # Update the manual slopes object
+          data$conc$data <- new_conc_data
           conc_groups <- unname(unlist(processed_pknca_data()$conc$columns$groups))
           manual_slopes <- new_conc_data %>%
             filter(is.included.hl + is.excluded.hl > 0) %>%
