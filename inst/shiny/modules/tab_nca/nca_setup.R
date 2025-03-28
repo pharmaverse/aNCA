@@ -611,17 +611,22 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     list(
       processed_pknca_data = processed_pknca_data,
       rules = reactive(list(
-        rule_adj_r_squared = input$rule_adj_r_squared,
-        adj.r.squared_threshold = input$adj.r.squared_threshold,
-
-        rule_aucpext_obs = input$rule_aucpext_obs,
-        aucpext.obs_threshold = input$aucpext.obs_threshold,
-
-        rule_aucpext_pred = input$rule_aucpext_pred,
-        aucpext.pred_threshold = input$aucpext.pred_threshold,
-
-        rule_span_ratio = input$rule_span_ratio,
-        span.ratio_threshold = input$span.ratio_threshold
+        adj.r.squared = list(
+          is.checked = input$rule_adj_r_squared,
+          threshold = input$adj.r.squared_threshold
+        ),
+        aucpext.obs = list(
+          is.checked = input$rule_aucpext_obs,
+          threshold = input$aucpext.obs_threshold
+        ),
+        aucpext.pred = list(
+          is.checked = input$rule_aucpext_pred,
+          threshold = input$aucpext.pred_threshold
+        ),
+        span.ratio = list(
+          is.checked = input$rule_span_ratio,
+          threshold = input$span.ratio_threshold
+        )
       ))
     )
   })

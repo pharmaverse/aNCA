@@ -52,27 +52,22 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       #' Transform results
       final_results <- pivot_wider_pknca_results(res)
 
-      # Apply rules
-      for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
-        if (!rules[[rule_input]]) next
+      # Apply flag rules
+      for (param in names(rules)) {
+        if (rules[[param]]$is.checked) {
+          # Find the proper column/s that should be considered (in principle should be 1)
+          param_cdisc <- translate_terms(param, "PKNCA", "PPTESTCD")
+          param_cols <- grep(paste0("^", param_cdisc, "(\\[.*\\])?$"),
+                             names(final_results),
+                             value = TRUE)
 
-        pptestcd <- rule_input |>
-          gsub("^rule_", "", x = _) |>
-          gsub("_", ".", x = _, fixed = TRUE)
-
-        pptestcd_col <- res_nca()$result %>%
-          filter(PPTESTCD == translate_terms(pptestcd, "PKNCA", "PPTESTCD")) %>%
-          slice(1) %>%
-          mutate(new_pptestcd = paste0(pptestcd, "[", PPSTRESU, "]")) %>%
-          pull(new_pptestcd) %>%
-          unique()
-
-        final_results <- final_results %>%
-          mutate(!!paste0("flag_", pptestcd) := case_when(
-            startsWith(pptestcd, "auc") ~ .data[[pptestcd_col]]
-            >= rules[[paste0(pptestcd, "_threshold")]],
-            TRUE ~ .data[[pptestcd_col]] <= rules[[paste0(pptestcd, "_threshold")]]
-          ))
+          # Include a flag column for that parameter that is TRUE when the threshold is surpassed
+          final_results <- final_results %>%
+            mutate(!!paste0("flag_", param) := case_when(
+              startsWith(param, "auc") ~ rowSums(.[, param_cols] >= rules[[param]]$threshold) > 0,
+              TRUE ~ rowSums(.[, param_cols] <= rules[[param]]$threshold) > 0
+            ))
+        }
       }
 
       # Join subject data to allow the user to group by it
