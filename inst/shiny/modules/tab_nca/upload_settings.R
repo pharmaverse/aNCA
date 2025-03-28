@@ -34,14 +34,41 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
       if (tools::file_ext(file_path) == "rds") {
         # Allow loading of big rds files into R
         options(shiny.maxRequestSize = 10 * 1024 ^ 2) # 10 Mb (generally ~5Mb)
-        setts <- readRDS(input$settings_upload$datapath)
-
+        setts <- tryCatch(
+          readRDS(file_path),
+          error = function(e) {
+            showNotification("Error: Uploaded RDS file is not valid.", type = "error")
+            return(NULL)
+          }
+        )
       } else if (tools::file_ext(file_path) == "xlsx") {
         # Load and restructure into PKNCA object the excel file
         sheets <- openxlsx::getSheetNames(file_path)
         setts <- lapply(sheets, function(sheet) openxlsx::read.xlsx(file_path, sheet = sheet))
         names(setts) <- sheets
 
+        # Make some validations of the file uploaded
+        expected_sheets <- c("intervals", "units", "conc_data", "conc_columns",
+                             "dose_data", "dose_columns", "flag_rules", "options")
+        missing_sheets <- setdiff(expected_sheets, sheets)
+
+        if (length(missing_sheets) > 0) {
+          showNotification(paste0("Invalid Excel settings file. Missing sheet/s: ",
+                                  paste0(missing_sheets, collapse = ", ")))
+          return()
+        }
+        if (!all(c("ind", "values") %in% names(setts$conc_columns))) {
+          showNotification("Error: Excel file has incorrect column structure
+                              in 'conc_columns'.", type = "error")
+          return()
+        }
+        if (!all(c("ind", "values") %in% names(setts$dose_columns))) {
+          showNotification("Error: Excel file has incorrect column structure
+                              in 'dose_columns'.", type = "error")
+          return()
+        }
+
+        # Once all validations are done rearrange the data
         setts <- list(
           conc = list(
             data = setts$conc_data,
@@ -110,6 +137,9 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
           units = setts$units,
           flag_rules = setts$flag_rules
         )
+      } else {
+        showNotification("Invalid settings file format. Formats accepted are: .xlsx, .rds")
+        return()
       }
       # Update all select inputs in the NCA setup tab
       .update_select_with_setts(
