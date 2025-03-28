@@ -14,11 +14,11 @@ upload_settings_ui <- function(id) {
 #' Load Settings Server Module
 #'
 #' This module handles the server-side logic for loading project settings from a file,
-#' including updating the UI elements: 
+#' including updating the UI elements:
 #' a) selectInputs for dosno, analyte, pcspec
 #' b) NCA parameters, method, units and C0 imputation
 #' c) The flag rules and their thresholds
-#' d) The slope adjustments for the half life calculation  
+#' d) The slope adjustments for the half life calculation
 #'
 #'Its arguments are:
 #' - id The module's ID.
@@ -147,19 +147,19 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
         return()
       }
       # Update all select inputs in the NCA setup tab
-      .update_select_with_setts(
+      .updateSelectInput_with_setts(
         "DOSNO", "DOSNO",
         setts_df = setts$intervals, data_df = processed_pknca_data()$conc$data,
         parent_session, "select_dosno"
       )
-      .update_select_with_setts(
+      .updateSelectInput_with_setts(
         var_setts_col = setts$conc$columns$groups$group_analyte,
         var_data_col = processed_pknca_data()$conc$columns$groups$group_analyte,
         setts_df = setts$intervals,
         data_df = processed_pknca_data()$conc$data,
         parent_session, "select_analyte"
       )
-      .update_select_with_setts(
+      .updateSelectInput_with_setts(
         "PCSPEC", "PCSPEC",
         setts, processed_pknca_data()$conc$data,
         parent_session, "select_pcspec"
@@ -341,8 +341,8 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
 
 # Create a function to update the selectInputs based on the matches between settings and data
 # If there are mismatches send a notification to the user
-.update_select_with_setts <- function(var_setts_col, var_data_col, setts_df,
-                                      data_df, session, inputid) {
+.updateSelectInput_with_setts() <- function(var_setts_col, var_data_col, setts_df,
+                                            data_df, session, inputid) {
 
   if (!is.null(var_data_col) && !is.null(var_setts_col)) {
     vals_data <- unique(data_df[[var_data_col]])
