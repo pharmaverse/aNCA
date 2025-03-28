@@ -23,7 +23,7 @@ tab_nca_ui <- function(id) {
 
   fluidPage(
     actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    download_settings_ui(ns("download_settings")),
+    nav_panel("Save setts", download_settings_ui(ns("download_settings"))),
     navset_tab(
       id = ns("ncapanel"),
       #' Pre-nca setup
@@ -31,7 +31,7 @@ tab_nca_ui <- function(id) {
         "Setup",
         fluid = TRUE,
         navset_pill_list(
-          nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
+          nav_panel("NCA settings", nca_setup_ui(ns("nca_setup"))),
           nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
         )
       ),
@@ -91,7 +91,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       bindEvent(adnca_data())
 
     #' NCA Setup module
-    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
+    nca_setup <- nca_setup_server("nca_setup", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
     rules <- nca_setup$rules
 
@@ -185,7 +185,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     #' Settings download module
-    download_settings_server("download_settings", processed_pknca_data, res_nca)
+    download_settings_server("download_settings", processed_pknca_data, session)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
