@@ -195,6 +195,8 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
+    # Make empty strings for units that have no metric (unitless, fraction...)
+    mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
