@@ -79,6 +79,22 @@ describe("interval_add_impute", {
                  "The 'impute' column in the intervals data.frame must be a character column.")
   })
 
+  it("warns and makes no changes when target_impute is NA or empty", {
+    expect_warning({
+      result <- interval_add_impute(o_data, target_impute = NA_character_)
+      expect_equal(result, o_data)
+    },
+    "No impute method specified. No changes made."
+    )
+
+    expect_warning({
+      result <- interval_add_impute(o_data, target_impute = "")
+      expect_equal(result, o_data)
+    },
+    "No impute method specified. No changes made."
+    )
+  })
+
   it("creates missing impute col as NA_char & adds impute", {
     d_no_imp <- o_data
     d_no_imp$intervals$impute <- NULL
@@ -296,6 +312,22 @@ describe("interval_remove_impute", {
     o_data_not_character_impute$intervals$impute <- 1
     expect_error(interval_remove_impute(o_data_not_character_impute, target_impute = "start_conc0"),
                  "The 'impute' column in the intervals data.frame must be a character column.")
+  })
+
+  it("warns and makes no changes when target_impute is NA or empty", {
+    expect_warning({
+      result <- interval_remove_impute(o_data, target_impute = NA_character_)
+      expect_equal(result, o_data)
+    },
+    "No impute method specified. No changes made."
+    )
+
+    expect_warning({
+      result <- interval_remove_impute(o_data, target_impute = "")
+      expect_equal(result, o_data)
+    },
+    "No impute method specified. No changes made."
+    )
   })
 
   it("does not modify data if global impute & column are missing", {
