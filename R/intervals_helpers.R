@@ -168,9 +168,9 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   # If missing, define target parameters as all parameter columns with at least one TRUE.
   if (is.null(target_params)) {
     target_params <- param_cols
-  } else {
-    stopifnot(all(target_params %in% all_param_options) || length(target_params) == 0)
   }
+
+  assert_subset(target_params, all_param_options)
 
   # Identify the target interval rows based on:
   target_rows <- identify_target_rows(data, target_impute, target_params, target_groups, after)
@@ -246,9 +246,9 @@ interval_remove_impute.data.frame <- function(data,
   # Handle target_params
   if (is.null(target_params)) {
     target_params <- param_cols
-  } else {
-    stopifnot(all(target_params %in% all_param_options))
   }
+
+  assert_subset(target_params, all_param_options)
 
   # Identify the interval rows that need to be changed
   target_rows <- identify_target_rows(data, target_impute, target_params, target_groups)
@@ -371,4 +371,18 @@ identify_target_rows <- function(data, target_impute, target_params, target_grou
   }
 
   is_target_group & is_target_param & is_after
+}
+
+#' Checks if a vector is a subset of another. If there are any values in `a` that are not present
+#' in `b`, throws an error.
+#' @param a Vector to check.
+#' @param b Vector with possible values.
+#' @noRd
+assert_subset <- function(a, b) {
+  if (!all(a %in% b)) {
+    stop(
+      "The following parameters are invalid interval columns: ",
+      paste0(setdiff(a, b), collapse = ", ")
+    )
+  }
 }
