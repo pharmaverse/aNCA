@@ -59,7 +59,7 @@ calculate_F <- function(res_nca, selected_aucs) {
 
   # Extract dose information
   dose_info <- res_nca$data$dose$data %>%
-    select(all_of(c(id_groups)), route_col, dose_col, USUBJID) %>%
+    select(all_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
     distinct()
 
   # Merge dose information with AUC data
