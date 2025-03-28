@@ -15,21 +15,23 @@ flexible_violinboxplot(
 )
 }
 \arguments{
+\item{boxplotdata}{A list containing the data to be plotted. It should have a \code{data}
+element with dose information and a \code{formatted} element with the
+data to be plotted.}
+
 \item{parameter}{A string specifying the parameter to be plotted.}
+
+\item{xvars}{Variables for the x axis.}
+
+\item{colorvars}{Variables for the color aesthetic.}
+
+\item{varvalstofilter}{Variables to filter on.}
 
 \item{columns_to_hover}{A character vector indicating the column names from result_data that
 should be used to identify when hovering the plotly outputs}
 
 \item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or a
 violin plot (\code{FALSE}). Default is \code{TRUE}.}
-
-\item{result_data}{A list containing the data to be plotted. It should have a \code{data}
-element with dose information and a \code{formatted} element with the
-data to be plotted.}
-
-\item{doses_included}{A vector of doses to be included in the plot.}
-
-\item{dosenumber_included}{A vector of dose numbers to be included in the plot.}
 }
 \value{
 A plotly object representing the violin or box plot.
