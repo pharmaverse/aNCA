@@ -4,12 +4,17 @@
 \alias{interval_add_impute}
 \title{Add specified imputation methods to the intervals in a PKNCAdata or data.frame object.}
 \usage{
-interval_add_impute(data, ...)
+interval_add_impute(
+  data,
+  target_impute,
+  after,
+  target_params,
+  target_groups,
+  ...
+)
 }
 \arguments{
 \item{data}{A PKNCAdata object containing the intervals data frame, or a data frame of intervals.}
-
-\item{...}{arguments passed to \code{interval_add_impute}.}
 
 \item{target_impute}{A character string specifying the imputation method to be added.}
 
@@ -21,6 +26,8 @@ If missing, all TRUE in the intervals are taken.}
 
 \item{target_groups}{A data frame specifying the intervals to be targeted (optional).
 If missing, all relevant groups are considered.}
+
+\item{...}{arguments passed to \code{interval_add_impute}.}
 }
 \value{
 A modified PKNCAdata object with specified imputation methods on the target intervals.

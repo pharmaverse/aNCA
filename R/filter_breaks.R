@@ -3,15 +3,15 @@
 #'
 #' Filters X-axis for consecutive breaks with at least the specified distance.
 #'
-#' @param x_breaks A numeric vector of x-axis breaks.
-#' @param plot A ggplot object used to extract plot dimensions and scales.
+#' @param breaks          A numeric vector of x-axis breaks.
+#' @param plot            A ggplot object used to extract plot dimensions and scales.
 #' @param min_cm_distance A numeric of the minimum distance between breaks.
+#' @param axis            Axis to filter on, either "x" or "y".
 #' @return A numeric vector of filtered x-axis breaks.
 #' @importFrom ggplot2 ggplot_build ggplot_gtable
 #' @importFrom grid convertUnit
 #' @author Gerardo Rodriguez
 #' @export
-
 filter_breaks <- function(breaks = NA,
                           plot = plot,
                           min_cm_distance = 0.5,
