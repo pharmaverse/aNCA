@@ -37,11 +37,7 @@ additional_analysis_ui <- function(id) {
       title = "AUC Ratios",
       value = "auc_analysis",
       card(
-        card_header("Bioavailability Calculations"),
-        card_body(
-
-          p("To be added")
-        )
+        p("To be added")
       ),
     ),
     nav_panel(
