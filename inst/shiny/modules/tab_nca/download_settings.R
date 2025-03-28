@@ -18,36 +18,36 @@ download_settings_ui <- function(id) {
 #' The file can be downloaded in two formats: RDS or XLSX.
 #'
 #' - id The module's ID.
-#' - mydata A reactive expression containing the project data to be saved.
+#' - processed_pknca_data A reactive expression containing the project data to be saved.
 #' - parent_session The parent Shiny session.
 #'
-download_settings_server <- function(id, mydata, parent_session) {
+download_settings_server <- function(id, processed_pknca_data, parent_session) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     output$settings_save <- downloadHandler(
       filename = function() {
-        fname <- paste0(mydata()$conc$data$STUDYID[1], "_aNCAsetts_", Sys.Date(),
+        fname <- paste0(processed_pknca_data()$conc$data$STUDYID[1], "_aNCAsetts_", Sys.Date(),
                         ".", input$settings_save_fmt)
       },
       content = function(file) {
 
-        mydata <- mydata()
-        conc_cols <- c(unname(unlist(mydata$conc$columns)),
+        processed_pknca_data <- processed_pknca_data()
+        conc_cols <- c(unname(unlist(processed_pknca_data$conc$columns)),
                        "is.included.hl", "is.excluded.hl", "REASON")
-        conc_logical_cols <- sapply(mydata$conc$data[conc_cols], is.logical) |>
+        conc_logical_cols <- sapply(processed_pknca_data$conc$data[conc_cols], is.logical) |>
           which() |>
           names()
 
         # Save only from concentration records the ones pointing the customizations
-        mydata$conc$data <- mydata$conc$data %>%
+        processed_pknca_data$conc$data <- processed_pknca_data$conc$data %>%
           filter(is.excluded.hl + is.included.hl > 0) %>%
           select(any_of(c(conc_cols, "DOSNO")))
 
-        mydata$dose$data <- mydata$dose$data %>%
-          select(any_of(c(unname(unlist(mydata$dose$columns)), "DOSNO")))
+        processed_pknca_data$dose$data <- processed_pknca_data$dose$data %>%
+          select(any_of(c(unname(unlist(processed_pknca_data$dose$columns)), "DOSNO")))
 
-        # Save into mydata the information associated to the flag rules
+        # Save into processed_pknca_data the information associated to the flag rules
         rule_inputs_logical <- names(parent_session$input) %>%
           keep(~startsWith(.x, "nca_setup-rule")) %>%
           sapply(., \(x) parent_session$input[[x]])
@@ -56,34 +56,34 @@ download_settings_server <- function(id, mydata, parent_session) {
           keep(~startsWith(.x, "nca_setup-") & endsWith(.x, "_threshold")) %>%
           sapply(., \(x) parent_session$input[[x]])
 
-        mydata$flag_rules <- ifelse(rule_inputs_logical, threshold_inputs, NA)
-        names(mydata$flag_rules) <- gsub("nca_setup-", "", names(mydata$flag_rules))
-        mydata$flag_rules <- stack(mydata$flag_rules)
+        processed_pknca_data$flag_rules <- ifelse(rule_inputs_logical, threshold_inputs, NA)
+        names(processed_pknca_data$flag_rules) <- gsub("nca_setup-", "", names(processed_pknca_data$flag_rules))
+        processed_pknca_data$flag_rules <- stack(processed_pknca_data$flag_rules)
 
         # Save the file in the format requested by the user
         if (input$settings_save_fmt == "rds") {
-          saveRDS(mydata, file)
+          saveRDS(processed_pknca_data, file)
         }
 
         if (input$settings_save_fmt == "xlsx") {
           # Excel files have some limitations  that need to be accounted for to prevent issues
-          mydata$options <- as.data.frame(
-            c(as.list(mydata$options$single.dose.aucs),
-              mydata$options[which(names(mydata$options) != "single.dose.aucs")])
+          processed_pknca_data$options <- as.data.frame(
+            c(as.list(processed_pknca_data$options$single.dose.aucs),
+              processed_pknca_data$options[which(names(processed_pknca_data$options) != "single.dose.aucs")])
           )
-          mydata$intervals <- replace(mydata$intervals, mydata$intervals == Inf, 1e99)
-          mydata$options <- replace(mydata$options, mydata$options == Inf, 1e99)
+          processed_pknca_data$intervals <- replace(processed_pknca_data$intervals, processed_pknca_data$intervals == Inf, 1e99)
+          processed_pknca_data$options <- replace(processed_pknca_data$options, processed_pknca_data$options == Inf, 1e99)
 
           # Make a standardized list with the PKNCA list elements
           setts_list <- list(
-            intervals = mydata$intervals,
-            units = mydata$units,
-            conc_data = mydata$conc$data,
-            conc_columns = .perfect_stack(mydata$conc$columns),
-            dose_data = mydata$dose$data,
-            dose_columns = .perfect_stack(mydata$dose$columns),
-            flag_rules = mydata$flag_rules,
-            options = mydata$options
+            intervals = processed_pknca_data$intervals,
+            units = processed_pknca_data$units,
+            conc_data = processed_pknca_data$conc$data,
+            conc_columns = .perfect_stack(processed_pknca_data$conc$columns),
+            dose_data = processed_pknca_data$dose$data,
+            dose_columns = .perfect_stack(processed_pknca_data$dose$columns),
+            flag_rules = processed_pknca_data$flag_rules,
+            options = processed_pknca_data$options
           )
 
           # Save the PKNCA list object elements in different sheets

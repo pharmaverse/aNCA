@@ -17,12 +17,12 @@ upload_settings_ui <- function(id) {
 #' including updating the UI elements: selectInputs, parameters, imputations, slope adj...
 #'
 #' - id The module's ID.
-#' - mydata A reactive expression containing the project data to be updated.
+#' - processed_pknca_data A reactive expression containing the project data to be updated.
 #' - parent_session The parent Shiny session.
 #' - auc_counter A reactive value for counting AUC intervals.
 #' - manual_slopes A reactive value for handling manual slopes.
 #'
-upload_settings_server <- function(id, mydata, parent_session, auc_counter, manual_slopes) {
+upload_settings_server <- function(id, processed_pknca_data, parent_session, auc_counter, manual_slopes) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -114,19 +114,19 @@ upload_settings_server <- function(id, mydata, parent_session, auc_counter, manu
       # Update all select inputs in the NCA setup tab
       .update_select_with_setts(
         "DOSNO", "DOSNO",
-        setts_df = setts$intervals, data_df = mydata()$conc$data,
+        setts_df = setts$intervals, data_df = processed_pknca_data()$conc$data,
         parent_session, "select_dosno"
       )
       .update_select_with_setts(
         var_setts_col = setts$conc$columns$groups$group_analyte,
-        var_data_col = mydata()$conc$columns$groups$group_analyte,
+        var_data_col = processed_pknca_data()$conc$columns$groups$group_analyte,
         setts_df = setts$intervals,
-        data_df = mydata()$conc$data,
+        data_df = processed_pknca_data()$conc$data,
         parent_session, "select_analyte"
       )
       .update_select_with_setts(
         "PCSPEC", "PCSPEC",
-        setts, mydata()$conc$data,
+        setts, processed_pknca_data()$conc$data,
         parent_session, "select_pcspec"
       )
 
@@ -155,7 +155,7 @@ upload_settings_server <- function(id, mydata, parent_session, auc_counter, manu
       )
 
       # Load the data object and update its units
-      data <- mydata()
+      data <- processed_pknca_data()
       data$units <- dplyr::left_join(data$units, setts$units,
                                      by = c("ANALYTE", "PPTESTCD"),
                                      suffix = c(".data", ".setts")) %>%
@@ -285,10 +285,10 @@ upload_settings_server <- function(id, mydata, parent_session, auc_counter, manu
 
           # Update the main object value
           data$conc$data <- new_conc_data
-          mydata(data)
+          processed_pknca_data(data)
 
           # Update the manual slopes object
-          conc_groups <- unname(unlist(mydata()$conc$columns$groups))
+          conc_groups <- unname(unlist(processed_pknca_data()$conc$columns$groups))
           manual_slopes <- new_conc_data %>%
             filter(is.included.hl + is.excluded.hl > 0) %>%
             rename(Inclusion = is.included.hl, Exclusion = is.excluded.hl) %>%
