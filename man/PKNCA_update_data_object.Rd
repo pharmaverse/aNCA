@@ -7,7 +7,6 @@
 PKNCA_update_data_object(
   adnca_data,
   method,
-  units_table,
   selected_analytes,
   selected_dosno,
   selected_pcspec,
@@ -19,8 +18,6 @@ PKNCA_update_data_object(
 \item{adnca_data}{A reactive PKNCAdata object}
 
 \item{method}{NCA calculation method selection}
-
-\item{units_table}{A reactive table of units}
 
 \item{selected_analytes}{User selected analytes}
 
@@ -40,7 +37,7 @@ This function updates a previously prepared \code{PKNCAdata} object
 based on user selections for method, analyte, dose, specimen, and parameters.
 }
 \details{
-Step 1: Update units in the \code{PKNCAdata} object using units table and
+Step 1: Update units in the \code{PKNCAdata} object
 ensuring unique analytes have their unique units
 Step 2: Set \code{PKNCAoptions} for NCA calculation
 Step 3: Format intervals using \code{format_pkncadata_intervals()}
