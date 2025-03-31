@@ -61,11 +61,11 @@ export_cdisc <- function(res_nca) {
                 "DOMAIN",
                 "USUBJID",
                 "PPSEQ",
-                "PPCAT",
                 "PPGRPID",
                 "PPSPID",
-                "PPTESTCD",
-                "PPTEST",
+                "PARAMCD",
+                "PARAM",
+                "PARAMCAT",
                 "PPSCAT",
                 "PPREASND",
                 "PPSPEC",
@@ -102,6 +102,7 @@ export_cdisc <- function(res_nca) {
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     mutate(
       PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
+      PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
       DOMAIN = "PP",
       # Group ID
       PPGRPID =  paste(ANALYTE, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
@@ -116,7 +117,16 @@ export_cdisc <- function(res_nca) {
         else if ("EXSPID" %in% names(.)) EXSPID
         else NA
       },
-      # TODO Results in Standard Units if ORRESU is not in standard units
+      SUBJID = {
+        if ("SUBJID" %in% names(.)) SUBJID
+        else if ("USUBJID" %in% names(.)) {
+          if ("STUDYID" %in% names(.)) stringr::str_remove(as.character(USUBJID),
+                                                           paste0(as.character(STUDYID),
+                                                                  "\\W?"))
+          else gsub(find_common_prefix(USUBJID), "", USUBJID)
+        }
+      },
+      # Parameter Variables
       PPSTRESN = as.numeric(PPSTRES),
       PPSTRESC = as.character(PPSTRES),
       PPSTRESU = PPSTRESU,
@@ -145,7 +155,7 @@ export_cdisc <- function(res_nca) {
       PPENINT = ifelse(end != Inf, end, NA)
     )  %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
-    mutate(PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")) %>%
+    # mutate(PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")) %>%
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
@@ -154,12 +164,41 @@ export_cdisc <- function(res_nca) {
   pp <- pp_info %>%  select(all_of(pp_cols))
 
   adpp <- pp_info %>%
-    # Elude potential collapse cases with PC variables
-    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU) %>%
-    select(any_of(c(adpp_cols, group_cols, "RACE", "SEX", "AGE")))
+    # Rename/mutate variables from PP
+    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU, 
+           PARAMCD = PPTESTCD, PARAM = PPTEST, PARAMCAT = PPCAT) %>%
+    select(any_of(c(group_cols, adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
 
   # Keep StudyID value to use for file naming 
   studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
 
   return(list(pp = pp, adpp = adpp, studyid = studyid))
+}
+
+find_common_prefix <- function(strings) {
+  # Sort the vector of strings
+  first_last_str <- sort(strings)[c(1, length(sorted_strings))]
+  
+  # Split the first and last elements into individual characters
+  first_last_chars <- strsplit(sorted_strings, "")
+  
+  # Extract the two character vectors
+  first_chars <- first_last_chars[[1]]
+  last_chars <- first_last_chars[[2]]
+  
+  # Determine the length of the common prefix by comparing characters element-wise
+  common_prefix_length <- 0
+  for (i in seq_len(min(length(first_chars), length(last_chars)))) {
+    if (first_chars[i] != last_chars[i]) {
+      break
+    }
+    common_prefix_length <- i
+  }
+  
+  # Return the common prefix if it exists, otherwise return an empty character vector
+  if (common_prefix_length == 0) {
+    return(character(0))
+  } else {
+    return(substr(sorted_strings[1], 1, common_prefix_length))
+  }
 }
