@@ -24,14 +24,14 @@
 #' @returns A data frame with calculated bioavailability values (`f_aucinf`, `f_auclast`, etc.)
 #'   for individual subjects where IV data is available. If IV data is missing,
 #'  it estimates bioavailability using the mean IV AUC for that grouping.
-#'  
+#'
 #' @importFrom dplyr bind_rows filter full_join group_by left_join mutate select summarize
 #' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider
 #' @importFrom rlang sym
 #'
 #' @export
-calculate_F <- function(res_nca, selected_aucs) {
+calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
 
   #check if selected_aucs are available
   if (is.null(selected_aucs) || length(selected_aucs) == 0) {
@@ -129,13 +129,13 @@ calculate_F <- function(res_nca, selected_aucs) {
 #' @param bioavailability A data frame with calculated bioavailability values
 #'
 #' @returns A PKNCAresults object with bioavailability data added to the result slot.
-#' 
+#'
 #' @importFrom dplyr bind_rows distinct left_join mutate select
 #' @importFrom purrr list_c keep
 #' @importFrom tidyr pivot_longer
 #'
 #' @export
-PKNCA_add_F <- function(res_nca, bioavailability) {
+PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
 
   if (is.null(bioavailability)) {
     return(res_nca)
