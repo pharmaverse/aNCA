@@ -20,7 +20,7 @@
 pivot_wider_pknca_results <- function(myres) {
 
   ############################################################################################
-  # Derive lambda.z.n.points & lambda.z.method
+  # Derive LAMZNPT & LAMZMETHOD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
 
@@ -29,29 +29,30 @@ pivot_wider_pknca_results <- function(myres) {
     c(unlist(unname(myres$data$conc$columns$groups)),
       "DOSNO")
   )
+
   added_params <- NULL
-  if (all(c("lambda.z",
-            "lambda.z.n.points",
-            "lambda.z.time.first") %in% unique(myres$result$PPTESTCD))) {
+  if (all(c("LAMZ",
+            "LAMZNPT",
+            "LAMZLL") %in% unique(myres$result$PPTESTCD))) {
     added_params <- myres$result %>%
-      filter(PPTESTCD %in% c("lambda.z.n.points", "lambda.z.time.first", "lambda.z"),
+      filter(PPTESTCD %in% c("LAMZNPT", "LAMZLL", "LAMZ"),
              type_interval == "main") %>%
       select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
       left_join(data_with_duplicates) %>%
-      # Derive lambda.z.method: was lambda.z manually customized?
-      mutate(lambda.z.method = ifelse(
+      # Derive LAMZIX: If present consider inclusions and disconsider exclusions
+      group_by(!!!syms(conc_groups), DOSNO) %>%
+      # Derive LAMZMETHOD: was lambda.z manually customized?
+      mutate(LAMZMETHOD = ifelse(
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
       )) %>%
-      # Derive lambda.z.ix: If present consider inclusions and disconsider exclusions
-      group_by(!!!syms(conc_groups), DOSNO) %>%
-      filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
-      filter(ARRLT >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
-      filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
-      mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
-      mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
-      select(conc_groups, DOSNO, start, end, lambda.z.ix, lambda.z.method) %>%
+      filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
+      filter(ARRLT >= (LAMZLL + start) | is.na(LAMZLL)) %>%
+      filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
+      mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
+      mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
+      select(conc_groups, DOSNO, start, end, LAMZIX, LAMZMETHOD) %>%
       unique()
   }
   ############################################################################################
