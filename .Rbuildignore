@@ -8,3 +8,4 @@
 ^dev/
 ^\.lintr$
 ^\.github/
+^LICENSE\.md$
