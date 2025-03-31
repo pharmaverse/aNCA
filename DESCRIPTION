@@ -31,6 +31,7 @@ Imports:
     formatters,
     ggplot2,
     magrittr,
+    methods,
     PKNCA,
     plotly,
     purrr,
@@ -40,6 +41,7 @@ Imports:
     tern,
     tidyr,
     units,
+    utils,
     rlang
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
