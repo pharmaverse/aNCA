@@ -150,7 +150,7 @@ slope_selector_server <- function(
         NULL
       } else {
         mydata <- mydata()
-        all_params <- names(get.interval.cols())
+        all_params <- names(PKNCA::get.interval.cols())
 
         mydata$intervals <- mydata$intervals %>%
           filter(type_interval == "main") %>%
@@ -159,7 +159,7 @@ slope_selector_server <- function(
                                               "lambda.z.time.first", "r.squared",
                                               "adj.r.squared", "cmax")), ~ FALSE))
 
-        result_obj <- pk.nca(mydata)
+        result_obj <- PKNCA::pk.nca(mydata)
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
 
