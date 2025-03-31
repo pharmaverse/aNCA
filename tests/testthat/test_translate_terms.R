@@ -15,7 +15,8 @@ describe("translate_terms", {
 
   it("handles missing mapping_col gracefully", {
     expect_error(
-      translate_terms(c("adj.r.squared"), mapping_col = "NONEXISTENT", metadata = pknca_cdisc_terms),
+      translate_terms(c("adj.r.squared"), mapping_col = "NONEXISTENT",
+                      metadata = pknca_cdisc_terms),
       "mapping_col and target_col must exist in metadata."
     )
   })
