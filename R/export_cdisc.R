@@ -102,7 +102,11 @@ export_cdisc <- function(res_nca) {
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
       # Specific ID variables
-      PPSPID = "TBD",
+      PPSPID = {
+        if ("PCSPID" %in% names(.)) PCSPID
+        else if ("EXSPID" %in% names(.)) EXSPID
+        else NA
+      },
       # TODO Results in Standard Units if ORRESU is not in standard units
       PPSTRESN = as.numeric(PPSTRES),
       PPSTRESC = as.character(PPSTRES),
@@ -117,7 +121,9 @@ export_cdisc <- function(res_nca) {
       # Datetime
       PPDTC = Sys.time() %>% format("%Y-%m-%dT%H:%M"),
       PPRFTDTC = {
-        if ("PCRFTDM" %in% names(.)) {
+        if ("PCRFTDTC" %in% names(.)) {
+          PCRFDTC
+        } else if ("PCRFTDTM" %in% names(.)) {
           strptime(PCRFTDTM, format = "%Y-%m-%d %H:%M:%S") %>% format("%Y-%m-%dT%H:%M")
         } else {
           NA
