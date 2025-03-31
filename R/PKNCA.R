@@ -152,13 +152,13 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @details
 #' Step 1: Update units in the `PKNCAdata` object
 #' ensuring unique analytes have their unique units
-#' 
+#'
 #' Step 2: Set `PKNCAoptions` for NCA calculation
-#' 
+#'
 #' Step 3: Format intervals using `format_pkncadata_intervals()`
-#' 
+#'
 #' Step 4: Apply filtering based on user selections
-#' 
+#'
 #' Step 5: Impute start values if requested
 #'
 #' @param adnca_data A reactive PKNCAdata object

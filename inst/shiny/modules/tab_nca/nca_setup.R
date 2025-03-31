@@ -547,7 +547,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     processed_pknca_data <- eventReactive(setup_trigger(), {
       log_trace("Updating PKNCA::data object.")
       req(adnca_data(), input$method, input$select_analyte,
-              input$select_dosno, input$select_pcspec)
+          input$select_dosno, input$select_pcspec)
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = input$method,
