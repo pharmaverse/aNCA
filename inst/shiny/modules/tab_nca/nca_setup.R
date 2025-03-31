@@ -525,8 +525,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- eventReactive(setup_trigger(), {
       log_trace("Updating PKNCA::data object for slopes.")
-      req(adnca_data, method, selected_analytes,
-          selected_dosno, selected_pcspec)
+      req(adnca_data(), input$method, input$select_analyte,
+          input$select_dosno, input$select_pcspec)
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = input$method,
@@ -546,8 +546,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # NCA dynamic changes/filters based on user selections
     processed_pknca_data <- eventReactive(setup_trigger(), {
       log_trace("Updating PKNCA::data object.")
-      req(adnca_data, method, selected_analytes,
-          selected_dosno, selected_pcspec)
+      req(adnca_data(), input$method, input$select_analyte,
+              input$select_dosno, input$select_pcspec)
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = input$method,
