@@ -48,7 +48,7 @@ pivot_wider_pknca_results <- function(myres) {
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
       )) %>%
       filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
-      filter(ARRLT >= (LAMZLL + start) | is.na(LAMZLL)) %>%
+      filter(TIME >= (LAMZLL + start) | is.na(LAMZLL)) %>%
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
       mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
