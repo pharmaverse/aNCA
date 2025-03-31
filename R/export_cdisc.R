@@ -158,5 +158,8 @@ export_cdisc <- function(res_nca) {
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU) %>%
     select(any_of(c(adpp_cols, group_cols, "RACE", "SEX", "AGE")))
 
-  return(list(pp = pp, adpp = adpp))
+  # Keep StudyID value to use for file naming 
+  studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
+
+  return(list(pp = pp, adpp = adpp, studyid = studyid))
 }
