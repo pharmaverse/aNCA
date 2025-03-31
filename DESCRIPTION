@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9034
+Version: 0.0.0.9036
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -27,58 +27,53 @@ Description: This application enables users to upload their datasets and
     accessible and straightforward for all scientists. 
 License: MIT + file LICENSE
 Imports: 
-    checkmate,
     dplyr,
-    forcats,
     formatters,
-    ggh4x,
     ggplot2,
-    glue,
-    haven,
-    logger,
     magrittr,
-    nestcolor,
     PKNCA,
     plotly,
     purrr,
     rlistings,
-    scales,
     stats,
     stringr,
     tern,
     tidyr,
     units,
-    rlang,
-    yaml
+    rlang
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Files: LICENSE
 Suggests:
-    lintr (>= 3.1.2),
-    testthat (>= 3.0.0),
-    DT,
-    bslib,
-    htmlwidgets,
-    jsonlite,
     knitr,
+    lintr (>= 3.1.2),
     markdown,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    jsonlite,
     pak,
+    ggh4x,
+    nestcolor,
+    scales,
+    bslib,
+    DT,
+    htmlwidgets,
+    logger,
     reactable,
     reactable.extras,
-    rio,
-    rmarkdown,
     shiny,
-    shinyBS,
-    shinyFiles,
-    shinyWidgets,
     shinycssloaders,
-    shinyjqui,
     shinyjs,
+    shinyjqui,
+    shinyWidgets,
     stringi,
     tools,
-    zip
+    yaml
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
+Depends: 
+    R (>= 2.10)
+LazyData: true

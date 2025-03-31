@@ -24,33 +24,20 @@ nca_setup_ui <- function(id) {
           column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                                 choices = NULL))
         ),
-
         # Method, NCA parameters, and units table
         fluidRow(
           column(4, selectInput(
             ns("method"),
             "Extrapolation Method:",
             choices = c(
-              "lin-log", "lin up/log down", "linear", "Linear LinearLogInterpolation"
+              "lin-log", "lin up/log down", "linear"
             ),
             selected = "lin up/log down"
           )),
           column(4, pickerInput(
             inputId = ns("nca_params"),
             label = "NCA parameters to calculate:",
-            choices = {
-              params <- sort(setdiff(names(PKNCA::get.interval.cols()),
-                                     c("start", "end")))
-              group_params <- case_when(
-                grepl("((auc|aum))", params) ~ "Exposure",
-                grepl("((lambda|half|thalf|cl\\.|clr))", params) ~ "Clearance",
-                grepl("^(cm|tm|clast|ceoi|cth|tl)", params) ~ "Concentration-Time",
-                grepl("^(vz|vs)", params) ~ "Volume-Distribution",
-                TRUE ~ "Miscellaneous"
-              )
-              grouped_params <- split(params, group_params)
-              grouped_params[order(names(grouped_params))]
-            },
+            choices = pull(pknca_cdisc_terms, PKNCA, input_names),
             options = list(
               `live-search` = TRUE,
               `dropup-auto` = FALSE,
@@ -604,17 +591,22 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
     list(
       processed_pknca_data = processed_pknca_data,
       rules = reactive(list(
-        rule_adj_r_squared = input$rule_adj_r_squared,
-        adj.r.squared_threshold = input$adj.r.squared_threshold,
-
-        rule_aucpext_obs = input$rule_aucpext_obs,
-        aucpext.obs_threshold = input$aucpext.obs_threshold,
-
-        rule_aucpext_pred = input$rule_aucpext_pred,
-        aucpext.pred_threshold = input$aucpext.pred_threshold,
-
-        rule_span_ratio = input$rule_span_ratio,
-        span.ratio_threshold = input$span.ratio_threshold
+        adj.r.squared = list(
+          is.checked = input$rule_adj_r_squared,
+          threshold = input$adj.r.squared_threshold
+        ),
+        aucpext.obs = list(
+          is.checked = input$rule_aucpext_obs,
+          threshold = input$aucpext.obs_threshold
+        ),
+        aucpext.pred = list(
+          is.checked = input$rule_aucpext_pred,
+          threshold = input$aucpext.pred_threshold
+        ),
+        span.ratio = list(
+          is.checked = input$rule_span_ratio,
+          threshold = input$span.ratio_threshold
+        )
       ))
     )
   })

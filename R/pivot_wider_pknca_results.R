@@ -59,7 +59,9 @@ pivot_wider_pknca_results <- function(myres) {
   main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
-    mutate(PPTESTCD = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
+    mutate(PPTESTCD = ifelse(PPSTRESU != "",
+                             paste0(PPTESTCD, "[", PPSTRESU, "]"),
+                             PPTESTCD)) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
@@ -75,7 +77,7 @@ pivot_wider_pknca_results <- function(myres) {
   if (any(myres$result$type_interval == "manual")) {
 
     manual_aucs_vals <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
@@ -86,7 +88,7 @@ pivot_wider_pknca_results <- function(myres) {
                   values_from = PPSTRES)
 
     manual_aucs_exclude <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
@@ -136,11 +138,15 @@ pivot_wider_pknca_results <- function(myres) {
 #' Helper function to add "label" attribute to columns based on parameter names
 #' @noRd
 .add_label_attribute <- function(df, myres) {
+
   mapping_vr <- myres$result %>%
-    mutate(PPTESTCD_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
-    select(PPTESTCD, PPTESTCD_unit) %>%
+    mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
+           PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
+                                                            mapping_col = "PPTESTCD",
+                                                            target_col = "PPTEST"))) %>%
+    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
-    pull(PPTESTCD, PPTESTCD_unit)
+    pull(PPTESTCD_cdisc, PPTESTCD_unit)
 
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])
