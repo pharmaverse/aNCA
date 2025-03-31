@@ -133,6 +133,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
 #' @importFrom dplyr bind_rows distinct left_join mutate select
 #' @importFrom purrr list_c keep
 #' @importFrom tidyr pivot_longer
+#' @importFrom PKNCA pk.calc.f
 #'
 #' @export
 PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
