@@ -21,9 +21,18 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
+  
+  # Define group columns in the data
+  group_cols <- unique(
+    unlist(
+      c(res_nca$data$conc$columns$groups,
+        res_nca$data$dose$columns$groups,
+        res_nca$data$dose$columns$route)
+    )
+  )
 
   # define columns needed for pp
-  pp_col <- c(
+  pp_cols <- c(
     "STUDYID",
     "DOMAIN",
     "USUBJID",
@@ -48,7 +57,7 @@ export_cdisc <- function(res_nca) {
   )
 
   # define columns needed for adpp
-  adpp_col <- c("STUDYID",
+  adpp_cols <- c("STUDYID",
                 "DOMAIN",
                 "USUBJID",
                 "PPSEQ",
@@ -142,18 +151,12 @@ export_cdisc <- function(res_nca) {
     ungroup()
 
   # select pp columns
-  pp <- pp_info %>%  select(all_of(pp_col))
+  pp <- pp_info %>%  select(all_of(pp_cols))
 
   adpp <- pp_info %>%
     # Elude potential collapse cases with PC variables
-    select(-any_of(c("AVAL", "AVALC", "AVALU"))) %>%
-    rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU)  %>%
-    left_join(
-      res_nca$data$dose$data %>%
-        select(-any_of(setdiff(names(pp_info), "USUBJID"))),
-      by = "USUBJID"
-    ) %>%
-    select(any_of(adpp_col))
+    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU) %>%
+    select(any_of(c(adpp_cols, group_cols, "RACE", "SEX", "AGE")))
 
   return(list(pp = pp, adpp = adpp))
 }
