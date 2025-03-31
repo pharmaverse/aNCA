@@ -57,41 +57,50 @@ download_settings_server <- function(id, processed_pknca_data, parent_session) {
           sapply(., \(x) parent_session$input[[x]])
 
         processed_pknca_data$flag_rules <- ifelse(rule_inputs_logical, threshold_inputs, NA)
-        names(processed_pknca_data$flag_rules) <- gsub("nca_setup-", "", names(processed_pknca_data$flag_rules))
+        names(processed_pknca_data$flag_rules) <- gsub("nca_setup-", "",
+                                                       names(processed_pknca_data$flag_rules))
         processed_pknca_data$flag_rules <- stack(processed_pknca_data$flag_rules)
 
         # Save the file in the format requested by the user
-        switch(input$settings_save_fmt,
-               "rds" = saveRDS(processed_pknca_data, file),
-               "xlsx" = {
-          # Excel files have some limitations  that need to be accounted for to prevent issues
-          processed_pknca_data$options <- as.data.frame(
-            c(as.list(processed_pknca_data$options$single.dose.aucs),
-              processed_pknca_data$options[which(names(processed_pknca_data$options) != "single.dose.aucs")])
-          )
-          processed_pknca_data$intervals <- replace(processed_pknca_data$intervals, processed_pknca_data$intervals == Inf, 1e99)
-          processed_pknca_data$options <- replace(processed_pknca_data$options, processed_pknca_data$options == Inf, 1e99)
+        switch(
+          input$settings_save_fmt,
+          "rds" = saveRDS(processed_pknca_data, file),
+          "xlsx" = {
+            # Excel files have some limitations  that need to be accounted for to prevent issues
+            processed_pknca_data$options <- as.data.frame(
+              c(
+                as.list(processed_pknca_data$options$single.dose.aucs),
+                processed_pknca_data$options[
+                  which(names(processed_pknca_data$options) != "single.dose.aucs")
+                ]
+              )
+            )
+            processed_pknca_data$intervals <- replace(processed_pknca_data$intervals,
+                                                      processed_pknca_data$intervals == Inf, 1e99)
+            processed_pknca_data$options <- replace(processed_pknca_data$options,
+                                                    processed_pknca_data$options == Inf, 1e99)
 
-          # Make a standardized list with the PKNCA list elements
-          setts_list <- list(
-            intervals = processed_pknca_data$intervals,
-            units = processed_pknca_data$units,
-            conc_data = processed_pknca_data$conc$data,
-            conc_columns = .perfect_stack(processed_pknca_data$conc$columns),
-            dose_data = processed_pknca_data$dose$data,
-            dose_columns = .perfect_stack(processed_pknca_data$dose$columns),
-            flag_rules = processed_pknca_data$flag_rules,
-            options = processed_pknca_data$options
-          )
+            # Make a standardized list with the PKNCA list elements
+            setts_list <- list(
+              intervals = processed_pknca_data$intervals,
+              units = processed_pknca_data$units,
+              conc_data = processed_pknca_data$conc$data,
+              conc_columns = .perfect_stack(processed_pknca_data$conc$columns),
+              dose_data = processed_pknca_data$dose$data,
+              dose_columns = .perfect_stack(processed_pknca_data$dose$columns),
+              flag_rules = processed_pknca_data$flag_rules,
+              options = processed_pknca_data$options
+            )
 
-          # Save the PKNCA list object elements in different sheets
-          wb <- openxlsx::createWorkbook(file)
-          for (i in seq_len(length(setts_list))) {
-            openxlsx::addWorksheet(wb = wb, sheetName = names(setts_list[i]))
-            openxlsx::writeData(wb = wb, sheet = names(setts_list[i]), x = setts_list[[i]])
+            # Save the PKNCA list object elements in different sheets
+            wb <- openxlsx::createWorkbook(file)
+            for (i in seq_len(length(setts_list))) {
+              openxlsx::addWorksheet(wb = wb, sheetName = names(setts_list[i]))
+              openxlsx::writeData(wb = wb, sheet = names(setts_list[i]), x = setts_list[[i]])
+            }
+            openxlsx::saveWorkbook(wb, file)
           }
-          openxlsx::saveWorkbook(wb, file)
-        })
+        )
       }
     )
   })

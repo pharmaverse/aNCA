@@ -27,7 +27,8 @@ upload_settings_ui <- function(id) {
 #' - auc_counter A reactive value for counting AUC intervals.
 #' - manual_slopes A reactive value for handling manual slopes.
 #'
-upload_settings_server <- function(id, processed_pknca_data, parent_session, auc_counter, manual_slopes) {
+upload_settings_server <- function(id, processed_pknca_data, parent_session,
+                                   auc_counter, manual_slopes) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -53,25 +54,7 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
         names(setts) <- sheets
 
         # Make some validations of the file uploaded
-        expected_sheets <- c("intervals", "units", "conc_data", "conc_columns",
-                             "dose_data", "dose_columns", "flag_rules", "options")
-        missing_sheets <- setdiff(expected_sheets, sheets)
-
-        if (length(missing_sheets) > 0) {
-          showNotification(paste0("Invalid Excel settings file. Missing sheet/s: ",
-                                  paste0(missing_sheets, collapse = ", ")))
-          return()
-        }
-        if (!all(c("ind", "values") %in% names(setts$conc_columns))) {
-          showNotification("Error: Excel file has incorrect column structure
-                              in 'conc_columns'.", type = "error")
-          return()
-        }
-        if (!all(c("ind", "values") %in% names(setts$dose_columns))) {
-          showNotification("Error: Excel file has incorrect column structure
-                              in 'dose_columns'.", type = "error")
-          return()
-        }
+        .validate_excel_file(setts, sheets)
 
         # Once all validations are done rearrange the data
         setts <- list(
@@ -147,19 +130,19 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
         return()
       }
       # Update all select inputs in the NCA setup tab
-      .updateSelectInput_with_setts(
+      .updateselectinput_with_setts(
         "DOSNO", "DOSNO",
         setts_df = setts$intervals, data_df = processed_pknca_data()$conc$data,
         parent_session, "select_dosno"
       )
-      .updateSelectInput_with_setts(
+      .updateselectinput_with_setts(
         var_setts_col = setts$conc$columns$groups$group_analyte,
         var_data_col = processed_pknca_data()$conc$columns$groups$group_analyte,
         setts_df = setts$intervals,
         data_df = processed_pknca_data()$conc$data,
         parent_session, "select_analyte"
       )
-      .updateSelectInput_with_setts(
+      .updateselectinput_with_setts(
         "PCSPEC", "PCSPEC",
         setts, processed_pknca_data()$conc$data,
         parent_session, "select_pcspec"
@@ -339,10 +322,35 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
   })
 }
 
+# Helper function to validate the Excel file structure
+.validate_excel_file <- function(setts, sheets) {
+  expected_sheets <- c("intervals", "units", "conc_data", "conc_columns",
+                       "dose_data", "dose_columns", "flag_rules", "options")
+  missing_sheets <- setdiff(expected_sheets, sheets)
+
+  if (length(missing_sheets) > 0) {
+    showNotification(paste0("Invalid Excel settings file. Missing sheet/s: ",
+                            paste0(missing_sheets, collapse = ", ")))
+    stop("Invalid Excel file structure.")
+  }
+
+  if (!all(c("ind", "values") %in% names(setts$conc_columns))) {
+    showNotification("Error: Excel file has incorrect column structure in 'conc_columns'.",
+                     type = "error")
+    stop("Invalid Excel file structure.")
+  }
+
+  if (!all(c("ind", "values") %in% names(setts$dose_columns))) {
+    showNotification("Error: Excel file has incorrect column structure in 'dose_columns'.",
+                     type = "error")
+    stop("Invalid Excel file structure.")
+  }
+}
+
 # Create a function to update the selectInputs based on the matches between settings and data
 # If there are mismatches send a notification to the user
-.updateSelectInput_with_setts <- function(var_setts_col, var_data_col, setts_df,
-                                            data_df, session, inputid) {
+.updateselectinput_with_setts <- function(var_setts_col, var_data_col, setts_df,
+                                          data_df, session, inputid) {
 
   if (!is.null(var_data_col) && !is.null(var_setts_col)) {
     vals_data <- unique(data_df[[var_data_col]])
