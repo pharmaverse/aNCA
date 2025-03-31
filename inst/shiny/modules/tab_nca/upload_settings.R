@@ -341,7 +341,7 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session, auc
 
 # Create a function to update the selectInputs based on the matches between settings and data
 # If there are mismatches send a notification to the user
-.updateSelectInput_with_setts() <- function(var_setts_col, var_data_col, setts_df,
+.updateSelectInput_with_setts <- function(var_setts_col, var_data_col, setts_df,
                                             data_df, session, inputid) {
 
   if (!is.null(var_data_col) && !is.null(var_setts_col)) {
