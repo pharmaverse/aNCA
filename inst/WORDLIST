@@ -15,7 +15,6 @@ CDISC
 DOSEA
 DOSEU
 DOSNO
-IXrange
 NCA
 NFRLT
 NRRLT
@@ -24,14 +23,18 @@ PKNCA
 PKNCAdata
 PKNCAdose
 PKNCAresults
+PPTEST
+PPTESTCD
 Pharmacokinetic
 Pharmaverse
+Plotly
 Pre
 RO
 RRLTU
 RStudio
 STUDYID
 TLG
+TLGs
 TRT
 USUBJID
 USUBJIDs
@@ -41,7 +44,7 @@ analyte
 analytes
 anonymized
 anonymizes
-cero
+cdisc
 cmax
 codebase
 csv
@@ -66,7 +69,6 @@ ruleset
 rulesets
 sas
 signif
-summarization
 templating
 timepoint
 tlg

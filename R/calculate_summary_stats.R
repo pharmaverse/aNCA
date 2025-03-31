@@ -23,7 +23,7 @@
 #'
 #' @import dplyr
 #' @import tidyr
-#' @importFrom stats sd
+#' @importFrom stats sd median
 #' @export
 #' @examples
 #' \dontrun{
@@ -70,6 +70,7 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
   # Include units for all column names
   pttestcd_with_units <- data %>%
     select(PPTESTCD, PPSTRESU) %>%
+    mutate(PPSTRESU = ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")) %>%
     unique() %>%
     pull(PPSTRESU, PPTESTCD)
 

@@ -11,54 +11,42 @@ run_app <- function(...) {
 #' This list of packages should also be provided as `Suggests` in the DESCRIPTION file.
 #' @noRd
 check_app_dependencies <- function() {
-  # TODO: check those packages over and make sure they are needed
   deps <- c(
     "bslib",
-    "checkmate",
     "dplyr",
     "DT",
-    "forcats",
-    "ggh4x",
-    "ggplot2",
-    "glue",
-    "haven",
     "htmlwidgets",
     "logger",
     "magrittr",
-    "nestcolor",
-    "PKNCA",
     "plotly",
     "purrr",
     "reactable",
     "reactable.extras",
-    "rio",
-    "rmarkdown",
-    "scales",
     "shiny",
-    "shinyBS",
     "shinycssloaders",
-    "shinyFiles",
-    "shinyjqui",
     "shinyjs",
+    "shinyjqui",
     "shinyWidgets",
     "stats",
     "stringi",
     "stringr",
-    "tern",
     "tidyr",
     "tools",
     "utils",
-    "units",
     "rlang",
-    "yaml",
-    "zip"
+    "yaml"
   )
 
-  purrr::walk(deps, \(dep) {
-    if (!requireNamespace(dep, quietly = TRUE)) {
-      if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-      warning("Package required for shiny application, but not available, installing: ", dep)
-      pak::pak(dep)
-    }
-  })
+  missing_packages <- purrr::keep(deps, \(dep) !requireNamespace(dep, quietly = TRUE))
+
+  if (length(missing_packages) != 0) {
+    warning(
+      "The following packages are required for shiny application, but are missing:\n",
+      paste0(missing_packages, collapse = "\n"), "\n",
+      "The required packages will be installed."
+    )
+
+    if (!requireNamespace("pak", silently = TRUE)) install.packages("pak")
+    pak::pak(missing_packages)
+  }
 }
