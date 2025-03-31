@@ -41,7 +41,8 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
         res$result <- res$result %>%
           select(-PPSTRESU, -PPSTRES) %>%
           left_join(
-            session$userData$units_table(),
+            session$userData$units_table() %>%
+              mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
             by = intersect(names(.), names(session$userData$units_table()))
           ) %>%
           mutate(PPSTRES = PPORRES * conversion_factor) %>%
@@ -51,27 +52,22 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       #' Transform results
       final_results <- pivot_wider_pknca_results(res)
 
-      # Apply rules
-      for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
-        if (!rules[[rule_input]]) next
+      # Apply flag rules
+      for (param in names(rules)) {
+        if (rules[[param]]$is.checked) {
+          # Find the proper column/s that should be considered (in principle should be 1)
+          param_cdisc <- translate_terms(param, "PKNCA", "PPTESTCD")
+          param_cols <- grep(paste0("^", param_cdisc, "(\\[.*\\])?$"),
+                             names(final_results),
+                             value = TRUE)
 
-        pptestcd <- rule_input |>
-          gsub("^rule_", "", x = _) |>
-          gsub("_", ".", x = _, fixed = TRUE)
-
-        final_pptestcd <- res_nca()$result %>%
-          filter(PPTESTCD == pptestcd) %>%
-          slice(1) %>%
-          mutate(new_pptestcd = paste0(pptestcd, "[", PPSTRESU, "]")) %>%
-          pull(new_pptestcd) %>%
-          unique()
-
-        final_results <- final_results %>%
-          mutate(!!paste0("flag_", pptestcd) := case_when(
-            startsWith(pptestcd, "auc") ~ .data[[final_pptestcd]]
-            >= rules[[paste0(pptestcd, "_threshold")]],
-            TRUE ~ .data[[final_pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
-          ))
+          # Include a flag column for that parameter that is TRUE when the threshold is surpassed
+          final_results <- final_results %>%
+            mutate(!!paste0("flag_", param) := case_when(
+              startsWith(param, "auc") ~ rowSums(.[, param_cols] >= rules[[param]]$threshold) > 0,
+              TRUE ~ rowSums(.[, param_cols] <= rules[[param]]$threshold) > 0
+            ))
+        }
       }
 
       # Join subject data to allow the user to group by it
@@ -101,14 +97,15 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
     observeEvent(final_results(), {
       req(final_results())
 
-      param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
+      param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
+      param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(
         session = session,
         inputId = "params",
         label = "Select Parameters :",
-        choices = sort(param_cols),
-        selected = sort(param_cols)
+        choices = param_inputnames,
+        selected =  param_inputnames
       )
     })
 
@@ -116,8 +113,9 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
-      param_label_cols <- formatters::var_labels(final_results())
-      params_sel_cols <- param_label_cols[param_label_cols %in% input$params] |>
+      label_cols <- formatters::var_labels(final_results())
+      sel_label_cols <- translate_terms(input$params, "input_names", "PPTEST")
+      sel_param_cols <- label_cols[label_cols %in% sel_label_cols] |>
         names()
 
       group_cols <- setdiff(names(res_nca()$data$intervals),
@@ -126,7 +124,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
         c("Exclude", "impute", "flagged")
 
       final_results <- final_results() %>%
-        select(any_of(c(group_cols, sort(params_sel_cols))))
+        select(any_of(c(group_cols, sel_param_cols)))
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)
