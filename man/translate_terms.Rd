@@ -8,7 +8,7 @@ translate_terms(
   input_terms,
   mapping_col = "PKNCA",
   target_col = "PPTESTCD",
-  metadata = dict_pknca_cdisc
+  metadata = pknca_cdisc_terms
 )
 }
 \arguments{

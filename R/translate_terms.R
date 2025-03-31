@@ -18,7 +18,7 @@
 translate_terms <- function(input_terms,
                             mapping_col = "PKNCA",
                             target_col = "PPTESTCD",
-                            metadata = dict_pknca_cdisc) {
+                            metadata = pknca_cdisc_terms) {
 
   # Check if mapping_col and target_col are single character strings
   if (length(c(mapping_col, target_col)) != 2 ||

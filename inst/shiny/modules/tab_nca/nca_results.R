@@ -97,7 +97,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
     observeEvent(final_results(), {
       req(final_results())
 
-      param_pptest_cols <- intersect(unname(var_labels(final_results())), dict_pknca_cdisc$PPTEST)
+      param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(

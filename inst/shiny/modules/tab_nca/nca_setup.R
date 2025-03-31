@@ -36,7 +36,7 @@ nca_setup_ui <- function(id) {
       column(4, pickerInput(
         inputId = ns("nca_params"),
         label = "NCA parameters to calculate:",
-        choices = pull(dict_pknca_cdisc, PKNCA, input_names),
+        choices = pull(pknca_cdisc_terms, PKNCA, input_names),
         options = list(
           `live-search` = TRUE,
           `dropup-auto` = FALSE,

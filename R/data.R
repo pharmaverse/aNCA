@@ -1,5 +1,5 @@
 
-#' dict_pknca_cdisc
+#' pknca_cdisc_terms
 #'
 #' A dataset containing the mapping between PKNCA terms and CDISC terms. It mainly involves:
 #' - Parameters: PPTEST, PPTESTCD
@@ -17,4 +17,4 @@
 #'   \item{type}{Arbitrary assigned subclass for the parameter/term}\
 #' }
 #' @source Generated for use in the `translate_nomenclature` function.
-"dict_pknca_cdisc"
+"pknca_cdisc_terms"
