@@ -27,7 +27,7 @@
 #'  
 #' @importFrom dplyr bind_rows filter full_join group_by left_join mutate select summarize
 #' @importFrom purrr reduce
-#' @importFrom tidyr pivot_longer pivot_wider
+#' @importFrom tidyr pivot_wider
 #' @importFrom rlang sym
 #'
 #' @export
@@ -132,6 +132,7 @@ calculate_F <- function(res_nca, selected_aucs) {
 #' 
 #' @importFrom dplyr bind_rows distinct left_join mutate select
 #' @importFrom purrr list_c keep
+#' @importFrom tidyr pivot_longer
 #'
 #' @export
 PKNCA_add_F <- function(res_nca, bioavailability) {
