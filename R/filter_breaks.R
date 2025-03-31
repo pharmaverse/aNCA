@@ -10,6 +10,7 @@
 #' @return A numeric vector of filtered x-axis breaks.
 #' @importFrom ggplot2 ggplot_build ggplot_gtable
 #' @importFrom grid convertUnit
+#' @importFrom stats na.omit
 #' @author Gerardo Rodriguez
 #' @export
 filter_breaks <- function(breaks = NA,

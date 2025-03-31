@@ -24,6 +24,8 @@
 #' @param range_vector numeric vector with numbers to compress into string
 #' @returns simplest possible character string representing provided vector
 #'
+#' @importFrom methods is
+#'
 #' @examples
 #' \dontrun{
 #' # Basic usage
@@ -56,6 +58,8 @@
 #'
 #' @param message A character string specifying the text to display in the center of the empty plot.
 #'                Defaults to `"No data available"`.
+#'
+#' @importFrom plotly plot_ly
 #'
 #' @returns A Plotly object representing an empty plot with hidden axes.
 .plotly_empty_plot <- function(message = "No data available") {

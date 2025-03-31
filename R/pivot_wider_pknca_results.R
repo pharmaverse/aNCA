@@ -15,6 +15,7 @@
 #' @importFrom dplyr select left_join rename mutate distinct group_by arrange ungroup
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
+#' @importFrom purrr pmap_chr
 #' @export
 #'
 pivot_wider_pknca_results <- function(myres) {
