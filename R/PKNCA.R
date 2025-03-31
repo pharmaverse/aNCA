@@ -152,9 +152,13 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @details
 #' Step 1: Update units in the `PKNCAdata` object
 #' ensuring unique analytes have their unique units
+#' 
 #' Step 2: Set `PKNCAoptions` for NCA calculation
+#' 
 #' Step 3: Format intervals using `format_pkncadata_intervals()`
+#' 
 #' Step 4: Apply filtering based on user selections
+#' 
 #' Step 5: Impute start values if requested
 #'
 #' @param adnca_data A reactive PKNCAdata object
@@ -167,9 +171,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
-#' @importFrom dplyr filter mutate select across all_of
+#' @importFrom dplyr filter mutate select
 #' @importFrom tidyr crossing
-#' @importFrom shiny reactive req showNotification
 #' @importFrom rlang sym
 #'
 #' @export
@@ -183,8 +186,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   should_impute_c0 = TRUE
 ) {
 
-  req(adnca_data, method, selected_analytes,
-      selected_dosno, selected_pcspec)
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
