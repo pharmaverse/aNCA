@@ -220,7 +220,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 #' @details
 #' This function adheres to the structure required by the `PKNCA` package to work with its
 #' functionalities. For more information, see the
-#' [PKNCA Data Imputation Vignette](https://cran.r-project.org/web/packages/PKNCA/vignettes).
+#' [PKNCA Data Imputation Vignette](https://CRAN.R-project.org/package=PKNCA).
 #' @export
 #'
 #' @examples
@@ -260,7 +260,7 @@ PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., opti
 #' @details
 #' This function adheres to the structure required by the `PKNCA` package to work with its
 #' functionalities.For more information, see the
-#' [PKNCA Data Imputation Vignette](https://cran.r-project.org/web/packages/PKNCA/vignettes).
+#' [PKNCA Data Imputation Vignette](https://CRAN.R-project.org/package=PKNCA).
 #' @export
 #'
 #' @examples

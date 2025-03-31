@@ -22,6 +22,8 @@
 #'   print(attr(data$A, "label"))
 #' }
 #'
+#' @importFrom stats setNames
+#'
 #' @export
 apply_labels <- function(data, labels_df, type) {
 

@@ -28,7 +28,7 @@ This function imputes the start concentration using the first concentration afte
 \details{
 This function adheres to the structure required by the \code{PKNCA} package to work with its
 functionalities.For more information, see the
-\href{https://cran.r-project.org/web/packages/PKNCA/vignettes}{PKNCA Data Imputation Vignette}.
+\href{https://CRAN.R-project.org/package=PKNCA}{PKNCA Data Imputation Vignette}.
 }
 \examples{
 conc <- c(1, 2, 3, 4, 5)
