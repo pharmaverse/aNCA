@@ -40,6 +40,18 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #' convert_to_iso8601_duration(5, "d")  # Returns "P5D"
 #' @export
 convert_to_iso8601_duration <- Vectorize(function(value, unit) {
+
+  # Input validation
+  if (!is.numeric(value)) {
+    stop("'value' must be a numeric vector.")
+  }
+  if (!is.character(unit)) {
+    stop("'unit' must be a character vector.")
+  }
+  if (length(value) != length(unit) && length(value) != 1 && length(unit) != 1) {
+    stop("'value' and 'unit' must have the same length, or one of them must be of length 1.")
+  }
+
   # Try to standardize the unit using units::set_units
   unit <- tryCatch(
     {

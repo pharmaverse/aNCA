@@ -74,11 +74,11 @@ describe("convert_to_iso8601_duration", {
   it("handles invalid input types", {
     expect_error(
       convert_to_iso8601_duration("five", "d"),
-      "non-numeric argument to binary operator"
+      "Value must be numeric."
     )
     expect_error(
       convert_to_iso8601_duration(5, 123),
-      "unsupported type"
+      "Unit must be a character string."
     )
   })
 
@@ -93,6 +93,20 @@ describe("convert_to_iso8601_duration", {
   it("handles mixed valid and invalid vectorized inputs", {
     values <- c(5, 10, "invalid")
     units <- c("d", "unsupported", "h")
+    expect_error(
+      convert_to_iso8601_duration(values, units),
+      "Value must be numeric."
+    )
+
+    values <- c(5, 10, 15)
+    units <- c(1, 12, 123)
+    expect_error(
+      convert_to_iso8601_duration(values, units),
+      "Unit must be a character string."
+    )
+
+    values <- c(5, 10, 20)
+    units <- c("d", "h", "tt")
     expect_error(
       convert_to_iso8601_duration(values, units),
       "Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'."
