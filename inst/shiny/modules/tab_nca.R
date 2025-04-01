@@ -94,6 +94,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     nca_setup <- nca_setup_server("nca_setup", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
     rules <- nca_setup$rules
+    f_auc_options <- nca_setup$bioavailability
 
     #' Slope rules setup module
     slope_rules <- slope_selector_server(
@@ -122,7 +123,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               slope_rules$profiles_per_patient(),
               slope_rules$slopes_groups()
             ) %>%
-            PKNCA_calculate_nca()
+            PKNCA_calculate_nca() %>%
+            # Apply standard CDISC names
+            mutate(
+              PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+            )
 
           #' Apply units
           if (!is.null(session$userData$units_table())) {
@@ -130,7 +135,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             res$result <- res$result %>%
               select(-PPSTRESU, -PPSTRES) %>%
               left_join(
-                session$userData$units_table(),
+                session$userData$units_table() %>%
+                  mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
                 by = intersect(names(.), names(session$userData$units_table()))
               ) %>%
               mutate(PPSTRES = PPORRES * conversion_factor) %>%
@@ -164,9 +170,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       pivot_wider_pknca_results(res_nca()) %>%
         select(
           any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
+          starts_with("LAMZ"),
           starts_with("lambda.z"),
-          starts_with("span.ratio"),
-          starts_with("half.life"),
+          starts_with("R2ADJ"),
           "Exclude"
         ) %>%
         DT::datatable(
@@ -179,10 +185,14 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
 
-    nca_results_server("nca_results", processed_pknca_data, res_nca, rules(), grouping_vars)
+    nca_results_server("nca_results",
+                       processed_pknca_data,
+                       res_nca, rules(),
+                       grouping_vars,
+                       f_auc_options)
 
     #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, f_auc_options)
 
     #' Settings download module
     download_settings_server("download_settings", processed_pknca_data, session)

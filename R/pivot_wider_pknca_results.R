@@ -15,6 +15,7 @@
 #' @importFrom dplyr select left_join rename mutate distinct group_by arrange ungroup
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
+#' @importFrom purrr pmap_chr
 #' @export
 #'
 pivot_wider_pknca_results <- function(myres) {
@@ -23,7 +24,6 @@ pivot_wider_pknca_results <- function(myres) {
   # Derive lambda.z.n.points & lambda.z.method
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
-
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),
@@ -60,7 +60,9 @@ pivot_wider_pknca_results <- function(myres) {
   main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
-    mutate(PPTESTCD = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
+    mutate(PPTESTCD = ifelse(PPSTRESU != "",
+                             paste0(PPTESTCD, "[", PPSTRESU, "]"),
+                             PPTESTCD)) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
@@ -76,23 +78,23 @@ pivot_wider_pknca_results <- function(myres) {
   if (any(myres$result$type_interval == "manual")) {
 
     manual_aucs_vals <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
-      select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
+      select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col,
                   values_from = PPSTRES)
 
     manual_aucs_exclude <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
-      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, start_dose, end_dose,
+      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
@@ -120,6 +122,7 @@ pivot_wider_pknca_results <- function(myres) {
 }
 
 #' Helper function to extract exclude values
+#' @noRd
 .extract_exclude_values <- function(...) {
   raw_values <- unique(c(...))  # Get unique exclude values from different columns
   raw_values <- raw_values[!is.na(raw_values)]  # Remove NAs
@@ -134,12 +137,17 @@ pivot_wider_pknca_results <- function(myres) {
 }
 
 #' Helper function to add "label" attribute to columns based on parameter names
+#' @noRd
 .add_label_attribute <- function(df, myres) {
+
   mapping_vr <- myres$result %>%
-    mutate(PPTESTCD_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
-    select(PPTESTCD, PPTESTCD_unit) %>%
+    mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
+           PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
+                                                            mapping_col = "PPTESTCD",
+                                                            target_col = "PPTEST"))) %>%
+    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
-    pull(PPTESTCD, PPTESTCD_unit)
+    pull(PPTESTCD_cdisc, PPTESTCD_unit)
 
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])

@@ -142,6 +142,7 @@ format_pkncadose_data <- function(pkncaconc_data,
 #' }
 #'
 #' @import dplyr
+#' @importFrom stats setNames
 #' @export
 format_pkncadata_intervals <- function(pknca_conc,
                                        pknca_dose,

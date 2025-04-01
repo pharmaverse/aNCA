@@ -13,12 +13,12 @@ tlg_module_ui <- function(id, type, options) {
         class = "tlg-options-container",
         dropdown(
           div(
-            tags$h2(glue("{type} options")),
-            tags$p(glue("
+            tags$h2(str_glue("{type} options")),
+            tags$p(str_glue("
               You can specify any {type} customization options that are supported by the specific
               {type} implementation function.
             ")),
-            tags$p(glue(
+            tags$p(str_glue(
               "Leaving a widget empty will allow default behaviour of the {type} function."
             )),
             tags$p(
@@ -178,7 +178,7 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
 
     options_values <- lapply(names(options), \(option) {
       if (is.character(options[[option]])) return(NULL)
-      fn <- get(glue("tlg_option_{options[[option]]$type}_server"))
+      fn <- get(str_glue("tlg_option_{options[[option]]$type}_server"))
       fn(option, options[[option]], data, reactive(input$reset_widgets))
     }) %>%
       setNames(names(options)) %>%
@@ -201,6 +201,6 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
   if (grepl(".group_label", opt_id)) {
     return(tags$h1(opt_def, class = "tlg-group-label"))
   }
-  ui_fn <- get(glue("tlg_option_{opt_def$type}_ui"))
+  ui_fn <- get(str_glue("tlg_option_{opt_def$type}_ui"))
   ui_fn(opt_id, opt_def, data)
 }
