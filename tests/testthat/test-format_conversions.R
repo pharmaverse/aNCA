@@ -57,7 +57,7 @@ describe("convert_to_iso8601_duration", {
     expect_equal(convert_to_iso8601_duration(30, "min"), "PT30M")
     expect_equal(convert_to_iso8601_duration(45, "s"), "PT45S")
   })
-  
+
   it("handles Inf and NA values", {
     expect_equal(convert_to_iso8601_duration(Inf, "d"), "PinfD")
     expect_equal(convert_to_iso8601_duration(NA, "d"), NA)
