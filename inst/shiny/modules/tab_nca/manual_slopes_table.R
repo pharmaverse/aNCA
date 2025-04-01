@@ -11,10 +11,6 @@ manual_slopes_table_ui <- function(id) {
       class = "plot-widget-group",
       actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
     ),
-    div(
-      class = "plot-widget-group",
-      actionButton(ns("save_ruleset"), tags$b("Apply"), class = "btn-primary")
-    ),
     # Table with selections and exclusions #
     fluidRow(
       reactableOutput(ns("manual_slopes"))
@@ -24,7 +20,7 @@ manual_slopes_table_ui <- function(id) {
 
 
 manual_slopes_table_server <- function(
-  id, mydata, profiles_per_patient, slopes_groups, pk_nca_trigger
+  id, mydata, profiles_per_patient, slopes_groups
 ) {
   moduleServer(id, function(input, output, session) {
 
@@ -197,11 +193,6 @@ manual_slopes_table_server <- function(
           manual_slopes(edited_slopes)
         })
       })
-    })
-
-    #' saves and implements provided ruleset
-    observeEvent(input$save_ruleset, {
-      pk_nca_trigger(pk_nca_trigger() + 1)
     })
 
     list(

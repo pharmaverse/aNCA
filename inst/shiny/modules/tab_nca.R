@@ -101,15 +101,12 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       "slope_selector",
       processed_pknca_data,
       res_nca,
-      pk_nca_trigger,
       reactive(input$settings_upload)
     )
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
 
     #' Triggers NCA analysis, creating res_nca reactive
-    pk_nca_trigger <- reactiveVal(0)
-    observeEvent(input$nca, pk_nca_trigger(pk_nca_trigger() + 1))
     res_nca <- reactive({
       req(processed_pknca_data())
 
@@ -162,7 +159,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         })
       })
     }) |>
-      bindEvent(pk_nca_trigger())
+      bindEvent(input$nca)
 
     #' Show slopes results
     output$slope_results <- DT::renderDataTable({
