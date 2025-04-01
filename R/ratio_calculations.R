@@ -10,7 +10,7 @@
 #' @param conc_col A character string specifying the column name for the concentration data.
 #' @param units_col A character string specifying the column name for the units.
 #' @param groups A character vector of grouping variables to use for the analysis.
-#'                  Must include TIME, USUBJID, and optionally, other grouping variables.
+#'                  Must include time column, USUBJID, and optionally, other grouping variables.
 #' @param spec1 A character string specifying the value for
 #'               the first specimen type(s) in the matrix_col.
 #' @param spec2 A character string specifying the value for
@@ -20,13 +20,13 @@
 #' @examples
 #' data <- data.frame(
 #' USUBJID = c("A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"),
-#' TIME = c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2),
+#' NFRLT = c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2),
 #' MATRIX = c("BLOOD", "BLOOD", "BLOOD", "PLASMA", "PLASMA", "PLASMA",
 #'            "BRAIN", "BRAIN", "BRAIN", "LIVER", "LIVER", "LIVER"),
 #' CONC = c(10, 20, 15, 25, 30, 40, 5, 10, 8, 12, 18, 16),
 #' UNITS = rep("ng/mL", 12)
 #' )
-#' multiple_matrix_ratios(data, "MATRIX", "CONC", "UNITS", c("TIME", "USUBJID"), "BLOOD", "PLASMA")
+#' multiple_matrix_ratios(data, "MATRIX", "CONC", "UNITS", c("NFRLT", "USUBJID"), "BLOOD", "PLASMA")
 #'
 #' @import dplyr
 #' @export
