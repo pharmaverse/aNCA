@@ -97,7 +97,7 @@ describe("PKNCA_update_data_object", {
   analytes <- unique(simple_data$ANALYTE)
   dosnos <- unique(simple_data$DOSNO)
   pcspecs <- unique(simple_data$PCSPEC)
-  auc_data <- tibble::tibble(start_auc = numeric(), end_auc = numeric())
+  auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
 
   ma_data <- PKNCA_create_data_object(multiple_data)
 
