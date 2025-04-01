@@ -151,8 +151,8 @@ slope_selector_server <- function(
       if (!"type_interval" %in% names(pknca_data$intervals)) {
         NULL
       } else {
-        all_params <- names(get.interval.cols())
-        result_obj <- pk.nca(data = pknca_data, verbose = FALSE)
+        all_params <- names(PKNCA::get.interval.cols())
+        result_obj <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
 
