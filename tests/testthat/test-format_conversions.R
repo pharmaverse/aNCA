@@ -74,11 +74,11 @@ describe("convert_to_iso8601_duration", {
   it("handles invalid input types", {
     expect_error(
       convert_to_iso8601_duration("five", "d"),
-      "Value must be numeric."
+      "'value' must be a numeric."
     )
     expect_error(
       convert_to_iso8601_duration(5, 123),
-      "Unit must be a character string."
+      "'unit' must be a character string."
     )
   })
 
@@ -95,14 +95,14 @@ describe("convert_to_iso8601_duration", {
     units <- c("d", "unsupported", "h")
     expect_error(
       convert_to_iso8601_duration(values, units),
-      "Value must be numeric."
+      "'value' must be a numeric."
     )
 
     values <- c(5, 10, 15)
     units <- c(1, 12, 123)
     expect_error(
       convert_to_iso8601_duration(values, units),
-      "Unit must be a character string."
+      "'unit' must be a character string."
     )
 
     values <- c(5, 10, 20)
