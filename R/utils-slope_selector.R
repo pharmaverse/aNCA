@@ -8,24 +8,37 @@
 #'                 `TYPE`, `PATIENT`, `PROFILE`, `RANGE`, `REASON`.
 #' @param profiles List with available profiles for each `PATIENT`.
 #' @param slope_groups List with column names that define the groups.
+#' @param check_reasons Whether to check if all selections have REASONS stated. If this is `TRUE`
+#'                      and not all selections have a reason provided, an error will be thrown.
 #'
 #' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
 #'          columns modified in accordance to the provided slope filters.
 #' @importFrom dplyr filter group_by mutate
 #' @export
-filter_slopes <- function(data, slopes, profiles, slope_groups) {
+filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = FALSE) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
-
-  # Reset to 0 all previous (if done) changes #
-  data$conc$data$is.included.hl <- FALSE
-  data$conc$data$is.excluded.hl <- FALSE
-  data$conc$data$exclude_half.life <- FALSE
 
   # If there is no specification there is nothing to save #
   if (is.null(slopes) || nrow(slopes) == 0) {
     return(data)
   }
+
+  if (check_reasons) {              # checks are nested, since single `if` statement with `&&` would
+    if (any(slopes$REASON == "")) { # trigger cyclomatic complexity lint for some reason
+      stop(
+        "No reason provided for the following selections/exclusions:\n",
+        "PSCPES USUBJID ANALYTE DOSNO TYPE RANGE\n",
+        filter(slopes, REASON == "") %>%
+          apply(1, \(x) paste0(x, collapse = " "))
+      )
+    }
+  }
+
+  # Reset to 0 all previous (if done) changes #
+  data$conc$data$is.included.hl <- FALSE
+  data$conc$data$is.excluded.hl <- FALSE
+  data$conc$data$exclude_half.life <- FALSE
 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%

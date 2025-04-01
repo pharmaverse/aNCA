@@ -70,6 +70,23 @@ describe(".filter_slopes", {
       filter_slopes(list(conc = list()), NULL, DOSNOS_FIXTURE), "Please provide valid data."
     )
   })
+
+  it("should throw an error if reasons are missing", {
+    selection <- data.frame(
+      TYPE = rep("Selection", 2),
+      USUBJID = c(1, 3),
+      DOSNO = c(1, 1),
+      ANALYTE = c("A", "A"),
+      PCSPEC = c(1, 1),
+      RANGE = c("1:3", "2:4"),
+      REASON = ""
+    )
+
+    expect_error(
+      filter_slopes(DATA_FIXTURE, selection, DOSNOS_FIXTURE, slope_groups, TRUE),
+      "^No reason provided for the following selections/exclusions*"
+    )
+  })
 })
 
 EXISTING_FIXTURE <- data.frame(

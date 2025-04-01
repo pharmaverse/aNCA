@@ -118,7 +118,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             filter_slopes(
               slope_rules$manual_slopes(),
               slope_rules$profiles_per_patient(),
-              slope_rules$slopes_groups()
+              slope_rules$slopes_groups(),
+              check_reasons = TRUE
             ) %>%
             PKNCA_calculate_nca() %>%
             # Apply standard CDISC names
@@ -146,16 +147,20 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
           res
         }, error = function(e) {
-          # TODO: this does not catch errors properly sometimes
-          full_error <- e$parent$message
-          if (grepl("pk.calc.", x = full_error)) {
-            param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
-            full_error <- paste0("Problem in calculation of NCA parameter: ", param_of_error,
-                                 "<br><br>", full_error)
+          if (grepl("pk.calc.", e$message)) {
+            param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", e$message)
+            html_error <- paste0(
+              "Problem in calculation of NCA parameter: ",
+              param_of_error,
+              "<br><br>", e$message,
+              "<br><br>If the error is unexpected, please report a bug."
+            )
+          } else {
+            html_error <- gsub("\\\n", "<br>", e$message)
           }
-          modified_error <- gsub("Please report a bug.\n:", "", x = full_error, fixed = TRUE) %>%
-            paste0("<br><br>If the error is unexpected, please report a bug.")
-          showNotification(HTML(modified_error), type = "error", duration = NULL)
+          log_error("Error calculating NCA results:\n{e$message}")
+          showNotification(HTML(html_error), type = "error", duration = NULL)
+          return(NULL)
         })
       })
     }) |>
