@@ -56,6 +56,16 @@ nca_setup_ui <- function(id) {
           )),
           column(4, units_table_ui(ns("units_table")))
         ),
+        #pickerinput only enabled when IV and EX data present
+        shinyjs::hidden(
+          pickerInput(
+            ns("bioavailability"),
+            "Calculate Bioavailability:",
+            choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+            multiple = TRUE,
+            selected = NULL
+          )
+        ),
         br(),
 
         h4("Data imputation"),
@@ -545,6 +555,19 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         should_impute_c0 = input$should_impute_c0
       )
       log_success("PKNCA data slopes object updated.")
+      
+      # Add picker input if bioavailability calculations are possible
+      if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+        shinyjs::show("bioavailability")
+
+        updatePickerInput(
+          session,
+          inputId = "bioavailability",
+          "Calculate Bioavailability:",
+          choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+          selected = "f_aucinf.obs"
+        )
+      }
 
       # # Add partial AUCs if any
       #TODO
@@ -620,7 +643,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
           is.checked = input$rule_span_ratio,
           threshold = input$span.ratio_threshold
         )
-      ))
+      )),
+      bioavailability = reactive(input$bioavailability)
     )
   })
 }
