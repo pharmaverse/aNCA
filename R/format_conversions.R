@@ -50,10 +50,10 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
       unit
     }
   )
-  
+
   # Ensure the unit is lowercase for consistency
   unit <- tolower(unit)
-  
+
   # Define a mapping of units to ISO 8601 components
   unit_map <- c(
     y = "Y",   # Years
@@ -64,12 +64,12 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
     min = "M", # Minutes
     s = "S"    # Seconds
   )
-  
+
   # Check if the unit starts with a valid character for a time unit
   if (!grepl("^[ymwdhs]", unit)) {
     stop("Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'.")
   }
-  
+
   # Construct the ISO 8601 duration
   if (unit %in% c("h", "min", "s")) {
     # Time components need a "T" prefix
