@@ -59,9 +59,8 @@ nca_setup_ui <- function(id) {
       pickerInput(
         ns("bioavailability"),
         "Calculate Bioavailability:",
-        choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+        choices = NULL,
         multiple = TRUE,
-        selected = NULL
       )
     ),
     br(),
@@ -522,8 +521,8 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
           session,
           inputId = "bioavailability",
           "Calculate Bioavailability:",
-          choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
-          selected = "f_aucinf.obs"
+          choices = c("f_AUCIFO", "f_AUCIFP", "f_AUCLST"),
+          selected = "f_AUCIFO"
         )
       }
 
