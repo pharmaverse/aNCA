@@ -130,8 +130,9 @@ export_cdisc <- function(res_nca) {
         }
       },
       # Parameter Variables
-      PPSTRESN = as.numeric(PPSTRES),
-      PPSTRESC = as.character(PPSTRES),
+      PPORRES = round(as.numeric(PPORRES), 12),
+      PPSTRESN = round(as.numeric(PPSTRES), 12),
+      PPSTRESC = as.character(PPSTRESN),
       PPSTRESU = PPSTRESU,
       # Status and Reason for Exclusion
       PPSTAT = ifelse(is.na(PPSTRES) | (PPSTRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
