@@ -58,7 +58,6 @@ export_cdisc <- function(res_nca) {
 
   # define columns needed for adpp
   adpp_cols <- c("STUDYID",
-                 "DOMAIN",
                  "USUBJID",
                  "PPSEQ",
                  "PPGRPID",
