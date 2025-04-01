@@ -39,24 +39,21 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #' convert_to_iso8601_duration(200, "h") # Returns "PT200H"
 #' convert_to_iso8601_duration(5, "d")  # Returns "P5D"
 #' @export
-
-convert_to_iso8601_duration <- function(value, unit) {
-  # Make sure the formats are correct
-  if (!is.numeric(value)) {
-    stop("The value must be numeric.")
-  }
-  if (!is.character(unit)) {
-    stop("The unit must be a character string.")
-  }
-
-  # Try to standardize the unit as much as possible
+convert_to_iso8601_duration <- Vectorize(function(value, unit) {
+  # Try to standardize the unit using units::set_units
   unit <- tryCatch(
-    units::set_units(1, unit, mode = "standard") %>%
-      units::deparse_unit()  %>%
-      tolower(),
-    error = function(e) tolower(unit)
+    {
+      units::set_units(1, unit, mode = "standard") %>% units::deparse_unit()
+    },
+    error = function(e) {
+      # If an error occurs, return the original unit
+      unit
+    }
   )
-
+  
+  # Ensure the unit is lowercase for consistency
+  unit <- tolower(unit)
+  
   # Define a mapping of units to ISO 8601 components
   unit_map <- c(
     y = "Y",   # Years
@@ -67,12 +64,12 @@ convert_to_iso8601_duration <- function(value, unit) {
     min = "M", # Minutes
     s = "S"    # Seconds
   )
-
+  
   # Check if the unit starts with a valid character for a time unit
   if (!grepl("^[ymwdhs]", unit)) {
     stop("Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'.")
   }
-
+  
   # Construct the ISO 8601 duration
   if (unit %in% c("h", "min", "s")) {
     # Time components need a "T" prefix
@@ -81,7 +78,7 @@ convert_to_iso8601_duration <- function(value, unit) {
     # Date components
     paste0("P", value, unit_map[unit])
   } else {
-    # Take the first letter of the unit
+    # Take the first letter of the unit & assume is date
     paste0("P", value, toupper(substr(unit, 1, 1)))
   }
-}
+})

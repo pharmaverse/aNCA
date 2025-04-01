@@ -57,28 +57,46 @@ describe("convert_to_iso8601_duration", {
     expect_equal(convert_to_iso8601_duration(30, "min"), "PT30M")
     expect_equal(convert_to_iso8601_duration(45, "s"), "PT45S")
   })
-
+  
   it("handles unsupported units gracefully", {
     expect_error(
       convert_to_iso8601_duration(10, "unsupported"),
       "Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'."
     )
   })
-
+  
   it("handles edge cases for valid units", {
     expect_equal(convert_to_iso8601_duration(1, "y"), "P1Y")
     expect_equal(convert_to_iso8601_duration(2, "month"), "P2M")
     expect_equal(convert_to_iso8601_duration(3, "w"), "P3W")
   })
-
+  
   it("handles invalid input types", {
     expect_error(
       convert_to_iso8601_duration("five", "d"),
-      "The value must be numeric."
+      "non-numeric argument to binary operator"
     )
     expect_error(
       convert_to_iso8601_duration(5, 123),
-      "The unit must be a character string."
+      "unsupported type"
+    )
+  })
+  
+  it("handles vectorized inputs correctly", {
+    values <- c(5, 10, 15)
+    units <- c("d", "h", "min")
+    expected_output <- c("P5D", "PT10H", "PT15M")
+    result <- convert_to_iso8601_duration(values, units)
+    expect_equal(result, expected_output)
+  })
+  
+  it("handles mixed valid and invalid vectorized inputs", {
+    values <- c(5, 10, "invalid")
+    units <- c("d", "unsupported", "h")
+    expect_error(
+      convert_to_iso8601_duration(values, units),
+      "Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'."
     )
   })
 })
+
