@@ -31,7 +31,7 @@
 #' @import dplyr
 #' @export
 multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
-                                   groups = c("TIME", "USUBJID"),
+                                   groups = c("NFRLT", "USUBJID"),
                                    spec1, spec2) {
 
   # Separate Samples
