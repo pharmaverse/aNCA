@@ -19,7 +19,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
+nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, auc_options) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -50,7 +50,12 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       }
 
       #' Transform results
-      final_results <- pivot_wider_pknca_results(res)
+      # Calculate bioavailability if available
+      results <- calculate_F(res, auc_options()) %>%
+        PKNCA_add_F(res, .)
+
+      # Transform results
+      final_results <- pivot_wider_pknca_results(results)
 
       # Apply flag rules
       for (param in names(rules)) {
@@ -77,6 +82,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
             select(
               any_of(c(grouping_vars(),
                        unname(unlist(res_nca()$data$conc$columns$groups)),
+                       "DOSEA",
                        "DOSNO",
                        "ROUTE"))
             )
@@ -113,18 +119,15 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
-      label_cols <- formatters::var_labels(final_results())
-      sel_label_cols <- translate_terms(input$params, "input_names", "PPTEST")
-      sel_param_cols <- label_cols[label_cols %in% sel_label_cols] |>
+      param_label_cols <- formatters::var_labels(final_results())
+      param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
+      remove_params <- setdiff(param_cols, input$params)
+      #identify parameters to be removed from final results
+      params_rem_cols <- param_label_cols[param_label_cols %in% remove_params] |>
         names()
 
-      group_cols <- setdiff(names(res_nca()$data$intervals),
-                            c(names(PKNCA::get.interval.cols()))) |>
-        # Here cols of interest are also added
-        c("Exclude", "impute", "flagged")
-
       final_results <- final_results() %>%
-        select(any_of(c(group_cols, sel_param_cols)))
+        select(-(any_of(params_rem_cols)))
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)
