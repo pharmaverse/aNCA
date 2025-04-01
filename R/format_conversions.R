@@ -40,22 +40,28 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #' convert_to_iso8601_duration(5, "d")  # Returns "P5D"
 #' @export
 convert_to_iso8601_duration <- Vectorize(function(value, unit) {
-
+  
+  # NA values remain NA
+  if (is.na(value)) return(NA)
+  
   # Input validation
   if (!is.numeric(value)) {
     stop("'value' must be a numeric.")
   }
+  if (is.infinite(value)) {
+    value = tolower(value)
+  }
   if (!is.character(unit)) {
     stop("'unit' must be a character string.")
   }
-  if (!grepl("^[ymwdhs]", unit)) {
+  if (!grepl("^[ymwdhs]", tolower(unit))) {
     stop("Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'.")
   }
 
   # Try to standardize the unit using units::set_units
   unit <- tryCatch(
     {
-      units::set_units(1, unit, mode = "standard") %>% units::deparse_unit()
+      units::set_units(1, tolower(unit), mode = "standard") %>% units::deparse_unit()
     },
     error = function(e) {
       # If an error occurs, return the original unit
@@ -63,29 +69,13 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
     }
   )
 
-  # Ensure the unit is lowercase for consistency
-  unit <- tolower(unit)
-
-  # Define a mapping of units to ISO 8601 components
-  unit_map <- c(
-    y = "Y",   # Years
-    month = "M",   # Months
-    w = "W",   # Weeks
-    d = "D",   # Days
-    h = "H",   # Hours
-    min = "M", # Minutes
-    s = "S"    # Seconds
-  )
-
   # Construct the ISO 8601 duration
   if (unit %in% c("h", "min", "s")) {
-    # Time components need a "T" prefix
-    paste0("PT", value, unit_map[unit])
-  } else if (unit %in% names(unit_map)) {
-    # Date components
-    paste0("P", value, unit_map[unit])
+    # Time components need a "PT" prefix
+    paste0("PT", value, toupper(substr(unit, 1, 1)))
+    # Period components need a "P" prefix
+    # Note: Months and years are not standardized by units package
   } else {
-    # Take the first letter of the unit & assume is date
     paste0("P", value, toupper(substr(unit, 1, 1)))
   }
 })
