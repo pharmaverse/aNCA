@@ -221,12 +221,12 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       DOSNO %in% selected_dosno,
       PCSPEC %in% selected_pcspec
     )
-  
+
   # # Add partial AUCs if any
-  
+
   auc_ranges <- auc_data %>%
     filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
-  
+
   # Make a list of intervals from valid AUC ranges
   intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
     data$intervals %>%

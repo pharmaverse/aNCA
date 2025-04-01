@@ -6,7 +6,7 @@ nca_setup_ui <- function(id) {
     id = ns("setup_tabs"),
     nav_panel(
       "Setup",
-    # Local upload option
+      # Local upload option
       fileInput(
         ns("settings_upload"),
         width = "60%",
@@ -26,7 +26,7 @@ nca_setup_ui <- function(id) {
             column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                                   choices = NULL))
           ),
-        # Method, NCA parameters, and units table
+          # Method, NCA parameters, and units table
           fluidRow(
             column(3, selectInput(
               ns("method"),
@@ -67,54 +67,54 @@ nca_setup_ui <- function(id) {
               selected = NULL
             )
           )
-      ),
-      accordion_panel(
-        title = "Data Imputation",
-        input_switch(
-          id = ns("should_impute_c0"),
-          label = "Impute Concentration",
-          value = TRUE
         ),
-        br(),
-        helpText(HTML(paste(
-          "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-          "- If DOSNO = 1 & IV bolus: C0 = 0",
-          "- If DOSNO > 1 & not IV bolus: C0 = predose",
-          "- If IV bolus & monoexponential data: logslope",
-          "- If IV bolus & not monoexponential data: C0 = C1",
-          sep = "<br>"
-        )))
-      ),
-      accordion_panel(
-        title = "Partial AUCs",
-        reactableOutput(ns("auc_table")),
-        actionButton(ns("addRow"), "Add Row")
-      ),
-      accordion_panel(
-        title = "Flag Rule Sets",
-        fluidRow(
-          column(
-            width = 6,
-            checkboxInput(ns("rule_adj_r_squared"), "RSQADJ:")
+        accordion_panel(
+          title = "Data Imputation",
+          input_switch(
+            id = ns("should_impute_c0"),
+            label = "Impute Concentration",
+            value = TRUE
           ),
-          column(
-            width = 6,
-            conditionalPanel(
-              condition = paste0("input['", ns("rule_adj_r_squared"), "'] == true"),
-              div(
-                class = "nca-numeric-container",
-                numericInput(
-                  ns("adj.r.squared_threshold"),
-                  "",
-                  value = 0.7,
-                  step = 0.05,
-                  min = 0,
-                  max = 1
+          br(),
+          helpText(HTML(paste(
+            "Imputes a start-of-interval concentration to calculate non-observational parameters:",
+            "- If DOSNO = 1 & IV bolus: C0 = 0",
+            "- If DOSNO > 1 & not IV bolus: C0 = predose",
+            "- If IV bolus & monoexponential data: logslope",
+            "- If IV bolus & not monoexponential data: C0 = C1",
+            sep = "<br>"
+          )))
+        ),
+        accordion_panel(
+          title = "Partial AUCs",
+          reactableOutput(ns("auc_table")),
+          actionButton(ns("addRow"), "Add Row")
+        ),
+        accordion_panel(
+          title = "Flag Rule Sets",
+          fluidRow(
+            column(
+              width = 6,
+              checkboxInput(ns("rule_adj_r_squared"), "RSQADJ:")
+            ),
+            column(
+              width = 6,
+              conditionalPanel(
+                condition = paste0("input['", ns("rule_adj_r_squared"), "'] == true"),
+                div(
+                  class = "nca-numeric-container",
+                  numericInput(
+                    ns("adj.r.squared_threshold"),
+                    "",
+                    value = 0.7,
+                    step = 0.05,
+                    min = 0,
+                    max = 1
+                  )
                 )
               )
             )
-          )
-        ),
+          ),
           fluidRow(
             column(
               width = 6,
@@ -508,7 +508,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       log_trace("Updating PKNCA::data object.")
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec, auc_data())
-      
+
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = auc_data(),
