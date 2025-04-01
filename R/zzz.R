@@ -5,7 +5,7 @@
   utils::globalVariables(c(
     ".", ":=", "AFRLT", "AFRLT.dose", "ANALYTE", "ARRLT", "AVAL", "AVISIT", "AUC_EX", "AUC_IV",
     "CI_lower", "CI_upper", "Count.missing", "Count.total", "DOSEA", "DOSNO", "Dose", "Dose_EX",
-    "Dose_IV", "DRUG", "Dataset", "EVID", "Geocv", "Geomean", "Grouping_EX", "Grouping_IV",
+    "Dose_IV", "DRUG", "Dataset", "EVID", "EXSPID", "Geocv", "Geomean", "Grouping_EX", "Grouping_IV",
     "IX", "IX_color", "IX_shape", "IX_stroke", "Label", "Max", "Mean", "Median", "Min", "N",
     "NRRLT", "PARAM", "PPCAT", "PCGRPID", "PCRFDTC", "PCRFTDTM", "PCSEQ", "PCSPID", "PCSPEC",
     "PPORRES", "PPORRESU", "PPSTRES", "PPSTRESC", "PPSTRESN", "PPSTRESU", "PPTEST", "PPTESTCD",
@@ -17,7 +17,7 @@
     "interval_name_col", "interval_next", "interval_prev", "is.excluded.hl", "is.included.hl",
     "lambda.z", "lambda.z.ix", "lambda.z.method", "lambda.z.n.points", "lambda.z.time.first",
     "log10_CI", "log10_Mean", "log10_SD", "log10_SE", "next_dose", "next_nom_dose",
-    "nom_dose_time", "nom_interval_next", "nom_interval_prev", "pknca_cdisc_terms",
+    "nom_dose_time", "nom_interval_next", "nom_interval_prev", "pknca_cdisc_terms", "sorted_strings",
     "start", "start_dose", "time_dose", "type_interval", "var_name", "view", "zero_str"
   ))
 }
