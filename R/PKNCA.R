@@ -238,7 +238,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
         type_interval = "manual"
       )
   })
-  
+
   data$intervals <- bind_rows(
     data$intervals,
     intervals_list

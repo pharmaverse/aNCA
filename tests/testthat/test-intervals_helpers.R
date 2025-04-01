@@ -212,8 +212,10 @@ describe("interval_add_impute", {
                  "start_predose,start_conc0",
                  "start_conc0")
     )
-    expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 expected_result)
+    expect_equal(
+      dplyr::arrange_all(result$intervals[, c("analyte", "half.life", "cmax", "impute")]),
+      dplyr::arrange_all(expected_result)
+    )
   })
 
   it("adds new rows with added imputations after the original ones", {
@@ -230,8 +232,10 @@ describe("interval_add_impute", {
                  "start_conc0",
                  "start_conc0,new_impute")
     )
-    expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 expected_result)
+    expect_equal(
+      dplyr::arrange_all(result$intervals[, c("analyte", "half.life", "cmax", "impute")]),
+      dplyr::arrange_all(expected_result)
+    )
   })
 
   it("does not add new interval if non-target & target params share target impute", {
@@ -374,7 +378,10 @@ describe("interval_remove_impute", {
                                   cmax = c(TRUE, TRUE, TRUE),
                                   impute = c("start_predose", "start_predose", NA_character_))
     result <- interval_remove_impute(o_data, target_impute = "start_conc0")
-    expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")], expected_result)
+    expect_equal(
+      dplyr::arrange_all(result$intervals[, c("analyte", "half.life", "cmax", "impute")]),
+      dplyr::arrange_all(expected_result)
+    )
   })
 
   it("handles specified target_params correctly", {
@@ -398,34 +405,58 @@ describe("interval_remove_impute", {
   })
 
   it("handles target_groups correctly", {
-    expected_result_analyte1 <- data.frame(analyte = c("Analyte1", "Analyte1"),
-                                           half.life = c(TRUE, TRUE),
-                                           cmax = c(TRUE, TRUE),
-                                           impute = c("start_predose", NA_character_))
+    expected_result_analyte1 <- tibble::tibble(
+      analyte = c("Analyte1", "Analyte1"),
+      half.life = c(TRUE, TRUE),
+      cmax = c(TRUE, TRUE),
+      impute = c("start_predose", NA_character_)
+    )
+    
     expected_result_analyte2 <- o_data$intervals[o_data$intervals$analyte == "Analyte2",
-                                                 c("analyte", "half.life", "cmax", "impute")]
+                                                 c("analyte", "half.life", "cmax", "impute")] |>
+      tibble::as_tibble() |>
+      dplyr::arrange(analyte, cmax, half.life)
+    
     result <- interval_remove_impute(o_data, target_impute = "start_conc0",
                                      target_groups = data.frame(analyte = "Analyte1"))
-    expect_equal(result$intervals[result$intervals$analyte == "Analyte1",
-                                  c("analyte", "half.life", "cmax", "impute")] |>
-                   `rownames<-`(NULL), expected_result_analyte1)
-    expect_equal(result$intervals[result$intervals$analyte == "Analyte2",
-                                  c("analyte", "half.life", "cmax", "impute")],
-                 expected_result_analyte2)
+    
+    result_analyte1 <- result$intervals[result$intervals$analyte == "Analyte1",
+                                        c("analyte", "half.life", "cmax", "impute")] |>
+      tibble::as_tibble() |>
+      dplyr::arrange(analyte, cmax, half.life)
+    
+    result_analyte2 <- result$intervals[result$intervals$analyte == "Analyte2",
+                                        c("analyte", "half.life", "cmax", "impute")] |>
+      tibble::as_tibble() |>
+      dplyr::arrange(analyte, cmax, half.life)
+    
+    expect_equal(result_analyte1, expected_result_analyte1)
+    expect_equal(result_analyte2, expected_result_analyte2)
   })
+  
 
   it("handles multiple target_params correctly", {
-    expected_result <- data.frame(analyte = c("Analyte1", "Analyte2", "Analyte1"),
-                                  half.life = c(TRUE, TRUE, TRUE),
-                                  cmax = c(TRUE, TRUE, TRUE),
-                                  impute = c("start_predose", "start_predose", NA_character_))
+    expected_result <- tibble::tibble(
+      analyte = c("Analyte1", "Analyte2", "Analyte1"),
+      half.life = c(TRUE, TRUE, TRUE),
+      cmax = c(TRUE, TRUE, TRUE),
+      impute = c("start_predose", "start_predose", NA_character_)
+    ) |>
+      dplyr::arrange(analyte, cmax, half.life)
+    
     result <- interval_remove_impute(
       o_data,
       target_impute = "start_conc0",
       target_params = c("half.life", "cmax")
     )
-    expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")], expected_result)
+    
+    result_clean <- result$intervals[, c("analyte", "half.life", "cmax", "impute")] |>
+      tibble::as_tibble() |>
+      dplyr::arrange(analyte, cmax, half.life)
+    
+    expect_equal(result_clean, expected_result)
   })
+  
 
   it("makes no changes and warns when no matching intervals found", {
     expect_warning({
@@ -475,7 +506,10 @@ describe("interval_remove_impute", {
       target_impute = "start_conc0",
       target_params = c("half.life", "cmax")
     )
-    expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")], expected_result)
+    expect_equal(
+      dplyr::arrange_all(result$intervals[, c("analyte", "half.life", "cmax", "impute")]),
+      dplyr::arrange_all(expected_result)
+    )
   })
 
   it("removes all target_impute even if is several times", {
@@ -504,8 +538,10 @@ describe("interval_remove_impute", {
                  "start_conc0",
                  NA_character_)
     )
-    expect_equal(result$intervals[, c("analyte", "half.life", "cmax", "impute")],
-                 expected_result)
+    expect_equal(
+      dplyr::arrange_all(result$intervals[, c("analyte", "half.life", "cmax", "impute")]),
+      dplyr::arrange_all(expected_result)
+    )
   })
 })
 

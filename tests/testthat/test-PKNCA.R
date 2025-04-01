@@ -11,8 +11,8 @@ simple_data <- data.frame(
   AVALU = rep("ng/mL", 6),
   DOSEA = rep(100, 6),
   DOSEU = rep("mg", 6),
-  AFRLT = c(0, 1, 2, 3, 4, 6),
-  ARRLT = c(0, 1, 2, 3, 4, 6),
+  AFRLT = c(0.5, 1, 2, 3, 4, 6),
+  ARRLT = c(0.5, 1, 2, 3, 4, 6),
   NFRLT = c(0, 1, 2, 3, 4, 6),
   ADOSEDUR = rep(0.5, 6),
   RRLTU = rep("hour", 6)
@@ -31,8 +31,8 @@ multiple_data <- data.frame(
   AVALU = rep("ng/mL", 12),
   DOSEA = rep(200, 12),
   DOSEU = rep("mg", 12),
-  AFRLT = rep(c(0, 1, 2, 3, 4, 6), 2),
-  ARRLT = rep(c(0, 1, 2, 3, 4, 6), 2),
+  AFRLT = rep(c(0.5, 1, 2, 3, 4, 6), 2),
+  ARRLT = rep(c(0.5, 1, 2, 3, 4, 6), 2),
   NFRLT = rep(c(0, 1, 2, 3, 4, 6), 2),
   ADOSEDUR = rep(1, 12),
   RRLTU = rep("hour", 12)
@@ -97,13 +97,14 @@ describe("PKNCA_update_data_object", {
   analytes <- unique(simple_data$ANALYTE)
   dosnos <- unique(simple_data$DOSNO)
   pcspecs <- unique(simple_data$PCSPEC)
-  default_units <- pknca_data$units
+  auc_data <- tibble::tibble(start_auc = numeric(), end_auc = numeric())
 
   ma_data <- PKNCA_create_data_object(multiple_data)
 
   it("returns a PKNCAdata object", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
+      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_dosno = dosnos,
@@ -117,6 +118,7 @@ describe("PKNCA_update_data_object", {
   it("includes only selected analytes, dosnos, and pcspecs in intervals", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = ma_data,
+      auc_data = auc_data,
       method = method,
       selected_analytes = "AnalyteX",
       selected_dosno = 1,
@@ -133,6 +135,7 @@ describe("PKNCA_update_data_object", {
   it("updates units for each analyte", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
+      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_dosno = dosnos,
@@ -147,6 +150,7 @@ describe("PKNCA_update_data_object", {
   it("sets NCA options correctly", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
+      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_dosno = dosnos,
@@ -162,6 +166,7 @@ describe("PKNCA_update_data_object", {
   it("does not impute C0 when not requested", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
+      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_dosno = dosnos,
@@ -176,6 +181,7 @@ describe("PKNCA_update_data_object", {
   it("ensures units table has separate rows per analyte", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
+      auc_data = auc_data,
       method = "lin up log down",
       selected_analytes = unique(simple_data$ANALYTE),
       selected_dosno = unique(simple_data$DOSNO),
