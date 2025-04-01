@@ -19,7 +19,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
+nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, auc_options) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -49,7 +49,12 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       }
 
       #' Transform results
-      final_results <- pivot_wider_pknca_results(res)
+      # Calculate bioavailability if available
+      results <- calculate_F(res, auc_options()) %>%
+        PKNCA_add_F(res, .)
+
+      # Transform results
+      final_results <- pivot_wider_pknca_results(results)
 
       # Apply flag rules
       for (param in names(rules)) {
@@ -76,6 +81,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
             select(
               any_of(c(grouping_vars(),
                        unname(unlist(res_nca()$data$conc$columns$groups)),
+                       "DOSEA",
                        "DOSNO",
                        "ROUTE"))
             )

@@ -23,7 +23,7 @@
 #'
 #' @import dplyr
 #' @import tidyr
-#' @importFrom stats sd
+#' @importFrom stats sd median
 #' @export
 #' @examples
 #' \dontrun{
