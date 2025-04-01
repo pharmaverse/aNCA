@@ -86,7 +86,6 @@ export_cdisc <- function(res_nca) {
                  "AVALU")
 
   pp_info <- res_nca$result  %>%
-    filter(is.infinite(end) | PPTESTCD == "auclast") %>%
     left_join(res_nca$data$dose$data,
               by = unname(unlist(res_nca$data$dose$columns$groups)),
               suffix = c("", ".y")) %>%
@@ -155,8 +154,8 @@ export_cdisc <- function(res_nca) {
       # Matrix
       PPSPEC = PCSPEC,
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
-      PPSTINT = ifelse(start != Inf, start, NA),
-      PPENINT = ifelse(end != Inf, end, NA)
+      PPSTINT = convert_to_iso8601_duration(start, RRLTU),
+      PPENINT = convert_to_iso8601_duration(end, RRLTU)
     )  %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     # mutate(PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")) %>%
