@@ -18,6 +18,6 @@
     "nom_dose_time", "nom_interval_next", "nom_interval_prev",
     "start", "start_dose", "time_dose", "type_interval", "var_name", "view",
     "zero_str", "PPTESTCD", "PPSTRESU", "PPTESTCD_unit", "PPTESTCD_cdisc", "LAMZLL", "LAMZNPT",
-    "LAMZ", "LAMZIX", "LAMZMETHOD", "pknca_cdisc_terms"
+    "LAMZ", "LAMZIX", "LAMZMTD", "pknca_cdisc_terms"
   ))
 }

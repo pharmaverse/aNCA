@@ -21,7 +21,7 @@
 pivot_wider_pknca_results <- function(myres) {
 
   ############################################################################################
-  # Derive LAMZNPT & LAMZMETHOD
+  # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
 
@@ -44,8 +44,8 @@ pivot_wider_pknca_results <- function(myres) {
       left_join(data_with_duplicates) %>%
       # Derive LAMZIX: If present consider inclusions and disconsider exclusions
       group_by(!!!syms(conc_groups), DOSNO) %>%
-      # Derive LAMZMETHOD: was lambda.z manually customized?
-      mutate(LAMZMETHOD = ifelse(
+      # Derive LAMZMTD: was lambda.z manually customized?
+      mutate(LAMZMTD = ifelse(
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
       )) %>%
       filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
@@ -53,7 +53,7 @@ pivot_wider_pknca_results <- function(myres) {
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
       mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
-      select(conc_groups, DOSNO, start, end, LAMZIX, LAMZMETHOD) %>%
+      select(conc_groups, DOSNO, start, end, LAMZIX, LAMZMTD) %>%
       unique()
   }
   ############################################################################################
