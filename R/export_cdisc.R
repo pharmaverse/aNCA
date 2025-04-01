@@ -156,13 +156,13 @@ export_cdisc <- function(res_nca) {
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        NA,
-        convert_to_iso8601_duration(start, RRLTU)
+        convert_to_iso8601_duration(start, RRLTU),
+        NA
       ),
       PPENINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        NA,
-        convert_to_iso8601_duration(end, RRLTU)
+        convert_to_iso8601_duration(end, RRLTU),
+        NA
       ),
       PPREASND = substr(exclude, 1, 200)
     ) %>%
