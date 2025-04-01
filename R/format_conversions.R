@@ -30,7 +30,7 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 
 #' Convert Numeric Value and Unit to ISO 8601 Duration
 #'
-#' This function converts a numeric value and its associated time unit into an ISO 8601 duration string.
+#' The function converts a numeric value and its associated time unit into ISO 8601 duration string.
 #'
 #' @param value A numeric value representing the time/duration.
 #' @param unit A character string representing the unit of the time/duration.
@@ -67,12 +67,12 @@ convert_to_iso8601_duration <- function(value, unit) {
     min = "M", # Minutes
     s = "S"    # Seconds
   )
-  
+
   # Check if the unit starts with a valid character for a time unit
   if (!grepl("^[ymwdhs]", unit)) {
     stop("Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'.")
   }
-  
+
   # Construct the ISO 8601 duration
   if (unit %in% c("h", "min", "s")) {
     # Time components need a "T" prefix

@@ -8,7 +8,7 @@ describe("get_conversion_factor", {
     expect_equal(get_conversion_factor("minute", "hour"), 1 / 60)
     expect_equal(get_conversion_factor("day", "minute"), 1440)
   })
-  
+
   it("handles simple concentration units", {
     expect_equal(get_conversion_factor("mg/L", "g/L"), 0.001)
     expect_equal(get_conversion_factor("g/dL", "kg/L"), 0.01)
@@ -18,7 +18,7 @@ describe("get_conversion_factor", {
     expect_equal(get_conversion_factor("g/L", "mg/L"), 1000)
     expect_equal(get_conversion_factor("kg/L", "mg/L"), 1e6)
   })
-  
+
   it("handles combined units", {
     expect_equal(get_conversion_factor("Hours*ug/mL", "Hours*mg/L"), 1)
     expect_equal(get_conversion_factor("Hours^2*ug/mL", "Hours^2*mg/L"), 1)
@@ -30,7 +30,7 @@ describe("get_conversion_factor", {
     expect_equal(get_conversion_factor("Hours*kg/L", "Hours*g/L"), 1000)
     expect_equal(get_conversion_factor("Hours*mg/L", "Hours*kg/L"), 1e-6)
   })
-  
+
   it("returns NA for non-convertible units", {
     expect_true(is.na(get_conversion_factor("meter", "second")))
     expect_true(is.na(get_conversion_factor("kg", "hour")))
@@ -39,7 +39,7 @@ describe("get_conversion_factor", {
     expect_true(is.na(get_conversion_factor("second", "gram")))
     expect_true(is.na(get_conversion_factor("hour", "meter")))
   })
-  
+
   it("handles vector inputs", {
     expect_equal(get_conversion_factor(c("hr", "minute"), c("minute", "second")), c(60, 60))
     expect_equal(get_conversion_factor(c("day", "mg/L"), c("hour", "g/L")), c(24, 0.001))
@@ -57,20 +57,20 @@ describe("convert_to_iso8601_duration", {
     expect_equal(convert_to_iso8601_duration(30, "min"), "PT30M")
     expect_equal(convert_to_iso8601_duration(45, "s"), "PT45S")
   })
-  
+
   it("handles unsupported units gracefully", {
     expect_error(
       convert_to_iso8601_duration(10, "unsupported"),
       "Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'."
     )
   })
-  
+
   it("handles edge cases for valid units", {
     expect_equal(convert_to_iso8601_duration(1, "y"), "P1Y")
     expect_equal(convert_to_iso8601_duration(2, "month"), "P2M")
     expect_equal(convert_to_iso8601_duration(3, "w"), "P3W")
   })
-  
+
   it("handles invalid input types", {
     expect_error(
       convert_to_iso8601_duration("five", "d"),

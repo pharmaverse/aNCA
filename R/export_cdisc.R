@@ -21,7 +21,7 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
-  
+
   # Define group columns in the data
   group_cols <- unique(
     unlist(
@@ -58,32 +58,32 @@ export_cdisc <- function(res_nca) {
 
   # define columns needed for adpp
   adpp_cols <- c("STUDYID",
-                "DOMAIN",
-                "USUBJID",
-                "PPSEQ",
-                "PPGRPID",
-                "PPSPID",
-                "PARAMCD",
-                "PARAM",
-                "PARAMCAT",
-                "PPSCAT",
-                "PPREASND",
-                "PPSPEC",
-                "PPDTC",
-                "PPSTINT",
-                "PPENINT",
-                "SUBJID",
-                "SITEID",
-                "SEX",
-                "RACE",
-                "ACTARM",
-                "AAGE",
-                "AAGEU",
-                "TRT01P",
-                "TRT01A",
-                "AVAL",
-                "AVALC",
-                "AVALU")
+                 "DOMAIN",
+                 "USUBJID",
+                 "PPSEQ",
+                 "PPGRPID",
+                 "PPSPID",
+                 "PARAMCD",
+                 "PARAM",
+                 "PARAMCAT",
+                 "PPSCAT",
+                 "PPREASND",
+                 "PPSPEC",
+                 "PPDTC",
+                 "PPSTINT",
+                 "PPENINT",
+                 "SUBJID",
+                 "SITEID",
+                 "SEX",
+                 "RACE",
+                 "ACTARM",
+                 "AAGE",
+                 "AAGEU",
+                 "TRT01P",
+                 "TRT01A",
+                 "AVAL",
+                 "AVALC",
+                 "AVALU")
 
   pp_info <- res_nca$result  %>%
     filter(is.infinite(end) | PPTESTCD == "auclast") %>%
@@ -169,11 +169,11 @@ export_cdisc <- function(res_nca) {
 
   adpp <- pp_info %>%
     # Rename/mutate variables from PP
-    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU, 
+    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST, PARAMCAT = PPCAT) %>%
     select(any_of(c(group_cols, adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
 
-  # Keep StudyID value to use for file naming 
+  # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
 
   return(list(pp = pp, adpp = adpp, studyid = studyid))
@@ -182,14 +182,14 @@ export_cdisc <- function(res_nca) {
 find_common_prefix <- function(strings) {
   # Sort the vector of strings
   first_last_str <- sort(strings)[c(1, length(sorted_strings))]
-  
+
   # Split the first and last elements into individual characters
   first_last_chars <- strsplit(sorted_strings, "")
-  
+
   # Extract the two character vectors
   first_chars <- first_last_chars[[1]]
   last_chars <- first_last_chars[[2]]
-  
+
   # Determine the length of the common prefix by comparing characters element-wise
   common_prefix_length <- 0
   for (i in seq_len(min(length(first_chars), length(last_chars)))) {
@@ -198,7 +198,7 @@ find_common_prefix <- function(strings) {
     }
     common_prefix_length <- i
   }
-  
+
   # Return the common prefix if it exists, otherwise return an empty character vector
   if (common_prefix_length == 0) {
     return(character(0))
