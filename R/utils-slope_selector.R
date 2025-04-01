@@ -83,7 +83,7 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 
   if (length(existing_index) != 1) {
     if (length(existing_index) > 1)
-      log_warn("More than one range for single patient, profile and rule type detected.")
+      warning("More than one range for single patient, profile and rule type detected.")
     return(rbind(existing, new))
   }
 

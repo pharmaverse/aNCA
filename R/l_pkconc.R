@@ -70,6 +70,7 @@
 #'   print(listing_ex)
 #'
 #' @import dplyr formatters rlistings
+#' @importFrom stats setNames
 #' @export
 #' @author Gerardo Rodriguez
 l_pkconc <- function(
