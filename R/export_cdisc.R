@@ -162,8 +162,9 @@ export_cdisc <- function(res_nca) {
       PPENINT = ifelse(startsWith(PPTESTCD, "AUCINT"),
                        NA,
                        convert_to_iso8601_duration(end, RRLTU)
-                       )
-    )  %>%
+                       ),
+      PPREASND = substr(exclude, 1, 200)
+    ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     # mutate(PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")) %>%
     group_by(USUBJID)  %>%
