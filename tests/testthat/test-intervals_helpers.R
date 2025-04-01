@@ -405,7 +405,7 @@ describe("interval_remove_impute", {
   })
 
   it("handles target_groups correctly", {
-    expected_result_analyte1 <- tibble::tibble(
+    expected_result_analyte1 <- data.frame(
       analyte = c("Analyte1", "Analyte1"),
       half.life = c(TRUE, TRUE),
       cmax = c(TRUE, TRUE),
@@ -414,7 +414,6 @@ describe("interval_remove_impute", {
 
     expected_result_analyte2 <- o_data$intervals[o_data$intervals$analyte == "Analyte2",
                                                  c("analyte", "half.life", "cmax", "impute")] |>
-      tibble::as_tibble() |>
       dplyr::arrange(analyte, cmax, half.life)
 
     result <- interval_remove_impute(o_data, target_impute = "start_conc0",
@@ -422,12 +421,10 @@ describe("interval_remove_impute", {
 
     result_analyte1 <- result$intervals[result$intervals$analyte == "Analyte1",
                                         c("analyte", "half.life", "cmax", "impute")] |>
-      tibble::as_tibble() |>
       dplyr::arrange(analyte, cmax, half.life)
 
     result_analyte2 <- result$intervals[result$intervals$analyte == "Analyte2",
                                         c("analyte", "half.life", "cmax", "impute")] |>
-      tibble::as_tibble() |>
       dplyr::arrange(analyte, cmax, half.life)
 
     expect_equal(result_analyte1, expected_result_analyte1)
@@ -436,7 +433,7 @@ describe("interval_remove_impute", {
 
 
   it("handles multiple target_params correctly", {
-    expected_result <- tibble::tibble(
+    expected_result <- data.frame(
       analyte = c("Analyte1", "Analyte2", "Analyte1"),
       half.life = c(TRUE, TRUE, TRUE),
       cmax = c(TRUE, TRUE, TRUE),
@@ -451,7 +448,6 @@ describe("interval_remove_impute", {
     )
 
     result_clean <- result$intervals[, c("analyte", "half.life", "cmax", "impute")] |>
-      tibble::as_tibble() |>
       dplyr::arrange(analyte, cmax, half.life)
 
     expect_equal(result_clean, expected_result)
