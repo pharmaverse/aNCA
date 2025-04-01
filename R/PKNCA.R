@@ -157,11 +157,12 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #'
 #' Step 3: Format intervals using `format_pkncadata_intervals()`
 #'
-#' Step 4: Apply filtering based on user selections
+#' Step 4: Apply filtering based on user selections and partial aucs
 #'
 #' Step 5: Impute start values if requested
 #'
 #' @param adnca_data A reactive PKNCAdata object
+#' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
 #' @param selected_dosno User selected dose numbers
@@ -178,6 +179,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
   adnca_data,
+  auc_data,
   method,
   selected_analytes,
   selected_dosno,
@@ -219,6 +221,29 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       DOSNO %in% selected_dosno,
       PCSPEC %in% selected_pcspec
     )
+  
+  # # Add partial AUCs if any
+  
+  auc_ranges <- auc_data %>%
+    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
+  
+  # Make a list of intervals from valid AUC ranges
+  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
+    data$intervals %>%
+      mutate(
+        start = start + start_auc,
+        end = start + (end_auc - start_auc),
+        across(where(is.logical), ~FALSE),
+        aucint.last = TRUE,
+        type_interval = "manual"
+      )
+  })
+  
+  data$intervals <- bind_rows(
+    data$intervals,
+    intervals_list
+  ) %>%
+    unique()
 
   data$impute <- NA
 

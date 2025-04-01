@@ -6,6 +6,7 @@
 \usage{
 PKNCA_update_data_object(
   adnca_data,
+  auc_data,
   method,
   selected_analytes,
   selected_dosno,
@@ -16,6 +17,8 @@ PKNCA_update_data_object(
 }
 \arguments{
 \item{adnca_data}{A reactive PKNCAdata object}
+
+\item{auc_data}{A data frame containing partial aucs added by user}
 
 \item{method}{NCA calculation method selection}
 
@@ -44,7 +47,7 @@ Step 2: Set \code{PKNCAoptions} for NCA calculation
 
 Step 3: Format intervals using \code{format_pkncadata_intervals()}
 
-Step 4: Apply filtering based on user selections
+Step 4: Apply filtering based on user selections and partial aucs
 
 Step 5: Impute start values if requested
 }
