@@ -155,8 +155,14 @@ export_cdisc <- function(res_nca) {
       # Matrix
       PPSPEC = PCSPEC,
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
-      PPSTINT = convert_to_iso8601_duration(start, RRLTU),
-      PPENINT = convert_to_iso8601_duration(end, RRLTU)
+      PPSTINT = ifelse(startsWith(PPTESTCD, "AUCINT"),
+                       NA,
+                       convert_to_iso8601_duration(start, RRLTU)
+                       ),
+      PPENINT = ifelse(startsWith(PPTESTCD, "AUCINT"),
+                       NA,
+                       convert_to_iso8601_duration(end, RRLTU)
+                       )
     )  %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     # mutate(PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")) %>%
