@@ -555,7 +555,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         should_impute_c0 = input$should_impute_c0
       )
       log_success("PKNCA data slopes object updated.")
-      
+
       # Add picker input if bioavailability calculations are possible
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show("bioavailability")
