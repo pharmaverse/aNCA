@@ -175,6 +175,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @importFrom dplyr filter mutate select
 #' @importFrom tidyr crossing
 #' @importFrom rlang sym
+#' @importFrom purrr pmap
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
