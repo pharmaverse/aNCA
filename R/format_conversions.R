@@ -38,7 +38,7 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #' @examples
 #' convert_to_iso8601_duration(200, "h") # Returns "PT200H"
 #' convert_to_iso8601_duration(5, "d")  # Returns "P5D"
-#' @export
+#' @import
 convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 
   # NA values remain NA
