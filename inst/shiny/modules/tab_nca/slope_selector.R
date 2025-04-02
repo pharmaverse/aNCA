@@ -106,8 +106,7 @@ slope_selector_ui <- function(id) {
 
 
 slope_selector_server <- function(
-  id, pknca_data, res_nca,
-  pk_nca_trigger, settings_upload
+  id, pknca_data, res_nca, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -280,7 +279,7 @@ slope_selector_server <- function(
     })
 
     slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data,
-                                               profiles_per_patient, slopes_groups, pk_nca_trigger)
+                                               profiles_per_patient, slopes_groups)
 
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
