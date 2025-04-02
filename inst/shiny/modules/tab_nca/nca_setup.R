@@ -529,8 +529,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
           session,
           inputId = "bioavailability",
           "Calculate Bioavailability:",
-          choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
-          selected = "f_aucinf.obs"
+          choices = c("f_AUCIFO", "f_AUCIFP", "f_AUCLST"),
+          selected = "f_AUCIFO"
         )
       }
 
