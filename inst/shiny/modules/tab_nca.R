@@ -189,7 +189,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     nca_results_server("nca_results",
                        processed_pknca_data,
-                       res_nca, rules(),
+                       res_nca, rules,
                        grouping_vars,
                        f_auc_options)
 

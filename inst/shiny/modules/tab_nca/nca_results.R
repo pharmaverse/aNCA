@@ -57,6 +57,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       final_results <- pivot_wider_pknca_results(results)
 
       # Apply flag rules
+      rules <- rules()
       for (param in names(rules)) {
         if (rules[[param]]$is.checked) {
           # Find the proper column/s that should be considered (in principle should be 1)
