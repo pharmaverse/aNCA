@@ -167,7 +167,6 @@ export_cdisc <- function(res_nca) {
       PPREASND = substr(exclude, 1, 200)
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
-    # mutate(PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")) %>%
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
@@ -187,30 +186,29 @@ export_cdisc <- function(res_nca) {
   list(pp = pp, adpp = adpp, studyid = studyid)
 }
 
-find_common_prefix <- function(strings) {
-  # Sort the vector of strings
-  first_last_str <- sort(strings)[c(1, length(sorted_strings))]
 
-  # Split the first and last elements into individual characters
-  first_last_chars <- strsplit(sorted_strings, "")
-
-  # Extract the two character vectors
-  first_chars <- first_last_chars[[1]]
-  last_chars <- first_last_chars[[2]]
-
-  # Determine the length of the common prefix by comparing characters element-wise
-  common_prefix_length <- 0
-  for (i in seq_len(min(length(first_chars), length(last_chars)))) {
-    if (first_chars[i] != last_chars[i]) {
-      break
-    }
-    common_prefix_length <- i
-  }
-
-  # Return the common prefix if it exists, otherwise return an empty character vector
-  if (common_prefix_length == 0) 
-    return(character(0))
+#' @title
+#' @description Function to identify the common prefix in a character vector.
+#' @details Assumes all characters share the same prefix for sure. .
+#' @noRd
+#' @examples
+#' # Example usage of the function (if applicable)
+#' # find_common_prefix(c("abc-100", "abc-102", "abc-103"))
+#' 
+#' @tests
+#' # Add test cases to validate the function's behavior
+#' # testthat::expect_equal(find_common_prefix(c("abcd", "abce")), "abc")
+#' # testthat::expect_equal(find_common_prefix(c("X01-111", "X01-222")), "X01")
+#' 
+.find_common_prefix <- function(strings) {
+  # Get the strings with the greatest prefix mismatch
+  diff_strings <- sort(strings)[c(1, length(strings))] %>%
+    # For the comparison make all have same number of letters
+    sapply(function(x) substr(x, 0, min(nchar(strings)))) %>%
+    # Separate the strings by letters
+    strsplit("")
   
-  substr(sorted_strings[1], 1, common_prefix_length)
-  }
+  # Get the common prefix by using the first letter mismatch between the two strings
+  first_mistmatch <- which(diff_strings[[1]] != diff_strings[[2]])[1]
+  substr(strings[1], 0, first_mistmatch - 1)
 }
