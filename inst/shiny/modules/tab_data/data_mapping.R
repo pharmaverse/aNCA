@@ -222,7 +222,7 @@ data_mapping_server <- function(id, adnca_data) {
       # Check for duplicate column selections
       all_selected_columns <- unlist(selected_cols)
       if (any(duplicated(all_selected_columns))) {
-        log_warn("Duplicate column selection detected.")
+        log_error("Duplicate column selection detected.")
         showNotification(
           ui = "Duplicate column selection detected. 
           Please ensure each selection is unique.",
@@ -239,7 +239,7 @@ data_mapping_server <- function(id, adnca_data) {
 
       # Check for unmapped columns
       if (any(unlist(selected_cols) == "")) {
-        log_warn("Unmapped columns detected.")
+        log_error("Unmapped columns detected.")
         showNotification(
           ui = "Some required columns are not mapped. Please complete all selections.",
           type = "error",
