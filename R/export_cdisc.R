@@ -103,11 +103,11 @@ export_cdisc <- function(res_nca) {
       PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
       DOMAIN = "PP",
       # Group ID
-      PPGRPID =  {
-        if ("PCGRPID" %in% names(.)) PCGRPID
-        else if ("AVISIT" %in% names(.)) paste0(ANALYTE, "-", DRUG, "-", PCSPEC, "-", AVISIT)
-        else paste0(DRUG, "-", PCSPEC, "-", DOSNO)
-      },
+      PPGRPID =  dplyr::case_when(
+        "PCGRPID" %in% names(.) ~ PCGRPID
+        "AVISIT" %in% names(.) ~ paste0(ANALYTE, "-", DRUG, "-", PCSPEC, "-", AVISIT)
+        .default ~ paste0(DRUG, "-", PCSPEC,"-", DOSNO)
+      ),
       # Parameter Category
       PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
       PPSCAT = "NON-COMPARTMENTAL",
@@ -184,7 +184,7 @@ export_cdisc <- function(res_nca) {
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
 
-  return(list(pp = pp, adpp = adpp, studyid = studyid))
+  list(pp = pp, adpp = adpp, studyid = studyid)
 }
 
 find_common_prefix <- function(strings) {
@@ -208,9 +208,9 @@ find_common_prefix <- function(strings) {
   }
 
   # Return the common prefix if it exists, otherwise return an empty character vector
-  if (common_prefix_length == 0) {
+  if (common_prefix_length == 0) 
     return(character(0))
-  } else {
-    return(substr(sorted_strings[1], 1, common_prefix_length))
+  
+  substr(sorted_strings[1], 1, common_prefix_length)
   }
 }
