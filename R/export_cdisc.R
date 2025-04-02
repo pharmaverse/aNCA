@@ -187,27 +187,27 @@ export_cdisc <- function(res_nca) {
 }
 
 
-#' @title
-#' @description Function to identify the common prefix in a character vector.
+#' Function to identify the common prefix in a character vector.
 #' @details Assumes all characters share the same prefix for sure. .
 #' @noRd
 #' @examples
 #' # Example usage of the function (if applicable)
 #' # find_common_prefix(c("abc-100", "abc-102", "abc-103"))
-#' 
+#'
+#' @param strings A character vector
 #' @tests
 #' # Add test cases to validate the function's behavior
 #' # testthat::expect_equal(find_common_prefix(c("abcd", "abce")), "abc")
-#' # testthat::expect_equal(find_common_prefix(c("X01-111", "X01-222")), "X01")
-#' 
-.find_common_prefix <- function(strings) {
+#' # testthat::expect_equal(find_common_prefix(c("X01-111", "X01-2222")), "X01-")
+#'
+find_common_prefix <- function(strings) {
   # Get the strings with the greatest prefix mismatch
   diff_strings <- sort(strings)[c(1, length(strings))] %>%
     # For the comparison make all have same number of letters
     sapply(function(x) substr(x, 0, min(nchar(strings)))) %>%
     # Separate the strings by letters
     strsplit("")
-  
+
   # Get the common prefix by using the first letter mismatch between the two strings
   first_mistmatch <- which(diff_strings[[1]] != diff_strings[[2]])[1]
   substr(strings[1], 0, first_mistmatch - 1)
