@@ -67,11 +67,13 @@ parameter_datasets_server <- function(id, res_nca) {
             ),
             list(
               extend = "csv",
-              title = paste0("ADPP_Dataset", CDISC()$studyid, "_", Sys.Date())
+              filename = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
             ),
             list(
               extend = "excel",
-              title = paste0("ADPP_Dataset", CDISC()$studyid, "_", Sys.Date())
+              title = NULL,
+              header = colnames(CDISC()$adpp),
+              filename = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
             )
           )
         )
