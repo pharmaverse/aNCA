@@ -73,7 +73,7 @@ describe(".filter_slopes", {
 
   it("should throw an error if reasons are missing", {
     selection <- data.frame(
-      TYPE = rep("Selection", 2),
+      TYPE = rep("Exclusion", 2),
       USUBJID = c(1, 3),
       DOSNO = c(1, 1),
       ANALYTE = c("A", "A"),
@@ -84,7 +84,7 @@ describe(".filter_slopes", {
 
     expect_error(
       filter_slopes(DATA_FIXTURE, selection, DOSNOS_FIXTURE, slope_groups, TRUE),
-      "^No reason provided for the following selections/exclusions*"
+      "^No reason provided for the following exclusions*"
     )
   })
 })

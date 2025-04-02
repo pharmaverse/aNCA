@@ -13,7 +13,7 @@
 #'
 #' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
 #'          columns modified in accordance to the provided slope filters.
-#' @importFrom dplyr filter group_by mutate
+#' @importFrom dplyr filter group_by mutate select
 #' @export
 filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = FALSE) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
@@ -24,12 +24,15 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
     return(data)
   }
 
-  if (check_reasons) {              # checks are nested, since single `if` statement with `&&` would
-    if (any(slopes$REASON == "")) { # trigger cyclomatic complexity lint for some reason
+  if (check_reasons) {
+    exclusions <- filter(slopes, TYPE == "Exclusion")
+
+    if (any(exclusions$REASON == "")) {
       stop(
-        "No reason provided for the following selections/exclusions:\n",
-        "PSCPES USUBJID ANALYTE DOSNO TYPE RANGE\n",
-        filter(slopes, REASON == "") %>%
+        "No reason provided for the following exclusions:\n",
+        "PCSPEC USUBJID ANALYTE DOSNO RANGE\n",
+        filter(exclusions, REASON == "") %>%
+          select(PCSPEC, USUBJID, ANALYTE, DOSNO, RANGE) %>%
           apply(1, \(x) paste0(x, collapse = " "))
       )
     }
