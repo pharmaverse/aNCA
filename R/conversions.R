@@ -34,7 +34,7 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #'
 #' @param value A numeric value representing the time/duration.
 #' @param unit A character string representing the unit of the time/duration.
-#' @return A character string representing the duration in ISO 8601 format.
+#' @returns A character string representing the duration in ISO 8601 format.
 #' @details
 #' It is a sensitive function that assumes that a valid time unit is given by the user.
 #' That means that if other units starting with 'y', 'm', 'w', 'd', 'h', or 's' are provided,
@@ -43,6 +43,7 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #' @examples
 #' convert_to_iso8601_duration(200, "h") # Returns "PT200H"
 #' convert_to_iso8601_duration(5, "d")  # Returns "P5D"
+#' @keywords internal
 convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 
   # NA values remain NA
