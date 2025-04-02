@@ -125,7 +125,7 @@ export_cdisc <- function(res_nca) {
           if ("STUDYID" %in% names(.)) stringr::str_remove(as.character(USUBJID),
                                                            paste0(as.character(STUDYID),
                                                                   "\\W?"))
-          else gsub(find_common_prefix(USUBJID), "", USUBJID)
+          else gsub(.find_common_prefix(USUBJID), "", USUBJID)
         }
       },
       # Parameter Variables
@@ -195,12 +195,7 @@ export_cdisc <- function(res_nca) {
 #' # find_common_prefix(c("abc-100", "abc-102", "abc-103"))
 #'
 #' @param strings A character vector
-#' @tests
-#' # Add test cases to validate the function's behavior
-#' # testthat::expect_equal(find_common_prefix(c("abcd", "abce")), "abc")
-#' # testthat::expect_equal(find_common_prefix(c("X01-111", "X01-2222")), "X01-")
-#'
-find_common_prefix <- function(strings) {
+.find_common_prefix <- function(strings) {
   # Get the strings with the greatest prefix mismatch
   diff_strings <- sort(strings)[c(1, length(strings))] %>%
     # For the comparison make all have same number of letters
