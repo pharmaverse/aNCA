@@ -105,8 +105,8 @@ export_cdisc <- function(res_nca) {
       # Group ID
       PPGRPID = {
         if ("PCGRPID" %in% names(.)) PCGRPID
-        else if ("AVISIT" %in% names(.)) paste0(ANALYTE, "-", DRUG, "-", PCSPEC, "-", AVISIT)
-        else paste0(DRUG, "-", PCSPEC, "-", DOSNO)
+        else if ("AVISIT" %in% names(.)) paste0(ANALYTE, DRUG, PCSPEC, AVISIT, collapse = "-")
+        else paste0(DRUG, PCSPEC, DOSNO, collapse = "-")
       },
       # Parameter Category
       PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
