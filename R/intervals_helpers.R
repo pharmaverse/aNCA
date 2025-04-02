@@ -204,8 +204,8 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   data <- data[!rows_no_params, , drop = FALSE]
 
   # Order the intervals by the index column and then remove it
+  rownames(data) <- NULL
   data <- data[order(data[[index_colname]]), ]
-  rownames(data) <- seq_len(nrow(data))
   data[, !names(data) %in% index_colname]
 }
 
@@ -282,8 +282,8 @@ interval_remove_impute.data.frame <- function(data,
   data <- data[!rows_no_params, , drop = FALSE]
 
   # Order the intervals by the index column and then remove it
+  rownames(data) <- NULL
   data <- data[order(data[[index_colname]]), ]
-  rownames(data) <- seq_len(nrow(data))
   data[, !names(data) %in% index_colname]
 }
 

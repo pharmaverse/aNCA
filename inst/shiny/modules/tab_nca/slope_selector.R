@@ -106,7 +106,7 @@ slope_selector_ui <- function(id) {
 
 
 slope_selector_server <- function(
-  id, mydata, res_nca,
+  id, pknca_data, res_nca,
   pk_nca_trigger, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
@@ -116,13 +116,13 @@ slope_selector_server <- function(
 
     #Get grouping columns for plots and tables
     slopes_groups <- reactive({
-      req(mydata())
+      req(pknca_data())
 
-      mydata()$conc$columns$groups %>%
+      pknca_data()$conc$columns$groups %>%
         purrr::list_c() %>%
         append("DOSNO") %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "DRUG" && length(unique(mydata()$conc$data[[col]])) > 1
+          !is.null(col) && col != "DRUG" && length(unique(pknca_data()$conc$data[[col]])) > 1
         })
     })
 
@@ -145,27 +145,21 @@ slope_selector_server <- function(
 
     # Generate dynamically the minimum results you need for the lambda plots
     lambdas_res <- reactive({
-      req(mydata())
-      if (!"type_interval" %in% names(mydata()$intervals)) {
+      req(pknca_data())
+      pknca_data <- pknca_data()
+
+      if (!"type_interval" %in% names(pknca_data$intervals)) {
         NULL
       } else {
-        mydata <- mydata()
         all_params <- names(PKNCA::get.interval.cols())
-
-        mydata$intervals <- mydata$intervals %>%
-          filter(type_interval == "main") %>%
-          # ToDo: For the newer version of PKNCA instead of ~FALSE this should be ~NA
-          mutate(across(setdiff(all_params, c("start", "end", "lambda.z.n.points",
-                                              "lambda.z.time.first", "r.squared",
-                                              "adj.r.squared", "cmax")), ~ FALSE))
-
-        result_obj <- PKNCA::pk.nca(mydata)
+        result_obj <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
 
         result_obj
       }
-    })
+    }) |>
+      bindEvent(pknca_data())
 
     # Profiles per Patient ----
     # Define the profiles per patient
@@ -175,7 +169,7 @@ slope_selector_server <- function(
       lambdas_res()$result %>%
         mutate(USUBJID = as.character(USUBJID),
                DOSNO = as.character(DOSNO)) %>%
-        group_by(!!!syms(unname(unlist(mydata()$conc$columns$groups)))) %>%
+        group_by(!!!syms(unname(unlist(lambdas_res()$data$conc$columns$groups)))) %>%
         summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
         unnest(DOSNO)  # Convert lists into individual rows
 
@@ -200,9 +194,9 @@ slope_selector_server <- function(
       }
 
       # create plot ids based on available data #
-      patient_profile_plot_ids <- mydata()$intervals %>%
-        select(any_of(c(unname(unlist(mydata()$dose$columns$groups)),
-                        unname(unlist(mydata()$conc$columns$groups)),
+      patient_profile_plot_ids <- pknca_data()$intervals %>%
+        select(any_of(c(unname(unlist(pknca_data()$dose$columns$groups)),
+                        unname(unlist(pknca_data()$conc$columns$groups)),
                         "DOSNO"))) %>%
         filter(USUBJID %in% search_patient) %>%
         select(slopes_groups(), USUBJID) %>%
@@ -238,6 +232,7 @@ slope_selector_server <- function(
             # nolint end
           )
       })
+
 
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
@@ -275,7 +270,6 @@ slope_selector_server <- function(
         profiles_per_patient()
       )
       log_trace("{id}: Rendering plots")
-
       # Update the patient search input to make available choices for the user
       updateSelectInput(
         session = session,
@@ -285,7 +279,7 @@ slope_selector_server <- function(
       )
     })
 
-    slopes_table <- manual_slopes_table_server("manual_slopes", mydata,
+    slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data,
                                                profiles_per_patient, slopes_groups, pk_nca_trigger)
 
     manual_slopes <- slopes_table$manual_slopes
@@ -295,8 +289,8 @@ slope_selector_server <- function(
     #' is already adjusted with the applied rules, so that the user can verify added selections
     #' and exclusions before applying them to the actual dataset.
     plot_data <- reactive({
-      req(mydata(), manual_slopes(), profiles_per_patient())
-      filter_slopes(mydata(), manual_slopes(), profiles_per_patient(), slopes_groups())
+      req(pknca_data(), manual_slopes(), profiles_per_patient())
+      filter_slopes(pknca_data(), manual_slopes(), profiles_per_patient(), slopes_groups())
     }) %>%
       shiny::debounce(750)
 
