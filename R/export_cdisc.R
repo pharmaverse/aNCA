@@ -103,11 +103,11 @@ export_cdisc <- function(res_nca) {
       PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
       DOMAIN = "PP",
       # Group ID
-      PPGRPID =  dplyr::case_when(
-        "PCGRPID" %in% names(.) ~ PCGRPID
-        "AVISIT" %in% names(.) ~ paste0(ANALYTE, "-", DRUG, "-", PCSPEC, "-", AVISIT)
-        .default ~ paste0(DRUG, "-", PCSPEC,"-", DOSNO)
-      ),
+      PPGRPID = {
+        if ("PCGRPID" %in% names(.)) PCGRPID
+        else if ("AVISIT" %in% names(.)) paste0(ANALYTE, "-", DRUG, "-", PCSPEC, "-", AVISIT)
+        else paste0(DRUG, "-", PCSPEC, "-", DOSNO)
+      },
       # Parameter Category
       PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
       PPSCAT = "NON-COMPARTMENTAL",
