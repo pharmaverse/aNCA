@@ -18,6 +18,7 @@
     "nom_dose_time", "nom_interval_next", "nom_interval_prev",
     "start", "start_dose", "time_dose", "type_interval", "var_name", "view",
     "zero_str", "PPTESTCD", "PPSTRESU", "PPTESTCD_unit", "Grouping_EX", "Route", "Dose",
-    "Grouping_IV", "AUC_IV", "Dose_IV", "AUC_EX", "Dose_EX", "pknca_cdisc_terms", "PPTESTCD_cdisc"
+    "Grouping_IV", "AUC_IV", "Dose_IV", "AUC_EX", "Dose_EX", "pknca_cdisc_terms", "PPTESTCD_cdisc",
+    "LAMZLL", "LAMZNPT", "LAMZ", "LAMZIX", "LAMZMTD", "end_auc", "start_auc"
   ))
 }
