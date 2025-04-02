@@ -223,12 +223,12 @@ data_mapping_server <- function(id, adnca_data) {
       all_selected_columns <- unlist(selected_cols)
       if (any(duplicated(all_selected_columns))) {
         log_warn("Duplicate column selection detected.")
-        showModal(modalDialog(
-          title = "Duplicate Column Selections",
-          "Please ensure that each column selection is unique.",
-          easyClose = TRUE,
-          footer = NULL
-        ))
+        showNotification(
+          ui = "⚠️ Duplicate column selection detected. 
+          Please ensure each selection is unique.",
+          type = "error",
+          duration = 5
+        )
         return()
       }
 
@@ -236,6 +236,17 @@ data_mapping_server <- function(id, adnca_data) {
       selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
         names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
       ]
+
+      # Check for unmapped columns
+      if (any(unlist(selected_cols) == "")) {
+        log_warn("Unmapped columns detected.")
+        showNotification(
+          ui = "⚠️ Some required columns are not mapped. Please complete all selections.",
+          type = "error",
+          duration = 5
+        )
+        return()
+      }
 
       # Rename columns
       colnames(dataset) <- sapply(colnames(dataset), function(col) {
