@@ -28,12 +28,13 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
     exclusions <- filter(slopes, TYPE == "Exclusion")
 
     if (any(exclusions$REASON == "")) {
+      missing_reasons <- filter(exclusions, REASON == "") %>%
+        select(PCSPEC, USUBJID, ANALYTE, DOSNO, RANGE) %>%
+        apply(1, \(x) paste0(x, collapse = " "))
+
       stop(
-        "No reason provided for the following exclusions:\n",
-        "PCSPEC USUBJID ANALYTE DOSNO RANGE\n",
-        filter(exclusions, REASON == "") %>%
-          select(PCSPEC, USUBJID, ANALYTE, DOSNO, RANGE) %>%
-          apply(1, \(x) paste0(x, collapse = " "))
+        "No reason provided for the following exclusions:\nPCSPEC USUBJID ANALYTE DOSNO RANGE\n",
+        missing_reasons
       )
     }
   }
