@@ -35,6 +35,11 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #' @param value A numeric value representing the time/duration.
 #' @param unit A character string representing the unit of the time/duration.
 #' @return A character string representing the duration in ISO 8601 format.
+#' @details
+#' It is a sensitive function that assumes that a valid time unit is given by the user.
+#' That means that if other units starting with 'y', 'm', 'w', 'd', 'h', or 's' are provided,
+#' it will make a naive guess that it refers to a time unit as year, month, week, day, hour, sec...
+#' 
 #' @examples
 #' convert_to_iso8601_duration(200, "h") # Returns "PT200H"
 #' convert_to_iso8601_duration(5, "d")  # Returns "P5D"
