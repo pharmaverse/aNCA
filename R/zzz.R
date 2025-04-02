@@ -19,6 +19,6 @@
     "start", "start_dose", "time_dose", "type_interval", "var_name", "view",
     "zero_str", "PPTESTCD", "PPSTRESU", "PPTESTCD_unit", "Grouping_EX", "Route", "Dose",
     "Grouping_IV", "AUC_IV", "Dose_IV", "AUC_EX", "Dose_EX", "pknca_cdisc_terms", "PPTESTCD_cdisc",
-    "REASON", "end_auc", "start_auc"
+    "REASON", "end_auc", "start_auc", "TYPE"
   ))
 }
