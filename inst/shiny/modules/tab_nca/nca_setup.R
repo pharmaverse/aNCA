@@ -28,7 +28,7 @@ nca_setup_ui <- function(id) {
           ),
           # Method, NCA parameters, and units table
           fluidRow(
-            column(3, selectInput(
+            column(4, selectInput(
               ns("method"),
               "Extrapolation Method:",
               choices = c(
@@ -36,37 +36,33 @@ nca_setup_ui <- function(id) {
               ),
               selected = "lin up/log down"
             )),
-            column(5, pickerInput(
-              inputId = ns("nca_params"),
-              label = "NCA parameters to calculate:",
-              choices = pull(pknca_cdisc_terms, PKNCA, input_names),
-              options = list(
-                `live-search` = TRUE,
-                `dropup-auto` = FALSE,
-                `size` = 10,
-                `noneSelectedText` = "No parameters selected",
-                `windowPadding` = 10,
-                `dropdownAlignRight` = TRUE
-              ),
-              multiple = TRUE,
-              selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
-                           "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
-                           "adj.r.squared", "lambda.z", "lambda.z.n.points",
-                           "cav", "cl.all", "cl.obs",
-                           "clast", "tlast")
-            )),
+            column(4, #pickerinput only enabled when IV and EX data present
+                   shinyjs::hidden(
+                     pickerInput(
+                       ns("bioavailability"),
+                       "Calculate Bioavailability:",
+                       choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+                       multiple = TRUE,
+                       selected = NULL
+                     )
+                   )),
             column(4, units_table_ui(ns("units_table")))
           ),
-          #pickerinput only enabled when IV and EX data present
-          shinyjs::hidden(
-            pickerInput(
-              ns("bioavailability"),
-              "Calculate Bioavailability:",
-              choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
-              multiple = TRUE,
-              selected = NULL
-            )
-          )
+        ),
+        accordion_panel(
+          title = "Parameter Selection",
+          selectizeInput(
+            inputId = ns("nca_params"),
+            label = "NCA parameters to calculate:",
+            choices = pull(pknca_cdisc_terms, PKNCA, input_names),
+            multiple = TRUE,
+            selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
+                         "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
+                         "adj.r.squared", "lambda.z", "lambda.z.n.points",
+                         "cav", "cl.all", "cl.obs",
+                         "clast", "tlast")
+          ),
+          reactableOutput(ns("nca_parameters"))
         ),
         accordion_panel(
           title = "Data Imputation",
@@ -426,6 +422,20 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       )
     }) %>%
       shiny::bindEvent(refresh_reactable())
+    
+    output$nca_parameters <- renderReactable({
+      reactable(
+        pknca_cdisc_terms %>%
+          select(PPTESTCD, PPTEST, type),
+        groupBy = "type",
+        pagination = FALSE,
+        filterable = TRUE,
+        compact = TRUE,
+        onClick = "select",
+        height = "49vh",
+        selection = "multiple"  # Enable multiple selection
+      )
+    })
 
     # Add a blank row on button click
     observeEvent(input$addRow, {
