@@ -17,6 +17,8 @@
     "log10_SE", "next_dose", "next_nom_dose",
     "nom_dose_time", "nom_interval_next", "nom_interval_prev",
     "start", "start_dose", "time_dose", "type_interval", "var_name", "view",
-    "zero_str", "PPTESTCD", "PPSTRESU", "PPTESTCD_unit", "PPTESTCD_cdisc", "pknca_cdisc_terms"
+    "zero_str", "PPTESTCD", "PPSTRESU", "PPTESTCD_unit", "Grouping_EX", "Route", "Dose",
+    "Grouping_IV", "AUC_IV", "Dose_IV", "AUC_EX", "Dose_EX", "pknca_cdisc_terms", "PPTESTCD_cdisc",
+    "end_auc", "start_auc"
   ))
 }
