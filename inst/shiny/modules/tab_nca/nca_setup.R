@@ -554,12 +554,21 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
       if (input$should_impute_c0) {
         processed_pknca_data <- create_start_impute(processed_pknca_data)
 
-        # Make sure observed parameters (cmax, tmax) are not imputed
+        # Make sure non-auc parameters are not imputed
         # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
+        auc_dep_params <- pknca_cdisc_terms %>%
+          filter(grepl("auc", PKNCA) | grepl("aumc", PKNCA) | grepl("auc", Depends)) %>%
+          pull(PKNCA)
+
+        not_imputable_params <- pknca_cdisc_terms %>%
+          filter(grepl("auc", PKNCA) | grepl("aumc", PKNCA)) %>%
+          filter(!str_detect(Depends, str_c(auc_dep_params, collapse = "|"))) %>%
+          pull(PKNCA)
+
         processed_pknca_data$intervals <- Reduce(function(data, ti_arg) {
           interval_remove_impute(data,
                                  target_impute = ti_arg,
-                                 target_params = c("cmax", "tmax"))
+                                 target_params = not_imputable_params)
         }, unique(processed_pknca_data$intervals$impute), init = processed_pknca_data$intervals)
       }
 
