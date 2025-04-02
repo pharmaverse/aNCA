@@ -118,15 +118,19 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
-      param_label_cols <- formatters::var_labels(final_results())
-      param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
-      remove_params <- setdiff(param_cols, input$params)
+      param_cols <- unique(res_nca()$result$PPTESTCD)
+      input_params <- sub(":.*", "", input$params)
       #identify parameters to be removed from final results
-      params_rem_cols <- param_label_cols[param_label_cols %in% remove_params] |>
-        names()
+      params_rem_cols <- setdiff(param_cols, input_params)
+      
+      col_names = names(final_results())
+      # Extract base names before the "[", or leave as-is if no "["
+      col_base_names <- ifelse(str_detect(col_names, "\\["),
+                               str_remove(col_names, "\\[.*"),
+                               col_names)
 
       final_results <- final_results() %>%
-        select(-(any_of(params_rem_cols)))
+        select(all_of(col_names[!(col_base_names %in% params_rem_cols)]))
 
       # Generate column definitions that can be hovered in the UI
       col_defs <- generate_col_defs(final_results)
