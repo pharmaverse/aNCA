@@ -147,7 +147,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
           res
         }, error = function(e) {
-          log_error("Error calculating NCA results:\n{e$message}")
+          log_error("Error calculating NCA results:\n{conditionMessage(e)}")
           showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
           return(NULL)
         })
@@ -200,29 +200,35 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 }
 
 #'
-#' Parses error from `aNCA::PKNCA_calculate_results()` into a html-formatted message ready
+#' Parses error from results calculation pipeline into a html-formatted message ready
 #' to be displayed in the interface.
 #'
 #' @param e Error object.
 #' @returns String with html-formatted error message.
 .parse_pknca_error <- function(e) {
-  if (grepl("pk.calc.", e$message)) {
-    param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", e$message)
-    html_error <- paste0(
+  msg <- conditionMessage(e)
+
+  if (grepl("pk.calc.", msg)) {
+    # Handle errors from PKNCA package.
+    param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", msg)
+    msg <- paste0(
       "Problem in calculation of NCA parameter: ",
       param_of_error,
-      "<br><br>", e$message,
+      "<br><br>", msg,
       "<br><br>If the error is unexpected, please report a bug."
     )
-  } else {
-    html_error <- gsub("\\\n", "<br>", e$message)
-  }
 
-  if (grepl("^No reason provided", html_error)) {
-    html_error <- paste(
-      html_error, "<br><br>Please provide the reason in Setup > Slope Selector tab."
+  } else if (grepl("^No reason provided", msg)) {
+    # Handle no reason provided erros from the calculation function.
+    msg <- paste(msg, "<br><br>Please provide the reason in Setup > Slope Selector tab.")
+
+  } else {
+    # Handle unknown error
+    msg <- paste0(
+      "Unknown error detected when calculating NCA results,",
+      " please inspect the logs and report a bug."
     )
   }
 
-  HTML(html_error)
+  HTML(gsub("\\\n", "<br>", msg))
 }
