@@ -203,7 +203,7 @@ format_pkncadata_intervals <- function(pknca_conc,
            else time_dose + !!sym("ARRLT")) %>%
     group_by(!!!syms(conc_groups)) %>%
     arrange(time_dose) %>%
-  
+
     # Make end based on next dose time (if no more, Inf)
     mutate(end = lead(as.numeric(time_dose), default = Inf)) %>%
     ungroup() %>%
@@ -219,7 +219,7 @@ format_pkncadata_intervals <- function(pknca_conc,
       attributes(column) <- NULL
       column
     })) %>%
-    
+
     # Set FALSE for aucint when end = Inf
     mutate(across(starts_with("aucint"), ~ if_else(end == Inf, FALSE, .))) %>%
     #TODO: once TAU is included in the app, add new line for aucint to be end = TAU
