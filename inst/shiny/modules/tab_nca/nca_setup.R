@@ -1,59 +1,62 @@
 nca_setup_ui <- function(id) {
   ns <- NS(id)
 
-  tagList(
-    # Local upload option
-    fluidRow(
+
+  navset_tab(
+    id = ns("setup_tabs"),
+    nav_panel(
+      "Setup",
+      # Local upload option
       fileInput(
         ns("settings_upload"),
         width = "60%",
         label = "Upload Settings",
         buttonLabel = list(icon("folder"), "Browse"),
         accept = c(".csv", ".xpt")
-      )
-    ),
-    accordion(
-      accordion_panel(
-        title = "General Settings",
-        # Selection of analyte, dose number and specimen
-        fluidRow(
-          column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = TRUE,
-                                choices = NULL)),
-          column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
-                                choices = NULL)),
-          column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
-                                choices = NULL))
-        ),
-        # Method, NCA parameters, and units table
-        fluidRow(
-          column(4, selectInput(
-            ns("method"),
-            "Extrapolation Method:",
-            choices = c(
-              "lin-log", "lin up/log down", "linear"
-            ),
-            selected = "lin up/log down"
-          )),
-          column(4, pickerInput(
-            inputId = ns("nca_params"),
-            label = "NCA parameters to calculate:",
-            choices = pull(pknca_cdisc_terms, PKNCA, input_names),
-            options = list(
-              `live-search` = TRUE,
-              `dropup-auto` = FALSE,
-              `size` = 10,
-              `noneSelectedText` = "No parameters selected",
-              `windowPadding` = 10,
-              `dropdownAlignRight` = TRUE
-            ),
-            multiple = TRUE,
-            selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
-                         "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
-                         "adj.r.squared", "lambda.z", "lambda.z.n.points",
-                         "cav", "cl.all", "cl.obs",
-                         "clast", "tlast")
-          )),
-          column(4, units_table_ui(ns("units_table"))),
+      ),
+      accordion(
+        accordion_panel(
+          title = "General Settings",
+          # Selection of analyte, dose number and specimen
+          fluidRow(
+            column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = TRUE,
+                                  choices = NULL)),
+            column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
+                                  choices = NULL)),
+            column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
+                                  choices = NULL))
+          ),
+          # Method, NCA parameters, and units table
+          fluidRow(
+            column(3, selectInput(
+              ns("method"),
+              "Extrapolation Method:",
+              choices = c(
+                "lin-log", "lin up/log down", "linear"
+              ),
+              selected = "lin up/log down"
+            )),
+            column(5, pickerInput(
+              inputId = ns("nca_params"),
+              label = "NCA parameters to calculate:",
+              choices = pull(pknca_cdisc_terms, PKNCA, input_names),
+              options = list(
+                `live-search` = TRUE,
+                `dropup-auto` = FALSE,
+                `size` = 10,
+                `noneSelectedText` = "No parameters selected",
+                `windowPadding` = 10,
+                `dropdownAlignRight` = TRUE
+              ),
+              multiple = TRUE,
+              selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
+                           "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
+                           "adj.r.squared", "lambda.z", "lambda.z.n.points",
+                           "cav", "cl.all", "cl.obs",
+                           "clast", "tlast")
+            )),
+            column(4, units_table_ui(ns("units_table")))
+          ),
           #pickerinput only enabled when IV and EX data present
           shinyjs::hidden(
             pickerInput(
@@ -63,131 +66,132 @@ nca_setup_ui <- function(id) {
               multiple = TRUE,
               selected = NULL
             )
-          ),
-        )
-      ),
-      accordion_panel(
-        title = "Data Imputation",
-        input_switch(
-          id = ns("should_impute_c0"),
-          label = "Impute Concentration",
-          value = TRUE
+          )
         ),
-        br(),
-        helpText(HTML(paste(
-          "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-          "- If DOSNO = 1 & IV bolus: C0 = 0",
-          "- If DOSNO > 1 & not IV bolus: C0 = predose",
-          "- If IV bolus & monoexponential data: logslope",
-          "- If IV bolus & not monoexponential data: C0 = C1",
-          sep = "<br>"
-        )))
-      ),
-      accordion_panel(
-        title = "Partial AUCs",
-        reactableOutput(ns("auc_table")),
-        actionButton(ns("addRow"), "Add Row")
-      ),
-      accordion_panel(
-        title = "Flag Rule Sets",
-        fluidRow(
-          column(
-            width = 6,
-            checkboxInput(ns("rule_adj_r_squared"), "RSQADJ:")
+        accordion_panel(
+          title = "Data Imputation",
+          input_switch(
+            id = ns("should_impute_c0"),
+            label = "Impute Concentration",
+            value = TRUE
           ),
-          column(
-            width = 6,
-            conditionalPanel(
-              condition = paste0("input['", ns("rule_adj_r_squared"), "'] == true"),
-              div(
-                class = "nca-numeric-container",
-                numericInput(
-                  ns("adj.r.squared_threshold"),
-                  "",
-                  value = 0.7,
-                  step = 0.05,
-                  min = 0,
-                  max = 1
+          br(),
+          helpText(HTML(paste(
+            "Imputes a start-of-interval concentration to calculate non-observational parameters:",
+            "- If DOSNO = 1 & IV bolus: C0 = 0",
+            "- If DOSNO > 1 & not IV bolus: C0 = predose",
+            "- If IV bolus & monoexponential data: logslope",
+            "- If IV bolus & not monoexponential data: C0 = C1",
+            sep = "<br>"
+          )))
+        ),
+        accordion_panel(
+          title = "Partial AUCs",
+          reactableOutput(ns("auc_table")),
+          actionButton(ns("addRow"), "Add Row")
+        ),
+        accordion_panel(
+          title = "Flag Rule Sets",
+          fluidRow(
+            column(
+              width = 6,
+              checkboxInput(ns("rule_adj_r_squared"), "RSQADJ:")
+            ),
+            column(
+              width = 6,
+              conditionalPanel(
+                condition = paste0("input['", ns("rule_adj_r_squared"), "'] == true"),
+                div(
+                  class = "nca-numeric-container",
+                  numericInput(
+                    ns("adj.r.squared_threshold"),
+                    "",
+                    value = 0.7,
+                    step = 0.05,
+                    min = 0,
+                    max = 1
+                  )
                 )
               )
             )
-          )
-        ),
-        fluidRow(
-          column(
-            width = 6,
-            checkboxInput(ns("rule_aucpext_obs"), "AUCPEO (% ext.observed): ")
           ),
-          column(
-            width = 6,
-            conditionalPanel(
-              condition = paste0("input['", ns("rule_aucpext_obs"), "'] == true"),
-              div(
-                class = "nca-numeric-container",
-                numericInput(
-                  ns("aucpext.obs_threshold"),
-                  "",
-                  value = 20,
-                  step = 1,
-                  min = 0,
-                  max = 100
+          fluidRow(
+            column(
+              width = 6,
+              checkboxInput(ns("rule_aucpext_obs"), "AUCPEO (% ext.observed): ")
+            ),
+            column(
+              width = 6,
+              conditionalPanel(
+                condition = paste0("input['", ns("rule_aucpext_obs"), "'] == true"),
+                div(
+                  class = "nca-numeric-container",
+                  numericInput(
+                    ns("aucpext.obs_threshold"),
+                    "",
+                    value = 20,
+                    step = 1,
+                    min = 0,
+                    max = 100
+                  )
                 )
               )
             )
-          )
-        ),
-        fluidRow(
-          column(
-            width = 6,
-            checkboxInput(ns("rule_aucpext_pred"), "AUCPEP (% ext.predicted): ")
           ),
-          column(
-            width = 6,
-            conditionalPanel(
-              condition = paste0("input['", ns("rule_aucpext_pred"), "'] == true"),
-              div(
-                class = "nca-numeric-container",
-                numericInput(
-                  ns("aucpext.pred_threshold"),
-                  "",
-                  value = 20,
-                  step = 5,
-                  min = 0,
-                  max = 100
+          fluidRow(
+            column(
+              width = 6,
+              checkboxInput(ns("rule_aucpext_pred"), "AUCPEP (% ext.predicted): ")
+            ),
+            column(
+              width = 6,
+              conditionalPanel(
+                condition = paste0("input['", ns("rule_aucpext_pred"), "'] == true"),
+                div(
+                  class = "nca-numeric-container",
+                  numericInput(
+                    ns("aucpext.pred_threshold"),
+                    "",
+                    value = 20,
+                    step = 5,
+                    min = 0,
+                    max = 100
+                  )
                 )
               )
             )
-          )
-        ),
-        fluidRow(
-          column(
-            width = 6,
-            checkboxInput(ns("rule_span_ratio"), "SPAN: ")
           ),
-          column(
-            width = 6,
-            conditionalPanel(
-              condition = paste0("input['", ns("rule_span_ratio"), "'] == true"),
-              div(
-                class = "nca-numeric-container",
-                numericInput(
-                  ns("span.ratio_threshold"),
-                  "",
-                  value = 2,
-                  step = 1,
-                  min = 0
+          fluidRow(
+            column(
+              width = 6,
+              checkboxInput(ns("rule_span_ratio"), "SPAN: ")
+            ),
+            column(
+              width = 6,
+              conditionalPanel(
+                condition = paste0("input['", ns("rule_span_ratio"), "'] == true"),
+                div(
+                  class = "nca-numeric-container",
+                  numericInput(
+                    ns("span.ratio_threshold"),
+                    "",
+                    value = 2,
+                    step = 1,
+                    min = 0
+                  )
                 )
               )
             )
-          )
+          ),
         ),
-      ),
-      id = "acc",
-      open = "General Settings"
+        id = "acc",
+        open = "General Settings"
+      )
     ),
-
-    h4("View of NCA settings"),
-    reactableOutput(ns("nca_intervals"))
+    nav_panel(
+      "Summary",
+      reactableOutput(ns("nca_intervals"))
+    )
   )
 }
 
@@ -195,19 +199,19 @@ nca_setup_ui <- function(id) {
 #'
 #' This module handles the server-side logic for the NCA settings, including file uploads,
 #' analyte/dose/specimen selection, AUC intervals, NCA parameters and their unit specifications.
-#' Then it integrates them to mydata and updates the object.
+#' Then it integrates them to adnca_data and updates the object.
 #'
 #' - id The module's ID.
 #' - data A reactive expression containing the read and mapped data from the app.
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
-#' - mydata A reactive expression of the PKNCAdata object, containing data and NCA specifications.
-#'
-nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / needs further modularization
+#' - adnca_data A reactive expression of the PKNCAdata object,
+#'  which contains data and NCA specifications.
+nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity / needs further modularization
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    conc_data <- reactive(mydata()$conc$data)
+    conc_data <- reactive(adnca_data()$conc$data)
 
     # File Upload Handling
     observeEvent(input$settings_upload, {
@@ -460,21 +464,62 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
                                      selected = nca_params)
                  })
 
-
-    # NCA settings dynamic changes
-    processed_pknca_data <- eventReactive(list(
-      input$method, input$nca_params, input$should_impute_c0,
-      input$select_analyte, input$select_dosno, input$select_pcspec,
-      mydata(), session$userData$units_table(), auc_data()
-    ), {
-      req(mydata())
-      req(
-        input$method, input$nca_params, input$select_analyte,
-        input$select_dosno, input$select_pcspec, auc_data()
+    # Create trigger for modifications to the user setup
+    # Debounce trigger signal
+    setup_trigger <- debounce(reactive({
+      paste(
+        adnca_data(),
+        auc_data(),
+        input$method,
+        input$nca_params,
+        input$should_impute_c0,
+        input$select_analyte,
+        input$select_dosno,
+        input$select_pcspec
       )
+    }), millis = 2500)
 
-      # Load mydata reactive and modify it accordingly to user's request
-      processed_pknca_data <- mydata()
+    # Create version for slope plots
+    # Only parameters required for the slope plots are set in intervals
+    # NCA dynamic changes/filters based on user selections
+    slopes_pknca_data <- eventReactive(setup_trigger(), {
+      log_trace("Updating PKNCA::data object for slopes.")
+      req(adnca_data(), input$method, input$select_analyte,
+          input$select_dosno, input$select_pcspec)
+      slopes_pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        auc_data = auc_data(),
+        method = input$method,
+        selected_analytes = input$select_analyte,
+        selected_dosno = input$select_dosno,
+        selected_pcspec = input$select_pcspec,
+        params = c("lambda.z.n.points", "lambda.z.time.first",
+                   "r.squared", "adj.r.squared", "cmax"),
+        should_impute_c0 = input$should_impute_c0
+      )
+      log_success("PKNCA data slopes object created.")
+
+      slopes_pknca_data
+    })
+
+    # Create version for NCA results
+    # NCA dynamic changes/filters based on user selections
+    processed_pknca_data <- eventReactive(setup_trigger(), {
+      log_trace("Updating PKNCA::data object.")
+      req(adnca_data(), input$method, input$select_analyte,
+          input$select_dosno, input$select_pcspec, auc_data())
+
+      processed_pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        auc_data = auc_data(),
+        method = input$method,
+        selected_analytes = input$select_analyte,
+        selected_dosno = input$select_dosno,
+        selected_pcspec = input$select_pcspec,
+        params = input$nca_params,
+        should_impute_c0 = input$should_impute_c0
+      )
+      log_success("PKNCA data object updated.")
 
       # Add picker input if bioavailability calculations are possible
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
@@ -484,102 +529,16 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
           session,
           inputId = "bioavailability",
           "Calculate Bioavailability:",
-          choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
-          selected = "f_aucinf.obs"
+          choices = c("f_AUCIFO", "f_AUCIFP", "f_AUCLST"),
+          selected = "f_AUCIFO"
         )
       }
 
-      analyte_column <- processed_pknca_data$conc$columns$groups$group_analyte
-      unique_analytes <- unique(processed_pknca_data$conc$data[[analyte_column]])
-
-      if (!is.null(session$userData$units_table())) {
-        processed_pknca_data$units <- session$userData$units_table()
-      }
-      processed_pknca_data$units <- processed_pknca_data$units %>%
-        select(-!!sym(analyte_column)) %>%
-        tidyr::crossing(!!sym(analyte_column) := unique_analytes)  %>%
-        mutate(PPSTRESU = PPORRESU, conversion_factor = 1)  %>%
-        filter(ANALYTE %in% input$select_analyte)
-
-      processed_pknca_data$options <- list(
-        auc.method = input$method,
-        keep_interval_cols = c("DOSNO", "type_interval"),
-        # Make sure the standard options do not prohibit results
-        min.hl.r.squared = 0.01
-      )
-
-      # Include main intervals as specified by the user
-      intervals <- format_pkncadata_intervals(
-        pknca_conc = processed_pknca_data$conc,
-        pknca_dose = processed_pknca_data$dose,
-        # Compute only parameters specified
-        params = input$nca_params,
-        # Start at t0 when requested by the user
-        start_from_last_dose = input$should_impute_c0
-      )
-
-      # Collect non-NA min/max values from reactable
-      auc_ranges <- auc_data() %>%
-        filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
-
-      # Make a list of intervals from valid AUC ranges
-      intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
-        intervals %>%
-          mutate(
-            start = start + start_auc,
-            end = start + (end_auc - start_auc),
-            across(where(is.logical), ~FALSE),
-            aucint.last = TRUE,
-            type_interval = "manual"
-          )
-      })
-
-      # Join custom AUC partial intervals specified by the user
-
-      processed_pknca_data$intervals <- bind_rows(
-        intervals,
-        intervals_list
-      ) %>%
-        unique()
-
-      processed_pknca_data$impute <- NA_character_
-
-      # Filter only the analytes and doses requested for intervals and units
-      processed_pknca_data$intervals <- processed_pknca_data$intervals %>%
-        dplyr::filter(DOSNO %in% input$select_dosno,
-                      ANALYTE %in% input$select_analyte,
-                      PCSPEC %in% input$select_pcspec)
-
-      # Define start imputations on intervals if specified by the user
-      if (input$should_impute_c0) {
-        processed_pknca_data <- create_start_impute(processed_pknca_data)
-
-        # Make sure non-auc parameters are not imputed
-        # ToDo: It would make sense to vectorize the fun so target_impute accepts a vector
-        auc_dep_params <- pknca_cdisc_terms %>%
-          filter(grepl("auc", PKNCA) | grepl("aumc", PKNCA) | grepl("auc", Depends)) %>%
-          pull(PKNCA)
-
-        not_imputable_params <- pknca_cdisc_terms %>%
-          filter(!grepl("auc", PKNCA),
-                 !grepl("aumc", PKNCA),
-                 !grepl(paste0(auc_dep_params, collapse = "|"), Depends)) %>%
-          pull(PKNCA) |>
-          intersect(names(PKNCA::get.interval.cols()))
-
-        processed_pknca_data$intervals <- Reduce(function(data, ti_arg) {
-          interval_remove_impute(data,
-                                 target_impute = ti_arg,
-                                 target_params = not_imputable_params)
-        }, unique(processed_pknca_data$intervals$impute), init = processed_pknca_data$intervals)
-      }
-
-      # If the user filtered all intervals or there are not left, show a notification
       if (nrow(processed_pknca_data$intervals) == 0) {
-        showNotification(paste0("All intervals have been filtered. Please reconsider ",
-                                "populating the last input modified or report a bug"),
-                         duration = 20,
-                         type = "warning")
+        showNotification(
+          "All intervals were filtered. Please revise your settings.",
+          type = "warning", duration = 10
+        )
       }
 
       processed_pknca_data
@@ -624,6 +583,7 @@ nca_setup_server <- function(id, data, mydata) { # nolint : TODO: complexity / n
 
     list(
       processed_pknca_data = processed_pknca_data,
+      slopes_pknca_data = slopes_pknca_data,
       rules = reactive(list(
         adj.r.squared = list(
           is.checked = input$rule_adj_r_squared,
