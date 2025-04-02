@@ -268,7 +268,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       interval_remove_impute(
         d,
         target_impute = ti_arg,
-        target_params = c("cmax", "tmax")
+        target_params = params_not_to_impute
       )
     }, unique(data$intervals$impute), init = data$intervals)
   }
