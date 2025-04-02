@@ -92,24 +92,24 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     #' NCA Setup module
     nca_setup <- nca_setup_server("nca_setup", adnca_data, pknca_data)
+
+
     processed_pknca_data <- nca_setup$processed_pknca_data
+    slopes_pknca_data <- nca_setup$slopes_pknca_data
     rules <- nca_setup$rules
     f_auc_options <- nca_setup$bioavailability
 
     #' Slope rules setup module
     slope_rules <- slope_selector_server(
       "slope_selector",
-      processed_pknca_data,
+      slopes_pknca_data,
       res_nca,
-      pk_nca_trigger,
       reactive(input$settings_upload)
     )
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
 
     #' Triggers NCA analysis, creating res_nca reactive
-    pk_nca_trigger <- reactiveVal(0)
-    observeEvent(input$nca, pk_nca_trigger(pk_nca_trigger() + 1))
     res_nca <- reactive({
       req(processed_pknca_data())
 
@@ -121,7 +121,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             filter_slopes(
               slope_rules$manual_slopes(),
               slope_rules$profiles_per_patient(),
-              slope_rules$slopes_groups()
+              slope_rules$slopes_groups(),
+              check_reasons = TRUE
             ) %>%
             PKNCA_calculate_nca() %>%
             # Apply standard CDISC names
@@ -149,20 +150,13 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
           res
         }, error = function(e) {
-          # TODO: this does not catch errors properly sometimes
-          full_error <- e$parent$message
-          if (grepl("pk.calc.", x = full_error)) {
-            param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", full_error)
-            full_error <- paste0("Problem in calculation of NCA parameter: ", param_of_error,
-                                 "<br><br>", full_error)
-          }
-          modified_error <- gsub("Please report a bug.\n:", "", x = full_error, fixed = TRUE) %>%
-            paste0("<br><br>If the error is unexpected, please report a bug.")
-          showNotification(HTML(modified_error), type = "error", duration = NULL)
+          log_error("Error calculating NCA results:\n{conditionMessage(e)}")
+          showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
+          return(NULL)
         })
       })
     }) |>
-      bindEvent(pk_nca_trigger())
+      bindEvent(input$nca)
 
     #' Show slopes results
     output$slope_results <- DT::renderDataTable({
@@ -206,4 +200,38 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     # return results for use in other modules
     res_nca
   })
+}
+
+#'
+#' Parses error from results calculation pipeline into a html-formatted message ready
+#' to be displayed in the interface.
+#'
+#' @param e Error object.
+#' @returns String with html-formatted error message.
+.parse_pknca_error <- function(e) {
+  msg <- conditionMessage(e)
+
+  if (grepl("pk.calc.", msg)) {
+    # Handle errors from PKNCA package.
+    param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", msg)
+    msg <- paste0(
+      "Problem in calculation of NCA parameter: ",
+      param_of_error,
+      "<br><br>", msg,
+      "<br><br>If the error is unexpected, please report a bug."
+    )
+
+  } else if (grepl("^No reason provided", msg)) {
+    # Handle no reason provided erros from the calculation function.
+    msg <- paste(msg, "<br><br>Please provide the reason in Setup > Slope Selector tab.")
+
+  } else {
+    # Handle unknown error
+    msg <- paste0(
+      "Unknown error detected when calculating NCA results,",
+      " please inspect the logs and report a bug."
+    )
+  }
+
+  HTML(gsub("\\\n", "<br>", msg))
 }

@@ -51,7 +51,7 @@ jobs:
       - name: Run Staged dependencies
         uses: insightsengineering/staged-dependencies-action@v1
         with:
-          run-system-dependencies: false
+          run-system-dependencies: true
           renv-restore: false
           enable-check: false
           direction: upstream
