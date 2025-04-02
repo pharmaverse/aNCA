@@ -147,19 +147,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
           res
         }, error = function(e) {
-          if (grepl("pk.calc.", e$message)) {
-            param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", e$message)
-            html_error <- paste0(
-              "Problem in calculation of NCA parameter: ",
-              param_of_error,
-              "<br><br>", e$message,
-              "<br><br>If the error is unexpected, please report a bug."
-            )
-          } else {
-            html_error <- gsub("\\\n", "<br>", e$message)
-          }
           log_error("Error calculating NCA results:\n{e$message}")
-          showNotification(HTML(html_error), type = "error", duration = NULL)
+          showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
           return(NULL)
         })
       })
@@ -208,4 +197,32 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     # return results for use in other modules
     res_nca
   })
+}
+
+#'
+#' Parses error from `aNCA::PKNCA_calculate_results()` into a html-formatted message ready
+#' to be displayed in the interface.
+#'
+#' @param e Error object.
+#' @returns String with html-formatted error message.
+.parse_pknca_error <- function(e) {
+  if (grepl("pk.calc.", e$message)) {
+    param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", e$message)
+    html_error <- paste0(
+      "Problem in calculation of NCA parameter: ",
+      param_of_error,
+      "<br><br>", e$message,
+      "<br><br>If the error is unexpected, please report a bug."
+    )
+  } else {
+    html_error <- gsub("\\\n", "<br>", e$message)
+  }
+
+  if (grepl("^No reason provided", html_error)) {
+    html_error <- paste(
+      html_error, "<br><br>Please provide the reason in Setup > Slope Selector tab."
+    )
+  }
+
+  HTML(html_error)
 }
