@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9041</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9042</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filter_slopes</span><span class="op">(</span><span class="va">data</span>, <span class="va">slopes</span>, <span class="va">profiles</span>, <span class="va">slope_groups</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filter_slopes</span><span class="op">(</span><span class="va">data</span>, <span class="va">slopes</span>, <span class="va">profiles</span>, <span class="va">slope_groups</span>, check_reasons <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,6 +73,11 @@
 
 <dt id="arg-slope-groups">slope_groups<a class="anchor" aria-label="anchor" href="#arg-slope-groups"></a></dt>
 <dd><p>List with column names that define the groups.</p></dd>
+
+
+<dt id="arg-check-reasons">check_reasons<a class="anchor" aria-label="anchor" href="#arg-check-reasons"></a></dt>
+<dd><p>Whether to check if all selections have REASONS stated. If this is <code>TRUE</code>
+and not all selections have a reason provided, an error will be thrown.</p></dd>
 
 </dl></div>
     <div class="section level2">
