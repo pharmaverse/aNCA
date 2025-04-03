@@ -16,7 +16,7 @@
 #' \itemize{
 #'   \item A horizontal rule (`<hr>`).
 #'   \item A dropdown menu for selecting a column from the dataset.
-#'   \item A dropdown menu for selecting a condition (e.g., `==`, `>`, `<`, `>=`, `<=`).
+#'   \item A dropdown menu for selecting a condition (e.g., `==`, `>`, `<`, `>=`, `<=`, `!=`).
 #'   \item A text input for specifying the filter value.
 #'   \item A remove button to remove the filter.
 #' }
@@ -37,7 +37,7 @@ input_filter_ui <- function(id, cols) {
     selectizeInput(
       ns("condition"),
       "",
-      choices = c("==", ">", "<", ">=", "<="),
+      choices = c("==", ">", "<", ">=", "<=", "!="),
       width = "5em",
       options = list(dropdownParent = "body")
     ),
