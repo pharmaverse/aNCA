@@ -178,7 +178,7 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, adnca_data, on_submit) {
+data_mapping_server <- function(id, adnca_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -203,11 +203,6 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
       log_info("Processing data mapping...")
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
 
-      # Enable other tabs
-      purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
-        shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
-      })
-
       dataset <- adnca_data()
 
       # Get the selected columns
@@ -228,13 +223,13 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
       # Check for duplicate column selections
       all_selected_columns <- unlist(selected_cols)
       if (any(duplicated(all_selected_columns))) {
-        log_warn("Duplicate column selection detected.")
-        showModal(modalDialog(
-          title = "Duplicate Column Selections",
-          "Please ensure that each column selection is unique.",
-          easyClose = TRUE,
-          footer = NULL
-        ))
+        log_error("Duplicate column selection detected.")
+        showNotification(
+          ui = "Duplicate column selection detected. 
+          Please ensure each selection is unique.",
+          type = "error",
+          duration = 5
+        )
         return()
       }
 
@@ -242,6 +237,17 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
       selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
         names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
       ]
+
+      # Check for unmapped columns
+      if (any(unlist(selected_cols) == "")) {
+        log_error("Unmapped columns detected.")
+        showNotification(
+          ui = "Some required columns are not mapped. Please complete all selections.",
+          type = "error",
+          duration = 5
+        )
+        return()
+      }
 
       # Rename columns
       colnames(dataset) <- sapply(colnames(dataset), function(col) {
@@ -275,9 +281,6 @@ data_mapping_server <- function(id, adnca_data, on_submit) {
 
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
-
-      # Execute the callback function to change the tab
-      on_submit()
 
       dataset
     }) |>

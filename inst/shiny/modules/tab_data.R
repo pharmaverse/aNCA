@@ -51,12 +51,15 @@ tab_data_server <- function(id) {
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
-      adnca_data = adnca_filtered,
-      on_submit = \() updateTabsetPanel(session, "data_navset", selected = "Review Data")
+      adnca_data = adnca_filtered
     )
 
     #' Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data
+    observeEvent(processed_data(), {
+      req(processed_data())
+      updateTabsetPanel(session, "data_navset", selected = "Review Data")
+    })
 
     #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables

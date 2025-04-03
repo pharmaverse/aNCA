@@ -48,7 +48,6 @@
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import nestcolor
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
@@ -139,7 +138,6 @@ general_lineplot <- function(
     caption = NULL,
     add_baseline_hline = FALSE,
     yvar_baseline = "AVAL",
-    ggtheme = nestcolor::theme_nest(),
     col = NULL
   ) +
     labs(color = paste(colorby_var, collapse = ", "))

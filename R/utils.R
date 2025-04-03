@@ -24,6 +24,8 @@
 #' @param range_vector numeric vector with numbers to compress into string
 #' @returns simplest possible character string representing provided vector
 #'
+#' @importFrom methods is
+#'
 #' @examples
 #' \dontrun{
 #' # Basic usage
@@ -57,6 +59,8 @@
 #' @param message A character string specifying the text to display in the center of the empty plot.
 #'                Defaults to `"No data available"`.
 #'
+#' @importFrom plotly plot_ly
+#'
 #' @returns A Plotly object representing an empty plot with hidden axes.
 .plotly_empty_plot <- function(message = "No data available") {
   plot_ly() %>%
@@ -74,4 +78,32 @@
         yref = "paper"
       )
     )
+}
+
+#' Parses annotations in the context of data. Special characters and syntax are substituted by
+#' actual data and/or substituted for format that is better parsed via rendering functions
+#' (e.g. plotly).
+#'
+#' @details
+#' * `\n` character is substituted for `<br>` tag in order to add new lines in rendered image.
+#' * `$COLNAME` is parsed to provide unique data value from the mentioned column.
+#' * `!COLNAME` is parsed to provide `label` attribute for a given column name.
+#' If any values are missing from the provided data, they are substituted for `ERR` string.
+#'
+#' @param data Data frame containing data to reference. Should include columns and labels referenced
+#'             in the text string. Referenced variables should be able to produce single unique
+#'             result.
+#' @param text Character text to parse.
+#' @returns Parsed annotation text.
+#'
+#' @importFrom magrittr `%>%`
+#' @importFrom stringr str_glue
+#'
+#' @export
+parse_annotation <- function(data, text) {
+  text %>%
+    gsub("\n", "<br>", .) %>%
+    gsub("\\$(\\w+)", "{unique(data[['\\1']])}", .) %>%
+    gsub("!(\\w+)", "{attr(data[['\\1']], 'label')}", .) %>%
+    str_glue(.na = "ERR", .null = "ERR")
 }
