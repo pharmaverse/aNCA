@@ -130,6 +130,7 @@
     "type_interval",
     "var_name",
     "view",
+    "VISIT",
     "zero_str"
   ))
 }
