@@ -254,12 +254,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
     # Don't impute parameters that are not AUC dependent
     params_auc_dep <- pknca_cdisc_terms %>%
-      filter(grepl("auc", PKNCA) | grepl("aumc", PKNCA) | grepl("auc", Depends)) %>%
+      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
       pull(PKNCA)
 
     params_not_to_impute <- pknca_cdisc_terms %>%
-      filter(!grepl("auc", PKNCA),
-             !grepl("aumc", PKNCA),
+      filter(!grepl("auc|aumc", PKNCA),
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
       pull(PKNCA) |>
       intersect(names(PKNCA::get.interval.cols()))
