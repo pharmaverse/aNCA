@@ -1,7 +1,4 @@
-#' @importFrom utils globalVariables
 .onLoad <- function(libname, pkgname) {
-  # Implemented to remedy global binding issues with non-standard evaluation (e.g. in dplyr) while
-  # running R CMD check.
   utils::globalVariables(c(
     ".",
     ":=",
@@ -19,6 +16,8 @@
     "Count.total",
     "DOSEA",
     "DOSNO",
+    "Dataset",
+    "Depends",
     "Dose",
     "Dose_EX",
     "Dose_IV",
@@ -52,8 +51,10 @@
     "PCRFDTC",
     "PCRFTDTM",
     "PCSEQ",
+    "PCSPEC",
     "PCSPID",
     "PCSPEC",
+    "PKNCA",
     "PKNCA_cdisc_terms",
     "PPORRES",
     "PPORRESU",
