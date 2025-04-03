@@ -89,6 +89,7 @@ describe("PKNCA_create_data_object", {
 })
 
 
+
 # Test PKNCA_update_data_object
 describe("PKNCA_update_data_object", {
 
@@ -231,10 +232,39 @@ describe("PKNCA_calculate_nca", {
     expect_true("start_dose" %in% colnames(nca_results$result))
     expect_true("end_dose" %in% colnames(nca_results$result))
 
-    #check that only two items have been added to list
+    # Check that only two items have been added to the list
     expect_equal(length(colnames(nca_results$result)), 15)
   })
 
+  it("handles warning levels correctly", {
+    
+    # Modify the data to eliminate points needed for half life
+    modified_data <- simple_data[1, ] # Remove one time point
+    modified_data$AVAL <- NA
+    pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
+    pknca_data_modified$intervals$half.life <- TRUE
+
+
+    # Check warning_level = all produces all warnings from pk.nca
+    all_warnings <- capture_warnings(
+      PKNCA_calculate_nca(pknca_data_modified, warning_level = "all")
+    )
+    expect_true(any(grepl("All concentration data are missing", all_warnings)))
+    expect_true(any(grepl("Too few points for half-life calculation", all_warnings)))
+
+    # Check warning_level = partial restricts some data related warnings
+    partial_warnings <- capture_warnings(
+      PKNCA_calculate_nca(pknca_data_modified, warning_level = "partial")
+    )
+    expect_true(any(grepl("All concentration data are missing", partial_warnings)))
+    expect_false(any(grepl("Too few points for half-life calculation", partial_warnings)))
+
+    # Check warning_level = none removes all warnings from pk.nca
+    none_warnings <- capture_warnings(
+      PKNCA_calculate_nca(pknca_data_modified, warning_level = "none")
+    )
+    expect_true(length(none_warnings) == 0)
+  })
 })
 
 describe("PKNCA_impute_method_start_logslope", {
