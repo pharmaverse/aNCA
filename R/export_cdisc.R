@@ -104,8 +104,7 @@ export_cdisc <- function(res_nca) {
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("PCGRPID" %in% names(.)) PCGRPID
-        else if ("AVISIT" %in% names(.)) paste(ANALYTE, PCSPEC, AVISIT, sep = "-")
+        if ("AVISIT" %in% names(.)) paste(ANALYTE, PCSPEC, AVISIT, sep = "-")
         else if ("VISIT" %in% names(.)) paste(ANALYTE, PCSPEC, VISIT, sep = "-")
         else paste(ANALYTE, PCSPEC, DOSNO, sep = "-")
       },
