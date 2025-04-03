@@ -23,7 +23,7 @@ create_start_impute <- function(mydata) {
   # Define column names
   conc_column <- mydata$conc$columns$conc
   time_column <- mydata$conc$columns$time
-  analyte_column <- mydata$conc$columns$groups$group_analyte
+  param_column <- mydata$conc$columns$groups$group_param
   route_column <- mydata$dose$columns$route
   duration_column <- mydata$dose$columns$duration
   drug_column <- "DRUG"
@@ -50,13 +50,13 @@ create_start_impute <- function(mydata) {
 
   # Define dosing drug as analyte if not present
   if (!drug_column %in% colnames(mydata_with_int)) {
-    if (analyte_column %in% colnames(mydata_with_int)) {
-      drug_column <- analyte_column
+    if (param_column %in% colnames(mydata_with_int)) {
+      drug_column <- param_column
     } else {
       mydata_with_int <- mutate(mydata_with_int,
                                 PARAM = "A")
-      analyte_column <- "PARAM"
-      drug_column <- analyte_column
+      param_column <- "PARAM"
+      drug_column <- param_column
     }
   }
 
