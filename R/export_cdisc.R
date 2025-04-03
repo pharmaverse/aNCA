@@ -64,7 +64,7 @@ export_cdisc <- function(res_nca) {
                  "PPSPID",
                  "PARAMCD",
                  "PARAM",
-                 "PARAMCAT",
+                 "PPCAT",
                  "PPSCAT",
                  "PPREASND",
                  "PPSPEC",
@@ -114,11 +114,7 @@ export_cdisc <- function(res_nca) {
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
       # Specific ID variables
-      PPSPID = {
-        if ("PCSPID" %in% names(.)) PCSPID
-        else if ("EXSPID" %in% names(.)) EXSPID
-        else NA
-      },
+      PPSPID = PPSPID = paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA"),
       SUBJID = {
         if ("SUBJID" %in% names(.)) SUBJID
         else if ("USUBJID" %in% names(.)) {
