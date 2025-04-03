@@ -224,7 +224,7 @@ describe("interval_add_impute", {
     result <- interval_add_impute(o_data, target_impute = "new_impute", target_param = "cmax")
     expected_result <- data.frame(
       param = c("Analyte1", "Analyte1", "Analyte2",
-                  "Analyte2", "Analyte1", "Analyte1"),
+                "Analyte2", "Analyte1", "Analyte1"),
       half.life = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
       cmax = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),
       impute = c("start_conc0,start_predose",
