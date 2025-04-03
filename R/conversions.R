@@ -41,8 +41,8 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 #' it will make a naive guess that it refers to a time unit as year, month, week, day, hour, sec...
 #'
 #' @examples
-#' convert_to_iso8601_duration(200, "h") # Returns "PT200H"
-#' convert_to_iso8601_duration(5, "d")  # Returns "P5D"
+#' aNCA:::convert_to_iso8601_duration(200, "h") # Returns "PT200H"
+#' aNCA:::convert_to_iso8601_duration(5, "d")  # Returns "P5D"
 #' @keywords internal
 convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 
