@@ -216,7 +216,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected = param_choices_colorby[length(param_choices_colorby)]
       )
 
-      # Update the analytemean select input
+      # Update the analyte mean select input
       analyte_choices <- data() %>%
         pull(PARAM) %>%
         unique()

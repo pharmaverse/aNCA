@@ -141,7 +141,7 @@ data_mapping_ui <- function(id) {
       ),
       tags$section(
         h5("Sample Variables"),
-        .column_mapping_widget(ns, "PARAM", "Character format. Same as ANALYTE."),
+        .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
         .column_mapping_widget(ns, "PCSPEC", "Character format"),
         .column_mapping_widget(ns, "AVAL", "Numeric format.")
       ),

@@ -76,7 +76,7 @@ describe(".filter_slopes", {
       TYPE = rep("Exclusion", 2),
       USUBJID = c(1, 3),
       DOSNO = c(1, 1),
-      ANALYTE = c("A", "A"),
+      PARAM = c("A", "A"),
       PCSPEC = c(1, 1),
       RANGE = c("1:3", "2:4"),
       REASON = ""

@@ -49,7 +49,7 @@ download_settings_server <- function(id, pknca_data, res_nca) {
         # Include the rule settings as additional columns
         setts <- setts_lambda %>%
           mutate(
-            ANALYTE %in% input$select_analyte,
+            PARAM %in% input$select_analyte,
             doses_selected = ifelse(
               !is.null(input$select_dosno),
               paste0(input$select_dosno, collapse = ","),
