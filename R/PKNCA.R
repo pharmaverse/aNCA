@@ -252,11 +252,22 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   if (should_impute_c0) {
     data <- create_start_impute(data)
 
+    # Don't impute parameters that are not AUC dependent
+    params_auc_dep <- pknca_cdisc_terms %>%
+      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
+      pull(PKNCA)
+
+    params_not_to_impute <- pknca_cdisc_terms %>%
+      filter(!grepl("auc|aumc", PKNCA),
+             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
+      pull(PKNCA) |>
+      intersect(names(PKNCA::get.interval.cols()))
+
     data$intervals <- Reduce(function(d, ti_arg) {
       interval_remove_impute(
         d,
         target_impute = ti_arg,
-        target_params = c("cmax", "tmax")
+        target_params = params_not_to_impute
       )
     }, unique(data$intervals$impute), init = data$intervals)
   }
