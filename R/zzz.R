@@ -1,7 +1,4 @@
-#' @importFrom utils globalVariables
 .onLoad <- function(libname, pkgname) {
-  # Implemented to remedy global binding issues with non-standard evaluation (e.g. in dplyr) while
-  # running R CMD check.
   utils::globalVariables(c(
     ".",
     ":=",
@@ -59,6 +56,7 @@
     "PPTESTCD_cdisc",
     "PPTESTCD_unit",
     "RANGE",
+    "REASON",
     "Ratio",
     "Ratio_Type",
     "Route",
@@ -74,6 +72,7 @@
     "Spec2_Value",
     "STUDYID",
     "TIME",
+    "TYPE",
     "Unit",
     "USUBJID",
     "Value",
