@@ -237,13 +237,12 @@ describe("PKNCA_calculate_nca", {
   })
 
   it("handles warning levels correctly", {
-    
+
     # Modify the data to eliminate points needed for half life
     modified_data <- simple_data[1, ] # Remove one time point
     modified_data$AVAL <- NA
     pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
     pknca_data_modified$intervals$half.life <- TRUE
-
 
     # Check warning_level = all produces all warnings from pk.nca
     all_warnings <- capture_warnings(
@@ -264,6 +263,10 @@ describe("PKNCA_calculate_nca", {
       PKNCA_calculate_nca(pknca_data_modified, warning_level = "none")
     )
     expect_true(length(none_warnings) == 0)
+
+    # Check warning_level with a non-accepted value
+    expect_error(PKNCA_calculate_nca(pknca_data_modified, warning_level = "fake-example"),
+                 "Invalid `warning_level` = fake-example. Options: 'all', 'partial', 'none'")
   })
 })
 

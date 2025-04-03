@@ -283,6 +283,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' with the start and end times for each dose, from first and most recent dose.
 #'
 #' @param pknca_data Data object created using PKNCA::PKNCAdata() function.
+#' @param warning_level Character string with three possible values
 #'
 #' @returns Results object with start and end times for each dose, from first dose
 #' and from most recent dose
@@ -315,7 +316,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'
 #' @export
 PKNCA_calculate_nca <- function(pknca_data, warning_level = "partial") { # nolint: object_name_linter
-  warning_level <- match.arg(warning_level)
 
   # Calculate results with appropriate warning handling
   if (warning_level == "all") {
@@ -332,12 +332,21 @@ PKNCA_calculate_nca <- function(pknca_data, warning_level = "partial") { # nolin
     )
   } else if (warning_level == "none") {
     results <- suppressWarnings(PKNCA::pk.nca(data = pknca_data, verbose = FALSE))
+  } else {
+    stop(paste0("Invalid `warning_level` = ",
+                warning_level,
+                ". Options: 'all', 'partial', 'none'"))
   }
 
   # Process results
+  dose_data_info <- select(pknca_data$dose$data,
+                           -exclude,
+                           -pknca_data$conc$columns$groups$group_analyte)
+
   results$result <- results$result %>%
     inner_join(
-      select(pknca_data$dose$data, -exclude, -pknca_data$conc$columns$groups$group_analyte)
+      dose_data_info,
+      by = intersect(names(.), names(dose_data_info))
     ) %>%
     mutate(
       start_dose = start - !!sym(results$data$dose$columns$time),
