@@ -201,8 +201,8 @@ find_common_prefix <- function(strings) {
     # For the comparison make all have same number of letters
     sapply(\(x) substr(x, 0, min(nchar(.)))) %>%
     strsplit("")
-  
+
   mismatch <- letters[[1]] != letters[[2]]
-  
+
   substr(strings[[1]], 0, which(mismatch)[1] - 1)
 }
