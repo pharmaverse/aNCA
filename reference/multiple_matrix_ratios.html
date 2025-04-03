@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9046</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9047</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,7 @@
 <span>  <span class="va">matrix_col</span>,</span>
 <span>  <span class="va">conc_col</span>,</span>
 <span>  <span class="va">units_col</span>,</span>
-<span>  groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TIME"</span>, <span class="st">"USUBJID"</span><span class="op">)</span>,</span>
+<span>  groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NFRLT"</span>, <span class="st">"USUBJID"</span><span class="op">)</span>,</span>
 <span>  <span class="va">spec1</span>,</span>
 <span>  <span class="va">spec2</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -83,7 +83,7 @@
 
 <dt id="arg-groups">groups<a class="anchor" aria-label="anchor" href="#arg-groups"></a></dt>
 <dd><p>A character vector of grouping variables to use for the analysis.
-Must include TIME, USUBJID, and optionally, other grouping variables.</p></dd>
+Must include time column, USUBJID, and optionally, other grouping variables.</p></dd>
 
 
 <dt id="arg-spec-">spec1<a class="anchor" aria-label="anchor" href="#arg-spec-"></a></dt>
@@ -105,20 +105,20 @@ the second specimen type(s) in the matrix_col.</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>USUBJID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"A"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>TIME <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>NFRLT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>MATRIX <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"BLOOD"</span>, <span class="st">"BLOOD"</span>, <span class="st">"BLOOD"</span>, <span class="st">"PLASMA"</span>, <span class="st">"PLASMA"</span>, <span class="st">"PLASMA"</span>,</span></span>
 <span class="r-in"><span>           <span class="st">"BRAIN"</span>, <span class="st">"BRAIN"</span>, <span class="st">"BRAIN"</span>, <span class="st">"LIVER"</span>, <span class="st">"LIVER"</span>, <span class="st">"LIVER"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>CONC <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">15</span>, <span class="fl">25</span>, <span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">8</span>, <span class="fl">12</span>, <span class="fl">18</span>, <span class="fl">16</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>UNITS <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"ng/mL"</span>, <span class="fl">12</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">multiple_matrix_ratios</span><span class="op">(</span><span class="va">data</span>, <span class="st">"MATRIX"</span>, <span class="st">"CONC"</span>, <span class="st">"UNITS"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TIME"</span>, <span class="st">"USUBJID"</span><span class="op">)</span>, <span class="st">"BLOOD"</span>, <span class="st">"PLASMA"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 7</span></span>
+<span class="r-in"><span><span class="fu">multiple_matrix_ratios</span><span class="op">(</span><span class="va">data</span>, <span class="st">"MATRIX"</span>, <span class="st">"CONC"</span>, <span class="st">"UNITS"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NFRLT"</span>, <span class="st">"USUBJID"</span><span class="op">)</span>, <span class="st">"BLOOD"</span>, <span class="st">"PLASMA"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 8</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Rowwise: </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    TIME USUBJID Ratio_Type   Spec1_Value Spec2_Value Ratio Unit    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494;">[1]</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>     0 A       BLOOD/PLASMA          10          25 0.4   unitless</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>     1 A       BLOOD/PLASMA          20          30 0.667 unitless</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>     2 A       BLOOD/PLASMA          15          40 0.375 unitless</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   NFRLT USUBJID Ratio_Type Spec1_Value Spec1_Units Spec2_Value Spec2_Units Ratio</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>     0 A       BLOOD/PLA…          10 ng/mL                25 ng/mL       0.4  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>     1 A       BLOOD/PLA…          20 ng/mL                30 ng/mL       0.667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>     2 A       BLOOD/PLA…          15 ng/mL                40 ng/mL       0.375</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
