@@ -15,7 +15,7 @@ MANUAL_UNITS <- list(
 MAPPING_COLUMN_GROUPS <- list(
   "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DOSETRT", "DOSNO", "DOSEA", "ADOSEDUR"),
+  "Dose Variables" = c("DRUG", "DOSNO", "DOSEA", "ADOSEDUR"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
   "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
 )
@@ -23,7 +23,7 @@ MAPPING_COLUMN_GROUPS <- list(
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "DOSNO", "ADOSEDUR"
+  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "DOSNO", "ADOSEDUR"
 )
 
 #' Column Mapping Widget
@@ -141,13 +141,13 @@ data_mapping_ui <- function(id) {
       ),
       tags$section(
         h5("Sample Variables"),
-        .column_mapping_widget(ns, "PARAM", "Character format"),
+        .column_mapping_widget(ns, "PARAM", "Character format. Same as ANALYTE."),
         .column_mapping_widget(ns, "PCSPEC", "Character format"),
         .column_mapping_widget(ns, "AVAL", "Numeric format.")
       ),
       tags$section(
         h5("Dose Variables"),
-        .column_mapping_widget(ns, "DOSETRT", "Character format."),
+        .column_mapping_widget(ns, "DRUG", "Character format."),
         .column_mapping_widget(ns, "DOSNO", "Numeric format."),
         .column_mapping_widget(
           ns, "ROUTE",

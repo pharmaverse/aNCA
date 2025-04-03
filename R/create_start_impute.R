@@ -26,7 +26,7 @@ create_start_impute <- function(mydata) {
   analyte_column <- mydata$conc$columns$groups$group_analyte
   route_column <- mydata$dose$columns$route
   duration_column <- mydata$dose$columns$duration
-  drug_column <- "DOSETRT"
+  drug_column <- "DRUG"
   conc_group_columns <- unname(unlist(mydata$conc$columns$groups))
   dose_group_columns <- unname(unlist(mydata$dose$columns$groups))
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
@@ -44,7 +44,7 @@ create_start_impute <- function(mydata) {
       select(any_of(c(conc_group_columns, conc_column, time_column))),
     y = mydata$dose$data %>%
       select(any_of(c(dose_group_columns, route_column,
-                      duration_column, "DOSNO", "DOSETRT")))
+                      duration_column, "DOSNO", "DRUG")))
   ) %>%
     merge(mydata$intervals)
 
