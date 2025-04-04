@@ -285,7 +285,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' with the start and end times for each dose, from first and most recent dose.
 #'
 #' @param pknca_data Data object created using PKNCA::PKNCAdata() function.
-#' @param warning_level Character string with three possible values
 #'
 #' @returns Results object with start and end times for each dose, from first dose
 #' and from most recent dose
