@@ -47,7 +47,8 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
     semi_join(
-      profiles
+      profiles,
+      by = c("PCSPEC", "USUBJID", "PARAM", "DOSNO")
     ) %>%
     filter(all(!is.na(sapply(RANGE, .eval_range))))
 
