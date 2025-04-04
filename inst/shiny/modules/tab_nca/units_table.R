@@ -216,7 +216,7 @@ units_table_server <- function(id, mydata) {
 
       log_trace("Applying custom units specification.")
       modal_units_table() %>%
-        rename(ANALYTE = `Analytes`,
+        rename(PARAM = `Analytes`,
                PPTESTCD = `Parameter`,
                PPORRESU = `Default unit`,
                PPSTRESU = `Custom unit`,
@@ -231,7 +231,7 @@ units_table_server <- function(id, mydata) {
     observeEvent(session$userData$units_table(), {
       session$userData$units_table() %>%
         rename(
-          `Analytes` = ANALYTE,
+          `Analytes` = PARAM,
           `Parameter` = PPTESTCD,
           `Default unit` = PPORRESU,
           `Custom unit` = PPSTRESU,
