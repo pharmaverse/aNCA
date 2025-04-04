@@ -95,9 +95,9 @@ export_cdisc <- function(res_nca) {
       PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
       DOMAIN = "PP",
       # Group ID
-      PPGRPID =  paste(ANALYTE, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
+      PPGRPID =  paste(PARAM, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
       # Parameter Category
-      PPCAT = if ("PARAM" %in% names(.)) PARAM else ANALYTE,
+      PPCAT = PARAM,
       PPSCAT = "NON-COMPARTMENTAL",
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
