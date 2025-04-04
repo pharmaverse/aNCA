@@ -4,7 +4,7 @@
 \alias{PKNCA_calculate_nca}
 \title{Calculates results for PKNCA analysis.}
 \usage{
-PKNCA_calculate_nca(pknca_data, warning_level = "partial")
+PKNCA_calculate_nca(pknca_data)
 }
 \arguments{
 \item{pknca_data}{Data object created using PKNCA::PKNCAdata() function.}

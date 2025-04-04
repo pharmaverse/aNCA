@@ -123,7 +123,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               slope_rules$slopes_groups(),
               check_reasons = TRUE
             ) %>%
-            PKNCA_calculate_nca(warning_level = "partial") %>%
+            PKNCA_calculate_nca() %>%
             # Apply standard CDISC names
             mutate(
               PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")

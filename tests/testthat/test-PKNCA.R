@@ -243,30 +243,6 @@ describe("PKNCA_calculate_nca", {
     modified_data$AVAL <- NA
     pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
     pknca_data_modified$intervals$half.life <- TRUE
-
-    # Check warning_level = all produces all warnings from pk.nca
-    all_warnings <- capture_warnings(
-      PKNCA_calculate_nca(pknca_data_modified, warning_level = "all")
-    )
-    expect_true(any(grepl("All concentration data are missing", all_warnings)))
-    expect_true(any(grepl("Too few points for half-life calculation", all_warnings)))
-
-    # Check warning_level = partial restricts some data related warnings
-    partial_warnings <- capture_warnings(
-      PKNCA_calculate_nca(pknca_data_modified, warning_level = "partial")
-    )
-    expect_true(any(grepl("All concentration data are missing", partial_warnings)))
-    expect_false(any(grepl("Too few points for half-life calculation", partial_warnings)))
-
-    # Check warning_level = none removes all warnings from pk.nca
-    none_warnings <- capture_warnings(
-      PKNCA_calculate_nca(pknca_data_modified, warning_level = "none")
-    )
-    expect_true(length(none_warnings) == 0)
-
-    # Check warning_level with a non-accepted value
-    expect_error(PKNCA_calculate_nca(pknca_data_modified, warning_level = "fake-example"),
-                 "Invalid `warning_level` = fake-example. Options: 'all', 'partial', 'none'")
   })
 })
 

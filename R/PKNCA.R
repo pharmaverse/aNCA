@@ -317,30 +317,12 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' nca_results <- PKNCA_calculate_nca(pknca_data)
 #'
 #' @export
-PKNCA_calculate_nca <- function(pknca_data, warning_level = "partial") { # nolint: object_name_linter
+PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 
-  # Calculate results with appropriate warning handling
-  if (warning_level == "all") {
-    results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
-  } else if (warning_level == "partial") {
-    results <- withCallingHandlers(
-      PKNCA::pk.nca(data = pknca_data, verbose = FALSE),
-      warning = function(w) {
-        if (grepl("No intervals for data$", conditionMessage(w)) ||
-              grepl("^Too few points for half-life", conditionMessage(w))) {
-          invokeRestart("muffleWarning")
-        }
-      }
-    )
-  } else if (warning_level == "none") {
-    results <- suppressWarnings(PKNCA::pk.nca(data = pknca_data, verbose = FALSE))
-  } else {
-    stop(paste0("Invalid `warning_level` = ",
-                warning_level,
-                ". Options: 'all', 'partial', 'none'"))
-  }
+  # Calculate results using PKNCA
+  results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
-  # Process results
+  # Process results including dose information
   dose_data_info <- select(pknca_data$dose$data,
                            -exclude,
                            -pknca_data$conc$columns$groups$group_analyte)
