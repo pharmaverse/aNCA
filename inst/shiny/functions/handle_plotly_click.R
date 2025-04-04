@@ -55,7 +55,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, c
         dynamic_values,
         TYPE = if (idx_pnt != updated_click_data$idx_pnt) "Selection" else "Exclusion",
         RANGE = paste0(updated_click_data$idx_pnt, ":", idx_pnt),
-        REASON = "[Graphical selection: Please add reason]"
+        REASON = ""
       ),
       as.character  # Convert everything to character
     ),

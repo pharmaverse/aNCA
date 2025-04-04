@@ -106,8 +106,7 @@ slope_selector_ui <- function(id) {
 
 
 slope_selector_server <- function(
-  id, pknca_data, res_nca,
-  pk_nca_trigger, settings_upload
+  id, pknca_data, res_nca, settings_upload
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -280,7 +279,7 @@ slope_selector_server <- function(
     })
 
     slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data,
-                                               profiles_per_patient, slopes_groups, pk_nca_trigger)
+                                               profiles_per_patient, slopes_groups)
 
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
@@ -330,11 +329,11 @@ slope_selector_server <- function(
       #' modularized and improved further.
       setts <- read.csv(settings_upload()$datapath)
       imported_slopes <- setts %>%
-        select(TYPE, USUBJID, ANALYTE, PCSPEC, DOSNO, IX, REASON) %>%
+        select(TYPE, USUBJID, PARAM, PCSPEC, DOSNO, IX, REASON) %>%
         mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
-        group_by(TYPE, PATIENT, ANALYTE, PCSPEC, PROFILE, REASON) %>%
+        group_by(TYPE, PATIENT, PARAM, PCSPEC, PROFILE, REASON) %>%
         summarise(RANGE = .compress_range(IX), .groups = "keep") %>%
-        select(TYPE, PATIENT, ANALYTE, PCSPEC, PROFILE, RANGE, REASON) %>%
+        select(TYPE, PATIENT, PARAM, PCSPEC, PROFILE, RANGE, REASON) %>%
         na.omit()
 
       manual_slopes(imported_slopes)
