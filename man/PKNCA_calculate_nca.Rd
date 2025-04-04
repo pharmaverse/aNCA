@@ -8,8 +8,6 @@ PKNCA_calculate_nca(pknca_data)
 }
 \arguments{
 \item{pknca_data}{Data object created using PKNCA::PKNCAdata() function.}
-
-\item{warning_level}{Character string with three possible values}
 }
 \value{
 Results object with start and end times for each dose, from first dose
