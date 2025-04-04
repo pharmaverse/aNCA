@@ -168,13 +168,13 @@ export_cdisc <- function(res_nca) {
     ungroup()
 
   # select pp columns
-  pp <- pp_info %>%  select(all_of(pp_cols))
+  pp <- pp_info %>% select(all_of(pp_cols))
 
   adpp <- pp_info %>%
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
-           PARAMCD = PPTESTCD, PARAM = PPTEST, PARAMCAT = PPCAT) %>%
-    select(any_of(c(group_cols, adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
+           PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
+    select(any_of(c(adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
 
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
