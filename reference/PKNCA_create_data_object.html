@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9047</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9048</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,7 @@ It requires the following columns in the ADNCA data:</p><ul><li><p>STUDYID: Stud
 <li><p>DRUG: Drug identifier.</p></li>
 <li><p>USUBJID: Unique subject identifier.</p></li>
 <li><p>DOSNO: Dose profile number.</p></li>
-<li><p>ANALYTE: Analyte.</p></li>
+<li><p>PARAM: Analyte.</p></li>
 <li><p>AVAL: Analysis value.</p></li>
 <li><p>AVALU: AVAL unit.</p></li>
 <li><p>DOSEA: Dose amount.</p></li>
@@ -87,7 +87,7 @@ It requires the following columns in the ADNCA data:</p><ul><li><p>STUDYID: Stud
 </ul><ol><li><p>Creating pk concentration data using <code><a href="format_pkncaconc_data.html">format_pkncaconc_data()</a></code>.</p></li>
 <li><p>Creating dosing data using <code><a href="format_pkncadose_data.html">format_pkncadose_data()</a></code>.</p></li>
 <li><p>Creating <code>PKNCAconc</code> object using <code><a href="http://billdenney.github.io/pknca/reference/PKNCAconc.html" class="external-link">PKNCA::PKNCAconc()</a></code>.
-with formula <code>AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE</code>.</p></li>
+with formula <code>AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM</code>.</p></li>
 <li><p>Creating PKNCAdose object using <code><a href="http://billdenney.github.io/pknca/reference/PKNCAdose.html" class="external-link">PKNCA::PKNCAdose()</a></code>.
 with formula <code>DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID</code>.</p></li>
 <li><p>Creating PKNCAdata object using <code><a href="http://billdenney.github.io/pknca/reference/PKNCAdata.html" class="external-link">PKNCA::PKNCAdata()</a></code>.</p></li>
@@ -103,7 +103,7 @@ with formula <code>DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID</code>.</p><
 <span class="r-in"><span>DRUG <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"DrugA"</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>USUBJID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"SUBJ001"</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>DOSNO <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>ANALYTE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"AnalyteA"</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>PARAM <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"AnalyteA"</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>AVAL <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">7</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>AVALU <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"ng/mL"</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>DOSEA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">6</span><span class="op">)</span>,</span></span>
@@ -116,14 +116,14 @@ with formula <code>DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID</code>.</p><
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">PKNCA_create_data_object</span><span class="op">(</span><span class="va">adnca_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Formula for concentration:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID/ANALYTE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x556310effac0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID/PARAM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55c2d8bb5890&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data are dense PK.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With 1 subjects defined in the 'USUBJID' column.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data for concentration:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   STUDYID PCSPEC ROUTE  DRUG USUBJID DOSNO  ANALYTE AVAL AVALU DOSEA DOSEU</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   STUDYID PCSPEC ROUTE  DRUG USUBJID DOSNO    PARAM AVAL AVALU DOSEA DOSEU</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001     1 AnalyteA    0 ng/mL   100    mg</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001     1 AnalyteA    5 ng/mL   100    mg</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001     1 AnalyteA   10 ng/mL   100    mg</span>
@@ -156,7 +156,7 @@ with formula <code>DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID</code>.</p><
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data for dosing:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   STUDYID PCSPEC ROUTE  DRUG USUBJID DOSNO  ANALYTE AVAL AVALU DOSEA DOSEU</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   STUDYID PCSPEC ROUTE  DRUG USUBJID DOSNO    PARAM AVAL AVALU DOSEA DOSEU</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001     1 AnalyteA    0 ng/mL   100    mg</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0     0     0      0.5  hour</span>

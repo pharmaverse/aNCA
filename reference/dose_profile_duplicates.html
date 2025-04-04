@@ -11,7 +11,7 @@ analyses where dosing intervals and concentration values need to be aligned for 
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9047</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9048</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ analyses where dosing intervals and concentration values need to be aligned for 
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dose_profile_duplicates</span><span class="op">(</span></span>
 <span>  <span class="va">conc_data</span>,</span>
-<span>  groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"DOSNO"</span>, <span class="st">"ANALYTE"</span><span class="op">)</span>,</span>
+<span>  groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"DOSNO"</span>, <span class="st">"PARAM"</span><span class="op">)</span>,</span>
 <span>  dosno <span class="op">=</span> <span class="st">"DOSNO"</span>,</span>
 <span>  arrlt <span class="op">=</span> <span class="st">"ARRLT"</span>,</span>
 <span>  afrlt <span class="op">=</span> <span class="st">"AFRLT"</span>,</span>
@@ -77,7 +77,7 @@ analyses where dosing intervals and concentration values need to be aligned for 
 
 <dt id="arg-groups">groups<a class="anchor" aria-label="anchor" href="#arg-groups"></a></dt>
 <dd><p>A character vector of column names to use for grouping
-(e.g., c("USUBJID", "ANALYTE", "DOSNO")).</p></dd>
+(e.g., c("USUBJID", "PARAM", "DOSNO")).</p></dd>
 
 
 <dt id="arg-dosno">dosno<a class="anchor" aria-label="anchor" href="#arg-dosno"></a></dt>
