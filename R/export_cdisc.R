@@ -22,8 +22,17 @@
 #' @export
 export_cdisc <- function(res_nca) {
 
+  # Define group columns in the data
+  group_cols <- unique(
+    unlist(
+      c(res_nca$data$conc$columns$groups,
+        res_nca$data$dose$columns$groups,
+        res_nca$data$dose$columns$route)
+    )
+  )
+
   # define columns needed for pp
-  pp_col <- c(
+  pp_cols <- c(
     "STUDYID",
     "DOMAIN",
     "USUBJID",
@@ -48,36 +57,34 @@ export_cdisc <- function(res_nca) {
   )
 
   # define columns needed for adpp
-  adpp_col <- c("STUDYID",
-                "DOMAIN",
-                "USUBJID",
-                "PPSEQ",
-                "PPCAT",
-                "PPGRPID",
-                "PPSPID",
-                "PPTESTCD",
-                "PPTEST",
-                "PPSCAT",
-                "PPREASND",
-                "PPSPEC",
-                "PPDTC",
-                "PPSTINT",
-                "PPENINT",
-                "SUBJID",
-                "SITEID",
-                "SEX",
-                "RACE",
-                "ACTARM",
-                "AAGE",
-                "AAGEU",
-                "TRT01P",
-                "TRT01A",
-                "AVAL",
-                "AVALC",
-                "AVALU")
+  adpp_cols <- c("STUDYID",
+                 "USUBJID",
+                 "PPSEQ",
+                 "PPGRPID",
+                 "PPSPID",
+                 "PARAMCD",
+                 "PARAM",
+                 "PPCAT",
+                 "PPSCAT",
+                 "PPREASND",
+                 "PPSPEC",
+                 "PPDTC",
+                 "PPSTINT",
+                 "PPENINT",
+                 "SUBJID",
+                 "SITEID",
+                 "SEX",
+                 "RACE",
+                 "ACTARM",
+                 "AAGE",
+                 "AAGEU",
+                 "TRT01P",
+                 "TRT01A",
+                 "AVAL",
+                 "AVALC",
+                 "AVALU")
 
   pp_info <- res_nca$result  %>%
-    filter(is.infinite(end) | PPTESTCD == "auclast") %>%
     left_join(res_nca$data$dose$data,
               by = unname(unlist(res_nca$data$dose$columns$groups)),
               suffix = c("", ".y")) %>%
@@ -93,19 +100,34 @@ export_cdisc <- function(res_nca) {
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     mutate(
       PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
+      PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
       DOMAIN = "PP",
       # Group ID
-      PPGRPID =  paste(PARAM, PCSPEC, paste("CYCLE", DOSNO,  sep = " "), sep = "-"),
+      PPGRPID = {
+        if ("AVISIT" %in% names(.)) paste(ANALYTE, PCSPEC, AVISIT, sep = "-")
+        else if ("VISIT" %in% names(.)) paste(ANALYTE, PCSPEC, VISIT, sep = "-")
+        else paste(ANALYTE, PCSPEC, DOSNO, sep = "-")
+      },
       # Parameter Category
-      PPCAT = PARAM,
+      PPCAT = ANALYTE,
       PPSCAT = "NON-COMPARTMENTAL",
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
       # Specific ID variables
-      PPSPID = "TBD",
-      # TODO Results in Standard Units if ORRESU is not in standard units
-      PPSTRESN = as.numeric(PPSTRES),
-      PPSTRESC = as.character(PPSTRES),
+      PPSPID = paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA"),
+      SUBJID = {
+        if ("SUBJID" %in% names(.)) SUBJID
+        else if ("USUBJID" %in% names(.)) {
+          if ("STUDYID" %in% names(.)) stringr::str_remove(as.character(USUBJID),
+                                                           paste0(as.character(STUDYID),
+                                                                  "\\W?"))
+          else gsub(find_common_prefix(USUBJID), "", USUBJID)
+        }
+      },
+      # Parameter Variables
+      PPORRES = round(as.numeric(PPORRES), 12),
+      PPSTRESN = round(as.numeric(PPSTRES), 12),
+      PPSTRESC = as.character(PPSTRESN),
       PPSTRESU = PPSTRESU,
       # Status and Reason for Exclusion
       PPSTAT = ifelse(is.na(PPSTRES) | (PPSTRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
@@ -117,7 +139,9 @@ export_cdisc <- function(res_nca) {
       # Datetime
       PPDTC = Sys.time() %>% format("%Y-%m-%dT%H:%M"),
       PPRFTDTC = {
-        if ("PCRFTDM" %in% names(.)) {
+        if ("PCRFTDTC" %in% names(.)) {
+          PCRFDTC
+        } else if ("PCRFTDTM" %in% names(.)) {
           strptime(PCRFTDTM, format = "%Y-%m-%d %H:%M:%S") %>% format("%Y-%m-%dT%H:%M")
         } else {
           NA
@@ -126,28 +150,59 @@ export_cdisc <- function(res_nca) {
       # Matrix
       PPSPEC = PCSPEC,
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
-      PPSTINT = ifelse(start != Inf, start, NA),
-      PPENINT = ifelse(end != Inf, end, NA)
-    )  %>%
+      PPSTINT = ifelse(
+        startsWith(PPTESTCD, "AUCINT"),
+        convert_to_iso8601_duration(start, RRLTU),
+        NA
+      ),
+      PPENINT = ifelse(
+        startsWith(PPTESTCD, "AUCINT"),
+        convert_to_iso8601_duration(end, RRLTU),
+        NA
+      ),
+      PPREASND = substr(exclude, 1, 200)
+    ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
-    mutate(PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")) %>%
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
 
   # select pp columns
-  pp <- pp_info %>%  select(all_of(pp_col))
+  pp <- pp_info %>% select(all_of(pp_cols))
 
   adpp <- pp_info %>%
-    # Elude potential collapse cases with PC variables
-    select(-any_of(c("AVAL", "AVALC", "AVALU"))) %>%
-    rename(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU)  %>%
-    left_join(
-      res_nca$data$dose$data %>%
-        select(-any_of(setdiff(names(pp_info), "USUBJID"))),
-      by = "USUBJID"
-    ) %>%
-    select(any_of(adpp_col))
+    # Rename/mutate variables from PP
+    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
+           PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
+    select(any_of(c(adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
 
-  return(list(pp = pp, adpp = adpp))
+  # Keep StudyID value to use for file naming
+  studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
+
+  list(pp = pp, adpp = adpp, studyid = studyid)
+}
+
+#' Function to identify the common prefix in a character vector.
+#' @details
+#' Checks the common prefix for all provided strings. If no
+#' common prefix is detected, returns empty string.
+#'
+#' @param strings Character vector with strings to check.
+#' @returns A character string with common prefix.
+#'
+#' @examples
+#' find_common_prefix(c("abc-100", "abc-102", "abc-103")) # "abc-10"
+#' @noRd
+#' @keywords internal
+find_common_prefix <- function(strings) {
+  # Get the strings with the greatest prefix mismatch
+  letters <- sort(strings) %>%
+    .[c(1, length(.))] %>%
+    # For the comparison make all have same number of letters
+    sapply(\(x) substr(x, 0, min(nchar(.)))) %>%
+    strsplit("")
+
+  mismatch <- letters[[1]] != letters[[2]]
+
+  substr(strings[[1]], 0, which(mismatch)[1] - 1)
 }
