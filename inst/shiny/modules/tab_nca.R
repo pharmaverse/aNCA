@@ -91,7 +91,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       bindEvent(adnca_data())
 
     #' NCA Setup module
-
     nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
     processed_pknca_data <- nca_setup$processed_pknca_data
     slopes_pknca_data <- nca_setup$slopes_pknca_data
@@ -162,7 +161,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
-          any_of(c("USUBJID", "DOSNO", "ANALYTE", "PCSPEC")),
+          any_of(c("USUBJID", "DOSNO", "PARAM", "PCSPEC")),
           starts_with("LAMZ"),
           starts_with("lambda.z"),
           starts_with("R2ADJ"),
@@ -180,7 +179,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     nca_results_server("nca_results",
                        processed_pknca_data,
-                       res_nca, rules(),
+                       res_nca, rules,
                        grouping_vars,
                        f_auc_options)
 

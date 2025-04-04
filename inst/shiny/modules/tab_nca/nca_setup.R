@@ -19,7 +19,7 @@ nca_setup_ui <- function(id) {
           title = "General Settings",
           # Selection of analyte, dose number and specimen
           fluidRow(
-            column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = TRUE,
+            column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
                                   choices = NULL)),
             column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
                                   choices = NULL)),
@@ -216,21 +216,21 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # File Upload Handling
     observeEvent(input$settings_upload, {
       setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
-      analyte <- setts$ANALYTE[1]
+      param <- setts$PARAM[1]
       doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
-      if (!analyte %in% unique(data()$ANALYTE) || !all(doses_selected %in% unique(data()$DOSNO))) {
+      if (!param %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$DOSNO))) {
         showNotification(
           validate("The analyte selected in the settings file is not present in the data. Please, if
-                    you want to use this settings for a different file, make sure all meaningful
-                    variables in the file are in the data (ANALYTE, DOSNO...)"),
+                    you want to use these settings for a different file, make sure all meaningful
+                    variables in the file are in the data (PARAM, DOSNO...)"),
           type = "error"
         )
       }
 
       new_data <- data() %>%
         filter(
-          ANALYTE == analyte,
+          PARAM == param,
           if ("EVID" %in% names(data())) EVID == 0 else TRUE
         ) %>%
         mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
@@ -267,16 +267,16 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       }
 
       rows_for_selected_analytes <- data() %>%
-        filter(ANALYTE %in% setts$ANALYTE) %>%
-        select(ANALYTE, DOSNO, PCSPEC) %>%
+        filter(PARAM %in% setts$PARAM) %>%
+        select(PARAM, DOSNO, PCSPEC) %>%
         unique()
 
       updateSelectInput(
         session,
         inputId = "select_analyte",
         label = "Choose the analyte:",
-        choices = data()$ANALYTE[1],
-        selected = setts$ANALYTE[1]
+        choices = data()$PARAM[1],
+        selected = setts$PARAM[1]
       )
 
       updateSelectInput(
@@ -389,8 +389,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       updateSelectInput(
         session,
         inputId = "select_analyte",
-        choices = unique(data()$ANALYTE),
-        selected = unique(data()$ANALYTE)[1]
+        choices = unique(data()$PARAM),
+        selected = unique(data()$PARAM)[1]
       )
 
       updateSelectInput(

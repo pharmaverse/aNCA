@@ -78,7 +78,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         })
 
       ratio_groups <- c(grouping_vars(), id_groups,
-                        data()$dose$columns$dose, data()$dose$columns$time,
+                        data()$dose$columns$dose, data()$dose$columns$time.nominal,
                         data()$dose$columns$route)
 
       # Calculate ratios

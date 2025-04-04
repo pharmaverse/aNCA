@@ -21,7 +21,7 @@ condition, and value to filter the dataset.
 }
 \details{
 The function iterates over the list of filters and applies each filter to the dataset.
-The supported conditions are \code{==}, \code{>}, \code{<}, \code{>=}, and \code{<=}.
+The supported conditions are \code{==}, \code{>}, \code{<}, \code{>=}, \code{<=} and \code{!=}.
 }
 \examples{
 \dontrun{

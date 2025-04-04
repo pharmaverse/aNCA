@@ -170,7 +170,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(data())
       # Update the analyte picker input
       param_choices_analyte <- data() %>%
-        pull(ANALYTE) %>%
+        pull(PARAM) %>%
         unique()
 
       updatePickerInput(
@@ -206,7 +206,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
       # Update the colorby picker input
       param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
+        c("STUDYID", "PCSPEC", "PARAM", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
       )
 
       updatePickerInput(
@@ -216,9 +216,9 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected = param_choices_colorby[length(param_choices_colorby)]
       )
 
-      # Update the analytemean select input
+      # Update the analyte mean select input
       analyte_choices <- data() %>%
-        pull(ANALYTE) %>%
+        pull(PARAM) %>%
         unique()
 
       updateSelectInput(
@@ -252,7 +252,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       )
 
       # Update the selectidvar select input
-      idvar_choices <- c("ANALYTE", "PCSPEC", "DOSEA", grouping_vars())
+      idvar_choices <- c("PARAM", "PCSPEC", "DOSEA", grouping_vars())
 
       updateSelectInput(
         session,
@@ -266,7 +266,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$cycle_select <- renderUI({
       req(input$generalplot_analyte)
       y <- data() %>%
-        filter(ANALYTE %in% input$generalplot_analyte) %>%
+        filter(PARAM %in% input$generalplot_analyte) %>%
         pull(DOSNO) %>%
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
@@ -307,7 +307,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     observeEvent(input$analyte_mean, {
       req(data())
       cycle_choices <- data() %>%
-        filter(ANALYTE %in% input$analyte_mean) %>%
+        filter(PARAM %in% input$analyte_mean) %>%
         pull(DOSNO) %>%
         unique()
 
@@ -331,7 +331,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
           data() %>%
             filter(
               STUDYID %in% input$studyid_mean,
-              ANALYTE %in% input$analyte_mean,
+              PARAM %in% input$analyte_mean,
               PCSPEC %in% input$pcspec_mean,
               DOSNO %in% input$cycles_mean,
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,

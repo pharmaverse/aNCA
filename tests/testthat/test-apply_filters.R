@@ -92,6 +92,19 @@ describe("apply_filters works correctly", {
 
     expect_equal(nrow(apply_filters(mtcars, filter)), 5)
   })
+
+  test_that("apply_filters works with !=", {
+    filter <- list(
+      list(
+        column = "mpg",
+        condition = "!=",
+        value = "21"
+      )
+    )
+
+    expect_equal(nrow(apply_filters(mtcars, filter)), 30)
+  })
+
 })
 
 describe("apply_filters throws errors for invalid input", {
