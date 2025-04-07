@@ -26,6 +26,8 @@ Description: This application enables users to upload their datasets and
     Designed with user-friendliness in mind, this app aims to make NCA
     accessible and straightforward for all scientists. 
 License: MIT + file LICENSE
+Remotes:
+  billdenney/pknca@main
 Imports: 
     dplyr,
     formatters,
