@@ -116,7 +116,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
         selected =  param_inputnames
       )
     })
-    
+
     output_results <- reactive({
       req(final_results(), input$params)
 
@@ -125,13 +125,13 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       input_params <- sub(":.*", "", input$params)
       #identify parameters to be removed from final results
       params_rem_cols <- setdiff(param_cols, input_params)
-      
+
       col_names <- names(final_results())
       # Extract base names before the "[", or leave as-is if no "["
       col_base_names <- ifelse(str_detect(col_names, "\\["),
                                str_remove(col_names, "\\[.*"),
                                col_names)
-      
+
       final_results() %>%
         select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])), -conc_groups)
     })
