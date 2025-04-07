@@ -44,7 +44,6 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
-#' @importFrom checkmate assert_numeric
 #' @importFrom scales breaks_log label_log
 #' @importFrom ggh4x scale_y_facet
 #'
@@ -313,8 +312,9 @@ g_pkconc_log <- function(data, ...) {
 
 #' Generate Combined PK Concentration-Time Profile Plot by Cohort
 #'
-#' This function generates a list of plotly objects :Combined PK concentration-time profiles for each unique group of patients.
-#' 
+#' This function generates a list of plotly objects PK concentration-time profiles for a
+#' group of patients.
+#'
 #' @param adpc            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
 #' @param yvar            A character string of the variable name for the y-axis.
@@ -339,7 +339,6 @@ g_pkconc_log <- function(data, ...) {
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
-#' @importFrom checkmate assert_numeric
 #' @importFrom scales breaks_log label_log
 #' @importFrom ggh4x scale_y_facet
 #' @import dplyr ggplot2 plotly purrr ggh4x
