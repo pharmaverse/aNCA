@@ -6,6 +6,9 @@
 \usage{
 export_cdisc(res_nca)
 }
+\arguments{
+\item{res_nca}{Object with results of the NCA analysis.}
+}
 \value{
 A list with two data frames:
 \describe{

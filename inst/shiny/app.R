@@ -1,8 +1,40 @@
+require(aNCA)
+
+require(bslib)
+require(dplyr)
+require(DT)
+require(htmlwidgets)
+require(logger)
+require(magrittr)
+require(plotly)
+require(purrr)
+require(reactable)
+require(reactable.extras)
+require(shiny)
+require(shinycssloaders)
+require(shinyjs)
+require(shinyjqui)
+require(shinyWidgets)
+require(stats)
+require(stringi)
+require(stringr)
+require(tidyr)
+require(tools)
+require(utils)
+require(rlang)
+require(yaml)
+
 lapply(list.files("modules", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 
 LABELS <<- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 assets <- system.file("shiny/www", package = "aNCA")
+
+# setup logger #
+log_layout(layout_glue_colors)
+log_formatter(formatter_glue)
+log_threshold(TRACE)
+log_appender(appender_console, namespace = "global")
 
 ui <- function() {
   # Define UI

@@ -43,7 +43,8 @@
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import plotly
+#' @importFrom plotly ggplotly layout config style add_trace
+#' @importFrom stats setNames
 #' @export
 lambda_slope_plot <- function(
   conc_pknca_df,

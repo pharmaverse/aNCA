@@ -4,12 +4,17 @@
 \alias{interval_add_impute}
 \title{Add specified imputation methods to the intervals in a PKNCAdata or data.frame object.}
 \usage{
-interval_add_impute(data, ...)
+interval_add_impute(
+  data,
+  target_impute,
+  after,
+  target_params,
+  target_groups,
+  ...
+)
 }
 \arguments{
 \item{data}{A PKNCAdata object containing the intervals data frame, or a data frame of intervals.}
-
-\item{...}{arguments passed to \code{interval_add_impute}.}
 
 \item{target_impute}{A character string specifying the imputation method to be added.}
 
@@ -21,6 +26,8 @@ If missing, all TRUE in the intervals are taken.}
 
 \item{target_groups}{A data frame specifying the intervals to be targeted (optional).
 If missing, all relevant groups are considered.}
+
+\item{...}{arguments passed to \code{interval_add_impute}.}
 }
 \value{
 A modified PKNCAdata object with specified imputation methods on the target intervals.
@@ -37,7 +44,7 @@ d_conc <- data.frame(
   conc = c(1, 0.6, 0.2, 0.1, 0.9, 0.4, 1.2, 0.8, 0.3, 0.2, 1.1, 0.5),
   time = rep(0:5, 2),
   ID = rep(1:2, each = 6),
-  analyte = rep(c("Analyte1", "Analyte2"), each = 6)
+  param = rep(c("Analyte1", "Analyte2"), each = 6)
 )
 
 d_dose <- data.frame(
@@ -46,7 +53,7 @@ d_dose <- data.frame(
   ID = c(1, 2)
 )
 
-o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
+o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / param)
 o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
 
 intervals <- data.frame(
@@ -55,7 +62,7 @@ intervals <- data.frame(
   half.life = c(TRUE, TRUE, TRUE),
   cmax = c(TRUE, TRUE, TRUE),
   impute = c("start_conc0,start_predose", "start_predose", "start_conc0"),
-  analyte = c("Analyte1", "Analyte2", "Analyte1")
+  param = c("Analyte1", "Analyte2", "Analyte1")
 )
 
 o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
@@ -64,5 +71,5 @@ o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
 o_data <- interval_add_impute(o_data,
                               target_impute = "start_conc0",
                               target_params = "half.life",
-                              target_groups = data.frame(analyte = "Analyte1"))
+                              target_groups = data.frame(param = "Analyte1"))
 }

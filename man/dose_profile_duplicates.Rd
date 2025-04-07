@@ -6,7 +6,7 @@
 \usage{
 dose_profile_duplicates(
   conc_data,
-  groups = c("USUBJID", "DOSNO", "ANALYTE"),
+  groups = c("USUBJID", "DOSNO", "PARAM"),
   dosno = "DOSNO",
   arrlt = "ARRLT",
   afrlt = "AFRLT",
@@ -18,7 +18,7 @@ dose_profile_duplicates(
 \item{conc_data}{A data frame containing concentration data.}
 
 \item{groups}{A character vector of column names to use for grouping
-(e.g., c("USUBJID", "ANALYTE", "DOSNO")).}
+(e.g., c("USUBJID", "PARAM", "DOSNO")).}
 
 \item{dosno}{Column name for the dose number (default: "DOSNO").}
 

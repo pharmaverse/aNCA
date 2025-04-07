@@ -14,16 +14,16 @@ MANUAL_UNITS <- list(
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
   "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
-  "Sample Variables" = c("ANALYTE", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DOSNO", "DOSEA", "ADOSEDUR"),
+  "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
+  "Dose Variables" = c("DRUG", "DOSNO", "DOSEA", "ADOSEDUR"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
   "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
 )
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "ANALYTE", "PCSPEC", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DOSEA", "DOSEU", "DOSNO", "ADOSEDUR"
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "DOSNO", "ADOSEDUR"
 )
 
 #' Column Mapping Widget
@@ -141,12 +141,13 @@ data_mapping_ui <- function(id) {
       ),
       tags$section(
         h5("Sample Variables"),
-        .column_mapping_widget(ns, "ANALYTE", "Character format"),
+        .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
         .column_mapping_widget(ns, "PCSPEC", "Character format"),
         .column_mapping_widget(ns, "AVAL", "Numeric format.")
       ),
       tags$section(
         h5("Dose Variables"),
+        .column_mapping_widget(ns, "DRUG", "Character format."),
         .column_mapping_widget(ns, "DOSNO", "Numeric format."),
         .column_mapping_widget(
           ns, "ROUTE",
@@ -222,13 +223,13 @@ data_mapping_server <- function(id, adnca_data) {
       # Check for duplicate column selections
       all_selected_columns <- unlist(selected_cols)
       if (any(duplicated(all_selected_columns))) {
-        log_warn("Duplicate column selection detected.")
-        showModal(modalDialog(
-          title = "Duplicate Column Selections",
-          "Please ensure that each column selection is unique.",
-          easyClose = TRUE,
-          footer = NULL
-        ))
+        log_error("Duplicate column selection detected.")
+        showNotification(
+          ui = "Duplicate column selection detected. 
+          Please ensure each selection is unique.",
+          type = "error",
+          duration = 5
+        )
         return()
       }
 
@@ -236,6 +237,17 @@ data_mapping_server <- function(id, adnca_data) {
       selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
         names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
       ]
+
+      # Check for unmapped columns
+      if (any(unlist(selected_cols) == "")) {
+        log_error("Unmapped columns detected.")
+        showNotification(
+          ui = "Some required columns are not mapped. Please complete all selections.",
+          type = "error",
+          duration = 5
+        )
+        return()
+      }
 
       # Rename columns
       colnames(dataset) <- sapply(colnames(dataset), function(col) {

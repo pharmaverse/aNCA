@@ -6,7 +6,7 @@ DATA_FIXTURE <- list(
       USUBJID = rep(1:4, each = 4),
       DOSNO = 1,
       IX = rep(1:4, times = 4),
-      ANALYTE = rep("A", 16),
+      PARAM = rep("A", 16),
       is.included.hl = FALSE,
       is.excluded.hl = FALSE,
       exclude_half.life = FALSE,
@@ -17,12 +17,12 @@ DATA_FIXTURE <- list(
 
 DOSNOS_FIXTURE <- data.frame(
   USUBJID = rep(1:4, each = 1),
-  ANALYTE = rep("A", 4),
+  PARAM = rep("A", 4),
   PCSPEC = rep(1, 4),
   DOSNO = rep(1, 4)
 )
 
-slope_groups <- c("USUBJID", "ANALYTE", "PCSPEC", "DOSNO")
+slope_groups <- c("USUBJID", "PARAM", "PCSPEC", "DOSNO")
 
 describe(".filter_slopes", {
   it("should handle slope selection", {
@@ -30,7 +30,7 @@ describe(".filter_slopes", {
       TYPE = rep("Selection", 2),
       USUBJID = c(1, 3),
       DOSNO = c(1, 1),
-      ANALYTE = c("A", "A"),
+      PARAM = c("A", "A"),
       PCSPEC = c(1, 1),
       RANGE = c("1:3", "2:4"),
       REASON = "Test selection"
@@ -47,7 +47,7 @@ describe(".filter_slopes", {
       TYPE = rep("Exclusion", 2),
       USUBJID = c(2, 4),
       DOSNO = c(1, 1),
-      ANALYTE = c("A", "A"),
+      PARAM = c("A", "A"),
       PCSPEC = c(1, 1),
       RANGE = c("1:2", "2:3"),
       REASON = "Test exclusion"
@@ -70,13 +70,30 @@ describe(".filter_slopes", {
       filter_slopes(list(conc = list()), NULL, DOSNOS_FIXTURE), "Please provide valid data."
     )
   })
+
+  it("should throw an error if reasons are missing", {
+    selection <- data.frame(
+      TYPE = rep("Exclusion", 2),
+      USUBJID = c(1, 3),
+      DOSNO = c(1, 1),
+      PARAM = c("A", "A"),
+      PCSPEC = c(1, 1),
+      RANGE = c("1:3", "2:4"),
+      REASON = ""
+    )
+
+    expect_error(
+      filter_slopes(DATA_FIXTURE, selection, DOSNOS_FIXTURE, slope_groups, TRUE),
+      "^No reason provided for the following exclusions*"
+    )
+  })
 })
 
 EXISTING_FIXTURE <- data.frame(
   TYPE = "Exclusion",
   USUBJID = 1,
   DOSNO = 1,
-  ANALYTE = "A",
+  PARAM = "A",
   PCSPEC = 1,
   RANGE = "3:6"
 )
@@ -88,7 +105,7 @@ describe("check_slope_rule_overlap", {
       TYPE = "Selection",
       USUBJID = 1,
       DOSNO = 1,
-      ANALYTE = "A",
+      PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
     )
@@ -100,7 +117,7 @@ describe("check_slope_rule_overlap", {
       TYPE = "Exclusion",
       USUBJID = 2,
       DOSNO = 1,
-      ANALYTE = "A",
+      PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
     )
@@ -112,7 +129,7 @@ describe("check_slope_rule_overlap", {
       TYPE = "Exclusion",
       USUBJID = 1,
       DOSNO = 2,
-      ANALYTE = "A",
+      PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
     )
@@ -126,7 +143,7 @@ describe("check_slope_rule_overlap", {
       TYPE = "Exclusion",
       USUBJID = 1,
       DOSNO = 1,
-      ANALYTE = "A",
+      PARAM = "A",
       PCSPEC = 1,
       RANGE = "4:5"
     )
@@ -137,7 +154,7 @@ describe("check_slope_rule_overlap", {
       TYPE = "Exclusion",
       USUBJID = 1,
       DOSNO = 1,
-      ANALYTE = "A",
+      PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:4"
     )
@@ -151,7 +168,7 @@ describe("check_slope_rule_overlap", {
       TYPE = "Exclusion",
       USUBJID = 1,
       DOSNO = 1,
-      ANALYTE = "A",
+      PARAM = "A",
       PCSPEC = 1,
       RANGE = "4:9"
     )
@@ -165,7 +182,7 @@ describe("check_slope_rule_overlap", {
       TYPE = "Exclusion",
       USUBJID = 1,
       DOSNO = 1,
-      ANALYTE = "A",
+      PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:6"
     )

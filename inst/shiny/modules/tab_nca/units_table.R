@@ -82,7 +82,8 @@ units_table_server <- function(id, mydata) {
 
     # Define which parameters where choosen by the user
     params_to_calculate <- reactive({
-      names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
+      names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x))) %>%
+        translate_terms("PKNCA", "PPTESTCD")
     })
 
     params_to_calculate_array_str <- reactive({
@@ -93,7 +94,8 @@ units_table_server <- function(id, mydata) {
     output$modal_units_table <- DT::renderDT({
       datatable(
         data = .clean_display_units_table(modal_units_table(),
-                                          input$select_unitstable_analyte),
+                                          input$select_unitstable_analyte) %>%
+          mutate(Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD")),
         escape = FALSE,
         selection = list(mode = "single", target = "cell"),
         class = "table table-striped table-bordered",
@@ -214,7 +216,7 @@ units_table_server <- function(id, mydata) {
 
       log_trace("Applying custom units specification.")
       modal_units_table() %>%
-        rename(ANALYTE = `Analytes`,
+        rename(PARAM = `Analytes`,
                PPTESTCD = `Parameter`,
                PPORRESU = `Default unit`,
                PPSTRESU = `Custom unit`,
@@ -229,7 +231,7 @@ units_table_server <- function(id, mydata) {
     observeEvent(session$userData$units_table(), {
       session$userData$units_table() %>%
         rename(
-          `Analytes` = ANALYTE,
+          `Analytes` = PARAM,
           `Parameter` = PPTESTCD,
           `Default unit` = PPORRESU,
           `Custom unit` = PPSTRESU,

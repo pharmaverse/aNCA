@@ -2,10 +2,10 @@
 #'
 #' This function calculates various summary statistics for formatted output of PKNCA::pk.nca().
 #'
+#' @param data         A data frame containing results of
+#'                     Non Compartmental Analysis using PKNCA package
 #' @param input_groups A character vector specifying the columns to group by.
 #'                     Here. the hierarchical order matters
-#' @param res_pknca     A data frame containing results of
-#'                     Non Compartmental Analysis using PKNCA package
 #' @returns A data frame with summary statistics for each group and parameter.
 #' @details The function calculates the following statistics for numeric variables:
 #' \itemize{
@@ -23,7 +23,7 @@
 #'
 #' @import dplyr
 #' @import tidyr
-#' @importFrom stats sd
+#' @importFrom stats sd median
 #' @export
 #' @examples
 #' \dontrun{
@@ -70,13 +70,14 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
   # Include units for all column names
   pttestcd_with_units <- data %>%
     select(PPTESTCD, PPSTRESU) %>%
+    mutate(PPSTRESU = ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")) %>%
     unique() %>%
     pull(PPSTRESU, PPTESTCD)
 
   summary_stats <- summary_stats %>%
     rename_with(~ifelse(
       gsub("_.*", "", .x) %in% names(pttestcd_with_units),
-      paste0(.x, "[", pttestcd_with_units[gsub("_.*", "", .x)], "]"),
+      paste0(.x, pttestcd_with_units[gsub("_.*", "", .x)]),
       .x
     ))
 

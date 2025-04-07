@@ -48,6 +48,8 @@ pkcg01(
 
 \item{xbreaks_var}{A character string of the x-axis breaks.}
 
+\item{xbreaks_mindist}{A numeric value for \code{xbreak_mindist}.}
+
 \item{xmin}{A numeric value specifying the minimum x-axis limit.}
 
 \item{xmax}{A numeric value specifying the maximum x-axis limit.}
@@ -60,17 +62,21 @@ pkcg01(
 
 \item{ylab}{Character for y-axis label. Defaults: \code{yvar} label & \code{yvar_unit}.}
 
+\item{title}{Character for plot title.}
+
+\item{subtitle}{Character for plot subtitle.}
+
 \item{footnote}{A character string of a manual footnote for the plot.}
 
 \item{plotgroup_vars}{A character vector of the variables to group data.}
 
 \item{plotgroup_names}{A character vector of the grouping variable names.}
 
+\item{scale}{Scale for the Y axis, either "LIN" or "LOG".}
+
 \item{studyid}{A character string specifying the study ID variable.}
 
 \item{trt_var}{A character string specifying the treatment variable.}
-
-\item{options}{A list of additional options (e.g., display scale).}
 }
 \value{
 A list of ggplot objects for each unique group.

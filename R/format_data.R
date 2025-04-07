@@ -142,6 +142,7 @@ format_pkncadose_data <- function(pkncaconc_data,
 #' }
 #'
 #' @import dplyr
+#' @importFrom stats setNames
 #' @export
 format_pkncadata_intervals <- function(pknca_conc,
                                        pknca_dose,
@@ -218,6 +219,10 @@ format_pkncadata_intervals <- function(pknca_conc,
       attributes(column) <- NULL
       column
     })) %>%
+
+    # Set FALSE for aucint when end = Inf
+    mutate(across(starts_with("aucint.inf.pred"), ~ if_else(end == Inf, FALSE, .))) %>%
+    #TODO: once TAU is included in the app, add new line for aucint to be end = TAU
 
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
