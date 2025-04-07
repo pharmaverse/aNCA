@@ -116,8 +116,8 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
         selected =  param_inputnames
       )
     })
-
-    output$myresults <- reactable::renderReactable({
+    
+    output_results <- reactive({
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
@@ -125,22 +125,26 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       input_params <- sub(":.*", "", input$params)
       #identify parameters to be removed from final results
       params_rem_cols <- setdiff(param_cols, input_params)
-
+      
       col_names <- names(final_results())
       # Extract base names before the "[", or leave as-is if no "["
       col_base_names <- ifelse(str_detect(col_names, "\\["),
                                str_remove(col_names, "\\[.*"),
                                col_names)
+      
+      final_results() %>%
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])), -conc_groups)
+    })
 
-      final_results <- final_results() %>%
-        select(all_of(col_names[!(col_base_names %in% params_rem_cols)]))
+    output$myresults <- reactable::renderReactable({
+      req(output_results())
 
       # Generate column definitions that can be hovered in the UI
-      col_defs <- generate_col_defs(final_results)
+      col_defs <- generate_col_defs(output_results())
 
       # Make the reactable object
       reactable(
-        final_results,
+        output_results(),
         columns = col_defs,
         searchable = TRUE,
         sortable = TRUE,
@@ -152,7 +156,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
         bordered = TRUE,
         height = "68vh",
         rowStyle = function(index) {
-          flagged_value <- final_results$flagged[index]
+          flagged_value <- output_results()$flagged[index]
           if (flagged_value == "FLAGGED") {
             list(backgroundColor = "#f5b4b4")
           } else if (flagged_value == "MISSING") {
@@ -169,7 +173,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
         paste0(res_nca()$data$conc$data$STUDYID[1], "PK_Parameters.csv")
       },
       content = function(file) {
-        write.csv(final_res_nca(), file, row.names = FALSE)
+        write.csv(output_results(), file, row.names = FALSE)
       }
     )
   })
