@@ -28,26 +28,25 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @param color_var       A character string of the variable name for the color.
 #' @param color_var_label A character string of the color label.
 #' @param xbreaks_var     A character string of the x-axis breaks.
-#' @param xbreaks_mindist A numeric value for `xbreak_mindist`.
 #' @param xmin            A numeric value specifying the minimum x-axis limit.
 #' @param xmax            A numeric value specifying the maximum x-axis limit.
 #' @param ymin            A numeric value for the minimum y-axis limit.
 #' @param ymax            A numeric value for the maximum y-axis limit.
 #' @param xlab            Character for x-axis label. Defaults: `xvar` label & `xvar_unit`.
 #' @param ylab            Character for y-axis label. Defaults: `yvar` label & `yvar_unit`.
-#' @param title           Character for plot title.
-#' @param subtitle        Character for plot subtitle.
 #' @param footnote        A character string of a manual footnote for the plot.
 #' @param plotgroup_vars  A character vector of the variables to group data.
 #' @param plotgroup_names A character vector of the grouping variable names.
-#' @param scale           Scale for the Y axis, either "LIN" or "LOG".
+#' @param options         A list of additional options (e.g., display scale).
 #' @param studyid         A character string specifying the study ID variable.
 #' @param trt_var         A character string specifying the treatment variable.
 #' @returns A list of ggplot objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
-#' @importFrom stats setNames
+#' @importFrom checkmate assert_numeric
+#' @importFrom scales breaks_log label_log
+#' @importFrom ggh4x scale_y_facet
 #'
 #' @examples
 #' \dontrun{
@@ -178,17 +177,6 @@ pkcg01 <- function(
   }
 
   if (scale == "SBS") {
-    if (!requireNamespace("ggh4x", silently = TRUE))
-      stop(
-        "Side-by-side view requires `ggh4x` package, please install it with ",
-        "`install.packages('ggh4x')`"
-      )
-    if (!requireNamespace("scales", silently = TRUE))
-      stop(
-        "Side-by-side view requires `scales` package, please install it with ",
-        "`install.packages('scales')`"
-      )
-
     # Create SBS version of data and plot
     adpc_grouped <- rbind(adpc_grouped, adpc_grouped) %>%
       dplyr::mutate(
@@ -323,7 +311,53 @@ g_pkconc_log <- function(data, ...) {
   pkcg02(adpc = data, scale = "LOG", ...)
 }
 
-#' Generate PK Concentration-Time Profile Plot by Cohort
+#' Generate Combined PK Concentration-Time Profile Plot by Cohort
+#'
+#' This function generates a list of plotly objects :Combined PK concentration-time profiles for each unique group of patients.
+#' 
+#' @param adpc            A data frame containing the data.
+#' @param xvar            A character string of the variable name for the x-axis.
+#' @param yvar            A character string of the variable name for the y-axis.
+#' @param xvar_unit       A character string of the unit for the x-axis variable.
+#' @param yvar_unit       A character string of the unit for the y-axis variable.
+#' @param color_var       A character string of the variable name for the color.
+#' @param color_var_label A character string of the color label.
+#' @param xbreaks_var     A character string of the x-axis breaks.
+#' @param xmin            A numeric value specifying the minimum x-axis limit.
+#' @param xmax            A numeric value specifying the maximum x-axis limit.
+#' @param ymin            A numeric value for the minimum y-axis limit.
+#' @param ymax            A numeric value for the maximum y-axis limit.
+#' @param xlab            Character for x-axis label. Defaults: `xvar` label & `xvar_unit`.
+#' @param ylab            Character for y-axis label. Defaults: `yvar` label & `yvar_unit`.
+#' @param footnote        A character string of a manual footnote for the plot.
+#' @param plotgroup_vars  A character vector of the variables to group data.
+#' @param plotgroup_names A character vector of the grouping variable names.
+#' @param options         A list of additional options (e.g., display scale).
+#' @param studyid         A character string specifying the study ID variable.
+#' @param trt_var         A character string specifying the treatment variable.
+#' @returns A list of ggplot objects for each unique group.
+#' @importFrom dplyr mutate across rowwise ungroup group_by n
+#' @importFrom ggplot2 aes scale_x_continuous labs
+#' @importFrom tern g_ipp
+#' @importFrom checkmate assert_numeric
+#' @importFrom scales breaks_log label_log
+#' @importFrom ggh4x scale_y_facet
+#' @import dplyr ggplot2 plotly purrr ggh4x
+#' @importFrom tern g_ipp
+#' @importFrom stats setNames
+
+#' @examples
+#' \dontrun{
+#'   adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
+#'   attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
+#'   attr(adpc[["AVAL"]], "label") <- "Analysis value"
+#'
+#'   plots <- pkcg02(adpc)
+#'   plots_log <- pkcg02(adpc, scale = "LOG")
+#'   plots_custom <- pkcg02(adpc, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study XYZ")
+#'   plotly::plotly_build(plots[[1]]) # View the first plot
+#' }
+#'
 #' @export
 #' @author Kezia Kobana
 pkcg02 <- function(
