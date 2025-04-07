@@ -141,6 +141,15 @@ slope_selector_server <- function(
     })
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
     observeEvent(list(input$plots_per_page, input$search_patient), current_page(1))
+    
+    #' Plot data is a local reactive copy of full data. The purpose is to display data that
+    #' is already adjusted with the applied rules, so that the user can verify added selections
+    #' and exclusions before applying them to the actual dataset.
+    plot_data <- reactive({
+      req(pknca_data(), manual_slopes(), profiles_per_patient())
+      filter_slopes(pknca_data(), manual_slopes(), profiles_per_patient(), slopes_groups())
+    }) %>%
+      shiny::debounce(750)
 
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
