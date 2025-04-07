@@ -43,6 +43,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
   data$conc$data$is.included.hl <- FALSE
   data$conc$data$is.excluded.hl <- FALSE
   data$conc$data$exclude_half.life <- FALSE
+  data$conc$data$include_half.life <- NA
 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
@@ -70,7 +71,12 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
       } else {
         is.excluded.hl
       }
-    })
+    },
+    include_half.life = case_when(
+      is.included.hl ~ TRUE,
+      is.excluded.hl ~ FALSE,
+      TRUE ~ NA
+    ))
 
   data
 }
