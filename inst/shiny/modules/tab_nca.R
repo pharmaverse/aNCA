@@ -137,8 +137,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               )
           },
           warning = function(w) {
-            if (any(grepl(paste(irrelevant_regex_warnings, collapse = "|"), w))) {
+            if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
+                       conditionMessage(w))) {
               log_warn(conditionMessage(w))
+              showNotification(conditionMessage(w), type = "warning", duration = 5)
             }
             invokeRestart("muffleWarning")
           })
