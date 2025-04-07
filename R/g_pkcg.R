@@ -312,8 +312,7 @@ g_pkconc_log <- function(data, ...) {
 
 #' Generate Combined PK Concentration-Time Profile Plot by Cohort
 #'
-#' This function generates a list of plotly objects PK concentration-time profiles for a
-#' group of patients.
+#' This function generates a list of plotly objects PK concentration-time profiles by group
 #'
 #' @param adpc            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
