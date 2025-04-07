@@ -483,9 +483,9 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- eventReactive(setup_trigger(), {
-      log_trace("Updating PKNCA::data object for slopes.")
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec)
+      log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = auc_data(),
@@ -497,7 +497,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
                    "r.squared", "adj.r.squared", "cmax"),
         should_impute_c0 = input$should_impute_c0
       )
-      log_success("PKNCA data slopes object created.")
 
       slopes_pknca_data
     })
@@ -505,9 +504,9 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
     processed_pknca_data <- eventReactive(setup_trigger(), {
-      log_trace("Updating PKNCA::data object.")
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec, auc_data())
+      log_trace("Updating PKNCA::data object.")
 
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
@@ -519,7 +518,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         params = input$nca_params,
         should_impute_c0 = input$should_impute_c0
       )
-      log_success("PKNCA data object updated.")
 
       # Add picker input if bioavailability calculations are possible
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
