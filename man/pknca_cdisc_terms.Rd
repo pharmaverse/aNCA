@@ -16,7 +16,8 @@ A data frame with 120 rows and 6 variables:
 \item{is_cdisc_sure}{Logical indicating if the term is a CDISC official name}
 \item{pretty_name}{PKNCA pretty name of the term}
 \item{unit_type}{Type of unit associated with the term}
-\item{type}{Arbitrary assigned subclass for the parameter/term}\
+\item{type}{Arbitrary assigned subclass for the parameter/term}
+\item{Depends}{PKNCA derived. Designates all directly used parameters in calculation}\
 }
 }
 \source{

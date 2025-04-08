@@ -49,3 +49,73 @@ describe("get_conversion_factor", {
     expect_equal(get_conversion_factor(c("g/L", "kg/L"), c("mg/L", "g/L")), c(1000, 1000))
   })
 })
+
+describe("convert_to_iso8601_duration", {
+  it("converts valid durations to ISO 8601 format", {
+    expect_equal(convert_to_iso8601_duration(5, "d"), "P5D")
+    expect_equal(convert_to_iso8601_duration(200, "h"), "PT200H")
+    expect_equal(convert_to_iso8601_duration(30, "min"), "PT30M")
+    expect_equal(convert_to_iso8601_duration(45, "s"), "PT45S")
+  })
+
+  it("handles Inf and NA values", {
+    expect_equal(convert_to_iso8601_duration(Inf, "d"), "PinfD")
+    expect_equal(convert_to_iso8601_duration(NA, "d"), NA)
+  })
+
+  it("handles unsupported units gracefully", {
+    expect_error(
+      convert_to_iso8601_duration(10, "unsupported"),
+      "Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'."
+    )
+  })
+
+  it("handles edge cases for valid units", {
+    expect_equal(convert_to_iso8601_duration(1, "y"), "P1Y")
+    expect_equal(convert_to_iso8601_duration(2, "month"), "P2M")
+    expect_equal(convert_to_iso8601_duration(3, "w"), "P3W")
+  })
+
+  it("handles invalid input types", {
+    expect_error(
+      convert_to_iso8601_duration("five", "d"),
+      "'value' must be a numeric."
+    )
+    expect_error(
+      convert_to_iso8601_duration(5, 123),
+      "'unit' must be a character string."
+    )
+  })
+
+  it("handles vectorized inputs correctly", {
+    values <- c(5, 10, 15)
+    units <- c("d", "h", "min")
+    expected_output <- c("P5D", "PT10H", "PT15M")
+    result <- convert_to_iso8601_duration(values, units)
+    expect_equal(result, expected_output)
+  })
+
+  it("handles mixed valid and invalid vectorized inputs", {
+    values <- c(5, 10, "invalid")
+    units <- c("d", "unsupported", "h")
+    expect_error(
+      convert_to_iso8601_duration(values, units),
+      "'value' must be a numeric."
+    )
+
+    values <- c(5, 10, 15)
+    units <- c(1, 12, 123)
+    expect_error(
+      convert_to_iso8601_duration(values, units),
+      "'unit' must be a character string."
+    )
+
+    values <- c(5, 10, 20)
+    units <- c("d", "h", "tt")
+    expect_error(
+      convert_to_iso8601_duration(values, units),
+      "Unsupported unit. Accepted units start with 'y', 'm', 'w', 'd', 'h', or 's'."
+    )
+  })
+})
+

@@ -6,7 +6,7 @@ simple_data <- data.frame(
   DRUG = rep("DrugA", 6),
   USUBJID = rep("SUBJ001", 6),
   DOSNO = rep(1, 6),
-  ANALYTE = rep("AnalyteA", 6),
+  PARAM = rep("AnalyteA", 6),
   AVAL = c(0, 5, 10, 7, 3, 1),
   AVALU = rep("ng/mL", 6),
   DOSEA = rep(100, 6),
@@ -26,7 +26,7 @@ multiple_data <- data.frame(
   DRUG = rep("DrugB", 12),
   USUBJID = rep(rep(c("SUBJ002", "SUBJ003"), each = 6)),
   DOSNO = rep(1, 12),
-  ANALYTE = rep(c("AnalyteX", "AnalyteY"), each = 6),
+  PARAM = rep(c("AnalyteX", "AnalyteY"), each = 6),
   AVAL = c(0, 2, 8, 6, 4, 1, 0, 10, 20, 18, 8, 3),
   AVALU = rep("ng/mL", 12),
   DOSEA = rep(200, 12),
@@ -77,10 +77,10 @@ describe("PKNCA_create_data_object", {
     results <- PKNCA_create_data_object(multiple_data)
 
     units_table <- results$units
-    #contains ANALYTE column with two unique values
-    expect_true("ANALYTE" %in% colnames(units_table))
+    #contains PARAM column with two unique values
+    expect_true("PARAM" %in% colnames(units_table))
 
-    unique_analytes <- unique(units_table$ANALYTE)
+    unique_analytes <- unique(units_table$PARAM)
     expect_equal(length(unique_analytes), 2)
 
   })
@@ -94,7 +94,7 @@ describe("PKNCA_update_data_object", {
 
   method <- "lin up log down"
   params <- c("cmax", "tmax", "auclast", "aucinf.obs")
-  analytes <- unique(simple_data$ANALYTE)
+  analytes <- unique(simple_data$PARAM)
   dosnos <- unique(simple_data$DOSNO)
   pcspecs <- unique(simple_data$PCSPEC)
   auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
@@ -127,7 +127,7 @@ describe("PKNCA_update_data_object", {
       should_impute_c0 = FALSE
     )
     intervals <- updated_data$intervals
-    expect_true(all(intervals$ANALYTE == "AnalyteX"))
+    expect_true(all(intervals$PARAM == "AnalyteX"))
     expect_true(all(intervals$DOSNO == 1))
     expect_true(all(intervals$PCSPEC == "Plasma"))
   })
@@ -143,7 +143,7 @@ describe("PKNCA_update_data_object", {
       params = params,
       should_impute_c0 = TRUE
     )
-    unit_analytes <- unique(updated_data$units$ANALYTE)
+    unit_analytes <- unique(updated_data$units$PARAM)
     expect_setequal(unit_analytes, analytes)
   })
 
@@ -183,7 +183,7 @@ describe("PKNCA_update_data_object", {
       adnca_data = pknca_data,
       auc_data = auc_data,
       method = "lin up log down",
-      selected_analytes = unique(simple_data$ANALYTE),
+      selected_analytes = unique(simple_data$PARAM),
       selected_dosno = unique(simple_data$DOSNO),
       selected_pcspec = unique(simple_data$PCSPEC),
       params = c("cmax", "tmax", "auclast", "aucinf.obs"),
@@ -204,12 +204,12 @@ describe("PKNCA_update_data_object", {
 
     # Sanity: make sure all analyte-param pairs exist
     pair_check <- tidyr::crossing(
-      ANALYTE = analytes,
+      PARAM = analytes,
       PPTESTCD = params
     )
 
     expect_true(all(
-      dplyr::semi_join(pair_check, units_table, by = c("ANALYTE", "PPTESTCD")) %>%
+      dplyr::semi_join(pair_check, units_table, by = c("PARAM", "PPTESTCD")) %>%
         nrow() == nrow(pair_check)
     ))
   })

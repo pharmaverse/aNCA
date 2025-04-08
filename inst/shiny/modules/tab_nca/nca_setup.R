@@ -12,7 +12,7 @@ nca_setup_ui <- function(id) {
           title = "General Settings",
           # Selection of analyte, dose number and specimen
           fluidRow(
-            column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = TRUE,
+            column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
                                   choices = NULL)),
             column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
                                   choices = NULL)),
@@ -211,6 +211,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # from NCA setup (all inputs) & slope adjustments (manual_slopes table & concentration dataset)
     upload_settings_server("upload_settings", adnca_data, session, auc_counter, manual_slopes)
 
+
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
@@ -234,8 +235,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       updateSelectInput(
         session,
         inputId = "select_analyte",
-        choices = unique(data()$ANALYTE),
-        selected = unique(data()$ANALYTE)[1]
+        choices = unique(data()$PARAM),
+        selected = unique(data()$PARAM)[1]
       )
 
       updateSelectInput(
