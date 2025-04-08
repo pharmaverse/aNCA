@@ -4,6 +4,7 @@
 ^\.Rproj\.user$
 ^\.renvignore$
 ^CONTRIBUTING.md$
+^vignettes/contributing.md$
 ^pkgdown/
 ^dev/
 ^\.lintr$
