@@ -21,7 +21,7 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
-
+  
   # Define group columns in the data
   group_cols <- unique(
     unlist(
@@ -30,7 +30,7 @@ export_cdisc <- function(res_nca) {
         res_nca$data$dose$columns$route)
     )
   )
-
+  
   # define columns needed for pp
   pp_cols <- c(
     "STUDYID",
@@ -55,35 +55,62 @@ export_cdisc <- function(res_nca) {
     "PPSTINT",
     "PPENINT"
   )
-
+  
   # define columns needed for adpp
-  adpp_cols <- c("STUDYID",
-                 "USUBJID",
-                 "PPSEQ",
-                 "PPGRPID",
-                 "PPSPID",
-                 "PARAMCD",
-                 "PARAM",
-                 "PPCAT",
-                 "PPSCAT",
-                 "PPREASND",
-                 "PPSPEC",
-                 "PPDTC",
-                 "PPSTINT",
-                 "PPENINT",
-                 "SUBJID",
-                 "SITEID",
-                 "SEX",
-                 "RACE",
-                 "ACTARM",
-                 "AAGE",
-                 "AAGEU",
-                 "TRT01P",
-                 "TRT01A",
-                 "AVAL",
-                 "AVALC",
-                 "AVALU")
-
+  adpp_cols <- c(
+    "STUDYID",
+    "USUBJID",
+    "PPSEQ",
+    "PPGRPID",
+    "PPSPID",
+    "PARAMCD",
+    "PARAM",
+    "PPCAT",
+    "PPSCAT",
+    "PPREASND",
+    "PPSPEC",
+    "PPDTC",
+    "PPSTINT",
+    "PPENINT",
+    "SUBJID",
+    "SITEID",
+    "SEX",
+    "RACE",
+    "ACTARM",
+    "AAGE",
+    "AAGEU",
+    "TRT01P",
+    "TRT01A",
+    "AVAL",
+    "AVALC",
+    "AVALU"
+  )
+  
+  adpc_cols <- c(
+    "STUDYID",
+    "SUBJID",
+    "USUBJID",
+    "SITEID",
+    "VISITNUM",
+    "VISIT",
+    "AVISIT",
+    "AVISITN",
+    "PCSTRESC",
+    "PCSTRESN",
+    "PCSTRESU",
+    "PCORRES",
+    "PCORRESU",
+    "PCTPT",
+    "PCTPTNUM",
+    "ATPT",
+    "ATPTN",
+    "PCSTRESC",
+    "PCSTRESN",
+    "PCSTRESU",
+    "AVAL",
+    "ANL01FL"
+  )
+  
   pp_info <- res_nca$result  %>%
     left_join(res_nca$data$dose$data,
               by = unname(unlist(res_nca$data$dose$columns$groups)),
@@ -166,20 +193,51 @@ export_cdisc <- function(res_nca) {
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup()
-
+  
   # select pp columns
   pp <- pp_info %>% select(all_of(pp_cols))
-
+  
   adpp <- pp_info %>%
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
     select(any_of(c(adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
-
+  
+  adpc <- res_nca$data$conc$data %>%
+    mutate(ANL01FL = ifelse(is.excluded.hl, "N", "Y"),
+           SUBJID =  {
+             if ("SUBJID" %in% names(.)) SUBJID
+             else if ("USUBJID" %in% names(.)) {
+               if ("STUDYID" %in% names(.)) stringr::str_remove(as.character(USUBJID),
+                                                                paste0(as.character(STUDYID),
+                                                                       "\\W?"))
+               else gsub(find_common_prefix(USUBJID), "", USUBJID)
+             }
+           },
+           ATPT = {
+             if ("PCTPT" %in% names(.)) PCTPT
+             else NA_character_
+           },
+           ATPTN = {
+             if( "PCTPTNUM" %in% names(.)) PCTPTNUM
+             else NA
+           },
+           ATPTREF = {
+             if ("PCTPTREF" %in% names(.)) PCTPTREF
+             else NA_character_
+           }
+    ) %>%
+    # Order columns using a standard, and then put the rest of the columns
+    select(any_of(adpc_cols), everything())  %>%
+    # Deselect columns that are only used internally in the App
+    select(-any_of(
+      c("exclude", "is.excluded.hl", "volume", "std_route",
+        "duration", "TIME", "IX", "exclude_half.life")))
+  
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
-
-  list(pp = pp, adpp = adpp, studyid = studyid)
+  
+  list(pp = pp, adpp = adpp, adpc = adpc, studyid = studyid)
 }
 
 #' Function to identify the common prefix in a character vector.
@@ -201,8 +259,8 @@ find_common_prefix <- function(strings) {
     # For the comparison make all have same number of letters
     sapply(\(x) substr(x, 0, min(nchar(.)))) %>%
     strsplit("")
-
+  
   mismatch <- letters[[1]] != letters[[2]]
-
+  
   substr(strings[[1]], 0, which(mismatch)[1] - 1)
 }
