@@ -142,15 +142,7 @@ export_cdisc <- function(res_nca) {
       PPSPEC = PCSPEC,
       # Specific ID variables
       PPSPID = paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA"),
-      SUBJID = {
-        if ("SUBJID" %in% names(.)) SUBJID
-        else if ("USUBJID" %in% names(.)) {
-          if ("STUDYID" %in% names(.)) stringr::str_remove(as.character(USUBJID),
-                                                           paste0(as.character(STUDYID),
-                                                                  "\\W?"))
-          else gsub(find_common_prefix(USUBJID), "", USUBJID)
-        }
-      },
+      SUBJID = get_subjid(.),
       # Parameter Variables
       PPORRES = round(as.numeric(PPORRES), 12),
       PPSTRESN = round(as.numeric(PPSTRES), 12),
@@ -204,35 +196,29 @@ export_cdisc <- function(res_nca) {
     select(any_of(c(adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
 
   adpc <- res_nca$data$conc$data %>%
-    mutate(ANL01FL = ifelse(is.excluded.hl, "N", "Y"),
-           SUBJID = {
-             if ("SUBJID" %in% names(.)) SUBJID
-             else if ("USUBJID" %in% names(.)) {
-               if ("STUDYID" %in% names(.)) stringr::str_remove(as.character(USUBJID),
-                                                                paste0(as.character(STUDYID),
-                                                                       "\\W?"))
-             else gsub(find_common_prefix(USUBJID), "", USUBJID)
-             }
-           },
-           ATPT = {
-             if ("PCTPT" %in% names(.)) PCTPT
-             else NA_character_
-           },
-           ATPTN = {
-             if ("PCTPTNUM" %in% names(.)) PCTPTNUM
-             else NA
-           },
-           ATPTREF = {
-             if ("PCTPTREF" %in% names(.)) PCTPTREF
-             else NA_character_
-           }
+    mutate(
+      ANL01FL = ifelse(is.excluded.hl, "N", "Y"),
+      SUBJID = get_subjid(.),
+      ATPT = {
+        if ("PCTPT" %in% names(.)) PCTPT
+        else NA_character_
+      },
+      ATPTN = {
+        if ("PCTPTNUM" %in% names(.)) PCTPTNUM
+        else NA
+      },
+      ATPTREF = {
+        if ("PCTPTREF" %in% names(.)) PCTPTREF
+        else NA_character_
+      }
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
     select(any_of(adpc_cols), everything())  %>%
     # Deselect columns that are only used internally in the App
-    select(-any_of(
-      c("exclude", "is.excluded.hl", "volume", "std_route",
-        "duration", "TIME", "IX", "exclude_half.life")))
+    select(-any_of(c(
+      "exclude", "is.excluded.hl", "volume", "std_route",
+      "duration", "TIME", "IX", "exclude_half.life"
+    )))
 
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
@@ -244,7 +230,7 @@ export_cdisc <- function(res_nca) {
 #' @details
 #' Checks the common prefix for all provided strings. If no
 #' common prefix is detected, returns empty string.
-#'
+#'get
 #' @param strings Character vector with strings to check.
 #' @returns A character string with common prefix.
 #'
@@ -263,4 +249,46 @@ find_common_prefix <- function(strings) {
   mismatch <- letters[[1]] != letters[[2]]
 
   substr(strings[[1]], 0, which(mismatch)[1] - 1)
+}
+
+#' Helper function to extract SUBJID from data
+#'
+#' This function extracts the `SUBJID` from the provided dataset. If `SUBJID` is not available,
+#' it attempts to derive it from `USUBJID` by removing the `STUDYID` prefix or the common prefix
+#' shared by all `USUBJID` values.
+#'
+#' @details
+#' The function first checks if `SUBJID` exists in the dataset. If not, it derives `SUBJID` from
+#' `USUBJID` by:
+#' \itemize{
+#'   \item Removing the `STUDYID` prefix if it exists.
+#'   \item Removing the longest common prefix shared by all `USUBJID` values.
+#' }
+#' If neither `SUBJID` nor `USUBJID` is available, the function returns `NA`.
+#'
+#' @param data A data frame containing `SUBJID`, `USUBJID`, and optionally `STUDYID`.
+#'
+#' @return A vector of `SUBJID` values.
+#'
+#' @examples
+#' data <- data.frame(
+#'   STUDYID = c("STUDY1", "STUDY1"),
+#'   USUBJID = c("STUDY1-001", "STUDY1-002")
+#' )
+#' get_subjid(data)
+#'
+#' @noRd
+#' @keywords internal
+get_subjid <- function(data) {
+  if ("SUBJID" %in% names(data)) {
+    data$SUBJID
+  } else if ("USUBJID" %in% names(data)) {
+    if ("STUDYID" %in% names(data)) {
+      stringr::str_remove(as.character(data$USUBJID), paste0(as.character(data$STUDYID), "\\W?"))
+    } else {
+      gsub(find_common_prefix(data$USUBJID), "", data$USUBJID)
+    }
+  } else {
+    NA
+  }
 }
