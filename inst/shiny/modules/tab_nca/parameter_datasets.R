@@ -13,7 +13,7 @@ parameter_datasets_server <- function(id, res_nca) {
       req(res_nca())
       export_cdisc(res_nca())
     })
-    
+
     output$pp_dataset <- DT::renderDataTable({
       DT::datatable(
         data = CDISC()$pp,
@@ -48,7 +48,7 @@ parameter_datasets_server <- function(id, res_nca) {
         )
       )
     })
-    
+
     output$adpp_dataset <- DT::renderDataTable({
       DT::datatable(
         data = CDISC()$adpp,
@@ -80,7 +80,7 @@ parameter_datasets_server <- function(id, res_nca) {
         )
       )
     })
-    
+
     output$adpc_dataset <- DT::renderDataTable({
       DT::datatable(
         data = CDISC()$adpc,
