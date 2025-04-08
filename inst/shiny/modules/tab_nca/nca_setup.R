@@ -52,7 +52,13 @@ nca_setup_ui <- function(id) {
         accordion_panel(
           title = "Parameter Selection",
           reactableOutput(ns("nca_parameters")),
-          verbatimTextOutput(ns("selected_params_text"))
+          card(
+            full_screen = FALSE,
+            card_header("Selected NCA Parameters"),
+            card_body(
+              uiOutput(ns("nca_param_display"))
+            )
+          )
         ),
         accordion_panel(
           title = "Data Imputation",
@@ -409,7 +415,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       
       reactable(
         params_data %>%
-          select(CAT, TYPE, PPTESTCD, PPTEST),
+          select(TYPE, PPTESTCD, PPTEST, CAT),
         groupBy = c("TYPE"),
         pagination = FALSE,
         filterable = TRUE,
@@ -433,10 +439,15 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       selected_terms$PKNCA
     })
     
-    output$selected_params_text <- renderPrint({
+    output$nca_param_display <- renderUI({
       req(nca_params())
-      cat("Selected PKNCA parameters:\n")
-      print(nca_params())
+      
+      div(
+        class = "nca-pill-grid",
+        lapply(nca_params(), function(param) {
+          tags$span(class = "nca-pill", param)
+        })
+      )
     })
 
     # Reactive value to store the AUC data table

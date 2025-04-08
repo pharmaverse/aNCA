@@ -216,6 +216,22 @@ h5 {
   display: inline-block !important;
 }
 
+/* parameter selection gird */
+.nca-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.nca-pill {
+  background-color: #e0ecff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+
 
 .tlg-module {
   margin-top: 1em;
