@@ -28,17 +28,20 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @param color_var       A character string of the variable name for the color.
 #' @param color_var_label A character string of the color label.
 #' @param xbreaks_var     A character string of the x-axis breaks.
+#' @param xbreaks_mindist A numeric value for minimum distance between x-axis breaks in centimeters.
 #' @param xmin            A numeric value specifying the minimum x-axis limit.
 #' @param xmax            A numeric value specifying the maximum x-axis limit.
 #' @param ymin            A numeric value for the minimum y-axis limit.
 #' @param ymax            A numeric value for the maximum y-axis limit.
 #' @param xlab            Character for x-axis label. Defaults: `xvar` label & `xvar_unit`.
 #' @param ylab            Character for y-axis label. Defaults: `yvar` label & `yvar_unit`.
+#' @param title           A character string for plot title.
+#' @param subtitle        A character string for plot subtitle.
 #' @param footnote        A character string of a manual footnote for the plot.
 #' @param plotgroup_vars  A character vector of the variables to group data.
 #' @param plotgroup_names A character vector of the grouping variable names.
-#' @param options         A list of additional options (e.g., display scale).
 #' @param studyid         A character string specifying the study ID variable.
+#' @param scale           A character string:"LIN", "LOG", or "SBS", defining the y-axis scale.
 #' @param trt_var         A character string specifying the treatment variable.
 #' @returns A list of ggplot objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
@@ -322,17 +325,20 @@ g_pkconc_log <- function(data, ...) {
 #' @param color_var       A character string of the variable name for the color.
 #' @param color_var_label A character string of the color label.
 #' @param xbreaks_var     A character string of the x-axis breaks.
+#' @param xbreaks_mindist A numeric value for minimum distance between x-axis breaks in centimeters.
 #' @param xmin            A numeric value specifying the minimum x-axis limit.
 #' @param xmax            A numeric value specifying the maximum x-axis limit.
 #' @param ymin            A numeric value for the minimum y-axis limit.
 #' @param ymax            A numeric value for the maximum y-axis limit.
 #' @param xlab            Character for x-axis label. Defaults: `xvar` label & `xvar_unit`.
 #' @param ylab            Character for y-axis label. Defaults: `yvar` label & `yvar_unit`.
+#' @param title           A character string for plot title.
+#' @param subtitle        A character string for plot subtitle.
 #' @param footnote        A character string of a manual footnote for the plot.
 #' @param plotgroup_vars  A character vector of the variables to group data.
 #' @param plotgroup_names A character vector of the grouping variable names.
-#' @param options         A list of additional options (e.g., display scale).
 #' @param studyid         A character string specifying the study ID variable.
+#' @param scale           A character string:"LIN", "LOG", or "SBS", defining the y-axis scale.
 #' @param trt_var         A character string specifying the treatment variable.
 #' @returns A list of ggplot objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n

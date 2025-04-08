@@ -48,6 +48,8 @@ pkcg02(
 
 \item{xbreaks_var}{A character string of the x-axis breaks.}
 
+\item{xbreaks_mindist}{A numeric value for minimum distance between x-axis breaks in centimeters.}
+
 \item{xmin}{A numeric value specifying the minimum x-axis limit.}
 
 \item{xmax}{A numeric value specifying the maximum x-axis limit.}
@@ -60,23 +62,27 @@ pkcg02(
 
 \item{ylab}{Character for y-axis label. Defaults: \code{yvar} label & \code{yvar_unit}.}
 
+\item{title}{A character string for plot title.}
+
+\item{subtitle}{A character string for plot subtitle.}
+
 \item{footnote}{A character string of a manual footnote for the plot.}
 
 \item{plotgroup_vars}{A character vector of the variables to group data.}
 
 \item{plotgroup_names}{A character vector of the grouping variable names.}
 
+\item{scale}{A character string:"LIN", "LOG", or "SBS", defining the y-axis scale.}
+
 \item{studyid}{A character string specifying the study ID variable.}
 
 \item{trt_var}{A character string specifying the treatment variable.}
-
-\item{options}{A list of additional options (e.g., display scale).}
 }
 \value{
 A list of ggplot objects for each unique group.
 }
 \description{
-This function generates a list of plotly objects :Combined PK concentration-time profiles for each unique group of patients.
+This function generates a list of plotly objects PK concentration-time profiles by group
 }
 \examples{
 \dontrun{
