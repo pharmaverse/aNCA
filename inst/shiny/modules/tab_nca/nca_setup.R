@@ -392,8 +392,9 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         selected = unique(data()$PCSPEC)[1]
       )
     })
-    
-    DEFAULT_PARAMS <- c("aucinf.obs", "aucinf.obs.dn",
+
+    DEFAULT_PARAMS <- c(
+      "aucinf.obs", "aucinf.obs.dn",
       "aucint.last",
       "auclast", "auclast.dn",
       "cmax", "cmax.dn",
@@ -404,15 +405,16 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       "lambda.z",
       "lambda.z.n.points", "r.squared",
       "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred")
-    
+      "aucpext.obs", "aucpext.pred"
+    )
+
     output$nca_parameters <- renderReactable({
       #remove parameters that are currently unavailable in PKNCA
       params_data <- pknca_cdisc_terms %>%
         filter(!PPTESTCD %in% c("FAB", "FREL"))
-      
+
       default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
-      
+
       reactable(
         params_data %>%
           select(TYPE, PPTESTCD, PPTEST, CAT),
@@ -426,22 +428,22 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         defaultSelected = default_row_indices
       )
     })
-    
+
     nca_params <- reactive({
       selected_rows <- getReactableState("nca_parameters", "selected")
       if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
-      
+
       params_data <- pknca_cdisc_terms %>%
         filter(!PPTESTCD %in% c("FAB", "FREL"))
       selected_terms <- params_data[selected_rows, , drop = FALSE]
-      
+
       # Return PKNCA column names
       selected_terms$PKNCA
     })
-    
+
     output$nca_param_display <- renderUI({
       req(nca_params())
-      
+
       div(
         class = "nca-pill-grid",
         lapply(nca_params(), function(param) {
@@ -475,7 +477,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       )
     }) %>%
       shiny::bindEvent(refresh_reactable())
-    
 
     # Add a blank row on button click
     observeEvent(input$addRow, {
