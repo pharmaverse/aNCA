@@ -346,9 +346,6 @@ g_pkconc_log <- function(data, ...) {
 #' @importFrom tern g_ipp
 #' @importFrom scales breaks_log label_log
 #' @importFrom ggh4x scale_y_facet
-#' @import dplyr ggplot2 plotly purrr ggh4x
-#' @importFrom tern g_ipp
-#' @importFrom stats setNames
 
 #' @examples
 #' \dontrun{
