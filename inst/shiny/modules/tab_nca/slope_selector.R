@@ -141,7 +141,7 @@ slope_selector_server <- function(
     })
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
     observeEvent(list(input$plots_per_page, input$search_patient), current_page(1))
-    
+
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
     #' and exclusions before applying them to the actual dataset.
@@ -153,34 +153,31 @@ slope_selector_server <- function(
 
     # Generate dynamically the minimum results you need for the lambda plots
     lambdas_res <- reactive({
-      req(pknca_data())
-      pknca_data <- pknca_data()
+      req(plot_data())
 
-      if (!"type_interval" %in% names(pknca_data$intervals)) {
+      if (!"type_interval" %in% names(plot_data()$intervals)) {
         NULL
       } else {
         all_params <- names(PKNCA::get.interval.cols())
-        result_obj <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
+        result_obj <- PKNCA::pk.nca(data = plot_data(), verbose = FALSE)
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
 
         result_obj
       }
-    }) |>
-      bindEvent(pknca_data())
+    })
 
     # Profiles per Patient ----
     # Define the profiles per patient
     profiles_per_patient <- reactive({
-      req(lambdas_res())
+      req(pknca_data())
 
-      lambdas_res()$result %>%
+      pknca_data()$intervals %>%
         mutate(USUBJID = as.character(USUBJID),
                DOSNO = as.character(DOSNO)) %>%
-        group_by(!!!syms(unname(unlist(lambdas_res()$data$conc$columns$groups)))) %>%
+        group_by(!!!syms(unname(unlist(pknca_data()$conc$columns$groups)))) %>%
         summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
         unnest(DOSNO)  # Convert lists into individual rows
-
     })
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
