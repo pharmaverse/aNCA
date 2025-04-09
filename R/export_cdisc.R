@@ -197,7 +197,7 @@ export_cdisc <- function(res_nca) {
 
   adpc <- res_nca$data$conc$data %>%
     mutate(
-      ANL01FL = ifelse(is.excluded.hl, "N", "Y"),
+      ANL01FL = ifelse(is.excluded.hl, NA_character_, "Y"),
       SUBJID = get_subjid(.),
       ATPT = {
         if ("PCTPT" %in% names(.)) PCTPT
