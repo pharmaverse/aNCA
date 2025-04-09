@@ -3,7 +3,7 @@
 #' @param ...  Any other parameters to be passed into the plotting function.
 #' @returns ggplot2 object for pkcg01.
 #' @export
-g_pkconc_ind_lin <- function(data, ...) {
+g_pkcg01_lin <- function(data, ...) {
   pkcg01(adpc = data, scale = "LIN", ...)
 }
 
@@ -12,7 +12,7 @@ g_pkconc_ind_lin <- function(data, ...) {
 #' @param ...  Any other parameters to be passed into the plotting function.
 #' @returns ggplot2 object for pkcg01.
 #' @export
-g_pkconc_ind_log <- function(data, ...) {
+g_pkcg01_log <- function(data, ...) {
   pkcg01(adpc = data, scale = "LOG", ...)
 }
 
@@ -162,15 +162,19 @@ pkcg01 <- function(
   # Add color when specified
   if (!is.null(color_var)) {
     plot <- plot +
-      aes(color = !!sym(color_var)) +
-      theme(legend.position = "none")
+      ggplot2::aes(color = !!sym(color_var))
+
+    if (length(unique(plot_data[[color_var]])) >= 1) {
+      plot <- plot +
+        ggplot2::theme(legend.position = "bottom")
+    }
   }
 
-  # Add color legend only when neccessary
-  if (!is.null(color_var_label) && length(color_var) > 1) {
+  # Modify legend label when specified
+  if (!is.null(color_var_label)) {
     plot <- plot +
-      labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
-      theme(legend.position = "bottom")
+      ggplot2::labs(color = color_var_label) +
+      ggplot2::theme(legend.position = "bottom")
   }
 
   if (scale == "LOG") {
@@ -250,47 +254,52 @@ pkcg01 <- function(
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
 
-    plotly_plot <- plot %+%
-      plot_data %+%
-      theme(
-        # add margin to make space for subtitle and footnote #
-        plot.margin = margin(
-          title_margin,
-          0,
-          footnote_y * 5,
-          0,
-          "cm"
+    suppressWarnings({
+      plotly_plot <- plot %+%
+        plot_data %+%
+        theme(
+          # add margin to make space for subtitle and footnote #
+          plot.margin = margin(
+            title_margin,
+            0,
+            footnote_y * 5,
+            0,
+            "cm"
+          )
+        ) %>%
+        ggplotly(
+          tooltip = c("x", "y"),
+          dynamicTicks = TRUE,
+          #' NOTE: might require some fine tuning down the line, looks fine now
+          height = 500 + (footnote_y * 25) + title_margin * 50
+        ) %>%
+        layout(
+          legend = list(
+            orientation = "h",
+            y = -0.2 # Move the legend down to avoid overlap
+          ),
+          yaxis = list(autorange = FALSE),
+          xaxis = list(autorange = FALSE),
+          # title and subtitle #
+          title = list(text = title_text),
+          # footnote #
+          annotations = list(
+            x = 0,
+            y =  -footnote_y,
+            text = footnote,
+            showarrow = FALSE,
+            yref = "paper",
+            xref = "paper",
+            align = "left",
+            parse = TRUE
+          )
         )
-      ) %>%
-      ggplotly(
-        tooltip = c("x", "y"),
-        dynamicTicks = TRUE,
-        #' NOTE: might require some fine tuning down the line, looks fine now
-        height = 500 + (footnote_y * 25) + title_margin * 50
-      ) %>%
-      layout(
-        yaxis = list(autorange = FALSE),
-        xaxis = list(autorange = FALSE),
-        # title and subtitle #
-        title = list(text = title_text),
-        # footnote #
-        annotations = list(
-          x = 0,
-          y =  -footnote_y,
-          text = footnote,
-          showarrow = FALSE,
-          yref = "paper",
-          xref = "paper",
-          align = "left",
-          parse = TRUE
-        )
-      )
 
-    if (scale == "LOG") {
-      plotly_plot <- plotly_plot %>%
-        layout(yaxis = list(type = "log"))
-    }
-
+      if (scale == "LOG") {
+        plotly_plot <- plotly_plot %>%
+          layout(yaxis = list(type = "log"))
+      }
+    })
     plotly_plot
   }) |>
     setNames(unique(adpc[["id_plot"]]))
@@ -300,7 +309,7 @@ pkcg01 <- function(
 #' @param ...  Any other parameters to be passed into the plotting function.
 #' @returns ggplot2 object for pkcg02.
 #' @export
-g_pkconc_lin <- function(data, ...) {
+g_pkcg02_lin <- function(data, ...) {
   pkcg02(adpc = data, scale = "LIN", ...)
 }
 
@@ -309,7 +318,7 @@ g_pkconc_lin <- function(data, ...) {
 #' @param ...  Any other parameters to be passed into the plotting function.
 #' @returns ggplot2 object for pkcg02.
 #' @export
-g_pkconc_log <- function(data, ...) {
+g_pkcg02_log <- function(data, ...) {
   pkcg02(adpc = data, scale = "LOG", ...)
 }
 
@@ -375,8 +384,8 @@ pkcg02 <- function(
   xmax = NA,
   ymin = NA,
   ymax = NA,
-  xlab = paste0(xvar, " [", unique(adpc[[xvar_unit]])[1], "]"),
-  ylab = paste0(yvar, " [", unique(adpc[[yvar_unit]])[1], "]"),
+  xlab = paste0("!", xvar, " [$", xvar_unit, "]"),
+  ylab = paste0("!", yvar, " [$", yvar_unit, "]"),
   title = NULL,
   subtitle = NULL,
   footnote = NULL,
@@ -396,6 +405,7 @@ pkcg02 <- function(
   xmax <- as.numeric(xmax)
   ymin <- as.numeric(ymin)
   ymax <- as.numeric(ymax)
+
 
   col_labels <- purrr::map(adpc, ~ attr(.x, "label"))
 
@@ -439,13 +449,19 @@ pkcg02 <- function(
       labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
     )
 
+  # Add color when specified
   if (!is.null(color_var)) {
     plot <- plot +
-      ggplot2::aes(color = !!sym(color_var)) +
-      ggplot2::theme(legend.position = "none")
+      ggplot2::aes(color = !!sym(color_var))
+
+    if (length(unique(plot_data[[color_var]])) >= 1) {
+      plot <- plot +
+        ggplot2::theme(legend.position = "bottom")
+    }
   }
 
-  if (!is.null(color_var_label) && length(color_var) > 1) {
+  # Modify legend label when specified
+  if (!is.null(color_var_label)) {
     plot <- plot +
       ggplot2::labs(color = color_var_label) +
       ggplot2::theme(legend.position = "bottom")
@@ -454,6 +470,7 @@ pkcg02 <- function(
   if (scale == "LOG") {
     plot <- plot +
       ggplot2::labs(y = paste0("Log 10 - ", plot$labels$y))
+
   }
 
   if (scale == "SBS") {
@@ -500,7 +517,6 @@ pkcg02 <- function(
     subtitle <- {
       if (is.null(subtitle)) {
         paste0(
-          #"Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
           # TODO(mateusz): Refactor when label attributes are implemented.
           paste(
             unlist(unname(plotgroup_names[plotgroup_vars])), ": ",

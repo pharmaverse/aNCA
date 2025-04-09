@@ -79,7 +79,7 @@ l_pkconc:
         - ["NFRLT",   "Nom. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
 
 # GRAPHS #
-g_pkconc_ind_lin:
+g_pkcg01_lin:
   is_default: true
   type: Graph
   dataset: ADPC
@@ -87,7 +87,7 @@ g_pkconc_ind_lin:
   label: "pkcg01 - linear"
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with linear scale"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
-  fun: g_pkconc_ind_lin
+  fun: g_pkcg01_lin
   options:
     .group_label_1: "General"
     xvar:
@@ -143,21 +143,22 @@ g_pkconc_ind_lin:
       type: numeric
     ymax:
       type: numeric
-g_pkconc_ind_log:
-  template: g_pkconc_ind_lin
+g_pkcg01_log:
+  template: g_pkcg01_lin
   label: "pkcg01 - log"
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
-  fun: g_pkconc_ind_log
+  fun: g_pkcg01_log
 
-g_pkconc_lin:
+g_pkcg02_lin:
   is_default: true
   type: Graph
   dataset: ADPC
   pkid: pkcg02
   label: "pkcg02 - linear"
+  scale_type: "LIN"
   description: "Combined plot of concentrations vs. time (one plot per patient/subject) with linear scale"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
-  fun: g_pkconc_lin
+  fun: g_pkcg02_lin
   options:
     .group_label_1: "General"
     xvar:
@@ -213,8 +214,8 @@ g_pkconc_lin:
       type: numeric
     ymax:
       type: numeric
-g_pkconc_log:
-  template: g_pkconc_lin
+g_pkcg02_log:
+  template: g_pkcg02_lin
   label: "pkcg02 - log"
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
-  fun: g_pkconc_log
+  fun: g_pkcg02_log

@@ -91,17 +91,17 @@ describe("pkcg01", {
   })
 })
 
-describe("g_pkconc_ind_lin", {
+describe("g_pkcg01_lin", {
   it("generates plot with linear scale", {
-    p_list <- g_pkconc_ind_lin(adpc_single)
+    p_list <- g_pkcg01_lin(adpc_single)
     p_json <- .get_plotly_json(p_list[[1]])
     expect_equal(p_json$layout$yaxis$type, "linear")
   })
 })
 
-describe("g_pkconc_ind_log", {
+describe("g_pkcg01_log", {
   it("generates plot with log scale", {
-    p_list <- g_pkconc_ind_log(adpc_single)
+    p_list <- g_pkcg01_log(adpc_single)
     p_json <- .get_plotly_json(p_list[[1]])
     expect_equal(p_json$layout$yaxis$type, "log")
   })
@@ -175,17 +175,17 @@ describe("pkcg02", {
   })
 })
 
-describe("g_pkconc_lin", {
+describe("g_pkcg02_lin", {
   it("generates plot with linear scale", {
-    p_list <- g_pkconc_lin(adpc)
+    p_list <- g_pkcg02_lin(adpc)
     p_json <- .get_plotly_json(p_list[[1]])
     expect_equal(p_json$layout$yaxis$type, "linear")
   })
 })
 
-describe("g_pkconc_log", {
+describe("g_pkcg02_log", {
   it("generates plot with log scale", {
-    p_list <- g_pkconc_log(adpc)
+    p_list <- g_pkcg02_log(adpc)
     p_json <- .get_plotly_json(p_list[[1]])
     expect_equal(p_json$layout$yaxis$type, "log")
   })
