@@ -330,10 +330,10 @@ slope_selector_server <- function(
       setts <- read.csv(settings_upload()$datapath)
       imported_slopes <- setts %>%
         select(TYPE, USUBJID, PARAM, PCSPEC, DOSNO, IX, REASON) %>%
-        mutate(PATIENT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
-        group_by(TYPE, PATIENT, PARAM, PCSPEC, PROFILE, REASON) %>%
+        mutate(SUBJECT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
+        group_by(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, REASON) %>%
         summarise(RANGE = .compress_range(IX), .groups = "keep") %>%
-        select(TYPE, PATIENT, PARAM, PCSPEC, PROFILE, RANGE, REASON) %>%
+        select(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, RANGE, REASON) %>%
         na.omit()
 
       manual_slopes(imported_slopes)

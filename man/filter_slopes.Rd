@@ -11,9 +11,9 @@ filter_slopes(data, slopes, profiles, slope_groups, check_reasons = FALSE)
 \code{PKNCAconc} list and appropriate data frame included under data.}
 
 \item{slopes}{Data frame with slopes selection rules, must contain the following columns:
-\code{TYPE}, \code{PATIENT}, \code{PROFILE}, \code{RANGE}, \code{REASON}.}
+\code{TYPE}, \code{SUBJECT}, \code{PROFILE}, \code{RANGE}, \code{REASON}.}
 
-\item{profiles}{List with available profiles for each \code{PATIENT}.}
+\item{profiles}{List with available profiles for each \code{SUBJECT}.}
 
 \item{slope_groups}{List with column names that define the groups.}
 

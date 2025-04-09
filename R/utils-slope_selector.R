@@ -5,8 +5,8 @@
 #' @param data     Data to filter. Must be `PKNCAdata` list, containing the `conc` element with
 #'                 `PKNCAconc` list and appropriate data frame included under data.
 #' @param slopes   Data frame with slopes selection rules, must contain the following columns:
-#'                 `TYPE`, `PATIENT`, `PROFILE`, `RANGE`, `REASON`.
-#' @param profiles List with available profiles for each `PATIENT`.
+#'                 `TYPE`, `SUBJECT`, `PROFILE`, `RANGE`, `REASON`.
+#' @param profiles List with available profiles for each `SUBJECT`.
 #' @param slope_groups List with column names that define the groups.
 #' @param check_reasons Whether to check if all selections have REASONS stated. If this is `TRUE`
 #'                      and not all selections have a reason provided, an error will be thrown.
