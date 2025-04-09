@@ -118,7 +118,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           res <- processed_pknca_data() %>%
             filter_slopes(
               slope_rules$manual_slopes(),
-              slope_rules$profiles_per_patient(),
+              slope_rules$profiles_per_subject(),
               slope_rules$slopes_groups(),
               check_reasons = TRUE
             ) %>%

@@ -90,7 +90,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
 #' @export
 check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE) {
 
-  # check if any rule already exists for specific patient and profile #
+  # check if any rule already exists for specific subject and profile #
   existing_index <- which(
     existing$TYPE == new$TYPE &
       Reduce(`&`, lapply(slope_groups, function(col) {
@@ -100,7 +100,7 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 
   if (length(existing_index) != 1) {
     if (length(existing_index) > 1)
-      warning("More than one range for single patient, profile and rule type detected.")
+      warning("More than one range for single subject, profile and rule type detected.")
     return(rbind(existing, new))
   }
 
