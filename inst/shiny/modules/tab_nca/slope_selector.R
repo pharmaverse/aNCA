@@ -61,7 +61,7 @@ slope_selector_ui <- function(id) {
         class = "plot-widget-group",
         selectInput(
           ns("search_subject"),
-          label = "Search Patient",
+          label = "Search Subject",
           choices = NULL,
           multiple = TRUE
         )
@@ -160,7 +160,7 @@ slope_selector_server <- function(
     }) |>
       bindEvent(pknca_data())
 
-    # Profiles per Patient ----
+    # Profiles per Subject ----
     # Define the profiles per subject
     profiles_per_subject <- reactive({
       req(lambdas_res())
@@ -273,7 +273,7 @@ slope_selector_server <- function(
       updateSelectInput(
         session = session,
         inputId = "search_subject",
-        label = "Search Patient",
+        label = "Search Subject",
         choices = unique(res_nca()$result$USUBJID)
       )
     })

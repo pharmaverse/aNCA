@@ -13,7 +13,7 @@ l_pkconc(
   title = paste0("Listing of PK Concentration by Treatment Group,",
     "Subject and Nominal Time, PK Population"),
   subtitle = NULL,
-  footnote = "*: Patients excluded from the summary table and mean plots"
+  footnote = "*: Subjects excluded from the summary table and mean plots"
 )
 }
 \arguments{
@@ -95,7 +95,7 @@ The \code{formatting_vars_table} should be a data frame with the following colum
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
                          formatting_vars_table = formatting_vars_table,
                          title = "Listing of PK Concentration",
-                         subtitle = "Patients with !PARAM: $PARAM (!PCSPEC: $PCSPEC)"
+                         subtitle = "Subjects with !PARAM: $PARAM (!PCSPEC: $PCSPEC)"
                          )
   print(listing_ex)
 
