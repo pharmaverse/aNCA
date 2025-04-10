@@ -57,8 +57,9 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       final_results <- pivot_wider_pknca_results(results)
 
       # Apply flag rules
-      for (param in names(rules)) {
-        if (rules[[param]]$is.checked) {
+      current_rules <- rules()
+      for (param in names(current_rules)) {
+        if (current_rules[[param]]$is.checked) {
           # Find the proper column/s that should be considered (in principle should be 1)
           param_cdisc <- translate_terms(param, "PKNCA", "PPTESTCD")
           param_cols <- grep(paste0("^", param_cdisc, "(\\[.*\\])?$"),
@@ -68,24 +69,26 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
           # Include a flag column for that parameter that is TRUE when the threshold is surpassed
           final_results <- final_results %>%
             mutate(!!paste0("flag_", param) := case_when(
-              startsWith(param, "auc") ~ rowSums(.[, param_cols] >= rules[[param]]$threshold) > 0,
-              TRUE ~ rowSums(.[, param_cols] <= rules[[param]]$threshold) > 0
+              startsWith(param, "auc") ~ rowSums(
+                .[, param_cols] >= current_rules[[param]]$threshold
+              ) > 0,
+              TRUE ~ rowSums(.[, param_cols] <= current_rules[[param]]$threshold) > 0
             ))
         }
       }
 
       # Join subject data to allow the user to group by it
+      conc_data_to_join <- res_nca()$data$conc$data %>%
+        select(any_of(c(
+          grouping_vars(),
+          unname(unlist(res_nca()$data$conc$columns$groups)),
+          "DOSEA",
+          "DOSNO",
+          "ROUTE"
+        )))
+
       final_results <- final_results %>%
-        inner_join(
-          res_nca()$data$conc$data %>%
-            select(
-              any_of(c(grouping_vars(),
-                       unname(unlist(res_nca()$data$conc$columns$groups)),
-                       "DOSEA",
-                       "DOSNO",
-                       "ROUTE"))
-            )
-        ) %>%
+        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
         distinct()
 
       # Add flagged column

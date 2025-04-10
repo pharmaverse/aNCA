@@ -1,7 +1,7 @@
 adpc <- read.csv(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"))
 attr(adpc$USUBJID, "label") <- "Subject ID"
 attr(adpc$DOSEU, "label") <- "Dose unit"
-adpc_single <- dplyr::filter(adpc, USUBJID == "11101")
+adpc_single <- dplyr::filter(adpc, USUBJID == "XX01-11101")
 
 #' Converts plotly object to JSON
 #' @param p plotly object
@@ -60,8 +60,8 @@ describe("pkcg01", {
     .expect_plotlist(p_list, 4)
 
     p_json <- .get_plotly_json(p_list[[1]])
-    expect_equal(p_json$layout$xaxis$title$text, "Test 11101")
-    expect_equal(p_json$layout$yaxis$title$text, "Test Subject ID: 11101")
+    expect_equal(p_json$layout$xaxis$title$text, "Test XX01-11101")
+    expect_equal(p_json$layout$yaxis$title$text, "Test Subject ID: XX01-11101")
     expect_equal(p_json$layout$title$text, "Test Dose unit: mg<br><sup>Test mg<br>mg</sup>")
     expect_equal(p_json$layout$annotations[1, ]$text, "Test Subject ID")
   })

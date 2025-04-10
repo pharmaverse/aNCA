@@ -11,7 +11,7 @@
 #'
 #' @details
 #' The function iterates over the list of filters and applies each filter to the dataset.
-#' The supported conditions are `==`, `>`, `<`, `>=`, and `<=`.
+#' The supported conditions are `==`, `>`, `<`, `>=`, `<=` and `!=`.
 #'
 #' @examples
 #' \dontrun{
@@ -60,6 +60,9 @@ apply_filters <- function(data, filters) {
       },
       "<=" = {
         data <- dplyr::filter(data, !!sym(column) <= value)
+      },
+      "!=" = {
+        data <- dplyr::filter(data, !!sym(column) != value)
       }
     )
   }

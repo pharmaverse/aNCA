@@ -3,7 +3,7 @@ conc_data <- data.frame(
   conc = c(1:3, c(1, 2, 0.5), 1:3, 6:4, 6:4, rep(2, 3), 1:3, 6:4),
   time = c(0:2, c(1, 2, 2.5), 4:6, c(1, 2, 2.5), 4:6, c(1, 2, 2.5), c(1, 2, 2.5), c(1, 2, 2.5)),
   route = c(rep("extravascular", 9), rep("intravascular", 15)),
-  analyte = c(rep("A", 21), rep("B", 3)),
+  param = c(rep("A", 21), rep("B", 3)),
   USUBJID = c(rep(1, 3), rep(2, 6), rep(3, 6), rep(4, 3), rep(5, 3), rep(6, 3)),
   DOSNO = c(rep(1, 3), rep(rep(1:2, each = 3), 2), rep(1, 3), rep(1, 3), rep(1, 3))
 )
@@ -28,7 +28,7 @@ intervals_data <- data.frame(
   auc.pred = TRUE
 )
 
-conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / analyte)
+conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / param)
 dose_obj <- PKNCA::PKNCAdose(dose_data, dose ~ time | USUBJID + DOSNO,
                              duration = "duration", route = "route")
 mydata <- PKNCA::PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)

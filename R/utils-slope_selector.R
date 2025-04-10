@@ -13,7 +13,7 @@
 #'
 #' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
 #'          columns modified in accordance to the provided slope filters.
-#' @importFrom dplyr filter group_by mutate select
+#' @importFrom dplyr filter group_by mutate select all_of
 #' @export
 filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = FALSE) {
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
@@ -29,11 +29,11 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
 
     if (any(exclusions$REASON == "")) {
       missing_reasons <- filter(exclusions, REASON == "") %>%
-        select(PCSPEC, USUBJID, ANALYTE, DOSNO, RANGE) %>%
+        select(PCSPEC, USUBJID, PARAM, DOSNO, RANGE) %>%
         apply(1, \(x) paste0(x, collapse = " "))
 
       stop(
-        "No reason provided for the following exclusions:\nPCSPEC USUBJID ANALYTE DOSNO RANGE\n",
+        "No reason provided for the following exclusions:\nPCSPEC USUBJID PARAM DOSNO RANGE\n",
         missing_reasons
       )
     }
@@ -47,7 +47,8 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
     semi_join(
-      profiles
+      profiles,
+      by = all_of(slope_groups)
     ) %>%
     filter(all(!is.na(sapply(RANGE, .eval_range))))
 

@@ -257,6 +257,7 @@ QTCBBLU,QTcB at Baseline (Unit),ADPC
 QTCFBLU,QTcF at Baseline (Unit),ADPC
 HRBLU,Heart Rate at Baseline (Unit),ADPC
 DRUG,Medication Name,ADPC
+DOSETRT,Medication Name,ADPC
 REGIME,Regimen of Medication,ADPC
 FRMUL,Treatment Formulation,ADPC
 DOSNO,Dose Number,ADPC

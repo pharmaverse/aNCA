@@ -29,7 +29,7 @@ example_data <- data.frame(
   DRUG = rep("DrugA", 6),
   USUBJID = rep("SUBJ001", 6),
   DOSNO = rep(1, 6),
-  ANALYTE = rep("AnalyteA", 6),
+  PARAM = rep("AnalyteA", 6),
   AVAL = c(0, 5, 10, 7, 3, 1),
   AVALU = rep("ng/mL", 6),
   DOSEA = rep(100, 6),
