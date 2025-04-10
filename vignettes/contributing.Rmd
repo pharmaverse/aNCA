@@ -1,3 +1,14 @@
+---
+title: "Contributing to aNCA"
+description: >
+  Learn how to contribute to the development of the aNCA package
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Contributing to aNCA}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
 Thank you for your interest in the aNCA application! We strive to provide open-sourced for performing Non-Compartment Analysis for both pre-clinical and clinical datasets, aiming to make NCA straightforward and approachable to all scientists.
 
 # Report bugs and suggest enhancements
