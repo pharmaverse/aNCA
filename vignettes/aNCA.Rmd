@@ -45,23 +45,11 @@ Click **Upload File** and select the dataset you would like to use. The data mus
 |  | DOSEU | Treatment Dose Units | character |
 |  | RRLTU | Relative Time from Reference Dose Unit | character |
 
-### Data mapping
-
-Once the dataset has been uploaded, you can verify that the data is as expected, and click on the *Mapping and Filters* tab.
-
--   Map the correct columns in your dataset to the corresponding label.
-
--   For Unit Variables, if your dataset has a defined column for units, select it. Otherwise, by scrolling down, you can select the units for the corresponding columns.
-
--   Click **Submit Mapping**. You will be automatically directed to the next tab.
-
-<img src="images/get_started/02.png" alt="Mapping tab"/> <img src="images/get_started/03.png" alt="Mapping"/>
-
 ### Verifying and adding filters
 
-Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, return to the *Mapping and Filters* page, then scroll down to add filters.
+Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, click the *Add Filter* button.
 
-<img src="images/get_started/04.png" alt="Adding filters"/>
+<img src="images/get_started/02.png" alt="Adding filters"/>
 
 <blockquote class="important">
 
@@ -69,7 +57,21 @@ Don’t forget to scroll down and click **Submit Filters**!
 
 </blockquote>
 
-<img src="images/get_started/05.png" alt="Submitting filters"/>
+### Data mapping
+
+Click on the *Column Mapping* tab.
+
+-   Map the correct columns in your dataset to the corresponding label.
+
+-   For Unit Variables, if your dataset has a defined column for units, select it. Otherwise, by scrolling down, you can select the units for the corresponding columns.
+
+-   Click **Submit Mapping**. You will be automatically directed to the next tab.
+
+<img src="images/get_started/04.png" alt="Mapping tab"/> <img src="images/get_started/03.png" alt="Mapping"/>
+
+### Review
+
+Review the data and ensure that the columns have been mapped correctly, and all your filters have been applied.
 
 # Step 2: Run NCA
 
@@ -77,8 +79,7 @@ Click on the *NCA* tab at the top of the screen to switch to the next section.
 
 ## Data selection
 
-1.  *NCA settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s) you would like to run the NCA on, the extrapolation method and the NCA parameters to calculate. Select additional options including partial AUCs, or rule sets to flag the data. A table summarizes the settings you have selected.
-
+1.  *NCA settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s) you would like to run the NCA on, the extrapolation method and the NCA parameters to calculate. Select additional options including partial AUCs, or rule sets to flag the data. In the summary tab, a table summarizes the settings you have selected.
 <img src="images/get_started/06.png" alt="NCA settings"/>
 
 2.  Click **Run NCA** at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
@@ -134,11 +135,17 @@ If you do not click **Apply**, the manual slopes will not be added!
 
 </blockquote>
 
-#### Parameter Datasets
+### Parameter Datasets
 
 In the Parameter Datasets tab you can see and export the ADPP and PP datasets.
 
 <img src="images/get_started/12.png" alt="Parameter Datasets"/>
+
+## Additional Analysis
+
+In the *Additional Analysis* tab, you can calculate tissue-matrix ratios using the concentration ratios tab. Input which specimen you would like as the numerator and denominator, and click **Submit**.
+
+<img src="images/get_started/13.png" alt="Additional Analysis"/>
 
 ## Saving and uploading settings
 
@@ -158,7 +165,7 @@ Click the button *Save Project Settings* on top of the tabs. This will download 
 
 To upload settings in a later analysis, after column mapping, in *Setup*, in the *NCA Settings* tab, click *Browse*. The inclusions and exclusions will be automatically added to the data.
 
-## Step 4: Visualization
+# Step 4: Visualization
 
 In the *Visualization* tab, you will find the different visualization options, including Individual Plots, Mean Plots, Descriptive Statistics, and Boxplots.
 
@@ -168,7 +175,7 @@ Currently work in progress
 
 </blockquote>
 
-## Step 5: TLGs
+# Step 5: TLGs
 <blockquote class="warning">
 Currently work in progress. Not all TLGs and features are available.
 </blockquote>

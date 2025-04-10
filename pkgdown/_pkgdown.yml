@@ -9,7 +9,7 @@ navbar:
       text: Contributing
       menu:
         - text: Contributing
-          href: page/CONTRIBUTING.html
+          href: articles/contributing.html
         - text: Adding TLGs
           href: articles/adding_tlg.html
 url: "https://pharmaverse.github.io/aNCA/"
