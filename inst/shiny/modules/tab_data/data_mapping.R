@@ -337,10 +337,10 @@ data_mapping_server <- function(id, adnca_data) {
 
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
-      
+      browser()
       # Check and filter concentration duplicates
       conc_duplicates <- dataset %>%
-        group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, AVAL) %>%
+        group_by(across(all_of(setdiff(MAPPING_DESIRED_ORDER, c("ARRLT", "NRRLT", "DOSNO"))))) %>%
         filter(n() > 1) %>%
         slice(1) %>%
         ungroup() %>%
@@ -366,6 +366,7 @@ data_mapping_server <- function(id, adnca_data) {
       req(mapped_data())
       dataset <- mapped_data()
       
+      #Check for blocking duplicates
       group_columns <- intersect(colnames(dataset), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
       
       df_conc <- format_pkncaconc_data(
