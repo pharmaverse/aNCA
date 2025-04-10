@@ -60,7 +60,7 @@ Number of the appropriate issue the pull request closes or references.
 Brief description of implemented changes, what they do and what is the reasoning behind the changes. 
 
 #### Definition of Done
-Checklist with minimal requirements to consider the feature or bugfix complete. Preferably the list supplied with the appropriate issue. Requirements might change and the scope might grow or shrink during development, so feel free to make changes to the list if relevant, but make sure any deviations are documented.
+Checklist with minimal requirements to consider the feature or bug fix complete. Preferably the list supplied with the appropriate issue. Requirements might change and the scope might grow or shrink during development, so feel free to make changes to the list if relevant, but make sure any deviations are documented.
 
 #### How to test
 Instructions on how to test the new feature manually (go to..., click on...). Might include code snippets. It is especially important to include such instructions if submitted code is not fully covered by unit tests. If full suite of unit tests is supplied alongside logic, this part might not be required or relevant in terms of miscellaneous changes (documentation, dependencies etc.).
@@ -79,10 +79,10 @@ The above rules will help keep our work organized, as well as allow for quick in
 If there is anything that the reviewer should know before tackling the pull request, please provide it here. This could include things like pointing to specific parts of the code that require special attention, explaining decisions behind unusual implementations or providing logic behind changing the scope of the task.
 
 ### Bumping package version
-Package versioning must use the semantic versioning schema, with developement extension: **X.Y.Z.9NNN**
+Package versioning must use the semantic versioning schema, with development extension: **X.Y.Z.9NNN**
 
-#### Developement version
-In each PR that introduces changes to the code, dependencies or the function documentation, it is required that the developement package version is incremented by 1 (this is the .9NNN number, the last part of the versioning schema). As the current feature branch might be outdated, before merging please cross-check with the **main** branch that the version you are submitting is correct.
+#### Development version
+In each PR that introduces changes to the code, dependencies or the function documentation, it is required that the development package version is incremented by 1 (this is the .9NNN number, the last part of the versioning schema). As the current feature branch might be outdated, before merging please cross-check with the **main** branch that the version you are submitting is correct.
 
 #### Semantic versioning
 The versioning schema for major / minor / patch releases must adhere to [semantic versioning](https://semver.org/) guidelines.
@@ -90,7 +90,7 @@ The versioning schema for major / minor / patch releases must adhere to [semanti
 ## Code review
 Each pull request must be accepted by at least two reviewers before it can be merged to the main branch.
 
-#### For reviewee
+#### For developer
 When the change is done, pull request is open and the description is filled, please move your issue from **In Progress** to **Needs review** status, so it can be picked up by a reviewer. From this point it is up to the contributor and the person validating the change to work out any kinks and lead to merging the changes.
 
 #### For reviewers
@@ -101,6 +101,6 @@ When reviewing a pull request, please do try to follow the [conventional comment
 - The package requires some dependencies for which there are no explicit `@import` statements in the `NAMESPACE` file. This is because some of those functions are not used in the **package** itself, but rather in the **Shiny application**. Please beware of this situation when managing the package dependencies - some functions might be used in the app, even though they are not verbosely imported.
 
 # In-depth guides
-Here are some useful links with in-depth documentation regarding specific parts of the pacakage and how to utilise in-build tools to extend the capabilities of the application:
+Here are some useful links with in-depth documentation regarding specific parts of the package and how to utilise in-build tools to extend the capabilities of the application:
 
 - [Adding TLGs](https://pharmaverse.github.io/aNCA/articles/adding_tlg.html)
