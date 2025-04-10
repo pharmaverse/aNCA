@@ -252,9 +252,9 @@ data_mapping_server <- function(id, adnca_data) {
     })
 
     # Observe submit button click and update processed_data
-    processed_data <- reactive({
+    mapped_data <- reactive({
       req(adnca_data())
-      req(input$submit_columns || rerun_trigger() > 0)
+      req(input$submit_columns)
       
       log_info("Processing data mapping...")
       Sys.sleep(1) # Make this artificially slow to show the loading spinner
@@ -338,8 +338,34 @@ data_mapping_server <- function(id, adnca_data) {
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
       
-      # Handle duplicates in the data
-      #Check for duplicates
+      # Check and filter concentration duplicates
+      conc_duplicates <- dataset %>%
+        group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, AVAL) %>%
+        filter(n() > 1) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(names(dataset))
+      
+      # Remove conc duplicates with warning
+      if (nrow(conc_duplicates) > 0) {
+        log_warn("Duplicate concentration data detected and filtered.")
+        showNotification(
+          ui = "Duplicate concentration data detected and removed. Please check the data",
+          type = "warning",
+          duration = 5
+        )
+      }
+      
+      dataset <- dataset %>%
+        anti_join(conc_duplicates, by = colnames(conc_duplicates))
+      
+      dataset
+    })
+      
+    processed_data <- reactive({
+      req(mapped_data())
+      dataset <- mapped_data()
+      
       group_columns <- intersect(colnames(dataset), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
       
       df_conc <- format_pkncaconc_data(
