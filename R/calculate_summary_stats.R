@@ -40,6 +40,15 @@
 
 calculate_summary_stats <- function(data, input_groups = "DOSNO") {
 
+  # Return an empty data frame if the input data is empty
+  if (nrow(data) == 0) {
+    return(data.frame(
+      Statistic = character(),
+      Value = numeric(),
+      stringsAsFactors = FALSE
+    ))
+  }
+
   # Calculate summary statistics, using all value rows
   # (note: this will give more weight to subjects with more valid records)
   summary_stats <- data %>%
