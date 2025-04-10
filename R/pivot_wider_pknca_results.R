@@ -40,7 +40,7 @@ pivot_wider_pknca_results <- function(myres) {
       select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
-      left_join(data_with_duplicates) %>%
+      left_join(data_with_duplicates, by = intersect(names(.), names(data_with_duplicates))) %>%
       # Derive LAMZIX: If present consider inclusions and disconsider exclusions
       group_by(!!!syms(conc_groups), DOSNO) %>%
       # Derive LAMZMTD: was lambda.z manually customized?
@@ -73,7 +73,11 @@ pivot_wider_pknca_results <- function(myres) {
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
     pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
 
-  main_intervals <- left_join(main_intervals_vals, main_intervals_exclude)
+  main_intervals <- left_join(
+    main_intervals_vals,
+    main_intervals_exclude,
+    by = intersect(names(main_intervals_vals), names(main_intervals_exclude))
+  )
 
   # If present: Pivot manual AUC interval columns and their respective exclude column
   if (any(myres$result$type_interval == "manual")) {
@@ -99,16 +103,29 @@ pivot_wider_pknca_results <- function(myres) {
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
-    manual_aucs <- inner_join(manual_aucs_vals, manual_aucs_exclude)
+    manual_aucs <- inner_join(
+      manual_aucs_vals,
+      manual_aucs_exclude,
+      by = intersect(names(manual_aucs_vals), names(manual_aucs_exclude))
+    )
 
     # If present: Merge main and manual intervals together
-    all_aucs <- left_join(main_intervals, manual_aucs)
+    all_aucs <- left_join(
+      main_intervals,
+      manual_aucs,
+      by = intersect(names(main_intervals), names(manual_aucs))
+    )
   } else {
     all_aucs <- main_intervals
   }
 
   # If derived: Merge lambda.z.ix & lambda.z.method
-  if (!is.null(added_params)) all_aucs <- left_join(all_aucs, added_params)
+  if (!is.null(added_params))
+    all_aucs <- left_join(
+      all_aucs,
+      added_params,
+      by = intersect(names(all_aucs), names(added_params))
+    )
 
   # Do a final standardization of the results reshaped
   pivoted_res <- all_aucs  %>%
