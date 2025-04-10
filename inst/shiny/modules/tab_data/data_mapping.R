@@ -338,7 +338,7 @@ data_mapping_server <- function(id, adnca_data) {
 
       # Apply labels to the dataset
       dataset <- apply_labels(dataset, LABELS, "ADPC")
-      browser()
+
       # Check and filter concentration duplicates
       conc_duplicates <- dataset %>%
         group_by(across(all_of(setdiff(MAPPING_DESIRED_ORDER, c("ARRLT", "NRRLT", "DOSNO"))))) %>%
@@ -368,21 +368,11 @@ data_mapping_server <- function(id, adnca_data) {
       dataset <- mapped_data()
       
       #Check for blocking duplicates
-      group_columns <- intersect(colnames(dataset), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
       
-      df_conc <- format_pkncaconc_data(
-        ADNCA = dataset,
-        group_columns = c(group_columns, "USUBJID", "PARAM"),
-        time_column = "AFRLT",
-        route_column = "ROUTE",
-        dosno_column = "DOSNO"
-      )
-      
-      df_duplicates <- df_conc %>%
-        group_by(TIME, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
+      df_duplicates <- dataset %>%
+        group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
         filter(n() > 1) %>%
-        ungroup() %>%
-        mutate(.dup_group = paste(TIME, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
+        ungroup()
       
       if (nrow(df_duplicates) == 0) {
         dataset$DFLAG <- FALSE
@@ -393,6 +383,7 @@ data_mapping_server <- function(id, adnca_data) {
       if (nrow(df_duplicates) > 0) {
 
         duplicates(df_duplicates)
+        
         if(!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
             # Get selected rows from the reactable
           selected <- getReactableState("duplicate_modal_table", "selected")
