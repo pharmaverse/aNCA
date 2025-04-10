@@ -258,7 +258,6 @@ data_mapping_server <- function(id, adnca_data) {
       req(input$submit_columns)
       
       log_info("Processing data mapping...")
-      Sys.sleep(1) # Make this artificially slow to show the loading spinner
 
       dataset <- adnca_data()
       
@@ -276,6 +275,17 @@ data_mapping_server <- function(id, adnca_data) {
         paste0(collapse = "\n") %>%
         paste0("The following mapping was applied:\n", .) %>%
         log_info()
+      
+      # Check for unmapped columns
+      if (any(unlist(selected_cols) == "")) {
+        log_error("Unmapped columns detected.")
+        showNotification(
+          ui = "Some required columns are not mapped. Please complete all selections.",
+          type = "error",
+          duration = 5
+        )
+        return()
+      }
 
       # Check for duplicate column selections
       all_selected_columns <- unlist(selected_cols)
@@ -294,17 +304,6 @@ data_mapping_server <- function(id, adnca_data) {
       selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
         names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
       ]
-
-      # Check for unmapped columns
-      if (any(unlist(selected_cols) == "")) {
-        log_error("Unmapped columns detected.")
-        showNotification(
-          ui = "Some required columns are not mapped. Please complete all selections.",
-          type = "error",
-          duration = 5
-        )
-        return()
-      }
 
       # Rename columns
       colnames(dataset) <- sapply(colnames(dataset), function(col) {
