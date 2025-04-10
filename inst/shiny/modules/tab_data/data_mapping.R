@@ -183,6 +183,7 @@ data_mapping_server <- function(id, adnca_data) {
     ns <- session$ns
 
     rerun_trigger <- reactiveVal(0)
+    duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)) |>
       unlist()
@@ -201,7 +202,53 @@ data_mapping_server <- function(id, adnca_data) {
     observeEvent(input$keep_selected_btn, {
 
       rerun_trigger(rerun_trigger() + 1)
+      duplicates(NULL)
       removeModal()
+    })
+    
+    output$duplicate_modal_table <- reactable::renderReactable({
+      group_ids <- unique(df_duplicates$.dup_group)
+      color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
+      
+      reactable::reactable(
+        df_duplicates,
+        columns = list(.dup_group = colDef(show = FALSE)),
+        rowStyle = function(index) {
+          group <- df_duplicates$.dup_group[index]
+          list(background = color_map[[group]])
+        },
+        selection = "multiple",
+        onClick = "select",
+        compact = TRUE,
+        wrap = FALSE,
+        resizable = TRUE
+      )
+    })
+    
+    observeEvent(duplicates(), {
+      showModal(
+        modalDialog(
+          title = "Duplicate Rows Detected",
+          tagList(
+            tags$style(HTML("
+            .modal-dialog { width: 90vw !important; max-width: 95vw !important; }
+            .modal-body { max-height: 90vh; overflow-y: auto; }
+          ")),
+            p("The following rows are duplicates based on TIME, STUDYID, PCSPEC, DRUG, USUBJID, PARAM."),
+            p("Please select the rows you would like to KEEP. Rows not selected will be flagged and filtered."),
+            div(
+              style = "overflow-x: auto; white-space: nowrap; border: 1px solid #ddd; padding: 1em;",
+              reactable::reactableOutput(ns("duplicate_modal_table"))
+            )
+          ),
+          easyClose = FALSE,
+          footer = tagList(
+            actionButton(ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        )
+      )
     })
 
     # Observe submit button click and update processed_data
@@ -303,7 +350,7 @@ data_mapping_server <- function(id, adnca_data) {
         dosno_column = "DOSNO"
       )
       
-      df_duplicates <<- df_conc %>%
+      df_duplicates <- df_conc %>%
         group_by(TIME, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
         filter(n() > 1) %>%
         ungroup() %>%
@@ -316,7 +363,8 @@ data_mapping_server <- function(id, adnca_data) {
 
       # CASE: user resolved duplicates, apply DFLAG
       if (nrow(df_duplicates) > 0) {
-  
+
+        duplicates(df_duplicates)
         if(!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
             # Get selected rows from the reactable
           selected <- getReactableState("duplicate_modal_table", "selected")
@@ -336,54 +384,9 @@ data_mapping_server <- function(id, adnca_data) {
             
           return(dataset)
         }
-      
-      showModal(
-        modalDialog(
-          title = "Duplicate Rows Detected",
-          tagList(
-            tags$style(HTML("
-        .modal-dialog { width: 90vw !important; max-width: 95vw !important; }
-        .modal-body { max-height: 90vh; overflow-y: auto; }
-      ")),
-            p("The following rows are duplicates based on TIME, STUDYID, PCSPEC, DRUG, USUBJID, PARAM."),
-            p("Please select the rows you would like to KEEP. Rows not selected will be removed before continuing."),
-            div(
-              style = "overflow-x: auto; white-space: nowrap; border: 1px solid #ddd; padding: 1em;",
-              reactable::reactableOutput(ns("duplicate_modal_table"))
-            )
-          ),
-          easyClose = FALSE,
-          footer = tagList(
-            actionButton(ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"),
-            modalButton("Cancel")
-          ),
-          size = "l"
-        )
-      )
-
-      output$duplicate_modal_table <- reactable::renderReactable({
-        group_ids <- unique(df_duplicates$.dup_group)
-        color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
-        
-        reactable::reactable(
-          df_duplicates,
-          columns = list(.dup_group = colDef(show = FALSE)),
-          rowStyle = function(index) {
-            group <- df_duplicates$.dup_group[index]
-            list(background = color_map[[group]])
-          },
-          selection = "multiple",
-          onClick = "select",
-          compact = TRUE,
-          wrap = FALSE,
-          resizable = TRUE
-        )
-      })
-      
+        # Don't return anything until duplicates are resolved
+        return(NULL)
       }
-      
-      # Don't return anything until duplicates are resolved
-      return(NULL)
       
     })
 
