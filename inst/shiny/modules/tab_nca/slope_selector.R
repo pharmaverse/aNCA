@@ -263,9 +263,9 @@ slope_selector_server <- function(
     })
 
     #' Rendering slope plots based on nca data.
-    observeEvent(res_nca(), {
+    observeEvent(lambdas_res(), {
       req(
-        res_nca(),
+        lambdas_res(),
         profiles_per_subject()
       )
       log_trace("{id}: Rendering plots")
@@ -274,7 +274,7 @@ slope_selector_server <- function(
         session = session,
         inputId = "search_subject",
         label = "Search Subject",
-        choices = unique(res_nca()$result$USUBJID)
+        choices = unique(lambdas_res()$result$USUBJID)
       )
     })
 
