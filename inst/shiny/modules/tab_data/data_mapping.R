@@ -199,17 +199,10 @@ data_mapping_server <- function(id, adnca_data) {
     })
     
     observeEvent(input$keep_selected_btn, {
+
       rerun_trigger(rerun_trigger() + 1)
       removeModal()
     })
-    
-    output$download_excluded <- downloadHandler(
-      filename = function() paste0("excluded_duplicates_", Sys.Date(), ".csv"),
-      content = function(file) {
-        req(df_excluded)
-        readr::write_csv(df_excluded, file)
-      }
-    )
 
     # Observe submit button click and update processed_data
     processed_data <- reactive({
@@ -310,7 +303,7 @@ data_mapping_server <- function(id, adnca_data) {
         dosno_column = "DOSNO"
       )
       
-      df_duplicates <- df_conc %>%
+      df_duplicates <<- df_conc %>%
         group_by(TIME, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
         filter(n() > 1) %>%
         ungroup() %>%
@@ -320,29 +313,29 @@ data_mapping_server <- function(id, adnca_data) {
         dataset$DFLAG <- FALSE
         return(dataset)
       }
-      
+      browser()
       # CASE: user resolved duplicates, apply DFLAG
       if (nrow(df_duplicates) > 0) {
-        req(input$keep_selected_btn)
-
-        selected <- getReactableState("duplicate_modal_table", "selected")
-        kept <- df_duplicates[selected, , drop = FALSE]
-        removed <- anti_join(df_duplicates, kept, by = colnames(kept))
+  
+        if(!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
+            # Get selected rows from the reactable
+          selected <- getReactableState("duplicate_modal_table", "selected")
+          req(length(selected) > 0)
+          
+          kept <- df_duplicates[selected, , drop = FALSE]
+          removed <- anti_join(df_duplicates, kept, by = colnames(kept))
+          dataset <- dataset %>%
+            mutate(DFLAG = FALSE)
         
-        dataset <- dataset %>%
-          mutate(DFLAG = FALSE)
-        
-        if (nrow(removed) > 0) {
-          browser()
           dataset <- dataset %>%
             rows_update(
-              removed %>% mutate(DFLAG = TRUE),
+              removed %>% mutate(DFLAG = TRUE) %>%
+                select(names(dataset)),
               by = intersect(names(dataset), names(removed))
             )
+            
+          return(dataset)
         }
-        
-        return(dataset)
-      }
       
       showModal(
         modalDialog(
@@ -361,7 +354,6 @@ data_mapping_server <- function(id, adnca_data) {
           ),
           easyClose = FALSE,
           footer = tagList(
-            downloadButton(ns("download_excluded"), "Download Removed Rows"),
             actionButton(ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"),
             modalButton("Cancel")
           ),
@@ -388,13 +380,11 @@ data_mapping_server <- function(id, adnca_data) {
         )
       })
       
+      }
+      
       # Don't return anything until duplicates are resolved
       return(NULL)
       
-    })
-    
-    observeEvent(input$keep_selected_btn, {
-      rerun_trigger(rerun_trigger() + 1)
     })
 
     list(
