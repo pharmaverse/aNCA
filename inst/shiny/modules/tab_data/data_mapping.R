@@ -313,7 +313,7 @@ data_mapping_server <- function(id, adnca_data) {
         dataset$DFLAG <- FALSE
         return(dataset)
       }
-      browser()
+
       # CASE: user resolved duplicates, apply DFLAG
       if (nrow(df_duplicates) > 0) {
   
