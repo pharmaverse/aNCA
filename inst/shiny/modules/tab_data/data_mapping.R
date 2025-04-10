@@ -236,6 +236,7 @@ data_mapping_server <- function(id, adnca_data) {
           ")),
             p("The following rows are duplicates based on TIME, STUDYID, PCSPEC, DRUG, USUBJID, PARAM."),
             p("Please select the rows you would like to KEEP. Rows not selected will be flagged and filtered."),
+            p("Alternatively, click 'Cancel' to discard the changes, and clean the dataset yourself."),
             div(
               style = "overflow-x: auto; white-space: nowrap; border: 1px solid #ddd; padding: 1em;",
               reactable::reactableOutput(ns("duplicate_modal_table"))
