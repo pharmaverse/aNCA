@@ -255,7 +255,6 @@ data_mapping_server <- function(id, adnca_data) {
     # Observe submit button click and update processed_data
     mapped_data <- reactive({
       req(adnca_data())
-      req(input$submit_columns)
       
       log_info("Processing data mapping...")
 
@@ -340,6 +339,7 @@ data_mapping_server <- function(id, adnca_data) {
 
       # Check and filter concentration duplicates
       conc_duplicates <- dataset %>%
+        # remove time from recent dose and dosno as these would be different for manual duplicates
         group_by(across(all_of(setdiff(MAPPING_DESIRED_ORDER, c("ARRLT", "NRRLT", "DOSNO"))))) %>%
         filter(n() > 1) %>%
         slice(1) %>%
@@ -360,14 +360,15 @@ data_mapping_server <- function(id, adnca_data) {
         anti_join(conc_duplicates, by = colnames(conc_duplicates))
       
       dataset
-    })
+    }) |> 
+      bindEvent(input$submit_columns)
       
     processed_data <- reactive({
       req(mapped_data())
       dataset <- mapped_data()
       
       #Check for blocking duplicates
-      
+      # groups based on PKNCAconc formula
       df_duplicates <- dataset %>%
         group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
         filter(n() > 1) %>%
@@ -378,7 +379,7 @@ data_mapping_server <- function(id, adnca_data) {
         return(dataset)
       }
 
-      # CASE: user resolved duplicates, apply DFLAG
+      # User resolves duplicates, apply DFLAG
       if (nrow(df_duplicates) > 0) {
 
         duplicates(df_duplicates)
@@ -392,7 +393,8 @@ data_mapping_server <- function(id, adnca_data) {
           removed <- anti_join(df_duplicates, kept, by = colnames(kept))
           dataset <- dataset %>%
             mutate(DFLAG = FALSE)
-        
+          
+          # Set DFLAG to TRUE for the removed rows
           dataset <- dataset %>%
             rows_update(
               removed %>% mutate(DFLAG = TRUE) %>%
@@ -403,7 +405,7 @@ data_mapping_server <- function(id, adnca_data) {
           return(dataset)
         }
         # Don't return anything until duplicates are resolved
-        return(NULL)
+        return()
       }
       
     })
