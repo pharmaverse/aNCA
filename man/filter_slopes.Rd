@@ -10,8 +10,8 @@ filter_slopes(data, slopes, profiles, slope_groups, check_reasons = FALSE)
 \item{data}{Data to filter. Must be \code{PKNCAdata} list, containing the \code{conc} element with
 \code{PKNCAconc} list and appropriate data frame included under data.}
 
-\item{slopes}{Data frame with slopes selection rules, must contain the following columns:
-\code{TYPE}, \code{SUBJECT}, \code{PROFILE}, \code{RANGE}, \code{REASON}.}
+\item{slopes}{A data frame containing slope rules, including \code{TYPE}, \code{RANGE},
+and \code{REASON} columns. May also have grouping columns (expected to match slope_groups)}
 
 \item{profiles}{List with available profiles for each \code{SUBJECT}.}
 

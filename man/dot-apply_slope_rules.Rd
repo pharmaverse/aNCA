@@ -11,7 +11,7 @@
 need to be updated based on the slope rules.}
 
 \item{slopes}{A data frame containing slope rules, including \code{TYPE}, \code{RANGE},
-and \code{REASON} columns.}
+and \code{REASON} columns. May also contain grouping columns (expected to match slope_groups)}
 
 \item{slope_groups}{A character vector specifying the group columns used for filtering.}
 }

@@ -4,8 +4,8 @@
 #'
 #' @param data     Data to filter. Must be `PKNCAdata` list, containing the `conc` element with
 #'                 `PKNCAconc` list and appropriate data frame included under data.
-#' @param slopes   Data frame with slopes selection rules, must contain the following columns:
-#'                 `PCSPEC`, `USUBJID`, `PARAM`, `DOSNO`, `TYPE`, `RANGE`, `REASON`.
+#' @param slopes   A data frame containing slope rules, including `TYPE`, `RANGE`,
+#'        and `REASON` columns. May also have grouping columns (expected to match slope_groups)
 #' @param profiles List with available profiles for each `SUBJECT`.
 #' @param slope_groups List with column names that define the groups.
 #' @param check_reasons Whether to check if all selections have REASONS stated. If this is `TRUE`
@@ -130,7 +130,7 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 #' @param data A list containing concentration data (`data$conc$data`) with columns that
 #'        need to be updated based on the slope rules.
 #' @param slopes A data frame containing slope rules, including `TYPE`, `RANGE`,
-#'        and `REASON` columns.
+#'        and `REASON` columns. May also have grouping columns (expected to match slope_groups)
 #' @param slope_groups A character vector specifying the group columns used for filtering.
 #'
 #' @returns description The modified `data` object with updated inclusion/exclusion flags
