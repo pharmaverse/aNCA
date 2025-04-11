@@ -52,7 +52,7 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
 
   # Return a summary table with statistics
   data %>%
-    
+
     # Only use unique records and calculate the conversion factor between PPSTRESU/PPORRESU
     unique() %>%
     mutate(
