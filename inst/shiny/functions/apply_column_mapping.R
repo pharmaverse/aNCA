@@ -41,7 +41,7 @@ apply_column_mapping <- function(dataset, input, manual_units) {
   }) %>%
     unlist() %>%
     paste0(collapse = "\n")
-  log_info(paste0("The following mapping was applied:\n", mapping_log))
+  log_debug(paste0("The following mapping was applied:\n", mapping_log))
 
   # Validation: Ensure no unmapped or duplicate selections
   if (any(unlist(selected_cols) == "")) {
@@ -65,9 +65,7 @@ apply_column_mapping <- function(dataset, input, manual_units) {
   }
 
   # Remove "Grouping_Variables" from the "Group Identifiers" mapping
-  selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-    names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
-  ]
+  selected_cols[["Group Identifiers"]][["Grouping_Variables"]] <- NULL
 
   # Rename dataset columns based on the mapping selections
   colnames(dataset) <- sapply(colnames(dataset), function(col) {

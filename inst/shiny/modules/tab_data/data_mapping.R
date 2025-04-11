@@ -230,8 +230,7 @@ data_mapping_server <- function(id, adnca_data) {
       dataset <- mapped_data()
 
       if (nrow(df_duplicates()) == 0) {
-        dataset$DFLAG <- FALSE
-        return(dataset)
+        return(mutate(dataset, DFLAG = FALSE))
       }
 
       # User resolves duplicates, apply DFLAG
@@ -259,7 +258,7 @@ data_mapping_server <- function(id, adnca_data) {
         return(dataset)
       }
       # Don't return anything until duplicates are resolved
-      return()
+      return(NULL)
 
     })
     
