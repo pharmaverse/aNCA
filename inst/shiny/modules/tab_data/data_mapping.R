@@ -202,33 +202,7 @@ data_mapping_server <- function(id, adnca_data) {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MANUAL_UNITS, MAPPING_DESIRED_ORDER)
     })
-
-    observeEvent(input$keep_selected_btn, {
-
-      rerun_trigger(rerun_trigger() + 1)
-      duplicates(NULL)
-      removeModal()
-    })
-
-    output$duplicate_modal_table <- reactable::renderReactable({
-      group_ids <- unique(df_duplicates$.dup_group)
-      color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
-
-      reactable::reactable(
-        df_duplicates,
-        columns = list(.dup_group = colDef(show = FALSE)),
-        rowStyle = function(index) {
-          group <- df_duplicates$.dup_group[index]
-          list(background = color_map[[group]])
-        },
-        selection = "multiple",
-        onClick = "select",
-        compact = TRUE,
-        wrap = FALSE,
-        resizable = TRUE
-      )
-    })
-
+    
     observeEvent(duplicates(), {
       showModal(
         modalDialog(
@@ -247,7 +221,7 @@ data_mapping_server <- function(id, adnca_data) {
             div(
               style = "overflow-x: auto; white-space: nowrap; border:
               1px solid #ddd; padding: 1em;",
-              reactable::reactableOutput(ns("duplicate_modal_table"))
+              reactableOutput(ns("duplicate_modal_table"))
             )
           ),
           easyClose = FALSE,
@@ -257,6 +231,32 @@ data_mapping_server <- function(id, adnca_data) {
           ),
           size = "l"
         )
+      )
+    })
+
+    observeEvent(input$keep_selected_btn, {
+
+      rerun_trigger(rerun_trigger() + 1)
+      duplicates(NULL)
+      removeModal()
+    })
+
+    output$duplicate_modal_table <- renderReactable({
+      group_ids <- unique(df_duplicates()$.dup_group)
+      color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
+
+      reactable(
+        df_duplicates(),
+        columns = list(.dup_group = colDef(show = FALSE)),
+        rowStyle = function(index) {
+          group <- df_duplicates()$.dup_group[index]
+          list(background = color_map[[group]])
+        },
+        selection = "multiple",
+        onClick = "select",
+        compact = TRUE,
+        wrap = FALSE,
+        resizable = TRUE
       )
     })
 
@@ -272,35 +272,38 @@ data_mapping_server <- function(id, adnca_data) {
     }) |>
       bindEvent(input$submit_columns)
 
+    #Check for blocking duplicates
+    # groups based on PKNCAconc formula
+    df_duplicates <- reactive({
+      req(mapped_data)
+      mapped_data() %>%
+      group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
+      filter(n() > 1) %>%
+      ungroup() %>%
+      mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
+    })
+    
     processed_data <- reactive({
       req(mapped_data())
       dataset <- mapped_data()
 
-      #Check for blocking duplicates
-      # groups based on PKNCAconc formula
-      df_duplicates <<- dataset %>%
-        group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
-        filter(n() > 1) %>%
-        ungroup() %>%
-        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
-
-      if (nrow(df_duplicates) == 0) {
+      if (nrow(df_duplicates()) == 0) {
         dataset$DFLAG <- FALSE
         return(dataset)
       }
 
       # User resolves duplicates, apply DFLAG
-      if (nrow(df_duplicates) > 0) {
+      if (nrow(df_duplicates()) > 0) {
 
-        duplicates(df_duplicates)
+        duplicates(df_duplicates())
 
         if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
           # Get selected rows from the reactable
           selected <- getReactableState("duplicate_modal_table", "selected")
           req(length(selected) > 0)
 
-          kept <- df_duplicates[selected, , drop = FALSE]
-          removed <- anti_join(df_duplicates, kept, by = colnames(kept))
+          kept <- df_duplicates()[selected, , drop = FALSE]
+          removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
           dataset <- dataset %>%
             mutate(DFLAG = FALSE)
 
