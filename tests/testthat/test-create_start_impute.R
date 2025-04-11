@@ -31,7 +31,12 @@ intervals_data <- data.frame(
 conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / param)
 dose_obj <- PKNCA::PKNCAdose(dose_data, dose ~ time | USUBJID + DOSNO,
                              duration = "duration", route = "route")
-mydata <- PKNCA::PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)
+mydata <- PKNCA::PKNCAdata(
+  conc_obj,
+  dose_obj,
+  intervals = intervals_data,
+  options = list(keep_interval_cols = c("auc.obs", "auc.pred"))
+)
 
 # Apply the function
 describe("create_start_impute", {
