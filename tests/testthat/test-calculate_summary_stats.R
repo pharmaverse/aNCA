@@ -2,10 +2,10 @@ test_data <- data.frame(
   DOSNO = rep(1:2, each = 8),
   PPTESTCD = rep(c("A", "A", "B", "B", "C", "C", "D", "D"), 2),
   PPSTRES = c(10, 20, 5, 15, NA, 30, 0, 10, 10, 20, 5, 15, NA, 30, 0, 10),
-  PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "", 
+  PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
                "mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", ""),
   PPORRES = c(1, 2, 0.5, 1.5, NA, 3, 0, 5, 1, 2, 0.5, 1.5, NA, 3, 0, 5),
-  PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "", 
+  PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
                "mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "")
 )
 
@@ -91,7 +91,7 @@ describe("calculate_summary_stats", {
     expected_result <- tibble::tibble(
       DOSNO = rep(1, 9),
       Statistic = c(
-        "Geomean", "Geocv", "Mean", "SD", "Min", 
+        "Geomean", "Geocv", "Mean", "SD", "Min",
         "Max", "Median", "Count.missing", "Count.total"
       ),
       `A[mg/L]` = c(1.817, 55.032, 2, 1, 1, 3, 2, 0, 3)

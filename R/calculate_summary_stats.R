@@ -23,6 +23,7 @@
 #'   \item Count (`count`)
 #' }
 #' The resulting summary statistics are rounded to three decimal places.
+#' If units are different, they are standardized to the group's most frequent first unit.
 #'
 #' @import dplyr
 #' @import tidyr
@@ -50,16 +51,17 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
     ))
   }
 
-  # Calculate summary statistics, using all value rows
-  # (note: this will give more weight to subjects with more valid records)
+  # Return a summary table with statistics
   summary_stats <- data %>%
     unique() %>%
-    mutate(conv_factor = ifelse(
-      PPSTRES == PPORRES,
-      1,
-      PPSTRES / PPORRES)
+    mutate(
+      conv_factor = ifelse(PPSTRES == PPORRES, 1, PPSTRES / PPORRES)
     ) %>%
+
+    # Group by the input groups and the parameter test codes
     group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
+
+    # Standardize units to the most frequent one within the groups (or first otherwise)
     mutate(
       ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE))[1],
       ModeConv_factor = as.numeric(names(sort(table(conv_factor), decreasing = TRUE))[1]),
@@ -70,6 +72,8 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
         paste0(PPTESTCD, "[", ModeUnit, "]")
       )
     ) %>%
+
+    # Calculate summary statistics
     summarise(
       Geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
       Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
@@ -83,6 +87,8 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
       .groups = "drop"
     ) %>%
     mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
+
+    # Pivot the data to return groups as rows and statistics as columns
     pivot_longer(
       cols = c(Geomean, Geocv, Mean, SD, Min, Max, Median, Count.missing, Count.total),
       names_to = "Statistic",
