@@ -28,7 +28,7 @@ nca_setup_ui <- function(id) {
           ),
           # Method, NCA parameters, and units table
           fluidRow(
-            column(3, selectInput(
+            column(4, selectInput(
               ns("method"),
               "Extrapolation Method:",
               choices = c(
@@ -36,35 +36,27 @@ nca_setup_ui <- function(id) {
               ),
               selected = "lin up/log down"
             )),
-            column(5, pickerInput(
-              inputId = ns("nca_params"),
-              label = "NCA parameters to calculate:",
-              choices = pull(pknca_cdisc_terms, PKNCA, input_names),
-              options = list(
-                `live-search` = TRUE,
-                `dropup-auto` = FALSE,
-                `size` = 10,
-                `noneSelectedText` = "No parameters selected",
-                `windowPadding` = 10,
-                `dropdownAlignRight` = TRUE
-              ),
-              multiple = TRUE,
-              selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
-                           "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
-                           "adj.r.squared", "lambda.z", "lambda.z.n.points",
-                           "cav", "cl.all", "cl.obs",
-                           "clast", "tlast")
-            )),
+            column(4, #pickerinput only enabled when IV and EX data present
+                   shinyjs::hidden(
+                     pickerInput(
+                       ns("bioavailability"),
+                       "Calculate Bioavailability:",
+                       choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+                       multiple = TRUE,
+                       selected = NULL
+                     )
+                   )),
             column(4, units_table_ui(ns("units_table")))
           ),
-          #pickerinput only enabled when IV and EX data present
-          shinyjs::hidden(
-            pickerInput(
-              ns("bioavailability"),
-              "Calculate Bioavailability:",
-              choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
-              multiple = TRUE,
-              selected = NULL
+        ),
+        accordion_panel(
+          title = "Parameter Selection",
+          reactableOutput(ns("nca_parameters")),
+          card(
+            full_screen = FALSE,
+            card_header("Selected NCA Parameters"),
+            card_body(
+              uiOutput(ns("nca_param_display"))
             )
           )
         ),
@@ -401,6 +393,65 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       )
     })
 
+    DEFAULT_PARAMS <- c(
+      "aucinf.obs", "aucinf.obs.dn",
+      "aucint.last",
+      "auclast", "auclast.dn",
+      "cmax", "cmax.dn",
+      "clast.obs", "clast.obs.dn",
+      "tlast", "tmax",
+      "half.life", "cl.obs", "vss.obs", "vz.obs",
+      "mrt.last", "mrt.obs",
+      "lambda.z",
+      "lambda.z.n.points", "r.squared",
+      "adj.r.squared", "lambda.z.time.first",
+      "aucpext.obs", "aucpext.pred"
+    )
+
+    output$nca_parameters <- renderReactable({
+      #remove parameters that are currently unavailable in PKNCA
+      params_data <- pknca_cdisc_terms %>%
+        filter(!PPTESTCD %in% c("FAB", "FREL"))
+
+      default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
+
+      reactable(
+        params_data %>%
+          select(TYPE, PPTESTCD, PPTEST, CAT),
+        groupBy = c("TYPE"),
+        pagination = FALSE,
+        filterable = TRUE,
+        compact = TRUE,
+        onClick = "select",
+        height = "49vh",
+        selection = "multiple",
+        defaultSelected = default_row_indices
+      )
+    })
+
+    nca_params <- reactive({
+      selected_rows <- getReactableState("nca_parameters", "selected")
+      if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
+
+      params_data <- pknca_cdisc_terms %>%
+        filter(!PPTESTCD %in% c("FAB", "FREL"))
+      selected_terms <- params_data[selected_rows, , drop = FALSE]
+
+      # Return PKNCA column names
+      selected_terms$PKNCA
+    })
+
+    output$nca_param_display <- renderUI({
+      req(nca_params())
+
+      div(
+        class = "nca-pill-grid",
+        lapply(nca_params(), function(param) {
+          tags$span(class = "nca-pill", param)
+        })
+      )
+    })
+
     # Reactive value to store the AUC data table
     auc_data <- reactiveVal(
       tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
@@ -452,9 +503,9 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
     # Updating Checkbox and Numeric Inputs
     observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
-                      input$rule_aucpext_pred, input$nca_params), {
+                      input$rule_aucpext_pred, nca_params()), {
 
-                   nca_params <- input$nca_params
+                   nca_params <- nca_params()
                    if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
                    if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
                    if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
@@ -471,7 +522,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         adnca_data(),
         auc_data(),
         input$method,
-        input$nca_params,
+        nca_params(),
         input$should_impute_c0,
         input$select_analyte,
         input$select_dosno,
@@ -515,7 +566,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         selected_analytes = input$select_analyte,
         selected_dosno = input$select_dosno,
         selected_pcspec = input$select_pcspec,
-        params = input$nca_params,
+        params = nca_params(),
         should_impute_c0 = input$should_impute_c0
       )
 
