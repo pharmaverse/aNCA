@@ -67,6 +67,8 @@ MAPPING_DESIRED_ORDER <- c(
 #' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
 #' group identifiers, sample variables, dose variables, time variables, and unit variables.
+#' It also checks for duplicates in the data that will cause problems later, and allows the user
+#' to resolve them.
 #'
 #' @param id The module ID.
 #' @param adnca_data A reactive expression that returns the dataset to be processed.
@@ -101,6 +103,8 @@ MAPPING_DESIRED_ORDER <- c(
 #' \item Renaming columns based on user selections.
 #' \item Handling manual units.
 #' \item Reordering columns according to a desired order.
+#' \item Filtering out concentration duplicates
+#' \item Setting a flag for duplicate rows, as selected by the user.
 #' }
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 data_mapping_ui <- function(id) {
