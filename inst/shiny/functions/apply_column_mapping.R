@@ -1,5 +1,29 @@
-
-
+#' Apply UI-Based Column Mapping to a Dataset
+#'
+#' This function takes a dataset and applies user-specified column mappings
+#'  provided through a Shiny `input` object. It renames columns based
+#'  on the selected mappings, handles special cases such as `ADOSEDUR`,
+#'  updates units for key variables, applies labels,
+#'  and removes detected duplicate concentration records.
+#'
+#' @param dataset A data frame containing the raw input data.
+#' @param input A Shiny input object containing the selected column mappings
+#'  from the user interface. Expected to include input IDs like `select_<column_name>`.
+#' @param manual_units A list with named elements (`concentration`, `dose`, and `time`)
+#'  specifying the manually selectable unit options for relevant columns.
+#'
+#' @returns A transformed data frame with:
+#'   - Renamed columns according to user mappings
+#'   - Unit columns updated (if user-specified units are in `manual_units`)
+#'   - Concentration duplicates removed
+#'   - Labels applied to columns (via `apply_labels()`)
+#'
+#' @details
+#' - Logs the mapping selections for debugging.
+#' - Validates that all required columns are mapped and no duplicates exist.
+#' - If `ADOSEDUR` is mapped to `"NA"`, it is assigned a value of `0`.
+#' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`, and `DOSNO`.
+#' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
 
 apply_column_mapping <- function(dataset, input, manual_units) {
 
