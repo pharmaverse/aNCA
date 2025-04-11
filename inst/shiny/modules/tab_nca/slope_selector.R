@@ -159,7 +159,7 @@ slope_selector_server <- function(
         NULL
       } else {
         all_params <- names(PKNCA::get.interval.cols())
-        result_obj <- PKNCA::pk.nca(data = plot_data(), verbose = FALSE)
+        result_obj <- suppressWarnings(PKNCA::pk.nca(data = pknca_data, verbose = FALSE))
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
 

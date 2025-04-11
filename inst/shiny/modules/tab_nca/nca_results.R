@@ -78,17 +78,17 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       }
 
       # Join subject data to allow the user to group by it
+      conc_data_to_join <- res_nca()$data$conc$data %>%
+        select(any_of(c(
+          grouping_vars(),
+          unname(unlist(res_nca()$data$conc$columns$groups)),
+          "DOSEA",
+          "DOSNO",
+          "ROUTE"
+        )))
+
       final_results <- final_results %>%
-        inner_join(
-          res_nca()$data$conc$data %>%
-            select(
-              any_of(c(grouping_vars(),
-                       unname(unlist(res_nca()$data$conc$columns$groups)),
-                       "DOSEA",
-                       "DOSNO",
-                       "ROUTE"))
-            )
-        ) %>%
+        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
         distinct()
 
       # Add flagged column
