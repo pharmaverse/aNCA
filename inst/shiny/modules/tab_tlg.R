@@ -1,4 +1,17 @@
-#' Parses TLG definitions from the yaml file
+#' Tab handling Tables, Listings and Graphs.
+#'
+#' @details
+#' Tab provides the user with a selection of TLGs and allows the display and customization of
+#' various tables, lists and graphs. The definitions table as well as all customization options
+#' are based on `tlg.yaml` file in the root directory of the application. This module calls on
+#' `tlg_module`s for each TLG in submitted order, creating a coprehensive UI for all visualizations.
+#'
+#' Read more in the contributing guide.
+#'
+#' @param id ID of the module
+#' @param data ADNCA data object, processed and mapped.
+
+#' Parses TLG definitions from the yaml file, holds all definitions.
 .TLG_DEFINITIONS <- {
   defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
 
@@ -60,11 +73,9 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id) {
+tab_tlg_server <- function(id, data) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
-
-    data <- session$userData$data
 
     #' Load TLG orders definitions
     tlg_order <- reactiveVal({
@@ -276,7 +287,7 @@ tab_tlg_server <- function(id) {
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
           if (exists(g_def$fun)) {
-            tlg_module_server(module_id, "graph", get(g_def$fun), g_def$options)
+            tlg_module_server(module_id, data, "graph", get(g_def$fun), g_def$options)
             tlg_module_ui(session$ns(module_id), "graph", g_def$options)
           } else {
             tags$div("Graph not implemented yet")
@@ -304,7 +315,7 @@ tab_tlg_server <- function(id) {
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
           if (exists(g_def$fun)) {
-            tlg_module_server(module_id, "listing", get(g_def$fun), g_def$options)
+            tlg_module_server(module_id, data, "listing", get(g_def$fun), g_def$options)
             tlg_module_ui(session$ns(module_id), "listing", g_def$options)
           } else {
             tags$div("Listing not implemented yet")
