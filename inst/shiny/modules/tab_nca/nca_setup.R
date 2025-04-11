@@ -1,7 +1,6 @@
 nca_setup_ui <- function(id) {
   ns <- NS(id)
 
-
   navset_tab(
     id = ns("setup_tabs"),
     nav_panel(
@@ -374,7 +373,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
 
-
     # Choose dosenumbers to be analyzed
     observeEvent(data()$DOSNO, priority = -1, {
       req(data())
@@ -452,12 +450,14 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
     # Updating Checkbox and Numeric Inputs
     observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
-                      input$rule_aucpext_pred, input$nca_params), {
+                      input$rule_aucpext_pred, input$nca_params, auc_data()), {
 
                    nca_params <- input$nca_params
                    if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
                    if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
                    if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
+                   if (any(apply(auc_data(), 1, \(x) !all(is.na(x)))))
+                     nca_params <- c(nca_params, "aucint.last")
 
                    updatePickerInput(session = session,
                                      inputId = "nca_params",
