@@ -107,6 +107,12 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
 
+    # List all irrelevant warnings to suppres in the NCA calculation
+    irrelevant_regex_warnings <- c(
+      "No intervals for data$",
+      "^Too few points for half-life"
+    )
+
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
@@ -115,18 +121,28 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         log_info("Calculating NCA results...")
         tryCatch({
           #' Calculate results
-          res <- processed_pknca_data() %>%
-            filter_slopes(
-              slope_rules$manual_slopes(),
-              slope_rules$profiles_per_subject(),
-              slope_rules$slopes_groups(),
-              check_reasons = TRUE
-            ) %>%
-            PKNCA_calculate_nca() %>%
-            # Apply standard CDISC names
-            mutate(
-              PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-            )
+          res <- withCallingHandlers({
+            processed_pknca_data() %>%
+              filter_slopes(
+                slope_rules$manual_slopes(),
+                slope_rules$profiles_per_subject(),
+                slope_rules$slopes_groups(),
+                check_reasons = TRUE
+              ) %>%
+              PKNCA_calculate_nca() %>%
+              # Apply standard CDISC names
+              mutate(
+                PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+              )
+          },
+          warning = function(w) {
+            if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
+                       conditionMessage(w))) {
+              log_warn(conditionMessage(w))
+              showNotification(conditionMessage(w), type = "warning", duration = 5)
+            }
+            invokeRestart("muffleWarning")
+          })
 
           #' Apply units
           if (!is.null(session$userData$units_table())) {
