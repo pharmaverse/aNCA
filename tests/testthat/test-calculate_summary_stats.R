@@ -88,7 +88,7 @@ describe("calculate_summary_stats", {
     result <- calculate_summary_stats(test_data_diff_units)
 
     # Define the expected result
-    expected_result <- tibble::tibble(
+    expected_result <- tibble(
       DOSNO = rep(1, 9),
       Statistic = c(
         "Geomean", "Geocv", "Mean", "SD", "Min",
