@@ -52,10 +52,16 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
   }
 
   # Return a summary table with statistics
-  summary_stats <- data %>%
+  data %>%
+    
+    # Only use unique records and calculate the conversion factor between PPSTRESU/PPORRESU
     unique() %>%
     mutate(
-      conv_factor = ifelse(PPSTRES == PPORRES, 1, PPSTRES / PPORRES)
+      conv_factor = case_when(
+        PPSTRESU == PPORRESU | PPSTRES == PPORRES ~ 1,
+        is.na(PPSTRES) & is.na(PPORRES) ~ 1,
+        TRUE ~ PPSTRES / PPORRES
+      )
     ) %>%
 
     # Group by the input groups and the parameter test codes
@@ -63,8 +69,9 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
 
     # Standardize units to the most frequent one within the groups (or first otherwise)
     mutate(
-      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE))[1],
-      ModeConv_factor = as.numeric(names(sort(table(conv_factor), decreasing = TRUE))[1]),
+      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE, useNA = "ifany"))[1],
+      ModeConv_factor = as.numeric(names(sort(table(conv_factor),
+                                              decreasing = TRUE, useNA = "ifany"))[1]),
       PPSTRES = PPORRES * ModeConv_factor,
       PPTESTCD = ifelse(
         ModeUnit == "",
@@ -88,7 +95,7 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
     ) %>%
     mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
 
-    # Pivot the data to return groups as rows and statistics as columns
+    # Pivot the data to return groups/statistics as rows & parameters as columns
     pivot_longer(
       cols = c(Geomean, Geocv, Mean, SD, Min, Max, Median, Count.missing, Count.total),
       names_to = "Statistic",
@@ -98,7 +105,4 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
       names_from = PPTESTCD,
       values_from = Value
     )
-
-  return(summary_stats)
-
 }
