@@ -1,4 +1,17 @@
-#' Parses TLG definitions from the yaml file
+#' Tab handling Tables, Listings and Graphs.
+#'
+#' @details
+#' Tab provides the user with a selection of TLGs and allows the display and customization of
+#' various tables, lists and graphs. The definitions table as well as all customization options
+#' are based on `tlg.yaml` file in the root directory of the application. This module calls on
+#' `tlg_module`s for each TLG in submitted order, creating a coprehensive UI for all visualizations.
+#'
+#' Read more in the contributing guide.
+#'
+#' @param id ID of the module
+#' @param data ADNCA data object, processed and mapped.
+
+#' Parses TLG definitions from the yaml file, holds all definitions.
 .TLG_DEFINITIONS <- {
   defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
 

@@ -1,3 +1,13 @@
+#' Module handling specific Tables, Lists and Graphs.
+#'
+#' @details
+#' Takes in the definition of a TLG, as defined in `tlg.yaml` file. Generates a paginated interface
+#' that allows viewing of the TLG with default values. In addition, generates editing widgets in a
+#' sidebar that allow the user to specify parameters passed into the rendering function.
+#'
+#' To read more check out documentation for each function of the module and the contributing
+#' guidelines.
+
 #' Function generating UI for a TLG module.
 #'
 #' @param id      id of the module, preferably with randomly generated part to avoid conflicts
@@ -87,6 +97,7 @@ tlg_module_ui <- function(id, type, options) {
 
 #' Function generating a server function for a TLG module.
 #' @param id          id of the module, preferably with randomly generated part to avoid conflicts
+#' @param data        adnca data object used for processing the TLG
 #' @param type        type of the module, either "graph" or "listing",
 #'                    decides the rendering funciton
 #' @param render_list function that renders the list of entries, actual implementation of the TLG
