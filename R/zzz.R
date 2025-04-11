@@ -14,6 +14,7 @@
     "CI_upper",
     "Count.missing",
     "Count.total",
+    "DFLAG",
     "DOSEA",
     "DOSNO",
     "Dataset",
