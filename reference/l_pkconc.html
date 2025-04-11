@@ -11,7 +11,7 @@ values and/or number of digits displayed."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9052</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9053</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@ values and/or number of digits displayed.</p>
 <span>  title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Listing of PK Concentration by Treatment Group,"</span>,</span>
 <span>    <span class="st">"Subject and Nominal Time, PK Population"</span><span class="op">)</span>,</span>
 <span>  subtitle <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  footnote <span class="op">=</span> <span class="st">"*: Patients excluded from the summary table and mean plots"</span></span>
+<span>  footnote <span class="op">=</span> <span class="st">"*: Subjects excluded from the summary table and mean plots"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -163,12 +163,12 @@ values and/or number of digits displayed.</p>
 <span class="r-in"><span>                         displaying_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NFRLT"</span>, <span class="st">"AFRLT"</span>, <span class="st">"AVAL"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                         formatting_vars_table <span class="op">=</span> <span class="va">formatting_vars_table</span>,</span></span>
 <span class="r-in"><span>                         title <span class="op">=</span> <span class="st">"Listing of PK Concentration"</span>,</span></span>
-<span class="r-in"><span>                         subtitle <span class="op">=</span> <span class="st">"Patients with !PARAM: $PARAM (!PCSPEC: $PCSPEC)"</span></span></span>
+<span class="r-in"><span>                         subtitle <span class="op">=</span> <span class="st">"Subjects with !PARAM: $PARAM (!PCSPEC: $PCSPEC)"</span></span></span>
 <span class="r-in"><span>                         <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">listing_ex</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $Param1.Blood</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Listing of PK Concentration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Patients with Parameter: Param1 (Specimen: Blood)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Subjects with Parameter: Param1 (Specimen: Blood)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ——————————————————————————————————————————————————————————————————————————————————————————————————————</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Treatment Arm   Unique Subject ID   Norminal Time (hours)   Actual Time (hours)   Analyte Value (mg/L)</span>
@@ -181,11 +181,11 @@ values and/or number of digits displayed.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                               3                    3.02                  2.021        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ——————————————————————————————————————————————————————————————————————————————————————————————————————</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> *: Patients excluded from the summary table and mean plots</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> *: Subjects excluded from the summary table and mean plots</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $Param2.Urine</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Listing of PK Concentration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Patients with Parameter: Param2 (Specimen: Urine)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Subjects with Parameter: Param2 (Specimen: Urine)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ——————————————————————————————————————————————————————————————————————————————————————————————————————</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Treatment Arm   Unique Subject ID   Norminal Time (hours)   Actual Time (hours)   Analyte Value (mg/L)</span>
@@ -198,7 +198,7 @@ values and/or number of digits displayed.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                               3                    3.23                  2.497        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ——————————————————————————————————————————————————————————————————————————————————————————————————————</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> *: Patients excluded from the summary table and mean plots</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> *: Subjects excluded from the summary table and mean plots</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
