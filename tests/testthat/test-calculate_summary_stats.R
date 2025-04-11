@@ -4,7 +4,7 @@ test_data <- data.frame(
   PPSTRES = c(10, 20, 5, 15, NA, 30, 0, 10, 10, 20, 5, 15, NA, 30, 0, 10),
   PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
                "mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", ""),
-  PPORRES = c(1, 2, 0.5, 1.5, NA, 3, 0, 5, 1, 2, 0.5, 1.5, NA, 3, 0, 5),
+  PPORRES = c(10, 20, 5, 15, NA, 30, 0, 10, 10, 20, 5, 15, NA, 30, 0, 10),
   PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
                "mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "")
 )
