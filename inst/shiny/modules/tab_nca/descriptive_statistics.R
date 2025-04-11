@@ -66,7 +66,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
       req(res_nca())
 
       group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
-                            "USUBJID")
+                            # By default SUBJECT column is aggregated
+                            res_nca()$data$conc$columns$subject)
       classification_cols <- sort(c(grouping_vars(), "DOSEA", "DOSNO"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
