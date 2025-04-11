@@ -235,34 +235,31 @@ data_mapping_server <- function(id, adnca_data) {
       }
 
       # User resolves duplicates, apply DFLAG
-      if (nrow(df_duplicates()) > 0) {
+      duplicates(df_duplicates())
 
-        duplicates(df_duplicates())
+      if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
+        # Get selected rows from the reactable
+        selected <- getReactableState("duplicate_modal_table", "selected")
+        req(length(selected) > 0)
 
-        if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
-          # Get selected rows from the reactable
-          selected <- getReactableState("duplicate_modal_table", "selected")
-          req(length(selected) > 0)
+        kept <- df_duplicates()[selected, , drop = FALSE]
+        removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
+        dataset <- dataset %>%
+          mutate(DFLAG = FALSE)
 
-          kept <- df_duplicates()[selected, , drop = FALSE]
-          removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
-          dataset <- dataset %>%
-            mutate(DFLAG = FALSE)
+        # Set DFLAG to TRUE for the removed rows
+        dataset <- dataset %>%
+          rows_update(
+            removed %>%
+              mutate(DFLAG = TRUE) %>%
+              select(names(dataset)),
+            by = intersect(names(dataset), names(removed))
+          )
 
-          # Set DFLAG to TRUE for the removed rows
-          dataset <- dataset %>%
-            rows_update(
-              removed %>%
-                mutate(DFLAG = TRUE) %>%
-                select(names(dataset)),
-              by = intersect(names(dataset), names(removed))
-            )
-
-          return(dataset)
-        }
-        # Don't return anything until duplicates are resolved
-        return()
+        return(dataset)
       }
+      # Don't return anything until duplicates are resolved
+      return()
 
     })
     
