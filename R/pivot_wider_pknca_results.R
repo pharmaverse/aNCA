@@ -2,7 +2,7 @@
 #'
 #' This function reshapes the structure of the results produced by the main function
 #' of the PKNCA package (pk.nca) in a way that each row represents all the main results
-#' summarized for each profile in each individual/patient. Excluding the ID variables,
+#' summarized for each profile in each individual/subject. Excluding the ID variables,
 #' each column name corresponds with a calculated parameter and between brackets its
 #' corresponding units. AUC intervals, if present, are be added as additional columns.
 #'
