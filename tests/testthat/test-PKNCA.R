@@ -84,7 +84,7 @@ describe("PKNCA_create_data_object", {
     expect_equal(length(unique_analytes), 2)
 
   })
-  
+
   it("handles duplicates in DFLAG", {
     # Duplicate DFLAG values
     duplicate_data <- simple_data %>% mutate(AFRLT = c(0.5, 1, 2, 3, 3, 6))

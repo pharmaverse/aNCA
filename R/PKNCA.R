@@ -72,7 +72,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
       filter(DFLAG == FALSE) %>%
       select(-DFLAG)
   }
-  
+
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
