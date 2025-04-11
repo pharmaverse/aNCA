@@ -3,7 +3,8 @@
 #' This function calculates various summary statistics for formatted output of PKNCA::pk.nca().
 #'
 #' @param data         A data frame containing results of
-#'                     Non Compartmental Analysis using PKNCA package
+#'                     Non Compartmental Analysis using PKNCA package. Assumes
+#'                     presence of columns: PPORRES, PPSTRES, PPSTRESU, PPTESTCD
 #' @param input_groups A character vector specifying the columns to group by.
 #'                     Here. the hierarchical order matters
 #' @param unit_col     A character string specifying the column name for units.
@@ -52,14 +53,22 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
   # Calculate summary statistics, using all value rows
   # (note: this will give more weight to subjects with more valid records)
   summary_stats <- data %>%
-    mutate(conv_factor = PPSTRES / PPORRES) %>%
-    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
     unique() %>%
+    mutate(conv_factor = ifelse(
+      PPSTRES == PPORRES,
+      1,
+      PPSTRES / PPORRES)
+    ) %>%
+    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
     mutate(
       ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE))[1],
       ModeConv_factor = as.numeric(names(sort(table(conv_factor), decreasing = TRUE))[1]),
       PPSTRES = PPORRES * ModeConv_factor,
-      PPTESTCD = paste0(PPTESTCD, "[", ModeUnit, "]")
+      PPTESTCD = ifelse(
+        ModeUnit == "",
+        PPTESTCD,
+        paste0(PPTESTCD, "[", ModeUnit, "]")
+      )
     ) %>%
     summarise(
       Geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
