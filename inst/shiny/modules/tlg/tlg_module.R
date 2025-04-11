@@ -92,7 +92,7 @@ tlg_module_ui <- function(id, type, options) {
 #' @param render_list function that renders the list of entries, actual implementation of the TLG
 #' @param options     list of options to customize input parameters
 #'
-tlg_module_server <- function(id, type, render_list, options = NULL) {
+tlg_module_server <- function(id, data, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
       type,
@@ -100,7 +100,6 @@ tlg_module_server <- function(id, type, render_list, options = NULL) {
       "listing" = renderPrint
     )
 
-    data <- session$userData$data
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
