@@ -35,13 +35,12 @@
 format_pkncaconc_data <- function(ADNCA,
                                   group_columns,
                                   time_column = "AFRLT",
-                                  route_column = "ROUTE",
-                                  dosno_column = "DOSNO") {
+                                  route_column = "ROUTE") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
 
-  missing_columns <- setdiff(c(group_columns, time_column, dosno_column), colnames(ADNCA))
+  missing_columns <- setdiff(c(group_columns, time_column), colnames(ADNCA))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
@@ -55,9 +54,6 @@ format_pkncaconc_data <- function(ADNCA,
                                     gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
                               "intravascular",
                               "extravascular")) %>%
-    group_by(!!!syms(group_columns), !!sym(dosno_column)) %>%
-    mutate(IX = seq_len(n())) %>%
-    ungroup() %>%
     arrange(!!!syms(group_columns))
 }
 
@@ -100,21 +96,15 @@ format_pkncadose_data <- function(pkncaconc_data,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
-  # Make sure there is a slice of the data by dose number even if the column does not exist
-  if (!is.null(dosno_column) && dosno_column %in% names(pkncaconc_data)) {
-    group_columns <- c(group_columns, dosno_column)
-  } else {
-    group_columns <- c(group_columns, "TIME")
-  }
+  # Make sure there is a slice of the data by dose time
+  group_columns <- c(group_columns, "TIME")
 
   pkncaconc_data %>%
-    mutate(TIME = !!sym(time_column) - !!sym(since_lastdose_time_column)) %>%
-    group_by(!!!syms(group_columns)) %>%
-    arrange(!!sym(since_lastdose_time_column) < 0,
-            !!sym(since_lastdose_time_column)) %>%
-    slice(1) %>%
-    ungroup() %>%
-    arrange(!!!syms(group_columns))
+    mutate( #reformat TIME to avoid floating-point mistmatches
+      TIME = as.numeric(formatC(!!sym(time_column) - !!sym(since_lastdose_time_column),
+                                     digits = 12, format = "fg", flag = "#"))
+      ) %>%
+    distinct(!!!syms(group_columns), .keep_all = TRUE)
 
 }
 
