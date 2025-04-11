@@ -7,7 +7,6 @@
 #'                     presence of columns: PPORRES, PPSTRES, PPSTRESU, PPTESTCD
 #' @param input_groups A character vector specifying the columns to group by.
 #'                     Here. the hierarchical order matters
-#' @param unit_col     A character string specifying the column name for units.
 #'                     Default is "PPSTRESU".
 #' @returns A data frame with summary statistics for each group and parameter.
 #' @details The function calculates the following statistics for numeric variables:
