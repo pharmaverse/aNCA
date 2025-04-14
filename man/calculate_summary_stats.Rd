@@ -7,11 +7,13 @@
 calculate_summary_stats(data, input_groups = "DOSNO")
 }
 \arguments{
-\item{input_groups}{A character vector specifying the columns to group by.
-Here. the hierarchical order matters}
+\item{data}{A data frame containing results of
+Non Compartmental Analysis using PKNCA package. Assumes
+presence of columns: PPORRES, PPSTRES, PPSTRESU, PPTESTCD}
 
-\item{res_pknca}{A data frame containing results of
-Non Compartmental Analysis using PKNCA package}
+\item{input_groups}{A character vector specifying the columns to group by.
+Here. the hierarchical order matters
+Default is "PPSTRESU".}
 }
 \value{
 A data frame with summary statistics for each group and parameter.
@@ -33,6 +35,7 @@ The function calculates the following statistics for numeric variables:
 \item Count (\code{count})
 }
 The resulting summary statistics are rounded to three decimal places.
+If units are different, they are standardized to the group's most frequent first unit.
 }
 \examples{
 \dontrun{

@@ -9,7 +9,7 @@
 #' - DRUG: Drug identifier.
 #' - USUBJID: Unique subject identifier.
 #' - DOSNO: Dose profile number.
-#' - ANALYTE: Analyte.
+#' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
 #' - DOSEA: Dose amount.
@@ -23,7 +23,7 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE`.
+#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
 #' with formula `DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
@@ -41,7 +41,7 @@
 #' DRUG = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
 #' DOSNO = rep(1, 6),
-#' ANALYTE = rep("AnalyteA", 6),
+#' PARAM = rep("AnalyteA", 6),
 #' AVAL = c(0, 5, 10, 7, 3, 1),
 #' AVALU = rep("ng/mL", 6),
 #' DOSEA = rep(100, 6),
@@ -62,7 +62,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   time_column <- "AFRLT"
   dosno_column <- "DOSNO"
   route_column <- "ROUTE"
-  analyte_column <- "ANALYTE"
+  analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
 
@@ -94,7 +94,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create PKNCA objects
   pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
@@ -143,6 +143,140 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   pknca_data_object
 }
 
+
+
+#' Create a PKNCAdata Object for NCA or Slope Analysis
+#'
+#' This function updates a previously prepared `PKNCAdata` object
+#' based on user selections for method, analyte, dose, specimen, and parameters.
+#' @details
+#' Step 1: Update units in the `PKNCAdata` object
+#' ensuring unique analytes have their unique units
+#'
+#' Step 2: Set `PKNCAoptions` for NCA calculation
+#'
+#' Step 3: Format intervals using `format_pkncadata_intervals()`
+#'
+#' Step 4: Apply filtering based on user selections and partial aucs
+#'
+#' Step 5: Impute start values if requested
+#'
+#' @param adnca_data A reactive PKNCAdata object
+#' @param auc_data A data frame containing partial aucs added by user
+#' @param method NCA calculation method selection
+#' @param selected_analytes User selected analytes
+#' @param selected_dosno User selected dose numbers
+#' @param selected_pcspec User selected specimen
+#' @param params A list of parameters for NCA calculation
+#' @param should_impute_c0 Logical indicating if start values should be imputed
+#'
+#' @returns A fully configured `PKNCAdata` object.
+#'
+#' @importFrom dplyr filter mutate select
+#' @importFrom tidyr crossing
+#' @importFrom rlang sym
+#' @importFrom purrr pmap
+#'
+#' @export
+PKNCA_update_data_object <- function( # nolint: object_name_linter
+  adnca_data,
+  auc_data,
+  method,
+  selected_analytes,
+  selected_dosno,
+  selected_pcspec,
+  params,
+  should_impute_c0 = TRUE
+) {
+
+  data <- adnca_data
+  analyte_column <- data$conc$columns$groups$group_analyte
+  unique_analytes <- unique(data$conc$data[[analyte_column]])
+
+  # Add and expand units
+  data$units <-  data$units %>%
+    filter(!!sym(analyte_column) %in% selected_analytes) %>%
+    select(-!!sym(analyte_column)) %>%
+    tidyr::crossing(!!sym(analyte_column) := unique_analytes) %>%
+    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
+
+  data$options <- list(
+    auc.method = method,
+    progress = FALSE,
+    keep_interval_cols = c("DOSNO", "type_interval"),
+    min.hl.r.squared = 0.01
+  )
+
+  # Format intervals
+  data$intervals <- format_pkncadata_intervals(
+    pknca_conc = data$conc,
+    pknca_dose = data$dose,
+    params = params,
+    start_from_last_dose = should_impute_c0
+  )
+
+  # Apply filtering
+  data$intervals <- data$intervals %>%
+    filter(
+      PARAM %in% selected_analytes,
+      DOSNO %in% selected_dosno,
+      PCSPEC %in% selected_pcspec
+    )
+
+  # # Add partial AUCs if any
+
+  auc_ranges <- auc_data %>%
+    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
+
+  # Make a list of intervals from valid AUC ranges
+  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
+    data$intervals %>%
+      mutate(
+        start = start + start_auc,
+        end = start + (end_auc - start_auc),
+        across(where(is.logical), ~FALSE),
+        aucint.last = TRUE,
+        type_interval = "manual"
+      )
+  })
+
+  data$intervals <- bind_rows(
+    data$intervals,
+    intervals_list
+  ) %>%
+    unique()
+
+  data$impute <- NA
+
+  # Impute start values if requested
+  if (should_impute_c0) {
+    data <- create_start_impute(data)
+
+    # Don't impute parameters that are not AUC dependent
+    params_auc_dep <- pknca_cdisc_terms %>%
+      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
+      pull(PKNCA)
+
+    params_not_to_impute <- pknca_cdisc_terms %>%
+      filter(!grepl("auc|aumc", PKNCA),
+             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
+      pull(PKNCA) |>
+      intersect(names(PKNCA::get.interval.cols()))
+
+    all_impute_methods <- na.omit(unique(data$intervals$impute))
+
+    data$intervals <- Reduce(function(d, ti_arg) {
+      interval_remove_impute(
+        d,
+        target_impute = ti_arg,
+        target_params = params_not_to_impute
+      )
+    }, all_impute_methods, init = data$intervals)
+  }
+
+  data
+}
+
 #' Calculates results for PKNCA analysis.
 #'
 #' @details
@@ -163,7 +297,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #'   DRUG = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
 #'   DOSNO = rep(1, 6),
-#'   ANALYTE = rep("AnalyteA", 6),
+#'   PARAM = rep("AnalyteA", 6),
 #'   AVAL = c(0, 5, 10, 7, 3, 1),
 #'   AVALU = rep("ng/mL", 6),
 #'   DOSEA = rep(100, 6),
@@ -183,18 +317,28 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #'
 #' @export
 PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
+
+  # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
+
+  dose_data_to_join <- select(
+    pknca_data$dose$data,
+    -exclude,
+    -pknca_data$conc$columns$groups$group_analyte
+  )
 
   results$result <- results$result %>%
     inner_join(
-      select(pknca_data$dose$data, -exclude, -pknca_data$conc$columns$groups$group_analyte)
-      # TODO: add `by = `argument to avoid warnings
+      dose_data_to_join,
+      by = intersect(names(.), names(dose_data_to_join))
     ) %>%
     mutate(
       start_dose = start - !!sym(results$data$dose$columns$time),
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
+    # Make empty strings for units that have no metric (unitless, fraction...)
+    mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
@@ -218,7 +362,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 #' @details
 #' This function adheres to the structure required by the `PKNCA` package to work with its
 #' functionalities. For more information, see the
-#' [PKNCA Data Imputation Vignette](https://cran.r-project.org/web/packages/PKNCA/vignettes).
+#' [PKNCA Data Imputation Vignette](https://CRAN.R-project.org/package=PKNCA).
 #' @export
 #'
 #' @examples
@@ -258,7 +402,7 @@ PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., opti
 #' @details
 #' This function adheres to the structure required by the `PKNCA` package to work with its
 #' functionalities.For more information, see the
-#' [PKNCA Data Imputation Vignette](https://cran.r-project.org/web/packages/PKNCA/vignettes).
+#' [PKNCA Data Imputation Vignette](https://CRAN.R-project.org/package=PKNCA).
 #' @export
 #'
 #' @examples

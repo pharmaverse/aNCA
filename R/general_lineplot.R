@@ -48,7 +48,6 @@
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import nestcolor
 #' @importFrom tern g_ipp
 #' @export
 general_lineplot <- function(
@@ -65,7 +64,7 @@ general_lineplot <- function(
   preprocessed_data <- data %>%
     filter(
       USUBJID %in% selected_usubjids,
-      ANALYTE %in% selected_analytes,
+      PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE
     ) %>%
@@ -134,12 +133,11 @@ general_lineplot <- function(
       "Subjects: ",
       paste(unique(preprocessed_data$USUBJID), collapse = ", "),
       "\nAnalyte(s): ",
-      paste(unique(preprocessed_data$ANALYTE), collapse = ", ")
+      paste(unique(preprocessed_data$PARAM), collapse = ", ")
     ),
     caption = NULL,
     add_baseline_hline = FALSE,
     yvar_baseline = "AVAL",
-    ggtheme = nestcolor::theme_nest(),
     col = NULL
   ) +
     labs(color = paste(colorby_var, collapse = ", "))

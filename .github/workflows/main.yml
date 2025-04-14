@@ -77,4 +77,4 @@ jobs:
     uses: ./.github/workflows/r-cmd-check.yml
     if: github.event_name == 'pull_request'
     with:
-        error-on: error
+        error-on: note

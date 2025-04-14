@@ -17,7 +17,7 @@
 #'   conc = c(1, 0.6, 0.2, 0.1, 0.9, 0.4, 1.2, 0.8, 0.3, 0.2, 1.1, 0.5),
 #'   time = rep(0:5, 2),
 #'   ID = rep(1:2, each = 6),
-#'   analyte = rep(c("Analyte1", "Analyte2"), each = 6)
+#'   param = rep(c("Analyte1", "Analyte2"), each = 6)
 #' )
 #'
 #' d_dose <- data.frame(
@@ -26,7 +26,7 @@
 #'   ID = c(1, 2)
 #' )
 #'
-#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / param)
 #' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
 #'
 #' intervals <- data.frame(
@@ -35,7 +35,7 @@
 #'   half.life = c(TRUE, TRUE, TRUE),
 #'   cmax = c(TRUE, TRUE, TRUE),
 #'   impute = c("start_conc0,start_predose", "start_predose", "start_conc0"),
-#'   analyte = c("Analyte1", "Analyte2", "Analyte1")
+#'   param = c("Analyte1", "Analyte2", "Analyte1")
 #' )
 #'
 #' o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
@@ -44,9 +44,9 @@
 #' o_data <- interval_add_impute(o_data,
 #'                               target_impute = "start_conc0",
 #'                               target_params = "half.life",
-#'                               target_groups = data.frame(analyte = "Analyte1"))
+#'                               target_groups = data.frame(param = "Analyte1"))
 #' @export
-interval_add_impute <- function(data, ...) {
+interval_add_impute <- function(data, target_impute, after, target_params, target_groups, ...) {
   UseMethod("interval_add_impute", data)
 }
 
@@ -61,7 +61,7 @@ interval_add_impute <- function(data, ...) {
 #'   conc = c(1, 0.6, 0.2, 0.1, 0.9, 0.4, 1.2, 0.8, 0.3, 0.2, 1.1, 0.5),
 #'   time = rep(0:5, 2),
 #'   ID = rep(1:2, each = 6),
-#'   analyte = rep(c("Analyte1", "Analyte2"), each = 6)
+#'   param = rep(c("Analyte1", "Analyte2"), each = 6)
 #' )
 #'
 #' d_dose <- data.frame(
@@ -70,7 +70,7 @@ interval_add_impute <- function(data, ...) {
 #'   ID = c(1, 2)
 #' )
 #'
-#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / analyte)
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | ID / param)
 #' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | ID)
 #'
 #' intervals <- data.frame(
@@ -79,7 +79,7 @@ interval_add_impute <- function(data, ...) {
 #'   half.life = c(TRUE, FALSE, TRUE),
 #'   cmax = c(TRUE, TRUE, TRUE),
 #'   impute = c("start_conc0,start_predose", "start_predose", "start_conc0"),
-#'   analyte = c("Analyte1", "Analyte2", "Analyte1")
+#'   param = c("Analyte1", "Analyte2", "Analyte1")
 #' )
 #'
 #' o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
@@ -88,9 +88,9 @@ interval_add_impute <- function(data, ...) {
 #' o_data <- interval_remove_impute(data = o_data,
 #'                                  target_impute = "start_conc0",
 #'                                  target_params = "half.life",
-#'                                  target_groups = data.frame(analyte = "Analyte1"))
+#'                                  target_groups = data.frame(param = "Analyte1"))
 #' @export
-interval_remove_impute <- function(data, ...) {
+interval_remove_impute <- function(data, target_impute, ...) {
   UseMethod("interval_remove_impute", data)
 }
 
@@ -145,6 +145,10 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   if (!is.character(target_impute)) {
     stop("'target_impute' must be a character string.")
   }
+  if (is.na(target_impute) || target_impute == "") {
+    warning("No impute method specified. No changes made.")
+    return(data)
+  }
 
   # Ensure the impute column exists and is a character column
   if (!"impute" %in% colnames(data)) {
@@ -164,9 +168,9 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   # If missing, define target parameters as all parameter columns with at least one TRUE.
   if (is.null(target_params)) {
     target_params <- param_cols
-  } else {
-    checkmate::assert_subset(target_params, choices = all_param_options, empty.ok = TRUE)
   }
+
+  assert_subset(target_params, all_param_options)
 
   # Identify the target interval rows based on:
   target_rows <- identify_target_rows(data, target_impute, target_params, target_groups, after)
@@ -200,8 +204,8 @@ interval_add_impute.data.frame <- function(data, target_impute, after = Inf,
   data <- data[!rows_no_params, , drop = FALSE]
 
   # Order the intervals by the index column and then remove it
+  rownames(data) <- NULL
   data <- data[order(data[[index_colname]]), ]
-  rownames(data) <- seq_len(nrow(data))
   data[, !names(data) %in% index_colname]
 }
 
@@ -217,6 +221,10 @@ interval_remove_impute.data.frame <- function(data,
   }
   if (!is.character(target_impute)) {
     stop("'target_impute' must be a character string.")
+  }
+  if (is.na(target_impute) || target_impute == "") {
+    warning("No impute method specified. No changes made.")
+    return(data)
   }
 
   # Ensure the impute column exists and is a character column
@@ -238,9 +246,9 @@ interval_remove_impute.data.frame <- function(data,
   # Handle target_params
   if (is.null(target_params)) {
     target_params <- param_cols
-  } else {
-    checkmate::assert_subset(target_params, choices = all_param_options)
   }
+
+  assert_subset(target_params, all_param_options)
 
   # Identify the interval rows that need to be changed
   target_rows <- identify_target_rows(data, target_impute, target_params, target_groups)
@@ -274,8 +282,8 @@ interval_remove_impute.data.frame <- function(data,
   data <- data[!rows_no_params, , drop = FALSE]
 
   # Order the intervals by the index column and then remove it
+  rownames(data) <- NULL
   data <- data[order(data[[index_colname]]), ]
-  rownames(data) <- seq_len(nrow(data))
   data[, !names(data) %in% index_colname]
 }
 
@@ -363,4 +371,18 @@ identify_target_rows <- function(data, target_impute, target_params, target_grou
   }
 
   is_target_group & is_target_param & is_after
+}
+
+#' Checks if a vector is a subset of another. If there are any values in `a` that are not present
+#' in `b`, throws an error.
+#' @param a Vector to check.
+#' @param b Vector with possible values.
+#' @noRd
+assert_subset <- function(a, b) {
+  if (!all(a %in% b)) {
+    stop(
+      "The following parameters are invalid interval columns: ",
+      paste0(setdiff(a, b), collapse = ", ")
+    )
+  }
 }

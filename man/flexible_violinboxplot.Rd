@@ -16,7 +16,17 @@ flexible_violinboxplot(
 )
 }
 \arguments{
+\item{boxplotdata}{A list containing the data to be plotted. It should have a \code{data}
+element with dose information and a \code{formatted} element with the
+data to be plotted.}
+
 \item{parameter}{A string specifying the parameter to be plotted.}
+
+\item{xvars}{Variables for the x axis.}
+
+\item{colorvars}{Variables for the color aesthetic.}
+
+\item{varvalstofilter}{Variables to filter on.}
 
 \item{columns_to_hover}{A character vector indicating the column names from result_data that
 should be used to identify when hovering the plotly outputs}

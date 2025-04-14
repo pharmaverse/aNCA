@@ -4,18 +4,21 @@
 \alias{filter_slopes}
 \title{Filter dataset based on slope selections and exclusions}
 \usage{
-filter_slopes(data, slopes, profiles, slope_groups)
+filter_slopes(data, slopes, profiles, slope_groups, check_reasons = FALSE)
 }
 \arguments{
 \item{data}{Data to filter. Must be \code{PKNCAdata} list, containing the \code{conc} element with
 \code{PKNCAconc} list and appropriate data frame included under data.}
 
-\item{slopes}{Data frame with slopes selection rules, must contain the following columns:
-\code{TYPE}, \code{PATIENT}, \code{PROFILE}, \code{RANGE}, \code{REASON}.}
+\item{slopes}{A data frame containing slope rules, including \code{TYPE}, \code{RANGE},
+and \code{REASON} columns. May also have grouping columns (expected to match slope_groups)}
 
-\item{profiles}{List with available profiles for each \code{PATIENT}.}
+\item{profiles}{List with available profiles for each \code{SUBJECT}.}
 
 \item{slope_groups}{List with column names that define the groups.}
+
+\item{check_reasons}{Whether to check if all selections have REASONS stated. If this is \code{TRUE}
+and not all selections have a reason provided, an error will be thrown.}
 }
 \value{
 Original dataset, with \code{is.included.hl}, \code{is.excluded.hl} and \code{exclude_half.life}

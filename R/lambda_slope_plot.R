@@ -7,7 +7,7 @@
 #' @param conc_pknca_df  Data frame containing the concentration data
 #'                      (default is `mydata$conc$data`).
 #' @param row_values     A list containing the values for the column_names used for filtering.
-#'                      (default is `patient`).
+#'                      (default is `subject`).
 #' @param myres          A PKNCAresults object containing the results of the NCA analysis
 #' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
 #'                      determining the subtitle color (default is 0.7).
@@ -43,7 +43,8 @@
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import plotly
+#' @importFrom plotly ggplotly layout config style add_trace
+#' @importFrom stats setNames
 #' @export
 lambda_slope_plot <- function(
   conc_pknca_df,
@@ -128,7 +129,7 @@ lambda_slope_plot <- function(
     collapse = ", "
   )
 
-  #Filter the data set for patient profile
+  #Filter the data set for subject profile
   plot_data <- conc_pknca_df %>%
     ungroup() %>%
     filter(

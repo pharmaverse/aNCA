@@ -31,15 +31,17 @@ parameter_datasets_server <- function(id, res_nca) {
           buttons = list(
             list(
               extend = "copy",
-              title = paste0("PP_Dataset", "_", Sys.Date())
+              title = paste0("PP_", CDISC()$studyid, "_", Sys.Date())
             ),
             list(
               extend = "csv",
-              title = paste0("PP_Dataset", "_", Sys.Date())
+              filename = paste0("PP_", CDISC()$studyid, "_", Sys.Date())
             ),
             list(
               extend = "excel",
-              title = paste0("PP_Dataset", "_", Sys.Date())
+              title = NULL,
+              header = colnames(CDISC()$pp),
+              filename = paste0("PP_", CDISC()$studyid, "_", Sys.Date())
             )
           )
         )
@@ -61,15 +63,17 @@ parameter_datasets_server <- function(id, res_nca) {
           buttons = list(
             list(
               extend = "copy",
-              title = paste0("ADPP_Dataset", "_", Sys.Date())
+              title = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
             ),
             list(
               extend = "csv",
-              title = paste0("ADPP_Dataset", "_", Sys.Date())
+              filename = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
             ),
             list(
               extend = "excel",
-              title = paste0("ADPP_Dataset", "_", Sys.Date())
+              title = NULL,
+              header = colnames(CDISC()$adpp),
+              filename = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
             )
           )
         )

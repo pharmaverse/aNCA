@@ -19,7 +19,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
+nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, auc_options) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -33,7 +33,6 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
 
     final_results <- reactive({
       req(res_nca())
-
       res <- res_nca()
       #' Apply units
       if (!is.null(session$userData$units_table())) {
@@ -41,7 +40,8 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
         res$result <- res$result %>%
           select(-PPSTRESU, -PPSTRES) %>%
           left_join(
-            session$userData$units_table(),
+            session$userData$units_table() %>%
+              mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
             by = intersect(names(.), names(session$userData$units_table()))
           ) %>%
           mutate(PPSTRES = PPORRES * conversion_factor) %>%
@@ -49,42 +49,46 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
       }
 
       #' Transform results
-      final_results <- pivot_wider_pknca_results(res)
+      # Calculate bioavailability if available
+      results <- calculate_F(res, auc_options()) %>%
+        PKNCA_add_F(res, .)
 
-      # Apply rules
-      for (rule_input in grep("^rule_", names(rules), value = TRUE)) {
-        if (!rules[[rule_input]]) next
+      # Transform results
+      final_results <- pivot_wider_pknca_results(results)
 
-        pptestcd <- rule_input |>
-          gsub("^rule_", "", x = _) |>
-          gsub("_", ".", x = _, fixed = TRUE)
+      # Apply flag rules
+      current_rules <- rules()
+      for (param in names(current_rules)) {
+        if (current_rules[[param]]$is.checked) {
+          # Find the proper column/s that should be considered (in principle should be 1)
+          param_cdisc <- translate_terms(param, "PKNCA", "PPTESTCD")
+          param_cols <- grep(paste0("^", param_cdisc, "(\\[.*\\])?$"),
+                             names(final_results),
+                             value = TRUE)
 
-        final_pptestcd <- res_nca()$result %>%
-          filter(PPTESTCD == pptestcd) %>%
-          slice(1) %>%
-          mutate(new_pptestcd = paste0(pptestcd, "[", PPSTRESU, "]")) %>%
-          pull(new_pptestcd) %>%
-          unique()
-
-        final_results <- final_results %>%
-          mutate(!!paste0("flag_", pptestcd) := case_when(
-            startsWith(pptestcd, "auc") ~ .data[[final_pptestcd]]
-            >= rules[[paste0(pptestcd, "_threshold")]],
-            TRUE ~ .data[[final_pptestcd]] <= rules[[paste0(pptestcd, "_threshold")]]
-          ))
+          # Include a flag column for that parameter that is TRUE when the threshold is surpassed
+          final_results <- final_results %>%
+            mutate(!!paste0("flag_", param) := case_when(
+              startsWith(param, "auc") ~ rowSums(
+                .[, param_cols] >= current_rules[[param]]$threshold
+              ) > 0,
+              TRUE ~ rowSums(.[, param_cols] <= current_rules[[param]]$threshold) > 0
+            ))
+        }
       }
 
       # Join subject data to allow the user to group by it
+      conc_data_to_join <- res_nca()$data$conc$data %>%
+        select(any_of(c(
+          grouping_vars(),
+          unname(unlist(res_nca()$data$conc$columns$groups)),
+          "DOSEA",
+          "DOSNO",
+          "ROUTE"
+        )))
+
       final_results <- final_results %>%
-        inner_join(
-          res_nca()$data$conc$data %>%
-            select(
-              any_of(c(grouping_vars(),
-                       unname(unlist(res_nca()$data$conc$columns$groups)),
-                       "DOSNO",
-                       "ROUTE"))
-            )
-        ) %>%
+        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
         distinct()
 
       # Add flagged column
@@ -101,39 +105,46 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
     observeEvent(final_results(), {
       req(final_results())
 
-      param_cols <- c(unique(res_nca()$result$PPTESTCD), "Exclude", "flagged")
+      param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
+      param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(
         session = session,
         inputId = "params",
         label = "Select Parameters :",
-        choices = sort(param_cols),
-        selected = sort(param_cols)
+        choices = param_inputnames,
+        selected =  param_inputnames
       )
     })
 
-    output$myresults <- reactable::renderReactable({
+    output_results <- reactive({
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
-      param_label_cols <- formatters::var_labels(final_results())
-      params_sel_cols <- param_label_cols[param_label_cols %in% input$params] |>
-        names()
+      param_cols <- unique(res_nca()$result$PPTESTCD)
+      input_params <- sub(":.*", "", input$params)
+      #identify parameters to be removed from final results
+      params_rem_cols <- setdiff(param_cols, input_params)
 
-      group_cols <- setdiff(names(res_nca()$data$intervals),
-                            c(names(PKNCA::get.interval.cols()))) |>
-        # Here cols of interest are also added
-        c("Exclude", "impute", "flagged")
+      col_names <- names(final_results())
+      # Extract base names before the "[", or leave as-is if no "["
+      col_base_names <- ifelse(str_detect(col_names, "\\["),
+                               str_remove(col_names, "\\[.*"),
+                               col_names)
 
-      final_results <- final_results() %>%
-        select(any_of(c(group_cols, sort(params_sel_cols))))
+      final_results() %>%
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])), -conc_groups)
+    })
+
+    output$myresults <- reactable::renderReactable({
+      req(output_results())
 
       # Generate column definitions that can be hovered in the UI
-      col_defs <- generate_col_defs(final_results)
+      col_defs <- generate_col_defs(output_results())
 
       # Make the reactable object
       reactable(
-        final_results,
+        output_results(),
         columns = col_defs,
         searchable = TRUE,
         sortable = TRUE,
@@ -145,7 +156,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
         bordered = TRUE,
         height = "68vh",
         rowStyle = function(index) {
-          flagged_value <- final_results$flagged[index]
+          flagged_value <- output_results()$flagged[index]
           if (flagged_value == "FLAGGED") {
             list(backgroundColor = "#f5b4b4")
           } else if (flagged_value == "MISSING") {
@@ -162,7 +173,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars) {
         paste0(res_nca()$data$conc$data$STUDYID[1], "PK_Parameters.csv")
       },
       content = function(file) {
-        write.csv(final_res_nca(), file, row.names = FALSE)
+        write.csv(output_results(), file, row.names = FALSE)
       }
     )
   })

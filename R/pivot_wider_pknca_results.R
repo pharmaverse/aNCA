@@ -2,7 +2,7 @@
 #'
 #' This function reshapes the structure of the results produced by the main function
 #' of the PKNCA package (pk.nca) in a way that each row represents all the main results
-#' summarized for each profile in each individual/patient. Excluding the ID variables,
+#' summarized for each profile in each individual/subject. Excluding the ID variables,
 #' each column name corresponds with a calculated parameter and between brackets its
 #' corresponding units. AUC intervals, if present, are be added as additional columns.
 #'
@@ -15,43 +15,44 @@
 #' @importFrom dplyr select left_join rename mutate distinct group_by arrange ungroup
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
+#' @importFrom purrr pmap_chr
 #' @export
 #'
 pivot_wider_pknca_results <- function(myres) {
 
   ############################################################################################
-  # Derive lambda.z.n.points & lambda.z.method
+  # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
-
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),
       "DOSNO")
   )
+
   added_params <- NULL
-  if (all(c("lambda.z",
-            "lambda.z.n.points",
-            "lambda.z.time.first") %in% unique(myres$result$PPTESTCD))) {
+  if (all(c("LAMZ",
+            "LAMZNPT",
+            "LAMZLL") %in% unique(myres$result$PPTESTCD))) {
     added_params <- myres$result %>%
-      filter(PPTESTCD %in% c("lambda.z.n.points", "lambda.z.time.first", "lambda.z"),
+      filter(PPTESTCD %in% c("LAMZNPT", "LAMZLL", "LAMZ"),
              type_interval == "main") %>%
       select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
-      left_join(data_with_duplicates) %>%
-      # Derive lambda.z.method: was lambda.z manually customized?
-      mutate(lambda.z.method = ifelse(
+      left_join(data_with_duplicates, by = intersect(names(.), names(data_with_duplicates))) %>%
+      # Derive LAMZIX: If present consider inclusions and disconsider exclusions
+      group_by(!!!syms(conc_groups), DOSNO) %>%
+      # Derive LAMZMTD: was lambda.z manually customized?
+      mutate(LAMZMTD = ifelse(
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
       )) %>%
-      # Derive lambda.z.ix: If present consider inclusions and disconsider exclusions
-      group_by(!!!syms(conc_groups), DOSNO) %>%
-      filter(!exclude_half.life | is.na(lambda.z.time.first) | is.na(lambda.z.n.points)) %>%
-      filter(ARRLT >= (lambda.z.time.first + start) | is.na(lambda.z.time.first)) %>%
-      filter(row_number() <= lambda.z.n.points | is.na(lambda.z.n.points)) %>%
-      mutate(lambda.z.ix = paste0(IX, collapse = ",")) %>%
-      mutate(lambda.z.ix = ifelse(is.na(lambda.z), NA, lambda.z.ix)) %>%
-      select(conc_groups, DOSNO, start, end, lambda.z.ix, lambda.z.method) %>%
+      filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
+      filter(TIME >= (LAMZLL + start) | is.na(LAMZLL)) %>%
+      filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
+      mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
+      mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
+      select(conc_groups, DOSNO, start, end, LAMZIX, LAMZMTD) %>%
       unique()
   }
   ############################################################################################
@@ -60,7 +61,9 @@ pivot_wider_pknca_results <- function(myres) {
   main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
-    mutate(PPTESTCD = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
+    mutate(PPTESTCD = ifelse(PPSTRESU != "",
+                             paste0(PPTESTCD, "[", PPSTRESU, "]"),
+                             PPTESTCD)) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
 
@@ -70,42 +73,59 @@ pivot_wider_pknca_results <- function(myres) {
     select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
     pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
 
-  main_intervals <- left_join(main_intervals_vals, main_intervals_exclude)
+  main_intervals <- left_join(
+    main_intervals_vals,
+    main_intervals_exclude,
+    by = intersect(names(main_intervals_vals), names(main_intervals_exclude))
+  )
 
   # If present: Pivot manual AUC interval columns and their respective exclude column
   if (any(myres$result$type_interval == "manual")) {
 
     manual_aucs_vals <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
-      select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end,
+      select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col,
                   values_from = PPSTRES)
 
     manual_aucs_exclude <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "aucint")) %>%
+      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
         interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
-      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, start_dose, end_dose,
+      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
              -PPTESTCD, -interval_name, -type_interval) %>%
       pivot_wider(names_from = interval_name_col, values_from = exclude)
 
-    manual_aucs <- inner_join(manual_aucs_vals, manual_aucs_exclude)
+    manual_aucs <- inner_join(
+      manual_aucs_vals,
+      manual_aucs_exclude,
+      by = intersect(names(manual_aucs_vals), names(manual_aucs_exclude))
+    )
 
     # If present: Merge main and manual intervals together
-    all_aucs <- left_join(main_intervals, manual_aucs)
+    all_aucs <- left_join(
+      main_intervals,
+      manual_aucs,
+      by = intersect(names(main_intervals), names(manual_aucs))
+    )
   } else {
     all_aucs <- main_intervals
   }
 
   # If derived: Merge lambda.z.ix & lambda.z.method
-  if (!is.null(added_params)) all_aucs <- left_join(all_aucs, added_params)
+  if (!is.null(added_params))
+    all_aucs <- left_join(
+      all_aucs,
+      added_params,
+      by = intersect(names(all_aucs), names(added_params))
+    )
 
   # Do a final standardization of the results reshaped
   pivoted_res <- all_aucs  %>%
@@ -120,6 +140,7 @@ pivot_wider_pknca_results <- function(myres) {
 }
 
 #' Helper function to extract exclude values
+#' @noRd
 .extract_exclude_values <- function(...) {
   raw_values <- unique(c(...))  # Get unique exclude values from different columns
   raw_values <- raw_values[!is.na(raw_values)]  # Remove NAs
@@ -134,12 +155,17 @@ pivot_wider_pknca_results <- function(myres) {
 }
 
 #' Helper function to add "label" attribute to columns based on parameter names
+#' @noRd
 .add_label_attribute <- function(df, myres) {
+
   mapping_vr <- myres$result %>%
-    mutate(PPTESTCD_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
-    select(PPTESTCD, PPTESTCD_unit) %>%
+    mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
+           PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
+                                                            mapping_col = "PPTESTCD",
+                                                            target_col = "PPTEST"))) %>%
+    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
-    pull(PPTESTCD, PPTESTCD_unit)
+    pull(PPTESTCD_cdisc, PPTESTCD_unit)
 
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])
