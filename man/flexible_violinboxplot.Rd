@@ -36,14 +36,6 @@ violin plot (\code{FALSE}). Default is \code{TRUE}.}
 
 \item{plotly}{A logical value indicating wether the output is plotly (TRUE, default)
 or ggplot otherwise (FALSE)}
-
-\item{result_data}{A list containing the data to be plotted. It should have a \code{data}
-element with dose information and a \code{formatted} element with the
-data to be plotted.}
-
-\item{doses_included}{A vector of doses to be included in the plot.}
-
-\item{dosenumber_included}{A vector of dose numbers to be included in the plot.}
 }
 \value{
 A plotly object representing the violin or box plot.
