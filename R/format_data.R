@@ -48,8 +48,8 @@ format_pkncaconc_data <- function(ADNCA,
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
     mutate(TIME = !!sym(time_column)) %>%
-    mutate(
-      TIME_DOSE = !!sym(time_column) - !!sym(since_lastdose_time_column)
+    mutate( #round to prevent floating point precision issues
+      TIME_DOSE = round(!!sym(time_column) - !!sym(since_lastdose_time_column), 6)
     ) %>%
     mutate(std_route = ifelse(
                               grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
@@ -181,6 +181,7 @@ format_pkncadata_intervals <- function(pknca_conc,
                     pknca_dose$columns$time)))
 
   TIME_DOSE = "TIME_DOSE"
+
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_conc,
                               sub_pknca_dose,
@@ -200,7 +201,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     arrange(TIME_DOSE) %>%
 
     # Make end based on next dose time (if no more, Inf)
-    mutate(end = lead(as.numeric(TIME_DOSE), default = Inf)) %>%
+    mutate(end = lead(TIME_DOSE, default = Inf)) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "DOSNO"))) %>%
 
