@@ -1,6 +1,6 @@
 # Rule input helper ui
 
-.ruleInput <- function(ns, id, label, default, step, min, max = NULL) {
+.rule_input <- function(ns, id, label, default, step, min, max = NULL) {
   numeric_args <- list(
     inputId = ns(paste0(id, "_threshold")),
     label = "",
@@ -8,12 +8,12 @@
     step = step,
     min = min
   )
-  
+
   # Only include `max` if not NULL
   if (!is.null(max)) {
     numeric_args$max <- max
   }
-  
+
   fluidRow(
     column(
       width = 6,
@@ -117,10 +117,10 @@ nca_setup_ui <- function(id) {
         ),
         accordion_panel(
           title = "Flag Rule Sets",
-          .ruleInput(ns, "adj_r_squared", "RSQADJ:", 0.7, 0.05, 0, 1),
-          .ruleInput(ns, "aucpext_obs", "AUCPEO (% ext.observed):", 20, 1, 0, 100),
-          .ruleInput(ns, "aucpext_pred", "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
-          .ruleInput(ns, "span_ratio", "SPAN:", 2, 1, 0)
+          .rule_input(ns, "adj_r_squared", "RSQADJ:", 0.7, 0.05, 0, 1),
+          .rule_input(ns, "aucpext_obs", "AUCPEO (% ext.observed):", 20, 1, 0, 100),
+          .rule_input(ns, "aucpext_pred", "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
+          .rule_input(ns, "span_ratio", "SPAN:", 2, 1, 0)
         ),
         id = "acc",
         open = "General Settings"
