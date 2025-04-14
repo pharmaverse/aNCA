@@ -1,9 +1,3 @@
-library(testthat)
-library(PKNCA)
-library(dplyr)
-library(tidyr)
-
-
 # Create PKNCA results object from 0 with sample concentration and dose datasets
 # Additional conditions to PKNCA assumptions need to be made:
 # 1) CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT)
