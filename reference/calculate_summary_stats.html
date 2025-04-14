@@ -59,12 +59,14 @@
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame containing results of
-Non Compartmental Analysis using PKNCA package</p></dd>
+Non Compartmental Analysis using PKNCA package. Assumes
+presence of columns: PPORRES, PPSTRES, PPSTRESU, PPTESTCD</p></dd>
 
 
 <dt id="arg-input-groups">input_groups<a class="anchor" aria-label="anchor" href="#arg-input-groups"></a></dt>
 <dd><p>A character vector specifying the columns to group by.
-Here. the hierarchical order matters</p></dd>
+Here. the hierarchical order matters
+Default is "PPSTRESU".</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -82,7 +84,8 @@ Here. the hierarchical order matters</p></dd>
 <li><p>Median value (<code>median</code>)</p></li>
 <li><p>Count of missing values (<code>count.missing</code>)</p></li>
 <li><p>Count (<code>count</code>)</p></li>
-</ul><p>The resulting summary statistics are rounded to three decimal places.</p>
+</ul><p>The resulting summary statistics are rounded to three decimal places.
+If units are different, they are standardized to the group's most frequent first unit.</p>
     </div>
 
     <div class="section level2">
