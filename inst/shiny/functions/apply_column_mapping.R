@@ -96,7 +96,7 @@ apply_column_mapping <- function(dataset, input, manual_units) {
   # Reorder columns per the desired order and apply labels
   dataset <- dataset %>%
     relocate(all_of(MAPPING_DESIRED_ORDER)) %>%
-    apply_labels(dataset, LABELS, "ADPC")
+    apply_labels(LABELS, "ADPC")
 
   # Detect and remove concentration duplicates (using all columns except a few)
   conc_duplicates <- dataset %>%
