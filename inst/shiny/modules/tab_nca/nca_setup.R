@@ -123,7 +123,7 @@ nca_setup_ui <- function(id) {
           .rule_input(ns, "span_ratio", "SPAN:", 2, 1, 0)
         ),
         id = "acc",
-        open = "General Settings"
+        open = c("General Settings", "Parameter Selection")
       )
     ),
     nav_panel(
