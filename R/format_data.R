@@ -39,7 +39,7 @@ format_pkncaconc_data <- function(ADNCA,
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
 
-  missing_columns <- setdiff(c(group_columns, time_column), colnames(ADNCA))
+  missing_columns <- setdiff(c(group_columns, time_column, since_lastdose_time_column), colnames(ADNCA))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
