@@ -30,7 +30,7 @@ Click **Upload File** and select the dataset you would like to use. The data mus
 |  | AGE | Age of Subject | numeric |
 |  | RACE | Race of Subject | character |
 |  | SEX | Sex of Subject | character |
-| **Sample variables** | ANALYTE | Analyte | character |
+| **Sample variables** | PARAM | Analyte | character |
 |  | PCSPEC | Specimen Material Type | character |
 |  | AVAL | Analysis Value | numeric |
 | **Dose Variables** | DOSNO | Dose Number | numeric |

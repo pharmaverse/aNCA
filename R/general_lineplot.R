@@ -64,7 +64,7 @@ general_lineplot <- function(
   preprocessed_data <- data %>%
     filter(
       USUBJID %in% selected_usubjids,
-      ANALYTE %in% selected_analytes,
+      PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE
     ) %>%
@@ -133,7 +133,7 @@ general_lineplot <- function(
       "Subjects: ",
       paste(unique(preprocessed_data$USUBJID), collapse = ", "),
       "\nAnalyte(s): ",
-      paste(unique(preprocessed_data$ANALYTE), collapse = ", ")
+      paste(unique(preprocessed_data$PARAM), collapse = ", ")
     ),
     caption = NULL,
     add_baseline_hline = FALSE,

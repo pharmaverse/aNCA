@@ -9,7 +9,7 @@
 #' - DRUG: Drug identifier.
 #' - USUBJID: Unique subject identifier.
 #' - DOSNO: Dose profile number.
-#' - ANALYTE: Analyte.
+#' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
 #' - DOSEA: Dose amount.
@@ -23,7 +23,7 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE`.
+#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
 #' with formula `DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
@@ -41,7 +41,7 @@
 #' DRUG = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
 #' DOSNO = rep(1, 6),
-#' ANALYTE = rep("AnalyteA", 6),
+#' PARAM = rep("AnalyteA", 6),
 #' AVAL = c(0, 5, 10, 7, 3, 1),
 #' AVALU = rep("ng/mL", 6),
 #' DOSEA = rep(100, 6),
@@ -62,7 +62,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   time_column <- "AFRLT"
   dosno_column <- "DOSNO"
   route_column <- "ROUTE"
-  analyte_column <- "ANALYTE"
+  analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
 
@@ -94,7 +94,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create PKNCA objects
   pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / ANALYTE,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
@@ -218,7 +218,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   # Apply filtering
   data$intervals <- data$intervals %>%
     filter(
-      ANALYTE %in% selected_analytes,
+      PARAM %in% selected_analytes,
       DOSNO %in% selected_dosno,
       PCSPEC %in% selected_pcspec
     )
@@ -263,13 +263,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       pull(PKNCA) |>
       intersect(names(PKNCA::get.interval.cols()))
 
+    all_impute_methods <- na.omit(unique(data$intervals$impute))
+
     data$intervals <- Reduce(function(d, ti_arg) {
       interval_remove_impute(
         d,
         target_impute = ti_arg,
         target_params = params_not_to_impute
       )
-    }, unique(data$intervals$impute), init = data$intervals)
+    }, all_impute_methods, init = data$intervals)
   }
 
   data
@@ -295,7 +297,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'   DRUG = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
 #'   DOSNO = rep(1, 6),
-#'   ANALYTE = rep("AnalyteA", 6),
+#'   PARAM = rep("AnalyteA", 6),
 #'   AVAL = c(0, 5, 10, 7, 3, 1),
 #'   AVALU = rep("ng/mL", 6),
 #'   DOSEA = rep(100, 6),
@@ -315,12 +317,20 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'
 #' @export
 PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
+
+  # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
+
+  dose_data_to_join <- select(
+    pknca_data$dose$data,
+    -exclude,
+    -pknca_data$conc$columns$groups$group_analyte
+  )
 
   results$result <- results$result %>%
     inner_join(
-      select(pknca_data$dose$data, -exclude, -pknca_data$conc$columns$groups$group_analyte)
-      # TODO: add `by = `argument to avoid warnings
+      dose_data_to_join,
+      by = intersect(names(.), names(dose_data_to_join))
     ) %>%
     mutate(
       start_dose = start - !!sym(results$data$dose$columns$time),

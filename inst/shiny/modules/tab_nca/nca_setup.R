@@ -52,7 +52,7 @@ nca_setup_ui <- function(id) {
           title = "General Settings",
           # Selection of analyte, dose number and specimen
           fluidRow(
-            column(4, selectInput(ns("select_analyte"), "Choose the analyte :", multiple = TRUE,
+            column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
                                   choices = NULL)),
             column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
                                   choices = NULL)),
@@ -154,21 +154,21 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # File Upload Handling
     observeEvent(input$settings_upload, {
       setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
-      analyte <- setts$ANALYTE[1]
+      param <- setts$PARAM[1]
       doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
-      if (!analyte %in% unique(data()$ANALYTE) || !all(doses_selected %in% unique(data()$DOSNO))) {
+      if (!param %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$DOSNO))) {
         showNotification(
           validate("The analyte selected in the settings file is not present in the data. Please, if
-                    you want to use this settings for a different file, make sure all meaningful
-                    variables in the file are in the data (ANALYTE, DOSNO...)"),
+                    you want to use these settings for a different file, make sure all meaningful
+                    variables in the file are in the data (PARAM, DOSNO...)"),
           type = "error"
         )
       }
 
       new_data <- data() %>%
         filter(
-          ANALYTE == analyte,
+          PARAM == param,
           if ("EVID" %in% names(data())) EVID == 0 else TRUE
         ) %>%
         mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
@@ -205,16 +205,16 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       }
 
       rows_for_selected_analytes <- data() %>%
-        filter(ANALYTE %in% setts$ANALYTE) %>%
-        select(ANALYTE, DOSNO, PCSPEC) %>%
+        filter(PARAM %in% setts$PARAM) %>%
+        select(PARAM, DOSNO, PCSPEC) %>%
         unique()
 
       updateSelectInput(
         session,
         inputId = "select_analyte",
         label = "Choose the analyte:",
-        choices = data()$ANALYTE[1],
-        selected = setts$ANALYTE[1]
+        choices = data()$PARAM[1],
+        selected = setts$PARAM[1]
       )
 
       updateSelectInput(
@@ -327,8 +327,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       updateSelectInput(
         session,
         inputId = "select_analyte",
-        choices = unique(data()$ANALYTE),
-        selected = unique(data()$ANALYTE)[1]
+        choices = unique(data()$PARAM),
+        selected = unique(data()$PARAM)[1]
       )
 
       updateSelectInput(
@@ -480,9 +480,9 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- eventReactive(setup_trigger(), {
-      log_trace("Updating PKNCA::data object for slopes.")
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec)
+      log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = auc_data(),
@@ -494,7 +494,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
                    "r.squared", "adj.r.squared", "cmax"),
         should_impute_c0 = input$should_impute_c0
       )
-      log_success("PKNCA data slopes object created.")
 
       slopes_pknca_data
     })
@@ -502,9 +501,9 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
     processed_pknca_data <- eventReactive(setup_trigger(), {
-      log_trace("Updating PKNCA::data object.")
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec, auc_data())
+      log_trace("Updating PKNCA::data object.")
 
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
@@ -516,7 +515,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         params = nca_params(),
         should_impute_c0 = input$should_impute_c0
       )
-      log_success("PKNCA data object updated.")
 
       # Add picker input if bioavailability calculations are possible
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
@@ -554,9 +552,10 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
       route_column <- "ROUTE"
       std_route_column <- "std_route"
+      col_groups <- unname(unlist(processed_pknca_data()$conc$columns$groups))
 
       data <- data %>%
-        left_join(y = processed_pknca_data()$dose$data) %>%
+        left_join(processed_pknca_data()$dose$data, by = c(col_groups, "DOSNO")) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
