@@ -11,6 +11,13 @@ boxplotdata <- data.frame(
   ANALYTE = rep("Analyte01", 10)
 )
 
+compare_pngs <- function(path1, path2) {
+  png1 <- as.raster(png::readPNG(path1))
+  png2 <- as.raster(png::readPNG(path2))
+  identical(png1, png2)
+}
+snaps_folder <- "tests/testthat/_snaps/flexible_violinboxplot/"
+
 describe("flexible_violinboxplot", {
   
   it("creates a plot with minimal arguments", {
@@ -25,10 +32,11 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
     temp_file <- tempfile(fileext = ".png")
-    ggsave(temp_file, plot = plot)
+    ggsave(temp_file, plot = plot, width = 10, height = 10)
+
     expect_snapshot_file(temp_file, "flexible_violinboxplot-minargs.png")
   })
-  
+  "tests/testthat/_snaps/flexible_violinboxplot/flexible_violinboxplot-minargs.png"
   it("creates a plot with additional xvars", {
     plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
@@ -41,7 +49,7 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
     temp_file <- tempfile(fileext = ".png")
-    ggsave(temp_file, plot = plot)
+    ggsave(temp_file, plot = plot, width = 10, height = 10)
     expect_snapshot_file(temp_file, "flexible_violinboxplot-xvars.png")
   })
   
@@ -57,7 +65,7 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
     temp_file <- tempfile(fileext = ".png")
-    ggsave(temp_file, plot = plot)
+    ggsave(temp_file, plot = plot, width = 10, height = 10)
     expect_snapshot_file(temp_file, "flexible_violinboxplot-colorvars.png")
   })
   
@@ -73,7 +81,7 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
     temp_file <- tempfile(fileext = ".png")
-    ggsave(temp_file, plot = plot)
+    ggsave(temp_file, plot = plot, width = 10, height = 10)
     expect_snapshot_file(temp_file, "flexible_violinboxplot-varvalstofilter.png")
   })
   
@@ -89,8 +97,8 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
     temp_file <- tempfile(fileext = ".png")
-    ggsave(temp_file, plot = plot)
-    expect_snapshot_file(temp_file, "flexible_violinboxplot-violin.png")
+    ggsave(temp_file, plot = plot, width = 10, height = 10)
+    expect_snapshot_file(temp_file, "_snaps/flexible_violinboxplot-violin.png")
   })
   
   it("handles missing data gracefully", {
@@ -107,8 +115,8 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
     temp_file <- tempfile(fileext = ".png")
-    ggsave(temp_file, plot = plot)
-    expect_snapshot_file(temp_file, "flexible_violinboxplot-missing_data.png")
+    ggsave(temp_file, plot = plot, width = 10, height = 10)
+    expect_snapshot_file(temp_file, "_snaps/flexible_violinboxplot/flexible_violinboxplot-missing_data.png")
   })
   
   it("produces plotly objects when plotly = TRUE", {
@@ -136,7 +144,7 @@ describe("flexible_violinboxplot", {
       box = TRUE,
       plotly = TRUE
     )
-    expect_true(grepl("\\[", plot_with_param_unit$x$layout$yaxis$title$text))
+    expect_true(grepl("\\[ ng/mL", plot_with_param_unit$x$layout$yaxis$title$text))
     
     plot_wo_param_unit <- flexible_violinboxplot(
       boxplotdata = boxplotdata %>% mutate(PPSTRESU = ""),
@@ -150,5 +158,4 @@ describe("flexible_violinboxplot", {
     )
     expect_false(grepl("\\[", plot_wo_param_unit$x$layout$yaxis$title$text))
   })
-  
 })
