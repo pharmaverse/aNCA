@@ -31,10 +31,6 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session,
                                    auc_counter, manual_slopes) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    observe({
-      print(input$settings_upload)
-    })
     
     observeEvent(input$settings_upload, {
 
