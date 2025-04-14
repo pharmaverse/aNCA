@@ -59,6 +59,8 @@ auc_intervals <- data.frame(
   type_interval = "manual",
   DOSNO = c(1, 2)
 )
+options <- PKNCA.options()
+options$keep_interval_cols <- c("DOSNO", "type_interval")
 
 myres <- PKNCA::pk.nca(
   PKNCA::PKNCAdata(
@@ -68,7 +70,7 @@ myres <- PKNCA::pk.nca(
       main_intervals,
       auc_intervals
     ),
-    options = list(keep_interval_cols = c("DOSNO", "type_interval")),
+    options = options,
     units = PKNCA::pknca_units_table(
       concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
     )
