@@ -12,6 +12,7 @@ library(tidyr)
 # 3) There are PPSTRES and PPSTRESU variables in the PKNCA results output
 # 4) start_dose & end_dose columns expressing when the actual start and actual end
 # of the dose happened. The time reference is the first dose given to the subject.
+# 5) CDISC denomination of PK parameters (needed temporarily to derive LAMZNPT & LAMZMTD)
 conc_data <- data.frame(
   ID = rep(1:2, each = 10), # Adjusted for 5 points per ID/DOSNO combination
   DOSNO = rep(rep(1:2, each = 5), 2),
@@ -22,7 +23,11 @@ conc_data <- data.frame(
   AVAL = c(c(10, 8, 6, 4, 2),
            c(10, 8, 6, 4, 2),
            c(100, 80, 60, 40, 20),
-           c(100, 80, 60, 40, 20)) # Adjusted values for 5 points
+           c(100, 80, 60, 40, 20)),
+  # Function assumes these custom additional columns are present
+  is.excluded.hl = FALSE,
+  is.included.hl = FALSE,
+  exclude_half.life = FALSE
 )
 
 dose_data <- data.frame(
@@ -54,6 +59,7 @@ auc_intervals <- data.frame(
   type_interval = "manual",
   DOSNO = c(1, 2)
 )
+
 myres <- PKNCA::pk.nca(
   PKNCA::PKNCAdata(
     data.conc = PKNCA::PKNCAconc(conc_data, AVAL~AFRLT|ID),
@@ -74,21 +80,34 @@ dose_data_to_join <- select(
   -myres$data$dose$data$conc$columns$groups$group_analyte
 )
 myres$result <- myres$result %>%
+  # Function assumes dose time information is added to PKNCA results
   inner_join(
     dose_data_to_join,
     by = intersect(names(.), names(dose_data_to_join))
   ) %>%
+  # Function assumes start_dose, end_dose, PPSTRES, PPSTRESU
   mutate(
     start_dose = start - !!sym(myres$data$dose$columns$time),
     end_dose = end - !!sym(myres$data$dose$columns$time),
     PPSTRESU = PPORRESU,
-    PPSTRES = PPORRES
+    PPSTRES = PPORRES,
+    # Function assumes PPTESTCD is following CDISC standards
+    PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
   )
+  
 
 
 describe("pivot_wider_pknca_results", {
 
-  it("reshapes PKNCA results correctly", {
+  it("produces a data.frame when only reshaping main intervals", {
+    myres_only_main <- myres
+    myres_only_main$result <- myres$result  %>%
+      filter(type_interval == "main")
+    result <- pivot_wider_pknca_results(myres_only_main)
+    expect_s3_class(result, "data.frame")
+  })
+
+  it("reshapes PKNCA results correctly when also considering AUC intervals", {
     # Apply pivot_wider_pknca_results
     result <- pivot_wider_pknca_results(myres)
 
@@ -97,24 +116,23 @@ describe("pivot_wider_pknca_results", {
 
     # Check that the result contains expected columns
     expected_columns <- c(
-      "ID", "start", "end", "DOSNO", "AFRLT", "ARRLT", "NFRLT", "NRRLT", "DOSE",
-      "route", "duration", "cmax[ng/mL]", "tmax[hr]", "tlast[hr]", "lambda.z[1/hr]",
-      "r.squared[unitless]", "adj.r.squared[unitless]", "lambda.z.time.first[hr]",
-      "lambda.z.n.points[count]", "clast.pred[ng/mL]", "half.life[hr]",
-      "span.ratio[fraction]", "Exclude"
+      "ID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
+      "NFRLT", "NRRLT", "DOSE", "route", "duration",
+      "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
+      "R2[unitless]", "R2ADJ[unitless]", "LAMZLL[hr]",
+      "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
+      "LAMZSPN[fraction]", "AUCINT_0-5", "LAMZIX",
+      "LAMZMTD", "Exclude"
     )
     expect_true(all(expected_columns %in% colnames(result)))
 
-    # Check the labels for the parameters are in the result
-    expected_labels <- 
-
     # Check that the result contains expected values for a few key columns
-    options <- result  %>%
+    id_and_dosnos <- result  %>%
       select(ID, DOSNO) %>%
       distinct()
-    for (i in 1:nrow(options)) {
-      id <- options$ID[i]
-      dosno <- options$DOSNO[i]
+    for (i in 1:nrow(id_and_dosnos)) {
+      id <- id_and_dosnos$ID[i]
+      dosno <- id_and_dosnos$DOSNO[i]
 
       # Make a loop of the different id and dosno to check if the results are the expected
       sub_conc_data <- conc_data  %>%
@@ -124,9 +142,9 @@ describe("pivot_wider_pknca_results", {
         filter(ID == id, DOSNO == dosno) %>%
         formatters::var_labels_remove()
 
-      expect_equal(actual_result[["cmax[ng/mL]"]], max(sub_conc_data$AVAL))
-      expect_equal(actual_result[["tmax[hr]"]], sub_conc_data$ARRLT[which.max(sub_conc_data$AVAL)])
-      expect_equal(actual_result[["lambda.z[1/hr]"]],
+      expect_equal(actual_result[["CMAX[ng/mL]"]], max(sub_conc_data$AVAL))
+      expect_equal(actual_result[["TMAX[hr]"]], sub_conc_data$ARRLT[which.max(sub_conc_data$AVAL)])
+      expect_equal(actual_result[["LAMZ[1/hr]"]],
                   PKNCA::pk.calc.half.life(sub_conc_data$AVAL,
                                             sub_conc_data$AFRLT)$lambda.z,
                                             tolerance = 1e-3)
@@ -149,27 +167,47 @@ describe("pivot_wider_pknca_results", {
 
   it("adds appropriate labels to columns", {
     result <- pivot_wider_pknca_results(myres)
-    expect_true(!is.null(attr(result$`cmax[ng/mL]`, "label")))
-    expect_equal(attr(result$`cmax[ng/mL]`, "label"), "Maximum concentration [ng/mL]")
-  })
-
-  it("validates variable labels in the result", {
-    result <- pivot_wider_pknca_results(myres)
-    labels <- var_labels(result)
-
+    labels <- formatters::var_labels(result)
+#   ID                           start 
+#                              NA                              NA 
+#                             end                           DOSNO      
+#                              NA                              NA      
+#                           AFRLT                           ARRLT      
+#                              NA                              NA      
+#                           NFRLT                           NRRLT      
+#                              NA                              NA      
+#                            DOSE                           route 
+#                              NA                              NA      
+#                        duration                     CMAX[ng/mL]      
+#                              NA                      "Max Conc"      
+#                        TMAX[hr]                        TLST[hr]      
+#                  "Time of CMAX"     "Time of Last Nonzero Conc"      
+#                      LAMZ[1/hr]                    R2[unitless]      
+#                      "Lambda z"                     "R Squared"      
+#                 R2ADJ[unitless]                      LAMZLL[hr] 
+#            "R Squared Adjusted"          "Lambda z Lower Limit"      
+#                  LAMZNPT[count]                    CLSTP[ng/mL]      
+# "Number of Points for Lambda z"                    "Clast pred"      
+#                      LAMZHL[hr]               LAMZSPN[fraction]      
+#            "Half-Life Lambda z"                 "Lambda z Span"      
+#                      AUCINT_0-5                          LAMZIX      
+#                              NA                              NA      
+#                         LAMZMTD                         Exclude      
+#                              NA                              NA 
     expected_labels <- c(
       ID = NA, start = NA, end = NA, DOSNO = NA, AFRLT = NA, ARRLT = NA,
       NFRLT = NA, NRRLT = NA, DOSE = NA, route = NA, duration = NA,
-      `cmax[ng/mL]` = "cmax", `tmax[hr]` = "tmax", `tlast[hr]` = "tlast",
-      `lambda.z[1/hr]` = "lambda.z", `r.squared[unitless]` = "r.squared",
-      `adj.r.squared[unitless]` = "adj.r.squared",
-      `lambda.z.time.first[hr]` = "lambda.z.time.first",
-      `lambda.z.n.points[count]` = "lambda.z.n.points",
-      `clast.pred[ng/mL]` = "clast.pred", `half.life[hr]` = "half.life",
-      `span.ratio[fraction]` = "span.ratio", Exclude = NA
+      `CMAX[ng/mL]` = "Max Conc", `TMAX[hr]` = "Time of CMAX",
+      `TLST[hr]` = "Time of Last Nonzero Conc", `LAMZ[1/hr]` = "Lambda z",
+      `R2[unitless]` = "R Squared", `R2ADJ[unitless]` = "R Squared Adjusted",
+      `LAMZLL[hr]` = "Lambda z Lower Limit", `LAMZNPT[count]` = "Number of Points for Lambda z",
+      `CLSTP[ng/mL]` = "Clast pred", `LAMZHL[hr]` = "Half-Life Lambda z",
+      `LAMZSPN[fraction]` = "Lambda z Span", `AUCINT_0-5` = NA,
+      `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
 
     expect_equal(labels, expected_labels)
   })
+  
 
 })
