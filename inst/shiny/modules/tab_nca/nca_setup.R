@@ -1,6 +1,39 @@
+# Rule input helper ui
+
+.ruleInput <- function(ns, id, label, default, step, min, max = NULL) {
+  numeric_args <- list(
+    inputId = ns(paste0(id, "_threshold")),
+    label = "",
+    value = default,
+    step = step,
+    min = min
+  )
+  
+  # Only include `max` if not NULL
+  if (!is.null(max)) {
+    numeric_args$max <- max
+  }
+  
+  fluidRow(
+    column(
+      width = 6,
+      checkboxInput(ns(paste0("rule_", id)), label)
+    ),
+    column(
+      width = 6,
+      conditionalPanel(
+        condition = paste0("input['", ns(paste0("rule_", id)), "'] == true"),
+        div(
+          class = "nca-numeric-container",
+          do.call(numericInput, numeric_args)
+        )
+      )
+    )
+  )
+}
+
 nca_setup_ui <- function(id) {
   ns <- NS(id)
-
 
   navset_tab(
     id = ns("setup_tabs"),
@@ -84,97 +117,10 @@ nca_setup_ui <- function(id) {
         ),
         accordion_panel(
           title = "Flag Rule Sets",
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_adj_r_squared"), "RSQADJ:")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_adj_r_squared"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("adj.r.squared_threshold"),
-                    "",
-                    value = 0.7,
-                    step = 0.05,
-                    min = 0,
-                    max = 1
-                  )
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_aucpext_obs"), "AUCPEO (% ext.observed): ")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_aucpext_obs"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("aucpext.obs_threshold"),
-                    "",
-                    value = 20,
-                    step = 1,
-                    min = 0,
-                    max = 100
-                  )
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_aucpext_pred"), "AUCPEP (% ext.predicted): ")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_aucpext_pred"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("aucpext.pred_threshold"),
-                    "",
-                    value = 20,
-                    step = 5,
-                    min = 0,
-                    max = 100
-                  )
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_span_ratio"), "SPAN: ")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_span_ratio"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("span.ratio_threshold"),
-                    "",
-                    value = 2,
-                    step = 1,
-                    min = 0
-                  )
-                )
-              )
-            )
-          ),
+          .ruleInput(ns, "adj_r_squared", "RSQADJ:", 0.7, 0.05, 0, 1),
+          .ruleInput(ns, "aucpext_obs", "AUCPEO (% ext.observed):", 20, 1, 0, 100),
+          .ruleInput(ns, "aucpext_pred", "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
+          .ruleInput(ns, "span_ratio", "SPAN:", 2, 1, 0)
         ),
         id = "acc",
         open = "General Settings"
@@ -361,7 +307,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
-    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "R.SQ.ADJ")
+    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "RSQADJ")
     limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, lab = "AUCPEO")
     limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
