@@ -189,7 +189,21 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, f_auc_options)
 
     #' Settings download module
-    download_settings_server("download_settings", processed_pknca_data, session)
+    #Apply slope rules to processed data
+    pknca_data_settings <- reactive({
+      req(processed_pknca_data())
+      req(slope_rules$manual_slopes(), slope_rules$profiles_per_patient(),
+          slope_rules$slopes_groups())
+      
+      #' Apply slope rules
+      processed_pknca_data() %>%
+        filter_slopes(
+          slope_rules$manual_slopes(),
+          slope_rules$profiles_per_patient(),
+          slope_rules$slopes_groups()
+        )
+    })
+    download_settings_server("download_settings", pknca_data_settings, session)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
