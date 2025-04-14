@@ -62,8 +62,8 @@ auc_intervals <- data.frame(
 
 myres <- PKNCA::pk.nca(
   PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(conc_data, AVAL~AFRLT|ID),
-    data.dose = PKNCA::PKNCAdose(dose_data, DOSE~AFRLT|ID),
+    data.conc = PKNCA::PKNCAconc(conc_data, AVAL ~ AFRLT | ID),
+    data.dose = PKNCA::PKNCAdose(dose_data, DOSE ~ AFRLT | ID),
     intervals = rbind(
       main_intervals,
       auc_intervals
@@ -72,7 +72,8 @@ myres <- PKNCA::pk.nca(
     units = PKNCA::pknca_units_table(
       concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
     )
-  ))
+  )
+)
 # Make preparations done by PKNCA_calculate_nca
 dose_data_to_join <- select(
   myres$data$dose$data,
@@ -94,8 +95,6 @@ myres$result <- myres$result %>%
     # Function assumes PPTESTCD is following CDISC standards
     PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
   )
-  
-
 
 describe("pivot_wider_pknca_results", {
 
@@ -130,7 +129,7 @@ describe("pivot_wider_pknca_results", {
     id_and_dosnos <- result  %>%
       select(ID, DOSNO) %>%
       distinct()
-    for (i in 1:nrow(id_and_dosnos)) {
+    for (i in seq_len(nrow(id_and_dosnos))) {
       id <- id_and_dosnos$ID[i]
       dosno <- id_and_dosnos$DOSNO[i]
 
@@ -145,9 +144,8 @@ describe("pivot_wider_pknca_results", {
       expect_equal(actual_result[["CMAX[ng/mL]"]], max(sub_conc_data$AVAL))
       expect_equal(actual_result[["TMAX[hr]"]], sub_conc_data$ARRLT[which.max(sub_conc_data$AVAL)])
       expect_equal(actual_result[["LAMZ[1/hr]"]],
-                  PKNCA::pk.calc.half.life(sub_conc_data$AVAL,
-                                            sub_conc_data$AFRLT)$lambda.z,
-                                            tolerance = 1e-3)
+                   PKNCA::pk.calc.half.life(sub_conc_data$AVAL, sub_conc_data$AFRLT)$lambda.z,
+                   tolerance = 1e-3)
     }
   })
 
@@ -168,32 +166,6 @@ describe("pivot_wider_pknca_results", {
   it("adds appropriate labels to columns", {
     result <- pivot_wider_pknca_results(myres)
     labels <- formatters::var_labels(result)
-#   ID                           start 
-#                              NA                              NA 
-#                             end                           DOSNO      
-#                              NA                              NA      
-#                           AFRLT                           ARRLT      
-#                              NA                              NA      
-#                           NFRLT                           NRRLT      
-#                              NA                              NA      
-#                            DOSE                           route 
-#                              NA                              NA      
-#                        duration                     CMAX[ng/mL]      
-#                              NA                      "Max Conc"      
-#                        TMAX[hr]                        TLST[hr]      
-#                  "Time of CMAX"     "Time of Last Nonzero Conc"      
-#                      LAMZ[1/hr]                    R2[unitless]      
-#                      "Lambda z"                     "R Squared"      
-#                 R2ADJ[unitless]                      LAMZLL[hr] 
-#            "R Squared Adjusted"          "Lambda z Lower Limit"      
-#                  LAMZNPT[count]                    CLSTP[ng/mL]      
-# "Number of Points for Lambda z"                    "Clast pred"      
-#                      LAMZHL[hr]               LAMZSPN[fraction]      
-#            "Half-Life Lambda z"                 "Lambda z Span"      
-#                      AUCINT_0-5                          LAMZIX      
-#                              NA                              NA      
-#                         LAMZMTD                         Exclude      
-#                              NA                              NA 
     expected_labels <- c(
       ID = NA, start = NA, end = NA, DOSNO = NA, AFRLT = NA, ARRLT = NA,
       NFRLT = NA, NRRLT = NA, DOSE = NA, route = NA, duration = NA,
@@ -208,7 +180,7 @@ describe("pivot_wider_pknca_results", {
 
     expect_equal(labels, expected_labels)
   })
-  
+
   it("handles exclude values correctly", {
     # Modify myres$result to include exclude values
     myres_with_exclude <- myres
@@ -216,14 +188,14 @@ describe("pivot_wider_pknca_results", {
       mutate(
         exclude = ifelse(ID == 1 & DOSNO == 1, "Reason 1; Reason 2", NA_character_)
       )
-    
+
     # Apply pivot_wider_pknca_results
     result <- pivot_wider_pknca_results(myres_with_exclude)
-    
+
     # Check that the Exclude column combines and deduplicates exclude values
     exclude_values <- result %>% filter(ID == 1 & DOSNO == 1) %>% pull(Exclude)
     expect_equal(exclude_values, "Reason 1, Reason 2")
-    
+
     # Check that rows without exclude values have NA in the Exclude column
     exclude_values_na <- result %>% filter(ID == 2 & DOSNO == 2) %>% pull(Exclude)
     expect_true(is.na(exclude_values_na))

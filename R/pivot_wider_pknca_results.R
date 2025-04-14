@@ -8,12 +8,13 @@
 #'
 #' @param myres The output of PKNCA::pk.nca. It makes some additional assumptions:
 #'   1) CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT).
-#'   2) Intervals must include a column (`type_interval`) to differentiate between custom AUC ranges ("manual") 
-#'      and main parameter calculations ("main").
+#'   2) Intervals must include a column (`type_interval`) to differentiate between the
+#'   custom AUC ranges ("manual") and main parameter calculations ("main").
 #'   3) Includes `PPSTRES` and `PPSTRESU` variables in results dataset.
-#'   4) Columns `start_dose` and `end_dose` must express the actual start and end times of the dose, 
-#'      relative to the first dose given to the subject.
-#'   5) Temporarily: CDISC denomination of PK parameters related to half-life  to derive `LAMZNPT` and `LAMZMTD`.
+#'   4) Columns `start_dose` and `end_dose` must express the actual start and end times
+#'   of the dose, relative to the first dose given to the subject.
+#'   5) Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
+#'   "LAMZLL", "LAMZ" Used to derive `LAMZNPT` and `LAMZMTD`.
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
