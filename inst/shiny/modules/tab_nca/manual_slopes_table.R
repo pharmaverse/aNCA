@@ -20,7 +20,7 @@ manual_slopes_table_ui <- function(id) {
 
 
 manual_slopes_table_server <- function(
-  id, mydata, profiles_per_patient, slopes_groups
+  id, mydata, profiles_per_subject, slopes_groups
 ) {
   moduleServer(id, function(input, output, session) {
 
@@ -63,9 +63,9 @@ manual_slopes_table_server <- function(
     observeEvent(input$add_rule, {
       log_trace("{id}: adding manual slopes row")
 
-      # Create a named list for dynamic columns based on `profiles_per_patient`
+      # Create a named list for dynamic columns based on `profiles_per_subject`
       dynamic_values <- lapply(slopes_groups(), function(col) {
-        value <- as.character(unique(profiles_per_patient()[[col]]))
+        value <- as.character(unique(profiles_per_subject()[[col]]))
         if (length(value) > 0) value[1] else NA_character_  # Handle empty or NULL cases
       })
 
@@ -134,7 +134,7 @@ manual_slopes_table_server <- function(
         colDef(
           cell = dropdown_extra(
             id = ns(paste0("edit_", col)),
-            choices = unique(profiles_per_patient()[[col]]), # Dynamically set choices
+            choices = unique(profiles_per_subject()[[col]]), # Dynamically set choices
             class = "dropdown-extra"
           ),
           width = 150

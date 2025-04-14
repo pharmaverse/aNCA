@@ -89,6 +89,7 @@ describe("PKNCA_create_data_object", {
 })
 
 
+
 # Test PKNCA_update_data_object
 describe("PKNCA_update_data_object", {
 
@@ -231,10 +232,18 @@ describe("PKNCA_calculate_nca", {
     expect_true("start_dose" %in% colnames(nca_results$result))
     expect_true("end_dose" %in% colnames(nca_results$result))
 
-    #check that only two items have been added to list
+    # Check that only two items have been added to the list
     expect_equal(length(colnames(nca_results$result)), 15)
   })
 
+  it("handles warning levels correctly", {
+
+    # Modify the data to eliminate points needed for half life
+    modified_data <- simple_data[1, ] # Remove one time point
+    modified_data$AVAL <- NA
+    pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
+    pknca_data_modified$intervals$half.life <- TRUE
+  })
 })
 
 describe("PKNCA_impute_method_start_logslope", {

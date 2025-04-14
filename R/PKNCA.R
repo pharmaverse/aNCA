@@ -263,13 +263,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       pull(PKNCA) |>
       intersect(names(PKNCA::get.interval.cols()))
 
+    all_impute_methods <- na.omit(unique(data$intervals$impute))
+
     data$intervals <- Reduce(function(d, ti_arg) {
       interval_remove_impute(
         d,
         target_impute = ti_arg,
         target_params = params_not_to_impute
       )
-    }, unique(data$intervals$impute), init = data$intervals)
+    }, all_impute_methods, init = data$intervals)
   }
 
   data
@@ -315,6 +317,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'
 #' @export
 PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
+
+  # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
   dose_data_to_join <- select(
