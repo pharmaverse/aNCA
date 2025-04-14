@@ -53,7 +53,7 @@ auc_intervals <- data.frame(
   type_interval = "manual",
   DOSNO = c(1, 2)
 )
-options <- PKNCA.options()
+options <- PKNCA::PKNCA.options()
 options$keep_interval_cols <- c("DOSNO", "type_interval")
 
 myres <- PKNCA::pk.nca(
