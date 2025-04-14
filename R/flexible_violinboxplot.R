@@ -65,6 +65,7 @@ flexible_violinboxplot <- function(boxplotdata,
   # ylabel of violin/boxplot
   ylabel <- {
     if (box_data$PPSTRESU[1] == "unitless" ||
+        box_data$PPSTRESU[1] == "" ||
           is.na(box_data$PPSTRESU[1]) ||
           is.null(box_data$PPSTRESU)) {
       parameter
