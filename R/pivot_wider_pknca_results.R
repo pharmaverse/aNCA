@@ -24,6 +24,7 @@ pivot_wider_pknca_results <- function(myres) {
   # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
+  time_col <- myres$data$conc$columns$time
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),
@@ -48,7 +49,7 @@ pivot_wider_pknca_results <- function(myres) {
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
       )) %>%
       filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
-      filter(TIME >= (LAMZLL + start) | is.na(LAMZLL)) %>%
+      filter(!!sym(time_col) >= (LAMZLL + start) | is.na(LAMZLL)) %>%
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
       mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
