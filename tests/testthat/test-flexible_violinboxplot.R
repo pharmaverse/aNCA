@@ -16,165 +16,144 @@ boxplotdata <- data.frame(
   ANALYTE = rep("Analyte01", 10)
 )
 
-test_that("flexible_violinboxplot with minimal arguments", {
-  # Define parameters
-  parameter <- "cmax"
-  xvars <- c("DOSEA")
-  colorvars <- c("DOSNO")
-  varvalstofilter <- c("DOSEA: Low", "DOSNO: 1")
-  columns_to_hover <- c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE")
-  box <- TRUE
+describe("flexible_violinboxplot", {
   
-  # Call the function with minimal arguments
-  plot <- flexible_violinboxplot(
-    boxplotdata = boxplotdata,
-    parameter = parameter,
-    xvars = xvars,
-    colorvars = colorvars,
-    varvalstofilter = varvalstofilter,
-    columns_to_hover = columns_to_hover,
-    box = box,
-    plotly = FALSE
-  )
-  temp_file <- tempfile(fileext = ".png")
-  ggsave(temp_file, plot = plot)
-  expect_snapshot_file(temp_file, "flexible_violinboxplot-minargs.png")
-})
-
-test_that("flexible_violinboxplot with additional xvars", {
-  # Define parameters
-  parameter <- "cmax"
-  xvars <- c("DOSEA", "SEX")
-  colorvars <- c("DOSNO")
-  varvalstofilter <- c("DOSEA: Low", "DOSNO: 1")
-  columns_to_hover <- c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE")
-  box <- TRUE
+  it("creates a plot with minimal arguments", {
+    plot <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = FALSE
+    )
+    temp_file <- tempfile(fileext = ".png")
+    ggsave(temp_file, plot = plot)
+    expect_snapshot_file(temp_file, "flexible_violinboxplot-minargs.png")
+  })
   
-  # Call the function with additional xvars
-  plot <- flexible_violinboxplot(
-    boxplotdata = boxplotdata,
-    parameter = parameter,
-    xvars = xvars,
-    colorvars = colorvars,
-    varvalstofilter = varvalstofilter,
-    columns_to_hover = columns_to_hover,
-    box = box,
-    plotly = FALSE
-  )
-  temp_file <- tempfile(fileext = ".png")
-  ggsave(temp_file, plot = plot)
-  expect_snapshot_file(temp_file, "flexible_violinboxplot-xvars.png")
-})
-
-test_that("flexible_violinboxplot with additional colorvars", {
-  # Define parameters
-  parameter <- "cmax"
-  xvars <- c("DOSEA")
-  colorvars <- c("DOSNO", "SEX")
-  varvalstofilter <- c("DOSEA: Low", "DOSNO: 1")
-  columns_to_hover <- c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE")
-  box <- TRUE
+  it("creates a plot with additional xvars", {
+    plot <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA", "SEX"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = FALSE
+    )
+    temp_file <- tempfile(fileext = ".png")
+    ggsave(temp_file, plot = plot)
+    expect_snapshot_file(temp_file, "flexible_violinboxplot-xvars.png")
+  })
   
-  # Call the function with additional colorvars
-  plot <- flexible_violinboxplot(
-    boxplotdata = boxplotdata,
-    parameter = parameter,
-    xvars = xvars,
-    colorvars = colorvars,
-    varvalstofilter = varvalstofilter,
-    columns_to_hover = columns_to_hover,
-    box = box,
-    plotly = FALSE
-  )
-  temp_file <- tempfile(fileext = ".png")
-  ggsave(temp_file, plot = plot)
-  expect_snapshot_file(temp_file, "flexible_violinboxplot-colorvars.png")
-})
-
-test_that("flexible_violinboxplot with different varvalstofilter", {
-  # Define parameters
-  parameter <- "cmax"
-  xvars <- c("DOSEA")
-  colorvars <- c("DOSNO")
-  varvalstofilter <- c("DOSEA: High", "DOSNO: 2")
-  columns_to_hover <- c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE")
-  box <- TRUE
+  it("creates a plot with additional colorvars", {
+    plot <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO", "SEX"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = FALSE
+    )
+    temp_file <- tempfile(fileext = ".png")
+    ggsave(temp_file, plot = plot)
+    expect_snapshot_file(temp_file, "flexible_violinboxplot-colorvars.png")
+  })
   
-  # Call the function with different varvalstofilter
-  plot <- flexible_violinboxplot(
-    boxplotdata = boxplotdata,
-    parameter = parameter,
-    xvars = xvars,
-    colorvars = colorvars,
-    varvalstofilter = varvalstofilter,
-    columns_to_hover = columns_to_hover,
-    box = box,
-    plotly = FALSE
-  )
-  temp_file <- tempfile(fileext = ".png")
-  ggsave(temp_file, plot = plot)
-  expect_snapshot_file(temp_file, "flexible_violinboxplot-varvalstofilter.png")
-})
-
-test_that("flexible_violinboxplot with violin plot", {
-  # Define parameters
-  parameter <- "cmax"
-  xvars <- c("DOSEA")
-  colorvars <- c("DOSNO")
-  varvalstofilter <- c("DOSEA: Low", "DOSNO: 1")
-  columns_to_hover <- c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE")
-  box <- FALSE
+  it("creates a plot with different varvalstofilter", {
+    plot <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: High", "DOSNO: 2"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = FALSE
+    )
+    temp_file <- tempfile(fileext = ".png")
+    ggsave(temp_file, plot = plot)
+    expect_snapshot_file(temp_file, "flexible_violinboxplot-varvalstofilter.png")
+  })
   
-  # Call the function with violin plot
-  plot <- flexible_violinboxplot(
-    boxplotdata = boxplotdata,
-    parameter = parameter,
-    xvars = xvars,
-    colorvars = colorvars,
-    varvalstofilter = varvalstofilter,
-    columns_to_hover = columns_to_hover,
-    box = box,
-    plotly = FALSE
-  )
-  temp_file <- tempfile(fileext = ".png")
-  ggsave(temp_file, plot = plot)
-  expect_snapshot_file(temp_file, "flexible_violinboxplot-violin.png")
-})
-
-test_that("flexible_violinboxplot with missing data", {
-  # Create a sample boxplotdata with missing values
-  boxplotdata_missing <- data.frame(
-    PPTESTCD = rep("cmax", 10),
-    PPSTRES = c(rnorm(9, mean = 20, sd = 10), NA),
-    PPSTRESU = rep("ng/mL", 10),
-    DOSEA = rep(c("Low", "High"), each = 5),
-    DOSNO = rep(1:2, each = 5),
-    USUBJID = rep(11111:11115, each = 2),
-    AGE = rep(60:64, each = 2),
-    SEX = rep(c("M", "F"), each = 5),
-    ANALYTE = rep("Analyte03", 10)
-  )
+  it("creates a violin plot when box = FALSE", {
+    plot <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = FALSE,
+      plotly = FALSE
+    )
+    temp_file <- tempfile(fileext = ".png")
+    ggsave(temp_file, plot = plot)
+    expect_snapshot_file(temp_file, "flexible_violinboxplot-violin.png")
+  })
   
-  # Define parameters
-  parameter <- "cmax"
-  xvars <- c("DOSEA")
-  colorvars <- c("DOSNO")
-  varvalstofilter <- c("DOSEA: Low", "DOSNO: 1")
-  columns_to_hover <- c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE")
-  box <- TRUE
+  it("handles missing data gracefully", {
+    boxplotdata_missing <- boxplotdata %>%
+      mutate(PPSTRES = replace(PPSTRES, 10, NA))
+    plot <- flexible_violinboxplot(
+      boxplotdata = boxplotdata_missing,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = FALSE
+    )
+    temp_file <- tempfile(fileext = ".png")
+    ggsave(temp_file, plot = plot)
+    expect_snapshot_file(temp_file, "flexible_violinboxplot-missing_data.png")
+  })
   
-  # Call the function with missing data
-  plot <- flexible_violinboxplot(
-    boxplotdata = boxplotdata_missing,
-    parameter = parameter,
-    xvars = xvars,
-    colorvars = colorvars,
-    varvalstofilter = varvalstofilter,
-    columns_to_hover = columns_to_hover,
-    box = box,
-    plotly = FALSE
-  )
-  temp_file <- tempfile(fileext = ".png")
-  ggsave(temp_file, plot = plot)
-  expect_snapshot_file(temp_file, "flexible_violinboxplot-missing_data.png")
+  it("produces plotly objects when plotly = TRUE", {
+    plot <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = TRUE
+    )
+    expect_true(inherits(plot, "plotly"))
+  })
+  
+  it("handles axis labels correctly when parameter has no unit", {
+    plot_with_param_unit <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = TRUE
+    )
+    expect_true(grepl("\\[", plot_with_param_unit$x$layout$yaxis$title$text))
+    
+    plot_wo_param_unit <- flexible_violinboxplot(
+      boxplotdata = boxplotdata %>% mutate(PPSTRESU = ""),
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = TRUE
+    )
+    expect_false(grepl("\\[", plot_wo_param_unit$x$layout$yaxis$title$text))
+  })
+  
 })
