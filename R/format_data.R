@@ -5,6 +5,7 @@
 #' @param ADNCA A data frame containing the ADNCA data.
 #' @param group_columns A character vector specifying the columns to group by.
 #' @param time_column A character string specifying the time column.
+#' @param since_lastdose_time_column A character string specifying the time since last dose column.
 #' @param route_column A character string specifying the route column.
 #'
 #' @returns A data frame containing the filtered and processed concentration data.
@@ -12,8 +13,7 @@
 #' @details
 #' The function performs the following steps:
 #'   - Groups the data by groups_column.
-#'   - Arranges the data by time_column.
-#'   - Adds a 'TIME' column.
+#'   - Calculates `TIME_DOSE`as the time of dose reference by the PK sample
 #'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
 #'   - Arranges the data by group_columns.
 #'
@@ -66,15 +66,13 @@ format_pkncaconc_data <- function(ADNCA,
 #' @param pkncaconc_data A data frame containing the concentration data.
 #' @param group_columns A character vector specifying the columns to group by.
 #' @param time_column A character string specifying the time column.
-#' @param since_lastdose_time_column A character string specifying the time since last dose column.
 #'
 #' @returns A data frame containing the dose data.
 #'
 #' @details
 #' The function performs the following steps:
 #'   - Arranges and groups the data by group_columns
-#'   - Derives the dose time as: time_column - since_lastdose_time_column
-#'   - Selects the first row within each group (arranged by since_lastdose_time_column)
+#'   - Selects the first row within each group (arranged by time of dose)
 #'
 #' @import dplyr
 #' @export
