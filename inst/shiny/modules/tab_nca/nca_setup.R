@@ -6,7 +6,7 @@ nca_setup_ui <- function(id) {
     nav_panel(
       "Setup",
       # Local upload option
-      upload_settings_ui("upload_settings"),
+      upload_settings_ui(ns("upload_settings")),
       accordion(
         accordion_panel(
           title = "General Settings",

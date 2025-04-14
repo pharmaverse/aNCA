@@ -32,6 +32,10 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    observe({
+      print(input$settings_upload)
+    })
+    
     observeEvent(input$settings_upload, {
 
       # Identify the file submited
@@ -175,7 +179,7 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session,
       # Load the data object and update its units
       data <- processed_pknca_data()
       data$units <- dplyr::left_join(data$units, setts$units,
-                                     by = c("ANALYTE", "PPTESTCD"),
+                                     by = c("PARAM", "PPTESTCD"),
                                      suffix = c(".data", ".setts")) %>%
         mutate(across(ends_with(".setts"),
                       ~coalesce(., get(str_replace(cur_column(), ".setts", ".data"))))) %>%
