@@ -1,8 +1,3 @@
-library(testthat)
-library(plotly)
-library(dplyr)
-library(ggplot2)
-
 # Create a sample boxplotdata
 boxplotdata <- data.frame(
   PPTESTCD = rep("cmax", 10),
