@@ -74,11 +74,12 @@ test_that("format_pkncaconc_data generates correct dataset with multiple doses",
 
   # Test if df_conc is correctly grouped and arranged
   expect_equal(df_conc$TIME, df_conc$AFRLT)
-  expect_equal(df_conc %>%
-                 dplyr::arrange(USUBJID, DOSNO) %>%
-                 dplyr::pull(TIME_DOSE),
-               rep(c(rep(0,5),rep(5,5)),2)
-               )
+  expect_equal(
+    df_conc %>%
+      dplyr::arrange(USUBJID, DOSNO) %>%
+      dplyr::pull(TIME_DOSE),
+    rep(c(rep(0, 5), rep(5, 5)), 2)
+  )
 
   # Test if df_conc can be used with PKNCAconc by testing its output
   expect_no_error(
@@ -144,7 +145,7 @@ test_that("format_pkncaconc_data handles multiple analytes", {
 })
 
 test_that("format_pkncadose_data generates with no errors", {
-  
+
   ADNCA <- data.frame(
     STUDYID = rep(1, 20),
     USUBJID = rep(1:2, each = 10),
@@ -257,7 +258,7 @@ test_that("format_pkncadose_data handles negative time values", {
     DOSEA = 10,
     AVAL = runif(10)
   )
-  
+
   df_conc <- format_pkncaconc_data(df_adnca,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "PARAM"),

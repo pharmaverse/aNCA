@@ -39,7 +39,8 @@ format_pkncaconc_data <- function(ADNCA,
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
 
-  missing_columns <- setdiff(c(group_columns, time_column, since_lastdose_time_column), colnames(ADNCA))
+  missing_columns <- setdiff(c(group_columns, time_column,
+                               since_lastdose_time_column), colnames(ADNCA))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
@@ -94,8 +95,8 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   #set a tolerance for the arranging to avoid floating point precision issues
-  tol = 1e-6
-  
+  tol <- 1e-6
+
   # Select unique doses
   pkncaconc_data %>%
     arrange(!!!syms(group_columns), TIME_DOSE) %>%
@@ -162,9 +163,9 @@ format_pkncadata_intervals <- function(pknca_conc,
   conc_groups <- unname(unlist(pknca_conc$columns$groups))
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
   # Set vars
-  TIME_DOSE = "TIME_DOSE"
-  DOSNOA = "DOSNOA"
-  
+  TIME_DOSE <- "TIME_DOSE"
+  DOSNOA <- "DOSNOA"
+
   # Obtain all possible pknca parameters
   all_pknca_params <- setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
                               c("start", "end"))
