@@ -215,6 +215,42 @@ describe("PKNCA_update_data_object", {
     ))
   })
 
+  it("handles partial AUCs (auc_data) creating proper intervals for each", {
+    auc_data <- data.frame(
+      start_auc = c(0, 1, 2),
+      end_auc = c(1, 2, 3)
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      auc_data = auc_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_dosno = dosnos,
+      selected_pcspec = pcspecs,
+      params = params,
+      should_impute_c0 = TRUE
+    )
+    # Check that interval_type column is present with at least one "manual" value
+    expect_true(any(updated_data$intervals$type_interval == "manual"))
+
+    # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
+    auc_intervals <- updated_data$intervals  %>%
+      dplyr::filter(type_interval == "manual") %>%
+      dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM, DOSNO, auclast, aucint.last, tmax)
+
+    expect_equal(auc_intervals, tidyr::tibble(
+      start = c(0, 1, 2),
+      end = c(1, 2, 3),
+      STUDYID = rep("STUDY001", 3),
+      DRUG = rep("DrugA", 3),
+      USUBJID = rep("SUBJ001", 3),
+      PARAM = rep("AnalyteA", 3),
+      DOSNO = rep(1, 3),
+      auclast = rep(FALSE, 3),
+      aucint.last = rep(TRUE, 3),
+      tmax = rep(FALSE, 3)
+    ))
+  })
 })
 
 
