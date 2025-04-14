@@ -209,5 +209,24 @@ describe("pivot_wider_pknca_results", {
     expect_equal(labels, expected_labels)
   })
   
+  it("handles exclude values correctly", {
+    # Modify myres$result to include exclude values
+    myres_with_exclude <- myres
+    myres_with_exclude$result <- myres_with_exclude$result %>%
+      mutate(
+        exclude = ifelse(ID == 1 & DOSNO == 1, "Reason 1; Reason 2", NA_character_)
+      )
+    
+    # Apply pivot_wider_pknca_results
+    result <- pivot_wider_pknca_results(myres_with_exclude)
+    
+    # Check that the Exclude column combines and deduplicates exclude values
+    exclude_values <- result %>% filter(ID == 1 & DOSNO == 1) %>% pull(Exclude)
+    expect_equal(exclude_values, "Reason 1, Reason 2")
+    
+    # Check that rows without exclude values have NA in the Exclude column
+    exclude_values_na <- result %>% filter(ID == 2 & DOSNO == 2) %>% pull(Exclude)
+    expect_true(is.na(exclude_values_na))
+  })
 
 })
