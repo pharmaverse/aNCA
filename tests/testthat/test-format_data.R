@@ -361,6 +361,9 @@ test_that("format_pkncadata_intervals generates correct dataset", {
         doseu = pknca_conc$data$DOSEU[1],
         amountu = pknca_conc$data$PCSTRESU[1],
         timeu = pknca_conc$data$RRLTU[1]
+      ),
+      options = list(
+        keep_interval_cols = c("DOSNO", "type_interval")
       )
     )
   )
@@ -465,6 +468,9 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
         doseu = "mg",
         amountu = "ng",
         timeu = "h"
+      ),
+      options = list(
+        keep_interval_cols = c("DOSNO", "type_interval")
       )
     )
   )
