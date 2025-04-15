@@ -108,6 +108,11 @@ pkcg01 <- function(
   ymin <- as.numeric(ymin)
   ymax <- as.numeric(ymax)
 
+  # Ensure color_var is interpreted as a factor
+  if (!is.null(color_var)) {
+    adpc[[color_var]] <- as.factor(adpc[[color_var]])
+  }
+
   # save col labels, as further adpc tranformations cause them to be lost #
   col_labels <- purrr::map(adpc, ~ attr(.x, "label"))
 
@@ -166,7 +171,12 @@ pkcg01 <- function(
   }
 
   # Add color legend only when neccessary
-  if (!is.null(color_var_label) && length(color_var) > 1) {
+  if (!is.null(color_var_label) && length(unique(adpc[[color_var]])) > 1) {
+
+    # Make sure the variable is interpreted as a factor
+    adpc[[color_var]] <- as.factor(adpc[[color_var]])
+
+    # Add to the plot the color_var and color_var_label
     plot <- plot +
       labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
       theme(legend.position = "bottom")
@@ -273,6 +283,7 @@ pkcg01 <- function(
           "cm"
         )
       ) %>%
+      # This because of no spec of parse annotation generates warning is.na()
       ggplotly(
         tooltip = c("x", "y"),
         dynamicTicks = TRUE,
