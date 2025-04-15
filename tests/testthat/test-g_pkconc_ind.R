@@ -90,6 +90,55 @@ describe("pkcg01", {
     expect_equal(p_json$layout$xaxis$range, c(3, 157))
     expect_equal(p_json$layout$yaxis$range, c(0.9, 3.1))
   })
+  
+  it("generates plots with color_var and color_var_label", {
+    adpc <- adpc_single
+    
+    p_list <- pkcg01(
+      adpc = adpc,
+      color_var = "DOSNO",
+      color_var_label = "Dose Number",
+      xvar = "AFRLT",
+      yvar = "AVAL",
+      xlab = "Time (hours)",
+      ylab = "Concentration (ng/mL)",
+      title = "PK Concentration-Time Profile",
+      subtitle = "By Treatment Group",
+      footnote = "Generated for testing purposes"
+    )
+
+    expect_type(p_list, "list")
+    expect_s3_class(p_list[[1]], "plotly")
+    
+    p_json <- .get_plotly_json(p_list[[1]])
+    
+    # Check that the color legend is present and labeled correctly
+    expect_equal(p_json$data$legendgroup, as.character(1:5))
+    expect_true(all(p_json$data$showlegend))
+    expect_equal(p_json$layout$legend$title$text, "Dose Number")
+  })
+
+  # it("generates plots with side-by-side (SBS) scale", {
+  #   p_list <- pkcg01(
+  #     adpc_single,
+  #     scale = "SBS",
+  #     xlab = "Test SBS xlab",
+  #     ylab = "Test SBS ylab",
+  #     title = "Test SBS title",
+  #     subtitle = "Test SBS subtitle",
+  #     footnote = "Test SBS footnote"
+  #   )
+  #
+  #   .expect_plotlist(p_list, 4)
+  #
+  #   p_json <- .get_plotly_json(p_list[[1]])
+  #
+  #   expect_equal(p_json$layout$title$text, "Test SBS title<br><sup>Test SBS subtitle</sup>")
+  #   expect_equal(p_json$layout$annotations[1, ]$text, "Test SBS xlab")
+  #   # Check for multiple x and y axes (facet_wrap)
+  #   expect_true(!is.null(p_json$layout$xaxis2))
+  #   expect_true(!is.null(p_json$layout$yaxis2))
+  # })
 })
 
 describe("g_pkconc_ind_lin", {
