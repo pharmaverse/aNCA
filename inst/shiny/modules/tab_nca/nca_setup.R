@@ -1,8 +1,11 @@
 # Rule input helper ui
 
-.rule_input <- function(ns, id, label, default, step, min, max = NULL) {
+.rule_input <- function(id, label, default, step, min, max = NULL) {
+
+  threshold_id <- paste0(id, "_threshold")
+  rule_id <- paste0(id, "_rule")
   numeric_args <- list(
-    inputId = ns(paste0(id, "_threshold")),
+    inputId = threshold_id,
     label = "",
     value = default,
     step = step,
@@ -17,12 +20,12 @@
   fluidRow(
     column(
       width = 6,
-      checkboxInput(ns(paste0("rule_", id)), label)
+      checkboxInput(rule_id, label)
     ),
     column(
       width = 6,
       conditionalPanel(
-        condition = paste0("input['", ns(paste0("rule_", id)), "'] == true"),
+        condition = paste0("input['", rule_id, "'] == true"),
         div(
           class = "nca-numeric-container",
           do.call(numericInput, numeric_args)
@@ -117,10 +120,10 @@ nca_setup_ui <- function(id) {
         ),
         accordion_panel(
           title = "Flag Rule Sets",
-          .rule_input(ns, "adj_r_squared", "RSQADJ:", 0.7, 0.05, 0, 1),
-          .rule_input(ns, "aucpext_obs", "AUCPEO (% ext.observed):", 20, 1, 0, 100),
-          .rule_input(ns, "aucpext_pred", "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
-          .rule_input(ns, "span_ratio", "SPAN:", 2, 1, 0)
+          .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
+          .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
+          .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
+          .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
         ),
         id = "acc",
         open = c("General Settings", "Parameter Selection")
@@ -448,13 +451,13 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     })
 
     # Updating Checkbox and Numeric Inputs
-    observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
-                      input$rule_aucpext_pred, nca_params()), {
+    observeEvent(list(input$adj.r.squared_rule, input$aucpext.obs_rule,
+                      input$aucpext.pred_rule, nca_params()), {
 
                    nca_params <- nca_params()
-                   if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
-                   if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
-                   if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
+                   if (input$adj.r.squared_rule) nca_params <- c(nca_params, "adj.r.squared")
+                   if (input$aucpext.obs_rule) nca_params <- c(nca_params, "aucpext.obs")
+                   if (input$aucpext.pred_rule) nca_params <- c(nca_params, "aucpext.pred")
 
                    updatePickerInput(session = session,
                                      inputId = "nca_params",
@@ -582,19 +585,19 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       slopes_pknca_data = slopes_pknca_data,
       rules = reactive(list(
         adj.r.squared = list(
-          is.checked = input$rule_adj_r_squared,
+          is.checked = input$adj.r.squared_rule,
           threshold = input$adj.r.squared_threshold
         ),
         aucpext.obs = list(
-          is.checked = input$rule_aucpext_obs,
+          is.checked = input$aucpext.obs_rule,
           threshold = input$aucpext.obs_threshold
         ),
         aucpext.pred = list(
-          is.checked = input$rule_aucpext_pred,
+          is.checked = input$aucpext.pred_rule,
           threshold = input$aucpext.pred_threshold
         ),
         span.ratio = list(
-          is.checked = input$rule_span_ratio,
+          is.checked = input$span.ratio_rule,
           threshold = input$span.ratio_threshold
         )
       )),
