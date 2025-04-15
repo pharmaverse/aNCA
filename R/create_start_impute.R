@@ -34,7 +34,7 @@ create_start_impute <- function(mydata) {
   # Define dose number (DOSNO) if not present in dose data
   if (!"DOSNO" %in% names(mydata$dose$data)) {
     mydata$dose$data <- mydata$dose$data %>%
-      group_by(across(all_of(dose_group_columns))) %>%
+      group_by(across(any_of(dose_group_columns))) %>%
       mutate(DOSNO = row_number()) %>%
       ungroup()
   }
@@ -46,7 +46,9 @@ create_start_impute <- function(mydata) {
       select(any_of(c(dose_group_columns, route_column,
                       duration_column, "DOSNO", "DRUG")))
   ) %>%
-    merge(mydata$intervals)
+    merge(mydata$intervals) %>%
+    filter(!!sym(time_column) >= start, !!sym(time_column) <= end) %>%
+    unique()
 
   # Define dosing drug as analyte if not present
   if (!drug_column %in% colnames(mydata_with_int)) {
@@ -63,7 +65,7 @@ create_start_impute <- function(mydata) {
   # Process imputation strategy based on each interval
   mydata$intervals <- mydata_with_int %>%
     group_by(across(any_of(c(group_columns, "DOSNO", "start", "end", "type_interval")))) %>%
-    arrange(across(all_of(c(group_columns, time_column)))) %>%
+    arrange(across(any_of(c(group_columns, time_column)))) %>%
     mutate(
       is.first.dose = DOSNO == 1,
       is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
