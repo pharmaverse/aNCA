@@ -90,6 +90,7 @@ nca_setup_ui <- function(id) {
           reactableOutput(ns("nca_parameters")),
           card(
             full_screen = FALSE,
+            style = "margin-top: 2em;",
             card_header("Selected NCA Parameters"),
             card_body(
               uiOutput(ns("nca_param_display"))
