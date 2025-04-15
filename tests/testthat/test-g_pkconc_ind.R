@@ -90,10 +90,10 @@ describe("pkcg01", {
     expect_equal(p_json$layout$xaxis$range, c(3, 157))
     expect_equal(p_json$layout$yaxis$range, c(0.9, 3.1))
   })
-  
+
   it("generates plots with color_var and color_var_label", {
     adpc <- adpc_single
-    
+
     p_list <- pkcg01(
       adpc = adpc,
       color_var = "DOSNO",
@@ -109,9 +109,9 @@ describe("pkcg01", {
 
     expect_type(p_list, "list")
     expect_s3_class(p_list[[1]], "plotly")
-    
+
     p_json <- .get_plotly_json(p_list[[1]])
-    
+
     # Check that the color legend is present and labeled correctly
     expect_equal(p_json$data$legendgroup, as.character(1:5))
     expect_true(all(p_json$data$showlegend))
@@ -138,6 +138,28 @@ describe("pkcg01", {
     # Check for multiple x and y axes (facet_wrap)
     expect_true(!is.null(p_json$layout$xaxis2))
     expect_true(!is.null(p_json$layout$yaxis2))
+  })
+
+  it("throws an error for SBS plots when ggh4x is not available", {
+    # Temporarily mock requireNamespace to simulate ggh4x not being available
+    mock_requireNamespace <- function(...) FALSE
+    
+    original_requireNamespace <- requireNamespace
+    requireNamespace <- function(pkg, ...) {
+      if (pkg == "ggh4x") return(FALSE)
+      original_requireNamespace(pkg, ...)
+    }
+    on.exit(requireNamespace <- original_requireNamespace) # Restore after test
+    expect_error(
+      pkcg01(
+        adpc_single,
+        scale = "SBS",
+        title = "Test SBS title",
+        subtitle = "Test SBS subtitle",
+        footnote = "Test SBS footnote"
+      ),
+      regexp = "Side-by-side view requires `ggh4x` package, please install it with "
+    )
   })
 })
 
