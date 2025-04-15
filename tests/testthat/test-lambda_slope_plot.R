@@ -76,8 +76,11 @@ describe("lambda_slope_plot", {
     
     # Get the corresponding Tmax value
     tmax_value <- myres_modified$result %>%
-      filter(across(all_of(names(test_id)), ~ . == test_id[[cur_column()]])) %>%
       filter(PPTESTCD == "tmax") %>%
+      filter(
+        USUBJID == row_values$USUBJID,
+        STUDYID == row_values$STUDYID
+      ) %>%
       pull(PPSTRES)
     
     # Force lambda.z.time.first to be *equal* to tmax, triggering Cmax inclusion
