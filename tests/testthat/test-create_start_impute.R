@@ -24,8 +24,8 @@ intervals_data <- data.frame(
   USUBJID =  c(1, rep(2, 2), rep(3, 2), 4, 5, 6),
   DOSNO = c(1, 1, 2, 1, 2, 1, 1, 1),  # Include second dose profile for USUBJID 6
   tmax = TRUE,
-  auc.obs = TRUE,
-  auc.pred = TRUE
+  auclast = TRUE,
+  aucinf.pred = TRUE
 )
 
 conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / param)
@@ -34,8 +34,7 @@ dose_obj <- PKNCA::PKNCAdose(dose_data, dose ~ time | USUBJID + DOSNO,
 mydata <- PKNCA::PKNCAdata(
   conc_obj,
   dose_obj,
-  intervals = intervals_data,
-  options = list(keep_interval_cols = c("auc.obs", "auc.pred"))
+  intervals = intervals_data
 )
 
 # Apply the function
