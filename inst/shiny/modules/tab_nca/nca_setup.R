@@ -486,7 +486,12 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # the NCA before settings are applied.
     observeEvent(setup_trigger(), {
       runjs(str_glue(
-        "buttonTimeout('nca-nca', {setup_debounce + 250}, 'Applying<br>settings...', 'Run NCA');"
+        "buttonTimeout(
+          '.run-nca-btn',
+          {setup_debounce + 250},
+          'Applying<br>settings...',
+          'Run NCA'
+        );"
       ))
     })
 
