@@ -118,27 +118,27 @@ describe("pkcg01", {
     expect_equal(p_json$layout$legend$title$text, "Dose Number")
   })
 
-  # it("generates plots with side-by-side (SBS) scale", {
-  #   p_list <- pkcg01(
-  #     adpc_single,
-  #     scale = "SBS",
-  #     xlab = "Test SBS xlab",
-  #     ylab = "Test SBS ylab",
-  #     title = "Test SBS title",
-  #     subtitle = "Test SBS subtitle",
-  #     footnote = "Test SBS footnote"
-  #   )
-  #
-  #   .expect_plotlist(p_list, 4)
-  #
-  #   p_json <- .get_plotly_json(p_list[[1]])
-  #
-  #   expect_equal(p_json$layout$title$text, "Test SBS title<br><sup>Test SBS subtitle</sup>")
-  #   expect_equal(p_json$layout$annotations[1, ]$text, "Test SBS xlab")
-  #   # Check for multiple x and y axes (facet_wrap)
-  #   expect_true(!is.null(p_json$layout$xaxis2))
-  #   expect_true(!is.null(p_json$layout$yaxis2))
-  # })
+  it("generates plots with side-by-side (SBS) scale", {
+    suppressWarnings(
+      p_list <- pkcg01(
+        adpc_single,
+        scale = "SBS",
+        title = "Test SBS title",
+        subtitle = "Test SBS subtitle",
+        footnote = "Test SBS footnote"
+      )
+    )
+
+    .expect_plotlist(p_list, 4)
+
+    p_json <- .get_plotly_json(p_list[[1]])
+
+    expect_equal(p_json$layout$title$text, "Test SBS title<br><sup>Test SBS subtitle</sup>")
+    #expect_equal(p_json$layout$annotations[1, ]$text, "Test SBS xlab")
+    # Check for multiple x and y axes (facet_wrap)
+    expect_true(!is.null(p_json$layout$xaxis2))
+    expect_true(!is.null(p_json$layout$yaxis2))
+  })
 })
 
 describe("g_pkconc_ind_lin", {
