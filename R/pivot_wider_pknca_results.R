@@ -12,7 +12,7 @@
 #'   custom AUC ranges ("manual") and main parameter calculations ("main").
 #'   3) Includes `PPSTRES` and `PPSTRESU` variables in results dataset.
 #'   4) Columns `start_dose` and `end_dose` must express the actual start and end times
-#'   of the dose, relative to the first dose given to the subject.
+#'   of the dose, relative to the last reference dose.
 #'   5) Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
 #'   "LAMZLL", "LAMZ" Used to derive `LAMZNPT` and `LAMZMTD`.
 #'
