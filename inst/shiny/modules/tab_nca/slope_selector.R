@@ -146,8 +146,8 @@ slope_selector_server <- function(
     #' is already adjusted with the applied rules, so that the user can verify added selections
     #' and exclusions before applying them to the actual dataset.
     plot_data <- reactive({
-      req(pknca_data(), manual_slopes(), profiles_per_patient())
-      filter_slopes(pknca_data(), manual_slopes(), profiles_per_patient(), slopes_groups())
+      req(pknca_data(), manual_slopes(), profiles_per_subject())
+      filter_slopes(pknca_data(), manual_slopes(), profiles_per_subject(), slopes_groups())
     }) %>%
       shiny::debounce(750)
 
@@ -159,7 +159,7 @@ slope_selector_server <- function(
         NULL
       } else {
         all_params <- names(PKNCA::get.interval.cols())
-        result_obj <- suppressWarnings(PKNCA::pk.nca(data = pknca_data, verbose = FALSE))
+        result_obj <- suppressWarnings(PKNCA::pk.nca(data = plot_data(), verbose = FALSE))
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
 
@@ -169,7 +169,7 @@ slope_selector_server <- function(
 
     # Profiles per Patient ----
     # Define the profiles per patient
-    profiles_per_patient <- reactive({
+    profiles_per_subject <- reactive({
       req(pknca_data())
 
       pknca_data()$intervals %>%
