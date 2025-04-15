@@ -115,7 +115,7 @@ describe("create_start_impute", {
                    dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
                    dplyr::pull(impute),
                  "start_logslope")
-    
+
     # No drug and no analyte
     mydata_no_analyte <- mydata
     mydata_no_analyte$dose$data$DRUG <- NULL
