@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9054</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9055</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,7 +39,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-contributing" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Contributing</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-contributing">
-<li><a class="dropdown-item" href="../page/CONTRIBUTING.html">Contributing</a></li>
+<li><a class="dropdown-item" href="../articles/contributing.html">Contributing</a></li>
     <li><a class="dropdown-item" href="../articles/adding_tlg.html">Adding TLGs</a></li>
   </ul>
 </li>
@@ -243,10 +243,21 @@ uploaded.</p>
 </table>
 </div>
 <div class="section level4">
+<h4 id="verifying-and-adding-filters">Verifying and adding filters<a class="anchor" aria-label="anchor" href="#verifying-and-adding-filters"></a>
+</h4>
+<p>Check that the data contains all the information you were expecting
+and is mapped correctly. If you want to change the data by adding
+filters, click the <em>Add Filter</em> button.</p>
+<p><img src="images%2Fget_started%2F02.png" alt="Adding filters"></p>
+<blockquote class="important">
+<p>Don’t forget to scroll down and click <strong>Submit
+Filters</strong>!</p>
+</blockquote>
+</div>
+<div class="section level4">
 <h4 id="data-mapping">Data mapping<a class="anchor" aria-label="anchor" href="#data-mapping"></a>
 </h4>
-<p>Once the dataset has been uploaded, you can verify that the data is
-as expected, and click on the <em>Mapping and Filters</em> tab.</p>
+<p>Click on the <em>Column Mapping</em> tab.</p>
 <ul>
 <li><p>Map the correct columns in your dataset to the corresponding
 label.</p></li>
@@ -256,21 +267,13 @@ for the corresponding columns.</p></li>
 <li><p>Click <strong>Submit Mapping</strong>. You will be automatically
 directed to the next tab.</p></li>
 </ul>
-<p><img src="images%2Fget_started%2F02.png" alt="Mapping tab"><img src="images%2Fget_started%2F03.png" alt="Mapping"></p>
+<p><img src="images%2Fget_started%2F04.png" alt="Mapping tab"><img src="images%2Fget_started%2F03.png" alt="Mapping"></p>
 </div>
 <div class="section level4">
-<h4 id="verifying-and-adding-filters">Verifying and adding filters<a class="anchor" aria-label="anchor" href="#verifying-and-adding-filters"></a>
+<h4 id="review">Review<a class="anchor" aria-label="anchor" href="#review"></a>
 </h4>
-<p>Check that the data contains all the information you were expecting
-and is mapped correctly. If you want to change the data by adding
-filters, return to the <em>Mapping and Filters</em> page, then scroll
-down to add filters.</p>
-<p><img src="images%2Fget_started%2F04.png" alt="Adding filters"></p>
-<blockquote class="important">
-<p>Don’t forget to scroll down and click <strong>Submit
-Filters</strong>!</p>
-</blockquote>
-<p><img src="images%2Fget_started%2F05.png" alt="Submitting filters"></p>
+<p>Review the data and ensure that the columns have been mapped
+correctly, and all your filters have been applied.</p>
 </div>
 </div>
 <div class="section level2">
@@ -282,18 +285,15 @@ the next section.</p>
 <h3 id="data-selection">Data selection<a class="anchor" aria-label="anchor" href="#data-selection"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li>
-<em>NCA settings</em>: Choose the Analyte, Dose Number(s) and/or
+<li><p><em>NCA settings</em>: Choose the Analyte, Dose Number(s) and/or
 Specimen(s) you would like to run the NCA on, the extrapolation method
 and the NCA parameters to calculate. Select additional options including
-partial AUCs, or rule sets to flag the data. A table summarizes the
-settings you have selected.</li>
-</ol>
-<p><img src="images%2Fget_started%2F06.png" alt="NCA settings"></p>
-<ol start="2" style="list-style-type: decimal">
-<li>Click <strong>Run NCA</strong> at the top of the page and check that
-the data is as expected. You will automatically be redirected to the
-<em>Results</em> tab.</li>
+partial AUCs, or rule sets to flag the data. In the summary tab, a table
+summarizes the settings you have selected.
+<img src="images%2Fget_started%2F06.png" alt="NCA settings"></p></li>
+<li><p>Click <strong>Run NCA</strong> at the top of the page and check
+that the data is as expected. You will automatically be redirected to
+the <em>Results</em> tab.</p></li>
 </ol>
 <p><img src="images%2Fget_started%2F07.png" alt="Running NCA"></p>
 <blockquote class="note">
@@ -365,13 +365,22 @@ on the <em>Exclusions</em> tab.</p>
 not be added!</p>
 </blockquote>
 </div>
-<div class="section level5">
-<h5 id="parameter-datasets">Parameter Datasets<a class="anchor" aria-label="anchor" href="#parameter-datasets"></a>
-</h5>
+<div class="section level4">
+<h4 id="parameter-datasets">Parameter Datasets<a class="anchor" aria-label="anchor" href="#parameter-datasets"></a>
+</h4>
 <p>In the Parameter Datasets tab you can see and export the ADPP and PP
 datasets.</p>
 <p><img src="images%2Fget_started%2F12.png" alt="Parameter Datasets"></p>
 </div>
+</div>
+<div class="section level3">
+<h3 id="additional-analysis">Additional Analysis<a class="anchor" aria-label="anchor" href="#additional-analysis"></a>
+</h3>
+<p>In the <em>Additional Analysis</em> tab, you can calculate
+tissue-matrix ratios using the concentration ratios tab. Input which
+specimen you would like as the numerator and denominator, and click
+<strong>Submit</strong>.</p>
+<p><img src="images%2Fget_started%2F13.png" alt="Additional Analysis"></p>
 </div>
 <div class="section level3">
 <h3 id="saving-and-uploading-settings">Saving and uploading settings<a class="anchor" aria-label="anchor" href="#saving-and-uploading-settings"></a>
@@ -396,9 +405,10 @@ The inclusions and exclusions will be automatically added to the
 data.</p>
 </div>
 </div>
-<div class="section level3">
-<h3 id="step-4-visualization">Step 4: Visualization<a class="anchor" aria-label="anchor" href="#step-4-visualization"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="step-4-visualization">Step 4: Visualization<a class="anchor" aria-label="anchor" href="#step-4-visualization"></a>
+</h2>
 <p>In the <em>Visualization</em> tab, you will find the different
 visualization options, including Individual Plots, Mean Plots,
 Descriptive Statistics, and Boxplots.</p>
@@ -406,9 +416,9 @@ Descriptive Statistics, and Boxplots.</p>
 <p>Currently work in progress</p>
 </blockquote>
 </div>
-<div class="section level3">
-<h3 id="step-5-tlgs">Step 5: TLGs<a class="anchor" aria-label="anchor" href="#step-5-tlgs"></a>
-</h3>
+<div class="section level2">
+<h2 id="step-5-tlgs">Step 5: TLGs<a class="anchor" aria-label="anchor" href="#step-5-tlgs"></a>
+</h2>
 <blockquote class="warning">
 Currently work in progress. Not all TLGs and features are available.
 </blockquote>
@@ -468,7 +478,6 @@ translate to mg (for the dummy dataset).</li>
 </ul>
 <p>You can always click on the <span class="help-button">?</span> button
 for help.</p>
-</div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
