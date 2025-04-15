@@ -114,18 +114,17 @@ pkcg01 <- function(
   }
 
   # save col labels, as further adpc tranformations cause them to be lost #
-  col_labels <- purrr::map(adpc, ~ attr(.x, "label"))
 
   adpc_grouped <- adpc %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
     rowwise() %>%
     dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
 
-  # reapply col labels to grouped data #
-  adpc_grouped <- purrr::map2_dfc(adpc_grouped, names(adpc_grouped), ~ {
-    attr(.x, "label") <- col_labels[[.y]]
-    .x
-  })
+  # reapply col labels to grouped data and make sure all variables are labeled #
+  old_labels <- c(formatters::var_labels(adpc), id_plot = NA)
+  formatters::var_labels(adpc_grouped) <- ifelse(!is.na(old_labels),
+                                                 old_labels,
+                                                 names(adpc_grouped))
 
   # Construct the reference ggplot object
   plot_data <- adpc_grouped %>% filter(id_plot == id_plot[1])
@@ -134,8 +133,8 @@ pkcg01 <- function(
     df = plot_data,
     xvar = xvar,
     yvar = yvar,
-    xlab = parse_annotation(plot_data, xlab),
-    ylab = parse_annotation(plot_data, ylab),
+    xlab = paste0(parse_annotation(plot_data, xlab), collapse = ","),
+    ylab = paste0(parse_annotation(plot_data, ylab), collapse = ","),
     id_var = "USUBJID",
     add_baseline_hline = FALSE,
     yvar_baseline = yvar,
