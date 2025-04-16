@@ -217,7 +217,8 @@ export_cdisc <- function(res_nca) {
     # Deselect columns that are only used internally in the App
     select(-any_of(c(
       "exclude", "is.excluded.hl", "volume", "std_route",
-      "duration", "TIME", "IX", "exclude_half.life"
+      "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
+      "conc_groups", "REASON"
     )))
 
   # Keep StudyID value to use for file naming
