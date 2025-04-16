@@ -219,12 +219,12 @@ data_mapping_server <- function(id, adnca_data) {
     df_duplicates <- reactive({
       req(mapped_data)
       mapped_data() %>%
-      group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
-      filter(n() > 1) %>%
-      ungroup() %>%
-      mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
+        group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
+        filter(n() > 1) %>%
+        ungroup() %>%
+        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
     })
-    
+
     processed_data <- reactive({
       req(mapped_data())
       dataset <- mapped_data()
@@ -261,7 +261,7 @@ data_mapping_server <- function(id, adnca_data) {
       return(NULL)
 
     })
-    
+
     observeEvent(duplicates(), {
       showModal(
         modalDialog(
@@ -285,16 +285,16 @@ data_mapping_server <- function(id, adnca_data) {
         )
       )
     })
-    
+
     observeEvent(input$keep_selected_btn, {
       duplicates(NULL)
       removeModal()
     })
-    
+
     output$duplicate_modal_table <- renderReactable({
       group_ids <- unique(df_duplicates()$.dup_group)
       color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
-      
+
       reactable(
         df_duplicates(),
         columns = list(.dup_group = colDef(show = FALSE)),
