@@ -92,6 +92,9 @@ myres$result <- myres$result %>%
     PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
   )
 
+# Obtain the result
+result <- pivot_wider_pknca_results(myres)
+
 describe("pivot_wider_pknca_results", {
 
   it("produces a data.frame when only reshaping main intervals", {
@@ -103,9 +106,6 @@ describe("pivot_wider_pknca_results", {
   })
 
   it("reshapes PKNCA results correctly when also considering AUC intervals", {
-    # Apply pivot_wider_pknca_results
-    result <- pivot_wider_pknca_results(myres)
-
     # Check that the result is a data frame
     expect_s3_class(result, "data.frame")
 
@@ -146,21 +146,17 @@ describe("pivot_wider_pknca_results", {
   })
 
   it("handles manual AUC intervals correctly", {
-    # Check if manual AUC intervals are included
-    result <- pivot_wider_pknca_results(myres)
     manual_auc_columns <- grep("^AUCINT_", colnames(result), value = TRUE)
     expect_true(length(manual_auc_columns) > 0)
   })
 
   it("rounds numeric values to three decimals", {
-    result <- pivot_wider_pknca_results(myres)
     numeric_columns <- sapply(result, is.numeric)
     rounded_values <- result[, numeric_columns]
     expect_true(all(apply(rounded_values, 2, function(x) all(abs(x - round(x, 3)) < 1e-6))))
   })
 
   it("adds appropriate labels to columns", {
-    result <- pivot_wider_pknca_results(myres)
     labels <- formatters::var_labels(result)
     expected_labels <- c(
       ID = NA, start = NA, end = NA, DOSNO = NA, AFRLT = NA, ARRLT = NA,
