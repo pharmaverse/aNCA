@@ -193,7 +193,7 @@ lambda_slope_plot <- function(
     )) +
     scale_y_log10()
 
-  plotly_output <- ggplotly(ggplot_obj) %>%
+  plotly_obj <- ggplotly(ggplot_obj) %>%
     layout(
       margin = list(t = 80),
       annotations = list(
@@ -215,10 +215,10 @@ lambda_slope_plot <- function(
     ) %>%
     config(mathjax = "cdn")
 
-  num_traces <- length(plotly_output$x$data)
+  num_traces <- length(plotly_obj$x$data)
 
   for (i in seq_len(num_traces)) {
-    plotly_output <- plotly_output %>%
+    plotly_obj <- plotly_obj %>%
       style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = i)
   }
 
@@ -229,7 +229,7 @@ lambda_slope_plot <- function(
   )
 
   # Add tracing for interactive plots
-  plotly_output %>%
+  plotly_obj %>%
     add_trace(
       plot_data,
       x = ~ARRLT, y = ~log10(AVAL),
