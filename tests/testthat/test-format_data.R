@@ -207,6 +207,17 @@ describe("format_pkncadose_data", {
                  regexp = "Input dataframe is empty. Please provide a valid concentration dataframe.")
   })
 
+  it("handles missing columns", {
+    expect_error(
+      format_pkncadose_data(df_conc,
+                            group_columns = c("NON_EXISTING_COL", "USUBJID", "PCSPEC",
+                                              "DRUG"),
+                            time_column = "AFRLT",
+                            since_lastdose_time_column = "ARRLT"),
+      regexp = "Missing required columns: NON_EXISTING_COL"
+    )
+  })
+
   it("handles negative time values", {
     df_conc <- data.frame(
       STUDYID = rep(1, 10),
