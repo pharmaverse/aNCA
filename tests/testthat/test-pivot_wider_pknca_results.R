@@ -86,7 +86,7 @@ myres$result <- myres$result %>%
   mutate(
     start_dose = start - !!sym(myres$data$dose$columns$time),
     end_dose = end - !!sym(myres$data$dose$columns$time),
-    PPSTRESU = PPORRESU,
+    PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
     PPSTRES = PPORRES,
     # Function assumes PPTESTCD is following CDISC standards
     PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
@@ -95,15 +95,104 @@ myres$result <- myres$result %>%
 # Obtain the result
 result <- pivot_wider_pknca_results(myres)
 
+
+
+
+
+
+
+
+#' Validate PKNCA Parameters
+#'
+#' This function validates that the reshaped PKNCA results contain the expected values
+#' for each parameter based on the original `myres` object.
+#'
+#' @param myres The original PKNCA results object.
+#' @param result The reshaped results from `pivot_wider_pknca_results`.
+#' @return A logical value indicating whether all checks passed.
+#' @export
+validate_pknca_params <- function(myres, result) {
+
+  # Extract unique parameter names with units
+  names_params <- myres$result %>%
+    mutate(PPTESTCD2 = case_when(
+      type_interval == "manual" ~ paste0(PPTESTCD, "_", start, "-", end),
+      PPSTRESU == "" | PPSTRESU == "unitless" ~ PPTESTCD,
+      TRUE ~ paste0(PPTESTCD, "[", PPSTRESU, "]")
+    )) %>%
+    pull(PPTESTCD2) %>%
+    unique()
+  
+  # Iterate over each parameter and validate values
+  for (param_col in names_params) {
+    pptestcd <- gsub("\\[.*\\]", "", param_col)  # Remove units from parameter name
+    
+    if (grepl("AUCINT_[0-9]+\\-[0-9]", param_col)) {
+      pptestcd <- gsub("_[0-9]+\\-[0-9]", "", param_col)
+      auc_start <- gsub("AUCINT_([0-9]+)\\-[0-9]", "\\1", param_col)
+      auc_end <- gsub("AUCINT_[0-9]+\\-([0-9]+)", "\\1", param_col)
+      
+      original_data <- myres$result %>%
+        filter(start == auc_start,
+               end == auc_end)
+      reshaped_res <- result %>%
+        filter(start == auc_start,
+               end == auc_end)
+    } else {
+      original_data <- myres$result
+      reshaped_res <- result
+    }
+
+    original_vals <- original_data %>%
+      formatters::var_labels_remove() %>%
+      filter(PPTESTCD == pptestcd) %>%
+      pull(PPSTRES)
+    result_vals <- reshaped_res %>%
+      formatters::var_labels_remove() %>%
+      pull(param_col)
+
+    have_similar_vals <- all(round(result_vals, 3) %in% round(original_vals, 3))
+    have_same_length <- length(result_vals) == length(original_vals)
+    if (!have_similar_vals | !have_same_length) {
+      stop(paste("Mismatch in values for parameter:", pptestcd))
+    }
+  }
+  
+  # If all checks pass, return TRUE
+  TRUE
+}
+
+
+
+
+
 describe("pivot_wider_pknca_results", {
 
-  it("produces a data.frame when only reshaping main intervals", {
+  it("produces a data.frame with expected format when only reshaping main intervals", {
     myres_only_main <- myres
     myres_only_main$result <- myres$result  %>%
       filter(type_interval == "main")
-    result <- pivot_wider_pknca_results(myres_only_main)
+    result_only_main <- pivot_wider_pknca_results(myres_only_main)
     expect_s3_class(result, "data.frame")
-  })
+
+    # Check that the result contains expected columns
+    expected_columns <- c(
+      "ID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
+      "NFRLT", "NRRLT", "DOSE", "route", "duration",
+      "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
+      "R2", "R2ADJ", "LAMZLL[hr]",
+      "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
+      "LAMZSPN", "LAMZIX",
+      "LAMZMTD", "Exclude"
+    )
+    expect_true(all(expected_columns %in% colnames(result_only_main)))
+
+    # Check number of rows is the expected
+    expect_true(nrow(result_only_main) == nrow(myres_only_main$data$dose$data))
+
+    # Check values
+    expect_true(validate_pknca_params(myres_only_main, result_only_main))
+    })
 
   it("reshapes PKNCA results correctly when also considering AUC intervals", {
     # Check that the result is a data frame
@@ -114,46 +203,26 @@ describe("pivot_wider_pknca_results", {
       "ID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
       "NFRLT", "NRRLT", "DOSE", "route", "duration",
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
-      "R2[unitless]", "R2ADJ[unitless]", "LAMZLL[hr]",
+      "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
-      "LAMZSPN[fraction]", "AUCINT_0-5", "LAMZIX",
+      "LAMZSPN", "AUCINT_0-5", "AUCINT_5-10", "LAMZIX",
       "LAMZMTD", "Exclude"
     )
     expect_true(all(expected_columns %in% colnames(result)))
-
-    # Check that the result contains expected values for a few key columns
-    id_and_dosnos <- result  %>%
-      select(ID, DOSNO) %>%
-      distinct()
-    for (i in seq_len(nrow(id_and_dosnos))) {
-      id <- id_and_dosnos$ID[i]
-      dosno <- id_and_dosnos$DOSNO[i]
-
-      # Make a loop of the different id and dosno to check if the results are the expected
-      sub_conc_data <- conc_data  %>%
-        filter(ID == id, DOSNO == dosno)
-
-      actual_result <- result %>%
-        filter(ID == id, DOSNO == dosno) %>%
-        formatters::var_labels_remove()
-
-      expect_equal(actual_result[["CMAX[ng/mL]"]], max(sub_conc_data$AVAL))
-      expect_equal(actual_result[["TMAX[hr]"]], sub_conc_data$ARRLT[which.max(sub_conc_data$AVAL)])
-      expect_equal(actual_result[["LAMZ[1/hr]"]],
-                   PKNCA::pk.calc.half.life(sub_conc_data$AVAL, sub_conc_data$AFRLT)$lambda.z,
-                   tolerance = 1e-3)
-    }
-  })
-
-  it("handles manual AUC intervals correctly", {
-    manual_auc_columns <- grep("^AUCINT_", colnames(result), value = TRUE)
-    expect_true(length(manual_auc_columns) > 0)
+    
+    expect_true(validate_pknca_params(myres, result))
   })
 
   it("rounds numeric values to three decimals", {
-    numeric_columns <- sapply(result, is.numeric)
-    rounded_values <- result[, numeric_columns]
-    expect_true(all(apply(rounded_values, 2, function(x) all(abs(x - round(x, 3)) < 1e-6))))
+    expected_num_param_cols <- c(
+      "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
+      "R2", "R2ADJ", "LAMZLL[hr]",
+      "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
+      "LAMZSPN", "AUCINT_0-5", "AUCINT_5-10"
+    )
+    rounded_values <- result[, expected_num_param_cols]
+    expect_true(all(apply(rounded_values, 2,
+                          function(x) all(na.omit(abs(x - round(x, 3))) < 1e-9))))
   })
 
   it("adds appropriate labels to columns", {
@@ -163,13 +232,12 @@ describe("pivot_wider_pknca_results", {
       NFRLT = NA, NRRLT = NA, DOSE = NA, route = NA, duration = NA,
       `CMAX[ng/mL]` = "Max Conc", `TMAX[hr]` = "Time of CMAX",
       `TLST[hr]` = "Time of Last Nonzero Conc", `LAMZ[1/hr]` = "Lambda z",
-      `R2[unitless]` = "R Squared", `R2ADJ[unitless]` = "R Squared Adjusted",
+      `R2` = "R Squared", `R2ADJ` = "R Squared Adjusted",
       `LAMZLL[hr]` = "Lambda z Lower Limit", `LAMZNPT[count]` = "Number of Points for Lambda z",
       `CLSTP[ng/mL]` = "Clast pred", `LAMZHL[hr]` = "Half-Life Lambda z",
-      `LAMZSPN[fraction]` = "Lambda z Span", `AUCINT_0-5` = NA,
+      `LAMZSPN` = "Lambda z Span", `AUCINT_0-5` = NA, `AUCINT_5-10` = NA,
       `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
-
     expect_equal(labels, expected_labels)
   })
 
@@ -192,5 +260,4 @@ describe("pivot_wider_pknca_results", {
     exclude_values_na <- result %>% filter(ID == 2 & DOSNO == 2) %>% pull(Exclude)
     expect_true(is.na(exclude_values_na))
   })
-
 })
