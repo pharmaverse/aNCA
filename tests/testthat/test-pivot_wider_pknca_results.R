@@ -96,12 +96,6 @@ myres$result <- myres$result %>%
 result <- pivot_wider_pknca_results(myres)
 
 
-
-
-
-
-
-
 #' Validate PKNCA Parameters
 #'
 #' This function validates that the reshaped PKNCA results contain the expected values
@@ -111,7 +105,7 @@ result <- pivot_wider_pknca_results(myres)
 #' @param result The reshaped results from `pivot_wider_pknca_results`.
 #' @return A logical value indicating whether all checks passed.
 #' @export
-validate_pknca_params <- function(myres, result) {
+.validate_pknca_params <- function(myres, result) {
 
   # Extract unique parameter names with units
   names_params <- myres$result %>%
@@ -122,16 +116,16 @@ validate_pknca_params <- function(myres, result) {
     )) %>%
     pull(PPTESTCD2) %>%
     unique()
-  
+
   # Iterate over each parameter and validate values
   for (param_col in names_params) {
     pptestcd <- gsub("\\[.*\\]", "", param_col)  # Remove units from parameter name
-    
+
     if (grepl("AUCINT_[0-9]+\\-[0-9]", param_col)) {
       pptestcd <- gsub("_[0-9]+\\-[0-9]", "", param_col)
       auc_start <- gsub("AUCINT_([0-9]+)\\-[0-9]", "\\1", param_col)
       auc_end <- gsub("AUCINT_[0-9]+\\-([0-9]+)", "\\1", param_col)
-      
+
       original_data <- myres$result %>%
         filter(start == auc_start,
                end == auc_end)
@@ -153,17 +147,14 @@ validate_pknca_params <- function(myres, result) {
 
     have_similar_vals <- all(round(result_vals, 3) %in% round(original_vals, 3))
     have_same_length <- length(result_vals) == length(original_vals)
-    if (!have_similar_vals | !have_same_length) {
+    if (!(have_similar_vals && have_same_length)) {
       stop(paste("Mismatch in values for parameter:", pptestcd))
     }
   }
-  
+
   # If all checks pass, return TRUE
   TRUE
 }
-
-
-
 
 
 describe("pivot_wider_pknca_results", {
@@ -191,8 +182,8 @@ describe("pivot_wider_pknca_results", {
     expect_true(nrow(result_only_main) == nrow(myres_only_main$data$dose$data))
 
     # Check values
-    expect_true(validate_pknca_params(myres_only_main, result_only_main))
-    })
+    expect_true(.validate_pknca_params(myres_only_main, result_only_main))
+  })
 
   it("reshapes PKNCA results correctly when also considering AUC intervals", {
     # Check that the result is a data frame
@@ -209,8 +200,8 @@ describe("pivot_wider_pknca_results", {
       "LAMZMTD", "Exclude"
     )
     expect_true(all(expected_columns %in% colnames(result)))
-    
-    expect_true(validate_pknca_params(myres, result))
+
+    expect_true(.validate_pknca_params(myres, result))
   })
 
   it("rounds numeric values to three decimals", {
