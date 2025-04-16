@@ -3,9 +3,11 @@
 #' This function calculates various summary statistics for formatted output of PKNCA::pk.nca().
 #'
 #' @param data         A data frame containing results of
-#'                     Non Compartmental Analysis using PKNCA package
+#'                     Non Compartmental Analysis using PKNCA package. Assumes
+#'                     presence of columns: PPORRES, PPSTRES, PPSTRESU, PPTESTCD
 #' @param input_groups A character vector specifying the columns to group by.
 #'                     Here. the hierarchical order matters
+#'                     Default is "PPSTRESU".
 #' @returns A data frame with summary statistics for each group and parameter.
 #' @details The function calculates the following statistics for numeric variables:
 #' \itemize{
@@ -20,6 +22,7 @@
 #'   \item Count (`count`)
 #' }
 #' The resulting summary statistics are rounded to three decimal places.
+#' If units are different, they are standardized to the group's most frequent first unit.
 #'
 #' @import dplyr
 #' @import tidyr
@@ -38,12 +41,45 @@
 
 calculate_summary_stats <- function(data, input_groups = "DOSNO") {
 
-  # Calculate summary statistics, using all value rows
-  # (note: this will give more weight to subjects with more valid records)
+  # Return an empty data frame if the input data is empty
+  if (nrow(data) == 0) {
+    return(data.frame(
+      Statistic = character(),
+      Value = numeric(),
+      stringsAsFactors = FALSE
+    ))
+  }
 
-  summary_stats <- data %>%
-    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
+  # Return a summary table with statistics
+  data %>%
+
+    # Only use unique records and calculate the conversion factor between PPSTRESU/PPORRESU
     unique() %>%
+    mutate(
+      conv_factor = case_when(
+        PPSTRESU == PPORRESU | PPSTRES == PPORRES ~ 1,
+        is.na(PPSTRES) & is.na(PPORRES) ~ 1,
+        TRUE ~ PPSTRES / PPORRES
+      )
+    ) %>%
+
+    # Group by the input groups and the parameter test codes
+    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
+
+    # Standardize units to the most frequent one within the groups (or first otherwise)
+    mutate(
+      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE, useNA = "ifany"))[1],
+      ModeConv_factor = as.numeric(names(sort(table(conv_factor),
+                                              decreasing = TRUE, useNA = "ifany"))[1]),
+      PPSTRES = PPORRES * ModeConv_factor,
+      PPTESTCD = ifelse(
+        ModeUnit == "",
+        PPTESTCD,
+        paste0(PPTESTCD, "[", ModeUnit, "]")
+      )
+    ) %>%
+
+    # Calculate summary statistics
     summarise(
       Geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
       Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
@@ -53,10 +89,12 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
       Max = ifelse(all(is.na(PPSTRES)), NA, max(PPSTRES, na.rm = TRUE)),
       Median = median(PPSTRES, na.rm = TRUE),
       Count.missing = sum(is.na(PPSTRES)),
-      Count.total = n()
+      Count.total = n(),
+      .groups = "drop"
     ) %>%
-    ungroup() %>%
     mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
+
+    # Pivot the data to return groups/statistics as rows & parameters as columns
     pivot_longer(
       cols = c(Geomean, Geocv, Mean, SD, Min, Max, Median, Count.missing, Count.total),
       names_to = "Statistic",
@@ -66,21 +104,4 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
       names_from = PPTESTCD,
       values_from = Value
     )
-
-  # Include units for all column names
-  pttestcd_with_units <- data %>%
-    select(PPTESTCD, PPSTRESU) %>%
-    mutate(PPSTRESU = ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")) %>%
-    unique() %>%
-    pull(PPSTRESU, PPTESTCD)
-
-  summary_stats <- summary_stats %>%
-    rename_with(~ifelse(
-      gsub("_.*", "", .x) %in% names(pttestcd_with_units),
-      paste0(.x, pttestcd_with_units[gsub("_.*", "", .x)]),
-      .x
-    ))
-
-  return(summary_stats)
-
 }
