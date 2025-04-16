@@ -61,6 +61,28 @@ describe("lambda_slope_plot", {
     }, "Not enough data for plotting")
   })
   
+  it("returns without error and gives expected warning when plot_data has 0 rows", {
+    conc_modified <- conc_pknca_df %>%
+      mutate(
+        AVAL = ifelse(
+          USUBJID == row_values$USUBJID &
+            STUDYID == row_values$STUDYID,
+          -1,
+          AVAL
+        )
+      )
+    
+    expect_warning(
+      lambda_slope_plot(
+        conc_pknca_df = conc_modified,
+        row_values = row_values,
+        myres = myres
+      ),
+      "Not enough data for plotting"
+    )
+  })
+  
+  
   it("shows warning when Cmax is included in lambda estimation", {
     # Copy inputs
     conc_modified <- conc_pknca_df
