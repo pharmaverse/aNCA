@@ -112,8 +112,8 @@ describe("create_start_impute", {
     mydata_with_analyte$dose$data$DRUG <- NULL
     result_with_analyte <- create_start_impute(mydata_with_analyte)
     result_with_analyte_impute <- result_with_analyte$intervals %>%
-                   dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
-                   dplyr::pull(impute)
+      dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
+      dplyr::pull(impute)
     expect_equal(result_with_analyte_impute, "start_logslope")
 
     # No drug and no analyte
@@ -123,8 +123,8 @@ describe("create_start_impute", {
     result_no_analyte <- create_start_impute(mydata_no_analyte)
     # For last subject now analyte and drug are matching, should be start_logslope
     result_no_analyte_impute <- result_no_analyte$intervals %>%
-                   dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
-                   dplyr::pull(impute)
+      dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
+      dplyr::pull(impute)
     expect_equal(result_no_analyte_impute, "start_logslope")
   })
 
