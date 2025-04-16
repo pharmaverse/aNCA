@@ -4,9 +4,9 @@
 #'
 #' @param data     Data to filter. Must be `PKNCAdata` list, containing the `conc` element with
 #'                 `PKNCAconc` list and appropriate data frame included under data.
-#' @param slopes   Data frame with slopes selection rules, must contain the following columns:
-#'                 `TYPE`, `PATIENT`, `PROFILE`, `RANGE`, `REASON`.
-#' @param profiles List with available profiles for each `PATIENT`.
+#' @param slopes   A data frame containing slope rules, including `TYPE`, `RANGE`,
+#'        and `REASON` columns. May also have grouping columns (expected to match slope_groups)
+#' @param profiles List with available profiles for each `SUBJECT`.
 #' @param slope_groups List with column names that define the groups.
 #' @param check_reasons Whether to check if all selections have REASONS stated. If this is `TRUE`
 #'                      and not all selections have a reason provided, an error will be thrown.
@@ -91,7 +91,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
 #' @export
 check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE) {
 
-  # check if any rule already exists for specific patient and profile #
+  # check if any rule already exists for specific subject and profile #
   existing_index <- which(
     existing$TYPE == new$TYPE &
       Reduce(`&`, lapply(slope_groups, function(col) {
@@ -101,7 +101,7 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 
   if (length(existing_index) != 1) {
     if (length(existing_index) > 1)
-      warning("More than one range for single patient, profile and rule type detected.")
+      warning("More than one range for single subject, profile and rule type detected.")
     return(rbind(existing, new))
   }
 
@@ -131,7 +131,7 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 #' @param data A list containing concentration data (`data$conc$data`) with columns that
 #'        need to be updated based on the slope rules.
 #' @param slopes A data frame containing slope rules, including `TYPE`, `RANGE`,
-#'        and `REASON` columns.
+#'        and `REASON` columns. May also have grouping columns (expected to match slope_groups)
 #' @param slope_groups A character vector specifying the group columns used for filtering.
 #'
 #' @returns description The modified `data` object with updated inclusion/exclusion flags

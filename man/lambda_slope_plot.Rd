@@ -16,7 +16,7 @@ lambda_slope_plot(
 (default is \code{mydata$conc$data}).}
 
 \item{row_values}{A list containing the values for the column_names used for filtering.
-(default is \code{patient}).}
+(default is \code{subject}).}
 
 \item{myres}{A PKNCAresults object containing the results of the NCA analysis}
 
