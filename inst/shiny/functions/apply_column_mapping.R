@@ -64,8 +64,10 @@ apply_column_mapping <- function(dataset, input, manual_units) {
     return()
   }
 
-  # Remove "Grouping_Variables" from the "Group Identifiers" mapping
-  selected_cols[["Group Identifiers"]][["Grouping_Variables"]] <- NULL
+  # Remove "Grouping_Variables" from selected columns to prevent renaming
+  selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
+    names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
+  ]
 
   # Rename dataset columns based on the mapping selections
   colnames(dataset) <- sapply(colnames(dataset), function(col) {
