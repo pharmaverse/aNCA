@@ -14,7 +14,7 @@ pivot_wider_pknca_results(myres)
 custom AUC ranges ("manual") and main parameter calculations ("main").
 \item Includes \code{PPSTRES} and \code{PPSTRESU} variables in results dataset.
 \item Columns \code{start_dose} and \code{end_dose} must express the actual start and end times
-of the dose, relative to the first dose given to the subject.
+of the dose, relative to the last reference dose.
 \item Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
 "LAMZLL", "LAMZ" Used to derive \code{LAMZNPT} and \code{LAMZMTD}.
 }}
