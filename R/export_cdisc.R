@@ -31,87 +31,7 @@ export_cdisc <- function(res_nca) {
     )
   )
 
-  # define columns needed for pp
-  pp_cols <- c(
-    "STUDYID",
-    "DOMAIN",
-    "USUBJID",
-    "PPSEQ",
-    "PPCAT",
-    "PPGRPID",
-    "PPSPID",
-    "PPTESTCD",
-    "PPTEST",
-    "PPSCAT",
-    "PPORRES",
-    "PPORRESU",
-    "PPSTRESC",
-    "PPSTRESN",
-    "PPSTRESU",
-    "PPSTAT",
-    "PPREASND",
-    "PPSPEC",
-    "PPRFTDTC",
-    "PPSTINT",
-    "PPENINT"
-  )
-
-  # define columns needed for adpp
-  adpp_cols <- c(
-    "STUDYID",
-    "USUBJID",
-    "PPSEQ",
-    "PPGRPID",
-    "PPSPID",
-    "PARAMCD",
-    "PARAM",
-    "PPCAT",
-    "PPSCAT",
-    "PPREASND",
-    "PPSPEC",
-    "PPDTC",
-    "PPSTINT",
-    "PPENINT",
-    "SUBJID",
-    "SITEID",
-    "SEX",
-    "RACE",
-    "ACTARM",
-    "AAGE",
-    "AAGEU",
-    "TRT01P",
-    "TRT01A",
-    "AVAL",
-    "AVALC",
-    "AVALU"
-  )
-
-  adpc_cols <- c(
-    "STUDYID",
-    "SUBJID",
-    "USUBJID",
-    "SITEID",
-    "VISITNUM",
-    "VISIT",
-    "AVISIT",
-    "AVISITN",
-    "PCSTRESC",
-    "PCSTRESN",
-    "PCSTRESU",
-    "PCORRES",
-    "PCORRESU",
-    "PCTPT",
-    "PCTPTNUM",
-    "ATPT",
-    "ATPTN",
-    "PCSTRESC",
-    "PCSTRESN",
-    "PCSTRESU",
-    "AVAL",
-    "ANL01FL"
-  )
-
-  pp_info <- res_nca$result  %>%
+  cdisc_info <- res_nca$result  %>%
     left_join(res_nca$data$dose$data,
               by = unname(unlist(res_nca$data$dose$columns$groups)),
               suffix = c("", ".y")) %>%
@@ -187,13 +107,14 @@ export_cdisc <- function(res_nca) {
     ungroup()
 
   # select pp columns
-  pp <- pp_info %>% select(all_of(pp_cols))
+  pp <- cdisc_info %>%
+    select(all_of(CDISC_COLS$PP))
 
-  adpp <- pp_info %>%
+  adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
+    select(any_of(c(CDISC_COLS$ADPP, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
 
   adpc <- res_nca$data$conc$data %>%
     mutate(
@@ -213,16 +134,12 @@ export_cdisc <- function(res_nca) {
       }
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(adpc_cols), everything())  %>%
+    select(any_of(CDISC_COLS$ADPC), everything())  %>%
     # Deselect columns that are only used internally in the App
-    select(-any_of(c(
-      "exclude", "is.excluded.hl", "volume", "std_route",
-      "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
-      "conc_groups", "REASON"
-    )))
+    select(-any_of(INTERNAL_ANCA_COLS))
 
   # Keep StudyID value to use for file naming
-  studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
+  studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
 
   list(pp = pp, adpp = adpp, adpc = adpc, studyid = studyid)
 }
@@ -293,3 +210,90 @@ get_subjid <- function(data) {
     NA
   }
 }
+
+
+CDISC_COLS <- list(
+  ADPC = c(
+    "STUDYID",
+    "SUBJID",
+    "USUBJID",
+    "SITEID",
+    "VISITNUM",
+    "VISIT",
+    "AVISIT",
+    "AVISITN",
+    "PCSTRESC",
+    "PCSTRESN",
+    "PCSTRESU",
+    "PCORRES",
+    "PCORRESU",
+    "PCTPT",
+    "PCTPTNUM",
+    "ATPT",
+    "ATPTN",
+    "PCSTRESC",
+    "PCSTRESN",
+    "PCSTRESU",
+    "AVAL",
+    "ANL01FL"
+  ),
+
+  ADPP = c(
+    "STUDYID",
+    "USUBJID",
+    "PPSEQ",
+    "PPGRPID",
+    "PPSPID",
+    "PARAMCD",
+    "PARAM",
+    "PPCAT",
+    "PPSCAT",
+    "PPREASND",
+    "PPSPEC",
+    "PPDTC",
+    "PPSTINT",
+    "PPENINT",
+    "SUBJID",
+    "SITEID",
+    "SEX",
+    "RACE",
+    "ACTARM",
+    "AAGE",
+    "AAGEU",
+    "TRT01P",
+    "TRT01A",
+    "AVAL",
+    "AVALC",
+    "AVALU"
+  ),
+
+  PP = c(
+    "STUDYID",
+    "DOMAIN",
+    "USUBJID",
+    "PPSEQ",
+    "PPCAT",
+    "PPGRPID",
+    "PPSPID",
+    "PPTESTCD",
+    "PPTEST",
+    "PPSCAT",
+    "PPORRES",
+    "PPORRESU",
+    "PPSTRESC",
+    "PPSTRESN",
+    "PPSTRESU",
+    "PPSTAT",
+    "PPREASND",
+    "PPSPEC",
+    "PPRFTDTC",
+    "PPSTINT",
+    "PPENINT"
+  )
+)
+
+INTERNAL_ANCA_COLS <- c(
+  "exclude", "is.excluded.hl", "volume", "std_route",
+  "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
+  "conc_groups", "REASON"
+)
