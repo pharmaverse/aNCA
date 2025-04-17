@@ -14,106 +14,64 @@ parameter_datasets_server <- function(id, res_nca) {
       export_cdisc(res_nca())
     })
 
-    output$pp_dataset <- DT::renderDataTable({
-      DT::datatable(
-        data = CDISC()$pp,
-        rownames = FALSE,
-        extensions = c("FixedHeader", "Buttons"),
-        options = list(
-          scrollX = TRUE,
-          scrollY = "80vh",
-          searching = TRUE,
-          fixedColumns = TRUE,
-          fixedHeader = TRUE,
-          autoWidth = TRUE,
-          pageLength = -1,
-          lengthMenu = -1,
-          dom = "Bfrtip",
-          buttons = list(
-            list(
-              extend = "copy",
-              title = paste0("PP_", CDISC()$studyid, "_", Sys.Date())
-            ),
-            list(
-              extend = "csv",
-              filename = paste0("PP_", CDISC()$studyid, "_", Sys.Date())
-            ),
-            list(
-              extend = "excel",
-              title = NULL,
-              header = colnames(CDISC()$pp),
-              filename = paste0("PP_", CDISC()$studyid, "_", Sys.Date())
-            )
-          )
-        )
+    output$pp_dataset <- DT::renderDataTable(
+      .parameters_datatable(
+        CDISC()$pp,
+        CDISC()$studyid,
+        "PP"
       )
-    })
+    )
 
-    output$adpp_dataset <- DT::renderDataTable({
-      DT::datatable(
-        data = CDISC()$adpp,
-        rownames = FALSE,
-        extensions = c("FixedHeader", "Buttons"),
-        options = list(
-          scrollX = TRUE,
-          scrollY = "80vh",
-          pageLength = -1,
-          lengthMenu = -1,
-          fixedHeader = TRUE,
-          dom = "Bfrtip",
-          buttons = list(
-            list(
-              extend = "copy",
-              title = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
-            ),
-            list(
-              extend = "csv",
-              filename = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
-            ),
-            list(
-              extend = "excel",
-              title = NULL,
-              header = colnames(CDISC()$adpp),
-              filename = paste0("ADPP_", CDISC()$studyid, "_", Sys.Date())
-            )
-          )
-        )
+    output$adpp_dataset <- DT::renderDataTable(
+      .parameters_datatable(
+        CDISC()$adpp,
+        CDISC()$studyid,
+        "ADPP"
       )
-    })
+    )
 
-    output$adpc_dataset <- DT::renderDataTable({
-      DT::datatable(
-        data = CDISC()$adpc,
-        rownames = FALSE,
-        extensions = c("FixedHeader", "Buttons"),
-        options = list(
-          scrollX = TRUE,
-          scrollY = "80vh",
-          searching = TRUE,
-          fixedColumns = TRUE,
-          fixedHeader = TRUE,
-          autoWidth = TRUE,
-          pageLength = -1,
-          lengthMenu = -1,
-          dom = "Bfrtip",
-          buttons = list(
-            list(
-              extend = "copy",
-              title = paste0("ADPC_", CDISC()$studyid, "_", Sys.Date())
-            ),
-            list(
-              extend = "csv",
-              filename = paste0("ADPC_", CDISC()$studyid, "_", Sys.Date())
-            ),
-            list(
-              extend = "excel",
-              title = NULL,
-              header = colnames(CDISC()$adpc),
-              filename = paste0("ADPC_", CDISC()$studyid, "_", Sys.Date())
-            )
-          )
-        )
+    output$adpp_dataset <- DT::renderDataTable(
+      .parameters_datatable(
+        CDISC()$adpc,
+        CDISC()$studyid,
+        "ADPC"
       )
-    })
+    )
   })
+}
+
+# Helper function to create a datatable for a parameter dataset
+.parameters_datatable <- function(data, studyid, prefix) {
+  DT::datatable(
+    data = data,
+    rownames = FALSE,
+    extensions = c("FixedHeader", "Buttons"),
+    options = list(
+      scrollX = TRUE,
+      scrollY = "80vh",
+      searching = TRUE,
+      fixedColumns = TRUE,
+      fixedHeader = TRUE,
+      autoWidth = TRUE,
+      pageLength = -1,
+      lengthMenu = -1,
+      dom = "Bfrtip",
+      buttons = list(
+        list(
+          extend = "copy",
+          title = paste0(prefix, "_", studyid, "_", Sys.Date())
+        ),
+        list(
+          extend = "csv",
+          filename = paste0(prefix, "_", studyid, "_", Sys.Date())
+        ),
+        list(
+          extend = "excel",
+          title = NULL,
+          header = colnames(data),
+          filename = paste0(prefix, "_", studyid, "_", Sys.Date())
+        )
+      )
+    )
+  )
 }
