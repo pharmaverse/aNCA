@@ -82,10 +82,15 @@ pivot_wider_pknca_results <- function(myres) {
   # If present: Pivot manual AUC interval columns and their respective exclude column
   if (any(myres$result$type_interval == "manual")) {
 
+    # TODO(mateusz): could use some refactoring in time, actions are repated, redundant
+    #                columns are created
     manual_aucs_vals <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
-        interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
+        interval_name = paste0(
+          signif(start_dose), "-", signif(end_dose),
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
       select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
@@ -96,7 +101,10 @@ pivot_wider_pknca_results <- function(myres) {
     manual_aucs_exclude <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
-        interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
+        interval_name = paste0(
+          signif(start_dose), "-", signif(end_dose),
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
       select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
@@ -136,7 +144,7 @@ pivot_wider_pknca_results <- function(myres) {
     ungroup()
 
   # Add "label" attribute to columns
-  .add_label_attribute(pivoted_res, myres)
+  add_label_attribute(pivoted_res, myres)
 }
 
 #' Helper function to extract exclude values
@@ -154,15 +162,22 @@ pivot_wider_pknca_results <- function(myres) {
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }
 
-#' Helper function to add "label" attribute to columns based on parameter names
+#' Helper function to add "label" attribute to columns based on parameter names.
 #' @noRd
-.add_label_attribute <- function(df, myres) {
-
+#' @keywords internal
+add_label_attribute <- function(df, myres) {
   mapping_vr <- myres$result %>%
-    mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
-           PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
-                                                            mapping_col = "PPTESTCD",
-                                                            target_col = "PPTEST"))) %>%
+    mutate(
+      PPTESTCD_unit = case_when(
+        type_interval == "manual" ~ paste0(
+          PPTESTCD, "_", start, "-", end,
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
+        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
+        TRUE ~ PPTESTCD
+      ),
+      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
+    ) %>%
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)
