@@ -24,8 +24,8 @@ intervals_data <- data.frame(
   USUBJID =  c(1, rep(2, 2), rep(3, 2), 4, 5, 6),
   DOSNO = c(1, 1, 2, 1, 2, 1, 1, 1),  # Include second dose profile for USUBJID 6
   tmax = TRUE,
-  auc.obs = TRUE,
-  auc.pred = TRUE
+  auclast = TRUE,
+  aucinf.pred = TRUE
 )
 
 conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / param)
@@ -104,5 +104,39 @@ describe("create_start_impute", {
                    dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
                    dplyr::pull(impute),
                  "start_conc0")
+  })
+
+  it("if drug column is not present, assumes is the same as analyte for imputation", {
+    # No drug but there is analyte
+    mydata_with_analyte <- mydata
+    mydata_with_analyte$dose$data$DRUG <- NULL
+    result_with_analyte <- create_start_impute(mydata_with_analyte)
+    result_with_analyte_impute <- result_with_analyte$intervals %>%
+      dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
+      dplyr::pull(impute)
+    expect_equal(result_with_analyte_impute, "start_logslope")
+
+    # No drug and no analyte
+    mydata_no_analyte <- mydata
+    mydata_no_analyte$dose$data$DRUG <- NULL
+    mydata_no_analyte$conc$data$param <- NULL
+    result_no_analyte <- create_start_impute(mydata_no_analyte)
+    # For last subject now analyte and drug are matching, should be start_logslope
+    result_no_analyte_impute <- result_no_analyte$intervals %>%
+      dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
+      dplyr::pull(impute)
+    expect_equal(result_no_analyte_impute, "start_logslope")
+  })
+
+  it("uses dose information to infere DOSNO when the column is missing", {
+    # Remove DOSNO from intervals
+    mydata_no_dosno <- mydata
+    mydata_no_dosno$intervals$DOSNO <- NULL
+    mydata_no_dosno$dose$columns$groups$group_vars <- "USUBJID"
+    result_no_dosno <- create_start_impute(mydata_no_dosno)
+
+    # Check that the imputation is correct for the first subject
+    expect_equal(result_no_dosno$intervals,
+                 result$intervals %>% select(-DOSNO))
   })
 })
