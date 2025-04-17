@@ -204,3 +204,29 @@ myres <- PKNCA::pk.nca(
     )
   )
 )
+
+
+# Make preparations done by PKNCA_calculate_nca
+dose_data_to_join <- select(
+  myres$data$dose$data,
+  -exclude,
+  -myres$data$dose$data$conc$columns$groups$group_analyte
+)
+myres$result <- myres$result %>%
+  # Function assumes dose time information is added to PKNCA results
+  inner_join(
+    dose_data_to_join,
+    by = intersect(names(.), names(dose_data_to_join))
+  ) %>%
+  # Function assumes start_dose, end_dose, PPSTRES, PPSTRESU
+  mutate(
+    start_dose = start - !!sym(myres$data$dose$columns$time),
+    end_dose = end - !!sym(myres$data$dose$columns$time),
+    PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
+    PPSTRES = PPORRES,
+    # Function assumes PPTESTCD is following CDISC standards
+    PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+  )
+
+# Obtain the result
+result <- pivot_wider_pknca_results(myres)
