@@ -122,6 +122,8 @@ h5 {
   right: 100px;
   top: 65px;
   z-index: 100;
+  height: 4.5rem;
+  width: 9rem;
 }
 
 .btn-help-icon {

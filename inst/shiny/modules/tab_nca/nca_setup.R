@@ -465,8 +465,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
                  })
 
     # Create trigger for modifications to the user setup
-    # Debounce trigger signal
-    setup_trigger <- debounce(reactive({
+    setup_trigger <- reactive({
       paste(
         adnca_data(),
         auc_data(),
@@ -477,15 +476,32 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         input$select_dosno,
         input$select_pcspec
       )
-    }), millis = 2500)
+    })
+
+    # Debounce the trigger, so the data is not updated too often.
+    setup_debounce <- 2500
+    setup_trigger_debounced <- debounce(setup_trigger, setup_debounce)
+
+    # On all changes, disable NCA button for given period of time to prevent the user from running
+    # the NCA before settings are applied.
+    observeEvent(setup_trigger(), {
+      runjs(str_glue(
+        "buttonTimeout(
+          '.run-nca-btn',
+          {setup_debounce + 250},
+          'Applying<br>settings...',
+          'Run NCA'
+        );"
+      ))
+    })
 
     # Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
-    slopes_pknca_data <- eventReactive(setup_trigger(), {
-      log_trace("Updating PKNCA::data object for slopes.")
+    slopes_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec)
+      log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = auc_data(),
@@ -497,17 +513,16 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
                    "r.squared", "adj.r.squared", "cmax"),
         should_impute_c0 = input$should_impute_c0
       )
-      log_success("PKNCA data slopes object created.")
 
       slopes_pknca_data
     })
 
     # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
-    processed_pknca_data <- eventReactive(setup_trigger(), {
-      log_trace("Updating PKNCA::data object.")
+    processed_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec, auc_data())
+      log_trace("Updating PKNCA::data object.")
 
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
@@ -519,7 +534,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         params = input$nca_params,
         should_impute_c0 = input$should_impute_c0
       )
-      log_success("PKNCA data object updated.")
 
       # Add picker input if bioavailability calculations are possible
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
@@ -557,9 +571,10 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
       route_column <- "ROUTE"
       std_route_column <- "std_route"
+      col_groups <- unname(unlist(processed_pknca_data()$conc$columns$groups))
 
       data <- data %>%
-        left_join(y = processed_pknca_data()$dose$data) %>%
+        left_join(processed_pknca_data()$dose$data, by = c(col_groups, "DOSNO")) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME) %>%
         mutate(start = start - first(TIME), end = end - first(TIME)) %>%
