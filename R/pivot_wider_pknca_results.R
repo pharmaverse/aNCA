@@ -137,8 +137,9 @@ pivot_wider_pknca_results <- function(myres) {
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }
 
-#' Helper function to add "label" attribute to columns based on parameter names
+#' Helper function to add "label" attribute to columns based on parameter names.
 #' @noRd
+#' @keywords internal
 .add_label_attribute <- function(df, myres) {
 
   mapping_vr <- myres$result %>%
@@ -149,6 +150,29 @@ pivot_wider_pknca_results <- function(myres) {
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)
+
+  # if custom AUC intervals are present, add them to the mapping vector
+  aucint_index <- grep("AUCINT", names(mapping_vr))
+  if (!rlang::is_empty(aucint_index)) {
+    aucint_label <- mapping_vr[aucint_index]
+    custom_auc_intervals <- grep("AUCINT", names(df), value = TRUE)
+
+    # create pretty colum names with intervals specified
+    auc_mapping <- custom_auc_intervals %>%
+      sapply(\(interval) {
+        interval_value <- gsub("AUCINT", "", interval)
+        gsub("\\[", paste0(interval_value, "["), names(aucint_label))
+      }, USE.NAMES = FALSE)
+
+    # assign pretty names to the df
+    names(df)[names(df) %in% custom_auc_intervals] <- auc_mapping
+
+    # add labels to mapping vector
+    mapping_vr <- c(
+      mapping_vr,
+      rlang::set_names(rep(aucint_label, length(auc_mapping)), auc_mapping)
+    )
+  }
 
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])
