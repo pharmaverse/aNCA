@@ -119,7 +119,7 @@ pivot_wider_pknca_results <- function(myres) {
     ungroup()
 
   # Add "label" attribute to columns
-  .add_label_attribute(pivoted_res, myres)
+  add_label_attribute(pivoted_res, myres)
 }
 
 #' Helper function to extract exclude values
@@ -140,7 +140,7 @@ pivot_wider_pknca_results <- function(myres) {
 #' Helper function to add "label" attribute to columns based on parameter names.
 #' @noRd
 #' @keywords internal
-.add_label_attribute <- function(df, myres) {
+add_label_attribute <- function(df, myres) {
 
   mapping_vr <- myres$result %>%
     mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
