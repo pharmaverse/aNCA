@@ -30,7 +30,7 @@ parameter_datasets_server <- function(id, res_nca) {
       )
     )
 
-    output$adpp_dataset <- DT::renderDataTable(
+    output$adpc_dataset <- DT::renderDataTable(
       .parameters_datatable(
         CDISC()$adpc,
         CDISC()$studyid,
