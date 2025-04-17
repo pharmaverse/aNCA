@@ -203,15 +203,18 @@ data_mapping_server <- function(id, adnca_data) {
     })
 
     # Observe submit button click and update processed_data
+    mapping <- reactive({
+      input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
+      input_ids <- c(input_ids, "select_Grouping_Variables") # Include manually added input
+      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      mapping_list
+    })
+    
     mapped_data <- reactive({
       req(adnca_data())
-
       log_info("Processing data mapping...")
-
-      dataset <- adnca_data()
-      apply_column_mapping(dataset, input, MANUAL_UNITS)
-
-    }) |>
+      apply_column_mapping(adnca_data(), mapping(), MANUAL_UNITS, MAPPING_COLUMN_GROUPS, MAPPING_DESIRED_ORDER)
+    }) |> 
       bindEvent(input$submit_columns)
 
     #Check for blocking duplicates
