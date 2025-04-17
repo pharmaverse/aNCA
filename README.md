@@ -1,4 +1,5 @@
 # automated Non-Compartmental Analysis (aNCA)
+
 <img id = "package-logo-dark" src='man/figures/aNCA_logo_bbg.png#gh-dark-mode-only' align="right" alt="aNCA logo dark bg" width="200"><img id = "package-logo-light" src="man/figures/aNCA_logo_wbg.png#gh-light-mode-only" align="right" alt="aNCA logo light bg" width="200">
 
 <!-- badges: start -->
@@ -15,7 +16,7 @@
 <br/>
 
 > Our aim is to develop and share an open-source R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets worldwide and across pharmaceutical companies.
-<br/>
+> <br/>
 
 ## Description
 
@@ -57,6 +58,13 @@ and then loading it directly using [devtools](https://github.com/r-lib/devtools)
 
 ```R
 devtools::load_all()
+```
+
+> [!IMPORTANT]
+> The package currently relies on developement version of [PKNCA](https://billdenney.github.io/pknca/). You can install it by running:
+```R
+install.packages("remotes")
+remotes::install_github("billdenney/pknca")
 ```
 
 ## Quick start
