@@ -10,7 +10,7 @@
 #'
 #' @param res_nca Object with results of the NCA analysis.
 #'
-#' @return A list with two data frames:
+#' @returns A list with two data frames:
 #' \describe{
 #' \item{pp}{A data frame containing the PP (Pharmacokinetic Parameters) domain data.}
 #' \item{adpp}{A data frame containing the ADPP (Analysis Dataset for Pharmacokinetic Parameters)
@@ -186,7 +186,7 @@ find_common_prefix <- function(strings) {
 #'
 #' @param data A data frame containing `SUBJID`, `USUBJID`, and optionally `STUDYID`.
 #'
-#' @return A vector of `SUBJID` values.
+#' @returns A vector of `SUBJID` values.
 #'
 #' @examples
 #' data <- data.frame(
