@@ -1,82 +1,86 @@
 conc_data <- data.frame(
   # Columns that are mapped from the data
-  AVAL = c( # USUBJID / DOSNO
-    0:4,               # 1 / 1 (Extravascular, linear & sample at dose)
-    c(1:4, 0.5),       # 2 / 1 (Extravascular eq, with max)
-    c(1:4, 0.5),       # 2 / 2 (Extravascular eq, 2nd dose)
-    5:1,               # 3 / 1 (IV bolus)
-    5:1,               # 3 / 2 (IV bolus, 2nd dose)
-    rep(2, 5),         # 4 / 1 (IV bolus, abnormal profile)
-    c(1:3, 1, 0.5),    # 5 / 1 (Infussion)
-    5:1,               # 6 / 1 (IV bolus)
-    c(1:3, NA, 0.5)      # 7 / 1 (Extravascular, with NA)
+  AVAL = c( # USUBJID/DOSNO
+    0:4,                    # 1/1 (Extravascular, linear & sample at dose)
+    c(1, 2, 1.5, 1, 0.5),   # 2/1 (Extravascular eq, with max)
+    c(1, 2, 1.5, 1, 0.5),   # 2/2 (Extravascular eq, 2nd dose)
+    5:1,                    # 3/1 (IV bolus)
+    5:1,                    # 3/2 (IV bolus, 2nd dose)
+    rep(2, 5),              # 4/1 (IV bolus, abnormal profile)
+    c(1, 2.5, 1, 0.7, 0.5), # 5/1 (Infusion)
+    5:1,                    # 6/1 (IV bolus, metabolite)
+    c(1:3, NA, 0.5)         # 7/1 (Extravascular, with NA)
   ),
   AFRLT = c(
-    0:4,               # 1 / 1
-    seq(0.5, 4.5, 1),               # 2 / 1
-    seq(5.5, 9.5, 1),              # 2 / 2
-    seq(0.5, 4.5, 1),       # 3 / 1
-    seq(5.5, 9.5, 1),              # 3 / 2
-    seq(0.5, 4.5, 1),      # 4 / 1
-    seq(0.5, 4.5, 1),      # 5 / 1
-    seq(0.5, 4.5, 1),      # 6 / 1
-    seq(0.5, 4.5, 1)                # 7 / 1
+    0:4,                   # 1/1
+    seq(0.5, 4.5, 1),      # 2/1
+    seq(5.5, 9.5, 1),      # 2/2
+    seq(0.5, 4.5, 1),      # 3/1
+    seq(5.5, 9.5, 1),      # 3/2
+    seq(0.5, 4.5, 1),      # 4/1
+    seq(0.5, 4.5, 1),      # 5/1
+    seq(0.5, 4.5, 1),      # 6/1
+    seq(0.5, 4.5, 1)       # 7/1
   ),
   ARRLT = c(
-    0:4,               # 1 / 1
-    seq(1, 4.5, 0.75), # 2 / 1
-    1:3,               # 2 / 2
-    c(1, 2, 2.5),      # 3 / 1
-    c(1, 2, 2.5),      # 3 / 2
-    c(1, 2, 2.5),      # 4 / 1
-    c(1, 2, 2.5),      # 5 / 1
-    c(1, 2, 2.5),      # 6 / 1
-    0:4                # 7 / 1
+    0:4,                   # 1/1
+    seq(0.5, 4.5, 1),      # 2/1
+    seq(0.5, 4.5, 1),      # 2/2
+    seq(0.5, 4.5, 1),      # 3/1
+    seq(0.5, 4.5, 1),      # 3/2
+    seq(0.5, 4.5, 1),      # 4/1
+    seq(0.5, 4.5, 1),      # 5/1
+    seq(0.5, 4.5, 1),      # 6/1
+    seq(0.5, 4.5, 1)       # 7/1
   ),
   NFRLT = c(
-    0:4, c(1, 2, 2.5), # 1 / 1
-    4:6, c(1, 2, 2.5), # 2 / 1
-    4:6, c(1, 2, 2.5), # 2 / 2
-    c(1, 2, 2.5),      # 3 / 1
-    c(1, 2, 2.5),      # 3 / 2
-    c(1, 2, 2.5),      # 4 / 1
-    c(1, 2, 2.5),      # 5 / 1
-    c(1, 2, 2.5),      # 6 / 1
-    0:4                # 7 / 1
+    0:4,                   # 1/1
+    seq(0.5, 4.5, 1),      # 2/1
+    seq(5.5, 9.5, 1),      # 2/2
+    seq(0.5, 4.5, 1),      # 3/1
+    seq(5.5, 9.5, 1),      # 3/2
+    seq(0.5, 4.5, 1),      # 4/1
+    seq(0.5, 4.5, 1),      # 5/1
+    seq(0.5, 4.5, 1),      # 6/1
+    seq(0.5, 4.5, 1)       # 7/1
   ),
   NRRLT = c(
-    0:4, # 1 / 1
-    1:3, c(1, 2, 2.5), # 2 / 1
-    1:3, c(1, 2, 2.5), # 2 / 2
-    c(1, 2, 2.5),      # 3 / 1
-    c(1, 2, 2.5),      # 3 / 2
-    c(1, 2, 2.5),      # 4 / 1
-    c(1, 2, 2.5),      # 5 / 1
-    c(1, 2, 2.5),      # 6 / 1
-    0:4                # 7 / 1
+    0:4,                   # 1/1
+    seq(0.5, 4.5, 1),      # 2/1
+    seq(0.5, 4.5, 1),      # 2/2
+    seq(0.5, 4.5, 1),      # 3/1
+    seq(0.5, 4.5, 1),      # 3/2
+    seq(0.5, 4.5, 1),      # 4/1
+    seq(0.5, 4.5, 1),      # 5/1
+    seq(0.5, 4.5, 1),      # 6/1
+    seq(0.5, 4.5, 1)       # 7/1
   ),
   ROUTE = c(
-    rep("extravascular", 9), 
-    rep("intravascular", 15)
+    rep("extravascular", 5*3), # 1/1 - 2/2
+    rep("intravascular", 5*6) # 3/1 - 7/1
   ),
   PARAM = c(
-    rep("A", 21), 
-    rep("B", 3)
+    rep("A", 5*7),          # 1/1 - 5/1	
+    rep("B", 5*1),          # 6/1 (IV bolus, metabolite)
+    rep("A", 5*1)           # 7/1 (Extravascular, with NA)
   ),
   USUBJID = c(
-    rep(1, 3),
-    rep(2, 6),
-    rep(3, 6),
-    rep(4, 3),
-    rep(5, 3),
-    rep(6, 3)
+    rep(1, 5),
+    rep(2, 5*2),
+    rep(3, 5*2),
+    rep(4, 5),
+    rep(5, 5),
+    rep(6, 5),
+    rep(7, 5)
   ),
   DOSNO = c(
-    rep(1, 3), 
-    rep(rep(1:2, each = 3), 2), 
-    rep(1, 3), 
-    rep(1, 3), 
-    rep(1, 3)
+    rep(1, 5), 
+    rep(1:2, each = 5),
+    rep(1:2, each = 5), 
+    rep(1, 5), 
+    rep(1, 5), 
+    rep(1, 5),
+    rep(1, 5)
   ),
   # Included by aNCA internally
   is.excluded.hl = FALSE,
@@ -86,42 +90,78 @@ conc_data <- data.frame(
 
 dose_data <- data.frame(
   AFRLT = c(
-    0, 0, 3, 0, 3, 0, 0, 0
+    0,
+    c(0, 3),
+    c(0, 3),
+    0,
+    0,
+    0,
+    0
   ),
   ARRLT = c(
-    0, 0, 0, 0, 0, 0, 0, 0
+    0,
+    c(0, 0),
+    c(0, 0),
+    0,
+    0,
+    0,
+    0
   ),
   NFRLT = c(
-    0, 0, 3, 0, 3, 0, 0, 0
+    0,
+    c(0, 3),
+    c(0, 3),
+    0,
+    0,
+    0,
+    0
   ),
   NRRLT = c(
-    0, 0, 0, 0, 0, 0, 0, 0
+    0,
+    c(0, 0),
+    c(0, 0),
+    0,
+    0,
+    0,
+    0
   ),
   ROUTE = c(
     rep("extravascular", 3), 
-    rep("intravascular", 5)
+    rep("intravascular", 5),
+    "extravascular"
   ),
   ADOSE = 1,
   DRUG = "A",
   ADOSEDUR = c(
-    0, 0, 0, 0, 0, 0, 1, 0
+    rep(0, 6),
+    1,            # 5/1 (Infussion)
+    0,
+    0
   ),
   USUBJID = c(
-    1, rep(2, 2), 
-    rep(3, 2), 
-    4, 5, 6
+    1,
+    rep(2, 2),
+    rep(3, 2),
+    4,
+    5,
+    6,
+    7
   ),
   DOSNO = c(
-    1, c(1, 2), 
-    c(1, 2), 
-    1, 1, 1
+    1,
+    c(1, 2),
+    c(1, 2),
+    1,
+    1,
+    1,
+    1
   )
 )
 
 # Perform NCA analysis
 main_intervals <- data.frame(
-  start = c(0, 3),
-  end = c(3, 6),
+  start = c(0, 5),
+  end = c(5, 10),
   half.life = TRUE,
   cmax = TRUE,
   aucint.last = FALSE,
