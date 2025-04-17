@@ -78,10 +78,15 @@ pivot_wider_pknca_results <- function(myres) {
   # If present: Pivot manual AUC interval columns and their respective exclude column
   if (any(myres$result$type_interval == "manual")) {
 
+    # TODO(mateusz): could use some refactoring in time, actions are repated, redundant
+    #                columns are created
     manual_aucs_vals <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
-        interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
+        interval_name = paste0(
+          signif(start_dose), "-", signif(end_dose),
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
       select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
@@ -92,7 +97,10 @@ pivot_wider_pknca_results <- function(myres) {
     manual_aucs_exclude <- myres$result %>%
       filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
-        interval_name = paste0(signif(start_dose), "-", signif(end_dose)),
+        interval_name = paste0(
+          signif(start_dose), "-", signif(end_dose),
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
       select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
@@ -141,38 +149,21 @@ pivot_wider_pknca_results <- function(myres) {
 #' @noRd
 #' @keywords internal
 add_label_attribute <- function(df, myres) {
-
   mapping_vr <- myres$result %>%
-    mutate(PPTESTCD_unit = ifelse(PPSTRESU != "", paste0(PPTESTCD, "[", PPSTRESU, "]"), PPTESTCD),
-           PPTESTCD_cdisc = gsub("\\$", "", translate_terms(PPTESTCD,
-                                                            mapping_col = "PPTESTCD",
-                                                            target_col = "PPTEST"))) %>%
+    mutate(
+      PPTESTCD_unit = case_when(
+        type_interval == "manual" ~ paste0(
+          PPTESTCD, "_", start, "-", end,
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
+        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
+        TRUE ~ PPTESTCD
+      ),
+      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
+    ) %>%
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)
-
-  # if custom AUC intervals are present, add them to the mapping vector
-  aucint_index <- grep("AUCINT", names(mapping_vr))
-  if (!rlang::is_empty(aucint_index)) {
-    aucint_label <- mapping_vr[aucint_index]
-    custom_auc_intervals <- grep("AUCINT", names(df), value = TRUE)
-
-    # create pretty colum names with intervals specified
-    auc_mapping <- custom_auc_intervals %>%
-      sapply(\(interval) {
-        interval_value <- gsub("AUCINT", "", interval)
-        gsub("\\[", paste0(interval_value, "["), names(aucint_label))
-      }, USE.NAMES = FALSE)
-
-    # assign pretty names to the df
-    names(df)[names(df) %in% custom_auc_intervals] <- auc_mapping
-
-    # add labels to mapping vector
-    mapping_vr <- c(
-      mapping_vr,
-      rlang::set_names(rep(aucint_label, length(auc_mapping)), auc_mapping)
-    )
-  }
 
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])
