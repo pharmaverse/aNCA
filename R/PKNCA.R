@@ -66,6 +66,13 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
 
+  #Filter out flagged duplicates if DFLAG column available
+  if ("DFLAG" %in% colnames(adnca_data)) {
+    adnca_data <- adnca_data %>%
+      filter(!DFLAG) %>%
+      select(-DFLAG)
+  }
+
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,

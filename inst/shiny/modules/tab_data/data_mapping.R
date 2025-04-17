@@ -67,6 +67,8 @@ MAPPING_DESIRED_ORDER <- c(
 #' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
 #' group identifiers, sample variables, dose variables, time variables, and unit variables.
+#' It also checks for duplicates in the data that will cause problems later, and allows the user
+#' to resolve them.
 #'
 #' @param id The module ID.
 #' @param adnca_data A reactive expression that returns the dataset to be processed.
@@ -101,6 +103,8 @@ MAPPING_DESIRED_ORDER <- c(
 #' \item Renaming columns based on user selections.
 #' \item Handling manual units.
 #' \item Reordering columns according to a desired order.
+#' \item Filtering out concentration duplicates
+#' \item Setting a flag for duplicate rows, as selected by the user.
 #' }
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 data_mapping_ui <- function(id) {
@@ -182,6 +186,7 @@ data_mapping_server <- function(id, adnca_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)) |>
       unlist()
@@ -198,93 +203,117 @@ data_mapping_server <- function(id, adnca_data) {
     })
 
     # Observe submit button click and update processed_data
-    processed_data <- reactive({
+    mapping <- reactive({
+      input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
+      input_ids <- c(input_ids, "select_Grouping_Variables") # Include manually added input
+      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      mapping_list
+    })
+
+    mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
-      Sys.sleep(1) # Make this artificially slow to show the loading spinner
-
-      dataset <- adnca_data()
-
-      # Get the selected columns
-      selected_cols <- sapply(names(MAPPING_COLUMN_GROUPS), function(group) {
-        sapply(MAPPING_COLUMN_GROUPS[[group]], function(column) {
-          input[[(paste0("select_", column))]]
-        })
-      }, simplify = FALSE)
-
-      lapply(selected_cols, \(group) {
-        purrr::imap(group, \(v, n) paste0("* ", n, " -> ", paste0(v, collapse = ", ")))
-      }) %>%
-        unlist(use.names = FALSE) %>%
-        paste0(collapse = "\n") %>%
-        paste0("The following mapping was applied:\n", .) %>%
-        log_info()
-
-      # Check for duplicate column selections
-      all_selected_columns <- unlist(selected_cols)
-      if (any(duplicated(all_selected_columns))) {
-        log_error("Duplicate column selection detected.")
-        showNotification(
-          ui = "Duplicate column selection detected. 
-          Please ensure each selection is unique.",
-          type = "error",
-          duration = 5
-        )
-        return()
-      }
-
-      # Remove "Grouping_Variables" from selected columns to prevent renaming
-      selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-        names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
-      ]
-
-      # Check for unmapped columns
-      if (any(unlist(selected_cols) == "")) {
-        log_error("Unmapped columns detected.")
-        showNotification(
-          ui = "Some required columns are not mapped. Please complete all selections.",
-          type = "error",
-          duration = 5
-        )
-        return()
-      }
-
-      # Rename columns
-      colnames(dataset) <- sapply(colnames(dataset), function(col) {
-        for (group in names(selected_cols)) {
-          if (col %in% selected_cols[[group]]) {
-            return(names(selected_cols[[group]])[which(selected_cols[[group]] == col)])
-          }
-        }
-        return(col)
-      })
-
-      # Handle ADOSEDUR == NA case
-      if (input$select_ADOSEDUR == "NA") {
-        dataset$ADOSEDUR <- 0
-      }
-
-      # Update dataset columns if manual units are selected
-      if (input$select_AVALU %in% MANUAL_UNITS$concentration) {
-        dataset$AVALU <- input$select_AVALU
-      }
-      if (input$select_DOSEU %in% MANUAL_UNITS$dose) {
-        dataset$DOSEU <- input$select_DOSEU
-      }
-      if (input$select_RRLTU %in% MANUAL_UNITS$time) {
-        dataset$RRLTU <- input$select_RRLTU
-      }
-
-      # Reorder columns based on the desired order
-      dataset <- dataset %>%
-        relocate(all_of(MAPPING_DESIRED_ORDER))
-
-      # Apply labels to the dataset
-      dataset <- apply_labels(dataset, LABELS, "ADPC")
-
-      dataset
+      apply_column_mapping(adnca_data(), mapping(),
+                           MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
+                           MAPPING_DESIRED_ORDER)
     }) |>
       bindEvent(input$submit_columns)
+
+    #Check for blocking duplicates
+    # groups based on PKNCAconc formula
+    df_duplicates <- reactive({
+      req(mapped_data)
+      mapped_data() %>%
+        group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
+        filter(n() > 1) %>%
+        ungroup() %>%
+        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
+    })
+
+    processed_data <- reactive({
+      req(mapped_data())
+      dataset <- mapped_data()
+
+      if (nrow(df_duplicates()) == 0) {
+        return(mutate(dataset, DFLAG = FALSE))
+      }
+
+      # User resolves duplicates, apply DFLAG
+      duplicates(df_duplicates())
+
+      if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
+        # Get selected rows from the reactable
+        selected <- getReactableState("duplicate_modal_table", "selected")
+        req(length(selected) > 0)
+
+        kept <- df_duplicates()[selected, , drop = FALSE]
+        removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
+        dataset <- dataset %>%
+          mutate(DFLAG = FALSE)
+
+        # Set DFLAG to TRUE for the removed rows
+        dataset <- dataset %>%
+          rows_update(
+            removed %>%
+              mutate(DFLAG = TRUE) %>%
+              select(names(dataset)),
+            by = intersect(names(dataset), names(removed))
+          )
+
+        return(dataset)
+      }
+      # Don't return anything until duplicates are resolved
+      return(NULL)
+
+    })
+
+    observeEvent(duplicates(), {
+      showModal(
+        modalDialog(
+          title = "Duplicate Rows Detected",
+          class = "modal-duplicates",
+          tagList(
+            p("The following rows are duplicates based on TIME, STUDYID,
+              PCSPEC, DRUG, USUBJID, PARAM."),
+            p("Please select the rows you would like to KEEP.
+              Rows not selected will be flagged and filtered."),
+            p("Alternatively, click 'Cancel' to discard the changes,
+              and clean the dataset yourself."),
+            div(reactableOutput(ns("duplicate_modal_table")))
+          ),
+          easyClose = FALSE,
+          footer = tagList(
+            actionButton(ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        )
+      )
+    })
+
+    observeEvent(input$keep_selected_btn, {
+      duplicates(NULL)
+      removeModal()
+    })
+
+    output$duplicate_modal_table <- renderReactable({
+      group_ids <- unique(df_duplicates()$.dup_group)
+      color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
+
+      reactable(
+        df_duplicates(),
+        columns = list(.dup_group = colDef(show = FALSE)),
+        rowStyle = function(index) {
+          group <- df_duplicates()$.dup_group[index]
+          list(background = color_map[[group]])
+        },
+        selection = "multiple",
+        onClick = "select",
+        compact = TRUE,
+        wrap = FALSE,
+        resizable = TRUE
+      )
+    })
 
     list(
       processed_data = processed_data,
