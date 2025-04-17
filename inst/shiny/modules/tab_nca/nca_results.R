@@ -112,7 +112,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
         session = session,
         inputId = "params",
         label = "Select Parameters :",
-        choices = param_inputnames,
+        choices = sort(param_inputnames),
         selected =  param_inputnames
       )
     })
