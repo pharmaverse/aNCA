@@ -209,12 +209,14 @@ data_mapping_server <- function(id, adnca_data) {
       mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
       mapping_list
     })
-    
+
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
-      apply_column_mapping(adnca_data(), mapping(), MANUAL_UNITS, MAPPING_COLUMN_GROUPS, MAPPING_DESIRED_ORDER)
-    }) |> 
+      apply_column_mapping(adnca_data(), mapping(),
+                           MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
+                           MAPPING_DESIRED_ORDER)
+    }) |>
       bindEvent(input$submit_columns)
 
     #Check for blocking duplicates
