@@ -168,8 +168,8 @@ describe("pivot_wider_pknca_results", {
 
     # Check that the result contains expected columns
     expected_columns <- c(
-      "ID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
-      "NFRLT", "NRRLT", "DOSE", "route", "duration",
+      "USUBJID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
+      "NFRLT", "NRRLT", "ADOSE", "route", "duration",
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
       "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
@@ -191,13 +191,13 @@ describe("pivot_wider_pknca_results", {
 
     # Check that the result contains expected columns
     expected_columns <- c(
-      "ID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
-      "NFRLT", "NRRLT", "DOSE", "route", "duration",
+      "USUBJID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
+      "NFRLT", "NRRLT", "ADOSE", "route", "duration",
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
       "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
-      "LAMZSPN", "AUCINT_0-5", "AUCINT_5-10", "LAMZIX",
-      "LAMZMTD", "Exclude"
+      "LAMZSPN", "LAMZIX", "LAMZMTD", "Exclude",
+      "AUCINT_0-2", "AUCINT_2-4"
     )
     expect_true(all(expected_columns %in% colnames(result)))
 
