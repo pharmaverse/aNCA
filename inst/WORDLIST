@@ -14,8 +14,10 @@ DOSNO
 LAMZ
 LAMZLL
 LAMZNPT
+MSCW
 NCA
 NFRLT
+NNN
 NRRLT
 PARAM
 PCSPEC
@@ -23,8 +25,12 @@ PKNCA
 PKNCAdata
 PKNCAdose
 PKNCAresults
+PPORRES
+PPSTRES
+PPSTRESU
 PPTEST
 PPTESTCD
+PRs
 Pharmacokinetic
 Pharmaverse
 Plotly
@@ -54,6 +60,8 @@ ggplot
 ggplots
 intravascular
 lastdose
+lintr
+md
 nca
 pak
 pharmacokinetic
@@ -66,7 +74,9 @@ reupload
 ruleset
 rulesets
 signif
+tidyverse
 timepoint
 tlg
+utilise
 visualizable
 yaml
