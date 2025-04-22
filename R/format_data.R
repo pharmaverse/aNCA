@@ -162,9 +162,6 @@ format_pkncadata_intervals <- function(pknca_conc,
   # Select relevant group columns
   conc_groups <- unname(unlist(pknca_conc$columns$groups))
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
-  # Set vars
-  TIME_DOSE <- "TIME_DOSE"
-  DOSNOA <- "DOSNOA"
 
   # Obtain all possible pknca parameters
   all_pknca_params <- setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
@@ -179,7 +176,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
     select(any_of(c(dose_groups,
-                    pknca_dose$columns$time, DOSNOA)))
+                    pknca_dose$columns$time, "DOSNOA")))
 
 
   # Based on dose times create a data frame with start and end times
@@ -190,7 +187,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
     # Pick 1 per concentration group and dose number
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
-    group_by(!!!syms(c(conc_groups, DOSNOA))) %>%
+    group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>%
     ungroup() %>%
 
