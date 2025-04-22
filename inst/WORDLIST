@@ -11,8 +11,10 @@ CDISC
 DOSEA
 DOSEU
 DOSNO
+MSCW
 NCA
 NFRLT
+NNN
 NRRLT
 PARAM
 PCSPEC
@@ -25,6 +27,7 @@ PPSTRES
 PPSTRESU
 PPTEST
 PPTESTCD
+PRs
 Pharmacokinetic
 Pharmaverse
 Plotly
@@ -54,6 +57,8 @@ ggplot
 ggplots
 intravascular
 lastdose
+lintr
+md
 nca
 pak
 pharmacokinetic
@@ -66,7 +71,9 @@ reupload
 ruleset
 rulesets
 signif
+tidyverse
 timepoint
 tlg
+utilise
 visualizable
 yaml
