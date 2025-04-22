@@ -1,4 +1,4 @@
-conc_data <- data.frame(
+TEST_CONC_DATA <- data.frame(
   # Columns that are mapped from the data
   AVAL = c( # USUBJID/DOSNO
     0:4,                    # 1/1 (Extravascular, linear & sample at dose)
@@ -88,7 +88,7 @@ conc_data <- data.frame(
   exclude_half.life = FALSE
 )
 
-dose_data <- data.frame(
+TEST_DOSE_DATA <- data.frame(
   AFRLT = c(
     0,
     c(0, 3),
@@ -169,7 +169,7 @@ main_intervals <- data.frame(
   DOSNO = c(1, 2)
 ) %>%
   left_join(
-    dose_data %>%
+    TEST_DOSE_DATA %>%
       select(USUBJID, DOSNO) %>%
       unique()
   )
@@ -183,17 +183,16 @@ auc_intervals <- data.frame(
   DOSNO = c(1, 2)
 ) %>%
   left_join(
-    dose_data %>%
+    TEST_DOSE_DATA %>%
       select(USUBJID, DOSNO) %>%
       unique()
   )
 options <- PKNCA::PKNCA.options()
 options$keep_interval_cols <- c("DOSNO", "type_interval")
 
-myres <- PKNCA::pk.nca(
-  PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(conc_data, AVAL ~ AFRLT | USUBJID / PARAM),
-    data.dose = PKNCA::PKNCAdose(dose_data, ADOSE ~ AFRLT | USUBJID),
+ TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
+    data.conc = PKNCA::PKNCAconc(TEST_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
+    data.dose = PKNCA::PKNCAdose(TEST_DOSE_DATA, ADOSE ~ AFRLT | USUBJID),
     intervals = rbind(
       main_intervals,
       auc_intervals
@@ -203,30 +202,36 @@ myres <- PKNCA::pk.nca(
       concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
     )
   )
-)
+
+TEST_PKNCA_RES <- PKNCA::pk.nca(TEST_PKNCA_DATA)
 
 
-# Make preparations done by PKNCA_calculate_nca
-dose_data_to_join <- select(
-  myres$data$dose$data,
+# Create PKNCA results object from 0 with sample concentration and dose datasets
+# Additional conditions to PKNCA assumptions need to be made:
+# 1) CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT)
+# 2) For the intervals create a column (type_interval) that differentiates between
+# custom AUC ranges ("manual") and main parameter calculations ("main")
+# 3) There are PPSTRES and PPSTRESU variables in the PKNCA results output
+# 4) start_dose & end_dose columns expressing when the actual start and actual end
+# of the dose happened. The time reference is the first dose given to the subject.
+# 5) CDISC denomination of PK parameters (needed temporarily to derive LAMZNPT & LAMZMTD)
+TEST_DOSE_DATA_to_join <- select(
+  TEST_PKNCA_RES$data$dose$data,
   -exclude,
-  -myres$data$dose$data$conc$columns$groups$group_analyte
+  -TEST_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
 )
-myres$result <- myres$result %>%
+TEST_PKNCA_RES$result <- TEST_PKNCA_RES$result %>%
   # Function assumes dose time information is added to PKNCA results
   inner_join(
-    dose_data_to_join,
-    by = intersect(names(.), names(dose_data_to_join))
+    TEST_DOSE_DATA_to_join,
+    by = intersect(names(.), names(TEST_DOSE_DATA_to_join))
   ) %>%
   # Function assumes start_dose, end_dose, PPSTRES, PPSTRESU
   mutate(
-    start_dose = start - !!sym(myres$data$dose$columns$time),
-    end_dose = end - !!sym(myres$data$dose$columns$time),
+    start_dose = start - !!sym(TEST_PKNCA_RES$data$dose$columns$time),
+    end_dose = end - !!sym(TEST_PKNCA_RES$data$dose$columns$time),
     PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
     PPSTRES = PPORRES,
     # Function assumes PPTESTCD is following CDISC standards
     PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
   )
-
-# Obtain the result
-result <- pivot_wider_pknca_results(myres)
