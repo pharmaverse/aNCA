@@ -46,7 +46,7 @@ pivot_wider_pknca_results <- function(myres) {
     added_params <- myres$result %>%
       filter(PPTESTCD %in% c("LAMZNPT", "LAMZLL", "LAMZ"),
              type_interval == "main") %>%
-      select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
+      select(any_of(c(conc_groups, "PPTESTCD", "PPSTRES", "DOSNO", "start", "end"))) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
       left_join(data_with_duplicates, by = intersect(names(.), names(data_with_duplicates))) %>%
