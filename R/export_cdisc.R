@@ -51,12 +51,12 @@ export_cdisc <- function(res_nca) {
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("AVISIT" %in% names(.)) paste(ANALYTE, PCSPEC, AVISIT, sep = "-")
-        else if ("VISIT" %in% names(.)) paste(ANALYTE, PCSPEC, VISIT, sep = "-")
-        else paste(ANALYTE, PCSPEC, DOSNO, sep = "-")
+        if ("AVISIT" %in% names(.)) paste(PARAM, PCSPEC, AVISIT, sep = "-")
+        else if ("VISIT" %in% names(.)) paste(PARAM, PCSPEC, VISIT, sep = "-")
+        else paste(PARAM, PCSPEC, DOSNO, sep = "-")
       },
       # Parameter Category
-      PPCAT = ANALYTE,
+      PPCAT = PARAM,
       PPSCAT = "NON-COMPARTMENTAL",
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
