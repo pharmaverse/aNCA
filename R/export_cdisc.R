@@ -114,7 +114,7 @@ export_cdisc <- function(res_nca) {
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(CDISC_COLS$ADPP, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
+    select(any_of(c(CDISC_COLS$ADPP)))
 
   adpc <- res_nca$data$conc$data %>%
     mutate(
@@ -235,7 +235,14 @@ CDISC_COLS <- list(
     "PCSTRESN",
     "PCSTRESU",
     "AVAL",
-    "ANL01FL"
+    "ANL01FL",
+    # Columns taken from the original data if present (still not directly mapped)
+    "SEX",
+    "RACE",
+    "ACTARM",
+    "AGE",
+    "AGEU",
+    "AVISIT"
   ),
 
   ADPP = c(
@@ -255,13 +262,15 @@ CDISC_COLS <- list(
     "PPENINT",
     "SUBJID",
     "SITEID",
+    # Columns taken from the original data if present (still not directly mapped)
     "SEX",
     "RACE",
     "ACTARM",
-    "AAGE",
-    "AAGEU",
+    "AGE",
+    "AGEU",
     "TRT01P",
     "TRT01A",
+
     "AVAL",
     "AVALC",
     "AVALU"
