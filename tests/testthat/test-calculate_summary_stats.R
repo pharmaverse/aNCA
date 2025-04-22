@@ -1,8 +1,12 @@
 test_data <- data.frame(
-  DOSNO = rep(1:2, each = 6),
-  PPTESTCD = rep(c("A", "A", "B", "B", "C", "C"), 2),
-  PPSTRES = rep(c(10, 20, 5, 15, NA, 30), 2),
-  PPSTRESU = rep(c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L"), 2)
+  DOSNO = rep(1:2, each = 8),
+  PPTESTCD = rep(c("A", "A", "B", "B", "C", "C", "D", "D"), 2),
+  PPSTRES = c(10, 20, 5, 15, NA, 30, 0, 10, 10, 20, 5, 15, NA, 30, 0, 10),
+  PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
+               "mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", ""),
+  PPORRES = c(10, 20, 5, 15, NA, 30, 0, 10, 10, 20, 5, 15, NA, 30, 0, 10),
+  PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
+               "mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "")
 )
 
 result <- calculate_summary_stats(test_data)
@@ -24,6 +28,7 @@ describe("calculate_summary_stats", {
     expect_true("A[mg/L]" %in% colnames(result))
     expect_true("B[ng/mL]" %in% colnames(result))
     expect_true("C[µg/L]" %in% colnames(result))
+    expect_true("D" %in% colnames(result))  # No units for D
   })
 
   it("correctly calculates summary statistics", {
@@ -70,4 +75,29 @@ describe("calculate_summary_stats", {
     expect_s3_class(result, "data.frame")
   })
 
+  it("standardizes units to the mode", {
+    test_data_diff_units <- data.frame(
+      DOSNO = c(1, 1, 1),
+      PPTESTCD = c("A", "A", "A"),
+      PPORRES = c(1, 2, 3),
+      PPORRESU = c("mg/L", "mg/L", "mg/L"),
+      PPSTRES = c(1, 2, 3 * (1e-6)),
+      PPSTRESU = c("mg/L", "mg/L", "µg/L")
+    )
+
+    result <- calculate_summary_stats(test_data_diff_units)
+
+    # Define the expected result
+    expected_result <- tibble(
+      DOSNO = rep(1, 9),
+      Statistic = c(
+        "Geomean", "Geocv", "Mean", "SD", "Min",
+        "Max", "Median", "Count.missing", "Count.total"
+      ),
+      `A[mg/L]` = c(1.817, 55.032, 2, 1, 1, 3, 2, 0, 3)
+    )
+
+    # Check that the result matches the expected output
+    expect_equal(result, expected_result)
+  })
 })

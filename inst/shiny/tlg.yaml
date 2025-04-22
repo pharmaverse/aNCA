@@ -85,7 +85,7 @@ g_pkcg01_lin:
   dataset: ADPC
   pkid: pkcg01
   label: "pkcg01 - linear"
-  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with linear scale"
+  description: "Individual plots of concentrations vs. time (one plot per subject) with linear scale"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkcg01_lin
   options:
@@ -143,6 +143,7 @@ g_pkcg01_lin:
       type: numeric
     ymax:
       type: numeric
+
 g_pkcg01_log:
   template: g_pkcg01_lin
   label: "pkcg01 - log"
