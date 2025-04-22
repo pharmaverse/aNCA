@@ -183,6 +183,17 @@ pkcg01 <- function(
   }
 
   if (scale == "SBS") {
+    if (!requireNamespace("ggh4x", silently = TRUE))
+      stop(
+        "Side-by-side view requires `ggh4x` package, please install it with ",
+        "`install.packages('ggh4x')`"
+      )
+    if (!requireNamespace("scales", silently = TRUE))
+      stop(
+        "Side-by-side view requires `scales` package, please install it with ",
+        "`install.packages('scales')`"
+      )
+
     # Create SBS version of data and plot
     adpc_grouped <- rbind(adpc_grouped, adpc_grouped) %>%
       dplyr::mutate(
@@ -472,8 +483,19 @@ pkcg02 <- function(
       ggplot2::labs(y = paste0("Log 10 - ", plot$labels$y))
 
   }
-
   if (scale == "SBS") {
+    if (!requireNamespace("ggh4x", silently = TRUE))
+      stop(
+        "Side-by-side view requires `ggh4x` package, please install it with ",
+        "`install.packages('ggh4x')`"
+      )
+    if (!requireNamespace("scales", silently = TRUE))
+      stop(
+        "Side-by-side view requires `scales` package, please install it with ",
+        "`install.packages('scales')`"
+      )
+
+    # Create SBS version of data and plot
     adpc_grouped <- rbind(adpc_grouped, adpc_grouped) %>%
       dplyr::mutate(
         view = c(

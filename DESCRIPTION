@@ -42,9 +42,7 @@ Imports:
     tidyr,
     units,
     utils,
-    rlang,
-    ggh4x,
-    scales
+    rlang
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
@@ -70,7 +68,9 @@ Suggests:
     shinyWidgets,
     stringi,
     tools,
-    yaml
+    yaml,
+    ggh4x,
+    scales
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
