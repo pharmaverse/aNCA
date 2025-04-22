@@ -167,6 +167,24 @@ h5 {
   color: #333; /* Dark text color */
 }
 
+/* modal for handling data duplicates */
+.modal-dialog:has(.modal-duplicates) {
+  width: 90vw;
+  max-width: 95vw;
+
+  .modal-body {
+    max-height: 90vh;
+    overflow: auto;
+
+    & > div {
+      overflow-x: auto;
+      white-space: nowrap;
+      border: 1px solid #ddd;
+      padding: 1em;
+    }
+  }
+}
+
 /* gifs */
 .gif-container {
   text-align: center;
