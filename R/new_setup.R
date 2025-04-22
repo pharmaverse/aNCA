@@ -1,84 +1,107 @@
+# Global Testing Data for aNCA Package
+# ------------------------------------
+# This file creates global testing datasets that can be used across all testthat tests.
+# Developers can either:
+# 1) Modify this file to add new cases as new lines in TEST_CONC_DATA & TEST_DOSE_DATA.
+# 2) Modify the testing file directly there, to derive the PKNCA objects for particular cases.
+#
+# The App currently performs certain modification on the PKNCA objects, numbered here:
+# Assumptions and Modifications:
+# 1) CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT).
+#    - Relevant for functions that rely on time variables (e.g., interval calculations).
+# 2) Intervals include a column (`type_interval`) differentiating custom AUC ("manual")
+#    and main parameter calculations ("main").
+#    - Relevant for interval-related functions.
+# 3) PKNCA results include `PPSTRES` and `PPSTRESU` variables.
+#    - Ensures compatibility with CDISC standards.
+# 4) `start_dose` and `end_dose` columns express the actual start and end times of the dose,
+#    relative to the first dose given to the subject.
+#    - Used for dose interval calculations.
+# 5) CDISC denomination of PK parameters (e.g., LAMZNPT, LAMZLL, LAMZ).
+#    - Temporarily needed to derive LAMZNPT and LAMZMTD.
+
+# Create Testing Concentration Data
 TEST_CONC_DATA <- data.frame(
   # Columns that are mapped from the data
-  AVAL = c( # USUBJID/DOSNO
-    0:4,                    # 1/1 (Extravascular, linear & sample at dose)
-    c(1, 2, 1.5, 1, 0.5),   # 2/1 (Extravascular eq, with max)
-    c(1, 2, 1.5, 1, 0.5),   # 2/2 (Extravascular eq, 2nd dose)
-    5:1,                    # 3/1 (IV bolus)
-    5:1,                    # 3/2 (IV bolus, 2nd dose)
-    rep(2, 5),              # 4/1 (IV bolus, abnormal profile)
-    c(1, 2.5, 1, 0.7, 0.5), # 5/1 (Infusion)
-    5:1,                    # 6/1 (IV bolus, metabolite)
-    c(1:3, NA, 0.5)         # 7/1 (Extravascular, with NA)
+  AVAL = c(                 # USUBJID.DOSNO
+    0:4,                    # 1.1 (Extravascular, linear & sample at dose)
+    c(1, 2, 1.5, 1, 0.5),   # 2.1 (Extravascular eq, with max)
+    c(1, 2, 1.5, 1, 0.5),   # 2.2 (Extravascular eq, 2nd dose)
+    5:1,                    # 3.1 (IV bolus)
+    5:1,                    # 3.2 (IV bolus, 2nd dose)
+    rep(2, 5),              # 4.1 (IV bolus, abnormal profile)
+    c(1, 2.5, 1, 0.7, 0.5), # 5.1 (Infusion)
+    5:1,                    # 6.1 (IV bolus, metabolite)
+    c(1:3, NA, 0.5)         # 7.1 (Extravascular, with NA)
   ),
-  AFRLT = c(
-    0:4,                   # 1/1
-    seq(0.5, 4.5, 1),      # 2/1
-    seq(5.5, 9.5, 1),      # 2/2
-    seq(0.5, 4.5, 1),      # 3/1
-    seq(5.5, 9.5, 1),      # 3/2
-    seq(0.5, 4.5, 1),      # 4/1
-    seq(0.5, 4.5, 1),      # 5/1
-    seq(0.5, 4.5, 1),      # 6/1
-    seq(0.5, 4.5, 1)       # 7/1
+  AFRLT = c(                # Assumption 1: CDISC time variables
+    0:4,                   # 1.1
+    seq(0.5, 4.5, 1),      # 2.1
+    seq(5.5, 9.5, 1),      # 2.2
+    seq(0.5, 4.5, 1),      # 3.1
+    seq(5.5, 9.5, 1),      # 3.2
+    seq(0.5, 4.5, 1),      # 4.1
+    seq(0.5, 4.5, 1),      # 5.1
+    seq(0.5, 4.5, 1),      # 6.1
+    seq(0.5, 4.5, 1)       # 7.1
   ),
-  ARRLT = c(
-    0:4,                   # 1/1
-    seq(0.5, 4.5, 1),      # 2/1
-    seq(0.5, 4.5, 1),      # 2/2
-    seq(0.5, 4.5, 1),      # 3/1
-    seq(0.5, 4.5, 1),      # 3/2
-    seq(0.5, 4.5, 1),      # 4/1
-    seq(0.5, 4.5, 1),      # 5/1
-    seq(0.5, 4.5, 1),      # 6/1
-    seq(0.5, 4.5, 1)       # 7/1
+  ARRLT = c(                # Assumption 1: CDISC time variables
+    0:4,                   # 1.1
+    seq(0.5, 4.5, 1),      # 2.1
+    seq(0.5, 4.5, 1),      # 2.2
+    seq(0.5, 4.5, 1),      # 3.1
+    seq(0.5, 4.5, 1),      # 3.2
+    seq(0.5, 4.5, 1),      # 4.1
+    seq(0.5, 4.5, 1),      # 5.1
+    seq(0.5, 4.5, 1),      # 6.1
+    seq(0.5, 4.5, 1)       # 7.1
   ),
-  NFRLT = c(
-    0:4,                   # 1/1
-    seq(0.5, 4.5, 1),      # 2/1
-    seq(5.5, 9.5, 1),      # 2/2
-    seq(0.5, 4.5, 1),      # 3/1
-    seq(5.5, 9.5, 1),      # 3/2
-    seq(0.5, 4.5, 1),      # 4/1
-    seq(0.5, 4.5, 1),      # 5/1
-    seq(0.5, 4.5, 1),      # 6/1
-    seq(0.5, 4.5, 1)       # 7/1
+  NFRLT = c(                # Assumption 1: CDISC time variables
+    0:4,                   # 1.1
+    seq(0.5, 4.5, 1),      # 2.1
+    seq(5.5, 9.5, 1),      # 2.2
+    seq(0.5, 4.5, 1),      # 3.1
+    seq(5.5, 9.5, 1),      # 3.2
+    seq(0.5, 4.5, 1),      # 4.1
+    seq(0.5, 4.5, 1),      # 5.1
+    seq(0.5, 4.5, 1),      # 6.1
+    seq(0.5, 4.5, 1)       # 7.1
   ),
-  NRRLT = c(
-    0:4,                   # 1/1
-    seq(0.5, 4.5, 1),      # 2/1
-    seq(0.5, 4.5, 1),      # 2/2
-    seq(0.5, 4.5, 1),      # 3/1
-    seq(0.5, 4.5, 1),      # 3/2
-    seq(0.5, 4.5, 1),      # 4/1
-    seq(0.5, 4.5, 1),      # 5/1
-    seq(0.5, 4.5, 1),      # 6/1
-    seq(0.5, 4.5, 1)       # 7/1
+  NRRLT = c(                # Assumption 1: CDISC time variables
+    0:4,                   # 1.1
+    seq(0.5, 4.5, 1),      # 2.1
+    seq(0.5, 4.5, 1),      # 2.2
+    seq(0.5, 4.5, 1),      # 3.1
+    seq(0.5, 4.5, 1),      # 3.2
+    seq(0.5, 4.5, 1),      # 4.1
+    seq(0.5, 4.5, 1),      # 5.1
+    seq(0.5, 4.5, 1),      # 6.1
+    seq(0.5, 4.5, 1)       # 7.1
   ),
   ROUTE = c(
-    rep("extravascular", 5*3), # 1/1 - 2/2
-    rep("intravascular", 5*6) # 3/1 - 7/1
+    rep("extravascular", 5 * 3), # 1.1 - 2.2
+    rep("intravascular", 5 * 6)  # 3.1 - 7.1
   ),
   PARAM = c(
-    rep("A", 5*7),          # 1/1 - 5/1	
-    rep("B", 5*1),          # 6/1 (IV bolus, metabolite)
-    rep("A", 5*1)           # 7/1 (Extravascular, with NA)
+    rep("A", 5 * 7),          # 1.1 - 5.1
+    rep("B", 5 * 1),          # 6.1 (IV bolus, metabolite)
+    rep("A", 5 * 1)           # 7.1 (Extravascular, with NA)
   ),
   USUBJID = c(
     rep(1, 5),
-    rep(2, 5*2),
-    rep(3, 5*2),
+    rep(2, 5 * 2),
+    rep(3, 5 * 2),
     rep(4, 5),
     rep(5, 5),
     rep(6, 5),
     rep(7, 5)
   ),
   DOSNO = c(
-    rep(1, 5), 
+    rep(1, 5),
     rep(1:2, each = 5),
-    rep(1:2, each = 5), 
-    rep(1, 5), 
-    rep(1, 5), 
+    rep(1:2, each = 5),
+    rep(1, 5),
+    rep(1, 5),
     rep(1, 5),
     rep(1, 5)
   ),
@@ -88,6 +111,7 @@ TEST_CONC_DATA <- data.frame(
   exclude_half.life = FALSE
 )
 
+# Create Testing Dose Data
 TEST_DOSE_DATA <- data.frame(
   AFRLT = c(
     0,
@@ -126,7 +150,7 @@ TEST_DOSE_DATA <- data.frame(
     0
   ),
   ROUTE = c(
-    rep("extravascular", 3), 
+    rep("extravascular", 3),
     rep("intravascular", 5),
     "extravascular"
   ),
@@ -134,7 +158,7 @@ TEST_DOSE_DATA <- data.frame(
   DRUG = "A",
   ADOSEDUR = c(
     rep(0, 6),
-    1,            # 5/1 (Infussion)
+    1,            # 5.1 (Infusion)
     0,
     0
   ),
@@ -158,14 +182,14 @@ TEST_DOSE_DATA <- data.frame(
   )
 )
 
-# Perform NCA analysis
+# Perform NCA Analysis
 main_intervals <- data.frame(
   start = c(0, 5),
   end = c(5, 10),
   half.life = TRUE,
   cmax = TRUE,
   aucint.last = FALSE,
-  type_interval = "main",
+  type_interval = "main",  # Assumption 2: Include type_interval column
   DOSNO = c(1, 2)
 ) %>%
   left_join(
@@ -179,7 +203,7 @@ auc_intervals <- data.frame(
   half.life = FALSE,
   cmax = FALSE,
   aucint.last = TRUE,
-  type_interval = "manual",
+  type_interval = "manual",  # Assumption 2: Include type_interval column
   DOSNO = c(1, 2)
 ) %>%
   left_join(
@@ -190,48 +214,37 @@ auc_intervals <- data.frame(
 options <- PKNCA::PKNCA.options()
 options$keep_interval_cols <- c("DOSNO", "type_interval")
 
- TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(TEST_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
-    data.dose = PKNCA::PKNCAdose(TEST_DOSE_DATA, ADOSE ~ AFRLT | USUBJID),
-    intervals = rbind(
-      main_intervals,
-      auc_intervals
-    ),
-    options = options,
-    units = PKNCA::pknca_units_table(
-      concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-    )
+TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
+  data.conc = PKNCA::PKNCAconc(TEST_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
+  data.dose = PKNCA::PKNCAdose(TEST_DOSE_DATA, ADOSE ~ AFRLT | USUBJID),
+  intervals = rbind(main_intervals, auc_intervals),
+  options = options,
+  units = PKNCA::pknca_units_table(
+    concu = "ng.mL", doseu = "mg.kg", amountu = "mg", timeu = "hr"
   )
+)
 
+# Add start_dose and end_dose columns
 TEST_PKNCA_RES <- PKNCA::pk.nca(TEST_PKNCA_DATA)
 
-
-# Create PKNCA results object from 0 with sample concentration and dose datasets
-# Additional conditions to PKNCA assumptions need to be made:
-# 1) CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT)
-# 2) For the intervals create a column (type_interval) that differentiates between
-# custom AUC ranges ("manual") and main parameter calculations ("main")
-# 3) There are PPSTRES and PPSTRESU variables in the PKNCA results output
-# 4) start_dose & end_dose columns expressing when the actual start and actual end
-# of the dose happened. The time reference is the first dose given to the subject.
-# 5) CDISC denomination of PK parameters (needed temporarily to derive LAMZNPT & LAMZMTD)
-TEST_DOSE_DATA_to_join <- select(
+TEST_DOSE_DATA_TO_JOIN <- select(
   TEST_PKNCA_RES$data$dose$data,
   -exclude,
   -TEST_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
 )
+
 TEST_PKNCA_RES$result <- TEST_PKNCA_RES$result %>%
-  # Function assumes dose time information is added to PKNCA results
   inner_join(
-    TEST_DOSE_DATA_to_join,
-    by = intersect(names(.), names(TEST_DOSE_DATA_to_join))
+    TEST_DOSE_DATA_TO_JOIN,
+    by = intersect(names(.), names(TEST_DOSE_DATA_TO_JOIN))
   ) %>%
-  # Function assumes start_dose, end_dose, PPSTRES, PPSTRESU
   mutate(
+    # Assumption 4: start_dose &  end_dose relative to the dose time
     start_dose = start - !!sym(TEST_PKNCA_RES$data$dose$columns$time),
     end_dose = end - !!sym(TEST_PKNCA_RES$data$dose$columns$time),
+    # Assumption 3: PPSTRESU & PPSTRES are always in the results object
     PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
     PPSTRES = PPORRES,
-    # Function assumes PPTESTCD is following CDISC standards
+    # Assumption 5: PPTESTCD column folllows CDISC format
     PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
   )
