@@ -43,14 +43,14 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     log_error("Unmapped columns detected.")
     showNotification("Some required columns are not mapped.
                      Please complete all selections.", type = "error", duration = 5)
-    return()
+    return(NULL)
   }
 
   if (any(duplicated(unlist(selected_cols)))) {
     log_error("Duplicate column selection detected.")
     showNotification("Duplicate column selection detected.
                      Please ensure each selection is unique.", type = "error", duration = 5)
-    return()
+    return(NULL)
   }
 
   selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
