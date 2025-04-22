@@ -216,11 +216,13 @@ options$keep_interval_cols <- c("DOSNO", "type_interval")
 
 TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
   data.conc = PKNCA::PKNCAconc(TEST_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
-  data.dose = PKNCA::PKNCAdose(TEST_DOSE_DATA, ADOSE ~ AFRLT | USUBJID),
+  data.dose = PKNCA::PKNCAdose(TEST_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
+                               route = "ROUTE", duration = "ADOSEDUR",
+                               time.nominal = "NFRLT"),
   intervals = rbind(main_intervals, auc_intervals),
   options = options,
   units = PKNCA::pknca_units_table(
-    concu = "ng.mL", doseu = "mg.kg", amountu = "mg", timeu = "hr"
+    concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
   )
 )
 
