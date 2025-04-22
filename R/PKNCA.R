@@ -71,7 +71,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     ADNCA = adnca_data,
     group_columns = c(group_columns, usubjid_column, analyte_column),
     time_column = time_column,
-    since_lastdose_time_column = "ARRLT",
+    rrlt_column = "ARRLT",
     route_column = route_column
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))

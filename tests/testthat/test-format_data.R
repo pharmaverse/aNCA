@@ -18,7 +18,7 @@ test_that("format_pkncaconc_data generates correct dataset", {
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "PARAM"),
                                    time_column = "AFRLT",
-                                   since_lastdose_time_column = "ARRLT")
+                                   rrlt_column = "ARRLT")
 
   # Test if df_conc is a data frame
   expect_s3_class(df_conc, "data.frame")
@@ -61,7 +61,7 @@ test_that("format_pkncaconc_data generates correct dataset with multiple doses",
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "PARAM"),
                                    time_column = "AFRLT",
-                                   since_lastdose_time_column = "ARRLT")
+                                   rrlt_column = "ARRLT")
 
   # Test if df_conc is a data frame
   expect_s3_class(df_conc, "data.frame")

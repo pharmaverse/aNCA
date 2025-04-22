@@ -5,7 +5,7 @@
 #' @param ADNCA A data frame containing the ADNCA data.
 #' @param group_columns A character vector specifying the columns to group by.
 #' @param time_column A character string specifying the time column.
-#' @param since_lastdose_time_column A character string specifying the time since last dose column.
+#' @param rrlt_column A character string specifying the time since last dose column.
 #' @param route_column A character string specifying the route column.
 #'
 #' @returns A data frame containing the filtered and processed concentration data.
@@ -33,14 +33,14 @@
 format_pkncaconc_data <- function(ADNCA,
                                   group_columns,
                                   time_column = "AFRLT",
-                                  since_lastdose_time_column = "ARRLT",
+                                  rrlt_column = "ARRLT",
                                   route_column = "ROUTE") {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
 
   missing_columns <- setdiff(c(group_columns, time_column,
-                               since_lastdose_time_column), colnames(ADNCA))
+                               rrlt_column), colnames(ADNCA))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
@@ -50,7 +50,7 @@ format_pkncaconc_data <- function(ADNCA,
     arrange(!!sym(time_column)) %>%
     mutate(TIME = !!sym(time_column)) %>%
     mutate( #round to prevent floating point precision issues
-      TIME_DOSE = round(!!sym(time_column) - !!sym(since_lastdose_time_column), 6)
+      TIME_DOSE = round(!!sym(time_column) - !!sym(rrlt_column), 6)
     ) %>%
     mutate(std_route = ifelse(
                               grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
