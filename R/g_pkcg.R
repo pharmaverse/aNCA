@@ -47,8 +47,7 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
-#' @importFrom scales breaks_log label_log
-#' @importFrom ggh4x scale_y_facet
+#' @importFrom stats setNames
 #'
 #' @examples
 #' \dontrun{
@@ -364,8 +363,7 @@ g_pkcg02_log <- function(data, ...) {
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
-#' @importFrom scales breaks_log label_log
-#' @importFrom ggh4x scale_y_facet
+#' @importFrom stats setNames
 
 #' @examples
 #' \dontrun{
