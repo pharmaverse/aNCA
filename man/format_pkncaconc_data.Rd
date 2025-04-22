@@ -8,7 +8,7 @@ format_pkncaconc_data(
   ADNCA,
   group_columns,
   time_column = "AFRLT",
-  since_lastdose_time_column = "ARRLT",
+  rrlt_column = "ARRLT",
   route_column = "ROUTE"
 )
 }
@@ -19,7 +19,7 @@ format_pkncaconc_data(
 
 \item{time_column}{A character string specifying the time column.}
 
-\item{since_lastdose_time_column}{A character string specifying the time since last dose column.}
+\item{rrlt_column}{A character string specifying the time since last dose column.}
 
 \item{route_column}{A character string specifying the route column.}
 }
