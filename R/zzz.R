@@ -15,6 +15,7 @@
     "conv_factor",
     "Count.missing",
     "Count.total",
+    "DFLAG",
     "DOSEA",
     "DOSNO",
     "Dataset",
