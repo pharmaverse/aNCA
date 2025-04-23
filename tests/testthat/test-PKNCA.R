@@ -58,16 +58,16 @@ describe("PKNCA_create_data_object", {
 
   it("handles missing columns required for the functions in the input data", {
     # Missing columns in the function
-    missing_columns_conc <- simple_data[, -which(names(simple_data) %in%  c("ARRLT"))]
+    missing_columns_conc <- simple_data[, -which(names(simple_data) %in%  c("AFRLT"))]
     expect_error(
       PKNCA_create_data_object(missing_columns_conc),
-      paste("Missing required columns: ARRLT")
+      paste("Missing required columns: AFRLT")
     )
 
-    missing_columns_dose <- simple_data[, -which(names(simple_data) %in%  c("AFRLT"))]
+    missing_columns_dose <- simple_data[, -which(names(simple_data) %in%  c("ARRLT"))]
     expect_error(
       PKNCA_create_data_object(missing_columns_dose),
-      paste("Missing required columns: AFRLT")
+      paste("Missing required columns: ARRLT")
     )
 
   })
