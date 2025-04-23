@@ -26,11 +26,11 @@ describe("dose_profile_duplicates", {
     last_dose_rows <- result[result$DOSNO == 3, ]
     expect_equal(nrow(last_dose_rows), 4)
   })
-  
+
   it("should return data with IX column if only one dose is present", {
     single_dose_data <- conc_data %>%
       filter(DOSNO == 1)
-    
+
     result_single_dose <- dose_profile_duplicates(single_dose_data,
                                                   groups = c("USUBJID", "DOSNO"),
                                                   dosno = "DOSNO")
