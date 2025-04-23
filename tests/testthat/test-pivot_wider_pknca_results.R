@@ -14,11 +14,18 @@ pwres <- pivot_wider_pknca_results(TEST_PKNCA_RES)
 
   # Extract unique parameter names with units
   names_params <- TEST_PKNCA_RES$result %>%
-    mutate(PPTESTCD2 = case_when(
-      type_interval == "manual" ~ paste0(PPTESTCD, "_", start, "-", end),
-      PPSTRESU == "" | PPSTRESU == "unitless" ~ PPTESTCD,
-      TRUE ~ paste0(PPTESTCD, "[", PPSTRESU, "]")
-    )) %>%
+    mutate(
+      PPSTRESU2 = ifelse(
+        PPSTRESU %in% c("", "unitless", "fraction"),
+        "",
+        paste0("[", PPSTRESU, "]")
+      ),
+      PPTESTCD2 = ifelse(
+        type_interval == "manual",
+        paste0(PPTESTCD, "_", start, "-", end, PPSTRESU2),
+        paste0(PPTESTCD, PPSTRESU2)
+      ),
+    ) %>%
     pull(PPTESTCD2) %>%
     unique()
 
@@ -27,9 +34,9 @@ pwres <- pivot_wider_pknca_results(TEST_PKNCA_RES)
     pptestcd <- gsub("\\[.*\\]", "", param_col)  # Remove units from parameter name
 
     if (grepl("AUCINT_[0-9]+\\-[0-9]", param_col)) {
-      pptestcd <- gsub("_[0-9]+\\-[0-9]", "", param_col)
-      auc_start <- gsub("AUCINT_([0-9]+)\\-[0-9]", "\\1", param_col)
-      auc_end <- gsub("AUCINT_[0-9]+\\-([0-9]+)", "\\1", param_col)
+      auc_start <- gsub("AUCINT_([0-9]+)\\-[0-9]", "\\1", pptestcd)
+      auc_end <- gsub("AUCINT_[0-9]+\\-([0-9]+)", "\\1", pptestcd)
+      pptestcd <- gsub("_[0-9]+\\-[0-9]", "", pptestcd)
 
       original_data <- TEST_PKNCA_RES$result %>%
         filter(start == auc_start,
@@ -101,7 +108,7 @@ describe("pivot_wider_pknca_results", {
       "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
       "LAMZSPN", "LAMZIX", "LAMZMTD", "Exclude",
-      "AUCINT_0-2", "AUCINT_2-4"
+      "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]"
     )
     expect_true(all(expected_columns %in% colnames(pwres)))
 
@@ -111,16 +118,15 @@ describe("pivot_wider_pknca_results", {
   it("rounds numeric values to three decimals", {
     expected_num_param_cols <- c(
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
-      "R2", "R2ADJ", "LAMZLL[hr]",
-      "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
-      "LAMZSPN", "AUCINT_0-2", "AUCINT_2-4"
+      "R2", "R2ADJ", "LAMZLL[hr]", "LAMZNPT[count]", "LAMZSPN",
+      "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]"
     )
     rounded_values <- pwres[, expected_num_param_cols]
     expect_true(all(apply(rounded_values, 2,
                           function(x) all(na.omit(abs(x - round(x, 3))) < 1e-9))))
   })
 
-  it("adds appropriate labels to columns", {
+  it("adds appropriate labels to columns (CDISC PPTEST)", {
     labels <- formatters::var_labels(pwres)
     expected_labels <- c(
       USUBJID = NA, PARAM = NA, start = NA, end = NA, DOSNO = NA, AFRLT = NA, ARRLT = NA,
@@ -129,8 +135,8 @@ describe("pivot_wider_pknca_results", {
       `TLST[hr]` = "Time of Last Nonzero Conc", `LAMZ[1/hr]` = "Lambda z",
       `R2` = "R Squared", `R2ADJ` = "R Squared Adjusted",
       `LAMZLL[hr]` = "Lambda z Lower Limit", `LAMZNPT[count]` = "Number of Points for Lambda z",
-      `CLSTP[ng/mL]` = "Clast pred", `LAMZHL[hr]` = "Half-Life Lambda z",
-      `LAMZSPN` = "Lambda z Span", `AUCINT_0-2` = NA, `AUCINT_2-4` = NA,
+      `CLSTP[ng/mL]` = "Clast pred", `LAMZHL[hr]` = "Half-Life Lambda z", `LAMZSPN` = "Lambda z Span",
+      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2", `AUCINT_2-4[hr*ng/mL]` = "AUC from T1 to T2",
       `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
     expect_equal(labels, expected_labels)
