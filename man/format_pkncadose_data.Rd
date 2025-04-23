@@ -4,14 +4,24 @@
 \alias{format_pkncadose_data}
 \title{Create PK Dose Dataset}
 \usage{
-format_pkncadose_data(pkncaconc_data, group_columns, time_column = "AFRLT")
+format_pkncadose_data(
+  pkncaconc_data,
+  group_columns,
+  dosno_column = NULL,
+  time_column = "AFRLT",
+  since_lastdose_time_column = "ARRLT"
+)
 }
 \arguments{
 \item{pkncaconc_data}{A data frame containing the concentration data.}
 
 \item{group_columns}{A character vector specifying the columns to group by.}
 
+\item{dosno_column}{A character string specifying the dose number column.}
+
 \item{time_column}{A character string specifying the time column.}
+
+\item{since_lastdose_time_column}{A character string specifying the time since last dose column.}
 }
 \value{
 A data frame containing the dose data.
@@ -23,6 +33,7 @@ This function creates a pharmacokinetic dose dataset from the provided concentra
 The function performs the following steps:
 \itemize{
 \item Arranges and groups the data by group_columns
-\item Selects the first row within each group (arranged by time of dose)
+\item Derives the dose time as: time_column - since_lastdose_time_column
+\item Selects the first row within each group (arranged by since_lastdose_time_column)
 }
 }
