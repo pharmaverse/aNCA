@@ -249,11 +249,10 @@ TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
                                time.nominal = "NFRLT"),
   units = PKNCA::pknca_units_table(
     concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-  ),
-  options = list(keep_interval_cols = c("DOSNO", "type_interval"))
+  )
 )
 TEST_PKNCA_DATA$intervals <- INTERVALS
-TEST_PKNCA_DATA$options$keep_interval_cols <- c("DOSNO", "type_interval")
+TEST_PKNCA_DATA$options <- list(keep_interval_cols = c("DOSNO", "type_interval"))
 
 # Add start_dose and end_dose columns
 TEST_PKNCA_RES <- withCallingHandlers(
