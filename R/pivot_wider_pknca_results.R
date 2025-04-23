@@ -61,7 +61,7 @@ pivot_wider_pknca_results <- function(myres) {
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
       mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
-      select(conc_groups, DOSNO, start, end, LAMZIX, LAMZMTD) %>%
+      select(any_of(c(conc_groups, "DOSNO", "start", "end", "LAMZIX", "LAMZMTD"))) %>%
       unique()
   }
   ############################################################################################

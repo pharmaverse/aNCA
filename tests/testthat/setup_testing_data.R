@@ -211,8 +211,6 @@ auc_intervals <- data.frame(
       select(USUBJID, DOSNO) %>%
       unique()
   )
-options <- PKNCA::PKNCA.options()
-options$keep_interval_cols <- c("DOSNO", "type_interval")
 
 TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
   data.conc = PKNCA::PKNCAconc(TEST_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
@@ -220,14 +218,22 @@ TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
                                route = "ROUTE", duration = "ADOSEDUR",
                                time.nominal = "NFRLT"),
   intervals = rbind(main_intervals, auc_intervals),
-  options = options,
   units = PKNCA::pknca_units_table(
     concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
   )
 )
+TEST_PKNCA_DATA$options$keep_interval_cols <- c("DOSNO", "type_interval")
 
 # Add start_dose and end_dose columns
-TEST_PKNCA_RES <- PKNCA::pk.nca(TEST_PKNCA_DATA)
+TEST_PKNCA_RES <- withCallingHandlers(
+  PKNCA::pk.nca(TEST_PKNCA_DATA),
+  warning = function(w) {
+    # Suppress warnings matching the regex "Too few points for half-life"
+    if (grepl("^Too few points for half-life", conditionMessage(w))) {
+      invokeRestart("muffleWarning")
+    }
+  }
+)
 
 TEST_DOSE_DATA_TO_JOIN <- select(
   TEST_PKNCA_RES$data$dose$data,
