@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9061</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9060</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,8 +54,8 @@
 <span>  <span class="va">ADNCA</span>,</span>
 <span>  <span class="va">group_columns</span>,</span>
 <span>  time_column <span class="op">=</span> <span class="st">"AFRLT"</span>,</span>
-<span>  rrlt_column <span class="op">=</span> <span class="st">"ARRLT"</span>,</span>
-<span>  route_column <span class="op">=</span> <span class="st">"ROUTE"</span></span>
+<span>  route_column <span class="op">=</span> <span class="st">"ROUTE"</span>,</span>
+<span>  dosno_column <span class="op">=</span> <span class="st">"DOSNO"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,12 +75,12 @@
 <dd><p>A character string specifying the time column.</p></dd>
 
 
-<dt id="arg-rrlt-column">rrlt_column<a class="anchor" aria-label="anchor" href="#arg-rrlt-column"></a></dt>
-<dd><p>A character string specifying the time since last dose column.</p></dd>
-
-
 <dt id="arg-route-column">route_column<a class="anchor" aria-label="anchor" href="#arg-route-column"></a></dt>
 <dd><p>A character string specifying the route column.</p></dd>
+
+
+<dt id="arg-dosno-column">dosno_column<a class="anchor" aria-label="anchor" href="#arg-dosno-column"></a></dt>
+<dd><p>A character string specifying the dose number column.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -90,8 +90,10 @@
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function performs the following steps:</p><ul><li><p>Groups the data by groups_column.</p></li>
-<li><p>Calculates <code>TIME_DOSE</code>as the time of dose reference by the PK sample</p></li>
+<li><p>Arranges the data by time_column.</p></li>
+<li><p>Adds a 'TIME' column.</p></li>
 <li><p>Adds a 'std_route' column taking values "intravascular" or "extravascular".</p></li>
+<li><p>Adds an index column ('IX') 1:n within each group of length n.</p></li>
 <li><p>Arranges the data by group_columns.</p></li>
 </ul></div>
 
