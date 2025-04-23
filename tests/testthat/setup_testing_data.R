@@ -212,15 +212,34 @@ auc_intervals <- data.frame(
       unique()
   )
 
+INTERVALS <- rbind(main_intervals, auc_intervals) %>%
+  mutate(impute = case_when(
+    USUBJID == 1 & DOSNO == 1 ~ NA_character_,
+    USUBJID == 2 & DOSNO == 1 ~ "start_conc0",
+    USUBJID == 2 & DOSNO == 2 ~ "start_predose",
+    USUBJID == 3 & DOSNO == 1 ~ "start_logslope",
+    USUBJID == 3 & DOSNO == 2 ~ "start_logslope",
+    USUBJID == 4 & DOSNO == 1 ~ "start_c1",
+    USUBJID == 4 & DOSNO == 2 ~ "start_c1",
+    USUBJID == 5 & DOSNO == 1 ~ "start_conc0",
+    USUBJID == 5 & DOSNO == 2 ~ "start_conc0",
+    USUBJID == 6 & DOSNO == 1 ~ "start_conc0",
+    USUBJID == 6 & DOSNO == 2 ~ "start_conc0",
+    USUBJID == 7 & DOSNO == 1 ~ "start_conc0",
+    USUBJID == 7 & DOSNO == 2 ~ "start_conc0",
+    TRUE ~ NA_character_
+  ))
+
 TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
   data.conc = PKNCA::PKNCAconc(TEST_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
   data.dose = PKNCA::PKNCAdose(TEST_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
                                route = "ROUTE", duration = "ADOSEDUR",
                                time.nominal = "NFRLT"),
-  intervals = rbind(main_intervals, auc_intervals),
   units = PKNCA::pknca_units_table(
     concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-  )
+  ),
+  intervals = INTERVALS,
+  options = list(keep_interval_cols = c("DOSNO", "type_interval"))
 )
 TEST_PKNCA_DATA$options$keep_interval_cols <- c("DOSNO", "type_interval")
 

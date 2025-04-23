@@ -135,7 +135,8 @@ describe("pivot_wider_pknca_results", {
       `TLST[hr]` = "Time of Last Nonzero Conc", `LAMZ[1/hr]` = "Lambda z",
       `R2` = "R Squared", `R2ADJ` = "R Squared Adjusted",
       `LAMZLL[hr]` = "Lambda z Lower Limit", `LAMZNPT[count]` = "Number of Points for Lambda z",
-      `CLSTP[ng/mL]` = "Clast pred", `LAMZHL[hr]` = "Half-Life Lambda z", `LAMZSPN` = "Lambda z Span",
+      `CLSTP[ng/mL]` = "Clast pred", `LAMZHL[hr]` = "Half-Life Lambda z",
+      `LAMZSPN` = "Lambda z Span",
       `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2", `AUCINT_2-4[hr*ng/mL]` = "AUC from T1 to T2",
       `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
@@ -144,14 +145,14 @@ describe("pivot_wider_pknca_results", {
 
   it("handles exclude values correctly", {
     # Modify TEST_PKNCA_RES$result to include exclude values
-    pwres_with_exclude <- TEST_PKNCA_RES
-    pwres_with_exclude$result <- pwres_with_exclude$result %>%
+    res_with_exclude <- TEST_PKNCA_RES
+    res_with_exclude$result <- res_with_exclude$result %>%
       mutate(
         exclude = ifelse(USUBJID == 1 & DOSNO == 1, "Reason 1; Reason 2", NA_character_)
       )
 
     # Apply pivot_wider_pknca_results
-    result <- pivot_wider_pknca_results(pwres_with_exclude)
+    result <- pivot_wider_pknca_results(res_with_exclude)
 
     # Check that the Exclude column combines and deduplicates exclude values
     exclude_values <- result %>% filter(USUBJID == 1 & DOSNO == 1) %>% pull(Exclude)
