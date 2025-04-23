@@ -66,7 +66,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
       req(res_nca())
 
       group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
-                            "USUBJID")
+                            # By default SUBJECT column is aggregated
+                            res_nca()$data$conc$columns$subject)
       classification_cols <- sort(c(grouping_vars(), "DOSEA", "DOSNO"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
@@ -90,9 +91,11 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
 
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))
+      results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
       stats_data <- inner_join(
         results$result,
-        select(res_nca()$data$conc$data, any_of(cols_to_join))
+        results_to_join,
+        by = intersect(names(results$result), names(results_to_join))
       ) %>%
         filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
         mutate(PPTESTCD = ifelse(
