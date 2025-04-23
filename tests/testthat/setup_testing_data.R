@@ -183,6 +183,8 @@ TEST_DOSE_DATA <- data.frame(
 )
 
 # Perform NCA Analysis
+all_params = setdiff(names(PKNCA::get.interval.cols()),
+                     c("start", "end"))
 main_intervals <- data.frame(
   start = c(0, 5),
   end = c(5, 10),
@@ -196,6 +198,12 @@ main_intervals <- data.frame(
     TEST_DOSE_DATA %>%
       select(USUBJID, DOSNO) %>%
       unique()
+  )
+main_intervals[, all_params] <- F
+main_intervals <- main_intervals %>%
+  mutate(
+      half.life = TRUE,
+      cmax = TRUE
   )
 auc_intervals <- data.frame(
   start = c(0, 2),
@@ -211,7 +219,11 @@ auc_intervals <- data.frame(
       select(USUBJID, DOSNO) %>%
       unique()
   )
-
+auc_intervals[, all_params] <- F
+auc_intervals <- auc_intervals %>%
+  mutate(
+    aucint.last = TRUE
+  )
 INTERVALS <- rbind(main_intervals, auc_intervals) %>%
   mutate(impute = case_when(
     USUBJID == 1 & DOSNO == 1 ~ NA_character_,
@@ -237,10 +249,9 @@ TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
                                time.nominal = "NFRLT"),
   units = PKNCA::pknca_units_table(
     concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-  ),
-  intervals = INTERVALS,
-  options = list(keep_interval_cols = c("DOSNO", "type_interval"))
+  )
 )
+TEST_PKNCA_DATA$intervals = INTERVALS
 TEST_PKNCA_DATA$options$keep_interval_cols <- c("DOSNO", "type_interval")
 
 # Add start_dose and end_dose columns
