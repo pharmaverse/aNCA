@@ -71,3 +71,29 @@ describe("parse_annotation", {
     )
   })
 })
+
+describe(".plotly_empty_plot", {
+  it("returns a plotly object", {
+    plot <- .plotly_empty_plot()
+    expect_s3_class(plot, "plotly")
+  })
+
+  it("displays the default message when no argument is provided", {
+    plot <- .plotly_empty_plot()
+    annotations <- plot$x$layoutAttrs[[1]]$annotations
+    expect_equal(annotations$text, "No data available")
+  })
+
+  it("displays a custom message when provided", {
+    custom_message <- "Custom message"
+    plot <- .plotly_empty_plot(custom_message)
+    annotations <- plot$x$layoutAttrs[[1]]$annotations
+    expect_equal(annotations$text, "Custom message")
+  })
+
+  it("hides axes in the plot", {
+    plot <- .plotly_empty_plot()
+    expect_false(plot$x$layoutAttrs[[1]]$xaxis$visible)
+    expect_false(plot$x$layoutAttrs[[1]]$yaxis$visible)
+  })
+})
