@@ -271,21 +271,22 @@ TEST_PKNCA_RES <- withCallingHandlers(
 #
 # TODO: Substitute this dirty hard coded trick with the proper way
 TEST_PKNCA_RES$result <- TEST_PKNCA_RES$result %>%
-mutate(
-  type_interval = if ("type_interval" %in% names(.)) {
-    type_interval
-  } else {
-    ifelse(end %in% c(2, 4), "manual", "main")
-  },
-  DOSNO = if ("type_interval" %in% names(.)) {
-    DOSNO
-  } else {
-    ifelse(end %in% c(2, 5),
-           1,
-           2
-    )
-  }
-)
+  mutate(
+    type_interval = if ("type_interval" %in% names(.)) {
+      type_interval
+    } else {
+      ifelse(end %in% c(2, 4), "manual", "main")
+    },
+    DOSNO = if ("type_interval" %in% names(.)) {
+      DOSNO
+    } else {
+      ifelse(
+        end %in% c(2, 5),
+        1,
+        2
+      )
+    }
+  )
 #####################################################################
 
 TEST_DOSE_DATA_TO_JOIN <- select(
