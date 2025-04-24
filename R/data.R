@@ -12,9 +12,9 @@
 #'   \item{FUN}{PKNCA function used to calculate the parameter}
 #'   \item{description}{PKNCA description of the term}
 #'   \item{is_cdisc_sure}{Logical indicating if the term is a CDISC official name}
-#'   \item{pretty_name}{PKNCA pretty name of the term}
 #'   \item{unit_type}{Type of unit associated with the term}
-#'   \item{type}{Arbitrary assigned subclass for the parameter/term}
+#'   \item{TYPE}{Type of data associated with the parameter/term}
+#'   \item{CAT}{Arbitrary assigned subclass for the parameter/term}
 #'   \item{Depends}{PKNCA derived. Designates all directly used parameters in calculation}\
 #' }
 #' @source Generated for use in the `translate_nomenclature` function.
