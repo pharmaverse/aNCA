@@ -35,9 +35,9 @@ apply_labels <- function(data, labels_df, type) {
 
   for (col in colnames(data)) {
     if (col %in% names(label_adnca)) {
-      attr(data[[col]], "label") <- label_adnca[[col]]
+      base::attr(data[[col]], "label") <- label_adnca[[col]]
     } else {
-      attr(data[[col]], "label") <- col
+      base::attr(data[[col]], "label") <- col
     }
 
     # Check if the column is a factor and keep the levels order
