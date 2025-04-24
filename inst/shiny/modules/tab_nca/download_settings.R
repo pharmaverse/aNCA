@@ -57,16 +57,16 @@ download_settings_server <- function(id, pknca_data, res_nca) {
             ),
             method = input$method,
             adj.r.squared_threshold = ifelse(
-              input$rule_adj_r_squared, input$adj.r.squared_threshold, NA
+              input$adj.r.squared_rule, input$adj.r.squared_threshold, NA
             ),
             aucpext.obs_threshold = ifelse(
-              input$rule_aucpext_obs, input$aucpext.obs_threshold, NA
+              input$aucpext.obs.rule, input$aucpext.obs_threshold, NA
             ),
             aucpext.pred_threshold = ifelse(
-              input$rule_aucpext_pred, input$aucpext.pred_threshold, NA
+              input$aucpext.pred.rule, input$aucpext.pred_threshold, NA
             ),
             span.ratio_threshold = ifelse(
-              input$rule_span_ratio, input$span.ratio_threshold, NA
+              input$span.ratio.rule, input$span.ratio_threshold, NA
             ),
             auc_mins = if (is.null(auc_mins)) NA else paste(auc_mins, collapse = ","),
             auc_maxs = if (is.null(auc_maxs)) NA else paste(auc_maxs, collapse = ",")
