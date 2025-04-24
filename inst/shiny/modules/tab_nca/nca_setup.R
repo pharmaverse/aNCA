@@ -466,8 +466,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
                  })
 
     # Create trigger for modifications to the user setup
-    # Debounce trigger signal
-    setup_trigger <- debounce(reactive({
+    setup_trigger <- reactive({
       paste(
         adnca_data(),
         auc_data(),
@@ -478,12 +477,29 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         input$select_dosno,
         input$select_pcspec
       )
-    }), millis = 2500)
+    })
+
+    # Debounce the trigger, so the data is not updated too often.
+    setup_debounce <- 2500
+    setup_trigger_debounced <- debounce(setup_trigger, setup_debounce)
+
+    # On all changes, disable NCA button for given period of time to prevent the user from running
+    # the NCA before settings are applied.
+    observeEvent(setup_trigger(), {
+      runjs(str_glue(
+        "buttonTimeout(
+          '.run-nca-btn',
+          {setup_debounce + 250},
+          'Applying<br>settings...',
+          'Run NCA'
+        );"
+      ))
+    })
 
     # Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
-    slopes_pknca_data <- eventReactive(setup_trigger(), {
+    slopes_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
@@ -504,7 +520,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
     # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
-    processed_pknca_data <- eventReactive(setup_trigger(), {
+    processed_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec, auc_data())
       log_trace("Updating PKNCA::data object.")

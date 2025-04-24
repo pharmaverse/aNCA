@@ -62,7 +62,7 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
   for (input_id in names(special_cases)) {
     updateSelectizeInput(
       session, input_id,
-      choices = special_cases[[input_id]],
+      choices = c("Select Column" = "", special_cases[[input_id]]),
       selected =
         if (sub("select_", "", input_id) %in% column_names)
           sub("select_", "", input_id) else NULL
