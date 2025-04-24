@@ -10,7 +10,7 @@
 #'
 #' @param res_nca Object with results of the NCA analysis.
 #'
-#' @return A list with two data frames:
+#' @returns A list with two data frames:
 #' \describe{
 #' \item{pp}{A data frame containing the PP (Pharmacokinetic Parameters) domain data.}
 #' \item{adpp}{A data frame containing the ADPP (Analysis Dataset for Pharmacokinetic Parameters)
@@ -31,60 +31,7 @@ export_cdisc <- function(res_nca) {
     )
   )
 
-  # define columns needed for pp
-  pp_cols <- c(
-    "STUDYID",
-    "DOMAIN",
-    "USUBJID",
-    "PPSEQ",
-    "PPCAT",
-    "PPGRPID",
-    "PPSPID",
-    "PPTESTCD",
-    "PPTEST",
-    "PPSCAT",
-    "PPORRES",
-    "PPORRESU",
-    "PPSTRESC",
-    "PPSTRESN",
-    "PPSTRESU",
-    "PPSTAT",
-    "PPREASND",
-    "PPSPEC",
-    "PPRFTDTC",
-    "PPSTINT",
-    "PPENINT"
-  )
-
-  # define columns needed for adpp
-  adpp_cols <- c("STUDYID",
-                 "USUBJID",
-                 "PPSEQ",
-                 "PPGRPID",
-                 "PPSPID",
-                 "PARAMCD",
-                 "PARAM",
-                 "PPCAT",
-                 "PPSCAT",
-                 "PPREASND",
-                 "PPSPEC",
-                 "PPDTC",
-                 "PPSTINT",
-                 "PPENINT",
-                 "SUBJID",
-                 "SITEID",
-                 "SEX",
-                 "RACE",
-                 "ACTARM",
-                 "AAGE",
-                 "AAGEU",
-                 "TRT01P",
-                 "TRT01A",
-                 "AVAL",
-                 "AVALC",
-                 "AVALU")
-
-  pp_info <- res_nca$result  %>%
+  cdisc_info <- res_nca$result  %>%
     left_join(res_nca$data$dose$data,
               by = unname(unlist(res_nca$data$dose$columns$groups)),
               suffix = c("", ".y")) %>%
@@ -104,26 +51,18 @@ export_cdisc <- function(res_nca) {
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("AVISIT" %in% names(.)) paste(ANALYTE, PCSPEC, AVISIT, sep = "-")
-        else if ("VISIT" %in% names(.)) paste(ANALYTE, PCSPEC, VISIT, sep = "-")
-        else paste(ANALYTE, PCSPEC, DOSNO, sep = "-")
+        if ("AVISIT" %in% names(.)) paste(PARAM, PCSPEC, AVISIT, sep = "-")
+        else if ("VISIT" %in% names(.)) paste(PARAM, PCSPEC, VISIT, sep = "-")
+        else paste(PARAM, PCSPEC, DOSNO, sep = "-")
       },
       # Parameter Category
-      PPCAT = ANALYTE,
+      PPCAT = PARAM,
       PPSCAT = "NON-COMPARTMENTAL",
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
       # Specific ID variables
       PPSPID = paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA"),
-      SUBJID = {
-        if ("SUBJID" %in% names(.)) SUBJID
-        else if ("USUBJID" %in% names(.)) {
-          if ("STUDYID" %in% names(.)) stringr::str_remove(as.character(USUBJID),
-                                                           paste0(as.character(STUDYID),
-                                                                  "\\W?"))
-          else gsub(find_common_prefix(USUBJID), "", USUBJID)
-        }
-      },
+      SUBJID = get_subjid(.),
       # Parameter Variables
       PPORRES = round(as.numeric(PPORRES), 12),
       PPSTRESN = round(as.numeric(PPSTRES), 12),
@@ -168,25 +107,48 @@ export_cdisc <- function(res_nca) {
     ungroup()
 
   # select pp columns
-  pp <- pp_info %>% select(all_of(pp_cols))
+  pp <- cdisc_info %>%
+    select(all_of(CDISC_COLS$PP))
 
-  adpp <- pp_info %>%
+  adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(adpp_cols, "RACE", "SEX", "AGE", "AGEU", "AVISIT")))
+    select(any_of(c(CDISC_COLS$ADPP)))
+
+  adpc <- res_nca$data$conc$data %>%
+    mutate(
+      ANL01FL = ifelse(is.excluded.hl, NA_character_, "Y"),
+      SUBJID = get_subjid(.),
+      ATPT = {
+        if ("PCTPT" %in% names(.)) PCTPT
+        else NA_character_
+      },
+      ATPTN = {
+        if ("PCTPTNUM" %in% names(.)) PCTPTNUM
+        else NA
+      },
+      ATPTREF = {
+        if ("PCTPTREF" %in% names(.)) PCTPTREF
+        else NA_character_
+      }
+    ) %>%
+    # Order columns using a standard, and then put the rest of the columns
+    select(any_of(CDISC_COLS$ADPC), everything())  %>%
+    # Deselect columns that are only used internally in the App
+    select(-any_of(INTERNAL_ANCA_COLS))
 
   # Keep StudyID value to use for file naming
-  studyid <- if ("STUDYID" %in% names(pp_info)) unique(pp_info$STUDYID)[1] else ""
+  studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
 
-  list(pp = pp, adpp = adpp, studyid = studyid)
+  list(pp = pp, adpp = adpp, adpc = adpc, studyid = studyid)
 }
 
 #' Function to identify the common prefix in a character vector.
 #' @details
 #' Checks the common prefix for all provided strings. If no
 #' common prefix is detected, returns empty string.
-#'
+#'get
 #' @param strings Character vector with strings to check.
 #' @returns A character string with common prefix.
 #'
@@ -206,3 +168,141 @@ find_common_prefix <- function(strings) {
 
   substr(strings[[1]], 0, which(mismatch)[1] - 1)
 }
+
+#' Helper function to extract SUBJID from data
+#'
+#' This function extracts the `SUBJID` from the provided dataset. If `SUBJID` is not available,
+#' it attempts to derive it from `USUBJID` by removing the `STUDYID` prefix or the common prefix
+#' shared by all `USUBJID` values.
+#'
+#' @details
+#' The function first checks if `SUBJID` exists in the dataset. If not, it derives `SUBJID` from
+#' `USUBJID` by:
+#' \itemize{
+#'   \item Removing the `STUDYID` prefix if it exists.
+#'   \item Removing the longest common prefix shared by all `USUBJID` values.
+#' }
+#' If neither `SUBJID` nor `USUBJID` is available, the function returns `NA`.
+#'
+#' @param data A data frame containing `SUBJID`, `USUBJID`, and optionally `STUDYID`.
+#'
+#' @returns A vector of `SUBJID` values.
+#'
+#' @examples
+#' data <- data.frame(
+#'   STUDYID = c("STUDY1", "STUDY1"),
+#'   USUBJID = c("STUDY1-001", "STUDY1-002")
+#' )
+#' get_subjid(data)
+#'
+#' @noRd
+#' @keywords internal
+get_subjid <- function(data) {
+  if ("SUBJID" %in% names(data)) {
+    data$SUBJID
+  } else if ("USUBJID" %in% names(data)) {
+    if ("STUDYID" %in% names(data)) {
+      stringr::str_remove(as.character(data$USUBJID), paste0(as.character(data$STUDYID), "\\W?"))
+    } else {
+      gsub(find_common_prefix(data$USUBJID), "", data$USUBJID)
+    }
+  } else {
+    NA
+  }
+}
+
+
+CDISC_COLS <- list(
+  ADPC = c(
+    "STUDYID",
+    "SUBJID",
+    "USUBJID",
+    "SITEID",
+    "VISITNUM",
+    "VISIT",
+    "AVISIT",
+    "AVISITN",
+    "PCSTRESC",
+    "PCSTRESN",
+    "PCSTRESU",
+    "PCORRES",
+    "PCORRESU",
+    "PCTPT",
+    "PCTPTNUM",
+    "ATPT",
+    "ATPTN",
+    "PCSTRESC",
+    "PCSTRESN",
+    "PCSTRESU",
+    "AVAL",
+    "ANL01FL",
+    # Columns taken from the original data if present (still not directly mapped)
+    "SEX",
+    "RACE",
+    "ACTARM",
+    "AGE",
+    "AGEU",
+    "AVISIT"
+  ),
+
+  ADPP = c(
+    "STUDYID",
+    "USUBJID",
+    "PPSEQ",
+    "PPGRPID",
+    "PPSPID",
+    "PARAMCD",
+    "PARAM",
+    "PPCAT",
+    "PPSCAT",
+    "PPREASND",
+    "PPSPEC",
+    "PPDTC",
+    "PPSTINT",
+    "PPENINT",
+    "SUBJID",
+    "SITEID",
+    # Columns taken from the original data if present (still not directly mapped)
+    "SEX",
+    "RACE",
+    "ACTARM",
+    "AGE",
+    "AGEU",
+    "TRT01P",
+    "TRT01A",
+
+    "AVAL",
+    "AVALC",
+    "AVALU"
+  ),
+
+  PP = c(
+    "STUDYID",
+    "DOMAIN",
+    "USUBJID",
+    "PPSEQ",
+    "PPCAT",
+    "PPGRPID",
+    "PPSPID",
+    "PPTESTCD",
+    "PPTEST",
+    "PPSCAT",
+    "PPORRES",
+    "PPORRESU",
+    "PPSTRESC",
+    "PPSTRESN",
+    "PPSTRESU",
+    "PPSTAT",
+    "PPREASND",
+    "PPSPEC",
+    "PPRFTDTC",
+    "PPSTINT",
+    "PPENINT"
+  )
+)
+
+INTERNAL_ANCA_COLS <- c(
+  "exclude", "is.excluded.hl", "volume", "std_route",
+  "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
+  "conc_groups", "REASON"
+)
