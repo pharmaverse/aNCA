@@ -511,7 +511,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         selected_dosno = input$select_dosno,
         selected_pcspec = input$select_pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
-                   "r.squared", "adj.r.squared", "cmax"),
+                   "r.squared", "adj.r.squared", "tmax"),
         should_impute_c0 = input$should_impute_c0
       )
 

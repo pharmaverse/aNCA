@@ -47,7 +47,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
   slopes <- slopes %>%
     semi_join(
       profiles,
-      by = all_of(slope_groups)
+      by = slope_groups
     ) %>%
     filter(all(!is.na(sapply(RANGE, .eval_range))))
 
