@@ -8,8 +8,8 @@ format_pkncaconc_data(
   ADNCA,
   group_columns,
   time_column = "AFRLT",
-  rrlt_column = "ARRLT",
-  route_column = "ROUTE"
+  route_column = "ROUTE",
+  dosno_column = "DOSNO"
 )
 }
 \arguments{
@@ -19,9 +19,9 @@ format_pkncaconc_data(
 
 \item{time_column}{A character string specifying the time column.}
 
-\item{rrlt_column}{A character string specifying the time since last dose column.}
-
 \item{route_column}{A character string specifying the route column.}
+
+\item{dosno_column}{A character string specifying the dose number column.}
 }
 \value{
 A data frame containing the filtered and processed concentration data.
@@ -33,8 +33,10 @@ This function creates a pharmacokinetic concentration dataset from the provided 
 The function performs the following steps:
 \itemize{
 \item Groups the data by groups_column.
-\item Calculates \code{TIME_DOSE}as the time of dose reference by the PK sample
+\item Arranges the data by time_column.
+\item Adds a 'TIME' column.
 \item Adds a 'std_route' column taking values "intravascular" or "extravascular".
+\item Adds an index column ('IX') 1:n within each group of length n.
 \item Arranges the data by group_columns.
 }
 }
