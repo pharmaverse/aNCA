@@ -1,6 +1,3 @@
-# Use the testing data to produce results
-pwres <- pivot_wider_pknca_results(TEST_PKNCA_RES)
-
 #' Validate PKNCA Parameters
 #'
 #' This function validates that the reshaped PKNCA results contain the expected values
@@ -8,8 +5,7 @@ pwres <- pivot_wider_pknca_results(TEST_PKNCA_RES)
 #'
 #' @param TEST_PKNCA_RES The original PKNCA results object.
 #' @param pwres The pivoted results from `pivot_wider_pknca_results`.
-#' @return A logical value indicating whether all checks passed.
-#' @export
+#' @returns A logical value indicating whether all checks passed.
 .validate_pknca_params <- function(TEST_PKNCA_RES, pwres) {
 
   # Extract unique parameter names with units
@@ -70,6 +66,12 @@ pwres <- pivot_wider_pknca_results(TEST_PKNCA_RES)
 
 describe("pivot_wider_pknca_results", {
 
+  pwres <- expect_no_error(pivot_wider_pknca_results(TEST_PKNCA_RES))
+  
+  it("produces a data.frame", {
+    expect_s3_class(pwres, "data.frame")
+  })
+
   it("produces a data.frame with expected format when only reshaping main intervals", {
     res_only_main <- TEST_PKNCA_RES
     res_only_main$result <- TEST_PKNCA_RES$result  %>%
@@ -93,7 +95,7 @@ describe("pivot_wider_pknca_results", {
     expect_true(nrow(pwres_only_main) == nrow(res_only_main$data$dose$data))
 
     # Check parameter values match the ones in the PKNCA results object
-    expect_true(.validate_pknca_params(res_only_main, pwres_only_main))
+    expect_no_error(.validate_pknca_params(res_only_main, pwres_only_main))
   })
 
   it("reshapes PKNCA results correctly when also considering AUC intervals", {
@@ -112,7 +114,7 @@ describe("pivot_wider_pknca_results", {
     )
     expect_true(all(expected_columns %in% colnames(pwres)))
 
-    expect_true(.validate_pknca_params(TEST_PKNCA_RES, pwres))
+    expect_no_error(.validate_pknca_params(TEST_PKNCA_RES, pwres))
   })
 
   it("rounds numeric values to three decimals", {
