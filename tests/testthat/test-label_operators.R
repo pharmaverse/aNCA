@@ -5,9 +5,9 @@ LABELS <- data.frame(
 )
 
   #  I added next line (data <- )
-  data <- data.frame(USUBJID = 1:3, AVAL = c(10, 20, 30))
-  data <- apply_labels(data, LABELS, c("ADPC", "ADPC"))
-  print(base::attr(data$A, "label"))
+  #data <- data.frame(USUBJID = 1:3, AVAL = c(10, 20, 30))
+  #data <- apply_labels(data, LABELS, c("ADPC", "ADPC"))
+  #print(base::attr(data$A, "label"))
    
 #------------------------  apply_labels
 
@@ -21,34 +21,25 @@ describe("apply_labels", {
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
   })
 
-  
   # Here, apply to column that is a factor 
-  
   it("applies labels to the data frame", {
     data <- data.frame(USUBJID = 1:3, AVAL = c(10, 20, 30), F=factor(letters[1:3]))
     labeled_data <- apply_labels(data, LABELS, c("ADPC", "ADPC"))
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "Unique Subject Identifier")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
   })
-  # Test for no labels applied when no matching labels exist
-  it("does not apply labels if no matching labels exist", {
+
+  # Use column names when variable not in labels list
+  it("uses column names as labels when the variable is not in the labels list", {
     data <- data.frame(USUBJID = 1:3, AVAL = c(10, 20, 30))
     LABELS <- data.frame(Variable = character(),
                          Label = character(),
                          Dataset = character())
-    
     labeled_data <- apply_labels(data, LABELS, c("ADPC", "ADPC"))
-
-    # PROBLEM in next 2 lines
-    #expect_null(base::attr(labeled_data$USUBJID, "label"))
-    #expect_null(base::attr(labeled_data$AVAL, "label"))
-
-    # TEMPORARY fix
-    expect_no_error(base::attr(labeled_data$USUBJID, "label"))
-    expect_no_error(base::attr(labeled_data$AVAL, "label"))
+    expect_equal(base::attr(labeled_data$USUBJID, "label"), "USUBJID")
+    expect_equal(base::attr(labeled_data$AVAL, "label"), "AVAL")
   })
 })
-
 
 # ------------------------  as_factor_preserve_label
 vec <- c("A", "B", "C")
@@ -69,11 +60,8 @@ describe("as_factor_preserve_label", {
   })
 
 # ------------------------  has_label
-#'   # Example usage:
-#'   vec <- c("A", "B", "C")
-#'   attr(vec, "label") <- "Example Label"
-#'   has_label(vec)  # Returns TRUE
-#' }
+vec <- c("A", "B", "C")
+attr(vec, "label") <- "Example Label"
 
 describe("has_label", {
   it("returns TRUE if has label; FALSE otherwise",{
