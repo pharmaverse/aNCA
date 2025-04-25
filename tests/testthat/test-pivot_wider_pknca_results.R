@@ -67,7 +67,7 @@
 describe("pivot_wider_pknca_results", {
 
   pwres <- expect_no_error(pivot_wider_pknca_results(TEST_PKNCA_RES))
-  
+
   it("produces a data.frame", {
     expect_s3_class(pwres, "data.frame")
   })
@@ -123,9 +123,12 @@ describe("pivot_wider_pknca_results", {
       "R2", "R2ADJ", "LAMZLL[hr]", "LAMZNPT[count]", "LAMZSPN",
       "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]"
     )
-    rounded_values <- pwres[, expected_num_param_cols]
-    expect_true(all(apply(rounded_values, 2,
-                          function(x) all(na.omit(abs(x - round(x, 3))) < 1e-9))))
+    actual_values <- pwres[, expected_num_param_cols]
+    expected_values <- round(actual_values, 3)
+    diff_values <- actual_values - expected_values
+
+    all_non_nan_values_are_rounded <- all(is.na(diff_values) | diff_values == 0)
+    expect_true(all_non_nan_values_are_rounded)
   })
 
   it("adds appropriate labels to columns (CDISC PPTEST)", {
