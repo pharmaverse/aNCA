@@ -188,9 +188,6 @@ all_params <- setdiff(names(PKNCA::get.interval.cols()),
 main_intervals <- data.frame(
   start = c(0, 5),
   end = c(5, 10),
-  half.life = TRUE,
-  cmax = TRUE,
-  aucint.last = FALSE,
   type_interval = "main",  # Assumption 2: Include type_interval column
   DOSNO = c(1, 2)
 ) %>%
@@ -203,7 +200,9 @@ main_intervals[, all_params] <- FALSE
 main_intervals <- main_intervals %>%
   mutate(
     half.life = TRUE,
-    cmax = TRUE
+    cmax = TRUE,
+    auclast = TRUE,
+    aucinf.obs = TRUE
   )
 auc_intervals <- data.frame(
   start = c(0, 2),
