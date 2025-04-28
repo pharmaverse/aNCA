@@ -231,9 +231,6 @@ CDISC_COLS <- list(
     "PCTPTNUM",
     "ATPT",
     "ATPTN",
-    "PCSTRESC",
-    "PCSTRESN",
-    "PCSTRESU",
     "AVAL",
     "ANL01FL",
     # Columns taken from the original data if present (still not directly mapped)
