@@ -32,15 +32,15 @@
 #'
 #' @export
 calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
-  
+
   #check if selected_aucs are available
   if (is.null(selected_aucs) || length(selected_aucs) == 0) {
     return(NULL)
   }
-  
+
   # Extract and clean AUC selection
   auc_vars <- gsub("^f_", "", selected_aucs)
-  
+
   # Extract required columns
   route_col <- res_nca$data$dose$columns$route
   dose_col <- res_nca$data$dose$columns$dose
@@ -50,26 +50,27 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
     purrr::list_c() %>%
     append("DOSNO") %>%
     purrr::keep(~ !is.null(.) && . != "DRUG" && length(unique(res_nca$data$conc$data[[.]])) > 1)
-  
+
   # Filter and transform AUC data
   auc_data <- res_nca$result %>%
     filter(PPTESTCD %in% auc_vars) %>%
     select(any_of(id_groups), PPTESTCD, PPORRES) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
-  
+
   # Extract dose information
   dose_info <- res_nca$data$dose$data %>%
     # PARAM should not be there
     select(any_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
     distinct()
-  
+
   # Merge dose information with AUC data
   auc_data <- auc_data %>%
-    inner_join(dose_info,
-               by = intersect(
-                 names(auc_data),
-                 names(dose_info)
-               )
+    inner_join(
+      dose_info,
+      by = intersect(
+        names(auc_data),
+        names(dose_info)
+      )
     ) %>%
     rename(Route = all_of(route_col), Dose = all_of(dose_col))
 
@@ -132,7 +133,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
 #'
 #' @export
 PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
-  
+
   if (is.null(bioavailability)) {
     return(res_nca)
   }
@@ -142,12 +143,12 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
     append("DOSNO") %>%
     purrr::keep(~ !is.null(.) && . != "DRUG" &&
                   length(unique(res_nca$data$conc$data[[.]])) > 1)
-  
+
   # Pivot results data
   subj_data <- res_nca$result %>%
     select(-starts_with("PP"), -exclude) %>%
     distinct()
-  
+
   # Create bioavailability data in resnca format
   f_results <- subj_data %>%
     left_join(bioavailability, by = id_groups) %>%
@@ -159,8 +160,8 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
     mutate(PPSTRESU = "%",
            PPORRESU = "%",
            PPORRES = PPSTRES)
-  
+
   res_nca$result <- bind_rows(res_nca$result, f_results)
-  
+
   res_nca
 }
