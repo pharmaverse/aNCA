@@ -136,13 +136,22 @@ describe("pivot_wider_pknca_results", {
     expected_labels <- c(
       USUBJID = NA, PARAM = NA, start = NA, end = NA, DOSNO = NA, AFRLT = NA, ARRLT = NA,
       NFRLT = NA, NRRLT = NA, ROUTE = NA, ADOSE = NA, DRUG = NA, ADOSEDUR = NA,
-      `CMAX[ng/mL]` = "Max Conc", `TMAX[hr]` = "Time of CMAX",
-      `TLST[hr]` = "Time of Last Nonzero Conc", `LAMZ[1/hr]` = "Lambda z",
-      `R2` = "R Squared", `R2ADJ` = "R Squared Adjusted",
-      `LAMZLL[hr]` = "Lambda z Lower Limit", `LAMZNPT[count]` = "Number of Points for Lambda z",
-      `CLSTP[ng/mL]` = "Clast pred", `LAMZHL[hr]` = "Half-Life Lambda z",
+      `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
+      `CMAX[ng/mL]` = "Max Conc",
+      `TMAX[hr]` = "Time of CMAX",
+      `TLST[hr]` = "Time of Last Nonzero Conc",
+      `CLST[ng/mL]` = "Last Nonzero Conc",
+      `LAMZ[1/hr]` = "Lambda z",
+      `R2` = "R Squared",
+      `R2ADJ` = "R Squared Adjusted",
+      `LAMZLL[hr]` = "Lambda z Lower Limit",
+      `LAMZNPT[count]` = "Number of Points for Lambda z",
+      `CLSTP[ng/mL]` = "Clast pred",
+      `LAMZHL[hr]` = "Half-Life Lambda z",
       `LAMZSPN` = "Lambda z Span",
-      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2", `AUCINT_2-4[hr*ng/mL]` = "AUC from T1 to T2",
+      `AUCIFO[hr*ng/mL]` = "AUC Infinity Obs",
+      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2",
+      `AUCINT_2-4[hr*ng/mL]` = "AUC from T1 to T2",
       `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
     expect_equal(labels, expected_labels)
