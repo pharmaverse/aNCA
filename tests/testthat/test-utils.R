@@ -73,13 +73,9 @@ describe("parse_annotation", {
 })
 
 describe(".plotly_empty_plot", {
-  it("returns a plotly object", {
+  it("returns a plotly object with default message if no argument is not provided", {
     plot <- .plotly_empty_plot()
     expect_s3_class(plot, "plotly")
-  })
-
-  it("displays the default message when no argument is provided", {
-    plot <- .plotly_empty_plot()
     annotations <- plot$x$layoutAttrs[[1]]$annotations
     expect_equal(annotations$text, "No data available")
   })
