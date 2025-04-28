@@ -28,7 +28,7 @@ upload_settings_ui <- function(id) {
 #' - manual_slopes A reactive value for handling manual slopes.
 #'
 upload_settings_server <- function(id, processed_pknca_data, parent_session,
-                                   auc_counter, manual_slopes) {
+                                   auc_data, manual_slopes) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -203,10 +203,10 @@ browser()
         ungroup() %>%
         filter(type_interval == "manual") %>%
         left_join(setts$dose$data, by = c(unlist(unname(setts$dose$columns$groups)), "DOSNO")) %>%
-        mutate(start = start - !!sym(dose_time_col),
-               end = end - !!sym(dose_time_col)) %>%
-        select(start, end) %>%
-        filter(!duplicated(paste0(start, end)))
+        mutate(start_auc = start - !!sym(dose_time_col),
+               end_auc = end - !!sym(dose_time_col)) %>%
+        select(start_auc, end_auc) %>%
+        filter(!duplicated(paste0(start_auc, end_auc)))
 
       if ((nrow(intervals_userinput_setts) > 0)) {
         updateCheckboxInput(parent_session, inputId = "AUCoptions",

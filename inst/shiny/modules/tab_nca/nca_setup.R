@@ -209,7 +209,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # File Upload Handling
     # The server handles the logic for loading project settings from a file & update UI elements
     # from NCA setup (all inputs) & slope adjustments (manual_slopes table & concentration dataset)
-    upload_settings_server("upload_settings", adnca_data, session, auc_counter, manual_slopes)
+    upload_settings_server("upload_settings", adnca_data, session, auc_data, manual_slopes)
 
 
     # Include keyboard limits for the settings GUI display
