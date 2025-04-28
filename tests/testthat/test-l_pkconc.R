@@ -203,14 +203,14 @@ describe("l_pkconc", {
     expect_equal(attr(listings$`A.Plasma.Oral`, "subtitles"),
                  "Analyte: A\nSpecimen: Plasma\nAdministration: Oral")
     expect_equal(attr(listings$`A.Plasma.Oral`, "main_footer"),
-                 "*: Patients excluded from the summary table and mean plots")
+                 "*: Subjects excluded from the summary table and mean plots")
     expect_equal(attr(listings$`B.Plasma.IV`, "main_title"),
                  paste0("Listing of PK Concentration by Treatment Group,",
                         "Subject and Nominal Time, PK Population"))
     expect_equal(attr(listings$`B.Plasma.IV`, "subtitles"),
                  "Analyte: B\nSpecimen: Plasma\nAdministration: IV")
     expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"),
-                 "*: Patients excluded from the summary table and mean plots")
+                 "*: Subjects excluded from the summary table and mean plots")
 
     # Check the attributes of the columns
     expect_equal(attr(listings$`A.Plasma.Oral`$TRT01A, "label"), "Treatment")

@@ -130,6 +130,8 @@ h5 {
   right: 100px;
   top: 65px;
   z-index: 100;
+  height: 4.5rem;
+  width: 9rem;
 }
 
 .btn-help-icon {
@@ -171,6 +173,24 @@ h5 {
   font-size: 18px;
   margin-bottom: 20px;
   color: #333; /* Dark text color */
+}
+
+/* modal for handling data duplicates */
+.modal-dialog:has(.modal-duplicates) {
+  width: 90vw;
+  max-width: 95vw;
+
+  .modal-body {
+    max-height: 90vh;
+    overflow: auto;
+
+    & > div {
+      overflow-x: auto;
+      white-space: nowrap;
+      border: 1px solid #ddd;
+      padding: 1em;
+    }
+  }
 }
 
 /* gifs */
@@ -223,6 +243,22 @@ h5 {
   text-align: left !important;
   display: inline-block !important;
 }
+
+/* parameter selection gird */
+.nca-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.nca-pill {
+  background-color: #e0ecff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  text-align: center;
+}
+
 
 
 .tlg-module {
