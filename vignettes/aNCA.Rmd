@@ -38,6 +38,7 @@ Some variables are mandatory (marked with \*), while others are optional. Custom
 |                          | AVAL \*      | Analysis Value                                                     | numeric           |
 |                          |              |                                                                    |                   |
 | **Dose Variables**       | DRUG \*      | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
+|                          | DOSNO \*     | Dose Number of administration. Used to split interval calculations | numeric           |
 |                          | ROUTE \*     | Route of Administration, either {intravascular} or {extravascular} | character         |
 |                          | DOSEA \*     | Actual Treatment Dose                                              | numeric           |
 |                          | ADOSEDUR     | Actual Treatment Dose                                              | numeric           |
