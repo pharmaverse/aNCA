@@ -84,8 +84,18 @@ describe("PKNCA_create_data_object", {
     expect_equal(length(unique_analytes), 2)
 
   })
+
+  it("handles duplicates in DFLAG", {
+    # Duplicate DFLAG values
+    duplicate_data <- simple_data %>% mutate(AFRLT = c(0.5, 1, 2, 3, 3, 6))
+    duplicate_data$DFLAG <- c(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)
+    results <- PKNCA_create_data_object(duplicate_data)
+
+    # Check that flag = FALSE values are removed
+    expect_equal(nrow(results$conc$data), 5)
+  })
   # TODO: Add test for multiple units once implemented
-  # TODO: add test for duplicated rows error message
+
 })
 
 
