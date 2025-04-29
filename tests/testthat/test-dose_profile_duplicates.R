@@ -27,4 +27,13 @@ describe("dose_profile_duplicates", {
     expect_equal(nrow(last_dose_rows), 4)
   })
 
+  it("should return original data when input has only one dose", {
+    conc_data_one_dose <- conc_data[conc_data$DOSNO == 1, ]
+    result_one_dose <- dose_profile_duplicates(
+      conc_data_one_dose,
+      groups = c("USUBJID", "DOSNO"),
+      dosno = "DOSNO"
+    )
+    expect_equal(result_one_dose, conc_data_one_dose)
+  })
 })
