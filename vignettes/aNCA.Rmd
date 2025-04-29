@@ -78,7 +78,7 @@ Click on the *Column Mapping* tab.
 
 ### Review
 
-Review the data and ensure that the columns have been mapped correctly, and all your filters have been applied. If there are any problems with your data (duplicates, missing times) you will be communicated and perhaps in certain situations your own intervention will be requested. Just follow the instructions.
+Review the data and ensure that the columns have been mapped correctly, and all your filters have been applied. If there are any problems with your data (duplicates, missing times), application will display a warning message and in certain situations manual edits will be requested. Just follow the instructions.
 
 # Step 2: Run NCA
 
