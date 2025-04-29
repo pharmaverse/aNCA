@@ -32,10 +32,10 @@ create_start_impute <- function(mydata) {
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
 
   # Define dose number (DOSNO) if not present in dose data
-  if (!"DOSNO" %in% names(mydata$dose$data)) {
+  if (!"DOSNOA" %in% names(mydata$dose$data)) {
     mydata$dose$data <- mydata$dose$data %>%
       group_by(across(all_of(dose_group_columns))) %>%
-      mutate(DOSNO = row_number()) %>%
+      mutate(DOSNOA = row_number()) %>%
       ungroup()
   }
 
@@ -44,7 +44,7 @@ create_start_impute <- function(mydata) {
       select(any_of(c(conc_group_columns, conc_column, time_column))),
     y = mydata$dose$data %>%
       select(any_of(c(dose_group_columns, route_column,
-                      duration_column, "DOSNO", "DRUG")))
+                      duration_column, "DOSNOA", "DRUG")))
   ) %>%
     merge(mydata$intervals)
 
@@ -62,10 +62,10 @@ create_start_impute <- function(mydata) {
 
   # Process imputation strategy based on each interval
   mydata$intervals <- mydata_with_int %>%
-    group_by(across(any_of(c(group_columns, "DOSNO", "start", "end", "type_interval")))) %>%
+    group_by(across(any_of(c(group_columns, "DOSNOA", "start", "end", "type_interval")))) %>%
     arrange(across(all_of(c(group_columns, time_column)))) %>%
     mutate(
-      is.first.dose = DOSNO == 1,
+      is.first.dose = DOSNOA == 1,
       is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
       is.analyte.drug = !!sym(analyte_column) == !!sym(drug_column),
       is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
