@@ -27,4 +27,14 @@ describe("dose_profile_duplicates", {
     expect_equal(nrow(last_dose_rows), 4)
   })
 
+  it("should return data with IX column if only one dose is present", {
+    single_dose_data <- conc_data %>%
+      filter(DOSNO == 1)
+
+    result_single_dose <- dose_profile_duplicates(single_dose_data,
+                                                  groups = c("USUBJID", "DOSNO"),
+                                                  dosno = "DOSNO")
+    expect_true("IX" %in% colnames(result_single_dose))
+
+  })
 })
