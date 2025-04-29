@@ -110,7 +110,7 @@ general_lineplot <- function(
       filter(AVAL > 0)
   }
 
-  time <- switch(time_scale, `By Cycle` = "ARRLT", "AFRLT")
+  time <- if (time_scale == "By Cycle") "ARRLT" else "AFRLT"
 
   plt <- tern::g_ipp(
     df = preprocessed_data,
