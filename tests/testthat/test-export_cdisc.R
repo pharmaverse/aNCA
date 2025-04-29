@@ -4,24 +4,24 @@ library(dplyr)
 # Simplified test_pknca_res object for testing with additional variables
 test_pknca_res <- list(
   result = data.frame(
-    USUBJID = rep(c("SUBJ001", "SUBJ002"), each = 3),
+    USUBJID = rep(c("S1-1", "S1-2"), each = 3),
     DOSNO = c(1, 1, 1, 1, 1, 1),
     PPTESTCD = c("AUCINF", "AUCIFO", "R2", "AUCINF", "AUCINT", "R2"),
-    PPORRES = c(100, 95, 0.98, 120, 115, 0.96),
-    PPSTRES = c(100, 95, 0.98, 120, 115, 0.96),
+    PPORRES = c(100, 95, 0.98, NA, 115, 0.96),
+    PPSTRES = c(100, 95, 0.98, NA, 115, 0.96),
     PPSTRESU = c("ng*h/mL", "ng*h/mL", "", "ng*h/mL", "ng*h/mL", ""),
     PPORRESU = c("ng*h/mL", "ng*h/mL", "", "ng*h/mL", "ng*h/mL", ""),
     exclude = c(NA, NA, NA, "Excluded due to protocol deviation", NA, NA),
     PARAM = c("Analyte1", "Analyte1", "Analyte1", "Analyte1", "Analyte1", "Analyte1"),
     PCSPEC = c("Plasma", "Plasma", "Plasma", "Plasma", "Plasma", "Plasma"),
-    STUDYID = c("STUDY001", "STUDY001", "STUDY001", "STUDY001", "STUDY001", "STUDY001"),
     start = c(0, 0, 0, 0, 2, 2),  # Start times for intervals
     end = c(5, 5, 5, 5, 4, 4)     # End times for intervals
   ),
   data = list(
     dose = list(
       data = data.frame(
-        USUBJID = c("SUBJ001", "SUBJ002"),
+        USUBJID = c("S1-1", "S1-2"),
+        STUDYID = "S1",
         DOSNO = c(1, 1),
         ROUTE = c("Oral", "Oral"),
         RRLTU = c("h", "h"),
@@ -35,7 +35,13 @@ test_pknca_res <- list(
         SITEID = c("Site1", "Site2"),
         ACTARM = c("Treatment A", "Treatment B"),
         TRT01P = c("Drug A", "Drug B"),
-        TRT01A = c("Drug A", "Drug B")
+        TRT01A = c("Drug A", "Drug B"),
+        PCRFTDTC = "2020-01-01T08:30:00",
+        PCRFTDTM = "2020-01-01 08:30:00",
+        # Just to derive PPGRPID
+        AVISIT = c("Visit 1", "Visit 1"),
+        VISIT = c("Visit 1", "Visit 1"),
+        VISITNUM = c(1, 1)
       ),
       columns = list(
         groups = c("USUBJID", "DOSNO"),
@@ -44,7 +50,8 @@ test_pknca_res <- list(
     ),
     conc = list(
       data = data.frame(
-        USUBJID = rep(c("SUBJ001", "SUBJ002"), each = 5),
+        USUBJID = rep(c("S1-1", "S1-2"), each = 5),
+        STUDYID = "S1",
         PARAM = rep("Analyte1", 10),
         AVAL = c(0, 10, 20, 30, 40, 0, 15, 25, 35, 45),
         AFRLT = c(0, 1, 2, 3, 4, 0, 1, 2, 3, 4),
@@ -60,11 +67,7 @@ test_pknca_res <- list(
         AGE = c(30, 25, 30, 25, 30, 30, 25, 30, 25, 30),
         AGEU = rep("years", 10),
         ACTARM = rep(c("Treatment A", "Treatment B"), each = 5),
-        VISITNUM = rep(1:5, 2),
-        VISIT = rep(c("Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5"), 2),
-        AVISIT = rep(c("Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5"), 2),
-        AVISITN = rep(1:5, 2),
-        STUDYID = rep("STUDY001", 10),
+        STUDYID = rep("S1", 10),
         ATPT = rep(c("Pre-dose", "Post-dose"), each = 5),
         ATPTN = rep(c(0, 1), each = 5),
         ANL01FL = rep("Y", 10),
@@ -76,7 +79,14 @@ test_pknca_res <- list(
         PCORRES = c(0, 10, 20, 30, 40, 0, 15, 25, 35, 45),
         PCORRESU = rep("ng/mL", 10),
         PCTPT = rep(c("Pre-dose", "Post-dose"), each = 5),
-        PCTPTNUM = rep(c(0, 1), each = 5)
+        PCTPTNUM = rep(c(0, 1), each = 5),
+        PCTPTREF = "Most Recent Dose",
+        AVISIT = c("Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5",
+                   "Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5"),
+        VISIT = c("Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5",
+                    "Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5"),
+        AVISITN = c(1, 2, 3, 4, 5, 1, 2, 3, 4, 5),
+        VISITNUM = c(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
       ),
       columns = list(
         groups = c("USUBJID", "PARAM")
@@ -112,6 +122,192 @@ describe("export_cdisc", {
     expect_equal(nrow(adpc), 10) # Ensure all concentration data is included
 
     # Check the studyid
-    expect_equal(result$studyid, "STUDY001")
+    expect_equal(result$studyid, "S1")
+  })
+
+  # it("derives SUBJID when it is not present", {
+  #   modified_test_pknca_res <- test_pknca_res
+  #   modified_test_pknca_res$result <- modified_test_pknca_res$result %>% select(-STUDYID)
+  #   modified_test_pknca_res$data$dose$data <- modified_test_pknca_res$data$dose$data %>% select(-STUDYID)
+  #   modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>% select(-SUBJID)
+  # 
+  #   result <- export_cdisc(modified_test_pknca_res)
+  # 
+  #   # Check that SUBJID is derived correctly
+  #   expect_true("SUBJID" %in% names(result$pp))
+  #   expect_true("SUBJID" %in% names(result$adpp))
+  #   expect_true("SUBJID" %in% names(result$adpc))
+  #   expect_equal(result$pp$SUBJID, c("001", "002", "001", "002", "001", "002"))
+  # })
+
+  it("derives ATPT and ATPTN when they are not present", {
+    modified_test_pknca_res <- test_pknca_res
+    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>% select(-ATPT, -ATPTN)
+
+    result <- export_cdisc(modified_test_pknca_res)
+
+    # Check that ATPT and ATPTN are derived as NA
+    expect_true("ATPT" %in% names(result$adpc))
+    expect_true("ATPTN" %in% names(result$adpc))
+    expect_true(all(!is.na(result$adpc$ATPT)))
+    expect_true(all(!is.na(result$adpc$ATPTN)))
+  })
+
+  it("derives PPSTINT and PPENINT for partial AUC intervals", {
+    modified_test_pknca_res <- test_pknca_res
+    modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
+      mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", "AUCINT", PPTESTCD))
+
+    result <- export_cdisc(modified_test_pknca_res)
+
+    # Check that PPSTINT and PPENINT are derived correctly
+    expect_true("PPSTINT" %in% names(result$pp))
+    expect_true("PPENINT" %in% names(result$pp))
+    expect_equal(result$pp$PPSTINT[which(result$pp$PPTESTCD == "AUCINT")], "PT2H")
+    expect_equal(result$pp$PPENINT[which(result$pp$PPTESTCD == "AUCINT")], "PT4H")
+  })
+
+  it("derives PPREASND & PPSTAT correctly in all situations", {
+    modified_test_pknca_res <- test_pknca_res
+    modified_test_pknca_res$result <- test_pknca_res$result %>%
+      mutate(
+        # Case NA without reason
+        PPSTRES = ifelse(PPTESTCD == "AUCINT", NA, PPSTRES),
+        exclude = ifelse(PPTESTCD == "AUCINT", NA, exclude),
+        # Case NA with reason
+        PPSTRES = ifelse(PPTESTCD == "AUCINF", NA, PPSTRES),
+        exclude = ifelse(PPTESTCD == "AUCINF", "Excluded due to protocol deviation", exclude),
+        # Reason with > 200 characters
+        exclude = ifelse(PPTESTCD == "R2", paste(rep("A", 201), collapse = ""), exclude),
+        PPSTRES = ifelse(PPTESTCD == "R2", NA, PPSTRES)
+      )
+
+    result <- export_cdisc(modified_test_pknca_res)
+
+    expect_equal(filter(result$pp, PPTESTCD == "AUCINT") %>% 
+                   pull(PPREASND) %>%
+                   unique(),
+                 "Unspecified")
+    expect_equal(filter(result$pp, PPTESTCD == "AUCINF") %>% 
+                   pull(PPREASND) %>%
+                   unique(),
+                 "Excluded due to protocol deviation")
+    expect_equal(filter(result$pp, PPTESTCD == "R2") %>% 
+                   pull(PPREASND) %>%
+                   unique(),
+                  paste0(rep("A", 200), collapse = ""))
+  })
+  it("returns NA for ATPTREF if PCTPTREF is not present", {
+    modified_test_pknca_res <- test_pknca_res
+    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>% select(-PCTPTREF)
+    
+    res <- export_cdisc(test_pknca_res)
+    res_no_pctptref <- export_cdisc(modified_test_pknca_res)
+
+    
+    expect_equal(unique(res$adpc$ATPTREF), "Most Recent Dose")
+    expect_true(all(is.na(res_no_pctptref$adpc$ATPTREF)))
+  })
+
+  it("derives correctly PPRFTDTC (if either PCRFTDTC or PCRFTDTM are present)", {
+    test_no_pcrftdtc <- test_pknca_res
+    test_no_pcrftdtm <- test_pknca_res
+    test_nothing <- test_pknca_res
+
+    res <- export_cdisc(test_pknca_res)
+    test_no_pcrftdtc$data$dose$data <- test_no_pcrftdtc$data$dose$data %>%
+      select(-PCRFTDTC)
+    res_no_pcrftdtc <- export_cdisc(test_no_pcrftdtc)
+    test_no_pcrftdtm$data$dose$data <- test_no_pcrftdtm$data$dose$data %>%
+      select(-PCRFTDTM)
+    res_no_pcrftdtm <- export_cdisc(test_no_pcrftdtm)
+    test_nothing$data$dose$data <- test_nothing$data$dose$data %>%
+      select(-PCRFTDTC, -PCRFTDTM)
+    res_nothing <- export_cdisc(test_nothing)
+
+
+    # Check that PPRFTDTC is derived correctly
+    expected_val <- unique(test_pknca_res$data$dose$data$PCRFTDTC)
+    
+    expect_equal(unique(res$pp$PPRFTDTC), expected_val)
+    expect_equal(unique(res_no_pcrftdtc$pp$PPRFTDTC), expected_val)
+    expect_equal(unique(res_no_pcrftdtm$pp$PPRFTDTC), expected_val)
+    expect_equal(unique(res_nothing$pp$PPRFTDTC), NA_character_)
+  })
+
+  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. DOSNO when possible", {
+    test_no_avisit <- test_pknca_res
+    test_no_avisit_visit <- test_pknca_res
+    test_nothing <- test_pknca_res
+
+    test_no_avisit$data$dose$data <- test_no_avisit$data$dose$data %>% select(-AVISIT)
+    test_no_avisit_visit$data$dose$data <- test_no_avisit_visit$data$dose$data %>% select(-AVISIT, -VISIT)
+    test_nothing$data$dose$data <- test_nothing$data$dose$data %>% select(-AVISIT, -VISIT)
+    test_nothing$result <- test_nothing$result %>% select(-DOSNO)
+
+    res <- export_cdisc(test_pknca_res)
+    res_no_avisit <- export_cdisc(test_no_avisit)
+    res_no_avisit_visit <- export_cdisc(test_no_avisit_visit)
+
+    # Check that PPGRPID is derived correctly
+    data <- left_join(test_pknca_res$result, test_pknca_res$data$dose$data,
+                      by = intersect(names(test_pknca_res$result),
+                                     names(test_pknca_res$data$dose$data)))
+    expected_val_all <- data %>%
+      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", AVISIT))
+    expected_val_no_avisit <- data %>%
+      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", VISIT))
+    expected_val_no_avisit_visit <- data  %>%
+      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", DOSNO))
+
+    expect_equal(unique(res$pp$PPGRPID), unique(expected_val_no_avisit$PPGRPID))
+    expect_equal(unique(res_no_avisit$pp$PPGRPID), unique(expected_val_no_avisit$PPGRPID))
+    expect_equal(unique(res_no_avisit_visit$pp$PPGRPID), unique(expected_val_no_avisit_visit$PPGRPID))
+
+  })
+  
+  it("does not derive SUBJID if not present with USUBJID, STUDYID", {
+    
+    test_with_subjid <- test_pknca_res
+    test_with_subjid$data$dose$data <- test_pknca_res$data$dose$data %>%
+      mutate(SUBJID = as.character(1:2))
+
+    test_no_subjid <- test_with_subjid
+    test_no_subjid$data$dose$data <- test_with_subjid$data$dose$data %>%
+      select(-SUBJID)
+
+    test_no_subjid_no_studyid <- test_with_subjid
+    test_no_subjid_no_studyid$data$dose$data <- test_with_subjid$data$dose$data %>%
+      select(-SUBJID, -STUDYID)
+
+    res_with_subjid <- export_cdisc(test_with_subjid)
+    res_no_subjid <- export_cdisc(test_no_subjid)
+    res_no_subjid_no_studyid <- export_cdisc(test_no_subjid_no_studyid)
+
+    # Check that SUBJID is derived correctly
+    expected_vals <- unique(test_with_subjid$data$dose$data$SUBJID)
+    expect_equal(unique(res_with_subjid$adpc$SUBJID), expected_vals)
+    expect_equal(unique(res_no_subjid$adpc$SUBJID), expected_vals)
+    expect_equal(unique(res_no_subjid_no_studyid$adpc$SUBJID), expected_vals)
+  })
+})
+
+describe(".get_subjid", {
+  it("returns SUBJID when present", {
+    data <- data.frame(SUBJID = c("1", "2"))
+    result <- get_subjid(data)
+    expect_equal(result, c("1", "2"))
+  })
+
+  it("derives SUBJID when USUBJID & STUDYID are present", {
+    data <- data.frame(USUBJID = c("S1-1", "S1-2"), STUDYID = "S1")
+    result <- get_subjid(data)
+    expect_equal(result, c("1", "2"))
+  })
+
+  it("returns NA when neither USUBJID nor SUBJID are present", {
+    data <- data.frame()
+    result <- get_subjid(data)
+    expect_true(all(is.na(result)))
   })
 })
