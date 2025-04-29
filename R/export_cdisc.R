@@ -63,7 +63,9 @@ export_cdisc <- function(res_nca) {
       # Specific ID variables
       PPSPID = if ("STUDYID" %in% names(.)) {
         paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA")
-      } else NA,
+      } else {
+        NA
+      },
       SUBJID = get_subjid(.),
       # Parameter Variables
       PPORRES = round(as.numeric(PPORRES), 12),

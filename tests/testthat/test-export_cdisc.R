@@ -63,7 +63,8 @@ test_pknca_res <- list(
         is.excluded.hl = rep(FALSE, 10),
         # Extra variables only added if present (ADPC)
         SEX = c("M", "F", "M", "F", "M", "M", "F", "M", "F", "M"),
-        RACE = c("White", "Black", "White", "Black", "White", "White", "Black", "White", "Black", "White"),
+        RACE = c("White", "Black", "White", "Black", "White",
+                 "White", "Black", "White", "Black", "White"),
         AGE = c(30, 25, 30, 25, 30, 30, 25, 30, 25, 30),
         AGEU = rep("years", 10),
         ACTARM = rep(c("Treatment A", "Treatment B"), each = 5),
@@ -84,7 +85,7 @@ test_pknca_res <- list(
         AVISIT = c("Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5",
                    "Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5"),
         VISIT = c("Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5",
-                    "Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5"),
+                  "Visit 1", "Visit 2", "Visit 3", "Visit 4", "Visit 5"),
         AVISITN = c(1, 2, 3, 4, 5, 1, 2, 3, 4, 5),
         VISITNUM = c(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
       ),
@@ -96,26 +97,26 @@ test_pknca_res <- list(
 )
 
 describe("export_cdisc", {
-  it("exports CDISC-compliant datasets with multiple variables per subject", {
+  it("exports CDISC-compliant datasets (PP, ADPP, ADPC)", {
     result <- export_cdisc(test_pknca_res)
 
     # Check that the result contains the expected components
     expect_type(result, "list")
     expect_named(result, c("pp", "adpp", "adpc", "studyid"))
 
-    # Check the pp dataset
+    # Check the PP
     pp <- result$pp
     expect_s3_class(pp, "data.frame")
     expect_true(all(CDISC_COLS$PP %in% names(pp)))
     expect_equal(nrow(pp), 6) # Ensure all variables are included
 
-    # Check the adpp dataset
+    # Check the ADPP
     adpp <- result$adpp
     expect_s3_class(adpp, "data.frame")
     expect_true(all(CDISC_COLS$ADPP %in% names(adpp)))
     expect_equal(nrow(adpp), 6) # Ensure all variables are included
 
-    # Check the adpc dataset
+    # Check the ADPC
     adpc <- result$adpc
     expect_s3_class(adpc, "data.frame")
     expect_true(all(CDISC_COLS$ADPC %in% names(adpc)))
@@ -125,24 +126,10 @@ describe("export_cdisc", {
     expect_equal(result$studyid, "S1")
   })
 
-  # it("derives SUBJID when it is not present", {
-  #   modified_test_pknca_res <- test_pknca_res
-  #   modified_test_pknca_res$result <- modified_test_pknca_res$result %>% select(-STUDYID)
-  #   modified_test_pknca_res$data$dose$data <- modified_test_pknca_res$data$dose$data %>% select(-STUDYID)
-  #   modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>% select(-SUBJID)
-  # 
-  #   result <- export_cdisc(modified_test_pknca_res)
-  # 
-  #   # Check that SUBJID is derived correctly
-  #   expect_true("SUBJID" %in% names(result$pp))
-  #   expect_true("SUBJID" %in% names(result$adpp))
-  #   expect_true("SUBJID" %in% names(result$adpc))
-  #   expect_equal(result$pp$SUBJID, c("001", "002", "001", "002", "001", "002"))
-  # })
-
   it("derives ATPT and ATPTN when they are not present", {
     modified_test_pknca_res <- test_pknca_res
-    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>% select(-ATPT, -ATPTN)
+    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>%
+      select(-ATPT, -ATPTN)
 
     result <- export_cdisc(modified_test_pknca_res)
 
@@ -184,27 +171,28 @@ describe("export_cdisc", {
 
     result <- export_cdisc(modified_test_pknca_res)
 
-    expect_equal(filter(result$pp, PPTESTCD == "AUCINT") %>% 
+    expect_equal(filter(result$pp, PPTESTCD == "AUCINT") %>%
                    pull(PPREASND) %>%
                    unique(),
                  "Unspecified")
-    expect_equal(filter(result$pp, PPTESTCD == "AUCINF") %>% 
+    expect_equal(filter(result$pp, PPTESTCD == "AUCINF") %>%
                    pull(PPREASND) %>%
                    unique(),
                  "Excluded due to protocol deviation")
-    expect_equal(filter(result$pp, PPTESTCD == "R2") %>% 
+    expect_equal(filter(result$pp, PPTESTCD == "R2") %>%
                    pull(PPREASND) %>%
                    unique(),
-                  paste0(rep("A", 200), collapse = ""))
+                 paste0(rep("A", 200), collapse = ""))
   })
-  it("returns NA for ATPTREF if PCTPTREF is not present", {
+  it("returns NA for ATPTREF if PCTPTREF is missing", {
     modified_test_pknca_res <- test_pknca_res
-    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>% select(-PCTPTREF)
-    
+    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>%
+      select(-PCTPTREF)
+
     res <- export_cdisc(test_pknca_res)
     res_no_pctptref <- export_cdisc(modified_test_pknca_res)
 
-    
+
     expect_equal(unique(res$adpc$ATPTREF), "Most Recent Dose")
     expect_true(all(is.na(res_no_pctptref$adpc$ATPTREF)))
   })
@@ -228,7 +216,7 @@ describe("export_cdisc", {
 
     # Check that PPRFTDTC is derived correctly
     expected_val <- unique(test_pknca_res$data$dose$data$PCRFTDTC)
-    
+
     expect_equal(unique(res$pp$PPRFTDTC), expected_val)
     expect_equal(unique(res_no_pcrftdtc$pp$PPRFTDTC), expected_val)
     expect_equal(unique(res_no_pcrftdtm$pp$PPRFTDTC), expected_val)
@@ -240,9 +228,12 @@ describe("export_cdisc", {
     test_no_avisit_visit <- test_pknca_res
     test_nothing <- test_pknca_res
 
-    test_no_avisit$data$dose$data <- test_no_avisit$data$dose$data %>% select(-AVISIT)
-    test_no_avisit_visit$data$dose$data <- test_no_avisit_visit$data$dose$data %>% select(-AVISIT, -VISIT)
-    test_nothing$data$dose$data <- test_nothing$data$dose$data %>% select(-AVISIT, -VISIT)
+    test_no_avisit$data$dose$data <- test_no_avisit$data$dose$data %>%
+      select(-AVISIT)
+    test_no_avisit_visit$data$dose$data <- test_no_avisit_visit$data$dose$data %>%
+      select(-AVISIT, -VISIT)
+    test_nothing$data$dose$data <- test_nothing$data$dose$data %>%
+      select(-AVISIT, -VISIT)
     test_nothing$result <- test_nothing$result %>% select(-DOSNO)
 
     res <- export_cdisc(test_pknca_res)
@@ -254,20 +245,25 @@ describe("export_cdisc", {
                       by = intersect(names(test_pknca_res$result),
                                      names(test_pknca_res$data$dose$data)))
     expected_val_all <- data %>%
-      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", AVISIT))
+      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", AVISIT)) %>%
+      pull(PPGRPID) %>%
+      unique()
     expected_val_no_avisit <- data %>%
-      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", VISIT))
+      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", VISIT)) %>%
+      pull(PPGRPID) %>%
+      unique()
     expected_val_no_avisit_visit <- data  %>%
-      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", DOSNO))
+      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", DOSNO)) %>%
+      pull(PPGRPID) %>%
+      unique()
 
-    expect_equal(unique(res$pp$PPGRPID), unique(expected_val_no_avisit$PPGRPID))
-    expect_equal(unique(res_no_avisit$pp$PPGRPID), unique(expected_val_no_avisit$PPGRPID))
-    expect_equal(unique(res_no_avisit_visit$pp$PPGRPID), unique(expected_val_no_avisit_visit$PPGRPID))
-
+    expect_equal(unique(res$pp$PPGRPID), unique(expected_val_all))
+    expect_equal(unique(res_no_avisit$pp$PPGRPID), unique(expected_val_no_avisit))
+    expect_equal(unique(res_no_avisit_visit$pp$PPGRPID), unique(expected_val_no_avisit_visit))
   })
-  
+
   it("does not derive SUBJID if not present with USUBJID, STUDYID", {
-    
+
     test_with_subjid <- test_pknca_res
     test_with_subjid$data$dose$data <- test_pknca_res$data$dose$data %>%
       mutate(SUBJID = as.character(1:2))
