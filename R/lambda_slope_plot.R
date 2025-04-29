@@ -7,7 +7,6 @@
 #' @param conc_pknca_df  Data frame containing the concentration data
 #'                      (default is `mydata$conc$data`).
 #' @param row_values     A list containing the values for the column_names used for filtering.
-#'                      (default is `subject`).
 #' @param myres          A PKNCAresults object containing the results of the NCA analysis
 #' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
 #'                      determining the subtitle color (default is 0.7).
@@ -44,7 +43,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom plotly ggplotly layout config style add_trace
-#' @importFrom stats setNames
+#' @importFrom rlang set_names
 #' @export
 lambda_slope_plot <- function(
   conc_pknca_df,
@@ -107,8 +106,9 @@ lambda_slope_plot <- function(
 
   #Create error text if Cmax used in calculation
   cmax_error_text <- NULL
-  cmax_value <- lambda_res$PPSTRES[lambda_res$PPTESTCD == "cmax"]
-  if (!is.na(cmax_value) && cmax_value <= max(lambda_z_ix_rows$AVAL, na.rm = TRUE)) {
+  tmax_value <- lambda_res$PPSTRES[lambda_res$PPTESTCD == "tmax"]
+  lower_limit <- lambda_res$PPSTRES[lambda_res$PPTESTCD == "lambda.z.time.first"]
+  if (!is.na(tmax_value) && !is.na(lower_limit) && tmax_value >= lower_limit) {
     subtitle_color <- "red"
     cmax_error_text <- list(
       text = "Cmax should not be included in lambda calculation",
@@ -154,7 +154,7 @@ lambda_slope_plot <- function(
   }
 
   #Create initial plot
-  p <- plot_data %>%
+  ggplot_obj <- plot_data %>%
     ggplot(aes(x = ARRLT, y = AVAL)) +
     geom_line(color = "gray70", linetype = "solid", linewidth = 1) +
     geom_smooth(
@@ -183,7 +183,7 @@ lambda_slope_plot <- function(
       axis.text = element_text(size = 15),
       axis.title.x = element_text(size = 15, family = "serif", margin = margin(t = 0)),
       axis.title.y = element_text(size = 15, family = "serif", margin = margin(r = 10)),
-      panel.border = element_rect(colour = "gray35", fill = NA, size = 1),
+      panel.border = element_rect(colour = "gray35", fill = NA, linewidth = 1),
       panel.grid.major = element_line(colour = "gray90"),
       plot.margin = margin(t = 5, r = 5, b = 35, l = 5)
     ) +
@@ -193,7 +193,7 @@ lambda_slope_plot <- function(
     )) +
     scale_y_log10()
 
-  pl <- ggplotly(p) %>%
+  plotly_obj <- ggplotly(ggplot_obj) %>%
     layout(
       margin = list(t = 80),
       annotations = list(
@@ -215,21 +215,21 @@ lambda_slope_plot <- function(
     ) %>%
     config(mathjax = "cdn")
 
-  num_traces <- length(pl$x$data)
+  num_traces <- length(plotly_obj$x$data)
 
   for (i in seq_len(num_traces)) {
-    pl <- pl %>%
+    plotly_obj <- plotly_obj %>%
       style(hovertext = ~paste0("Data Point: ", IX), hoverinfo = "none", traces = i)
   }
 
   customdata <- apply(
     plot_data[, c(column_names, "IX"), drop = FALSE],
     1,
-    function(row) as.list(setNames(row, c(column_names, "IX")))
+    function(row) as.list(set_names(row, c(column_names, "IX")))
   )
 
   # Add tracing for interactive plots
-  pl <- pl %>%
+  plotly_obj %>%
     add_trace(
       plot_data,
       x = ~ARRLT, y = ~log10(AVAL),
@@ -249,6 +249,4 @@ lambda_slope_plot <- function(
       ), size = 12, opacity = 0), # Make points semi-transparent
       showlegend = FALSE
     )
-
-  pl
 }
