@@ -33,7 +33,7 @@ upload_settings_server <- function(id, processed_pknca_data, parent_session,
     ns <- session$ns
     
     observeEvent(input$settings_upload, {
-browser()
+
       # Identify the file submited
       file_path <- input$settings_upload$datapath
 

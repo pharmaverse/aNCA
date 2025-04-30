@@ -33,6 +33,7 @@ download_settings_server <- function(id, processed_pknca_data, parent_session) {
       content = function(file) {
 
         processed_pknca_data <- processed_pknca_data()
+
         conc_cols <- c(unname(unlist(processed_pknca_data$conc$columns)),
                        "is.included.hl", "is.excluded.hl", "REASON")
         conc_logical_cols <- sapply(processed_pknca_data$conc$data[conc_cols], is.logical) |>
@@ -49,7 +50,7 @@ download_settings_server <- function(id, processed_pknca_data, parent_session) {
 
         # Save into processed_pknca_data the information associated to the flag rules
         rule_inputs_logical <- names(parent_session$input) %>%
-          keep(~startsWith(.x, "nca_setup-rule")) %>%
+          keep(~startsWith(.x, "nca_setup-") & endsWith(.x, "_rule")) %>%
           sapply(., \(x) parent_session$input[[x]])
 
         threshold_inputs <- names(parent_session$input) %>%
