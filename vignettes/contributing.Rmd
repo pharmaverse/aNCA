@@ -99,6 +99,7 @@ When reviewing a pull request, please do try to follow the [conventional comment
 # Beware
 - The package is split into two parts: the R package and a shiny application. Logic code, which is useful on its own and can be easily run via the console should be placed in the `R/` directory. Code that is strictly related to **Shiny** application, especially code that generates some interface elements, should be placed in `inst/shiny/` folder. 
 - The package requires some dependencies for which there are no explicit `@import` statements in the `NAMESPACE` file. This is because some of those functions are not used in the **package** itself, but rather in the **Shiny application**. Please beware of this situation when managing the package dependencies - some functions might be used in the app, even though they are not verbosely imported.
+- For developement purposes, you can specify a log level using `aNCA_LOG_LEVEL` environment variable. As a default, this is set to **INFO**. We recommend setting the log level to **TRACE**, e.g. in your `.Renviron` file (`aNCA_LOG_LEVEL="TRACE"`).
 
 # In-depth guides
 Here are some useful links with in-depth documentation regarding specific parts of the package and how to utilise in-build tools to extend the capabilities of the application:
