@@ -16,6 +16,8 @@
     "conv_factor",
     "Count.missing",
     "Count.total",
+    "Dose_IV",
+    "Dose_EX",
     "DFLAG",
     "DOSEA",
     "DOSNO",
