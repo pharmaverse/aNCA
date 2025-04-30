@@ -30,11 +30,7 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 LABELS <<- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 assets <- system.file("shiny/www", package = "aNCA")
 
-# setup logger #
-log_layout(layout_glue_colors)
-log_formatter(formatter_glue)
-log_threshold(TRACE)
-log_appender(appender_console, namespace = "global")
+setup_logger()
 
 ui <- function() {
   # Define UI
@@ -86,6 +82,7 @@ ui <- function() {
 
 server <- function(input, output, session) {
   log_info("Startup")
+  log_trace("This is an INFO LOL")
 
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
