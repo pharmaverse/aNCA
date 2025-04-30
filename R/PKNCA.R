@@ -328,13 +328,13 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 
   dose_data_to_join <- select(
     results$data$dose$data,
-    unlist(unname(pknca_data$dose$columns$groups)), 
+    unlist(unname(pknca_data$dose$columns$groups)),
     pknca_data$dose$columns$time,
     pknca_data$dose$columns$dose
-    ) %>%
+  ) %>%
     mutate(
       start = !!sym(pknca_data$dose$columns$time)
-      )
+    )
 
   results$result <- results$result %>%
     inner_join(
