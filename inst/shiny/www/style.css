@@ -19,27 +19,98 @@
   width: 100%;
 }
 
-/* filters on data page */
-#data-filters {
-  padding: 1em;
+/* Style adjustments for headings */
+h5 {
+  margin-bottom: -1.5rem;
 }
 
-#data-filters .col-sm-6,
-#data-filters .col-sm-5,
-#data-filters .col-sm-4,
-#data-filters .col-sm-2,
-#data-filters .col-sm-1 {
-  padding: 0;
+.fluidRow {
+  margin-top: -0.25rem;
 }
 
-#data-filters .form-group.shiny-input-container {
-  width: 100%;
+.shiny-input-container {
+  margin-bottom: 0;
 }
 
-#data-filters button.btn-danger {
-  margin-top: 1.45em;
-  margin-left: 0.25em;
+.nca-numeric-container {
+  display: flex;
+  align-items: center;
+  margin-right: 5px;
 }
+
+/* data tab styling */
+.data-tab-container {
+  .card {
+    margin-top: 1em;
+    margin-bottom: 0em;
+
+    .card-body > div {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+  }
+
+  .error-string {
+    color: var(--bs-danger);
+    font-weight: bold;
+  }
+
+  /* filters on data page */
+  .filters-buttons-container {
+    display: grid;
+    grid-template-columns: 49% 49%;
+    gap: 2%;
+  }
+
+  .filter-widget-container {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+
+    .btn-danger {
+      align-self: flex-end;
+      width: 2.5em;
+      height: 2.5em;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  .reactable {
+    margin-top: 2em;
+  }
+
+  /* column mapping UI */
+  .data-mapping-container {
+    .column-mapping-row {
+      display: flex;
+      align-items: center;
+      margin: -0.75rem 0 .25em 1em;
+    }
+
+    .column-mapping-output {
+      margin: 1.25rem 0 0 0.625rem;
+      color: black;
+    }
+
+    .column-mapping-label {
+      margin: 1.25rem 0 0 0.625rem;
+      color: grey;
+    }
+
+    h5 {
+      font-weight: bold;
+      margin-top: 0.75em;
+      margin-bottom: 0;
+    }
+
+    button {
+      margin-top: 1em;
+    }
+  }
+}
+
 
 /* buttons */
 .input-group-btn {
@@ -51,6 +122,8 @@
   right: 100px;
   top: 65px;
   z-index: 100;
+  height: 4.5rem;
+  width: 9rem;
 }
 
 .btn-help-icon {
@@ -94,6 +167,24 @@
   color: #333; /* Dark text color */
 }
 
+/* modal for handling data duplicates */
+.modal-dialog:has(.modal-duplicates) {
+  width: 90vw;
+  max-width: 95vw;
+
+  .modal-body {
+    max-height: 90vh;
+    overflow: auto;
+
+    & > div {
+      overflow-x: auto;
+      white-space: nowrap;
+      border: 1px solid #ddd;
+      padding: 1em;
+    }
+  }
+}
+
 /* gifs */
 .gif-container {
   text-align: center;
@@ -135,4 +226,93 @@
     position: relative;
     top: 3px;
   }
+}
+
+/* custom inline selection module */
+.inline-select-input > div,
+.inline-select-input > div > div {
+  width: 5em !important;
+  text-align: left !important;
+  display: inline-block !important;
+}
+
+/* parameter selection gird */
+.nca-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.nca-pill {
+  background-color: #e0ecff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+
+
+.tlg-module {
+  margin-top: 1em;
+
+  /* Well containing tabs for each tlg */
+  div.well {
+    height: min-content;
+  }
+
+  .sw-dropdown {
+    font-size: 1em;
+    display: block;
+    position: relative;
+    top: -2.5em;
+    right: -0.5em;
+    margin-bottom: -1.25em;
+    height: 2em;
+    width: 2em;
+    float: right;
+  }
+
+  .sw-dropdown-in {
+    width: 200px;
+  }
+
+  .tlg-widgets-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+    margin-bottom: 1em;
+  }
+
+  /* tlg tab */
+  h1.tlg-group-label {
+    font-weight: bold;
+    font-size: 2rem;
+    border-bottom: thin solid #337ab7;
+    border-radius: 0 0 .25em 0;
+    margin-top: 0.75em;
+  }
+
+  .tlg-options-container {
+    & > button {
+      width: 90%;
+      margin-left: 5%;
+      margin-top: 1em;
+      padding: 0.75em 0 0.75em 0;
+    }
+
+    .form-group.shiny-input-container {
+      margin-bottom: 0.5em;
+
+      label {
+        margin: 0;
+      }
+    }
+  }
+}
+
+.modal-dialog:has(.tlg-option-table) {
+  max-width: none;
+  margin-left: 1em;
+  margin-right: 1em;
 }

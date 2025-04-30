@@ -1,0 +1,15 @@
+template:
+  bootstrap: 5
+  light-switch: true
+navbar:
+  structure:
+    right: [search, github, lightswitch]
+  components:
+    articles:
+      text: Contributing
+      menu:
+        - text: Contributing
+          href: articles/contributing.html
+        - text: Adding TLGs
+          href: articles/adding_tlg.html
+url: "https://pharmaverse.github.io/aNCA/"

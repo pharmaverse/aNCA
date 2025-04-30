@@ -7,11 +7,13 @@
 filter_breaks(breaks = NA, plot = plot, min_cm_distance = 0.5, axis = "x")
 }
 \arguments{
+\item{breaks}{A numeric vector of x-axis breaks.}
+
 \item{plot}{A ggplot object used to extract plot dimensions and scales.}
 
 \item{min_cm_distance}{A numeric of the minimum distance between breaks.}
 
-\item{x_breaks}{A numeric vector of x-axis breaks.}
+\item{axis}{Axis to filter on, either "x" or "y".}
 }
 \value{
 A numeric vector of filtered x-axis breaks.

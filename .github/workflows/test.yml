@@ -1,0 +1,81 @@
+# Custom workflow created based on jobs available in `admiralci` package.
+
+name: Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: choice
+        options:
+          - devel
+          - latest
+  workflow_call:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: string
+
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
+    steps:
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+
+      - name: Checkout repo (PR) 🛎
+        uses: actions/checkout@v4.2.2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        if: github.event_name != 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.staged.dependencies
+          key: staged-deps
+
+      - name: Run Staged dependencies
+        uses: insightsengineering/staged-dependencies-action@v1
+        with:
+          run-system-dependencies: true
+          renv-restore: false
+          enable-check: false
+          direction: upstream
+          git-ref: ${{ steps.branch-name.outputs.current_branch }}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies from DESCRIPTION
+        run: |
+          remotes::install_local(force = TRUE, dependencies = TRUE)
+        shell: Rscript {0}
+        env:
+          R_REMOTES_STANDALONE: "true"
+
+      - name: Run tests
+        shell: Rscript {0}
+        run: |
+          devtools::load_all(".")
+          devtools::test()

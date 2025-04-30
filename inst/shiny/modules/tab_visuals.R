@@ -17,7 +17,15 @@ tab_visuals_ui <- function(id) {
             label = "Select Analyte:",
             choices = NULL,
             selected = NULL,
-            multiple = FALSE,
+            multiple = TRUE,
+            options = list(`actions-box` = TRUE)
+          ),
+          pickerInput(
+            inputId = ns("generalplot_pcspec"),
+            label = "Select Matrix:",
+            choices = NULL,
+            selected = NULL,
+            multiple = TRUE,
             options = list(`actions-box` = TRUE)
           ),
           pickerInput(
@@ -61,7 +69,14 @@ tab_visuals_ui <- function(id) {
           selectInput(
             inputId = ns("analyte_mean"),
             label = "Choose the Analyte:",
-            choices = NULL
+            choices = NULL,
+            multiple = TRUE
+          ),
+          selectInput(
+            inputId = ns("pcspec_mean"),
+            label = "Choose the Matrix:",
+            choices = NULL,
+            multiple = TRUE
           ),
           selectInput(
             inputId = ns("studyid_mean"),
@@ -71,8 +86,7 @@ tab_visuals_ui <- function(id) {
           selectInput(
             inputId = ns("select_id_var"),
             label = "Choose the variable to group by:",
-            choices = c("PCSPEC", "DOSEA", "TRT01A", "TRT01P"),
-            selected = "DOSEA"
+            choices = NULL
           ),
           selectInput(
             inputId = ns("cycles_mean"),
@@ -88,45 +102,6 @@ tab_visuals_ui <- function(id) {
         plotlyOutput(ns("mean_plot")),
         br(),
         helpText("If n<3 at the specified time point then the mean value is not displayed.")
-      )
-    ),
-    nav_panel("Descriptive Statistics",
-      layout_sidebar(
-        sidebar = sidebar(
-          position = "right", open = TRUE,
-          pickerInput(
-            inputId = ns("select_display_parameters"),
-            label = "Filter parameters to display:",
-            choices = NULL,
-            selected = NULL,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE)
-          )
-        ),
-        card(
-          orderInput(
-            ns("summary_groupby_source"),
-            "Drag and drop these variables...",
-            items = c("STUDYID", "USUBJID", "DOSEA", "PCSPEC", "ANALYTE"),
-            width = shiny::validateCssUnit("100%"),
-            connect = ns("summary_groupby")
-          ),
-          orderInput(
-            ns("summary_groupby"),
-            "..to hierarchically group by (order matters!):",
-            items = c("DOSNO"),
-            width = shiny::validateCssUnit("100%"),
-            connect = ns("summary_groupby_source"),
-            placeholder = "Drag items here to group hierarchically..."
-          )
-        ),
-        card(
-          reactableOutput(ns("descriptive_stats"))
-        ),
-        card(
-          actionButton(ns("download_improve"), "Download the NCA Summary Data to Improve"),
-          downloadButton(ns("download_browser"), "Download the NCA Summary Data")
-        )
       )
     ),
     nav_panel("Boxplot",
@@ -195,13 +170,26 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(data())
       # Update the analyte picker input
       param_choices_analyte <- data() %>%
-        pull(ANALYTE) %>%
+        pull(PARAM) %>%
         unique()
 
       updatePickerInput(
         session,
         "generalplot_analyte",
-        choices = param_choices_analyte
+        choices = param_choices_analyte,
+        selected = param_choices_analyte[1]
+      )
+
+      # Update pcspec picker input
+      param_choices_pcspec <- data() %>%
+        pull(PCSPEC) %>%
+        unique()
+
+      updatePickerInput(
+        session,
+        "generalplot_pcspec",
+        choices = param_choices_pcspec,
+        selected = param_choices_pcspec[1]
       )
 
       # Update the usubjid picker input
@@ -218,7 +206,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
       # Update the colorby picker input
       param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "ANALYTE", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
+        c("STUDYID", "PCSPEC", "PARAM", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
       )
 
       updatePickerInput(
@@ -228,15 +216,16 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected = param_choices_colorby[length(param_choices_colorby)]
       )
 
-      # Update the analytemean select input
+      # Update the analyte mean select input
       analyte_choices <- data() %>%
-        pull(ANALYTE) %>%
+        pull(PARAM) %>%
         unique()
 
       updateSelectInput(
         session,
         "analyte_mean",
-        choices = sort(analyte_choices)
+        choices = sort(analyte_choices),
+        selected = sort(analyte_choices)[1]
       )
 
       # Update the studyidmean select input
@@ -250,8 +239,20 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         choices = sort(studyid_choices)
       )
 
+      # Update pcspec mean choices
+      pcspec_choices <- data() %>%
+        pull(PCSPEC) %>%
+        unique()
+
+      updateSelectInput(
+        session,
+        "pcspec_mean",
+        choices = sort(pcspec_choices),
+        selected = sort(pcspec_choices)[1]
+      )
+
       # Update the selectidvar select input
-      idvar_choices <- c("PCSPEC", "DOSEA", grouping_vars())
+      idvar_choices <- c("PARAM", "PCSPEC", "DOSEA", grouping_vars())
 
       updateSelectInput(
         session,
@@ -265,7 +266,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$cycle_select <- renderUI({
       req(input$generalplot_analyte)
       y <- data() %>%
-        filter(ANALYTE == input$generalplot_analyte) %>%
+        filter(PARAM %in% input$generalplot_analyte) %>%
         pull(DOSNO) %>%
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
@@ -278,6 +279,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$individualplot <- renderPlotly({
       req(data())
       req(input$generalplot_analyte)
+      req(input$generalplot_pcspec)
       req(input$generalplot_usubjid)
       req(input$generalplot_colorby)
       req(input$timescale)
@@ -287,6 +289,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       general_lineplot(
         data(),
         input$generalplot_analyte,
+        input$generalplot_pcspec,
         input$generalplot_usubjid,
         input$generalplot_colorby,
         input$timescale,
@@ -304,7 +307,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     observeEvent(input$analyte_mean, {
       req(data())
       cycle_choices <- data() %>%
-        filter(ANALYTE %in% input$analyte_mean) %>%
+        filter(PARAM %in% input$analyte_mean) %>%
         pull(DOSNO) %>%
         unique()
 
@@ -319,6 +322,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     output$mean_plot <- renderPlotly({
       req(input$studyid_mean)
       req(input$analyte_mean)
+      req(input$pcspec_mean)
       req(input$cycles_mean)
       log_info("Rendering mean plot")
 
@@ -327,7 +331,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
           data() %>%
             filter(
               STUDYID %in% input$studyid_mean,
-              ANALYTE %in% input$analyte_mean,
+              PARAM %in% input$analyte_mean,
+              PCSPEC %in% input$pcspec_mean,
               DOSNO %in% input$cycles_mean,
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
@@ -348,6 +353,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         data = data(),
         selected_studyids = input$studyid_mean,
         selected_analytes = input$analyte_mean,
+        selected_pcspecs = input$pcspec_mean,
         selected_cycles = input$cycles_mean,
         id_variable = input$select_id_var,
         plot_ylog = input$log_mean_plot,
@@ -359,97 +365,14 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
     })
 
-
-    # TAB: Descriptive Statistics ---------------------------------------------
-    # This tab computes and visualizes output data from the NCA analysis
-
-    # Update inputs based on what is available in the data
-    observeEvent(res_nca(), {
-
-      # Update the paramselect picker input
-      paramselection <- unique(res_nca()$result$PPTESTCD)
-
-      updatePickerInput(
-        session,
-        "select_display_parameters",
-        choices = paramselection,
-        selected = paramselection
-      )
-
-      # Define the relevant columns for the group by picker
-      group_cols <- unname(unlist(res_nca()$data$conc$columns$groups))
-      classification_cols <- sort(grouping_vars())
-      classification_cols <- classification_cols[
-        classification_cols %in% names(res_nca()$data$conc$data)
-      ]
-
-      # update the input for the group by picker
-      updateOrderInput(session, "summary_groupby_source",
-                       items = c(group_cols, classification_cols))
-    })
-
-    # Reactive expression for summary table based on selected group and parameters
-    summary_stats <- reactive({
-      req(input$summary_groupby, input$select_display_parameters)
-
-      # Calculate summary stats and filter by selected parameters
-      calculate_summary_stats(res_nca(), input$summary_groupby) %>%
-        filter(PPTESTCD %in% input$select_display_parameters)  %>%
-        rename(PARAM = PPTESTCD)
-    })
-
-    # render the reactive summary table in a data table
-    output$descriptive_stats <- renderReactable({
-      req(summary_stats())
-      log_info("Rendering descriptive statistics table")
-
-      reactable(
-        summary_stats(),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "60vh"
-      )
-    })
-
-    # Save summary stats to improve
-    observeEvent(input$download_improve, {
-      showModal(modalDialog(
-        title = "Please enter the path to the folder on improve for your results:",
-        textInput(ns("pathresults"), "Path:"),
-        textInput(ns("filename"), "Enter filename of choice:", ""),
-        actionButton(ns("go2"), "GO"),
-        footer = modalButton("Close")
-      ))
-    })
-
-    # alternatively: save locally
-    output$download_browser <- downloadHandler(
-      filename = function() {
-        paste("NCA_summary.csv")
-      },
-      content = function(file) {
-        log_info("Downloading summary statistics as CSV")
-        write.csv(summary_stats(), file)
-      }
-    )
-
     # TAB: Parameter Box plots ----------------------------------------------------
 
     # Create formatted Box plot data: PKNCA + PP results, linking DOSEA + PPTESTCD
     boxplotdata <- reactive({
       group_columns <- unname(unlist(res_nca()$data$conc$columns$groups))
-
+      req(res_nca())
       left_join(
-        res_nca()$result %>%
-          filter(
-            end == Inf | startsWith(PPTESTCD, "aucint")
-          ),
+        res_nca()$result,
         res_nca()$data$conc$data %>%
           distinct(across(all_of(group_columns)), .keep_all = TRUE),
         by = group_columns,

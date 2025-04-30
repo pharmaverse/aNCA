@@ -7,6 +7,7 @@
 #' @param data              A data frame containing the ADNCA dataset.
 #' @param selected_studyids A character vector of selected study IDs to be included in the plot.
 #' @param selected_analytes A character vector of selected analytes to be included in the plot.
+#' @param selected_pcspecs  A character vector of selected matrices to be included in the plot.
 #' @param selected_cycles   A character vector or numeric vector of selected cycles to be
 #'                          included in the plot.
 #' @param id_variable       A character string specifying the variable by which to color the lines
@@ -28,6 +29,7 @@
 general_meanplot <- function(data,
                              selected_studyids,
                              selected_analytes,
+                             selected_pcspecs,
                              selected_cycles,
                              id_variable = "DOSEA",
                              plot_ylog = FALSE,
@@ -38,7 +40,8 @@ general_meanplot <- function(data,
   preprocessed_data <- data %>%
     filter(
       STUDYID %in% selected_studyids,
-      ANALYTE %in% selected_analytes,
+      PARAM %in% selected_analytes,
+      PCSPEC %in% selected_pcspecs,
       DOSNO %in% selected_cycles,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       NRRLT > 0
@@ -50,7 +53,7 @@ general_meanplot <- function(data,
   summarised_data <- preprocessed_data %>%
     mutate(id_variable = as.factor(!!sym(id_variable))) %>%
     # Create a groups variables for the labels
-    mutate(groups = paste(STUDYID, ANALYTE, DOSNO, sep = ", ")) %>%
+    mutate(groups = paste(STUDYID, PARAM, PCSPEC, DOSNO, sep = ", ")) %>%
     group_by(id_variable, NRRLT, groups) %>%
     summarise(
               Mean = round(mean(AVAL, na.rm = TRUE), 3),
@@ -132,22 +135,3 @@ general_meanplot <- function(data,
   # Convert ggplot to plotly
   p
 }
-
-#' Helper Function: Calculate the Geometric Mean
-#'
-#' @param x A numeric vector.
-#' @param na.rm A logical value indicating whether NA values should be removed.
-#' @return The geometric mean of the input vector.
-#' @export
-geometric_mean <- function(x, na.rm = FALSE) { # nolint
-  if (na.rm) {
-    x <- x[!is.na(x)]
-  }
-  exp(mean(log(x)))
-}
-
-#' Derived function from labeller label_both: Labels in one line
-#'
-#' @param x Column names as character vector
-#' @return Corresponding labels of the facet plots split by the specified colimns (labels)
-#' @export
