@@ -54,9 +54,7 @@ Suggests:
     testthat (>= 3.0.0),
     jsonlite,
     pak,
-    ggh4x,
     nestcolor,
-    scales,
     bslib,
     DT,
     htmlwidgets,
@@ -70,7 +68,9 @@ Suggests:
     shinyWidgets,
     stringi,
     tools,
-    yaml
+    yaml,
+    ggh4x,
+    scales
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
