@@ -98,6 +98,10 @@ uploaded.</p>
 <div class="section level4">
 <h4 id="data-format">Data format<a class="anchor" aria-label="anchor" href="#data-format"></a>
 </h4>
+<p>Some variables are mandatory (marked with *), while others are
+optional. Custom variable names are supported as long as they are
+correctly mapped during the <a href="#id_##%20Data%20mapping">Data
+Mapping</a> step.</p>
 <table style="width:100%;" class="table">
 <colgroup>
 <col width="24%">
@@ -113,14 +117,14 @@ uploaded.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td></td>
-<td>STUDYID</td>
+<td><strong>Grouping Identifiers</strong></td>
+<td>STUDYID *</td>
 <td>Study Identifier</td>
 <td>character</td>
 </tr>
 <tr class="even">
-<td><strong>Grouping Identifiers</strong></td>
-<td>USUBJID</td>
+<td></td>
+<td>USUBJID *</td>
 <td>Unique Subject Identifier</td>
 <td>character/numeric</td>
 </tr>
@@ -155,85 +159,116 @@ uploaded.</p>
 <td>character</td>
 </tr>
 <tr class="even">
-<td><strong>Sample variables</strong></td>
-<td>PARAM</td>
-<td>Analyte</td>
-<td>character</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 </tr>
 <tr class="odd">
+<td><strong>Sample variables</strong></td>
+<td>PARAM *</td>
+<td>Analyte studied in the sample</td>
+<td>character</td>
+</tr>
+<tr class="even">
 <td></td>
-<td>PCSPEC</td>
+<td>PCSPEC *</td>
 <td>Specimen Material Type</td>
 <td>character</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
-<td>AVAL</td>
+<td>AVAL *</td>
 <td>Analysis Value</td>
 <td>numeric</td>
 </tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
 <tr class="odd">
 <td><strong>Dose Variables</strong></td>
-<td>DOSNO</td>
-<td>Dose Number</td>
-<td>numeric</td>
+<td>DRUG *</td>
+<td>Drug/Treatment compound. When relevant, should match with PARAM</td>
+<td>character</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>ROUTE</td>
+<td>DOSNO *</td>
+<td>Dose Number of administration. Used to split interval
+calculations</td>
+<td>numeric</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>ROUTE *</td>
 <td>Route of Administration, either {intravascular} or
 {extravascular}</td>
 <td>character</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td></td>
-<td>DOSEA</td>
+<td>DOSEA *</td>
 <td>Actual Treatment Dose</td>
 <td>numeric</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
 <td>ADOSEDUR</td>
 <td>Actual Treatment Dose</td>
 <td>numeric</td>
 </tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
 <tr class="odd">
 <td><strong>Time Variables</strong></td>
-<td>AFRLT</td>
+<td>AFRLT *</td>
 <td>Actual Relative Time from Analyte First Dose</td>
 <td>numeric</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>ARRLT</td>
+<td>ARRLT *</td>
 <td>Actual Relative Time from Reference Dose</td>
 <td>numeric</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td>NFRLT</td>
+<td>NFRLT *</td>
 <td>Nominal Relative Time from Analyte First Dose</td>
 <td>numeric</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>NRRLT</td>
+<td>NRRLT *</td>
 <td>Nominal Relative Time from Reference Dose</td>
 <td>numeric</td>
 </tr>
 <tr class="odd">
 <td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Time Variables</strong></td>
 <td>AVALU</td>
 <td>Analysis Value Unit</td>
 <td>character</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
 <td>DOSEU</td>
 <td>Treatment Dose Units</td>
 <td>character</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td></td>
 <td>RRLTU</td>
 <td>Relative Time from Reference Dose Unit</td>
@@ -273,7 +308,10 @@ directed to the next tab.</p></li>
 <h4 id="review">Review<a class="anchor" aria-label="anchor" href="#review"></a>
 </h4>
 <p>Review the data and ensure that the columns have been mapped
-correctly, and all your filters have been applied.</p>
+correctly, and all your filters have been applied. If there are any
+problems with your data (duplicates, missing times), application will
+display a warning message and in certain situations manual edits will be
+requested. Just follow the instructions.</p>
 </div>
 </div>
 <div class="section level2">
@@ -297,8 +335,8 @@ the <em>Results</em> tab.</p></li>
 </ol>
 <p><img src="images/get_started/07.png" alt="Running NCA"></p>
 <blockquote class="note">
-The <strong>Save Project Settings</strong>/<strong>Upload
-Settings</strong> option is not working currently.
+<p>The <strong>Save Project Settings</strong>/<strong>Upload
+Settings</strong> option is not working currently.</p>
 </blockquote>
 </div>
 </div>
@@ -420,7 +458,8 @@ Descriptive Statistics, and Boxplots.</p>
 <h2 id="step-5-tlgs">Step 5: TLGs<a class="anchor" aria-label="anchor" href="#step-5-tlgs"></a>
 </h2>
 <blockquote class="warning">
-Currently work in progress. Not all TLGs and features are available.
+<p>Currently work in progress. Not all TLGs and features are
+available.</p>
 </blockquote>
 <p>After performing the analysis, you can prepare reports regarding the
 analysis, including various tables, listings and graphs.</p>
