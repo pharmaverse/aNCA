@@ -82,7 +82,6 @@ ui <- function() {
 
 server <- function(input, output, session) {
   log_info("Startup")
-  log_trace("This is an INFO LOL")
 
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
