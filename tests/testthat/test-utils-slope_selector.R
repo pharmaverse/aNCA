@@ -87,6 +87,13 @@ describe(".filter_slopes", {
       "^No reason provided for the following exclusions*"
     )
   })
+
+  it("should return data unchanged if no slopes are provided", {
+    res_null <- filter_slopes(DATA_FIXTURE, NULL, DOSNOS_FIXTURE, slope_groups)
+    res_empty <- filter_slopes(DATA_FIXTURE, data.frame(), DOSNOS_FIXTURE, slope_groups)
+    expect_equal(res_null, DATA_FIXTURE)
+    expect_equal(res_empty, DATA_FIXTURE)
+  })
 })
 
 EXISTING_FIXTURE <- data.frame(

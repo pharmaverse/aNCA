@@ -35,6 +35,5 @@ describe("dose_profile_duplicates", {
                                                   groups = c("USUBJID", "DOSNO"),
                                                   dosno = "DOSNO")
     expect_true("IX" %in% colnames(result_single_dose))
-
   })
 })

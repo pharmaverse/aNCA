@@ -105,6 +105,19 @@ describe("apply_filters works correctly", {
     expect_equal(nrow(apply_filters(mtcars, filter)), 30)
   })
 
+  test_that("apply_filters skips NULL filters", {
+    filters_with_null <- list(
+      list(
+        column = "mpg",
+        condition = ">",
+        value = "21"
+      ),
+      NULL
+    )
+
+    expect_equal(nrow(apply_filters(mtcars, filters_with_null)), 12)
+  })
+
 })
 
 describe("apply_filters throws errors for invalid input", {
