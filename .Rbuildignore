@@ -9,3 +9,4 @@
 ^\.lintr$
 ^\.github/
 ^LICENSE\.md$
+^\.covrignore$
