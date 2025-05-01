@@ -15,7 +15,6 @@ describe("apply_labels", {
 
   # Test for successful label application
   it("applies labels to the data frame", {
-    data <- data.frame(USUBJID = 1:3, AVAL = c(10, 20, 30))
     labeled_data <- apply_labels(data, LABELS, c("ADPC", "ADPC"))
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "Unique Subject Identifier")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
