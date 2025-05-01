@@ -30,6 +30,7 @@ describe("apply_labels", {
 
   # Use column names when variable not in labels list
   it("uses column names as labels when the variable is not in the labels list", {
+    # PROBLEM:  is next line needed?
     data <- data.frame(USUBJID = 1:3, AVAL = c(10, 20, 30))
     LABELS <- data.frame(Variable = character(),
                          Label = character(),
