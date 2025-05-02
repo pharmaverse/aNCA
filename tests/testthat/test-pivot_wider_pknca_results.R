@@ -18,7 +18,7 @@
       ),
       PPTESTCD2 = ifelse(
         type_interval == "manual",
-        paste0(PPTESTCD, "_", start, "-", end, PPSTRESU2),
+        paste0(PPTESTCD, "_", start_dose, "-", end_dose, PPSTRESU2),
         paste0(PPTESTCD, PPSTRESU2)
       ),
     ) %>%
@@ -35,8 +35,11 @@
       pptestcd <- gsub("_[0-9]+\\-[0-9]", "", pptestcd)
 
       original_data <- TEST_PKNCA_RES$result %>%
-        filter(start == auc_start,
-               end == auc_end)
+        filter(
+          start_dose == auc_start,
+          end_dose == auc_end,
+          type_interval == "manual"
+        )
       reshaped_data <- pwres %>%
         filter(!is.na(!!sym(param_col)))
     } else {

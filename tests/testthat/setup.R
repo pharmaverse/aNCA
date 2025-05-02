@@ -118,8 +118,8 @@ TEST_CONC_DATA <- data.frame(
 TEST_DOSE_DATA <- data.frame(
   AFRLT = c(
     0,
-    c(0, 3),
-    c(0, 3),
+    c(0, 5),
+    c(0, 5),
     0,
     0,
     0,
@@ -136,8 +136,8 @@ TEST_DOSE_DATA <- data.frame(
   ),
   NFRLT = c(
     0,
-    c(0, 3),
-    c(0, 3),
+    c(0, 5),
+    c(0, 5),
     0,
     0,
     0,
@@ -208,18 +208,18 @@ main_intervals <- main_intervals %>%
     aucinf.obs = TRUE
   )
 auc_intervals <- data.frame(
-  start = c(0, 2),
-  end = c(2, 4),
-  half.life = FALSE,
-  cmax = FALSE,
-  aucint.last = TRUE,
+  # Intervals for AUC_0-2, AUC_2-4 in each dose
+  start = c(0, 2, 5, 7),
+  end = c(2, 4, 7, 9),
   type_interval = "manual",  # Assumption 2: Include type_interval column
-  DOSNO = c(1, 2)
+  DOSNO = c(1, 1, 2, 2)
 ) %>%
   left_join(
     TEST_DOSE_DATA %>%
       select(USUBJID, DOSNO) %>%
-      unique()
+      unique(),
+    by = "DOSNO",
+    relationship = "many-to-many"
   )
 auc_intervals[, all_params] <- FALSE
 auc_intervals <- auc_intervals %>%
