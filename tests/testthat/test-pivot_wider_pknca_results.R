@@ -177,6 +177,6 @@ describe("pivot_wider_pknca_results", {
 
     # Check that rows without exclude values have NA in the Exclude column
     exclude_values_na <- result %>% filter(USUBJID == 2 & DOSNO == 2) %>% pull(Exclude)
-    expect_true(is.na(exclude_values_na))
+    expect_true(all(is.na(exclude_values_na)))
   })
 })
