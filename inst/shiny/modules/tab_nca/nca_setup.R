@@ -578,7 +578,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         left_join(processed_pknca_data()$dose$data %>%
                     select(all_of(c(col_groups, route_column, std_route_column,
                                     "TIME_DOSE", "DOSNO", "DOSNOA"))),
-                  by = c(col_groups,"TIME_DOSE", "DOSNO", "DOSNOA")) %>%
+                  by = c(col_groups, "TIME_DOSE", "DOSNO", "DOSNOA")) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
         mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%

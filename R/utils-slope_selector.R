@@ -136,12 +136,12 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 #' @returns description The modified `data` object with updated inclusion/exclusion flags
 #'         and reasons in `data$conc$data`.
 .apply_slope_rules <- function(data, slopes, slope_groups) {
-  
+
   conc_data <- data$conc$data %>%
     group_by(!!!syms(slope_groups)) %>%
     mutate(IX = seq_len(n())) %>%
     ungroup()
-  
+
   for (i in seq_len(nrow(slopes))) {
     # Build the condition dynamically for group columns
     selection_index <- which(
