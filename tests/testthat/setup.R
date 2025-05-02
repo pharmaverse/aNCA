@@ -1,3 +1,6 @@
+# Testing plots
+TEST_PLOTS <- readRDS("tests/testthat/data/test_plots.rds")
+
 # Import dataset from testthat/data folder
 
 DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
