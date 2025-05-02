@@ -95,7 +95,7 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   #set a tolerance for the arranging to avoid floating point precision issues
-  tol <- 0.01
+  tol <- 0.02
 
   # Select unique doses
   pkncaconc_data %>%
@@ -107,7 +107,9 @@ format_pkncadose_data <- function(pkncaconc_data,
     group_by(!!!syms(group_columns), DOSNOA) %>%
     slice(1) %>%
     ungroup() %>%
-    arrange(!!!syms(group_columns))
+    arrange(!!!syms(group_columns)) %>%
+    # filter out rows with NA in DOSEA column
+    filter(!is.na(DOSEA))
 
 }
 
