@@ -332,5 +332,12 @@ PKNCA_DATA_FIXTURE$intervals <- format_pkncadata_intervals(
 PKNCA_DATA_FIXTURE <- create_start_impute(PKNCA_DATA_FIXTURE)
 
 # Create NCA results
-PKNCA_RESULTS_FIXTURE <- PKNCA_calculate_nca(PKNCA_DATA_FIXTURE)
-
+PKNCA_RESULTS_FIXTURE <- withCallingHandlers(
+  PKNCA_calculate_nca(PKNCA_DATA_FIXTURE),
+  warning = function(w) {
+    # Suppress warnings matching the regex "Too few points for half-life"
+    if (grepl("^Too few points for half-life", conditionMessage(w))) {
+      invokeRestart("muffleWarning")
+    }
+  }
+)
