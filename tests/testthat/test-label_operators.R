@@ -1,9 +1,9 @@
 #------------------------  apply_labels, get_label
 
 LABELS_TEST <- data.frame(
-  Variable <- c("USUBJID", "AVAL", "RACE"),
-  Label <- c("Unique Subject Identifier", "Analysis Value", "Race"),
-  Dataset <- c("ADPC", "ADPC", "ADPC")
+  Variable = c("USUBJID", "AVAL", "RACE"),
+  Label =  c("Unique Subject Identifier", "Analysis Value", "Race"),
+  Dataset = c("ADPC", "ADPC", "ADPC")
 )
 
 data <- data.frame(
