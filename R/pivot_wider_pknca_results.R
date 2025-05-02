@@ -97,7 +97,7 @@ pivot_wider_pknca_results <- function(myres) {
       filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
       mutate(
         interval_name = paste0(
-          signif(start), "-", signif(end),
+          signif(start_dose), "-", signif(end_dose),
           ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
         ),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
