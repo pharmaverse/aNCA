@@ -238,7 +238,7 @@ describe("PKNCA_update_data_object", {
       dplyr::filter(type_interval == "manual") %>%
       dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM, DOSNO, auclast, aucint.last, tmax)
 
-    expect_equal(auc_intervals, tidyr::tibble(
+    expected_res <- tidyr::tibble(
       start = c(0, 1, 2),
       end = c(1, 2, 3),
       STUDYID = rep("STUDY001", 3),
@@ -249,7 +249,9 @@ describe("PKNCA_update_data_object", {
       auclast = rep(FALSE, 3),
       aucint.last = rep(TRUE, 3),
       tmax = rep(FALSE, 3)
-    ))
+    )
+
+    expect_equal(auc_intervals, expected_res)
   })
 })
 
