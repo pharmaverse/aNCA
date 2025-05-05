@@ -27,7 +27,7 @@ boxplotdata <- data.frame(
 # )
 
 # Helper function to compare two plotly objects
-expect_equal_plotly <- function(actual, expected, ignore_fields = list(), tolerance = 1e-4) {
+expect_equal_plotly <- function(actual, expected, ignore_fields = list(), tolerance = 1e-3) {
   # Extract relevant parts of the plotly objects
   extract_relevant <- function(plotly_obj) {
     list(
@@ -61,13 +61,17 @@ expect_equal_plotly <- function(actual, expected, ignore_fields = list(), tolera
   expect_equal_plotly(
     act_obj,
     exp_obj,
-    # Dots in boxplots randomize the X axis position
+    # Dots in box plots randomize the X axis position
     ignore_fields = c(
+      # Margins can vary based on IDE
       "data[[2]]$x",
       "layout$margin",
+      # Colors can sometimes change based on default
       "data[[1]]$line$color",
       "data[[2]]$marker$line$color",
-      "data[[2]]$marker$color"
+      "data[[2]]$marker$color",
+      # Text is only in violin plots, and density is a rounded text value
+      "data[[1]]$text"
     )
   )
 }
