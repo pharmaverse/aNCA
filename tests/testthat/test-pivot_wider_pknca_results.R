@@ -1,15 +1,15 @@
 #' Validate PKNCA Parameters
 #'
 #' This function validates that the reshaped PKNCA results contain the expected values
-#' for each parameter based on the original `TEST_PKNCA_RES` object.
+#' for each parameter based on the original `pknca_res` object.
 #'
-#' @param TEST_PKNCA_RES The original PKNCA results object.
-#' @param pwres The pivoted results from `pivot_wider_pknca_results`.
+#' @param pknca_res The original PKNCA results object.
+#' @param pivoted_res The pivoted results from `pivot_wider_pknca_results`.
 #' @returns A logical value indicating whether all checks passed.
-.validate_pknca_params <- function(TEST_PKNCA_RES, pwres) {
+.validate_pknca_params <- function(pknca_res, pivoted_res) {
 
   # Extract unique parameter names with units
-  names_params <- TEST_PKNCA_RES$result %>%
+  names_params <- pknca_res$result %>%
     mutate(
       PPSTRESU2 = ifelse(
         PPSTRESU %in% c("", "unitless", "fraction"),
@@ -34,17 +34,17 @@
       auc_end <- gsub("AUCINT_[0-9]+\\-([0-9]+)", "\\1", pptestcd)
       pptestcd <- gsub("_[0-9]+\\-[0-9]", "", pptestcd)
 
-      original_data <- TEST_PKNCA_RES$result %>%
+      original_data <- pknca_res$result %>%
         filter(
           start_dose == auc_start,
           end_dose == auc_end,
           type_interval == "manual"
         )
-      reshaped_data <- pwres %>%
+      reshaped_data <- pivoted_res %>%
         filter(!is.na(!!sym(param_col)))
     } else {
-      original_data <- TEST_PKNCA_RES$result
-      reshaped_data <- pwres
+      original_data <- pknca_res$result
+      reshaped_data <- pivoted_res
     }
 
     original_vals <- original_data %>%
@@ -61,9 +61,6 @@
       stop(paste("Mismatch in values for parameter:", param_col))
     }
   }
-
-  # If all checks pass, return TRUE
-  TRUE
 }
 
 
