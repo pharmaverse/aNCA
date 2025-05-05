@@ -251,9 +251,7 @@ FIXTURE_PKNCA_DATA <- PKNCA::PKNCAdata(
                                time.nominal = "NFRLT"),
   units = PKNCA::pknca_units_table(
     concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-  ),
-  intervals = FIXTURE_INTERVALS,
-  options = list(keep_interval_cols = c("DOSNO", "type_interval"))
+  )
 )
 FIXTURE_PKNCA_DATA$intervals <- FIXTURE_INTERVALS
 FIXTURE_PKNCA_DATA$options <- list(keep_interval_cols = c("DOSNO", "type_interval"))
