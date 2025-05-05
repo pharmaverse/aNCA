@@ -34,7 +34,7 @@ should be used to identify when hovering the plotly outputs}
 \item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or a
 violin plot (\code{FALSE}). Default is \code{TRUE}.}
 
-\item{plotly}{A logical value indicating wether the output is plotly (TRUE, default)
+\item{plotly}{A logical value defining if the output is plotly (TRUE, default)
 or ggplot otherwise (FALSE)}
 }
 \value{
