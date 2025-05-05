@@ -1,5 +1,5 @@
 # Testing plots
-TEST_PLOTS <- readRDS(testthat::test_path("data", "test_plots.rds"))
+FIXTURE_PLOTS <- readRDS(testthat::test_path("data", "FIXTURE_PLOTS.rds"))
 
 # Import dataset from testthat/data folder
 
