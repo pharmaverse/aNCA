@@ -146,9 +146,10 @@ describe("export_cdisc", {
     )
 
     # Check is NA when PCTPT, PCTPTNUM, PCTPTREF are not present
+    test_pknca_res_no_pctpt <- test_pknca_res_no_atpt
     test_pknca_res_no_pctpt$data$conc$data <- test_pknca_res_no_atpt$data$conc$data %>%
       select(-PCTPT, -PCTPTNUM, -PCTPTREF)
-    res_no_atpt_pctpt_vars <- export_cdisc(modified_test_pknca_res)
+    res_no_atpt_pctpt_vars <- export_cdisc(test_pknca_res_no_pctpt)
 
     expect_equal(
       unique(res_no_atpt_pctpt_vars$adpc$ATPT),
