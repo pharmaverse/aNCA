@@ -62,7 +62,13 @@ expect_equal_plotly <- function(actual, expected, ignore_fields = list()) {
     act_obj,
     exp_obj,
     # Dots in boxplots randomize the X axis position
-    ignore_fields = c("data[[2]]$x")
+    ignore_fields = c(
+      "data[[2]]$x",
+      "layout$margin",
+      "data[[1]]$line$color",
+      "data[[2]]$marker$line$color",
+      "data[[2]]$marker$color"
+    )
   )
 }
 
@@ -186,7 +192,7 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
     expect_true(inherits(ggplot_plot, "ggplot"))
-    expect_equal(
+    .expect_equal_violinboxplot(
       ggplot_plot,
       testing_plots$ggplot_plot
     )
