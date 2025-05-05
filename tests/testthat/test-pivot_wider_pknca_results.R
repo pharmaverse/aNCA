@@ -66,10 +66,10 @@
 
 describe("pivot_wider_pknca_results", {
 
-  pwres <- expect_no_error(pivot_wider_pknca_results(TEST_PKNCA_RES))
+  pivoted_res <- expect_no_error(pivot_wider_pknca_results(TEST_PKNCA_RES))
 
   it("produces a data.frame", {
-    expect_s3_class(pwres, "data.frame")
+    expect_s3_class(pivoted_res, "data.frame")
   })
 
   it("produces a data.frame with expected format when only reshaping main intervals", {
@@ -102,7 +102,7 @@ describe("pivot_wider_pknca_results", {
 
   it("reshapes PKNCA results correctly when also considering AUC intervals", {
     # Check that the result is a data frame
-    expect_s3_class(pwres, "data.frame")
+    expect_s3_class(pivoted_res, "data.frame")
 
     # Check that the result contains expected columns
     group_columns <- PKNCA::getGroups(TEST_PKNCA_RES$data$conc)
@@ -117,10 +117,10 @@ describe("pivot_wider_pknca_results", {
       colnames(group_columns)
 
     )
-    expect_setequal(colnames(pwres), expected_colnames)
-    expect_equal(nrow(pwres), nrow(TEST_PKNCA_RES$data$dose$data))
+    expect_setequal(colnames(pivoted_res), expected_colnames)
+    expect_equal(nrow(pivoted_res), nrow(TEST_PKNCA_RES$data$dose$data))
 
-    expect_no_error(.validate_pknca_params(TEST_PKNCA_RES, pwres))
+    expect_no_error(.validate_pknca_params(TEST_PKNCA_RES, pivoted_res))
   })
 
   it("rounds numeric values to three decimals", {
@@ -129,7 +129,7 @@ describe("pivot_wider_pknca_results", {
       "R2", "R2ADJ", "LAMZLL[hr]", "LAMZNPT[count]", "LAMZSPN",
       "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]"
     )
-    actual_values <- pwres[, expected_num_param_cols]
+    actual_values <- pivoted_res[, expected_num_param_cols]
     expected_values <- round(actual_values, 3)
     diff_values <- actual_values - expected_values
 
@@ -138,7 +138,7 @@ describe("pivot_wider_pknca_results", {
   })
 
   it("adds appropriate labels to columns (CDISC PPTEST)", {
-    labels <- formatters::var_labels(pwres)
+    labels <- formatters::var_labels(pivoted_res)
     expected_labels <- c(
       USUBJID = NA, PARAM = NA, start = NA, end = NA, DOSNO = NA, AFRLT = NA, ARRLT = NA,
       NFRLT = NA, NRRLT = NA, ROUTE = NA, ADOSE = NA, DRUG = NA, ADOSEDUR = NA,
