@@ -1,5 +1,3 @@
-library(testthat)
-library(dplyr)
 
 # Simplified test_pknca_res object for testing with additional variables
 test_pknca_res <- list(
@@ -126,18 +124,44 @@ describe("export_cdisc", {
     expect_equal(result$studyid, "S1")
   })
 
-  it("derives ATPT and ATPTN when they are not present", {
-    modified_test_pknca_res <- test_pknca_res
-    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>%
+  it("derives when possible ATPT, ATPTN, ATPTREF (PCTPT, PCTPTNUM, PCTPTREF)", {
+    test_pknca_res_no_atpt <- test_pknca_res
+    test_pknca_res_no_atpt$data$conc$data <- test_pknca_res_no_atpt$data$conc$data %>%
       select(-ATPT, -ATPTN)
 
-    result <- export_cdisc(modified_test_pknca_res)
+    res_no_atpt_vars <- export_cdisc(test_pknca_res_no_atpt)
 
-    # Check that ATPT and ATPTN are derived as NA
-    expect_true("ATPT" %in% names(result$adpc))
-    expect_true("ATPTN" %in% names(result$adpc))
-    expect_true(all(!is.na(result$adpc$ATPT)))
-    expect_true(all(!is.na(result$adpc$ATPTN)))
+    # Check derivation when PCTPT, PCTPTNUM, PCTPTREF are present
+    expect_equal(
+      unique(res_no_atpt_vars$adpc$ATPT),
+      unique(test_pknca_res_no_atpt$data$conc$data$PCTPT)
+    )
+    expect_equal(
+      unique(res_no_atpt_vars$adpc$ATPTN),
+      unique(test_pknca_res_no_atpt$data$conc$data$PCTPTNUM)
+    )
+    expect_equal(
+      unique(res_no_atpt_vars$adpc$ATPTREF),
+      unique(test_pknca_res_no_atpt$data$conc$data$PCTPTREF)
+    )
+
+    # Check is NA when PCTPT, PCTPTNUM, PCTPTREF are not present
+    test_pknca_res_no_pctpt$data$conc$data <- test_pknca_res_no_atpt$data$conc$data %>%
+      select(-PCTPT, -PCTPTNUM, -PCTPTREF)
+    res_no_atpt_pctpt_vars <- export_cdisc(modified_test_pknca_res)
+
+    expect_equal(
+      unique(res_no_atpt_pctpt_vars$adpc$ATPT),
+      NA_character_
+    )
+    expect_equal(
+      unique(res_no_atpt_pctpt_vars$adpc$ATPTN),
+      NA
+    )
+    expect_equal(
+      unique(res_no_atpt_pctpt_vars$adpc$ATPTREF),
+      NA_character_
+    )
   })
 
   it("derives PPSTINT and PPENINT for partial AUC intervals", {
@@ -183,18 +207,6 @@ describe("export_cdisc", {
                    pull(PPREASND) %>%
                    unique(),
                  paste0(rep("A", 200), collapse = ""))
-  })
-  it("returns NA for ATPTREF if PCTPTREF is missing", {
-    modified_test_pknca_res <- test_pknca_res
-    modified_test_pknca_res$data$conc$data <- modified_test_pknca_res$data$conc$data %>%
-      select(-PCTPTREF)
-
-    res <- export_cdisc(test_pknca_res)
-    res_no_pctptref <- export_cdisc(modified_test_pknca_res)
-
-
-    expect_equal(unique(res$adpc$ATPTREF), "Most Recent Dose")
-    expect_true(all(is.na(res_no_pctptref$adpc$ATPTREF)))
   })
 
   it("derives correctly PPRFTDTC (if either PCRFTDTC or PCRFTDTM are present)", {
