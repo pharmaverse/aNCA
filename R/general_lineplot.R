@@ -55,11 +55,6 @@ general_lineplot <- function(
   colorby_var, time_scale, yaxis_scale, cycle = NULL
 ) {
 
-  # Check if the data is empty
-  if (nrow(data) == 0) {
-    return(ggplot() + ggtitle("No data available"))
-  }
-
   # preprocess data according to user selection
   preprocessed_data <- data %>%
     filter(
@@ -115,11 +110,7 @@ general_lineplot <- function(
       filter(AVAL > 0)
   }
 
-  time <- if (time_scale == "By Cycle") {
-    "ARRLT"
-  } else {
-    "AFRLT"
-  }
+  time <- if (time_scale == "By Cycle") "ARRLT" else "AFRLT"
 
   plt <- tern::g_ipp(
     df = preprocessed_data,
