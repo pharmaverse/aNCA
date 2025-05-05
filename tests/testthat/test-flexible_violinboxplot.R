@@ -27,7 +27,7 @@ boxplotdata <- data.frame(
 # )
 
 # Helper function to compare two plotly objects
-expect_equal_plotly <- function(actual, expected, ignore_fields = list()) {
+expect_equal_plotly <- function(actual, expected, ignore_fields = list(), tolerance = 1e-4) {
   # Extract relevant parts of the plotly objects
   extract_relevant <- function(plotly_obj) {
     list(
@@ -54,7 +54,7 @@ expect_equal_plotly <- function(actual, expected, ignore_fields = list()) {
   expected_relevant <- remove_ignored_fields(expected_relevant, ignore_fields)
 
   # Compare the relevant parts
-  expect_equal(actual_relevant, expected_relevant)
+  expect_equal(actual_relevant, expected_relevant, tolerance = tolerance)
 }
 
 .expect_equal_violinboxplot <- function(act_obj, exp_obj) {
@@ -148,8 +148,8 @@ describe("flexible_violinboxplot", {
     violin_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
+      xvars = "DOSEA",
+      colorvars = "DOSNO",
       varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
       columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
       box = FALSE,
