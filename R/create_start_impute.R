@@ -98,6 +98,7 @@ create_start_impute <- function(mydata) {
         is.ivbolus & is.analyte.drug ~ "start_c1"
       )
     ) %>%
+    ungroup() %>%
     # Select only the columns of interest
     select(any_of(c(names(mydata$intervals), "impute")))
 

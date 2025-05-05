@@ -83,6 +83,17 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
 
+  # Check for missing values in group columns
+  na_columns <- group_columns[sapply(df_conc[, group_columns], function(x) any(is.na(x)))]
+
+  if (length(na_columns) > 0) {
+    stop(
+      "Missing values detected in grouping columns: ",
+      paste(na_columns, collapse = ", "),
+      ". Please ensure all columns contain values."
+    )
+  }
+
   # Create dosing data
   df_dose <- format_pkncadose_data(
     pkncaconc_data = df_conc,
