@@ -16,7 +16,7 @@
 #'                            should be used to identify when hovering the plotly outputs
 #' @param box                 A logical value indicating whether to plot a box plot (`TRUE`) or a
 #'                            violin plot (`FALSE`). Default is `TRUE`.
-#' @param plotly              A logical value indicating wether the output is plotly (TRUE, default) 
+#' @param plotly              A logical value defining if the output is plotly (TRUE, default)
 #'                            or ggplot otherwise (FALSE)
 #'
 #' @return A plotly object representing the violin or box plot.
@@ -67,7 +67,7 @@ flexible_violinboxplot <- function(boxplotdata,
   # ylabel of violin/boxplot
   ylabel <- {
     if (box_data$PPSTRESU[1] == "unitless" ||
-        box_data$PPSTRESU[1] == "" ||
+          box_data$PPSTRESU[1] == "" ||
           is.na(box_data$PPSTRESU[1]) ||
           is.null(box_data$PPSTRESU)) {
       parameter
@@ -106,7 +106,7 @@ flexible_violinboxplot <- function(boxplotdata,
     theme(legend.position = "right",
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
-  
+
 
   # Make plotly with hover features
   if (plotly) {

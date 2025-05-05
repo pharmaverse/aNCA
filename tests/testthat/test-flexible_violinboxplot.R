@@ -36,11 +36,11 @@ expect_equal_plotly <- function(actual, expected) {
       layout = plotly_obj$x$layout
     )
   }
-  
+
   # Extract relevant parts
   actual_relevant <- extract_relevant(actual)
   expected_relevant <- extract_relevant(expected)
-  
+
   # Compare the relevant parts
   expect_equal(actual_relevant, expected_relevant)
 }
@@ -60,7 +60,7 @@ describe("flexible_violinboxplot", {
       box = TRUE,
       plotly = TRUE
     )
-    
+
     expect_equal_plotly(
       simple_plot,
       testing_plots$simple_plot
