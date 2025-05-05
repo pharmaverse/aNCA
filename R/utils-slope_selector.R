@@ -26,14 +26,13 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
 
   if (check_reasons) {
     exclusions <- filter(slopes, TYPE == "Exclusion")
-
     if (any(exclusions$REASON == "")) {
       missing_reasons <- filter(exclusions, REASON == "") %>%
-        select(PCSPEC, USUBJID, PARAM, DOSNO, RANGE) %>%
+        select(-REASON) %>%
         apply(1, \(x) paste0(x, collapse = " "))
 
       stop(
-        "No reason provided for the following exclusions:\nPCSPEC USUBJID PARAM DOSNO RANGE\n",
+        "No reason provided for the following exclusions:\n",
         missing_reasons
       )
     }
@@ -48,7 +47,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
   slopes <- slopes %>%
     semi_join(
       profiles,
-      by = all_of(slope_groups)
+      by = slope_groups
     ) %>%
     filter(all(!is.na(sapply(RANGE, .eval_range))))
 

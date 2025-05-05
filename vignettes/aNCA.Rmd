@@ -21,47 +21,42 @@ Click **Upload File** and select the dataset you would like to use. The data mus
 
 ### Data format
 
-|   | **Variable** | **Description** | **Format** |
+Some variables are mandatory (marked with \*), while others are optional. Custom variable names are supported as long as they are correctly mapped during the [Data Mapping](###%20Data%20mapping) step.
+
+|                          | **Variable** | **Description**                                                    | **Format**        |
 |------------------|------------------|-------------------|------------------|
-|  | STUDYID | Study Identifier | character |
-| **Grouping Identifiers** | USUBJID | Unique Subject Identifier | character/numeric |
-|  | TRT01A | Treatment Group Identifier (Actual) | character |
-|  | TRT01P | Treatment Group Identifier (Planned) | character |
-|  | AGE | Age of Subject | numeric |
-|  | RACE | Race of Subject | character |
-|  | SEX | Sex of Subject | character |
-| **Sample variables** | PARAM | Analyte | character |
-|  | PCSPEC | Specimen Material Type | character |
-|  | AVAL | Analysis Value | numeric |
-| **Dose Variables** | DOSNO | Dose Number | numeric |
-|  | ROUTE | Route of Administration, either {intravascular} or {extravascular} | character |
-|  | DOSEA | Actual Treatment Dose | numeric |
-|  | ADOSEDUR | Actual Treatment Dose | numeric |
-| **Time Variables** | AFRLT | Actual Relative Time from Analyte First Dose | numeric |
-|  | ARRLT | Actual Relative Time from Reference Dose | numeric |
-|  | NFRLT | Nominal Relative Time from Analyte First Dose | numeric |
-|  | NRRLT | Nominal Relative Time from Reference Dose | numeric |
-|  | AVALU | Analysis Value Unit | character |
-|  | DOSEU | Treatment Dose Units | character |
-|  | RRLTU | Relative Time from Reference Dose Unit | character |
-
-### Data mapping
-
-Once the dataset has been uploaded, you can verify that the data is as expected, and click on the *Mapping and Filters* tab.
-
--   Map the correct columns in your dataset to the corresponding label.
-
--   For Unit Variables, if your dataset has a defined column for units, select it. Otherwise, by scrolling down, you can select the units for the corresponding columns.
-
--   Click **Submit Mapping**. You will be automatically directed to the next tab.
-
-<img src="images/get_started/02.png" alt="Mapping tab"/> <img src="images/get_started/03.png" alt="Mapping"/>
+| **Grouping Identifiers** | STUDYID \*   | Study Identifier                                                   | character         |
+|                          | USUBJID \*   | Unique Subject Identifier                                          | character/numeric |
+|                          | TRT01A       | Treatment Group Identifier (Actual)                                | character         |
+|                          | TRT01P       | Treatment Group Identifier (Planned)                               | character         |
+|                          | AGE          | Age of Subject                                                     | numeric           |
+|                          | RACE         | Race of Subject                                                    | character         |
+|                          | SEX          | Sex of Subject                                                     | character         |
+|                          |              |                                                                    |                   |
+| **Sample variables**     | PARAM \*     | Analyte studied in the sample                                      | character         |
+|                          | PCSPEC \*    | Specimen Material Type                                             | character         |
+|                          | AVAL \*      | Analysis Value                                                     | numeric           |
+|                          |              |                                                                    |                   |
+| **Dose Variables**       | DRUG \*      | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
+|                          | DOSNO \*     | Dose Number of administration. Used to split interval calculations | numeric           |
+|                          | ROUTE \*     | Route of Administration, either {intravascular} or {extravascular} | character         |
+|                          | DOSEA \*     | Actual Treatment Dose                                              | numeric           |
+|                          | ADOSEDUR     | Actual Treatment Dose                                              | numeric           |
+|                          |              |                                                                    |                   |
+| **Time Variables**       | AFRLT \*     | Actual Relative Time from Analyte First Dose                       | numeric           |
+|                          | ARRLT \*     | Actual Relative Time from Reference Dose                           | numeric           |
+|                          | NFRLT \*     | Nominal Relative Time from Analyte First Dose                      | numeric           |
+|                          | NRRLT \*     | Nominal Relative Time from Reference Dose                          | numeric           |
+|                          |              |                                                                    |                   |
+| **Time Variables**       | AVALU        | Analysis Value Unit                                                | character         |
+|                          | DOSEU        | Treatment Dose Units                                               | character         |
+|                          | RRLTU        | Relative Time from Reference Dose Unit                             | character         |
 
 ### Verifying and adding filters
 
-Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, return to the *Mapping and Filters* page, then scroll down to add filters.
+Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, click the *Add Filter* button.
 
-<img src="images/get_started/04.png" alt="Adding filters"/>
+<img src="images/get_started/02.png" alt="Adding filters"/>
 
 <blockquote class="important">
 
@@ -69,7 +64,21 @@ Don’t forget to scroll down and click **Submit Filters**!
 
 </blockquote>
 
-<img src="images/get_started/05.png" alt="Submitting filters"/>
+### Data mapping
+
+Click on the *Column Mapping* tab.
+
+-   Map the correct columns in your dataset to the corresponding label.
+
+-   For Unit Variables, if your dataset has a defined column for units, select it. Otherwise, by scrolling down, you can select the units for the corresponding columns.
+
+-   Click **Submit Mapping**. You will be automatically directed to the next tab.
+
+<img src="images/get_started/04.png" alt="Mapping tab"/> <img src="images/get_started/03.png" alt="Mapping"/>
+
+### Review
+
+Review the data and ensure that the columns have been mapped correctly, and all your filters have been applied. If there are any problems with your data (duplicates, missing times), application will display a warning message and in certain situations manual edits will be requested. Just follow the instructions.
 
 # Step 2: Run NCA
 
@@ -77,16 +86,16 @@ Click on the *NCA* tab at the top of the screen to switch to the next section.
 
 ## Data selection
 
-1.  *NCA settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s) you would like to run the NCA on, the extrapolation method and the NCA parameters to calculate. Select additional options including partial AUCs, or rule sets to flag the data. A table summarizes the settings you have selected.
-
-<img src="images/get_started/06.png" alt="NCA settings"/>
+1.  *NCA settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s) you would like to run the NCA on, the extrapolation method and the NCA parameters to calculate. Select additional options including partial AUCs, or rule sets to flag the data. In the summary tab, a table summarizes the settings you have selected. <img src="images/get_started/06.png" alt="NCA settings"/>
 
 2.  Click **Run NCA** at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
 
 <img src="images/get_started/07.png" alt="Running NCA"/>
 
 <blockquote class="note">
+
 The **Save Project Settings**/**Upload Settings** option is not working currently.
+
 </blockquote>
 
 # Step 3: NCA Results
@@ -112,7 +121,7 @@ There are two different ways to add exclusions/selections to the slopes.
 
 #### Via the Plots
 
-For in-app guidance, you can click the <span class="help-button">?</span> button.
+For in-app guidance, you can click the [?]{.help-button} button.
 
 <img src="images/get_started/10.png" alt="Guidance"/>
 
@@ -134,11 +143,17 @@ If you do not click **Apply**, the manual slopes will not be added!
 
 </blockquote>
 
-#### Parameter Datasets
+### Parameter Datasets
 
 In the Parameter Datasets tab you can see and export the ADPP and PP datasets.
 
 <img src="images/get_started/12.png" alt="Parameter Datasets"/>
+
+## Additional Analysis
+
+In the *Additional Analysis* tab, you can calculate tissue-matrix ratios using the concentration ratios tab. Input which specimen you would like as the numerator and denominator, and click **Submit**.
+
+<img src="images/get_started/13.png" alt="Additional Analysis"/>
 
 ## Saving and uploading settings
 
@@ -158,7 +173,7 @@ Click the button *Save Project Settings* on top of the tabs. This will download 
 
 To upload settings in a later analysis, after column mapping, in *Setup*, in the *NCA Settings* tab, click *Browse*. The inclusions and exclusions will be automatically added to the data.
 
-## Step 4: Visualization
+# Step 4: Visualization
 
 In the *Visualization* tab, you will find the different visualization options, including Individual Plots, Mean Plots, Descriptive Statistics, and Boxplots.
 
@@ -168,14 +183,18 @@ Currently work in progress
 
 </blockquote>
 
-## Step 5: TLGs
+# Step 5: TLGs
+
 <blockquote class="warning">
+
 Currently work in progress. Not all TLGs and features are available.
+
 </blockquote>
 
 After performing the analysis, you can prepare reports regarding the analysis, including various tables, listings and graphs.
 
 ### Order details
+
 Firstly, you will need to prepare an order for TLGs. Table in the *Order details* tab will display some default TLGs with their metadata. You can add additional reports by clicking the **Add TLG** button. This will bring up a list of available, defined TLGs. Select the ones you are interested in and click the **Add TLGs to Order** button. You can also remove unwanted entries by selecting them and clicking **Remove TLG**.
 
 When you are happy with the selection, click **Submit Order Details**.
@@ -183,6 +202,7 @@ When you are happy with the selection, click **Submit Order Details**.
 <img src="images/get_started/tlg_01.png" alt="Default TLG table"/>
 
 ### Navigating the TLGs
+
 The application provides three separate tabs for differentiating **Tables**, **Listings** and **Graphs**.
 
 Each tab will show a sidebar on the left of the screen. This will let you navigate each specific entry.
@@ -198,6 +218,7 @@ Lastly, the widgets on the right are used for customizing the resulting reports.
 <img src="images/get_started/tlg_04.png" alt="TLG customization"/>
 
 ### Customizing the TLGs
+
 Exact customization options available for any given TLGs will depend on their implementation. Usually, you will be able to specify things like titles and footnotes, axis labels, limits or grouping variables.
 
 Simply provide the desired value in a given widget and the TLG will update in real time.
@@ -206,7 +227,7 @@ Leaving a widget empty will induce default behavior of the TLG.
 
 Some fields will provide additional functionalities. For text fields, a special syntax might be used to reference the values or attributes of the data:
 
-- prefacing a column name with `!` will reference the **label attribute** of a given column, e.g. `!DOSEU` will translate to `Treatment Dose Units`.
-- prefacing a column name with `$` will reference the **value** for a given column, e.g. `$DOSEU` will translate to mg (for the dummy dataset).
+-   prefacing a column name with `!` will reference the **label attribute** of a given column, e.g. `!DOSEU` will translate to `Treatment Dose Units`.
+-   prefacing a column name with `$` will reference the **value** for a given column, e.g. `$DOSEU` will translate to mg (for the dummy dataset).
 
-You can always click on the <span class="help-button">?</span> button for help.
+You can always click on the [?]{.help-button} button for help.

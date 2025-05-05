@@ -30,11 +30,7 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 LABELS <<- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 assets <- system.file("shiny/www", package = "aNCA")
 
-# setup logger #
-log_layout(layout_glue_colors)
-log_formatter(formatter_glue)
-log_threshold(TRACE)
-log_appender(appender_console, namespace = "global")
+setup_logger()
 
 ui <- function() {
   # Define UI
@@ -95,20 +91,20 @@ server <- function(input, output, session) {
   # DATA ----
   data_module <- tab_data_server("data")
   # Data set for analysis
-  data <- data_module$data
+  adnca_data <- data_module$data
   #' Create global data object. This is accessible by all modules, without the need to pass
   #' data reactive directly.
-  session$userData$data <- reactive(data())
+
   # Grouping Variables
   grouping_vars <- data_module$grouping_variables
 
   # NCA ----
-  res_nca <- tab_nca_server("nca", data, grouping_vars)
+  res_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
   # VISUALISATION ----
-  tab_visuals_server("visuals", data, grouping_vars, res_nca)
+  tab_visuals_server("visuals", adnca_data, grouping_vars, res_nca)
 
   # TLG
-  tab_tlg_server("tlg")
+  tab_tlg_server("tlg", adnca_data)
 }
 
 shiny::shinyApp(ui, server)

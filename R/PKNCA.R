@@ -66,23 +66,39 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
 
+  #Filter out flagged duplicates if DFLAG column available
+  if ("DFLAG" %in% colnames(adnca_data)) {
+    adnca_data <- adnca_data %>%
+      filter(!DFLAG) %>%
+      select(-DFLAG)
+  }
+
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
     group_columns = c(group_columns, usubjid_column, analyte_column),
     time_column = time_column,
-    route_column = route_column,
-    dosno_column = dosno_column
+    rrlt_column = "ARRLT",
+    route_column = route_column
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
+
+  # Check for missing values in group columns
+  na_columns <- group_columns[sapply(df_conc[, group_columns], function(x) any(is.na(x)))]
+
+  if (length(na_columns) > 0) {
+    stop(
+      "Missing values detected in grouping columns: ",
+      paste(na_columns, collapse = ", "),
+      ". Please ensure all columns contain values."
+    )
+  }
 
   # Create dosing data
   df_dose <- format_pkncadose_data(
     pkncaconc_data = df_conc,
     group_columns = c(group_columns, usubjid_column),
-    time_column = time_column,
-    dosno_column = dosno_column,
-    since_lastdose_time_column = "ARRLT"
+    time_column = time_column
   )
 
   # Set default settings
@@ -101,7 +117,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
+    formula = DOSEA ~ TIME_DOSE | STUDYID + PCSPEC + DRUG + USUBJID,
     route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
