@@ -1,12 +1,12 @@
 describe("lambda_slope_plot", {
 
-  conc_pknca_df <- PKNCA_DATA_FIXTURE$conc$data %>%
+  conc_pknca_df <- FIXTURE_PKNCA_DATA$conc$data %>%
     # ToDo: The currerent lambda_slope_plot
     # has additional non-neccesary assumptions
     mutate(TIME = AFRLT,
            PCSTRESU = AVALU)
 
-  myres <- PKNCA_RES_FIXTURE
+  myres <- FIXTURE_PKNCA_RES
   myres$result <- myres$result %>%
     mutate(PPTESTCD = translate_terms(
       PPTESTCD, "PPTESTCD", "PKNCA"

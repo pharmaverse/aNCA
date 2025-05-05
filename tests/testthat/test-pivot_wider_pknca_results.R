@@ -66,15 +66,15 @@
 
 describe("pivot_wider_pknca_results", {
 
-  pivoted_res <- expect_no_error(pivot_wider_pknca_results(PKNCA_RES_FIXTURE))
+  pivoted_res <- expect_no_error(pivot_wider_pknca_results(FIXTURE_PKNCA_RES))
 
   it("produces a data.frame", {
     expect_s3_class(pivoted_res, "data.frame")
   })
 
   it("produces a data.frame with expected format when only reshaping main intervals", {
-    res_only_main <- PKNCA_RES_FIXTURE
-    res_only_main$result <- PKNCA_RES_FIXTURE$result  %>%
+    res_only_main <- FIXTURE_PKNCA_RES
+    res_only_main$result <- FIXTURE_PKNCA_RES$result  %>%
       filter(type_interval == "main")
     pivoted_res_only_main <- pivot_wider_pknca_results(res_only_main)
     expect_s3_class(pivoted_res_only_main, "data.frame")
@@ -107,7 +107,7 @@ describe("pivot_wider_pknca_results", {
     expect_s3_class(pivoted_res, "data.frame")
 
     # Check that the result contains expected columns
-    group_columns <- PKNCA::getGroups(PKNCA_RES_FIXTURE$data$conc)
+    group_columns <- PKNCA::getGroups(FIXTURE_PKNCA_RES$data$conc)
     expected_colnames <- c(
       "start", "end", "DOSNO", "AFRLT", "ARRLT",
       "NFRLT", "NRRLT", "ADOSE", "ROUTE", "ADOSEDUR",
@@ -118,12 +118,12 @@ describe("pivot_wider_pknca_results", {
       "LAMZSPN", "LAMZIX", "LAMZMTD", "Exclude",
       "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]",
       colnames(group_columns),
-      intersect(colnames(PKNCA_RES_FIXTURE$data$dose$data), colnames(pivoted_res))
+      intersect(colnames(FIXTURE_PKNCA_RES$data$dose$data), colnames(pivoted_res))
     )
     expect_setequal(colnames(pivoted_res), expected_colnames)
-    expect_equal(nrow(pivoted_res), nrow(PKNCA_RES_FIXTURE$data$dose$data))
+    expect_equal(nrow(pivoted_res), nrow(FIXTURE_PKNCA_RES$data$dose$data))
 
-    expect_no_error(.validate_pknca_params(PKNCA_RES_FIXTURE, pivoted_res))
+    expect_no_error(.validate_pknca_params(FIXTURE_PKNCA_RES, pivoted_res))
   })
 
   it("rounds numeric values to three decimals", {
@@ -167,8 +167,8 @@ describe("pivot_wider_pknca_results", {
   })
 
   it("handles exclude values correctly", {
-    # Modify PKNCA_RES_FIXTURE$result to include exclude values
-    res_with_exclude <- PKNCA_RES_FIXTURE
+    # Modify FIXTURE_PKNCA_RES$result to include exclude values
+    res_with_exclude <- FIXTURE_PKNCA_RES
     res_with_exclude$result <- res_with_exclude$result %>%
       mutate(
         exclude = ifelse(USUBJID == 1 & DOSNO == 1, "Reason 1; Reason 2", NA_character_)
