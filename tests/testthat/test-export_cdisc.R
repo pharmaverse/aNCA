@@ -156,7 +156,7 @@ describe("export_cdisc", {
 
   it("derives PPREASND & PPSTAT correctly in all situations", {
     modified_test_pknca_res <- test_pknca_res
-    modified_test_pknca_res$result <- test_pknca_res$result %>%
+    modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
       mutate(
         # Case NA without reason
         PPSTRES = ifelse(PPTESTCD == "AUCINT", NA, PPSTRES),
