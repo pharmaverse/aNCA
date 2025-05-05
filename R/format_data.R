@@ -95,34 +95,22 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   #set a tolerance for the arranging to avoid floating point precision issues
-  tol <- 0.01
+  tol <- 0.02
 
-  #Check if EVID column in data, and has rows with EVID == 1
-  if ("EVID" %in% colnames(pkncaconc_data) &&
-      any(pkncaconc_data$EVID == 1)) {
-      pkncadose_data <- pkncaconc_data %>%
-        filter(EVID == 1) %>%
-        arrange(!!!syms(group_columns), TIME_DOSE) %>%
-        group_by(!!!syms(group_columns)) %>%
-        mutate(
-          DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
-        ) %>%
-        arrange(!!!syms(group_columns))
-      }
-  else {
-      # Select unique doses
-      pkncadose_data <- pkncaconc_data %>%
-        arrange(!!!syms(group_columns), TIME_DOSE) %>%
-        group_by(!!!syms(group_columns)) %>%
-        mutate(
-          DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
-        ) %>%
-        group_by(!!!syms(group_columns), DOSNOA) %>%
-        slice(1) %>%
-        ungroup() %>%
-        arrange(!!!syms(group_columns))
-  }
-  pkncadose_data
+  # Select unique doses
+  pkncaconc_data %>%
+    arrange(!!!syms(group_columns), TIME_DOSE) %>%
+    group_by(!!!syms(group_columns)) %>%
+    mutate(
+      DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
+    ) %>%
+    group_by(!!!syms(group_columns), DOSNOA) %>%
+    slice(1) %>%
+    ungroup() %>%
+    arrange(!!!syms(group_columns)) %>%
+    # filter out rows with NA in DOSEA column
+    filter(!is.na(DOSEA))
+
 }
 
 #' Create Dose Intervals Dataset

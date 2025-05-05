@@ -5,7 +5,7 @@ conc_data <- data.frame(
   route = c(rep("extravascular", 9), rep("intravascular", 15)),
   param = c(rep("A", 21), rep("B", 3)),
   USUBJID = c(rep(1, 3), rep(2, 6), rep(3, 6), rep(4, 3), rep(5, 3), rep(6, 3)),
-  DOSNO = c(rep(1, 3), rep(rep(1:2, each = 3), 2), rep(1, 3), rep(1, 3), rep(1, 3))
+  DOSNOA = c(rep(1, 3), rep(rep(1:2, each = 3), 2), rep(1, 3), rep(1, 3), rep(1, 3))
 )
 
 dose_data <- data.frame(
@@ -15,21 +15,21 @@ dose_data <- data.frame(
   DRUG = "A",
   duration = c(0, 0, 0, 0, 0, 0, 1, 0),
   USUBJID = c(1, rep(2, 2), rep(3, 2), 4, 5, 6),
-  DOSNO = c(1, c(1, 2), c(1, 2), 1, 1, 1)
+  DOSNOA = c(1, c(1, 2), c(1, 2), 1, 1, 1)
 )
 
 intervals_data <- data.frame(
   start = c(0, 0, 3, 0, 3, 0, 0, 0),
   end =   c(3, 3, 6, 3, 6, 3, 3, 3),
   USUBJID =  c(1, rep(2, 2), rep(3, 2), 4, 5, 6),
-  DOSNO = c(1, 1, 2, 1, 2, 1, 1, 1),  # Include second dose profile for USUBJID 6
+  DOSNOA = c(1, 1, 2, 1, 2, 1, 1, 1),  # Include second dose profile for USUBJID 6
   tmax = TRUE,
   auclast = TRUE,
   aucinf.pred = TRUE
 )
 
-conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID + DOSNO / param)
-dose_obj <- PKNCA::PKNCAdose(dose_data, dose ~ time | USUBJID + DOSNO,
+conc_obj <- PKNCA::PKNCAconc(conc_data, conc ~ time | USUBJID / param)
+dose_obj <- PKNCA::PKNCAdose(dose_data, dose ~ time | USUBJID,
                              duration = "duration", route = "route")
 mydata <- PKNCA::PKNCAdata(conc_obj, dose_obj, intervals = intervals_data)
 
@@ -52,56 +52,56 @@ describe("create_start_impute", {
 
   it("does not add impute (NA) when start is in PKNCAconc", {
     not_imputed <- result$intervals %>%
-      dplyr::filter(USUBJID == 1, DOSNO == 1) %>%
+      dplyr::filter(USUBJID == 1, DOSNOA == 1) %>%
       dplyr::pull(impute)
     expect_equal(not_imputed, NA_character_)
   })
 
   it("sets conc0 when route is extravascular (first dose)", {
     expect_equal(result$intervals %>%
-                   dplyr::filter(USUBJID == 2, DOSNO == 1) %>%
+                   dplyr::filter(USUBJID == 2, DOSNOA == 1) %>%
                    dplyr::pull(impute),
                  "start_conc0")
   })
 
   it("sets predose when route is extravascular (later dose)", {
     expect_equal(result$intervals %>%
-                   dplyr::filter(USUBJID == 2, DOSNO == 2) %>%
+                   dplyr::filter(USUBJID == 2, DOSNOA == 2) %>%
                    dplyr::pull(impute),
                  "start_predose")
   })
 
   it("sets logslope when route is IV bolus (first dose)", {
     expect_equal(result$intervals %>%
-                   dplyr::filter(USUBJID == 3, DOSNO == 1) %>%
+                   dplyr::filter(USUBJID == 3, DOSNOA == 1) %>%
                    dplyr::pull(impute),
                  "start_logslope")
   })
 
   it("sets logslope when route is IV bolus (later dose)", {
     expect_equal(result$intervals %>%
-                   dplyr::filter(USUBJID == 3, DOSNO == 2) %>%
+                   dplyr::filter(USUBJID == 3, DOSNOA == 2) %>%
                    dplyr::pull(impute),
                  "start_logslope")
   })
 
   it("sets c1 when route is IV bolus not monodecaying (first dose)", {
     expect_equal(result$intervals %>%
-                   dplyr::filter(USUBJID == 4, DOSNO == 1) %>%
+                   dplyr::filter(USUBJID == 4, DOSNOA == 1) %>%
                    dplyr::pull(impute),
                  "start_c1")
   })
 
   it("sets conc0 when route is IV bolus not monodecaying (first dose)", {
     expect_equal(result$intervals %>%
-                   dplyr::filter(USUBJID == 5, DOSNO == 1) %>%
+                   dplyr::filter(USUBJID == 5, DOSNOA == 1) %>%
                    dplyr::pull(impute),
                  "start_conc0")
   })
 
   it("sets conc0 when route is IV bolus not monodecaying (first dose)", {
     expect_equal(result$intervals %>%
-                   dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
+                   dplyr::filter(USUBJID == 6, DOSNOA == 1) %>%
                    dplyr::pull(impute),
                  "start_conc0")
   })
