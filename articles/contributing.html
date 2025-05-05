@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9070</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9071</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -319,6 +319,11 @@ file. This is because some of those functions are not used in the
 application</strong>. Please beware of this situation when managing the
 package dependencies - some functions might be used in the app, even
 though they are not verbosely imported.</li>
+<li>For development purposes, you can specify a log level using
+<code>aNCA_LOG_LEVEL</code> environment variable. As a default, this is
+set to <strong>INFO</strong>. We recommend setting the log level to
+<strong>TRACE</strong>, e.g. in your <code>.Renviron</code> file
+(<code>aNCA_LOG_LEVEL="TRACE"</code>).</li>
 </ul>
 </div>
 <div class="section level2">
