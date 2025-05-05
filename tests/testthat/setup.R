@@ -2,7 +2,7 @@
 # ------------------------------------
 # This file creates global testing datasets that can be used across all testthat tests.
 # Developers can either:
-# 1) Modify this file to add new cases as new lines in TEST_CONC_DATA & TEST_DOSE_DATA.
+# 1) Modify this file to add new cases as new lines in CONC_DATA_FIXTURE & TEST_DOSE_DATA.
 # 2) Modify the testing file directly there, to derive the PKNCA objects for particular cases.
 #
 # The App currently performs certain modification on the PKNCA objects, numbered here:
@@ -21,7 +21,7 @@
 #    - Temporarily needed to derive LAMZNPT and LAMZMTD.
 
 # Create Testing Concentration Data
-TEST_CONC_DATA <- data.frame(
+CONC_DATA_FIXTURE <- data.frame(
   # Columns that are mapped from the data
   AVAL = c(                 # USUBJID.DOSNO
     0:4,                    # 1.1 (Extravascular, linear & sample at dose)
@@ -115,7 +115,7 @@ TEST_CONC_DATA <- data.frame(
 )
 
 # Create Testing Dose Data
-TEST_DOSE_DATA <- data.frame(
+DOSE_DATA_FIXTURE <- data.frame(
   AFRLT = c(
     0,
     c(0, 5),
@@ -195,7 +195,7 @@ main_intervals <- data.frame(
   DOSNO = c(1, 2)
 ) %>%
   left_join(
-    TEST_DOSE_DATA %>%
+    DOSE_DATA_FIXTURE %>%
       select(USUBJID, DOSNO) %>%
       unique()
   )
@@ -215,7 +215,7 @@ auc_intervals <- data.frame(
   DOSNO = c(1, 1, 2, 2)
 ) %>%
   left_join(
-    TEST_DOSE_DATA %>%
+    DOSE_DATA_FIXTURE %>%
       select(USUBJID, DOSNO) %>%
       unique(),
     by = "DOSNO",
@@ -226,7 +226,7 @@ auc_intervals <- auc_intervals %>%
   mutate(
     aucint.last = TRUE
   )
-INTERVALS <- rbind(main_intervals, auc_intervals) %>%
+INTERVALS_FIXTURE <- rbind(main_intervals, auc_intervals) %>%
   mutate(impute = case_when(
     USUBJID == 1 & DOSNO == 1 ~ NA_character_,
     USUBJID == 2 & DOSNO == 1 ~ "start_conc0",
@@ -244,23 +244,23 @@ INTERVALS <- rbind(main_intervals, auc_intervals) %>%
     TRUE ~ NA_character_
   ))
 
-TEST_PKNCA_DATA <- PKNCA::PKNCAdata(
-  data.conc = PKNCA::PKNCAconc(TEST_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
-  data.dose = PKNCA::PKNCAdose(TEST_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
+PKNCA_DATA_FIXTURE <- PKNCA::PKNCAdata(
+  data.conc = PKNCA::PKNCAconc(CONC_DATA_FIXTURE, AVAL ~ AFRLT | USUBJID / PARAM),
+  data.dose = PKNCA::PKNCAdose(DOSE_DATA_FIXTURE, ADOSE ~ AFRLT | USUBJID,
                                route = "ROUTE", duration = "ADOSEDUR",
                                time.nominal = "NFRLT"),
   units = PKNCA::pknca_units_table(
     concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
   ),
-  intervals = INTERVALS,
+  intervals = INTERVALS_FIXTURE,
   options = list(keep_interval_cols = c("DOSNO", "type_interval"))
 )
-TEST_PKNCA_DATA$intervals <- INTERVALS
-TEST_PKNCA_DATA$options <- list(keep_interval_cols = c("DOSNO", "type_interval"))
+PKNCA_DATA_FIXTURE$intervals <- INTERVALS_FIXTURE
+PKNCA_DATA_FIXTURE$options <- list(keep_interval_cols = c("DOSNO", "type_interval"))
 
 # Add start_dose and end_dose columns
-TEST_PKNCA_RES <- withCallingHandlers(
-  PKNCA::pk.nca(TEST_PKNCA_DATA),
+PKNCA_RES_FIXTURE <- withCallingHandlers(
+  PKNCA::pk.nca(PKNCA_DATA_FIXTURE),
   warning = function(w) {
     # Suppress warnings matching the regex "Too few points for half-life"
     if (grepl("^Too few points for half-life", conditionMessage(w))) {
@@ -274,7 +274,7 @@ TEST_PKNCA_RES <- withCallingHandlers(
 # so we are manually making it
 #
 # TODO: Substitute this dirty hard coded trick with the proper way
-TEST_PKNCA_RES$result <- TEST_PKNCA_RES$result %>%
+PKNCA_RES_FIXTURE$result <- PKNCA_RES_FIXTURE$result %>%
   mutate(
     type_interval = if ("type_interval" %in% names(.)) {
       type_interval
@@ -293,21 +293,21 @@ TEST_PKNCA_RES$result <- TEST_PKNCA_RES$result %>%
   )
 #####################################################################
 
-TEST_DOSE_DATA_TO_JOIN <- select(
-  TEST_PKNCA_RES$data$dose$data,
+dose_data_to_join_fixture <- select(
+  PKNCA_RES_FIXTURE$data$dose$data,
   -exclude,
-  -TEST_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
+  -PKNCA_RES_FIXTURE$data$dose$data$conc$columns$groups$group_analyte
 )
 
-TEST_PKNCA_RES$result <- TEST_PKNCA_RES$result %>%
+PKNCA_RES_FIXTURE$result <- PKNCA_RES_FIXTURE$result %>%
   inner_join(
-    TEST_DOSE_DATA_TO_JOIN,
-    by = intersect(names(.), names(TEST_DOSE_DATA_TO_JOIN))
+    dose_data_to_join_fixture,
+    by = intersect(names(.), names(dose_data_to_join_fixture))
   ) %>%
   mutate(
     # Assumption 4: start_dose &  end_dose relative to the dose time
-    start_dose = start - !!sym(TEST_PKNCA_RES$data$dose$columns$time),
-    end_dose = end - !!sym(TEST_PKNCA_RES$data$dose$columns$time),
+    start_dose = start - !!sym(PKNCA_RES_FIXTURE$data$dose$columns$time),
+    end_dose = end - !!sym(PKNCA_RES_FIXTURE$data$dose$columns$time),
     # Assumption 3: PPSTRESU & PPSTRES are always in the results object
     PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
     PPSTRES = PPORRES,
@@ -318,6 +318,9 @@ TEST_PKNCA_RES$result <- TEST_PKNCA_RES$result %>%
 
 # Dummy data
 # Import dataset from testthat/data folder
+
+# ToDo (Gerardo): These fixtures are supporting still test-bioavailability.R
+# We need to substitute them with the previous ones for consistency
 
 DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
 

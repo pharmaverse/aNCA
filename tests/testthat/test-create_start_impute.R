@@ -1,4 +1,4 @@
-pknca_data <- TEST_PKNCA_DATA
+pknca_data <- PKNCA_DATA_FIXTURE
 
 describe("create_start_impute", {
   it("works without issue", {

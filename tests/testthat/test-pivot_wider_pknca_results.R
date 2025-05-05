@@ -66,38 +66,40 @@
 
 describe("pivot_wider_pknca_results", {
 
-  pivoted_res <- expect_no_error(pivot_wider_pknca_results(TEST_PKNCA_RES))
+  pivoted_res <- expect_no_error(pivot_wider_pknca_results(PKNCA_RES_FIXTURE))
 
   it("produces a data.frame", {
     expect_s3_class(pivoted_res, "data.frame")
   })
 
   it("produces a data.frame with expected format when only reshaping main intervals", {
-    res_only_main <- TEST_PKNCA_RES
-    res_only_main$result <- TEST_PKNCA_RES$result  %>%
+    res_only_main <- PKNCA_RES_FIXTURE
+    res_only_main$result <- PKNCA_RES_FIXTURE$result  %>%
       filter(type_interval == "main")
-    pwres_only_main <- pivot_wider_pknca_results(res_only_main)
-    expect_s3_class(pwres_only_main, "data.frame")
+    pivoted_res_only_main <- pivot_wider_pknca_results(res_only_main)
+    expect_s3_class(pivoted_res_only_main, "data.frame")
 
     # Check that the result contains expected columns
     group_columns <- PKNCA::getGroups(res_only_main$data$conc)
     expected_colnames <- c(
       "start", "end", "DOSNO", "AFRLT", "ARRLT",
       "NFRLT", "NRRLT", "ADOSE", "ROUTE", "ADOSEDUR",
+      "AUCLST[hr*ng/mL]", "AUCIFO[hr*ng/mL]", "CLST[ng/mL]",
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
       "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
       "LAMZSPN", "LAMZIX",
       "LAMZMTD", "Exclude",
-      colnames(group_columns)
+      colnames(group_columns),
+      intersect(colnames(res_only_main$data$dose$data), colnames(pivoted_res_only_main))
     )
-    expect_setequal(colnames(pwres_only_main), expected_colnames)
+    expect_setequal(colnames(pivoted_res_only_main), expected_colnames)
 
     # Check number of rows is the expected (each dose has 1 row in the pivoted data)
-    expect_equal(nrow(pwres_only_main), nrow(res_only_main$data$dose$data))
+    expect_equal(nrow(pivoted_res_only_main), nrow(res_only_main$data$dose$data))
 
     # Check parameter values match the ones in the PKNCA results object
-    expect_no_error(.validate_pknca_params(res_only_main, pwres_only_main))
+    expect_no_error(.validate_pknca_params(res_only_main, pivoted_res_only_main))
   })
 
   it("reshapes PKNCA results correctly when also considering AUC intervals", {
@@ -105,22 +107,23 @@ describe("pivot_wider_pknca_results", {
     expect_s3_class(pivoted_res, "data.frame")
 
     # Check that the result contains expected columns
-    group_columns <- PKNCA::getGroups(TEST_PKNCA_RES$data$conc)
+    group_columns <- PKNCA::getGroups(PKNCA_RES_FIXTURE$data$conc)
     expected_colnames <- c(
       "start", "end", "DOSNO", "AFRLT", "ARRLT",
       "NFRLT", "NRRLT", "ADOSE", "ROUTE", "ADOSEDUR",
+      "AUCLST[hr*ng/mL]", "AUCIFO[hr*ng/mL]", "CLST[ng/mL]",
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
       "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
       "LAMZSPN", "LAMZIX", "LAMZMTD", "Exclude",
       "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]",
-      colnames(group_columns)
-
+      colnames(group_columns),
+      intersect(colnames(PKNCA_RES_FIXTURE$data$dose$data), colnames(pivoted_res))
     )
     expect_setequal(colnames(pivoted_res), expected_colnames)
-    expect_equal(nrow(pivoted_res), nrow(TEST_PKNCA_RES$data$dose$data))
+    expect_equal(nrow(pivoted_res), nrow(PKNCA_RES_FIXTURE$data$dose$data))
 
-    expect_no_error(.validate_pknca_params(TEST_PKNCA_RES, pivoted_res))
+    expect_no_error(.validate_pknca_params(PKNCA_RES_FIXTURE, pivoted_res))
   })
 
   it("rounds numeric values to three decimals", {
@@ -164,8 +167,8 @@ describe("pivot_wider_pknca_results", {
   })
 
   it("handles exclude values correctly", {
-    # Modify TEST_PKNCA_RES$result to include exclude values
-    res_with_exclude <- TEST_PKNCA_RES
+    # Modify PKNCA_RES_FIXTURE$result to include exclude values
+    res_with_exclude <- PKNCA_RES_FIXTURE
     res_with_exclude$result <- res_with_exclude$result %>%
       mutate(
         exclude = ifelse(USUBJID == 1 & DOSNO == 1, "Reason 1; Reason 2", NA_character_)
