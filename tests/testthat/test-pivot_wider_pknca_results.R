@@ -80,19 +80,21 @@ describe("pivot_wider_pknca_results", {
     expect_s3_class(pwres_only_main, "data.frame")
 
     # Check that the result contains expected columns
-    expected_columns <- c(
-      "USUBJID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
+    group_columns <- PKNCA::getGroups(res_only_main$data$conc)
+    expected_colnames <- c(
+      "start", "end", "DOSNO", "AFRLT", "ARRLT",
       "NFRLT", "NRRLT", "ADOSE", "ROUTE", "ADOSEDUR",
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
       "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
       "LAMZSPN", "LAMZIX",
-      "LAMZMTD", "Exclude"
+      "LAMZMTD", "Exclude",
+      colnames(group_columns)
     )
-    expect_true(all(expected_columns %in% colnames(pwres_only_main)))
+    expect_setequal(colnames(pwres_only_main), expected_colnames)
 
     # Check number of rows is the expected (each dose has 1 row in the pivoted data)
-    expect_true(nrow(pwres_only_main) == nrow(res_only_main$data$dose$data))
+    expect_equal(nrow(pwres_only_main), nrow(res_only_main$data$dose$data))
 
     # Check parameter values match the ones in the PKNCA results object
     expect_no_error(.validate_pknca_params(res_only_main, pwres_only_main))
@@ -103,16 +105,20 @@ describe("pivot_wider_pknca_results", {
     expect_s3_class(pwres, "data.frame")
 
     # Check that the result contains expected columns
-    expected_columns <- c(
-      "USUBJID", "start", "end", "DOSNO", "AFRLT", "ARRLT",
+    group_columns <- PKNCA::getGroups(TEST_PKNCA_RES$data$conc)
+    expected_colnames <- c(
+      "start", "end", "DOSNO", "AFRLT", "ARRLT",
       "NFRLT", "NRRLT", "ADOSE", "ROUTE", "ADOSEDUR",
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
       "R2", "R2ADJ", "LAMZLL[hr]",
       "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
       "LAMZSPN", "LAMZIX", "LAMZMTD", "Exclude",
-      "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]"
+      "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]",
+      colnames(group_columns)
+
     )
-    expect_true(all(expected_columns %in% colnames(pwres)))
+    expect_setequal(colnames(pwres), expected_colnames)
+    expect_equal(nrow(pwres), nrow(TEST_PKNCA_RES$data$dose$data))
 
     expect_no_error(.validate_pknca_params(TEST_PKNCA_RES, pwres))
   })
