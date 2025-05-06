@@ -38,8 +38,8 @@ describe("format_pkncaconc_data", {
   })
 
   it("returns an error for empty input dataframe", {
-    empty_ADNCA <- data.frame()
-    expect_error(format_pkncaconc_data(empty_ADNCA,
+    empty_adnca <- data.frame()
+    expect_error(format_pkncaconc_data(empty_adnca,
                                        group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                          "DRUG", "PARAM"),
                                        time_column = "AFRLT"),
@@ -47,10 +47,10 @@ describe("format_pkncaconc_data", {
   })
 
   it("returns an error for missing required columns", {
-    incomplete_ADNCA <- ADNCA %>% select(-PARAM)
+    incomplete_adnca <- ADNCA %>% select(-PARAM)
     expect_error(
       format_pkncaconc_data(
-        incomplete_ADNCA,
+        incomplete_adnca,
         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "PARAM"),
         time_column = "AFRLT"
       ),
@@ -59,8 +59,8 @@ describe("format_pkncaconc_data", {
   })
 
   it("processes multiple analytes correctly", {
-    multi_analyte_ADNCA <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Analyte2"), each = 10))
-    df_conc <- format_pkncaconc_data(multi_analyte_ADNCA,
+    multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Analyte2"), each = 10))
+    df_conc <- format_pkncaconc_data(multi_analyte_adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DRUG", "PARAM"),
                                      time_column = "AFRLT")
@@ -101,11 +101,14 @@ describe("format_pkncadose_data", {
 
   it("handles empty input", {
     empty_df_conc <- data.frame()
-    expect_error(format_pkncadose_data(empty_df_conc,
-                                       group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                         "DRUG"),
-                                       time_column = "AFRLT"),
-                 regexp = "Input dataframe is empty. Please provide a valid concentration dataframe.")
+    expect_error(
+      format_pkncadose_data(
+        empty_df_conc,
+        group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG"),
+        time_column = "AFRLT"
+      ),
+      regexp = "Input dataframe is empty. Please provide a valid concentration dataframe."
+    )
   })
 
   it("handles missing columns", {
@@ -122,15 +125,15 @@ describe("format_pkncadose_data", {
   })
 
   it("handles negative time values", {
-    negative_time_ADNCA <- ADNCA %>%
+    negative_time_adnca <- ADNCA %>%
       add_row(
-        ADNCA[1,] %>%
+        ADNCA[1, ] %>%
           mutate(
             AFRLT = -1,
             ARRLT = -1
           )
       )
-    df_conc <- format_pkncaconc_data(negative_time_ADNCA,
+    df_conc <- format_pkncaconc_data(negative_time_adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DRUG", "PARAM"),
                                      time_column = "AFRLT")
@@ -143,34 +146,34 @@ describe("format_pkncadose_data", {
 })
 
 describe("format_pkncadata_intervals", {
-  multi_analyte_ADNCA <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Metabolite1"), each = 10))
-  df_conc <- format_pkncaconc_data(multi_analyte_ADNCA,
+  multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Metabolite1"), each = 10))
+  df_conc <- format_pkncaconc_data(multi_analyte_adnca,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG", "PARAM"),
                                    time_column = "AFRLT")
-  
+
   df_dose <- format_pkncadose_data(df_conc,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                      "DRUG"),
                                    time_column = "AFRLT")
-  
+
   pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
-  
+
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME_DOSE | STUDYID + PCSPEC + DRUG + USUBJID
   )
-  
+
   params <- c("cmax", "tmax", "half.life", "cl.obs")
-  
+
   it("handles multiple analytes with metabolites", {
     result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
-    
+
     expect_equal(result$start[1], 0)
     expect_equal(result$end[1], 5)
     expect_equal(unique(result$PARAM), c("Analyte1", "Metabolite1"))
@@ -178,7 +181,7 @@ describe("format_pkncadata_intervals", {
     expect_equal(result$tmax[1], TRUE)
     expect_equal(result$half.life[1], TRUE)
     expect_equal(result$cl.obs[1], TRUE)
-    
+
     expect_no_error(
       PKNCA::PKNCAdata(
         data.conc = pknca_conc,
