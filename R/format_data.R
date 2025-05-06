@@ -50,7 +50,7 @@ format_pkncaconc_data <- function(ADNCA,
     ADNCA <- ADNCA %>%
       filter(!grepl("^DOSE", PARAMCD, ignore.case = TRUE))
   }
-  
+
   ADNCA %>%
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
