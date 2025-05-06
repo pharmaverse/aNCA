@@ -36,7 +36,6 @@ describe("get_label", {
     expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADPC"), "Unique Subject Identifier")
   })
 
-  # Test for fallback behavior when no label is available
   it("returns 'No label available' if the label does not exist", {
     expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADP"), "No label available")
   })
@@ -44,9 +43,7 @@ describe("get_label", {
 
 vec <- c("A", "B", "C")
 attr(vec, "label") <- "Example Label"
-#
-mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(vec))
-#
+
 describe("as_factor_preserve_label", {
   mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(vec))
   it("returns object of class factor", {
@@ -54,8 +51,8 @@ describe("as_factor_preserve_label", {
   })
 
   it("returns ... ", {
-    old_label <- base::attr(vec, "label")
-    new_label <- base::attr(as_factor_preserve_label(vec), "label")
+    old_label <- base::attr(mock_vector_as_factor, "label")
+    new_label <- base::attr(as_factor_preserve_label(mock_vector_as_factor), "label")
     expect_equal(old_label, new_label)
 
   })
