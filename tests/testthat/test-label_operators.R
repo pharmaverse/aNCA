@@ -1,5 +1,3 @@
-#------------------------  apply_labels, get_label
-
 ADNCA_LABELS_FIXTURE <- data.frame(
   Variable = c("USUBJID", "AVAL", "RACE"),
   Label =  c("Unique Subject Identifier", "Analysis Value", "Race"),
