@@ -44,7 +44,6 @@ format_pkncaconc_data <- function(ADNCA,
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
-  browser()
 
   # filter out dose data if present
   if ("PARAMCD" %in% colnames(ADNCA)) {
