@@ -16,7 +16,7 @@ ADNCA <- data.frame(
 )
 
 describe("format_pkncaconc_data", {
-  it("generates correct dataset", {
+  it("generates a valid dataset with required columns", {
     df_conc <- format_pkncaconc_data(ADNCA,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DRUG", "PARAM"),
@@ -37,7 +37,7 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  it("handles empty input", {
+  it("returns an error for empty input dataframe", {
     empty_ADNCA <- data.frame()
     expect_error(format_pkncaconc_data(empty_ADNCA,
                                        group_columns = c("STUDYID", "USUBJID", "PCSPEC",
@@ -46,7 +46,7 @@ describe("format_pkncaconc_data", {
                  regexp = "Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   })
 
-  it("handles missing columns", {
+  it("returns an error for missing required columns", {
     incomplete_ADNCA <- ADNCA %>% select(-PARAM)
     expect_error(
       format_pkncaconc_data(
@@ -58,7 +58,7 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  it("handles multiple analytes", {
+  it("processes multiple analytes correctly", {
     multi_analyte_ADNCA <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Analyte2"), each = 10))
     df_conc <- format_pkncaconc_data(multi_analyte_ADNCA,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
