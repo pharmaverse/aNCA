@@ -295,8 +295,7 @@ dose_data_to_join_fixture <- select(
   FIXTURE_PKNCA_RES$data$dose$data,
   -exclude,
   -FIXTURE_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
-) %>%
-  rename(dose_time = !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time))
+)
 
 FIXTURE_PKNCA_RES$result <- FIXTURE_PKNCA_RES$result %>%
   inner_join(
@@ -305,8 +304,8 @@ FIXTURE_PKNCA_RES$result <- FIXTURE_PKNCA_RES$result %>%
   ) %>%
   mutate(
     # Assumption 4: start_dose &  end_dose relative to the dose time
-    start_dose = start - dose_time,
-    end_dose = end - dose_time,
+    start_dose = start - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
+    end_dose = end - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
     # Assumption 3: PPSTRESU & PPSTRES are always in the results object
     PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
     PPSTRES = PPORRES,
