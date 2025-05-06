@@ -277,13 +277,13 @@ FIXTURE_PKNCA_RES$result <- FIXTURE_PKNCA_RES$result %>%
     type_interval = if ("type_interval" %in% names(.)) {
       type_interval
     } else {
-      ifelse(end %in% c(2, 4), "manual", "main")
+      ifelse((end - start) == 2, "manual", "main")
     },
-    DOSNO = if ("type_interval" %in% names(.)) {
+    DOSNO = if ("DOSNO" %in% names(.)) {
       DOSNO
     } else {
       ifelse(
-        end %in% c(2, 5),
+        start < 5,
         1,
         2
       )
