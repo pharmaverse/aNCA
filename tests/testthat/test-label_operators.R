@@ -71,7 +71,7 @@ describe("has_label", {
 })
 
 describe("set_empty_label", {
-  it("set empty label if none exists now", {
+  it("sets label to empty string if it does not exist", {
     vec_unlabeled  <- c("A", "B", "C")
     vec_unlabeled  <- set_empty_label(vec_unlabeled)
     expect_identical("", base::attr(vec_unlabeled, "label"))
