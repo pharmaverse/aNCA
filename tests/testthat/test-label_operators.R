@@ -62,7 +62,7 @@ describe("as_factor_preserve_label", {
 })
 
 describe("has_label", {
-  it("returns TRUE if has label; FALSE otherwise", {
+  it("returns TRUE if has label", {
     expect_true(has_label(vec))
   })
 })
