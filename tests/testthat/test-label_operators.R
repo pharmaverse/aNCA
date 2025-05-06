@@ -31,7 +31,6 @@ describe("apply_labels", {
 })
 
 describe("get_label", {
-  # Test for successful label retrieval
   it("returns label of a heading if it exists in the label file", {
     expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADPC"), "Unique Subject Identifier")
   })
@@ -41,11 +40,11 @@ describe("get_label", {
   })
 })
 
-vec <- c("A", "B", "C")
-attr(vec, "label") <- "Example Label"
+mock_vec <- c("A", "B", "C")
+attr(mock_vec, "label") <- "Example Label"
 
 describe("as_factor_preserve_label", {
-  mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(vec))
+  mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(mock_vec))
   it("returns object of class factor", {
     expect_s3_class(mock_vector_as_factor, "factor")
   })
@@ -60,15 +59,16 @@ describe("as_factor_preserve_label", {
 
 describe("has_label", {
   it("returns TRUE if has label", {
-    expect_true(has_label(vec))
+    expect_true(has_label(mock_vec))
   })
 })
 
 describe("set_empty_label", {
+  attr(mock_vec, "label")  <-  NULL
+  expect_false(has_label(mock_vec))
   it("sets label to empty string if it does not exist", {
-    vec_unlabeled  <- c("A", "B", "C")
-    vec_unlabeled  <- set_empty_label(vec_unlabeled)
-    expect_identical("", base::attr(vec_unlabeled, "label"))
+    mock_vec_unlabeled  <- set_empty_label(mock_vec)
+    expect_identical("", base::attr(mock_vec_unlabeled, "label"))
   })
 })
 
