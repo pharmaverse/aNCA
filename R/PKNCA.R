@@ -338,7 +338,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
   dose_data_to_join <- select(
-    results$data$dose$data,
+    pknca_data$dose$data,
     unlist(unname(pknca_data$dose$columns$groups)),
     pknca_data$dose$columns$time,
     pknca_data$dose$columns$dose
