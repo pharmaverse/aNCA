@@ -70,12 +70,12 @@ describe("format_pkncaconc_data", {
 })
 
 describe("format_pkncadose_data", {
-  it("generates with no errors", {
-    df_conc <- format_pkncaconc_data(ADNCA,
-                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "PARAM"),
-                                     time_column = "AFRLT")
+  df_conc <- format_pkncaconc_data(ADNCA,
+                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                     "DRUG", "PARAM"),
+                                   time_column = "AFRLT")
 
+  it("generates with no errors", {
     df_dose <- format_pkncadose_data(df_conc,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DRUG", "PARAM"),
