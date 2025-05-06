@@ -139,7 +139,7 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 
   conc_data <- data$conc$data %>%
     group_by(!!!syms(slope_groups)) %>%
-    mutate(IX = seq_len(n())) %>%
+    mutate(index = seq_len(n())) %>%
     ungroup()
 
   for (i in seq_len(nrow(slopes))) {
@@ -148,7 +148,7 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
       Reduce(`&`, lapply(slope_groups, function(col) {
         conc_data[[col]] == slopes[[col]][i]
       })) &
-        conc_data$IX %in% .eval_range(slopes$RANGE[i])
+        conc_data$index %in% .eval_range(slopes$RANGE[i])
     )
 
     if (slopes$TYPE[i] == "Selection") {
