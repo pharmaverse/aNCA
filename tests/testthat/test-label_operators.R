@@ -42,7 +42,6 @@ describe("get_label", {
   })
 })
 
-#------------------------  as_factor_preserve_label, has_label, set_empty_label
 vec <- c("A", "B", "C")
 attr(vec, "label") <- "Example Label"
 #
