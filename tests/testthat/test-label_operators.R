@@ -1,6 +1,6 @@
 #------------------------  apply_labels, get_label
 
-LABELS_TEST <- data.frame(
+ADNCA_LABELS_FIXTURE <- data.frame(
   Variable = c("USUBJID", "AVAL", "RACE"),
   Label =  c("Unique Subject Identifier", "Analysis Value", "Race"),
   Dataset = c("ADPC", "ADPC", "ADPC")
@@ -14,7 +14,7 @@ data <- data.frame(
 labeled_data  <- apply_labels(data, LABELS_TEST, type = "ADPC")
 
 describe("apply_labels", {
-  # Test for successful label application
+  labeled_data  <- expect_no_error(apply_labels(data, ADNCA_LABELS_FIXTURE, type = "ADPC"))
   it("applies labels to the data frame", {
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "Unique Subject Identifier")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
