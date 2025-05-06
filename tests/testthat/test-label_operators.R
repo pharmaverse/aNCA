@@ -11,8 +11,6 @@ data <- data.frame(
   AVAL = c(10, 20, 30),
   RACE = as.factor(c("WHITE", "ASIAN", "ASIAN"))
 )
-labeled_data  <- apply_labels(data, LABELS_TEST, type = "ADPC")
-
 describe("apply_labels", {
   labeled_data  <- expect_no_error(apply_labels(data, ADNCA_LABELS_FIXTURE, type = "ADPC"))
   it("applies labels to the data frame", {
@@ -21,14 +19,13 @@ describe("apply_labels", {
     expect_equal(base::attr(labeled_data$RACE, "label"), "Race")
   })
 
-  # Test that column name used as label when variable not in labels list
   it("uses column names as labels when the variable is not in the labels list", {
-    EMPTY_LABELS_TEST  <- data.frame(
+    EMPTY_ADNCA_LABELS_FIXTURE  <- data.frame(
       Variable = character(),
       Label = character(),
       Dataset = character()
     )
-    labeled_data <- apply_labels(data, EMPTY_LABELS_TEST, c("ADPC", "ADPC"))
+    labeled_data <- expect_no_error(apply_labels(data, EMPTY_ADNCA_LABELS_FIXTURE, c("ADPC", "ADPC")))
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "USUBJID")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "AVAL")
     expect_equal(base::attr(labeled_data$RACE, "label"), "RACE")
@@ -38,12 +35,12 @@ describe("apply_labels", {
 describe("get_label", {
   # Test for successful label retrieval
   it("returns label of a heading if it exists in the label file", {
-    expect_equal(get_label(LABELS_TEST, "USUBJID", "ADPC"), "Unique Subject Identifier")
+    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADPC"), "Unique Subject Identifier")
   })
 
   # Test for fallback behavior when no label is available
   it("returns 'No label available' if the label does not exist", {
-    expect_equal(get_label(LABELS_TEST, "USUBJID", "ADP"), "No label available")
+    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADP"), "No label available")
   })
 })
 
