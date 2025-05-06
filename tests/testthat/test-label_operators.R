@@ -47,10 +47,13 @@ describe("get_label", {
 #------------------------  as_factor_preserve_label, has_label, set_empty_label
 vec <- c("A", "B", "C")
 attr(vec, "label") <- "Example Label"
-
+#
+mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(vec))
+#
 describe("as_factor_preserve_label", {
+  mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(vec))
   it("returns object of class factor", {
-    expect_equal("factor", class(as_factor_preserve_label(vec)))
+    expect_s3_class(mock_vector_as_factor, "factor")
   })
 
   it("returns ... ", {
