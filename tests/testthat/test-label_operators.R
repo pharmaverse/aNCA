@@ -23,7 +23,8 @@ describe("apply_labels", {
       Label = character(),
       Dataset = character()
     )
-    labeled_data <- expect_no_error(apply_labels(data, EMPTY_ADNCA_LABELS_FIXTURE, c("ADPC", "ADPC")))
+    labeled_data <- expect_no_error(apply_labels(data, EMPTY_ADNCA_LABELS_FIXTURE,
+                                                 c("ADPC", "ADPC")))
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "USUBJID")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "AVAL")
     expect_equal(base::attr(labeled_data$RACE, "label"), "RACE")
