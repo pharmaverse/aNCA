@@ -6,7 +6,15 @@
 #' each column name corresponds with a calculated parameter and between brackets its
 #' corresponding units. AUC intervals, if present, are be added as additional columns.
 #'
-#' @param myres The output of PKNCA::pk.nca
+#' @param myres The output of PKNCA::pk.nca. It makes some additional assumptions:
+#'   1) CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT).
+#'   2) Intervals must include a column (`type_interval`) to differentiate between the
+#'   custom AUC ranges ("manual") and main parameter calculations ("main").
+#'   3) Includes `PPSTRES` and `PPSTRESU` variables in results dataset.
+#'   4) Columns `start_dose` and `end_dose` must express the actual start and end times
+#'   of the dose, relative to the last reference dose.
+#'   5) Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
+#'   "LAMZLL", "LAMZ" Used to derive `LAMZNPT` and `LAMZMTD`.
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
@@ -24,6 +32,7 @@ pivot_wider_pknca_results <- function(myres) {
   # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
   conc_groups <- unname(unlist(myres$data$conc$columns$groups))
+  time_col <- myres$data$conc$columns$time
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),
@@ -37,7 +46,7 @@ pivot_wider_pknca_results <- function(myres) {
     added_params <- myres$result %>%
       filter(PPTESTCD %in% c("LAMZNPT", "LAMZLL", "LAMZ"),
              type_interval == "main") %>%
-      select(conc_groups, PPTESTCD, PPSTRES, DOSNO, start, end) %>%
+      select(any_of(c(conc_groups, "PPTESTCD", "PPSTRES", "DOSNO", "start", "end"))) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
       left_join(data_with_duplicates, by = intersect(names(.), names(data_with_duplicates))) %>%
@@ -48,11 +57,11 @@ pivot_wider_pknca_results <- function(myres) {
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
       )) %>%
       filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
-      filter(TIME >= (LAMZLL + start) | is.na(LAMZLL)) %>%
+      filter(!!sym(time_col) >= (LAMZLL + start) | is.na(LAMZLL)) %>%
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
       mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
-      select(conc_groups, DOSNO, start, end, LAMZIX, LAMZMTD) %>%
+      select(any_of(c(conc_groups, "DOSNO", "start", "end", "LAMZIX", "LAMZMTD"))) %>%
       unique()
   }
   ############################################################################################
