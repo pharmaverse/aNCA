@@ -295,7 +295,13 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         input$timescale,
         input$log,
         cycle = input$cycles
-      )
+      ) %>%
+        ggplotly() %>%
+        layout(
+            xaxis = list(
+              rangeslider = list(type = "time")
+            )
+        )
 
     })
 
