@@ -33,26 +33,6 @@ p > img {
   margin: 1em 0;
 }
 
-html[data-bs-theme="light"] {
-  & p > img {
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  }
-
-  #package-logo-dark {
-    display: none;
-  }
-}
-
-html[data-bs-theme="dark"] {
-  #package-logo-light {
-    display: none;
-  }
-}
-
-#package-logo-light {
-  box-shadow: none;
-}
-
 span.help-button {
   border: thin solid #1f6feb;
   border-radius: 1em;
