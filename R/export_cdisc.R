@@ -61,7 +61,11 @@ export_cdisc <- function(res_nca) {
       PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
       # Specific ID variables
-      PPSPID = paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA"),
+      PPSPID = if ("STUDYID" %in% names(.)) {
+        paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA")
+      } else {
+        NA_character_
+      },
       SUBJID = get_subjid(.),
       # Parameter Variables
       PPORRES = round(as.numeric(PPORRES), 12),
@@ -69,21 +73,22 @@ export_cdisc <- function(res_nca) {
       PPSTRESC = as.character(PPSTRESN),
       PPSTRESU = PPSTRESU,
       # Status and Reason for Exclusion
-      PPSTAT = ifelse(is.na(PPSTRES) | (PPSTRES == 0 & PPTESTCD == "CMAX"), "NOT DONE",  ""),
+      PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
       PPREASND = case_when(
         !is.na(exclude) ~ exclude,
         is.na(PPSTRES) ~ "Unspecified",
         TRUE ~ ""
       ),
+      PPREASND = substr(PPREASND, 0, 200),
       # Datetime
       PPDTC = Sys.time() %>% format("%Y-%m-%dT%H:%M"),
       PPRFTDTC = {
         if ("PCRFTDTC" %in% names(.)) {
-          PCRFDTC
+          PCRFTDTC
         } else if ("PCRFTDTM" %in% names(.)) {
-          strptime(PCRFTDTM, format = "%Y-%m-%d %H:%M:%S") %>% format("%Y-%m-%dT%H:%M")
+          strptime(PCRFTDTM, format = "%Y-%m-%d %H:%M:%S") %>% format("%Y-%m-%dT%H:%M:%S")
         } else {
-          NA
+          NA_character_
         }
       },
       # Matrix
@@ -98,8 +103,7 @@ export_cdisc <- function(res_nca) {
         startsWith(PPTESTCD, "AUCINT"),
         convert_to_iso8601_duration(end, RRLTU),
         NA
-      ),
-      PPREASND = substr(exclude, 1, 200)
+      )
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
@@ -108,7 +112,7 @@ export_cdisc <- function(res_nca) {
 
   # select pp columns
   pp <- cdisc_info %>%
-    select(all_of(CDISC_COLS$PP))
+    select(any_of(CDISC_COLS$PP))
 
   adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
@@ -231,9 +235,6 @@ CDISC_COLS <- list(
     "PCTPTNUM",
     "ATPT",
     "ATPTN",
-    "PCSTRESC",
-    "PCSTRESN",
-    "PCSTRESU",
     "AVAL",
     "ANL01FL",
     # Columns taken from the original data if present (still not directly mapped)
