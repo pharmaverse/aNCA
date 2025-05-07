@@ -298,9 +298,9 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       ) %>%
         ggplotly() %>%
         layout(
-            xaxis = list(
-              rangeslider = list(type = "time")
-            )
+          xaxis = list(
+            rangeslider = list(type = "time")
+          )
         )
 
     })
