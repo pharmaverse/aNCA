@@ -107,6 +107,12 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
       calculate_summary_stats(stats_data, input$summary_groupby)
     })
 
+    summary_stats_filtered <- reactive({
+      summary_stats() %>%
+        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
+        filter(Statistic %in% input$select_display_statistic)
+    })
+
     observeEvent(summary_stats(), {
       req(summary_stats())
 
@@ -129,15 +135,11 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
 
     # Render the reactive summary table in a data table
     output$descriptive_stats <- renderReactable({
-      req(summary_stats())
-      log_info("Rendering descriptive statistics table")
-
-      data <- summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
-        filter(Statistic %in% input$select_display_statistic)
+      req(summary_stats_filtered())
+      log_trace("Rendering descriptive statistics table")
 
       reactable(
-        data,
+        summary_stats_filtered(),
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -156,7 +158,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
       },
       content = function(file) {
         log_info("Downloading summary statistics as CSV")
-        write.csv(summary_stats(), file)
+        write.csv(summary_stats_filtered(), file)
       }
     )
 
