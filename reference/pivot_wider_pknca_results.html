@@ -70,7 +70,15 @@ corresponding units. AUC intervals, if present, are be added as additional colum
 
 
 <dl><dt id="arg-myres">myres<a class="anchor" aria-label="anchor" href="#arg-myres"></a></dt>
-<dd><p>The output of PKNCA::pk.nca</p></dd>
+<dd><p>The output of PKNCA::pk.nca. It makes some additional assumptions:</p><ol><li><p>CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT).</p></li>
+<li><p>Intervals must include a column (<code>type_interval</code>) to differentiate between the
+custom AUC ranges ("manual") and main parameter calculations ("main").</p></li>
+<li><p>Includes <code>PPSTRES</code> and <code>PPSTRESU</code> variables in results dataset.</p></li>
+<li><p>Columns <code>start_dose</code> and <code>end_dose</code> must express the actual start and end times
+of the dose, relative to the last reference dose.</p></li>
+<li><p>Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
+"LAMZLL", "LAMZ" Used to derive <code>LAMZNPT</code> and <code>LAMZMTD</code>.</p></li>
+</ol></dd>
 
 </dl></div>
     <div class="section level2">
