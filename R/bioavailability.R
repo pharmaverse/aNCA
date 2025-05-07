@@ -34,7 +34,7 @@
 calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
 
   #check if selected_aucs are available
-  if (is.null(selected_aucs) || length(selected_aucs) == 0) {
+  if (length(selected_aucs) == 0) {
     return(NULL)
   }
 
@@ -46,78 +46,74 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
   dose_col <- res_nca$data$dose$columns$dose
 
   # Extract ID groups
-  id_groups <- res_nca$data$conc$columns$groups %>%
-    purrr::list_c() %>%
-    append("DOSNO") %>%
-    purrr::keep(~ !is.null(.) && . != "DRUG" && length(unique(res_nca$data$conc$data[[.]])) > 1)
+  id_groups <- PKNCA::getGroups(res_nca$data$conc) %>%
+    names() %>%
+    append("DOSNO")
 
   # Filter and transform AUC data
   auc_data <- res_nca$result %>%
     filter(PPTESTCD %in% auc_vars) %>%
-    select(USUBJID, PPTESTCD, PPORRES, all_of(id_groups)) %>%
+    select(any_of(id_groups), PPTESTCD, PPORRES) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
 
   # Extract dose information
   dose_info <- res_nca$data$dose$data %>%
-    select(all_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
+    select(any_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
     distinct()
 
-  # Merge dose information with AUC data
-  auc_data <- auc_data %>%
-    inner_join(dose_info, by = id_groups) %>%
-    rename(Route = all_of(route_col), Dose = all_of(dose_col))
-
-  results_list <- list()
-
-  for (auc_type in auc_vars) {
-
-    data <- auc_data %>%
-      mutate(grouping = apply(select(., all_of(id_groups), -USUBJID), 1, paste, collapse = " "))
-
-    # Separate IV and EX data
-    iv_data <- data %>%
-      filter(tolower(Route) == "intravascular") %>%
-      rename(AUC_IV = !!sym(auc_type), Dose_IV = Dose, Grouping_IV = grouping) %>%
-      select(USUBJID, Grouping_IV, AUC_IV, Dose_IV)
-
-    ex_data <- data %>%
-      filter(tolower(Route) == "extravascular") %>%
-      rename(AUC_EX = !!sym(auc_type), Dose_EX = Dose, Grouping_EX = grouping) %>%
-      select(USUBJID, Grouping_EX, AUC_EX, Dose_EX)
-
-    # Merge IV and EX by USUBJID
-    merged_data <- left_join(ex_data, iv_data, by = "USUBJID")
-
-    # Compute bioavailability for individuals (F)
-    individual_data <- merged_data %>%
-      filter(!is.na(AUC_IV) & !is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type) := (pk.calc.f(Dose_IV, AUC_IV, Dose_EX, AUC_EX)) * 100)
-
-    # Compute mean IV AUC for missing IV subjects
-    mean_iv <- iv_data %>%
-      group_by(Grouping_IV) %>%
-      summarize(Mean_AUC_IV = mean(AUC_IV, na.rm = TRUE),
-                Mean_Dose_IV = mean(Dose_IV, na.rm = TRUE),
-                .groups = "drop")
-
-    ex_without_match <- merged_data %>%
-      filter(is.na(AUC_IV) | is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type)
-             := (pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX)) * 100)
-
-    # Combine results
-    auc_results <- bind_rows(
-      individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV,
-                                 !!paste0("f_", auc_type)),
-      ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV,
-                                  !!paste0("f_", auc_type))
-    )
-
-    results_list[[auc_type]] <- auc_results
-  }
-
-  purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV")) %>%
-    select(-Grouping_IV)
+  auc_data %>%
+    # Merge dose information (route and dose)
+    left_join(
+      dose_info,
+      by = intersect(names(auc_data), names(dose_info))
+    ) %>%
+    # Calculate the mean Dose & AUC values for IV & EX routes
+    rename(Route = all_of(route_col), Dose = all_of(dose_col)) %>%
+    pivot_longer(
+      cols = any_of(auc_vars),
+      names_to = "auc_type",
+      values_to = "vals"
+    ) %>%
+    pivot_wider(
+      names_from = Route,
+      values_from = c(vals, Dose)
+    ) %>%
+    group_by(auc_type, !!!syms(setdiff(id_groups, "USUBJID"))) %>%
+    mutate(
+      Mean_AUC_IV = mean(vals_intravascular, na.rm = TRUE),
+      Mean_Dose_IV = mean(Dose_intravascular, na.rm = TRUE),
+    ) %>%
+    # Calculate F using group mean values when individual is not already present
+    ungroup() %>%
+    mutate(
+      vals_intravascular = ifelse(
+        is.na(vals_intravascular) | is.na(Dose_intravascular),
+        Mean_AUC_IV,
+        vals_intravascular
+      ),
+      Dose_intravascular = ifelse(
+        is.na(vals_intravascular) | is.na(Dose_intravascular),
+        Mean_Dose_IV,
+        Dose_intravascular
+      ),
+      f_auc = pk.calc.f(
+        Dose_intravascular, vals_intravascular,
+        Dose_extravascular, vals_extravascular
+      ) * 100
+    ) %>%
+    # Arrange the data to keep 1 row per group
+    mutate(
+      auc_type = paste0("f_", auc_type)
+    ) %>%
+    select(any_of(c(names(auc_data), "auc_type", "f_auc"))) %>%
+    pivot_wider(
+      names_from = auc_type,
+      values_from = f_auc
+    ) %>%
+    # question: this action is not necessary, but keeps the original output fmt. May I remove?
+    # Remove columns with NA values for all columns with name auc_vars
+    filter(rowSums(is.na(pick(starts_with("f_AUC")))) != length(auc_vars)) %>%
+    unique()
 }
 
 #' Add bioavailability to PKNCAresults object
@@ -142,11 +138,9 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
     return(res_nca)
   }
   # Extract ID groups
-  id_groups <- res_nca$data$conc$columns$groups %>%
-    purrr::list_c() %>%
-    append("DOSNO") %>%
-    purrr::keep(~ !is.null(.) && . != "DRUG" &&
-                  length(unique(res_nca$data$conc$data[[.]])) > 1)
+  id_groups <- PKNCA::getGroups(res_nca$data$conc) %>%
+    names() %>%
+    append("DOSNO")
 
   # Pivot results data
   subj_data <- res_nca$result %>%
@@ -155,18 +149,15 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
 
   # Create bioavailability data in resnca format
   f_results <- subj_data %>%
-    mutate(Grouping_EX = apply(select(., all_of(id_groups), -USUBJID),
-                               1, paste, collapse = " ")) %>%
-    left_join(bioavailability, by = c("USUBJID", "Grouping_EX")) %>%
-    select(-Grouping_EX) %>%
+    left_join(bioavailability, by = id_groups) %>%
     pivot_longer(
       cols = starts_with("f_"),  # Select columns with calculated bioavailability
       names_to = "PPTESTCD",
       values_to = "PPSTRES"
     ) %>%
     mutate(PPSTRESU = "%",
-           PPORRES = PPSTRES,
-           PPORRESU = PPSTRESU)
+           PPORRESU = "%",
+           PPORRES = PPSTRES)
 
   res_nca$result <- bind_rows(res_nca$result, f_results)
 

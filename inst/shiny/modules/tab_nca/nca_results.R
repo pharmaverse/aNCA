@@ -133,7 +133,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])), -conc_groups)
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
     })
 
     output$myresults <- reactable::renderReactable({
