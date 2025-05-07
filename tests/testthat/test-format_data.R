@@ -24,8 +24,10 @@ describe("format_pkncaconc_data", {
                                      rrlt_column = "ARRLT")
 
     expect_s3_class(df_conc, "data.frame")
-    expect_true(all(c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "PARAM",
-                      "AFRLT", "AVAL", "conc_groups", "TIME", "TIME_DOSE") %in% colnames(df_conc)))
+    expect_setequal(
+      c(names(ADNCA), "std_route", "conc_groups", "TIME", "TIME_DOSE"),
+      colnames(df_conc)
+    )
     expect_equal(df_conc$TIME, df_conc$AFRLT)
     expect_no_error(
       PKNCA::PKNCAconc(
@@ -82,10 +84,11 @@ describe("format_pkncadose_data", {
                                      time_column = "AFRLT")
 
     expect_s3_class(df_dose, "data.frame")
-    expect_true(all(c("STUDYID", "USUBJID", "PCSPEC",
-                      "DRUG", "PARAM", "AFRLT",
-                      "ARRLT", "AVAL", "conc_groups",
-                      "TIME", "TIME_DOSE", "DOSNOA", "ROUTE") %in% colnames(df_dose)))
+    expect_setequal(
+      c(names(ADNCA), "conc_groups", "TIME", "TIME_DOSE", "std_route", "DOSNOA"),
+      colnames(df_dose)
+    )
+
     expect_no_error(
       PKNCA::PKNCAdose(
         data = df_dose,
