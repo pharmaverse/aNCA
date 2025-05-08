@@ -25,7 +25,7 @@
 #' \itemize{
 #'   \item Filters the data based on the selected analytes, matrices, and subjects.
 #'   \item Selects relevant columns and removes rows with missing concentration values.
-#'   \item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
+#'   \item Converts 'USUBJID', 'NCA_PROFILE', and 'DOSEA' to factors.
 #'   \item Filters the data by cycle if `time_scale` is "By Cycle".
 #'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
 #'   \item Generates a line plot using the `g_ipp` function with the specified parameters.
@@ -39,7 +39,7 @@
 #'                            selected_analytes = c("Analyte1", "Analyte2"),
 #'                            selected_pcspec = c("Spec1", "Spec2"),
 #'                            selected_usubjids = c("Subject1", "Subject2"),
-#'                            colorby_var = "DOSNO",
+#'                            colorby_var = "NCA_PROFILE",
 #'                            time_scale = "By Cycle",
 #'                            yaxis_scale = "Log",
 #'                            cycle = "1")
@@ -66,7 +66,7 @@ general_lineplot <- function(
     filter(!is.na(AVAL)) %>%
     mutate(
       USUBJID = factor(USUBJID),
-      DOSNO = factor(DOSNO),
+      NCA_PROFILE = factor(NCA_PROFILE),
       DOSEA = factor(DOSEA),
       id_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
@@ -76,33 +76,36 @@ general_lineplot <- function(
   }
 
   # If there are predose records duplicate them in the previous line so they are considered
-  if ("ARRLT" %in% names(preprocessed_data) &&
-        any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
-
-    cycle_times <- preprocessed_data  %>%
-      filter(preprocessed_data$ARRLT > 0, preprocessed_data$AFRLT > 0) %>%
-      mutate(AFRLT.dose = AFRLT - ARRLT) %>%
-      group_by(DOSNO) %>%
-      summarise(AFRLT.dose = mean(AFRLT.dose, na.rm = TRUE)) %>%
-      pull(AFRLT.dose, DOSNO)
-
-    predose_records <- preprocessed_data %>%
-      filter(ARRLT < 0, AFRLT > 0) %>%
-      mutate(DOSNO = ifelse(
-        AFRLT < as.numeric(cycle_times[as.character(DOSNO)]),
-        as.numeric(DOSNO) - 1,
-        as.numeric(DOSNO) + 1
-      ))
-
-    preprocessed_data <- rbind(predose_records, preprocessed_data)
-
-  }
+  
+  #TODO: fix this using dose_duplicates function
+  
+  # if ("ARRLT" %in% names(preprocessed_data) &&
+  #       any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
+  # 
+  #   cycle_times <- preprocessed_data  %>%
+  #     filter(preprocessed_data$ARRLT > 0, preprocessed_data$AFRLT > 0) %>%
+  #     mutate(AFRLT.dose = AFRLT - ARRLT) %>%
+  #     group_by(NCA_PROFILE) %>%
+  #     summarise(AFRLT.dose = mean(AFRLT.dose, na.rm = TRUE)) %>%
+  #     pull(AFRLT.dose, NCA_PROFILE)
+  # 
+  #   predose_records <- preprocessed_data %>%
+  #     filter(ARRLT < 0, AFRLT > 0) %>%
+  #     mutate(DOSNO = ifelse(
+  #       AFRLT < as.numeric(cycle_times[as.character(DOSNO)]),
+  #       as.numeric(NCA_PROFILE) - 1,
+  #       as.numeric(NCA_PROFILE) + 1
+  #     ))
+  # 
+  #   preprocessed_data <- rbind(predose_records, preprocessed_data)
+  # 
+  # }
 
 
   # Adjust the data selection according to input
-  if (time_scale == "By Cycle") {
+  if (time_scale == "By Dose Profile") {
     preprocessed_data <- preprocessed_data %>%
-      filter(DOSNO %in% cycle)
+      filter(NCA_PROFILE %in% cycle)
   }
 
   if (yaxis_scale == "Log") {

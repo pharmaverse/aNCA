@@ -14,6 +14,7 @@
 #' The function performs the following steps:
 #'   - Groups the data by groups_column.
 #'   - Calculates `TIME_DOSE`as the time of dose reference by the PK sample
+#'   - Creates `DOSNOA` variable, sequential numbers based on time of dose
 #'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
 #'   - Arranges the data by group_columns.
 #'
@@ -23,8 +24,7 @@
 #'   conc_data <- format_pkncaconc_data(ADNCA,
 #'                                      group_columns,
 #'                                      "AFRLT",
-#'                                      "ROUTE",
-#'                                      "DOSNO")
+#'                                      "ROUTE")
 #' }
 #'
 #' @import dplyr
@@ -51,6 +51,9 @@ format_pkncaconc_data <- function(ADNCA,
       filter(!grepl("^DOSE", PARAMCD, ignore.case = TRUE))
   }
 
+  #set a tolerance for the arranging to avoid floating point precision issues
+  tol <- 0.02
+  
   ADNCA %>%
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
@@ -63,6 +66,11 @@ format_pkncaconc_data <- function(ADNCA,
                                     gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
                               "intravascular",
                               "extravascular")) %>%
+    arrange(!!!syms(group_columns), TIME_DOSE) %>%
+    group_by(!!!syms(group_columns)) %>%
+    mutate(
+      DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
+    ) %>%
     arrange(!!!syms(group_columns))
 }
 
@@ -79,14 +87,14 @@ format_pkncaconc_data <- function(ADNCA,
 #' @details
 #' The function performs the following steps:
 #'   - Arranges and groups the data by group_columns
-#'   - Selects the first row within each group (arranged by time of dose)
+#'   - Selects the first row within each group (arranged by DOSNOA- a variable created 
+#'   in `format_pkncaconc_data`)
 #'
 #' @import dplyr
 #' @export
 
 format_pkncadose_data <- function(pkncaconc_data,
-                                  group_columns,
-                                  time_column = "AFRLT") {
+                                  group_columns) {
 
   # Check: Dataset is not empty
   if (nrow(pkncaconc_data) == 0) {
@@ -94,22 +102,14 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   # Check: All necessary columns are present
-  required_columns <- c(group_columns, time_column, "TIME_DOSE")
+  required_columns <- c(group_columns, "TIME_DOSE", "DOSNOA")
   missing_columns <- setdiff(required_columns, colnames(pkncaconc_data))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
-  #set a tolerance for the arranging to avoid floating point precision issues
-  tol <- 0.02
-
   # Select unique doses
   pkncaconc_data %>%
-    arrange(!!!syms(group_columns), TIME_DOSE) %>%
-    group_by(!!!syms(group_columns)) %>%
-    mutate(
-      DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
-    ) %>%
     group_by(!!!syms(group_columns), DOSNOA) %>%
     slice(1) %>%
     ungroup() %>%
@@ -178,7 +178,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "TIME_DOSE", "DOSNO"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "TIME_DOSE", "NCA_PROFILE"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   # Select dose data and use its time column as a time of last dose reference
@@ -208,7 +208,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Make end based on next dose time (if no more, Inf)
     mutate(end = lead(TIME_DOSE, default = Inf)) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "DOSNO", "DOSNOA"))) %>%
+    select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%

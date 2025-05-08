@@ -60,7 +60,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
-  dosno_column <- "DOSNO"
+  dosno_column <- "NCA_PROFILE"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
@@ -97,8 +97,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create dosing data
   df_dose <- format_pkncadose_data(
     pkncaconc_data = df_conc,
-    group_columns = c(group_columns, usubjid_column),
-    time_column = time_column
+    group_columns = c(group_columns, usubjid_column)
   )
 
   # Set default settings
@@ -219,7 +218,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c("DOSNO", "type_interval"),
+    keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
     min.hl.r.squared = 0.01
   )
 
@@ -235,7 +234,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      DOSNO %in% selected_dosno,
+      NCA_PROFILE %in% selected_dosno,
       PCSPEC %in% selected_pcspec
     )
 
