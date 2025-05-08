@@ -51,7 +51,7 @@ descriptive_statistics_ui <- function(id) {
       reactableOutput(ns("descriptive_stats"))
     ),
     card(
-      downloadButton(ns("download_browser"), "Download the NCA Summary Data")
+      downloadButton(ns("download_summary"), "Download the NCA Summary Data")
     )
   )
 }
@@ -150,9 +150,13 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
     })
 
     # Download summary statistics as CSV
-    output$download_browser <- downloadHandler(
+    output$download_summary <- downloadHandler(
       filename = function() {
-        paste("NCA_summary.csv")
+        paste0(
+          format(Sys.time(), "%Y-%m-%d"), "_",
+          summary_stats_filtered()$STUDYID[1],
+          "_NCA_summary.csv"
+        )
       },
       content = function(file) {
         log_info("Downloading summary statistics as CSV")
