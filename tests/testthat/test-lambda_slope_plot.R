@@ -1,15 +1,24 @@
 describe("lambda_slope_plot", {
 
-  conc_pknca_df <- PKNCA_DATA_FIXTURE$conc$data
-  myres <- PKNCA_RESULTS_FIXTURE
+  conc_pknca_df <- FIXTURE_PKNCA_DATA$conc$data %>%
+    # ToDo: The currerent lambda_slope_plot
+    # has additional non-neccesary assumptions
+    mutate(TIME = AFRLT,
+           PCSTRESU = AVALU)
 
-  valid_row <- myres$result %>%
-    filter(PPTESTCD == "half.life") %>%
-    slice(1)
+  myres <- FIXTURE_PKNCA_RES
+  myres$result <- myres$result %>%
+    mutate(PPTESTCD = translate_terms(
+      PPTESTCD, "PPTESTCD", "PKNCA"
+    ))
 
-  row_values <- valid_row %>%
-    select(any_of(c("USUBJID", "STUDYID", "DOSE", "DOSEU"))) %>%
-    as.list()
+  row_values <- myres$data$intervals %>%
+    filter(half.life) %>%
+    select(any_of(c(
+      unname(unlist(myres$data$conc$columns$groups)),
+      "DOSNO"
+    ))) %>%
+    filter(USUBJID == 5)
 
   it("returns a plotly object with valid input", {
     plotly_output <- lambda_slope_plot(
@@ -31,8 +40,7 @@ describe("lambda_slope_plot", {
       mutate(
         PPSTRES = ifelse(
           PPTESTCD == "lambda.z.n.points" &
-            USUBJID == row_values$USUBJID &
-            STUDYID == row_values$STUDYID,
+            USUBJID == row_values$USUBJID,
           NA_real_,
           PPSTRES
         )
@@ -65,8 +73,7 @@ describe("lambda_slope_plot", {
     conc_modified <- conc_pknca_df %>%
       mutate(
         AVAL = ifelse(
-          USUBJID == row_values$USUBJID &
-            STUDYID == row_values$STUDYID,
+          USUBJID == row_values$USUBJID,
           -1,
           AVAL
         )
@@ -88,10 +95,13 @@ describe("lambda_slope_plot", {
     myres_modified <- myres
 
     # Use the same subject for consistency
-    test_id <- myres_modified$result %>%
-      filter(PPTESTCD == "cmax") %>%
-      slice(1) %>%
-      select(any_of(c("USUBJID", "STUDYID")))
+    test_id  <- myres$data$intervals %>%
+      filter(half.life) %>%
+      select(any_of(c(
+        unname(unlist(myres$data$conc$columns$groups)),
+        "DOSNO"
+      ))) %>%
+      filter(USUBJID == 5)
 
     row_values <- test_id %>% as.list()
 
@@ -99,8 +109,7 @@ describe("lambda_slope_plot", {
     tmax_value <- myres_modified$result %>%
       filter(PPTESTCD == "tmax") %>%
       filter(
-        USUBJID == row_values$USUBJID,
-        STUDYID == row_values$STUDYID
+        USUBJID == row_values$USUBJID
       ) %>%
       pull(PPSTRES)
 
@@ -109,8 +118,7 @@ describe("lambda_slope_plot", {
       mutate(
         PPSTRES = ifelse(
           PPTESTCD == "lambda.z.time.first" &
-            USUBJID == row_values$USUBJID &
-            STUDYID == row_values$STUDYID,
+            USUBJID == row_values$USUBJID,
           tmax_value,
           PPSTRES
         )
