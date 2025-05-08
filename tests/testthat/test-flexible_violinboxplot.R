@@ -11,73 +11,11 @@ boxplotdata <- data.frame(
   ANALYTE = rep("Analyte01", 10)
 )
 
-## Note: If you want to create a new checking plot for a test follow these steps:
-#
-## 1) Load the object:
-# FIXTURE_PLOTS = readRDS("tests/testthat/data/FIXTURE_PLOTS.rds") # nolint
-#
-## 2) Store in the list your plot:
-# FIXTURE_PLOTS$flexible_violinboxplot$<<unique plot name>>
-#
-## 3) Save the object back:
-# saveRDS(
-#   FIXTURE_PLOTS,
-#   file = "tests/testthat/data/FIXTURE_PLOTS.rds", # nolint
-#   compress = "xz" # nolint
-# )
-
-# Helper function to compare two plotly objects
-expect_equal_plotly <- function(actual, expected, ignore_fields = list(), tolerance = 1e-3) {
-  # Extract relevant parts of the plotly objects
-  extract_relevant <- function(plotly_obj) {
-    list(
-      data = plotly_obj$x$data,
-      layout = plotly_obj$x$layout
-    )
-  }
-
-  # Remove ignored fields from the plotly object
-  remove_ignored_fields <- function(obj, ignore_fields) {
-    for (field in ignore_fields) {
-      # Use eval(parse()) to dynamically access nested fields
-      eval(parse(text = paste0("obj$", field, " <- NULL")))
-    }
-    obj
-  }
-
-  # Extract relevant parts
-  actual_relevant <- extract_relevant(actual)
-  expected_relevant <- extract_relevant(expected)
-
-  # Apply ignore_fields to both actual and expected objects
-  actual_relevant <- remove_ignored_fields(actual_relevant, ignore_fields)
-  expected_relevant <- remove_ignored_fields(expected_relevant, ignore_fields)
-
-  # Compare the relevant parts
-  expect_equal(actual_relevant, expected_relevant, tolerance = tolerance)
-}
-
-.expect_equal_violinboxplot <- function(act_obj, exp_obj) {
-  expect_equal_plotly(
-    act_obj,
-    exp_obj,
-    # Dots in box plots randomize the X axis position
-    ignore_fields = c(
-      # Margins can vary based on IDE
-      "data[[2]]$x",
-      "layout$margin",
-      # Colors can sometimes change based on default
-      "data[[1]]$line$color",
-      "data[[2]]$marker$line$color",
-      "data[[2]]$marker$color",
-      # Text is only in violin plots, and density is a rounded text value
-      "data[[1]]$text"
-    )
-  )
+test_ggsave <- function(file, p) {
+  ggplot2::ggsave(file, p, device = "png", width = 1000, height = 1200, units = "px")
 }
 
 describe("flexible_violinboxplot", {
-
   testing_plots <- FIXTURE_PLOTS$flexible_violinboxplot
 
   it("creates a simple plot with minimal arguments", {
@@ -89,12 +27,12 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
       columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
       box = TRUE,
-      plotly = TRUE
+      plotly = FALSE
     )
-    .expect_equal_violinboxplot(
-      simple_plot,
-      testing_plots$simple_plot
-    )
+
+    tempfile <- file.path(tempdir(), "simple_plot.png")
+    test_ggsave(tempfile, simple_plot)
+    expect_snapshot_file(tempfile, "simple_plot.png")
   })
 
   it("creates a plot with additional xvars", {
@@ -106,12 +44,12 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
       columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
       box = TRUE,
-      plotly = TRUE
+      plotly = FALSE
     )
-    .expect_equal_violinboxplot(
-      xvars_plot,
-      testing_plots$xvars_plot
-    )
+
+    tempfile <- file.path(tempdir(), "xvars_plot.png")
+    test_ggsave(tempfile, xvars_plot)
+    expect_snapshot_file(tempfile, "xvars_plot.png")
   })
 
   it("creates a plot with additional colorvars", {
@@ -123,12 +61,11 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
       columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
       box = TRUE,
-      plotly = TRUE
+      plotly = FALSE
     )
-    .expect_equal_violinboxplot(
-      colorvars_plot,
-      testing_plots$colorvars_plot
-    )
+    tempfile <- file.path(tempdir(), "colorvars_plot.png")
+    test_ggsave(tempfile, colorvars_plot)
+    expect_snapshot_file(tempfile, "colorvars_plot.png")
   })
 
   it("creates a plot with different varvalstofilter", {
@@ -140,12 +77,11 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("DOSEA: High", "DOSNO: 2"),
       columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
       box = TRUE,
-      plotly = TRUE
+      plotly = FALSE
     )
-    .expect_equal_violinboxplot(
-      varvalstofilter_plot,
-      testing_plots$varvalstofilter_plot
-    )
+    tempfile <- file.path(tempdir(), "varvalstofilter_plot.png")
+    test_ggsave(tempfile, varvalstofilter_plot)
+    expect_snapshot_file(tempfile, "varvalstofilter_plot.png")
   })
 
   it("creates a violin plot when box = FALSE", {
@@ -157,12 +93,11 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
       columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
       box = FALSE,
-      plotly = TRUE
+      plotly = FALSE
     )
-    .expect_equal_violinboxplot(
-      violin_plot,
-      testing_plots$violin_plot
-    )
+    tempfile <- file.path(tempdir(), "violin_plot.png")
+    test_ggsave(tempfile, violin_plot)
+    expect_snapshot_file(tempfile, "violin_plot.png")
   })
 
   it("handles missing data gracefully", {
@@ -176,30 +111,11 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
       columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
       box = TRUE,
-      plotly = TRUE
-    )
-    .expect_equal_violinboxplot(
-      missing_plot,
-      testing_plots$missing_plot
-    )
-  })
-
-  it("produces ggplot objects when plotly = FALSE", {
-    ggplot_plot <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
-      box = TRUE,
       plotly = FALSE
     )
-    expect_true(inherits(ggplot_plot, "ggplot"))
-    .expect_equal_violinboxplot(
-      ggplot_plot,
-      testing_plots$ggplot_plot
-    )
+    tempfile <- file.path(tempdir(), "missing_plot.png")
+    test_ggsave(tempfile, missing_plot)
+    expect_snapshot_file(tempfile, "missing_plot.png")
   })
 
   it("handles axis labels correctly when parameter has no unit", {

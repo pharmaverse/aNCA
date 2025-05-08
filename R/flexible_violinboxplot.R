@@ -95,7 +95,7 @@ flexible_violinboxplot <- function(boxplotdata,
 
   # Include points, labels and theme
   p <- p +
-    geom_point(position = position_jitterdodge()) +
+    geom_point(position = position_jitterdodge(seed = 123)) +
     # facet_wrap(~STUDYID) +
     labs(
       x = paste(xvars, collapse = ", "),
