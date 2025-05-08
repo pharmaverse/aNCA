@@ -57,7 +57,7 @@ nca_setup_ui <- function(id) {
           fluidRow(
             column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
                                   choices = NULL)),
-            column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
+            column(4, selectInput(ns("select_dosno"), "Choose the profiles for the NCA:", multiple = TRUE,
                                   choices = NULL)),
             column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                                   choices = NULL))
@@ -224,7 +224,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       updateSelectInput(
         session,
         inputId = "select_dosno",
-        label = "Choose the Dose Number:",
+        label = "Choose the profiles for the NCA:",
         choices = rows_for_selected_analytes$DOSNO,
         selected = doses_selected
       )
