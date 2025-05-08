@@ -1,7 +1,7 @@
 describe("create_start_impute", {
-  
+
   pknca_data <- FIXTURE_PKNCA_DATA
-  
+
   it("works without issue", {
     expect_no_error({
       result <- create_start_impute(pknca_data)

@@ -143,8 +143,9 @@ describe("pivot_wider_pknca_results", {
   it("adds appropriate labels to columns (CDISC PPTEST)", {
     labels <- formatters::var_labels(pivoted_res)
     expected_labels <- c(
-      USUBJID = NA, PARAM = NA, start = NA, end = NA, DOSNO = NA, DOSNOA = NA, AFRLT = NA, ARRLT = NA,
-      NFRLT = NA, NRRLT = NA, ROUTE = NA, ADOSE = NA, DRUG = NA, ADOSEDUR = NA,
+      USUBJID = NA, PARAM = NA, start = NA, end = NA, DOSNO = NA, DOSNOA = NA,
+      AFRLT = NA, ARRLT = NA, NFRLT = NA, NRRLT = NA, ROUTE = NA,
+      ADOSE = NA, DRUG = NA, ADOSEDUR = NA,
       `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
       `CMAX[ng/mL]` = "Max Conc",
       `TMAX[hr]` = "Time of CMAX",
