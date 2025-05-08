@@ -102,6 +102,7 @@ flexible_violinboxplot <- function(boxplotdata,
       y = ylabel,
       color = paste(colorvars, collapse = ", ")
     ) +
+    scale_color_manual(values = "red") +
     theme_bw() +
     theme(legend.position = "right",
           panel.spacing = unit(3, "lines"),
