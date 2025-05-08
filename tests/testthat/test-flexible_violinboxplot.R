@@ -129,4 +129,19 @@ describe("flexible_violinboxplot", {
     )
     expect_false(grepl("\\[", plot_wo_param_unit$x$layout$yaxis$title$text))
   })
+
+  it("creates a plotly object correctly", {
+    simple_plotly <- flexible_violinboxplot(
+      boxplotdata = boxplotdata,
+      parameter = "cmax",
+      xvars = c("DOSEA"),
+      colorvars = c("DOSNO"),
+      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
+      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      box = TRUE,
+      plotly = TRUE
+    )
+
+    expect_s3_class(simple_plotly, "plotly")
+  })
 })
