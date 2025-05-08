@@ -12,7 +12,15 @@ boxplotdata <- data.frame(
 )
 
 test_ggsave <- function(file, p) {
-  ggplot2::ggsave(file, p, device = "png", width = 1000, height = 1200, units = "px")
+  ggplot2::ggsave(
+    file,
+    p,
+    device = ragg::agg_png,
+    width = 4,
+    height = 6,
+    units = "in",
+    dpi = 300
+  )
 }
 
 describe("flexible_violinboxplot", {
