@@ -11,21 +11,7 @@ boxplotdata <- data.frame(
   ANALYTE = rep("Analyte01", 10)
 )
 
-test_ggsave <- function(file, p) {
-  ggplot2::ggsave(
-    file,
-    p,
-    device = ragg::agg_png,
-    width = 4,
-    height = 6,
-    units = "in",
-    dpi = 300
-  )
-}
-
 describe("flexible_violinboxplot", {
-  testing_plots <- FIXTURE_PLOTS$flexible_violinboxplot
-
   it("creates a simple plot with minimal arguments", {
     simple_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
