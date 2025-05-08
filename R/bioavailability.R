@@ -164,7 +164,9 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
       names_to = "PPTESTCD",
       values_to = "PPSTRES"
     ) %>%
-    mutate(PPSTRESU = "%")
+    mutate(PPSTRESU = "%",
+           PPORRES = PPSTRES,
+           PPORRESU = PPSTRESU)
 
   res_nca$result <- bind_rows(res_nca$result, f_results)
 

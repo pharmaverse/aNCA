@@ -43,7 +43,6 @@ jobs:
   spellcheck:
     name: Spelling
     uses: ./.github/workflows/spellcheck.yml
-    if: github.event_name == 'pull_request'
     needs: get_r_version
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
@@ -52,7 +51,6 @@ jobs:
     name: Lint
     uses: ./.github/workflows/lintr.yml
     needs: get_r_version
-    if: github.event_name == 'pull_request'
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
 
@@ -60,7 +58,6 @@ jobs:
     name: Man Pages
     uses: ./.github/workflows/man-pages.yml
     needs: get_r_version
-    if: github.event_name == 'pull_request'
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
     
@@ -68,13 +65,11 @@ jobs:
     name: Tests
     uses: ./.github/workflows/test.yml
     needs: get_r_version
-    if: github.event_name == 'pull_request'
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
 
   check:
     name: Check
     uses: ./.github/workflows/r-cmd-check.yml
-    if: github.event_name == 'pull_request'
     with:
         error-on: note
