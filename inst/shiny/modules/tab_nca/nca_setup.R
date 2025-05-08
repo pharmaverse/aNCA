@@ -107,8 +107,8 @@ nca_setup_ui <- function(id) {
           br(),
           helpText(HTML(paste(
             "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-            "- If DOSNO = 1 & IV bolus: C0 = 0",
-            "- If DOSNO > 1 & not IV bolus: C0 = predose",
+            "- First dose & IV bolus: C0 = 0",
+            "- Not first dose 1 not IV bolus: C0 = predose",
             "- If IV bolus & monoexponential data: logslope",
             "- If IV bolus & not monoexponential data: C0 = C1",
             sep = "<br>"
@@ -161,11 +161,11 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       param <- setts$PARAM[1]
       doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
-      if (!param %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$DOSNO))) {
+      if (!param %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$NCA_PROFILE))) {
         showNotification(
           validate("The analyte selected in the settings file is not present in the data. Please, if
                     you want to use these settings for a different file, make sure all meaningful
-                    variables in the file are in the data (PARAM, DOSNO...)"),
+                    variables in the file are in the data (PARAM, NCA_PROFILE...)"),
           type = "error"
         )
       }
@@ -324,8 +324,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       updateSelectInput(
         session,
         inputId = "select_dosno",
-        choices = unique(data()$DOSNO),
-        selected = unique(data()$DOSNO)[1]
+        choices = unique(data()$NCA_PROFILE),
+        selected = unique(data()$NCA_PROFILE)[1]
       )
 
       updateSelectInput(
@@ -577,8 +577,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       data <- data %>%
         left_join(processed_pknca_data()$dose$data %>%
                     select(all_of(c(col_groups, route_column, std_route_column,
-                                    "TIME_DOSE", "DOSNO", "DOSNOA"))),
-                  by = c(col_groups, "TIME_DOSE", "DOSNO", "DOSNOA")) %>%
+                                    "TIME_DOSE", "NCA_PROFILE", "DOSNOA"))),
+                  by = c(col_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA")) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
         mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%

@@ -31,7 +31,7 @@ create_start_impute <- function(mydata) {
   dose_group_columns <- unname(unlist(mydata$dose$columns$groups))
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
 
-  # Define dose number (DOSNO) if not present in dose data
+  # Define dose number (DOSNOA) if not present in dose data
   if (!"DOSNOA" %in% names(mydata$dose$data)) {
     mydata$dose$data <- mydata$dose$data %>%
       group_by(across(all_of(dose_group_columns))) %>%

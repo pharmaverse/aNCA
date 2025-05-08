@@ -206,7 +206,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
       # Update the colorby picker input
       param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "PARAM", "DOSEA", "DOSNO", "USUBJID", grouping_vars())
+        c("STUDYID", "PCSPEC", "PARAM", "DOSEA", "NCA_PROFILE", "USUBJID", grouping_vars())
       )
 
       updatePickerInput(
@@ -267,7 +267,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$generalplot_analyte)
       y <- data() %>%
         filter(PARAM %in% input$generalplot_analyte) %>%
-        pull(DOSNO) %>%
+        pull(NCA_PROFILE) %>%
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
                   multiple = TRUE, selected = y[1])
@@ -308,7 +308,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(data())
       cycle_choices <- data() %>%
         filter(PARAM %in% input$analyte_mean) %>%
-        pull(DOSNO) %>%
+        pull(NCA_PROFILE) %>%
         unique()
 
       updateSelectInput(
@@ -333,7 +333,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
               STUDYID %in% input$studyid_mean,
               PARAM %in% input$analyte_mean,
               PCSPEC %in% input$pcspec_mean,
-              DOSNO %in% input$cycles_mean,
+              NCA_PROFILE %in% input$cycles_mean,
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
             ) %>%
@@ -418,7 +418,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         session,
         "selected_colorvars_boxplot",
         choices = colorvar_choices,
-        selected = "DOSNO"
+        selected = "NCA_PROFILE"
       )
     })
 

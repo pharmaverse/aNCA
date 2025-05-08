@@ -15,15 +15,15 @@ MANUAL_UNITS <- list(
 MAPPING_COLUMN_GROUPS <- list(
   "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "DOSNO", "DOSEA", "ADOSEDUR"),
+  "Dose Variables" = c("DRUG", "NCA_PROFILE", "DOSEA", "ADOSEDUR"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
   "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
 )
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "DOSNO", "ADOSEDUR"
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR"
 )
 
 #' Column Mapping Widget
@@ -152,7 +152,7 @@ data_mapping_ui <- function(id) {
       tags$section(
         h5("Dose Variables"),
         .column_mapping_widget(ns, "DRUG", "Character format."),
-        .column_mapping_widget(ns, "DOSNO", "Numeric format."),
+        .column_mapping_widget(ns, "NCA_PROFILE", "Any format."),
         .column_mapping_widget(
           ns, "ROUTE",
           "Character format, stating either 'intravascular' or 'extravascular'."

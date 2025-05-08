@@ -53,7 +53,7 @@ download_settings_server <- function(id, pknca_data, res_nca) {
             doses_selected = ifelse(
               !is.null(input$select_dosno),
               paste0(input$select_dosno, collapse = ","),
-              unique(pknca_data()$conc$data$DOSNO)
+              unique(pknca_data()$conc$data$NCA_PROFILE)
             ),
             method = input$method,
             adj.r.squared_threshold = ifelse(

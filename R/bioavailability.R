@@ -48,7 +48,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
   # Extract ID groups
   id_groups <- res_nca$data$conc$columns$groups %>%
     purrr::list_c() %>%
-    append("DOSNO") %>%
+    append("NCA_PROFILE") %>%
     purrr::keep(~ !is.null(.) && . != "DRUG" && length(unique(res_nca$data$conc$data[[.]])) > 1)
 
   # Filter and transform AUC data
@@ -144,7 +144,7 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
   # Extract ID groups
   id_groups <- res_nca$data$conc$columns$groups %>%
     purrr::list_c() %>%
-    append("DOSNO") %>%
+    append("NCA_PROFILE") %>%
     purrr::keep(~ !is.null(.) && . != "DRUG" &&
                   length(unique(res_nca$data$conc$data[[.]])) > 1)
 

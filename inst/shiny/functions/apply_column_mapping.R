@@ -57,14 +57,27 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
   ]
 
+  # Rename necessary columns
   colnames(dataset) <- sapply(colnames(dataset), function(col) {
     for (group in names(selected_cols)) {
-      if (col %in% selected_cols[[group]]) {
-        return(names(selected_cols[[group]])[which(selected_cols[[group]] == col)])
+      column_names <- names(selected_cols[[group]])
+      mapped_values <- selected_cols[[group]]
+      # Skip renaming if this is select_NCA_PROFILE
+      for (i in seq_along(mapped_values)) {
+        if (mapped_values[i] == col && !(group == "Dose Variables" && column_names[i] == "NCA_PROFILE")) {
+          return(column_names[i])
+        }
       }
     }
     col
   })
+  
+  # Handle special case for NCA_PROFILE
+  nca_profile_col <- mapping$select_NCA_PROFILE
+  
+  if (!is.null(nca_profile_col) && nca_profile_col != "" && nca_profile_col != "NA") {
+    dataset <- dataset %>% mutate(NCA_PROFILE = .data[[nca_profile_col]])
+  }
 
   if (mapping$select_ADOSEDUR == "NA") dataset$ADOSEDUR <- 0
 
