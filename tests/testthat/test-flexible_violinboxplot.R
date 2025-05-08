@@ -1,25 +1,15 @@
 # Create a sample boxplotdata
-boxplotdata <- data.frame(
-  PPTESTCD = rep("cmax", 10),
-  PPSTRES = 1:10,
-  PPSTRESU = rep("ng/mL", 10),
-  DOSEA = rep(c("Low", "High"), each = 5),
-  DOSNO = rep(1:2, each = 5),
-  USUBJID = rep(11101:11105, each = 2),
-  AGE = rep(50:54, each = 2),
-  SEX = rep(c("M", "F"), each = 5),
-  ANALYTE = rep("Analyte01", 10)
-)
+boxplotdata <- FIXTURE_PKNCA_RES$result
 
 describe("flexible_violinboxplot", {
   it("creates a simple plot with minimal arguments", {
     simple_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = "ADOSE",
+      colorvars = "DOSNO",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -30,11 +20,11 @@ describe("flexible_violinboxplot", {
   it("creates a plot with additional xvars", {
     xvars_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = c("DOSEA", "SEX"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = c("ADOSE", "PARAM"),
+      colorvars = "DOSNO",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -45,11 +35,11 @@ describe("flexible_violinboxplot", {
   it("creates a plot with additional colorvars", {
     colorvars_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO", "SEX"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = "ADOSE",
+      colorvars = c("DOSNO", "PARAM"),
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -57,14 +47,14 @@ describe("flexible_violinboxplot", {
     vdiffr::expect_doppelganger("colorvars_plot", colorvars_plot)
   })
 
-  it("creates a plot with different varvalstofilter", {
+  it("creates a plot with additional varvalstofilter", {
     varvalstofilter_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: High", "DOSNO: 2"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = "ADOSE",
+      colorvars = "DOSNO",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6", "DOSNO: 1"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -75,11 +65,11 @@ describe("flexible_violinboxplot", {
   it("creates a violin plot when box = FALSE", {
     violin_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = "DOSEA",
+      parameter = "CMAX",
+      xvars = "ADOSE",
       colorvars = "DOSNO",
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 3"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = FALSE,
       plotly = FALSE
     )
@@ -92,11 +82,11 @@ describe("flexible_violinboxplot", {
       mutate(PPSTRES = NA)
     missing_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata_missing,
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = "ADOSE",
+      colorvars = "DOSNO",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -107,11 +97,11 @@ describe("flexible_violinboxplot", {
   it("handles axis labels correctly when parameter has no unit", {
     plot_with_param_unit <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = "ADOSE",
+      colorvars = "DOSNO",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -119,11 +109,11 @@ describe("flexible_violinboxplot", {
 
     plot_wo_param_unit <- flexible_violinboxplot(
       boxplotdata = boxplotdata %>% mutate(PPSTRESU = ""),
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = "ADOSE",
+      colorvars = "DOSNO",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -133,15 +123,14 @@ describe("flexible_violinboxplot", {
   it("creates a plotly object correctly", {
     simple_plotly <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
-      parameter = "cmax",
-      xvars = c("DOSEA"),
-      colorvars = c("DOSNO"),
-      varvalstofilter = c("DOSEA: Low", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "DOSNO", "USUBJID", "AGE", "SEX", "ANALYTE"),
+      parameter = "CMAX",
+      xvars = "ADOSE",
+      colorvars = "DOSNO",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
-
     expect_s3_class(simple_plotly, "plotly")
   })
 })
