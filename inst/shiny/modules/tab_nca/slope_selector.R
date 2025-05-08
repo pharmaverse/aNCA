@@ -119,7 +119,7 @@ slope_selector_server <- function(
 
       pknca_data()$conc$columns$groups %>%
         purrr::list_c() %>%
-        append("NCA_PROFILE") %>%
+        append(c("NCA_PROFILE", "DOSNOA")) %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "DRUG" && length(unique(pknca_data()$conc$data[[col]])) > 1
         })
@@ -168,8 +168,9 @@ slope_selector_server <- function(
 
       lambdas_res()$result %>%
         mutate(USUBJID = as.character(USUBJID),
-               NCA_PROFILE = as.character(NCA_PROFILE)) %>%
-        group_by(!!!syms(unname(unlist(lambdas_res()$data$conc$columns$groups)))) %>%
+               NCA_PROFILE = as.character(NCA_PROFILE),
+               DOSNOA = as.character(DOSNOA)) %>%
+        group_by(!!!syms(c(unname(unlist(lambdas_res()$data$conc$columns$groups)), "DOSNOA"))) %>%
         summarise(NCA_PROFILE = unique(NCA_PROFILE), .groups = "drop") %>%
         unnest(NCA_PROFILE)  # Convert lists into individual rows
 
