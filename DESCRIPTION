@@ -70,9 +70,8 @@ Suggests:
     shinyWidgets,
     stringi,
     tools,
-    yaml,
     vdiffr,
-    ragg
+    yaml
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
