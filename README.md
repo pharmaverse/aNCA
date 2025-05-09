@@ -59,13 +59,6 @@ and then loading it directly using [devtools](https://github.com/r-lib/devtools)
 devtools::load_all()
 ```
 
-> [!IMPORTANT]
-> The package currently relies on developement version of [PKNCA](https://billdenney.github.io/pknca/). You can install it by running:
-```R
-install.packages("remotes")
-remotes::install_github("billdenney/pknca")
-```
-
 ## Quick start
 
 To run the application, simply invoke:
