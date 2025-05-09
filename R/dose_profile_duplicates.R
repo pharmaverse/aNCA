@@ -45,7 +45,11 @@ dose_profile_duplicates <- function(conc_data,
 
   #If only one dose, return the original data
   if (n_distinct(conc_data[[dosno]]) == 1) {
-    return(conc_data)
+    return(conc_data %>%
+             group_by(across(all_of(groups))) %>%
+             arrange(across(all_of(c(groups, arrlt)))) %>%
+             mutate(IX = seq_len(n())) %>%
+             ungroup())
   }
   # Step 1: Identify the dosing times (ARRLT == 0)
   dose_times <- conc_data %>%

@@ -48,6 +48,11 @@ describe("get_conversion_factor", {
     expect_equal(get_conversion_factor(c("minute", "day"), c("second", "hour")), c(60, 24))
     expect_equal(get_conversion_factor(c("g/L", "kg/L"), c("mg/L", "g/L")), c(1000, 1000))
   })
+
+  it("returns 1 for same units even if they are non-convertible", {
+    expect_equal(get_conversion_factor("kg", "kg"), 1)
+    expect_equal(get_conversion_factor("fakeunit_in_kilos", "fakeunit_in_kilos"), 1)
+  })
 })
 
 describe("convert_to_iso8601_duration", {
