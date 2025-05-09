@@ -373,7 +373,7 @@ test_that("format_pkncadata_intervals generates correct dataset", {
         timeu = pknca_conc$data$RRLTU[1]
       ),
       options = list(
-        keep_interval_cols = c("DOSNO", "type_interval")
+        keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval", "TIME_DOSE")
       )
     )
   )
@@ -480,7 +480,7 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
         timeu = "h"
       ),
       options = list(
-        keep_interval_cols = c("DOSNO", "type_interval")
+        keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval", "TIME_DOSE")
       )
     )
   )
