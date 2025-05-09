@@ -25,10 +25,9 @@
 #'   for individual subjects where IV data is available. If IV data is missing,
 #'  it estimates bioavailability using the mean IV AUC for that grouping.
 #'
-#' @importFrom dplyr bind_rows filter full_join group_by left_join mutate select summarize
-#' @importFrom purrr reduce
+#' @importFrom dplyr any_of distinct filter group_by left_join mutate rename select ungroup
 #' @importFrom tidyr pivot_wider
-#' @importFrom rlang sym
+#' @importFrom rlang syms
 #'
 #' @export
 calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
@@ -104,7 +103,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
         Mean_Dose_IV,
         Dose_intravascular
       ),
-      PPORRES = pk.calc.f(
+      PPORRES = PKNCA::pk.calc.f(
         Dose_intravascular, vals_intravascular,
         Dose_extravascular, vals_extravascular
       ) * 100,

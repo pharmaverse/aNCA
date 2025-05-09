@@ -86,8 +86,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
 
-      results <- calculate_F(res_nca(), auc_options()) %>%
-        PKNCA_add_F(res_nca(), .)
+      results <- res_nca()
+      results$result <- bind_rows(results$result, calculate_F(res_nca(), auc_options()))
 
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))
