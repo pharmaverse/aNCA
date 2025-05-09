@@ -77,7 +77,7 @@ nca_setup_ui <- function(id) {
                      pickerInput(
                        ns("bioavailability"),
                        "Calculate Bioavailability:",
-                       choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+                       choices = c("f_AUCIFO", "f_AUCIFP", "f_AUCLST"),
                        multiple = TRUE,
                        selected = NULL
                      )
