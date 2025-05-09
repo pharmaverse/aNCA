@@ -53,7 +53,7 @@ format_pkncaconc_data <- function(ADNCA,
 
   if ("PARAMCD" %in% colnames(ADNCA)) {
     ADNCA <- ADNCA %>%
-      filter(!grepl("^DOSE", PARAMCD, ignore.case = TRUE))
+      filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
   }
 
   ADNCA %>%
