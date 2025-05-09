@@ -15,7 +15,7 @@
 <br/>
 
 > Our aim is to develop and share an open-source R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets worldwide and across pharmaceutical companies.
-> <br/>
+<br/>
 
 ## Description
 
