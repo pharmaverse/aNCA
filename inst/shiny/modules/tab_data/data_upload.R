@@ -52,12 +52,7 @@ data_upload_server <- function(id) {
       } else {
         df <- tryCatch({
           file_loading_error(NULL)
-          switch(
-            file_ext(input$data_upload$name),
-            csv = read.csv(input$data_upload$datapath, na = c("", "NA")),
-            rds = readRDS(input$data_upload$datapath),
-            stop("Invalid file type. Only accepted are .csv and .rds")
-          )
+          read_pk(input$data_upload$datapath)
         }, error = function(e) {
           file_loading_error(e$message)
         })
