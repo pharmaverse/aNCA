@@ -54,6 +54,7 @@
     "N",
     "NRRLT",
     "PARAM",
+    "PARAMCD",
     "PPCAT",
     "PCGRPID",
     "PCRFTDTC",

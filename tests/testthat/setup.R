@@ -106,6 +106,15 @@ base::local({
       rep(1, 5),
       rep(1, 5)
     ),
+    DOSNO = c(
+      1,
+      c(1, 2),
+      c(1, 2),
+      1,
+      1,
+      1,
+      1
+    ),
     # Included by aNCA internally
     is.excluded.hl = FALSE,
     is.included.hl = FALSE,
@@ -183,6 +192,15 @@ base::local({
       1,
       1,
       1
+    ),
+    DOSNOA = c(
+      1,
+      c(1, 2),
+      c(1, 2),
+      1,
+      1,
+      1,
+      1
     )
   )
 
@@ -197,7 +215,7 @@ base::local({
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO) %>%
+        select(USUBJID, DOSNO, DOSNOA) %>%
         unique()
     )
   main_intervals[, all_params] <- FALSE
@@ -217,7 +235,7 @@ base::local({
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO) %>%
+        select(USUBJID, DOSNO, DOSNOA) %>%
         unique(),
       by = "DOSNO",
       relationship = "many-to-many"
@@ -255,7 +273,7 @@ base::local({
     )
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
-  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "type_interval"))
+  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
 
   # Add start_dose and end_dose columns
   FIXTURE_PKNCA_RES <<- withCallingHandlers(
@@ -282,6 +300,15 @@ base::local({
       },
       DOSNO = if ("DOSNO" %in% names(.)) {
         DOSNO
+      } else {
+        ifelse(
+          start < 5,
+          1,
+          2
+        )
+      },
+      DOSNOA = if ("DOSNOA" %in% names(.)) {
+        DOSNOA
       } else {
         ifelse(
           start < 5,
