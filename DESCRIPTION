@@ -34,7 +34,7 @@ Imports:
     ggplot2,
     magrittr,
     methods,
-    PKNCA,
+    PKNCA (>= 0.12.0),
     plotly,
     purrr,
     rlistings,
