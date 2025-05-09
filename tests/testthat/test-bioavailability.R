@@ -10,8 +10,10 @@ describe("calculate_F", {
   })
 
   it("throws an error when aucs are not available", {
-    expect_error(calculate_F(PKNCA_RESULTS_FIXTURE, c("f_AUCXXX", "f_AUCYYY")),
-                 "No AUC parameters (PPTESTCD) available for: AUCXXX, AUCYYY")
+    expect_error(
+      calculate_F(PKNCA_RESULTS_FIXTURE, c("f_AUCXXX", "f_AUCYYY")),
+      "No AUC parameters \\(PPTESTCD\\) available for: AUCXXX, AUCYYY"
+    )
   })
 
   it("returns a data.frame", {
@@ -86,14 +88,32 @@ describe("calculate_F", {
 
   it("bioavailability values are numeric and within expected range", {
     result <- calculate_F(PKNCA_RESULTS_FIXTURE, c("f_AUCLST"))
-    expect_type(result$f_AUCLST, "double")
-    expect_true(all(result$f_AUCLST >= 0 & result$f_AUCLST <= 200, na.rm = TRUE))
+    actual_range <- range(result$PPORRES, na.rm = TRUE)
+    expect_true(all(actual_range >= 0 & actual_range <= 100))
   })
 
-  it("handles missing IV data by estimating from group mean", {
-    result <- calculate_F(PKNCA_RESULTS_FIXTURE, "f_AUCLST")
+  it("when subject intravascular and extravascular data is available, makes the calculation with it", {
+    pknca_res <- PKNCA_RESULTS_FIXTURE
+    pknca_res$result <- pknca_res$result %>%
+      filter(USUBJID == 1, PPTESTCD == "AUCLST")
+    
+    pknca_res$result <- bind_rows(
+      pknca_res$result,
+      pknca_res$result %>% mutate(
+        ROUTE = "intravascular",
+        DOSNO = 2,
+        PPORRES = PPORRES + 1
+      ),
+      pknca_res$result %>% mutate(
+        ROUTE = "intravascular",
+        DOSNO = 3,
+        PPORRES = PPORRES - 1
+      )
+    )
 
-    expect_true(any(is.na(result$f_AUCLST)) || any(result$f_AUCLST > 0))
+    result <- calculate_F(pknca_res, "f_AUCLST")
+
+    expect_equal(result$PPORRES[1], 100)
   })
 })
 

@@ -25,9 +25,10 @@
 #'   for individual subjects where IV data is available. If IV data is missing,
 #'  it estimates bioavailability using the mean IV AUC for that grouping.
 #'
-#' @importFrom dplyr any_of distinct filter group_by left_join mutate rename select ungroup
+#' @importFrom dplyr bind_rows filter full_join group_by left_join mutate select summarize
+#' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider
-#' @importFrom rlang syms
+#' @importFrom rlang sym
 #'
 #' @export
 calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
@@ -84,6 +85,15 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
       names_from = any_of(route_col),
       values_from = c(vals, Dose)
     ) %>%
+
+    # Mean AUC & dose values by subject
+    group_by(PPTESTCD, !!!syms(conc_group_cols), start, end, PPORRESU) %>%
+    mutate(
+      Mean_AUC_IV_subj = mean(vals_intravascular, na.rm = TRUE),
+      Mean_Dose_IV_subj = mean(Dose_intravascular, na.rm = TRUE),
+    ) %>%
+
+    # Mean AUC & dose values by cohort
     group_by(PPTESTCD, !!!syms(setdiff(conc_group_cols, "USUBJID")), start, end, PPORRESU) %>%
     mutate(
       Mean_AUC_IV = mean(vals_intravascular, na.rm = TRUE),
@@ -93,15 +103,17 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
     # Calculate F using group mean values when individual is not present for both routes
     ungroup() %>%
     mutate(
-      vals_intravascular = ifelse(
-        is.na(vals_intravascular) | is.na(Dose_intravascular),
-        Mean_AUC_IV,
-        vals_intravascular
+      vals_intravascular = case_when(
+        !is.na(vals_intravascular) & !is.na(Dose_intravascular) ~ vals_intravascular,
+        !is.na(Mean_AUC_IV_subj) & !is.na(Mean_Dose_IV_subj) ~ Mean_AUC_IV_subj,
+        !is.na(Mean_AUC_IV) & !is.na(Mean_Dose_IV) ~ Mean_AUC_IV,
+        TRUE ~ NA
       ),
-      Dose_intravascular = ifelse(
-        is.na(vals_intravascular) | is.na(Dose_intravascular),
-        Mean_Dose_IV,
-        Dose_intravascular
+      Dose_intravascular = case_when(
+        !is.na(vals_intravascular) & !is.na(Dose_intravascular) ~ Dose_intravascular,
+        !is.na(Mean_AUC_IV_subj) & !is.na(Mean_Dose_IV_subj) ~ Mean_Dose_IV_subj,
+        !is.na(Mean_AUC_IV) & !is.na(Mean_Dose_IV) ~ Mean_Dose_IV,
+        TRUE ~ NA
       ),
       PPORRES = PKNCA::pk.calc.f(
         Dose_intravascular, vals_intravascular,
