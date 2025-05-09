@@ -50,8 +50,8 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
 
       #' Transform results
       # Calculate bioavailability if available
-      results <- calculate_F(res, auc_options()) %>%
-        PKNCA_add_F(res, .)
+      results <- res_nca()
+      results$result <- bind_rows(results$result, calculate_F(res_nca(), auc_options()))
 
       # Transform results
       final_results <- pivot_wider_pknca_results(results)
