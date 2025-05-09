@@ -9,7 +9,7 @@ describe("read_pk", {
   })
 
   it("reads rds data correctly", {
-    tmp_rds <- tempfile(fileext = ".rds")
+    tmp_rds <- withr::local_tempfile(fileext = ".rds")
     saveRDS(data_dummy, tmp_rds)
 
     df <- read_pk(tmp_rds)
@@ -23,19 +23,19 @@ describe("read_pk", {
   })
 
   it("throws an error if file with unsupported format is loaded", {
-    unsupported_path <- tempfile(fileext = ".txt")
+    unsupported_path <- withr::local_tempfile(fileext = ".txt")
     expect_error(read_pk(unsupported_path, "Invalid file type."))
   })
 
   it("throws an error if loaded object is not a data frame", {
-    tmp_rds_list <- tempfile(fileext = ".rds")
+    tmp_rds_list <- withr::local_tempfile(fileext = ".rds")
     saveRDS(list(a = 1), tmp_rds_list)
 
     expect_error(read_pk(tmp_rds_list), "Invalid data format. Data frame was expected")
   })
 
   it("throws an error if loaded data frame has no rows", {
-    tmp_rds_empty_frame <- tempfile(fileext = ".rds")
+    tmp_rds_empty_frame <- withr::local_tempfile(fileext = ".rds")
     saveRDS(data.frame(), tmp_rds_empty_frame)
 
     expect_error(
