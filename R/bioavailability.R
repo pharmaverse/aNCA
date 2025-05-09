@@ -45,21 +45,21 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
   route_col <- res_nca$data$dose$columns$route
   dose_col <- res_nca$data$dose$columns$dose
 
-  # Extract ID groups
+  # Extract ID concentration groups
   id_groups <- PKNCA::getGroups(res_nca$data$conc) %>%
     names() %>%
     append("DOSNO")
 
-  # Filter and transform AUC data
+  # Extract dose information (route and dose)
+  dose_info <- res_nca$data$dose$data %>%
+    select(any_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
+    distinct()
+
+  # Filter AUC data requested for bioavailiability calculations
   auc_data <- res_nca$result %>%
     filter(PPTESTCD %in% auc_vars) %>%
     select(any_of(id_groups), PPTESTCD, PPORRES) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
-
-  # Extract dose information
-  dose_info <- res_nca$data$dose$data %>%
-    select(any_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
-    distinct()
 
   auc_data %>%
     # Merge dose information (route and dose)
@@ -96,24 +96,20 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
         Mean_Dose_IV,
         Dose_intravascular
       ),
-      f_auc = pk.calc.f(
+      PPORRES = pk.calc.f(
         Dose_intravascular, vals_intravascular,
         Dose_extravascular, vals_extravascular
-      ) * 100
+      ) * 100,
+      PPORRESU = "%",
+      PPSTRES = PPORRES,
+      PPSTRESU = "%"
     ) %>%
     # Arrange the data to keep 1 row per group
     mutate(
-      auc_type = paste0("f_", auc_type)
+      PPTESTCD = paste0("f_", auc_type),
+      type_interval = "main"
     ) %>%
-    select(any_of(c(names(auc_data), "auc_type", "f_auc"))) %>%
-    pivot_wider(
-      names_from = auc_type,
-      values_from = f_auc
-    ) %>%
-    # question: this action is not necessary, but keeps the original output fmt. May I remove?
-    # Remove columns with NA values for all columns with name auc_vars
-    filter(rowSums(is.na(pick(starts_with("f_AUC")))) != length(auc_vars)) %>%
-    unique()
+    select(any_of(c(names(res_nca$result))))
 }
 
 #' Add bioavailability to PKNCAresults object
