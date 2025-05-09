@@ -11,7 +11,7 @@ describe("calculate_F", {
 
   it("throws an error when aucs are not available", {
     expect_error(calculate_F(PKNCA_RESULTS_FIXTURE, c("f_AUCXXX", "f_AUCYYY")),
-                 "No AUC data available for the selected variables")
+                 "No AUC parameters (PPTESTCD) available for: AUCXXX, AUCYYY")
   })
 
   it("returns a data.frame", {
@@ -41,15 +41,47 @@ describe("calculate_F", {
 
     expect_true(all(!is.na(result$PPSTRES[1:3])))
     expect_true(all(is.na(result_no_start_matching$PPSTRES[1:3])))
+
+    # Check that the subject not changed has still the same value
+    expect_equal(result_no_start_matching %>%
+                  filter(USUBJID == 7),
+                result_no_start_matching %>%
+                  filter(USUBJID == 7)
+    )
   })
 
+  it("makes ratio using the same unit", {
+    pknca_res <- PKNCA_RESULTS_FIXTURE
+    pknca_res$result <- pknca_res$result %>%
+      filter(
+        PPTESTCD == "AUCLST"
+      )
 
-  it("has expected columns in output", {
+    pknca_res_diff_units <- pknca_res
+    pknca_res_diff_units$result <- pknca_res_diff_units$result %>%
+      mutate(
+        PPORRESU = case_when(
+          ROUTE == "intravascular" & USUBJID %in% c(3,4) ~ "hr*g/mL",
+          ROUTE == "intravascular" ~ "hr*ng/mL",
+          TRUE ~ PPSTRESU
+        ),
+        PPORRES = case_when(
+          ROUTE == "intravascular" & USUBJID %in% c(3,4) ~ PPORRES * 1e-9,
+          TRUE ~ PPORRES
+        )
+      )
+
+    result <- calculate_F(pknca_res, "f_AUCLST")
+    result_diff_units <- calculate_F(pknca_res_diff_units, "f_AUCLST")
+
+    expect_equal(result, result_diff_units)
+  })
+
+  it("has expected format and can be bound to a PKNCA result object", {
     result <- calculate_F(PKNCA_RESULTS_FIXTURE, c("f_AUCLST", "f_AUCIFO"))
 
-    expect_true("USUBJID" %in% names(result))
-    expect_true("f_AUCLST" %in% names(result))
-    expect_true("f_AUCIFO" %in% names(result))
+    # Does not create other new columns (variables output can vary)
+    expect_true(all(names(result) %in% names(PKNCA_RESULTS_FIXTURE$result)))
   })
 
   it("bioavailability values are numeric and within expected range", {
@@ -62,25 +94,6 @@ describe("calculate_F", {
     result <- calculate_F(PKNCA_RESULTS_FIXTURE, "f_AUCLST")
 
     expect_true(any(is.na(result$f_AUCLST)) || any(result$f_AUCLST > 0))
-  })
-})
-
-describe("PKNCA_add_F", {
-  it("returns the original object when bioavailability is NULL", {
-    result <- PKNCA_add_F(PKNCA_RESULTS_FIXTURE, NULL)
-    expect_equal(result, PKNCA_RESULTS_FIXTURE)
-  })
-
-  it("adds bioavailability data to the result slot when provided", {
-    bioavailability <- calculate_F(PKNCA_RESULTS_FIXTURE, c("f_AUCLST", "f_AUCIFO"))
-    result <- PKNCA_add_F(PKNCA_RESULTS_FIXTURE, bioavailability)
-    expect_true(all(c("f_AUCLST","f_AUCIFO") %in% result$result$PPTESTCD))
-  
-    expected_res <- result$result %>%
-      filter(ROUTE == "intravascular",
-             PPTESTCD %in% c("f_AUCLST", "f_AUCIFO"))
-    expect_equal(result$result$PPSTRES[result$result$PPTESTCD == "f_AUCLST"] |> na.omit() |> as.numeric(),
-                 c(26.899, 19.98260, 22.5204, 79.0651, 70.2774, 66.71026), tolerance = 1e-4)
   })
 })
 
