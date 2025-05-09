@@ -68,7 +68,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
     ) %>%
 
     # Force all AUC values to be in the same unit if possible by get_conversion_factor
-    group_by(PPTESTCD, !!!syms(setdiff(conc_group_cols, "USUBJID")), start, end) %>%
+    group_by(PPTESTCD, !!!syms(setdiff(conc_group_cols, "USUBJID"))) %>%
     mutate(
       conv_factor = get_conversion_factor(PPORRESU, PPORRESU[1]),
       PPORRES = ifelse(!is.na(conv_factor), PPORRES * conv_factor, PPORRES),
@@ -87,7 +87,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
     ) %>%
 
     # Mean AUC & dose values by subject
-    group_by(PPTESTCD, !!!syms(conc_group_cols), start, end, PPORRESU) %>%
+    group_by(PPTESTCD, !!!syms(conc_group_cols), PPORRESU) %>%
     mutate(
       Mean_AUC_IV_subj = mean(vals_intravascular, na.rm = TRUE),
       Mean_Dose_IV_subj = mean(Dose_intravascular, na.rm = TRUE),
