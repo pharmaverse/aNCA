@@ -88,4 +88,4 @@ Feel free to open identified [issues](https://github.com/pharmaverse/aNCA/issues
 ## Documentation and references
 
 - Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app** (still in development).
-- The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/billdenney/pknca)
+- The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/humanpred/pknca)
