@@ -22,7 +22,7 @@ This function converts a vector to a factor while preserving its "label" attribu
   attr(vec, "label") <- "Example Label"
   factor_vec <- as_factor_preserve_label(vec)
   print(factor_vec)
-  print(attr(factor_vec, "label"))
+  print(base::attr(factor_vec, "label"))
 }
 
 }
