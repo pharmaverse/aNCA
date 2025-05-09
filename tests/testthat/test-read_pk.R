@@ -18,6 +18,16 @@ describe("read_pk", {
     expect_equal(nrow(df), 131)
   })
 
+  it("reads excel data correctly", {
+    tmp_xlsx <- withr::local_tempfile(fileext = ".xlsx")
+    openxlsx2::write_xlsx(data_dummy, tmp_xlsx)
+
+    df <- read_pk(tmp_xlsx)
+
+    expect_s3_class(df, "data.frame")
+    expect_equal(nrow(df), 131)
+  })
+
   it("throws an error if file does not exist", {
     expect_error(read_pk("invalid_path.csv"), "File does not exist: ")
   })

@@ -57,6 +57,7 @@ Suggests:
     withr,
     ggh4x,
     nestcolor,
+    openxlsx2,
     scales,
     bslib,
     DT,

@@ -10,6 +10,7 @@
 #'
 #' @examples
 #' df <- read_pk(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"))
+#'
 #' @importFrom tools file_ext
 #' @importFrom utils read.csv
 #' @export
@@ -20,7 +21,15 @@ read_pk <- function(path) {
     file_ext(path),
     csv = read.csv(path, na = c("", "NA")),
     rds = readRDS(path),
-    stop("Invalid file type. Only accepted are .csv and .rds")
+    xlsx = {
+      if (!requireNamespace("openxlsx2", silently = TRUE))
+        stop(
+          "Handling .xlsx files requires `openxlsx2` package, please install it with ",
+          "`install.packages('openxlsx2')`"
+        )
+      openxlsx2::read_xlsx(path)
+    },
+    stop("Invalid file type. Accepted formats are .csv, .rds, .xlsx.")
   ) |>
     validate_pk()
 }
