@@ -11,6 +11,8 @@
 #' @examples
 #' df <- read_pk(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"))
 #' @importFrom tools file_ext
+#' @importFrom utils read.csv
+#' @export
 read_pk <- function(path) {
   if (!file.exists(path)) stop("File does not exist: ", path)
 
@@ -19,5 +21,28 @@ read_pk <- function(path) {
     csv = read.csv(path, na = c("", "NA")),
     rds = readRDS(path),
     stop("Invalid file type. Only accepted are .csv and .rds")
-  )
+  ) |>
+    validate_pk()
+}
+
+#' Validates datatable with raw pk data.
+#'
+#' @details
+#' Performs the following checks:
+#'   - If provided variable is of class `data.frame`.
+#'   - If number of rows in provided data frame is greater than 0.
+#'
+#' Throws an error if any of the checks does not pass.
+#'
+#' @param pk_data Object to check.
+#'
+#' @returns Original, unchanged object. If any of the checks do not pass, throws an error.
+validate_pk <- function(pk_data) {
+  if (!inherits(pk_data, "data.frame"))
+    stop("Invalid data format. Data frame was expected, but received ", class(pk_data), ".")
+
+  if (NROW(pk_data) == 0)
+    stop("Empty data frame received, please check the input file.")
+
+  pk_data
 }
