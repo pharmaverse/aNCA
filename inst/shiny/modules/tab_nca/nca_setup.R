@@ -1,6 +1,42 @@
+# Rule input helper ui
+
+.rule_input <- function(id, label, default, step, min, max = NULL) {
+
+  threshold_id <- paste0(id, "_threshold")
+  rule_id <- paste0(id, "_rule")
+  numeric_args <- list(
+    inputId = threshold_id,
+    label = "",
+    value = default,
+    step = step,
+    min = min
+  )
+
+  # Only include `max` if not NULL
+  if (!is.null(max)) {
+    numeric_args$max <- max
+  }
+
+  fluidRow(
+    column(
+      width = 6,
+      checkboxInput(rule_id, label)
+    ),
+    column(
+      width = 6,
+      conditionalPanel(
+        condition = paste0("input['", rule_id, "'] == true"),
+        div(
+          class = "nca-numeric-container",
+          do.call(numericInput, numeric_args)
+        )
+      )
+    )
+  )
+}
+
 nca_setup_ui <- function(id) {
   ns <- NS(id)
-
 
   navset_tab(
     id = ns("setup_tabs"),
@@ -28,7 +64,7 @@ nca_setup_ui <- function(id) {
           ),
           # Method, NCA parameters, and units table
           fluidRow(
-            column(3, selectInput(
+            column(4, selectInput(
               ns("method"),
               "Extrapolation Method:",
               choices = c(
@@ -36,35 +72,28 @@ nca_setup_ui <- function(id) {
               ),
               selected = "lin up/log down"
             )),
-            column(5, pickerInput(
-              inputId = ns("nca_params"),
-              label = "NCA parameters to calculate:",
-              choices = pull(pknca_cdisc_terms, PKNCA, input_names),
-              options = list(
-                `live-search` = TRUE,
-                `dropup-auto` = FALSE,
-                `size` = 10,
-                `noneSelectedText` = "No parameters selected",
-                `windowPadding` = 10,
-                `dropdownAlignRight` = TRUE
-              ),
-              multiple = TRUE,
-              selected = c("cmax", "tmax", "half.life", "cl.obs", "auclast",
-                           "aucinf.pred", "aucinf.obs", "aucinf.obs.dn",
-                           "adj.r.squared", "lambda.z", "lambda.z.n.points",
-                           "cav", "cl.all", "cl.obs",
-                           "clast", "tlast")
-            )),
+            column(4, #pickerinput only enabled when IV and EX data present
+                   shinyjs::hidden(
+                     pickerInput(
+                       ns("bioavailability"),
+                       "Calculate Bioavailability:",
+                       choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+                       multiple = TRUE,
+                       selected = NULL
+                     )
+                   )),
             column(4, units_table_ui(ns("units_table")))
           ),
-          #pickerinput only enabled when IV and EX data present
-          shinyjs::hidden(
-            pickerInput(
-              ns("bioavailability"),
-              "Calculate Bioavailability:",
-              choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
-              multiple = TRUE,
-              selected = NULL
+        ),
+        accordion_panel(
+          title = "Parameter Selection",
+          reactableOutput(ns("nca_parameters")),
+          card(
+            full_screen = FALSE,
+            style = "margin-top: 2em;",
+            card_header("Selected NCA Parameters"),
+            card_body(
+              uiOutput(ns("nca_param_display"))
             )
           )
         ),
@@ -92,100 +121,13 @@ nca_setup_ui <- function(id) {
         ),
         accordion_panel(
           title = "Flag Rule Sets",
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_adj_r_squared"), "RSQADJ:")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_adj_r_squared"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("adj.r.squared_threshold"),
-                    "",
-                    value = 0.7,
-                    step = 0.05,
-                    min = 0,
-                    max = 1
-                  )
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_aucpext_obs"), "AUCPEO (% ext.observed): ")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_aucpext_obs"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("aucpext.obs_threshold"),
-                    "",
-                    value = 20,
-                    step = 1,
-                    min = 0,
-                    max = 100
-                  )
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_aucpext_pred"), "AUCPEP (% ext.predicted): ")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_aucpext_pred"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("aucpext.pred_threshold"),
-                    "",
-                    value = 20,
-                    step = 5,
-                    min = 0,
-                    max = 100
-                  )
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(ns("rule_span_ratio"), "SPAN: ")
-            ),
-            column(
-              width = 6,
-              conditionalPanel(
-                condition = paste0("input['", ns("rule_span_ratio"), "'] == true"),
-                div(
-                  class = "nca-numeric-container",
-                  numericInput(
-                    ns("span.ratio_threshold"),
-                    "",
-                    value = 2,
-                    step = 1,
-                    min = 0
-                  )
-                )
-              )
-            )
-          ),
+          .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
+          .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
+          .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
+          .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
         ),
         id = "acc",
-        open = "General Settings"
+        open = c("General Settings", "Parameter Selection")
       )
     ),
     nav_panel(
@@ -369,7 +311,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
-    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "R.SQ.ADJ")
+    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "RSQADJ")
     limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, lab = "AUCPEO")
     limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
@@ -398,6 +340,65 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         inputId = "select_pcspec",
         choices = unique(data()$PCSPEC),
         selected = unique(data()$PCSPEC)[1]
+      )
+    })
+
+    DEFAULT_PARAMS <- c(
+      "aucinf.obs", "aucinf.obs.dn",
+      "aucint.last",
+      "auclast", "auclast.dn",
+      "cmax", "cmax.dn",
+      "clast.obs", "clast.obs.dn",
+      "tlast", "tmax",
+      "half.life", "cl.obs", "vss.obs", "vz.obs",
+      "mrt.last", "mrt.obs",
+      "lambda.z",
+      "lambda.z.n.points", "r.squared",
+      "adj.r.squared", "lambda.z.time.first",
+      "aucpext.obs", "aucpext.pred"
+    )
+
+    output$nca_parameters <- renderReactable({
+      #remove parameters that are currently unavailable in PKNCA
+      params_data <- pknca_cdisc_terms %>%
+        filter(!PPTESTCD %in% c("FAB", "FREL"))
+
+      default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
+
+      reactable(
+        params_data %>%
+          select(TYPE, PPTESTCD, PPTEST, CAT),
+        groupBy = c("TYPE"),
+        pagination = FALSE,
+        filterable = TRUE,
+        compact = TRUE,
+        onClick = "select",
+        height = "49vh",
+        selection = "multiple",
+        defaultSelected = default_row_indices
+      )
+    })
+
+    nca_params <- reactive({
+      selected_rows <- getReactableState("nca_parameters", "selected")
+      if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
+
+      params_data <- pknca_cdisc_terms %>%
+        filter(!PPTESTCD %in% c("FAB", "FREL"))
+      selected_terms <- params_data[selected_rows, , drop = FALSE]
+
+      # Return PKNCA column names
+      selected_terms$PKNCA
+    })
+
+    output$nca_param_display <- renderUI({
+      req(nca_params())
+
+      div(
+        class = "nca-pill-grid",
+        lapply(nca_params(), function(param) {
+          tags$span(class = "nca-pill", param)
+        })
       )
     })
 
@@ -451,13 +452,13 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     })
 
     # Updating Checkbox and Numeric Inputs
-    observeEvent(list(input$rule_adj_r_squared, input$rule_aucpext_obs,
-                      input$rule_aucpext_pred, input$nca_params), {
+    observeEvent(list(input$adj.r.squared_rule, input$aucpext.obs_rule,
+                      input$aucpext.pred_rule, nca_params()), {
 
-                   nca_params <- input$nca_params
-                   if (input$rule_adj_r_squared) nca_params <- c(nca_params, "adj.r.squared")
-                   if (input$rule_aucpext_obs) nca_params <- c(nca_params, "aucpext.obs")
-                   if (input$rule_aucpext_pred) nca_params <- c(nca_params, "aucpext.pred")
+                   nca_params <- nca_params()
+                   if (input$adj.r.squared_rule) nca_params <- c(nca_params, "adj.r.squared")
+                   if (input$aucpext.obs_rule) nca_params <- c(nca_params, "aucpext.obs")
+                   if (input$aucpext.pred_rule) nca_params <- c(nca_params, "aucpext.pred")
 
                    updatePickerInput(session = session,
                                      inputId = "nca_params",
@@ -465,24 +466,40 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
                  })
 
     # Create trigger for modifications to the user setup
-    # Debounce trigger signal
-    setup_trigger <- debounce(reactive({
+    setup_trigger <- reactive({
       paste(
         adnca_data(),
         auc_data(),
         input$method,
-        input$nca_params,
+        nca_params(),
         input$should_impute_c0,
         input$select_analyte,
         input$select_dosno,
         input$select_pcspec
       )
-    }), millis = 2500)
+    })
+
+    # Debounce the trigger, so the data is not updated too often.
+    setup_debounce <- 2500
+    setup_trigger_debounced <- debounce(setup_trigger, setup_debounce)
+
+    # On all changes, disable NCA button for given period of time to prevent the user from running
+    # the NCA before settings are applied.
+    observeEvent(setup_trigger(), {
+      runjs(str_glue(
+        "buttonTimeout(
+          '.run-nca-btn',
+          {setup_debounce + 250},
+          'Applying<br>settings...',
+          'Run NCA'
+        );"
+      ))
+    })
 
     # Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
-    slopes_pknca_data <- eventReactive(setup_trigger(), {
+    slopes_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
@@ -494,7 +511,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         selected_dosno = input$select_dosno,
         selected_pcspec = input$select_pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
-                   "r.squared", "adj.r.squared", "cmax"),
+                   "r.squared", "adj.r.squared", "tmax"),
         should_impute_c0 = input$should_impute_c0
       )
 
@@ -503,7 +520,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
     # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
-    processed_pknca_data <- eventReactive(setup_trigger(), {
+    processed_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
           input$select_dosno, input$select_pcspec, auc_data())
       log_trace("Updating PKNCA::data object.")
@@ -515,7 +532,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         selected_analytes = input$select_analyte,
         selected_dosno = input$select_dosno,
         selected_pcspec = input$select_pcspec,
-        params = input$nca_params,
+        params = nca_params(),
         should_impute_c0 = input$should_impute_c0
       )
 
@@ -558,10 +575,11 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       col_groups <- unname(unlist(processed_pknca_data()$conc$columns$groups))
 
       data <- data %>%
-        left_join(processed_pknca_data()$dose$data, by = c(col_groups, "DOSNO")) %>%
+        left_join(processed_pknca_data()$dose$data,
+                  by = c(col_groups, "TIME_DOSE", "DOSNO", "DOSNOA")) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
-        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME) %>%
-        mutate(start = start - first(TIME), end = end - first(TIME)) %>%
+        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
+        mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
         select(!!!syms(colnames(data)), conc_groups,
                all_of(c(route_column, std_route_column)))
 
@@ -585,19 +603,19 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       slopes_pknca_data = slopes_pknca_data,
       rules = reactive(list(
         adj.r.squared = list(
-          is.checked = input$rule_adj_r_squared,
+          is.checked = input$adj.r.squared_rule,
           threshold = input$adj.r.squared_threshold
         ),
         aucpext.obs = list(
-          is.checked = input$rule_aucpext_obs,
+          is.checked = input$aucpext.obs_rule,
           threshold = input$aucpext.obs_threshold
         ),
         aucpext.pred = list(
-          is.checked = input$rule_aucpext_pred,
+          is.checked = input$aucpext.pred_rule,
           threshold = input$aucpext.pred_threshold
         ),
         span.ratio = list(
-          is.checked = input$rule_span_ratio,
+          is.checked = input$span.ratio_rule,
           threshold = input$span.ratio_threshold
         )
       )),

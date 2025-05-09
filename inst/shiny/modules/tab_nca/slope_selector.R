@@ -136,6 +136,7 @@ slope_selector_server <- function(
       shinyjs::disable(selector = ".btn-page")
     })
     observeEvent(input$previous_page, {
+      if (current_page() == 1) return(NULL)
       current_page(current_page() - 1)
       shinyjs::disable(selector = ".btn-page")
     })
@@ -208,13 +209,22 @@ slope_selector_server <- function(
         unique() %>%
         arrange(USUBJID)
 
-      num_plots <- nrow(subject_profile_plot_ids)
-
       # find which plots should be displayed based on page #
+      num_plots <- nrow(subject_profile_plot_ids)
       plots_per_page <- as.numeric(input$plots_per_page)
+      num_pages <- ceiling(num_plots / plots_per_page)
+
+      if (current_page() > num_pages) {
+        current_page(current_page() - 1)
+        return(NULL)
+      }
+
       page_end <- current_page() * plots_per_page
       page_start <- page_end - plots_per_page + 1
       if (page_end > num_plots) page_end <- num_plots
+
+      # update page number display #
+      output$page_number <- renderUI(num_pages)
 
       plots_to_render <- slice(ungroup(subject_profile_plot_ids), page_start:page_end)
 
@@ -243,10 +253,6 @@ slope_selector_server <- function(
         shinyjs::enable(selector = ".btn-page")
         plot_outputs
       })
-
-      # update page number display #
-      num_pages <- ceiling(num_plots / plots_per_page)
-      output$page_number <- renderUI(num_pages)
 
       # update jump to page selector #
       updatePickerInput(

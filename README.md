@@ -1,6 +1,5 @@
 # automated Non-Compartmental Analysis (aNCA)
-
-<img id = "package-logo-dark" src='man/figures/aNCA_logo_bbg.png#gh-dark-mode-only' align="right" alt="aNCA logo dark bg" width="200"><img id = "package-logo-light" src="man/figures/aNCA_logo_wbg.png#gh-light-mode-only" align="right" alt="aNCA logo light bg" width="200">
+<img src='man/figures/aNCA_logo.png' align="right" alt="aNCA logo" width="200">
 
 <!-- badges: start -->
 
