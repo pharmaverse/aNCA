@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_pk.R
 \name{validate_pk}
 \alias{validate_pk}
-\title{Validates datatable with raw pk data.}
+\title{Validates data table with raw pk data.}
 \usage{
 validate_pk(pk_data)
 }
@@ -13,7 +13,7 @@ validate_pk(pk_data)
 Original, unchanged object. If any of the checks do not pass, throws an error.
 }
 \description{
-Validates datatable with raw pk data.
+Validates data table with raw pk data.
 }
 \details{
 Performs the following checks:

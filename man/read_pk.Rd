@@ -18,10 +18,11 @@ Reads PK datasets from various file formats.
 \details{
 Currently supported file formats include:
 \itemize{
-\item csv
-\item rds
+\item \code{csv}
+\item \code{rds}
 }
 }
 \examples{
 df <- read_pk(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"))
+
 }

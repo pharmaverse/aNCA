@@ -2,8 +2,8 @@
 #'
 #' @details
 #' Currently supported file formats include:
-#' - csv
-#' - rds
+#' - `csv`
+#' - `rds`
 #'
 #' @param path Character string with path to the dataset file.
 #' @returns A data.frame object with loaded data.
@@ -34,7 +34,7 @@ read_pk <- function(path) {
     validate_pk()
 }
 
-#' Validates datatable with raw pk data.
+#' Validates data table with raw pk data.
 #'
 #' @details
 #' Performs the following checks:
