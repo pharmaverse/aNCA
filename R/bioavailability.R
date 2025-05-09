@@ -33,32 +33,34 @@
 #' @export
 calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
 
+  # Extract and clean AUC selection
+  auc_vars <- gsub("^f_", "", selected_aucs)
+
   #check if selected_aucs are available
   if (length(selected_aucs) == 0) {
     return(NULL)
   }
 
-  # Extract and clean AUC selection
-  auc_vars <- gsub("^f_", "", selected_aucs)
+  if (!any(res_nca$result$PPTESTCD %in% auc_vars)) {
+    stop(paste0("No AUC data available for: ", paste(auc_vars, collapse = ", ")))
+  }
 
   # Extract required columns
   route_col <- res_nca$data$dose$columns$route
   dose_col <- res_nca$data$dose$columns$dose
-
-  # Extract ID concentration groups
-  id_groups <- PKNCA::getGroups(res_nca$data$conc) %>%
+  group_cols <- PKNCA::getGroups(res_nca$data$conc) %>%
     names() %>%
     append("DOSNO")
 
   # Extract dose information (route and dose)
   dose_info <- res_nca$data$dose$data %>%
-    select(any_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
+    select(any_of(c(group_cols, route_col, dose_col)), USUBJID) %>%
     distinct()
 
   # Filter AUC data requested for bioavailiability calculations
   auc_data <- res_nca$result %>%
     filter(PPTESTCD %in% auc_vars) %>%
-    select(any_of(id_groups), PPTESTCD, PPORRES) %>%
+    select(any_of(group_cols), PPTESTCD, PPORRES, start, end) %>%
     pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
 
   auc_data %>%
@@ -78,7 +80,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
       names_from = Route,
       values_from = c(vals, Dose)
     ) %>%
-    group_by(auc_type, !!!syms(setdiff(id_groups, "USUBJID"))) %>%
+    group_by(auc_type, !!!syms(setdiff(group_cols, "USUBJID")), start, end) %>%
     mutate(
       Mean_AUC_IV = mean(vals_intravascular, na.rm = TRUE),
       Mean_Dose_IV = mean(Dose_intravascular, na.rm = TRUE),
@@ -91,7 +93,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
         Mean_AUC_IV,
         vals_intravascular
       ),
-      Dose_intravascular = ifelse(
+      dose_iv = ifelse(
         is.na(vals_intravascular) | is.na(Dose_intravascular),
         Mean_Dose_IV,
         Dose_intravascular
@@ -134,7 +136,7 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
     return(res_nca)
   }
   # Extract ID groups
-  id_groups <- PKNCA::getGroups(res_nca$data$conc) %>%
+  group_cols <- PKNCA::getGroups(res_nca$data$conc) %>%
     names() %>%
     append("DOSNO")
 
@@ -145,7 +147,7 @@ PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
 
   # Create bioavailability data in resnca format
   f_results <- subj_data %>%
-    left_join(bioavailability, by = id_groups) %>%
+    left_join(bioavailability, by = group_cols) %>%
     pivot_longer(
       cols = starts_with("f_"),  # Select columns with calculated bioavailability
       names_to = "PPTESTCD",
