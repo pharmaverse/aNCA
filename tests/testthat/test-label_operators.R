@@ -50,7 +50,7 @@ describe("as_factor_preserve_label", {
     expect_s3_class(mock_vector_as_factor, "factor")
   })
 
-  it("returns ... ", {
+  it("does not change the original label text", {
     old_label <- base::attr(mock_vector_as_factor, "label")
     new_label <- base::attr(as_factor_preserve_label(mock_vector_as_factor), "label")
     expect_equal(old_label, new_label)
