@@ -62,6 +62,9 @@ describe("has_label", {
   it("returns TRUE if has label", {
     expect_true(has_label(mock_vec))
   })
+  it("returns FALSE if has no label", {
+    expect_false(has_label("unlabeled_char"))
+  })
 })
 
 describe("set_empty_label", {
