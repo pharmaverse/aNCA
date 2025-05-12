@@ -48,6 +48,16 @@ describe("read_pk", {
     expect_equal(nrow(df), 131)
   })
 
+  it("reads parquet files correctly", {
+    tmp_parquet <- withr::local_tempfile(fileext = ".parquet")
+    arrow::write_parquet(data_dummy, tmp_parquet)
+
+    df <- read_pk(tmp_parquet)
+
+    expect_s3_class(df, "data.frame")
+    expect_equal(nrow(df), 131)
+  })
+
   it("throws an error if file does not exist", {
     expect_error(read_pk("invalid_path.csv"), "File does not exist: ")
   })

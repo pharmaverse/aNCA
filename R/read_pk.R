@@ -45,6 +45,14 @@ read_pk <- function(path) {
         )
       haven::read_xpt(path)
     },
+    parquet = {
+      if (!requireNamespace("arrow", silently = TRUE))
+        stop(
+          "Handling .parquet files requires `arrow` package, please install it with ",
+          "`install.packages('arrow')`"
+        )
+      arrow::read_parquet(path)
+    },
     stop("Invalid file type. Accepted formats are .csv, .rds, .xlsx.")
   ) |>
     validate_pk()

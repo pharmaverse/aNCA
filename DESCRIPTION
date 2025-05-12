@@ -55,6 +55,7 @@ Suggests:
     jsonlite,
     pak,
     withr,
+    arrow,
     ggh4x,
     haven,
     nestcolor,
