@@ -9,3 +9,5 @@
 ^\.lintr$
 ^\.github/
 ^LICENSE\.md$
+^\.covrignore$
+^man/figures/*

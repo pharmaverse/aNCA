@@ -1,3 +1,32 @@
+#' Sets up the logger package for the application.
+#'
+#' @details
+#' The application logs everything to a log file located in `/log` directory. If such folder
+#' does not exist, it will be created. Logfile for each session will be separate. The application
+#' will keep 5 log files at any given time - if this number is exceeded, the oldest log file
+#' will be deleted.
+#'
+#' In addition, information of the level specified by the user will be logged to console.
+#' As a default, this level is INFO - this is so that the user has good information on what is
+#' happening inside the app, but is not overwhelmed with tracing and debugging information. This
+#' level can be changed using `aNCA_LOG_LEVEL` environmental variable, set for example in
+#' `.Renviron` file.
+setup_logger <- function() {
+  log_layout(layout_glue_colors)
+  log_formatter(formatter_glue)
+  log_threshold(TRACE)
+  log_threshold(Sys.getenv("aNCA_LOG_LEVEL", "INFO"), index = 2)
+
+  log_dir <- "./log"
+  if (!dir.exists(log_dir)) dir.create(log_dir)
+  existing_logs <- list.files(log_dir, full.names = TRUE)
+  if (length(existing_logs) >= 5) file.remove(sort(existing_logs)[1]) # keep only five log files
+  logfile_name <- paste0(log_dir, "/aNCA_app_", format(Sys.time(), "%y%m%d-%H%M%S-"), ".log")
+
+  log_appender(appender_file(logfile_name))
+  log_appender(appender_console, index = 2)
+}
+
 #' Needed to properly reset reactable.extras widgets
 #'
 #' @details
