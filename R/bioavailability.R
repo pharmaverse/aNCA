@@ -116,12 +116,18 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
         1, AUCdn_IV, # The AUC is already dose normalized for IV
         Dose_extravascular, vals_extravascular
       ) * 100,
-
       # Maintain the PKNCA results format
+      PPTESTCD = paste0("f_", PPTESTCD),
+      exclude = case_when(
+        is.na(vals_extravascular) ~ "Intravascular records cannot have bioavailability",
+        !is.na(AUCdn_IV) ~ "",
+        !is.na(Mean_AUCdn_IV_subj) ~ "Mean AUC.dn IV for the subject was used",
+        !is.na(Mean_AUCdn_IV_coh) ~ "Mean AUC.dn IV for the cohort was used",
+        TRUE ~ "No individual, subject or cohort IV records to compare with"
+      ),
       PPORRESU = "%",
       PPSTRES = PPORRES,
       PPSTRESU = "%",
-      PPTESTCD = paste0("f_", PPTESTCD),
       type_interval = "main"
     ) %>%
     select(any_of(c(names(res_nca$result))))
