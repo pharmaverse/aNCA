@@ -1,5 +1,5 @@
 # automated Non-Compartmental Analysis (aNCA)
-<img id = "package-logo-dark" src='man/figures/aNCA_logo_bbg.png#gh-dark-mode-only' align="right" alt="aNCA logo dark bg" width="200"><img id = "package-logo-light" src="man/figures/aNCA_logo_wbg.png#gh-light-mode-only" align="right" alt="aNCA logo light bg" width="200">
+<img src='man/figures/aNCA_logo.png' align="right" alt="aNCA logo" width="200">
 
 <!-- badges: start -->
 
@@ -88,4 +88,4 @@ Feel free to open identified [issues](https://github.com/pharmaverse/aNCA/issues
 ## Documentation and references
 
 - Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app** (still in development).
-- The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/billdenney/pknca)
+- The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/humanpred/pknca)
