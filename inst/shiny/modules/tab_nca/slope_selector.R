@@ -143,37 +143,43 @@ slope_selector_server <- function(
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
     observeEvent(list(input$plots_per_page, input$search_subject), current_page(1))
 
+    #' Plot data is a local reactive copy of full data. The purpose is to display data that
+    #' is already adjusted with the applied rules, so that the user can verify added selections
+    #' and exclusions before applying them to the actual dataset.
+    plot_data <- reactive({
+      req(pknca_data(), manual_slopes(), profiles_per_subject())
+      filter_slopes(pknca_data(), manual_slopes(), profiles_per_subject(), slopes_groups())
+    }) %>%
+      shiny::debounce(750)
+
     # Generate dynamically the minimum results you need for the lambda plots
     lambdas_res <- reactive({
-      req(pknca_data())
-      pknca_data <- pknca_data()
+      req(plot_data())
 
-      if (!"type_interval" %in% names(pknca_data$intervals)) {
+      if (!"type_interval" %in% names(plot_data()$intervals)) {
         NULL
       } else {
         all_params <- names(PKNCA::get.interval.cols())
-        result_obj <- suppressWarnings(PKNCA::pk.nca(data = pknca_data, verbose = FALSE))
+        result_obj <- suppressWarnings(PKNCA::pk.nca(data = plot_data(), verbose = FALSE))
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
 
         result_obj
       }
-    }) |>
-      bindEvent(pknca_data())
+    })
 
-    # Profiles per Subject ----
-    # Define the profiles per subject
+    # Profiles per Patient ----
+    # Define the profiles per patient
     profiles_per_subject <- reactive({
-      req(lambdas_res())
+      req(pknca_data())
 
-      lambdas_res()$result %>%
+      pknca_data()$intervals %>%
         mutate(USUBJID = as.character(USUBJID),
                NCA_PROFILE = as.character(NCA_PROFILE),
                DOSNOA = as.character(DOSNOA)) %>%
-        group_by(!!!syms(c(unname(unlist(lambdas_res()$data$conc$columns$groups)), "DOSNOA"))) %>%
+        group_by(!!!syms(c(unname(unlist(pknca_data()$conc$columns$groups)), "DOSNOA"))) %>%
         summarise(NCA_PROFILE = unique(NCA_PROFILE), .groups = "drop") %>%
         unnest(NCA_PROFILE)  # Convert lists into individual rows
-
     })
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
@@ -290,15 +296,6 @@ slope_selector_server <- function(
 
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
-
-    #' Plot data is a local reactive copy of full data. The purpose is to display data that
-    #' is already adjusted with the applied rules, so that the user can verify added selections
-    #' and exclusions before applying them to the actual dataset.
-    plot_data <- reactive({
-      req(pknca_data(), manual_slopes(), profiles_per_subject())
-      filter_slopes(pknca_data(), manual_slopes(), profiles_per_subject(), slopes_groups())
-    }) %>%
-      shiny::debounce(750)
 
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveValues()

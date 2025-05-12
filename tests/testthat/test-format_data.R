@@ -89,6 +89,7 @@ describe("format_pkncadose_data", {
       colnames(df_dose)
     )
 
+    # Test if myintervals can be used with PKNCAdata by testing its output
     expect_no_error(
       PKNCA::PKNCAdose(
         data = df_dose,
@@ -173,7 +174,6 @@ describe("format_pkncadata_intervals", {
   )
 
   params <- c("cmax", "tmax", "half.life", "cl.obs")
-
   it("handles multiple analytes with metabolites", {
     result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
 
@@ -195,6 +195,9 @@ describe("format_pkncadata_intervals", {
           doseu = "mg",
           amountu = "ng",
           timeu = "h"
+        ),
+        options = list(
+          keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval", "TIME_DOSE")
         )
       )
     )

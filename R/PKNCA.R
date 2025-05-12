@@ -111,6 +111,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     df_conc,
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
+    include_half.life = "include_half.life",
     time.nominal = "NFRLT"
   )
 
