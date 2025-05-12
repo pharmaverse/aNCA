@@ -1,4 +1,8 @@
-adpc <- read.csv(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"))
+adpc <- read.csv(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA")) %>%
+  filter(
+    USUBJID %in% c("XX01-11101", "XX01-11102", "XX01-11103"),
+    PCSPEC == "SERUM", PARAM == "Analyte01"
+  )
 attr(adpc$USUBJID, "label") <- "Subject ID"
 attr(adpc$DOSEU, "label") <- "Dose unit"
 adpc_single <- dplyr::filter(adpc, USUBJID == "XX01-11101")
@@ -24,8 +28,16 @@ adpc_single <- dplyr::filter(adpc, USUBJID == "XX01-11101")
 
 describe("pkcg01", {
   it("generates valid plot list with default settings", {
-    p_list <- pkcg01(adpc)
-    .expect_plotlist(p_list, 92)
+    simple_plots <- pkcg01(adpc, plotly = FALSE)
+    expect_equal(length(simple_plots), 3)
+    
+    simple_plot1 <- simple_plots[[1]]
+    simple_plot2 <- simple_plots[[2]]
+    simple_plot3 <- simple_plots[[3]]
+
+    vdiffr::expect_doppelganger("simple_plot1", simple_plot1)
+    vdiffr::expect_doppelganger("simple_plot2", simple_plot2)
+    vdiffr::expect_doppelganger("simple_plot3", simple_plot3)
   })
 
   it("generates plot with custom labels", {
