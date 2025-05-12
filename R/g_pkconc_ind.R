@@ -32,7 +32,7 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @param xmin            A numeric value specifying the minimum x-axis limit.
 #' @param xmax            A numeric value specifying the maximum x-axis limit.
 #' @param ymin            A numeric value for the minimum y-axis limit.
-#' @param ymax            A numeric value for the maximum y-axis limit.
+#' @param ymax            A numeric value for the maximum x-axis limit.
 #' @param xlab            Character for x-axis label. Defaults: `xvar` label & `xvar_unit`.
 #' @param ylab            Character for y-axis label. Defaults: `yvar` label & `yvar_unit`.
 #' @param title           Character for plot title.
@@ -43,7 +43,8 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @param scale           Scale for the Y axis, either "LIN" or "LOG".
 #' @param studyid         A character string specifying the study ID variable.
 #' @param trt_var         A character string specifying the treatment variable.
-#' @returns A list of ggplot objects for each unique group.
+#' @param plotly          Logical indicating whether to return plotly objects. Defaults to TRUE.
+#' @returns A list of ggplot or plotly objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
@@ -101,7 +102,8 @@ pkcg01 <- function(
   # Specific inputs (needs metadata specification),
   scale = c("LIN", "LOG", "SBS")[1],
   studyid = "STUDYID",
-  trt_var = "TRT01A"
+  trt_var = "TRT01A",
+  plotly = TRUE
 ) {
   xmin <- as.numeric(xmin)
   xmax <- as.numeric(xmax)
@@ -222,8 +224,8 @@ pkcg01 <- function(
   }
 
   # Create the list of plots for each unique group
-  lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
-    plot_data <- adpc_grouped %>% dplyr::filter(id_plot ==  id_val)
+  plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
+    plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
 
     title <- {
       if (is.null(title)) {
@@ -270,49 +272,65 @@ pkcg01 <- function(
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
 
-    plotly_plot <- plot %+%
-      plot_data %+%
-      theme(
-        # add margin to make space for subtitle and footnote #
-        plot.margin = margin(
-          title_margin,
-          0,
-          footnote_y * 5,
-          0,
-          "cm"
+    if (plotly) {
+      plotly_plot <- plot %+%
+        plot_data %+%
+        theme(
+          # add margin to make space for subtitle and footnote #
+          plot.margin = margin(
+            title_margin,
+            0,
+            footnote_y * 5,
+            0,
+            "cm"
+          )
+        ) %>%
+        # This because of no spec of parse annotation generates warning is.na()
+        ggplotly(
+          tooltip = c("x", "y"),
+          dynamicTicks = TRUE,
+          #' NOTE: might require some fine tuning down the line, looks fine now
+          height = 500 + (footnote_y * 25) + title_margin * 50
+        ) %>%
+        layout(
+          yaxis = list(autorange = FALSE),
+          xaxis = list(autorange = FALSE),
+          # title and subtitle #
+          title = list(text = title_text),
+          # footnote #
+          annotations = list(
+            x = 0,
+            y =  -footnote_y,
+            text = footnote,
+            showarrow = FALSE,
+            yref = "paper",
+            xref = "paper",
+            align = "left",
+            parse = TRUE
+          )
         )
-      ) %>%
-      # This because of no spec of parse annotation generates warning is.na()
-      ggplotly(
-        tooltip = c("x", "y"),
-        dynamicTicks = TRUE,
-        #' NOTE: might require some fine tuning down the line, looks fine now
-        height = 500 + (footnote_y * 25) + title_margin * 50
-      ) %>%
-      layout(
-        yaxis = list(autorange = FALSE),
-        xaxis = list(autorange = FALSE),
-        # title and subtitle #
-        title = list(text = title_text),
-        # footnote #
-        annotations = list(
-          x = 0,
-          y =  -footnote_y,
-          text = footnote,
-          showarrow = FALSE,
-          yref = "paper",
-          xref = "paper",
-          align = "left",
-          parse = TRUE
-        )
-      )
 
-    if (scale == "LOG") {
-      plotly_plot <- plotly_plot %>%
-        layout(yaxis = list(type = "log"))
+      if (scale == "LOG") {
+        plotly_plot <- plotly_plot %>%
+          layout(yaxis = list(type = "log"))
+      }
+
+      plotly_plot
+    } else {
+      plot %+%
+        plot_data +
+        labs(
+          title = title,
+          subtitle = subtitle,
+          caption = footnote
+        )
     }
+  })
 
-    plotly_plot
-  }) |>
-    setNames(unique(adpc[["id_plot"]]))
+  if (plotly) {
+    plots |>
+      setNames(unique(adpc[["id_plot"]]))
+  } else {
+    plots
+  }
 }
