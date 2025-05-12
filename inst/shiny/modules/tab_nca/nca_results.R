@@ -34,6 +34,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
     final_results <- reactive({
       req(res_nca())
       res <- res_nca()
+
       #' Apply units
       if (!is.null(session$userData$units_table())) {
         res$data$units <- session$userData$units_table()

@@ -46,12 +46,12 @@ pivot_wider_pknca_results <- function(myres) {
     added_params <- myres$result %>%
       filter(PPTESTCD %in% c("LAMZNPT", "LAMZLL", "LAMZ"),
              type_interval == "main") %>%
-      select(any_of(c(conc_groups, "PPTESTCD", "PPSTRES", "NCA_PROFILE", "start", "end"))) %>%
+      select(any_of(c(conc_groups, "PPTESTCD", "PPSTRES", "DOSNOA", "start", "end"))) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
       left_join(data_with_duplicates, by = intersect(names(.), names(data_with_duplicates))) %>%
       # Derive LAMZIX: If present consider inclusions and disconsider exclusions
-      group_by(!!!syms(conc_groups), NCA_PROFILE) %>%
+      group_by(!!!syms(conc_groups), DOSNOA) %>%
       # Derive LAMZMTD: was lambda.z manually customized?
       mutate(LAMZMTD = ifelse(
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
@@ -61,7 +61,8 @@ pivot_wider_pknca_results <- function(myres) {
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
       mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
-      select(any_of(c(conc_groups, "NCA_PROFILE", "start", "end", "LAMZIX", "LAMZMTD"))) %>%
+      ungroup() %>%
+      select(any_of(c(conc_groups, "DOSNOA", "start", "end", "LAMZIX", "LAMZMTD"))) %>%
       unique()
   }
   ############################################################################################

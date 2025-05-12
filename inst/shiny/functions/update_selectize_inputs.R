@@ -17,7 +17,7 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
   # Define the desired columns for Grouping_Variables
   desired_grouping_columns <- c("TRTA", "TRTAN", "ACTARM", "TRT01A",
                                 "TRT01P", "AGE", "RACE", "SEX", "GROUP", "NOMDOSE", "DOSEP")
-#browser()
+
   for (input_id in input_ids) {
     # Remove the "select_" prefix to get the actual column name
     column_name <- sub("select_", "", input_id)
