@@ -46,9 +46,14 @@ format_pkncaconc_data <- function(ADNCA,
   }
 
   # filter out dose data if present
+  if ("EVID" %in% colnames(ADNCA)) {
+    ADNCA <- ADNCA %>%
+      filter(EVID == 0)
+  }
+
   if ("PARAMCD" %in% colnames(ADNCA)) {
     ADNCA <- ADNCA %>%
-      filter(!grepl("^DOSE", PARAMCD, ignore.case = TRUE))
+      filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
   }
 
   #set a tolerance for the arranging to avoid floating point precision issues
