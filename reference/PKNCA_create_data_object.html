@@ -45,7 +45,7 @@
     </div>
 
     <div class="ref-description section level2">
-    <p>Creates a <code><a href="http://billdenney.github.io/pknca/reference/PKNCAdata.html" class="external-link">PKNCA::PKNCAdata</a></code> object.</p>
+    <p>Creates a <code><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAdata.html" class="external-link">PKNCA::PKNCAdata</a></code> object.</p>
     </div>
 
     <div class="section level2">
@@ -86,11 +86,11 @@ It requires the following columns in the ADNCA data:</p><ul><li><p>STUDYID: Stud
 <li><p>RRLTU: Time unit.</p></li>
 </ul><ol><li><p>Creating pk concentration data using <code><a href="format_pkncaconc_data.html">format_pkncaconc_data()</a></code>.</p></li>
 <li><p>Creating dosing data using <code><a href="format_pkncadose_data.html">format_pkncadose_data()</a></code>.</p></li>
-<li><p>Creating <code>PKNCAconc</code> object using <code><a href="http://billdenney.github.io/pknca/reference/PKNCAconc.html" class="external-link">PKNCA::PKNCAconc()</a></code>.
+<li><p>Creating <code>PKNCAconc</code> object using <code><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAconc.html" class="external-link">PKNCA::PKNCAconc()</a></code>.
 with formula <code>AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM</code>.</p></li>
-<li><p>Creating PKNCAdose object using <code><a href="http://billdenney.github.io/pknca/reference/PKNCAdose.html" class="external-link">PKNCA::PKNCAdose()</a></code>.
+<li><p>Creating PKNCAdose object using <code><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAdose.html" class="external-link">PKNCA::PKNCAdose()</a></code>.
 with formula <code>DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID</code>.</p></li>
-<li><p>Creating PKNCAdata object using <code><a href="http://billdenney.github.io/pknca/reference/PKNCAdata.html" class="external-link">PKNCA::PKNCAdata()</a></code>.</p></li>
+<li><p>Creating PKNCAdata object using <code><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAdata.html" class="external-link">PKNCA::PKNCAdata()</a></code>.</p></li>
 <li><p>Updating units in PKNCAdata object so each analyte has its own unit.</p></li>
 </ol></div>
 
@@ -117,7 +117,7 @@ with formula <code>DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID</code>.</p><
 <span class="r-in"><span><span class="fu">PKNCA_create_data_object</span><span class="op">(</span><span class="va">adnca_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Formula for concentration:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID/PARAM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561398022d98&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x560fdf084f70&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data are dense PK.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With 1 subjects defined in the 'USUBJID' column.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>
