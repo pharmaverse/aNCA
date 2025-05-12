@@ -54,9 +54,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
     names()
 
   # Extract dose information (route and dose)
-  dose_info <- res_nca$data$dose$data %>%
-    select(any_of(c(dose_group_cols, route_col, dose_col))) %>%
-    distinct()
+  dose_info <- res_nca$data$dose$data
 
   res_nca$result %>%
 
