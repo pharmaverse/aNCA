@@ -70,6 +70,7 @@ Suggests:
     shinyWidgets,
     stringi,
     tools,
+    vdiffr,
     yaml
 VignetteBuilder: knitr
 Config/testthat/edition: 3
