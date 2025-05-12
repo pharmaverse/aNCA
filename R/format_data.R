@@ -45,6 +45,17 @@ format_pkncaconc_data <- function(ADNCA,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
+  # filter out dose data if present
+  if ("EVID" %in% colnames(ADNCA)) {
+    ADNCA <- ADNCA %>%
+      filter(EVID == 0)
+  }
+
+  if ("PARAMCD" %in% colnames(ADNCA)) {
+    ADNCA <- ADNCA %>%
+      filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
+  }
+
   ADNCA %>%
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
@@ -95,7 +106,7 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   #set a tolerance for the arranging to avoid floating point precision issues
-  tol <- 1e-6
+  tol <- 0.02
 
   # Select unique doses
   pkncaconc_data %>%
@@ -107,7 +118,10 @@ format_pkncadose_data <- function(pkncaconc_data,
     group_by(!!!syms(group_columns), DOSNOA) %>%
     slice(1) %>%
     ungroup() %>%
-    arrange(!!!syms(group_columns))
+    arrange(!!!syms(group_columns)) %>%
+    # filter out rows with NA in DOSEA column
+    filter(!is.na(DOSEA))
+
 }
 
 #' Create Dose Intervals Dataset
@@ -169,9 +183,8 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "TIME_DOSE", "DOSNOA", "DOSNO"))) %>%
-    arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
-    ungroup()
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "TIME_DOSE", "DOSNO"))) %>%
+    arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
@@ -180,8 +193,8 @@ format_pkncadata_intervals <- function(pknca_conc,
 
 
   # Based on dose times create a data frame with start and end times
-  dose_intervals <- left_join(sub_pknca_conc,
-                              sub_pknca_dose,
+  dose_intervals <- left_join(sub_pknca_dose,
+                              sub_pknca_conc,
                               by = intersect(names(sub_pknca_dose), c(conc_groups, "TIME_DOSE")),
                               relationship = "many-to-many") %>%
 
