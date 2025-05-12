@@ -86,37 +86,34 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
       values_from = c(vals, Dose)
     ) %>%
 
-    # Mean AUC & dose values by subject
-    group_by(PPTESTCD, !!!syms(conc_group_cols), PPORRESU) %>%
+    # Calculate AUC dose normalized values (intravascular)
     mutate(
-      Mean_AUC_IV_subj = mean(vals_intravascular, na.rm = TRUE),
-      Mean_Dose_IV_subj = mean(Dose_intravascular, na.rm = TRUE),
+      AUCdn_IV = PKNCA::pk.calc.dn(vals_intravascular, Dose_intravascular)
     ) %>%
 
-    # Mean AUC & dose values by cohort
+    # Mean AUC dose normalized values by subject (intravascular)
+    group_by(PPTESTCD, !!!syms(conc_group_cols), PPORRESU) %>%
+    mutate(
+      Mean_AUCdn_IV_subj = mean(AUCdn_IV, na.rm = TRUE)
+    ) %>%
+
+    # Mean AUC dose normalized values by cohort (intravascular)
     group_by(PPTESTCD, !!!syms(setdiff(conc_group_cols, "USUBJID")), start, end, PPORRESU) %>%
     mutate(
-      Mean_AUC_IV = mean(vals_intravascular, na.rm = TRUE),
-      Mean_Dose_IV = mean(Dose_intravascular, na.rm = TRUE),
+      Mean_AUCdn_IV_coh = mean(AUCdn_IV, na.rm = TRUE)
     ) %>%
 
     # Calculate F using group mean values when individual is not present for both routes
     ungroup() %>%
     mutate(
-      vals_intravascular = case_when(
-        !is.na(vals_intravascular) & !is.na(Dose_intravascular) ~ vals_intravascular,
-        !is.na(Mean_AUC_IV_subj) & !is.na(Mean_Dose_IV_subj) ~ Mean_AUC_IV_subj,
-        !is.na(Mean_AUC_IV) & !is.na(Mean_Dose_IV) ~ Mean_AUC_IV,
-        TRUE ~ NA
-      ),
-      Dose_intravascular = case_when(
-        !is.na(vals_intravascular) & !is.na(Dose_intravascular) ~ Dose_intravascular,
-        !is.na(Mean_AUC_IV_subj) & !is.na(Mean_Dose_IV_subj) ~ Mean_Dose_IV_subj,
-        !is.na(Mean_AUC_IV) & !is.na(Mean_Dose_IV) ~ Mean_Dose_IV,
+      AUCdn_IV = case_when(
+        !is.na(AUCdn_IV) ~ AUCdn_IV,
+        !is.na(Mean_AUCdn_IV_subj) ~ Mean_AUCdn_IV_subj,
+        !is.na(Mean_AUCdn_IV_coh) ~ Mean_AUCdn_IV_coh,
         TRUE ~ NA
       ),
       PPORRES = PKNCA::pk.calc.f(
-        Dose_intravascular, vals_intravascular,
+        1, AUCdn_IV, # The AUC is already dose normalized for IV
         Dose_extravascular, vals_extravascular
       ) * 100,
 
