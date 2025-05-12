@@ -79,7 +79,7 @@ calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
     # Pivot and calculate by group mean AUC and dose values
     rename(
       vals = PPORRES,
-      Dose = dose_col
+      Dose = any_of(dose_col)
     ) %>%
     pivot_wider(
       names_from = any_of(route_col),
