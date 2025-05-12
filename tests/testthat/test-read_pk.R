@@ -28,6 +28,26 @@ describe("read_pk", {
     expect_equal(nrow(df), 131)
   })
 
+  it("reads sas data correctly", {
+    tmp_sas <- withr::local_tempfile(fileext = ".sas7bdat")
+    suppressWarnings(haven::write_sas(data_dummy, tmp_sas))
+
+    df <- read_pk(tmp_sas)
+
+    expect_s3_class(df, "data.frame")
+    expect_equal(nrow(df), 131)
+  })
+
+  it("reads xpt files correctly", {
+    tmp_xpt <- withr::local_tempfile(fileext = ".xpt")
+    haven::write_xpt(data_dummy, tmp_xpt)
+
+    df <- read_pk(tmp_xpt)
+
+    expect_s3_class(df, "data.frame")
+    expect_equal(nrow(df), 131)
+  })
+
   it("throws an error if file does not exist", {
     expect_error(read_pk("invalid_path.csv"), "File does not exist: ")
   })

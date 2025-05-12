@@ -56,6 +56,7 @@ Suggests:
     pak,
     withr,
     ggh4x,
+    haven,
     nestcolor,
     openxlsx2,
     scales,

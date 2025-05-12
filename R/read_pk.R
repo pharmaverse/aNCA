@@ -29,6 +29,22 @@ read_pk <- function(path) {
         )
       openxlsx2::read_xlsx(path)
     },
+    sas7bdat = {
+      if (!requireNamespace("haven", silently = TRUE))
+        stop(
+          "Handling .sas7bdat files requires `haven` package, please install it with ",
+          "`install.packages('haven')`"
+        )
+      haven::read_sas(path)
+    },
+    xpt = {
+      if (!requireNamespace("haven", silently = TRUE))
+        stop(
+          "Handling .xpt files requires `haven` package, please install it with ",
+          "`install.packages('haven')`"
+        )
+      haven::read_xpt(path)
+    },
     stop("Invalid file type. Accepted formats are .csv, .rds, .xlsx.")
   ) |>
     validate_pk()
