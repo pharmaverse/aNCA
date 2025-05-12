@@ -219,7 +219,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c("DOSNO", "type_interval"),
+    keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"),
     min.hl.r.squared = 0.01
   )
 
@@ -341,11 +341,9 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
     pknca_data$dose$data,
     unlist(unname(pknca_data$dose$columns$groups)),
     pknca_data$dose$columns$time,
-    pknca_data$dose$columns$dose
-  ) %>%
-    mutate(
-      start = !!sym(pknca_data$dose$columns$time)
-    )
+    pknca_data$dose$columns$dose,
+    DOSNOA
+  )
 
   results$result <- results$result %>%
     inner_join(
