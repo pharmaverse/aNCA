@@ -89,20 +89,7 @@ describe("format_pkncadose_data", {
       colnames(df_dose)
     )
 
-  # Test if myintervals can be used with PKNCAdata by testing its output
-  expect_no_error(
-    PKNCA::PKNCAdata(
-      data.conc = pknca_conc,
-      data.dose = pknca_dose,
-      intervals = myintervals,
-      units = PKNCA::pknca_units_table(
-        concu = pknca_conc$data$PCSTRESU[1],
-        doseu = pknca_conc$data$DOSEU[1],
-        amountu = pknca_conc$data$PCSTRESU[1],
-        timeu = pknca_conc$data$RRLTU[1]
-      ),
-      options = list(
-        keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval", "TIME_DOSE")
+    # Test if myintervals can be used with PKNCAdata by testing its output
     expect_no_error(
       PKNCA::PKNCAdose(
         data = df_dose,
@@ -208,6 +195,9 @@ describe("format_pkncadata_intervals", {
           doseu = "mg",
           amountu = "ng",
           timeu = "h"
+        ),
+        options = list(
+          keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval", "TIME_DOSE")
         )
       )
     )
