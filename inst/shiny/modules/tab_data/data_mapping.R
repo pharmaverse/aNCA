@@ -13,9 +13,9 @@ MANUAL_UNITS <- list(
 
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
+  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE", "Grouping_Variables"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "NCA_PROFILE", "DOSEA", "ADOSEDUR"),
+  "Dose Variables" = c("DRUG", "DOSEA", "ADOSEDUR"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
   "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
 )
@@ -123,6 +123,7 @@ data_mapping_ui <- function(id) {
         h5("Group Identifiers"),
         .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
         .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
+        .column_mapping_widget(ns, "NCA_PROFILE", "Select the column you want to use for selecting the NCA profiles."),
         div(
           class = "column-mapping-row",
           tooltip(
@@ -152,7 +153,6 @@ data_mapping_ui <- function(id) {
       tags$section(
         h5("Dose Variables"),
         .column_mapping_widget(ns, "DRUG", "Character format."),
-        .column_mapping_widget(ns, "NCA_PROFILE", "Any format."),
         .column_mapping_widget(
           ns, "ROUTE",
           "Character format, stating either 'intravascular' or 'extravascular'."

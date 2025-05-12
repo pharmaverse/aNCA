@@ -64,7 +64,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
       mapped_values <- selected_cols[[group]]
       # Skip renaming if this is select_NCA_PROFILE
       for (i in seq_along(mapped_values)) {
-        if (mapped_values[i] == col && !(group == "Dose Variables" && column_names[i] == "NCA_PROFILE")) {
+        if (mapped_values[i] == col && !(group == "Group Identifiers" && column_names[i] == "NCA_PROFILE")) {
           return(column_names[i])
         }
       }

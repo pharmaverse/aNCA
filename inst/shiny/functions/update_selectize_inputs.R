@@ -17,7 +17,7 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
   # Define the desired columns for Grouping_Variables
   desired_grouping_columns <- c("TRTA", "TRTAN", "ACTARM", "TRT01A",
                                 "TRT01P", "AGE", "RACE", "SEX", "GROUP", "NOMDOSE", "DOSEP")
-
+#browser()
   for (input_id in input_ids) {
     # Remove the "select_" prefix to get the actual column name
     column_name <- sub("select_", "", input_id)
@@ -30,7 +30,12 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
       if (length(selected_values) == 0) {
         selected_values <- NULL
       }
-    } else {
+    }
+    else if (column_name == "NCA_PROFILE") {
+      # Find which desired grouping columns are present
+      selected_values <- if("DOSNO" %in% column_names) "DOSNO" else NULL
+    }
+    else {
       # For other columns, use basic logic
       selected_values <- if (column_name %in% column_names) column_name else NULL
     }
