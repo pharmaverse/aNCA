@@ -178,7 +178,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "TIME_DOSE", "NCA_PROFILE"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   # Select dose data and use its time column as a time of last dose reference
@@ -190,7 +190,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
                               sub_pknca_conc,
-                              by = intersect(names(sub_pknca_dose), c(conc_groups, "TIME_DOSE")),
+                              by = intersect(names(sub_pknca_dose), c(conc_groups, "DOSNOA")),
                               relationship = "many-to-many") %>%
 
     # Pick 1 per concentration group and dose number
