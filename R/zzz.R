@@ -51,6 +51,7 @@
     "ModeConv_factor",
     "ModeUnit",
     "N",
+    "new_NCA_PROFILE",
     "NCA_PROFILE",
     "NRRLT",
     "PARAM",
