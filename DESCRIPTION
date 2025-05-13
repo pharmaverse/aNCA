@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9072
+Version: 0.0.0.9076
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -32,7 +32,7 @@ Imports:
     ggplot2,
     magrittr,
     methods,
-    PKNCA,
+    PKNCA (>= 0.12.0),
     plotly,
     purrr,
     rlistings,
@@ -70,6 +70,7 @@ Suggests:
     shinyWidgets,
     stringi,
     tools,
+    vdiffr,
     yaml
 VignetteBuilder: knitr
 Config/testthat/edition: 3
