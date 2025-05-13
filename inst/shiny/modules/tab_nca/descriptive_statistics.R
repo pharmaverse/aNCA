@@ -87,17 +87,17 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
       ]
 
       results <- res_nca()
-      results$result <- bind_rows(results$result, calculate_F(res_nca(), auc_options()))
+      results$result <- bind_rows(results$result, pknca_calculate_f(res_nca(), auc_options()))
 
       # Join subject data to allow the user to group by it
-      cols_to_join <- c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))
+      cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
       results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
-      stats_data <- inner_join(
+      stats_data <- left_join(
         results$result,
         results_to_join,
         by = intersect(names(results$result), names(results_to_join))
       ) %>%
-        filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
+        filter(type_interval != "manual") %>%
         mutate(PPTESTCD = ifelse(
           type_interval == "manual", paste0(PPTESTCD, signif(start), "-", signif(end)),
           PPTESTCD

@@ -3,16 +3,16 @@ pknca_res <- FIXTURE_PKNCA_RES
 pknca_res$result <- pknca_res$result %>%
   filter(USUBJID %in% 1:6)
 
-describe("calculate_F", {
+describe("pknca_calculate_f", {
   it("handles missing or unavailable AUCs gracefully", {
-    expect_null(calculate_F(pknca_res, NULL))
+    expect_null(pknca_calculate_f(pknca_res, NULL))
     expect_error(
-      calculate_F(pknca_res, c("f_AUCXXX", "f_AUCYYY")),
+      pknca_calculate_f(pknca_res, c("f_AUCXXX", "f_AUCYYY")),
       "No AUC parameters \\(PPTESTCD\\) available for: AUCXXX, AUCYYY"
     )
   })
 
-  result <- calculate_F(pknca_res, c("f_AUCLST"))
+  result <- pknca_calculate_f(pknca_res, c("f_AUCLST"))
 
   it("returns a data.frame with expected format", {
     expect_s3_class(result, "data.frame")
@@ -36,8 +36,8 @@ describe("calculate_F", {
         )
       )
 
-    result <- calculate_F(pknca_res, "f_AUCLST")
-    result_no_start_matching <- calculate_F(pknca_res_no_start_matching, "f_AUCLST")
+    result <- pknca_calculate_f(pknca_res, "f_AUCLST")
+    result_no_start_matching <- pknca_calculate_f(pknca_res_no_start_matching, "f_AUCLST")
 
     expect_true(all(!is.na(result$PPSTRES[1:3])))
     expect_true(all(is.na(result_no_start_matching$PPSTRES[1:3])))
@@ -58,8 +58,8 @@ describe("calculate_F", {
         )
       )
 
-    result <- calculate_F(pknca_res, "f_AUCLST")
-    result_diff_units <- calculate_F(pknca_res_diff_units, "f_AUCLST")
+    result <- pknca_calculate_f(pknca_res, "f_AUCLST")
+    result_diff_units <- pknca_calculate_f(pknca_res_diff_units, "f_AUCLST")
 
     expect_equal(result, result_diff_units)
   })
@@ -83,7 +83,7 @@ describe("calculate_F", {
       )
     )
 
-    result <- calculate_F(pknca_res_ind_both_routes, "f_AUCLST")
+    result <- pknca_calculate_f(pknca_res_ind_both_routes, "f_AUCLST")
     expect_equal(result$PPORRES[1], 100)
   })
 })

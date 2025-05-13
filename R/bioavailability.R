@@ -31,7 +31,7 @@
 #' @importFrom rlang sym
 #'
 #' @export
-calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
+pknca_calculate_f <- function(res_nca, selected_aucs) {
 
   # Extract and clean AUC selection
   auc_vars <- gsub("^f_", "", selected_aucs)
