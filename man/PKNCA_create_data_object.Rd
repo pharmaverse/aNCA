@@ -24,7 +24,7 @@ It requires the following columns in the ADNCA data:
 \item ROUTE: Route of administration.
 \item DRUG: Drug identifier.
 \item USUBJID: Unique subject identifier.
-\item DOSNO: Dose profile number.
+\item NCA_PROFILE: (Non- standard column). Can be any column, used for filtering the data for NCA
 \item PARAM: Analyte.
 \item AVAL: Analysis value.
 \item AVALU: AVAL unit.
@@ -42,7 +42,7 @@ It requires the following columns in the ADNCA data:
 \item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}.
 with formula \code{AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM}.
 \item Creating PKNCAdose object using \code{PKNCA::PKNCAdose()}.
-with formula \code{DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID}.
+with formula \code{DOSEA ~ TIME | STUDYID + DRUG + USUBJID}.
 \item Creating PKNCAdata object using \code{PKNCA::PKNCAdata()}.
 \item Updating units in PKNCAdata object so each analyte has its own unit.
 }
@@ -54,7 +54,7 @@ PCSPEC = rep("Plasma", 6),
 ROUTE = rep("IV", 6),
 DRUG = rep("DrugA", 6),
 USUBJID = rep("SUBJ001", 6),
-DOSNO = rep(1, 6),
+NCA_PROFILE = rep(1, 6),
 PARAM = rep("AnalyteA", 6),
 AVAL = c(0, 5, 10, 7, 3, 1),
 AVALU = rep("ng/mL", 6),

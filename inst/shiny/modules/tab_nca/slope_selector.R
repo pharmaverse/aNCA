@@ -119,7 +119,7 @@ slope_selector_server <- function(
 
       pknca_data()$conc$columns$groups %>%
         purrr::list_c() %>%
-        append("DOSNO") %>%
+        append(c("NCA_PROFILE", "DOSNOA")) %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "DRUG" && length(unique(pknca_data()$conc$data[[col]])) > 1
         })
@@ -175,10 +175,11 @@ slope_selector_server <- function(
 
       pknca_data()$intervals %>%
         mutate(USUBJID = as.character(USUBJID),
-               DOSNO = as.character(DOSNO)) %>%
-        group_by(!!!syms(unname(unlist(pknca_data()$conc$columns$groups)))) %>%
-        summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-        unnest(DOSNO)  # Convert lists into individual rows
+               NCA_PROFILE = as.character(NCA_PROFILE),
+               DOSNOA = as.character(DOSNOA)) %>%
+        group_by(!!!syms(c(unname(unlist(pknca_data()$conc$columns$groups)), "DOSNOA"))) %>%
+        summarise(NCA_PROFILE = unique(NCA_PROFILE), .groups = "drop") %>%
+        unnest(NCA_PROFILE)  # Convert lists into individual rows
     })
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
@@ -203,9 +204,9 @@ slope_selector_server <- function(
       subject_profile_plot_ids <- pknca_data()$intervals %>%
         select(any_of(c(unname(unlist(pknca_data()$dose$columns$groups)),
                         unname(unlist(pknca_data()$conc$columns$groups)),
-                        "DOSNO"))) %>%
+                        "NCA_PROFILE", "DOSNOA"))) %>%
         filter(USUBJID %in% search_subject) %>%
-        select(slopes_groups(), USUBJID) %>%
+        select(slopes_groups(), USUBJID, DOSNOA) %>%
         unique() %>%
         arrange(USUBJID)
 
@@ -332,8 +333,8 @@ slope_selector_server <- function(
       #' modularized and improved further.
       setts <- read.csv(settings_upload()$datapath)
       imported_slopes <- setts %>%
-        select(TYPE, USUBJID, PARAM, PCSPEC, DOSNO, IX, REASON) %>%
-        mutate(SUBJECT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
+        select(TYPE, USUBJID, PARAM, PCSPEC, NCA_PROFILE, IX, REASON) %>%
+        mutate(SUBJECT = as.character(USUBJID), PROFILE = as.character(NCA_PROFILE)) %>%
         group_by(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, REASON) %>%
         summarise(RANGE = .compress_range(IX), .groups = "keep") %>%
         select(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, RANGE, REASON) %>%

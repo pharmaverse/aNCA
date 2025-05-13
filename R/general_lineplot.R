@@ -25,8 +25,9 @@
 #' \itemize{
 #'   \item Filters the data based on the selected analytes, matrices, and subjects.
 #'   \item Selects relevant columns and removes rows with missing concentration values.
-#'   \item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
-#'   \item Filters the data by cycle if `time_scale` is "By Cycle".
+#'   \item Converts 'USUBJID', 'NCA_PROFILE', and 'DOSEA' to factors.
+#'   \item Filters the data by cycle if `time_scale` is "By Cycle"
+#'          while creating duplicates for predose samples if needed.
 #'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
 #'   \item Generates a line plot using the `g_ipp` function with the specified parameters.
 #'   \item Adjusts the y-axis to logarithmic scale if `yaxis_scale` is "Log".
@@ -39,7 +40,7 @@
 #'                            selected_analytes = c("Analyte1", "Analyte2"),
 #'                            selected_pcspec = c("Spec1", "Spec2"),
 #'                            selected_usubjids = c("Subject1", "Subject2"),
-#'                            colorby_var = "DOSNO",
+#'                            colorby_var = "NCA_PROFILE",
 #'                            time_scale = "By Cycle",
 #'                            yaxis_scale = "Log",
 #'                            cycle = "1")
@@ -49,6 +50,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom tern g_ipp
+#' @importFrom utils head
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
@@ -66,7 +68,7 @@ general_lineplot <- function(
     filter(!is.na(AVAL)) %>%
     mutate(
       USUBJID = factor(USUBJID),
-      DOSNO = factor(DOSNO),
+      NCA_PROFILE = factor(NCA_PROFILE),
       DOSEA = factor(DOSEA),
       id_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
@@ -76,33 +78,50 @@ general_lineplot <- function(
   }
 
   # If there are predose records duplicate them in the previous line so they are considered
+
   if ("ARRLT" %in% names(preprocessed_data) &&
         any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
 
-    cycle_times <- preprocessed_data  %>%
-      filter(preprocessed_data$ARRLT > 0, preprocessed_data$AFRLT > 0) %>%
+    # alculate average cycle time per NCA_PROFILE (as character)
+    dose_times <- preprocessed_data %>%
+      filter(ARRLT > 0, AFRLT > 0) %>%
       mutate(AFRLT.dose = AFRLT - ARRLT) %>%
-      group_by(DOSNO) %>%
-      summarise(AFRLT.dose = mean(AFRLT.dose, na.rm = TRUE)) %>%
-      pull(AFRLT.dose, DOSNO)
+      group_by(NCA_PROFILE) %>%
+      summarise(dose_time = mean(AFRLT.dose, na.rm = TRUE), .groups = "drop")
 
-    predose_records <- preprocessed_data %>%
+    # Duplicate pre-dose records and assign to the previous profile
+    # Convert NCA_PROFILE to factor to maintain order (if needed)
+    preprocessed_data <- preprocessed_data %>%
+      mutate(NCA_PROFILE = as.character(NCA_PROFILE)) # Ensure character
+
+    # Get unique ordered profiles
+    profile_levels <- unique(preprocessed_data$NCA_PROFILE)
+    profile_shift_map <- setNames(
+      c(NA, head(profile_levels, -1)), # Previous profile
+      profile_levels
+    )
+
+    # Identify pre-dose rows and assign to previous profile
+    predose_dup <- preprocessed_data %>%
       filter(ARRLT < 0, AFRLT > 0) %>%
-      mutate(DOSNO = ifelse(
-        AFRLT < as.numeric(cycle_times[as.character(DOSNO)]),
-        as.numeric(DOSNO) - 1,
-        as.numeric(DOSNO) + 1
-      ))
+      mutate(
+        new_NCA_PROFILE = profile_shift_map[NCA_PROFILE],
+        dose_time = dose_times$dose_time[match(new_NCA_PROFILE, dose_times$NCA_PROFILE)],
+        ARRLT = ARRLT + dose_time
+      ) %>%
+      filter(!is.na(new_NCA_PROFILE)) %>%
+      mutate(NCA_PROFILE = new_NCA_PROFILE) %>%
+      select(-new_NCA_PROFILE, -dose_time)
 
-    preprocessed_data <- rbind(predose_records, preprocessed_data)
+    # Combine the original and duplicated rows
+    preprocessed_data <- bind_rows(preprocessed_data, predose_dup)
 
   }
 
-
   # Adjust the data selection according to input
-  if (time_scale == "By Cycle") {
+  if (time_scale == "By Dose Profile") {
     preprocessed_data <- preprocessed_data %>%
-      filter(DOSNO %in% cycle)
+      filter(NCA_PROFILE %in% cycle)
   }
 
   if (yaxis_scale == "Log") {
@@ -110,7 +129,7 @@ general_lineplot <- function(
       filter(AVAL > 0)
   }
 
-  time <- if (time_scale == "By Cycle") "ARRLT" else "AFRLT"
+  time <- if (time_scale == "By Dose Profile") "ARRLT" else "AFRLT"
 
   plt <- tern::g_ipp(
     df = preprocessed_data,

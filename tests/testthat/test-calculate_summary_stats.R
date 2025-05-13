@@ -1,5 +1,5 @@
 test_data <- data.frame(
-  DOSNO = rep(1:2, each = 8),
+  NCA_PROFILE = rep(1:2, each = 8),
   PPTESTCD = rep(c("A", "A", "B", "B", "C", "C", "D", "D"), 2),
   PPSTRES = c(10, 20, 5, 15, NA, 30, 0, 10, 10, 20, 5, 15, NA, 30, 0, 10),
   PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
@@ -33,24 +33,24 @@ describe("calculate_summary_stats", {
 
   it("correctly calculates summary statistics", {
 
-    a_data <- test_data %>% filter(PPTESTCD == "A", DOSNO == 1) %>% pull(PPSTRES)
+    a_data <- test_data %>% filter(PPTESTCD == "A", NCA_PROFILE == 1) %>% pull(PPSTRES)
 
     expected_geomean <- round(exp(mean(log(a_data), na.rm = TRUE)), 3)
     expected_mean <- round(mean(a_data, na.rm = TRUE), 3)
     expected_sd <- round(sd(a_data, na.rm = TRUE), 3)
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "Geomean", DOSNO == 1) %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "Geomean", NCA_PROFILE == 1) %>% pull(`A[mg/L]`)),
       expected_geomean
     )
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "Mean", DOSNO == 1) %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "Mean", NCA_PROFILE == 1) %>% pull(`A[mg/L]`)),
       expected_mean
     )
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "SD", DOSNO == 1) %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "SD", NCA_PROFILE == 1) %>% pull(`A[mg/L]`)),
       expected_sd
     )
   })
@@ -77,7 +77,7 @@ describe("calculate_summary_stats", {
 
   it("standardizes units to the mode", {
     test_data_diff_units <- data.frame(
-      DOSNO = c(1, 1, 1),
+      NCA_PROFILE = c(1, 1, 1),
       PPTESTCD = c("A", "A", "A"),
       PPORRES = c(1, 2, 3),
       PPORRESU = c("mg/L", "mg/L", "mg/L"),
@@ -89,7 +89,7 @@ describe("calculate_summary_stats", {
 
     # Define the expected result
     expected_result <- tibble(
-      DOSNO = rep(1, 9),
+      NCA_PROFILE = rep(1, 9),
       Statistic = c(
         "Geomean", "Geocv", "Mean", "SD", "Min",
         "Max", "Median", "Count.missing", "Count.total"

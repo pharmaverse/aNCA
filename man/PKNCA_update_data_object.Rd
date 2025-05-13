@@ -24,7 +24,7 @@ PKNCA_update_data_object(
 
 \item{selected_analytes}{User selected analytes}
 
-\item{selected_dosno}{User selected dose numbers}
+\item{selected_dosno}{User selected dose numbers/profiles}
 
 \item{selected_pcspec}{User selected specimen}
 
@@ -50,4 +50,7 @@ Step 3: Format intervals using \code{format_pkncadata_intervals()}
 Step 4: Apply filtering based on user selections and partial aucs
 
 Step 5: Impute start values if requested
+
+Note*: The function assumes that the \code{adnca_data} object has been
+created using the \code{PKNCA_create_data_object()} function.
 }

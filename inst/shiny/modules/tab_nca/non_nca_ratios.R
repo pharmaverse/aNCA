@@ -72,7 +72,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
 
       id_groups <- data()$conc$columns$groups %>%
         purrr::list_c() %>%
-        append("DOSNO") %>%
+        append("NCA_PROFILE") %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
         })

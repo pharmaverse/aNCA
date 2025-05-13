@@ -4,7 +4,7 @@
 \alias{calculate_summary_stats}
 \title{Calculate Summary Statistics}
 \usage{
-calculate_summary_stats(data, input_groups = "DOSNO")
+calculate_summary_stats(data, input_groups = "NCA_PROFILE")
 }
 \arguments{
 \item{data}{A data frame containing results of
@@ -40,7 +40,7 @@ If units are different, they are standardized to the group's most frequent first
 \examples{
 \dontrun{
 data <- data.frame(
-DOSNO = c(1, 1, 1, 1, 1, 1),
+NCA_PROFILE = c(1, 1, 1, 1, 1, 1),
 PPTESTCD = c("A", "A", "B", "B", "C", "C"),
 PPSTRES = c(10, 20, 5, 15, NA, 30),
 PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")

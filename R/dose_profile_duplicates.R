@@ -6,8 +6,8 @@
 #'
 #' @param conc_data A data frame containing concentration data.
 #' @param groups A character vector of column names to use for grouping
-#'               (e.g., c("USUBJID", "PARAM", "DOSNO")).
-#' @param dosno Column name for the dose number (default: "DOSNO").
+#'               (e.g., c("USUBJID", "PARAM", "DOSNOA")).
+#' @param dosno Column name for the dose number (default: "DOSNOA").
 #' @param arrlt Column name for time from the most recent dose.
 #' @param afrlt Column name for time from the first dose.
 #' @param nrrlt Column name for the numeric relative time.
@@ -25,23 +25,24 @@
 #' conc_data <- data.frame(
 #' USUBJID = c("001", "001", "001", "001", "001", "001", "001", "001", "001", "001"),
 #' AVAL = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-#' DOSNO = c(1, 1, 1, 2, 2, 2, 2, 3, 3, 3),
+#' DOSNOA = c(1, 1, 1, 2, 2, 2, 2, 3, 3, 3),
 #' ARRLT = c(-1, 0, 1, -1, 0, 1, 2, 0, 1, 2),
 #' AFRLT = c(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8),
 #' NRRLT = c(-1, 0, 1, -1, 0, 1, 2, 0, 1, 2),
 #' NFRLT = c(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8)
 #' )
 #' result <- dose_profile_duplicates(conc_data,
-#'                             groups = c("USUBJID", "DOSNO"), dosno = "DOSNO")
+#'                             groups = c("USUBJID", "DOSNOA"), dosno = "DOSNOA")
 #'
 #' @export
 dose_profile_duplicates <- function(conc_data,
-                                    groups = c("USUBJID", "DOSNO", "PARAM"),
-                                    dosno = "DOSNO",
+                                    groups = c("USUBJID", "DOSNOA", "PARAM"),
+                                    dosno = "DOSNOA",
                                     arrlt = "ARRLT",
                                     afrlt = "AFRLT",
                                     nrrlt = "NRRLT",
                                     nfrlt = "NFRLT") {
+
 
   #If only one dose, return the original data
   if (n_distinct(conc_data[[dosno]]) == 1) {

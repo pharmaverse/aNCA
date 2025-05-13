@@ -40,9 +40,9 @@ export_cdisc <- function(res_nca) {
         unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
       )))
     )  %>%
-    arrange(USUBJID, DOSNO, !is.na(PPSTRES)) %>%
+    arrange(USUBJID, NCA_PROFILE, !is.na(PPSTRES)) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
-    filter(!duplicated(paste0(USUBJID, DOSNO, PPTESTCD))) %>%
+    filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     mutate(
@@ -53,12 +53,11 @@ export_cdisc <- function(res_nca) {
       PPGRPID = {
         if ("AVISIT" %in% names(.)) paste(PARAM, PCSPEC, AVISIT, sep = "-")
         else if ("VISIT" %in% names(.)) paste(PARAM, PCSPEC, VISIT, sep = "-")
-        else paste(PARAM, PCSPEC, DOSNO, sep = "-")
+        else paste(PARAM, PCSPEC, NCA_PROFILE, sep = "-")
       },
       # Parameter Category
       PPCAT = PARAM,
       PPSCAT = "NON-COMPARTMENTAL",
-      PPDOSNO = DOSNO,
       PPSPEC = PCSPEC,
       # Specific ID variables
       PPSPID = if ("STUDYID" %in% names(.)) {
