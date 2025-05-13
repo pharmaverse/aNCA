@@ -50,6 +50,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom tern g_ipp
+#' @importFrom utils head
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
