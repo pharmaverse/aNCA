@@ -15,8 +15,7 @@ lambda_slope_plot(
 \item{conc_pknca_df}{Data frame containing the concentration data
 (default is \code{mydata$conc$data}).}
 
-\item{row_values}{A list containing the values for the column_names used for filtering.
-(default is \code{subject}).}
+\item{row_values}{A list containing the values for the column_names used for filtering.}
 
 \item{myres}{A PKNCAresults object containing the results of the NCA analysis}
 

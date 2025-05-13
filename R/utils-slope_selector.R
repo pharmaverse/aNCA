@@ -26,14 +26,13 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
 
   if (check_reasons) {
     exclusions <- filter(slopes, TYPE == "Exclusion")
-
     if (any(exclusions$REASON == "")) {
       missing_reasons <- filter(exclusions, REASON == "") %>%
-        select(PCSPEC, USUBJID, PARAM, DOSNO, RANGE) %>%
+        select(-REASON) %>%
         apply(1, \(x) paste0(x, collapse = " "))
 
       stop(
-        "No reason provided for the following exclusions:\nPCSPEC USUBJID PARAM DOSNO RANGE\n",
+        "No reason provided for the following exclusions:\n",
         missing_reasons
       )
     }
@@ -43,12 +42,13 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
   data$conc$data$is.included.hl <- FALSE
   data$conc$data$is.excluded.hl <- FALSE
   data$conc$data$exclude_half.life <- FALSE
+  data$conc$data$include_half.life <- NA
 
   # Eliminate all rows with conflicting or blank values
   slopes <- slopes %>%
     semi_join(
       profiles,
-      by = all_of(slope_groups)
+      by = slope_groups
     ) %>%
     filter(all(!is.na(sapply(RANGE, .eval_range))))
 
@@ -71,7 +71,12 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
       } else {
         is.excluded.hl
       }
-    })
+    },
+    include_half.life = case_when(
+      is.included.hl ~ TRUE,
+      is.excluded.hl ~ FALSE,
+      TRUE ~ NA
+    ))
 
   data
 }
@@ -137,13 +142,19 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 #' @returns description The modified `data` object with updated inclusion/exclusion flags
 #'         and reasons in `data$conc$data`.
 .apply_slope_rules <- function(data, slopes, slope_groups) {
+
+  conc_data <- data$conc$data %>%
+    group_by(!!!syms(slope_groups)) %>%
+    mutate(index = seq_len(n())) %>%
+    ungroup()
+
   for (i in seq_len(nrow(slopes))) {
     # Build the condition dynamically for group columns
     selection_index <- which(
       Reduce(`&`, lapply(slope_groups, function(col) {
-        data$conc$data[[col]] == slopes[[col]][i]
+        conc_data[[col]] == slopes[[col]][i]
       })) &
-        data$conc$data$IX %in% .eval_range(slopes$RANGE[i])
+        conc_data$index %in% .eval_range(slopes$RANGE[i])
     )
 
     if (slopes$TYPE[i] == "Selection") {
