@@ -35,7 +35,19 @@ create_start_impute <- function(pknca_data) {
   if (!"DOSNOA" %in% names(pknca_data$dose$data)) {
     pknca_data$dose$data <- pknca_data$dose$data %>%
       group_by(across(any_of(dose_group_columns))) %>%
-      mutate(DOSNO = row_number()) %>%
+      mutate(DOSNOA = row_number()) %>%
+      ungroup()
+  }
+  if (!"DOSNOA" %in% names(pknca_data$conc$data)) {
+    pknca_data$conc$data <- pknca_data$conc$data %>%
+      group_by(across(any_of(dose_group_columns))) %>%
+      mutate(DOSNOA = cur_group_id()) %>%
+      ungroup()
+  }
+  if (!"DOSNOA" %in% names(pknca_data$intervals)) {
+    pknca_data$intervals <- pknca_data$intervals %>%
+      group_by(across(any_of(dose_group_columns))) %>%
+      mutate(DOSNOA = cur_group_id()) %>%
       ungroup()
   }
 
