@@ -366,6 +366,7 @@ test_that("format_pkncadata_intervals generates correct dataset", {
       data.conc = pknca_conc,
       data.dose = pknca_dose,
       intervals = myintervals,
+      options = list(keep_interval_cols = c("TIME_DOSE", "DOSNO", "DOSNOA", "type_interval")),
       units = PKNCA::pknca_units_table(
         concu = pknca_conc$data$PCSTRESU[1],
         doseu = pknca_conc$data$DOSEU[1],
@@ -470,6 +471,7 @@ test_that("format_pkncadata_intervals handles multiple analytes with metabolites
       data.conc = pknca_conc,
       data.dose = pknca_dose,
       intervals = result,
+      options = list(keep_interval_cols = c("TIME_DOSE", "DOSNO", "DOSNOA", "type_interval")),
       units = PKNCA::pknca_units_table(
         concu = "ng/mL",
         doseu = "mg",
