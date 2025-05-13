@@ -130,3 +130,40 @@ pknca_calculate_f <- function(res_nca, selected_aucs) {
     ) %>%
     select(any_of(c(names(res_nca$result))))
 }
+
+#' Calculate bioavailability with pivoted output
+#'
+#' This function calculates bioavailability (F) based on AUC (Area Under Curve) data
+#' extracted from `res_nca`. It computes individual bioavailability
+#' where IV and EX data are available for a subject. If IV data is missing, it estimates
+#' bioavailability using the mean IV values for that grouping. The output is pivoted
+#' such that each row represents all main results summarized for each profile in each
+#' subject. Columns are assumed to be in `%` units even if not explicitly stated.
+#'
+#' @details
+#' - This function is a wrapper around `pknca_calculate_f` that reshapes the output
+#'   into a pivoted format.
+#' - The output includes bioavailability estimates for individual subjects and mean-based
+#'   estimates, with columns assumed to be in `%` units.
+#'
+#' @inheritParams pknca_calculate_f
+#'
+#' @returns A pivoted data frame with calculated bioavailability values (`f_aucinf`, `f_auclast`, etc.)
+#'   for individual subjects where IV data is available. If IV data is missing, it estimates
+#'   bioavailability using the mean IV AUC for that grouping. Columns are assumed to be in `%` units.
+#'
+#' @importFrom dplyr mutate select
+#' @importFrom tidyr pivot_wider
+#'
+#' @export
+calculate_f <- function(res_nca, selected_aucs) {
+  pknca_result <- pknca_calculate_f(res_nca, selected_aucs)
+  res_nca$result <- pknca_result
+  pivot_wider_pknca_results(res_nca) %>%
+    select(any_of(c(
+      names(PKNCA::getGroups(res_nca)),
+      "end",
+      paste0(selected_aucs, "[%]"),
+      "Exclude"
+    )))
+}

@@ -88,3 +88,11 @@ describe("pknca_calculate_f", {
   })
 })
 
+describe("calculate_f", {
+  it("returns a data.frame with one column per bioavailability parameter", {
+    result <- calculate_f(pknca_res, c("f_AUCLST", "f_AUCIFO"))
+    expect_s3_class(result, "data.frame")
+    res_groups <- names(PKNCA::getGroups(pknca_res))
+    expect_true(all(c("f_AUCLST[%]", "f_AUCIFO[%]") %in% names(result)))
+  })
+})
