@@ -8,7 +8,7 @@
 #' - ROUTE: Route of administration.
 #' - DRUG: Drug identifier.
 #' - USUBJID: Unique subject identifier.
-#' - DOSNO: Dose profile number.
+#' - NCA_PROFILE: (Non- standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
@@ -25,7 +25,7 @@
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
 #' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID`.
+#' with formula `DOSEA ~ TIME | STUDYID + DRUG + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
@@ -40,7 +40,7 @@
 #' ROUTE = rep("IV", 6),
 #' DRUG = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
-#' DOSNO = rep(1, 6),
+#' NCA_PROFILE = rep(1, 6),
 #' PARAM = rep("AnalyteA", 6),
 #' AVAL = c(0, 5, 10, 7, 3, 1),
 #' AVALU = rep("ng/mL", 6),
@@ -176,12 +176,15 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' Step 4: Apply filtering based on user selections and partial aucs
 #'
 #' Step 5: Impute start values if requested
+#' 
+#' Note*: The function assumes that the `adnca_data` object has been
+#' created using the `PKNCA_create_data_object()` function.
 #'
 #' @param adnca_data A reactive PKNCAdata object
 #' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
-#' @param selected_dosno User selected dose numbers
+#' @param selected_dosno User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
@@ -312,7 +315,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'   ROUTE = rep("IV", 6),
 #'   DRUG = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
-#'   DOSNO = rep(1, 6),
+#'   NCA_PROFILE = rep(1, 6),
 #'   PARAM = rep("AnalyteA", 6),
 #'   AVAL = c(0, 5, 10, 7, 3, 1),
 #'   AVALU = rep("ng/mL", 6),

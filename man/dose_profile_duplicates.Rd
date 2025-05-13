@@ -6,8 +6,8 @@
 \usage{
 dose_profile_duplicates(
   conc_data,
-  groups = c("USUBJID", "DOSNO", "PARAM"),
-  dosno = "DOSNO",
+  groups = c("USUBJID", "DOSNOA", "PARAM"),
+  dosno = "DOSNOA",
   arrlt = "ARRLT",
   afrlt = "AFRLT",
   nrrlt = "NRRLT",
@@ -18,9 +18,9 @@ dose_profile_duplicates(
 \item{conc_data}{A data frame containing concentration data.}
 
 \item{groups}{A character vector of column names to use for grouping
-(e.g., c("USUBJID", "PARAM", "DOSNO")).}
+(e.g., c("USUBJID", "PARAM", "DOSNOA")).}
 
-\item{dosno}{Column name for the dose number (default: "DOSNO").}
+\item{dosno}{Column name for the dose number (default: "DOSNOA").}
 
 \item{arrlt}{Column name for time from the most recent dose.}
 
@@ -49,13 +49,13 @@ analyses where dosing intervals and concentration values need to be aligned for 
 conc_data <- data.frame(
 USUBJID = c("001", "001", "001", "001", "001", "001", "001", "001", "001", "001"),
 AVAL = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-DOSNO = c(1, 1, 1, 2, 2, 2, 2, 3, 3, 3),
+DOSNOA = c(1, 1, 1, 2, 2, 2, 2, 3, 3, 3),
 ARRLT = c(-1, 0, 1, -1, 0, 1, 2, 0, 1, 2),
 AFRLT = c(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8),
 NRRLT = c(-1, 0, 1, -1, 0, 1, 2, 0, 1, 2),
 NFRLT = c(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8)
 )
 result <- dose_profile_duplicates(conc_data,
-                            groups = c("USUBJID", "DOSNO"), dosno = "DOSNO")
+                            groups = c("USUBJID", "DOSNOA"), dosno = "DOSNOA")
 
 }
