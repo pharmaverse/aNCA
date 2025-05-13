@@ -4,10 +4,10 @@
 \alias{create_start_impute}
 \title{Create C0 Impute Column}
 \usage{
-create_start_impute(mydata)
+create_start_impute(pknca_data)
 }
 \arguments{
-\item{mydata}{A PKNCAdata object containing concentration and dose data.}
+\item{pknca_data}{A PKNCAdata object containing concentration and dose data.}
 }
 \value{
 A PKNCAdata object with updated intervals table including start imputation strategies.
@@ -17,6 +17,6 @@ Defines an impute column in the intervals of the PKNCAdata object based on data
 }
 \examples{
 \dontrun{
-mydata <- create_start_impute(mydata)
+pknca_data <- create_start_impute(pknca_data)
 }
 }
