@@ -22,7 +22,7 @@
 #' - Logs the mapping selections for debugging.
 #' - Validates that all required columns are mapped and no duplicates exist.
 #' - If `ADOSEDUR` is mapped to `"NA"`, it is assigned a value of `0`.
-#' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`, and `DOSNO`.
+#' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`, and `NCA_PROFILE`.
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
 
 apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, desired_order) {
@@ -90,7 +90,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     apply_labels(LABELS, "ADPC")
 
   conc_duplicates <- dataset %>%
-    group_by(across(all_of(setdiff(desired_order, c("ARRLT", "NRRLT", "DOSNO"))))) %>%
+    group_by(across(all_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
     filter(n() > 1) %>%
     slice(1) %>%
     ungroup() %>%

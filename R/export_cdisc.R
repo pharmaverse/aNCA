@@ -58,7 +58,6 @@ export_cdisc <- function(res_nca) {
       # Parameter Category
       PPCAT = PARAM,
       PPSCAT = "NON-COMPARTMENTAL",
-      PPDOSNO = DOSNO, #todo: check if this is needed
       PPSPEC = PCSPEC,
       # Specific ID variables
       PPSPID = if ("STUDYID" %in% names(.)) {

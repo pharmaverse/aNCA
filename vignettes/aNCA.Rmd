@@ -23,34 +23,34 @@ Click **Upload File** and select the dataset you would like to use. The data mus
 
 Some variables are mandatory (marked with \*), while others are optional. Custom variable names are supported as long as they are correctly mapped during the [Data Mapping](###%20Data%20mapping) step.
 
-|                          | **Variable** | **Description**                                                    | **Format**        |
+|                          | **Variable**   | **Description**                                                    | **Format**        |
 |------------------|------------------|-------------------|------------------|
-| **Grouping Identifiers** | STUDYID \*   | Study Identifier                                                   | character         |
-|                          | USUBJID \*   | Unique Subject Identifier                                          | character/numeric |
-|                          | TRT01A       | Treatment Group Identifier (Actual)                                | character         |
-|                          | TRT01P       | Treatment Group Identifier (Planned)                               | character         |
-|                          | AGE          | Age of Subject                                                     | numeric           |
-|                          | RACE         | Race of Subject                                                    | character         |
-|                          | SEX          | Sex of Subject                                                     | character         |
-|                          |              |                                                                    |                   |
-| **Sample variables**     | PARAM \*     | Analyte studied in the sample                                      | character         |
-|                          | PCSPEC \*    | Specimen Material Type                                             | character         |
-|                          | AVAL \*      | Analysis Value                                                     | numeric           |
-|                          |              |                                                                    |                   |
-| **Dose Variables**       | DRUG \*      | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
-|                          | DOSNO \*     | Dose Number of administration. Used to split interval calculations | numeric           |
-|                          | ROUTE \*     | Route of Administration, either {intravascular} or {extravascular} | character         |
-|                          | DOSEA \*     | Actual Treatment Dose                                              | numeric           |
-|                          | ADOSEDUR     | Actual Treatment Dose                                              | numeric           |
-|                          |              |                                                                    |                   |
-| **Time Variables**       | AFRLT \*     | Actual Relative Time from Analyte First Dose                       | numeric           |
-|                          | ARRLT \*     | Actual Relative Time from Reference Dose                           | numeric           |
-|                          | NFRLT \*     | Nominal Relative Time from Analyte First Dose                      | numeric           |
-|                          | NRRLT \*     | Nominal Relative Time from Reference Dose                          | numeric           |
-|                          |              |                                                                    |                   |
-| **Time Variables**       | AVALU        | Analysis Value Unit                                                | character         |
-|                          | DOSEU        | Treatment Dose Units                                               | character         |
-|                          | RRLTU        | Relative Time from Reference Dose Unit                             | character         |
+| **Grouping Identifiers** | STUDYID \*     | Study Identifier                                                   | character         |
+|                          | USUBJID \*     | Unique Subject Identifier                                          | character/numeric |
+|                          | NCA_PROFILE \* | Can be any colum, and used to filter data for NCA calculations     | any               |
+|                          | TRT01A         | Treatment Group Identifier (Actual)                                | character         |
+|                          | TRT01P         | Treatment Group Identifier (Planned)                               | character         |
+|                          | AGE            | Age of Subject                                                     | numeric           |
+|                          | RACE           | Race of Subject                                                    | character         |
+|                          | SEX            | Sex of Subject                                                     | character         |
+|                          |                |                                                                    |                   |
+| **Sample variables**     | PARAM \*       | Analyte studied in the sample                                      | character         |
+|                          | PCSPEC \*      | Specimen Material Type                                             | character         |
+|                          | AVAL \*        | Analysis Value                                                     | numeric           |
+|                          |                |                                                                    |                   |
+| **Dose Variables**       | DRUG \*        | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
+|                          | ROUTE \*       | Route of Administration, either {intravascular} or {extravascular} | character         |
+|                          | DOSEA \*       | Actual Treatment Dose                                              | numeric           |
+|                          | ADOSEDUR       | Actual Treatment Dose                                              | numeric           |
+|                          |                |                                                                    |                   |
+| **Time Variables**       | AFRLT \*       | Actual Relative Time from Analyte First Dose                       | numeric           |
+|                          | ARRLT \*       | Actual Relative Time from Reference Dose                           | numeric           |
+|                          | NFRLT \*       | Nominal Relative Time from Analyte First Dose                      | numeric           |
+|                          | NRRLT \*       | Nominal Relative Time from Reference Dose                          | numeric           |
+|                          |                |                                                                    |                   |
+| **Time Variables**       | AVALU          | Analysis Value Unit                                                | character         |
+|                          | DOSEU          | Treatment Dose Units                                               | character         |
+|                          | RRLTU          | Relative Time from Reference Dose Unit                             | character         |
 
 ### Verifying and adding filters
 

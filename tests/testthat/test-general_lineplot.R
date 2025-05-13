@@ -4,7 +4,7 @@ sample_data <- data.frame(
   USUBJID = rep(c("Subject1", "Subject2", "Subject3", "Subject4"), each = 6),
   PARAM = rep(c("Analyte1", "Analyte 2"), each = 12),
   PCSPEC = rep(c("Spec1", "Spec2"), each = 12),
-  DOSNO = rep(1, 24),
+  NCA_PROFILE = rep(1, 24),
   EVID = rep(0, 24),
   NRRLT = rep(1:6, 4),
   ARRLT = rep(1:6, 4),
@@ -27,7 +27,7 @@ describe("general_lineplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_usubjids = c("Subject1", "Subject2"),
       selected_pcspec = "Spec1",
-      colorby_var = "DOSNO",
+      colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
       cycle = 1
@@ -42,7 +42,7 @@ describe("general_lineplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_usubjids = c("Subject1", "Subject2"),
       selected_pcspec = "Spec1",
-      colorby_var = "DOSNO",
+      colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
       cycle = 1
@@ -59,7 +59,7 @@ describe("general_lineplot functions correctly", {
         selected_analytes = "Analyte1",
         selected_usubjids = c("Subject1", "Subject2"),
         selected_pcspec = "Spec1",
-        colorby_var = "DOSNO",
+        colorby_var = "NCA_PROFILE",
         time_scale = "By Cycle",
         yaxis_scale = "Linear",
         cycle = 1
@@ -74,7 +74,7 @@ describe("general_lineplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_usubjids = c("Subject1", "Subject2"),
       selected_pcspec = "Spec1",
-      colorby_var = "DOSNO",
+      colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Log",
       cycle = 1
@@ -93,7 +93,7 @@ describe("general_lineplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_usubjids = c("NonExistentSubject"),
       selected_pcspec = "Spec1",
-      colorby_var = "DOSNO",
+      colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
       cycle = 1
@@ -113,7 +113,7 @@ describe("general_lineplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_usubjids = c("Subject1", "Subject2"),
       selected_pcspec = "Spec1",
-      colorby_var = "DOSNO",
+      colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
       cycle = 1
@@ -128,7 +128,7 @@ describe("general_lineplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_usubjids = c("Subject1", "Subject2"),
       selected_pcspec = "Spec1",
-      colorby_var = "DOSNO",
+      colorby_var = "NCA_PROFILE",
       time_scale = "Overall",
       yaxis_scale = "Linear",
       cycle = 1
