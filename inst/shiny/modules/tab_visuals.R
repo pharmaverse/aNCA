@@ -52,10 +52,10 @@ tab_visuals_ui <- function(id) {
           radioButtons(
             ns("timescale"),
             "Choose the Timescale",
-            choices = c("All Time", "By Cycle")
+            choices = c("All Time", "By Dose Profile")
           ),
           conditionalPanel(
-            condition = "input.timescale == 'By Cycle'",
+            condition = "input.timescale == 'By Dose Profile'",
             uiOutput(ns("cycle_select")),
             ns = NS(id)
           )

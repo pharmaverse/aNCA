@@ -51,7 +51,8 @@ The function performs the following steps:a
 \item Filters the data based on the selected analytes, matrices, and subjects.
 \item Selects relevant columns and removes rows with missing concentration values.
 \item Converts 'USUBJID', 'NCA_PROFILE', and 'DOSEA' to factors.
-\item Filters the data by cycle if \code{time_scale} is "By Cycle".
+\item Filters the data by cycle if \code{time_scale} is "By Cycle"
+while creating duplicates for predose samples if needed.
 \item Adjusts concentration values for logarithmic scale if \code{yaxis_scale} is "Log".
 \item Generates a line plot using the \code{g_ipp} function with the specified parameters.
 \item Adjusts the y-axis to logarithmic scale if \code{yaxis_scale} is "Log".
