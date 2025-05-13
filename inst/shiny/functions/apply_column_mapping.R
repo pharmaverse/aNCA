@@ -118,7 +118,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 #'
 #' @param dataset A `data.frame` or `tibble` representing the input data.
 #' @param mapping A list of selected values from the UI mapping input.
-#' @param manual_units A named list containing valid unit options (e.g., `concentration`, `dose`, `time`).
+#' @param manual_units A named list containing valid unit options.
 #'
 #' @returns A modified `dataset` with updated unit columns if applicable.
 .apply_manual_units <- function(dataset, mapping, manual_units) {
