@@ -14,9 +14,9 @@ including concentration and dose data.}
 AUC variables (e.g., \code{c("f_aucinf.obs", "f_auclast")}).}
 }
 \value{
-A pivoted data frame with calculated bioavailability values (\code{f_aucinf}, \code{f_auclast}, etc.)
-for individual subjects where IV data is available. If IV data is missing, it estimates
-bioavailability using the mean IV AUC for that grouping. Columns are assumed to be in \verb{\%} units.
+A pivoted data frame with bioavailability calculations (\code{f_aucinf}, \code{f_auclast}, etc.)
+for individual subjects where IV data is available. If suject IV data is missing, the estimation is
+done using the mean IV AUC for that grouping. Columns are assumed to be in \verb{\%} units.
 }
 \description{
 This function calculates bioavailability (F) based on AUC (Area Under Curve) data
