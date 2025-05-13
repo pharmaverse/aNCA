@@ -31,26 +31,6 @@ create_start_impute <- function(pknca_data) {
   dose_group_columns <- unname(unlist(pknca_data$dose$columns$groups))
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
 
-  # Define dose number (DOSNO) if not present in dose data
-  if (!"DOSNOA" %in% names(pknca_data$dose$data)) {
-    pknca_data$dose$data <- pknca_data$dose$data %>%
-      group_by(across(any_of(dose_group_columns))) %>%
-      mutate(DOSNOA = row_number()) %>%
-      ungroup()
-  }
-  if (!"DOSNOA" %in% names(pknca_data$conc$data)) {
-    pknca_data$conc$data <- pknca_data$conc$data %>%
-      group_by(across(any_of(dose_group_columns))) %>%
-      mutate(DOSNOA = cur_group_id()) %>%
-      ungroup()
-  }
-  if (!"DOSNOA" %in% names(pknca_data$intervals)) {
-    pknca_data$intervals <- pknca_data$intervals %>%
-      group_by(across(any_of(dose_group_columns))) %>%
-      mutate(DOSNOA = cur_group_id()) %>%
-      ungroup()
-  }
-
   mydata_with_int <- merge(
     x = pknca_data$conc$data %>%
       select(any_of(c(conc_group_columns, conc_column, time_column))),

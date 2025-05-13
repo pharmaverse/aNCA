@@ -1,5 +1,7 @@
 describe("create_start_impute", {
 
+  # Notes: This function is enforced to assume that DOSNOA was created separating intervals 
+  # in order to work properly
   pknca_data <- FIXTURE_PKNCA_DATA
 
   it("works without issue", {
@@ -75,16 +77,16 @@ describe("create_start_impute", {
 
   it("if drug column is not present, assumes is the same as analyte for imputation", {
     # No drug but there is analyte
-    mydata_with_analyte <- mydata
+    mydata_with_analyte <- pknca_data
     mydata_with_analyte$dose$data$DRUG <- NULL
     result_with_analyte <- create_start_impute(mydata_with_analyte)
     result_with_analyte_impute <- result_with_analyte$intervals %>%
       dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
       dplyr::pull(impute)
-    expect_equal(result_with_analyte_impute, "start_logslope")
+    expect_equal(unique(result_with_analyte_impute), "start_logslope")
 
     # No drug and no analyte
-    mydata_no_analyte <- mydata
+    mydata_no_analyte <- pknca_data
     mydata_no_analyte$dose$data$DRUG <- NULL
     mydata_no_analyte$conc$data$param <- NULL
     result_no_analyte <- create_start_impute(mydata_no_analyte)
@@ -92,18 +94,7 @@ describe("create_start_impute", {
     result_no_analyte_impute <- result_no_analyte$intervals %>%
       dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
       dplyr::pull(impute)
-    expect_equal(result_no_analyte_impute, "start_logslope")
+    expect_equal(unique(result_no_analyte_impute), "start_logslope")
   })
 
-  it("uses dose information to infere DOSNO when the column is missing", {
-    # Remove DOSNO from intervals
-    mydata_no_dosno <- mydata
-    mydata_no_dosno$intervals$DOSNO <- NULL
-    mydata_no_dosno$dose$columns$groups$group_vars <- "USUBJID"
-    result_no_dosno <- create_start_impute(mydata_no_dosno)
-
-    # Check that the imputation is correct for the first subject
-    expect_equal(result_no_dosno$intervals,
-                 result$intervals %>% select(-DOSNO))
-  })
 })
