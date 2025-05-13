@@ -149,8 +149,8 @@ pknca_calculate_f <- function(res_nca, selected_aucs) {
 #' @inheritParams pknca_calculate_f
 #'
 #' @returns A pivoted data frame with bioavailability calculations (`f_aucinf`, `f_auclast`, etc.)
-#'   for individual subjects where IV data is available. If suject IV data is missing, the estimation is
-#'   done using the mean IV AUC for that grouping. Columns are assumed to be in `%` units.
+#'   for individual subjects where IV data is available. If IV data is missing for the subject,
+#'   the mean IV AUC for that group is used instead. Variables are assumed to be in `%` units.
 #'
 #' @importFrom dplyr mutate select
 #' @importFrom tidyr pivot_wider
