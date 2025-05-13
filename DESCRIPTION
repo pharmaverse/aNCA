@@ -32,7 +32,7 @@ Imports:
     ggplot2,
     magrittr,
     methods,
-    PKNCA,
+    PKNCA (>= 0.12.0),
     plotly,
     purrr,
     rlistings,
@@ -74,6 +74,7 @@ Suggests:
     shinyWidgets,
     stringi,
     tools,
+    vdiffr,
     yaml
 VignetteBuilder: knitr
 Config/testthat/edition: 3
