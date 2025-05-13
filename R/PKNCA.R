@@ -176,7 +176,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' Step 4: Apply filtering based on user selections and partial aucs
 #'
 #' Step 5: Impute start values if requested
-#' 
+#'
 #' Note*: The function assumes that the `adnca_data` object has been
 #' created using the `PKNCA_create_data_object()` function.
 #'

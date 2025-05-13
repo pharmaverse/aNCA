@@ -273,7 +273,9 @@ base::local({
     )
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
-  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"))
+  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("NCA_PROFILE",
+                                                             "DOSNOA",
+                                                             "type_interval"))
 
   # Add start_dose and end_dose columns
   FIXTURE_PKNCA_RES <<- withCallingHandlers(

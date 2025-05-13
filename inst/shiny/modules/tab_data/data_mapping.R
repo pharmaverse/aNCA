@@ -22,7 +22,8 @@ MAPPING_COLUMN_GROUPS <- list(
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
+  "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
   "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR"
 )
 
@@ -123,7 +124,8 @@ data_mapping_ui <- function(id) {
         h5("Group Identifiers"),
         .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
         .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
-        .column_mapping_widget(ns, "NCA_PROFILE", "Select the column you want to use for selecting the NCA profiles."),
+        .column_mapping_widget(ns, "NCA_PROFILE",
+                               "Select the column you want to use for selecting the NCA profiles."),
         div(
           class = "column-mapping-row",
           tooltip(

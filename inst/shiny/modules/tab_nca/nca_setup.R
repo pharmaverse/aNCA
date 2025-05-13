@@ -57,7 +57,8 @@ nca_setup_ui <- function(id) {
           fluidRow(
             column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
                                   choices = NULL)),
-            column(4, selectInput(ns("select_dosno"), "Choose the profiles for the NCA:", multiple = TRUE,
+            column(4, selectInput(ns("select_dosno"),
+                                  "Choose the profiles for the NCA:", multiple = TRUE,
                                   choices = NULL)),
             column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                                   choices = NULL))
@@ -161,7 +162,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       param <- setts$PARAM[1]
       doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
-      if (!param %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$NCA_PROFILE))) {
+      if (!param %in% unique(data()$PARAM)
+          || !all(doses_selected %in% unique(data()$NCA_PROFILE))) {
         showNotification(
           validate("The analyte selected in the settings file is not present in the data. Please, if
                     you want to use these settings for a different file, make sure all meaningful

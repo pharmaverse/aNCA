@@ -236,7 +236,7 @@ describe("export_cdisc", {
     expect_equal(unique(res_nothing$pp$PPRFTDTC), NA_character_)
   })
 
-  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. NCA_PROFILE when possible", {
+  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. NCA_PROFILE", {
     test_no_avisit <- test_pknca_res
     test_no_avisit_visit <- test_pknca_res
     test_nothing <- test_pknca_res

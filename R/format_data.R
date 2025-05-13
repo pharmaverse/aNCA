@@ -13,7 +13,8 @@
 #' @details
 #' The function performs the following steps:
 #'   - Checks for required columns and data.
-#'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE" (dosing data- not CDISC standard)
+#'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
+#'   (dosing data- not CDISC standard)
 #'   - Calculates `TIME_DOSE`as the time of dose reference by the PK sample
 #'   - Creates `DOSNOA` variable, sequential numbers based on time of dose
 #'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
@@ -59,7 +60,7 @@ format_pkncaconc_data <- function(ADNCA,
 
   #set a tolerance for the arranging to avoid floating point precision issues
   tol <- 0.02
-  
+
   ADNCA %>%
     mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
@@ -92,9 +93,9 @@ format_pkncaconc_data <- function(ADNCA,
 #' @details
 #' The function performs the following steps:
 #'   - Arranges and groups the data by group_columns
-#'   - Selects the first row within each group (arranged by DOSNOA- a variable created 
+#'   - Selects the first row within each group (arranged by DOSNOA- a variable created
 #'   in `format_pkncaconc_data`)
-#'   
+#'
 #' Note*: This function is designed to work with the output of `format_pkncaconc_data`.
 #'
 #' @import dplyr

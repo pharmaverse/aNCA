@@ -246,7 +246,8 @@ describe("PKNCA_update_data_object", {
     # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
     auc_intervals <- updated_data$intervals  %>%
       dplyr::filter(type_interval == "manual") %>%
-      dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM, NCA_PROFILE, auclast, aucint.last, tmax)
+      dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM,
+                    NCA_PROFILE, auclast, aucint.last, tmax)
 
     expected_res <- tidyr::tibble(
       start = c(0, 1, 2),
