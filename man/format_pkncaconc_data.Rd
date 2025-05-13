@@ -32,7 +32,8 @@ This function creates a pharmacokinetic concentration dataset from the provided 
 \details{
 The function performs the following steps:
 \itemize{
-\item Groups the data by groups_column.
+\item Checks for required columns and data.
+\item Filters out rows with EVID = 0 and PARAMCD containing "DOSE" (dosing data- not CDISC standard)
 \item Calculates \code{TIME_DOSE}as the time of dose reference by the PK sample
 \item Creates \code{DOSNOA} variable, sequential numbers based on time of dose
 \item Adds a 'std_route' column taking values "intravascular" or "extravascular".

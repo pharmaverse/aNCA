@@ -10,8 +10,6 @@ format_pkncadose_data(pkncaconc_data, group_columns)
 \item{pkncaconc_data}{A data frame containing the concentration data.}
 
 \item{group_columns}{A character vector specifying the columns to group by.}
-
-\item{time_column}{A character string specifying the time column.}
 }
 \value{
 A data frame containing the dose data.
@@ -26,4 +24,6 @@ The function performs the following steps:
 \item Selects the first row within each group (arranged by DOSNOA- a variable created
 in \code{format_pkncaconc_data})
 }
+
+Note*: This function is designed to work with the output of \code{format_pkncaconc_data}.
 }
