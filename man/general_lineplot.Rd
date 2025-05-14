@@ -12,6 +12,8 @@ general_lineplot(
   colorby_var,
   time_scale,
   yaxis_scale,
+  show_threshold,
+  threshold_value,
   cycle = NULL
 )
 }
@@ -33,6 +35,12 @@ Options are "By Cycle" or other values.}
 
 \item{yaxis_scale}{A character string specifying the x-axis scale.
 Options are "Log" or other values.}
+
+\item{show_threshold}{A boolean specifying wether to show a threshold line or not.
+Default is FALSE.}
+
+\item{threshold_value}{A numeric value to set the y value of the threshold line.
+Default is 0.}
 
 \item{cycle}{A character string or numeric value specifying the cycle to filter by
 when \code{time_scale} is "By Cycle". Default is NULL.}
@@ -67,7 +75,9 @@ The function performs the following steps:a
                            colorby_var = "DOSNO",
                            time_scale = "By Cycle",
                            yaxis_scale = "Log",
-                           cycle = "1")
+                           cycle = "1",
+                           show_threshold = TRUE,
+                           threshold_value = 1)
   print(plot)
 }
 
