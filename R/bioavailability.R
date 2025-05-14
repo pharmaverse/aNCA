@@ -34,7 +34,7 @@
 pknca_calculate_f <- function(res_nca, selected_aucs) {
 
   # Extract and clean AUC selection
-  auc_vars <- gsub("^f_", "", selected_aucs)
+  auc_vars <- gsub("^F_", "", selected_aucs)
 
   #check if selected_aucs are available
   if (length(selected_aucs) == 0) {
