@@ -36,7 +36,7 @@ Options are "By Cycle" or other values.}
 \item{yaxis_scale}{A character string specifying the x-axis scale.
 Options are "Log" or other values.}
 
-\item{show_threshold}{A boolean specifying wether to show a threshold line or not.
+\item{show_threshold}{A boolean specifying whether to show a threshold line or not.
 Default is FALSE.}
 
 \item{threshold_value}{A numeric value to set the y value of the threshold line.

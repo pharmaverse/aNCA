@@ -17,7 +17,7 @@
 #'                          Options are "Log" or other values.
 #' @param cycle             A character string or numeric value specifying the cycle to filter by
 #'                          when `time_scale` is "By Cycle". Default is NULL.
-#' @param show_threshold    A boolean specifying wether to show a threshold line or not.
+#' @param show_threshold    A boolean specifying whether to show a threshold line or not.
 #'                          Default is FALSE.
 #' @param threshold_value   A numeric value to set the y value of the threshold line.
 #'                          Default is 0.
