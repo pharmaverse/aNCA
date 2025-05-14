@@ -29,8 +29,8 @@ describe("apply_labels", {
     expect_equal(base::attr(labeled_data$AVAL, "label"), "AVAL")
     expect_equal(base::attr(labeled_data$RACE, "label"), "RACE")
   })
-  
-  
+
+
   it("does not change labels if already applied", {
     data_with_existing_labels <- data
     attr(data_with_existing_labels$USUBJID, "label") <- "Existing label for USUBJID"
