@@ -158,12 +158,13 @@ pknca_calculate_f <- function(res_nca, selected_aucs) {
 #' @export
 calculate_f <- function(res_nca, selected_aucs) {
   pknca_result <- pknca_calculate_f(res_nca, selected_aucs)
-  res_nca$result <- pknca_result
+  res_nca$result <- pknca_result %>%
+    mutate(PPSTRESU = "")
   pivot_wider_pknca_results(res_nca) %>%
     select(any_of(c(
       names(PKNCA::getGroups(res_nca)),
       "end",
-      paste0(selected_aucs, "[%]"),
+      paste0(selected_aucs),
       "Exclude"
     )))
 }
