@@ -14,8 +14,8 @@ describe("apply_labels", {
     data <- apply_labels(data, LABELS, "ADPC")
     expect_equal(attr(data$USUBJID, "label"), "Unique Subject Identifier")
     expect_equal(attr(data$AVAL, "label"), "Analysis Value")
-
   })
+
   it("appplies labels to non matching data", {
     data <- data.frame(
       COL1 = c(1, 2, 3),
@@ -25,6 +25,18 @@ describe("apply_labels", {
     data <- apply_labels(data, LABELS, "ADPC")
     expect_equal(attr(data$COL1, "label"), "COL1")
     expect_equal(attr(data$COL2, "label"), "COL2")
+  })
+
+  it("does not change labels if already applied", {
+    data <- data.frame(
+      USUBJID = c(1, 2, 3),
+      AVAL = c(4, 5, 6)
+    )
+    attr(data$USUBJID, "label") <- "Existing label for USUBJID"
+
+    data <- apply_labels(data, LABELS, "ADPC")
+    expect_equal(attr(data$USUBJID, "label"), "Existing label for USUBJID")
+    expect_equal(attr(data$AVAL, "label"), "Analysis Value")
   })
 })
 
