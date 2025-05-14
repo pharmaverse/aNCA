@@ -202,14 +202,14 @@ pkcg01 <- function(
       )
 
     # Create SBS version of data and plot
-    adpc_grouped <- rbind(adpc_grouped, adpc_grouped) %>%
+    adpc_grouped <- bind_rows(
+      adpc_grouped %>% dplyr::mutate(view = "Linear view"),
+      adpc_grouped %>% dplyr::mutate(view = "Semilogarithmic view (Log10)")
+    ) %>%
       dplyr::mutate(
-        view = c(
-          rep("Linear view", nrow(adpc_grouped)),
-          rep("Semilogarithmic view (Log10)", nrow(adpc_grouped))
-        ),
         !!sym(yvar) := ifelse(
-          !!sym(yvar) < 1e-3 & view == "Semilogarithmic view (Log10)", yes = 1e-3, no = !!sym(yvar)
+          !!sym(yvar) < 1e-3 & view == "Semilogarithmic view (Log10)",
+          yes = 1e-3, no = !!sym(yvar)
         )
       )
 
