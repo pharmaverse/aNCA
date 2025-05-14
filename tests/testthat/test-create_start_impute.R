@@ -1,6 +1,6 @@
 describe("create_start_impute", {
 
-  # Notes: This function is enforced to assume that DOSNOA was created separating intervals 
+  # Notes: This function is enforced to assume that DOSNOA was created separating intervals
   # in order to work properly
   pknca_data <- FIXTURE_PKNCA_DATA
 
@@ -88,7 +88,7 @@ describe("create_start_impute", {
     # No drug and no analyte
     mydata_no_analyte <- pknca_data
     mydata_no_analyte$dose$data$DRUG <- NULL
-    mydata_no_analyte$conc$data$param <- NULL
+    mydata_no_analyte$conc$data$PARAM <- NULL
     result_no_analyte <- create_start_impute(mydata_no_analyte)
     # For last subject now analyte and drug are matching, should be start_logslope
     result_no_analyte_impute <- result_no_analyte$intervals %>%
@@ -96,5 +96,4 @@ describe("create_start_impute", {
       dplyr::pull(impute)
     expect_equal(unique(result_no_analyte_impute), "start_logslope")
   })
-
 })
