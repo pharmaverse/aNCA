@@ -116,6 +116,7 @@ pknca_calculate_f <- function(res_nca, selected_aucs) {
       ) * 100,
       # Maintain the PKNCA results format
       PPTESTCD = paste0("f_", PPTESTCD),
+      PPTEST = paste0("Fraction Absorbed ", PPTESTCD),
       exclude = case_when(
         is.na(vals_extravascular) ~ "Intravascular records cannot have bioavailability",
         !is.na(AUCdn_IV) ~ "",
