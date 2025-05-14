@@ -3,7 +3,6 @@ adpc <- FIXTURE_CONC_DATA %>%
 attr(adpc$USUBJID, "label") <- "Subject ID"
 attr(adpc$AVAL, "label") <- "Analysis value"
 attr(adpc$DOSEU, "label") <- "Dose unit"
-adpc_single <- dplyr::filter(adpc, USUBJID == USUBJID[1])
 
 describe("pkcg01", {
   it("generates valid ggplots with LIN scale", {
@@ -24,7 +23,7 @@ describe("pkcg01", {
   it("generates valid ggplots with LOG scale", {
     plots_log <- pkcg01(adpc, scale = "LOG", plotly = FALSE)
     expect_equal(length(plots_log), 3)
-    
+
     vdiffr::expect_doppelganger("log_plot1", plots_log[[1]])
     vdiffr::expect_doppelganger("log_plot2", plots_log[[2]])
     vdiffr::expect_doppelganger("log_plot3", plots_log[[3]])
@@ -39,7 +38,7 @@ describe("pkcg01", {
   it("generates valid ggplots with SBS scale", {
     plots_sbs <- pkcg01(adpc, scale = "SBS", plotly = FALSE)
     expect_equal(length(plots_sbs), 3)
-    
+
     vdiffr::expect_doppelganger("sbs_plot1", plots_sbs[[1]])
     vdiffr::expect_doppelganger("sbs_plot2", plots_sbs[[2]])
     vdiffr::expect_doppelganger("sbs_plot3", plots_sbs[[3]])
@@ -98,7 +97,7 @@ describe("pkcg01", {
         )
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
-        if (pkg == "ggh4x") return(FALSE) else TRUE 
+        if (pkg == "ggh4x") return(FALSE) else TRUE
       },
       .package = "base"
     )
@@ -113,7 +112,7 @@ describe("pkcg01", {
         )
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
-        if (pkg == "scales") return(FALSE) else TRUE 
+        if (pkg == "scales") return(FALSE) else TRUE
       },
       .package = "base"
     )

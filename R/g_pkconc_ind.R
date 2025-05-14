@@ -227,37 +227,8 @@ pkcg01 <- function(
   plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
     plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
 
-    title <- {
-      if (is.null(title)) {
-        paste0(
-          "Plot of PK Concentration-Time Profile ",
-          dplyr::case_when(
-            scale == "LIN" ~ "linear",
-            scale == "LOG" ~ "logarithmic",
-            TRUE ~ "linear and logarithmic"
-          ),
-          " scale, by Cohort: ", unique(plot_data[[studyid]])
-        )
-      } else {
-        parse_annotation(plot_data, title)
-      }
-    }
-
-    subtitle <- {
-      if (is.null(subtitle)) {
-        paste0(
-          "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
-          # TODO(mateusz): Refactor when label attributes are implemented.
-          paste(
-            unlist(unname(plotgroup_names[plotgroup_vars])), ": ",
-            unique(plot_data[, plotgroup_vars]),
-            sep = "",  collapse = ", "
-          )
-        )
-      } else {
-        parse_annotation(plot_data, subtitle)
-      }
-    }
+    title <- .generate_title(plot_data, title, scale, studyid)
+    subtitle <- .generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
     title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
@@ -327,10 +298,39 @@ pkcg01 <- function(
     }
   })
 
-  if (plotly) {
-    plots |>
-      setNames(unique(adpc[["id_plot"]]))
+  plots |>
+    setNames(unique(adpc[["id_plot"]]))
+}
+
+# Helper Function for Title Generation
+.generate_title <- function(plot_data, title, scale, studyid) {
+  if (is.null(title)) {
+    paste0(
+      "Plot of PK Concentration-Time Profile ",
+      dplyr::case_when(
+        scale == "LIN" ~ "linear",
+        scale == "LOG" ~ "logarithmic",
+        TRUE ~ "linear and logarithmic"
+      ),
+      " scale, by Cohort: ", unique(plot_data[[studyid]])
+    )
   } else {
-    plots
+    parse_annotation(plot_data, title)
+  }
+}
+
+# Helper Function for Subtitle Generation
+.generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names) {
+  if (is.null(subtitle)) {
+    paste0(
+      "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
+      paste(
+        unlist(unname(plotgroup_names[plotgroup_vars])), ": ",
+        unique(plot_data[, plotgroup_vars]),
+        sep = "", collapse = ", "
+      )
+    )
+  } else {
+    parse_annotation(plot_data, subtitle)
   }
 }
