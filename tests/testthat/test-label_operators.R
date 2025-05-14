@@ -35,9 +35,9 @@ describe("apply_labels", {
     data_with_existing_labels <- data
     attr(data_with_existing_labels$USUBJID, "label") <- "Existing label for USUBJID"
 
-    labeled_data <- apply_labels(data_with_existing_labels, LABELS, "ADPC")
-    expect_equal(base::attr(data$USUBJID, "label"), "Existing label for USUBJID")
-    expect_equal(base::attr(data$AVAL, "label"), "Analysis Value")
+    labeled_data <- apply_labels(data_with_existing_labels, ADNCA_LABELS_FIXTURE, "ADPC")
+    expect_equal(base::attr(labeled_data$USUBJID, "label"), "Existing label for USUBJID")
+    expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
   })
 })
 
