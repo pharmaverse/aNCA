@@ -35,9 +35,9 @@ apply_labels <- function(data, labels_df, type) {
     if (!is.null(attr(data[[col]], "label"))) next # Preserve existing labels
 
     if (col %in% names(labels_reference)) {
-      attr(data[[col]], "label") <- labels_reference[[col]]
+      base::attr(data[[col]], "label") <- labels_reference[[col]]
     } else {
-      attr(data[[col]], "label") <- col
+      base::attr(data[[col]], "label") <- col
     }
 
     # Check if the column is a factor and keep the levels order
@@ -64,7 +64,7 @@ apply_labels <- function(data, labels_df, type) {
 #'   attr(vec, "label") <- "Example Label"
 #'   factor_vec <- as_factor_preserve_label(vec)
 #'   print(factor_vec)
-#'   print(attr(factor_vec, "label"))
+#'   print(base::attr(factor_vec, "label"))
 #' }
 #'
 #' @export
