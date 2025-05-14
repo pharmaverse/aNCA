@@ -9,18 +9,18 @@ describe("pkcg01", {
   it("generates valid ggplots with LIN scale", {
     plots_lin <- pkcg01(adpc, scale = "LIN", plotly = FALSE)
     expect_equal(length(plots_lin), 3)
-    
+
     vdiffr::expect_doppelganger("lin_plot1", plots_lin[[1]])
     vdiffr::expect_doppelganger("lin_plot2", plots_lin[[2]])
     vdiffr::expect_doppelganger("lin_plot3", plots_lin[[3]])
   })
-  
+
   it("generates plotly plots with LIN scale", {
     plotlys_lin <- pkcg01(adpc, scale = "LIN", plotly = TRUE)
     expect_equal(length(plotlys_lin), 3)
     expect_true(inherits(plotlys_lin[[1]], "plotly"))
   })
-  
+
   it("generates valid ggplots with LOG scale", {
     plots_log <- pkcg01(adpc, scale = "LOG", plotly = FALSE)
     expect_equal(length(plots_log), 3)
@@ -35,7 +35,7 @@ describe("pkcg01", {
     expect_equal(length(plotlys_log), 3)
     expect_true(inherits(plotlys_log[[1]], "plotly"))
   })
-  
+
   it("generates valid ggplots with SBS scale", {
     plots_sbs <- pkcg01(adpc, scale = "SBS", plotly = FALSE)
     expect_equal(length(plots_sbs), 3)
@@ -50,7 +50,7 @@ describe("pkcg01", {
     expect_equal(length(plotlys_sbs), 3)
     expect_true(inherits(plotlys_sbs[[1]], "plotly"))
   })
-  
+
   it("generates plots with custom labels for LIN scale", {
     plots_lin <- pkcg01(
       adpc,
@@ -63,7 +63,7 @@ describe("pkcg01", {
       plotly = FALSE
     )
     plot <- plots_lin[[1]]
-    
+
     expect_equal(plot$labels$x, "Custom X Label")
     expect_equal(plot$labels$y, "Custom Y Label")
     expect_equal(plot$labels$title, "Custom Title")
@@ -84,23 +84,38 @@ describe("pkcg01", {
       color_var = "DOSNO",
       color = c("red", "blue", "green")
     )
-    plot_lin_colors <- plots_lin[[2]]
+    plot_lin_colors <- plots_lin_colors[[2]]
     vdiffr::expect_doppelganger("lin_plot2_custom_colors", plot_lin_colors)
   })
 
   it("returns error if missing ggh4x package for SBS scale", {
     # Temporarily mock requireNamespace to simulate ggh4x not being available
-    with_mocked_bindings(
-      {
+    testthat::with_mocked_bindings(
+      code = {
         expect_error(
           pkcg01(adpc, scale = "SBS", plotly = FALSE),
           "Side-by-side view requires `ggh4x` package, please install it with"
         )
       },
-      `requireNamespace` = function(pkg, quietly = TRUE) {
-        if (pkg == "ggh4x") return(FALSE)
-        base::requireNamespace(pkg, quietly = quietly)
-      }, .package = "aNCA"
+      `requireNamespace` = function(pkg, quietly = FALSE) {
+        if (pkg == "ggh4x") return(FALSE) else TRUE 
+      },
+      .package = "base"
+    )
+  })
+  it("returns error if missing scales package for SBS scale", {
+    # Temporarily mock requireNamespace to simulate ggh4x not being available
+    testthat::with_mocked_bindings(
+      code = {
+        expect_error(
+          pkcg01(adpc, scale = "SBS", plotly = FALSE),
+          "Side-by-side view requires `scales` package, please install it with"
+        )
+      },
+      `requireNamespace` = function(pkg, quietly = FALSE) {
+        if (pkg == "scales") return(FALSE) else TRUE 
+      },
+      .package = "base"
     )
   })
 })

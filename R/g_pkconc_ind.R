@@ -190,12 +190,12 @@ pkcg01 <- function(
   }
 
   if (scale == "SBS") {
-    if (!requireNamespace("ggh4x", silently = TRUE))
+    if (!requireNamespace("ggh4x", quietly = FALSE))
       stop(
         "Side-by-side view requires `ggh4x` package, please install it with ",
         "`install.packages('ggh4x')`"
       )
-    if (!requireNamespace("scales", silently = TRUE))
+    if (!requireNamespace("scales", quietly = FALSE))
       stop(
         "Side-by-side view requires `scales` package, please install it with ",
         "`install.packages('scales')`"
