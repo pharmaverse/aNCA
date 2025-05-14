@@ -157,6 +157,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               mutate(PPSTRES = PPORRES * conversion_factor) %>%
               select(-conversion_factor)
           }
+          
+          # Add bioavailability results if available
+          res$result <- bind_rows(res$result, pknca_calculate_f(res, f_auc_options()))
 
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
