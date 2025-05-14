@@ -52,7 +52,7 @@
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
-  colorby_var, time_scale, yaxis_scale, cycle = NULL
+  colorby_var, time_scale, yaxis_scale, show_threshold, threshold_value, cycle = NULL
 ) {
 
   # preprocess data according to user selection
@@ -139,5 +139,11 @@ general_lineplot <- function(
                     label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
       labs(y = paste0("Log 10 - ", plt$labels$y))
   }
+
+  if (show_threshold == TRUE) {
+    plt <- plt +
+      ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  }
+
   return(plt)
 }
