@@ -51,13 +51,13 @@ pkcg01(
 
 \item{xbreaks_mindist}{A numeric value for \code{xbreak_mindist}.}
 
-\item{xmin}{A numeric value specifying the minimum x-axis limit.}
+\item{xmin}{A numeric value for the minimum x-axis limit.}
 
-\item{xmax}{A numeric value specifying the maximum x-axis limit.}
+\item{xmax}{A numeric value for the maximum x-axis limit.}
 
 \item{ymin}{A numeric value for the minimum y-axis limit.}
 
-\item{ymax}{A numeric value for the maximum x-axis limit.}
+\item{ymax}{A numeric value for the maximum y-axis limit.}
 
 \item{xlab}{Character for x-axis label. Defaults: \code{xvar} label & \code{xvar_unit}.}
 

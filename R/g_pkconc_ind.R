@@ -29,10 +29,10 @@ g_pkconc_ind_log <- function(data, ...) {
 #' @param color_var_label A character string of the color label.
 #' @param xbreaks_var     A character string of the x-axis breaks.
 #' @param xbreaks_mindist A numeric value for `xbreak_mindist`.
-#' @param xmin            A numeric value specifying the minimum x-axis limit.
-#' @param xmax            A numeric value specifying the maximum x-axis limit.
+#' @param xmin            A numeric value for the minimum x-axis limit.
+#' @param xmax            A numeric value for the maximum x-axis limit.
 #' @param ymin            A numeric value for the minimum y-axis limit.
-#' @param ymax            A numeric value for the maximum x-axis limit.
+#' @param ymax            A numeric value for the maximum y-axis limit.
 #' @param xlab            Character for x-axis label. Defaults: `xvar` label & `xvar_unit`.
 #' @param ylab            Character for y-axis label. Defaults: `yvar` label & `yvar_unit`.
 #' @param title           Character for plot title.
