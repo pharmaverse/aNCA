@@ -3,6 +3,7 @@ conc_data <- data.frame(
   USUBJID = c("001", "001", "001", "001", "001", "001", "001", "001", "001", "001"),
   AVAL = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
   DOSNOA = c(1, 1, 1, 2, 2, 2, 2, 3, 3, 3),
+  PROFILE = c("A", "A", "A", "B", "B", "B", "B", "C", "C", "C"),
   ARRLT = c(-1, 0, 1, -1, 0, 1, 2, 0, 1, 2),
   AFRLT = c(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8),
   NRRLT = c(-1, 0, 1, -1, 0, 1, 2, 0, 1, 2),
@@ -35,5 +36,12 @@ describe("dose_profile_duplicates", {
                                                   groups = c("USUBJID", "DOSNOA"),
                                                   dosno = "DOSNOA")
     expect_true("IX" %in% colnames(result_single_dose))
+  })
+  
+  it("handles character or numeric dosno correctly", {
+    result_char_dosno <- dose_profile_duplicates(conc_data,
+                                                groups = c("USUBJID", "PROFILE"),
+                                                dosno = "PROFILE")
+    expect_equal(result_char_dosno$PROFILE[1:4], c("A", "A", "A", "A"))  
   })
 })
