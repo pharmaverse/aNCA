@@ -29,6 +29,16 @@ describe("apply_labels", {
     expect_equal(base::attr(labeled_data$AVAL, "label"), "AVAL")
     expect_equal(base::attr(labeled_data$RACE, "label"), "RACE")
   })
+
+
+  it("does not change labels if already applied", {
+    data_with_existing_labels <- data
+    attr(data_with_existing_labels$USUBJID, "label") <- "Existing label for USUBJID"
+
+    labeled_data <- apply_labels(data_with_existing_labels, ADNCA_LABELS_FIXTURE, "ADPC")
+    expect_equal(base::attr(labeled_data$USUBJID, "label"), "Existing label for USUBJID")
+    expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
+  })
 })
 
 describe("get_label", {
@@ -75,4 +85,3 @@ describe("set_empty_label", {
     expect_identical("", base::attr(mock_vec_unlabeled, "label"))
   })
 })
-
