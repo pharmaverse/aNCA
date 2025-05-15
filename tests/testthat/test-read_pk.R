@@ -64,7 +64,8 @@ describe("read_pk", {
 
   it("throws an error if file with unsupported format is loaded", {
     unsupported_path <- withr::local_tempfile(fileext = ".txt")
-    expect_error(read_pk(unsupported_path, "Invalid file type."))
+    writeLines("test", unsupported_path)
+    expect_error(read_pk(unsupported_path), "Invalid file type.")
   })
 
   it("throws an error if loaded object is not a data frame", {
