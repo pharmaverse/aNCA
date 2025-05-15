@@ -11,7 +11,7 @@ logarithmic scale and can be filtered by cycle."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9079</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9080</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,6 +64,8 @@ logarithmic scale and can be filtered by cycle.</p>
 <span>  <span class="va">colorby_var</span>,</span>
 <span>  <span class="va">time_scale</span>,</span>
 <span>  <span class="va">yaxis_scale</span>,</span>
+<span>  show_threshold <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  threshold_value <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  cycle <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -104,6 +106,16 @@ Options are "By Cycle" or other values.</p></dd>
 Options are "Log" or other values.</p></dd>
 
 
+<dt id="arg-show-threshold">show_threshold<a class="anchor" aria-label="anchor" href="#arg-show-threshold"></a></dt>
+<dd><p>A boolean specifying whether to show a threshold line or not.
+Default is FALSE.</p></dd>
+
+
+<dt id="arg-threshold-value">threshold_value<a class="anchor" aria-label="anchor" href="#arg-threshold-value"></a></dt>
+<dd><p>A numeric value to set the y value of the threshold line.
+Default is 0.</p></dd>
+
+
 <dt id="arg-cycle">cycle<a class="anchor" aria-label="anchor" href="#arg-cycle"></a></dt>
 <dd><p>A character string or numeric value specifying the cycle to filter by
 when <code>time_scale</code> is "By Cycle". Default is NULL.</p></dd>
@@ -135,7 +147,9 @@ when <code>time_scale</code> is "By Cycle". Default is NULL.</p></dd>
 <span class="r-in"><span>                           colorby_var <span class="op">=</span> <span class="st">"DOSNO"</span>,</span></span>
 <span class="r-in"><span>                           time_scale <span class="op">=</span> <span class="st">"By Cycle"</span>,</span></span>
 <span class="r-in"><span>                           yaxis_scale <span class="op">=</span> <span class="st">"Log"</span>,</span></span>
-<span class="r-in"><span>                           cycle <span class="op">=</span> <span class="st">"1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                           cycle <span class="op">=</span> <span class="st">"1"</span>,</span></span>
+<span class="r-in"><span>                           show_threshold <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                           threshold_value <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
