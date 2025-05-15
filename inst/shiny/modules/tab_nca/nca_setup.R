@@ -57,7 +57,7 @@ nca_setup_ui <- function(id) {
           fluidRow(
             column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
                                   choices = NULL)),
-            column(4, selectInput(ns("select_dosno"),
+            column(4, selectInput(ns("select_nca_profile"),
                                   "Choose the profiles for the NCA:", multiple = TRUE,
                                   choices = NULL)),
             column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
@@ -225,7 +225,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
       updateSelectInput(
         session,
-        inputId = "select_dosno",
+        inputId = "select_nca_profile",
         label = "Choose the profiles for the NCA:",
         choices = rows_for_selected_analytes$NCA_PROFILE,
         selected = doses_selected
@@ -325,7 +325,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
       updateSelectInput(
         session,
-        inputId = "select_dosno",
+        inputId = "select_nca_profile",
         choices = unique(data()$NCA_PROFILE),
         selected = unique(data()$NCA_PROFILE)[1]
       )
@@ -476,7 +476,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         nca_params(),
         input$should_impute_c0,
         input$select_analyte,
-        input$select_dosno,
+        input$select_nca_profile,
         input$select_pcspec
       )
     })
@@ -503,14 +503,14 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
-          input$select_dosno, input$select_pcspec)
+          input$select_nca_profile, input$select_pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = auc_data(),
         method = input$method,
         selected_analytes = input$select_analyte,
-        selected_dosno = input$select_dosno,
+        selected_dosno = input$select_nca_profile,
         selected_pcspec = input$select_pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
                    "r.squared", "adj.r.squared", "tmax"),
@@ -524,7 +524,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # NCA dynamic changes/filters based on user selections
     processed_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
-          input$select_dosno, input$select_pcspec, auc_data())
+          input$select_nca_profile, input$select_pcspec, auc_data())
       log_trace("Updating PKNCA::data object.")
 
       processed_pknca_data <- PKNCA_update_data_object(
@@ -532,7 +532,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         auc_data = auc_data(),
         method = input$method,
         selected_analytes = input$select_analyte,
-        selected_dosno = input$select_dosno,
+        selected_dosno = input$select_nca_profile,
         selected_pcspec = input$select_pcspec,
         params = nca_params(),
         should_impute_c0 = input$should_impute_c0
