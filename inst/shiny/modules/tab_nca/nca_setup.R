@@ -20,7 +20,7 @@
   fluidRow(
     column(
       width = 6,
-      checkboxInput(rule_id, label)
+      checkboxInput(rule_id, label, value = TRUE)
     ),
     column(
       width = 6,
