@@ -173,11 +173,11 @@ calculate_f <- function(res_nca, f_aucs) {
 }
 
 #' Add bioavailability results to PKNCA results
-#' 
+#'
 #' @inheritParams pknca_calculate_f
-#' @returns A PKNCA result object which results data frame contains added the 
+#' @returns A PKNCA result object which results data frame contains added the
 #' bioavailability calculations requested based on the AUCs provided in `f_aucs`.
-#' 
+#'
 #' @importFrom dplyr left_join
 add_f_to_pknca_results <- function(res_nca, f_aucs) {
   f_results <- pknca_calculate_f(res_nca, f_aucs)

@@ -100,7 +100,7 @@ describe("calculate_f", {
 describe("add_f_to_pknca_results", {
   it("adds bioavailability parameters to the pknca result", {
     result <- add_f_to_pknca_results(pknca_res, c("f_AUCLST", "f_AUCIFO"))
-    # Check output format is PKNCAresults 
+    # Check output format is PKNCAresults
     expect_s3_class(result, "PKNCAresults")
     # Check columns are the same in results data frame
     expect_equal(names(result$result), names(pknca_res$result))

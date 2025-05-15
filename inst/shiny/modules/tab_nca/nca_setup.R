@@ -540,7 +540,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       # Add picker input if bioavailability calculations are possible
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show("bioavailability")
-        
+
         f_options <- pknca_cdisc_terms %>%
           filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
           pull(PKNCA, PPTESTCD)
