@@ -4,11 +4,11 @@ pknca_res$result <- pknca_res$result %>%
   filter(USUBJID %in% 1:6)
 
 describe("pknca_calculate_f", {
-  it("handles missing or unavailable AUCs gracefully", {
+  it("returns NULL for missing or unavailable AUCs, last case with a warning", {
     expect_null(pknca_calculate_f(pknca_res, NULL))
-    expect_error(
-      pknca_calculate_f(pknca_res, c("f_AUCXXX", "f_AUCYYY")),
-      "No AUC parameters \\(PPTESTCD\\) available for: AUCXXX, AUCYYY"
+    expect_warning(
+      expect_null(pknca_calculate_f(pknca_res, c("f_AUCXXX", "f_AUCYYY"))),
+      "No AUC extracted from f_aucs available in res_nca \\(PPTESTCD\\): AUCXXX, AUCYYY"
     )
   })
 
@@ -94,5 +94,21 @@ describe("calculate_f", {
     expect_s3_class(result, "data.frame")
     res_groups <- names(PKNCA::getGroups(pknca_res))
     expect_true(all(c("f_AUCLST", "f_AUCIFO") %in% names(result)))
+  })
+})
+
+describe("add_f_to_pknca_results", {
+  it("adds bioavailability parameters to the pknca result", {
+    result <- add_f_to_pknca_results(pknca_res, c("f_AUCLST", "f_AUCIFO"))
+    # Check output format is PKNCAresults 
+    expect_s3_class(result, "PKNCAresults")
+    # Check columns are the same in results data frame
+    expect_equal(names(result$result), names(pknca_res$result))
+    # Check that the number of rows increased by the added calculations
+    n_aucs <- result$result %>%
+      filter(PPTESTCD %in% c("f_AUCLST", "f_AUCIFO")) %>%
+      nrow()
+    expect_true(nrow(result$result) > nrow(pknca_res$result))
+    expect_equal(nrow(result$result), nrow(pknca_res$result) + n_aucs)
   })
 })

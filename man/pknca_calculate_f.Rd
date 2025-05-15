@@ -4,17 +4,17 @@
 \alias{pknca_calculate_f}
 \title{Calculate bioavailability for intravascular vs extravascular aucs}
 \usage{
-pknca_calculate_f(res_nca, selected_aucs)
+pknca_calculate_f(res_nca, f_aucs)
 }
 \arguments{
 \item{res_nca}{A list containing non-compartmental analysis (NCA) results,
 including concentration and dose data.}
 
-\item{selected_aucs}{A character vector of selected
-AUC variables (e.g., \code{c("f_aucinf.obs", "f_auclast")}).}
+\item{f_aucs}{A character vector of the comparing AUC paremeter/s including
+the prefix f_ (e.g., \code{c("f_aucinf.obs", "f_auclast")}).}
 }
 \value{
-A data frame with calculated bioavailability values (\code{f_aucinf}, \code{f_auclast}, etc.)
+A data frame with calculated absolute bioavailability values (\code{FABS_})
 for individual subjects where IV data is available. If IV data is missing,
 it estimates bioavailability using the mean IV AUC for that grouping.
 }

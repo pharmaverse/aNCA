@@ -4,14 +4,14 @@
 \alias{calculate_f}
 \title{Calculate bioavailability with pivoted output}
 \usage{
-calculate_f(res_nca, selected_aucs)
+calculate_f(res_nca, f_aucs)
 }
 \arguments{
 \item{res_nca}{A list containing non-compartmental analysis (NCA) results,
 including concentration and dose data.}
 
-\item{selected_aucs}{A character vector of selected
-AUC variables (e.g., \code{c("f_aucinf.obs", "f_auclast")}).}
+\item{f_aucs}{A character vector of the comparing AUC paremeter/s including
+the prefix f_ (e.g., \code{c("f_aucinf.obs", "f_auclast")}).}
 }
 \value{
 A pivoted data frame with bioavailability calculations (\code{f_aucinf}, \code{f_auclast}, etc.)
@@ -25,12 +25,4 @@ where IV and EX data are available for a subject. If IV data is missing, it esti
 bioavailability using the mean IV values for that grouping. The output is pivoted
 such that each row represents all main results summarized for each profile in each
 subject. Columns are assumed to be in \verb{\%} units even if not explicitly stated.
-}
-\details{
-\itemize{
-\item This function is a wrapper around \code{pknca_calculate_f} that reshapes the output
-into a pivoted format.
-\item The output includes bioavailability estimates for individual subjects and mean-based
-estimates, with columns assumed to be in \verb{\%} units.
-}
 }

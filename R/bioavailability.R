@@ -18,10 +18,10 @@
 #'  for individual subjects and mean-based estimates.
 #' @param res_nca A list containing non-compartmental analysis (NCA) results,
 #'  including concentration and dose data.
-#' @param selected_aucs A character vector of selected
-#'  AUC variables (e.g., `c("f_aucinf.obs", "f_auclast")`).
+#' @param f_aucs A character vector of the comparing AUC paremeter/s including
+#' the prefix f_ (e.g., `c("f_aucinf.obs", "f_auclast")`).
 #'
-#' @returns A data frame with calculated bioavailability values (`f_aucinf`, `f_auclast`, etc.)
+#' @returns A data frame with calculated absolute bioavailability values (`FABS_`)
 #'   for individual subjects where IV data is available. If IV data is missing,
 #'  it estimates bioavailability using the mean IV AUC for that grouping.
 #'
@@ -31,18 +31,23 @@
 #' @importFrom rlang sym
 #'
 #' @export
-pknca_calculate_f <- function(res_nca, selected_aucs) {
+pknca_calculate_f <- function(res_nca, f_aucs) {
 
   # Extract and clean AUC selection
-  auc_vars <- gsub("^F_", "", selected_aucs)
+  auc_vars <- gsub("^f_", "", f_aucs)
 
-  #check if selected_aucs are available
-  if (length(selected_aucs) == 0) {
+  # Check if the comparing AUC parameters are available in the PKNCA results
+  available_pptestcd <- unique(res_nca$result$PPTESTCD)
+  if (!any(available_pptestcd %in% auc_vars)) {
+    if (length(f_aucs) > 0) {
+      warning(
+        paste0(
+          "No AUC extracted from f_aucs available in res_nca (PPTESTCD): ",
+          paste(auc_vars, collapse = ", ")
+        )
+      )
+    }
     return(NULL)
-  }
-
-  if (!any(res_nca$result$PPTESTCD %in% auc_vars)) {
-    stop(paste0("No AUC parameters (PPTESTCD) available for: ", paste(auc_vars, collapse = ", ")))
   }
 
   # Extract required columns
@@ -116,13 +121,16 @@ pknca_calculate_f <- function(res_nca, selected_aucs) {
       ) * 100,
       # Maintain the PKNCA results format
       PPTESTCD = paste0("f_", PPTESTCD),
-      PPTEST = paste0("Fraction Absorbed ", PPTESTCD),
+      PPTEST = paste0("Absolute Bioavailability (", PPTESTCD, ")"),
       exclude = case_when(
-        is.na(vals_extravascular) ~ "Intravascular records cannot have bioavailability",
+        is.na(vals_extravascular) & is.na(vals_intravascular) ~ paste0(
+          gsub("f_", "", PPTESTCD), " not available"
+        ),
+        is.na(vals_extravascular) ~ "Bioavailability is not calculated for IV records",
         !is.na(AUCdn_IV) ~ "",
         !is.na(Mean_AUCdn_IV_subj) ~ "Mean AUC.dn IV for the subject was used",
         !is.na(Mean_AUCdn_IV_coh) ~ "Mean AUC.dn IV for the cohort was used",
-        TRUE ~ "No individual, subject or cohort IV records to compare with"
+        TRUE ~ "Bioavailability: No individual, subject or cohort IV records to compare with"
       ),
       PPORRESU = "%",
       PPSTRES = PPORRES,
@@ -141,12 +149,6 @@ pknca_calculate_f <- function(res_nca, selected_aucs) {
 #' such that each row represents all main results summarized for each profile in each
 #' subject. Columns are assumed to be in `%` units even if not explicitly stated.
 #'
-#' @details
-#' - This function is a wrapper around `pknca_calculate_f` that reshapes the output
-#'   into a pivoted format.
-#' - The output includes bioavailability estimates for individual subjects and mean-based
-#'   estimates, with columns assumed to be in `%` units.
-#'
 #' @inheritParams pknca_calculate_f
 #'
 #' @returns A pivoted data frame with bioavailability calculations (`f_aucinf`, `f_auclast`, etc.)
@@ -157,15 +159,28 @@ pknca_calculate_f <- function(res_nca, selected_aucs) {
 #' @importFrom tidyr pivot_wider
 #'
 #' @export
-calculate_f <- function(res_nca, selected_aucs) {
-  pknca_result <- pknca_calculate_f(res_nca, selected_aucs)
+calculate_f <- function(res_nca, f_aucs) {
+  pknca_result <- pknca_calculate_f(res_nca, f_aucs)
   res_nca$result <- pknca_result %>%
     mutate(PPSTRESU = "")
   pivot_wider_pknca_results(res_nca) %>%
     select(any_of(c(
       names(PKNCA::getGroups(res_nca)),
       "end",
-      paste0(selected_aucs),
+      paste0(f_aucs),
       "Exclude"
     )))
+}
+
+#' Add bioavailability results to PKNCA results
+#' 
+#' @inheritParams pknca_calculate_f
+#' @returns A PKNCA result object which results data frame contains added the 
+#' bioavailability calculations requested based on the AUCs provided in `f_aucs`.
+#' 
+#' @importFrom dplyr left_join
+add_f_to_pknca_results <- function(res_nca, f_aucs) {
+  f_results <- pknca_calculate_f(res_nca, f_aucs)
+  res_nca$result <- bind_rows(res_nca$result, f_results)
+  res_nca
 }
