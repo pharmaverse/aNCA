@@ -10,7 +10,7 @@ pknca_calculate_f(res_nca, f_aucs)
 \item{res_nca}{A list containing non-compartmental analysis (NCA) results,
 including concentration and dose data.}
 
-\item{f_aucs}{A character vector of the comparing AUC paremeter/s including
+\item{f_aucs}{A character vector of the comparing AUC parameter/s including
 the prefix f_ (e.g., \code{c("f_aucinf.obs", "f_auclast")}).}
 }
 \value{

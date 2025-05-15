@@ -18,7 +18,7 @@
 #'  for individual subjects and mean-based estimates.
 #' @param res_nca A list containing non-compartmental analysis (NCA) results,
 #'  including concentration and dose data.
-#' @param f_aucs A character vector of the comparing AUC paremeter/s including
+#' @param f_aucs A character vector of the comparing AUC parameter/s including
 #' the prefix f_ (e.g., `c("f_aucinf.obs", "f_auclast")`).
 #'
 #' @returns A data frame with calculated absolute bioavailability values (`FABS_`)
