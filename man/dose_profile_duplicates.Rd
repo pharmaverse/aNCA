@@ -35,7 +35,7 @@ A data frame with adjusted concentration data, including:
 \itemize{
 \item Duplicated pre-dose values assigned to the previous dose.
 \item Duplicated last values assigned to the next dose if pre-dose values are missing,
-filtered so only samples within 24 hours of the next dose are included.
+filtered so only samples within 4 hours of the next dose are included.
 \item Sorted by the grouping variables and relative time.
 }
 }

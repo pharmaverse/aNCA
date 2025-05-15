@@ -77,50 +77,22 @@ general_lineplot <- function(
     return(ggplot() + ggtitle("No data available for selected parameters"))
   }
 
-  # If there are predose records duplicate them in the previous line so they are considered
-
-  if ("ARRLT" %in% names(preprocessed_data) &&
-        any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
-
-    # calculate average cycle time per NCA_PROFILE (as character)
-    dose_times <- preprocessed_data %>%
-      filter(ARRLT > 0, AFRLT > 0) %>%
-      mutate(AFRLT.dose = AFRLT - ARRLT) %>%
-      group_by(NCA_PROFILE) %>%
-      summarise(dose_time = mean(AFRLT.dose, na.rm = TRUE), .groups = "drop")
-
-    # Duplicate pre-dose records and assign to the previous profile
-    # Convert NCA_PROFILE to factor to maintain order (if needed)
-    preprocessed_data <- preprocessed_data %>%
-      mutate(NCA_PROFILE = as.character(NCA_PROFILE)) # Ensure character
-
-    # Get unique ordered profiles
-    profile_levels <- unique(preprocessed_data$NCA_PROFILE)
-    profile_shift_map <- setNames(
-      c(NA, head(profile_levels, -1)), # Previous profile
-      profile_levels
-    )
-
-    # Identify pre-dose rows and assign to previous profile
-    predose_dup <- preprocessed_data %>%
-      filter(ARRLT < 0, AFRLT > 0) %>%
-      mutate(
-        new_NCA_PROFILE = profile_shift_map[NCA_PROFILE],
-        dose_time = dose_times$dose_time[match(new_NCA_PROFILE, dose_times$NCA_PROFILE)],
-        ARRLT = ARRLT + dose_time
-      ) %>%
-      filter(!is.na(new_NCA_PROFILE)) %>%
-      mutate(NCA_PROFILE = new_NCA_PROFILE) %>%
-      select(-new_NCA_PROFILE, -dose_time)
-
-    # Combine the original and duplicated rows
-    preprocessed_data <- bind_rows(preprocessed_data, predose_dup)
-
-  }
 
   # Adjust the data selection according to input
   if (time_scale == "By Dose Profile") {
+    # If there are predose records duplicate them in the previous line so they are considered
+    
+    if ("ARRLT" %in% names(preprocessed_data) &&
+        any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
+      
+      preprocessed_data <- dose_profile_duplicates(preprocessed_data,
+                                                   groups = c("USUBJID", "PCSPEC", "PARAM", "NCA_PROFILE"),
+                                                   dosno = "NCA_PROFILE")
+      
+    }
+    
     preprocessed_data <- preprocessed_data %>%
+      mutate(id_var = interaction(!!!syms(colorby_var), sep = ", ")) %>%
       filter(NCA_PROFILE %in% cycle)
   }
 
