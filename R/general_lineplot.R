@@ -82,7 +82,7 @@ general_lineplot <- function(
   if ("ARRLT" %in% names(preprocessed_data) &&
         any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
 
-    # alculate average cycle time per NCA_PROFILE (as character)
+    # calculate average cycle time per NCA_PROFILE (as character)
     dose_times <- preprocessed_data %>%
       filter(ARRLT > 0, AFRLT > 0) %>%
       mutate(AFRLT.dose = AFRLT - ARRLT) %>%
