@@ -227,8 +227,8 @@ pkcg01 <- function(
   plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
     plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
 
-    title <- .generate_title(plot_data, title, scale, studyid)
-    subtitle <- .generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
+    title <- generate_title(plot_data, title, scale, studyid)
+    subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
     title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
@@ -303,7 +303,7 @@ pkcg01 <- function(
 }
 
 # Helper Function for Title Generation
-.generate_title <- function(plot_data, title, scale, studyid) {
+generate_title <- function(plot_data, title, scale, studyid) {
   if (is.null(title)) {
     paste0(
       "Plot of PK Concentration-Time Profile ",
@@ -320,7 +320,7 @@ pkcg01 <- function(
 }
 
 # Helper Function for Subtitle Generation
-.generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names) {
+generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names) {
   if (is.null(subtitle)) {
     paste0(
       "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
