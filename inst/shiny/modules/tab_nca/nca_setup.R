@@ -227,7 +227,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         session,
         inputId = "select_dosno",
         label = "Choose the profiles for the NCA:",
-        choices = rows_for_selected_analytes$DOSNO,
+        choices = rows_for_selected_analytes$NCA_PROFILE,
         selected = doses_selected
       )
 
