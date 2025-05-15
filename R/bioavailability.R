@@ -89,28 +89,28 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
       values_from = c(vals, Dose)
     ) %>%
 
-    # Calculate AUC dose normalized values (intravascular)
+    # Calculate AUC dose normalized values for each profile (intravascular)
     mutate(
-      AUCdn_IV = PKNCA::pk.calc.dn(vals_intravascular, Dose_intravascular)
+      AUCdn_IV_prof = PKNCA::pk.calc.dn(vals_intravascular, Dose_intravascular)
     ) %>%
 
     # Mean AUC dose normalized values by subject (intravascular)
     group_by(PPTESTCD, !!!syms(conc_group_cols), PPORRESU) %>%
     mutate(
-      Mean_AUCdn_IV_subj = mean(AUCdn_IV, na.rm = TRUE)
+      Mean_AUCdn_IV_subj = mean(AUCdn_IV_prof, na.rm = TRUE)
     ) %>%
 
     # Mean AUC dose normalized values by cohort (intravascular)
     group_by(PPTESTCD, !!!syms(setdiff(conc_group_cols, "USUBJID")), start, end, PPORRESU) %>%
     mutate(
-      Mean_AUCdn_IV_coh = mean(AUCdn_IV, na.rm = TRUE)
+      Mean_AUCdn_IV_coh = mean(AUCdn_IV_prof, na.rm = TRUE)
     ) %>%
 
     # Calculate F using group mean values when individual is not present for both routes
     ungroup() %>%
     mutate(
       AUCdn_IV = case_when(
-        !is.na(AUCdn_IV) ~ AUCdn_IV,
+        !is.na(AUCdn_IV_prof) ~ AUCdn_IV_prof,
         !is.na(Mean_AUCdn_IV_subj) ~ Mean_AUCdn_IV_subj,
         !is.na(Mean_AUCdn_IV_coh) ~ Mean_AUCdn_IV_coh,
         TRUE ~ NA
@@ -123,11 +123,11 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
       PPTESTCD = paste0("f_", PPTESTCD),
       PPTEST = paste0("Absolute Bioavailability (", PPTESTCD, ")"),
       exclude = case_when(
-        is.na(vals_extravascular) & is.na(vals_intravascular) ~ paste0(
-          gsub("f_", "", PPTESTCD), " not available"
-        ),
-        is.na(vals_extravascular) ~ "Bioavailability is not calculated for IV records",
-        !is.na(AUCdn_IV) ~ "",
+        is.na(vals_extravascular) & !is.na(vals_intravascular) ~
+          "Bioavailability is not calculated for IV records",
+        is.na(vals_extravascular) ~
+          paste0(gsub("f_", "", PPTESTCD), " not available"),
+        !is.na(AUCdn_IV_prof) ~ "",
         !is.na(Mean_AUCdn_IV_subj) ~ "Mean AUC.dn IV for the subject was used",
         !is.na(Mean_AUCdn_IV_coh) ~ "Mean AUC.dn IV for the cohort was used",
         TRUE ~ "Bioavailability: No individual, subject or cohort IV records to compare with"
