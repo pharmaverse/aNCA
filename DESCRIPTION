@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9076
+Version: 0.0.0.9078
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -54,8 +54,12 @@ Suggests:
     testthat (>= 3.0.0),
     jsonlite,
     pak,
+    withr,
+    arrow,
     ggh4x,
+    haven,
     nestcolor,
+    openxlsx2,
     scales,
     bslib,
     DT,

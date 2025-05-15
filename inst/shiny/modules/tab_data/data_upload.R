@@ -19,9 +19,8 @@ data_upload_ui <- function(id) {
         ns("data_upload"),
         width = "60%",
         label = NULL,
-        placeholder = ".csv",
-        buttonLabel = list(icon("folder"), "Upload File..."),
-        accept = c(".csv", ".rds")
+        placeholder = paste(names(aNCA:::readers), collapse = ", "),
+        buttonLabel = list(icon("folder"), "Upload File...")
       )
     )
   )
@@ -39,7 +38,7 @@ data_upload_server <- function(id) {
     file_loading_error <- reactiveVal(NULL)
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
-        p("Upload your PK dataset in either .csv or .rds format")
+        p("Upload your PK dataset.")
       } else {
         p(file_loading_error(), class = "error-string")
       }
@@ -52,12 +51,7 @@ data_upload_server <- function(id) {
       } else {
         df <- tryCatch({
           file_loading_error(NULL)
-          switch(
-            file_ext(input$data_upload$name),
-            csv = read.csv(input$data_upload$datapath, na = c("", "NA")),
-            rds = readRDS(input$data_upload$datapath),
-            stop("Invalid file type. Only accepted are .csv and .rds")
-          )
+          read_pk(input$data_upload$datapath)
         }, error = function(e) {
           file_loading_error(e$message)
         })
