@@ -12,8 +12,8 @@ general_lineplot(
   colorby_var,
   time_scale,
   yaxis_scale,
-  show_threshold,
-  threshold_value,
+  show_threshold = FALSE,
+  threshold_value = 0,
   cycle = NULL
 )
 }
