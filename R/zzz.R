@@ -7,6 +7,7 @@
     "ANALYTE",
     "ARRLT",
     "AUCdn_IV",
+    "AUCdn_IV_prof",
     "auc_type",
     "AVAL",
     "AVISIT",
