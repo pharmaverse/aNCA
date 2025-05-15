@@ -124,7 +124,7 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
       PPTEST = paste0("Absolute Bioavailability (", PPTESTCD, ")"),
       exclude = case_when(
         is.na(vals_extravascular) & !is.na(vals_intravascular) ~
-          "Bioavailability is not calculated for IV records",
+          "", # Not calculated because it is an IV record
         is.na(vals_extravascular) ~
           paste0(gsub("f_", "", PPTESTCD), " not available"),
         !is.na(AUCdn_IV_prof) ~ "",
