@@ -109,7 +109,7 @@ nca_setup_ui <- function(id) {
           helpText(HTML(paste(
             "Imputes a start-of-interval concentration to calculate non-observational parameters:",
             "- First dose & IV bolus: C0 = 0",
-            "- Not first dose 1 not IV bolus: C0 = predose",
+            "- Not first dose & not IV bolus: C0 = predose",
             "- If IV bolus & monoexponential data: logslope",
             "- If IV bolus & not monoexponential data: C0 = C1",
             sep = "<br>"
