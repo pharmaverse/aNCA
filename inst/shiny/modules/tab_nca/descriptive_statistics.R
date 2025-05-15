@@ -89,16 +89,12 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
       results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
-      stats_data <- left_join(
+      stats_data <- inner_join(
         results$result,
         results_to_join,
         by = intersect(names(results$result), names(results_to_join))
       ) %>%
-        filter(type_interval != "manual") %>%
-        mutate(PPTESTCD = ifelse(
-          type_interval == "manual", paste0(PPTESTCD, signif(start), "-", signif(end)),
-          PPTESTCD
-        ))
+        filter(type_interval != "manual")
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)

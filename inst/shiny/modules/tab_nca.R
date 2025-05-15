@@ -130,6 +130,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                 check_reasons = TRUE
               ) %>%
               PKNCA_calculate_nca() %>%
+              # Add bioavailability results if requested
+              add_f_to_pknca_results(f_auc_options()) %>%
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
@@ -157,9 +159,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               mutate(PPSTRES = PPORRES * conversion_factor) %>%
               select(-conversion_factor)
           }
-          
-          # Add bioavailability results if available
-          res$result <- bind_rows(res$result, pknca_calculate_f(res, f_auc_options()))
 
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
