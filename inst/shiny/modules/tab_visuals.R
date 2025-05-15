@@ -62,7 +62,11 @@ tab_visuals_ui <- function(id) {
           checkboxInput(ns("show_threshold"), label = "Show Threshold"),
           conditionalPanel(
             condition = "input.show_threshold == true",
-            uiOutput(ns("set_threshold")),
+            numericInput(
+              ns("threshold_value"),
+              label = "Threshold Value",
+              value = 0
+            ),
             ns = NS(id)
           )
         ),
@@ -277,15 +281,6 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
                   multiple = TRUE, selected = y[1])
-    })
-
-    # select the dose number/cycle for the general lineplot, if plotting by cycle is chosen
-    output$set_threshold <- renderUI({
-      numericInput(
-        ns("threshold_value"),
-        label = "Threshold Value",
-        value = 0
-      )
     })
 
     # TAB: General Lineplot --------------------------------------------------------
