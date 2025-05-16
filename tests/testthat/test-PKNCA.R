@@ -94,8 +94,18 @@ describe("PKNCA_create_data_object", {
     # Check that flag = FALSE values are removed
     expect_equal(nrow(results$conc$data), 5)
   })
-  # TODO: Add test for multiple units once implemented
 
+  it("throws an error when there are missing values in grouping columns", {
+    # Introduce missing values in grouping columns
+    data_with_na <- simple_data
+    data_with_na$STUDYID[1] <- NA
+
+    expect_error(
+      PKNCA_create_data_object(data_with_na),
+      "Missing values detected in grouping columns: STUDYID"
+    )
+  })
+  # TODO: Add test for multiple units once implemented
 })
 
 
