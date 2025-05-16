@@ -28,7 +28,8 @@ pkcg01(
     = "Subject ID"),
   scale = c("LIN", "LOG", "SBS")[1],
   studyid = "STUDYID",
-  trt_var = "TRT01A"
+  trt_var = "TRT01A",
+  plotly = TRUE
 )
 }
 \arguments{
@@ -50,9 +51,9 @@ pkcg01(
 
 \item{xbreaks_mindist}{A numeric value for \code{xbreak_mindist}.}
 
-\item{xmin}{A numeric value specifying the minimum x-axis limit.}
+\item{xmin}{A numeric value for the minimum x-axis limit.}
 
-\item{xmax}{A numeric value specifying the maximum x-axis limit.}
+\item{xmax}{A numeric value for the maximum x-axis limit.}
 
 \item{ymin}{A numeric value for the minimum y-axis limit.}
 
@@ -77,9 +78,11 @@ pkcg01(
 \item{studyid}{A character string specifying the study ID variable.}
 
 \item{trt_var}{A character string specifying the treatment variable.}
+
+\item{plotly}{Logical indicating whether to return plotly objects. Defaults to TRUE.}
 }
 \value{
-A list of ggplot objects for each unique group.
+A list of ggplot or plotly objects for each unique group.
 }
 \description{
 This function generates a list of ggplots for PK concentration-time profiles.
