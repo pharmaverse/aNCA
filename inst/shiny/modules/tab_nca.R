@@ -130,6 +130,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                 check_reasons = TRUE
               ) %>%
               PKNCA_calculate_nca() %>%
+              # Add bioavailability results if requested
+              add_f_to_pknca_results(f_auc_options()) %>%
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")

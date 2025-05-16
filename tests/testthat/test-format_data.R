@@ -35,6 +35,7 @@ describe("format_pkncaconc_data", {
         formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
         exclude_half.life = "exclude_half.life",
         time.nominal = "NFRLT"
+
       )
     )
   })
