@@ -113,7 +113,9 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
-    time.nominal = "NFRLT"
+    time.nominal = "NFRLT",
+    concu = "AVALU",
+    timeu = "RRLTU"
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
@@ -121,7 +123,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
     route = std_route_column,
     time.nominal = "NFRLT",
-    duration = "ADOSEDUR"
+    duration = "ADOSEDUR",
+    doseu = "DOSEU"
   )
 
   # create basic intervals so that PKNCAdata can be created
@@ -139,15 +142,15 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     data.conc = pknca_conc,
     data.dose = pknca_dose,
     intervals = intervals, #TODO: should be default
-    units = PKNCA::pknca_units_table(
-      concu = pknca_conc$data$AVALU[1],
-      doseu = pknca_conc$data$DOSEU[1],
-      amountu = pknca_conc$data$AVALU[1],
-      timeu = pknca_conc$data$RRLTU[1]
-    )
+    units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
-
+browser()
   # Update units
+  concu_vars <- setdiff(names(getGroups(pknca_conc)), names(getGroups(pknca_dose)))
+  units_table <- pknca_conc$data %>%
+    select(any_of(c(names(getGroups(pknca_conc)), "AVALU", "DOSEU", "RRLTU"))) %>%
+    unique() %>%
+    select_relevant_columns(o_conc$columns$concu)
   unique_analytes <- unique(
     pknca_data_object$conc$data[[pknca_data_object$conc$columns$groups$group_analyte]]
   )
@@ -442,4 +445,72 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
     }
   }
   d_conc_time
+}
+
+PKNCA_build_units_table <- function(o_conc, o_dose) {
+  # Extract relevant columns from o_conc and o_dose
+  group_dose_cols <- names(getGroups(o_dose))
+  group_conc_cols <- names(getGroups(o_conc))
+  uconc_col <- o_conc$columns$concu
+  utime_col <- o_conc$columns$timeu
+  udose_col <- o_dose$columns$doseu
+  
+  # Join concentration and dose data (groups and units)
+  groups_units_tbl <- left_join(
+    o_conc$data %>% select(any_of(c(group_conc_cols, uconc_col, utime_col))),
+    o_dose$data %>% select(any_of(c(group_dose_cols, udose_col))),
+    by = intersect(group_conc_cols, group_dose_cols)
+  ) %>%
+  # Derive the minimum expression of groups for the units
+    select(-any_of(c(o_conc$columns$subject, o_dose$columns$subject))) %>%
+    unique() %>%
+    select_relevant_columns(c(uconc_col, utime_col, udose_col))
+
+  # TODO: Add some checkings for the groups_units_tbl
+  
+    # Generate a PKNCA units table for each group
+  groups_units_tbl %>%
+    rowwise() %>%
+    mutate(
+      pknca_units_tbl = list(
+        PKNCA::pknca_units_table(
+          concu = !!sym(uconc_col),
+          doseu = !!sym(udose_col),
+          amountu = !!sym(udose_col),
+          timeu = !!sym(utime_col)
+        )
+      )
+    ) %>%
+    
+    # Combine all PKNCA units tables into one
+    unnest(cols = c(pknca_units_tbl)) %>%
+    select(-any_of(c(uconc_col, utime_col, udose_col))) %>%
+    mutate(
+      PPSTRESU = PPORRESU,
+      conversion_factor = 1
+    )
+}
+
+select_relevant_columns <- function(data, target_col) {
+  # Convert all columns to numeric factors for comparison
+  data_binary <- data %>%
+    mutate(target_col_derived = paste(!!!syms(target_col), sep = "_")) %>%
+    select(-all_of(target_col)) %>%
+    mutate(across(everything(), ~ as.numeric(as.factor(.))))
+  
+  # Extract the binary representation of the target column
+  target_binary <- data_binary[["target_col_derived"]]
+  
+  # Check which columns have at least one change in value when the target column changes
+  relevant_cols <- sapply(data_binary, function(col) any(diff(col) != 0 & diff(target_binary) != 0))
+  relevant_cols <- names(relevant_cols)[relevant_cols] |>
+    setdiff("target_col_derived")
+  
+  # Check if there is any duplicated column in data_binary
+  non_unit_cols <- as.list(data_binary  %>% select(any_of(relevant_cols)))
+  relevant_non_dup_cols <- names(non_unit_cols)[!duplicated(non_unit_cols, fromLast = TRUE)]
+  
+  # Select and return only the relevant columns from the original data
+  
+  data %>% select(any_of(c(relevant_non_dup_cols, target_col)))
 }
