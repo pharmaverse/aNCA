@@ -10,17 +10,17 @@
 <url><loc>https://pharmaverse.github.io/aNCA/articles/index.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/authors.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/index.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_add_F.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_calculate_nca.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_impute_method_start_c1.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_impute_method_start_logslope.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_update_data_object.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_impute_method.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_filters.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_labels.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/as_factor_preserve_label.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_F.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_to_iso8601_duration.html</loc></url>
@@ -54,6 +54,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/parse_annotation.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pivot_wider_pknca_results.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg01.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_cdisc_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
