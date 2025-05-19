@@ -80,17 +80,17 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
 
     # Pivot and calculate by group mean AUC and dose values
     rename(
-      vals = PPORRES,
-      Dose = any_of(dose_col)
+      aucs = PPORRES,
+      dose = any_of(dose_col)
     ) %>%
     pivot_wider(
       names_from = any_of(route_col),
-      values_from = c(vals, Dose)
+      values_from = c(aucs, dose)
     ) %>%
 
     # Calculate AUC dose normalized values for each profile (intravascular)
     mutate(
-      AUCdn_IV_prof = PKNCA::pk.calc.dn(vals_intravascular, Dose_intravascular)
+      AUCdn_IV_prof = PKNCA::pk.calc.dn(aucs_intravascular, dose_intravascular)
     ) %>%
 
     # Mean AUC dose normalized values by subject (intravascular)
@@ -116,15 +116,15 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
       ),
       PPORRES = PKNCA::pk.calc.f(
         1, AUCdn_IV, # The AUC is already dose normalized for IV
-        Dose_extravascular, vals_extravascular
+        dose_extravascular, aucs_extravascular
       ) * 100,
       # Maintain the PKNCA results format
       PPTESTCD = paste0("f_", PPTESTCD),
       PPTEST = paste0("Absolute Bioavailability (", PPTESTCD, ")"),
       exclude = case_when(
-        is.na(vals_extravascular) & !is.na(vals_intravascular) ~
+        is.na(aucs_extravascular) & !is.na(aucs_intravascular) ~
           "", # Not calculated because it is an IV record
-        is.na(vals_extravascular) ~
+        is.na(aucs_extravascular) ~
           paste0(gsub("f_", "", PPTESTCD), " not available"),
         !is.na(AUCdn_IV_prof) ~ "",
         !is.na(Mean_AUCdn_IV_subj) ~ "Mean AUC.dn IV for the subject was used",
