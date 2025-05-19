@@ -80,7 +80,7 @@ describe("pknca_calculate_f", {
     expect_equal(result$PPORRES[1], 100)
   })
 
-    it("returns NULL for missing or unavailable AUCs, last case with a warning", {
+  it("returns NULL for missing or unavailable AUCs, last case with a warning", {
     expect_null(pknca_calculate_f(pknca_res, NULL))
     expect_warning(
       expect_null(pknca_calculate_f(pknca_res, c("f_AUCXXX", "f_AUCYYY"))),
