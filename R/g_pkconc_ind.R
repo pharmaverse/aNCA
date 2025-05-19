@@ -119,7 +119,6 @@ pkcg01 <- function(
 
   adpc_grouped <- adpc %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    rowwise() %>%
     dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
@@ -169,20 +168,19 @@ pkcg01 <- function(
     plot <- plot +
       aes(color = !!sym(color_var)) +
       theme(legend.position = "none")
+
+    # Add color legend only when neccessary
+    if (length(unique(adpc[[color_var]])) > 1) {
+  
+      # Make sure the variable is interpreted as a factor
+      adpc[[color_var]] <- as.factor(adpc[[color_var]])
+  
+      # Add to the plot the color_var and color_var_label
+      plot <- plot +
+        labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
+        theme(legend.position = "bottom")
+    }
   }
-
-  # Add color legend only when neccessary
-  if (!is.null(color_var_label) && length(unique(adpc[[color_var]])) > 1) {
-
-    # Make sure the variable is interpreted as a factor
-    adpc[[color_var]] <- as.factor(adpc[[color_var]])
-
-    # Add to the plot the color_var and color_var_label
-    plot <- plot +
-      labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
-      theme(legend.position = "bottom")
-  }
-
 
   if (scale == "LOG") {
     plot <- plot +
@@ -200,7 +198,7 @@ pkcg01 <- function(
         "Side-by-side view requires `scales` package, please install it with ",
         "`install.packages('scales')`"
       )
-
+browser()
     # Create SBS version of data and plot
     adpc_grouped <- bind_rows(
       adpc_grouped %>% dplyr::mutate(view = "Linear view"),
