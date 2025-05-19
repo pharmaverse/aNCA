@@ -25,10 +25,9 @@
 #'   for individual subjects where IV data is available. If IV data is missing,
 #'  it estimates bioavailability using the mean IV AUC for that grouping.
 #'
-#' @importFrom dplyr bind_rows filter full_join group_by left_join mutate select summarize
-#' @importFrom purrr reduce
+#' @importFrom dplyr filter group_by left_join mutate rename select ungroup case_when
 #' @importFrom tidyr pivot_wider
-#' @importFrom rlang sym
+#' @importFrom rlang syms
 #'
 #' @export
 pknca_calculate_f <- function(res_nca, f_aucs) {
@@ -156,7 +155,6 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
 #'   the mean IV AUC for that group is used instead. Variables are assumed to be in `%` units.
 #'
 #' @importFrom dplyr mutate select
-#' @importFrom tidyr pivot_wider
 #'
 #' @export
 calculate_f <- function(res_nca, f_aucs) {
@@ -178,7 +176,7 @@ calculate_f <- function(res_nca, f_aucs) {
 #' @returns A PKNCA result object which results data frame contains added the
 #' bioavailability calculations requested based on the AUCs provided in `f_aucs`.
 #'
-#' @importFrom dplyr left_join
+#' @importFrom dplyr bind_rows
 add_f_to_pknca_results <- function(res_nca, f_aucs) {
   f_results <- pknca_calculate_f(res_nca, f_aucs)
   res_nca$result <- bind_rows(res_nca$result, f_results)
