@@ -121,18 +121,16 @@ describe("pkcg01", {
 
 describe("g_pkconc_ind_lin", {
   it("generates plot with linear scale", {
-    plots_lin <- g_pkconc_ind_lin(adpc, plotly = FALSE)
-    plot <- plots_lin[[1]]
-    expect_equal(plot$labels$y, "Analysis value [mg/L]")
-    vdiffr::expect_doppelganger("g_pkconc_ind_lin_plot", plot)
+    plot_lin <- g_pkconc_ind_lin(adpc, plotly = FALSE)[[1]]
+    expect_equal(plot_lin$labels$y, "Analysis value [mg/L]")
+    vdiffr::expect_doppelganger("g_pkconc_ind_lin_plot", plot_lin)
   })
 })
 
 describe("g_pkconc_ind_log", {
   it("generates plot with log scale", {
-    plots_log <- g_pkconc_ind_log(adpc, plotly = FALSE)
-    plot <- plots_log[[1]]
-    expect_equal(plot$labels$y, "Log 10 - Analysis value [mg/L]")
-    vdiffr::expect_doppelganger("g_pkconc_ind_log_plot", plot)
+    plot_log <- g_pkconc_ind_log(adpc, plotly = FALSE)[[1]]
+    expect_equal(plot_log$labels$y, "Analysis value [mg/L]")
+    vdiffr::expect_doppelganger("g_pkconc_ind_log_plot", plot_log)
   })
 })

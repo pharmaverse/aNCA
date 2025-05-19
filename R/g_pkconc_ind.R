@@ -183,21 +183,21 @@ pkcg01 <- function(
   }
 
   if (scale == "LOG") {
-    if (plotly) {
       adpc_grouped[[yvar]] <- ifelse(
         adpc_grouped[[yvar]] < 1e-3,
         yes = 1e-3, no = adpc_grouped[[yvar]]
       )
-    } else {
-      plot <- withCallingHandlers(
-        plot +
-          scale_y_continuous(
-            transform = "log10"
-          ),
-        message = "log-10 transformation introduced infinite values"
-      )
+      #browser()
+    if (plotly) adpc_grouped[[yvar]] <- log10(adpc_grouped[[yvar]])
+    if (!plotly) {
+      plot <- plot +
+        scale_y_continuous(
+          transform = "log10",
+          labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+        )
     }
   }
+
 
   if (scale == "SBS") {
     if (!requireNamespace("ggh4x", quietly = FALSE))
@@ -289,8 +289,13 @@ pkcg01 <- function(
         )
 
       if (scale == "LOG") {
+        plotly_plot$x$layout$yaxis$tickvals <- ifelse(
+          plotly_plot$x$layout$yaxis$tickvals == 0,
+          1e-3,
+          plotly_plot$x$layout$yaxis$tickvals
+        )
         plotly_plot <- plotly_plot %>%
-          layout(yaxis = list(type = "log"))
+          layout(yaxis = list(type = "log", autorange = TRUE))
       }
 
       plotly_plot
