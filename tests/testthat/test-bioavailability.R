@@ -4,15 +4,8 @@ pknca_res$result <- pknca_res$result %>%
   filter(USUBJID %in% 1:6)
 
 describe("pknca_calculate_f", {
-  it("returns NULL for missing or unavailable AUCs, last case with a warning", {
-    expect_null(pknca_calculate_f(pknca_res, NULL))
-    expect_warning(
-      expect_null(pknca_calculate_f(pknca_res, c("f_AUCXXX", "f_AUCYYY"))),
-      "No AUC extracted from f_aucs available in res_nca \\(PPTESTCD\\): AUCXXX, AUCYYY"
-    )
-  })
 
-  result <- pknca_calculate_f(pknca_res, c("f_AUCLST"))
+  result <- expect_no_error(pknca_calculate_f(pknca_res, c("f_AUCLST")))
 
   it("returns a data.frame with expected format", {
     expect_s3_class(result, "data.frame")
@@ -85,6 +78,14 @@ describe("pknca_calculate_f", {
 
     result <- pknca_calculate_f(pknca_res_ind_both_routes, "f_AUCLST")
     expect_equal(result$PPORRES[1], 100)
+  })
+
+    it("returns NULL for missing or unavailable AUCs, last case with a warning", {
+    expect_null(pknca_calculate_f(pknca_res, NULL))
+    expect_warning(
+      expect_null(pknca_calculate_f(pknca_res, c("f_AUCXXX", "f_AUCYYY"))),
+      "No AUC extracted from f_aucs available in res_nca \\(PPTESTCD\\): AUCXXX, AUCYYY"
+    )
   })
 })
 
