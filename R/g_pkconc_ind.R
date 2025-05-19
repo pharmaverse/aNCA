@@ -183,10 +183,10 @@ pkcg01 <- function(
   }
 
   if (scale == "LOG") {
-      adpc_grouped[[yvar]] <- ifelse(
-        adpc_grouped[[yvar]] < 1e-3,
-        yes = 1e-3, no = adpc_grouped[[yvar]]
-      )
+    adpc_grouped[[yvar]] <- ifelse(
+      adpc_grouped[[yvar]] < 1e-3,
+      yes = 1e-3, no = adpc_grouped[[yvar]]
+    )
 
     if (plotly) adpc_grouped[[yvar]] <- log10(adpc_grouped[[yvar]])
     if (!plotly) {
