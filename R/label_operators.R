@@ -9,33 +9,33 @@
 #'
 #' @return The same dataset with label attributes applied to all columns.
 #' If a column is not present in the labels list, it will be assigned the name of the col.
+#' If label already exists in the original data, it will be preserved.
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   data <- data.frame(USUBJID = c(1, 2, 3), AVAL = c(4, 5, 6))
-#'   labels <- data.frame(
-#'   Variable = c("USUBJID", "AVAL"),
-#'   Label = c("Unique Subject Identifier", "Analysis Value")
-#'   )
-#'   data <- apply_labels(data, labels)
-#'   print(attr(data$A, "label"))
-#' }
+#'  data <- data.frame(USUBJID = c(1, 2, 3), AVAL = c(4, 5, 6))
+#'  labels <- data.frame(
+#'    Variable = c("USUBJID", "AVAL"),
+#'    Label = c("Unique Subject Identifier", "Analysis Value"),
+#'    Dataset = c("ADPC", "ADPC")
+#'  )
+#'  data <- apply_labels(data, labels, "ADPC")
+#'  print(attr(data$USUBJID, "label")) # "Unique Subject Identifier"
+#'  print(attr(data$AVAL, "label"))    # "Analysis Value"
 #'
+#' @importFrom dplyr filter
+#' @importFrom magrittr `%>%`
 #' @importFrom stats setNames
 #'
 #' @export
 apply_labels <- function(data, labels_df, type) {
-
-  # Create the label_ADNCA named vector from labels_app
-  labels_df %>%
-    dplyr::filter(Dataset == type)
-
-  label_adnca <- setNames(labels_df$Label, labels_df$Variable)
+  labels_df <- dplyr::filter(labels_df, Dataset == type)
+  labels_reference <- stats::setNames(labels_df$Label, labels_df$Variable)
 
   for (col in colnames(data)) {
-    if (col %in% names(label_adnca)) {
-      base::attr(data[[col]], "label") <- label_adnca[[col]]
+    if (!is.null(attr(data[[col]], "label"))) next # Preserve existing labels
+
+    if (col %in% names(labels_reference)) {
+      base::attr(data[[col]], "label") <- labels_reference[[col]]
     } else {
       base::attr(data[[col]], "label") <- col
     }

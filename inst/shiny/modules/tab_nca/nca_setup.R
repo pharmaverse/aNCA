@@ -346,7 +346,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
-      "aucint.last",
       "auclast", "auclast.dn",
       "cmax", "cmax.dn",
       "clast.obs", "clast.obs.dn",
