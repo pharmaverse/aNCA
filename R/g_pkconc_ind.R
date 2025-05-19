@@ -187,7 +187,7 @@ pkcg01 <- function(
         adpc_grouped[[yvar]] < 1e-3,
         yes = 1e-3, no = adpc_grouped[[yvar]]
       )
-      #browser()
+
     if (plotly) adpc_grouped[[yvar]] <- log10(adpc_grouped[[yvar]])
     if (!plotly) {
       plot <- plot +
@@ -228,8 +228,7 @@ pkcg01 <- function(
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
         trans  = "log10",
-        breaks = scales::breaks_log(),
-        labels = scales::label_log()
+        labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
       )
   }
 
@@ -268,7 +267,7 @@ pkcg01 <- function(
         # This because of no spec of parse annotation generates warning is.na()
         ggplotly(
           tooltip = c("x", "y"),
-          dynamicTicks = TRUE,
+          dynamicTicks = if (scale != "SBS") TRUE else FALSE,
           #' NOTE: might require some fine tuning down the line, looks fine now
           height = 500 + (footnote_y * 25) + title_margin * 50
         ) %>%
