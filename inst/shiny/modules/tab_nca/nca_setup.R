@@ -77,7 +77,8 @@ nca_setup_ui <- function(id) {
                      pickerInput(
                        ns("bioavailability"),
                        "Calculate Bioavailability:",
-                       choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+                       choices = pknca_cdisc_terms$PPTESTCD %>%
+                         subset(startsWith(., "FABS_") | startsWith(., "FREL_")),
                        multiple = TRUE,
                        selected = NULL
                      )
@@ -360,7 +361,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     output$nca_parameters <- renderReactable({
       #remove parameters that are currently unavailable in PKNCA
       params_data <- pknca_cdisc_terms %>%
-        filter(!PPTESTCD %in% c("FAB", "FREL"))
+        filter(TYPE != "PKNCA-not-covered")
 
       default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
 
@@ -383,7 +384,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
 
       params_data <- pknca_cdisc_terms %>%
-        filter(!PPTESTCD %in% c("FAB", "FREL"))
+        filter(TYPE != "PKNCA-not-covered")
       selected_terms <- params_data[selected_rows, , drop = FALSE]
 
       # Return PKNCA column names
@@ -539,12 +540,16 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show("bioavailability")
 
+        f_options <- pknca_cdisc_terms %>%
+          filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
+          pull(PKNCA, PPTESTCD)
+
         updatePickerInput(
           session,
           inputId = "bioavailability",
           "Calculate Bioavailability:",
-          choices = c("f_AUCIFO", "f_AUCIFP", "f_AUCLST"),
-          selected = "f_AUCIFO"
+          choices = f_options,
+          selected = f_options[1]
         )
       }
 
