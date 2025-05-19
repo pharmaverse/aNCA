@@ -171,10 +171,10 @@ pkcg01 <- function(
 
     # Add color legend only when neccessary
     if (length(unique(adpc[[color_var]])) > 1) {
-  
+
       # Make sure the variable is interpreted as a factor
       adpc[[color_var]] <- as.factor(adpc[[color_var]])
-  
+
       # Add to the plot the color_var and color_var_label
       plot <- plot +
         labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
@@ -183,8 +183,20 @@ pkcg01 <- function(
   }
 
   if (scale == "LOG") {
-    plot <- plot +
-      labs(y = paste0("Log 10 - ", plot$labels$y))
+    if (plotly) {
+      adpc_grouped[[yvar]] <- ifelse(
+        adpc_grouped[[yvar]] < 1e-3,
+        yes = 1e-3, no = adpc_grouped[[yvar]]
+      )
+    } else {
+      plot <- withCallingHandlers(
+        plot +
+          scale_y_continuous(
+            transform = "log10"
+          ),
+        message = "log-10 transformation introduced infinite values"
+      )
+    }
   }
 
   if (scale == "SBS") {
@@ -198,7 +210,7 @@ pkcg01 <- function(
         "Side-by-side view requires `scales` package, please install it with ",
         "`install.packages('scales')`"
       )
-browser()
+
     # Create SBS version of data and plot
     adpc_grouped <- bind_rows(
       adpc_grouped %>% dplyr::mutate(view = "Linear view"),
@@ -240,7 +252,6 @@ browser()
       }
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
-
     if (plotly) {
       plotly_plot <- plot %+%
         plot_data %+%
@@ -262,8 +273,6 @@ browser()
           height = 500 + (footnote_y * 25) + title_margin * 50
         ) %>%
         layout(
-          yaxis = list(autorange = FALSE),
-          xaxis = list(autorange = FALSE),
           # title and subtitle #
           title = list(text = title_text),
           # footnote #
@@ -295,7 +304,6 @@ browser()
         )
     }
   })
-
   plots |>
     setNames(unique(adpc[["id_plot"]]))
 }
