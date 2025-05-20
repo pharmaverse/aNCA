@@ -144,7 +144,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
-
+  pknca_data_object$units <- PKNCA_build_units_table(pknca_conc, pknca_dose)
   pknca_data_object
 }
 
@@ -197,13 +197,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
-
-  # Add and expand units
-  data$units <-  data$units %>%
-    filter(!!sym(analyte_column) %in% selected_analytes) %>%
-    select(-!!sym(analyte_column)) %>%
-    tidyr::crossing(!!sym(analyte_column) := unique_analytes) %>%
-    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
   data$options <- list(
     auc.method = method,
@@ -439,7 +432,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
   uconc_col <- o_conc$columns$concu
   utime_col <- o_conc$columns$timeu
   udose_col <- o_dose$columns$doseu
-  
+
   # Join concentration and dose data (groups and units)
   groups_units_tbl <- left_join(
     o_conc$data %>% select(any_of(c(group_conc_cols, uconc_col, utime_col))),
@@ -473,7 +466,9 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
     mutate(
       PPSTRESU = PPORRESU,
       conversion_factor = 1
-    )
+    ) %>%
+    select(any_of(c(group_conc_cols, group_dose_cols)),
+           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor)
 }
 
 select_relevant_columns <- function(data, target_col) {
@@ -482,10 +477,10 @@ select_relevant_columns <- function(data, target_col) {
     mutate(target_col_derived = paste(!!!syms(target_col), sep = "_")) %>%
     select(-all_of(target_col)) %>%
     mutate(across(everything(), ~ as.numeric(as.factor(.))))
-  
+
   # Extract the binary representation of the target column
   target_binary <- data_binary[["target_col_derived"]]
-  
+
   # Check which columns have at least one change in value when the target column changes
   relevant_cols <- sapply(data_binary, function(col) any(diff(col) != 0 & diff(target_binary) != 0))
   relevant_cols <- names(relevant_cols)[relevant_cols] |>

@@ -33,7 +33,11 @@ units_table_server <- function(id, mydata) {
     })
 
     # Define the modal message displayed with the parameter units table #
+    modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
+      
+      # Make a reactive variable from the units table
+      modal_units_table(mydata()$units)
 
       # Keep in a variable all analytes available
       group_cols_for_units <- mydata()$units %>%
@@ -45,7 +49,7 @@ units_table_server <- function(id, mydata) {
       
       groups_as_filter_ops <- apply(groups_for_units, 1, function(x) {
         paste0(names(x), " == '", x, "'") %>%
-          paste(collapse = " & ") %>%
+          paste(collapse = " | ") %>%
           paste0("(", ., ")")
       })
       names(groups_as_filter_ops) <- apply(groups_for_units, 1, function(x) {
@@ -71,27 +75,6 @@ units_table_server <- function(id, mydata) {
         title = tagList(
           span("Units of NCA parameter results")
         ),
-        selectInput(
-          inputId = ns("select_unitstable_analyte"),
-          multiple = TRUE,
-          label = "Select Analytes to modify:",
-          choices = groups_for_units_input,
-          selected = unlist(groups_for_units_input)
-        ),
-        selectInput(
-          inputId = ns("select_unitstable_analyte2"),
-          multiple = TRUE,
-          label = "Select Analytes to modify:",
-          choices = groups_for_units_input,
-          selected = unlist(groups_for_units_input)
-        ),
-        pickerInput(
-          inputId = ns("select_unitstable_analyte3"),
-          multiple = TRUE,
-          label = "Select Analytes to modify:",
-          choices = groups_as_filter_ops,
-          selected = unlist(groups_as_filter_ops)
-        ),
         DTOutput(ns("modal_units_table")),
         footer = tagList(
           modalButton("Close"),
@@ -103,26 +86,8 @@ units_table_server <- function(id, mydata) {
 
     # Define the parameter units table and how is displayed to the user #
     modal_units_table <- reactiveVal(NULL)
-    observeEvent(mydata(), {
-      req(mydata()$units)
-
-      analyte_column <- mydata()$conc$columns$groups$group_analyte
-
-      modal_units_table_data <- mydata()$units %>%
-        rename(
-          `Parameter` = PPTESTCD,
-          `Default unit` = PPORRESU,
-          `Conversion Factor` = conversion_factor,
-          `Custom unit` = PPSTRESU,
-          `Analytes` = analyte_column
-        ) %>%
-        select(`Analytes`, `Parameter`, `Default unit`, `Custom unit`, `Conversion Factor`)
-
-      if (.validate_current_table(modal_units_table(), modal_units_table_data)) {
-        return()
-      }
-
-      modal_units_table(modal_units_table_data)
+    observeEvent(mydata()$units, {
+      mydata()$units
     })
 
     # Define which parameters where choosen by the user
@@ -134,16 +99,30 @@ units_table_server <- function(id, mydata) {
     params_to_calculate_array_str <- reactive({
       paste0("['", paste(params_to_calculate(), collapse = "','"), "']")
     })
+    
+    group_cols_for_units <- reactive({
+      mydata()$units %>%
+        select(-any_of(c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))) %>%
+        colnames()
+    })
 
     #' Rendering the modal units table
     output$modal_units_table <- DT::renderDT({
+      req(modal_units_table())
+
       datatable(
-        data = .clean_display_units_table(
-          modal_units_table(),
-          input$select_unitstable_analyte
-        ) %>%
-          mutate(Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD")),
+        data = modal_units_table() %>%
+          rename(
+            `Parameter` = PPTESTCD,
+            `Default unit` = PPORRESU,
+            `Conversion Factor` = conversion_factor,
+            `Custom unit` = PPSTRESU
+          ) %>%
+          mutate(Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD"),
+                 across(where(is.character), as.factor)
+          ),
         escape = FALSE,
+        filter = "top",
         selection = list(mode = "single", target = "cell"),
         class = "table table-striped table-bordered",
         rownames = FALSE,
@@ -160,22 +139,25 @@ units_table_server <- function(id, mydata) {
           autoWidth = TRUE,
           dom = "ft",
           # Display only rows with the parameters to run for the NCA
-          rowCallback = htmlwidgets::JS(
-            paste0(
-              "
-              function(row, data, index) {
-              var paramsToCalculate = ", params_to_calculate_array_str(),
-              ";
-              if (paramsToCalculate.indexOf(data[1]) === -1) {
-              $(row).hide();
-              }
-              }"
-            )
-          ),
+          ### TODO: Not working
+          # rowCallback = htmlwidgets::JS(
+          #   paste0(
+          #     "
+          #     function(row, data, index) {
+          #     var paramsToCalculate = ", params_to_calculate_array_str(),
+          #     ";
+          #     if (paramsToCalculate.indexOf(data[1]) === -1) {
+          #     $(row).hide();
+          #     }
+          #     }"
+          #   )
+          # ),
           columnDefs = list(
             list(
-              visible = FALSE,
-              targets = c()
+              searchable = FALSE,
+              targets = which(
+                c("PPORRES", "PPSTRES") %in% names(mydata()$units)
+              )
             )
           )
         )
@@ -184,24 +166,15 @@ units_table_server <- function(id, mydata) {
 
     # Accept user modifications in the modal units table
     observeEvent(input$modal_units_table_cell_edit, {
+      browser()
       info <- input$modal_units_table_cell_edit
       modal_units_table <- modal_units_table()
-
-      analytes <- input$select_unitstable_analyte
-      param <- .clean_display_units_table(
-        modal_units_table,
-        analyt
-      ) %>%
-        slice(info$row) %>%
-        pull(Parameter)
-      rows_to_change <- with(
-        modal_units_table,
-        which(Analytes %in% analytes & Parameter %in% param)
-      )
-      col_to_change <- names(modal_units_table)[info$col + 1]
-
+      col_conv_factor <- which(names(modal_units_table) == "conversion_factor")
+      col_default_unit <- which(names(modal_units_table) == "PPORRES")
+      col_custom_unit <- which(names(modal_units_table) == "PPSTRESU")
+      
       # If the edited cell is in the 'Conversion Factor' only accept numeric values
-      if (col_to_change == "Conversion Factor" && !is.numeric(info$value)) {
+      if ((info$col + 1) == col_conv_factor && !is.numeric(info$value)) {
         # Report the user the expected numeric format
         showNotification(
           "Please enter a valid numeric value for the Conversion Factor.",
@@ -214,12 +187,12 @@ units_table_server <- function(id, mydata) {
       }
 
       # Make the edition in the units table
-      modal_units_table[rows_to_change, col_to_change] <- info$value
+      modal_units_table[info$row, info$col + 1] <- info$value
 
       # If the custom unit was changed recalculate the conversion factor
-      if (col_to_change == "Custom unit") {
-        def_unit <- modal_units_table[rows_to_change, ][["Default unit"]]
-        cust_unit <- modal_units_table[rows_to_change, ][["Custom unit"]]
+      if ((info$col + 1) == col_custom_unit) {
+        def_unit <- modal_units_table[info$row, "PPORRESU"]
+        cust_unit <- modal_units_table[info$row, "PPSTRESU"]
         conversion_factor_value <- get_conversion_factor(def_unit, cust_unit)
 
         # If the modification lead to an unexpected conversion factor notify the user
