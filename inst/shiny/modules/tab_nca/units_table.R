@@ -34,6 +34,7 @@ units_table_server <- function(id, mydata) {
 
     # Define the modal message displayed with the parameter units table #
     observeEvent(input$open_units_table, {
+
       # Keep in a variable all analytes available
       group_cols_for_units <- mydata()$units %>%
         select(-any_of(c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))) %>%
@@ -41,6 +42,18 @@ units_table_server <- function(id, mydata) {
       groups_for_units <- mydata()$intervals %>%
         select(any_of(group_cols_for_units)) %>%
         unique()
+      
+      groups_as_filter_ops <- apply(groups_for_units, 1, function(x) {
+        paste0(names(x), " == '", x, "'") %>%
+          paste(collapse = " & ") %>%
+          paste0("(", ., ")")
+      })
+      names(groups_as_filter_ops) <- apply(groups_for_units, 1, function(x) {
+        paste0(names(x), ": ", x) %>%
+          paste(collapse = ", ")
+      })
+      
+
       groups_for_units_input <- lapply(
         colnames(groups_for_units),
         function(varname) {
@@ -64,6 +77,20 @@ units_table_server <- function(id, mydata) {
           label = "Select Analytes to modify:",
           choices = groups_for_units_input,
           selected = unlist(groups_for_units_input)
+        ),
+        selectInput(
+          inputId = ns("select_unitstable_analyte2"),
+          multiple = TRUE,
+          label = "Select Analytes to modify:",
+          choices = groups_for_units_input,
+          selected = unlist(groups_for_units_input)
+        ),
+        pickerInput(
+          inputId = ns("select_unitstable_analyte3"),
+          multiple = TRUE,
+          label = "Select Analytes to modify:",
+          choices = groups_as_filter_ops,
+          selected = unlist(groups_as_filter_ops)
         ),
         DTOutput(ns("modal_units_table")),
         footer = tagList(
@@ -270,14 +297,14 @@ units_table_server <- function(id, mydata) {
 
 # Create a function to provide a clean display of the modal units table
 .clean_display_units_table <- function(modal_units_table, sel_filter_operations) {
-  browser()
-  modal_units_table %>%
-    mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
-    filter(`Analytes` %in% selected_analytes) %>%
-    group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
-    mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
-    ungroup() %>%
-    unique()
+
+  modal_units_table #%>%
+    # mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
+    # filter(`Analytes` %in% selected_analytes) %>%
+    # group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
+    # mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
+    # ungroup() %>%
+    # unique()
 }
 
 #' Check if units table already exists.
