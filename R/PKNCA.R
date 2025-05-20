@@ -144,21 +144,6 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
-browser()
-  # Update units
-  concu_vars <- setdiff(names(getGroups(pknca_conc)), names(getGroups(pknca_dose)))
-  units_table <- pknca_conc$data %>%
-    select(any_of(c(names(getGroups(pknca_conc)), "AVALU", "DOSEU", "RRLTU"))) %>%
-    unique() %>%
-    select_relevant_columns(o_conc$columns$concu)
-  unique_analytes <- unique(
-    pknca_data_object$conc$data[[pknca_data_object$conc$columns$groups$group_analyte]]
-  )
-  analyte_column <- pknca_data_object$conc$columns$groups$group_analyte
-  pknca_data_object$units <- tidyr::crossing(
-    pknca_data_object$units, !!sym(analyte_column) := unique_analytes
-  ) %>%
-    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
   pknca_data_object
 }
@@ -449,8 +434,8 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 
 PKNCA_build_units_table <- function(o_conc, o_dose) {
   # Extract relevant columns from o_conc and o_dose
-  group_dose_cols <- names(getGroups(o_dose))
-  group_conc_cols <- names(getGroups(o_conc))
+  group_dose_cols <- names(PKNCA::getGroups(o_dose))
+  group_conc_cols <- names(PKNCA::getGroups(o_conc))
   uconc_col <- o_conc$columns$concu
   utime_col <- o_conc$columns$timeu
   udose_col <- o_dose$columns$doseu
