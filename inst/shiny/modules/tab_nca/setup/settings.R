@@ -572,6 +572,41 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
 
+    all_settings <- reactive(
+      list(
+        general = list(
+          analyte = input$select_analyte,
+          doseno = input$select_doseno,
+          pcspec = input$select_pcspec
+        ),
+        method = input$method,
+        bioavailability = input$bioavailability,
+        parameter_selection = nca_params(),
+        data_imputation = list(
+          impute_c0 = input$should_impute_c0
+        ),
+        partial_aucs = auc_data(),
+        flags = list(
+          adj.r.squared = list(
+            is.checked = input$adj.r.squared_rule,
+            threshold = input$adj.r.squared_threshold
+          ),
+          aucpext.obs = list(
+            is.checked = input$aucpext.obs_rule,
+            threshold = input$aucpext.obs_threshold
+          ),
+          aucpext.pred = list(
+            is.checked = input$aucpext.pred_rule,
+            threshold = input$aucpext.pred_threshold
+          ),
+          span.ratio = list(
+            is.checked = input$span.ratio_rule,
+            threshold = input$span.ratio_threshold
+          )
+        )
+      )
+    )
+
     settings_rules <- reactive(
       list(
         adj.r.squared = list(
@@ -594,6 +629,7 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
     )
 
     list(
+      all_settings = all_settings,
       processed_pknca_data = processed_pknca_data,
       slopes_pknca_data = slopes_pknca_data,
       rules = settings_rules,
