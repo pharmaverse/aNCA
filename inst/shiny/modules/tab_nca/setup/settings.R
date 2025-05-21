@@ -1,7 +1,5 @@
 # Rule input helper ui
-
 .rule_input <- function(id, label, default, step, min, max = NULL) {
-
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
   numeric_args <- list(
@@ -35,105 +33,114 @@
   )
 }
 
-nca_setup_ui <- function(id) {
+settings_ui <- function(id) {
   ns <- NS(id)
 
-  navset_tab(
-    id = ns("setup_tabs"),
-    nav_panel(
-      "Setup",
-      # Local upload option
-      fileInput(
-        ns("settings_upload"),
-        width = "60%",
-        label = "Upload Settings",
-        buttonLabel = list(icon("folder"), "Browse"),
-        accept = c(".csv", ".xpt")
-      ),
-      accordion(
-        accordion_panel(
-          title = "General Settings",
-          # Selection of analyte, dose number and specimen
-          fluidRow(
-            column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
-                                  choices = NULL)),
-            column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
-                                  choices = NULL)),
-            column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
-                                  choices = NULL))
+  tagList(
+    fileInput(
+      ns("settings_upload"),
+      width = "60%",
+      label = "Upload Settings",
+      buttonLabel = list(icon("folder"), "Browse"),
+      accept = c(".csv", ".xpt")
+    ),
+    accordion(
+      accordion_panel(
+        title = "General Settings",
+        # Selection of analyte, dose number and specimen
+        fluidRow(
+          column(4,
+            selectInput(
+              ns("select_analyte"),
+              "Choose the Analyte:",
+              multiple = TRUE,
+              choices = NULL
+            )
           ),
-          # Method, NCA parameters, and units table
-          fluidRow(
-            column(4, selectInput(
-              ns("method"),
-              "Extrapolation Method:",
-              choices = c(
-                "lin-log", "lin up/log down", "linear"
-              ),
-              selected = "lin up/log down"
-            )),
-            column(4, #pickerinput only enabled when IV and EX data present
-                   shinyjs::hidden(
-                     pickerInput(
-                       ns("bioavailability"),
-                       "Calculate Bioavailability:",
-                       choices = pknca_cdisc_terms$PPTESTCD %>%
-                         subset(startsWith(., "FABS_") | startsWith(., "FREL_")),
-                       multiple = TRUE,
-                       selected = NULL
-                     )
-                   )),
-            column(4, units_table_ui(ns("units_table")))
+          column(4,
+            selectInput(
+              ns("select_dosno"),
+              "Choose the Dose Number:",
+              multiple = TRUE,
+              choices = NULL
+            )
           ),
-        ),
-        accordion_panel(
-          title = "Parameter Selection",
-          reactableOutput(ns("nca_parameters")),
-          card(
-            full_screen = FALSE,
-            style = "margin-top: 2em;",
-            card_header("Selected NCA Parameters"),
-            card_body(
-              uiOutput(ns("nca_param_display"))
+          column(4,
+            selectInput(
+              ns("select_pcspec"),
+              "Choose the Specimen:",
+              multiple = TRUE,
+              choices = NULL
             )
           )
         ),
-        accordion_panel(
-          title = "Data Imputation",
-          input_switch(
-            id = ns("should_impute_c0"),
-            label = "Impute Concentration",
-            value = TRUE
+        # Method, NCA parameters, and units table
+        fluidRow(
+          column(4,
+            selectInput(
+              ns("method"),
+              "Extrapolation Method:",
+              choices = c("lin-log", "lin up/log down", "linear"),
+              selected = "lin up/log down"
+            )
           ),
-          br(),
-          helpText(HTML(paste(
-            "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-            "- If DOSNO = 1 & IV bolus: C0 = 0",
-            "- If DOSNO > 1 & not IV bolus: C0 = predose",
-            "- If IV bolus & monoexponential data: logslope",
-            "- If IV bolus & not monoexponential data: C0 = C1",
-            sep = "<br>"
-          )))
+          column(4, # pickerinput only enabled when IV and EX data present
+            shinyjs::hidden(
+              pickerInput(
+                ns("bioavailability"),
+                "Calculate Bioavailability:",
+                choices = pknca_cdisc_terms$PPTESTCD %>%
+                  subset(startsWith(., "FABS_") | startsWith(., "FREL_")),
+                multiple = TRUE,
+                selected = NULL
+              )
+            )
+          ),
+          column(4, units_table_ui(ns("units_table")))
+        )
+      ),
+      accordion_panel(
+        title = "Parameter Selection",
+        reactableOutput(ns("nca_parameters")),
+        card(
+          full_screen = FALSE,
+          style = "margin-top: 2em;",
+          card_header("Selected NCA Parameters"),
+          card_body(uiOutput(ns("nca_param_display"))
+          )
+        )
+      ),
+      accordion_panel(
+        title = "Data Imputation",
+        input_switch(
+          id = ns("should_impute_c0"),
+          label = "Impute Concentration",
+          value = TRUE
         ),
-        accordion_panel(
-          title = "Partial AUCs",
-          reactableOutput(ns("auc_table")),
-          actionButton(ns("addRow"), "Add Row")
-        ),
-        accordion_panel(
-          title = "Flag Rule Sets",
-          .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
-          .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
-          .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
-          .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
-        ),
-        id = "acc",
-        open = c("General Settings", "Parameter Selection")
-      )
-    ),
-    nav_panel(
-      "Summary",
-      reactableOutput(ns("nca_intervals"))
+        br(),
+        helpText(HTML(paste(
+          "Imputes a start-of-interval concentration to calculate non-observational parameters:",
+          "- If DOSNO = 1 & IV bolus: C0 = 0",
+          "- If DOSNO > 1 & not IV bolus: C0 = predose",
+          "- If IV bolus & monoexponential data: logslope",
+          "- If IV bolus & not monoexponential data: C0 = C1",
+          sep = "<br>"
+        )))
+      ),
+      accordion_panel(
+        title = "Partial AUCs",
+        reactableOutput(ns("auc_table")),
+        actionButton(ns("addRow"), "Add Row")
+      ),
+      accordion_panel(
+        title = "Flag Rule Sets",
+        .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
+        .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
+        .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
+        .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
+      ),
+      id = "acc",
+      open = c("General Settings", "Parameter Selection")
     )
   )
 }
@@ -149,8 +156,7 @@ nca_setup_ui <- function(id) {
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
 #' - adnca_data A reactive expression of the PKNCAdata object,
 #'  which contains data and NCA specifications.
-nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity / needs further modularization
-
+settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity / needs further modularization
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -566,48 +572,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
 
-    # Rendering Reactable Output
-    output$nca_intervals <- renderReactable({
-      req(processed_pknca_data())
-
-      data <- processed_pknca_data()$intervals %>%
-        apply_labels(LABELS, "ADPC") %>%
-        select(where(~!is.logical(.) | any(. == TRUE)))
-
-      route_column <- "ROUTE"
-      std_route_column <- "std_route"
-      col_groups <- unname(unlist(processed_pknca_data()$dose$columns$groups))
-
-      data <- data %>%
-        left_join(processed_pknca_data()$dose$data %>%
-                    select(all_of(c(col_groups, route_column, std_route_column,
-                                    "TIME_DOSE", "DOSNO", "DOSNOA"))),
-                  by = c(col_groups, "TIME_DOSE", "DOSNO", "DOSNOA")) %>%
-        group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
-        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
-        mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
-        select(!!!syms(colnames(data)),
-               all_of(c(route_column, std_route_column)))
-
-      reactable(
-        data,
-        columns = generate_col_defs(data),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
-      )
-    })
-
-    list(
-      processed_pknca_data = processed_pknca_data,
-      slopes_pknca_data = slopes_pknca_data,
-      rules = reactive(list(
+    settings_rules <- reactive(
+      list(
         adj.r.squared = list(
           is.checked = input$adj.r.squared_rule,
           threshold = input$adj.r.squared_threshold
@@ -624,7 +590,13 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
           is.checked = input$span.ratio_rule,
           threshold = input$span.ratio_threshold
         )
-      )),
+      )
+    )
+
+    list(
+      processed_pknca_data = processed_pknca_data,
+      slopes_pknca_data = slopes_pknca_data,
+      rules = settings_rules,
       bioavailability = reactive(input$bioavailability)
     )
   })

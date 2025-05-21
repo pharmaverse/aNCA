@@ -26,14 +26,10 @@ tab_nca_ui <- function(id) {
     download_settings_ui(ns("download_settings")),
     navset_tab(
       id = ns("ncapanel"),
-      #' Pre-nca setup
       nav_panel(
         "Setup",
         fluid = TRUE,
-        navset_pill_list(
-          nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
-          nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
-        )
+        setup_ui(ns("nca_setup")),
       ),
       #' Results
       nav_panel(
@@ -85,25 +81,19 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       }, error = function(e) {
         log_error(e$message)
         showNotification(e$message, type = "error", duration = NULL)
-        return(NULL)
+        NULL
       })
     }) |>
       bindEvent(adnca_data())
 
-    #' NCA Setup module
-    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
+    # #' NCA Setup module
+    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, res_nca)
+
     processed_pknca_data <- nca_setup$processed_pknca_data
     slopes_pknca_data <- nca_setup$slopes_pknca_data
     rules <- nca_setup$rules
     f_auc_options <- nca_setup$bioavailability
-
-    #' Slope rules setup module
-    slope_rules <- slope_selector_server(
-      "slope_selector",
-      slopes_pknca_data,
-      res_nca,
-      reactive(input$settings_upload)
-    )
+    slope_rules <- nca_setup$slope_rules
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
 
@@ -168,7 +158,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         }, error = function(e) {
           log_error("Error calculating NCA results:\n{conditionMessage(e)}")
           showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
-          return(NULL)
+          NULL
         })
       })
     }) |>
