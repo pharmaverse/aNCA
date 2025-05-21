@@ -14,7 +14,7 @@ units_table_ui <- function(id) {
       ns("open_units_table"),
       icon = icon("scale-balanced"),
       label = "Parameter Units",
-      disabled = TRUE
+      disabled = FALSE
     )
   )
 }
@@ -23,52 +23,12 @@ units_table_server <- function(id, mydata) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    #' Allow user to open the units table when data is available
-    observeEvent(mydata(), {
-      updateActionButton(
-        session = session,
-        inputId = "open_units_table",
-        disabled = FALSE
-      )
-    })
-
     # Define the modal message displayed with the parameter units table #
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
-      
+
       # Make a reactive variable from the units table
       modal_units_table(mydata()$units)
-
-      # Keep in a variable all analytes available
-      group_cols_for_units <- mydata()$units %>%
-        select(-any_of(c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))) %>%
-        colnames()
-      groups_for_units <- mydata()$intervals %>%
-        select(any_of(group_cols_for_units)) %>%
-        unique()
-      
-      groups_as_filter_ops <- apply(groups_for_units, 1, function(x) {
-        paste0(names(x), " == '", x, "'") %>%
-          paste(collapse = " | ") %>%
-          paste0("(", ., ")")
-      })
-      names(groups_as_filter_ops) <- apply(groups_for_units, 1, function(x) {
-        paste0(names(x), ": ", x) %>%
-          paste(collapse = ", ")
-      })
-      
-
-      groups_for_units_input <- lapply(
-        colnames(groups_for_units),
-        function(varname) {
-          vals <- unique(groups_for_units[[varname]])
-          setNames(
-            paste0(varname, " == '", vals, "'"),
-            vals
-          )
-        }
-      )
-      names(groups_for_units_input) <- colnames(groups_for_units)
 
       # Show the modal message with the units table and an analyte selector
       showModal(modalDialog(
@@ -88,44 +48,21 @@ units_table_server <- function(id, mydata) {
       ))
     })
 
-    # Define the parameter units table and how is displayed to the user #
-    modal_units_table <- reactiveVal(NULL)
-    observeEvent(mydata()$units, {
-      mydata()$units
-    })
-
-    # Define which parameters where choosen by the user
-    params_to_calculate <- reactive({
-      names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x))) %>%
-        translate_terms("PKNCA", "PPTESTCD")
-    })
-    
+    # Define rows from units table not of interest for the user
     rows_to_hide_units_table <- reactive({
-      group_cols_for_units <- mydata()$units %>%
-        select(-any_of(c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))) %>%
-        colnames()
-      group_vals_for_units <- mydata()$intervals %>%
-        select(any_of(group_cols_for_units)) %>%
-        unique()
-      params_for_units <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
+      group_cols <- intersect(
+        names(PKNCA::getGroups(mydata()$conc)), names(mydata()$units)
+      )
+      groups_to_keep <- select(mydata()$intervals, any_of(group_cols))
+      params_to_keep <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
 
       rows_to_keep <- mydata()$units %>%
-        mutate(rownr = row_number()) %>%
-        inner_join(group_vals_for_units, by = names(group_vals_for_units)) %>%
-        filter(PPTESTCD %in% params_for_units) %>%
-        pull(rownr)
-      rows_to_hide <- setdiff(1:nrow(mydata()$units), rows_to_keep)
-      paste0("[", paste(rows_to_hide, collapse = ", "), "]")
-    })
+        mutate(nrow = row_number()) %>%
+        filter(PPTESTCD %in% params_to_keep)
+      if (ncol(groups_to_keep) > 0) rows_to_keep <- inner_join(rows_to_keep, groups_to_keep)
 
-    params_to_calculate_array_str <- reactive({
-      paste0("['", paste(params_to_calculate(), collapse = "','"), "']")
-    })
-    
-    group_cols_for_units <- reactive({
-      mydata()$units %>%
-        select(-any_of(c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))) %>%
-        colnames()
+      rows_to_hide <- setdiff(1:nrow(mydata()$units), rows_to_keep$nrow)
+      paste0("[", paste(rows_to_hide, collapse = ", "), "]")
     })
 
     #' Rendering the modal units table
@@ -143,7 +80,7 @@ units_table_server <- function(id, mydata) {
           ) %>%
           mutate(Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD"),
                  across(where(is.character), as.factor) %>%
-          mutate(rownr = row_number())
+          mutate(nrow = row_number())
           ),
         escape = FALSE,
         filter = "top",
@@ -157,13 +94,11 @@ units_table_server <- function(id, mydata) {
           )
         ),
         options = list(
-          #order = list(2, "desc"),
           paging = FALSE,
           searching = TRUE,
           autoWidth = TRUE,
           dom = "t",
           # Display only rows with the parameters to run for the NCA
-          ### TODO: Not working
           rowCallback = htmlwidgets::JS(
             paste0(
               "
@@ -254,7 +189,7 @@ units_table_server <- function(id, mydata) {
         showNotification(
           paste0(
             "Please, make sure to use only recognised convertible units in `Custom Unit` ",
-            "(i.e, day, hr, min, sec, g/L).",
+            "(i.e, day, h, min, sec, g/L).",
             " If not, introduce yourself the corresponding `Conversion Factor` value in: ",
             paste(invalid_entries, collapse = ", ")
           ),
@@ -276,30 +211,7 @@ units_table_server <- function(id, mydata) {
     #' Update local `modal_units_table()` is the global value changes.
     observeEvent(session$userData$units_table(), {
       session$userData$units_table() %>%
-        rename(
-          `Analytes` = PARAM,
-          `Parameter` = PPTESTCD,
-          `Default unit` = PPORRESU,
-          `Custom unit` = PPSTRESU,
-          `Conversion Factor` = conversion_factor
-        ) %>%
         modal_units_table()
     })
   })
-}
-
-
-#' Check if units table already exists.
-#' If it does, check if parameters and their default units are the same as pulled
-#' from the data. If they are, there is no need to update the table and we wish to keep
-#' the previously established units.
-#' If the tables differ in content (e.g. when new data is uploaded), then overwrite existing
-#' units table.
-#' @param current Tibble with current units table, or NULL if non-existant.
-#' @param new      Tibble with new units table to replace the current one.
-#' @returns Boolean, TRUE if current table is still valid, FALSE if it is not.
-.validate_current_table <- function(current, new) {
-  !is.null(current) &&
-    all(sort(current$`Parameter`) == sort(new$`Parameter`)) &&
-    all(sort(current$`Default unit`) == sort(new$`Default unit`))
 }
