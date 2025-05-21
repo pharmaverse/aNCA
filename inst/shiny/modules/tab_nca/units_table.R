@@ -75,12 +75,16 @@ units_table_server <- function(id, mydata) {
         title = tagList(
           span("Units of NCA parameter results")
         ),
+        tagList(
+          modalButton("Close"),
+          actionButton(ns("save_units_table"), "Save Units Table")
+        ),
         DTOutput(ns("modal_units_table")),
         footer = tagList(
           modalButton("Close"),
           actionButton(ns("save_units_table"), "Save Units Table")
         ),
-        size = "l"
+        size = "xl"
       ))
     })
 
@@ -94,6 +98,24 @@ units_table_server <- function(id, mydata) {
     params_to_calculate <- reactive({
       names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x))) %>%
         translate_terms("PKNCA", "PPTESTCD")
+    })
+    
+    rows_to_hide_units_table <- reactive({
+      group_cols_for_units <- mydata()$units %>%
+        select(-any_of(c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))) %>%
+        colnames()
+      group_vals_for_units <- mydata()$intervals %>%
+        select(any_of(group_cols_for_units)) %>%
+        unique()
+      params_for_units <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
+
+      rows_to_keep <- mydata()$units %>%
+        mutate(rownr = row_number()) %>%
+        inner_join(group_vals_for_units, by = names(group_vals_for_units)) %>%
+        filter(PPTESTCD %in% params_for_units) %>%
+        pull(rownr)
+      rows_to_hide <- setdiff(1:nrow(mydata()$units), rows_to_keep)
+      paste0("[", paste(rows_to_hide, collapse = ", "), "]")
     })
 
     params_to_calculate_array_str <- reactive({
@@ -109,6 +131,7 @@ units_table_server <- function(id, mydata) {
     #' Rendering the modal units table
     output$modal_units_table <- DT::renderDT({
       req(modal_units_table())
+      req(rows_to_hide_units_table())
 
       datatable(
         data = modal_units_table() %>%
@@ -119,7 +142,8 @@ units_table_server <- function(id, mydata) {
             `Custom unit` = PPSTRESU
           ) %>%
           mutate(Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD"),
-                 across(where(is.character), as.factor)
+                 across(where(is.character), as.factor) %>%
+          mutate(rownr = row_number())
           ),
         escape = FALSE,
         filter = "top",
@@ -133,31 +157,31 @@ units_table_server <- function(id, mydata) {
           )
         ),
         options = list(
-          order = list(2, "desc"),
+          #order = list(2, "desc"),
           paging = FALSE,
           searching = TRUE,
           autoWidth = TRUE,
-          dom = "ft",
+          dom = "t",
           # Display only rows with the parameters to run for the NCA
           ### TODO: Not working
-          # rowCallback = htmlwidgets::JS(
-          #   paste0(
-          #     "
-          #     function(row, data, index) {
-          #     var paramsToCalculate = ", params_to_calculate_array_str(),
-          #     ";
-          #     if (paramsToCalculate.indexOf(data[1]) === -1) {
-          #     $(row).hide();
-          #     }
-          #     }"
-          #   )
-          # ),
+          rowCallback = htmlwidgets::JS(
+            paste0(
+              "
+              function(row, data, index) {
+                var rowsToHide =", rows_to_hide_units_table(),
+                ";
+                console.log(rowsToHide);
+                if (rowsToHide.includes(data[", ncol(modal_units_table()),"])) {
+                  $(row).hide();
+                }
+              }
+              "
+            )
+          ),
           columnDefs = list(
             list(
-              searchable = FALSE,
-              targets = which(
-                c("PPORRES", "PPSTRES") %in% names(mydata()$units)
-              )
+              visible = FALSE,
+              targets = ncol(modal_units_table())
             )
           )
         )
@@ -166,7 +190,6 @@ units_table_server <- function(id, mydata) {
 
     # Accept user modifications in the modal units table
     observeEvent(input$modal_units_table_cell_edit, {
-      browser()
       info <- input$modal_units_table_cell_edit
       modal_units_table <- modal_units_table()
       col_conv_factor <- which(names(modal_units_table) == "conversion_factor")
@@ -208,7 +231,7 @@ units_table_server <- function(id, mydata) {
           )
         }
 
-        modal_units_table[rows_to_change, "Conversion Factor"] <- conversion_factor_value
+        modal_units_table[info$row, "conversion_factor"] <- conversion_factor_value
       }
 
       # Update the server table
@@ -218,10 +241,14 @@ units_table_server <- function(id, mydata) {
     # When save button is pressed substitute the original units table based on the modal one
     observeEvent(input$save_units_table, {
       # Make sure there are no missing entries (no NA in conversion factor)
-      if (any(is.na(modal_units_table()$`Conversion Factor`))) {
+      if (any(is.na(modal_units_table()$conversion_factor))) {
+        id_cols <- setdiff(names(mydata()$units),
+                           c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor"))
         invalid_entries <- modal_units_table() %>%
-          filter(is.na(`Conversion Factor`)) %>%
-          mutate(entry = paste0(Parameter, " (", Analytes, ")")) %>%
+          filter(is.na(`conversion_factor`)) %>%
+          mutate(
+            entry = paste0(PPTESTCD, " (", paste(!!!syms(id_cols), sep = ", "), ")")
+          ) %>%
           pull(entry)
 
         showNotification(
@@ -240,13 +267,6 @@ units_table_server <- function(id, mydata) {
 
       log_trace("Applying custom units specification.")
       modal_units_table() %>%
-        rename(
-          PARAM = `Analytes`,
-          PPTESTCD = `Parameter`,
-          PPORRESU = `Default unit`,
-          PPSTRESU = `Custom unit`,
-          conversion_factor = `Conversion Factor`
-        ) %>%
         session$userData$units_table()
 
       # Close the modal message window for the user
@@ -268,17 +288,6 @@ units_table_server <- function(id, mydata) {
   })
 }
 
-# Create a function to provide a clean display of the modal units table
-.clean_display_units_table <- function(modal_units_table, sel_filter_operations) {
-
-  modal_units_table #%>%
-    # mutate(`Conversion Factor` = signif(`Conversion Factor`, 3)) %>%
-    # filter(`Analytes` %in% selected_analytes) %>%
-    # group_by(Parameter, `Default unit`, `Conversion Factor`, `Custom unit`) %>%
-    # mutate(Analytes = paste(Analytes, collapse = ", ")) %>%
-    # ungroup() %>%
-    # unique()
-}
 
 #' Check if units table already exists.
 #' If it does, check if parameters and their default units are the same as pulled
