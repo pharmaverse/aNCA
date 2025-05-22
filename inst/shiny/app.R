@@ -36,7 +36,6 @@ ui <- function() {
   page_sidebar(
     id = "sidebar",
     title = "aNCA",
-    theme = bs_theme(bootswatch = "flatly"),
 
     tags$script("
       Shiny.addCustomMessageHandler('update', function(value) {
@@ -55,6 +54,7 @@ ui <- function() {
 
     sidebar = navset_pill_list(
       id = "page",
+      well = FALSE,
       selected = "data",
       # DATA ----
       nav_panel(
