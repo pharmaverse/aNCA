@@ -193,7 +193,7 @@ base::local({
       0,
       0,
       0,
-      5,
+      5
     ),
     NRRLT = c(
       0,
@@ -204,11 +204,12 @@ base::local({
       0,
       0,
       0,  # 8.1 (A,B)
-      0,  # 8.2 (A,B)
+      0   # 8.2 (A,B)
     ),
     ROUTE = c(
-      rep("extravascular", 3),
-      rep("intravascular", 5),
+      rep("extravascular", 3), # 1.1, 2.1, 2.2
+      rep("intravascular", 5), # 2.2 - 6.1
+      "extravascular",  # 7.1 (A)
       "extravascular",  # 8.1 (A,B)
       "intravascular"   # 8.2 (A,B)
     ),
@@ -220,9 +221,8 @@ base::local({
       1,
       1,
       1,
-      # Patient 8
-      10,
-      5,
+      10,             # 8.1 (A,B)
+      5               # 8.2 (A,B)
     ),
     DRUG = "A",
     ADOSEDUR = c(
@@ -231,7 +231,7 @@ base::local({
       0,
       0,
       0,           
-      0,
+      0
     ),
     USUBJID = c(
       1,

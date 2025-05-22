@@ -429,20 +429,31 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
   # Extract relevant columns from o_conc and o_dose
   group_dose_cols <- names(PKNCA::getGroups(o_dose))
   group_conc_cols <- names(PKNCA::getGroups(o_conc))
-  uconc_col <- o_conc$columns$concu
-  utime_col <- o_conc$columns$timeu
-  udose_col <- o_dose$columns$doseu
+  concu_col <- o_conc$columns$concu
+  timeu_col <- o_conc$columns$timeu
+  doseu_col <- o_dose$columns$doseu
+  
+  # Force the creation of columns if unit columns were not defined
+  # Note: (This is a problem case that won't never apply to the App)
+  if (is.null(concu_col)) {
+    concu_col <- "concu"
+    if (!is.null(o_conc$units$concu) {
+      o_conc$data$concu <- o_conc$units$concu
+    } else {
+      o_conc$data$concu <- NA_character_
+    }
+  }
 
   # Join concentration and dose data (groups and units)
   groups_units_tbl <- left_join(
-    o_conc$data %>% select(any_of(c(group_conc_cols, uconc_col, utime_col))),
-    o_dose$data %>% select(any_of(c(group_dose_cols, udose_col))),
+    o_conc$data %>% select(any_of(c(group_conc_cols, concu_col, timeu_col))),
+    o_dose$data %>% select(any_of(c(group_dose_cols, doseu_col))),
     by = intersect(group_conc_cols, group_dose_cols)
   ) %>%
   # Derive the minimum expression of groups for the units
     select(-any_of(c(o_conc$columns$subject, o_dose$columns$subject))) %>%
     unique() %>%
-    select_relevant_columns(c(uconc_col, utime_col, udose_col))
+    select_relevant_columns(c(concu_col, timeu_col, doseu_col))
 
   # TODO: Add some checkings for the groups_units_tbl
   
@@ -452,17 +463,17 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
     mutate(
       pknca_units_tbl = list(
         PKNCA::pknca_units_table(
-          concu = !!sym(uconc_col),
-          doseu = !!sym(udose_col),
-          amountu = !!sym(udose_col),
-          timeu = !!sym(utime_col)
+          concu = if (!is.null(concu_col)) !!sym(concu_col) else o_conc$units$concu,
+          doseu = if (!is.null(doseu_col)) !!sym(doseu_col) else o_dose$units$doseu,
+          amountu = if (!is.null(concu_col)) !!sym(concu_col) else o_conc$units$concu,
+          timeu = if (!is.null(timeu_col)) !!sym(timeu_col) else o_conc$units$timeu
         )
       )
     ) %>%
     
     # Combine all PKNCA units tables into one
     unnest(cols = c(pknca_units_tbl)) %>%
-    select(-any_of(c(uconc_col, utime_col, udose_col))) %>%
+    select(-any_of(c(concu_col, timeu_col, doseu_col))) %>%
     mutate(
       PPSTRESU = PPORRESU,
       conversion_factor = 1
@@ -472,6 +483,10 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
 }
 
 select_relevant_columns <- function(data, target_col) {
+
+  # If there is no target_col specified, simply return the original data
+  if (is.null(target_col)) return(data)
+
   # Convert all columns to numeric factors for comparison
   data_binary <- data %>%
     mutate(target_col_derived = paste(!!!syms(target_col), sep = "_")) %>%

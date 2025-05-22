@@ -69,7 +69,6 @@ describe("PKNCA_create_data_object", {
       PKNCA_create_data_object(missing_columns_dose),
       paste("Missing required columns: AFRLT")
     )
-
   })
 
   it("handles multiple analytes", {
@@ -468,14 +467,16 @@ describe("PKNCA_build_units_table", {
       data.conc = PKNCA::PKNCAconc(conc_data, AVAL ~ AFRLT | USUBJID / PARAM / PCSPEC),
       data.dose = PKNCA::PKNCAdose(dose_data, ADOSE ~ AFRLT | USUBJID / PARAM / PCSPEC, amount.units = "DOSEU", time.units = "RRLTU")
     )
+
+    pknca_data <- FIXTURE_PKNCA_DATA
     # Build units table
-    units_table <- PKNA_build_units_table(pknca_obj)
+    units_table <- PKNCA_build_units_table(pknca_data$conc, pknca_data$dose)
     # Check that the distinguishing columns are present
     expect_true(all(c("AVALU", "DOSEU", "RRLTU") %in% colnames(units_table)))
     # Check that there are rows for each unique combination of PARAM, PCSPEC, and units
     expect_true(any(duplicated(units_table[, c("PARAM", "PCSPEC")])))
   })
-  
+
   it("includes only relevant columns when units are the same for all", {
     conc_data <- data.frame(
       USUBJID = rep(1:2, each = 2),
