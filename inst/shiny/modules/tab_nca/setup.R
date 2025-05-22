@@ -42,12 +42,47 @@ setup_ui <- function(id) {
 #'  which contains data and NCA specifications.
 setup_server <- function(id, data, adnca_data, res_nca) {
   moduleServer(id, function(input, output, session) {
+    # Gather all settings from the appropriate module
     settings <- settings_server("nca_settings", data, adnca_data)
 
     setup <- settings$all_settings
-    processed_pknca_data <- settings$processed_pknca_data
     settings_rules <- settings$rules
     f_auc_options <- settings$bioavailability
+
+    # Create processed data object with applied settings.
+
+    processed_pknca_data <- reactive({
+      req(adnca_data(), setup())
+      log_trace("Updating PKNCA::data object.")
+
+      processed_pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        auc_data = setup()$partial_aucs,
+        method = setup()$method,
+        selected_analytes = setup()$analyte,
+        selected_dosno = setup()$doseno,
+        selected_pcspec = setup()$pcspec,
+        params = setup()$parameter_selection,
+        should_impute_c0 = setup()$data_imputation$impute_c0
+      )
+
+      # Show bioavailability widget if it is possible to calculate
+      if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+        shinyjs::show(selector = ".bioavailability-picker")
+      } else {
+        shinyjs::hide(selector = ".bioavailability-picker")
+      }
+
+      if (nrow(processed_pknca_data$intervals) == 0) {
+        showNotification(
+          "All intervals were filtered. Please revise your settings",
+          type = "warning",
+          duration = 10
+        )
+      }
+
+      processed_pknca_data
+    })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)

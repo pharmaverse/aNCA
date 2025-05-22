@@ -79,13 +79,17 @@ settings_ui <- function(id) {
           ),
           column(4, # pickerinput only enabled when IV and EX data present
             shinyjs::hidden(
-              pickerInput(
-                ns("bioavailability"),
-                "Calculate Bioavailability:",
-                choices = pknca_cdisc_terms$PPTESTCD %>%
-                  subset(startsWith(., "FABS_") | startsWith(., "FREL_")),
-                multiple = TRUE,
-                selected = NULL
+              div(
+                class = "bioavailability-picker",
+                pickerInput(
+                  ns("bioavailability"),
+                  "Calculate Bioavailability:",
+                  choices = pknca_cdisc_terms %>%
+                    filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
+                    pull(PKNCA, PPTESTCD),
+                  multiple = TRUE,
+                  selected = NULL
+                )
               )
             )
           )
@@ -494,51 +498,6 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
       ))
     })
 
-    # Create version for NCA results
-    # NCA dynamic changes/filters based on user selections
-    processed_pknca_data <- eventReactive(setup_trigger_debounced(), {
-      req(adnca_data(), input$method, input$select_analyte,
-          input$select_doseno, input$select_pcspec, auc_data())
-      log_trace("Updating PKNCA::data object.")
-
-      processed_pknca_data <- PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        auc_data = auc_data(),
-        method = input$method,
-        selected_analytes = input$select_analyte,
-        selected_dosno = input$select_doseno,
-        selected_pcspec = input$select_pcspec,
-        params = nca_params(),
-        should_impute_c0 = input$should_impute_c0
-      )
-
-      # Add picker input if bioavailability calculations are possible
-      if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
-        shinyjs::show("bioavailability")
-
-        f_options <- pknca_cdisc_terms %>%
-          filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
-          pull(PKNCA, PPTESTCD)
-
-        updatePickerInput(
-          session,
-          inputId = "bioavailability",
-          "Calculate Bioavailability:",
-          choices = f_options,
-          selected = f_options[1]
-        )
-      }
-
-      if (nrow(processed_pknca_data$intervals) == 0) {
-        showNotification(
-          "All intervals were filtered. Please revise your settings.",
-          type = "warning", duration = 10
-        )
-      }
-
-      processed_pknca_data
-    })
-
     all_settings <- reactive({
       list(
         analyte = input$select_analyte,
@@ -596,7 +555,6 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
 
     list(
       all_settings = all_settings,
-      processed_pknca_data = processed_pknca_data,
       rules = settings_rules,
       bioavailability = reactive(input$bioavailability)
     )
