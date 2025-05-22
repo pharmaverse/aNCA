@@ -2,9 +2,30 @@ setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
-    nav_panel("Summary", summary_ui(ns("nca_setup_summary"))),
-    nav_panel("Settings", settings_ui(ns("nca_settings"))),
-    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
+    nav_panel(
+      "Settings",
+      fluidRow(
+        column(6,
+          fileInput(
+            ns("settings_upload"),
+            width = "100%",
+            label = "Upload settings",
+            buttonLabel = list(icon("folder"), "Browse"),
+            accept = c(".csv", ".xpt")
+          )
+        ),
+        column(6,
+          downloadButton(
+            ns("settings_download"),
+            label = "Download settings"
+          )
+        )
+      ),
+      fluidRow(units_table_ui(ns("units_table"))),
+      settings_ui(ns("nca_settings"))
+    ),
+    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
+    nav_panel("Summary", summary_ui(ns("nca_setup_summary")))
   )
 }
 
@@ -27,6 +48,9 @@ setup_server <- function(id, data, adnca_data, res_nca) {
     processed_pknca_data <- settings$processed_pknca_data
     settings_rules <- settings$rules
     f_auc_options <- settings$bioavailability
+
+    # Parameter unit changes option: Opens a modal message with a units table to edit
+    units_table_server("units_table", processed_pknca_data)
 
     # Create version for slope plots
     # Only parameters required for the slope plots are set in intervals

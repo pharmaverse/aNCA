@@ -23,7 +23,6 @@ tab_nca_ui <- function(id) {
 
   fluidPage(
     actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    download_settings_ui(ns("download_settings")),
     navset_tab(
       id = ns("ncapanel"),
       nav_panel(
@@ -193,9 +192,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, f_auc_options)
-
-    #' Settings download module
-    download_settings_server("download_settings", processed_pknca_data, res_nca)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)

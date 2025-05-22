@@ -37,13 +37,6 @@ settings_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    fileInput(
-      ns("settings_upload"),
-      width = "60%",
-      label = "Upload Settings",
-      buttonLabel = list(icon("folder"), "Browse"),
-      accept = c(".csv", ".xpt")
-    ),
     accordion(
       accordion_panel(
         title = "General Settings",
@@ -95,8 +88,7 @@ settings_ui <- function(id) {
                 selected = NULL
               )
             )
-          ),
-          column(4, units_table_ui(ns("units_table")))
+          )
         )
       ),
       accordion_panel(
@@ -547,11 +539,7 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
       processed_pknca_data
     })
 
-    # Parameter unit changes option: Opens a modal message with a units table to edit
-    units_table_server("units_table", processed_pknca_data)
-
     all_settings <- reactive({
-      req(input$select_analyte, input$select_doseno, input$select_pcspec)
       list(
         analyte = input$select_analyte,
         doseno = input$select_doseno,
