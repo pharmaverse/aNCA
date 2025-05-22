@@ -33,7 +33,11 @@ base::local({
       rep(2, 5),              # 4.1 (IV bolus, abnormal profile)
       c(1, 2.5, 1, 0.7, 0.5), # 5.1 (Infusion)
       5:1,                    # 6.1 (IV bolus, metabolite)
-      c(1:3, NA, 0.5)         # 7.1 (Extravascular, with NA)
+      c(1:3, NA, 0.5),        # 7.1 (Extravascular, with NA)
+      c(1:3, NA, 0.5),        # 8.1 (A)
+      c(0:2, NA, 0.5),        # 8.1 (B)
+      c(5:3, NA, 0.5),        # 8.2 (A)
+      c(4:2, NA, 0.5)         # 8.2 (B)
     ),
     AFRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -44,7 +48,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(5.5, 9.5, 1),        # 8.2 (A)
+      seq(5.5, 9.5, 1)         # 8.2 (B)
     ),
     ARRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -55,7 +64,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(0.5, 4.5, 1),        # 8.2 (A)
+      seq(0.5, 4.5, 1)         # 8.2 (B)
     ),
     NFRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -66,7 +80,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(5.5, 9.5, 1),        # 8.2 (A)
+      seq(5.5, 9.5, 1)         # 8.2 (B)
     ),
     NRRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -77,16 +96,30 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(0.5, 4.5, 1),        # 8.2 (A)
+      seq(0.5, 4.5, 1)         # 8.2 (B)
     ),
     ROUTE = c(
       rep("extravascular", 5 * 3), # 1.1 - 2.2
-      rep("intravascular", 5 * 6)  # 3.1 - 7.1
+      rep("intravascular", 5 * 6),  # 3.1 - 7.1
+      # Patient 8      
+      rep("extravascular", 5), # 8.1 (A)
+      rep("extravascular", 5), # 8.1 (B)
+      rep("intravascular", 5), # 8.2 (A)
+      rep("intravascular", 5)  # 8.2 (B)
     ),
     PARAM = c(
       rep("A", 5 * 7),          # 1.1 - 5.1
       rep("B", 5 * 1),          # 6.1 (IV bolus, metabolite)
-      rep("A", 5 * 1)           # 7.1 (Extravascular, with NA)
+      rep("A", 5 * 1),          # 7.1 (Extravascular, with NA)
+      rep("A", 5),              # 8.1 (A)
+      rep("B", 5),              # 8.1 (B)
+      rep("A", 5),              # 8.2 (A)
+      rep("B", 5)               # 8.2 (B)
     ),
     USUBJID = c(
       rep(1, 5),
@@ -95,7 +128,8 @@ base::local({
       rep(4, 5),
       rep(5, 5),
       rep(6, 5),
-      rep(7, 5)
+      rep(7, 5),
+      rep(8, 20)                # 8.1 (A,B), 8.2 (A,B)
     ),
     DOSNO = c(
       rep(1, 5),
@@ -104,23 +138,25 @@ base::local({
       rep(1, 5),
       rep(1, 5),
       rep(1, 5),
-      rep(1, 5)
-    ),
-    DOSNO = c(
-      1,
-      c(1, 2),
-      c(1, 2),
-      1,
-      1,
-      1,
-      1
+      rep(1, 5),
+      # Patient 8
+      rep(1, 10),               # 8.1 (A,B)
+      rep(2, 10)                # 8.2 (A,B)
     ),
     # Included by aNCA internally
     is.excluded.hl = FALSE,
     is.included.hl = FALSE,
     exclude_half.life = FALSE,
     # Units
-    AVALU = "mg/L",
+    AVALU = c(
+    rep("mg/mL", 5 * 7),     # 1.1 - 5.1 (A)
+    rep("ug/mL", 5),         # 6.1 (B)
+    rep("ng/mL", 5),         # 7.1 (A)
+    rep("ng/mL", 5),         # 8.1 (A)
+    rep("ug/mL", 5),         # 8.1 (B)
+    rep("ng/mL", 5),         # 8.2 (A)
+    rep("ug/mL", 5)          # 8.2 (B)
+    ),
     RRLTU = "h"
   )
 
@@ -133,12 +169,16 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,
+      5
     ),
     ARRLT = c(
       0,
       c(0, 0),
       c(0, 0),
+      0,
+      0,
       0,
       0,
       0,
@@ -151,7 +191,9 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,
+      5,
     ),
     NRRLT = c(
       0,
@@ -160,20 +202,36 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,  # 8.1 (A,B)
+      0,  # 8.2 (A,B)
     ),
     ROUTE = c(
       rep("extravascular", 3),
       rep("intravascular", 5),
-      "extravascular"
+      "extravascular",  # 8.1 (A,B)
+      "intravascular"   # 8.2 (A,B)
     ),
-    ADOSE = 1,
+    ADOSE = c(
+      1,
+      c(1, 2),
+      c(1, 2),
+      1,
+      1,
+      1,
+      1,
+      # Patient 8
+      10,
+      5,
+    ),
     DRUG = "A",
     ADOSEDUR = c(
       rep(0, 6),
       1,            # 5.1 (Infusion)
       0,
-      0
+      0,
+      0,           
+      0,
     ),
     USUBJID = c(
       1,
@@ -182,7 +240,8 @@ base::local({
       4,
       5,
       6,
-      7
+      7,
+      rep(8, 2)
     ),
     DOSNO = c(
       1,
@@ -191,7 +250,8 @@ base::local({
       1,
       1,
       1,
-      1
+      1,
+      c(1, 2)
     ),
     DOSNOA = c(
       1,
@@ -200,7 +260,8 @@ base::local({
       1,
       1,
       1,
-      1
+      1,
+      c(1, 2)
     )
   )
 
