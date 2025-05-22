@@ -364,33 +364,23 @@ describe("PKNCA_impute_method_start_c1", {
 describe("PKNCA_build_units_table", {
   it("includes AVALU, DOSEU, RRLTU columns when units differ by PARAM and/or PCSPEC", {
     # Create a data frame with different units for different analytes and specimens
-    conc_data <- data.frame(
-      USUBJID = rep(1:2, each = 4),
-      PARAM = rep(c("A", "B"), each = 2, times = 2),
-      PCSPEC = rep(c("Plasma", "Urine"), times = 4),
-      AVAL = 1:8,
-      AVALU = c("ng/mL", "ng/mL", "ug/mL", "ug/mL", "ng/mL", "ng/mL", "ug/mL", "ug/mL"),
-      AFRLT = rep(0:1, 4),
-      ARRLT = rep(0:1, 4),
-      NFRLT = rep(0:1, 4),
-      RRLTU = c("hour", "hour", "min", "min", "hour", "hour", "min", "min")
+    
+    
+    
+    pknca_conc <- PKNCA::PKNCAconc(
+      FIXTURE_CONC_DATA,
+      AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "AVALU",
+      timeu = "RRLTU"
     )
-    dose_data <- data.frame(
-      USUBJID = rep(1:2, each = 2),
-      PARAM = rep(c("A", "B"), times = 2),
-      PCSPEC = rep(c("Plasma", "Urine"), times = 2),
-      ADOSE = 1:4,
-      DOSEU = c("mg", "mg", "ug", "ug"),
-      AFRLT = rep(0, 4),
-      ARRLT = rep(0, 4),
-      NFRLT = rep(0, 4),
-      RRLTU = c("hour", "hour", "min", "min")
+    pknca_dose <- PKNCA::PKNCAdose(
+      FIXTURE_DOSE_DATA,
+      ADOSE ~ AFRLT | USUBJID,
+      amount.units = "DOSEU",
+      time.units = "RRLTU"
     )
-    # Create PKNCAdata object
-    pknca_obj <- PKNCA::PKNCAdata(
-      data.conc = PKNCA::PKNCAconc(conc_data, AVAL ~ AFRLT | USUBJID / PARAM / PCSPEC),
-      data.dose = PKNCA::PKNCAdose(dose_data, ADOSE ~ AFRLT | USUBJID / PARAM / PCSPEC, amount.units = "DOSEU", time.units = "RRLTU")
-    )
+    
+
     # Build units table
     units_table <- PKNA_build_units_table(pknca_obj)
     # Check that the distinguishing columns are present
