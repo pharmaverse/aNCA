@@ -426,23 +426,32 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 }
 
 PKNCA_build_units_table <- function(o_conc, o_dose) {
+
+  # Force the creation of columns if unit columns were not defined
+  # Note: (This is a problem case that won't never apply to the App)
+  ensure_column_unit_exists <- function(pknca_obj, unit_name) {
+    if (is.null(pknca_obj$columns[[unit_name]])) {
+      unit_colname <- make.unique(c(names(pknca_obj$data), unit_name))[ncol(pknca_obj$data) + 1]
+      pknca_obj$columns[[unit_name]] <- unit_colname
+      if (!is.null(pknca_obj$units[[unit_name]])) {
+        pknca_obj$data[[unit_colname]] <- pknca_obj$units[[unit_name]]
+      } else {
+        pknca_obj$data[[unit_colname]] <- NA_character_
+      }
+    }
+    pknca_obj
+  }
+  o_conc <- ensure_column_unit_exists(o_conc, "concu")
+  o_conc <- ensure_column_unit_exists(o_conc, "amountu")
+  o_conc <- ensure_column_unit_exists(o_conc, "timeu")
+  o_dose <- ensure_column_unit_exists(o_dose, "doseu")
+
   # Extract relevant columns from o_conc and o_dose
   group_dose_cols <- names(PKNCA::getGroups(o_dose))
   group_conc_cols <- names(PKNCA::getGroups(o_conc))
   concu_col <- o_conc$columns$concu
   timeu_col <- o_conc$columns$timeu
   doseu_col <- o_dose$columns$doseu
-  
-  # Force the creation of columns if unit columns were not defined
-  # Note: (This is a problem case that won't never apply to the App)
-  if (is.null(concu_col)) {
-    concu_col <- "concu"
-    if (!is.null(o_conc$units$concu) {
-      o_conc$data$concu <- o_conc$units$concu
-    } else {
-      o_conc$data$concu <- NA_character_
-    }
-  }
 
   # Join concentration and dose data (groups and units)
   groups_units_tbl <- left_join(
@@ -463,14 +472,14 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
     mutate(
       pknca_units_tbl = list(
         PKNCA::pknca_units_table(
-          concu = if (!is.null(concu_col)) !!sym(concu_col) else o_conc$units$concu,
-          doseu = if (!is.null(doseu_col)) !!sym(doseu_col) else o_dose$units$doseu,
-          amountu = if (!is.null(concu_col)) !!sym(concu_col) else o_conc$units$concu,
-          timeu = if (!is.null(timeu_col)) !!sym(timeu_col) else o_conc$units$timeu
+          concu = !!sym(concu_col),
+          doseu = !!sym(doseu_col),
+          amountu = !!sym(concu_col),
+          timeu = !!sym(timeu_col)
         )
       )
     ) %>%
-    
+
     # Combine all PKNCA units tables into one
     unnest(cols = c(pknca_units_tbl)) %>%
     select(-any_of(c(concu_col, timeu_col, doseu_col))) %>%
