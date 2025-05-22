@@ -59,7 +59,7 @@ settings_ui <- function(id) {
           ),
           column(4,
             selectInput(
-              ns("select_dosno"),
+              ns("select_doseno"),
               "Choose the Dose Number:",
               multiple = TRUE,
               choices = NULL
@@ -230,7 +230,7 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
 
       updateSelectInput(
         session,
-        inputId = "select_dosno",
+        inputId = "select_doseno",
         label = "Choose the Dose Number:",
         choices = rows_for_selected_analytes$DOSNO,
         selected = doses_selected
@@ -330,7 +330,7 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
 
       updateSelectInput(
         session,
-        inputId = "select_dosno",
+        inputId = "select_doseno",
         choices = unique(data()$DOSNO),
         selected = unique(data()$DOSNO)[1]
       )
@@ -480,7 +480,7 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
         nca_params(),
         input$should_impute_c0,
         input$select_analyte,
-        input$select_dosno,
+        input$select_doseno,
         input$select_pcspec
       )
     })
@@ -502,33 +502,11 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
       ))
     })
 
-    # Create version for slope plots
-    # Only parameters required for the slope plots are set in intervals
-    # NCA dynamic changes/filters based on user selections
-    slopes_pknca_data <- eventReactive(setup_trigger_debounced(), {
-      req(adnca_data(), input$method, input$select_analyte,
-          input$select_dosno, input$select_pcspec)
-      log_trace("Updating PKNCA::data object for slopes.")
-      slopes_pknca_data <- PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        auc_data = auc_data(),
-        method = input$method,
-        selected_analytes = input$select_analyte,
-        selected_dosno = input$select_dosno,
-        selected_pcspec = input$select_pcspec,
-        params = c("lambda.z.n.points", "lambda.z.time.first",
-                   "r.squared", "adj.r.squared", "tmax"),
-        should_impute_c0 = input$should_impute_c0
-      )
-
-      slopes_pknca_data
-    })
-
     # Create version for NCA results
     # NCA dynamic changes/filters based on user selections
     processed_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
-          input$select_dosno, input$select_pcspec, auc_data())
+          input$select_doseno, input$select_pcspec, auc_data())
       log_trace("Updating PKNCA::data object.")
 
       processed_pknca_data <- PKNCA_update_data_object(
@@ -536,7 +514,7 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
         auc_data = auc_data(),
         method = input$method,
         selected_analytes = input$select_analyte,
-        selected_dosno = input$select_dosno,
+        selected_dosno = input$select_doseno,
         selected_pcspec = input$select_pcspec,
         params = nca_params(),
         should_impute_c0 = input$should_impute_c0
@@ -572,13 +550,12 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
 
-    all_settings <- reactive(
+    all_settings <- reactive({
+      req(input$select_analyte, input$select_doseno, input$select_pcspec)
       list(
-        general = list(
-          analyte = input$select_analyte,
-          doseno = input$select_doseno,
-          pcspec = input$select_pcspec
-        ),
+        analyte = input$select_analyte,
+        doseno = input$select_doseno,
+        pcspec = input$select_pcspec,
         method = input$method,
         bioavailability = input$bioavailability,
         parameter_selection = nca_params(),
@@ -605,7 +582,8 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
           )
         )
       )
-    )
+    }) |>
+      bindEvent(setup_trigger_debounced())
 
     settings_rules <- reactive(
       list(
@@ -631,7 +609,6 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
     list(
       all_settings = all_settings,
       processed_pknca_data = processed_pknca_data,
-      slopes_pknca_data = slopes_pknca_data,
       rules = settings_rules,
       bioavailability = reactive(input$bioavailability)
     )

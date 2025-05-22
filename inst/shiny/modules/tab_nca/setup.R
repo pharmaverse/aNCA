@@ -23,10 +23,30 @@ setup_server <- function(id, data, adnca_data, res_nca) {
   moduleServer(id, function(input, output, session) {
     settings <- settings_server("nca_settings", data, adnca_data)
 
+    setup <- settings$all_settings
     processed_pknca_data <- settings$processed_pknca_data
-    slopes_pknca_data <- settings$slopes_pknca_data
     settings_rules <- settings$rules
     f_auc_options <- settings$bioavailability
+
+    # Create version for slope plots
+    # Only parameters required for the slope plots are set in intervals
+    # NCA dynamic changes/filters based on user selections
+    slopes_pknca_data <- reactive({
+      req(adnca_data(), setup())
+      log_trace("Updating PKNCA::data object for slopes.")
+
+      PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        auc_data = setup()$partial_aucs,
+        method = setup()$method,
+        selected_analytes = setup()$analyte,
+        selected_dosno = setup()$doseno,
+        selected_pcspec = setup()$pcspec,
+        params = c("lambda.z.n.points", "lambda.z.time.first",
+                   "r.squared", "adj.r.squared", "tmax"),
+        should_impute_c0 = setup()$data_imputation$impute_c0
+      )
+    })
 
     slope_rules <- slope_selector_server(
       "slope_selector",
