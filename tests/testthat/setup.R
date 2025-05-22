@@ -262,7 +262,8 @@ base::local({
       1,
       1,
       c(1, 2)
-    )
+    ),
+    DOSEU = "mg/kg"
   )
 
   # Perform NCA Analysis
@@ -325,13 +326,11 @@ base::local({
     ))
 
   FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
+    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM,
+                                 concu = "AVALU", timeu = "RRLTU"),
     data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
                                  route = "ROUTE", duration = "ADOSEDUR",
-                                 time.nominal = "NFRLT"),
-    units = PKNCA::pknca_units_table(
-      concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-    )
+                                 time.nominal = "NFRLT", doseu = "DOSEU"),
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
   FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
