@@ -371,38 +371,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
                                      selected = nca_params)
                  })
 
-    # Create trigger for modifications to the user setup
-    setup_trigger <- reactive({
-      paste(
-        adnca_data(),
-        auc_data(),
-        input$method,
-        nca_params(),
-        input$should_impute_c0,
-        input$select_analyte,
-        input$select_doseno,
-        input$select_pcspec
-      )
-    })
 
-    # Debounce the trigger, so the data is not updated too often.
-    setup_debounce <- 2500
-    setup_trigger_debounced <- debounce(setup_trigger, setup_debounce)
-
-    # On all changes, disable NCA button for given period of time to prevent the user from running
-    # the NCA before settings are applied.
-    observeEvent(setup_trigger(), {
-      runjs(str_glue(
-        "buttonTimeout(
-          '.run-nca-btn',
-          {setup_debounce + 250},
-          'Applying<br>settings...',
-          'Run NCA'
-        );"
-      ))
-    })
-
-    reactive({
+    settings <- reactive({
+      req(input$select_analyte) # Wait on general settings UI to be loaded
       list(
         analyte = input$select_analyte,
         doseno = input$select_doseno,
@@ -433,7 +404,25 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           )
         )
       )
-    }) |>
-      bindEvent(setup_trigger_debounced())
+    })
+
+    # Debounce the trigger, so the data is not updated too often.
+    settings_debounce <- 2500
+    settings_debounced <- debounce(settings, settings_debounce)
+
+    # On all changes, disable NCA button for given period of time to prevent the user from running
+    # the NCA before settings are applied.
+    observeEvent(settings(), {
+      runjs(str_glue(
+        "buttonTimeout(
+          '.run-nca-btn',
+          {settings_debounce + 250},
+          'Applying<br>settings...',
+          'Run NCA'
+        );"
+      ))
+    })
+
+    settings_debounced
   })
 }
