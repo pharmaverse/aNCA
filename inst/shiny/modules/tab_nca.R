@@ -89,9 +89,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, res_nca)
 
     processed_pknca_data <- nca_setup$processed_pknca_data
-    slopes_pknca_data <- nca_setup$slopes_pknca_data
-    rules <- nca_setup$rules
-    f_auc_options <- nca_setup$bioavailability
+    settings <- nca_setup$settings
     slope_rules <- nca_setup$slope_rules
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
@@ -120,7 +118,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               ) %>%
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
-              add_f_to_pknca_results(f_auc_options()) %>%
+              add_f_to_pknca_results(settings()$bioavailability) %>%
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
@@ -184,14 +182,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
 
-    nca_results_server("nca_results",
-                       processed_pknca_data,
-                       res_nca, rules,
-                       grouping_vars,
-                       f_auc_options)
+    nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)
 
     #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, f_auc_options)
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)

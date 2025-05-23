@@ -45,25 +45,21 @@ setup_server <- function(id, data, adnca_data, res_nca) {
     # Gather all settings from the appropriate module
     settings <- settings_server("nca_settings", data, adnca_data)
 
-    setup <- settings$all_settings
-    settings_rules <- settings$rules
-    f_auc_options <- settings$bioavailability
-
     # Create processed data object with applied settings.
 
     processed_pknca_data <- reactive({
-      req(adnca_data(), setup())
+      req(adnca_data(), settings())
       log_trace("Updating PKNCA::data object.")
 
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
-        auc_data = setup()$partial_aucs,
-        method = setup()$method,
-        selected_analytes = setup()$analyte,
-        selected_dosno = setup()$doseno,
-        selected_pcspec = setup()$pcspec,
-        params = setup()$parameter_selection,
-        should_impute_c0 = setup()$data_imputation$impute_c0
+        auc_data = settings()$partial_aucs,
+        method = settings()$method,
+        selected_analytes = settings()$analyte,
+        selected_dosno = settings()$doseno,
+        selected_pcspec = settings()$pcspec,
+        params = settings()$parameter_selection,
+        should_impute_c0 = settings()$data_imputation$impute_c0
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -91,19 +87,19 @@ setup_server <- function(id, data, adnca_data, res_nca) {
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
-      req(adnca_data(), setup())
+      req(adnca_data(), settings())
       log_trace("Updating PKNCA::data object for slopes.")
 
       PKNCA_update_data_object(
         adnca_data = adnca_data(),
-        auc_data = setup()$partial_aucs,
-        method = setup()$method,
-        selected_analytes = setup()$analyte,
-        selected_dosno = setup()$doseno,
-        selected_pcspec = setup()$pcspec,
+        auc_data = settings()$partial_aucs,
+        method = settings()$method,
+        selected_analytes = settings()$analyte,
+        selected_dosno = settings()$doseno,
+        selected_pcspec = settings()$pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
                    "r.squared", "adj.r.squared", "tmax"),
-        should_impute_c0 = setup()$data_imputation$impute_c0
+        should_impute_c0 = settings()$data_imputation$impute_c0
       )
     })
 
@@ -118,9 +114,7 @@ setup_server <- function(id, data, adnca_data, res_nca) {
 
     list(
       processed_pknca_data = processed_pknca_data,
-      slopes_pknca_data = slopes_pknca_data,
-      rules = settings_rules,
-      bioavailability = f_auc_options,
+      settings = settings,
       slope_rules = slope_rules
     )
   })

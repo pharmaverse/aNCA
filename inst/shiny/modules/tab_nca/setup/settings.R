@@ -498,7 +498,7 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
       ))
     })
 
-    all_settings <- reactive({
+    reactive({
       list(
         analyte = input$select_analyte,
         doseno = input$select_doseno,
@@ -531,32 +531,5 @@ settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity 
       )
     }) |>
       bindEvent(setup_trigger_debounced())
-
-    settings_rules <- reactive(
-      list(
-        adj.r.squared = list(
-          is.checked = input$adj.r.squared_rule,
-          threshold = input$adj.r.squared_threshold
-        ),
-        aucpext.obs = list(
-          is.checked = input$aucpext.obs_rule,
-          threshold = input$aucpext.obs_threshold
-        ),
-        aucpext.pred = list(
-          is.checked = input$aucpext.pred_rule,
-          threshold = input$aucpext.pred_threshold
-        ),
-        span.ratio = list(
-          is.checked = input$span.ratio_rule,
-          threshold = input$span.ratio_threshold
-        )
-      )
-    )
-
-    list(
-      all_settings = all_settings,
-      rules = settings_rules,
-      bioavailability = reactive(input$bioavailability)
-    )
   })
 }
