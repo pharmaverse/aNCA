@@ -446,7 +446,8 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' # Assuming `o_conc` and `o_dose` are valid PKNCA objects:
 #' units_table <- PKNCA_build_units_table(o_conc, o_dose)
 #'
-#' @importFrom dplyr select mutate rowwise unnest
+#' @importFrom dplyr select mutate rowwise
+#' @importFrom tidyr unnest
 #' @importFrom rlang sym
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
