@@ -181,6 +181,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
       updateSelectInput(inputId = "method", selected = settings$method)
 
+      params_data <- pknca_cdisc_terms %>%
+        filter(TYPE != "PKNCA-not-covered") %>%
+        pull("PKNCA")
+
+      updateReactable(
+        "nca_parameters",
+        selected = which(params_data %in% settings$parameter_selection)
+      )
+
       # TODO: add the rest of the settings
 
       if (!is.null(settings$bioavailability))
