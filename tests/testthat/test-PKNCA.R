@@ -8,7 +8,7 @@ simple_data <- data.frame(
   DOSNO = rep(1, 6),
   PARAM = rep("AnalyteA", 6),
   AVAL = c(0, 5, 10, 7, 3, 1),
-  AVALU = rep("ng/mL", 6),
+  AVALU = rep(c("ng/mL"), 6),
   DOSEA = rep(100, 6),
   DOSEU = rep("mg", 6),
   AFRLT = c(0.5, 1, 2, 3, 4, 6),
@@ -28,7 +28,7 @@ multiple_data <- data.frame(
   DOSNO = rep(1, 12),
   PARAM = rep(c("AnalyteX", "AnalyteY"), each = 6),
   AVAL = c(0, 2, 8, 6, 4, 1, 0, 10, 20, 18, 8, 3),
-  AVALU = rep("ng/mL", 12),
+  AVALU = rep(c("ng/mL", "mg/mL"), each = 6),
   DOSEA = rep(200, 12),
   DOSEU = rep("mg", 12),
   AFRLT = rep(c(0.5, 1, 2, 3, 4, 6), 2),
@@ -40,6 +40,9 @@ multiple_data <- data.frame(
 
 # Simple example dataset
 pknca_data <- PKNCA_create_data_object(simple_data)
+
+# ToDo (Gerardo): refine PKNCA_create_data_object
+#                 to make less implicit column assumptions
 
 describe("PKNCA_create_data_object", {
   it("creates a PKNCAdata object with concentration, doses, and units based on ADNCA data", {
@@ -76,8 +79,7 @@ describe("PKNCA_create_data_object", {
     results <- PKNCA_create_data_object(multiple_data)
 
     units_table <- results$units
-    #contains PARAM column with two unique values
-    expect_true("PARAM" %in% colnames(units_table))
+    expect_s3_class(units_table, "data.frame")
 
     unique_analytes <- unique(units_table$PARAM)
     expect_equal(length(unique_analytes), 2)
@@ -93,8 +95,16 @@ describe("PKNCA_create_data_object", {
     # Check that flag = FALSE values are removed
     expect_equal(nrow(results$conc$data), 5)
   })
-  # TODO: Add test for multiple units once implemented
 
+  it("produces a message error when missing values are in group columns", {
+    # Duplicate DFLAG values
+    adnca_with_group_na <- multiple_data
+    adnca_with_group_na$PCSPEC[1] <- NA_character_
+    expect_error(
+      PKNCA_create_data_object(adnca_with_group_na),
+      "Missing values detected in grouping columns: PCSPEC"
+    )
+  })
 })
 
 
@@ -142,21 +152,6 @@ describe("PKNCA_update_data_object", {
     expect_true(all(intervals$PCSPEC == "Plasma"))
   })
 
-  it("updates units for each analyte", {
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = method,
-      selected_analytes = analytes,
-      selected_dosno = dosnos,
-      selected_pcspec = pcspecs,
-      params = params,
-      should_impute_c0 = TRUE
-    )
-    unit_analytes <- unique(updated_data$units$PARAM)
-    expect_setequal(unit_analytes, analytes)
-  })
-
   it("sets NCA options correctly", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
@@ -186,42 +181,6 @@ describe("PKNCA_update_data_object", {
     )
     expect_true("impute" %in% names(updated_data))
     expect_true(all(is.na(updated_data$impute)))
-  })
-
-  it("ensures units table has separate rows per analyte", {
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = "lin up log down",
-      selected_analytes = unique(simple_data$PARAM),
-      selected_dosno = unique(simple_data$DOSNO),
-      selected_pcspec = unique(simple_data$PCSPEC),
-      params = c("cmax", "tmax", "auclast", "aucinf.obs"),
-      should_impute_c0 = TRUE
-    )
-
-    # Get units table and analyte column
-    units_table <- updated_data$units
-    analyte_col <- updated_data$conc$columns$groups$group_analyte
-
-    # Extract number of unique analytes and parameters
-    analytes <- unique(units_table[[analyte_col]])
-    params <- unique(units_table$PPTESTCD)
-
-    # Expect a row for every analyte-param combination
-    expected_nrows <- length(analytes) * length(params)
-    expect_equal(nrow(units_table), expected_nrows)
-
-    # Sanity: make sure all analyte-param pairs exist
-    pair_check <- tidyr::crossing(
-      PARAM = analytes,
-      PPTESTCD = params
-    )
-
-    expect_true(all(
-      dplyr::semi_join(pair_check, units_table, by = c("PARAM", "PPTESTCD")) %>%
-        nrow() == nrow(pair_check)
-    ))
   })
 
   it("handles partial AUCs (auc_data) creating proper intervals for each", {
@@ -360,144 +319,85 @@ describe("PKNCA_impute_method_start_c1", {
 })
 
 # Tests for PKNA_build_units_table
-
 describe("PKNCA_build_units_table", {
-  it("includes AVALU, DOSEU, RRLTU columns when units differ by PARAM and/or PCSPEC", {
-    # Create a data frame with different units for different analytes and specimens
-    
-    
-    
-    pknca_conc <- PKNCA::PKNCAconc(
-      FIXTURE_CONC_DATA,
-      AVAL ~ AFRLT | USUBJID / PARAM,
-      concu = "AVALU",
-      timeu = "RRLTU"
-    )
-    pknca_dose <- PKNCA::PKNCAdose(
-      FIXTURE_DOSE_DATA,
-      ADOSE ~ AFRLT | USUBJID,
-      amount.units = "DOSEU",
-      time.units = "RRLTU"
-    )
-    
 
-    # Build units table
-    units_table <- PKNA_build_units_table(pknca_obj)
-    # Check that the distinguishing columns are present
-    expect_true(all(c("AVALU", "DOSEU", "RRLTU") %in% colnames(units_table)))
-    # Check that there are rows for each unique combination of PARAM, PCSPEC, and units
-    expect_true(any(duplicated(units_table[, c("PARAM", "PCSPEC")])))
+  # Subset the data to only include USUBJID 8 (2 analytes, A & B)
+  d_conc <- FIXTURE_CONC_DATA %>%
+    filter(USUBJID == 8)
+  d_dose <- FIXTURE_DOSE_DATA %>%
+    filter(USUBJID == 8)
+  
+  o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                             concu = "AVALU", timeu = "RRLTU")
+  o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
+                             doseu = "DOSEU")
+  units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+
+  it("creates a seggregated valid units table when unit columns are defined in the PKNCA objects", {
+    # Check units_table is a data frame
+    expect_true(is.data.frame(units_table))
+    
+    # Contains the seggregating variable PARAM & parameter unit columns
+    expect_equal(
+      colnames(units_table),
+      c("PARAM", "PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+    )
+    
+    # Differentiates concentration units by PARAM
+    analyte_a_cmax_unit <- units_table %>%
+      dplyr::filter(PARAM == "A", PPTESTCD == "cmax") %>%
+      dplyr::pull(PPSTRESU)
+    analyte_b_cmax_unit <- units_table %>%
+      dplyr::filter(PARAM == "B", PPTESTCD == "cmax") %>%
+      dplyr::pull(PPSTRESU)
+    expect_equal(analyte_a_cmax_unit, "ng/mL")
+    expect_equal(analyte_b_cmax_unit, "ug/mL")
   })
-
-  it("includes only relevant columns when units are the same for all", {
-    conc_data <- data.frame(
-      USUBJID = rep(1:2, each = 2),
-      PARAM = rep("A", 4),
-      PCSPEC = rep("Plasma", 4),
-      AVAL = 1:4,
-      AVALU = rep("ng/mL", 4),
-      AFRLT = rep(0:1, 2),
-      ARRLT = rep(0:1, 2),
-      NFRLT = rep(0:1, 2),
-      RRLTU = rep("hour", 4)
+  
+  it("creates an uniform valid units table when units are not defined as columns in the PKNCA objects", {
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                               concu = "ng/mL", timeu = "h")
+    o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
+                               doseu = "mg")
+    units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+    # Check units_table is a data frame
+    expect_true(is.data.frame(units_table))
+    # Does not consider any seggregating variable
+    expect_equal(
+      colnames(units_table),
+      c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
     )
-    dose_data <- data.frame(
-      USUBJID = rep(1:2, each = 1),
-      PARAM = rep("A", 2),
-      PCSPEC = rep("Plasma", 2),
-      ADOSE = 1:2,
-      DOSEU = rep("mg", 2),
-      AFRLT = rep(0, 2),
-      ARRLT = rep(0, 2),
-      NFRLT = rep(0, 2),
-      RRLTU = rep("hour", 2)
+    # Contains unit values for concentration and dose
+    cmaxdn_unit <- units_table %>%
+      dplyr::filter(PPTESTCD == "cmax.dn") %>%
+      dplyr::pull(PPSTRESU)
+    expect_equal(cmaxdn_unit, "(ng/mL)/mg")
+  })
+  
+  it("creates a NA units tables when units are not defined in the PKNCA objects", {
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM)
+    o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID)
+    units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+    # Check units_table is a data frame
+    expect_true(is.data.frame(units_table))
+    # Does not consider any seggregating variable
+    expect_equal(
+      colnames(units_table),
+      c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
     )
-    pknca_obj <- PKNCA::PKNCAdata(
-      data.conc = PKNCA::PKNCAconc(conc_data, AVAL ~ AFRLT | USUBJID / PARAM / PCSPEC),
-      data.dose = PKNCA::PKNCAdose(dose_data, ADOSE ~ AFRLT | USUBJID / PARAM / PCSPEC, amount.units = "DOSEU", time.units = "RRLTU")
+    # Does not contain any unit values except for adimensional parameters
+    expect_setequal(
+      unique(units_table$PPSTRESU),
+      c("unitless", "fraction", "%", "count", NA)
     )
-    units_table <- PKNA_build_units_table(pknca_obj)
-    expect_true(all(c("AVALU", "DOSEU", "RRLTU") %in% colnames(units_table)))
-    # Only one row should be present
-    expect_equal(nrow(units_table), 1)
   })
 })
 
-
-
-# Tests for PKNA_build_units_table
-
-describe("PKNCA_build_units_table", {
-  it("includes AVALU, DOSEU, RRLTU columns when units differ by PARAM and/or PCSPEC", {
-    # Create a data frame with different units for different analytes and specimens
-    conc_data <- data.frame(
-      USUBJID = rep(1:2, each = 4),
-      PARAM = rep(c("A", "B"), each = 2, times = 2),
-      PCSPEC = rep(c("Plasma", "Urine"), times = 4),
-      AVAL = 1:8,
-      AVALU = c("ng/mL", "ng/mL", "ug/mL", "ug/mL", "ng/mL", "ng/mL", "ug/mL", "ug/mL"),
-      AFRLT = rep(0:1, 4),
-      ARRLT = rep(0:1, 4),
-      NFRLT = rep(0:1, 4),
-      RRLTU = c("hour", "hour", "min", "min", "hour", "hour", "min", "min")
-    )
-    dose_data <- data.frame(
-      USUBJID = rep(1:2, each = 2),
-      PARAM = rep(c("A", "B"), times = 2),
-      PCSPEC = rep(c("Plasma", "Urine"), times = 2),
-      ADOSE = 1:4,
-      DOSEU = c("mg", "mg", "ug", "ug"),
-      AFRLT = rep(0, 4),
-      ARRLT = rep(0, 4),
-      NFRLT = rep(0, 4),
-      RRLTU = c("hour", "hour", "min", "min")
-    )
-    # Create PKNCAdata object
-    pknca_obj <- PKNCA::PKNCAdata(
-      data.conc = PKNCA::PKNCAconc(conc_data, AVAL ~ AFRLT | USUBJID / PARAM / PCSPEC),
-      data.dose = PKNCA::PKNCAdose(dose_data, ADOSE ~ AFRLT | USUBJID / PARAM / PCSPEC, amount.units = "DOSEU", time.units = "RRLTU")
-    )
-
-    pknca_data <- FIXTURE_PKNCA_DATA
-    # Build units table
-    units_table <- PKNCA_build_units_table(pknca_data$conc, pknca_data$dose)
-    # Check that the distinguishing columns are present
-    expect_true(all(c("AVALU", "DOSEU", "RRLTU") %in% colnames(units_table)))
-    # Check that there are rows for each unique combination of PARAM, PCSPEC, and units
-    expect_true(any(duplicated(units_table[, c("PARAM", "PCSPEC")])))
-  })
-
-  it("includes only relevant columns when units are the same for all", {
-    conc_data <- data.frame(
-      USUBJID = rep(1:2, each = 2),
-      PARAM = rep("A", 4),
-      PCSPEC = rep("Plasma", 4),
-      AVAL = 1:4,
-      AVALU = rep("ng/mL", 4),
-      AFRLT = rep(0:1, 2),
-      ARRLT = rep(0:1, 2),
-      NFRLT = rep(0:1, 2),
-      RRLTU = rep("hour", 4)
-    )
-    dose_data <- data.frame(
-      USUBJID = rep(1:2, each = 1),
-      PARAM = rep("A", 2),
-      PCSPEC = rep("Plasma", 2),
-      ADOSE = 1:2,
-      DOSEU = rep("mg", 2),
-      AFRLT = rep(0, 2),
-      ARRLT = rep(0, 2),
-      NFRLT = rep(0, 2),
-      RRLTU = rep("hour", 2)
-    )
-    pknca_obj <- PKNCA::PKNCAdata(
-      data.conc = PKNCA::PKNCAconc(conc_data, AVAL ~ AFRLT | USUBJID / PARAM / PCSPEC),
-      data.dose = PKNCA::PKNCAdose(dose_data, ADOSE ~ AFRLT | USUBJID / PARAM / PCSPEC, amount.units = "DOSEU", time.units = "RRLTU")
-    )
-    units_table <- PKNA_build_units_table(pknca_obj)
-    expect_true(all(c("AVALU", "DOSEU", "RRLTU") %in% colnames(units_table)))
-    # Only one row should be present
-    expect_equal(nrow(units_table), 1)
+describe("select_relevant_columns", {
+  # Note: this case will never happen in the App or PKNCA_build_units_table
+  it("returns the original data if target_columns is NULL", {
+    data <- data.frame(a = 1:5, b = 6:10)
+    result <- select_relevant_columns(data, NULL)
+    expect_equal(result, data)
   })
 })
-
