@@ -21,7 +21,7 @@ among the dose and/or concentration groups.
 \details{
 The function performs the following steps:
 \enumerate{
-\item Ensures that the unit columns (e.g., \code{concu}, \code{timeu}, \code{doseu}, \code{amountu}) exist in the inputs.
+\item Ensures the unit columns (e.g., \code{concu}, \code{timeu}, \code{doseu}, \code{amountu}) exist in the inputs.
 \item Joins the concentration and dose data based on their grouping columns.
 \item Generates a PKNCA units table for each group, including conversion factors and custom units.
 \item Returns a unique table with relevant columns for PKNCA analysis.
