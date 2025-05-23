@@ -428,7 +428,7 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' Build Units Table for PKNCA
 #'
 #' This function generates a PKNCA units table including the potential unit segregating columns
-#' among the dose and/or concentration groups
+#' among the dose and/or concentration groups.
 #'
 #' @param o_conc A PKNCA concentration object (PKNCAconc).
 #' @param o_dose A PKNCA dose object (PKNCAdose).
@@ -437,7 +437,7 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #'
 #' @details
 #' The function performs the following steps:
-#' 1. Ensures that the unit columns (e.g., `concu`, `timeu`, `doseu`) exist in the input objects.
+#' 1. Ensures that the unit columns (e.g., `concu`, `timeu`, `doseu`, `amountu`) exist in the inputs.
 #' 2. Joins the concentration and dose data based on their grouping columns.
 #' 3. Generates a PKNCA units table for each group, including conversion factors and custom units.
 #' 4. Returns a unique table with relevant columns for PKNCA analysis.
@@ -446,8 +446,7 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' # Assuming `o_conc` and `o_dose` are valid PKNCA objects:
 #' units_table <- PKNCA_build_units_table(o_conc, o_dose)
 #'
-#' @importFrom dplyr select mutate rowwise
-#' @importFrom tidyr unnest
+#' @importFrom dplyr select mutate rowwise unnest
 #' @importFrom rlang sym
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
@@ -461,18 +460,19 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   group_dose_cols <- names(PKNCA::getGroups(o_dose))
   group_conc_cols <- names(PKNCA::getGroups(o_conc))
   concu_col <- o_conc$columns$concu
+  amountu_col <- o_conc$columns$amountu
   timeu_col <- o_conc$columns$timeu
   doseu_col <- o_dose$columns$doseu
 
   # Join concentration and dose data
   groups_units_tbl <- pknca_full_join_conc_dose(o_conc, o_dose) %>%
     select(any_of(c(group_conc_cols, group_dose_cols,
-                    concu_col, timeu_col, doseu_col))
+                    concu_col, amountu_col, timeu_col, doseu_col))
     ) %>%
     mutate(across(everything(), ~ as.character(.))) %>%
     select(-any_of(c(o_conc$columns$subject, o_dose$columns$subject))) %>%
     unique() %>%
-    select_relevant_columns(c(concu_col, timeu_col, doseu_col))
+    select_relevant_columns(c(concu_col, amountu_col, timeu_col, doseu_col))
 
   # Generate a PKNCA units table for each group
   groups_units_tbl %>%
@@ -482,7 +482,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
         PKNCA::pknca_units_table(
           concu = !!sym(concu_col),
           doseu = !!sym(doseu_col),
-          amountu = !!sym(concu_col),
+          amountu = !!sym(amountu_col),
           timeu = !!sym(timeu_col)
         )
       )
@@ -490,7 +490,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
     # Combine all PKNCA units tables into one
     unnest(cols = c(pknca_units_tbl)) %>%
-    select(-any_of(c(concu_col, timeu_col, doseu_col))) %>%
+    select(-any_of(c(concu_col, amountu_col, timeu_col, doseu_col))) %>%
     mutate(
       PPSTRESU = PPORRESU,
       conversion_factor = 1
