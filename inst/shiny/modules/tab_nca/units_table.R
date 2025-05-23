@@ -97,7 +97,7 @@ units_table_server <- function(id, mydata) {
         editable = list(
           target = "cell",
           disable = list(
-            columns = c(0, 1, 2)
+            columns = c(0, 1, 2, 3)
           )
         ),
         options = list(
