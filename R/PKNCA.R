@@ -437,7 +437,7 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #'
 #' @details
 #' The function performs the following steps:
-#' 1. Ensures that the unit columns (e.g., `concu`, `timeu`, `doseu`, `amountu`) exist in the inputs.
+#' 1. Ensures the unit columns (e.g., `concu`, `timeu`, `doseu`, `amountu`) exist in the inputs.
 #' 2. Joins the concentration and dose data based on their grouping columns.
 #' 3. Generates a PKNCA units table for each group, including conversion factors and custom units.
 #' 4. Returns a unique table with relevant columns for PKNCA analysis.
