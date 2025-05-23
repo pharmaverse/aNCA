@@ -117,15 +117,6 @@ h5 {
   width: auto;
 }
 
-.run-nca-btn {
-  position: absolute;
-  right: 100px;
-  top: 65px;
-  z-index: 100;
-  height: 4.5rem;
-  width: 9rem;
-}
-
 .btn-help-icon {
   font-size: 20px; /* Increase font size */
   padding: 10px 20px; /* Increase padding */
