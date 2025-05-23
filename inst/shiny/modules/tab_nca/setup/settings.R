@@ -33,6 +33,15 @@
   )
 }
 
+.update_rule_input <- function(session, id, checked, value) {
+  threshold_id <- paste0(id, "_threshold")
+  rule_id <- paste0(id, "_rule")
+
+  updateCheckboxInput(session = session, inputId = rule_id, value = checked)
+  if (checked)
+    updateNumericInput(session = session, inputId = threshold_id, value = value)
+}
+
 settings_ui <- function(id) {
   ns <- NS(id)
 
@@ -152,163 +161,58 @@ settings_ui <- function(id) {
 #'        It is only used for the file uploads and the analyte/dose/specimen selection.
 #' - adnca_data A reactive expression of the PKNCAdata object,
 #'  which contains data and NCA specifications.
-settings_server <- function(id, data, adnca_data) { # nolint : TODO: complexity / needs further modularization
+settings_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     conc_data <- reactive(adnca_data()$conc$data)
 
     # File Upload Handling
-    observeEvent(input$settings_upload, {
-      setts <- read.csv(input$settings_upload$datapath, na = c("", "NA"))
-      param <- setts$PARAM[1]
-      doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
+    observeEvent(settings_override(), {
+      settings <- settings_override()
 
-      if (!param %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$DOSNO))) {
-        showNotification(
-          validate("The analyte selected in the settings file is not present in the data. Please, if
-                    you want to use these settings for a different file, make sure all meaningful
-                    variables in the file are in the data (PARAM, DOSNO...)"),
-          type = "error"
-        )
-      }
+      # TODO: add checks to verify if uploaded settings are compatible with current data
 
-      new_data <- data() %>%
-        filter(
-          PARAM == param,
-          if ("EVID" %in% names(data())) EVID == 0 else TRUE
-        ) %>%
-        mutate(groups = paste0(USUBJID, ", ", DOSNO)) %>%
-        filter(TIME >= 0) %>%
-        arrange(STUDYID, USUBJID, PCSPEC, DOSNO, TIME) %>%
-        group_by(STUDYID, USUBJID, PCSPEC, DOSNO) %>%
-        mutate(IX = seq_len(n())) %>%
-        select(STUDYID, USUBJID, AVAL, DOSNO, TIME, IX)
+      log_trace("User settings override:")
+      print(settings)
 
-      setts_lambda <- setts %>%
-        select(STUDYID, USUBJID, DOSNO, IX, AVAL, TIME) %>%
-        na.omit()
+      updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
+      updateSelectInput(inputId = "select_doseno", selected = settings$doseno)
+      updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
+      updateSelectInput(inputId = "method", selected = settings$method)
 
-      mismatched_points <- setts_lambda %>%
-        anti_join(new_data, by = c("USUBJID", "DOSNO", "IX", "AVAL", "TIME"))
+      # TODO: add the rest of the settings
 
-      if (nrow(mismatched_points) > 0) {
-        showModal(modalDialog(
-          title = "Mismatched Data Points",
-          tags$h4("The following data points in the settings file do not match the uploaded dataset.
-                  The slopes for these profiles will be reset to best slope:"),
-          DTOutput(ns("mismatched_table")),
-          easyClose = TRUE,
-          footer = NULL
-        ))
+      if (!is.null(settings$bioavailability))
+        updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
 
-        output$mismatched_table <- DT::renderDT({
-          datatable(mismatched_points %>% select(-IX),
-                    fillContainer = TRUE)
-        })
-
-        setts <- setts %>%
-          anti_join(mismatched_points, by = c("USUBJID", "DOSNO"))
-      }
-
-      rows_for_selected_analytes <- data() %>%
-        filter(PARAM %in% setts$PARAM) %>%
-        select(PARAM, DOSNO, PCSPEC) %>%
-        unique()
-
-      updateSelectInput(
+      .update_rule_input(
         session,
-        inputId = "select_analyte",
-        label = "Choose the analyte:",
-        choices = data()$PARAM[1],
-        selected = setts$PARAM[1]
+        "adj.r.squared",
+        settings$flags$adj.r.squared$is.checked,
+        settings$flags$adj.r.squared$threshold
       )
 
-      updateSelectInput(
+      .update_rule_input(
         session,
-        inputId = "select_doseno",
-        label = "Choose the Dose Number:",
-        choices = rows_for_selected_analytes$DOSNO,
-        selected = doses_selected
+        "aucpext.obs",
+        settings$flags$aucpext.obs$is.checked,
+        settings$flags$aucpext.obs$threshold
       )
 
-      updateSelectInput(
+      .update_rule_input(
         session,
-        inputId = "select_pcspec",
-        label = "Choose the Specimen/Matrix:",
-        choices = rows_for_selected_analytes$PCSPEC,
-        selected = rows_for_selected_analytes$PCSPEC
+        "aucpext.pred",
+        settings$flags$aucpext.pred$is.checked,
+        settings$flags$aucpext.pred$threshold
       )
 
-      updateSelectInput(
+      .update_rule_input(
         session,
-        inputId = "method",
-        label = "Extrapolation Method:",
-        choices = c("lin-log", "lin up/log down", "linear"),
-        selected = setts$method
+        "span.ratio",
+        settings$flags$span.ratio$is.checked,
+        settings$flags$span.ratio$threshold
       )
-
-
-      if (!is.na(setts$adj.r.squared_threshold[1])) {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_adj_r_squared"),
-                            label = "RSQADJ:",
-                            value = TRUE)
-        updateNumericInput(
-          session,
-          ns("adj.r.squared_threshold"),
-          "",
-          value = setts$adj.r.squared_threshold[1]
-        )
-      } else {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_adj_r_squared"),
-                            label = "RSQADJ:",
-                            value = FALSE)
-      }
-
-      if (!is.na(setts$aucpext.obs_threshold[1])) {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_aucpext_obs"),
-                            value = TRUE)
-        updateNumericInput(session,
-                           ns("aucpext.obs_threshold"),
-                           value = setts$aucpext.obs_threshold[1])
-      } else {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_aucpext_obs"),
-                            label = "",
-                            value = FALSE)
-      }
-
-      if (!is.na(setts$aucpext.pred_threshold[1])) {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_aucpext_pred"),
-                            value = TRUE)
-        updateNumericInput(session,
-                           ns("aucpext.pred_threshold"),
-                           value = setts$aucpext.pred_threshold[1])
-      } else {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_aucpext_pred"),
-                            value = FALSE)
-      }
-
-      if (!is.na(setts$span.ratio_threshold[1])) {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_span_ratio"),
-                            label = "SPAN: ",
-                            value = TRUE)
-        updateNumericInput(session,
-                           ns("span.ratio_threshold"),
-                           "",
-                           value = setts$span.ratio_threshold[1])
-      } else {
-        updateCheckboxInput(session,
-                            inputId = ns("rule_span_ratio"),
-                            label = "SPAN:",
-                            value = FALSE)
-      }
     })
 
     # Include keyboard limits for the settings GUI display

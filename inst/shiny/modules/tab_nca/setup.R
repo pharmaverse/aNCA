@@ -43,7 +43,7 @@ setup_ui <- function(id) {
 setup_server <- function(id, data, adnca_data, res_nca) {
   moduleServer(id, function(input, output, session) {
     # Gather all settings from the appropriate module
-    settings <- settings_server("nca_settings", data, adnca_data)
+    settings <- settings_server("nca_settings", data, adnca_data, settings_override)
 
     # Create processed data object with applied settings.
 

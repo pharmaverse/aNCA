@@ -324,6 +324,7 @@ slope_selector_server <- function(
     #' If any settings are uploaded by the user, overwrite current rules
     observeEvent(manual_slopes_override(), {
       req(manual_slopes_override())
+      # TODO: add some validation that the settings provided match current data
       manual_slopes(manual_slopes_override())
     })
 
