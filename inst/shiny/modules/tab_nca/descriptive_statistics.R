@@ -57,7 +57,7 @@ descriptive_statistics_ui <- function(id) {
 }
 
 # Server function for the summary statistics module
-descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_options) {
+descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     # Update the input for the group by picker
     observeEvent(res_nca(), {

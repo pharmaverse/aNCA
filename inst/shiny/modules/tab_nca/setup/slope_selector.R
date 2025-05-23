@@ -106,7 +106,7 @@ slope_selector_ui <- function(id) {
 
 
 slope_selector_server <- function(
-  id, pknca_data, res_nca, settings_upload
+  id, pknca_data, res_nca, manual_slopes_override
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -159,7 +159,6 @@ slope_selector_server <- function(
       if (!"type_interval" %in% names(plot_data()$intervals)) {
         NULL
       } else {
-        all_params <- names(PKNCA::get.interval.cols())
         result_obj <- suppressWarnings(PKNCA::pk.nca(data = plot_data(), verbose = FALSE))
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
@@ -323,23 +322,10 @@ slope_selector_server <- function(
     })
 
     #' If any settings are uploaded by the user, overwrite current rules
-    observeEvent(settings_upload(), {
-      req(settings_upload()$datapath)
-
-      #' TODO(mateusz): This is suboptimal, as currently the .csv file is read twice (once in the
-      #' nca.R file, and second time here). Ideally, file should be loaded once and then relevant
-      #' info passed to appropriate modules. This should be reworked once the application is
-      #' modularized and improved further.
-      setts <- read.csv(settings_upload()$datapath)
-      imported_slopes <- setts %>%
-        select(TYPE, USUBJID, PARAM, PCSPEC, DOSNO, IX, REASON) %>%
-        mutate(SUBJECT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
-        group_by(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, REASON) %>%
-        summarise(RANGE = .compress_range(IX), .groups = "keep") %>%
-        select(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, RANGE, REASON) %>%
-        na.omit()
-
-      manual_slopes(imported_slopes)
+    observeEvent(manual_slopes_override(), {
+      req(manual_slopes_override())
+      # TODO: add some validation that the settings provided match current data
+      manual_slopes(manual_slopes_override())
     })
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
