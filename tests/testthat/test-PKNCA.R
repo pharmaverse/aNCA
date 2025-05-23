@@ -326,23 +326,23 @@ describe("PKNCA_build_units_table", {
     filter(USUBJID == 8)
   d_dose <- FIXTURE_DOSE_DATA %>%
     filter(USUBJID == 8)
-  
+
   o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
                              concu = "AVALU", timeu = "RRLTU")
   o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
                              doseu = "DOSEU")
   units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
 
-  it("creates a seggregated valid units table when unit columns are defined in the PKNCA objects", {
+  it("creates a seggregated units table when unit columns are defined in the PKNCA objects", {
     # Check units_table is a data frame
     expect_true(is.data.frame(units_table))
-    
+
     # Contains the seggregating variable PARAM & parameter unit columns
     expect_equal(
       colnames(units_table),
       c("PARAM", "PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
     )
-    
+
     # Differentiates concentration units by PARAM
     analyte_a_cmax_unit <- units_table %>%
       dplyr::filter(PARAM == "A", PPTESTCD == "cmax") %>%
@@ -353,8 +353,8 @@ describe("PKNCA_build_units_table", {
     expect_equal(analyte_a_cmax_unit, "ng/mL")
     expect_equal(analyte_b_cmax_unit, "ug/mL")
   })
-  
-  it("creates an uniform valid units table when units are not defined as columns in the PKNCA objects", {
+
+  it("creates an uniform units table when units are not defined as columns in the PKNCA obj", {
     o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
                                concu = "ng/mL", timeu = "h")
     o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
@@ -373,7 +373,7 @@ describe("PKNCA_build_units_table", {
       dplyr::pull(PPSTRESU)
     expect_equal(cmaxdn_unit, "(ng/mL)/mg")
   })
-  
+
   it("creates a NA units tables when units are not defined in the PKNCA objects", {
     o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM)
     o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID)

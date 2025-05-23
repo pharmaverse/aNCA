@@ -20,6 +20,7 @@ units_table_ui <- function(id) {
 }
 
 units_table_server <- function(id, mydata) {
+
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -53,15 +54,20 @@ units_table_server <- function(id, mydata) {
       group_cols <- intersect(
         names(PKNCA::getGroups(mydata()$conc)), names(mydata()$units)
       )
-      groups_to_keep <- select(mydata()$intervals, any_of(group_cols))
+      groups_to_keep <- select(mydata()$intervals, any_of(group_cols)) %>% unique()
       params_to_keep <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
 
       rows_to_keep <- mydata()$units %>%
         mutate(nrow = row_number()) %>%
         filter(PPTESTCD %in% params_to_keep)
-      if (ncol(groups_to_keep) > 0) rows_to_keep <- inner_join(rows_to_keep, groups_to_keep)
+      if (ncol(groups_to_keep) > 0) {
+        rows_to_keep <- inner_join(
+          rows_to_keep, groups_to_keep,
+          by = intersect(names(rows_to_keep), names(groups_to_keep))
+        )
+      }
 
-      rows_to_hide <- setdiff(1:nrow(mydata()$units), rows_to_keep$nrow)
+      rows_to_hide <- setdiff(seq_len(nrow(mydata()$units)), rows_to_keep$nrow)
       paste0("[", paste(rows_to_hide, collapse = ", "), "]")
     })
 
@@ -78,9 +84,10 @@ units_table_server <- function(id, mydata) {
             `Conversion Factor` = conversion_factor,
             `Custom unit` = PPSTRESU
           ) %>%
-          mutate(Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD"),
-                 across(where(is.character), as.factor) %>%
-          mutate(nrow = row_number())
+          mutate(
+            Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD"),
+            across(where(is.character), as.factor),
+            nrow = row_number()
           ),
         escape = FALSE,
         filter = "top",
@@ -104,9 +111,9 @@ units_table_server <- function(id, mydata) {
               "
               function(row, data, index) {
                 var rowsToHide =", rows_to_hide_units_table(),
-                ";
+              ";
                 console.log(rowsToHide);
-                if (rowsToHide.includes(data[", ncol(modal_units_table()),"])) {
+                if (rowsToHide.includes(data[", ncol(modal_units_table()), "])) {
                   $(row).hide();
                 }
               }
@@ -130,7 +137,7 @@ units_table_server <- function(id, mydata) {
       col_conv_factor <- which(names(modal_units_table) == "conversion_factor")
       col_default_unit <- which(names(modal_units_table) == "PPORRES")
       col_custom_unit <- which(names(modal_units_table) == "PPSTRESU")
-      
+
       # If the edited cell is in the 'Conversion Factor' only accept numeric values
       if ((info$col + 1) == col_conv_factor && !is.numeric(info$value)) {
         # Report the user the expected numeric format

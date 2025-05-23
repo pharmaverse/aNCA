@@ -49,7 +49,7 @@ base::local({
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
       seq(0.5, 4.5, 1),      # 7.1
-      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
+
       seq(0.5, 4.5, 1),        # 8.1 (A)
       seq(0.5, 4.5, 1),        # 8.1 (B)
       seq(5.5, 9.5, 1),        # 8.2 (A)
@@ -65,7 +65,7 @@ base::local({
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
       seq(0.5, 4.5, 1),      # 7.1
-      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
+
       seq(0.5, 4.5, 1),        # 8.1 (A)
       seq(0.5, 4.5, 1),        # 8.1 (B)
       seq(0.5, 4.5, 1),        # 8.2 (A)
@@ -81,11 +81,11 @@ base::local({
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
       seq(0.5, 4.5, 1),      # 7.1
-      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
-      seq(0.5, 4.5, 1),        # 8.1 (A)
-      seq(0.5, 4.5, 1),        # 8.1 (B)
-      seq(5.5, 9.5, 1),        # 8.2 (A)
-      seq(5.5, 9.5, 1)         # 8.2 (B)
+
+      seq(0.5, 4.5, 1),      # 8.1 (A)
+      seq(0.5, 4.5, 1),      # 8.1 (B)
+      seq(5.5, 9.5, 1),      # 8.2 (A)
+      seq(5.5, 9.5, 1)       # 8.2 (B)
     ),
     NRRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -97,16 +97,14 @@ base::local({
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
       seq(0.5, 4.5, 1),      # 7.1
-      # Patient 8: 8.1 (A) 5 points, 8.1 (B) 5 points, 8.2 (A) 5 points, 8.2 (B) 5 points
-      seq(0.5, 4.5, 1),        # 8.1 (A)
-      seq(0.5, 4.5, 1),        # 8.1 (B)
-      seq(0.5, 4.5, 1),        # 8.2 (A)
-      seq(0.5, 4.5, 1)         # 8.2 (B)
+      seq(0.5, 4.5, 1),      # 8.1 (A)
+      seq(0.5, 4.5, 1),      # 8.1 (B)
+      seq(0.5, 4.5, 1),      # 8.2 (A)
+      seq(0.5, 4.5, 1)       # 8.2 (B)
     ),
     ROUTE = c(
       rep("extravascular", 5 * 3), # 1.1 - 2.2
       rep("intravascular", 5 * 6),  # 3.1 - 7.1
-      # Patient 8      
       rep("extravascular", 5), # 8.1 (A)
       rep("extravascular", 5), # 8.1 (B)
       rep("intravascular", 5), # 8.2 (A)
@@ -140,7 +138,6 @@ base::local({
       rep(1, 5),
       rep(1, 5),
       rep(1, 5),
-      # Patient 8
       rep(1, 10),               # 8.1 (A,B)
       rep(2, 10)                # 8.2 (A,B)
     ),
@@ -150,13 +147,13 @@ base::local({
     exclude_half.life = FALSE,
     # Units
     AVALU = c(
-    rep("ng/mL", 5 * 7),     # 1.1 - 5.1 (A)
-    rep("ug/mL", 5),         # 6.1 (B)
-    rep("ng/mL", 5),         # 7.1 (A)
-    rep("ng/mL", 5),         # 8.1 (A)
-    rep("ug/mL", 5),         # 8.1 (B)
-    rep("ng/mL", 5),         # 8.2 (A)
-    rep("ug/mL", 5)          # 8.2 (B)
+      rep("ng/mL", 5 * 7),     # 1.1 - 5.1 (A)
+      rep("ug/mL", 5),         # 6.1 (B)
+      rep("ng/mL", 5),         # 7.1 (A)
+      rep("ng/mL", 5),         # 8.1 (A)
+      rep("ug/mL", 5),         # 8.1 (B)
+      rep("ng/mL", 5),         # 8.2 (A)
+      rep("ug/mL", 5)          # 8.2 (B)
     ),
     RRLTU = "hr",
     STUDYID = "S1"
@@ -232,7 +229,7 @@ base::local({
       1,            # 5.1 (Infusion)
       0,
       0,
-      0,           
+      0,
       0
     ),
     USUBJID = c(
@@ -418,7 +415,7 @@ base::local({
 
 # Dummy data
 # Import dataset from testthat/data folder
-# 
+#
 DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
 
 # Create PKNCAdata object
