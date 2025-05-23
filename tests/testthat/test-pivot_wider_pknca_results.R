@@ -77,7 +77,7 @@ describe("pivot_wider_pknca_results", {
       PPSTRESU != "",
       paste0(PPTESTCD, "[", PPSTRESU, "]"),
       PPTESTCD
-      )) %>%
+    )) %>%
     pull(param_col) %>%
     unique()
 
@@ -131,7 +131,8 @@ describe("pivot_wider_pknca_results", {
       intersect(colnames(pknca_res$data$dose$data), colnames(pivoted_res))
     )
     expect_setequal(colnames(pivoted_res), expected_colnames)
-    expect_equal(nrow(pivoted_res), nrow(unique(PKNCA::getGroups(res_only_main))))
+    main_res <- filter(pknca_res, type_interval == "main")
+    expect_equal(nrow(pivoted_res), nrow(unique(PKNCA::getGroups(main_res))))
 
     expect_no_error(.validate_pknca_params(pknca_res, pivoted_res))
   })
