@@ -1,15 +1,16 @@
 # Create a sample boxplotdata
-boxplotdata <- FIXTURE_PKNCA_RES$result
+boxplotdata <- FIXTURE_PKNCA_RES$result %>%
+  filter(USUBJID %in% 1:7)
 
 describe("flexible_violinboxplot", {
   it("creates a simple plot with minimal arguments", {
     simple_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -21,10 +22,10 @@ describe("flexible_violinboxplot", {
     xvars_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
-      xvars = c("ADOSE", "PARAM"),
+      xvars = c("DOSEA", "PARAM"),
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -36,10 +37,10 @@ describe("flexible_violinboxplot", {
     colorvars_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = c("DOSNO", "PARAM"),
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -51,10 +52,10 @@ describe("flexible_violinboxplot", {
     varvalstofilter_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6", "DOSNO: 1"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -66,10 +67,10 @@ describe("flexible_violinboxplot", {
     violin_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 3"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = FALSE,
       plotly = FALSE
     )
@@ -83,10 +84,10 @@ describe("flexible_violinboxplot", {
     missing_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata_missing,
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -98,10 +99,10 @@ describe("flexible_violinboxplot", {
     plot_with_param_unit <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -110,10 +111,10 @@ describe("flexible_violinboxplot", {
     plot_wo_param_unit <- flexible_violinboxplot(
       boxplotdata = boxplotdata %>% mutate(PPSTRESU = ""),
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -124,10 +125,10 @@ describe("flexible_violinboxplot", {
     simple_plotly <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
-      xvars = "ADOSE",
+      xvars = "DOSEA",
       colorvars = "DOSNO",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("ADOSE", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )

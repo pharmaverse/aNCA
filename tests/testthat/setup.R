@@ -158,7 +158,7 @@ base::local({
     rep("ng/mL", 5),         # 8.2 (A)
     rep("ug/mL", 5)          # 8.2 (B)
     ),
-    RRLTU = "h",
+    RRLTU = "hr",
     STUDYID = "S1"
   )
 
@@ -329,13 +329,13 @@ base::local({
 
   units_table <- rbind(
     PKNCA::pknca_units_table(
-      concu = "mg/mL",
-      timeu = "h",
+      concu = "ng/mL",
+      timeu = "hr",
       doseu = "mg/kg"
     )  %>%  mutate(PARAM = "A"),
     PKNCA::pknca_units_table(
       concu = "ug/mL",
-      timeu = "h",
+      timeu = "hr",
       doseu = "mg/kg"
     )  %>%  mutate(PARAM = "B")
   )
