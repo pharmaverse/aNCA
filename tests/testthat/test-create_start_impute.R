@@ -86,7 +86,11 @@ describe("create_start_impute", {
     expect_equal(unique(result_with_analyte_impute), "start_logslope")
 
     # No drug and no analyte
+    ## Note: This works only if the data is not multiple analyte per subject!
+    ## ToDo (Gerardo): Is perhaps a better assumption possible?
     mydata_no_analyte <- pknca_data
+    mydata_no_analyte$conc <- mydata_no_analyte$conc %>%
+      filter(USUBJID %in% 1:7)
     mydata_no_analyte$dose$data$DRUG <- NULL
     mydata_no_analyte$conc$data$PARAM <- NULL
     result_no_analyte <- create_start_impute(mydata_no_analyte)
