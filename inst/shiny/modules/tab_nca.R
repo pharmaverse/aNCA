@@ -22,8 +22,11 @@ tab_nca_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
-    actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    download_settings_ui(ns("download_settings")),
+    div(
+      class = "d-flex justify-content-between",
+      download_settings_ui(ns("download_settings")),
+      actionButton(ns("nca"), "Run NCA")
+    ),
     navset_tab(
       id = ns("ncapanel"),
       #' Pre-nca setup
