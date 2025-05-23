@@ -106,14 +106,8 @@ base::local({
       rep(1, 5),
       rep(1, 5)
     ),
-    DOSNO = c(
-      1,
-      c(1, 2),
-      c(1, 2),
-      1,
-      1,
-      1,
-      1
+    PCSPEC = c(
+      rep("PLASMA", 9)
     ),
     # Included by aNCA internally
     is.excluded.hl = FALSE,
@@ -121,7 +115,8 @@ base::local({
     exclude_half.life = FALSE,
     # Units
     AVALU = "mg/L",
-    RRLTU = "h"
+    RRLTU = "h",
+    DOSEU = "dg/L"
   )
 
   # Create Testing Dose Data

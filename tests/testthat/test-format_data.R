@@ -190,6 +190,9 @@ describe("format_pkncadata_intervals", {
         data.conc = pknca_conc,
         data.dose = pknca_dose,
         intervals = result,
+        options = list(
+          keep_interval_cols = c("TIME_DOSE", "DOSNO", "DOSNOA", "type_interval")
+        ),
         units = PKNCA::pknca_units_table(
           concu = "ng/mL",
           doseu = "mg",
