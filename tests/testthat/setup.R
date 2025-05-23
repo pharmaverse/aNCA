@@ -121,6 +121,7 @@ base::local({
       rep("A", 5),              # 8.2 (A)
       rep("B", 5)               # 8.2 (B)
     ),
+    PCSPEC = "SERUM",
     USUBJID = c(
       rep(1, 5),
       rep(2, 5 * 2),
@@ -149,7 +150,7 @@ base::local({
     exclude_half.life = FALSE,
     # Units
     AVALU = c(
-    rep("mg/mL", 5 * 7),     # 1.1 - 5.1 (A)
+    rep("ng/mL", 5 * 7),     # 1.1 - 5.1 (A)
     rep("ug/mL", 5),         # 6.1 (B)
     rep("ng/mL", 5),         # 7.1 (A)
     rep("ng/mL", 5),         # 8.1 (A)
@@ -157,7 +158,8 @@ base::local({
     rep("ng/mL", 5),         # 8.2 (A)
     rep("ug/mL", 5)          # 8.2 (B)
     ),
-    RRLTU = "h"
+    RRLTU = "h",
+    STUDYID = "S1"
   )
 
   # Create Testing Dose Data
@@ -213,7 +215,7 @@ base::local({
       "extravascular",  # 8.1 (A,B)
       "intravascular"   # 8.2 (A,B)
     ),
-    ADOSE = c(
+    DOSEA = c(
       1,
       c(1, 2),
       c(1, 2),
@@ -325,12 +327,24 @@ base::local({
       TRUE ~ NA_character_
     ))
 
+  units_table <- rbind(
+    PKNCA::pknca_units_table(
+      concu = "mg/mL",
+      timeu = "h",
+      doseu = "mg/kg"
+    )  %>%  mutate(PARAM = "A"),
+    PKNCA::pknca_units_table(
+      concu = "ug/mL",
+      timeu = "h",
+      doseu = "mg/kg"
+    )  %>%  mutate(PARAM = "B")
+  )
+
   FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM,
-                                 concu = "AVALU", timeu = "RRLTU"),
-    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
-                                 route = "ROUTE", duration = "ADOSEDUR",
-                                 time.nominal = "NFRLT", doseu = "DOSEU"),
+    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
+    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
+                                 route = "ROUTE", duration = "ADOSEDUR"),
+    units = units_table
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
   FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
@@ -404,10 +418,7 @@ base::local({
 
 # Dummy data
 # Import dataset from testthat/data folder
-
-# ToDo (Gerardo): These fixtures are supporting still test-bioavailability.R
-# We need to substitute them with the previous ones for consistency
-
+# 
 DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
 
 # Create PKNCAdata object
