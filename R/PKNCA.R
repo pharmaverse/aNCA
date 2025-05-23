@@ -65,6 +65,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
+  all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
+  
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -76,7 +78,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
-    group_columns = c(group_columns, usubjid_column, analyte_column, matrix_column),
+    group_columns = all_group_columns,
     time_column = time_column,
     rrlt_column = "ARRLT",
     route_column = route_column
@@ -84,7 +86,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     arrange(across(all_of(c(usubjid_column, time_column))))
 
   # Check for missing values in group columns
-  na_columns <- group_columns[sapply(df_conc[, group_columns], function(x) any(is.na(x)))]
+  na_columns <- all_group_columns[sapply(df_conc[, all_group_columns], function(x) any(is.na(x)))]
 
   if (length(na_columns) > 0) {
     stop(
@@ -144,7 +146,6 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
-  pknca_data_object$units <- PKNCA_build_units_table(pknca_conc, pknca_dose)
   pknca_data_object
 }
 
@@ -426,47 +427,48 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 }
 
 PKNCA_build_units_table <- function(o_conc, o_dose) {
-
-  # Force the creation of columns if unit columns were not defined
-  # Note: (This is a problem case that won't never apply to the App)
-  ensure_column_unit_exists <- function(pknca_obj, unit_name) {
-    if (is.null(pknca_obj$columns[[unit_name]])) {
-      unit_colname <- make.unique(c(names(pknca_obj$data), unit_name))[ncol(pknca_obj$data) + 1]
-      pknca_obj$columns[[unit_name]] <- unit_colname
-      if (!is.null(pknca_obj$units[[unit_name]])) {
-        pknca_obj$data[[unit_colname]] <- pknca_obj$units[[unit_name]]
-      } else {
-        pknca_obj$data[[unit_colname]] <- NA_character_
-      }
-    }
-    pknca_obj
-  }
+  
   o_conc <- ensure_column_unit_exists(o_conc, "concu")
   o_conc <- ensure_column_unit_exists(o_conc, "amountu")
   o_conc <- ensure_column_unit_exists(o_conc, "timeu")
   o_dose <- ensure_column_unit_exists(o_dose, "doseu")
-
+  
   # Extract relevant columns from o_conc and o_dose
   group_dose_cols <- names(PKNCA::getGroups(o_dose))
   group_conc_cols <- names(PKNCA::getGroups(o_conc))
   concu_col <- o_conc$columns$concu
   timeu_col <- o_conc$columns$timeu
   doseu_col <- o_dose$columns$doseu
-
+  
   # Join concentration and dose data (groups and units)
-  groups_units_tbl <- left_join(
-    o_conc$data %>% select(any_of(c(group_conc_cols, concu_col, timeu_col))),
-    o_dose$data %>% select(any_of(c(group_dose_cols, doseu_col))),
-    by = intersect(group_conc_cols, group_dose_cols)
-  ) %>%
-  # Derive the minimum expression of groups for the units
+  groups_units_tbl <- pknca_full_join_conc_dose(o_conc, o_dose) %>%
+    select(any_of(c(group_conc_cols, group_dose_cols,
+                    concu_col, timeu_col, doseu_col))
+    ) %>%
+    # Derive the minimum expression of groups for the units
+    mutate(across(everything(), ~ as.character(.))) %>%
+    # Derive the minimum expression of groups for the units
     select(-any_of(c(o_conc$columns$subject, o_dose$columns$subject))) %>%
     unique() %>%
     select_relevant_columns(c(concu_col, timeu_col, doseu_col))
-
+  PKNCA:::full_join_PKNCAconc_PKNCAdose(o_conc, o_dose)
   # TODO: Add some checkings for the groups_units_tbl
+  conc_time_col <- o_conc$columns$time
+  dose_time_col <- o_dose$columns$time
+  bind_rows(
+    o_conc$data %>% select(any_of(c(group_conc_cols, concu_col, timeu_col, conc_time_col))) %>%
+      mutate(is.dose.col = FALSE),
+    o_dose$data %>% select(any_of(c(group_dose_cols, doseu_col, dose_time_col))) %>%
+      rename(!!conc_time_col := !!sym(dose_time_col)) %>%
+      mutate(is.dose.col = TRUE)
+  ) %>%
+    arrange(across(any_of(c(group_dose_cols, conc_time_col)))) %>%
+    # fill all missing values until the next is.dose.col == TRUE
+    fill(everything(), .direction = "down")  %>%
+    filter(!is.dose.col) %>%
+    select(-is.dose.col)
   
-    # Generate a PKNCA units table for each group
+  # Generate a PKNCA units table for each group
   groups_units_tbl %>%
     rowwise() %>%
     mutate(
@@ -479,7 +481,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
         )
       )
     ) %>%
-
+    
     # Combine all PKNCA units tables into one
     unnest(cols = c(pknca_units_tbl)) %>%
     select(-any_of(c(concu_col, timeu_col, doseu_col))) %>%
@@ -488,23 +490,24 @@ PKNCA_build_units_table <- function(o_conc, o_dose) {
       conversion_factor = 1
     ) %>%
     select(any_of(c(group_conc_cols, group_dose_cols)),
-           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor)
+           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
+    unique()
 }
 
 select_relevant_columns <- function(data, target_col) {
-
+  
   # If there is no target_col specified, simply return the original data
   if (is.null(target_col)) return(data)
-
+  
   # Convert all columns to numeric factors for comparison
   data_binary <- data %>%
     mutate(target_col_derived = paste(!!!syms(target_col), sep = "_")) %>%
     select(-all_of(target_col)) %>%
     mutate(across(everything(), ~ as.numeric(as.factor(.))))
-
+  
   # Extract the binary representation of the target column
   target_binary <- data_binary[["target_col_derived"]]
-
+  
   # Check which columns have at least one change in value when the target column changes
   relevant_cols <- sapply(data_binary, function(col) any(diff(col) != 0 & diff(target_binary) != 0))
   relevant_cols <- names(relevant_cols)[relevant_cols] |>
@@ -518,3 +521,46 @@ select_relevant_columns <- function(data, target_col) {
   
   data %>% select(any_of(c(relevant_non_dup_cols, target_col)))
 }
+
+# Force the creation of unit columns if they were not defined like that
+# Note: (in the App units columns will always be defined)
+ensure_column_unit_exists <- function(pknca_obj, unit_name) {
+  if (is.null(pknca_obj$columns[[unit_name]])) {
+    unit_colname <- make.unique(c(names(pknca_obj$data), unit_name))[ncol(pknca_obj$data) + 1]
+    pknca_obj$columns[[unit_name]] <- unit_colname
+    if (!is.null(pknca_obj$units[[unit_name]])) {
+      pknca_obj$data[[unit_colname]] <- pknca_obj$units[[unit_name]]
+    } else {
+      pknca_obj$data[[unit_colname]] <- NA_character_
+    }
+  }
+  pknca_obj
+}
+
+pknca_full_join_conc_dose <- function(o_conc, o_dose) {
+  # Extract necessary columns from o_conc and o_dose
+  group_conc_cols <- names(PKNCA::getGroups(o_conc))
+  group_dose_cols <- names(PKNCA::getGroups(o_dose))
+  conc_time_col <- o_conc$columns$time
+  dose_time_col <- o_dose$columns$time
+  
+  # Combine concentration and dose data
+  combined_data <- bind_rows(
+    o_conc$data %>%
+      mutate(is.dose.col = FALSE),
+    o_dose$data %>%
+      mutate(
+        !!conc_time_col := !!sym(dose_time_col),
+        is.dose.col = TRUE
+      )
+  ) %>%
+    group_by(!!!syms(group_dose_cols)) %>%
+    arrange(across(any_of(c(group_dose_cols, conc_time_col))), !is.dose.col) %>%
+    fill(everything(), .direction = "downup") %>%
+    ungroup() %>%
+    filter(!is.dose.col) %>%
+    select(-is.dose.col)
+
+  combined_data
+}
+
