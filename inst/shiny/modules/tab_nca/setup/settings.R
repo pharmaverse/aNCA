@@ -176,11 +176,16 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       log_trace("User settings override:")
       print(settings)
 
+      # General #
       updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
       updateSelectInput(inputId = "select_doseno", selected = settings$doseno)
       updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
       updateSelectInput(inputId = "method", selected = settings$method)
 
+      if (!is.null(settings$bioavailability))
+        updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
+
+      # Parmeter selection #
       reset_reactable_memory()
 
       params_data <- pknca_cdisc_terms %>%
@@ -192,14 +197,14 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         selected = which(params_data %in% settings$parameter_selection)
       )
 
+      # Data imputation #
+      update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+
+      # Partial AUCs #
       auc_data(settings$partial_aucs)
       refresh_reactable(refresh_reactable() + 1)
 
-      # TODO: add the rest of the settings
-
-      if (!is.null(settings$bioavailability))
-        updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
-
+      # Flags #
       .update_rule_input(
         session,
         "adj.r.squared",
