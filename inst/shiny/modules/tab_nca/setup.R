@@ -107,10 +107,26 @@ setup_server <- function(id, data, adnca_data, res_nca) {
       "slope_selector",
       slopes_pknca_data,
       res_nca,
-      reactive(input$settings_upload)
+      manual_slopes_override
     )
 
     summary_server("nca_setup_summary", processed_pknca_data)
+
+    # Handle downloading and uploading settings
+    output$settings_download <- downloadHandler(
+      filename = "aNCA_app_setup.Rds",
+      content = function(con) {
+        saveRDS(list(settings = settings(), slope_rules = slope_rules$manual_slopes()), con)
+      }
+    )
+
+    imported_settings <- reactive({
+      req(input$settings_upload)
+      readRDS(input$settings_upload$datapath)
+    })
+
+    settings_override <- reactive(imported_settings()$settings)
+    manual_slopes_override <- reactive(imported_settings()$slope_rules)
 
     list(
       processed_pknca_data = processed_pknca_data,
