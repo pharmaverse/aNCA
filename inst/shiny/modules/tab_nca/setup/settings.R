@@ -181,6 +181,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
       updateSelectInput(inputId = "method", selected = settings$method)
 
+      reset_reactable_memory()
+
       params_data <- pknca_cdisc_terms %>%
         filter(TYPE != "PKNCA-not-covered") %>%
         pull("PKNCA")
@@ -189,6 +191,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         "nca_parameters",
         selected = which(params_data %in% settings$parameter_selection)
       )
+
+      auc_data(settings$partial_aucs)
+      refresh_reactable(refresh_reactable() + 1)
 
       # TODO: add the rest of the settings
 
