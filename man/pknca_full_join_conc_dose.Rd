@@ -29,6 +29,24 @@ s
 }
 \examples{
 # Assuming `o_conc` and `o_dose` are valid PKNCA objects and present common groups:
+library(PKNCA)
+d_conc <- data.frame(
+  subj = 1,
+  analyte = rep(c("A", "B"), each = 2),
+  concu = rep(c("ng/mL", "ug/mL"), each = 2),
+  conc = c(0, 2, 0, 5),
+  time = rep(0:1, 2),
+  timeu = "h"
+)
+d_dose <- data.frame(
+  subj = 1,
+  dose = 100,
+  doseu = "mg",
+  time = 0,
+  timeu = "h"
+)
+o_conc <- PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
+o_dose <- PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
 combined_data <- pknca_full_join_conc_dose(o_conc, o_dose)
 
 }
