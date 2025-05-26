@@ -33,8 +33,10 @@ assets <- system.file("shiny/www", package = "aNCA")
 setup_logger()
 
 ui <- function() {
-  # Define UI
-  fluidPage(
+  page_sidebar(
+    id = "sidebar",
+    title = "aNCA",
+
     tags$script("
       Shiny.addCustomMessageHandler('update', function(value) {
       Shiny.setInputValue('update', value);
@@ -50,31 +52,41 @@ ui <- function() {
     includeCSS(file.path(assets, "style.css")),
     includeScript(file.path(assets, "index.js")),
 
-    page_navbar(
+    sidebar = navset_pill_list(
       id = "page",
-      title = "aNCA",
+      well = FALSE,
+      selected = "data",
       # DATA ----
       nav_panel(
         "Data",
         value = "data",
-        fluid = TRUE,
-        tab_data_ui("data")
+        fluid = TRUE
       ),
       # NCA ----
-      nav_panel("NCA", value = "nca", fluid = TRUE,
-        tab_nca_ui("nca")
+      nav_panel(
+        "NCA",
+        value = "nca",
+        fluid = TRUE
       ),
-
       # VISUALISATION ----
-      nav_panel("Visualisation", value = "visualisation",
-        fluid = TRUE,
-        tab_visuals_ui("visuals")
+      nav_panel(
+        "Visualisation",
+        value = "visualisation",
+        fluid = TRUE
       ),
       # New TLG tab
-      nav_panel("TLG", value = "tlg",
-        tab_tlg_ui("tlg")
+      nav_panel(
+        "TLG",
+        value = "tlg"
       )
     ),
+    div(
+      conditionalPanel("input.page == 'data'", tab_data_ui("data")),
+      conditionalPanel("input.page == 'nca'", tab_nca_ui("nca")),
+      conditionalPanel("input.page == 'visualisation'", tab_visuals_ui("visuals")),
+      conditionalPanel("input.page == 'tlg'", tab_tlg_ui("tlg"))
+    ),
+
     shinyjs::useShinyjs(),
     reactable.extras::reactable_extras_dependency()
   )

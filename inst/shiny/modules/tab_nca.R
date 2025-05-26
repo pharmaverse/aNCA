@@ -22,7 +22,10 @@ tab_nca_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
-    actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
+    div(
+      class = "d-flex justify-content-between",
+      actionButton(ns("nca"), "Run NCA", class = "run-nca-btn")
+    ),
     navset_tab(
       id = ns("ncapanel"),
       nav_panel(
