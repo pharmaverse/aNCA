@@ -27,6 +27,30 @@ setup_logger <- function() {
   log_appender(appender_console, index = 2)
 }
 
+#' Logs a list objects.
+#'
+#' @details
+#' Utilitary function for logging a list object (like mapping list or used settings) in
+#' a nice format. Parses a list into nice string and logs at DEBUG level.
+#'
+#' @param title Title for the logs.
+#' @param l     List object to be parsed into log.
+log_debug_list <- function(title, l) {
+  log_msg <- purrr::imap(l, \(v, n) {
+    sep <- ", "
+    if (is.list(v)) {
+      v <- purrr::imap(v, \(v2, n2) paste0("\t* ", n2, " -> ", paste0(v2, collapse = ", "))) %>%
+        paste0(collapse = "\n") %>%
+        paste0("\n", .)
+    } else {
+      v <- paste0(v, collapse = ", ")
+    }
+    paste0("* ", n, " -> ", v, collapse = "\n")
+  })
+  log_debug(paste0(title, "\n", paste0(log_msg, collapse = "\n")))
+}
+
+
 #' Needed to properly reset reactable.extras widgets
 #'
 #' @details

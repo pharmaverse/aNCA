@@ -171,8 +171,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     observeEvent(settings_override(), {
       settings <- settings_override()
 
-      log_trace("User settings override:")
-      print(settings)
+      log_debug_list("User settings override:", settings)
 
       not_compatible <- c()
 

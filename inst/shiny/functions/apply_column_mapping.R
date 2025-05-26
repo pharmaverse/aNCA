@@ -32,12 +32,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     })
   }, simplify = FALSE)
 
-  mapping_log <- lapply(selected_cols, function(group) {
-    purrr::imap(group, function(v, n) paste0("* ", n, " -> ", paste0(v, collapse = ", ")))
-  }) %>%
-    unlist() %>%
-    paste0(collapse = "\n")
-  log_debug(paste0("The following mapping was applied:\n", mapping_log))
+  log_debug_list("The following mapping was applied:", purrr::flatten(selected_cols))
 
   if (any(unlist(selected_cols) == "")) {
     log_error("Unmapped columns detected.")
