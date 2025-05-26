@@ -42,7 +42,7 @@ dose_profile_duplicates <- function(conc_data,
                                     afrlt = "AFRLT",
                                     nrrlt = "NRRLT",
                                     nfrlt = "NFRLT") {
-  
+
   dosno_sym <- sym(dosno)
 
   #If only one dose, return the original data
@@ -67,7 +67,7 @@ dose_profile_duplicates <- function(conc_data,
       nom_dose_time = first(nom_dose_time),
       .groups = "drop"
     )
-  
+
   # Create prev/next dosno mapping within each subject/param group
   dose_order <- dose_times %>%
     group_by(across(all_of(setdiff(groups, dosno)))) %>%
@@ -85,7 +85,7 @@ dose_profile_duplicates <- function(conc_data,
                nom_interval_next), ~ replace_na(., 0))
     ) %>%
     ungroup()
-  
+
   # Duplicate pre-dose values to previous dose
   predose_duplicates <- conc_data %>%
     filter(!!sym(arrlt) < 0) %>%
@@ -107,7 +107,7 @@ dose_profile_duplicates <- function(conc_data,
     left_join(dose_order, by = groups) %>%
     filter(!is.na(prev_dosno)) %>%
     mutate(!!dosno := prev_dosno)
-  
+
   # Duplicate last value of previous dose as predose of next dose
   last_values <- conc_data %>%
     semi_join(missing_predose, by = c(groups)) %>%
@@ -124,7 +124,7 @@ dose_profile_duplicates <- function(conc_data,
     select(-prev_dosno, -next_dosno, -interval_prev, -interval_next,
            -nom_interval_prev, -nom_interval_next, -dose_time,
            -nom_dose_time, -next_dose_time, -next_nom_dose_time)
-  
+
   # Combine all
   bind_rows(conc_data, predose_duplicates, last_values) %>%
     group_by(across(all_of(groups))) %>%

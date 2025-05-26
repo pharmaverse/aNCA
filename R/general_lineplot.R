@@ -87,16 +87,17 @@ general_lineplot <- function(
   # Adjust the data selection according to input
   if (time_scale == "By Dose Profile") {
     # If there are predose records duplicate them in the previous line so they are considered
-    
+
     if ("ARRLT" %in% names(preprocessed_data) &&
-        any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
-      
+          any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
+
       preprocessed_data <- dose_profile_duplicates(preprocessed_data,
-                                                   groups = c("USUBJID", "PCSPEC", "PARAM", "NCA_PROFILE"),
+                                                   groups = c("USUBJID", "PCSPEC",
+                                                              "PARAM", "NCA_PROFILE"),
                                                    dosno = "NCA_PROFILE")
-      
+
     }
-    
+
     preprocessed_data <- preprocessed_data %>%
       mutate(id_var = interaction(!!!syms(colorby_var), sep = ", ")) %>%
       filter(NCA_PROFILE %in% cycle)

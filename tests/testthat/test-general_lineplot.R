@@ -4,10 +4,10 @@ sample_data <- data.frame(
   USUBJID = rep(c("Subject1", "Subject2", "Subject1", "Subject2"), each = 6),
   PARAM = rep(c("Analyte1", "Analyte 2"), each = 12),
   PCSPEC = rep(c("Spec1", "Spec2", "Spec1", "Spec2"), each = 6),
-  NCA_PROFILE = rep(c(1,2), each = 12),
+  NCA_PROFILE = rep(c(1, 2), each = 12),
   EVID = rep(0, 24),
-  NRRLT = rep(0:5, 4),                  
-  ARRLT = c(0:4, -1, 0:4, -1, 0:4, -1, 0:4, -1), 
+  NRRLT = rep(0:5, 4),
+  ARRLT = c(0:4, -1, 0:4, -1, 0:4, -1, 0:4, -1),
   AFRLT = c(0:4, 7, 0:4, 7, 0:4, 7, 0:4, 7),
   AVAL = c(
     10, 20, 30, 40, 50, 60,
@@ -73,7 +73,7 @@ describe("general_lineplot functions correctly", {
       "object 'AVAL' not found"
     )
   })
-  
+
   it("supports multiple variables for colorby_var", {
     extended_data <- sample_data %>% mutate(ExtraVar = rep(c("A", "B"), 12))
     p <- general_lineplot(
@@ -147,26 +147,26 @@ describe("general_lineplot functions correctly", {
     expect_s3_class(p, "ggplot")
     expect_true(nrow(p$data) > 0) # Ensure predose records are handled
   })
-  
+
   it("handles By Dose Profile time_scale with predose duplication", {
-    
-      p <- general_lineplot(
-        data = sample_data,
-        selected_analytes = "Analyte1",
-        selected_usubjids = "Subject1",
-        selected_pcspec = "Spec1",
-        colorby_var = "NCA_PROFILE",
-        time_scale = "By Dose Profile",
-        yaxis_scale = "Linear",
-        cycle = 1
-      )
-      
-      # Extract AFRLT values used in the plot
-      plotted_afrlts <- unique(p$data$AFRLT)
-      
-      # Check if AFRLT = 7 was duplicated into cycle 1
-      expect_true(7 %in% plotted_afrlts)
-    })
+
+    p <- general_lineplot(
+      data = sample_data,
+      selected_analytes = "Analyte1",
+      selected_usubjids = "Subject1",
+      selected_pcspec = "Spec1",
+      colorby_var = "NCA_PROFILE",
+      time_scale = "By Dose Profile",
+      yaxis_scale = "Linear",
+      cycle = 1
+    )
+
+    # Extract AFRLT values used in the plot
+    plotted_afrlts <- unique(p$data$AFRLT)
+
+    # Check if AFRLT = 7 was duplicated into cycle 1
+    expect_true(7 %in% plotted_afrlts)
+  })
 
   it("removes non-positive AVAL values for log scale", {
     bad_data <- sample_data
@@ -184,7 +184,7 @@ describe("general_lineplot functions correctly", {
     expect_s3_class(p, "ggplot")
     expect_true(all(p$data$AVAL > 0))
   })
-  
+
   it("handles time_scale not equal to 'By Cycle'", {
     p <- general_lineplot(
       data = sample_data,

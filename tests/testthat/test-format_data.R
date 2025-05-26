@@ -38,11 +38,11 @@ describe("format_pkncaconc_data", {
       )
     )
   })
-  
+
   it("filters out rows where PARAMCD contains DOSE", {
     data_with_paramcd <- ADNCA %>%
       mutate(PARAMCD = c(rep("DOSE1", 10), rep("PARAM", 10)))
-    
+
     result <- format_pkncaconc_data(
       data_with_paramcd,
       group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "PARAM"),
@@ -50,7 +50,7 @@ describe("format_pkncaconc_data", {
     )
     expect_true(all(!grepl("DOSE", result$PARAMCD, ignore.case = TRUE)))
   })
-  
+
 
   it("returns an error for empty input dataframe", {
     empty_adnca <- data.frame()
@@ -228,7 +228,7 @@ describe("format_pkncadata_intervals", {
       regexp = "Missing required columns: DRUG"
     )
   })
-  
+
   it("uses ARRLT for start when start_from_last_dose is FALSE", {
     result <- format_pkncadata_intervals(
       pknca_conc = pknca_conc,
@@ -236,7 +236,7 @@ describe("format_pkncadata_intervals", {
       params = c("cmax"),
       start_from_last_dose = FALSE
     )
-    expect_true(all(result$start >= 0)) 
+    expect_true(all(result$start >= 0))
   })
 
 })

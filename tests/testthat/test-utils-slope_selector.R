@@ -202,7 +202,7 @@ describe("check_slope_rule_overlap", {
     EXISTING <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      DOSNO = 1,
+      NCA_PROFILE = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:6"

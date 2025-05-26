@@ -37,11 +37,11 @@ describe("dose_profile_duplicates", {
                                                   dosno = "DOSNOA")
     expect_true("IX" %in% colnames(result_single_dose))
   })
-  
+
   it("handles character or numeric dosno correctly", {
     result_char_dosno <- dose_profile_duplicates(conc_data,
-                                                groups = c("USUBJID", "PROFILE"),
-                                                dosno = "PROFILE")
-    expect_equal(result_char_dosno$PROFILE[1:4], c("A", "A", "A", "A"))  
+                                                 groups = c("USUBJID", "PROFILE"),
+                                                 dosno = "PROFILE")
+    expect_equal(result_char_dosno$PROFILE[1:4], c("A", "A", "A", "A"))
   })
 })
