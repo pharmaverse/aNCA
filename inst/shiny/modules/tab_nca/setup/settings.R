@@ -196,11 +196,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       if (length(not_compatible) != 0) {
         msg <- paste0(
-          paste0(not_compatible, sep = ", "),
+          paste0(not_compatible, collapse = ", "),
           " not compatible with current data, leaving as default."
         )
-        log_warning(msg)
-        showNotification(msg, type = "warning", duration = 5)
+        log_warn(msg)
+        showNotification(msg, type = "warning", duration = 10)
       }
 
       updateSelectInput(inputId = "method", selected = settings$method)

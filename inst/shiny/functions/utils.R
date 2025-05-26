@@ -27,15 +27,19 @@ setup_logger <- function() {
   log_appender(appender_console, index = 2)
 }
 
-#' Logs a list objects.
+#' Logs a list and data frame objects.
 #'
 #' @details
 #' Utilitary function for logging a list object (like mapping list or used settings) in
-#' a nice format. Parses a list into nice string and logs at DEBUG level.
+#' a nice format. Parses a list into nice string and logs at DEBUG level. Can also process
+#' data frames, which will be converted into a list of rows.
 #'
 #' @param title Title for the logs.
-#' @param l     List object to be parsed into log.
+#' @param l     List object to be parsed into log. Can also be a data.frame.
 log_debug_list <- function(title, l) {
+  if (is.data.frame(l))
+    l <- split(l, seq_len(nrow(l)))
+
   log_msg <- purrr::imap(l, \(v, n) {
     sep <- ", "
     if (is.list(v)) {
