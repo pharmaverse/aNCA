@@ -17,6 +17,10 @@
 #'                          Options are "Log" or other values.
 #' @param cycle             A character string or numeric value specifying the cycle to filter by
 #'                          when `time_scale` is "By Cycle". Default is NULL.
+#' @param show_threshold    A boolean specifying whether to show a threshold line or not.
+#'                          Default is FALSE.
+#' @param threshold_value   A numeric value to set the y value of the threshold line.
+#'                          Default is 0.
 #'
 #' @return A ggplot object representing the line plot of pharmacokinetic concentration over time.
 #'
@@ -43,7 +47,9 @@
 #'                            colorby_var = "NCA_PROFILE",
 #'                            time_scale = "By Cycle",
 #'                            yaxis_scale = "Log",
-#'                            cycle = "1")
+#'                            cycle = "1",
+#'                            show_threshold = TRUE,
+#'                            threshold_value = 1)
 #'   print(plot)
 #' }
 #'
@@ -54,7 +60,7 @@
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
-  colorby_var, time_scale, yaxis_scale, cycle = NULL
+  colorby_var, time_scale, yaxis_scale, show_threshold = FALSE, threshold_value = 0, cycle = NULL
 ) {
 
   # preprocess data according to user selection
@@ -130,5 +136,11 @@ general_lineplot <- function(
                     label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
       labs(y = paste0("Log 10 - ", plt$labels$y))
   }
+
+  if (show_threshold) {
+    plt <- plt +
+      ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  }
+
   return(plt)
 }

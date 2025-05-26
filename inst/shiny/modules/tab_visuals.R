@@ -58,6 +58,16 @@ tab_visuals_ui <- function(id) {
             condition = "input.timescale == 'By Dose Profile'",
             uiOutput(ns("cycle_select")),
             ns = NS(id)
+          ),
+          checkboxInput(ns("show_threshold"), label = "Show Threshold"),
+          conditionalPanel(
+            condition = "input.show_threshold == true",
+            numericInput(
+              ns("threshold_value"),
+              label = "Threshold Value",
+              value = 0
+            ),
+            ns = NS(id)
           )
         ),
         plotlyOutput(ns("individualplot"))
@@ -294,6 +304,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         input$generalplot_colorby,
         input$timescale,
         input$log,
+        input$show_threshold,
+        input$threshold_value,
         cycle = input$cycles
       ) %>%
         ggplotly() %>%

@@ -18,157 +18,167 @@
 #'  for individual subjects and mean-based estimates.
 #' @param res_nca A list containing non-compartmental analysis (NCA) results,
 #'  including concentration and dose data.
-#' @param selected_aucs A character vector of selected
-#'  AUC variables (e.g., `c("f_aucinf.obs", "f_auclast")`).
+#' @param f_aucs A character vector of the comparing AUC parameter/s including
+#' the prefix f_ (e.g., `c("f_aucinf.obs", "f_auclast")`).
 #'
-#' @returns A data frame with calculated bioavailability values (`f_aucinf`, `f_auclast`, etc.)
+#' @returns A data frame with calculated absolute bioavailability values (`FABS_`)
 #'   for individual subjects where IV data is available. If IV data is missing,
 #'  it estimates bioavailability using the mean IV AUC for that grouping.
 #'
-#' @importFrom dplyr bind_rows filter full_join group_by left_join mutate select summarize
-#' @importFrom purrr reduce
+#' @importFrom dplyr filter group_by left_join mutate rename select ungroup case_when
 #' @importFrom tidyr pivot_wider
-#' @importFrom rlang sym
+#' @importFrom rlang syms
 #'
 #' @export
-calculate_F <- function(res_nca, selected_aucs) { # nolint: object_name_linter
-
-  #check if selected_aucs are available
-  if (is.null(selected_aucs) || length(selected_aucs) == 0) {
-    return(NULL)
-  }
+pknca_calculate_f <- function(res_nca, f_aucs) {
 
   # Extract and clean AUC selection
-  auc_vars <- gsub("^f_", "", selected_aucs)
+  auc_vars <- gsub("^f_", "", f_aucs)
+
+  # Check if the comparing AUC parameters are available in the PKNCA results
+  available_pptestcd <- unique(res_nca$result$PPTESTCD)
+  if (!any(available_pptestcd %in% auc_vars)) {
+    if (length(f_aucs) > 0) {
+      warning(
+        paste0(
+          "No AUC extracted from f_aucs available in res_nca (PPTESTCD): ",
+          paste(auc_vars, collapse = ", ")
+        )
+      )
+    }
+    return(NULL)
+  }
 
   # Extract required columns
   route_col <- res_nca$data$dose$columns$route
   dose_col <- res_nca$data$dose$columns$dose
+  conc_group_cols <- PKNCA::getGroups(res_nca$data$conc) %>%
+    names()
+  dose_group_cols <- PKNCA::getGroups(res_nca$data$dose) %>%
+    names()
 
-  # Extract ID groups
-  id_groups <- res_nca$data$conc$columns$groups %>%
-    purrr::list_c() %>%
-    append("NCA_PROFILE") %>%
-    purrr::keep(~ !is.null(.) && . != "DRUG" && length(unique(res_nca$data$conc$data[[.]])) > 1)
+  # Extract dose information (route and dose)
+  dose_info <- res_nca$data$dose$data
 
-  # Filter and transform AUC data
-  auc_data <- res_nca$result %>%
+  res_nca$result %>%
+
+    # Filter AUC parameters requested for bioavailability calculations
     filter(PPTESTCD %in% auc_vars) %>%
-    select(USUBJID, PPTESTCD, PPORRES, all_of(id_groups)) %>%
-    pivot_wider(names_from = PPTESTCD, values_from = PPORRES)
+    left_join(
+      dose_info,
+      by = intersect(names(.), names(dose_info))
+    ) %>%
 
-  # Extract dose information
-  dose_info <- res_nca$data$dose$data %>%
-    select(all_of(c(id_groups, route_col, dose_col)), USUBJID) %>%
-    distinct()
+    # Force all AUC values to be in the same unit if possible by get_conversion_factor
+    group_by(PPTESTCD, !!!syms(setdiff(conc_group_cols, "USUBJID"))) %>%
+    mutate(
+      conv_factor = get_conversion_factor(PPORRESU, PPORRESU[1]),
+      PPORRES = ifelse(!is.na(conv_factor), PPORRES * conv_factor, PPORRES),
+      PPORRESU = ifelse(!is.na(conv_factor), PPORRESU[1], PPORRESU)
+    ) %>%
+    ungroup() %>%
 
-  # Merge dose information with AUC data
-  auc_data <- auc_data %>%
-    inner_join(dose_info, by = id_groups) %>%
-    rename(Route = all_of(route_col), Dose = all_of(dose_col))
+    # Pivot and calculate by group mean AUC and dose values
+    rename(
+      aucs = PPORRES,
+      dose = any_of(dose_col)
+    ) %>%
+    pivot_wider(
+      names_from = any_of(route_col),
+      values_from = c(aucs, dose)
+    ) %>%
 
-  results_list <- list()
+    # Calculate AUC dose normalized values for each profile (intravascular)
+    mutate(
+      AUCdn_IV_prof = PKNCA::pk.calc.dn(aucs_intravascular, dose_intravascular)
+    ) %>%
 
-  for (auc_type in auc_vars) {
+    # Mean AUC dose normalized values by subject (intravascular)
+    group_by(PPTESTCD, !!!syms(conc_group_cols), PPORRESU) %>%
+    mutate(
+      Mean_AUCdn_IV_subj = mean(AUCdn_IV_prof, na.rm = TRUE)
+    ) %>%
 
-    data <- auc_data %>%
-      mutate(grouping = apply(select(., all_of(id_groups), -USUBJID), 1, paste, collapse = " "))
+    # Mean AUC dose normalized values by cohort (intravascular)
+    group_by(PPTESTCD, !!!syms(setdiff(conc_group_cols, "USUBJID")), start, end, PPORRESU) %>%
+    mutate(
+      Mean_AUCdn_IV_coh = mean(AUCdn_IV_prof, na.rm = TRUE)
+    ) %>%
 
-    # Separate IV and EX data
-    iv_data <- data %>%
-      filter(tolower(Route) == "intravascular") %>%
-      rename(AUC_IV = !!sym(auc_type), Dose_IV = Dose, Grouping_IV = grouping) %>%
-      select(USUBJID, Grouping_IV, AUC_IV, Dose_IV)
-
-    ex_data <- data %>%
-      filter(tolower(Route) == "extravascular") %>%
-      rename(AUC_EX = !!sym(auc_type), Dose_EX = Dose, Grouping_EX = grouping) %>%
-      select(USUBJID, Grouping_EX, AUC_EX, Dose_EX)
-
-    # Merge IV and EX by USUBJID
-    merged_data <- left_join(ex_data, iv_data, by = "USUBJID")
-
-    # Compute bioavailability for individuals (F)
-    individual_data <- merged_data %>%
-      filter(!is.na(AUC_IV) & !is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type) := (pk.calc.f(Dose_IV, AUC_IV, Dose_EX, AUC_EX)) * 100)
-
-    # Compute mean IV AUC for missing IV subjects
-    mean_iv <- iv_data %>%
-      group_by(Grouping_IV) %>%
-      summarize(Mean_AUC_IV = mean(AUC_IV, na.rm = TRUE),
-                Mean_Dose_IV = mean(Dose_IV, na.rm = TRUE),
-                .groups = "drop")
-
-    ex_without_match <- merged_data %>%
-      filter(is.na(AUC_IV) | is.na(Dose_IV)) %>%
-      mutate(!!paste0("f_", auc_type)
-             := (pk.calc.f(mean_iv$Mean_Dose_IV, mean_iv$Mean_AUC_IV, Dose_EX, AUC_EX)) * 100)
-
-    # Combine results
-    auc_results <- bind_rows(
-      individual_data %>% select(USUBJID, Grouping_EX, Grouping_IV,
-                                 !!paste0("f_", auc_type)),
-      ex_without_match %>% select(USUBJID, Grouping_EX, Grouping_IV,
-                                  !!paste0("f_", auc_type))
-    )
-
-    results_list[[auc_type]] <- auc_results
-  }
-
-  purrr::reduce(results_list, full_join, by = c("USUBJID", "Grouping_EX", "Grouping_IV")) %>%
-    select(-Grouping_IV)
+    # Calculate F using group mean values when individual is not present for both routes
+    ungroup() %>%
+    mutate(
+      AUCdn_IV = case_when(
+        !is.na(AUCdn_IV_prof) ~ AUCdn_IV_prof,
+        !is.na(Mean_AUCdn_IV_subj) ~ Mean_AUCdn_IV_subj,
+        !is.na(Mean_AUCdn_IV_coh) ~ Mean_AUCdn_IV_coh,
+        TRUE ~ NA
+      ),
+      PPORRES = PKNCA::pk.calc.f(
+        1, AUCdn_IV, # The AUC is already dose normalized for IV
+        dose_extravascular, aucs_extravascular
+      ) * 100,
+      # Maintain the PKNCA results format
+      PPTESTCD = paste0("f_", PPTESTCD),
+      PPTEST = paste0("Absolute Bioavailability (", PPTESTCD, ")"),
+      exclude = case_when(
+        is.na(aucs_extravascular) & !is.na(aucs_intravascular) ~
+          "", # Not calculated because it is an IV record
+        is.na(aucs_extravascular) ~
+          paste0(gsub("f_", "", PPTESTCD), " not available"),
+        !is.na(AUCdn_IV_prof) ~ "",
+        !is.na(Mean_AUCdn_IV_subj) ~ "Mean AUC.dn IV for the subject was used",
+        !is.na(Mean_AUCdn_IV_coh) ~ "Mean AUC.dn IV for the cohort was used",
+        TRUE ~ "Bioavailability: No individual, subject or cohort IV records to compare with"
+      ),
+      PPORRESU = "%",
+      PPSTRES = PPORRES,
+      PPSTRESU = "%",
+      type_interval = "main"
+    ) %>%
+    select(any_of(c(names(res_nca$result))))
 }
 
-#' Add bioavailability to PKNCAresults object
-#' This helper function adds bioavailability (F) data to a PKNCAresults object.
-#' The bioavailability is calculated with the calculate_bioavailability function.
+#' Calculate bioavailability with pivoted output
 #'
-#' @param res_nca A list containing non-compartmental analysis (NCA) results,
-#' including concentration and dose data.
-#' @param bioavailability A data frame with calculated bioavailability values
+#' This function calculates bioavailability (F) based on AUC (Area Under Curve) data
+#' extracted from `res_nca`. It computes individual bioavailability
+#' where IV and EX data are available for a subject. If IV data is missing, it estimates
+#' bioavailability using the mean IV values for that grouping. The output is pivoted
+#' such that each row represents all main results summarized for each profile in each
+#' subject. Columns are assumed to be in `%` units even if not explicitly stated.
 #'
-#' @returns A PKNCAresults object with bioavailability data added to the result slot.
+#' @inheritParams pknca_calculate_f
 #'
-#' @importFrom dplyr bind_rows distinct left_join mutate select
-#' @importFrom purrr list_c keep
-#' @importFrom tidyr pivot_longer
-#' @importFrom PKNCA pk.calc.f
+#' @returns A pivoted data frame with bioavailability calculations (`f_aucinf`, `f_auclast`, etc.)
+#'   for individual subjects where IV data is available. If IV data is missing for the subject,
+#'   the mean IV AUC for that group is used instead. Variables are assumed to be in `%` units.
+#'
+#' @importFrom dplyr mutate select
 #'
 #' @export
-PKNCA_add_F <- function(res_nca, bioavailability) { # nolint: object_name_linter
+calculate_f <- function(res_nca, f_aucs) {
+  pknca_result <- pknca_calculate_f(res_nca, f_aucs)
+  res_nca$result <- pknca_result %>%
+    mutate(PPSTRESU = "")
+  pivot_wider_pknca_results(res_nca) %>%
+    select(any_of(c(
+      names(PKNCA::getGroups(res_nca)),
+      "end",
+      paste0(f_aucs),
+      "Exclude"
+    )))
+}
 
-  if (is.null(bioavailability)) {
-    return(res_nca)
-  }
-  # Extract ID groups
-  id_groups <- res_nca$data$conc$columns$groups %>%
-    purrr::list_c() %>%
-    append("NCA_PROFILE") %>%
-    purrr::keep(~ !is.null(.) && . != "DRUG" &&
-                  length(unique(res_nca$data$conc$data[[.]])) > 1)
-
-  # Pivot results data
-  subj_data <- res_nca$result %>%
-    select(-starts_with("PP"), -exclude) %>%
-    distinct()
-
-  # Create bioavailability data in resnca format
-  f_results <- subj_data %>%
-    mutate(Grouping_EX = apply(select(., all_of(id_groups), -USUBJID),
-                               1, paste, collapse = " ")) %>%
-    left_join(bioavailability, by = c("USUBJID", "Grouping_EX")) %>%
-    select(-Grouping_EX) %>%
-    pivot_longer(
-      cols = starts_with("f_"),  # Select columns with calculated bioavailability
-      names_to = "PPTESTCD",
-      values_to = "PPSTRES"
-    ) %>%
-    mutate(PPSTRESU = "%",
-           PPORRES = PPSTRES,
-           PPORRESU = PPSTRESU)
-
+#' Add bioavailability results to PKNCA results
+#'
+#' @inheritParams pknca_calculate_f
+#' @returns A PKNCA result object which results data frame contains added the
+#' bioavailability calculations requested based on the AUCs provided in `f_aucs`.
+#'
+#' @importFrom dplyr bind_rows
+add_f_to_pknca_results <- function(res_nca, f_aucs) {
+  f_results <- pknca_calculate_f(res_nca, f_aucs)
   res_nca$result <- bind_rows(res_nca$result, f_results)
-
   res_nca
 }

@@ -30,7 +30,9 @@ describe("general_lineplot functions correctly", {
       colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
-      cycle = 1
+      cycle = 1,
+      show_threshold = TRUE,
+      threshold_value = 0
     )
     expect_s3_class(p, "ggplot")
   })
@@ -45,7 +47,9 @@ describe("general_lineplot functions correctly", {
       colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
-      cycle = 1
+      cycle = 1,
+      show_threshold = TRUE,
+      threshold_value = 0
     )
     expect_s3_class(p, "ggplot")
     expect_true(length(p$layers) == 0)
@@ -62,7 +66,9 @@ describe("general_lineplot functions correctly", {
         colorby_var = "NCA_PROFILE",
         time_scale = "By Cycle",
         yaxis_scale = "Linear",
-        cycle = 1
+        cycle = 1,
+        show_threshold = TRUE,
+        threshold_value = 0
       ),
       "object 'AVAL' not found"
     )
@@ -91,7 +97,9 @@ describe("general_lineplot functions correctly", {
       colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Log",
-      cycle = 1
+      cycle = 1,
+      show_threshold = TRUE,
+      threshold_value = 0
     )
     expect_s3_class(p, "ggplot")
 
@@ -110,7 +118,9 @@ describe("general_lineplot functions correctly", {
       colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
-      cycle = 1
+      cycle = 1,
+      show_threshold = TRUE,
+      threshold_value = 0
     )
     expect_s3_class(p, "ggplot")
     expect_true(p$labels$title == "No data available for selected parameters")
@@ -130,7 +140,9 @@ describe("general_lineplot functions correctly", {
       colorby_var = "NCA_PROFILE",
       time_scale = "By Cycle",
       yaxis_scale = "Linear",
-      cycle = 1
+      cycle = 1,
+      show_threshold = TRUE,
+      threshold_value = 0
     )
     expect_s3_class(p, "ggplot")
     expect_true(nrow(p$data) > 0) # Ensure predose records are handled
@@ -182,7 +194,9 @@ describe("general_lineplot functions correctly", {
       colorby_var = "NCA_PROFILE",
       time_scale = "Overall",
       yaxis_scale = "Linear",
-      cycle = 1
+      cycle = 1,
+      show_threshold = TRUE,
+      threshold_value = 0
     )
     expect_s3_class(p, "ggplot")
     expect_true("AFRLT" %in% names(p$data)) # Ensure time variable is AFRLT

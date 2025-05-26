@@ -197,4 +197,25 @@ describe("check_slope_rule_overlap", {
     expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)), 0)
 
   })
+
+  it("should warn if more than one range for single subject, profile and rule type is detected", {
+    EXISTING <- data.frame(
+      TYPE = "Exclusion",
+      USUBJID = 1,
+      DOSNO = 1,
+      PARAM = "A",
+      PCSPEC = 1,
+      RANGE = "3:6"
+    )
+
+    DUPLICATE <- EXISTING %>%
+      mutate(
+        RANGE = "4:7"
+      )
+
+    expect_warning(
+      check_slope_rule_overlap(rbind(EXISTING, DUPLICATE), DUPLICATE, slope_groups),
+      "More than one range for single subject, profile and rule type detected."
+    )
+  })
 })

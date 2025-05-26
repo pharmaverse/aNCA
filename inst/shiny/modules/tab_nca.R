@@ -22,8 +22,11 @@ tab_nca_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
-    actionButton(ns("nca"), "Run NCA", class = "run-nca-btn"),
-    download_settings_ui(ns("download_settings")),
+    div(
+      class = "d-flex justify-content-between",
+      download_settings_ui(ns("download_settings")),
+      actionButton(ns("nca"), "Run NCA")
+    ),
     navset_tab(
       id = ns("ncapanel"),
       #' Pre-nca setup
@@ -130,6 +133,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                 check_reasons = TRUE
               ) %>%
               PKNCA_calculate_nca() %>%
+              # Add bioavailability results if requested
+              add_f_to_pknca_results(f_auc_options()) %>%
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")

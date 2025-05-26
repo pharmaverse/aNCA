@@ -1,5 +1,7 @@
 describe("create_start_impute", {
 
+  # Notes: This function is enforced to assume that DOSNOA was created separating intervals
+  # in order to work properly
   pknca_data <- FIXTURE_PKNCA_DATA
 
   it("works without issue", {
@@ -71,5 +73,27 @@ describe("create_start_impute", {
                    dplyr::filter(USUBJID == 6, DOSNOA == 1, type_interval == "main") %>%
                    dplyr::pull(impute),
                  "start_conc0")
+  })
+
+  it("if drug column is not present, assumes is the same as analyte for imputation", {
+    # No drug but there is analyte
+    mydata_with_analyte <- pknca_data
+    mydata_with_analyte$dose$data$DRUG <- NULL
+    result_with_analyte <- create_start_impute(mydata_with_analyte)
+    result_with_analyte_impute <- result_with_analyte$intervals %>%
+      dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
+      dplyr::pull(impute)
+    expect_equal(unique(result_with_analyte_impute), "start_logslope")
+
+    # No drug and no analyte
+    mydata_no_analyte <- pknca_data
+    mydata_no_analyte$dose$data$DRUG <- NULL
+    mydata_no_analyte$conc$data$PARAM <- NULL
+    result_no_analyte <- create_start_impute(mydata_no_analyte)
+    # For last subject now analyte and drug are matching, should be start_logslope
+    result_no_analyte_impute <- result_no_analyte$intervals %>%
+      dplyr::filter(USUBJID == 6, DOSNO == 1) %>%
+      dplyr::pull(impute)
+    expect_equal(unique(result_no_analyte_impute), "start_logslope")
   })
 })
