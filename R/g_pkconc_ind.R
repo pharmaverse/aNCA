@@ -188,7 +188,6 @@ pkcg01 <- function(
       yes = 1e-3, no = adpc_grouped[[yvar]]
     )
 
-    if (plotly) adpc_grouped[[yvar]] <- log10(adpc_grouped[[yvar]])
     if (!plotly) {
       plot <- plot +
         scale_y_continuous(
@@ -288,13 +287,13 @@ pkcg01 <- function(
         )
 
       if (scale == "LOG") {
-        plotly_plot$x$layout$yaxis$tickvals <- ifelse(
-          plotly_plot$x$layout$yaxis$tickvals == 0,
-          1e-3,
-          plotly_plot$x$layout$yaxis$tickvals
-        )
+        browser()
         plotly_plot <- plotly_plot %>%
-          layout(yaxis = list(type = "log", autorange = TRUE))
+          layout(yaxis = list(
+            type = "log",
+            autorange = TRUE,
+            tickformat = "~r"
+          ))
       }
 
       plotly_plot
