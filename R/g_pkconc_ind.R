@@ -287,7 +287,6 @@ pkcg01 <- function(
         )
 
       if (scale == "LOG") {
-        browser()
         plotly_plot <- plotly_plot %>%
           layout(yaxis = list(
             type = "log",
