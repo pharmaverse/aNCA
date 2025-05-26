@@ -171,15 +171,39 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     observeEvent(settings_override(), {
       settings <- settings_override()
 
-      # TODO: add checks to verify if uploaded settings are compatible with current data
-
       log_trace("User settings override:")
       print(settings)
 
+      not_compatible <- c()
+
       # General #
-      updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
-      updateSelectInput(inputId = "select_doseno", selected = settings$doseno)
-      updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
+      if (all(settings$analyte %in% unique(data()$PARAM))) {
+        updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
+      } else {
+        not_compatible <- append(not_compatible, "Analyte")
+      }
+
+      if (all(settings$doseno %in% unique(data()$DOSNO))) {
+        updateSelectInput(inputId = "select_doseno", selected = settings$doseno)
+      } else {
+        not_compatible <- append(not_compatible, "Dose Number")
+      }
+
+      if (all(settings$pscpec %in% unique(data()$PCSPEC))) {
+        updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
+      } else {
+        not_compatible <- append(not_compatible, "Dose Specimen")
+      }
+
+      if (length(not_compatible) != 0) {
+        msg <- paste0(
+          paste0(not_compatible, sep = ", "),
+          " not compatible with current data, leaving as default."
+        )
+        log_warning(msg)
+        showNotification(msg, type = "warning", duration = 5)
+      }
+
       updateSelectInput(inputId = "method", selected = settings$method)
 
       if (!is.null(settings$bioavailability))
