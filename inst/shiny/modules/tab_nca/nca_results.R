@@ -56,24 +56,24 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       final_results <- pivot_wider_pknca_results(results)
 
       # Apply flag rules
-      current_rules <- rules()
-      for (param in names(current_rules)) {
-        if (current_rules[[param]]$is.checked) {
-          # Find the proper column/s that should be considered (in principle should be 1)
-          param_cdisc <- translate_terms(param, "PKNCA", "PPTESTCD")
-          param_cols <- grep(paste0("^", param_cdisc, "(\\[.*\\])?$"),
-                             names(final_results),
-                             value = TRUE)
+      rule_thr <- lapply(rules(), FUN =  \(x) x$threshold)
+      rule_pretty_names <- sapply(names(rules()), \(x) PKNCA::get.interval.cols()[[x]]$pretty_name)
+      rule_msgs <- paste0(rule_pretty_names, c(" < ", " > ", " > ", " < "), rule_thr)
 
-          # Include a flag column for that parameter that is TRUE when the threshold is surpassed
-          final_results <- final_results %>%
-            mutate(!!paste0("flag_", param) := case_when(
-              startsWith(param, "auc") ~ rowSums(
-                .[, param_cols] >= current_rules[[param]]$threshold
-              ) > 0,
-              TRUE ~ rowSums(.[, param_cols] <= current_rules[[param]]$threshold) > 0
-            ))
-        }
+      rules_applied <- sapply(rules(), FUN =  \(x) x$is.checked)
+      params_applied <- translate_terms(names(rules()), "PKNCA", "PPTEST")[rules_applied]
+
+      if (length(params_applied) > 0) {
+        browser()
+        final_results <- final_results %>%
+          mutate(
+            flagged = case_when(
+              rowSums(is.na(select(., any_of(params_applied)))) > 0 ~ "MISSING",
+              is.na(Exclude) ~ "ACCEPTED",
+              any(sapply(rule_msgs, \(msg) str_detect(Exclude, fixed(msg)))) ~ "FLAGGED",
+              TRUE ~ "ACCEPTED"
+            )
+          )
       }
 
       # Join subject data to allow the user to group by it
