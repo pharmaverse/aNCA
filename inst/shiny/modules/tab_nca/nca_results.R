@@ -50,8 +50,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
 
       #' Transform results
       # Calculate bioavailability if available
-      results <- calculate_F(res, auc_options()) %>%
-        PKNCA_add_F(res, .)
+      results <- res_nca()
 
       # Transform results
       final_results <- pivot_wider_pknca_results(results)
@@ -133,7 +132,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])), -conc_groups)
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
     })
 
     output$myresults <- reactable::renderReactable({

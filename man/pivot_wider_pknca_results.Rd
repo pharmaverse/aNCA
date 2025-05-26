@@ -7,7 +7,17 @@
 pivot_wider_pknca_results(myres)
 }
 \arguments{
-\item{myres}{The output of PKNCA::pk.nca}
+\item{myres}{The output of PKNCA::pk.nca. It makes some additional assumptions:
+\enumerate{
+\item CDISC denomination of actual and nominal time variables (AFRLT, ARRLT, NFRLT, NRRLT).
+\item Intervals must include a column (\code{type_interval}) to differentiate between the
+custom AUC ranges ("manual") and main parameter calculations ("main").
+\item Includes \code{PPSTRES} and \code{PPSTRESU} variables in results dataset.
+\item Columns \code{start_dose} and \code{end_dose} must express the actual start and end times
+of the dose, relative to the last reference dose.
+\item Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
+"LAMZLL", "LAMZ" Used to derive \code{LAMZNPT} and \code{LAMZMTD}.
+}}
 }
 \value{
 A data frame which provides an easy overview on the results from the NCA

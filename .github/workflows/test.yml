@@ -73,9 +73,10 @@ jobs:
         shell: Rscript {0}
         env:
           R_REMOTES_STANDALONE: "true"
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests
         shell: Rscript {0}
         run: |
           devtools::load_all(".")
-          devtools::test()
+          testthat::test_dir("tests/testthat", stop_on_failure = TRUE)

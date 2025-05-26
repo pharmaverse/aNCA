@@ -57,7 +57,7 @@
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
-  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "PCSPEC", "ROUTE", "DRUG"))
+  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
   dosno_column <- "DOSNO"
@@ -76,20 +76,29 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
-    group_columns = c(group_columns, usubjid_column, analyte_column),
+    group_columns = c(group_columns, usubjid_column, analyte_column, matrix_column),
     time_column = time_column,
-    route_column = route_column,
-    dosno_column = dosno_column
+    rrlt_column = "ARRLT",
+    route_column = route_column
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
+
+  # Check for missing values in group columns
+  na_columns <- group_columns[sapply(df_conc[, group_columns], function(x) any(is.na(x)))]
+
+  if (length(na_columns) > 0) {
+    stop(
+      "Missing values detected in grouping columns: ",
+      paste(na_columns, collapse = ", "),
+      ". Please ensure all columns contain values."
+    )
+  }
 
   # Create dosing data
   df_dose <- format_pkncadose_data(
     pkncaconc_data = df_conc,
     group_columns = c(group_columns, usubjid_column),
-    time_column = time_column,
-    dosno_column = dosno_column,
-    since_lastdose_time_column = "ARRLT"
+    time_column = time_column
   )
 
   # Set default settings
@@ -103,12 +112,13 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     df_conc,
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
+    include_half.life = "include_half.life",
     time.nominal = "NFRLT"
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID,
+    formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
     route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR"
@@ -210,7 +220,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c("DOSNO", "type_interval"),
+    keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"),
     min.hl.r.squared = 0.01
   )
 
@@ -330,8 +340,10 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 
   dose_data_to_join <- select(
     pknca_data$dose$data,
-    -exclude,
-    -pknca_data$conc$columns$groups$group_analyte
+    unlist(unname(pknca_data$dose$columns$groups)),
+    pknca_data$dose$columns$time,
+    pknca_data$dose$columns$dose,
+    DOSNOA
   )
 
   results$result <- results$result %>%

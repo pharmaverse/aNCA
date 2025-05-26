@@ -11,7 +11,8 @@ flexible_violinboxplot(
   colorvars,
   varvalstofilter,
   columns_to_hover,
-  box = TRUE
+  box = TRUE,
+  plotly = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ should be used to identify when hovering the plotly outputs}
 
 \item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or a
 violin plot (\code{FALSE}). Default is \code{TRUE}.}
+
+\item{plotly}{A logical value defining if the output is plotly (TRUE, default)
+or ggplot otherwise (FALSE)}
 }
 \value{
 A plotly object representing the violin or box plot.

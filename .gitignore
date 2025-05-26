@@ -2,11 +2,13 @@
 .Rhistory
 .RData
 .Ruserdata
+.Renviron
 aNCA.Rproj
 inst/guidelines
 inst/templates
 inst/shiny/data
 !inst/shiny/data/DummyRO_ADNCA.csv
 !inst/shiny/data/adnca_labels.csv
+inst/shiny/log/*
 .Rprofile
 /page

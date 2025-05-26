@@ -51,7 +51,7 @@ descriptive_statistics_ui <- function(id) {
       reactableOutput(ns("descriptive_stats"))
     ),
     card(
-      downloadButton(ns("download_browser"), "Download the NCA Summary Data")
+      downloadButton(ns("download_summary"), "Download the NCA Summary Data")
     )
   )
 }
@@ -59,8 +59,6 @@ descriptive_statistics_ui <- function(id) {
 # Server function for the summary statistics module
 descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_options) {
   moduleServer(id, function(input, output, session) {
-    ns <- session$ns
-
     # Update the input for the group by picker
     observeEvent(res_nca(), {
       req(res_nca())
@@ -86,25 +84,26 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
 
-      results <- calculate_F(res_nca(), auc_options()) %>%
-        PKNCA_add_F(res_nca(), .)
+      results <- res_nca()
 
       # Join subject data to allow the user to group by it
-      cols_to_join <- c(classification_cols, unname(unlist(res_nca()$data$conc$columns$groups)))
+      cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
       results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
       stats_data <- inner_join(
         results$result,
         results_to_join,
         by = intersect(names(results$result), names(results_to_join))
       ) %>%
-        filter(!(type_interval == "manual" & PPTESTCD != "aucint.last")) %>%
-        mutate(PPTESTCD = ifelse(
-          type_interval == "manual", paste0(PPTESTCD, signif(start), "-", signif(end)),
-          PPTESTCD
-        ))
+        filter(type_interval != "manual")
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
+    })
+
+    summary_stats_filtered <- reactive({
+      summary_stats() %>%
+        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
+        filter(Statistic %in% input$select_display_statistic)
     })
 
     observeEvent(summary_stats(), {
@@ -129,15 +128,11 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
 
     # Render the reactive summary table in a data table
     output$descriptive_stats <- renderReactable({
-      req(summary_stats())
-      log_info("Rendering descriptive statistics table")
-
-      data <- summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
-        filter(Statistic %in% input$select_display_statistic)
+      req(summary_stats_filtered())
+      log_trace("Rendering descriptive statistics table")
 
       reactable(
-        data,
+        summary_stats_filtered(),
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -150,13 +145,17 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
     })
 
     # Download summary statistics as CSV
-    output$download_browser <- downloadHandler(
+    output$download_summary <- downloadHandler(
       filename = function() {
-        paste("NCA_summary.csv")
+        paste0(
+          format(Sys.time(), "%Y-%m-%d"), "_",
+          summary_stats_filtered()$STUDYID[1],
+          "_NCA_summary.csv"
+        )
       },
       content = function(file) {
         log_info("Downloading summary statistics as CSV")
-        write.csv(summary_stats(), file)
+        write.csv(summary_stats_filtered(), file)
       }
     )
 

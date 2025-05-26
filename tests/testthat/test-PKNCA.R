@@ -58,16 +58,16 @@ describe("PKNCA_create_data_object", {
 
   it("handles missing columns required for the functions in the input data", {
     # Missing columns in the function
-    missing_columns_conc <- simple_data[, -which(names(simple_data) %in%  c("AFRLT"))]
+    missing_columns_conc <- simple_data[, -which(names(simple_data) %in%  c("ARRLT"))]
     expect_error(
       PKNCA_create_data_object(missing_columns_conc),
-      paste("Missing required columns: AFRLT")
+      paste("Missing required columns: ARRLT")
     )
 
-    missing_columns_dose <- simple_data[, -which(names(simple_data) %in%  c("ARRLT"))]
+    missing_columns_dose <- simple_data[, -which(names(simple_data) %in%  c("AFRLT"))]
     expect_error(
       PKNCA_create_data_object(missing_columns_dose),
-      paste("Missing required columns: ARRLT")
+      paste("Missing required columns: AFRLT")
     )
 
   })
@@ -94,8 +94,18 @@ describe("PKNCA_create_data_object", {
     # Check that flag = FALSE values are removed
     expect_equal(nrow(results$conc$data), 5)
   })
-  # TODO: Add test for multiple units once implemented
 
+  it("throws an error when there are missing values in grouping columns", {
+    # Introduce missing values in grouping columns
+    data_with_na <- simple_data
+    data_with_na$STUDYID[1] <- NA
+
+    expect_error(
+      PKNCA_create_data_object(data_with_na),
+      "Missing values detected in grouping columns: STUDYID"
+    )
+  })
+  # TODO: Add test for multiple units once implemented
 })
 
 
@@ -225,6 +235,44 @@ describe("PKNCA_update_data_object", {
     ))
   })
 
+  it("handles partial AUCs (auc_data) creating proper intervals for each", {
+    auc_data <- data.frame(
+      start_auc = c(0, 1, 2),
+      end_auc = c(1, 2, 3)
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      auc_data = auc_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_dosno = dosnos,
+      selected_pcspec = pcspecs,
+      params = params,
+      should_impute_c0 = TRUE
+    )
+    # Check that interval_type column is present with at least one "manual" value
+    expect_true(any(updated_data$intervals$type_interval == "manual"))
+
+    # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
+    auc_intervals <- updated_data$intervals  %>%
+      dplyr::filter(type_interval == "manual") %>%
+      dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM, DOSNO, auclast, aucint.last, tmax)
+
+    expected_res <- tidyr::tibble(
+      start = c(0, 1, 2),
+      end = c(1, 2, 3),
+      STUDYID = rep("STUDY001", 3),
+      DRUG = rep("DrugA", 3),
+      USUBJID = rep("SUBJ001", 3),
+      PARAM = rep("AnalyteA", 3),
+      DOSNO = rep(1, 3),
+      auclast = rep(FALSE, 3),
+      aucint.last = rep(TRUE, 3),
+      tmax = rep(FALSE, 3)
+    )
+
+    expect_equal(auc_intervals, expected_res)
+  })
 })
 
 

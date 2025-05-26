@@ -20,7 +20,7 @@
   fluidRow(
     column(
       width = 6,
-      checkboxInput(rule_id, label)
+      checkboxInput(rule_id, label, value = TRUE)
     ),
     column(
       width = 6,
@@ -77,7 +77,8 @@ nca_setup_ui <- function(id) {
                      pickerInput(
                        ns("bioavailability"),
                        "Calculate Bioavailability:",
-                       choices = c("f_aucinf.obs", "f_aucinf.pred", "f_auclast"),
+                       choices = pknca_cdisc_terms$PPTESTCD %>%
+                         subset(startsWith(., "FABS_") | startsWith(., "FREL_")),
                        multiple = TRUE,
                        selected = NULL
                      )
@@ -345,7 +346,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
-      "aucint.last",
       "auclast", "auclast.dn",
       "cmax", "cmax.dn",
       "clast.obs", "clast.obs.dn",
@@ -361,7 +361,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     output$nca_parameters <- renderReactable({
       #remove parameters that are currently unavailable in PKNCA
       params_data <- pknca_cdisc_terms %>%
-        filter(!PPTESTCD %in% c("FAB", "FREL"))
+        filter(TYPE != "PKNCA-not-covered")
 
       default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
 
@@ -384,7 +384,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
 
       params_data <- pknca_cdisc_terms %>%
-        filter(!PPTESTCD %in% c("FAB", "FREL"))
+        filter(TYPE != "PKNCA-not-covered")
       selected_terms <- params_data[selected_rows, , drop = FALSE]
 
       # Return PKNCA column names
@@ -540,12 +540,16 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show("bioavailability")
 
+        f_options <- pknca_cdisc_terms %>%
+          filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
+          pull(PKNCA, PPTESTCD)
+
         updatePickerInput(
           session,
           inputId = "bioavailability",
           "Calculate Bioavailability:",
-          choices = c("f_AUCIFO", "f_AUCIFP", "f_AUCLST"),
-          selected = "f_AUCIFO"
+          choices = f_options,
+          selected = f_options[1]
         )
       }
 
@@ -572,14 +576,17 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
       route_column <- "ROUTE"
       std_route_column <- "std_route"
-      col_groups <- unname(unlist(processed_pknca_data()$conc$columns$groups))
+      col_groups <- unname(unlist(processed_pknca_data()$dose$columns$groups))
 
       data <- data %>%
-        left_join(processed_pknca_data()$dose$data, by = c(col_groups, "DOSNO")) %>%
+        left_join(processed_pknca_data()$dose$data %>%
+                    select(all_of(c(col_groups, route_column, std_route_column,
+                                    "TIME_DOSE", "DOSNO", "DOSNOA"))),
+                  by = c(col_groups, "TIME_DOSE", "DOSNO", "DOSNOA")) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
-        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME) %>%
-        mutate(start = start - first(TIME), end = end - first(TIME)) %>%
-        select(!!!syms(colnames(data)), conc_groups,
+        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
+        mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
+        select(!!!syms(colnames(data)),
                all_of(c(route_column, std_route_column)))
 
       reactable(
