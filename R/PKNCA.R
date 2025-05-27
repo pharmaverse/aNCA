@@ -65,6 +65,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
+  volume_column = "VOLUME"
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -113,7 +114,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
-    time.nominal = "NFRLT"
+    time.nominal = "NFRLT",
+    volume = volume_column
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
