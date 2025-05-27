@@ -70,9 +70,11 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
         distinct()
 
       # Add flaging column in the pivoted results
+      # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared, we can simplify this part
+      #                by using the PKNCA object
       rule_thr <- lapply(rules(), FUN =  \(x) x$threshold)
       rule_pretty_names <- sapply(names(rules()), \(x) PKNCA::get.interval.cols()[[x]]$pretty_name)
-      rule_msgs <- paste0(rule_pretty_names, c(" < ", " > ", " > ", " < "), rule_thr)
+      rule_msgs <- paste0(rule_pretty_names, c(" < ", " > ", " > ", " < "))
       
       rules_applied <- sapply(rules(), FUN =  \(x) x$is.checked)
       params_applied <- translate_terms(names(rules()), "PKNCA", "PPTEST")[rules_applied]
