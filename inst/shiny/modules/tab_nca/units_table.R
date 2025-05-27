@@ -102,6 +102,7 @@ units_table_server <- function(id, mydata) {
         ),
         options = list(
           paging = FALSE,
+          scrollX = TRUE,
           searching = TRUE,
           autoWidth = TRUE,
           dom = "t",
