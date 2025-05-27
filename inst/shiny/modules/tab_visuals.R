@@ -436,7 +436,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         session,
         "selected_colorvars_boxplot",
         choices = colorvar_choices,
-        selected = "NCA_PROFILE"
+        selected = "PARAM"
       )
     })
 

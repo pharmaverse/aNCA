@@ -115,13 +115,17 @@ base::local({
       1,
       1
     ),
+    PCSPEC = c(
+      rep("PLASMA", 9)
+    ),
     # Included by aNCA internally
     is.excluded.hl = FALSE,
     is.included.hl = FALSE,
     exclude_half.life = FALSE,
     # Units
     AVALU = "mg/L",
-    RRLTU = "h"
+    RRLTU = "h",
+    DOSEU = "dg/L"
   )
 
   # Create Testing Dose Data
