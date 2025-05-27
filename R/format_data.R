@@ -233,6 +233,23 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
+  # Conditionally override params for urine/feces if PCSPEC is present
+  if ("PCSPEC" %in% conc_groups) {
+    dose_intervals <- dose_intervals %>%
+      mutate(is_excreta = grepl("urine|feces|faeces", PCSPEC, ignore.case = TRUE)) %>%
+      mutate(across(
+        any_of(all_pknca_params),
+        ~ if_else(
+          is_excreta,
+          if_else(cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr."),
+                  cur_column() %in% params,
+                  FALSE),
+          .  # unchanged for non-excreta
+        )
+      )) %>%
+      select(-is_excreta)
+  }
+
   dose_intervals
 }
 

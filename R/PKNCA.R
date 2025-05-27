@@ -108,15 +108,25 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   df_conc$REASON <- NA
   df_conc$exclude_half.life <- FALSE
 
-  # Create PKNCA objects
-  pknca_conc <- PKNCA::PKNCAconc(
-    df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
-    exclude_half.life = "exclude_half.life",
-    include_half.life = "include_half.life",
-    time.nominal = "NFRLT",
-    volume = volume_column
-  )
+  # Create PKNCA conc object
+  if(volume_column %in% colnames(df_conc)) {
+    pknca_conc <- PKNCA::PKNCAconc(
+      df_conc,
+      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      include_half.life = "include_half.life",
+      time.nominal = "NFRLT",
+      volume = volume_column
+    )
+  } else {
+    pknca_conc <- PKNCA::PKNCAconc(
+      df_conc,
+      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      include_half.life = "include_half.life",
+      time.nominal = "NFRLT"
+    )
+  }
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,

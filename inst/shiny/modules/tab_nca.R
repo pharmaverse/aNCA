@@ -120,6 +120,14 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     res_nca <- reactive({
       req(processed_pknca_data())
 
+      if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals, is.logical)]))) {
+        log_error("Invalid parameters")
+        showNotification("No suitable parameters selected for NCA calculation.
+         Please go back and select parameters suitable for the data.",
+                         type = "error", duration = NULL)
+        return(NULL)
+      }
+      
       withProgress(message = "Calculating NCA...", value = 0, {
         log_info("Calculating NCA results...")
         tryCatch({
