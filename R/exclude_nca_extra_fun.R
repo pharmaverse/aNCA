@@ -5,7 +5,7 @@ exclude_nca_by_param <- function(parameter, min_value = NULL, max_value = NULL) 
 
   # Check min_value and max_value are well defined
   is.defined.min_value <- any(!is.null(min_value) & !is.na(min_value) & !missing(min_value))
-  is.defined.max_value <- any(!is.null(max_value) & !is.na(max_value) & !missing(min_value))
+  is.defined.max_value <- any(!is.null(max_value) & !is.na(max_value) & !missing(max_value))
 
   if (is.defined.min_value && (length(min_value) > 1 || !is.numeric(min_value))) {
     stop("when defined min_value must be single numeric values")
