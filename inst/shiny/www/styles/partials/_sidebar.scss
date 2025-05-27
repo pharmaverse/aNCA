@@ -1,0 +1,33 @@
+.bslib-sidebar-layout {
+    --_sidebar-width: 170px !important;
+}
+
+.sidebar .sidebar-content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.sidebar .sidebar-content .row > :nth-child(2) {
+    display: none;
+}
+
+.sidebar .sidebar-content .row > :first-child {
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sidebar .sidebar-content .row > :first-child > ul > li > a {
+    padding-left: 30px;
+    padding-right: 30px;
+    color: #21201F;
+}
+
+.sidebar .sidebar-content .row > :first-child > ul > li > a.active {
+    background-color: #F0F4FD;
+    color: #21201F;
+}
+
+.sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
+    color: #bcbcbb;
+}
