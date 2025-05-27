@@ -222,13 +222,6 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
     mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
 
-    # Prevent any potential attributes associated to the column names
-    mutate(across(everything(), ~ {
-      column <- .
-      attributes(column) <- NULL
-      column
-    })) %>%
-
     # Set FALSE for aucint when end = Inf
     mutate(across(starts_with("aucint.inf.pred"), ~ if_else(end == Inf, FALSE, .))) %>%
     #TODO: once TAU is included in the app, add new line for aucint to be end = TAU

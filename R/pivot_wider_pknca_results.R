@@ -27,7 +27,6 @@
 #' @export
 #'
 pivot_wider_pknca_results <- function(myres) {
-
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified

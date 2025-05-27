@@ -119,7 +119,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
-
       withProgress(message = "Calculating NCA...", value = 0, {
         log_info("Calculating NCA results...")
         tryCatch({
