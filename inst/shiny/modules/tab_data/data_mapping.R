@@ -13,11 +13,12 @@ MANUAL_UNITS <- list(
 
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
+  "Group Identifiers" = c("STUDYID", "USUBJID"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "DOSNO", "DOSEA", "ADOSEDUR"),
+  "Dose Variables" = c("DRUG", "DOSNO", "DOSEA"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
-  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
+  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU"),
+  "Supplemental Variables" = c("Grouping_Variables", "ADOSEDUR", "VOLUME", "VOLUMEU")
 )
 
 # Define the desired column order
@@ -123,6 +124,38 @@ data_mapping_ui <- function(id) {
         h5("Group Identifiers"),
         .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
         .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
+      ),
+      tags$section(
+        h5("Sample Variables"),
+        .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
+        .column_mapping_widget(ns, "PCSPEC", "Character format"),
+        .column_mapping_widget(ns, "AVAL", "Numeric format.")
+      ),
+      tags$section(
+        h5("Dose Variables"),
+        .column_mapping_widget(ns, "DRUG", "Character format."),
+        .column_mapping_widget(ns, "DOSNO", "Numeric format."),
+        .column_mapping_widget(
+          ns, "ROUTE",
+          "Character format, stating either 'intravascular' or 'extravascular'."
+        ),
+        .column_mapping_widget(ns, "DOSEA", "Numeric format."),
+      ),
+      tags$section(
+        h5("Time Variables"),
+        .column_mapping_widget(ns, "AFRLT", "Numeric format"),
+        .column_mapping_widget(ns, "ARRLT", "Numeric format"),
+        .column_mapping_widget(ns, "NFRLT", "Numeric format"),
+        .column_mapping_widget(ns, "NRRLT", "Numeric format")
+      ),
+      tags$section(
+        h5("Unit Variables"),
+        .column_mapping_widget(ns, "AVALU", "Character format."),
+        .column_mapping_widget(ns, "DOSEU", "Character format."),
+        .column_mapping_widget(ns, "RRLTU", "Character format.")
+      ),
+      tags$section(
+        h5("Supplemental Variables"),
         div(
           class = "column-mapping-row",
           tooltip(
@@ -141,41 +174,14 @@ data_mapping_ui <- function(id) {
             class = "column-mapping-output",
             span("Additional Grouping Variables")
           )
-        )
-      ),
-      tags$section(
-        h5("Sample Variables"),
-        .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
-        .column_mapping_widget(ns, "PCSPEC", "Character format"),
-        .column_mapping_widget(ns, "AVAL", "Numeric format.")
-      ),
-      tags$section(
-        h5("Dose Variables"),
-        .column_mapping_widget(ns, "DRUG", "Character format."),
-        .column_mapping_widget(ns, "DOSNO", "Numeric format."),
-        .column_mapping_widget(
-          ns, "ROUTE",
-          "Character format, stating either 'intravascular' or 'extravascular'."
         ),
-        .column_mapping_widget(ns, "DOSEA", "Numeric format."),
         .column_mapping_widget(
           ns, "ADOSEDUR",
           "Numeric format. Only required for infusion studies,
           otherwise select NA"
-        )
-      ),
-      tags$section(
-        h5("Time Variables"),
-        .column_mapping_widget(ns, "AFRLT", "Numeric format"),
-        .column_mapping_widget(ns, "ARRLT", "Numeric format"),
-        .column_mapping_widget(ns, "NFRLT", "Numeric format"),
-        .column_mapping_widget(ns, "NRRLT", "Numeric format")
-      ),
-      tags$section(
-        h5("Unit Variables"),
-        .column_mapping_widget(ns, "AVALU", "Character format."),
-        .column_mapping_widget(ns, "DOSEU", "Character format."),
-        .column_mapping_widget(ns, "RRLTU", "Character format.")
+        ),
+        .column_mapping_widget(ns, "VOLUME", "Numeric format. Only required for urine/excretion studies."),
+        .column_mapping_widget(ns, "VOLUMEU", "Character format. Only required for urine/excretion studies.")
       ),
       input_task_button(ns("submit_columns"), "Submit Mapping")
     )
@@ -205,8 +211,11 @@ data_mapping_server <- function(id, adnca_data) {
     # Observe submit button click and update processed_data
     mapping <- reactive({
       input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
-      input_ids <- c(input_ids, "select_Grouping_Variables") # Include manually added input
       mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      
+      if(mapping_list$select_VOLUME == "") {
+       mapping_list <- mapping_list[!names(mapping_list) %in% c("select_VOLUME", "select_VOLUMEU")]
+      }
       mapping_list
     })
 
