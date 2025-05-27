@@ -6,10 +6,10 @@ describe("exclude_nca_by_param", {
     mutate(PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA")) %>%
     filter(PPTESTCD %in% c("r.squared", "span.ratio"))
 
-  it("excludes rows based on min_val", {
+  it("excludes rows based on min_thr", {
     res_min_excluded <- PKNCA::exclude(
       my_result,
-      FUN = exclude_nca_by_param("span.ratio", min_val = 100)
+      FUN = exclude_nca_by_param("span.ratio", min_thr = 100)
     )
     expect_equal(
       as.data.frame(res_min_excluded)$exclude,
@@ -17,10 +17,10 @@ describe("exclude_nca_by_param", {
     )
   })
 
-  it("does not exclude rows when min_val is not met", {
+  it("does not exclude rows when min_thr is not met", {
     res_min_not_excluded <- PKNCA::exclude(
       my_result,
-      FUN = exclude_nca_by_param("span.ratio", min_val = 0.01)
+      FUN = exclude_nca_by_param("span.ratio", min_thr = 0.01)
     )
     expect_equal(
       as.data.frame(res_min_not_excluded)$exclude,
@@ -28,10 +28,10 @@ describe("exclude_nca_by_param", {
     )
   })
 
-  it("excludes rows based on max_val", {
+  it("excludes rows based on max_thr", {
     res_max_excluded <- PKNCA::exclude(
       my_result,
-      FUN = exclude_nca_by_param("span.ratio", max_val = 0.01)
+      FUN = exclude_nca_by_param("span.ratio", max_thr = 0.01)
     )
     expect_equal(
       as.data.frame(res_max_excluded)$exclude,
@@ -39,10 +39,10 @@ describe("exclude_nca_by_param", {
     )
   })
 
-  it("does not exclude rows when max_val is not exceeded", {
+  it("does not exclude rows when max_thr is not exceeded", {
     res_max_not_excluded <- PKNCA::exclude(
       my_result,
-      FUN = exclude_nca_by_param("span.ratio", max_val = 100)
+      FUN = exclude_nca_by_param("span.ratio", max_thr = 100)
     )
     expect_equal(
       as.data.frame(res_max_not_excluded)$exclude,
@@ -50,29 +50,29 @@ describe("exclude_nca_by_param", {
     )
   })
 
-  it("throws an error for invalid min_val", {
+  it("throws an error for invalid min_thr", {
     expect_error(
-      exclude_nca_by_param("span.ratio", min_val = "invalid"),
-      "when defined min_val must be a single numeric value"
+      exclude_nca_by_param("span.ratio", min_thr = "invalid"),
+      "when defined min_thr must be a single numeric value"
     )
   })
 
-  it("throws an error for invalid max_val", {
+  it("throws an error for invalid max_thr", {
     expect_error(
-      exclude_nca_by_param(parameter = "span.ratio", max_val = c(1, 2)),
-      "when defined max_val must be a single numeric value"
+      exclude_nca_by_param(parameter = "span.ratio", max_thr = c(1, 2)),
+      "when defined max_thr must be a single numeric value"
     )
   })
 
-  it("throws an error when min_val is greater than max_val", {
+  it("throws an error when min_thr is greater than max_thr", {
     expect_error(
-      exclude_nca_by_param("span.ratio", min_val = 10, max_val = 5),
-      "if both defined min_val must be less than max_val"
+      exclude_nca_by_param("span.ratio", min_thr = 10, max_thr = 5),
+      "if both defined min_thr must be less than max_thr"
     )
   })
 
   it("returns the original object when the parameter is not found", {
-    res <- PKNCA::exclude(my_result, FUN = exclude_nca_by_param("nonexistent", min_val = 0))
+    res <- PKNCA::exclude(my_result, FUN = exclude_nca_by_param("nonexistent", min_thr = 0))
     expect_true(all(is.na(as.data.frame(res)$exclude)))
   })
 
@@ -81,7 +81,7 @@ describe("exclude_nca_by_param", {
     my_result_na$result$PPORRES <- NA
     res <- PKNCA::exclude(
       my_result_na,
-      FUN = exclude_nca_by_param("span.ratio", min_val = 0)
+      FUN = exclude_nca_by_param("span.ratio", min_thr = 0)
     )
     expect_true(all(is.na(as.data.frame(res)$exclude)))
   })
@@ -91,7 +91,7 @@ describe("exclude_nca_by_param", {
     expect_error(
       exclude_nca_by_param(
         param = "r.squared",
-        min_val = 0.7
+        min_thr = 0.7
       )(data.frame(PPTESTCD = "r.squared", PPORRES = c(1, 1))),
       regexp = "Should not see more than one r.squared (please report this as a bug)",
       fixed = TRUE
