@@ -151,15 +151,52 @@ g_pkcg01_log:
   fun: g_pkcg01_log
 
 g_pkcg02_lin:
+  template: g_pkcg01_lin
+  pkid: pkcg02
+  label: "pkcg02 - linear"
+  description: "Combined plot of PK concentrations vs. time with linear scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
+  fun: g_pkcg02_lin
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+    
+g_pkcg02_log:
+  template: g_pkcg01_lin
+  pkid: pkcg02
+  label: "pkcg02 - log"
+  description: "Combined plots of PK concentrations vs. time with log10 scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
+  fun: g_pkcg02_log
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+
+g_pkcg03_lin:
   is_default: true
   type: Graph
   dataset: ADPC
-  pkid: pkcg02
-  label: "pkcg02 - linear"
-  scale_type: "LIN"
-  description: "Combined plot of concentrations vs. time (one plot per patient/subject) with linear scale"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
-  fun: g_pkcg02_lin
+  pkid: pkcg03
+  label: "pkcg03 - linear"
+  description: "Individual plots of concentrations vs. time (one plot per subject) with linear scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
+  fun: g_pkcg03_lin
   options:
     .group_label_1: "General"
     xvar:
@@ -176,11 +213,31 @@ g_pkcg02_lin:
         - PCSPEC
         - PARAM
         - TRT01A
-    color_var:
+    mean_group_var:
       type: select
-      label: "Color variable"
+      label: "Mean Grouping variable"
       choices: .colnames
-
+      default: "DOSEA"
+    summary_method:
+      type: select
+      label: "Summary Statistic"
+      default: "Mean with Standard Deviation"
+      multiple: false
+      choices:
+        - Mean_ci
+        - Mean_sdi
+        - Mean_se
+        - Median_ci
+    whiskers_lwr_upr:
+      type: select
+      label: "Whiskers selection"
+      default: "Both"
+      multiple: false
+      choices:
+        - Both
+        - Lower
+        - Upper
+        
     .group_label_2: "Labels"
     title:
       type: text
@@ -202,9 +259,6 @@ g_pkcg02_lin:
       label: "X ticks"
       choices: .colnames
       default: "NFRLT"
-    color_var_label:
-      type: text
-      label: Color variable label
 
     .group_label_3: "Limits"
     xmin:
@@ -215,8 +269,9 @@ g_pkcg02_lin:
       type: numeric
     ymax:
       type: numeric
-g_pkcg02_log:
-  template: g_pkcg02_lin
-  label: "pkcg02 - log"
+
+g_pkcg03_log:
+  template: g_pkcg03_lin
+  label: "pkcg03 - log"
   description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
-  fun: g_pkcg02_log
+  fun: g_pkcg03_log

@@ -106,178 +106,251 @@ base::local({
       rep(1, 5),
       rep(1, 5)
     ),
-    DOSNO = c(
-      1,
-      c(1, 2),
-      c(1, 2),
-      1,
-      1,
-      1,
-      1
-    ),
-    # Included by aNCA internally
-    is.excluded.hl = FALSE,
-    is.included.hl = FALSE,
-    exclude_half.life = FALSE,
-    # Units
-    AVALU = "mg/L",
-    RRLTU = "h"
+      PCSPEC = c(
+        rep("PLASMA", 9)
+      ),
+      # Included by aNCA internally
+      is.excluded.hl = FALSE,
+      is.included.hl = FALSE,
+      exclude_half.life = FALSE,
+      # Units
+      AVALU = "mg/L",
+      RRLTU = "h",
+      DOSEU = "dg/L",
+      TRT01A = "Dummy treatment"
+    )
+    
+    # Create Testing Dose Data
+    FIXTURE_DOSE_DATA <<- data.frame(
+      AFRLT = c(
+        0,
+        c(0, 5),
+        c(0, 5),
+        0,
+        0,
+        0,
+        0
+      ),
+      ARRLT = c(
+        0,
+        c(0, 0),
+        c(0, 0),
+        0,
+        0,
+        0,
+        0
+      ),
+      NFRLT = c(
+        0,
+        c(0, 5),
+        c(0, 5),
+        0,
+        0,
+        0,
+        0
+      ),
+      NRRLT = c(
+        0,
+        c(0, 0),
+        c(0, 0),
+        0,
+        0,
+        0,
+        0
+      ),
+      ROUTE = c(
+        rep("extravascular", 3),
+        rep("intravascular", 5),
+        "extravascular"
+      ),
+      ADOSE = 1,
+      DRUG = "A",
+      ADOSEDUR = c(
+        rep(0, 6),
+        1,            # 5.1 (Infusion)
+        0,
+        0
+      ),
+      USUBJID = c(
+        1,
+        rep(2, 2),
+        rep(3, 2),
+        4,
+        5,
+        6,
+        7
+      ),
+      DOSNO = c(
+        1,
+        c(1, 2),
+        c(1, 2),
+        1,
+        1,
+        1,
+        1
+      ),
+      DOSNOA = c(
+        1,
+        c(1, 2),
+        c(1, 2),
+        1,
+        1,
+        1,
+        1
+      ),
+      TRT01A = "Dummy treatment"
+    )
+    # Perform NCA Analysis
+    all_params <- setdiff(names(PKNCA::get.interval.cols()),
+                          c("start", "end"))
+    main_intervals <- data.frame(
+      start = c(0, 5),
+      end = c(5, 10),
+      type_interval = "main",  # Assumption 2: Include type_interval column
+      DOSNO = c(1, 2)
+    ) %>%
+      left_join(
+        FIXTURE_DOSE_DATA %>%
+          select(USUBJID, DOSNO, DOSNOA) %>%
+          unique()
+      )
+    main_intervals[, all_params] <- FALSE
+    main_intervals <- main_intervals %>%
+      mutate(
+        half.life = TRUE,
+        cmax = TRUE,
+        auclast = TRUE,
+        aucinf.obs = TRUE
+      )
+    auc_intervals <- data.frame(
+      # Intervals for AUC_0-2, AUC_2-4 in each dose
+      start = c(0, 2, 5, 7),
+      end = c(2, 4, 7, 9),
+      type_interval = "manual",  # Assumption 2: Include type_interval column
+      DOSNO = c(1, 1, 2, 2)
+    ) %>%
+      left_join(
+        FIXTURE_DOSE_DATA %>%
+          select(USUBJID, DOSNO, DOSNOA) %>%
+          unique(),
+        by = "DOSNO",
+        relationship = "many-to-many"
+      )
+    auc_intervals[, all_params] <- FALSE
+    auc_intervals <- auc_intervals %>%
+      mutate(
+        aucint.last = TRUE
+      )
+    FIXTURE_INTERVALS <<- rbind(main_intervals, auc_intervals) %>%
+      mutate(impute = case_when(
+        USUBJID == 1 & DOSNO == 1 ~ NA_character_,
+        USUBJID == 2 & DOSNO == 1 ~ "start_conc0",
+        USUBJID == 2 & DOSNO == 2 ~ "start_predose",
+        USUBJID == 3 & DOSNO == 1 ~ "start_logslope",
+        USUBJID == 3 & DOSNO == 2 ~ "start_logslope",
+        USUBJID == 4 & DOSNO == 1 ~ "start_c1",
+        USUBJID == 4 & DOSNO == 2 ~ "start_c1",
+        USUBJID == 5 & DOSNO == 1 ~ "start_conc0",
+        USUBJID == 5 & DOSNO == 2 ~ "start_conc0",
+        USUBJID == 6 & DOSNO == 1 ~ "start_conc0",
+        USUBJID == 6 & DOSNO == 2 ~ "start_conc0",
+        USUBJID == 7 & DOSNO == 1 ~ "start_conc0",
+        USUBJID == 7 & DOSNO == 2 ~ "start_conc0",
+        TRUE ~ NA_character_
+      ))
+    FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
+      data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
+      data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
+                                   route = "ROUTE", duration = "ADOSEDUR",
+                                   time.nominal = "NFRLT"),
+      units = PKNCA::pknca_units_table(
+        concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
+      )
+    )
+    FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
+    FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
+    # Add start_dose and end_dose columns
+    FIXTURE_PKNCA_RES <<- withCallingHandlers(
+      PKNCA::pk.nca(FIXTURE_PKNCA_DATA),
+      warning = function(w) {
+        # Suppress warnings matching the regex "Too few points for half-life"
+        if (grepl("^Too few points for half-life", conditionMessage(w))) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    )
+    #####################################################################
+    # Temporarily for some odd reason we cannot use keep_interval_cols,
+    # so we are manually making it
+    #
+    # TODO: Substitute this dirty hard coded trick with the proper way
+    FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
+      mutate(
+        type_interval = if ("type_interval" %in% names(.)) {
+          type_interval
+        } else {
+          ifelse((end - start) == 2, "manual", "main")
+        },
+        DOSNO = if ("DOSNO" %in% names(.)) {
+          DOSNO
+        } else {
+          ifelse(
+            start < 5,
+            1,
+            2
+          )
+        },
+        DOSNOA = if ("DOSNOA" %in% names(.)) {
+          DOSNOA
+        } else {
+          ifelse(
+            start < 5,
+            1,
+            2
+          )
+        }
+      )
+    #####################################################################
+    dose_data_to_join_fixture <- select(
+      FIXTURE_PKNCA_RES$data$dose$data,
+      -exclude,
+      -FIXTURE_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
+    )
+    FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
+      inner_join(
+        dose_data_to_join_fixture,
+        by = intersect(names(.), names(dose_data_to_join_fixture))
+      ) %>%
+      mutate(
+        # Assumption 4: start_dose &  end_dose relative to the dose time
+        start_dose = start - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
+        end_dose = end - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
+        # Assumption 3: PPSTRESU & PPSTRES are always in the results object
+        PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
+        PPSTRES = PPORRES,
+        # Assumption 5: PPTESTCD column folllows CDISC format
+        PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+      )
+})
+  # Dummy data
+  # Import dataset from testthat/data folder
+  # ToDo (Gerardo): These fixtures are supporting still test-bioavailability.R
+  # We need to substitute them with the previous ones for consistency
+  DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
+  # Create PKNCAdata object
+  PKNCA_DATA_FIXTURE <- PKNCA_create_data_object(DUMMY_DATA_FIXTURE %>% filter(PCSPEC == "Plasma"))
+  # Set intervals
+  PKNCA_DATA_FIXTURE$intervals <- format_pkncadata_intervals(
+    PKNCA_DATA_FIXTURE$conc, PKNCA_DATA_FIXTURE$dose,
+    params = c("aucinf.obs", "aucint.last", "auclast",
+               "cmax", "half.life", "tmax",
+               "lambda.z", "lambda.z.n.points",
+               "r.squared", "adj.r.squared", "lambda.z.time.first")
   )
-
-  # Create Testing Dose Data
-  FIXTURE_DOSE_DATA <<- data.frame(
-    AFRLT = c(
-      0,
-      c(0, 5),
-      c(0, 5),
-      0,
-      0,
-      0,
-      0
-    ),
-    ARRLT = c(
-      0,
-      c(0, 0),
-      c(0, 0),
-      0,
-      0,
-      0,
-      0
-    ),
-    NFRLT = c(
-      0,
-      c(0, 5),
-      c(0, 5),
-      0,
-      0,
-      0,
-      0
-    ),
-    NRRLT = c(
-      0,
-      c(0, 0),
-      c(0, 0),
-      0,
-      0,
-      0,
-      0
-    ),
-    ROUTE = c(
-      rep("extravascular", 3),
-      rep("intravascular", 5),
-      "extravascular"
-    ),
-    ADOSE = 1,
-    DRUG = "A",
-    ADOSEDUR = c(
-      rep(0, 6),
-      1,            # 5.1 (Infusion)
-      0,
-      0
-    ),
-    USUBJID = c(
-      1,
-      rep(2, 2),
-      rep(3, 2),
-      4,
-      5,
-      6,
-      7
-    ),
-    DOSNO = c(
-      1,
-      c(1, 2),
-      c(1, 2),
-      1,
-      1,
-      1,
-      1
-    ),
-    DOSNOA = c(
-      1,
-      c(1, 2),
-      c(1, 2),
-      1,
-      1,
-      1,
-      1
-    )
-  )
-
-  # Perform NCA Analysis
-  all_params <- setdiff(names(PKNCA::get.interval.cols()),
-                        c("start", "end"))
-  main_intervals <- data.frame(
-    start = c(0, 5),
-    end = c(5, 10),
-    type_interval = "main",  # Assumption 2: Include type_interval column
-    DOSNO = c(1, 2)
-  ) %>%
-    left_join(
-      FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO, DOSNOA) %>%
-        unique()
-    )
-  main_intervals[, all_params] <- FALSE
-  main_intervals <- main_intervals %>%
-    mutate(
-      half.life = TRUE,
-      cmax = TRUE,
-      auclast = TRUE,
-      aucinf.obs = TRUE
-    )
-  auc_intervals <- data.frame(
-    # Intervals for AUC_0-2, AUC_2-4 in each dose
-    start = c(0, 2, 5, 7),
-    end = c(2, 4, 7, 9),
-    type_interval = "manual",  # Assumption 2: Include type_interval column
-    DOSNO = c(1, 1, 2, 2)
-  ) %>%
-    left_join(
-      FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO, DOSNOA) %>%
-        unique(),
-      by = "DOSNO",
-      relationship = "many-to-many"
-    )
-  auc_intervals[, all_params] <- FALSE
-  auc_intervals <- auc_intervals %>%
-    mutate(
-      aucint.last = TRUE
-    )
-  FIXTURE_INTERVALS <<- rbind(main_intervals, auc_intervals) %>%
-    mutate(impute = case_when(
-      USUBJID == 1 & DOSNO == 1 ~ NA_character_,
-      USUBJID == 2 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 2 & DOSNO == 2 ~ "start_predose",
-      USUBJID == 3 & DOSNO == 1 ~ "start_logslope",
-      USUBJID == 3 & DOSNO == 2 ~ "start_logslope",
-      USUBJID == 4 & DOSNO == 1 ~ "start_c1",
-      USUBJID == 4 & DOSNO == 2 ~ "start_c1",
-      USUBJID == 5 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 5 & DOSNO == 2 ~ "start_conc0",
-      USUBJID == 6 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 6 & DOSNO == 2 ~ "start_conc0",
-      USUBJID == 7 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 7 & DOSNO == 2 ~ "start_conc0",
-      TRUE ~ NA_character_
-    ))
-
-  FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
-    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
-                                 route = "ROUTE", duration = "ADOSEDUR",
-                                 time.nominal = "NFRLT"),
-    units = PKNCA::pknca_units_table(
-      concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-    )
-  )
-  FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
-  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
-
-  # Add start_dose and end_dose columns
-  FIXTURE_PKNCA_RES <<- withCallingHandlers(
-    PKNCA::pk.nca(FIXTURE_PKNCA_DATA),
+  PKNCA_DATA_FIXTURE <- create_start_impute(PKNCA_DATA_FIXTURE)
+  # Create NCA results
+  PKNCA_RESULTS_FIXTURE <- withCallingHandlers(
+    PKNCA_calculate_nca(PKNCA_DATA_FIXTURE),
     warning = function(w) {
       # Suppress warnings matching the regex "Too few points for half-life"
       if (grepl("^Too few points for half-life", conditionMessage(w))) {
@@ -285,90 +358,3 @@ base::local({
       }
     }
   )
-
-  #####################################################################
-  # Temporarily for some odd reason we cannot use keep_interval_cols,
-  # so we are manually making it
-  #
-  # TODO: Substitute this dirty hard coded trick with the proper way
-  FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
-    mutate(
-      type_interval = if ("type_interval" %in% names(.)) {
-        type_interval
-      } else {
-        ifelse((end - start) == 2, "manual", "main")
-      },
-      DOSNO = if ("DOSNO" %in% names(.)) {
-        DOSNO
-      } else {
-        ifelse(
-          start < 5,
-          1,
-          2
-        )
-      },
-      DOSNOA = if ("DOSNOA" %in% names(.)) {
-        DOSNOA
-      } else {
-        ifelse(
-          start < 5,
-          1,
-          2
-        )
-      }
-    )
-  #####################################################################
-
-  dose_data_to_join_fixture <- select(
-    FIXTURE_PKNCA_RES$data$dose$data,
-    -exclude,
-    -FIXTURE_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
-  )
-
-  FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
-    inner_join(
-      dose_data_to_join_fixture,
-      by = intersect(names(.), names(dose_data_to_join_fixture))
-    ) %>%
-    mutate(
-      # Assumption 4: start_dose &  end_dose relative to the dose time
-      start_dose = start - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
-      end_dose = end - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
-      # Assumption 3: PPSTRESU & PPSTRES are always in the results object
-      PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
-      PPSTRES = PPORRES,
-      # Assumption 5: PPTESTCD column folllows CDISC format
-      PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-    )
-})
-
-# Dummy data
-# Import dataset from testthat/data folder
-
-# ToDo (Gerardo): These fixtures are supporting still test-bioavailability.R
-# We need to substitute them with the previous ones for consistency
-
-DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
-
-# Create PKNCAdata object
-PKNCA_DATA_FIXTURE <- PKNCA_create_data_object(DUMMY_DATA_FIXTURE %>% filter(PCSPEC == "Plasma"))
-# Set intervals
-PKNCA_DATA_FIXTURE$intervals <- format_pkncadata_intervals(
-  PKNCA_DATA_FIXTURE$conc, PKNCA_DATA_FIXTURE$dose,
-  params = c("aucinf.obs", "aucint.last", "auclast",
-             "cmax", "half.life", "tmax",
-             "lambda.z", "lambda.z.n.points",
-             "r.squared", "adj.r.squared", "lambda.z.time.first")
-)
-PKNCA_DATA_FIXTURE <- create_start_impute(PKNCA_DATA_FIXTURE)
-
-# Create NCA results
-PKNCA_RESULTS_FIXTURE <- withCallingHandlers(
-  PKNCA_calculate_nca(PKNCA_DATA_FIXTURE),
-  warning = function(w) {
-    # Suppress warnings matching the regex "Too few points for half-life"
-    if (grepl("^Too few points for half-life", conditionMessage(w))) {
-      invokeRestart("muffleWarning")
-    }
-  }
-)
