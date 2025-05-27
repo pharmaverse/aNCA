@@ -198,9 +198,6 @@ describe("format_pkncadata_intervals", {
           doseu = "mg",
           amountu = "ng",
           timeu = "h"
-        ),
-        options = list(
-          keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval", "TIME_DOSE")
         )
       )
     )
