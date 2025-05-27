@@ -154,7 +154,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
     conc_data <- reactive(adnca_data()$conc$data)
 
     # File Upload Handling
@@ -321,7 +320,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
 
     # Choose dosenumbers to be analyzed
-    observeEvent(data()$DOSNO, priority = -1, {
+    observeEvent(data()$NCA_PROFILE, priority = -1, {
       req(data())
 
       updateSelectInput(
