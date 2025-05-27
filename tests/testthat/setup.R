@@ -116,8 +116,7 @@ base::local({
       # Units
       AVALU = "mg/L",
       RRLTU = "h",
-      DOSEU = "dg/L",
-      TRT01A = "Dummy treatment"
+      DOSEU = "dg/L"
     )
     
     # Create Testing Dose Data
@@ -197,8 +196,7 @@ base::local({
         1,
         1,
         1
-      ),
-      TRT01A = "Dummy treatment"
+      )
     )
     # Perform NCA Analysis
     all_params <- setdiff(names(PKNCA::get.interval.cols()),
@@ -346,6 +344,7 @@ base::local({
                "cmax", "half.life", "tmax",
                "lambda.z", "lambda.z.n.points",
                "r.squared", "adj.r.squared", "lambda.z.time.first")
+
   )
   PKNCA_DATA_FIXTURE <- create_start_impute(PKNCA_DATA_FIXTURE)
   # Create NCA results

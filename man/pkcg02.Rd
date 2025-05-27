@@ -28,7 +28,8 @@ pkcg02(
     = "Treatment"),
   scale = c("LIN", "LOG", "SBS")[1],
   studyid = "STUDYID",
-  trt_var = "TRT01A"
+  trt_var = "TRT01A",
+  plotly = TRUE
 )
 }
 \arguments{
@@ -48,11 +49,11 @@ pkcg02(
 
 \item{xbreaks_var}{A character string of the x-axis breaks.}
 
-\item{xbreaks_mindist}{A numeric value for minimum distance between x-axis breaks in centimeters.}
+\item{xbreaks_mindist}{A numeric value for \code{xbreak_mindist}.}
 
-\item{xmin}{A numeric value specifying the minimum x-axis limit.}
+\item{xmin}{A numeric value for the minimum x-axis limit.}
 
-\item{xmax}{A numeric value specifying the maximum x-axis limit.}
+\item{xmax}{A numeric value for the maximum x-axis limit.}
 
 \item{ymin}{A numeric value for the minimum y-axis limit.}
 
@@ -62,9 +63,9 @@ pkcg02(
 
 \item{ylab}{Character for y-axis label. Defaults: \code{yvar} label & \code{yvar_unit}.}
 
-\item{title}{A character string for plot title.}
+\item{title}{Character for plot title.}
 
-\item{subtitle}{A character string for plot subtitle.}
+\item{subtitle}{Character for plot subtitle.}
 
 \item{footnote}{A character string of a manual footnote for the plot.}
 
@@ -72,14 +73,16 @@ pkcg02(
 
 \item{plotgroup_names}{A character vector of the grouping variable names.}
 
-\item{scale}{A character string:"LIN", "LOG", or "SBS", defining the y-axis scale.}
+\item{scale}{Scale for the Y axis, either "LIN" or "LOG".}
 
 \item{studyid}{A character string specifying the study ID variable.}
 
 \item{trt_var}{A character string specifying the treatment variable.}
+
+\item{plotly}{Logical indicating whether to return plotly objects. Defaults to TRUE.}
 }
 \value{
-A list of ggplot objects for each unique group.
+A list of ggplot or plotly objects for each unique group.
 }
 \description{
 This function generates a list of plotly objects PK concentration-time profiles by group
