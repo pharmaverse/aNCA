@@ -123,6 +123,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       withProgress(message = "Calculating NCA...", value = 0, {
         log_info("Calculating NCA results...")
         tryCatch({
+          # Create env for storing PKNCA run warnings, so that warning messages can be appended
+          # from within warning handler without bleeding to global env.
+          pknca_warn_env <- new.env()
+          pknca_warn_env$warnings <- c()
+
           #' Calculate results
           res <- withCallingHandlers({
             processed_pknca_data() %>%
@@ -143,10 +148,16 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
                        conditionMessage(w))) {
-              log_warn(conditionMessage(w))
-              showNotification(conditionMessage(w), type = "warning", duration = 5)
+              pknca_warn_env$warnings <- append(pknca_warn_env$warnings, conditionMessage(w))
             }
             invokeRestart("muffleWarning")
+          })
+
+          # Display unique warnings thrown by PKNCA run.
+          purrr::walk(unique(pknca_warn_env$warnings), \(w) {
+            w_message <- paste0("PKNCA run produced a warning: ", w)
+            log_warn(w_message)
+            showNotification(w_message, type = "warning", duration = 5)
           })
 
           #' Apply units
