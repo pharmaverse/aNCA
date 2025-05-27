@@ -1,3 +1,19 @@
+#' NCA Slope selector module handling slope selection via interactive plots and tables.
+#'
+#' Generates appropriate interface and gathers user input from the table, as well as interactive
+#' plotly plots, with with user can define inclusions and exclusions for the data.
+#'
+#' @param id ID of the module.
+#' @param pknca_data `PKNCAdata` object with data to base the plots on.
+#' @param manual_slopes_override Reactive experssion with override for the manual slopes selection.
+#'                               If changes are detected, current settings will be overwritten with
+#'                               values from that reactive.
+#'
+#' @returns List with reactive expressions:
+#'   * manual_slopes - Data frame containing inclusions / exclusions.
+#'   * profiles_per_subject - Grouping for each subject.
+#'   * slopes_groups - Grouping for the slopes, in accordance to the settings.
+
 slope_selector_ui <- function(id) {
   ns <- NS(id)
   assets <- system.file("shiny/www", package = "aNCA")
@@ -105,8 +121,8 @@ slope_selector_ui <- function(id) {
 }
 
 
-slope_selector_server <- function(
-  id, pknca_data, res_nca, manual_slopes_override
+slope_selector_server <- function( # nolint
+  id, pknca_data, manual_slopes_override
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")

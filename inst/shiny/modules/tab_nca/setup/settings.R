@@ -1,46 +1,18 @@
-# Rule input helper ui
-.rule_input <- function(id, label, default, step, min, max = NULL) {
-  threshold_id <- paste0(id, "_threshold")
-  rule_id <- paste0(id, "_rule")
-  numeric_args <- list(
-    inputId = threshold_id,
-    label = "",
-    value = default,
-    step = step,
-    min = min
-  )
 
-  # Only include `max` if not NULL
-  if (!is.null(max)) {
-    numeric_args$max <- max
-  }
-
-  fluidRow(
-    column(
-      width = 6,
-      checkboxInput(rule_id, label, value = TRUE)
-    ),
-    column(
-      width = 6,
-      conditionalPanel(
-        condition = paste0("input['", rule_id, "'] == true"),
-        div(
-          class = "nca-numeric-container",
-          do.call(numericInput, numeric_args)
-        )
-      )
-    )
-  )
-}
-
-.update_rule_input <- function(session, id, checked, value) {
-  threshold_id <- paste0(id, "_threshold")
-  rule_id <- paste0(id, "_rule")
-
-  updateCheckboxInput(session = session, inputId = rule_id, value = checked)
-  if (checked)
-    updateNumericInput(session = session, inputId = threshold_id, value = value)
-}
+#' NCA Settings Server Module
+#'
+#' This module handles logic for basic / general settings for the NCA run. Generates appropriate
+#' widgets on the page and gathers all user input into single reactive list. The output is
+#' debounced by 2500ms in order not to trigger too frequent invalidations upstream.
+#'
+#' @param id ID of the module.
+#' @param data Reactive with data table containing raw data uploaded to the app.
+#' @param adnca_data Reactive with `PKNCAdata` object including the `adnca_data`.
+#' @param settings_override Reactive expression with compatible list with settings override. When
+#'                          changes are detected, current settings will be overwritten with the
+#'                          values in this reactive expression.
+#'
+#' @returns A reactive with a list with all settings.
 
 settings_ui <- function(id) {
   ns <- NS(id)
@@ -150,17 +122,6 @@ settings_ui <- function(id) {
   )
 }
 
-#' NCA Settings Server Module
-#'
-#' This module handles the server-side logic for the NCA settings, including file uploads,
-#' analyte/dose/specimen selection, AUC intervals, NCA parameters and their unit specifications.
-#' Then it integrates them to adnca_data and updates the object.
-#'
-#' - id The module's ID.
-#' - data A reactive expression containing the read and mapped data from the app.
-#'        It is only used for the file uploads and the analyte/dose/specimen selection.
-#' - adnca_data A reactive expression of the PKNCAdata object,
-#'  which contains data and NCA specifications.
 settings_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -467,4 +428,62 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     settings_debounced
   })
+}
+
+#' Generates rule input widget with a checkbox and conditional numeric input for the value.
+#'
+#' @param id ID for the widget as a whole.
+#' @param label Character string with the label for the widget.
+#' @param default Numeric with default value for the `shiny::numericInput` widget.
+#' @param step    Step for the `shiny::numericInput` widget.
+#' @param min     Min value for the `shiny::numericInput` widget.
+#' @param max     Max value for the `shiny::numericInput` widget.
+#' @returns `shiny::fluidRow` containing html elements of the widget.
+.rule_input <- function(id, label, default, step, min, max = NULL) {
+  threshold_id <- paste0(id, "_threshold")
+  rule_id <- paste0(id, "_rule")
+  numeric_args <- list(
+    inputId = threshold_id,
+    label = "",
+    value = default,
+    step = step,
+    min = min
+  )
+
+  # Only include `max` if not NULL
+  if (!is.null(max)) {
+    numeric_args$max <- max
+  }
+
+  fluidRow(
+    column(
+      width = 6,
+      checkboxInput(rule_id, label, value = TRUE)
+    ),
+    column(
+      width = 6,
+      conditionalPanel(
+        condition = paste0("input['", rule_id, "'] == true"),
+        div(
+          class = "nca-numeric-container",
+          do.call(numericInput, numeric_args)
+        )
+      )
+    )
+  )
+}
+
+#' Updates rule input.
+#'
+#' @param session Shiny session object.
+#' @param id      ID of the widget as a whole.
+#' @param checked Boolean, whether the checkbox should be selected or not.
+#' @param value   Numeric value for the related `shiny::numericInput` widget.
+.update_rule_input <- function(session, id, checked, value) {
+  threshold_id <- paste0(id, "_threshold")
+  rule_id <- paste0(id, "_rule")
+
+  updateCheckboxInput(session = session, inputId = rule_id, value = checked)
+  if (checked)
+    updateNumericInput(session = session, inputId = threshold_id, value = value)
 }

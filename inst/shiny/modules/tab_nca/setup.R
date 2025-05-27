@@ -1,3 +1,19 @@
+#' NCA Setup Server Module
+#'
+#' This module handles the server-side logic for the NCA settings, including file uploads,
+#' analyte/dose/specimen selection, AUC intervals, NCA parameters, as well as slope selection and
+#' their unit specification. Then it integrates them to adnca_data object and returns data
+#' that is processed accordingly.
+#'
+#' @param id ID of the module.
+#' @param data Reactive with data table containing raw data uploaded to the app.
+#' @param adnca_data Reactive with `PKNCAdata` object including the `adnca_data`.
+#'
+#' @returns List with three reactive expressions:
+#'   * processed_pknca_data - PKNCAdata object with applied settings and slope selections.
+#'   * settings - List with raw settings as gathered by the module.
+#'   * slope_rules - Data frame with slope inclusions / exclusions provided by slope selector.
+
 setup_ui <- function(id) {
   ns <- NS(id)
 
@@ -29,18 +45,7 @@ setup_ui <- function(id) {
   )
 }
 
-#' NCA Settings Server Module
-#'
-#' This module handles the server-side logic for the NCA settings, including file uploads,
-#' analyte/dose/specimen selection, AUC intervals, NCA parameters and their unit specifications.
-#' Then it integrates them to adnca_data and updates the object.
-#'
-#' - id The module's ID.
-#' - data A reactive expression containing the read and mapped data from the app.
-#'        It is only used for the file uploads and the analyte/dose/specimen selection.
-#' - adnca_data A reactive expression of the PKNCAdata object,
-#'  which contains data and NCA specifications.
-setup_server <- function(id, data, adnca_data, res_nca) {
+setup_server <- function(id, data, adnca_data) {
   moduleServer(id, function(input, output, session) {
     # Gather all settings from the appropriate module
     settings <- settings_server("nca_settings", data, adnca_data, settings_override)
@@ -106,7 +111,6 @@ setup_server <- function(id, data, adnca_data, res_nca) {
     slope_rules <- slope_selector_server(
       "slope_selector",
       slopes_pknca_data,
-      res_nca,
       manual_slopes_override
     )
 

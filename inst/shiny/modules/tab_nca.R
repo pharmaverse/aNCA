@@ -89,7 +89,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       bindEvent(adnca_data())
 
     # #' NCA Setup module
-    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, res_nca)
+    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
