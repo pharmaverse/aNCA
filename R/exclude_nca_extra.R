@@ -1,49 +1,55 @@
 # This file will only be used until PKNCA includes the additional functions in their new version
-# ToDo(Gerardo): Remove the file once PKNCA incorporates all our functions (adj.r.squared, aucpeo...)
+# ToDo(Gerardo): Remove the file once PKNCA incorporates all our functions (adj.r.squared...)
 
-exclude_nca_by_param <- function(parameter, min_value = NULL, max_value = NULL) {
+# Updated exclude_nca_by_param function
+exclude_nca_by_param <- function(parameter, min_val = NULL, max_val = NULL) {
 
-  # Check min_value and max_value are well defined
-  is.defined.min_value <- any(!is.null(min_value) & !is.na(min_value) & !missing(min_value))
-  is.defined.max_value <- any(!is.null(max_value) & !is.na(max_value) & !missing(max_value))
-
-  if (is.defined.min_value && (length(min_value) > 1 || !is.numeric(min_value))) {
-    stop("when defined min_value must be single numeric values")
-  }
-  if (is.defined.max_value && (length(max_value) > 1 || !is.numeric(max_value))) {
-    stop("when defined max_value must be single numeric values")
-  }
-  if (is.defined.min_value && is.defined.max_value && min_value > max_value) {
-    stop("if both defined min_value must be less than max_value")
-  }
+  # Determine if thresholds are defined and if so check they are single numeric objects
+  thr_def <- validate_thresholds(min_val, max_val)
 
   function(x, ...) {
     ret <- rep(NA_character_, nrow(x))
-
-    # Find the index of the parameter in the dataset
     idx_param <- which(x$PPTESTCD %in% parameter)
 
     if (length(idx_param) == 0) {
-      # Do nothing, the parameter was not calculated
-      return(ret)
+      # do nothing
     } else if (length(idx_param) > 1) {
       stop("Should not see more than one ", parameter, " (please report this as a bug)")
-    } else {
-      # If the parameter is found, perform the exclusion flag action
+    } else if (!is.na(x$PPORRES[idx_param])) {
       current_value <- x$PPORRES[idx_param]
       pretty_name <- PKNCA::get.interval.cols()[[parameter]]$pretty_name
-      if (is.na(current_value)) return(ret)
 
-      # Check against min_value
-      if (!is.null(min_value) && !is.na(min_value) && current_value < min_value) {
-        ret[idx_param] <- sprintf("%s < %g", pretty_name, min_value)
+      if (thr_def$is_min_val && current_value < min_val) {
+        ret[idx_param] <- sprintf("%s < %g", pretty_name, min_val)
       }
-
-      # Check against max_value
-      if (!is.null(max_value) && !is.na(max_value) && current_value > max_value) {
-        ret[idx_param] <- sprintf("%s > %g", pretty_name, max_value)
+      if (thr_def$is_max_val && current_value > max_val) {
+        ret[idx_param] <- sprintf("%s > %g", pretty_name, max_val)
       }
     }
     ret
   }
 }
+
+# Helper function to validate if a value is a single numeric and check if it is defined
+validate_is_single_numeric <- function(value, name) {
+  is_val <- any(!is.null(value) & !is.na(value) & !missing(value))
+  if (is_val && (length(value) != 1 || !is.numeric(value))) {
+    stop(sprintf("when defined %s must be a single numeric value", name))
+  }
+  is_val
+}
+
+# Updated validate_thresholds function to use validate_is_single_numeric
+validate_thresholds <- function(min_val, max_val) {
+  is_min_val <- validate_is_single_numeric(min_val, "min_val")
+  is_max_val <- validate_is_single_numeric(max_val, "max_val")
+
+  if (is_min_val && is_max_val && min_val > max_val) {
+    stop("if both defined min_val must be less than max_val")
+  }
+  list(
+    is_min_val = is_min_val,
+    is_max_val = is_max_val
+  )
+}
+

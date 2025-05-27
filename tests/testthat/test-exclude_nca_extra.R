@@ -1,15 +1,15 @@
 describe("exclude_nca_by_param", {
-  
+
   # Define the input
   my_result <- FIXTURE_PKNCA_RES %>%
     filter(USUBJID == 2) %>%
     mutate(PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA")) %>%
     filter(PPTESTCD %in% c("r.squared", "span.ratio"))
 
-  it("excludes rows based on min_value", {
+  it("excludes rows based on min_val", {
     res_min_excluded <- PKNCA::exclude(
       my_result,
-      FUN = exclude_nca_by_param("span.ratio", min_value = 100)
+      FUN = exclude_nca_by_param("span.ratio", min_val = 100)
     )
     expect_equal(
       as.data.frame(res_min_excluded)$exclude,
@@ -17,18 +17,21 @@ describe("exclude_nca_by_param", {
     )
   })
 
-  it("does not exclude rows when min_value is not met", {
-    res_min_not_excluded <- PKNCA::exclude(my_result, FUN = exclude_nca_by_param("span.ratio", min_value = 0.01))
+  it("does not exclude rows when min_val is not met", {
+    res_min_not_excluded <- PKNCA::exclude(
+      my_result,
+      FUN = exclude_nca_by_param("span.ratio", min_val = 0.01)
+    )
     expect_equal(
       as.data.frame(res_min_not_excluded)$exclude,
       rep(NA_character_, 4)
     )
   })
 
-  it("excludes rows based on max_value", {
+  it("excludes rows based on max_val", {
     res_max_excluded <- PKNCA::exclude(
       my_result,
-      FUN =exclude_nca_by_param("span.ratio", max_value = 0.01)
+      FUN = exclude_nca_by_param("span.ratio", max_val = 0.01)
     )
     expect_equal(
       as.data.frame(res_max_excluded)$exclude,
@@ -36,10 +39,10 @@ describe("exclude_nca_by_param", {
     )
   })
 
-  it("does not exclude rows when max_value is not exceeded", {
+  it("does not exclude rows when max_val is not exceeded", {
     res_max_not_excluded <- PKNCA::exclude(
       my_result,
-      FUN = exclude_nca_by_param("span.ratio", max_value = 100)
+      FUN = exclude_nca_by_param("span.ratio", max_val = 100)
     )
     expect_equal(
       as.data.frame(res_max_not_excluded)$exclude,
@@ -47,43 +50,49 @@ describe("exclude_nca_by_param", {
     )
   })
 
-  it("throws an error for invalid min_value", {
+  it("throws an error for invalid min_val", {
     expect_error(
-      exclude_nca_by_param("span.ratio", min_value = "invalid"),
-      "when defined min_value must be single numeric values"
+      exclude_nca_by_param("span.ratio", min_val = "invalid"),
+      "when defined min_val must be a single numeric value"
     )
   })
 
-  it("throws an error for invalid max_value", {
+  it("throws an error for invalid max_val", {
     expect_error(
-      exclude_nca_by_param(parameter = "span.ratio", max_value = c(1, 2)),
-      "when defined max_value must be single numeric values"
+      exclude_nca_by_param(parameter = "span.ratio", max_val = c(1, 2)),
+      "when defined max_val must be a single numeric value"
     )
   })
 
-  it("throws an error when min_value is greater than max_value", {
+  it("throws an error when min_val is greater than max_val", {
     expect_error(
-      exclude_nca_by_param("span.ratio", min_value = 10, max_value = 5),
-      "if both defined min_value must be less than max_value"
+      exclude_nca_by_param("span.ratio", min_val = 10, max_val = 5),
+      "if both defined min_val must be less than max_val"
     )
   })
 
   it("returns the original object when the parameter is not found", {
-    res <- PKNCA::exclude(my_result, FUN = exclude_nca_by_param("nonexistent", min_value = 0))
+    res <- PKNCA::exclude(my_result, FUN = exclude_nca_by_param("nonexistent", min_val = 0))
     expect_true(all(is.na(as.data.frame(res)$exclude)))
   })
 
   it("returns the object when the parameter's value is NA", {
     my_result_na <- my_result
     my_result_na$result$PPORRES <- NA
-    res <- PKNCA::exclude(my_result_na, FUN = exclude_nca_by_param("span.ratio", min_value = 0))
+    res <- PKNCA::exclude(
+      my_result_na,
+      FUN = exclude_nca_by_param("span.ratio", min_val = 0)
+    )
     expect_true(all(is.na(as.data.frame(res)$exclude)))
   })
 
   # This should never happen in real code
   it("produces an error when more than 1 PPORRES is per parameter", {
     expect_error(
-      exclude_nca_by_param(param = "r.squared", min_value = 0.7)(data.frame(PPTESTCD = "r.squared", PPORRES = c(1, 1))),
+      exclude_nca_by_param(
+        param = "r.squared",
+        min_val = 0.7
+      )(data.frame(PPTESTCD = "r.squared", PPORRES = c(1, 1))),
       regexp = "Should not see more than one r.squared (please report this as a bug)",
       fixed = TRUE
     )
