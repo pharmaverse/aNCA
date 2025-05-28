@@ -158,6 +158,8 @@ slope_selector_server <- function(
 
       if (!"type_interval" %in% names(plot_data()$intervals)) {
         NULL
+      } else if (all(!unlist(plot_data()$intervals[sapply(plot_data()$intervals, is.logical)]))) {
+        NULL
       } else {
         all_params <- names(PKNCA::get.interval.cols())
         result_obj <- suppressWarnings(PKNCA::pk.nca(data = plot_data(), verbose = FALSE))

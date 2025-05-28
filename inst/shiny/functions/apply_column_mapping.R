@@ -26,6 +26,7 @@
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
 
 apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, desired_order) {
+
   selected_cols <- sapply(names(column_groups), function(group) {
     sapply(column_groups[[group]], function(column) {
       mapping[[paste0("select_", column)]]
@@ -38,7 +39,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     unlist() %>%
     paste0(collapse = "\n")
   log_debug(paste0("The following mapping was applied:\n", mapping_log))
-
+  
   if (any(unlist(selected_cols) == "")) {
     log_error("Unmapped columns detected.")
     showNotification("Some required columns are not mapped.
@@ -53,8 +54,8 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     return(NULL)
   }
 
-  selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-    names(selected_cols[["Group Identifiers"]]) != "Grouping_Variables"
+  selected_cols[["Supplemental Variables"]] <- selected_cols[["Supplemental Variables"]][
+    names(selected_cols[["Supplemental Variables"]]) != "Grouping_Variables"
   ]
 
   colnames(dataset) <- sapply(colnames(dataset), function(col) {
