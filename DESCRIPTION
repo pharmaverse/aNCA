@@ -67,6 +67,7 @@ Suggests:
     logger,
     reactable,
     reactable.extras,
+    sass,
     shiny,
     shinycssloaders,
     shinyjs,
