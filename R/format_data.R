@@ -183,7 +183,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "TIME_DOSE", "DOSNO"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NFRLT", "TIME_DOSE", "DOSNO"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   # Select dose data and use its time column as a time of last dose reference
@@ -210,8 +210,11 @@ format_pkncadata_intervals <- function(pknca_conc,
     group_by(!!!syms(conc_groups)) %>%
     arrange(TIME_DOSE) %>%
 
-    # Make end based on next dose time (if no more, Inf)
-    mutate(end = lead(TIME_DOSE, default = Inf)) %>%
+    # Make end based on next dose time (if no more, Tau or last NFRLT)
+    mutate(end = case_when(
+      !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+      TRUE ~ if ("TAU" %in% names(cur_data())) TAU else max(NFRLT, na.rm = TRUE)
+    )) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "DOSNO", "DOSNOA"))) %>%
 
@@ -225,11 +228,6 @@ format_pkncadata_intervals <- function(pknca_conc,
       attributes(column) <- NULL
       column
     })) %>%
-
-    # Set FALSE for aucint when end = Inf
-    mutate(across(starts_with("aucint.inf.pred"), ~ if_else(end == Inf, FALSE, .))) %>%
-    #TODO: once TAU is included in the app, add new line for aucint to be end = TAU
-
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
