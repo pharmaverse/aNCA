@@ -38,12 +38,12 @@ describe("format_pkncaconc_data", {
       )
     )
   })
-  
+
   it("filters EVID if column is present", {
     # Create base data with EVID = 0
     ADNCA <- ADNCA %>%
       mutate(EVID = 0)
-    
+
     # Create one dosing row per USUBJID
     dosing_rows <- ADNCA %>%
       distinct(STUDYID) %>%
@@ -62,7 +62,7 @@ describe("format_pkncaconc_data", {
         AVAL = 10,
         EVID = 1
       )
-    
+
     # Append the dosing rows to the original data
     ADNCA <- bind_rows(ADNCA, dosing_rows)
     df_conc <- format_pkncaconc_data(ADNCA,
@@ -73,12 +73,12 @@ describe("format_pkncaconc_data", {
 
     expect_true(all(df_conc$EVID == 0))
   })
-  
+
   it("filters PARAMCD if column is present", {
     # Create base data with EVID = 0
     ADNCA <- ADNCA %>%
       mutate(PARAMCD = "sample")
-    
+
     # Create one dosing row per USUBJID
     dosing_rows <- ADNCA %>%
       distinct(STUDYID) %>%
@@ -97,16 +97,16 @@ describe("format_pkncaconc_data", {
         AVAL = 10,
         PARAMCD = "dose"
       )
-    
+
     # Append the dosing rows to the original data
     ADNCA <- bind_rows(ADNCA, dosing_rows)
-    
+
     df_conc <- format_pkncaconc_data(ADNCA,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DRUG", "PARAM"),
                                      time_column = "AFRLT",
                                      rrlt_column = "ARRLT")
-    
+
     expect_true(all(df_conc$PARAMCD == "sample"))
   })
 
@@ -293,7 +293,7 @@ describe("format_pkncadata_intervals", {
       regexp = "Missing required columns: DRUG"
     )
   })
-  
+
   it("correctly uses tau if column is available", {
     df_conc_tau <- df_conc %>%
       mutate(TAU = 5)  # Add a tau column for testing
@@ -309,7 +309,7 @@ describe("format_pkncadata_intervals", {
 
     expect_equal(result_tau$end[4], 10)
   })
-  
+
   it("sets last time to end NFRLT if no TAU available", {
     result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
     expect_equal(result$end[4], 9)

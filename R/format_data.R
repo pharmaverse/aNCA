@@ -212,7 +212,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     arrange(TIME_DOSE) %>%
 
     # Make end based on next dose time (if no more, Tau or last NFRLT)
-    mutate(end = if(has_tau) {
+    mutate(end = if (has_tau) {
       case_when(
         !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
         TRUE ~ start + TAU
@@ -223,7 +223,7 @@ format_pkncadata_intervals <- function(pknca_conc,
         TRUE ~ max_end
       )
     }
-      ) %>%
+    ) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "DOSNO", "DOSNOA"))) %>%
 

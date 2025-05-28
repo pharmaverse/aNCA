@@ -48,6 +48,7 @@
     "ModeConv_factor",
     "ModeUnit",
     "N",
+    "NFRLT",
     "NRRLT",
     "PARAM",
     "PARAMCD",
