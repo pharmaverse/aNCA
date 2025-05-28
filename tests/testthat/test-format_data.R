@@ -222,4 +222,25 @@ describe("format_pkncadata_intervals", {
       regexp = "Missing required columns: DRUG"
     )
   })
+  
+  it("correctly uses tau if column is available", {
+    df_conc_tau <- df_conc %>%
+      mutate(TAU = 5)  # Add a tau column for testing
+
+    pknca_conc_tau <- PKNCA::PKNCAconc(
+      df_conc_tau,
+      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+
+    result_tau <- format_pkncadata_intervals(pknca_conc_tau, pknca_dose, params = params)
+
+    expect_equal(result_tau$end[4], 10)
+  })
+  
+  it("sets last time to end NFRLT if no TAU available", {
+    result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
+    expect_equal(result$end[4], 9)
+  })
 })

@@ -183,14 +183,14 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NFRLT", "TIME_DOSE", "DOSNO"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NFRLT", "TIME_DOSE", "DOSNO", "TAU"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
+  has_tau <- "TAU" %in% names(sub_pknca_conc)
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
     select(any_of(c(dose_groups,
                     pknca_dose$columns$time, "DOSNOA")))
-
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
@@ -212,10 +212,18 @@ format_pkncadata_intervals <- function(pknca_conc,
     arrange(TIME_DOSE) %>%
 
     # Make end based on next dose time (if no more, Tau or last NFRLT)
-    mutate(end = case_when(
-      !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
-      TRUE ~ if ("TAU" %in% names(cur_data())) start + TAU else max_end
-    )) %>%
+    mutate(end = if(has_tau) {
+      case_when(
+        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        TRUE ~ start + TAU
+      )
+    } else {
+      case_when(
+        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        TRUE ~ max_end
+      )
+    }
+      ) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "DOSNO", "DOSNOA"))) %>%
 
