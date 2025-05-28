@@ -110,74 +110,77 @@ MAPPING_DESIRED_ORDER <- c(
 data_mapping_ui <- function(id) {
   ns <- NS(id)
 
-  card(
-    div(
-      class = "data-mapping-container",
-      h3("Data Mapping"),
-      p(
-        "The following columns are required for data analysis. Please ensure each of these columns",
-        " has been assigned a corresponding column from your dataset"
-      ),
-      # Adjusted layout using CSS flexbox
-      tags$section(
-        h5("Group Identifiers"),
-        .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
-        .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
-        div(
-          class = "column-mapping-row",
-          tooltip(
-            selectizeInput(
-              ns("select_Grouping_Variables"),
-              "",
-              choices = NULL,
-              multiple = TRUE,
-              options = list(placeholder = "Select Column(s)"),
-              width = "40%"
-            ),
-            "Select the additional column(s) that will be used to group the data 
-            in the outputs. E.g. Treatment Arm, Age, Sex, Race"
-          ),
-          div(
-            class = "column-mapping-output",
-            span("Additional Grouping Variables")
-          )
-        )
-      ),
-      tags$section(
-        h5("Sample Variables"),
-        .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
-        .column_mapping_widget(ns, "PCSPEC", "Character format"),
-        .column_mapping_widget(ns, "AVAL", "Numeric format.")
-      ),
-      tags$section(
-        h5("Dose Variables"),
-        .column_mapping_widget(ns, "DRUG", "Character format."),
-        .column_mapping_widget(ns, "DOSNO", "Numeric format."),
-        .column_mapping_widget(
-          ns, "ROUTE",
-          "Character format, stating either 'intravascular' or 'extravascular'."
+  div(
+    stepper_ui("Mapping"),
+    card(
+      div(
+        class = "data-mapping-container",
+        h3("Data Mapping"),
+        p(
+          "The following columns are required for data analysis. Please ensure each of these columns",
+          " has been assigned a corresponding column from your dataset"
         ),
-        .column_mapping_widget(ns, "DOSEA", "Numeric format."),
-        .column_mapping_widget(
-          ns, "ADOSEDUR",
-          "Numeric format. Only required for infusion studies,
-          otherwise select NA"
-        )
-      ),
-      tags$section(
-        h5("Time Variables"),
-        .column_mapping_widget(ns, "AFRLT", "Numeric format"),
-        .column_mapping_widget(ns, "ARRLT", "Numeric format"),
-        .column_mapping_widget(ns, "NFRLT", "Numeric format"),
-        .column_mapping_widget(ns, "NRRLT", "Numeric format")
-      ),
-      tags$section(
-        h5("Unit Variables"),
-        .column_mapping_widget(ns, "AVALU", "Character format."),
-        .column_mapping_widget(ns, "DOSEU", "Character format."),
-        .column_mapping_widget(ns, "RRLTU", "Character format.")
-      ),
-      input_task_button(ns("submit_columns"), "Submit Mapping")
+        # Adjusted layout using CSS flexbox
+        tags$section(
+          h5("Group Identifiers"),
+          .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
+          .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
+          div(
+            class = "column-mapping-row",
+            tooltip(
+              selectizeInput(
+                ns("select_Grouping_Variables"),
+                "",
+                choices = NULL,
+                multiple = TRUE,
+                options = list(placeholder = "Select Column(s)"),
+                width = "40%"
+              ),
+              "Select the additional column(s) that will be used to group the data 
+              in the outputs. E.g. Treatment Arm, Age, Sex, Race"
+            ),
+            div(
+              class = "column-mapping-output",
+              span("Additional Grouping Variables")
+            )
+          )
+        ),
+        tags$section(
+          h5("Sample Variables"),
+          .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
+          .column_mapping_widget(ns, "PCSPEC", "Character format"),
+          .column_mapping_widget(ns, "AVAL", "Numeric format.")
+        ),
+        tags$section(
+          h5("Dose Variables"),
+          .column_mapping_widget(ns, "DRUG", "Character format."),
+          .column_mapping_widget(ns, "DOSNO", "Numeric format."),
+          .column_mapping_widget(
+            ns, "ROUTE",
+            "Character format, stating either 'intravascular' or 'extravascular'."
+          ),
+          .column_mapping_widget(ns, "DOSEA", "Numeric format."),
+          .column_mapping_widget(
+            ns, "ADOSEDUR",
+            "Numeric format. Only required for infusion studies,
+            otherwise select NA"
+          )
+        ),
+        tags$section(
+          h5("Time Variables"),
+          .column_mapping_widget(ns, "AFRLT", "Numeric format"),
+          .column_mapping_widget(ns, "ARRLT", "Numeric format"),
+          .column_mapping_widget(ns, "NFRLT", "Numeric format"),
+          .column_mapping_widget(ns, "NRRLT", "Numeric format")
+        ),
+        tags$section(
+          h5("Unit Variables"),
+          .column_mapping_widget(ns, "AVALU", "Character format."),
+          .column_mapping_widget(ns, "DOSEU", "Character format."),
+          .column_mapping_widget(ns, "RRLTU", "Character format.")
+        ),
+        input_task_button(ns("submit_columns"), "Submit Mapping")
+      )
     )
   )
 }

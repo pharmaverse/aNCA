@@ -11,16 +11,19 @@
 data_upload_ui <- function(id) {
   ns <- NS(id)
 
-  card(
-    div(
-      h3("Upload"),
-      uiOutput(ns("file_loading_message")),
-      fileInput(
-        ns("data_upload"),
-        width = "60%",
-        label = NULL,
-        placeholder = paste(names(aNCA:::readers), collapse = ", "),
-        buttonLabel = list(icon("folder"), "Upload File...")
+  div(
+    stepper_ui("Data"),
+    card(
+      div(
+        h3("Upload"),
+        uiOutput(ns("file_loading_message")),
+        fileInput(
+          ns("data_upload"),
+          width = "60%",
+          label = NULL,
+          placeholder = paste(names(aNCA:::readers), collapse = ", "),
+          buttonLabel = list(icon("folder"), "Upload File...")
+        )
       )
     )
   )
