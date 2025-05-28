@@ -198,7 +198,6 @@ base::local({
       1
     )
   )
-
   # Perform NCA Analysis
   all_params <- setdiff(names(PKNCA::get.interval.cols()),
                         c("start", "end"))
@@ -257,7 +256,6 @@ base::local({
       USUBJID == 7 & DOSNO == 2 ~ "start_conc0",
       TRUE ~ NA_character_
     ))
-
   FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
     data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
     data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
@@ -269,7 +267,6 @@ base::local({
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
   FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
-
   # Add start_dose and end_dose columns
   FIXTURE_PKNCA_RES <<- withCallingHandlers(
     PKNCA::pk.nca(FIXTURE_PKNCA_DATA),
@@ -280,7 +277,6 @@ base::local({
       }
     }
   )
-
   #####################################################################
   # Temporarily for some odd reason we cannot use keep_interval_cols,
   # so we are manually making it
@@ -313,13 +309,11 @@ base::local({
       }
     )
   #####################################################################
-
   dose_data_to_join_fixture <- select(
     FIXTURE_PKNCA_RES$data$dose$data,
     -exclude,
     -FIXTURE_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
   )
-
   FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
     inner_join(
       dose_data_to_join_fixture,
@@ -336,15 +330,11 @@ base::local({
       PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
     )
 })
-
 # Dummy data
 # Import dataset from testthat/data folder
-
 # ToDo (Gerardo): These fixtures are supporting still test-bioavailability.R
 # We need to substitute them with the previous ones for consistency
-
 DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
-
 # Create PKNCAdata object
 PKNCA_DATA_FIXTURE <- PKNCA_create_data_object(DUMMY_DATA_FIXTURE %>% filter(PCSPEC == "Plasma"))
 # Set intervals
@@ -356,7 +346,6 @@ PKNCA_DATA_FIXTURE$intervals <- format_pkncadata_intervals(
              "r.squared", "adj.r.squared", "lambda.z.time.first")
 )
 PKNCA_DATA_FIXTURE <- create_start_impute(PKNCA_DATA_FIXTURE)
-
 # Create NCA results
 PKNCA_RESULTS_FIXTURE <- withCallingHandlers(
   PKNCA_calculate_nca(PKNCA_DATA_FIXTURE),
