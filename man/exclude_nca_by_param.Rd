@@ -4,7 +4,12 @@
 \alias{exclude_nca_by_param}
 \title{Exclude NCA Results Based on Parameter Thresholds}
 \usage{
-exclude_nca_by_param(parameter, min_thr = NULL, max_thr = NULL)
+exclude_nca_by_param(
+  parameter,
+  min_thr = NULL,
+  max_thr = NULL,
+  affected_parameters
+)
 }
 \arguments{
 \item{parameter}{The name of the PKNCA parameter to evaluate (e.g., "span.ratio").}
@@ -12,6 +17,9 @@ exclude_nca_by_param(parameter, min_thr = NULL, max_thr = NULL)
 \item{min_thr}{The minimum acceptable value for the parameter. If not provided, is not applied.}
 
 \item{max_thr}{The maximum acceptable value for the parameter. If not provided, is not applied.}
+
+\item{affected_parameters}{Character vector of PKNCA parameters that will be marked as excluded.
+By default is the defined parameter.}
 }
 \value{
 A function that can be used with \code{PKNCA::exclude} to mark through the 'exclude'  column
