@@ -38,6 +38,77 @@ describe("format_pkncaconc_data", {
       )
     )
   })
+  
+  it("filters EVID if column is present", {
+    # Create base data with EVID = 0
+    ADNCA <- ADNCA %>%
+      mutate(EVID = 0)
+    
+    # Create one dosing row per USUBJID
+    dosing_rows <- ADNCA %>%
+      distinct(STUDYID) %>%
+      mutate(
+        USUBJID = 1,
+        PCSPEC = "Plasma",
+        DRUG = "DrugA",
+        PARAM = "Analyte1",
+        AFRLT = 0,
+        ARRLT = 0,
+        NFRLT = 0,
+        DOSNO = 1,
+        DOSEA = 5,
+        ROUTE = "intravascular",
+        ADOSEDUR = 0,
+        AVAL = 10,
+        EVID = 1
+      )
+    
+    # Append the dosing rows to the original data
+    ADNCA <- bind_rows(ADNCA, dosing_rows)
+    df_conc <- format_pkncaconc_data(ADNCA,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DRUG", "PARAM"),
+                                     time_column = "AFRLT",
+                                     rrlt_column = "ARRLT")
+
+    expect_true(all(df_conc$EVID == 0))
+  })
+  
+  it("filters PARAMCD if column is present", {
+    # Create base data with EVID = 0
+    ADNCA <- ADNCA %>%
+      mutate(PARAMCD = "sample")
+    
+    # Create one dosing row per USUBJID
+    dosing_rows <- ADNCA %>%
+      distinct(STUDYID) %>%
+      mutate(
+        USUBJID = 1,
+        PCSPEC = "Plasma",
+        DRUG = "DrugA",
+        PARAM = "Analyte1",
+        AFRLT = 0,
+        ARRLT = 0,
+        NFRLT = 0,
+        DOSNO = 1,
+        DOSEA = 5,
+        ROUTE = "intravascular",
+        ADOSEDUR = 0,
+        AVAL = 10,
+        PARAMCD = "dose"
+      )
+    
+    # Append the dosing rows to the original data
+    ADNCA <- bind_rows(ADNCA, dosing_rows)
+    
+    df_conc <- format_pkncaconc_data(ADNCA,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DRUG", "PARAM"),
+                                     time_column = "AFRLT",
+                                     rrlt_column = "ARRLT")
+    
+    expect_true(all(df_conc$PARAMCD == "sample"))
+  })
 
   it("returns an error for empty input dataframe", {
     empty_adnca <- data.frame()
