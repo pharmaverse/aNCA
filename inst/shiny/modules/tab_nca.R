@@ -134,7 +134,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               ) %>%
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
-              add_f_to_pknca_results(f_auc_options())
+              add_f_to_pknca_results(f_auc_options()) %>%
+              # Apply flag rules to mark results in the `exclude` column
+              PKNCA_hl_rules_exclusion(rules())
+              
           },
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
@@ -144,26 +147,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             }
             invokeRestart("muffleWarning")
           })
-
-          # Apply flag rules
-          for (param in names(rules())) {
-            if (rules()[[param]]$is.checked) {
-              if (startsWith(param, "aucpext")) {
-                exc_fun <- exclude_nca_by_param(
-                  param,
-                  max_thr = rules()[[param]]$threshold,
-                  affected_parameters = PKNCA::get.parameter.deps("half.life")
-                )
-              } else {
-                exc_fun <- exclude_nca_by_param(
-                  param,
-                  min_thr = rules()[[param]]$threshold,
-                  affected_parameters = PKNCA::get.parameter.deps("half.life")
-                )
-              }
-              res <- PKNCA::exclude(res, FUN = exc_fun)
-            }
-          }
 
           #' Apply units
           if (!is.null(session$userData$units_table())) {
