@@ -1,8 +1,7 @@
 #' Generate a Stepper UI Component
 #'
 #' Creates a horizontal stepper navigation UI using HTML tags, with one active
-#' step based on the current tab. This is typically used to guide users through
-#' a multi-step process (e.g., data preparation workflow).
+#' step based on the current tab.
 #'
 #' @param tab A character string indicating the currently active tab or step.
 #'   Must be one of: `"Data"`, `"Filtering"`, `"Mapping"`, or `"Preview"`.
