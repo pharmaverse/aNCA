@@ -13,7 +13,7 @@ describe("exclude_nca_by_param", {
     )
     expect_equal(
       as.data.frame(res_min_excluded)$exclude,
-      c(NA, "Span ratio < 100", NA, "Span ratio < 100")
+      c(NA, "Lambda z Span < 100", NA, "Lambda z Span < 100")
     )
   })
 
@@ -35,7 +35,7 @@ describe("exclude_nca_by_param", {
     )
     expect_equal(
       as.data.frame(res_max_excluded)$exclude,
-      c(NA, "Span ratio > 0.01", NA, "Span ratio > 0.01")
+      c(NA, "Lambda z Span > 0.01", NA, "Lambda z Span > 0.01")
     )
   })
 

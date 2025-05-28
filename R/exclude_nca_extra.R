@@ -31,7 +31,7 @@
 #'   FUN = exclude_nca_by_param("span.ratio", min_thr = 100)
 #' )
 #' as.data.frame(excluded_result)
-#' 
+#'
 #' @export
 
 exclude_nca_by_param <- function(parameter, min_thr = NULL, max_thr = NULL) {
@@ -49,7 +49,7 @@ exclude_nca_by_param <- function(parameter, min_thr = NULL, max_thr = NULL) {
       stop("Should not see more than one ", parameter, " (please report this as a bug)")
     } else if (!is.na(x$PPORRES[idx_param])) {
       current_value <- x$PPORRES[idx_param]
-      pretty_name <- PKNCA::get.interval.cols()[[parameter]]$pretty_name
+      pretty_name <- translate_terms(parameter, "PKNCA", "PPTEST")
 
       if (thr_def$is_min_thr && current_value < min_thr) {
         ret[idx_param] <- sprintf("%s < %g", pretty_name, min_thr)
