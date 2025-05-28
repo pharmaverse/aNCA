@@ -51,9 +51,9 @@ download_settings_server <- function(id, pknca_data, res_nca) {
           mutate(
             PARAM %in% input$select_analyte,
             doses_selected = ifelse(
-              !is.null(input$select_dosno),
-              paste0(input$select_dosno, collapse = ","),
-              unique(pknca_data()$conc$data$DOSNO)
+              !is.null(input$select_nca_profile),
+              paste0(input$select_nca_profile, collapse = ","),
+              unique(pknca_data()$conc$data$NCA_PROFILE)
             ),
             method = input$method,
             adj.r.squared_threshold = ifelse(

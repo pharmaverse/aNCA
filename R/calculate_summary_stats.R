@@ -31,7 +31,7 @@
 #' @examples
 #' \dontrun{
 #' data <- data.frame(
-#' DOSNO = c(1, 1, 1, 1, 1, 1),
+#' NCA_PROFILE = c(1, 1, 1, 1, 1, 1),
 #' PPTESTCD = c("A", "A", "B", "B", "C", "C"),
 #' PPSTRES = c(10, 20, 5, 15, NA, 30),
 #' PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
@@ -39,7 +39,7 @@
 #' calculate_summary_stats(data)
 #' }
 
-calculate_summary_stats <- function(data, input_groups = "DOSNO") {
+calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
 
   # Return an empty data frame if the input data is empty
   if (nrow(data) == 0) {
