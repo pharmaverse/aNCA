@@ -49,8 +49,8 @@ tab_data_ui <- function(id) {
 
     div(
       class = "data-tab-btns-container",
-      # Left side: Cancel button
-      actionButton(ns("cancel"), "Cancel"),
+      # Left side: Restart button
+      actionButton(ns("restart"), "Restart"),
 
       # Right side: Previous and Next buttons
       div(
@@ -70,7 +70,7 @@ tab_data_server <- function(id) {
     step_labels <- c("Data", "Filtering", "Mapping", "Preview")
     data_step <- reactiveVal("data")
 
-    observeEvent(input$cancel, {
+    observeEvent(input$restart, {
       data_step(steps[1])
       updateTabsetPanel(session, "data_navset", selected = step_labels[1])
     })
