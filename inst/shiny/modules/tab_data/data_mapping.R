@@ -117,14 +117,19 @@ data_mapping_ui <- function(id) {
         class = "data-mapping-container",
         h3("Data Mapping"),
         p(
-          "The following columns are required for data analysis. Please ensure each of these columns",
+          "The following columns are required for data analysis.",
+          " Please ensure each of these columns",
           " has been assigned a corresponding column from your dataset"
         ),
         # Adjusted layout using CSS flexbox
         tags$section(
           h5("Group Identifiers"),
-          .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
-          .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
+          .column_mapping_widget(
+            ns, "STUDYID", "Select Corresponding Column, in character format."
+          ),
+          .column_mapping_widget(
+            ns, "USUBJID", "Character or Numeric format"
+          ),
           div(
             class = "column-mapping-row",
             tooltip(
