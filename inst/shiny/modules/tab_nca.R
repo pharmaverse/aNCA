@@ -150,9 +150,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             if (rules()[[param]]$is.checked) {
 
               if (startsWith(param, "aucpext")) {
-                exc_fun <- exclude_nca_by_param(param, max_value = rules()[[param]]$threshold)
+                exc_fun <- exclude_nca_by_param(param, max_thr = rules()[[param]]$threshold)
               } else {
-                exc_fun <- exclude_nca_by_param(param, min_value = rules()[[param]]$threshold)
+                exc_fun <- exclude_nca_by_param(param, min_thr = rules()[[param]]$threshold)
               }
 
               res <- PKNCA::exclude(res, FUN = exc_fun)
