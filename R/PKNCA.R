@@ -461,13 +461,13 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
     if (startsWith(param, "aucpext")) {
       exc_fun <- exclude_nca_by_param(
         param,
-        max_thr = rules[[param]]$threshold,
+        max_thr = rules[[param]],
         affected_parameters = PKNCA::get.parameter.deps("half.life")
       )
     } else {
       exc_fun <- exclude_nca_by_param(
         param,
-        min_thr = rules[[param]]$threshold,
+        min_thr = rules[[param]],
         affected_parameters = PKNCA::get.parameter.deps("half.life")
       )
     }
