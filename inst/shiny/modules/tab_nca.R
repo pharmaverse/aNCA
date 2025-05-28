@@ -148,13 +148,19 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           # Apply flag rules
           for (param in names(rules())) {
             if (rules()[[param]]$is.checked) {
-
               if (startsWith(param, "aucpext")) {
-                exc_fun <- exclude_nca_by_param(param, max_thr = rules()[[param]]$threshold)
+                exc_fun <- exclude_nca_by_param(
+                  param,
+                  max_thr = rules()[[param]]$threshold,
+                  affected_parameters = PKNCA::get.parameter.deps("half.life")
+                )
               } else {
-                exc_fun <- exclude_nca_by_param(param, min_thr = rules()[[param]]$threshold)
+                exc_fun <- exclude_nca_by_param(
+                  param,
+                  min_thr = rules()[[param]]$threshold,
+                  affected_parameters = PKNCA::get.parameter.deps("half.life")
+                )
               }
-
               res <- PKNCA::exclude(res, FUN = exc_fun)
             }
           }

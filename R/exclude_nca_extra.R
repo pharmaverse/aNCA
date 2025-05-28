@@ -11,6 +11,8 @@
 #' @param parameter The name of the PKNCA parameter to evaluate (e.g., "span.ratio").
 #' @param min_thr The minimum acceptable value for the parameter. If not provided, is not applied.
 #' @param max_thr The maximum acceptable value for the parameter. If not provided, is not applied.
+#' @param affected_parameters Character vector of PKNCA parameters that will be marked as excluded.
+#'                            By default is the defined parameter.
 #' @returns A function that can be used with `PKNCA::exclude` to mark through the 'exclude'  column
 #'          the rows in the PKNCA results based on the specified thresholds for a parameter.
 #' @examples
@@ -34,16 +36,18 @@
 #'
 #' @export
 
-exclude_nca_by_param <- function(parameter, min_thr = NULL, max_thr = NULL) {
+exclude_nca_by_param <- function(parameter, min_thr = NULL, max_thr = NULL, affected_parameters) {
 
   # Determine if thresholds are defined and if so check they are single numeric objects
   thr_def <- validate_thresholds(min_thr, max_thr)
+  if (missing(affected_parameters)) affected_parameters <- parameter
 
   function(x, ...) {
     ret <- rep(NA_character_, nrow(x))
     idx_param <- which(x$PPTESTCD %in% parameter)
+    idx_to_flag <- which(x$PPTESTCD %in% affected_parameters)
 
-    if (length(idx_param) == 0) {
+    if (length(idx_param) == 0 || length(idx_to_flag) == 0) {
       # Do nothing, it wasn't calculated
     } else if (length(idx_param) > 1) {
       stop("Should not see more than one ", parameter, " (please report this as a bug)")
@@ -52,10 +56,10 @@ exclude_nca_by_param <- function(parameter, min_thr = NULL, max_thr = NULL) {
       pretty_name <- translate_terms(parameter, "PKNCA", "PPTEST")
 
       if (thr_def$is_min_thr && current_value < min_thr) {
-        ret[idx_param] <- sprintf("%s < %g", pretty_name, min_thr)
+        ret[idx_to_flag] <- sprintf("%s < %g", pretty_name, min_thr)
       }
       if (thr_def$is_max_thr && current_value > max_thr) {
-        ret[idx_param] <- sprintf("%s > %g", pretty_name, max_thr)
+        ret[idx_to_flag] <- sprintf("%s > %g", pretty_name, max_thr)
       }
     }
     ret
