@@ -11,7 +11,7 @@ analyses where dosing intervals and concentration values need to be aligned for 
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9085</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9086</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,8 +58,8 @@ analyses where dosing intervals and concentration values need to be aligned for 
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dose_profile_duplicates</span><span class="op">(</span></span>
 <span>  <span class="va">conc_data</span>,</span>
-<span>  groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"DOSNO"</span>, <span class="st">"PARAM"</span><span class="op">)</span>,</span>
-<span>  dosno <span class="op">=</span> <span class="st">"DOSNO"</span>,</span>
+<span>  groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"DOSNOA"</span>, <span class="st">"PARAM"</span><span class="op">)</span>,</span>
+<span>  dosno <span class="op">=</span> <span class="st">"DOSNOA"</span>,</span>
 <span>  arrlt <span class="op">=</span> <span class="st">"ARRLT"</span>,</span>
 <span>  afrlt <span class="op">=</span> <span class="st">"AFRLT"</span>,</span>
 <span>  nrrlt <span class="op">=</span> <span class="st">"NRRLT"</span>,</span>
@@ -77,11 +77,11 @@ analyses where dosing intervals and concentration values need to be aligned for 
 
 <dt id="arg-groups">groups<a class="anchor" aria-label="anchor" href="#arg-groups"></a></dt>
 <dd><p>A character vector of column names to use for grouping
-(e.g., c("USUBJID", "PARAM", "DOSNO")).</p></dd>
+(e.g., c("USUBJID", "PARAM", "DOSNOA")).</p></dd>
 
 
 <dt id="arg-dosno">dosno<a class="anchor" aria-label="anchor" href="#arg-dosno"></a></dt>
-<dd><p>Column name for the dose number (default: "DOSNO").</p></dd>
+<dd><p>Column name for the dose number (default: "DOSNOA").</p></dd>
 
 
 <dt id="arg-arrlt">arrlt<a class="anchor" aria-label="anchor" href="#arg-arrlt"></a></dt>
@@ -104,7 +104,7 @@ analyses where dosing intervals and concentration values need to be aligned for 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame with adjusted concentration data, including:</p><ul><li><p>Duplicated pre-dose values assigned to the previous dose.</p></li>
 <li><p>Duplicated last values assigned to the next dose if pre-dose values are missing,
-filtered so only samples within 24 hours of the next dose are included.</p></li>
+filtered so only samples within 4 hours of the next dose are included.</p></li>
 <li><p>Sorted by the grouping variables and relative time.</p></li>
 </ul></div>
 
@@ -114,14 +114,14 @@ filtered so only samples within 24 hours of the next dose are included.</p></li>
 <span class="r-in"><span><span class="va">conc_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>USUBJID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"001"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>AVAL <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span>, <span class="fl">9</span>, <span class="fl">10</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>DOSNO <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>DOSNOA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>ARRLT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>AFRLT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>NRRLT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>NFRLT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">dose_profile_duplicates</span><span class="op">(</span><span class="va">conc_data</span>,</span></span>
-<span class="r-in"><span>                            groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"DOSNO"</span><span class="op">)</span>, dosno <span class="op">=</span> <span class="st">"DOSNO"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                            groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"DOSNOA"</span><span class="op">)</span>, dosno <span class="op">=</span> <span class="st">"DOSNOA"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

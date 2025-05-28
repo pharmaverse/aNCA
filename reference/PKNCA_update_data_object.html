@@ -9,7 +9,7 @@ based on user selections for method, analyte, dose, specimen, and parameters."><
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9085</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9086</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@ based on user selections for method, analyte, dose, specimen, and parameters.</p
 
 
 <dt id="arg-selected-dosno">selected_dosno<a class="anchor" aria-label="anchor" href="#arg-selected-dosno"></a></dt>
-<dd><p>User selected dose numbers</p></dd>
+<dd><p>User selected dose numbers/profiles</p></dd>
 
 
 <dt id="arg-selected-pcspec">selected_pcspec<a class="anchor" aria-label="anchor" href="#arg-selected-pcspec"></a></dt>
@@ -113,6 +113,8 @@ ensuring unique analytes have their unique units</p>
 <p>Step 3: Format intervals using <code><a href="format_pkncadata_intervals.html">format_pkncadata_intervals()</a></code></p>
 <p>Step 4: Apply filtering based on user selections and partial aucs</p>
 <p>Step 5: Impute start values if requested</p>
+<p>Note*: The function assumes that the <code>adnca_data</code> object has been
+created using the <code><a href="PKNCA_create_data_object.html">PKNCA_create_data_object()</a></code> function.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -11,7 +11,7 @@ logarithmic scale and can be filtered by cycle."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9085</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9086</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -129,8 +129,9 @@ when <code>time_scale</code> is "By Cycle". Default is NULL.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function performs the following steps:a</p><ul><li><p>Filters the data based on the selected analytes, matrices, and subjects.</p></li>
 <li><p>Selects relevant columns and removes rows with missing concentration values.</p></li>
-<li><p>Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.</p></li>
-<li><p>Filters the data by cycle if <code>time_scale</code> is "By Cycle".</p></li>
+<li><p>Converts 'USUBJID', 'NCA_PROFILE', and 'DOSEA' to factors.</p></li>
+<li><p>Filters the data by cycle if <code>time_scale</code> is "By Cycle"
+while creating duplicates for predose samples if needed.</p></li>
 <li><p>Adjusts concentration values for logarithmic scale if <code>yaxis_scale</code> is "Log".</p></li>
 <li><p>Generates a line plot using the <code>g_ipp</code> function with the specified parameters.</p></li>
 <li><p>Adjusts the y-axis to logarithmic scale if <code>yaxis_scale</code> is "Log".</p></li>
@@ -144,7 +145,7 @@ when <code>time_scale</code> is "By Cycle". Default is NULL.</p></dd>
 <span class="r-in"><span>                           selected_analytes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Analyte1"</span>, <span class="st">"Analyte2"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                           selected_pcspec <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Spec1"</span>, <span class="st">"Spec2"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                           selected_usubjids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Subject1"</span>, <span class="st">"Subject2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                           colorby_var <span class="op">=</span> <span class="st">"DOSNO"</span>,</span></span>
+<span class="r-in"><span>                           colorby_var <span class="op">=</span> <span class="st">"NCA_PROFILE"</span>,</span></span>
 <span class="r-in"><span>                           time_scale <span class="op">=</span> <span class="st">"By Cycle"</span>,</span></span>
 <span class="r-in"><span>                           yaxis_scale <span class="op">=</span> <span class="st">"Log"</span>,</span></span>
 <span class="r-in"><span>                           cycle <span class="op">=</span> <span class="st">"1"</span>,</span></span>
