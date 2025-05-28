@@ -33,6 +33,8 @@ The function performs the following steps:
 \itemize{
 \item Creates a vector with all pharmacokinetic parameters.
 \item Based on dose times, creates a data frame with start and end times.
+\item If TAU column is present in data, sets last dose end time to start + TAU
+\item If no TAU column in data, sets last dose end time to the nominal time of last sample
 \item Adds logical columns for each specified parameter.
 }
 }

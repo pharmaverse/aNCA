@@ -47,6 +47,7 @@
     "ModeConv_factor",
     "ModeUnit",
     "N",
+    "NFRLT",
     "new_NCA_PROFILE",
     "next_dosno",
     "next_dose_time",
