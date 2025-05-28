@@ -30,6 +30,12 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
         pknca_data()
       })
     )
+    
+    results_dir <<- reactive({
+      study <- res_nca()$data$conc$data$STUDYID[1]
+      datetime <- attr(res_nca(), "provenance")$datetime
+      paste0(study, "/", format(datetime, "%d-%m-%Y_%H"))
+    })
 
     final_results <- reactive({
       req(res_nca())
@@ -103,6 +109,9 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
 
     observeEvent(final_results(), {
       req(final_results())
+
+      # Save the results in the output folder
+      save_output(output = final_results(), output_path = paste0(results_dir(), "/pivoted_results.csv"))
 
       param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")

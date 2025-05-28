@@ -109,6 +109,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars, auc_option
     observeEvent(summary_stats(), {
       req(summary_stats())
 
+      # Save the results in the output folder
+      save_output(summary_stats(), paste0(results_dir(), "/descriptive_statistics.csv"))
+
       # Update the select display parameters picker input
       updatePickerInput(
         session,
