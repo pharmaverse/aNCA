@@ -10,6 +10,7 @@ require(plotly)
 require(purrr)
 require(reactable)
 require(reactable.extras)
+require(sass)
 require(shiny)
 require(shinycssloaders)
 require(shinyjs)
@@ -30,6 +31,11 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 LABELS <<- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 assets <- system.file("shiny/www", package = "aNCA")
 
+sass(
+  sass_file(file.path(assets, "styles/main.scss")),
+  output = file.path(assets, "main.css")
+)
+
 setup_logger()
 
 ui <- function() {
@@ -49,7 +55,7 @@ ui <- function() {
       });
     "),
 
-    includeCSS(file.path(assets, "style.css")),
+    includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
 
     sidebar = navset_pill_list(
@@ -60,24 +66,28 @@ ui <- function() {
       nav_panel(
         "Data",
         value = "data",
+        icon = icon("database"),
         fluid = TRUE
       ),
       # NCA ----
       nav_panel(
         "NCA",
         value = "nca",
+        icon = icon("microscope"),
         fluid = TRUE
       ),
       # VISUALISATION ----
       nav_panel(
         "Visualisation",
         value = "visualisation",
+        icon = icon("chart-line"),
         fluid = TRUE
       ),
       # New TLG tab
       nav_panel(
         "TLG",
-        value = "tlg"
+        value = "tlg",
+        icon = icon("table-list")
       )
     ),
     div(
