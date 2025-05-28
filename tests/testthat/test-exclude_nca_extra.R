@@ -85,16 +85,16 @@ describe("exclude_nca_by_param", {
     )
     expect_true(all(is.na(as.data.frame(res)$exclude)))
   })
-  
-  it("marks records associated with the affected_parameters",
-     {
-       res <- PKNCA::exclude(
-         my_result,
-         FUN = exclude_nca_by_param("span.ratio", min_thr = 0.01, affected_parameters = c("cmax", "span.ratio"))
-       )
-       expect_true(all(is.na(as.data.frame(res)$exclude[res$result$PPTESTCD == "span.ratio"])))
-     }
-     )
+
+  it("marks records associated with the affected_parameters", {
+    res <- PKNCA::exclude(
+      my_result,
+      FUN = exclude_nca_by_param(
+        "span.ratio", min_thr = 0.01, affected_parameters = c("cmax", "span.ratio")
+      )
+    )
+    expect_true(all(is.na(as.data.frame(res)$exclude[res$result$PPTESTCD == "span.ratio"])))
+  })
 
   # This should never happen in real code
   it("produces an error when more than 1 PPORRES is per parameter", {

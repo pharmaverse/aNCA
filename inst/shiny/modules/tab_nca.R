@@ -137,7 +137,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               add_f_to_pknca_results(f_auc_options()) %>%
               # Apply flag rules to mark results in the `exclude` column
               PKNCA_hl_rules_exclusion(rules())
-              
           },
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
