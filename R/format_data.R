@@ -201,6 +201,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Pick 1 per concentration group and dose number
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
+    mutate(max_end = max(NFRLT, na.rm = TRUE)) %>%
     slice(1) %>%
     ungroup() %>%
 
@@ -213,7 +214,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Make end based on next dose time (if no more, Tau or last NFRLT)
     mutate(end = case_when(
       !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
-      TRUE ~ if ("TAU" %in% names(cur_data())) start + TAU else max(NFRLT, na.rm = TRUE)
+      TRUE ~ if ("TAU" %in% names(cur_data())) start + TAU else max_end
     )) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "DOSNO", "DOSNOA"))) %>%
