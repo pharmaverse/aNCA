@@ -116,7 +116,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
       exclude_half.life = "exclude_half.life",
       include_half.life = "include_half.life",
       time.nominal = "NFRLT",
-      volume = volume_column
+      volume = volume_column,
+      amountu = "VOLUMEU"
     )
   } else {
     pknca_conc <- PKNCA::PKNCAconc(
