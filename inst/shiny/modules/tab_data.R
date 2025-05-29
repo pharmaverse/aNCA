@@ -15,48 +15,52 @@
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
-
-  div(
-    class = "data-tab-container",
+  tagList(
+    shinyjs::useShinyjs(),
     div(
-      class = "data-tab-content-container",
+      class = "data-tab-container",
       div(
-        class = "data-tab-content",
-        navset_pill(
-          id = ns("data_navset"),
-          nav_panel("Data",
-            data_upload_ui(ns("raw_data"))
-          ),
-          nav_panel("Filtering",
-            data_filtering_ui(ns("data_filtering"))
-          ),
-          nav_panel("Mapping",
-            data_mapping_ui(ns("column_mapping"))
-          ),
-          nav_panel("Preview",
-            id = ns("data_navset-review"),
-            div(
-              stepper_ui("Preview"),
-              card(
-                uiOutput(ns("processed_data_message")),
-                reactableOutput(ns("data_processed"))
+        class = "data-tab-content-container",
+        div(
+          class = "data-tab-content",
+          navset_pill(
+            id = ns("data_navset"),
+            nav_panel(
+              "Data",
+              data_upload_ui(ns("raw_data"))
+            ),
+            nav_panel(
+              "Filtering",
+              data_filtering_ui(ns("data_filtering"))
+            ),
+            nav_panel(
+              "Mapping",
+              data_mapping_ui(ns("column_mapping"))
+            ),
+            nav_panel("Preview",
+              id = ns("data_navset-review"),
+              div(
+                stepper_ui("Preview"),
+                card(
+                  uiOutput(ns("processed_data_message")),
+                  reactableOutput(ns("data_processed"))
+                )
               )
             )
           )
         )
-      )
-    ),
-
-    div(
-      class = "data-tab-btns-container",
-      # Left side: Restart button
-      actionButton(ns("restart"), "Restart"),
-
-      # Right side: Previous and Next buttons
+      ),
       div(
-        class = "nav-btns",
-        actionButton(ns("prev_step"), "Previous"),
-        actionButton(ns("next_step"), "Next", , class = "btn-primary")
+        class = "data-tab-btns-container",
+        # Left side: Restart button
+        actionButton(ns("restart"), "Restart"),
+
+        # Right side: Previous and Next buttons
+        div(
+          class = "nav-btns",
+          actionButton(ns("prev_step"), "Previous", disabled = TRUE),
+          actionButton(ns("next_step"), "Next", , class = "btn-primary")
+        )
       )
     )
   )
@@ -69,6 +73,21 @@ tab_data_server <- function(id) {
     steps <- c("data", "filtering", "mapping", "preview")
     step_labels <- c("Data", "Filtering", "Mapping", "Preview")
     data_step <- reactiveVal("data")
+
+    observe({
+      current <- data_step()
+      if (current == steps[1]) {
+        shinyjs::disable("prev_step")
+      } else {
+        shinyjs::enable("prev_step")
+      }
+
+      if (current == steps[length(steps)]) {
+        shinyjs::disable("next_step")
+      } else {
+        shinyjs::enable("next_step")
+      }
+    })
 
     observeEvent(input$restart, {
       data_step(steps[1])
@@ -117,16 +136,18 @@ tab_data_server <- function(id) {
     grouping_variables <- column_mapping$grouping_variables
 
     output$processed_data_message <- renderUI({
-      tryCatch({
-        req(processed_data())
-        div(
-          "This is the data set that will be used for the analysis.
+      tryCatch(
+        {
+          req(processed_data())
+          div(
+            "This is the data set that will be used for the analysis.
           If you would like to make any changes please return to the previous tabs."
-        )
-      },
-      error = function(e) {
-        div("Please map your data in the 'Column Mapping' section before reviewing it.")
-      })
+          )
+        },
+        error = function(e) {
+          div("Please map your data in the 'Column Mapping' section before reviewing it.")
+        }
+      )
     })
 
     # Update the data table object with the filtered data
