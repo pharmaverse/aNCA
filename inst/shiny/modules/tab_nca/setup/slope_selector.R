@@ -20,7 +20,6 @@ slope_selector_ui <- function(id) {
 
   div(
     class = "slope-selector-module",
-    includeCSS(file.path(assets, "slope_selector.css")),
     manual_slopes_table_ui(ns("manual_slopes")),
     # Help widget #
     dropdown(
