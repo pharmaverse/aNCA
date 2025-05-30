@@ -78,26 +78,29 @@ units_table_server <- function(id, mydata) {
 
       datatable(
         data = modal_units_table() %>%
-          rename(
-            `Parameter` = PPTESTCD,
-            `Default unit` = PPORRESU,
-            `Conversion Factor` = conversion_factor,
-            `Custom unit` = PPSTRESU
-          ) %>%
           mutate(
-            Parameter = translate_terms(Parameter, "PKNCA", "PPTESTCD"),
+            PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTEST"),
             across(where(is.character), as.factor),
             nrow = row_number()
           ),
+        class = "cell-border compact striped",
         escape = FALSE,
         filter = "top",
         selection = list(mode = "single", target = "cell"),
-        class = "table table-striped table-bordered",
+        #class = "table table-striped table-bordered",
+        colnames = c(
+          "Parameter" = "PPTESTCD",
+          "Default unit" = "PPORRESU",
+          "Conversion Factor" = "conversion_factor",
+          "Custom unit" = "PPSTRESU"
+        ),
         rownames = FALSE,
         editable = list(
           target = "cell",
           disable = list(
-            columns = c(0, 1, 2, 3)
+            columns = which(
+              !names(modal_units_table()) %in% c("PPSTRESU", "conversion_factor")
+            ) - 1
           )
         ),
         options = list(
@@ -125,7 +128,8 @@ units_table_server <- function(id, mydata) {
             list(
               visible = FALSE,
               targets = ncol(modal_units_table())
-            )
+            ),
+            list(className = 'dt-center', targets = "_all")
           )
         )
       )
@@ -133,10 +137,10 @@ units_table_server <- function(id, mydata) {
 
     # Accept user modifications in the modal units table
     observeEvent(input$modal_units_table_cell_edit, {
+
       info <- input$modal_units_table_cell_edit
       modal_units_table <- modal_units_table()
       col_conv_factor <- which(names(modal_units_table) == "conversion_factor")
-      col_default_unit <- which(names(modal_units_table) == "PPORRES")
       col_custom_unit <- which(names(modal_units_table) == "PPSTRESU")
 
       # If the edited cell is in the 'Conversion Factor' only accept numeric values
