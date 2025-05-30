@@ -27,7 +27,7 @@ setup_ui <- function(id) {
             width = "100%",
             label = "Upload settings",
             buttonLabel = list(icon("folder"), "Browse"),
-            accept = c(".csv", ".xpt")
+            accept = ".rds"
           )
         ),
         column(6,
