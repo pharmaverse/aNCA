@@ -67,7 +67,7 @@ exclude_nca_by_param <- function(parameter, min_thr = NULL, max_thr = NULL, affe
 }
 
 
-exclude_nca_by_param <- function( # nolint
+exclude_nca_by_param <- function(
   parameter,
   min_thr = NULL,
   max_thr = NULL,
@@ -76,8 +76,10 @@ exclude_nca_by_param <- function( # nolint
   # Determine if thresholds are defined and if so check they are single numeric objects
   is_min_thr <- is_single_numeric(min_thr, "min_thr")
   is_max_thr <- is_single_numeric(max_thr, "max_thr")
-  if (is_min_thr && is_max_thr && min_thr > max_thr)
+
+  if (isTRUE(min_thr > max_thr))
     stop("if both defined min_thr must be less than max_thr")
+
   function(x, ...) {
     ret <- rep(NA_character_, nrow(x))
     idx_param <- which(x$PPTESTCD == parameter)
