@@ -27,7 +27,6 @@
 #' @export
 #'
 pivot_wider_pknca_results <- function(myres) {
-
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
@@ -36,7 +35,7 @@ pivot_wider_pknca_results <- function(myres) {
   data_with_duplicates <- dose_profile_duplicates(
     myres$data$conc$data,
     c(unlist(unname(myres$data$conc$columns$groups)),
-      "DOSNO")
+      "DOSNOA")
   )
 
   added_params <- NULL
@@ -46,12 +45,12 @@ pivot_wider_pknca_results <- function(myres) {
     added_params <- myres$result %>%
       filter(PPTESTCD %in% c("LAMZNPT", "LAMZLL", "LAMZ"),
              type_interval == "main") %>%
-      select(any_of(c(conc_groups, "PPTESTCD", "PPSTRES", "DOSNO", "start", "end"))) %>%
+      select(any_of(c(conc_groups, "PPTESTCD", "PPSTRES", "DOSNOA", "start", "end"))) %>%
       unique() %>%
       pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
       left_join(data_with_duplicates, by = intersect(names(.), names(data_with_duplicates))) %>%
       # Derive LAMZIX: If present consider inclusions and disconsider exclusions
-      group_by(!!!syms(conc_groups), DOSNO) %>%
+      group_by(!!!syms(conc_groups), DOSNOA) %>%
       # Derive LAMZMTD: was lambda.z manually customized?
       mutate(LAMZMTD = ifelse(
         any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
@@ -61,7 +60,8 @@ pivot_wider_pknca_results <- function(myres) {
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
       mutate(LAMZIX = ifelse(is.na(LAMZ), NA, LAMZIX)) %>%
-      select(any_of(c(conc_groups, "DOSNO", "start", "end", "LAMZIX", "LAMZMTD"))) %>%
+      ungroup() %>%
+      select(any_of(c(conc_groups, "DOSNOA", "start", "end", "LAMZIX", "LAMZMTD"))) %>%
       unique()
   }
   ############################################################################################

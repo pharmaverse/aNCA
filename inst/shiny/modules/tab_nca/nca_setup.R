@@ -57,7 +57,8 @@ nca_setup_ui <- function(id) {
           fluidRow(
             column(4, selectInput(ns("select_analyte"), "Choose the Analyte :", multiple = TRUE,
                                   choices = NULL)),
-            column(4, selectInput(ns("select_dosno"), "Choose the Dose Number:", multiple = TRUE,
+            column(4, selectInput(ns("select_nca_profile"),
+                                  "Choose the profiles for the NCA:", multiple = TRUE,
                                   choices = NULL)),
             column(4, selectInput(ns("select_pcspec"), "Choose the Specimen:", multiple = TRUE,
                                   choices = NULL))
@@ -108,8 +109,8 @@ nca_setup_ui <- function(id) {
           br(),
           helpText(HTML(paste(
             "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-            "- If DOSNO = 1 & IV bolus: C0 = 0",
-            "- If DOSNO > 1 & not IV bolus: C0 = predose",
+            "- First dose & IV bolus: C0 = 0",
+            "- Not first dose & not IV bolus: C0 = predose",
             "- If IV bolus & monoexponential data: logslope",
             "- If IV bolus & not monoexponential data: C0 = C1",
             sep = "<br>"
@@ -153,7 +154,6 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
     conc_data <- reactive(adnca_data()$conc$data)
 
     # File Upload Handling
@@ -162,11 +162,12 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       param <- setts$PARAM[1]
       doses_selected <- as.numeric(strsplit(as.character(setts$doses_selected), split = ",")[[1]])
 
-      if (!param %in% unique(data()$PARAM) || !all(doses_selected %in% unique(data()$DOSNO))) {
+      if (!param %in% unique(data()$PARAM)
+          || !all(doses_selected %in% unique(data()$NCA_PROFILE))) {
         showNotification(
           validate("The analyte selected in the settings file is not present in the data. Please, if
                     you want to use these settings for a different file, make sure all meaningful
-                    variables in the file are in the data (PARAM, DOSNO...)"),
+                    variables in the file are in the data (PARAM, NCA_PROFILE...)"),
           type = "error"
         )
       }
@@ -224,9 +225,9 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
       updateSelectInput(
         session,
-        inputId = "select_dosno",
-        label = "Choose the Dose Number:",
-        choices = rows_for_selected_analytes$DOSNO,
+        inputId = "select_nca_profile",
+        label = "Choose the profiles for the NCA:",
+        choices = rows_for_selected_analytes$NCA_PROFILE,
         selected = doses_selected
       )
 
@@ -319,14 +320,14 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
 
 
     # Choose dosenumbers to be analyzed
-    observeEvent(data()$DOSNO, priority = -1, {
+    observeEvent(data()$NCA_PROFILE, priority = -1, {
       req(data())
 
       updateSelectInput(
         session,
-        inputId = "select_dosno",
-        choices = unique(data()$DOSNO),
-        selected = unique(data()$DOSNO)[1]
+        inputId = "select_nca_profile",
+        choices = unique(data()$NCA_PROFILE),
+        selected = unique(data()$NCA_PROFILE)[1]
       )
 
       updateSelectInput(
@@ -474,7 +475,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         nca_params(),
         input$should_impute_c0,
         input$select_analyte,
-        input$select_dosno,
+        input$select_nca_profile,
         input$select_pcspec
       )
     })
@@ -501,14 +502,14 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
-          input$select_dosno, input$select_pcspec)
+          input$select_nca_profile, input$select_pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
       slopes_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = auc_data(),
         method = input$method,
         selected_analytes = input$select_analyte,
-        selected_dosno = input$select_dosno,
+        selected_dosno = input$select_nca_profile,
         selected_pcspec = input$select_pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
                    "r.squared", "adj.r.squared", "tmax"),
@@ -522,7 +523,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
     # NCA dynamic changes/filters based on user selections
     processed_pknca_data <- eventReactive(setup_trigger_debounced(), {
       req(adnca_data(), input$method, input$select_analyte,
-          input$select_dosno, input$select_pcspec, auc_data())
+          input$select_nca_profile, input$select_pcspec, auc_data())
       log_trace("Updating PKNCA::data object.")
 
       processed_pknca_data <- PKNCA_update_data_object(
@@ -530,7 +531,7 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
         auc_data = auc_data(),
         method = input$method,
         selected_analytes = input$select_analyte,
-        selected_dosno = input$select_dosno,
+        selected_dosno = input$select_nca_profile,
         selected_pcspec = input$select_pcspec,
         params = nca_params(),
         should_impute_c0 = input$should_impute_c0
@@ -581,8 +582,8 @@ nca_setup_server <- function(id, data, adnca_data) { # nolint : TODO: complexity
       data <- data %>%
         left_join(processed_pknca_data()$dose$data %>%
                     select(all_of(c(col_groups, route_column, std_route_column,
-                                    "TIME_DOSE", "DOSNO", "DOSNOA"))),
-                  by = c(col_groups, "TIME_DOSE", "DOSNO", "DOSNOA")) %>%
+                                    "TIME_DOSE", "NCA_PROFILE", "DOSNOA"))),
+                  by = c(col_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA")) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
         mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
