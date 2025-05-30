@@ -24,19 +24,14 @@ tab_nca_ui <- function(id) {
   fluidPage(
     div(
       class = "d-flex justify-content-between",
-      download_settings_ui(ns("download_settings")),
-      actionButton(ns("nca"), "Run NCA")
+      actionButton(ns("nca"), "Run NCA", class = "run-nca-btn")
     ),
     navset_tab(
       id = ns("ncapanel"),
-      #' Pre-nca setup
       nav_panel(
         "Setup",
         fluid = TRUE,
-        navset_pill_list(
-          nav_panel("NCA settings", nca_setup_ui(ns("nca_settings"))),
-          nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
-        )
+        setup_ui(ns("nca_setup")),
       ),
       #' Results
       nav_panel(
@@ -88,25 +83,17 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       }, error = function(e) {
         log_error(e$message)
         showNotification(e$message, type = "error", duration = NULL)
-        return(NULL)
+        NULL
       })
     }) |>
       bindEvent(adnca_data())
 
-    #' NCA Setup module
-    nca_setup <- nca_setup_server("nca_settings", adnca_data, pknca_data)
-    processed_pknca_data <- nca_setup$processed_pknca_data
-    slopes_pknca_data <- nca_setup$slopes_pknca_data
-    rules <- nca_setup$rules
-    f_auc_options <- nca_setup$bioavailability
+    # #' NCA Setup module
+    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
 
-    #' Slope rules setup module
-    slope_rules <- slope_selector_server(
-      "slope_selector",
-      slopes_pknca_data,
-      res_nca,
-      reactive(input$settings_upload)
-    )
+    processed_pknca_data <- nca_setup$processed_pknca_data
+    settings <- nca_setup$settings
+    slope_rules <- nca_setup$slope_rules
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
 
@@ -138,7 +125,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               ) %>%
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
-              add_f_to_pknca_results(f_auc_options()) %>%
+              add_f_to_pknca_results(settings()$bioavailability) %>%
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
@@ -181,7 +168,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         }, error = function(e) {
           log_error("Error calculating NCA results:\n{conditionMessage(e)}")
           showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
-          return(NULL)
+          NULL
         })
       })
     }) |>
@@ -208,17 +195,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
 
-    nca_results_server("nca_results",
-                       processed_pknca_data,
-                       res_nca, rules,
-                       grouping_vars,
-                       f_auc_options)
+    nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)
 
     #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars, f_auc_options)
-
-    #' Settings download module
-    download_settings_server("download_settings", processed_pknca_data, res_nca)
+    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)

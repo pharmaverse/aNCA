@@ -19,7 +19,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, auc_options) {
+nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -57,7 +57,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       final_results <- pivot_wider_pknca_results(results)
 
       # Apply flag rules
-      current_rules <- rules()
+      current_rules <- isolate(settings()$flags)
       for (param in names(current_rules)) {
         if (current_rules[[param]]$is.checked) {
           # Find the proper column/s that should be considered (in principle should be 1)

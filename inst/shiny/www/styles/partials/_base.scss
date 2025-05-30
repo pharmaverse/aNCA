@@ -248,6 +248,18 @@ h5 {
   margin-right: 1em;
 }
 
+/* styling for widgets at the top of the Settings page */
+div[data-value="Settings"] {
+  & > div.row {
+    margin: 1em;
+    & div:has(a) {
+      text-align: center;
+    }
+    & a {
+      margin-top: 2em;
+    }
+  }
+}
 .content-container {
   height: 100%;
 }
