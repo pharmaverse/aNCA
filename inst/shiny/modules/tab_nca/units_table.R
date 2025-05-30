@@ -29,7 +29,12 @@ units_table_server <- function(id, mydata) {
     observeEvent(input$open_units_table, {
 
       # Make a reactive variable from the units table
-      modal_units_table(mydata()$units)
+      if (!is.null(session$userData$units_table())) {
+        modal_units_table(session$userData$units_table())
+      } else {
+        # If the user has not set any custom units table, use the default one
+        modal_units_table(mydata()$units)
+      }
 
       # Show the modal message with the units table and an analyte selector
       showModal(modalDialog(
