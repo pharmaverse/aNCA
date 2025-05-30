@@ -63,6 +63,7 @@
     "PCSPEC",
     "PCSPID",
     "PCSPEC",
+    "PCSTRESU",
     "PKNCA",
     "PKNCA_cdisc_terms",
     "PPREASND",
