@@ -76,7 +76,8 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
       is.included.hl ~ TRUE,
       is.excluded.hl ~ FALSE,
       TRUE ~ NA
-    ))
+    )) %>%
+    ungroup()
 
   data
 }
