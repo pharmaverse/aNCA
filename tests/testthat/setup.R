@@ -157,7 +157,12 @@ base::local({
     ),
     RRLTU = "hr",
     STUDYID = "S1"
-  )
+  ) %>%
+    # Needed for pivot_wider_pknca_results (dose_profile_duplicates)
+    # TODO (Gerardo): Kill this assumption
+    mutate(
+      DOSNOA = NCA_PROFILE
+    )
 
   # Create Testing Dose Data
   FIXTURE_DOSE_DATA <<- data.frame(
