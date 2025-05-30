@@ -28,9 +28,9 @@ summary_server <- function(id, processed_pknca_data) {
         left_join(
           processed_pknca_data()$dose$data %>%
             select(all_of(c(
-              col_groups, route_column, std_route_column, "TIME_DOSE", "DOSNO", "DOSNOA"
+              col_groups, route_column, std_route_column, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"
             ))),
-          by = c(col_groups, "TIME_DOSE", "DOSNO", "DOSNOA")
+          by = c(col_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA")
         ) %>%
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
