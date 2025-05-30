@@ -465,7 +465,7 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #'   time = 0,
 #'   timeu = "h"
 #' )
-#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu")
 #' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
 #' units_table <- PKNCA_build_units_table(o_conc, o_dose)
 #' print(units_table)
@@ -501,7 +501,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
     # Prevent any issue with NAs in the group or unit columns
     mutate(across(everything(), ~ as.character(.))) %>%
     # Pick the group columns that are relevant in stratifying the units
-    select_minimal_grouping_columns(all_unit_cols)
+    select_level_grouping_cols(all_unit_cols)
 
   # Generate a PKNCA units table for each group
   groups_units_tbl %>%
@@ -545,7 +545,7 @@ ensure_column_unit_exists <- function(pknca_obj, unit_name) {
   pknca_obj
 }
 
-#' Select Relevant Columns for Grouping or Stratification
+#' Select Relevant Columns for Grouping Levels of a target column
 #'
 #' This function identifies and returns the minimal set of columns from a data frame
 #' that are necessary to uniquely reconstruct the grouping or stratification defined by
@@ -558,8 +558,9 @@ ensure_column_unit_exists <- function(pknca_obj, unit_name) {
 #'
 #' @param df A data frame.
 #' @param target_col A character vector of one or more column names to be reconstructed.
-#' @returns A data frame containing the minimal set of columns necessary to reconstruct the target column(s).
-select_minimal_grouping_columns <- function(df, target_col) {
+#' @returns A data frame containing the target column and the minimal set of columns
+#'          necessary to reconstruct the target column(s) levels structure.
+select_level_grouping_cols <- function(df, target_col) {
   # If there is no target_col specified, simply return the original df
   if (length(target_col) == 0) return(df)
   # If the target column is a vector of length > 1, create a combined column
@@ -569,7 +570,7 @@ select_minimal_grouping_columns <- function(df, target_col) {
       mutate(target_cols_comb = paste(!!!syms(target_col), sep = "_")) %>%
       pull(target_cols_comb)
 
-  # If the target column is a single string, no need to do anything special
+    # If the target column is a single string, no need to do anything special
   } else {
     target_vals <- df[[target_col]]
   }

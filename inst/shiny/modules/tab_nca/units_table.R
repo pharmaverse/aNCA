@@ -92,7 +92,6 @@ units_table_server <- function(id, mydata) {
         escape = FALSE,
         filter = "top",
         selection = list(mode = "single", target = "cell"),
-        #class = "table table-striped table-bordered",
         colnames = c(
           "Parameter" = "PPTESTCD",
           "Default unit" = "PPORRESU",
@@ -134,7 +133,7 @@ units_table_server <- function(id, mydata) {
               visible = FALSE,
               targets = ncol(modal_units_table())
             ),
-            list(className = 'dt-center', targets = "_all")
+            list(className = "dt-center", targets = "_all")
           )
         )
       )

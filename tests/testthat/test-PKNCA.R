@@ -382,12 +382,12 @@ describe("PKNCA_build_units_table", {
   })
 })
 
-describe("select_minimal_grouping_columns", {
+describe("select_level_grouping_cols", {
 
   # Make a dataset where a variable `d` depends on `a` & `b`
   data <- data.frame(
-    a = rep(letters[c(1,2,3)], each = 4),
-    b = rep(letters[c(1,2)], each = 3),
+    a = rep(letters[c(1, 2, 3)], each = 4),
+    b = rep(letters[c(1, 2)], each = 3),
     c = letters[1]
   ) %>%
     mutate(
@@ -395,13 +395,13 @@ describe("select_minimal_grouping_columns", {
     )
 
   it("returns the minimal grouping_columns (a, b) for one target column", {
-    result <- select_minimal_grouping_columns(data, "d")
+    result <- select_level_grouping_cols(data, "d")
     expect_equal(result, data[c("a", "b", "d")])
   })
 
   # Note: this case will never happen in the App or PKNCA_build_units_table
   it("returns the original data if target_columns is NULL", {
-    result <- select_minimal_grouping_columns(data, NULL)
+    result <- select_level_grouping_cols(data, NULL)
     expect_equal(result, data)
   })
 })

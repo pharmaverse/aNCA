@@ -48,7 +48,7 @@ d_dose <- data.frame(
   time = 0,
   timeu = "h"
 )
-o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
+o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu")
 o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
 units_table <- PKNCA_build_units_table(o_conc, o_dose)
 print(units_table)
