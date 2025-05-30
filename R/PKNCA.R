@@ -448,7 +448,6 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' # 2) Time units are the same within dose groups
 #' # 3) Units are the same for subjects within the same concentration group
 #'
-#' library(PKNCA)
 #' d_conc <- data.frame(
 #'   subj = 1,
 #'   analyte = rep(c("A", "B"), each = 2),
@@ -464,39 +463,42 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #'   time = 0,
 #'   timeu = "h"
 #' )
-#' o_conc <- PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
-#' o_dose <- PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
+#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
 #' units_table <- PKNCA_build_units_table(o_conc, o_dose)
 #' print(units_table)
 #'
-#' @importFrom dplyr select mutate rowwise
+#' @importFrom dplyr select mutate rowwise any_of across everything %>%
 #' @importFrom tidyr unnest
 #' @importFrom rlang sym
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
-  o_conc <- ensure_column_unit_exists(o_conc, "concu")
-  o_conc <- ensure_column_unit_exists(o_conc, "amountu")
-  o_conc <- ensure_column_unit_exists(o_conc, "timeu")
-  o_dose <- ensure_column_unit_exists(o_dose, "doseu")
+  o_conc <- ensure_column_unit_exists(o_conc, c("concu", "timeu", "amountu", "doseu"))
 
   # Extract relevant columns from o_conc and o_dose
-  group_dose_cols <- names(PKNCA::getGroups(o_dose))
-  group_conc_cols <- names(PKNCA::getGroups(o_conc))
+  group_dose_cols <- group_vars(o_dose)
+  group_conc_cols <- group_vars(o_conc)
   concu_col <- o_conc$columns$concu
   amountu_col <- o_conc$columns$amountu
   timeu_col <- o_conc$columns$timeu
   doseu_col <- o_dose$columns$doseu
+  all_unit_cols <- c(concu_col, amountu_col, timeu_col, doseu_col)
 
-  # Join concentration and dose data
-  groups_units_tbl <- pknca_full_join_conc_dose(o_conc, o_dose) %>%
-    select(any_of(c(group_conc_cols, group_dose_cols,
-                    concu_col, amountu_col, timeu_col, doseu_col))
-    ) %>%
+  # Join dose units with concentration group columns and units
+  groups_units_tbl <- left_join(
+    o_conc$data %>%
+      select(any_of(c(group_conc_cols, concu_col, amountu_col, timeu_col))) %>%
+      unique(),
+    o_dose$data %>%
+      select(any_of(c(group_dose_cols, doseu_col))) %>%
+      unique(),
+    by = intersect(group_conc_cols, group_dose_cols)
+  ) %>%
+    # Prevent any issue with NAs in the group or unit columns
     mutate(across(everything(), ~ as.character(.))) %>%
-    select(-any_of(c(o_conc$columns$subject, o_dose$columns$subject))) %>%
-    unique() %>%
-    select_relevant_columns(c(concu_col, amountu_col, timeu_col, doseu_col))
+    # Pick the group columns that are relevant in stratifying the units
+    select_minimal_grouping_columns(all_unit_cols)
 
   # Generate a PKNCA units table for each group
   groups_units_tbl %>%
@@ -514,11 +516,11 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
     # Combine all PKNCA units tables into one
     unnest(cols = c(pknca_units_tbl)) %>%
-    select(-any_of(c(concu_col, amountu_col, timeu_col, doseu_col))) %>%
     mutate(
       PPSTRESU = PPORRESU,
       conversion_factor = 1
     ) %>%
+    # Order the columns to have them in a clean display
     select(any_of(c(group_conc_cols, group_dose_cols)),
            PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
     unique()
@@ -542,7 +544,6 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 #'s
 #' @examples
 #' # Assuming `o_conc` and `o_dose` are valid PKNCA objects and present common groups:
-#' library(PKNCA)
 #' d_conc <- data.frame(
 #'   subj = 1,
 #'   analyte = rep(c("A", "B"), each = 2),
@@ -558,15 +559,15 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 #'   time = 0,
 #'   timeu = "h"
 #' )
-#' o_conc <- PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
-#' o_dose <- PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
-#' combined_data <- pknca_full_join_conc_dose(o_conc, o_dose)
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
+#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
+#' combined_data <- PKNCA_left_join_conc_dose(o_conc, o_dose)
 #'
-#' @importFrom dplyr bind_rows mutate group_by arrange ungroup filter select
+#' @importFrom dplyr bind_rows mutate group_by arrange ungroup filter select any_of across everything %>%
 #' @importFrom tidyr fill
 #' @importFrom rlang sym syms
 #' @export
-pknca_full_join_conc_dose <- function(o_conc, o_dose) {
+PKNCA_left_join_conc_dose <- function(o_conc, o_dose) {
 
   # Extract necessary columns
   group_conc_cols <- names(PKNCA::getGroups(o_conc))
@@ -594,45 +595,74 @@ pknca_full_join_conc_dose <- function(o_conc, o_dose) {
   combined_data
 }
 
-# Ensures that a specified unit column exists in the PKNCA object, creating it if necessary.
+# Ensures that specified unit columns exist in the PKNCA object, creating them if necessary.
 ensure_column_unit_exists <- function(pknca_obj, unit_name) {
-  if (is.null(pknca_obj$columns[[unit_name]])) {
-    unit_colname <- make.unique(c(names(pknca_obj$data), unit_name))[ncol(pknca_obj$data) + 1]
-    pknca_obj$columns[[unit_name]] <- unit_colname
-    if (!is.null(pknca_obj$units[[unit_name]])) {
-      pknca_obj$data[[unit_colname]] <- pknca_obj$units[[unit_name]]
-    } else {
-      pknca_obj$data[[unit_colname]] <- NA_character_
+  for (unit in unit_name) {
+    if (is.null(pknca_obj$columns[[unit]])) {
+      unit_colname <- make.unique(c(names(pknca_obj$data), unit))[ncol(pknca_obj$data) + 1]
+      pknca_obj$columns[[unit]] <- unit_colname
+      if (!is.null(pknca_obj$units[[unit]])) {
+        pknca_obj$data[[unit_colname]] <- pknca_obj$units[[unit]]
+      } else {
+        pknca_obj$data[[unit_colname]] <- NA_character_
+      }
     }
   }
   pknca_obj
 }
 
-# Selects only the relevant columns from the data based on changes in the target column.
-select_relevant_columns <- function(data, target_col) {
+#' Select Relevant Columns for Grouping or Stratification
+#'
+#' This function identifies and returns the minimal set of columns from a data frame
+#' that are necessary to uniquely reconstruct the grouping or stratification defined by
+#' the target column(s). "Relevant columns" are those whose combined values can be used
+#' to generate a factor that matches the levels of the target column(s).
+#'
+#' The function removes duplicate, constant, and redundant columns, and then searches
+#' for the smallest combination of columns that can uniquely represent the grouping
+#' structure of the target column(s).
+#'
+#' @param df A data frame.
+#' @param target_col A character vector of one or more column names to be reconstructed.
+#' @returns A data frame containing the minimal set of columns necessary to reconstruct the target column(s).
+select_minimal_grouping_columns <- function(df, target_col) {
+  # If there is no target_col specified, simply return the original df
+  if (length(target_col) == 0) return(df)
+  # If the target column is a vector of length > 1, create a combined column
 
-  # If there is no target_col specified, simply return the original data
-  if (is.null(target_col)) return(data)
+  if (length(target_col) > 1) {
+    target_vals <- df %>%
+      mutate(target_cols_comb = paste(!!!syms(target_col), sep = "_")) %>%
+      pull(target_cols_comb)
 
-  # Convert all columns to numeric factors for comparison
-  data_binary <- data %>%
-    mutate(target_col_derived = paste(!!!syms(target_col), sep = "_")) %>%
-    select(-all_of(target_col)) %>%
-    mutate(across(everything(), ~ as.numeric(as.factor(.))))
+  # If the target column is a single string, no need to do anything special
+  } else {
+    target_vals <- df[[target_col]]
+  }
+  # If the target column only has one level, there are no relevant columns
+  if (length(unique(target_vals)) == 1) {
+    return(df[target_col])
+  }
 
-  # Extract the binary representation of the target column
-  target_binary <- data_binary[["target_col_derived"]]
+  cols <- setdiff(names(df), target_col)
+  # 1. Remove columns that are duplicates in levels terms
+  col_levels <- lapply(df[cols], function(x) as.numeric(as.factor(x)))
+  is_dup <- duplicated(col_levels)
+  cols <- cols[!is_dup]
 
-  # Check which columns have at least one change in value when the target column changes
-  relevant_cols <- sapply(data_binary, function(col) any(diff(col) != 0 & diff(target_binary) != 0))
-  relevant_cols <- names(relevant_cols)[relevant_cols] |>
-    setdiff("target_col_derived")
+  # 2. Remove columns with only 1 level
+  n_levels <- sapply(df[cols], function(x) length(unique(x)))
+  cols <- cols[n_levels > 1]
 
-  # Check if there is any duplicated column in data_binary
-  non_unit_cols <- as.list(data_binary  %>% select(any_of(relevant_cols)))
-  relevant_non_dup_cols <- names(non_unit_cols)[!duplicated(non_unit_cols, fromLast = TRUE)]
-
-  # Select and return only the relevant columns from the original data
-
-  data %>% select(any_of(c(relevant_non_dup_cols, target_col)))
+  # 3. Check combinations of columns to find minimal key combination to level-match target_col
+  for (n in seq_len(length(cols))) {
+    combs <- combn(cols, n, simplify = FALSE)
+    for (comb in combs) {
+      combined <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
+      if (all(as.numeric(as.factor(combined)) == as.numeric(as.factor(target_vals)))) {
+        return(df[c(comb, target_col)])
+      }
+    }
+  }
+  return(df[target_col])
 }
