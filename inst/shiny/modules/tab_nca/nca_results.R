@@ -34,6 +34,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
     final_results <- reactive({
       req(res_nca())
       res <- res_nca()
+
       #' Apply units
       if (!is.null(session$userData$units_table())) {
         res$data$units <- session$userData$units_table()
@@ -82,7 +83,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
           grouping_vars(),
           unname(unlist(res_nca()$data$conc$columns$groups)),
           "DOSEA",
-          "DOSNO",
+          "NCA_PROFILE",
           "ROUTE"
         )))
 
