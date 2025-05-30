@@ -33,7 +33,11 @@ base::local({
       rep(2, 5),              # 4.1 (IV bolus, abnormal profile)
       c(1, 2.5, 1, 0.7, 0.5), # 5.1 (Infusion)
       5:1,                    # 6.1 (IV bolus, metabolite)
-      c(1:3, NA, 0.5)         # 7.1 (Extravascular, with NA)
+      c(1:3, NA, 0.5),        # 7.1 (Extravascular, with NA)
+      c(1:3, NA, 0.5),        # 8.1 (A)
+      c(0:2, NA, 0.5),        # 8.1 (B)
+      c(5:3, NA, 0.5),        # 8.2 (A)
+      c(4:2, NA, 0.5)         # 8.2 (B)
     ),
     AFRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -44,7 +48,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(5.5, 9.5, 1),        # 8.2 (A)
+      seq(5.5, 9.5, 1)         # 8.2 (B)
     ),
     ARRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -55,7 +64,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(0.5, 4.5, 1),        # 8.2 (A)
+      seq(0.5, 4.5, 1)         # 8.2 (B)
     ),
     NFRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -66,7 +80,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+
+      seq(0.5, 4.5, 1),      # 8.1 (A)
+      seq(0.5, 4.5, 1),      # 8.1 (B)
+      seq(5.5, 9.5, 1),      # 8.2 (A)
+      seq(5.5, 9.5, 1)       # 8.2 (B)
     ),
     NRRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -77,17 +96,30 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+      seq(0.5, 4.5, 1),      # 8.1 (A)
+      seq(0.5, 4.5, 1),      # 8.1 (B)
+      seq(0.5, 4.5, 1),      # 8.2 (A)
+      seq(0.5, 4.5, 1)       # 8.2 (B)
     ),
     ROUTE = c(
       rep("extravascular", 5 * 3), # 1.1 - 2.2
-      rep("intravascular", 5 * 6)  # 3.1 - 7.1
+      rep("intravascular", 5 * 6),  # 3.1 - 7.1
+      rep("extravascular", 5), # 8.1 (A)
+      rep("extravascular", 5), # 8.1 (B)
+      rep("intravascular", 5), # 8.2 (A)
+      rep("intravascular", 5)  # 8.2 (B)
     ),
     PARAM = c(
       rep("A", 5 * 7),          # 1.1 - 5.1
       rep("B", 5 * 1),          # 6.1 (IV bolus, metabolite)
-      rep("A", 5 * 1)           # 7.1 (Extravascular, with NA)
+      rep("A", 5 * 1),          # 7.1 (Extravascular, with NA)
+      rep("A", 5),              # 8.1 (A)
+      rep("B", 5),              # 8.1 (B)
+      rep("A", 5),              # 8.2 (A)
+      rep("B", 5)               # 8.2 (B)
     ),
+    PCSPEC = "SERUM",
     USUBJID = c(
       rep(1, 5),
       rep(2, 5 * 2),
@@ -95,7 +127,8 @@ base::local({
       rep(4, 5),
       rep(5, 5),
       rep(6, 5),
-      rep(7, 5)
+      rep(7, 5),
+      rep(8, 20)                # 8.1 (A,B), 8.2 (A,B)
     ),
     NCA_PROFILE = c(
       rep(1, 5),
@@ -104,29 +137,32 @@ base::local({
       rep(1, 5),
       rep(1, 5),
       rep(1, 5),
-      rep(1, 5)
-    ),
-    DOSNOA = c(
-      1,
-      c(1, 2),
-      c(1, 2),
-      1,
-      1,
-      1,
-      1
-    ),
-    PCSPEC = c(
-      rep("PLASMA", 9)
+      rep(1, 5),
+      rep(1, 10),               # 8.1 (A,B)
+      rep(2, 10)                # 8.2 (A,B)
     ),
     # Included by aNCA internally
     is.excluded.hl = FALSE,
     is.included.hl = FALSE,
     exclude_half.life = FALSE,
     # Units
-    AVALU = "mg/L",
-    RRLTU = "h",
-    DOSEU = "dg/L"
-  )
+    AVALU = c(
+      rep("ng/mL", 5 * 7),     # 1.1 - 5.1 (A)
+      rep("ug/mL", 5),         # 6.1 (B)
+      rep("ng/mL", 5),         # 7.1 (A)
+      rep("ng/mL", 5),         # 8.1 (A)
+      rep("ug/mL", 5),         # 8.1 (B)
+      rep("ng/mL", 5),         # 8.2 (A)
+      rep("ug/mL", 5)          # 8.2 (B)
+    ),
+    RRLTU = "hr",
+    STUDYID = "S1"
+  ) %>%
+    # Needed for pivot_wider_pknca_results (dose_profile_duplicates)
+    # TODO (Gerardo): Kill this assumption
+    mutate(
+      DOSNOA = NCA_PROFILE
+    )
 
   # Create Testing Dose Data
   FIXTURE_DOSE_DATA <<- data.frame(
@@ -137,12 +173,16 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,
+      5
     ),
     ARRLT = c(
       0,
       c(0, 0),
       c(0, 0),
+      0,
+      0,
       0,
       0,
       0,
@@ -155,7 +195,9 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,
+      5
     ),
     NRRLT = c(
       0,
@@ -164,18 +206,34 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,  # 8.1 (A,B)
+      0   # 8.2 (A,B)
     ),
     ROUTE = c(
-      rep("extravascular", 3),
-      rep("intravascular", 5),
-      "extravascular"
+      rep("extravascular", 3), # 1.1, 2.1, 2.2
+      rep("intravascular", 5), # 2.2 - 6.1
+      "extravascular",  # 7.1 (A)
+      "extravascular",  # 8.1 (A,B)
+      "intravascular"   # 8.2 (A,B)
     ),
-    ADOSE = 1,
+    DOSEA = c(
+      1,
+      c(1, 2),
+      c(1, 2),
+      1,
+      1,
+      1,
+      1,
+      10,             # 8.1 (A,B)
+      5               # 8.2 (A,B)
+    ),
     DRUG = "A",
     ADOSEDUR = c(
       rep(0, 6),
       1,            # 5.1 (Infusion)
+      0,
+      0,
       0,
       0
     ),
@@ -186,7 +244,8 @@ base::local({
       4,
       5,
       6,
-      7
+      7,
+      rep(8, 2)
     ),
     NCA_PROFILE = c(
       1,
@@ -195,7 +254,8 @@ base::local({
       1,
       1,
       1,
-      1
+      1,
+      c(1, 2)
     ),
     DOSNOA = c(
       1,
@@ -204,8 +264,10 @@ base::local({
       1,
       1,
       1,
-      1
-    )
+      1,
+      c(1, 2)
+    ),
+    DOSEU = "mg/kg"
   )
 
   # Perform NCA Analysis
@@ -267,14 +329,24 @@ base::local({
       TRUE ~ NA_character_
     ))
 
+  units_table <- rbind(
+    PKNCA::pknca_units_table(
+      concu = "ng/mL",
+      timeu = "hr",
+      doseu = "mg/kg"
+    )  %>%  mutate(PARAM = "A"),
+    PKNCA::pknca_units_table(
+      concu = "ug/mL",
+      timeu = "hr",
+      doseu = "mg/kg"
+    )  %>%  mutate(PARAM = "B")
+  )
+
   FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
     data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
-    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
-                                 route = "ROUTE", duration = "ADOSEDUR",
-                                 time.nominal = "NFRLT"),
-    units = PKNCA::pknca_units_table(
-      concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-    )
+    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
+                                 route = "ROUTE", duration = "ADOSEDUR"),
+    units = units_table
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
   FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("NCA_PROFILE",
@@ -350,10 +422,7 @@ base::local({
 
 # Dummy data
 # Import dataset from testthat/data folder
-
-# ToDo (Gerardo): These fixtures are supporting still test-bioavailability.R
-# We need to substitute them with the previous ones for consistency
-
+#
 DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
 
 # Create PKNCAdata object

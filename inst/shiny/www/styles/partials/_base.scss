@@ -112,6 +112,17 @@ h5 {
   }
 }
 
+/* custom-modal.css: Make Shiny modalDialog extra large (units table) */
+.modal-xl {
+  max-width: 65vw !important;
+  width: 65vw !important;
+}
+
+.modal-xl .modal-body {
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
 /* gifs */
 .gif-container {
   text-align: center;

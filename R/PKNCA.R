@@ -65,6 +65,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
+  all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -76,7 +77,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
-    group_columns = c(group_columns, usubjid_column, analyte_column, matrix_column),
+    group_columns = all_group_columns,
     time_column = time_column,
     rrlt_column = "ARRLT",
     route_column = route_column
@@ -84,7 +85,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     arrange(across(all_of(c(usubjid_column, time_column))))
 
   # Check for missing values in group columns
-  na_columns <- group_columns[sapply(df_conc[, group_columns], function(x) any(is.na(x)))]
+  na_columns <- all_group_columns[sapply(df_conc[, all_group_columns], function(x) any(is.na(x)))]
 
   if (length(na_columns) > 0) {
     stop(
@@ -112,7 +113,9 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
-    time.nominal = "NFRLT"
+    time.nominal = "NFRLT",
+    concu = "AVALU",
+    timeu = "RRLTU"
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
@@ -120,7 +123,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
     route = std_route_column,
     time.nominal = "NFRLT",
-    duration = "ADOSEDUR"
+    duration = "ADOSEDUR",
+    doseu = "DOSEU"
   )
 
   # create basic intervals so that PKNCAdata can be created
@@ -138,24 +142,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     data.conc = pknca_conc,
     data.dose = pknca_dose,
     intervals = intervals, #TODO: should be default
-    units = PKNCA::pknca_units_table(
-      concu = pknca_conc$data$AVALU[1],
-      doseu = pknca_conc$data$DOSEU[1],
-      amountu = pknca_conc$data$AVALU[1],
-      timeu = pknca_conc$data$RRLTU[1]
-    )
+    units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
-
-  # Update units
-  unique_analytes <- unique(
-    pknca_data_object$conc$data[[pknca_data_object$conc$columns$groups$group_analyte]]
-  )
-  analyte_column <- pknca_data_object$conc$columns$groups$group_analyte
-  pknca_data_object$units <- tidyr::crossing(
-    pknca_data_object$units, !!sym(analyte_column) := unique_analytes
-  ) %>%
-    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
-
   pknca_data_object
 }
 
@@ -211,13 +199,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
-
-  # Add and expand units
-  data$units <-  data$units %>%
-    filter(!!sym(analyte_column) %in% selected_analytes) %>%
-    select(-!!sym(analyte_column)) %>%
-    tidyr::crossing(!!sym(analyte_column) := unique_analytes) %>%
-    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
   data$options <- list(
     auc.method = method,
@@ -444,4 +425,179 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
     }
   }
   d_conc_time
+}
+
+#' Build Units Table for PKNCA
+#'
+#' This function generates a PKNCA units table including the potential unit segregating columns
+#' among the dose and/or concentration groups.
+#'
+#' @param o_conc A PKNCA concentration object (PKNCAconc).
+#' @param o_dose A PKNCA dose object (PKNCAdose).
+#'
+#' @returns A data frame containing the PKNCA formatted units table.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Ensures the unit columns (e.g., `concu`, `timeu`, `doseu`, `amountu`) exist in the inputs.
+#' 2. Joins the concentration and dose data based on their grouping columns.
+#' 3. Generates a PKNCA units table for each group, including conversion factors and custom units.
+#' 4. Returns a unique table with relevant columns for PKNCA analysis.
+#'
+#' @examples
+#' # Assuming `o_conc` and `o_dose` are valid PKNCA objects:
+#' # 1) Sharing group variables in their formulas
+#' # 2) Time units are the same within dose groups
+#' # 3) Units are the same for subjects within the same concentration group
+#'
+#' d_conc <- data.frame(
+#'   subj = 1,
+#'   analyte = rep(c("A", "B"), each = 2),
+#'   concu = rep(c("ng/mL", "ug/mL"), each = 2),
+#'   conc = c(0, 2, 0, 5),
+#'   time = rep(0:1, 2),
+#'   timeu = "h"
+#' )
+#' d_dose <- data.frame(
+#'   subj = 1,
+#'   dose = 100,
+#'   doseu = "mg",
+#'   time = 0,
+#'   timeu = "h"
+#' )
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu")
+#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
+#' units_table <- PKNCA_build_units_table(o_conc, o_dose)
+#' print(units_table)
+#'
+#' @importFrom dplyr select mutate rowwise any_of across everything %>%
+#' @importFrom tidyr unnest
+#' @importFrom rlang sym
+#' @export
+PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
+
+  o_conc <- ensure_column_unit_exists(o_conc, c("concu", "timeu", "amountu"))
+  o_dose <- ensure_column_unit_exists(o_dose, c("doseu"))
+
+  # Extract relevant columns from o_conc and o_dose
+  group_dose_cols <- group_vars(o_dose)
+  group_conc_cols <- group_vars(o_conc)
+  concu_col <- o_conc$columns$concu
+  amountu_col <- o_conc$columns$amountu
+  timeu_col <- o_conc$columns$timeu
+  doseu_col <- o_dose$columns$doseu
+  all_unit_cols <- c(concu_col, amountu_col, timeu_col, doseu_col)
+
+  # Join dose units with concentration group columns and units
+  groups_units_tbl <- left_join(
+    o_conc$data %>%
+      select(any_of(c(group_conc_cols, concu_col, amountu_col, timeu_col))) %>%
+      unique(),
+    o_dose$data %>%
+      select(any_of(c(group_dose_cols, doseu_col))) %>%
+      unique(),
+    by = intersect(group_conc_cols, group_dose_cols)
+  ) %>%
+    # Prevent any issue with NAs in the group or unit columns
+    mutate(across(everything(), ~ as.character(.))) %>%
+    # Pick the group columns that are relevant in stratifying the units
+    select_level_grouping_cols(all_unit_cols)
+
+  # Generate a PKNCA units table for each group
+  groups_units_tbl %>%
+    rowwise() %>%
+    mutate(
+      pknca_units_tbl = list(
+        PKNCA::pknca_units_table(
+          concu = !!sym(concu_col),
+          doseu = !!sym(doseu_col),
+          amountu = !!sym(amountu_col),
+          timeu = !!sym(timeu_col)
+        )
+      )
+    ) %>%
+
+    # Combine all PKNCA units tables into one
+    unnest(cols = c(pknca_units_tbl)) %>%
+    mutate(
+      PPSTRESU = PPORRESU,
+      conversion_factor = 1
+    ) %>%
+    # Order the columns to have them in a clean display
+    select(any_of(c(group_conc_cols, group_dose_cols)),
+           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
+    unique()
+}
+
+# Ensures that specified unit columns exist in the PKNCA object, creating them if necessary.
+ensure_column_unit_exists <- function(pknca_obj, unit_name) {
+  for (unit in unit_name) {
+    if (is.null(pknca_obj$columns[[unit]])) {
+      unit_colname <- make.unique(c(names(pknca_obj$data), unit))[ncol(pknca_obj$data) + 1]
+      pknca_obj$columns[[unit]] <- unit_colname
+      if (!is.null(pknca_obj$units[[unit]])) {
+        pknca_obj$data[[unit_colname]] <- pknca_obj$units[[unit]]
+      } else {
+        pknca_obj$data[[unit_colname]] <- NA_character_
+      }
+    }
+  }
+  pknca_obj
+}
+
+#' Select Relevant Columns for Grouping Levels of a target column
+#'
+#' This function identifies and returns the minimal set of columns from a data frame
+#' that are necessary to uniquely reconstruct the grouping or stratification defined by
+#' the target column(s). "Relevant columns" are those whose combined values can be used
+#' to generate a factor that matches the levels of the target column(s).
+#'
+#' The function removes duplicate, constant, and redundant columns, and then searches
+#' for the smallest combination of columns that can uniquely represent the grouping
+#' structure of the target column(s).
+#'
+#' @param df A data frame.
+#' @param target_col A character vector of one or more column names to be reconstructed.
+#' @returns A data frame containing the target column and the minimal set of columns
+#'          necessary to reconstruct the target column(s) levels structure.
+select_level_grouping_cols <- function(df, target_col) {
+  # If there is no target_col specified, simply return the original df
+  if (length(target_col) == 0) return(df)
+  # If the target column is a vector of length > 1, create a combined column
+
+  if (length(target_col) > 1) {
+    target_vals <- df %>%
+      mutate(target_cols_comb = paste(!!!syms(target_col), sep = "_")) %>%
+      pull(target_cols_comb)
+
+    # If the target column is a single string, no need to do anything special
+  } else {
+    target_vals <- df[[target_col]]
+  }
+  # If the target column only has one level, there are no relevant columns
+  if (length(unique(target_vals)) == 1) {
+    return(df[target_col])
+  }
+
+  cols <- setdiff(names(df), target_col)
+  # 1. Remove columns that are duplicates in levels terms
+  col_levels <- lapply(df[cols], function(x) as.numeric(as.factor(x)))
+  is_dup <- duplicated(col_levels)
+  cols <- cols[!is_dup]
+
+  # 2. Remove columns with only 1 level
+  n_levels <- sapply(df[cols], function(x) length(unique(x)))
+  cols <- cols[n_levels > 1]
+
+  # 3. Check combinations of columns to find minimal key combination to level-match target_col
+  for (n in seq_len(length(cols))) {
+    combs <- combn(cols, n, simplify = FALSE)
+    for (comb in combs) {
+      combined <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
+      if (all(as.numeric(as.factor(combined)) == as.numeric(as.factor(target_vals)))) {
+        return(df[c(comb, target_col)])
+      }
+    }
+  }
+  return(df[target_col])
 }
