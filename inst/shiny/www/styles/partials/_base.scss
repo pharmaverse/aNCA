@@ -1,5 +1,3 @@
-
-
 /* custom css for progress bar */
 .shiny-notification {
   position: fixed;
@@ -38,124 +36,62 @@ h5 {
   margin-right: 5px;
 }
 
-/* data tab styling */
-.data-tab-container {
-  .card {
-    margin-top: 1em;
-    margin-bottom: 0em;
-
-    .card-body > div {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-  }
-
-  .error-string {
-    color: var(--bs-danger);
-    font-weight: bold;
-  }
-
-  /* filters on data page */
-  .filters-buttons-container {
-    display: grid;
-    grid-template-columns: 49% 49%;
-    gap: 2%;
-  }
-
-  .filter-widget-container {
-    display: flex;
-    justify-content: center;
-    gap: 1em;
-
-    .btn-danger {
-      align-self: flex-end;
-      width: 2.5em;
-      height: 2.5em;
-      padding: 0;
-      margin: 0;
-    }
-  }
-
-  .reactable {
-    margin-top: 2em;
-  }
-
-  /* column mapping UI */
-  .data-mapping-container {
-    .column-mapping-row {
-      display: flex;
-      align-items: center;
-      margin: -0.75rem 0 .25em 1em;
-    }
-
-    .column-mapping-output {
-      margin: 1.25rem 0 0 0.625rem;
-      color: black;
-    }
-
-    .column-mapping-label {
-      margin: 1.25rem 0 0 0.625rem;
-      color: grey;
-    }
-
-    h5 {
-      font-weight: bold;
-      margin-top: 0.75em;
-      margin-bottom: 0;
-    }
-
-    button {
-      margin-top: 1em;
-    }
-  }
-}
-
-
 /* buttons */
 .input-group-btn {
   width: auto;
 }
 
 .btn-help-icon {
-  font-size: 20px; /* Increase font size */
-  padding: 10px 20px; /* Increase padding */
+  font-size: 20px;
+  /* Increase font size */
+  padding: 10px 20px;
+  /* Increase padding */
 }
 
 /* modals */
 .modal-dialog {
   max-width: 800px;
 }
+
 .modal-header {
   border-bottom: 1px solid #e5e5e5;
-  background-color: #3f8abf; /* Blue header background */
+  background-color: #3f8abf;
+  /* Blue header background */
   text-align: center;
 }
+
 .modal-title {
-  font-family: 'Arial', sans-serif;
-  font-size: 32px; /* Larger title font size */
+  font-family: "Arial", sans-serif;
+  font-size: 32px;
+  /* Larger title font size */
   font-weight: bold;
-  color: #ffffff; /* White title color */
+  color: #ffffff;
+  /* White title color */
   margin-bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .modal-body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   font-size: 16px;
-  background-color: #f5f5f5; /* Light grey body background */
+  background-color: #f5f5f5;
+  /* Light grey body background */
   padding: 20px;
   text-align: center;
 }
+
 .modal-intro {
-  font-family: 'Georgia', serif; /* Elegant font type for intro text */
+  font-family: "Georgia", serif;
+  /* Elegant font type for intro text */
   font-size: 18px;
   margin-bottom: 20px;
-  color: #333; /* Dark text color */
+  color: #333;
+  /* Dark text color */
 }
 
 /* modal for handling data duplicates */
@@ -195,13 +131,19 @@ h5 {
     margin-bottom: 0px;
     margin-top: 0px;
     font-weight: bold;
-    font-size: 24px; /* Larger font size for titles */
-    color: #0056b3; /* More vibrant color */
-    text-align: center; /* Center the title */
-    font-family: 'Arial', sans-serif; /* Use a more attractive font */
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Add a subtle text shadow */
+    font-size: 24px;
+    /* Larger font size for titles */
+    color: #0056b3;
+    /* More vibrant color */
+    text-align: center;
+    /* Center the title */
+    font-family: "Arial", sans-serif;
+    /* Use a more attractive font */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    /* Add a subtle text shadow */
   }
 }
+
 .gif-container:hover {
   transform: scale(1.05);
 }
@@ -242,8 +184,6 @@ h5 {
   text-align: center;
 }
 
-
-
 .tlg-module {
   margin-top: 1em;
 
@@ -280,7 +220,7 @@ h5 {
     font-weight: bold;
     font-size: 2rem;
     border-bottom: thin solid #337ab7;
-    border-radius: 0 0 .25em 0;
+    border-radius: 0 0 0.25em 0;
     margin-top: 0.75em;
   }
 
@@ -319,4 +259,15 @@ div[data-value="Settings"] {
       margin-top: 2em;
     }
   }
+}
+.content-container {
+  height: 100%;
+}
+
+.page-container {
+  height: 100%;
+}
+
+.bslib-sidebar-layout > .main {
+  padding: 0;
 }

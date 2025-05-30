@@ -13,3 +13,4 @@ inst/shiny/www/.sass_cache_keys
 inst/shiny/log/*
 .Rprofile
 /page
+.DS_Store
