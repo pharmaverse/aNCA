@@ -316,6 +316,19 @@ h5 {
   margin-right: 1em;
 }
 
+/* styling for widgets at the top of the Settings page */
+div[data-value="Settings"] > div.row {
+  margin: 1em;
+}
+
+div[data-value="Settings"] > div.row div:has(a) {
+  text-align: center;
+}
+
+div[data-value="Settings"] > div.row a {
+  margin-top: 2em;
+}
+
 .bslib-sidebar-layout {
   --_sidebar-width: 170px !important;
 }
@@ -338,12 +351,12 @@ h5 {
 .sidebar .sidebar-content .row > :first-child > ul > li > a {
   padding-left: 30px;
   padding-right: 30px;
-  color: #21201F;
+  color: #21201f;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #F0F4FD;
-  color: #21201F;
+  background-color: #f0f4fd;
+  color: #21201f;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
