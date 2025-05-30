@@ -36,78 +36,6 @@ h5 {
   margin-right: 5px;
 }
 
-/* data tab styling */
-.data-tab-container {
-  /* filters on data page */
-  /* column mapping UI */
-}
-
-.data-tab-container .card {
-  margin-top: 1em;
-  margin-bottom: 0em;
-}
-
-.data-tab-container .card .card-body > div {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.data-tab-container .error-string {
-  color: var(--bs-danger);
-  font-weight: bold;
-}
-
-.data-tab-container .filters-buttons-container {
-  display: grid;
-  grid-template-columns: 49% 49%;
-  gap: 2%;
-}
-
-.data-tab-container .filter-widget-container {
-  display: flex;
-  justify-content: center;
-  gap: 1em;
-}
-
-.data-tab-container .filter-widget-container .btn-danger {
-  align-self: flex-end;
-  width: 2.5em;
-  height: 2.5em;
-  padding: 0;
-  margin: 0;
-}
-
-.data-tab-container .reactable {
-  margin-top: 2em;
-}
-
-.data-tab-container .data-mapping-container .column-mapping-row {
-  display: flex;
-  align-items: center;
-  margin: -0.75rem 0 .25em 1em;
-}
-
-.data-tab-container .data-mapping-container .column-mapping-output {
-  margin: 1.25rem 0 0 0.625rem;
-  color: black;
-}
-
-.data-tab-container .data-mapping-container .column-mapping-label {
-  margin: 1.25rem 0 0 0.625rem;
-  color: grey;
-}
-
-.data-tab-container .data-mapping-container h5 {
-  font-weight: bold;
-  margin-top: 0.75em;
-  margin-bottom: 0;
-}
-
-.data-tab-container .data-mapping-container button {
-  margin-top: 1em;
-}
-
 /* buttons */
 .input-group-btn {
   width: auto;
@@ -133,7 +61,7 @@ h5 {
 }
 
 .modal-title {
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   font-size: 32px;
   /* Larger title font size */
   font-weight: bold;
@@ -149,7 +77,7 @@ h5 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   font-size: 16px;
   background-color: #f5f5f5;
   /* Light grey body background */
@@ -158,7 +86,7 @@ h5 {
 }
 
 .modal-intro {
-  font-family: 'Georgia', serif;
+  font-family: "Georgia", serif;
   /* Elegant font type for intro text */
   font-size: 18px;
   margin-bottom: 20px;
@@ -210,7 +138,7 @@ h5 {
   /* More vibrant color */
   text-align: center;
   /* Center the title */
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   /* Use a more attractive font */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   /* Add a subtle text shadow */
@@ -291,7 +219,7 @@ h5 {
   font-weight: bold;
   font-size: 2rem;
   border-bottom: thin solid #337ab7;
-  border-radius: 0 0 .25em 0;
+  border-radius: 0 0 0.25em 0;
   margin-top: 0.75em;
 }
 
@@ -316,6 +244,122 @@ h5 {
   margin-right: 1em;
 }
 
+.content-container {
+  height: 100%;
+}
+
+.page-container {
+  height: 100%;
+}
+
+.bslib-sidebar-layout > .main {
+  padding: 0;
+}
+
+.data-tab-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 20px 0px 20px;
+}
+
+.data-tab-content-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+/* data tab styling */
+.data-tab-content {
+  /* filters on data page */
+  /* column mapping UI */
+}
+
+.data-tab-content > .tabbable > ul {
+  display: none !important;
+}
+
+.data-tab-content .card {
+  margin-top: 1em;
+  margin-bottom: 0em;
+}
+
+.data-tab-content .card .card-body > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.data-tab-content .error-string {
+  color: var(--bs-danger);
+  font-weight: bold;
+}
+
+.data-tab-content .filters-buttons-container {
+  display: grid;
+  grid-template-columns: 49% 49%;
+  gap: 2%;
+}
+
+.data-tab-content .filter-widget-container {
+  display: flex;
+  justify-content: center;
+  gap: 1em;
+}
+
+.data-tab-content .filter-widget-container .btn-danger {
+  align-self: flex-end;
+  width: 2.5em;
+  height: 2.5em;
+  padding: 0;
+  margin: 0;
+}
+
+.data-tab-content .reactable {
+  margin-top: 2em;
+}
+
+.data-tab-content .data-mapping-container .column-mapping-row {
+  display: flex;
+  align-items: center;
+  margin: -0.75rem 0 0.25em 1em;
+}
+
+.data-tab-content .data-mapping-container .column-mapping-output {
+  margin: 1.25rem 0 0 0.625rem;
+  color: black;
+}
+
+.data-tab-content .data-mapping-container .column-mapping-label {
+  margin: 1.25rem 0 0 0.625rem;
+  color: grey;
+}
+
+.data-tab-content .data-mapping-container h5 {
+  font-weight: bold;
+  margin-top: 0.75em;
+  margin-bottom: 0;
+}
+
+.data-tab-content .data-mapping-container button {
+  margin-top: 1em;
+}
+
+.data-tab-btns-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 8px;
+  padding-bottom: 28px;
+  border-top: 1px solid #ddd;
+}
+
+.data-tab-btns-container .nav-btns {
+  display: flex;
+  gap: 16px;
+}
+
 .bslib-sidebar-layout {
   --_sidebar-width: 170px !important;
 }
@@ -338,14 +382,81 @@ h5 {
 .sidebar .sidebar-content .row > :first-child > ul > li > a {
   padding-left: 30px;
   padding-right: 30px;
-  color: #21201F;
+  color: #21201f;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #F0F4FD;
-  color: #21201F;
+  background-color: #f0f4fd;
+  color: #21201f;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
   color: #bcbcbb;
+}
+
+.stepper-wrapper {
+  max-width: 100%;
+  margin-bottom: 40px;
+  --circle-size: 24px;
+  --spacing: 8px;
+}
+
+.stepper-wrapper > ol {
+  padding-left: 0px;
+  padding-right: 2rem;
+}
+
+.c-stepper {
+  display: flex;
+  counter-reset: step;
+}
+
+.c-stepper__item {
+  display: flex;
+  gap: var(--spacing);
+  align-items: center;
+}
+
+.c-stepper__item:before {
+  counter-increment: step;
+  content: counter(step);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--circle-size);
+  height: var(--circle-size);
+  border-radius: 50%;
+  font-size: 12px;
+  background-color: lightgrey;
+  color: white;
+}
+
+.c-stepper__item.active:before {
+  background-color: #007bff;
+  color: white;
+}
+
+.c-stepper__item:not(:last-child) {
+  flex: 1;
+}
+
+.c-stepper__item:not(:last-child):after {
+  content: "";
+  position: relative;
+  z-index: -1;
+  height: 2px;
+  background-color: #e0e0e0;
+  flex: 1;
+  margin-right: 0.5rem;
+}
+
+.c-stepper__title {
+  font-size: 16px;
+  margin: 0px;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
 }
