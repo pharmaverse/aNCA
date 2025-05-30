@@ -149,7 +149,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         not_compatible <- append(not_compatible, "Dose Number")
       }
 
-      if (all(settings$pscpec %in% unique(data()$PCSPEC))) {
+      if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
         updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
       } else {
         not_compatible <- append(not_compatible, "Dose Specimen")
@@ -359,21 +359,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         })
       })
     })
-
-    # Updating Checkbox and Numeric Inputs
-    observeEvent(list(input$adj.r.squared_rule, input$aucpext.obs_rule,
-                      input$aucpext.pred_rule, nca_params()), {
-
-                   nca_params <- nca_params()
-                   if (input$adj.r.squared_rule) nca_params <- c(nca_params, "adj.r.squared")
-                   if (input$aucpext.obs_rule) nca_params <- c(nca_params, "aucpext.obs")
-                   if (input$aucpext.pred_rule) nca_params <- c(nca_params, "aucpext.pred")
-
-                   updatePickerInput(session = session,
-                                     inputId = "nca_params",
-                                     selected = nca_params)
-                 })
-
 
     settings <- reactive({
       req(input$select_analyte) # Wait on general settings UI to be loaded
