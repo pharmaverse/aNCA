@@ -8,7 +8,7 @@ exclude_nca_by_param(
   parameter,
   min_thr = NULL,
   max_thr = NULL,
-  affected_parameters
+  affected_parameters = parameter
 )
 }
 \arguments{
