@@ -154,7 +154,7 @@ describe("pivot_wider_pknca_results", {
   it("adds appropriate labels to columns (CDISC PPTEST)", {
     labels <- formatters::var_labels(pivoted_res)
     expected_labels <- c(
-      USUBJID = NA, PARAM = NA, start = NA, end = NA, DOSNO = NA, DOSNOA = NA,
+      USUBJID = NA, PARAM = NA, start = NA, end = NA, NCA_PROFILE = NA, DOSNOA = NA,
       AFRLT = NA, ARRLT = NA, NFRLT = NA, NRRLT = NA, ROUTE = NA,
       DOSEA = NA, DRUG = NA, ADOSEDUR = NA, DOSEU = NA,
       `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
@@ -183,18 +183,18 @@ describe("pivot_wider_pknca_results", {
     res_with_exclude <- pknca_res
     res_with_exclude$result <- res_with_exclude$result %>%
       mutate(
-        exclude = ifelse(USUBJID == 1 & DOSNO == 1, "Reason 1; Reason 2", NA_character_)
+        exclude = ifelse(USUBJID == 1 & NCA_PROFILE == 1, "Reason 1; Reason 2", NA_character_)
       )
 
     # Apply pivot_wider_pknca_results
     result <- pivot_wider_pknca_results(res_with_exclude)
 
     # Check that the Exclude column combines and deduplicates exclude values
-    exclude_values <- result %>% filter(USUBJID == 1 & DOSNO == 1) %>% pull(Exclude)
+    exclude_values <- result %>% filter(USUBJID == 1 & NCA_PROFILE == 1) %>% pull(Exclude)
     expect_equal(exclude_values, "Reason 1, Reason 2")
 
     # Check that rows without exclude values have NA in the Exclude column
-    exclude_values_na <- result %>% filter(USUBJID == 2 & DOSNO == 2) %>% pull(Exclude)
+    exclude_values_na <- result %>% filter(USUBJID == 2 & NCA_PROFILE == 2) %>% pull(Exclude)
     expect_true(all(is.na(exclude_values_na)))
   })
 })

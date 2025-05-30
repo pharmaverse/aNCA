@@ -79,7 +79,7 @@ describe("pkcg01", {
       subtitle = "Custom Subtitle",
       footnote = "Custom Footnote",
       plotly = FALSE,
-      color_var = "DOSNO",
+      color_var = "NCA_PROFILE",
       color = c("red", "blue", "green")
     )
     plot_lin_colors <- plots_lin_colors[[2]]

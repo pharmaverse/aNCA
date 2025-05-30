@@ -8,7 +8,7 @@
 #' - ROUTE: Route of administration.
 #' - DRUG: Drug identifier.
 #' - USUBJID: Unique subject identifier.
-#' - DOSNO: Dose profile number.
+#' - NCA_PROFILE: (Non- standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
@@ -25,7 +25,7 @@
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
 #' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID`.
+#' with formula `DOSEA ~ TIME | STUDYID + DRUG + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
@@ -40,7 +40,7 @@
 #' ROUTE = rep("IV", 6),
 #' DRUG = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
-#' DOSNO = rep(1, 6),
+#' NCA_PROFILE = rep(1, 6),
 #' PARAM = rep("AnalyteA", 6),
 #' AVAL = c(0, 5, 10, 7, 3, 1),
 #' AVALU = rep("ng/mL", 6),
@@ -60,7 +60,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
-  dosno_column <- "DOSNO"
+  dosno_column <- "NCA_PROFILE"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
@@ -98,8 +98,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create dosing data
   df_dose <- format_pkncadose_data(
     pkncaconc_data = df_conc,
-    group_columns = c(group_columns, usubjid_column),
-    time_column = time_column
+    group_columns = c(group_columns, usubjid_column)
   )
 
   # Set default settings
@@ -166,11 +165,14 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #'
 #' Step 5: Impute start values if requested
 #'
+#' Note*: The function assumes that the `adnca_data` object has been
+#' created using the `PKNCA_create_data_object()` function.
+#'
 #' @param adnca_data A reactive PKNCAdata object
 #' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
-#' @param selected_dosno User selected dose numbers
+#' @param selected_dosno User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
@@ -201,7 +203,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"),
+    keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
     min.hl.r.squared = 0.01
   )
 
@@ -217,7 +219,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      DOSNO %in% selected_dosno,
+      NCA_PROFILE %in% selected_dosno,
       PCSPEC %in% selected_pcspec
     )
 
@@ -294,7 +296,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'   ROUTE = rep("IV", 6),
 #'   DRUG = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
-#'   DOSNO = rep(1, 6),
+#'   NCA_PROFILE = rep(1, 6),
 #'   PARAM = rep("AnalyteA", 6),
 #'   AVAL = c(0, 5, 10, 7, 3, 1),
 #'   AVALU = rep("ng/mL", 6),

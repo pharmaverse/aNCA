@@ -8,9 +8,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "DOSNO",
+      colorvars = "NCA_PROFILE",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -23,9 +23,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = c("DOSEA", "PARAM"),
-      colorvars = "DOSNO",
+      colorvars = "NCA_PROFILE",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -38,9 +38,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = c("DOSNO", "PARAM"),
+      colorvars = c("NCA_PROFILE", "PARAM"),
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -53,9 +53,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "DOSNO",
-      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6", "DOSNO: 1"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      colorvars = "NCA_PROFILE",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6", "NCA_PROFILE: 1"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -68,9 +68,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "DOSNO",
+      colorvars = "NCA_PROFILE",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 3"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = FALSE,
       plotly = FALSE
     )
@@ -85,9 +85,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata_missing,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "DOSNO",
+      colorvars = "NCA_PROFILE",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
@@ -100,9 +100,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "DOSNO",
+      colorvars = "NCA_PROFILE",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -112,9 +112,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata %>% mutate(PPSTRESU = ""),
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "DOSNO",
+      colorvars = "NCA_PROFILE",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -126,9 +126,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "DOSNO",
+      colorvars = "NCA_PROFILE",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "DOSNO", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
