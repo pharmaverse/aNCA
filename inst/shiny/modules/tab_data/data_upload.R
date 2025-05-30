@@ -12,7 +12,7 @@ data_upload_ui <- function(id) {
   ns <- NS(id)
 
   div(
-    stepper_ui("Data"),
+    stepper_ui("Upload"),
     card(
       div(
         h3("Upload"),

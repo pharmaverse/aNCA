@@ -26,7 +26,7 @@ tab_data_ui <- function(id) {
           navset_pill(
             id = ns("data_navset"),
             nav_panel(
-              "Data",
+              "Upload",
               data_upload_ui(ns("raw_data"))
             ),
             nav_panel(
@@ -70,9 +70,9 @@ tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    steps <- c("data", "filtering", "mapping", "preview")
-    step_labels <- c("Data", "Filtering", "Mapping", "Preview")
-    data_step <- reactiveVal("data")
+    steps <- c("upload", "filtering", "mapping", "preview")
+    step_labels <- c("Upload", "Filtering", "Mapping", "Preview")
+    data_step <- reactiveVal("upload")
 
     observe({
       current <- data_step()

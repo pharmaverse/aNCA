@@ -4,14 +4,14 @@
 #' step based on the current tab.
 #'
 #' @param tab A character string indicating the currently active tab or step.
-#'   Must be one of: `"Data"`, `"Filtering"`, `"Mapping"`, or `"Preview"`.
+#'   Must be one of: `"Upload"`, `"Filtering"`, `"Mapping"`, or `"Preview"`.
 #'   An error is thrown if an invalid value is provided.
 #'
 #' @return A `tags$div` HTML element representing the stepper UI.
 #'
 #' @export
 stepper_ui <- function(tab) {
-  steps <- c("Data", "Filtering", "Mapping", "Preview")
+  steps <- c("Upload", "Filtering", "Mapping", "Preview")
 
   if (!tab %in% steps) {
     stop(sprintf(
