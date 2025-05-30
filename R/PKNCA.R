@@ -476,7 +476,8 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
-  o_conc <- ensure_column_unit_exists(o_conc, c("concu", "timeu", "amountu", "doseu"))
+  o_conc <- ensure_column_unit_exists(o_conc, c("concu", "timeu", "amountu"))
+  o_dose <- ensure_column_unit_exists(o_dose, c("doseu"))
 
   # Extract relevant columns from o_conc and o_dose
   group_dose_cols <- group_vars(o_dose)
@@ -526,75 +527,6 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
     select(any_of(c(group_conc_cols, group_dose_cols)),
            PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
     unique()
-}
-
-#' Full Join of Concentration and Dose Data for PKNCA
-#'
-#' This function combines concentration and dose PKNCA objects into a single data frame.
-#'
-#' @param o_conc A PKNCA concentration object (PKNCAconc).
-#' @param o_dose A PKNCA dose object (PKNCAdose).
-#'
-#' @returns A data frame containing the concentration data with the corresponding dose information.
-#'
-#' @details
-#' The function performs the following steps:
-#' 1. Extracts necessary columns from the concentration and dose objects.
-#' 2. Combines the data using `bind_rows`, adding a helper column to distinguish dose rows.
-#' 3. Fills values in the combined data.
-#' 4. Filters out dose rows and returns the final combined data frame.
-#'s
-#' @examples
-#' # Assuming `o_conc` and `o_dose` are valid PKNCA objects and present common groups:
-#' d_conc <- data.frame(
-#'   subj = 1,
-#'   analyte = rep(c("A", "B"), each = 2),
-#'   concu = rep(c("ng/mL", "ug/mL"), each = 2),
-#'   conc = c(0, 2, 0, 5),
-#'   time = rep(0:1, 2),
-#'   timeu = "h"
-#' )
-#' d_dose <- data.frame(
-#'   subj = 1,
-#'   dose = 100,
-#'   doseu = "mg",
-#'   time = 0,
-#'   timeu = "h"
-#' )
-#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
-#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
-#' combined_data <- PKNCA_left_join_conc_dose(o_conc, o_dose)
-#'
-#' @importFrom dplyr bind_rows mutate group_by arrange ungroup filter select any_of across everything %>%
-#' @importFrom tidyr fill
-#' @importFrom rlang sym syms
-#' @export
-PKNCA_left_join_conc_dose <- function(o_conc, o_dose) {
-
-  # Extract necessary columns
-  group_conc_cols <- names(PKNCA::getGroups(o_conc))
-  group_dose_cols <- names(PKNCA::getGroups(o_dose))
-  conc_time_col <- o_conc$columns$time
-  dose_time_col <- o_dose$columns$time
-
-  # Combine concentration and dose data
-  combined_data <- bind_rows(
-    o_conc$data %>%
-      mutate(is.dose.col = FALSE),
-    o_dose$data %>%
-      mutate(
-        !!conc_time_col := !!sym(dose_time_col),
-        is.dose.col = TRUE
-      )
-  ) %>%
-    group_by(!!!syms(group_dose_cols)) %>%
-    arrange(across(any_of(c(group_dose_cols, conc_time_col))), !is.dose.col) %>%
-    fill(everything(), .direction = "downup") %>%
-    ungroup() %>%
-    filter(!is.dose.col) %>%
-    select(-is.dose.col)
-
-  combined_data
 }
 
 # Ensures that specified unit columns exist in the PKNCA object, creating them if necessary.

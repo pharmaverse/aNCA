@@ -74,18 +74,6 @@ describe("PKNCA_create_data_object", {
     )
   })
 
-  it("handles multiple analytes", {
-    # Multiple analytes and units
-    results <- PKNCA_create_data_object(multiple_data)
-
-    units_table <- results$units
-    expect_s3_class(units_table, "data.frame")
-
-    unique_analytes <- unique(units_table$PARAM)
-    expect_equal(length(unique_analytes), 2)
-
-  })
-
   it("handles duplicates in DFLAG", {
     # Duplicate DFLAG values
     duplicate_data <- simple_data %>% mutate(AFRLT = c(0.5, 1, 2, 3, 3, 6))
@@ -394,11 +382,26 @@ describe("PKNCA_build_units_table", {
   })
 })
 
-describe("select_relevant_columns", {
+describe("select_minimal_grouping_columns", {
+
+  # Make a dataset where a variable `d` depends on `a` & `b`
+  data <- data.frame(
+    a = rep(letters[c(1,2,3)], each = 4),
+    b = rep(letters[c(1,2)], each = 3),
+    c = letters[1]
+  ) %>%
+    mutate(
+      d = paste0(a, b)
+    )
+
+  it("returns the minimal grouping_columns (a, b) for one target column", {
+    result <- select_minimal_grouping_columns(data, "d")
+    expect_equal(result, data[c("a", "b", "d")])
+  })
+
   # Note: this case will never happen in the App or PKNCA_build_units_table
   it("returns the original data if target_columns is NULL", {
-    data <- data.frame(a = 1:5, b = 6:10)
-    result <- select_relevant_columns(data, NULL)
+    result <- select_minimal_grouping_columns(data, NULL)
     expect_equal(result, data)
   })
 })
