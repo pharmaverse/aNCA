@@ -351,7 +351,8 @@ slope_selector_server <- function( # nolint
           PCSPEC == r["PCSPEC"],
           USUBJID == r["USUBJID"],
           PARAM == r["PARAM"],
-          DOSNO == r["DOSNO"]
+          NCA_PROFILE == r["NCA_PROFILE"],
+          DOSNOA == r["DOSNOA"]
         ) |>
           NROW() != 0
       }) |>
