@@ -145,7 +145,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           })
 
           # Apply flag rules to mark results in the `exclude` column
-          flag_rules_to_apply <- purrr::keep(rules(), ~ .x$is.checked) |>
+          flag_rules_to_apply <- rules() |>
+            purrr::keep(~ .x$is.checked) |>
             purrr::map(~ .x$threshold)
           res <- PKNCA_hl_rules_exclusion(res, flag_rules_to_apply)
 
