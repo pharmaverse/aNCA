@@ -33,7 +33,6 @@ The function performs the following steps:
 # 2) Time units are the same within dose groups
 # 3) Units are the same for subjects within the same concentration group
 
-library(PKNCA)
 d_conc <- data.frame(
   subj = 1,
   analyte = rep(c("A", "B"), each = 2),
@@ -49,8 +48,8 @@ d_dose <- data.frame(
   time = 0,
   timeu = "h"
 )
-o_conc <- PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
-o_dose <- PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
+o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu", timeu = "timeu")
+o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
 units_table <- PKNCA_build_units_table(o_conc, o_dose)
 print(units_table)
 
