@@ -468,13 +468,11 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu")
 #' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
 #' units_table <- PKNCA_build_units_table(o_conc, o_dose)
-#' print(units_table)
 #'
 #' @importFrom dplyr select mutate rowwise any_of across everything %>% add_count inner_join
 #' @importFrom tidyr unnest
 #' @importFrom rlang sym syms
 #' @importFrom utils capture.output
-#' @export
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
@@ -606,5 +604,5 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
       }
     }
   }
-  return(df[strata_cols])
+  df[strata_cols]
 }

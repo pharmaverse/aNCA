@@ -120,7 +120,6 @@ units_table_server <- function(id, mydata) {
               function(row, data, index) {
                 var rowsToHide =", rows_to_hide_units_table(),
               ";
-                console.log(rowsToHide);
                 if (rowsToHide.includes(data[", ncol(modal_units_table()), "])) {
                   $(row).hide();
                 }
