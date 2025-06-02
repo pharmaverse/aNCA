@@ -30,7 +30,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
         pknca_data()
       })
     )
-    
+
     results_dir <<- reactive({
       req(res_nca())
       project <- project_name()
@@ -113,7 +113,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       req(final_results())
 
       # Save the results in the output folder
-      save_output(output = final_results(), output_path = paste0(results_dir(), "/pivoted_results.csv"))
+      save_output(
+        output = final_results(),
+        output_path = paste0(results_dir(), "/pivoted_results.csv")
+      )
 
       param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")

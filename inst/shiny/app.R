@@ -127,7 +127,7 @@ ui <- function() {
 
 server <- function(input, output, session) {
   log_info("Startup")
-  
+
   # Store globally the name of the project
   project_name <<- reactive({
     if (input$project_name != "") return(input$project_name)

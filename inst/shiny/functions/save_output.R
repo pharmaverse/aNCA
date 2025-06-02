@@ -13,11 +13,11 @@ save_output <- function(output, output_path) {
   } else if (inherits(output, "ggplot")) {
     ggsave(output_path, plot = output, width = 10, height = 6)
   } else if (inherits(output, "list")) {
-    if (inherits(output[[1]], "ggplot")){
+    if (inherits(output[[1]], "ggplot")) {
       for (name in names(output)) {
         file_name <- paste0(output_path, "_", name)
         ggsave(file_name, plot = output[[name]], width = 10, height = 6)
-      } 
+      }
     } else if (inherits(output[[1]], "data.frame")) {
       for (name in names(output)) {
         file_name <- paste0(output_path, "_", name, ".csv")
