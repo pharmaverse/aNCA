@@ -394,13 +394,12 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 #' PKNCA_impute_method_start_logslope(conc, time, start, end)
 
 PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., options = list()) { # nolint
-
   d_conc_time <- data.frame(conc = conc, time = time)
   if (!any(time == start)) {
     all_concs <- conc[time >= start  &  time <= end]
     all_times <- time[time >= start  &  time <= end]
     if (!all(is.na(all_concs))) {
-      c0 <- PKNCA::pk.calc.c0(all_concs, all_times, method = "logslope")
+      c0 <- PKNCA::pk.calc.c0(all_concs, all_times, time.dose = start, method = "logslope")
       if (!is.na(c0)) {
         d_conc_time <- rbind(d_conc_time, data.frame(time = start, conc = c0))
         d_conc_time <- d_conc_time[order(d_conc_time$time), ]
