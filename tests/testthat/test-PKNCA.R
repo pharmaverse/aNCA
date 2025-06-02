@@ -380,6 +380,16 @@ describe("PKNCA_build_units_table", {
       c("unitless", "fraction", "%", "count", NA)
     )
   })
+
+  it("reports an error when units are not uniform through all concentration groups", {
+    d_conc$AVALU[1] <- "pg/L"
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                               concu = "AVALU", timeu = "RRLTU")
+    expect_error(
+      PKNCA_build_units_table(o_conc, o_dose),
+      regexp = "Units should be uniform at least across concentration groups.*"
+    )
+  })
 })
 
 describe("select_level_grouping_cols", {
@@ -395,13 +405,19 @@ describe("select_level_grouping_cols", {
     )
 
   it("returns the minimal grouping_columns (a, b) for one target column", {
-    result <- select_level_grouping_cols(data, "d")
+    result <- select_minimal_grouping_cols(data, "d")
     expect_equal(result, data[c("a", "b", "d")])
   })
 
   # Note: this case will never happen in the App or PKNCA_build_units_table
   it("returns the original data if target_columns is NULL", {
-    result <- select_level_grouping_cols(data, NULL)
+    result <- select_minimal_grouping_cols(data, NULL)
     expect_equal(result, data)
+  })
+
+  it("returns just the strata columns if no stratification groups are found", {
+    data[, "a"] <- 10
+    result <- select_minimal_grouping_cols(data, "d")
+    expect_equal(result, data["d"])
   })
 })

@@ -498,13 +498,29 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
       unique(),
     by = intersect(group_conc_cols, group_dose_cols)
   ) %>%
-    # Prevent any issue with NAs in the group or unit columns
+    # Prevent any issue with NAs in the group(s) or unit columns
     mutate(across(everything(), ~ as.character(.))) %>%
-    # Pick the group columns that are relevant in stratifying the units
-    select_level_grouping_cols(all_unit_cols)
+    unique()
 
-  # Generate a PKNCA units table for each group
+  # Check that at least for each concentration group units are uniform
+  mismatching_units_groups <- groups_units_tbl %>%
+    add_count(!!!syms(group_conc_cols), name = "n") %>%
+    filter(n > 1) %>%
+    select(-n)
+  if (nrow(mismatching_units_groups) > 0) {
+    stop(
+      "Units should be uniform at least across concentration groups.",
+      "Review the units for the next group(s):\n",
+      paste(capture.output(print(mismatching_units_groups)), collapse = "\n")
+    )
+  }
+
+  # Generate the PKNCA units table
   groups_units_tbl %>%
+    # Pick only the group columns that are relevant in stratifying the units
+    select_minimal_grouping_cols(all_unit_cols) %>%
+    unique() %>%
+    # Create a PKNCA units table for each group
     rowwise() %>%
     mutate(
       pknca_units_tbl = list(
@@ -516,7 +532,6 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
         )
       )
     ) %>%
-
     # Combine all PKNCA units tables into one
     unnest(cols = c(pknca_units_tbl)) %>%
     mutate(
@@ -525,8 +540,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
     ) %>%
     # Order the columns to have them in a clean display
     select(any_of(c(group_conc_cols, group_dose_cols)),
-           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor) %>%
-    unique()
+           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor)
 }
 
 # Ensures that specified unit columns exist in the PKNCA object, creating them if necessary.
@@ -545,59 +559,50 @@ ensure_column_unit_exists <- function(pknca_obj, unit_name) {
   pknca_obj
 }
 
-#' Select Relevant Columns for Grouping Levels of a target column
+#' Find Minimal Grouping Columns for Strata Reconstruction
 #'
-#' This function identifies and returns the minimal set of columns from a data frame
-#' that are necessary to uniquely reconstruct the grouping or stratification defined by
-#' the target column(s). "Relevant columns" are those whose combined values can be used
-#' to generate a factor that matches the levels of the target column(s).
-#'
-#' The function removes duplicate, constant, and redundant columns, and then searches
-#' for the smallest combination of columns that can uniquely represent the grouping
-#' structure of the target column(s).
+#' This function identifies the smallest set of columns in a data frame whose unique combinations
+#' can reconstruct the grouping structure defined by the specified strata columns.
+#' It removes duplicate, constant, and redundant columns, then searches for the minimal combination
+#' that uniquely identifies each stratum.
 #'
 #' @param df A data frame.
-#' @param target_col A character vector of one or more column names to be reconstructed.
-#' @returns A data frame containing the target column and the minimal set of columns
-#'          necessary to reconstruct the target column(s) levels structure.
-select_level_grouping_cols <- function(df, target_col) {
-  # If there is no target_col specified, simply return the original df
-  if (length(target_col) == 0) return(df)
-  # If the target column is a vector of length > 1, create a combined column
+#' @param strata_cols Column names in df whose unique combination defines the strata.
+#' @returns A data frame containing the strata columns and their minimal set of grouping columns.
+select_minimal_grouping_cols <- function(df, strata_cols) {
+  # If there is no strata_cols specified, simply return the original df
+  if (length(strata_cols) == 0) return(df)
 
-  if (length(target_col) > 1) {
-    target_vals <- df %>%
-      mutate(target_cols_comb = paste(!!!syms(target_col), sep = "_")) %>%
-      pull(target_cols_comb)
+  # Obtain the comb_vals values of the target column(s)
+  strata_vals <- df %>%
+    mutate(strata_cols_comb = paste(!!!syms(strata_cols), sep = "_")) %>%
+    pull(strata_cols_comb)
 
-    # If the target column is a single string, no need to do anything special
-  } else {
-    target_vals <- df[[target_col]]
-  }
-  # If the target column only has one level, there are no relevant columns
-  if (length(unique(target_vals)) == 1) {
-    return(df[target_col])
+  # If the target column(s) only has one level, there are no relevant columns
+  if (length(unique(strata_vals)) == 1) {
+    return(df[strata_cols])
   }
 
-  cols <- setdiff(names(df), target_col)
+  candidate_cols <- setdiff(names(df), strata_cols)
   # 1. Remove columns that are duplicates in levels terms
-  col_levels <- lapply(df[cols], function(x) as.numeric(as.factor(x)))
-  is_dup <- duplicated(col_levels)
-  cols <- cols[!is_dup]
+  candidate_levels <- lapply(
+    df[candidate_cols], function(x) as.numeric(factor(x, levels = unique(x)))
+  )
+  candidate_cols <- candidate_cols[!duplicated(candidate_levels)]
 
   # 2. Remove columns with only 1 level
-  n_levels <- sapply(df[cols], function(x) length(unique(x)))
-  cols <- cols[n_levels > 1]
+  candidate_n_levels <- sapply(df[candidate_cols], function(x) length(unique(x)))
+  candidate_cols <- candidate_cols[candidate_n_levels > 1]
 
-  # 3. Check combinations of columns to find minimal key combination to level-match target_col
-  for (n in seq_len(length(cols))) {
-    combs <- combn(cols, n, simplify = FALSE)
-    for (comb in combs) {
-      combined <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
-      if (all(as.numeric(as.factor(combined)) == as.numeric(as.factor(target_vals)))) {
-        return(df[c(comb, target_col)])
+  # 3. Check combinations of columns to find minimal key combination to level group strata_cols
+  for (n in seq_len(length(candidate_cols))) {
+    all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
+    for (comb in all_candidate_combs) {
+      comb_vals <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
+      if (all(tapply(strata_vals, comb_vals, FUN = \(x) length(unique(x)) == 1))) {
+        return(df[c(comb, strata_cols)])
       }
     }
   }
-  return(df[target_col])
+  return(df[strata_cols])
 }
