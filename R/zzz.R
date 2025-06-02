@@ -10,6 +10,7 @@
     "AUCdn_IV_prof",
     "auc_type",
     "AVAL",
+    "AVALU",
     "AVISIT",
     "CI_lower",
     "CI_upper",
