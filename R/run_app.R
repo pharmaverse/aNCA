@@ -22,6 +22,7 @@ check_app_dependencies <- function() {
     "purrr",
     "reactable",
     "reactable.extras",
+    "sass",
     "shiny",
     "shinycssloaders",
     "shinyjs",

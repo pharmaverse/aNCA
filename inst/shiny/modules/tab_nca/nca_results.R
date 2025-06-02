@@ -19,7 +19,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, auc_options) {
+nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -34,6 +34,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
     final_results <- reactive({
       req(res_nca())
       res <- res_nca()
+
       #' Apply units
       if (!is.null(session$userData$units_table())) {
         res$data$units <- session$userData$units_table()
@@ -61,7 +62,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
           grouping_vars(),
           unname(unlist(res_nca()$data$conc$columns$groups)),
           "DOSEA",
-          "DOSNO",
+          "NCA_PROFILE",
           "ROUTE"
         )))
 
@@ -72,12 +73,13 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       # Add flaging column in the pivoted results
       # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared,
       #                we can simplify this part by using the PKNCA object
-      rule_thr <- lapply(rules(), FUN =  \(x) x$threshold)
-      rule_pretty_names <- translate_terms(names(rules()), "PKNCA", "PPTEST")
+      rules <- settings()$flags
+      rule_thr <- lapply(rules, FUN =  \(x) x$threshold)
+      rule_pretty_names <- translate_terms(names(rules), "PKNCA", "PPTEST")
       rule_msgs <- paste0(rule_pretty_names, c(" < ", " > ", " > ", " < "))
 
-      rules_applied <- sapply(rules(), FUN =  \(x) x$is.checked)
-      params_applied <- translate_terms(names(rules()), "PKNCA", "PPTEST")[rules_applied]
+      rules_applied <- sapply(rules, FUN =  \(x) x$is.checked)
+      params_applied <- translate_terms(names(rules), "PKNCA", "PPTEST")[rules_applied]
       params_applied <- names(final_results)[var_labels(final_results) %in% params_applied]
 
       if (length(params_applied) > 0) {
