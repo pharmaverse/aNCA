@@ -470,9 +470,11 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' units_table <- PKNCA_build_units_table(o_conc, o_dose)
 #' print(units_table)
 #'
-#' @importFrom dplyr select mutate rowwise any_of across everything %>%
+#' @importFrom dplyr select mutate rowwise any_of across everything %>% add_count inner_join
 #' @importFrom tidyr unnest
-#' @importFrom rlang sym
+#' @importFrom rlang sym syms
+#' @importFrom utils capture.output
+#' @export
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
@@ -511,7 +513,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
     stop(
       "Units should be uniform at least across concentration groups.",
       "Review the units for the next group(s):\n",
-      paste(capture.output(print(mismatching_units_groups)), collapse = "\n")
+      paste(utils::capture.output(print(mismatching_units_groups)), collapse = "\n")
     )
   }
 
