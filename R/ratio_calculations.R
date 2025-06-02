@@ -62,3 +62,88 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
     filter(Spec1_Label != Spec2_Label) %>%
     select(all_of(groups), Ratio_Type, Spec1_Value, Spec1_Units, Spec2_Value, Spec2_Units, Ratio)
 }
+
+' Calculate Ratios from PKNCA Results
+#'
+#' This function calculates ratios of PPORRES values from a PKNCA results object (e.g., res$results),
+#' matching rows according to user-specified parameters, matching columns, and denominator_groups variables.
+#'
+#' @param results A data.frame, typically res$results, containing PPORRES and grouping columns.
+#' @param parameter Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").
+#' @param match_cols Character vector of column names to match between numerator and denominator_groups, or a data.frame specifying columns and values to filter.
+#' @param denominator_groups A data.frame specifying denominator_groups. At is minimum, it must contain the contrast variable value/s for the denominator.
+#' @param numerator_groups A data.frame specifying numerator_groups. Optional argument. By default is NULL and all rows not in the denominator_groups will be used as numerator.
+#' @param adjusting_factor Numeric. A factor to adjust the calculated ratios. Default is 1.
+#'
+#' @return A data.frame with the original columns, plus columns for numerator, denominator_groups, and the calculated ratio.
+#'
+#' @examples
+#' # Example usage:
+#' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID", "VISIT"), denominator_groups = c("TREATMENT"))
+#' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), denominator_groups = data.frame(TREATMENT = "Placebo"))
+#' @export
+calculate_ratios <- function(PKNCAres, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+  # Make checks on the input formats
+  if (!inherits(PKNCAres, "PKNCAresults")) {
+    stop("PKNCAres must be an object of class 'PKNCAresults'.")
+  }
+  if (!any(PKNCAres$result$PPTESTCD == parameter)) {
+    warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
+  }
+  contrast_var <- setdiff(names(denominator_groups), match_cols)
+  if (length(contrast_var) == 1) {
+    stop("The denominator_groups must contain at least one contrast variable that is not in match_cols.")
+  }
+  if (!all(c(match_cols, names(denominator_groups)) %in% PKNCA::getGroups(PKNCAres))) {
+    stop(paste0(
+      "match_cols and denominator_groups must contain valid group column names in PKNCAres: ",
+      paste(names(getGroups(PKNCAres)), collapse = ", ")
+    ))
+  }
+  
+  # Filter for the parameter of interest
+  df <- PKNCAres$result[PKNCAres$result$PPTESTCD == parameter, ]
+  
+  # Define the denominator rows
+  df_den <- merge(df, denominator_groups)
+  
+  # Define the numerator rows, which should exclude the denominator_groups
+  if (!is.null(numerator_groups)) {
+    df_num <- merge(df, numerator_groups)
+  } else {
+    df_num <- df
+  }
+  df_num <- anti_join(df_num, df_den, by = intersect(names(df_num), names(df_den)))
+  
+  # Join numerator and denominator by their matching columns
+  merge(df_num, df_den, by = match_cols, suffixes = c("", "_den")) %>%
+    group_by(across(all_of(c(match_cols, contrast_var, PPTESTCD, paste0(contrast_var, "_den"))))) %>%
+    unique() %>%
+    # Use mean values in case of multiple denominator rows per numerator
+    mutate(
+      PPORRES_den = mean(PPORRES_den, na.rm = TRUE),
+      PPSTRES_den = mean(PPSTRES_den, na.rm = TRUE),
+      n = n()
+    ) %>%
+    ungroup() %>%
+    mutate(
+      PPORRES = (PPORRES / PPORRES_den) * adjusting_factor,
+      PPSTRES = (PPSTRES / PPSTRES_den) * adjusting_factor,
+      PPORRESU = ifelse(PPORRESU == PPORRESU_den, "fraction", paste0(PPORRESU, "/", PPORRESU_den)),
+      PPSTRESU = ifelse(PPSTRESU == PPSTRESU_den, "fraction", paste0(PPSTRESU, "/", PPSTRESU_den)),
+      PPTESTCD = if (!is.null(custom.pptestcd)) {
+        custom.pptestcd
+      } else {
+        ifelse(n > 1, paste0(PPTESTCD, "_RATIO (mean)"), paste0(PPTESTCD, "_RATIO"))
+      },
+      PPTEST = if (!is.null(custom.pptest)) {
+        custom.pptest
+      } else {
+        ifelse(n > 1, paste0(PPTEST, " Ratio (mean)"), paste0(PPTEST, " Ratio"))
+      }
+    ) %>%
+    # Keep same foramt as the input (PKNCAresults)
+    unique() %>%
+    select(any_of(names(df)))
+}
+
