@@ -13,17 +13,18 @@ MANUAL_UNITS <- list(
 
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "Grouping_Variables"),
+  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE", "Grouping_Variables"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "DOSNO", "DOSEA", "ADOSEDUR"),
+  "Dose Variables" = c("DRUG", "DOSEA", "ADOSEDUR"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
   "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
 )
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "DOSNO", "ADOSEDUR"
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
+  "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR"
 )
 
 #' Column Mapping Widget
@@ -110,74 +111,86 @@ MAPPING_DESIRED_ORDER <- c(
 data_mapping_ui <- function(id) {
   ns <- NS(id)
 
-  card(
-    div(
-      class = "data-mapping-container",
-      h3("Data Mapping"),
-      p(
-        "The following columns are required for data analysis. Please ensure each of these columns",
-        " has been assigned a corresponding column from your dataset"
-      ),
-      # Adjusted layout using CSS flexbox
-      tags$section(
-        h5("Group Identifiers"),
-        .column_mapping_widget(ns, "STUDYID", "Select Corresponding Column, in character format."),
-        .column_mapping_widget(ns, "USUBJID", "Character or Numeric format"),
-        div(
-          class = "column-mapping-row",
-          tooltip(
-            selectizeInput(
-              ns("select_Grouping_Variables"),
-              "",
-              choices = NULL,
-              multiple = TRUE,
-              options = list(placeholder = "Select Column(s)"),
-              width = "40%"
-            ),
-            "Select the additional column(s) that will be used to group the data 
-            in the outputs. E.g. Treatment Arm, Age, Sex, Race"
+  div(
+    stepper_ui("Mapping"),
+    card(
+      div(
+        class = "data-mapping-container",
+        h3("Data Mapping"),
+        p(
+          "The following columns are required for data analysis.",
+          " Please ensure each of these columns",
+          " has been assigned a corresponding column from your dataset"
+        ),
+        # Adjusted layout using CSS flexbox
+        tags$section(
+          h5("Group Identifiers"),
+          .column_mapping_widget(
+            ns, "STUDYID", "Select Corresponding Column, in character format."
+          ),
+          .column_mapping_widget(
+            ns, "USUBJID", "Character or Numeric format"
+          ),
+          .column_mapping_widget(
+            ns,
+            "NCA_PROFILE",
+            "Select the column you want to use for selecting the NCA profiles."
           ),
           div(
-            class = "column-mapping-output",
-            span("Additional Grouping Variables")
+            class = "column-mapping-row",
+            tooltip(
+              selectizeInput(
+                ns("select_Grouping_Variables"),
+                "",
+                choices = NULL,
+                multiple = TRUE,
+                options = list(placeholder = "Select Column(s)"),
+                width = "40%"
+              ),
+              "Select the additional column(s) that will be used to group the data 
+              in the outputs. E.g. Treatment Arm, Age, Sex, Race"
+            ),
+            div(
+              class = "column-mapping-output",
+              span("Additional Grouping Variables")
+            )
           )
-        )
-      ),
-      tags$section(
-        h5("Sample Variables"),
-        .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
-        .column_mapping_widget(ns, "PCSPEC", "Character format"),
-        .column_mapping_widget(ns, "AVAL", "Numeric format.")
-      ),
-      tags$section(
-        h5("Dose Variables"),
-        .column_mapping_widget(ns, "DRUG", "Character format."),
-        .column_mapping_widget(ns, "DOSNO", "Numeric format."),
-        .column_mapping_widget(
-          ns, "ROUTE",
-          "Character format, stating either 'intravascular' or 'extravascular'."
         ),
-        .column_mapping_widget(ns, "DOSEA", "Numeric format."),
-        .column_mapping_widget(
-          ns, "ADOSEDUR",
-          "Numeric format. Only required for infusion studies,
-          otherwise select NA"
-        )
-      ),
-      tags$section(
-        h5("Time Variables"),
-        .column_mapping_widget(ns, "AFRLT", "Numeric format"),
-        .column_mapping_widget(ns, "ARRLT", "Numeric format"),
-        .column_mapping_widget(ns, "NFRLT", "Numeric format"),
-        .column_mapping_widget(ns, "NRRLT", "Numeric format")
-      ),
-      tags$section(
-        h5("Unit Variables"),
-        .column_mapping_widget(ns, "AVALU", "Character format."),
-        .column_mapping_widget(ns, "DOSEU", "Character format."),
-        .column_mapping_widget(ns, "RRLTU", "Character format.")
-      ),
-      input_task_button(ns("submit_columns"), "Submit Mapping")
+        tags$section(
+          h5("Sample Variables"),
+          .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
+          .column_mapping_widget(ns, "PCSPEC", "Character format"),
+          .column_mapping_widget(ns, "AVAL", "Numeric format.")
+        ),
+        tags$section(
+          h5("Dose Variables"),
+          .column_mapping_widget(ns, "DRUG", "Character format."),
+          .column_mapping_widget(
+            ns, "ROUTE",
+            "Character format, stating either 'intravascular' or 'extravascular'."
+          ),
+          .column_mapping_widget(ns, "DOSEA", "Numeric format."),
+          .column_mapping_widget(
+            ns, "ADOSEDUR",
+            "Numeric format. Only required for infusion studies,
+            otherwise select NA"
+          )
+        ),
+        tags$section(
+          h5("Time Variables"),
+          .column_mapping_widget(ns, "AFRLT", "Numeric format"),
+          .column_mapping_widget(ns, "ARRLT", "Numeric format"),
+          .column_mapping_widget(ns, "NFRLT", "Numeric format"),
+          .column_mapping_widget(ns, "NRRLT", "Numeric format")
+        ),
+        tags$section(
+          h5("Unit Variables"),
+          .column_mapping_widget(ns, "AVALU", "Character format."),
+          .column_mapping_widget(ns, "DOSEU", "Character format."),
+          .column_mapping_widget(ns, "RRLTU", "Character format.")
+        ),
+        input_task_button(ns("submit_columns"), "Submit Mapping")
+      )
     )
   )
 }
