@@ -67,17 +67,17 @@ parameter_datasets_server <- function(id, res_nca) {
       buttons = list(
         list(
           extend = "copy",
-          title = paste0(prefix, "_", studyid, "_", Sys.Date())
+          title = paste0(project_name(), "-", prefix, "_", Sys.Date())
         ),
         list(
           extend = "csv",
-          filename = paste0(prefix, "_", studyid, "_", Sys.Date())
+          filename = paste0(project_name(), "-", prefix, "_", Sys.Date())
         ),
         list(
           extend = "excel",
           title = NULL,
           header = colnames(data),
-          filename = paste0(prefix, "_", studyid, "_", Sys.Date())
+          filename = paste0(project_name(), "-", prefix, "_", Sys.Date())
         )
       )
     )

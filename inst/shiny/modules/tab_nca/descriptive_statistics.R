@@ -151,9 +151,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     output$download_summary <- downloadHandler(
       filename = function() {
         paste0(
-          format(Sys.time(), "%Y-%m-%d"), "_",
-          summary_stats_filtered()$STUDYID[1],
-          "_NCA_summary.csv"
+          project_name(), "-",
+          "NCA_summary_",
+          format(Sys.time(), "%Y-%m-%d"), ".csv"
         )
       },
       content = function(file) {

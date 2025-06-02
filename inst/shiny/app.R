@@ -43,6 +43,12 @@ ui <- function() {
     id = "sidebar",
     title = "aNCA",
 
+    div(
+      class = "project-name-container",
+      textInput("project_name", label = NULL, placeholder = "Project Name"),
+      icon("file", class = "project-name-icon")
+    ),
+
     tags$script("
       Shiny.addCustomMessageHandler('update', function(value) {
       Shiny.setInputValue('update', value);
@@ -121,6 +127,12 @@ ui <- function() {
 
 server <- function(input, output, session) {
   log_info("Startup")
+  
+  # Store globally the name of the project
+  project_name <<- reactive({
+    if (input$project_name != "") return(input$project_name)
+    "Unnamed_Project"
+  })
 
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
