@@ -184,7 +184,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
-#' @param selected_dosno User selected dose numbers/profiles
+#' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
@@ -202,7 +202,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   auc_data,
   method,
   selected_analytes,
-  selected_dosno,
+  selected_profile,
   selected_pcspec,
   params,
   should_impute_c0 = TRUE
@@ -238,7 +238,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      NCA_PROFILE %in% selected_dosno,
+      NCA_PROFILE %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
 
