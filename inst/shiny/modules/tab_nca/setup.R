@@ -92,7 +92,8 @@ setup_server <- function(id, data, adnca_data) {
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
-      req(adnca_data(), settings())
+      req(adnca_data(), settings(), settings()$profile,
+          settings()$analyte, settings()$pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
 
       PKNCA_update_data_object(
