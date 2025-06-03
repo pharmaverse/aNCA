@@ -90,7 +90,8 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
       Max = ifelse(all(is.na(PPSTRES)), NA, max(PPSTRES, na.rm = TRUE)),
       Median = median(PPSTRES, na.rm = TRUE),
       Count.missing = sum(is.na(PPSTRES)),
-      Count.total = n()
+      Count.total = n(),
+      .groups = "drop"
     ) %>%
     mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
 
