@@ -91,22 +91,22 @@ calculate_ratios <- function(PKNCAres, parameter, match_cols, denominator_groups
     warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
   }
   contrast_var <- setdiff(names(denominator_groups), match_cols)
-  if (length(contrast_var) == 1) {
+  if (length(contrast_var) < 1) {
     stop("The denominator_groups must contain at least one contrast variable that is not in match_cols.")
   }
-  if (!all(c(match_cols, names(denominator_groups)) %in% PKNCA::getGroups(PKNCAres))) {
+  if (!all(c(match_cols, names(denominator_groups)) %in% names(PKNCA::getGroups(PKNCAres)))) {
     stop(paste0(
       "match_cols and denominator_groups must contain valid group column names in PKNCAres: ",
-      paste(names(getGroups(PKNCAres)), collapse = ", ")
+      paste(names(PKNCA::getGroups(PKNCAres)), collapse = ", ")
     ))
   }
-  
+
   # Filter for the parameter of interest
   df <- PKNCAres$result[PKNCAres$result$PPTESTCD == parameter, ]
-  
+
   # Define the denominator rows
   df_den <- merge(df, denominator_groups)
-  
+
   # Define the numerator rows, which should exclude the denominator_groups
   if (!is.null(numerator_groups)) {
     df_num <- merge(df, numerator_groups)
@@ -114,7 +114,7 @@ calculate_ratios <- function(PKNCAres, parameter, match_cols, denominator_groups
     df_num <- df
   }
   df_num <- anti_join(df_num, df_den, by = intersect(names(df_num), names(df_den)))
-  
+
   # Join numerator and denominator by their matching columns
   merge(df_num, df_den, by = match_cols, suffixes = c("", "_den")) %>%
     group_by(across(all_of(c(match_cols, contrast_var, PPTESTCD, paste0(contrast_var, "_den"))))) %>%
