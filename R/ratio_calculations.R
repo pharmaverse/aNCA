@@ -116,8 +116,8 @@ calculate_ratios <- function(PKNCAres, parameter, match_cols, denominator_groups
   df_num <- anti_join(df_num, df_den, by = intersect(names(df_num), names(df_den)))
 
   # Join numerator and denominator by their matching columns
-  merge(df_num, df_den, by = match_cols, suffixes = c("", "_den")) %>%
-    group_by(across(all_of(c(match_cols, contrast_var, PPTESTCD, paste0(contrast_var, "_den"))))) %>%
+  merge(df_num, df_den, by = c(match_cols, "PPTESTCD"), suffixes = c("", "_den")) %>%
+    group_by(across(all_of(c(match_cols, contrast_var, "PPTESTCD", paste0(contrast_var, "_den"))))) %>%
     unique() %>%
     # Use mean values in case of multiple denominator rows per numerator
     mutate(
@@ -143,7 +143,7 @@ calculate_ratios <- function(PKNCAres, parameter, match_cols, denominator_groups
       }
     ) %>%
     # Keep same foramt as the input (PKNCAresults)
-    unique() %>%
-    select(any_of(names(df)))
+    select(any_of(names(df))) %>%
+    unique()
 }
 
