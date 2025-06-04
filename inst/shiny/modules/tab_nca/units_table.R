@@ -135,7 +135,9 @@ units_table_server <- function(id, mydata) {
             list(className = "dt-center", targets = "_all")
           )
         )
-      )
+      ) %>%
+        # Format the conversion factor column with scientific notation
+        DT::formatSignif(columns = c("Conversion Factor"), digits = 2)
     })
 
     # Accept user modifications in the modal units table
