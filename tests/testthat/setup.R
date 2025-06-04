@@ -24,7 +24,7 @@ base::local({
   # Create Testing Concentration Data
   FIXTURE_CONC_DATA <<- data.frame(
     # Columns that are mapped from the data
-    AVAL = c(                 # USUBJID.DOSNO
+    AVAL = c(                 # USUBJID.NCA_PROFILE
       0:4,                    # 1.1 (Extravascular, linear & sample at dose)
       c(1, 2, 1.5, 1, 0.5),   # 2.1 (Extravascular eq, with max)
       c(1, 2, 1.5, 1, 0.5),   # 2.2 (Extravascular eq, 2nd dose)
@@ -97,7 +97,7 @@ base::local({
       rep(6, 5),
       rep(7, 5)
     ),
-    DOSNO = c(
+    NCA_PROFILE = c(
       rep(1, 5),
       rep(1:2, each = 5),
       rep(1:2, each = 5),
@@ -105,6 +105,15 @@ base::local({
       rep(1, 5),
       rep(1, 5),
       rep(1, 5)
+    ),
+    DOSNOA = c(
+      1,
+      c(1, 2),
+      c(1, 2),
+      1,
+      1,
+      1,
+      1
     ),
     PCSPEC = c(
       rep("PLASMA", 9)
@@ -179,7 +188,7 @@ base::local({
       6,
       7
     ),
-    DOSNO = c(
+    NCA_PROFILE = c(
       1,
       c(1, 2),
       c(1, 2),
@@ -206,11 +215,11 @@ base::local({
     start = c(0, 5),
     end = c(5, 10),
     type_interval = "main",  # Assumption 2: Include type_interval column
-    DOSNO = c(1, 2)
+    NCA_PROFILE = c(1, 2)
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO, DOSNOA) %>%
+        select(USUBJID, NCA_PROFILE, DOSNOA) %>%
         unique()
     )
   main_intervals[, all_params] <- FALSE
@@ -226,13 +235,13 @@ base::local({
     start = c(0, 2, 5, 7),
     end = c(2, 4, 7, 9),
     type_interval = "manual",  # Assumption 2: Include type_interval column
-    DOSNO = c(1, 1, 2, 2)
+    NCA_PROFILE = c(1, 1, 2, 2)
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO, DOSNOA) %>%
+        select(USUBJID, NCA_PROFILE, DOSNOA) %>%
         unique(),
-      by = "DOSNO",
+      by = "NCA_PROFILE",
       relationship = "many-to-many"
     )
   auc_intervals[, all_params] <- FALSE
@@ -242,19 +251,19 @@ base::local({
     )
   FIXTURE_INTERVALS <<- rbind(main_intervals, auc_intervals) %>%
     mutate(impute = case_when(
-      USUBJID == 1 & DOSNO == 1 ~ NA_character_,
-      USUBJID == 2 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 2 & DOSNO == 2 ~ "start_predose",
-      USUBJID == 3 & DOSNO == 1 ~ "start_logslope",
-      USUBJID == 3 & DOSNO == 2 ~ "start_logslope",
-      USUBJID == 4 & DOSNO == 1 ~ "start_c1",
-      USUBJID == 4 & DOSNO == 2 ~ "start_c1",
-      USUBJID == 5 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 5 & DOSNO == 2 ~ "start_conc0",
-      USUBJID == 6 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 6 & DOSNO == 2 ~ "start_conc0",
-      USUBJID == 7 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 7 & DOSNO == 2 ~ "start_conc0",
+      USUBJID == 1 & NCA_PROFILE == 1 ~ NA_character_,
+      USUBJID == 2 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 2 & NCA_PROFILE == 2 ~ "start_predose",
+      USUBJID == 3 & NCA_PROFILE == 1 ~ "start_logslope",
+      USUBJID == 3 & NCA_PROFILE == 2 ~ "start_logslope",
+      USUBJID == 4 & NCA_PROFILE == 1 ~ "start_c1",
+      USUBJID == 4 & NCA_PROFILE == 2 ~ "start_c1",
+      USUBJID == 5 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 5 & NCA_PROFILE == 2 ~ "start_conc0",
+      USUBJID == 6 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 6 & NCA_PROFILE == 2 ~ "start_conc0",
+      USUBJID == 7 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 7 & NCA_PROFILE == 2 ~ "start_conc0",
       TRUE ~ NA_character_
     ))
 
@@ -268,7 +277,9 @@ base::local({
     )
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
-  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
+  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("NCA_PROFILE",
+                                                             "DOSNOA",
+                                                             "type_interval"))
 
   # Add start_dose and end_dose columns
   FIXTURE_PKNCA_RES <<- withCallingHandlers(
@@ -293,8 +304,8 @@ base::local({
       } else {
         ifelse((end - start) == 2, "manual", "main")
       },
-      DOSNO = if ("DOSNO" %in% names(.)) {
-        DOSNO
+      NCA_PROFILE = if ("NCA_PROFILE" %in% names(.)) {
+        NCA_PROFILE
       } else {
         ifelse(
           start < 5,

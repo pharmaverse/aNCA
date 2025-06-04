@@ -15,23 +15,51 @@
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
+  tagList(
+    shinyjs::useShinyjs(),
+    div(
+      class = "data-tab-container",
+      div(
+        class = "data-tab-content-container",
+        div(
+          class = "data-tab-content",
+          navset_pill(
+            id = ns("data_navset"),
+            nav_panel(
+              "Upload",
+              data_upload_ui(ns("raw_data"))
+            ),
+            nav_panel(
+              "Filtering",
+              data_filtering_ui(ns("data_filtering"))
+            ),
+            nav_panel(
+              "Mapping",
+              data_mapping_ui(ns("column_mapping"))
+            ),
+            nav_panel("Preview",
+              id = ns("data_navset-review"),
+              div(
+                stepper_ui("Preview"),
+                card(
+                  uiOutput(ns("processed_data_message")),
+                  reactableOutput(ns("data_processed"))
+                )
+              )
+            )
+          )
+        )
+      ),
+      div(
+        class = "data-tab-btns-container",
+        # Left side: Restart button
+        actionButton(ns("restart"), "Restart"),
 
-  div(
-    class = "data-tab-container",
-    navset_pill(
-      id = ns("data_navset"),
-      nav_panel("Raw Data Upload",
-        data_upload_ui(ns("raw_data")),
-        data_filtering_ui(ns("data_filtering"))
-      ),
-      nav_panel("Column Mapping",
-        data_mapping_ui(ns("column_mapping"))
-      ),
-      nav_panel("Review Data",
-        id = ns("data_navset-review"),
-        card(
-          uiOutput(ns("processed_data_message")),
-          reactableOutput(ns("data_processed"))
+        # Right side: Previous and Next buttons
+        div(
+          class = "nav-btns",
+          actionButton(ns("prev_step"), "Previous", disabled = TRUE),
+          actionButton(ns("next_step"), "Next", , class = "btn-primary")
         )
       )
     )
@@ -41,6 +69,48 @@ tab_data_ui <- function(id) {
 tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    steps <- c("upload", "filtering", "mapping", "preview")
+    step_labels <- c("Upload", "Filtering", "Mapping", "Preview")
+    data_step <- reactiveVal("upload")
+
+    observe({
+      current <- data_step()
+      if (current == steps[1]) {
+        shinyjs::disable("prev_step")
+      } else {
+        shinyjs::enable("prev_step")
+      }
+
+      if (current == steps[length(steps)]) {
+        shinyjs::disable("next_step")
+      } else {
+        shinyjs::enable("next_step")
+      }
+    })
+
+    observeEvent(input$restart, {
+      data_step(steps[1])
+      updateTabsetPanel(session, "data_navset", selected = step_labels[1])
+    })
+
+    observeEvent(input$next_step, {
+      current <- data_step()
+      idx <- match(current, steps)
+      if (!is.na(idx) && idx < length(steps)) {
+        data_step(steps[idx + 1])
+      }
+      updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
+    })
+
+    observeEvent(input$prev_step, {
+      current <- data_step()
+      idx <- match(current, steps)
+      if (!is.na(idx) && idx > 1) {
+        data_step(steps[idx - 1])
+      }
+      updateTabsetPanel(session, "data_navset", selected = step_labels[idx - 1])
+    })
 
     #' Load raw ADNCA data
     adnca_raw <- data_upload_server("raw_data")
@@ -58,23 +128,26 @@ tab_data_server <- function(id) {
     processed_data <- column_mapping$processed_data
     observeEvent(processed_data(), {
       req(processed_data())
-      updateTabsetPanel(session, "data_navset", selected = "Review Data")
+      data_step("preview")
+      updateTabsetPanel(session, "data_navset", selected = "Preview")
     })
 
     #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables
 
     output$processed_data_message <- renderUI({
-      tryCatch({
-        req(processed_data())
-        div(
-          "This is the data set that will be used for the analysis.
+      tryCatch(
+        {
+          req(processed_data())
+          div(
+            "This is the data set that will be used for the analysis.
           If you would like to make any changes please return to the previous tabs."
-        )
-      },
-      error = function(e) {
-        div("Please map your data in the 'Column Mapping' section before reviewing it.")
-      })
+          )
+        },
+        error = function(e) {
+          div("Please map your data in the 'Column Mapping' section before reviewing it.")
+        }
+      )
     })
 
     # Update the data table object with the filtered data

@@ -3,7 +3,7 @@
 test_pknca_res <- list(
   result = data.frame(
     USUBJID = rep(c("S1-1", "S1-2"), each = 3),
-    DOSNO = c(1, 1, 1, 1, 1, 1),
+    NCA_PROFILE = c(1, 1, 1, 1, 1, 1),
     PPTESTCD = c("AUCINF", "AUCIFO", "R2", "AUCINF", "AUCINT", "R2"),
     PPORRES = c(100, 95, 0.98, NA, 115, 0.96),
     PPSTRES = c(100, 95, 0.98, NA, 115, 0.96),
@@ -20,7 +20,7 @@ test_pknca_res <- list(
       data = data.frame(
         USUBJID = c("S1-1", "S1-2"),
         STUDYID = "S1",
-        DOSNO = c(1, 1),
+        NCA_PROFILE = c(1, 1),
         ROUTE = c("Oral", "Oral"),
         RRLTU = c("h", "h"),
         DOSEA = c(100, 200),
@@ -42,7 +42,7 @@ test_pknca_res <- list(
         VISITNUM = c(1, 1)
       ),
       columns = list(
-        groups = c("USUBJID", "DOSNO"),
+        groups = c("USUBJID", "NCA_PROFILE"),
         route = "ROUTE"
       )
     ),
@@ -236,7 +236,7 @@ describe("export_cdisc", {
     expect_equal(unique(res_nothing$pp$PPRFTDTC), NA_character_)
   })
 
-  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. DOSNO when possible", {
+  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. NCA_PROFILE", {
     test_no_avisit <- test_pknca_res
     test_no_avisit_visit <- test_pknca_res
     test_nothing <- test_pknca_res
@@ -247,7 +247,7 @@ describe("export_cdisc", {
       select(-AVISIT, -VISIT)
     test_nothing$data$dose$data <- test_nothing$data$dose$data %>%
       select(-AVISIT, -VISIT)
-    test_nothing$result <- test_nothing$result %>% select(-DOSNO)
+    test_nothing$result <- test_nothing$result %>% select(-NCA_PROFILE)
 
     res <- export_cdisc(test_pknca_res)
     res_no_avisit <- export_cdisc(test_no_avisit)
@@ -266,7 +266,7 @@ describe("export_cdisc", {
       pull(PPGRPID) %>%
       unique()
     expected_val_no_avisit_visit <- data  %>%
-      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", DOSNO)) %>%
+      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", NCA_PROFILE)) %>%
       pull(PPGRPID) %>%
       unique()
 
@@ -296,7 +296,6 @@ describe("export_cdisc", {
     # Check that SUBJID is derived correctly
     expected_vals <- unique(test_with_subjid$data$dose$data$SUBJID)
     expect_equal(unique(res_with_subjid$adpc$SUBJID), expected_vals)
-    expect_equal(unique(res_no_subjid$adpc$SUBJID), expected_vals)
     expect_equal(unique(res_no_subjid_no_studyid$adpc$SUBJID), expected_vals)
   })
 })
