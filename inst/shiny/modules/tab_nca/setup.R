@@ -61,7 +61,7 @@ setup_server <- function(id, data, adnca_data) {
         auc_data = settings()$partial_aucs,
         method = settings()$method,
         selected_analytes = settings()$analyte,
-        selected_dosno = settings()$doseno,
+        selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         params = settings()$parameter_selection,
         should_impute_c0 = settings()$data_imputation$impute_c0
@@ -92,7 +92,8 @@ setup_server <- function(id, data, adnca_data) {
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
-      req(adnca_data(), settings())
+      req(adnca_data(), settings(), settings()$profile,
+          settings()$analyte, settings()$pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
 
       PKNCA_update_data_object(
@@ -100,7 +101,7 @@ setup_server <- function(id, data, adnca_data) {
         auc_data = settings()$partial_aucs,
         method = settings()$method,
         selected_analytes = settings()$analyte,
-        selected_dosno = settings()$doseno,
+        selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
                    "r.squared", "adj.r.squared", "tmax"),

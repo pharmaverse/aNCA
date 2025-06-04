@@ -9,7 +9,7 @@ PKNCA_update_data_object(
   auc_data,
   method,
   selected_analytes,
-  selected_dosno,
+  selected_profile,
   selected_pcspec,
   params,
   should_impute_c0 = TRUE
@@ -24,7 +24,7 @@ PKNCA_update_data_object(
 
 \item{selected_analytes}{User selected analytes}
 
-\item{selected_dosno}{User selected dose numbers/profiles}
+\item{selected_profile}{User selected dose numbers/profiles}
 
 \item{selected_pcspec}{User selected specimen}
 

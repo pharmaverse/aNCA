@@ -33,8 +33,8 @@ settings_ui <- function(id) {
           ),
           column(4,
             selectInput(
-              ns("select_doseno"),
-              "Choose the Dose Number:",
+              ns("select_profile"),
+              "Choose the NCA Profile:",
               multiple = TRUE,
               choices = NULL
             )
@@ -143,10 +143,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         not_compatible <- append(not_compatible, "Analyte")
       }
 
-      if (all(settings$doseno %in% unique(data()$DOSNO))) {
-        updateSelectInput(inputId = "select_doseno", selected = settings$doseno)
+      if (all(settings$profile %in% unique(data()$NCA_PROFILE))) {
+        updateSelectInput(inputId = "select_profile", selected = settings$profile)
       } else {
-        not_compatible <- append(not_compatible, "Dose Number")
+        not_compatible <- append(not_compatible, "NCA Profile")
       }
 
       if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
@@ -233,9 +233,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       updateSelectInput(
         session,
-        inputId = "select_doseno",
-        choices = unique(data()$DOSNO),
-        selected = unique(data()$DOSNO)[1]
+        inputId = "select_profile",
+        choices = unique(data()$NCA_PROFILE),
+        selected = unique(data()$NCA_PROFILE)[1]
       )
 
       updateSelectInput(
@@ -364,7 +364,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       req(input$select_analyte) # Wait on general settings UI to be loaded
       list(
         analyte = input$select_analyte,
-        doseno = input$select_doseno,
+        profile = input$select_profile,
         pcspec = input$select_pcspec,
         method = input$method,
         bioavailability = input$bioavailability,
