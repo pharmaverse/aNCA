@@ -21,7 +21,7 @@ create_start_impute <- function(pknca_data) {
   }
 
   # Define column names
-  conc_column <- pknca_data$conc$columns$conc
+  conc_column <- pknca_data$conc$columns$concentration
   time_column <- pknca_data$conc$columns$time
   analyte_column <- pknca_data$conc$columns$groups$group_analyte
   route_column <- pknca_data$dose$columns$route
