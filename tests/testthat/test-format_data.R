@@ -279,7 +279,7 @@ describe("format_pkncadata_intervals", {
     expect_equal(result_tau$end[4], 10)
   })
 
-  it("sets last time to end NFRLT if no TAU available", {
+  it("sets last time to end AFRLT if no TAU available", {
     result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
     expect_equal(result$end[4], 9)
   })

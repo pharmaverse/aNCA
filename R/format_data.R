@@ -143,7 +143,7 @@ format_pkncadose_data <- function(pkncaconc_data,
 #'   - Creates a vector with all pharmacokinetic parameters.
 #'   - Based on dose times, creates a data frame with start and end times.
 #'   - If TAU column is present in data, sets last dose end time to start + TAU
-#'   - If no TAU column in data, sets last dose end time to the nominal time of last sample
+#'   - If no TAU column in data, sets last dose end time to the time of last sample
 #'   - Adds logical columns for each specified parameter.
 #'
 #' @examples
@@ -188,7 +188,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NFRLT", "NCA_PROFILE", "DOSNOA", "TAU"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   has_tau <- "TAU" %in% names(sub_pknca_conc)
@@ -206,7 +206,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Pick 1 per concentration group and dose number
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
-    mutate(max_end = max(NFRLT, na.rm = TRUE)) %>%
+    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>%
     slice(1) %>%
     ungroup() %>%
 
