@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9089</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9090</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,6 +88,8 @@
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function performs the following steps:</p><ul><li><p>Creates a vector with all pharmacokinetic parameters.</p></li>
 <li><p>Based on dose times, creates a data frame with start and end times.</p></li>
+<li><p>If TAU column is present in data, sets last dose end time to start + TAU</p></li>
+<li><p>If no TAU column in data, sets last dose end time to the time of last sample</p></li>
 <li><p>Adds logical columns for each specified parameter.</p></li>
 </ul></div>
 
