@@ -31,6 +31,13 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       })
     )
 
+    results_dir <<- reactive({
+      req(res_nca())
+      project <- project_name()
+      datetime <- attr(res_nca(), "provenance")$datetime
+      paste0(project, "/", format(datetime, "%d-%m-%Y_%H"))
+    })
+
     final_results <- reactive({
       req(res_nca())
       res <- res_nca()
@@ -105,6 +112,12 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
     observeEvent(final_results(), {
       req(final_results())
 
+      # Save the results in the output folder
+      save_output(
+        output = final_results(),
+        output_path = paste0(results_dir(), "/pivoted_results.csv")
+      )
+
       param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
@@ -170,7 +183,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
-        paste0(res_nca()$data$conc$data$STUDYID[1], "PK_Parameters.csv")
+        paste0(project_name(), "-pivoted_NCA_results.csv")
       },
       content = function(file) {
         write.csv(output_results(), file, row.names = FALSE)
