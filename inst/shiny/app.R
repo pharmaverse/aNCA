@@ -91,10 +91,27 @@ ui <- function() {
       )
     ),
     div(
-      conditionalPanel("input.page == 'data'", tab_data_ui("data")),
-      conditionalPanel("input.page == 'nca'", tab_nca_ui("nca")),
-      conditionalPanel("input.page == 'visualisation'", tab_visuals_ui("visuals")),
-      conditionalPanel("input.page == 'tlg'", tab_tlg_ui("tlg"))
+      class = "content-container",
+      conditionalPanel(
+        class = "page-container",
+        condition = "input.page == 'data'",
+        tab_data_ui("data")
+      ),
+      conditionalPanel(
+        class = "page-container",
+        condition = "input.page == 'nca'",
+        tab_nca_ui("nca")
+      ),
+      conditionalPanel(
+        class = "page-container",
+        condition = "input.page == 'visualisation'",
+        tab_visuals_ui("visuals")
+      ),
+      conditionalPanel(
+        class = "page-container",
+        condition = "input.page == 'tlg'",
+        tab_tlg_ui("tlg")
+      )
     ),
 
     shinyjs::useShinyjs(),
