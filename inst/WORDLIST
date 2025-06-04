@@ -11,6 +11,8 @@ CDISC
 DOSEA
 DOSEU
 DOSNO
+DOSNOA
+EVID
 Kezia
 Kobana
 LAMZ
@@ -22,6 +24,7 @@ NFRLT
 NNN
 NRRLT
 PARAM
+PARAMCD
 PCSPEC
 PKNCA
 PKNCAdata
@@ -37,6 +40,7 @@ Pharmacokinetic
 Pharmaverse
 Plotly
 Pre
+predose
 RRLTU
 RStudio
 SBS
@@ -65,6 +69,7 @@ intravascular
 lintr
 md
 nca
+NCA_PROFILE
 pak
 pharmacokinetic
 pkcg

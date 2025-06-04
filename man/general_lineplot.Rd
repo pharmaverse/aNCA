@@ -58,8 +58,9 @@ The function performs the following steps:a
 \itemize{
 \item Filters the data based on the selected analytes, matrices, and subjects.
 \item Selects relevant columns and removes rows with missing concentration values.
-\item Converts 'USUBJID', 'DOSNO', and 'DOSEA' to factors.
-\item Filters the data by cycle if \code{time_scale} is "By Cycle".
+\item Converts 'USUBJID', 'NCA_PROFILE', and 'DOSEA' to factors.
+\item Filters the data by cycle if \code{time_scale} is "By Cycle"
+while creating duplicates for predose samples if needed.
 \item Adjusts concentration values for logarithmic scale if \code{yaxis_scale} is "Log".
 \item Generates a line plot using the \code{g_ipp} function with the specified parameters.
 \item Adjusts the y-axis to logarithmic scale if \code{yaxis_scale} is "Log".
@@ -72,7 +73,7 @@ The function performs the following steps:a
                            selected_analytes = c("Analyte1", "Analyte2"),
                            selected_pcspec = c("Spec1", "Spec2"),
                            selected_usubjids = c("Subject1", "Subject2"),
-                           colorby_var = "DOSNO",
+                           colorby_var = "NCA_PROFILE",
                            time_scale = "By Cycle",
                            yaxis_scale = "Log",
                            cycle = "1",

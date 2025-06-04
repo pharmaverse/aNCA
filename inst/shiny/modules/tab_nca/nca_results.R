@@ -19,7 +19,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, auc_options) {
+nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -34,6 +34,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
     final_results <- reactive({
       req(res_nca())
       res <- res_nca()
+
       #' Apply units
       if (!is.null(session$userData$units_table())) {
         res$data$units <- session$userData$units_table()
@@ -56,7 +57,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
       final_results <- pivot_wider_pknca_results(results)
 
       # Apply flag rules
-      current_rules <- rules()
+      current_rules <- isolate(settings()$flags)
       for (param in names(current_rules)) {
         if (current_rules[[param]]$is.checked) {
           # Find the proper column/s that should be considered (in principle should be 1)
@@ -82,7 +83,7 @@ nca_results_server <- function(id, pknca_data, res_nca, rules, grouping_vars, au
           grouping_vars(),
           unname(unlist(res_nca()$data$conc$columns$groups)),
           "DOSEA",
-          "DOSNO",
+          "NCA_PROFILE",
           "ROUTE"
         )))
 
