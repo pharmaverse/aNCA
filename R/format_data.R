@@ -205,9 +205,10 @@ format_pkncadata_intervals <- function(pknca_conc,
 
     # Pick 1 per concentration group and dose number
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
+    group_by(!!!syms(dose_groups), DOSNOA) %>%
+    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
-    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>%
-    slice(1) %>%
+    slice(1) %>% # slice one row per conc group
     ungroup() %>%
 
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
@@ -239,9 +240,9 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(type_interval = "main")
 
   # Conditionally override params for urine/feces if PCSPEC is present
-  if ("PCSPEC" %in% conc_groups) {
+  if ("PCSPEC" %in% names(dose_intervals)) {
     dose_intervals <- dose_intervals %>%
-      mutate(is_excreta = grepl("urine|feces|faeces", PCSPEC, ignore.case = TRUE)) %>%
+      mutate(is_excreta = grepl("urine|feces|faeces|bile", PCSPEC, ignore.case = TRUE)) %>%
       mutate(across(
         any_of(all_pknca_params),
         ~ if_else(

@@ -118,6 +118,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
       volume = volume_column,
       amountu = "VOLUMEU"
     )
+    
+    # ensure units are matching for excretion calculations
+    pknca_conc$data <- convert_excretion_units(pknca_conc$data)
+    
   } else {
     pknca_conc <- PKNCA::PKNCAconc(
       df_conc,

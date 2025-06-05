@@ -84,3 +84,128 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
     paste0("P", value, toupper(substr(unit, 1, 1)))
   }
 })
+
+
+
+#' Convert Volume Units to Match Concentration Denominator Units
+#'
+#' This function identifies rows associated with excretion samples (e.g., urine, feces, bile)
+#' and adjusts the `VOLUME` and `VOLUMEU` columns so that the volume unit matches the
+#' denominator unit in the corresponding concentration unit (`AVALU`).
+#' This is necessary for PKNCA calculation of excretion parameters.
+#'
+#' It uses the \pkg{units} package to perform unit-safe conversions. If a direct conversion 
+#' between volume and the concentration denominator is not possible (e.g., between mass and volume),
+#' a fallback conversion is attempted using a neutral density of `1 (target_unit / original_unit)`.
+#' The function modifies only the `VOLUME` and `VOLUMEU` columns when necessary and leaves all 
+#' other data unchanged.
+#'
+#' @param df A data frame containing pharmacokinetic data.
+#' @param pcspec A character string specifying the column name for sample type (default: "PCSPEC").
+#' @param avalu A character string specifying the column name for concentration values (default: "AVALU").
+#' @param volume A character string specifying the column name for volume or mass values (default: "VOLUME").
+#' @param volumeu A character string specifying the column name for volume or mass units (default: "VOLUMEU").
+#'  It must contain the following columns:
+#'   \describe{
+#'     \item{PCSPEC}{Sample type (e.g., urine, feces, bile, plasma).}
+#'     \item{AVAL}{Concentration values.}
+#'     \item{AVALU}{Concentration units (e.g., "ug/mL", "mg/g").}
+#'     \item{VOLUME}{Volume or mass values for integration.}
+#'     \item{VOLUMEU}{Units for the `VOLUME` column (e.g., "mL", "g").}
+#'   }
+#'
+#' @return A modified data frame with `VOLUME` and `VOLUMEU` converted (where necessary) so that
+#' multiplying `AVAL * VOLUME` results in a unit with consistent dimensionality (typically mass or moles).
+#'
+#' @details
+#' The function:
+#' \enumerate{
+#'   \item Identifies rows where `PCSPEC` contains "urine", "feces", or "bile" (case-insensitive).
+#'   \item Parses the denominator from `AVALU` (e.g., "ug/mL" → "mL").
+#'   \item Attempts to convert the corresponding `VOLUME` to that unit.
+#'   \item If direct conversion fails, assumes a neutral density of 1 (i.e., `1 unit_target / unit_original`)
+#'         and retries.
+#'   \item Leaves units unchanged for non-excreta samples or already-valid combinations.
+#' }
+#'
+#' @importFrom units set_units drop_units
+#' @importFrom stringr str_split str_trim
+#' @examples
+#' df <- data.frame(
+#'   PCSPEC = c("urine", "feces", "plasma"),
+#'   AVAL = c(100, 5, 70),
+#'   AVALU = c("ug/mL", "mg/g", "ng/mL"),
+#'   VOLUME = c(2, 1.5, 3),
+#'   VOLUMEU = c("L", "mL", "mL"),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' df_converted <- convert_excretion_units(df)
+#'
+#' @export
+convert_excretion_units <- function(df, pcspec = "PCSPEC",
+                                    avalu = "AVALU",
+                                    volume = "VOLUME",
+                                    volumeu = "VOLUMEU") {
+
+  required_cols <- c(pcspec, avalu, volume, volumeu)
+  if (!all(required_cols %in% names(df))) {
+    return(df)
+  }
+  browser()
+  # Define sample types to apply the logic to
+  excreta_types <- c("urine", "feces", "faeces", "bile")
+  is_excreta <- grepl(paste(excreta_types, collapse = "|"), df[[pcspec]], ignore.case = TRUE)
+  
+  for (i in which(is_excreta)) {
+    concu <- df[[avalu]][i]
+    vol <- df[[volume]][i]
+    volu <- df[[volumeu]][i]
+    
+    if (any(is.na(c(concu, vol, volu)))) next
+    
+    tryCatch({
+      # Extract denominator unit from AVALU 
+      unit_parts <- str_split(concu, "/", simplify = TRUE)
+      if (ncol(unit_parts) != 2) {
+        warning(sprintf("Row %d: Could not parse AVALU '%s' as 'x/y'", i, avalu))
+        next
+      }
+      
+      denom_unit <- str_trim(unit_parts[2])
+      
+      # Create unit-aware volume
+      u_vol <- set_units(vol, volu, mode = "standard")
+      
+      # Try direct conversion of volume to concentration denominator unit
+      conversion_success <- FALSE
+      try({
+        u_vol_new <- set_units(u_vol, denom_unit, mode = "standard")
+        conversion_success <- TRUE
+      }, silent = TRUE)
+      
+      # If direct conversion fails, try applying neutral density (1 denom_unit / volu)
+      if (!conversion_success) {
+        try({
+          density_unit <- paste(denom_unit, "/", volu)
+          density <- set_units(1, density_unit, mode = "standard")
+          u_vol_new <- u_vol * density
+          conversion_success <- TRUE
+        }, silent = TRUE)
+      }
+      
+      # If conversion worked, apply it to the dataframe
+      if (conversion_success) {
+        df[[volume]][i] <- set_units(u_vol_new, NULL)
+        df[[volumeu]][i] <- denom_unit
+      } else {
+        warning(sprintf("Row %d: Could not convert volume from '%s' to '%s'", i, volu, denom_unit))
+      }
+      
+    }, error = function(e) {
+      warning(sprintf("Row %d: Unit conversion error — %s", i, e$message))
+    })
+  }
+  
+  return(df)
+}

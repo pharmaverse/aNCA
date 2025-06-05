@@ -13,7 +13,7 @@ MANUAL_UNITS <- list(
 
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE", "Grouping_Variables"),
+  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
   "Dose Variables" = c("DRUG", "DOSEA"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
