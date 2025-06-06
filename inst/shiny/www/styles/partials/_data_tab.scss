@@ -2,13 +2,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
-  padding: 20px 20px 0px 20px;
 }
 
 .data-tab-content-container {
   flex: 1;
+  overflow-y: auto;
   margin-top: 10px;
+  padding: 20px 20px 0px 20px;
 }
 
 /* data tab styling */
@@ -95,8 +95,7 @@
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 8px;
-  padding-bottom: 28px;
+  padding: 20px;
   border-top: 1px solid #ddd;
 
   .nav-btns {

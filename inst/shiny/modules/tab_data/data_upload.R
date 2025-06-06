@@ -85,8 +85,7 @@ data_upload_server <- function(id) {
         resizable = TRUE,
         defaultPageSize = 10,
         showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE
+        class = "reacttable-table"
       )
     })
 
