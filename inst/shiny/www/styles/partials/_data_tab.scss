@@ -70,12 +70,12 @@
 
     .column-mapping-output {
       margin: 1.25rem 0 0 0.625rem;
-      color: black;
+      color: $anca-black;
     }
 
     .column-mapping-label {
       margin: 1.25rem 0 0 0.625rem;
-      color: grey;
+      color: $grey-1;
     }
 
     h5 {
@@ -96,7 +96,7 @@
   align-items: center;
   margin-top: auto;
   padding: 20px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid $grey-5;
 
   .nav-btns {
     display: flex;
@@ -106,7 +106,7 @@
 
 .upload-container {
   padding: 32px 16px;
-  border: 1px dashed blue;
+  border: 1px dashed $anca-blue;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -116,12 +116,12 @@
     .input-group {
       .input-group-btn .btn,
       .form-control {
-        border: 1px solid blue;
-        color: blue;
+        border: 1px solid $anca-blue;
+        color: $anca-blue;
       }
       .input-group-btn .btn:hover {
-        background-color: blue;
-        color: white;
+        background-color: $anca-blue;
+        color: $anca-white
       }
     }
   }

@@ -295,12 +295,12 @@ div[data-value="Settings"] > div.row a {
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #f0f4fd;
+  background-color: #E7ECFA;
   color: #21201f;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
-  color: #bcbcbb;
+  color: #c0c0c0;
 }
 
 .slope-selector-module {
@@ -361,10 +361,10 @@ div[data-value="Settings"] > div.row a {
   position: fixed;
   bottom: 0;
   width: 75%;
-  background: white;
+  background: #ffffff;
   padding: 10px;
   z-index: 1000;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid #dadada;
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -469,12 +469,12 @@ div[data-value="Settings"] > div.row a {
 
 .data-tab-content .data-mapping-container .column-mapping-output {
   margin: 1.25rem 0 0 0.625rem;
-  color: black;
+  color: #000000;
 }
 
 .data-tab-content .data-mapping-container .column-mapping-label {
   margin: 1.25rem 0 0 0.625rem;
-  color: grey;
+  color: #a7a7a7;
 }
 
 .data-tab-content .data-mapping-container h5 {
@@ -493,7 +493,7 @@ div[data-value="Settings"] > div.row a {
   align-items: center;
   margin-top: auto;
   padding: 20px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #dadada;
 }
 
 .data-tab-btns-container .nav-btns {
@@ -503,7 +503,7 @@ div[data-value="Settings"] > div.row a {
 
 .upload-container {
   padding: 32px 16px;
-  border: 1px dashed blue;
+  border: 1px dashed #007bc2;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -512,25 +512,25 @@ div[data-value="Settings"] > div.row a {
 
 .upload-container .shiny-input-container .input-group .input-group-btn .btn,
 .upload-container .shiny-input-container .input-group .form-control {
-  border: 1px solid blue;
-  color: blue;
+  border: 1px solid #007bc2;
+  color: #007bc2;
 }
 
 .upload-container .shiny-input-container .input-group .input-group-btn .btn:hover {
-  background-color: blue;
-  color: white;
+  background-color: #007bc2;
+  color: #ffffff;
 }
 
-.reacttable-table .rt-search {
+.reactable-table .rt-search {
   width: 100%;
 }
 
-.reacttable-table .rt-table .rt-thead .rt-tr .rt-th {
-  border-bottom: 2px solid #0B41CD;
+.reactable-table .rt-table .rt-thead .rt-tr .rt-th {
+  border-bottom: 2px solid #007bc2;
 }
 
-.reacttable-table .rt-table .rt-tbody .rt-tr-group .rt-tr-highlight:hover {
-  background-color: rgba(11, 65, 205, 0.05);
+.reactable-table .rt-table .rt-tbody .rt-tr-group .rt-tr-highlight:hover {
+  background-color: #E7ECFA;
 }
 
 .bslib-sidebar-layout {
@@ -559,12 +559,12 @@ div[data-value="Settings"] > div.row a {
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #f0f4fd;
+  background-color: #E7ECFA;
   color: #21201f;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
-  color: #bcbcbb;
+  color: #c0c0c0;
 }
 
 .stepper-wrapper {
@@ -600,13 +600,13 @@ div[data-value="Settings"] > div.row a {
   height: var(--circle-size);
   border-radius: 50%;
   font-size: 12px;
-  background-color: lightgrey;
-  color: white;
+  background-color: #dadada;
+  color: #ffffff;
 }
 
 .c-stepper__item.active:before {
-  background-color: #007bff;
-  color: white;
+  background-color: #007bc2;
+  color: #ffffff;
 }
 
 .c-stepper__item:not(:last-child) {
@@ -618,7 +618,7 @@ div[data-value="Settings"] > div.row a {
   position: relative;
   z-index: -1;
   height: 2px;
-  background-color: #e0e0e0;
+  background-color: #dadada;
   flex: 1;
   margin-right: 0.5rem;
 }

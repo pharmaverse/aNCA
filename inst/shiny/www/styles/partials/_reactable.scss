@@ -1,4 +1,4 @@
-.reacttable-table {
+.reactable-table {
   .rt-search {
     width: 100%;
   }
@@ -6,14 +6,14 @@
     .rt-thead {
       .rt-tr {
         .rt-th {
-          border-bottom: 2px solid #0B41CD;
+          border-bottom: 2px solid $anca-blue;
         }
       }
     }
     .rt-tbody {
       .rt-tr-group {
         .rt-tr-highlight:hover {
-          background-color: rgba(11, 65, 205, 0.05);
+          background-color: $anca-blue-light;
         }
       }
     }
