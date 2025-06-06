@@ -8,7 +8,7 @@ simple_data <- data.frame(
   NCA_PROFILE = rep(1, 6),
   PARAM = rep("AnalyteA", 6),
   AVAL = c(0, 5, 10, 7, 3, 1),
-  AVALU = rep("ng/mL", 6),
+  AVALU = rep(c("ng/mL"), 6),
   DOSEA = rep(100, 6),
   DOSEU = rep("mg", 6),
   AFRLT = c(0.5, 1, 2, 3, 4, 6),
@@ -28,7 +28,7 @@ multiple_data <- data.frame(
   NCA_PROFILE = rep(1, 12),
   PARAM = rep(c("AnalyteX", "AnalyteY"), each = 6),
   AVAL = c(0, 2, 8, 6, 4, 1, 0, 10, 20, 18, 8, 3),
-  AVALU = rep("ng/mL", 12),
+  AVALU = rep(c("ng/mL", "mg/mL"), each = 6),
   DOSEA = rep(200, 12),
   DOSEU = rep("mg", 12),
   AFRLT = rep(c(0.5, 1, 2, 3, 4, 6), 2),
@@ -40,6 +40,9 @@ multiple_data <- data.frame(
 
 # Simple example dataset
 pknca_data <- PKNCA_create_data_object(simple_data)
+
+# ToDo (Gerardo): refine PKNCA_create_data_object
+#                 to make less implicit column assumptions
 
 describe("PKNCA_create_data_object", {
   it("creates a PKNCAdata object with concentration, doses, and units based on ADNCA data", {
@@ -69,20 +72,6 @@ describe("PKNCA_create_data_object", {
       PKNCA_create_data_object(missing_columns_dose),
       paste("Missing required columns: AFRLT")
     )
-
-  })
-
-  it("handles multiple analytes", {
-    # Multiple analytes and units
-    results <- PKNCA_create_data_object(multiple_data)
-
-    units_table <- results$units
-    #contains PARAM column with two unique values
-    expect_true("PARAM" %in% colnames(units_table))
-
-    unique_analytes <- unique(units_table$PARAM)
-    expect_equal(length(unique_analytes), 2)
-
   })
 
   it("handles duplicates in DFLAG", {
@@ -95,17 +84,15 @@ describe("PKNCA_create_data_object", {
     expect_equal(nrow(results$conc$data), 5)
   })
 
-  it("throws an error when there are missing values in grouping columns", {
-    # Introduce missing values in grouping columns
-    data_with_na <- simple_data
-    data_with_na$STUDYID[1] <- NA
-
+  it("produces a message error when missing values are in group columns", {
+    # Duplicate DFLAG values
+    adnca_with_group_na <- multiple_data
+    adnca_with_group_na$PCSPEC[1] <- NA_character_
     expect_error(
-      PKNCA_create_data_object(data_with_na),
-      "Missing values detected in grouping columns: STUDYID"
+      PKNCA_create_data_object(adnca_with_group_na),
+      "Missing values detected in grouping columns: PCSPEC"
     )
   })
-  # TODO: Add test for multiple units once implemented
 })
 
 
@@ -153,21 +140,6 @@ describe("PKNCA_update_data_object", {
     expect_true(all(intervals$PCSPEC == "Plasma"))
   })
 
-  it("updates units for each analyte", {
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = method,
-      selected_analytes = analytes,
-      selected_dosno = dosnos,
-      selected_pcspec = pcspecs,
-      params = params,
-      should_impute_c0 = TRUE
-    )
-    unit_analytes <- unique(updated_data$units$PARAM)
-    expect_setequal(unit_analytes, analytes)
-  })
-
   it("sets NCA options correctly", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
@@ -199,42 +171,6 @@ describe("PKNCA_update_data_object", {
     expect_true(all(is.na(updated_data$impute)))
   })
 
-  it("ensures units table has separate rows per analyte", {
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = "lin up log down",
-      selected_analytes = unique(simple_data$PARAM),
-      selected_dosno = unique(simple_data$NCA_PROFILE),
-      selected_pcspec = unique(simple_data$PCSPEC),
-      params = c("cmax", "tmax", "auclast", "aucinf.obs"),
-      should_impute_c0 = TRUE
-    )
-
-    # Get units table and analyte column
-    units_table <- updated_data$units
-    analyte_col <- updated_data$conc$columns$groups$group_analyte
-
-    # Extract number of unique analytes and parameters
-    analytes <- unique(units_table[[analyte_col]])
-    params <- unique(units_table$PPTESTCD)
-
-    # Expect a row for every analyte-param combination
-    expected_nrows <- length(analytes) * length(params)
-    expect_equal(nrow(units_table), expected_nrows)
-
-    # Sanity: make sure all analyte-param pairs exist
-    pair_check <- tidyr::crossing(
-      PARAM = analytes,
-      PPTESTCD = params
-    )
-
-    expect_true(all(
-      dplyr::semi_join(pair_check, units_table, by = c("PARAM", "PPTESTCD")) %>%
-        nrow() == nrow(pair_check)
-    ))
-  })
-
   it("handles partial AUCs (auc_data) creating proper intervals for each", {
     auc_data <- data.frame(
       start_auc = c(0, 1, 2),
@@ -250,7 +186,7 @@ describe("PKNCA_update_data_object", {
       params = params,
       should_impute_c0 = TRUE
     )
-    # Check that interval_type column is present with at least one "manual" value
+    # Check that the interval_type column is present with at least one "manual" value
     expect_true(any(updated_data$intervals$type_interval == "manual"))
 
     # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
@@ -368,5 +304,120 @@ describe("PKNCA_impute_method_start_c1", {
       data.frame(conc = c(1, 2, 2:3), time = c(-1, 0, 1:2)),
       ignore_attr = TRUE
     )
+  })
+})
+
+# Tests for PKNA_build_units_table
+describe("PKNCA_build_units_table", {
+
+  # Subset the data to only include USUBJID 8 (2 analytes, A & B)
+  d_conc <- FIXTURE_CONC_DATA %>%
+    filter(USUBJID == 8)
+  d_dose <- FIXTURE_DOSE_DATA %>%
+    filter(USUBJID == 8)
+
+  o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                             concu = "AVALU", timeu = "RRLTU")
+  o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
+                             doseu = "DOSEU")
+  units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+
+  it("creates a seggregated units table when unit columns are defined in the PKNCA objects", {
+    # Check units_table is a data frame
+    expect_true(is.data.frame(units_table))
+
+    # Contains the seggregating variable PARAM & parameter unit columns
+    expect_equal(
+      colnames(units_table),
+      c("PARAM", "PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+    )
+
+    # Differentiates concentration units by PARAM
+    analyte_a_cmax_unit <- units_table %>%
+      dplyr::filter(PARAM == "A", PPTESTCD == "cmax") %>%
+      dplyr::pull(PPSTRESU)
+    analyte_b_cmax_unit <- units_table %>%
+      dplyr::filter(PARAM == "B", PPTESTCD == "cmax") %>%
+      dplyr::pull(PPSTRESU)
+    expect_equal(analyte_a_cmax_unit, "ng/mL")
+    expect_equal(analyte_b_cmax_unit, "ug/mL")
+  })
+
+  it("creates an uniform units table when units are not defined as columns in the PKNCA obj", {
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                               concu = "ng/mL", timeu = "h")
+    o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
+                               doseu = "mg")
+    units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+    # Check units_table is a data frame
+    expect_true(is.data.frame(units_table))
+    # Does not consider any seggregating variable
+    expect_equal(
+      colnames(units_table),
+      c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+    )
+    # Contains unit values for concentration and dose
+    cmaxdn_unit <- units_table %>%
+      dplyr::filter(PPTESTCD == "cmax.dn") %>%
+      dplyr::pull(PPSTRESU)
+    expect_equal(cmaxdn_unit, "(ng/mL)/mg")
+  })
+
+  it("creates a NA units tables when units are not defined in the PKNCA objects", {
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM)
+    o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID)
+    units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+    # Check units_table is a data frame
+    expect_true(is.data.frame(units_table))
+    # Does not consider any seggregating variable
+    expect_equal(
+      colnames(units_table),
+      c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+    )
+    # Does not contain any unit values except for adimensional parameters
+    expect_setequal(
+      unique(units_table$PPSTRESU),
+      c("unitless", "fraction", "%", "count", NA)
+    )
+  })
+
+  it("reports an error when units are not uniform through all concentration groups", {
+    d_conc$AVALU[1] <- "pg/L"
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                               concu = "AVALU", timeu = "RRLTU")
+    expect_error(
+      PKNCA_build_units_table(o_conc, o_dose),
+      regexp = "Units should be uniform at least across concentration groups.*"
+    )
+  })
+})
+
+describe("select_level_grouping_cols", {
+
+  # Make a dataset where a variable `d` depends on `a` & `b`
+  data <- data.frame(
+    a = rep(letters[c(1, 2, 3)], each = 4),
+    b = rep(letters[c(1, 2)], each = 3),
+    c = letters[1]
+  ) %>%
+    mutate(
+      d = paste0(a, b)
+    )
+
+  it("returns the minimal grouping_columns (a, b) for one target column", {
+    result <- select_minimal_grouping_cols(data, "d")
+    expect_equal(result, data[c("a", "b", "d")])
+  })
+
+  # Note: this case will never happen in the App or PKNCA_build_units_table
+  it("returns the original data if target_columns is NULL", {
+    result <- select_minimal_grouping_cols(data, NULL)
+    expect_equal(result, data)
+  })
+
+  it("returns just the strata columns if no stratification groups are found", {
+    data[, "a"] <- 10
+    result <- select_minimal_grouping_cols(data, "d")
+    expect_equal(result, data["d"])
   })
 })

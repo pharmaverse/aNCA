@@ -2,7 +2,6 @@ adpc <- FIXTURE_CONC_DATA %>%
   filter(USUBJID %in% unique(USUBJID)[1:3])
 attr(adpc$USUBJID, "label") <- "Subject ID"
 attr(adpc$AVAL, "label") <- "Analysis value"
-attr(adpc$DOSEU, "label") <- "Dose unit"
 
 describe("pkcg01", {
   it("generates valid ggplots with LIN scale", {
@@ -122,7 +121,7 @@ describe("pkcg01", {
 describe("g_pkconc_ind_lin", {
   it("generates plot with linear scale", {
     plot_lin <- g_pkconc_ind_lin(adpc, plotly = FALSE)[[1]]
-    expect_equal(plot_lin$labels$y, "Analysis value [mg/L]")
+    expect_equal(plot_lin$labels$y, "Analysis value [ng/mL]")
     vdiffr::expect_doppelganger("g_pkconc_ind_lin_plot", plot_lin)
   })
 })
@@ -130,7 +129,7 @@ describe("g_pkconc_ind_lin", {
 describe("g_pkconc_ind_log", {
   it("generates plot with log scale", {
     plot_log <- g_pkconc_ind_log(adpc, plotly = FALSE)[[1]]
-    expect_equal(plot_log$labels$y, "Analysis value [mg/L]")
+    expect_equal(plot_log$labels$y, "Analysis value [ng/mL]")
     vdiffr::expect_doppelganger("g_pkconc_ind_log_plot", plot_log)
   })
 })
