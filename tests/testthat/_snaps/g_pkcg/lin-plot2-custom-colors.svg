@@ -66,14 +66,14 @@
 <text x='305.06' y='505.32' text-anchor='middle' style='font-size: 8.00px; fill: #4D4D4D; font-family: sans;' textLength='4.45px' lengthAdjust='spacingAndGlyphs'>4</text>
 <text x='373.88' y='516.60' text-anchor='middle' style='font-size: 10.00px; font-family: sans;' textLength='71.16px' lengthAdjust='spacingAndGlyphs'>Custom X Label</text>
 <text transform='translate(12.36,266.86) rotate(-90)' text-anchor='middle' style='font-size: 10.00px; font-family: sans;' textLength='71.16px' lengthAdjust='spacingAndGlyphs'>Custom Y Label</text>
-<rect x='328.48' y='529.64' width='90.79' height='28.24' style='stroke-width: 2.13; stroke: #BEBEBE;' />
-<text x='333.96' y='547.20' style='font-size: 10.00px; font-weight: bold; font-family: sans;' textLength='14.45px' lengthAdjust='spacingAndGlyphs'>red</text>
-<line x1='355.62' y1='543.76' x2='369.45' y2='543.76' style='stroke-width: 0.85; stroke: #343CFF; stroke-linecap: butt;' />
-<circle cx='362.53' cy='543.76' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<line x1='388.31' y1='543.76' x2='402.13' y2='543.76' style='stroke-width: 0.85; stroke: #FF484B; stroke-linecap: butt;' />
-<circle cx='395.22' cy='543.76' r='2.49' style='stroke-width: 0.71; stroke: #FF484B; fill: #FF484B;' />
-<text x='376.65' y='546.51' style='font-size: 8.00px; font-family: sans;' textLength='4.45px' lengthAdjust='spacingAndGlyphs'>1</text>
-<text x='409.34' y='546.51' style='font-size: 8.00px; font-family: sans;' textLength='4.45px' lengthAdjust='spacingAndGlyphs'>2</text>
+<rect x='304.30' y='529.64' width='139.15' height='28.24' style='stroke-width: 2.13; stroke: #BEBEBE;' />
+<text x='309.78' y='547.20' style='font-size: 10.00px; font-weight: bold; font-family: sans;' textLength='62.81px' lengthAdjust='spacingAndGlyphs'>Nominal Dose</text>
+<line x1='379.80' y1='543.76' x2='393.63' y2='543.76' style='stroke-width: 0.85; stroke: #343CFF; stroke-linecap: butt;' />
+<circle cx='386.71' cy='543.76' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
+<line x1='412.49' y1='543.76' x2='426.31' y2='543.76' style='stroke-width: 0.85; stroke: #FF484B; stroke-linecap: butt;' />
+<circle cx='419.40' cy='543.76' r='2.49' style='stroke-width: 0.71; stroke: #FF484B; fill: #FF484B;' />
+<text x='400.83' y='546.51' style='font-size: 8.00px; font-family: sans;' textLength='4.45px' lengthAdjust='spacingAndGlyphs'>1</text>
+<text x='433.52' y='546.51' style='font-size: 8.00px; font-family: sans;' textLength='4.45px' lengthAdjust='spacingAndGlyphs'>2</text>
 <text x='33.23' y='31.07' style='font-size: 11.00px; font-family: sans;' textLength='77.66px' lengthAdjust='spacingAndGlyphs'>Custom Subtitle</text>
 <text x='33.23' y='15.11' style='font-size: 14.00px; font-family: sans;' textLength='78.58px' lengthAdjust='spacingAndGlyphs'>Custom Title</text>
 <text x='33.23' y='568.86' style='font-size: 8.00px; font-family: sans;' textLength='61.37px' lengthAdjust='spacingAndGlyphs'>Custom Footnote</text>

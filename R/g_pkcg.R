@@ -3,7 +3,7 @@
 #' @param ...  Any other parameters to be passed into the plotting function.
 #' @returns ggplot2 object for pkcg01.
 #' @export
-g_pkconc_ind_lin <- function(data, ...) {
+g_pkcg01_lin <- function(data, ...) {
   pkcg01(adpc = data, scale = "LIN", ...)
 }
 
@@ -12,7 +12,7 @@ g_pkconc_ind_lin <- function(data, ...) {
 #' @param ...  Any other parameters to be passed into the plotting function.
 #' @returns ggplot2 object for pkcg01.
 #' @export
-g_pkconc_ind_log <- function(data, ...) {
+g_pkcg01_log <- function(data, ...) {
   pkcg01(adpc = data, scale = "LOG", ...)
 }
 
@@ -341,4 +341,306 @@ generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plot
   } else {
     parse_annotation(plot_data, subtitle)
   }
+}
+#' Wrapper around aNCA::pkcg02() function. Calls the function with `LIN` scale argument.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg02.
+#' @export
+g_pkcg02_lin <- function(data, ...) {
+  pkcg02(adpc = data, scale = "LIN", ...)
+}
+
+#' Wrapper around aNCA::pkcg02() function. Calls the function with `LOG` scale argument.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg02.
+#' @export
+g_pkcg02_log <- function(data, ...) {
+  pkcg02(adpc = data, scale = "LOG", ...)
+}
+
+#' Generate Combined PK Concentration-Time Profile Plot by Cohort
+#'
+#' This function generates a list of plotly objects PK concentration-time profiles by group
+#'
+#' @param adpc            A data frame containing the data.
+#' @param xvar            A character string of the variable name for the x-axis.
+#' @param yvar            A character string of the variable name for the y-axis.
+#' @param xvar_unit       A character string of the unit for the x-axis variable.
+#' @param yvar_unit       A character string of the unit for the y-axis variable.
+#' @param color_var       A character string of the variable name for the color.
+#' @param color_var_label A character string of the color label.
+#' @param xbreaks_var     A character string of the x-axis breaks.
+#' @param xbreaks_mindist A numeric value for `xbreak_mindist`.
+#' @param xmin            A numeric value for the minimum x-axis limit.
+#' @param xmax            A numeric value for the maximum x-axis limit.
+#' @param ymin            A numeric value for the minimum y-axis limit.
+#' @param ymax            A numeric value for the maximum y-axis limit.
+#' @param xlab            Character for x-axis label. Defaults: `xvar` label & `xvar_unit`.
+#' @param ylab            Character for y-axis label. Defaults: `yvar` label & `yvar_unit`.
+#' @param title           Character for plot title.
+#' @param subtitle        Character for plot subtitle.
+#' @param footnote        A character string of a manual footnote for the plot.
+#' @param plotgroup_vars  A character vector of the variables to group data.
+#' @param plotgroup_names A character vector of the grouping variable names.
+#' @param scale           Scale for the Y axis, either "LIN" or "LOG".
+#' @param studyid         A character string specifying the study ID variable.
+#' @param trt_var         A character string specifying the treatment variable.
+#' @param plotly          Logical indicating whether to return plotly objects. Defaults to TRUE.
+#' @returns A list of ggplot or plotly objects for each unique group.
+#' @importFrom dplyr mutate across rowwise ungroup group_by n
+#' @importFrom ggplot2 aes scale_x_continuous labs
+#' @importFrom tern g_ipp
+#' @importFrom stats setNames
+
+#' @examples
+#' \dontrun{
+#'   adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
+#'   attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
+#'   attr(adpc[["AVAL"]], "label") <- "Analysis value"
+#'
+#'   plots <- pkcg02(adpc)
+#'   plots_log <- pkcg02(adpc, scale = "LOG")
+#'   plots_custom <- pkcg02(adpc, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study XYZ")
+#'   plotly::plotly_build(plots[[1]]) # View the first plot
+#' }
+#'
+#' @export
+#' @author Kezia Kobana
+pkcg02 <- function(
+  adpc = data(),
+  xvar = "AFRLT",
+  yvar = "AVAL",
+  xvar_unit = "RRLTU",
+  yvar_unit = "AVALU",
+  color_var = NULL,
+  color_var_label = NULL,
+  xbreaks_var = "NFRLT",
+  xbreaks_mindist = 0.5,
+  xmin = NA,
+  xmax = NA,
+  ymin = NA,
+  ymax = NA,
+  xlab = paste0("!", xvar, " [$", xvar_unit, "]"),
+  ylab = paste0("!", yvar, " [$", yvar_unit, "]"),
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL,
+  plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM", "TRT01A"),
+  plotgroup_names = list(
+    "ROUTE" = "Route",
+    "PCSPEC" = "Specimen",
+    "PARAM" = "Analyte",
+    "TRT01A" = "Treatment"
+  ),
+  scale = c("LIN", "LOG", "SBS")[1],
+  studyid = "STUDYID",
+  trt_var = "TRT01A",
+  plotly = TRUE
+) {
+
+  xmin <- as.numeric(xmin)
+  xmax <- as.numeric(xmax)
+  ymin <- as.numeric(ymin)
+  ymax <- as.numeric(ymax)
+
+  # Ensure color_var is interpreted as a factor
+  if (!is.null(color_var)) {
+    adpc[[color_var]] <- as.factor(adpc[[color_var]])
+  }
+
+  # save col labels, as further adpc tranformations cause them to be lost #
+  adpc_grouped <- adpc %>%
+    mutate(across(all_of(plotgroup_vars), as.character)) %>%
+    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
+
+  # reapply col labels to grouped data and make sure all variables are labeled #
+  old_labels <- c(formatters::var_labels(adpc), id_plot = NA)
+  formatters::var_labels(adpc_grouped) <- ifelse(!is.na(old_labels),
+                                                 old_labels,
+                                                 names(adpc_grouped))
+
+  # Construct the reference ggplot object
+  plot_data <- adpc_grouped %>% filter(id_plot == id_plot[1])
+
+  plot <- tern::g_ipp(
+    df = plot_data,
+    xvar = xvar,
+    yvar = yvar,
+    xlab = paste0(parse_annotation(plot_data, xlab), collapse = ","),
+    ylab = paste0(parse_annotation(plot_data, ylab), collapse = ","),
+    id_var = "USUBJID",
+    add_baseline_hline = FALSE,
+    yvar_baseline = yvar,
+    plotting_choices = "all_in_one"
+  )
+
+  # Provide limits and additional potential future aesthetic customizations
+  plot <- plot +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(family = "sans", size = 14, color = "black"),
+      plot.subtitle = ggplot2::element_text(family = "sans", size = 11, color = "black")
+    ) +
+    ggplot2::coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
+
+
+  # Ensure x breaks labels do not overlap graphically
+  plot <- plot + ggplot2::scale_x_continuous(
+    guide = ggplot2::guide_axis(n.dodge = 1),
+    breaks = filter_breaks(
+      plot_data[[xbreaks_var]],
+      min_cm_distance = xbreaks_mindist,
+      plot = plot
+    ),
+    labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+  )
+
+  # Add color when specified
+  if (!is.null(color_var)) {
+    plot <- plot +
+      ggplot2::aes(color = !!sym(color_var)) +
+      ggplot2::theme(legend.position = "none")
+
+    # Add color legend only when neccessary
+    if (length(unique(adpc[[color_var]])) > 1) {
+
+      # Make sure the variable is interpreted as a factor
+      adpc[[color_var]] <- as.factor(adpc[[color_var]])
+
+      # Add to the plot the color_var and color_var_label
+      plot <- plot +
+        ggplot2::labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
+        ggplot2::theme(legend.position = "bottom")
+    }
+  }
+
+  if (scale == "LOG") {
+    adpc_grouped[[yvar]] <- ifelse(
+      adpc_grouped[[yvar]] < 1e-3,
+      yes = 1e-3, no = adpc_grouped[[yvar]]
+    )
+
+    if (!plotly) {
+      plot <- plot +
+        scale_y_continuous(
+          transform = "log10",
+          labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+        )
+    }
+  }
+
+  if (scale == "SBS") {
+    if (!requireNamespace("ggh4x", quietly = FALSE))
+      stop(
+        "Side-by-side view requires `ggh4x` package, please install it with ",
+        "`install.packages('ggh4x')`"
+      )
+    if (!requireNamespace("scales", quietly = FALSE))
+      stop(
+        "Side-by-side view requires `scales` package, please install it with ",
+        "`install.packages('scales')`"
+      )
+
+    # Create SBS version of data and plot
+    adpc_grouped <- bind_rows(
+      adpc_grouped %>% dplyr::mutate(view = "Linear view"),
+      adpc_grouped %>% dplyr::mutate(view = "Semilogarithmic view (Log10)")
+    ) %>%
+      dplyr::mutate(
+        !!sym(yvar) := ifelse(
+          !!sym(yvar) < 1e-3 & view == "Semilogarithmic view (Log10)",
+          yes = 1e-3, no = !!sym(yvar)
+        )
+      )
+
+    plot <- plot %+% dplyr::filter(adpc_grouped, id_plot == unique(id_plot)[1]) +
+      facet_wrap(~ view, scales = "free_y") +
+      ggh4x::scale_y_facet(
+        view == "Semilogarithmic view (Log10)",
+        trans  = "log10",
+        labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+      )
+  }
+
+  # Create the list of plots for each unique group
+  plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
+    plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
+
+    title <- generate_title(plot_data, title, scale, studyid)
+    subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
+
+    title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
+    title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
+
+    #' magic numbers for footnote position and margin, work in app up to 4 lines
+    footnote <- {
+      if (is.null(footnote)) {
+        ""
+      } else {
+        parse_annotation(plot_data, footnote)
+      }
+    }
+    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
+    if (plotly) {
+      suppressWarnings({
+        plotly_plot <- plot %+%
+          plot_data %+%
+          theme(
+            # add margin to make space for subtitle and footnote #
+            plot.margin = margin(
+              title_margin,
+              0,
+              footnote_y * 5,
+              0,
+              "cm"
+            )
+          ) %>%
+          # This because of no spec of parse annotation generates warning is.na()
+          ggplotly(
+            tooltip = c("x", "y"),
+            dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+            #' NOTE: might require some fine tuning down the line, looks fine now
+            height = 500 + (footnote_y * 25) + title_margin * 50
+          ) %>%
+          layout(
+            # title and subtitle #
+            title = list(text = title_text),
+            # footnote #
+            annotations = list(
+              x = 0,
+              y =  -footnote_y,
+              text = footnote,
+              showarrow = FALSE,
+              yref = "paper",
+              xref = "paper",
+              align = "left",
+              parse = TRUE
+            )
+          )
+
+        if (scale == "LOG") {
+          plotly_plot <- plotly_plot %>%
+            layout(yaxis = list(
+              type = "log",
+              autorange = TRUE,
+              tickformat = "~r"
+            ))
+        }
+
+        plotly_plot
+      })
+    } else {
+      plot %+%
+        plot_data +
+        labs(
+          title = title,
+          subtitle = subtitle,
+          caption = footnote
+        )
+    }
+  })
+  plots |>
+    setNames(unique(adpc[["id_plot"]]))
+
 }

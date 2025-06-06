@@ -79,7 +79,7 @@ l_pkconc:
         - ["NFRLT",   "Nom. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
 
 # GRAPHS #
-g_pkconc_ind_lin:
+g_pkcg01_lin:
   is_default: true
   type: Graph
   dataset: ADPC
@@ -87,7 +87,7 @@ g_pkconc_ind_lin:
   label: "pkcg01 - linear"
   description: "Individual plots of concentrations vs. time (one plot per subject) with linear scale"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
-  fun: g_pkconc_ind_lin
+  fun: g_pkcg01_lin
   options:
     .group_label_1: "General"
     xvar:
@@ -143,8 +143,47 @@ g_pkconc_ind_lin:
       type: numeric
     ymax:
       type: numeric
-g_pkconc_ind_log:
-  template: g_pkconc_ind_lin
-  label: pkcg01 - log
-  description: "Individual plots of concentrations vs. time (one plot per subject) with log10 scale"
-  fun: g_pkconc_ind_log
+
+g_pkcg01_log:
+  template: g_pkcg01_lin
+  label: "pkcg01 - log"
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
+  fun: g_pkcg01_log
+
+g_pkcg02_lin:
+  template: g_pkcg01_lin
+  pkid: pkcg02
+  label: "pkcg02 - linear"
+  description: "Combined plot of PK concentrations vs. time with linear scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
+  fun: g_pkcg02_lin
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+    
+g_pkcg02_log:
+  template: g_pkcg01_lin
+  pkid: pkcg02
+  label: "pkcg02 - log"
+  description: "Combined plots of PK concentrations vs. time with log10 scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
+  fun: g_pkcg02_log
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
