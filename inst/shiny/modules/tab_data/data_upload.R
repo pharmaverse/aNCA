@@ -86,6 +86,7 @@ data_upload_server <- function(id) {
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
+        height = "70vh",
         class = "reactable-table"
       )
     })
