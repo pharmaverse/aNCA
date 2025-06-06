@@ -511,7 +511,11 @@ div[data-value="Settings"] > div.row a {
 }
 
 .reacttable-table .rt-table .rt-thead .rt-tr .rt-th {
-  border-bottom: 2px solid blue;
+  border-bottom: 1px solid blue;
+}
+
+.reacttable-table .rt-table .rt-tbody .rt-tr-group .rt-tr-highlight:hover {
+  background-color: rgba(56, 134, 218, 0.05);
 }
 
 .bslib-sidebar-layout {
