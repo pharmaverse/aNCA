@@ -111,4 +111,18 @@
   justify-content: center;
   flex-direction: column;
   align-items: center;
+
+  .shiny-input-container {
+    .input-group {
+      .input-group-btn .btn,
+      .form-control {
+        border: 1px solid blue;
+        color: blue;
+      }
+      .input-group-btn .btn:hover {
+        background-color: blue;
+        color: white;
+      }
+    }
+  }
 }
