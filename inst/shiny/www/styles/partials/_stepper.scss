@@ -30,13 +30,13 @@
     height: var(--circle-size);
     border-radius: 50%;
     font-size: 12px;
-    background-color: lightgrey;
-    color: white;
+    background-color: $grey-5;
+    color: $anca-white;
   }
 
   &.active:before {
-    background-color: #007bff;
-    color: white;
+    background-color: $anca-blue;
+    color: $anca-white;
   }
 
   &:not(:last-child) {
@@ -47,7 +47,7 @@
       position: relative;
       z-index: -1;
       height: 2px;
-      background-color: #e0e0e0;
+      background-color: $grey-5;
       flex: 1;
       margin-right: 0.5rem;
     }

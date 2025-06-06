@@ -20,14 +20,14 @@
 .sidebar .sidebar-content .row > :first-child > ul > li > a {
   padding-left: 30px;
   padding-right: 30px;
-  color: #21201f;
+  color: $anca-black-2;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #f0f4fd;
-  color: #21201f;
+  background-color: $anca-blue-light;
+  color: $anca-black-2;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
-  color: #bcbcbb;
+  color: $grey-3;
 }
