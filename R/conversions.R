@@ -152,7 +152,7 @@ convert_excretion_units <- function(df, pcspec = "PCSPEC",
   if (!all(required_cols %in% names(df))) {
     return(df)
   }
-  browser()
+
   # Define sample types to apply the logic to
   excreta_types <- c("urine", "feces", "faeces", "bile")
   is_excreta <- grepl(paste(excreta_types, collapse = "|"), df[[pcspec]], ignore.case = TRUE)

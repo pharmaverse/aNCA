@@ -54,6 +54,10 @@
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
+#' @importFrom dplyr filter select arrange across
+#' @importFrom purrr pmap_chr
+#' @importFrom units set_units deparse_unit
+#'
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
@@ -110,8 +114,28 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   df_conc$REASON <- NA
   df_conc$exclude_half.life <- FALSE
 
+  
   # Create PKNCA conc object
   if(volume_column %in% colnames(df_conc)) {
+
+    # ensure units are matching for excretion calculations
+    df_conc <- convert_excretion_units(df_conc) %>%
+      # Create amountu column as AVALU * VOLUMEU
+      mutate(
+        AMOUNTU = pmap_chr(
+          list(AVALU, VOLUMEU),
+          function(avalu, volume) {
+            if (is.na(avalu) || is.na(volume)) {
+              return(NA_character_)
+            } else {
+              u1 <- set_units(1, avalu, mode = "standard")
+              u2 <- set_units(1, volume, mode = "standard")
+              deparse_unit(u1 * u2)
+            }
+          }
+        )
+      )
+
     pknca_conc <- PKNCA::PKNCAconc(
       df_conc,
       formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
@@ -121,11 +145,9 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
       volume = volume_column,
       concu = "AVALU",
       timeu = "RRLTU",
-      amountu = "ng"
+      amountu = "AMOUNTU"
     )
-    
-    # ensure units are matching for excretion calculations
-    pknca_conc$data <- convert_excretion_units(pknca_conc$data)
+
     
   } else {
     # Create PKNCA objects
