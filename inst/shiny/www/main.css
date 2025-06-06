@@ -502,6 +502,15 @@ div[data-value="Settings"] > div.row a {
   gap: 16px;
 }
 
+.upload-container {
+  padding: 66px 16px;
+  border: 1px dashed blue;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
 .bslib-sidebar-layout {
   --_sidebar-width: 170px !important;
 }

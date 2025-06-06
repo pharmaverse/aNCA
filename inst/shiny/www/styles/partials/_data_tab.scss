@@ -104,3 +104,12 @@
     gap: 16px;
   }
 }
+
+.upload-container {
+  padding: 66px 16px;
+  border: 1px dashed blue;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}

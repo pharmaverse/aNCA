@@ -13,18 +13,20 @@ data_upload_ui <- function(id) {
 
   div(
     stepper_ui("Upload"),
-    card(
-      div(
-        h3("Upload"),
-        uiOutput(ns("file_loading_message")),
-        fileInput(
-          ns("data_upload"),
-          width = "60%",
-          label = NULL,
-          placeholder = paste(names(aNCA:::readers), collapse = ", "),
-          buttonLabel = list(icon("folder"), "Upload File...")
-        )
-      )
+    div(
+      class = "upload-container",
+      p("Upload your PK dataset."),
+      fileInput(
+        ns("data_upload"),
+        width = "50%",
+        label = NULL,
+        placeholder = paste(names(aNCA:::readers), collapse = ", "),
+        buttonLabel = list(icon("folder"), "Upload File...")
+      ),
+      uiOutput(ns("file_loading_message"))
+    ),
+    withSpinner(
+      reactableOutput(ns("data_display"))
     )
   )
 }
@@ -41,7 +43,7 @@ data_upload_server <- function(id) {
     file_loading_error <- reactiveVal(NULL)
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
-        p("Upload your PK dataset.")
+        p("")
       } else {
         p(file_loading_error(), class = "error-string")
       }
@@ -69,5 +71,22 @@ data_upload_server <- function(id) {
       }
     }) |>
       bindEvent(input$data_upload, ignoreNULL = FALSE)
+
+    output$data_display <- renderReactable({
+      req(DUMMY_DATA)
+      reactable(
+        DUMMY_DATA,
+        searchable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        wrap = TRUE,
+        resizable = TRUE,
+        defaultPageSize = 25,
+        showPageSizeOptions = TRUE,
+        striped = TRUE,
+        bordered = TRUE,
+        height = "98vh"
+      )
+    })
   })
 }
