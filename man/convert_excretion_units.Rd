@@ -34,6 +34,7 @@ It must contain the following columns:
 \value{
 A modified data frame with \code{VOLUME} and \code{VOLUMEU} converted (where necessary) so that
 multiplying \code{AVAL * VOLUME} results in a unit with consistent dimensionality (typically mass or moles).
+A new column \code{AMOUNTU} is created to represent the product of \code{AVALU} and \code{VOLUMEU}.
 }
 \description{
 This function identifies rows associated with excretion samples (e.g., urine, feces, bile)

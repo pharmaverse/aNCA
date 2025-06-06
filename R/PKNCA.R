@@ -102,12 +102,6 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     )
   }
 
-  # Create dosing data
-  df_dose <- format_pkncadose_data(
-    pkncaconc_data = df_conc,
-    group_columns = c(group_columns, usubjid_column)
-  )
-
   # Set default settings
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
@@ -118,22 +112,23 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create PKNCA conc object
   if(volume_column %in% colnames(df_conc)) {
 
-    # ensure units are matching for excretion calculations
+    # ensure units are correct for excretion calculations
     df_conc <- convert_excretion_units(df_conc) %>%
-      # Create amountu column as AVALU * VOLUMEU
       mutate(
-        AMOUNTU = pmap_chr(
-          list(AVALU, VOLUMEU),
-          function(avalu, volume) {
-            if (is.na(avalu) || is.na(volume)) {
-              return(NA_character_)
-            } else {
-              u1 <- set_units(1, avalu, mode = "standard")
-              u2 <- set_units(1, volume, mode = "standard")
-              deparse_unit(u1 * u2)
-            }
-          }
-        )
+        # Compute conversion factor only where AMOUNTU is not NA
+        conversion_factor = ifelse(
+          !is.na(AMOUNTU),
+          get_conversion_factor(DOSEU, AMOUNTU),
+          NA_real_
+        ),
+        # Apply conversion factor conditionally
+        DOSEA = ifelse(
+          !is.na(conversion_factor),
+          DOSEA * conversion_factor,
+          DOSEA
+        ),
+        # Update DOSEU only where conversion happened
+        DOSEU = ifelse(!is.na(conversion_factor), AMOUNTU, DOSEU)
       )
 
     pknca_conc <- PKNCA::PKNCAconc(
@@ -162,6 +157,12 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     )
   }
 
+  # Create dosing data
+  df_dose <- format_pkncadose_data(
+    pkncaconc_data = df_conc,
+    group_columns = c(group_columns, usubjid_column)
+  )
+  
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,

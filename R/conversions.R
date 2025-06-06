@@ -116,6 +116,7 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #'
 #' @return A modified data frame with `VOLUME` and `VOLUMEU` converted (where necessary) so that
 #' multiplying `AVAL * VOLUME` results in a unit with consistent dimensionality (typically mass or moles).
+#' A new column `AMOUNTU` is created to represent the product of `AVALU` and `VOLUMEU`.
 #'
 #' @details
 #' The function:
@@ -206,6 +207,23 @@ convert_excretion_units <- function(df, pcspec = "PCSPEC",
       warning(sprintf("Row %d: Unit conversion error — %s", i, e$message))
     })
   }
+  
+  df <- df %>%
+    # Create amountu column as AVALU * VOLUMEU
+    mutate(
+      AMOUNTU = pmap_chr(
+        list(!!sym(avalu), !!sym(volumeu)),
+        function(avalu, volume) {
+          if (is.na(avalu) || is.na(volume)) {
+            return(NA_character_)
+          } else {
+            u1 <- set_units(1, avalu, mode = "standard")
+            u2 <- set_units(1, volume, mode = "standard")
+            deparse_unit(u1 * u2)
+          }
+        }
+      )
+    )
   
   return(df)
 }
