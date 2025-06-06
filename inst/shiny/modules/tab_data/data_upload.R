@@ -81,9 +81,9 @@ data_upload_server <- function(id) {
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = TRUE,
+        wrap = FALSE,
         resizable = TRUE,
-        defaultPageSize = 10,
+        defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         class = "reacttable-table"
       )
