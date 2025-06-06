@@ -49,44 +49,47 @@ data_upload_server <- function(id) {
       }
     })
 
-    reactive({
-      #' if no data is provided by the user, load dummy data
-      if (is.null(input$data_upload$datapath)) {
-        DUMMY_DATA
-      } else {
-        df <- tryCatch({
-          file_loading_error(NULL)
-          read_pk(input$data_upload$datapath)
-        }, error = function(e) {
-          file_loading_error(e$message)
-        })
-
-        if (is.null(file_loading_error())) {
-          log_success("User data loaded successfully.")
-          df
-        } else {
-          log_error("Error loading user data: ", file_loading_error())
+    raw_data <- (
+      reactive({
+        #' if no data is provided by the user, load dummy data
+        if (is.null(input$data_upload$datapath)) {
           DUMMY_DATA
+        } else {
+          df <- tryCatch({
+            file_loading_error(NULL)
+            read_pk(input$data_upload$datapath)
+          }, error = function(e) {
+            file_loading_error(e$message)
+          })
+
+          if (is.null(file_loading_error())) {
+            log_success("User data loaded successfully.")
+            df
+          } else {
+            log_error("Error loading user data: ", file_loading_error())
+            DUMMY_DATA
+          }
         }
-      }
-    }) |>
-      bindEvent(input$data_upload, ignoreNULL = FALSE)
+      }) |>
+        bindEvent(input$data_upload, ignoreNULL = FALSE)
+    )
 
     output$data_display <- renderReactable({
-      req(DUMMY_DATA)
+      req(raw_data())
       reactable(
-        DUMMY_DATA,
+        raw_data(),
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
         wrap = TRUE,
         resizable = TRUE,
-        defaultPageSize = 25,
+        defaultPageSize = 10,
         showPageSizeOptions = TRUE,
         striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
+        bordered = TRUE
       )
     })
+
+    raw_data
   })
 }
