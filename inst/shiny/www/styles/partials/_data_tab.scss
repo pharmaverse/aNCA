@@ -112,6 +112,11 @@
   flex-direction: column;
   align-items: center;
 
+  &.dragover {
+    background-color: rgba($anca-blue, 0.05);
+    border-color: darken($anca-blue, 10%);
+  }
+
   .shiny-input-container {
     .input-group {
       .input-group-btn .btn,

@@ -510,6 +510,11 @@ div[data-value="Settings"] > div.row a {
   align-items: center;
 }
 
+.upload-container.dragover {
+  background-color: rgba(0, 123, 194, 0.05);
+  border-color: #005b8f;
+}
+
 .upload-container .shiny-input-container .input-group .input-group-btn .btn,
 .upload-container .shiny-input-container .input-group .form-control {
   border: 1px solid #007bc2;

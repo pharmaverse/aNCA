@@ -15,6 +15,7 @@ data_upload_ui <- function(id) {
     stepper_ui("Upload"),
     div(
       class = "upload-container",
+      id = ns("upload_container"),
       p("Upload your PK dataset."),
       fileInput(
         ns("data_upload"),
