@@ -50,7 +50,6 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
     select(all_of(groups), Spec2_Value, Spec2_Label, Spec2_Units)
 
   # Merge Data
-
   left_join(df_spec1, df_spec2, by = groups, relationship = "many-to-many") %>%
     filter(!is.na(Spec1_Value) & !is.na(Spec2_Value)) %>%
     rowwise() %>%
@@ -82,27 +81,23 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID", "VISIT"), denominator_groups = c("TREATMENT"))
 #' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), denominator_groups = data.frame(TREATMENT = "Placebo"))
 #' @export
-calculate_ratios <- function(PKNCAres, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
-  # Make checks on the input formats
-  if (!inherits(PKNCAres, "PKNCAresults")) {
-    stop("PKNCAres must be an object of class 'PKNCAresults'.")
-  }
-  if (!any(PKNCAres$result$PPTESTCD == parameter)) {
+#' 
+calculate_ratios <- function(results, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+  UseMethod("calculate_ratios")
+}
+
+calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+
+  if (!any(data$PPTESTCD == parameter)) {
     warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
   }
   contrast_var <- setdiff(names(denominator_groups), match_cols)
   if (length(contrast_var) < 1) {
     stop("The denominator_groups must contain at least one contrast variable that is not in match_cols.")
   }
-  if (!all(c(match_cols, names(denominator_groups)) %in% names(PKNCA::getGroups(PKNCAres)))) {
-    stop(paste0(
-      "match_cols and denominator_groups must contain valid group column names in PKNCAres: ",
-      paste(names(PKNCA::getGroups(PKNCAres)), collapse = ", ")
-    ))
-  }
 
   # Filter for the parameter of interest
-  df <- PKNCAres$result[PKNCAres$result$PPTESTCD == parameter, ]
+  df <- data[data$PPTESTCD == parameter, ]
 
   # Define the denominator rows
   df_den <- merge(df, denominator_groups)
@@ -147,3 +142,92 @@ calculate_ratios <- function(PKNCAres, parameter, match_cols, denominator_groups
     unique()
 }
 
+calculate_ratios.PKNCAresults <- function(PKNCAres, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+  # Check if match_cols and denominator_groups are valid group columns
+    # Make checks on the input formats
+  if (!all(c(match_cols, names(denominator_groups)) %in% names(PKNCA::getGroups(PKNCAres)))) {
+    stop(paste0(
+      "match_cols and denominator_groups must contain valid group column names in PKNCAres: ",
+      paste(names(PKNCA::getGroups(PKNCAres)), collapse = ", ")
+    ))
+  }
+
+  # Calculate ratios using the data.frame method
+  results <- calculate_ratios.data.frame(
+    PKNCAres$data$conc,
+    parameter = parameter,
+    match_cols = match_cols,
+    denominator_groups = denominator_groups,
+    numerator_groups = numerator_groups,
+    adjusting_factor = adjusting_factor,
+    custom.pptestcd = custom.pptestcd,
+    custom.pptest = custom.pptest
+  )
+
+  # Update the PKNCA results with the new ratios
+  PKNCAres$results <- bind_rows(PKNCAres$results, results)
+  PKNCAres
+}
+
+create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var = "PARAM", reference_values = "A", aggregate_subject = "never", adjusting_factor = 1) {
+  if (!inherits(PKNCAdata, "PKNCAdata")) {
+    stop("PKNCAdata must be a PKNCAdata object.")
+  }
+  params_available <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
+  if (!all(parameter %in% params_available)) {
+    param_missing <- setdiff(parameter, params_available)
+    warning(paste0("No parameter with PPTESTCD: '", paste(param_missing, collapse = ","), "' is not found in the PKNCA intervals."))
+  }
+  contrast_var <- setdiff(names(denominator_groups), match_cols)
+  if (length(contrast_var) < 1) {
+    stop("The denominator_groups must contain at least one contrast variable that is not in match_cols.")
+  }
+
+  # Filter for the parameter of interest
+  df <- data[data$PPTESTCD == parameter, ]
+
+  # Define the denominator rows
+  df_den <- merge(df, denominator_groups)
+
+  # Define the numerator rows, which should exclude the denominator_groups
+  if (!is.null(numerator_groups)) {
+    df_num <- merge(df, numerator_groups)
+  } else {
+    df_num <- df
+  }
+  df_num <- anti_join(df_num, df_den, by = intersect(names(df_num), names(df_den)))
+
+  # Join numerator and denominator by their matching columns
+  merge(df_num, df_den, by = c(match_cols, "PPTESTCD"), suffixes = c("", "_den"))
+
+
+
+  
+  match_cols <- setdiff(c(names(PKNCA::getGroups(PKNCAdata)), "start", "end"), c(contrast_var))
+
+  denominator_groups <- data.frame(contrast_var = reference_values)
+  names(denominator_groups) <- contrast_var
+
+  if (aggregate_subject == "always") {
+    match_cols <- setdiff(match_cols, "USUBJID")
+  } else if (aggregate_subject == "never") {
+    if (!"USUBJID" %in% match_cols) {
+      stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
+    } 
+  } else if (aggregate_subject == "if_available") {
+    
+  }
+}
+
+  # This is a wrapper for the PKNCAresults method
+  calculate_ratios.PKNCAresults(
+    PKNCAres,
+    parameter = parameter,
+    match_cols = match_cols,
+    denominator_groups = denominator_groups,
+    numerator_groups = numerator_groups,
+    adjusting_factor = adjusting_factor,
+    custom.pptestcd = custom.pptestcd,
+    custom.pptest = custom.pptest
+  )
+}
