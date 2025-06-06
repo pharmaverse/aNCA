@@ -510,8 +510,12 @@ div[data-value="Settings"] > div.row a {
   align-items: center;
 }
 
+.reacttable-table .rt-search {
+  width: 100%;
+}
+
 .reacttable-table .rt-table .rt-thead .rt-tr .rt-th {
-  border-bottom: 1px solid blue;
+  border-bottom: 2px solid blue;
 }
 
 .reacttable-table .rt-table .rt-tbody .rt-tr-group .rt-tr-highlight:hover {

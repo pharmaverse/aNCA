@@ -1,9 +1,12 @@
 .reacttable-table {
+  .rt-search {
+    width: 100%;
+  }
   .rt-table {
     .rt-thead {
       .rt-tr {
         .rt-th {
-          border-bottom: 1px solid blue;
+          border-bottom: 2px solid blue;
         }
       }
     }
