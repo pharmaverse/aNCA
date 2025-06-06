@@ -68,12 +68,12 @@ describe("multiple_matrix_ratios function", {
 })
 
 describe("calculate_ratios function", {
-  it("computes correct ratios for simple case", {
 
     res <- FIXTURE_PKNCA_RES
     numerator_groups <- data.frame(PARAM = "B")
     denominator_groups <- data.frame(PARAM = "A")
 
+  it("computes correct ratios for simple case", {
     ratios <- calculate_ratios(
       res,
       parameter = "AUCINT",
@@ -82,106 +82,85 @@ describe("calculate_ratios function", {
       numerator_groups = numerator_groups
     )
 
-    expect_equal(ratios$PPORRES, c(2, 2, 2))
-    expect_equal(ratios$PPSTRES, c(2, 2, 2))
+    expect_equal(ratios$PPORRES, c(2.10, 1.28), tolerance = 1e-2)
     expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
   })
 
   it("handles adjusting_factor", {
-    res <- list(
-      result = data.frame(
-        USUBJID = c("A", "A"),
-        VISIT = c(1, 1),
-        TREATMENT = c("Drug", "Placebo"),
-        PPTESTCD = c("AUCINF", "AUCINF"),
-        PPTEST = c("AUCINF", "AUCINF"),
-        PPORRES = c(100, 50),
-        PPSTRES = c(100, 50),
-        PPORRESU = c("ng/mL", "ng/mL"),
-        PPSTRESU = c("ng/mL", "ng/mL"),
-        stringsAsFactors = FALSE
-      )
-    )
-    class(res) <- "PKNCAresults"
-
-    numerator_groups <- data.frame(TREATMENT = "Drug")
-    denominator_groups <- data.frame(TREATMENT = "Placebo")
 
     ratios <- calculate_ratios(
       res,
-      parameter = "AUCINF",
-      match_cols = c("USUBJID", "VISIT"),
+      parameter = "AUCINT",
+      match_cols = c("start"),
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups,
       adjusting_factor = 2
     )
 
-    expect_equal(ratios$PPORRES, 4)
-    expect_equal(ratios$PPSTRES, 4)
+    expect_equal(ratios$PPORRES, c(2.10, 1.28) * 2, tolerance = 1e-2)
+    expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
   })
 
-  it("returns empty data frame if no matches", {
-    res <- list(
-      result = data.frame(
-        USUBJID = c("A", "A"),
-        VISIT = c(1, 1),
-        TREATMENT = c("Drug", "Placebo"),
-        PPTESTCD = c("AUCINF", "AUCINF"),
-        PPTEST = c("AUCINF", "AUCINF"),
-        PPORRES = c(100, 50),
-        PPSTRES = c(100, 50),
-        PPORRESU = c("ng/mL", "ng/mL"),
-        PPSTRESU = c("ng/mL", "ng/mL"),
-        stringsAsFactors = FALSE
+  it("handles different unit conversions", {
+    res_with_diff_units <- res %>%
+      mutate(
+        PPORRES =  ifelse(PARAM == "B", PPORRES * 1000, PPORRES),
+        PPORRESU = ifelse(PARAM == "B", "ng/mL", PPORRESU),
+        PPSTRES = ifelse(PARAM == "B", PPSTRES * 1000, PPSTRES),
+        PPSTRESU = ifelse(PARAM == "B", "ng/mL", PPSTRESU)
       )
-    )
-    class(res) <- "PKNCAresults"
-
-    numerator_groups <- data.frame(TREATMENT = "Drug")
-    denominator_groups <- data.frame(TREATMENT = "Other")
 
     ratios <- calculate_ratios(
-      res,
-      parameter = "AUCINF",
-      match_cols = c("USUBJID", "VISIT"),
+      res_with_diff_units,
+      parameter = "AUCINT",
+      match_cols = c("start"),
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups
     )
 
-    expect_equal(nrow(ratios), 0)
+    expect_equal(ratios$PPORRES, c(2.10 * 1000, 1.28 * 1000), tolerance = 1e-2)
+    expect_equal(ratios$PPORRESU, rep("ng/mL/hr*ng/mL", 2))
+    expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
+  })
+
+  it("returns error when a non-grop column is used for match_cols or denominator_groups", {
+
+    expect_error(
+      calculate_ratios(
+        res,
+        parameter = "AUCINT",
+        match_cols = c("UNKNOWN_COL"),
+        denominator_groups = denominator_groups,
+        numerator_groups = numerator_groups
+      ),
+      "match_cols and denominator_groups must contain valid group column names in PKNCAres:"
+    )
+
+    expect_error(
+      calculate_ratios(
+        res,
+        parameter = "AUCINT",
+        match_cols = c("start"),
+        denominator_groups = data.frame(UNKNOWN_COL = "unknnown_value"),
+        numerator_groups = numerator_groups
+      ),
+      "match_cols and denominator_groups must contain valid group column names in PKNCAres:"
+    )
   })
 
   it("allows custom PPTESTCD and PPTEST", {
-    res <- list(
-      result = data.frame(
-        USUBJID = c("A", "A"),
-        VISIT = c(1, 1),
-        TREATMENT = c("Drug", "Placebo"),
-        PPTESTCD = c("AUCINF", "AUCINF"),
-        PPTEST = c("AUCINF", "AUCINF"),
-        PPORRES = c(100, 50),
-        PPSTRES = c(100, 50),
-        PPORRESU = c("ng/mL", "ng/mL"),
-        PPSTRESU = c("ng/mL", "ng/mL"),
-        stringsAsFactors = FALSE
-      )
-    )
-    class(res) <- "PKNCAresults"
-
-    numerator_groups <- data.frame(TREATMENT = "Drug")
-    denominator_groups <- data.frame(TREATMENT = "Placebo")
 
     ratios <- calculate_ratios(
       res,
-      parameter = "AUCINF",
-      match_cols = c("USUBJID", "VISIT"),
+      parameter = "AUCINT",
+      match_cols = c("start"),
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups,
       custom.pptestcd = "MYRATIO",
       custom.pptest = "My Custom Ratio"
     )
 
-    expect_equal(ratios$PPTESTCD, "MYRATIO")
-    expect_equal(ratios$PPTEST, "My Custom Ratio")
+    expect_equal(ratios$PPTESTCD, c("MYRATIO", "MYRATIO"))
+    expect_equal(ratios$PPTEST, c("My Custom Ratio", "My Custom Ratio"))
   })
 })
