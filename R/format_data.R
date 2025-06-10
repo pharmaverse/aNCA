@@ -144,6 +144,7 @@ format_pkncadose_data <- function(pkncaconc_data,
 #'   - Based on dose times, creates a data frame with start and end times.
 #'   - If TAU column is present in data, sets last dose end time to start + TAU
 #'   - If no TAU column in data, sets last dose end time to the time of last sample
+#'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
 #'
 #' @examples
@@ -192,6 +193,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   has_tau <- "TAU" %in% names(sub_pknca_conc)
+  is_single_dose <- !has_tau && length(unique(sub_pknca_conc$DOSNOA)) == 1
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
     select(any_of(c(dose_groups,
@@ -225,6 +227,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     } else {
       case_when(
         !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        is_single_dose ~ Inf,
         TRUE ~ max_end
       )
     }
@@ -235,6 +238,8 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
     mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
+    # Set FALSE for aucint when end = Inf
+    mutate(across(starts_with("aucint"), ~ if_else(end == Inf, FALSE, .))) %>%
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
