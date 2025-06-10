@@ -36,37 +36,6 @@
 #'
 #' @export
 
-exclude_nca_by_param <- function(parameter, min_thr = NULL, max_thr = NULL, affected_parameters) {
-
-  # Determine if thresholds are defined and if so check they are single numeric objects
-  thr_def <- validate_thresholds(min_thr, max_thr)
-  if (missing(affected_parameters)) affected_parameters <- parameter
-
-  function(x, ...) {
-    ret <- rep(NA_character_, nrow(x))
-    idx_param <- which(x$PPTESTCD %in% parameter)
-    idx_to_flag <- which(x$PPTESTCD %in% affected_parameters)
-
-    if (length(idx_param) == 0 || length(idx_to_flag) == 0) {
-      # Do nothing, it wasn't calculated
-    } else if (length(idx_param) > 1) {
-      stop("Should not see more than one ", parameter, " (please report this as a bug)")
-    } else if (!is.na(x$PPORRES[idx_param])) {
-      current_value <- x$PPORRES[idx_param]
-      pretty_name <- translate_terms(parameter, "PKNCA", "PPTEST")
-
-      if (thr_def$is_min_thr && current_value < min_thr) {
-        ret[idx_to_flag] <- sprintf("%s < %g", pretty_name, min_thr)
-      }
-      if (thr_def$is_max_thr && current_value > max_thr) {
-        ret[idx_to_flag] <- sprintf("%s > %g", pretty_name, max_thr)
-      }
-    }
-    ret
-  }
-}
-
-
 exclude_nca_by_param <- function(
   parameter,
   min_thr = NULL,
