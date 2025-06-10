@@ -183,7 +183,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
 
   # Obtain all possible pknca parameters
-  all_pknca_params <- setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
+  all_pknca_params <- setdiff(names(get.interval.cols()),
                               c("start", "end"))
 
   # Select conc data and for time column give priority to non-predose samples
@@ -238,24 +238,47 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
-
-  # Conditionally override params for urine/feces if PCSPEC is present
-  if ("PCSPEC" %in% names(dose_intervals)) {
-    dose_intervals <- dose_intervals %>%
-      mutate(is_excreta = grepl("urine|feces|faeces|bile", PCSPEC, ignore.case = TRUE)) %>%
-      mutate(across(
-        any_of(all_pknca_params),
-        ~ if_else(
-          is_excreta,
-          if_else(cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr."),
-                  cur_column() %in% params,
-                  FALSE),
-          .  # unchanged for non-excreta
-        )
-      )) %>%
-      select(-is_excreta)
-  }
+browser()
+  dose_intervals <- .verify_parameters(dose_intervals, params, all_pknca_params)
 
   dose_intervals
 }
 
+#' Conditionally Verify and Override PK Parameters Based on Sample Type
+#'
+#' This helper function updates a PKNCA intervals data frame by verifying and overriding 
+#' specific pharmacokinetic parameters depending on whether the sample is identified 
+#' as excreta (e.g., urine, feces, bile). Parameters related to excretion 
+#' (such as `ae`, `fe`, and those starting with `"clr."`) are selectively enabled 
+#' only for excreta samples and set to `FALSE` otherwise.
+#' @param pknca_intervals A data frame containing PKNCA interval information, 
+#'   including pharmacokinetic parameters and a `PCSPEC` column that describes the 
+#'   specimen type.
+#' @param params A character vector of parameter names selected by the user. 
+#'   Only these parameters will remain `TRUE` for excreta types.
+#' @param all_pknca_params A character vector of all pharmacokinetic parameters 
+#'   that may be present in `pknca_intervals`. These will be checked and updated accordingly.
+#'   
+#'  @returns A modified version of the `pknca_intervals` data frame with appropriate 
+#'  parameters updated based on the specimen type.
+
+.verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
+  if ("PCSPEC" %in% names(pknca_intervals)) {
+    pknca_intervals <- pknca_intervals %>%
+      mutate(
+        is_excreta = grepl("urine|feces|faeces|bile", PCSPEC, ignore.case = TRUE)
+      ) %>%
+      mutate(across(
+        any_of(all_pknca_params),
+        ~ case_when(
+          is_excreta ~ FALSE,
+          is_excreta & (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ cur_column() %in% params,
+          !is_excreta & (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ FALSE,
+          TRUE ~ .
+        )
+      )) %>%
+      select(-is_excreta)
+  }
+  
+  return(pknca_intervals)
+}
