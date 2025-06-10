@@ -146,6 +146,9 @@ format_pkncadose_data <- function(pkncaconc_data,
 #'   - If no TAU column in data, sets last dose end time to the time of last sample
 #'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
+#'   
+#'  Assumes that multiple dose data will have a TAU column 
+#'  or contain multiple doses in dataset
 #'
 #' @examples
 #' \dontrun{
