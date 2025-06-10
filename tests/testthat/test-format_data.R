@@ -283,6 +283,20 @@ describe("format_pkncadata_intervals", {
     result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
     expect_equal(result$end[4], 9)
   })
+  
+  it("sets end to Inf if no TAU and single dose", {
+    single_dose_pknca_conc <- pknca_conc
+    single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
+      filter(DOSNOA == 1)  # Filter to a single dose
+    
+    single_dose_pknca_dose <- pknca_dose
+    single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
+      filter(DOSNOA == 1)  # Filter to a single dose
+
+    result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc, single_dose_pknca_dose, params = params)
+    expect_true(all(is.infinite(result_single_dose$end)))
+  })
+  
 
   it("uses ARRLT for start when start_from_last_dose is FALSE", {
     result <- format_pkncadata_intervals(
