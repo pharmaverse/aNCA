@@ -219,15 +219,96 @@ create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var =
   }
 }
 
-  # This is a wrapper for the PKNCAresults method
-  calculate_ratios.PKNCAresults(
-    PKNCAres,
-    parameter = parameter,
-    match_cols = match_cols,
-    denominator_groups = denominator_groups,
-    numerator_groups = numerator_groups,
-    adjusting_factor = adjusting_factor,
-    custom.pptestcd = custom.pptestcd,
-    custom.pptest = custom.pptest
-  )
+# This is a wrapper for the PKNCAresults method
+calculate_ratios.PKNCAresults(
+  PKNCAres,
+  parameter = parameter,
+  match_cols = match_cols,
+  denominator_groups = denominator_groups,
+  numerator_groups = numerator_groups,
+  adjusting_factor = adjusting_factor,
+  custom.pptestcd = custom.pptestcd,
+  custom.pptest = custom.pptest
+)
+
+
+#' Add interval row to PKNCA data intervals
+#' #' This function adds a new interval row to the PKNCA data intervals.
+#' @param PKNCAdata
+#' @param groups Data frame containing the groups to be added.
+#' @param parameters Character vector of parameter names to be added. If a different value to TRUE/1 is needed, it should be provided as a data.frame.
+#' @param impute Character name of the imputate column value (if exists)
+#'
+#' @details Always recommended to apply the method on the PKNCAdata object, as it will also work in the addition of new groups that are not defined in the PKNCA data intervals.
+
+add_interval_row <- function(o_data, groups, parameters, impute = NULL) {
+  UseMethod("add_interval_row", o_data)
+}
+
+add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NULL, ...) {
+  # Perform checks on the groups input
+  all_params <- setdiff(names(get.interval.cols()), c("start", "end"))
+  group_names_o_data <- setdiff(names(o_data), all_params)
+  missing_group_cols <- setdiff(names(groups), group_names_o_data)
+  if (length(missing_group_cols) > 0) {
+    stop(paste("The following group columns are missing in the PKNCA data:", paste(missing_group_cols, collapse = ", ")))
+  }
+  
+  # Based on the groups data.frame, define all the actual groups matching in the PKNCA data
+  groups_o_data <- o_data[, group_names_o_data, drop = FALSE]
+  groups <- unique(left_join(groups, groups_o_data, by = names(groups)))
+  missing_groups <- anyNA(groups)
+  if (missing_groups) {
+    stop(paste(
+      "The following groups are not present in the intervals data.frame: ",
+      paste(apply(groups, 1, paste, collapse = ", "), collapse = "; "),
+      ". Please, if your groups are valid and completely defined try using the function on the PKNCAdata object."
+    ))
+  }
+  
+  # If specified consider the impute column for the matching
+  if (!is.null(impute)) {
+    groups <- bind_cols(groups, data.frame(impute = impute))
+    if (!is.null(o_data$impute)) {
+      o_data$intervals[["impute"]] <- NA_character
+    }
+  }
+  
+  # If parameters is not a data.frame, convert it to a data.frame with TRUE values
+  if (!is.data.frame(parameters)) {
+    parameters <- as.data.frame(matrix(TRUE, nrow = 1, ncol = length(parameters), dimnames = list(NULL, parameters)))
+  }
+  
+  # Ensure that, unless already present, the parameters are added to the interval groups
+  for (ix_parameter in seq_len(ncol(parameters))) {
+    
+    param <- parameters[, ix_parameter, drop = FALSE]
+    groups_with_parameter <- cbind(groups, param)
+    intervals_missing <- anti_join(groups_with_parameter, o_data, by = names(groups_with_parameter))
+    ix_intervals_only_missing_param <- merge(
+      intervals_missing[, names(groups), drop = FALSE],
+      o_data %>% mutate(n = row_number())
+    ) %>%
+      pull(n)
+    o_data[ix_intervals_only_missing_param, names(param)] <- param[[1]]
+    intervals_missing_groups <- anti_join(groups_with_parameter, o_data[-ix_intervals_only_missing_param,], by = names(groups_with_parameter))
+    o_data <- bind_rows(o_data, intervals_missing)
+  }
+  o_data
+}
+
+add_interval_row.PKNCAdata <- function(o_data, groups, parameters, impute = NULL, ...) {
+  # Ensure that the groups are valid PKNCA groups
+  groups <- unique(merge(groups, getGroups(o_data$conc)))
+  
+  # If specified consider the impute column for the matching
+  if (!is.null(impute)) {
+    if (!impute %in% names(o_data$data)) {
+      if (!is.na(o_data$impute) && !is.null(o_data$impute)) {
+        o_data$intervals[["impute"]] <- o_data$impute
+      }
+    }
+  }
+  o_data$intervals <- add_interval_row(o_data$intervals, groups, parameters, impute = impute)
+  o_data
 }
