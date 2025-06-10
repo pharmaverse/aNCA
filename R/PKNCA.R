@@ -144,7 +144,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create dosing data
   df_dose <- format_pkncadose_data(
     pkncaconc_data = df_conc,
-    group_columns = c(group_columns, usubjid_column, "DOSEU")
+    group_columns = c(group_columns, usubjid_column)
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
@@ -503,7 +503,7 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' @importFrom utils capture.output
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
-browser()
+
   o_conc <- ensure_column_unit_exists(o_conc, c("concu", "timeu", "amountu"))
   o_dose <- ensure_column_unit_exists(o_dose, c("doseu"))
 

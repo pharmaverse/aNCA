@@ -238,7 +238,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
-browser()
+
   dose_intervals <- .verify_parameters(dose_intervals, params, all_pknca_params)
 
   dose_intervals
