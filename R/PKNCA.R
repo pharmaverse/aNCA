@@ -113,23 +113,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   if(volume_column %in% colnames(df_conc)) {
 
     # ensure units are correct for excretion calculations
-    df_conc <- convert_excretion_units(df_conc) %>%
-      mutate(
-        # Compute conversion factor only where AMOUNTU is not NA
-        conversion_factor = ifelse(
-          !is.na(AMOUNTU),
-          get_conversion_factor(DOSEU, AMOUNTU),
-          NA_real_
-        ),
-        # Apply conversion factor conditionally
-        DOSEA = ifelse(
-          !is.na(conversion_factor),
-          DOSEA * conversion_factor,
-          DOSEA
-        ),
-        # Update DOSEU only where conversion happened
-        DOSEU = ifelse(!is.na(conversion_factor), AMOUNTU, DOSEU)
-      )
+    df_conc <- convert_excretion_units(df_conc)
 
     pknca_conc <- PKNCA::PKNCAconc(
       df_conc,
@@ -162,7 +146,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     pkncaconc_data = df_conc,
     group_columns = c(group_columns, usubjid_column)
   )
-  
+
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
