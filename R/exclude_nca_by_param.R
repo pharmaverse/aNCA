@@ -35,7 +35,7 @@
 #' as.data.frame(excluded_result)
 #'
 #' @export
-#' 
+#'
 exclude_nca_by_param <- function(
   parameter,
   min_thr = NULL,
