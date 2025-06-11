@@ -142,7 +142,8 @@ format_pkncadose_data <- function(pkncaconc_data,
 #' The function performs the following steps:
 #'   - Creates a vector with all pharmacokinetic parameters.
 #'   - Based on dose times, creates a data frame with start and end times.
-#'   - If TAU column is present in data, sets last dose end time to start + TAU
+#'   - If TAU column is present in data, sets last dose end time to start + TAU,
+#'   or if TAU is NA then either Inf if only one dose present, or max end time if not.
 #'   - If no TAU column in data, sets last dose end time to the time of last sample
 #'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
