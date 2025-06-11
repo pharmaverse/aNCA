@@ -82,8 +82,8 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), denominator_groups = data.frame(TREATMENT = "Placebo"))
 #' @export
 #' 
-calculate_ratios <- function(results, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
-  UseMethod("calculate_ratios")
+calculate_ratios <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+  UseMethod("calculate_ratios", data)
 }
 
 calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
@@ -112,6 +112,19 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
 
   # Join numerator and denominator by their matching columns
   merge(df_num, df_den, by = c(match_cols, "PPTESTCD"), suffixes = c("", "_den")) %>%
+
+    # If possible compute conversion factors for the units of numerator and denominator
+    mutate(
+      PPORRESU_factor = get_conversion_factor(PPORRESU_den, PPORRESU),
+      PPSTRESU_factor = if ("PPSTRESU" %in% names(.)) {
+        get_conversion_factor(PPSTRESU_den, PPSTRESU)
+      } else NULL,
+      PPORRES_den = ifelse (!is.na(PPORRESU_factor), PPORRES_den * PPORRESU_factor, PPORRES_den),
+      PPSTRES_den = if ("PPSTRESU" %in% names(.)) {
+        ifelse(!is.na(PPSTRESU_factor), PPSTRESU_factor * PPSTRES_den, PPSTRES_den)
+      } else NULL
+
+    ) %>%
     group_by(across(all_of(c(match_cols, contrast_var, "PPTESTCD", paste0(contrast_var, "_den"))))) %>%
     unique() %>%
     # Use mean values in case of multiple denominator rows per numerator
@@ -123,9 +136,13 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
     ungroup() %>%
     mutate(
       PPORRES = (PPORRES / PPORRES_den) * adjusting_factor,
-      PPSTRES = (PPSTRES / PPSTRES_den) * adjusting_factor,
-      PPORRESU = ifelse(PPORRESU == PPORRESU_den, "fraction", paste0(PPORRESU, "/", PPORRESU_den)),
-      PPSTRESU = ifelse(PPSTRESU == PPSTRESU_den, "fraction", paste0(PPSTRESU, "/", PPSTRESU_den)),
+      PPSTRES = if ("PPSTRES" %in% names(.)) {
+        (PPSTRES / PPSTRES_den) * adjusting_factor
+      } else NULL,
+      PPORRESU = ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPORRESU, "/", PPORRESU_den)),
+      PPSTRESU = if ("PPSTRESU" %in% names(.)) {
+        ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPSTRESU, "/", PPSTRESU_den))
+      } else NULL,
       PPTESTCD = if (!is.null(custom.pptestcd)) {
         custom.pptestcd
       } else {
@@ -142,19 +159,19 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
     unique()
 }
 
-calculate_ratios.PKNCAresults <- function(PKNCAres, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
   # Check if match_cols and denominator_groups are valid group columns
-    # Make checks on the input formats
-  if (!all(c(match_cols, names(denominator_groups)) %in% names(PKNCA::getGroups(PKNCAres)))) {
+  # Make checks on the input formats
+  if (!all(c(match_cols, names(denominator_groups), names(numerator_groups)) %in% c(names(PKNCA::getGroups(data)), "start", "end"))) {
     stop(paste0(
       "match_cols and denominator_groups must contain valid group column names in PKNCAres: ",
-      paste(names(PKNCA::getGroups(PKNCAres)), collapse = ", ")
+      paste(names(PKNCA::getGroups(data)), collapse = ", ")
     ))
   }
 
   # Calculate ratios using the data.frame method
-  results <- calculate_ratios.data.frame(
-    PKNCAres$data$conc,
+  ratios_result <- calculate_ratios.data.frame(
+    data = data$result,
     parameter = parameter,
     match_cols = match_cols,
     denominator_groups = denominator_groups,
@@ -165,8 +182,44 @@ calculate_ratios.PKNCAresults <- function(PKNCAres, parameter, match_cols, denom
   )
 
   # Update the PKNCA results with the new ratios
-  PKNCAres$results <- bind_rows(PKNCAres$results, results)
-  PKNCAres
+  data$result <- bind_rows(data$result, ratios_result)
+  data
+}
+
+
+calculate_ratios_app <- function(PKNCAresults, parameter, contrast_var = "ANALYTE", reference_values = "A", match_cols = c("USUBJID", "start", "end"), aggregate_subject = "no", adjusting_factor = 1) {
+  match_cols <- unique(c(dplyr::group_vars(PKNCAresults$data), "end"))
+  if (aggregate_subject == "yes") {
+    match_cols <- list(setdiff(match_cols, "USUBJID"))
+  } else if (aggregate_subject == "no") {
+    if (!"USUBJID" %in% match_cols) {
+      stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
+    }
+    match_cols <- list(match_cols)
+  } else if (aggregate_subject == "if-needed") {
+    if ("USUBJID" %in% match_cols) {
+      # Perform both individual and aggregate calculations and then eliminate duplicates in the group columns
+      match_cols <- list(match_cols, setdiff(match_cols, "USUBJID"))
+    }
+  }
+
+  all_ratios <- data.frame()
+  for (ix in seq_along(match_cols)) {
+  ratio_calculations <- calculate_ratios(
+    PKNCAresults, 
+    parameter = parameter,
+    match_cols = match_cols[[ix]],
+    denominator_groups = data.frame(contrast_var = reference_values),
+    numerator_groups = NULL,
+    adjusting_factor = adjusting_factor,
+    custom.pptestcd = NULL,
+    custom.pptest = NULL
+  )
+  all_ratios <- bind_rows(all_ratios, ratio_calculations)
+  }
+  unnest(all_ratios) %>%
+    # Make sure there are no duplicate rows for: parameter, contrast_var, and match_cols
+    distinct(across(all_of(c(parameter, group_vars(PKNCAresults$data), "end", "impute"))), .keep_all = TRUE)
 }
 
 create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var = "PARAM", reference_values = "A", aggregate_subject = "never", adjusting_factor = 1) {
@@ -220,16 +273,16 @@ create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var =
 }
 
 # This is a wrapper for the PKNCAresults method
-calculate_ratios.PKNCAresults(
-  PKNCAres,
-  parameter = parameter,
-  match_cols = match_cols,
-  denominator_groups = denominator_groups,
-  numerator_groups = numerator_groups,
-  adjusting_factor = adjusting_factor,
-  custom.pptestcd = custom.pptestcd,
-  custom.pptest = custom.pptest
-)
+# calculate_ratios.PKNCAresults(
+#   PKNCAres,
+#   parameter = parameter,
+#   match_cols = match_cols,
+#   denominator_groups = denominator_groups,
+#   numerator_groups = numerator_groups,
+#   adjusting_factor = adjusting_factor,
+#   custom.pptestcd = custom.pptestcd,
+#   custom.pptest = custom.pptest
+# )
 
 
 #' Add interval row to PKNCA data intervals
@@ -246,6 +299,7 @@ add_interval_row <- function(o_data, groups, parameters, impute = NULL) {
 }
 
 add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NULL, ...) {
+
   # Perform checks on the groups input
   all_params <- setdiff(names(get.interval.cols()), c("start", "end"))
   group_names_o_data <- setdiff(names(o_data), all_params)
@@ -281,7 +335,7 @@ add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NUL
   
   # Ensure that, unless already present, the parameters are added to the interval groups
   for (ix_parameter in seq_len(ncol(parameters))) {
-    
+
     param <- parameters[, ix_parameter, drop = FALSE]
     groups_with_parameter <- cbind(groups, param)
     intervals_missing <- anti_join(groups_with_parameter, o_data, by = names(groups_with_parameter))
@@ -311,4 +365,8 @@ add_interval_row.PKNCAdata <- function(o_data, groups, parameters, impute = NULL
   }
   o_data$intervals <- add_interval_row(o_data$intervals, groups, parameters, impute = impute)
   o_data
+}
+
+add_ratio_interval_row <- function(o_data, groups, parameters, impute = NULL) {
+  UseMethod("add_ratio_interval_row", o_data)
 }

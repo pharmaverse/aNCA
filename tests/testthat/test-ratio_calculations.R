@@ -70,67 +70,119 @@ describe("multiple_matrix_ratios function", {
 describe("calculate_ratios function", {
 
     res <- FIXTURE_PKNCA_RES
+    res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
     numerator_groups <- data.frame(PARAM = "B")
     denominator_groups <- data.frame(PARAM = "A")
 
-  it("computes correct ratios for simple case", {
+
+    # Make a simple input version that has same units and only 1 subject
+    res_simple <- res
+    res_simple$result <- res$result %>%
+      filter(USUBJID == 8) %>%
+      mutate(
+        PPORRESU = "ng/mL",
+        PPSTRESU = "ng/mL"
+      )
+
+  it("computes correct ratios for simple case (data.frame)", {
+
     ratios <- calculate_ratios(
-      res,
-      parameter = "AUCINT",
-      match_cols = c("start"),
+      res_simple$result,
+      parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups
     )
 
-    expect_equal(ratios$PPORRES, c(2.10, 1.28), tolerance = 1e-2)
+    expect_equal(ratios$PPSTRES, c(2/3, 4/5), tolerance = 1e-2)
     expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
+  })
+
+    it("computes correct ratios for simple case (PKNCAresults)", {
+
+    pknca_res_with_ratios <- calculate_ratios(
+      res_simple,
+      parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      denominator_groups = denominator_groups,
+      numerator_groups = numerator_groups
+    )
+    ratios <- pknca_res_with_ratios$result %>%
+      filter(PPTESTCD == "CMAX_RATIO")
+
+    expect_equal(nrow(pknca_res_with_ratios$result), nrow(res_simple$result) + 2)
+    expect_equal(ratios$PPSTRES, c(2/3, 4/5), tolerance = 1e-2)
+    expect_true(all(grepl("CMAX_RATIO", ratios$PPTESTCD)))
   })
 
   it("handles adjusting_factor", {
 
     ratios <- calculate_ratios(
-      res,
-      parameter = "AUCINT",
-      match_cols = c("start"),
+      res_simple$result,
+      parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups,
       adjusting_factor = 2
     )
 
-    expect_equal(ratios$PPORRES, c(2.10, 1.28) * 2, tolerance = 1e-2)
+    expect_equal(ratios$PPORRES, c(2/3, 4/5) * 2)
     expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
   })
 
-  it("handles different unit conversions", {
-    res_with_diff_units <- res %>%
+  it("handles unit conversions when needed and possible to convert", {
+    res_with_diff_units <- res_simple
+    res_with_diff_units$result <- res_simple$result %>%
       mutate(
-        PPORRES =  ifelse(PARAM == "B", PPORRES * 1000, PPORRES),
-        PPORRESU = ifelse(PARAM == "B", "ng/mL", PPORRESU),
-        PPSTRES = ifelse(PARAM == "B", PPSTRES * 1000, PPSTRES),
-        PPSTRESU = ifelse(PARAM == "B", "ng/mL", PPSTRESU)
+        PPORRESU = ifelse(PARAM == "B", "ng/mL", "pg/mL"),
+        PPSTRESU = ifelse(PARAM == "B", "ng/mL", "pg/mL")
       )
 
     ratios <- calculate_ratios(
       res_with_diff_units,
-      parameter = "AUCINT",
+      parameter = "CMAX",
       match_cols = c("start"),
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups
     )
+    ratios <- ratios$result %>%
+      filter(PPTESTCD == "CMAX_RATIO")
 
-    expect_equal(ratios$PPORRES, c(2.10 * 1000, 1.28 * 1000), tolerance = 1e-2)
-    expect_equal(ratios$PPORRESU, rep("ng/mL/hr*ng/mL", 2))
+    expect_equal(ratios$PPORRES, c(2/3, 4/5) * 1000)
+    expect_equal(ratios$PPORRESU, rep("fraction", 2))
     expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
   })
 
-  it("returns error when a non-grop column is used for match_cols or denominator_groups", {
+  it("handles when unit conversions are needed but not possible to convert", {
+    res_with_diff_units <- res_simple
+    res_with_diff_units$result <- res_simple$result %>%
+      mutate(
+        PPORRESU = ifelse(PARAM == "B", "ng/mL", "unknown_unit"),
+        PPSTRESU = ifelse(PARAM == "B", "ng/mL", "unknown_unit")
+      )
+
+    ratios <- calculate_ratios(
+      res_with_diff_units,
+      parameter = "CMAX",
+      match_cols = c("start"),
+      denominator_groups = denominator_groups,
+      numerator_groups = numerator_groups
+    )
+    ratios <- ratios$result %>%
+      filter(PPTESTCD == "CMAX_RATIO")
+
+     expect_equal(ratios$PPORRES, c(2/3, 4/5))
+     expect_equal(ratios$PPORRESU, rep("ng/mL/unknown_unit", 2))
+  })
+
+  it("returns error when a non-group column is used for match_cols or denominator_groups", {
 
     expect_error(
       calculate_ratios(
         res,
-        parameter = "AUCINT",
+        parameter = "CMAX",
         match_cols = c("UNKNOWN_COL"),
-        denominator_groups = denominator_groups,
+        denominator_groups = c(denominator_groups, "UNKNOWN_COL"),
         numerator_groups = numerator_groups
       ),
       "match_cols and denominator_groups must contain valid group column names in PKNCAres:"
@@ -139,10 +191,10 @@ describe("calculate_ratios function", {
     expect_error(
       calculate_ratios(
         res,
-        parameter = "AUCINT",
+        parameter = "CMAX",
         match_cols = c("start"),
-        denominator_groups = data.frame(UNKNOWN_COL = "unknnown_value"),
-        numerator_groups = numerator_groups
+        denominator_groups = denominator_groups,
+        numerator_groups = data.frame(UNKNOWN_COL = "X")
       ),
       "match_cols and denominator_groups must contain valid group column names in PKNCAres:"
     )
@@ -151,15 +203,16 @@ describe("calculate_ratios function", {
   it("allows custom PPTESTCD and PPTEST", {
 
     ratios <- calculate_ratios(
-      res,
-      parameter = "AUCINT",
+      res_simple,
+      parameter = "CMAX",
       match_cols = c("start"),
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups,
       custom.pptestcd = "MYRATIO",
       custom.pptest = "My Custom Ratio"
     )
-
+    ratios <- ratios$result %>%
+      filter(PPTESTCD == "MYRATIO")
     expect_equal(ratios$PPTESTCD, c("MYRATIO", "MYRATIO"))
     expect_equal(ratios$PPTEST, c("My Custom Ratio", "My Custom Ratio"))
   })
