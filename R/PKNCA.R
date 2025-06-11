@@ -113,7 +113,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   if(volume_column %in% colnames(df_conc)) {
 
     # ensure units are correct for excretion calculations
-    df_conc <- convert_excretion_units(df_conc)
+    df_conc <- convert_volume_units(df_conc)
 
     pknca_conc <- PKNCA::PKNCAconc(
       df_conc,

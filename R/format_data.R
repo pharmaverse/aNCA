@@ -183,7 +183,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
 
   # Obtain all possible pknca parameters
-  all_pknca_params <- setdiff(names(get.interval.cols()),
+  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
                               c("start", "end"))
 
   # Select conc data and for time column give priority to non-predose samples
