@@ -49,7 +49,7 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
       stringsAsFactors = FALSE
     ))
   }
-browser()
+
   # Return a summary table with statistics
   data %>%
 
