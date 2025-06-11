@@ -196,7 +196,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   has_tau <- "TAU" %in% names(sub_pknca_conc)
-browser()
+
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
     group_by(!!!syms(dose_groups)) %>%
