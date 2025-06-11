@@ -100,7 +100,7 @@ describe("calculate_summary_stats", {
     # Check that the result matches the expected output
     expect_equal(result, expected_result)
   })
-  
+
   it("handles NA values in results for unit conversion", {
     test_data_na_conversion <- data.frame(
       NCA_PROFILE = c(1, 1, 1),
