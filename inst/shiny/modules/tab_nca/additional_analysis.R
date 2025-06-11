@@ -28,8 +28,7 @@ additional_analysis_ui <- function(id) {
       card(
         card_header("Excretion Analysis"),
         card_body(
-
-          p("To be added")
+          excretion_ui(ns("excretion"))
         )
       )
     ),
@@ -61,6 +60,8 @@ additional_analysis_server <- function(id, data, grouping_vars) {
 
     # Call module for Matrix Ratio Analysis
     non_nca_ratio_server(id = "matrix_ratio_analysis", data, grouping_vars)
+    
+    excretion_server("excretion", input_pknca_data = data)
 
   })
 }
