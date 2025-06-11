@@ -188,7 +188,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU", "VOLUME"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   has_tau <- "TAU" %in% names(sub_pknca_conc)
@@ -231,7 +231,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     }
     ) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"))) %>%
+    select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
@@ -263,22 +263,20 @@ format_pkncadata_intervals <- function(pknca_conc,
 #'  parameters updated based on the specimen type.
 
 .verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
-  if ("PCSPEC" %in% names(pknca_intervals)) {
-    pknca_intervals <- pknca_intervals %>%
-      mutate(
-        is_excreta = grepl("urine|feces|faeces|bile", PCSPEC, ignore.case = TRUE)
-      ) %>%
-      mutate(across(
-        any_of(all_pknca_params),
-        ~ case_when(
-          is_excreta ~ FALSE,
-          is_excreta & (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ cur_column() %in% params,
-          !is_excreta & (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ FALSE,
-          TRUE ~ .
-        )
-      )) %>%
-      select(-is_excreta)
-  }
+  
+  pknca_intervals <- pknca_intervals %>%
+    mutate(across(
+      any_of(all_pknca_params),
+      ~ case_when(
+        !is.na(VOLUME) & 
+          (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ cur_column() %in% params,
+        !is.na(VOLUME) ~ FALSE,
+        is.na(VOLUME) &
+          (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ FALSE,
+        is.na(VOLUME) ~ cur_column() %in% params
+      )
+    ))  %>%
+    select(-VOLUME)  # Remove VOLUME column if it exists
   
   return(pknca_intervals)
 }

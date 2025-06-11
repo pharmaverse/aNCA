@@ -48,9 +48,13 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 
   # Rename necessary columns
   colnames(dataset) <- sapply(colnames(dataset), function(col) {
+
     for (group in names(selected_cols)) {
       column_names <- names(selected_cols[[group]])
       mapped_values <- selected_cols[[group]]
+      if (col %in% mapped_values) {
+        return(column_names[which(mapped_values == col)])
+      }
     }
     col
   })
