@@ -100,4 +100,25 @@ describe("calculate_summary_stats", {
     # Check that the result matches the expected output
     expect_equal(result, expected_result)
   })
+
+  it("handles NA values in results for unit conversion", {
+    test_data_na_conversion <- data.frame(
+      NCA_PROFILE = c(1, 1, 1),
+      PPTESTCD = c("A", "A", "A"),
+      PPORRES = c(1, 2, NA),
+      PPORRESU = c("mg/L", "mg/L", "mg/L"),
+      PPSTRES = c(1, 2, NA),
+      PPSTRESU = c("µg/L", "µg/L", "µg/L")
+    )
+
+    result <- calculate_summary_stats(test_data_na_conversion)
+
+    # Define the expected result
+    expected_result <- tibble(
+      NCA_PROFILE = rep(1, 9),
+      Statistic = "Mean",
+      `A[µg/L]` = 1.5
+    )
+
+  })
 })
