@@ -128,7 +128,7 @@ describe("PKNCA_update_data_object", {
       auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
-      selected_dosno = dosnos,
+      selected_profile = dosnos,
       selected_pcspec = pcspecs,
       params = params,
       should_impute_c0 = TRUE
@@ -142,7 +142,7 @@ describe("PKNCA_update_data_object", {
       auc_data = auc_data,
       method = method,
       selected_analytes = "AnalyteX",
-      selected_dosno = 1,
+      selected_profile = 1,
       selected_pcspec = "Plasma",
       params = params,
       should_impute_c0 = FALSE
@@ -159,7 +159,7 @@ describe("PKNCA_update_data_object", {
       auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
-      selected_dosno = dosnos,
+      selected_profile = dosnos,
       selected_pcspec = pcspecs,
       params = params,
       should_impute_c0 = TRUE
@@ -174,7 +174,7 @@ describe("PKNCA_update_data_object", {
       auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
-      selected_dosno = dosnos,
+      selected_profile = dosnos,
       selected_pcspec = pcspecs,
       params = params,
       should_impute_c0 = TRUE
@@ -190,7 +190,7 @@ describe("PKNCA_update_data_object", {
       auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
-      selected_dosno = dosnos,
+      selected_profile = dosnos,
       selected_pcspec = pcspecs,
       params = params,
       should_impute_c0 = FALSE
@@ -205,7 +205,7 @@ describe("PKNCA_update_data_object", {
       auc_data = auc_data,
       method = "lin up log down",
       selected_analytes = unique(simple_data$PARAM),
-      selected_dosno = unique(simple_data$NCA_PROFILE),
+      selected_profile = unique(simple_data$NCA_PROFILE),
       selected_pcspec = unique(simple_data$PCSPEC),
       params = c("cmax", "tmax", "auclast", "aucinf.obs"),
       should_impute_c0 = TRUE
@@ -245,7 +245,7 @@ describe("PKNCA_update_data_object", {
       auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
-      selected_dosno = dosnos,
+      selected_profile = dosnos,
       selected_pcspec = pcspecs,
       params = params,
       should_impute_c0 = TRUE

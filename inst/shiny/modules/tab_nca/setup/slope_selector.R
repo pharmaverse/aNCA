@@ -170,7 +170,6 @@ slope_selector_server <- function( # nolint
     # Generate dynamically the minimum results you need for the lambda plots
     lambdas_res <- reactive({
       req(plot_data())
-
       if (!"type_interval" %in% names(plot_data()$intervals)) {
         NULL
       } else {
