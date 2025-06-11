@@ -49,18 +49,14 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
       stringsAsFactors = FALSE
     ))
   }
-
+browser()
   # Return a summary table with statistics
   data %>%
 
     # Only use unique records and calculate the conversion factor between PPSTRESU/PPORRESU
     unique() %>%
     mutate(
-      conv_factor = case_when(
-        PPSTRESU == PPORRESU | PPSTRES == PPORRES ~ 1,
-        is.na(PPSTRES) & is.na(PPORRES) ~ 1,
-        TRUE ~ PPSTRES / PPORRES
-      )
+      conv_factor = get_conversion_factor(PPORRESU, PPSTRESU)
     ) %>%
 
     # Group by the input groups and the parameter test codes
