@@ -144,7 +144,7 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' df_converted <- convert_excretion_units(df)
 #'
 #' @export
-convert_excretion_units <- function(df, pcspec = "PCSPEC",
+convert_volume_units <- function(df, pcspec = "PCSPEC",
                                     avalu = "AVALU",
                                     volume = "VOLUME",
                                     volumeu = "VOLUMEU") {
@@ -154,11 +154,7 @@ convert_excretion_units <- function(df, pcspec = "PCSPEC",
     return(df)
   }
 
-  # Define sample types to apply the logic to
-  excreta_types <- c("urine", "feces", "faeces", "bile")
-  is_excreta <- grepl(paste(excreta_types, collapse = "|"), df[[pcspec]], ignore.case = TRUE)
-  
-  for (i in which(is_excreta)) {
+  for (i in seq_len(nrow(df))) {
     concu <- df[[avalu]][i]
     vol <- df[[volume]][i]
     volu <- df[[volumeu]][i]
