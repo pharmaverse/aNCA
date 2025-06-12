@@ -7,8 +7,8 @@ excretion_ui <- function(id) {
       card_body(
         selectInput(ns("matrix_select"), "Select Matrices:", 
                     choices = NULL, multiple = TRUE),
-        # selectInput(ns("end_time_col"), "Map End Time Column:", 
-        #             choices = NULL),
+         selectInput(ns("end_time_col"), "Map End Time Column:", 
+                     choices = NULL),
         checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = FALSE),
         selectInput(ns("param_select"), "Select Parameters:", 
                     choices = NULL, multiple = TRUE),
@@ -34,7 +34,7 @@ excretion_server <- function(id, input_pknca_data) {
       available_cols <- names(input_pknca_data()$conc$data)
       
       updateSelectInput(session, "matrix_select", choices = unique(input_pknca_data()$conc$data$PCSPEC))
-      #updateSelectInput(session, "end_time_col", choices = available_cols)
+      updateSelectInput(session, "end_time_col", choices = available_cols)
       updateSelectInput(session, "param_select", choices = pknca_cdisc_terms %>%
                           filter(startsWith(PPTESTCD, "RCA") | 
                                    startsWith(PPTESTCD, "RENAL") | 
@@ -79,10 +79,43 @@ excretion_server <- function(id, input_pknca_data) {
       }
       
       # Update intervals
+      # dose profile intervals
       data$intervals <- format_pkncadata_intervals(data$conc,
                                                    data$dose,
                                                    params = input$param_select) %>%
+        mutate(type_interval = "profile") %>%
         filter(PCSPEC %in% input$matrix_select)
+      browser()
+      # excretion sample intervals
+      # add one row with start AFRLT and end_time_col
+      end_time_col <- input$end_time_col
+
+      if (is.null(end_time_col) || end_time_col == "") {
+        showNotification("Please select an end time column.", type = "error")
+        return(NULL)
+      }
+      
+      # Obtain all possible pknca parameters
+      all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
+                                  c("start", "end"))
+      
+      conc_groups <- unname(unlist(data$conc$columns$groups))
+      
+      excretion_intervals <- data$conc$data %>%
+        group_by(!!!syms(conc_groups)) %>%
+        select(any_of(c(conc_groups, end_time_col, "AFRLT"))) %>% 
+        mutate(PCSPEC = as.character(PCSPEC)) %>%
+        rename(start = AFRLT, end = !!sym(end_time_col)) %>%
+        filter(PCSPEC %in% input$matrix_select) %>%
+        distinct() %>%
+        # Create logical columns with only TRUE for the NCA parameters requested by the user
+        mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
+        mutate(across(any_of(input$param_select), ~ TRUE, .names = "{.col}"),
+               type_interval = "sample")
+      
+      # Combine dose profile intervals and excretion sample intervals
+      data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
+        arrange(PCSPEC, start)
 
       # Run PKNCA analysis
       results <- suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE))
@@ -90,11 +123,35 @@ excretion_server <- function(id, input_pknca_data) {
       results
     })
     
-    # Render results
-    output$results_table <- renderReactable({
+    results_output <- reactive({
       req(analysis_result())
       
-      reactable(analysis_result()$result,
+      #pivot wider
+      df <- analysis_result()$result %>%
+        mutate(PPTESTCD = ifelse(PPSTRESU != "",
+                                 paste0(PPTESTCD, "[", PPSTRESU, "]"),
+                                 PPTESTCD)) %>%
+        select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude,) %>%
+        pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
+      
+      exclude <- analysis_result()$result %>%
+        select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU,)  %>%
+        pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
+      
+      main_results <- left_join(
+        df,
+        exclude,
+        by = intersect(names(df), names(exclude))
+      )
+      
+      main_results
+    })
+    
+    # Render results
+    output$results_table <- renderReactable({
+      req(results_output())
+      
+      reactable(results_output(),
                 defaultPageSize = 10,
                 searchable = TRUE,
                 highlight = TRUE)
