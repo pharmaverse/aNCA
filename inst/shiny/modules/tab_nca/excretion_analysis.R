@@ -3,31 +3,39 @@ excretion_ui <- function(id) {
   ns <- NS(id)
   
   tagList(
-    card(
-      card_body(
-        selectInput(ns("matrix_select"), "Select Matrices:", 
-                    choices = NULL, multiple = TRUE),
-         selectInput(ns("end_time_col"), "Map End Time Column:", 
-                     choices = NULL),
-        checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = FALSE),
-        selectInput(ns("param_select"), "Select Parameters:", 
-                    choices = NULL, multiple = TRUE),
-        checkboxGroupInput( 
-          ns("interval_types"), 
-          "Select Interval Types:", 
-          c( 
-            "Samples" = "sample", 
-            "Profiles" = "profile"
-          ) 
-        ),
-        actionButton(ns("submit_btn"), "Submit")
+    div(
+      class = "excretion_section_container",
+      id = ns("excretion_section_container"),
+      div(
+        id = ns("excretion_overlay"),
+        class = "excretion-overlay",
+        style = "display: none;",
+        "Excretion analysis is disabled: 'VOLUME' column required."
+      ),
+      div(style = "position: relative;",  # Wrapping makes overlay work
+          card(
+            card_body(
+              selectInput(ns("matrix_select"), "Select Matrices:", choices = NULL, multiple = TRUE),
+              selectInput(ns("end_time_col"), "Map End Time Column:", choices = NULL),
+              checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = FALSE),
+              selectInput(ns("param_select"), "Select Parameters:", choices = NULL, multiple = TRUE),
+              checkboxGroupInput(
+                ns("interval_types"),
+                "Select Interval Types:",
+                c("Samples" = "sample", "Profiles" = "profile"),
+                selected = c("sample", "profile")
+              ),
+              actionButton(ns("submit_btn"), "Submit")
+            )
+          ),
+          card(
+            reactableOutput(ns("results_table"))
+          )
       )
-    ),
-    card(
-      reactableOutput(ns("results_table"))
     )
   )
 }
+
 
 # Server function
 excretion_server <- function(id, input_pknca_data) {
@@ -39,15 +47,35 @@ excretion_server <- function(id, input_pknca_data) {
     observe({
       req(input_pknca_data())
       
-      available_cols <- names(input_pknca_data()$conc$data)
+      conc_data <- input_pknca_data()$conc$data
+      volume_missing <- !all(c("VOLUME", "VOLUMEU") %in% names(conc_data))
       
-      updateSelectInput(session, "matrix_select", choices = unique(input_pknca_data()$conc$data$PCSPEC))
-      updateSelectInput(session, "end_time_col", choices = available_cols)
+      if (volume_missing) {
+        session$sendCustomMessage("showOverlay", list(id = session$ns("excretion_overlay")))
+      } else {
+        session$sendCustomMessage("hideOverlay", list(id = session$ns("excretion_overlay")))
+      }
+      
+      available_cols <- names(conc_data)
+      # Check if VOLUME exists before trying to filter
+      if (!volume_missing) {
+        pcspecs <- conc_data %>%
+          filter(!is.na(VOLUME)) %>%
+          distinct(PCSPEC) %>%
+          pull(PCSPEC)
+      } else {
+        pcspecs <- character(0)
+      }
+      
+      updateSelectInput(session, "matrix_select", choices = pcspecs,
+                        selected = if("Urine" %in% pcspecs) "Urine" else NULL)
+      updateSelectInput(session, "end_time_col", choices = available_cols,
+                        selected = if("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
       updateSelectInput(session, "param_select", choices = pknca_cdisc_terms %>%
                           filter(startsWith(PPTESTCD, "RCA") | 
-                                   startsWith(PPTESTCD, "RENAL") | 
                                    startsWith(PPTESTCD, "FREX")) %>%
-                          pull(PKNCA, PPTESTCD))
+                          pull(PKNCA, PPTESTCD),
+                        selected = c("ae"))
     })
     
     # Perform calculations
@@ -124,7 +152,7 @@ excretion_server <- function(id, input_pknca_data) {
       # Combine dose profile intervals and excretion sample intervals
       data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
         filter(type_interval %in% input$interval_types) %>%
-        arrange(PCSPEC, start)
+        arrange(PCSPEC, start, end)
 
       # Run PKNCA analysis
       results <- suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
@@ -147,7 +175,8 @@ excretion_server <- function(id, input_pknca_data) {
                                  paste0(PPTESTCD, "[", PPSTRESU, "]"),
                                  PPTESTCD)) %>%
         select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude,) %>%
-        pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
+        pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)%>%
+        select(-DOSNOA)
       
       # Add "label" attribute to columns
       df <- add_label_attribute(df, analysis_result())

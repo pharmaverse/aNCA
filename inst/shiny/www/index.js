@@ -23,3 +23,23 @@ const buttonTimeout = function(selector, debounce, placeholder, ready) {
     $(selector).html(ready).prop("disabled", false);
   }, debounce)
 }
+
+/**
+ * Shows overlay div by ID
+ */
+Shiny.addCustomMessageHandler("showOverlay", function(message) {
+  const el = document.getElementById(message.id);
+  if (el) {
+    el.style.display = 'block';
+  }
+});
+
+/**
+ * Hides overlay div by ID
+ */
+Shiny.addCustomMessageHandler("hideOverlay", function(message) {
+  const el = document.getElementById(message.id);
+  if (el) {
+    el.style.display = 'none';
+  }
+});
