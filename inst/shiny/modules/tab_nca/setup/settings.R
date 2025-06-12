@@ -1,4 +1,3 @@
-
 #' NCA Settings Server Module
 #'
 #' This module handles logic for basic / general settings for the NCA run. Generates appropriate
@@ -115,6 +114,10 @@ settings_ui <- function(id) {
         .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
         .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
         .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
+      ),
+      accordion_panel(
+        title = "Ratio Calculations",
+        ratio_calculations_table_ui(ns("ratio_calculations"))
       ),
       id = "acc",
       open = c("General Settings", "Parameter Selection")
@@ -360,6 +363,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       })
     })
 
+    # Ratio Calculations Table
+    ratio_calculations <- ratio_calculations_table_server(
+      id = "ratio_calculations",
+      adnca_data = adnca_data,
+      nca_params = nca_params
+    )
+
     settings <- reactive({
       req(input$select_analyte) # Wait on general settings UI to be loaded
       list(
@@ -373,6 +383,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           impute_c0 = input$should_impute_c0
         ),
         partial_aucs = auc_data(),
+        # ratio_calculations = ratio_calculations$ratio_table(),
         flags = list(
           adj.r.squared = list(
             is.checked = input$adj.r.squared_rule,
