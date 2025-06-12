@@ -1,3 +1,5 @@
+## ------------------------  Placeholder for test-fliter_breaks.R
+
 ?apply_labels
 ?pckg01
 
@@ -19,6 +21,13 @@
    )
  }
 ###
+p  <- ggplot(mtcars, aes(mpg)) +
+  geom_histogram()
+
+filter_breaks(plot = p)
+
+### ------------------------  ignore ...
+
 describe("apply_filters works correctly", {
   test_that("apply_filters works with ==", {
     filter <- list(
