@@ -264,19 +264,37 @@ format_pkncadata_intervals <- function(pknca_conc,
 
 .verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
   
-  pknca_intervals <- pknca_intervals %>%
-    mutate(across(
-      any_of(all_pknca_params),
-      ~ case_when(
-        !is.na(VOLUME) & 
-          (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ cur_column() %in% params,
-        !is.na(VOLUME) ~ FALSE,
-        is.na(VOLUME) &
-          (cur_column() %in% c("ae", "fe") | startsWith(cur_column(), "clr.")) ~ FALSE,
-        is.na(VOLUME) ~ cur_column() %in% params
-      )
-    ))  %>%
-    select(-VOLUME)  # Remove VOLUME column if it exists
+  has_volume <- "VOLUME" %in% names(pknca_intervals)
+  
+  if (has_volume) {
+    pknca_intervals <- pknca_intervals %>%
+      mutate(across(
+        any_of(all_pknca_params),
+        ~ {
+          col <- cur_column()
+          case_when(
+            !is.na(VOLUME) & (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ col %in% params,
+            !is.na(VOLUME) ~ FALSE,
+            is.na(VOLUME) & (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ FALSE,
+            is.na(VOLUME) ~ col %in% params
+          )
+        }
+      )) %>%
+      select(-VOLUME)
+    
+  } else {
+    pknca_intervals <- pknca_intervals %>%
+      mutate(across(
+        any_of(all_pknca_params),
+        ~ {
+          col <- cur_column()
+          case_when(
+            (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ FALSE,
+            TRUE ~ col %in% params
+          )
+        }
+      ))
+  }
   
   return(pknca_intervals)
 }
