@@ -85,7 +85,7 @@ excretion_server <- function(id, input_pknca_data) {
                                                    params = input$param_select) %>%
         mutate(type_interval = "profile") %>%
         filter(PCSPEC %in% input$matrix_select)
-      browser()
+
       # excretion sample intervals
       # add one row with start AFRLT and end_time_col
       end_time_col <- input$end_time_col
@@ -125,7 +125,8 @@ excretion_server <- function(id, input_pknca_data) {
     
     results_output <- reactive({
       req(analysis_result())
-      
+
+      conc_groups <- unname(unlist(input_pknca_data()$conc$columns$groups))
       #pivot wider
       df <- analysis_result()$result %>%
         mutate(PPTESTCD = ifelse(PPSTRESU != "",
@@ -134,17 +135,7 @@ excretion_server <- function(id, input_pknca_data) {
         select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude,) %>%
         pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
       
-      exclude <- analysis_result()$result %>%
-        select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU,)  %>%
-        pivot_wider(names_from = PPTESTCD, values_from = exclude, names_prefix = "exclude.")
-      
-      main_results <- left_join(
-        df,
-        exclude,
-        by = intersect(names(df), names(exclude))
-      )
-      
-      main_results
+      df
     })
     
     # Render results
