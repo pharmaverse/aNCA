@@ -177,6 +177,7 @@ calculate_f <- function(res_nca, f_aucs) {
 #' bioavailability calculations requested based on the AUCs provided in `f_aucs`.
 #'
 #' @importFrom dplyr bind_rows
+#' @export
 add_f_to_pknca_results <- function(res_nca, f_aucs) {
   f_results <- pknca_calculate_f(res_nca, f_aucs)
   res_nca$result <- bind_rows(res_nca$result, f_results)
