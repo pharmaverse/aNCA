@@ -12,6 +12,14 @@ excretion_ui <- function(id) {
         checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = FALSE),
         selectInput(ns("param_select"), "Select Parameters:", 
                     choices = NULL, multiple = TRUE),
+        checkboxGroupInput( 
+          ns("interval_types"), 
+          "Select Interval Types:", 
+          c( 
+            "Samples" = "sample", 
+            "Profiles" = "profile"
+          ) 
+        ),
         actionButton(ns("submit_btn"), "Submit")
       )
     ),
@@ -115,10 +123,15 @@ excretion_server <- function(id, input_pknca_data) {
       
       # Combine dose profile intervals and excretion sample intervals
       data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
+        filter(type_interval %in% input$interval_types) %>%
         arrange(PCSPEC, start)
 
       # Run PKNCA analysis
-      results <- suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE))
+      results <- suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
+        # Apply standard CDISC names
+        mutate(
+          PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+        )
       
       results
     })
@@ -129,11 +142,15 @@ excretion_server <- function(id, input_pknca_data) {
       conc_groups <- unname(unlist(input_pknca_data()$conc$columns$groups))
       #pivot wider
       df <- analysis_result()$result %>%
+        mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
         mutate(PPTESTCD = ifelse(PPSTRESU != "",
                                  paste0(PPTESTCD, "[", PPSTRESU, "]"),
                                  PPTESTCD)) %>%
         select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude,) %>%
         pivot_wider(names_from = PPTESTCD, values_from = PPSTRES)
+      
+      # Add "label" attribute to columns
+      df <- add_label_attribute(df, analysis_result())
       
       df
     })
