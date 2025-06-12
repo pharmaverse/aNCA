@@ -47,17 +47,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   ]
 
   # Rename necessary columns
-  colnames(dataset) <- sapply(colnames(dataset), function(col) {
-
-    for (group in names(selected_cols)) {
-      column_names <- names(selected_cols[[group]])
-      mapped_values <- selected_cols[[group]]
-      if (col %in% mapped_values) {
-        return(column_names[which(mapped_values == col)])
-      }
-    }
-    col
-  })
+  dataset <- rename_columns(dataset, selected_cols)
 
   # Handle special case for NCA_PROFILE
   nca_profile_col <- mapping$select_NCA_PROFILE
@@ -89,7 +79,24 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   dataset %>% anti_join(conc_duplicates, by = colnames(conc_duplicates))
 }
 
-
+#' Internal helper to rename dataset columns based on selected column mappings.
+#'
+#' @param dataset A data frame whose columns are to be renamed.
+#' @param selected_cols A named list of vectors representing mapped columns
+#'
+#' @returns A data frame with renamed columns based on the provided mappings.
+rename_columns <- function(dataset, selected_cols) {
+  colnames(dataset) <- sapply(colnames(dataset), function(col) {
+    for (group in names(selected_cols)) {
+      mapped_values <- selected_cols[[group]]
+      if (col %in% mapped_values) {
+        return(names(mapped_values)[which(mapped_values == col)])
+      }
+    }
+    col
+  })
+  dataset
+}
 
 #' Internal helper to check for missing or duplicate column mappings.
 #'

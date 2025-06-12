@@ -69,7 +69,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
-  volume_column = "VOLUME"
+  volume_column <- "VOLUME"
 
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
@@ -108,9 +108,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   df_conc$REASON <- NA
   df_conc$exclude_half.life <- FALSE
 
-  
   # Create PKNCA conc object
-  if(volume_column %in% colnames(df_conc)) {
+  if (volume_column %in% colnames(df_conc)) {
 
     # ensure units are correct for excretion calculations
     df_conc <- convert_volume_units(df_conc)
@@ -127,7 +126,6 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
       amountu = "AMOUNTU"
     )
 
-    
   } else {
     # Create PKNCA objects
     pknca_conc <- PKNCA::PKNCAconc(

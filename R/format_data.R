@@ -231,7 +231,9 @@ format_pkncadata_intervals <- function(pknca_conc,
     }
     ) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
+    select(any_of(c("start", "end",
+                    conc_groups, "TIME_DOSE",
+                    "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
@@ -246,26 +248,26 @@ format_pkncadata_intervals <- function(pknca_conc,
 
 #' Conditionally Verify and Override PK Parameters Based on Sample Type
 #'
-#' This helper function updates a PKNCA intervals data frame by verifying and overriding 
-#' specific pharmacokinetic parameters depending on whether the sample is identified 
-#' as excreta (e.g., urine, feces, bile). Parameters related to excretion 
-#' (such as `ae`, `fe`, and those starting with `"clr."`) are selectively enabled 
+#' This helper function updates a PKNCA intervals data frame by verifying and overriding
+#' specific pharmacokinetic parameters depending on whether the sample is identified
+#' as excreta (e.g., urine, feces, bile). Parameters related to excretion
+#' (such as `ae`, `fe`, and those starting with `"clr."`) are selectively enabled
 #' only for excreta samples and set to `FALSE` otherwise.
-#' @param pknca_intervals A data frame containing PKNCA interval information, 
-#'   including pharmacokinetic parameters and a `PCSPEC` column that describes the 
+#' @param pknca_intervals A data frame containing PKNCA interval information,
+#'   including pharmacokinetic parameters and a `PCSPEC` column that describes the
 #'   specimen type.
-#' @param params A character vector of parameter names selected by the user. 
+#' @param params A character vector of parameter names selected by the user.
 #'   Only these parameters will remain `TRUE` for excreta types.
-#' @param all_pknca_params A character vector of all pharmacokinetic parameters 
+#' @param all_pknca_params A character vector of all pharmacokinetic parameters
 #'   that may be present in `pknca_intervals`. These will be checked and updated accordingly.
-#'   
-#'  @returns A modified version of the `pknca_intervals` data frame with appropriate 
+#'
+#'  @returns A modified version of the `pknca_intervals` data frame with appropriate
 #'  parameters updated based on the specimen type.
 
 .verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
-  
+
   has_volume <- "VOLUME" %in% names(pknca_intervals)
-  
+
   if (has_volume) {
     pknca_intervals <- pknca_intervals %>%
       mutate(across(
@@ -281,7 +283,7 @@ format_pkncadata_intervals <- function(pknca_conc,
         }
       )) %>%
       select(-VOLUME)
-    
+
   } else {
     pknca_intervals <- pknca_intervals %>%
       mutate(across(
@@ -295,6 +297,6 @@ format_pkncadata_intervals <- function(pknca_conc,
         }
       ))
   }
-  
+
   return(pknca_intervals)
 }

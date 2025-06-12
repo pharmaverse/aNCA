@@ -60,7 +60,7 @@ additional_analysis_server <- function(id, data, grouping_vars) {
 
     # Call module for Matrix Ratio Analysis
     non_nca_ratio_server(id = "matrix_ratio_analysis", data, grouping_vars)
-    
+
     excretion_server("excretion", input_pknca_data = data)
 
   })

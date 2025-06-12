@@ -192,8 +192,10 @@ data_mapping_ui <- function(id) {
             "Numeric format. Only required for infusion studies,
                     otherwise select NA"
           ),
-          .column_mapping_widget(ns, "VOLUME", "Numeric format. Only required for urine/excretion studies."),
-          .column_mapping_widget(ns, "VOLUMEU", "Character format. Only required for urine/excretion studies.")
+          .column_mapping_widget(ns, "VOLUME", "Numeric format.
+                                 Only required for urine/excretion studies."),
+          .column_mapping_widget(ns, "VOLUMEU", "Character format.
+                                 Only required for urine/excretion studies.")
         ),
 
         input_task_button(ns("submit_columns"), "Submit Mapping")
@@ -226,9 +228,9 @@ data_mapping_server <- function(id, adnca_data) {
     mapping <- reactive({
       input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
       mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
-      
-      if(mapping_list$select_VOLUME == "") {
-       mapping_list <- mapping_list[!names(mapping_list) %in% c("select_VOLUME", "select_VOLUMEU")]
+
+      if (mapping_list$select_VOLUME == "") {
+        mapping_list <- mapping_list[!names(mapping_list) %in% c("select_VOLUME", "select_VOLUMEU")]
       }
       mapping_list
     })
