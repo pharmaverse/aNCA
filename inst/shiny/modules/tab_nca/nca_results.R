@@ -14,7 +14,8 @@ nca_results_ui <- function(id) {
     ),
     units_table_ui(ns("units_table")),
     reactableOutput(ns("myresults")),
-    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
+    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data"),
+    downloadButton(ns("download_zip"), "Download All Results as ZIP")
   )
 }
 
@@ -33,9 +34,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
     session$userData$results_dir <- reactive({
       req(res_nca())
-      project <- project_name()
-      datetime <- attr(res_nca(), "provenance")$datetime
-      paste0(project, "/", format(datetime, "%d-%m-%Y_%H"))
+
+      tempdir()
     })
 
     final_results <- reactive({
@@ -108,6 +108,34 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
           )
         )
     })
+
+    observeEvent(final_results(), {
+      req(final_results())
+
+      # Create a temporary directory for saving outputs
+      temp_dir <- tempdir()
+      results_dir <- file.path(temp_dir, "NCA_results")
+      dir.create(results_dir, recursive = TRUE)
+
+      # Save the results in the temporary directory
+      save_output(
+        output = final_results(),
+        output_path = file.path(session$userData$project_name, "pivoted_results.csv")
+      )
+    })
+
+    # Provide the zip file for download
+    output$download_zip <- downloadHandler(
+      filename = function() {
+          project <- session$userData$project_name
+          datetime <- attr(res_nca(), "provenance")$datetime
+          paste0(project, "/", format(datetime, "%d-%m-%Y"))
+      },
+      content = function(fname) {
+        res_tmp_dir <- session$userData$results_dir
+        utils::zip(zipfile = fname, files = list.files(res_tmp_dir, full.names = TRUE))
+      }
+    )
 
     observeEvent(final_results(), {
       req(final_results())
