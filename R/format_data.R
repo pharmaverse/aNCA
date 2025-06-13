@@ -201,7 +201,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
     group_by(!!!syms(dose_groups)) %>%
-    mutate(one_dose = ifelse(length(unique(DOSNOA)) == 1, TRUE, FALSE)) %>%
+    mutate(one_dose = length(unique(DOSNOA)) == 1) %>%
     ungroup() %>%
     select(any_of(c(dose_groups,
                     pknca_dose$columns$time, "DOSNOA", "one_dose")))
