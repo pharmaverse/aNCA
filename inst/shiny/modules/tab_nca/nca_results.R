@@ -109,31 +109,19 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
         )
     })
 
-    observeEvent(final_results(), {
-      req(final_results())
-
-      # Create a temporary directory for saving outputs
-      temp_dir <- tempdir()
-      results_dir <- file.path(temp_dir, "NCA_results")
-      dir.create(results_dir, recursive = TRUE)
-
-      # Save the results in the temporary directory
-      save_output(
-        output = final_results(),
-        output_path = file.path(session$userData$project_name, "pivoted_results.csv")
-      )
-    })
-
     # Provide the zip file for download
     output$download_zip <- downloadHandler(
       filename = function() {
-          project <- session$userData$project_name
+          project <- session$userData$project_name()
           datetime <- attr(res_nca(), "provenance")$datetime
-          paste0(project, "/", format(datetime, "%d-%m-%Y"))
+          paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
-        res_tmp_dir <- session$userData$results_dir
-        utils::zip(zipfile = fname, files = list.files(res_tmp_dir, full.names = TRUE))
+        res_tmp_dir <- session$userData$results_dir()
+        files <- list.files(res_tmp_dir, full.names = TRUE, pattern = ".csv", recursive = TRUE)
+        setwd(res_tmp_dir)
+        files <- gsub(paste0(res_tmp_dir, "/"), "", fixed = TRUE, files)
+        utils::zip(zipfile = fname, files = files)
       }
     )
 
@@ -143,7 +131,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       # Save the results in the output folder
       save_output(
         output = final_results(),
-        output_path = paste0(results_dir(), "/pivoted_results.csv")
+        output_path = paste0(session$userData$results_dir(), "/nca_results/pivoted_results.csv")
       )
 
       param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
@@ -211,7 +199,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
-        paste0(project_name(), "-pivoted_NCA_results.csv")
+        paste0(session$userData$project_name(), "-pivoted_NCA_results.csv")
       },
       content = function(file) {
         write.csv(output_results(), file, row.names = FALSE)
