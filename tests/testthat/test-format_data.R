@@ -317,18 +317,18 @@ describe("format_pkncadata_intervals", {
   })
 
   it("sets end to last time point if TAU= NA and multiple dose", {
-    pknca_conc <- pknca_conc
-    pknca_conc$data <- pknca_conc$data %>%
+    pknca_conc_na_tau <- pknca_conc
+    pknca_conc_na_tau$data <- pknca_conc$data %>%
       mutate(TAU = NA) # Set TAU to NA
 
-    pknca_dose <- pknca_dose
-    pknca_dose$data <- pknca_dose$data %>%
+    pknca_dose_na_tau <- pknca_dose
+    pknca_dose_na_tau$data <- pknca_dose$data %>%
       mutate(TAU = NA)  # Set TAU to NA
 
-    result_single_dose <- format_pkncadata_intervals(pknca_conc,
-                                                     pknca_dose,
+    result_single_dose <- format_pkncadata_intervals(pknca_conc_na_tau,
+                                                     pknca_dose_na_tau,
                                                      params = params)
-    expect_equal(result_single_dose$end[4], max(pknca_conc$data$AFRLT, na.rm = TRUE))
+    expect_equal(result_single_dose$end[4], max(pknca_conc_na_tau$data$AFRLT, na.rm = TRUE))
   })
 
 
