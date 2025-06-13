@@ -93,6 +93,21 @@ describe("PKNCA_create_data_object", {
       "Missing values detected in grouping columns: PCSPEC"
     )
   })
+  
+  it("handles VOLUME column correctly", {
+    # Create a data frame with VOLUME column
+    volume_data <- simple_data
+    volume_data$VOLUME <- c(1, 2, 3, 4, 5, 6)
+    volume_data$VOLUMEU <- "mL"
+    
+    # Create PKNCAdata object
+    pknca_volume_data <- PKNCA_create_data_object(volume_data)
+    
+    # Check if VOLUME and VOLUMEU are included in the object
+    expect_true("VOLUME" %in% names(pknca_volume_data$conc$data))
+    expect_true("VOLUMEU" %in% names(pknca_volume_data$conc$data))
+    expect_true("AMOUNTU" %in% names(pknca_volume_data$conc$data))
+  })
 })
 
 

@@ -54,6 +54,10 @@
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
+#' @importFrom dplyr filter select arrange across
+#' @importFrom purrr pmap_chr
+#' @importFrom units set_units deparse_unit
+#'
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
@@ -65,7 +69,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
+  volume_column <- "VOLUME"
+
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
+
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -95,27 +102,47 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     )
   }
 
-  # Create dosing data
-  df_dose <- format_pkncadose_data(
-    pkncaconc_data = df_conc,
-    group_columns = c(group_columns, usubjid_column)
-  )
-
   # Set default settings
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- NA
   df_conc$exclude_half.life <- FALSE
 
-  # Create PKNCA objects
-  pknca_conc <- PKNCA::PKNCAconc(
-    df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
-    exclude_half.life = "exclude_half.life",
-    include_half.life = "include_half.life",
-    time.nominal = "NFRLT",
-    concu = "AVALU",
-    timeu = "RRLTU"
+  # Create PKNCA conc object
+  if (volume_column %in% colnames(df_conc)) {
+
+    # ensure units are correct for excretion calculations
+    df_conc <- convert_volume_units(df_conc)
+
+    pknca_conc <- PKNCA::PKNCAconc(
+      df_conc,
+      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      include_half.life = "include_half.life",
+      time.nominal = "NFRLT",
+      volume = volume_column,
+      concu = "AVALU",
+      timeu = "RRLTU",
+      amountu = "AMOUNTU"
+    )
+
+  } else {
+    # Create PKNCA objects
+    pknca_conc <- PKNCA::PKNCAconc(
+      df_conc,
+      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      include_half.life = "include_half.life",
+      time.nominal = "NFRLT",
+      concu = "AVALU",
+      timeu = "RRLTU"
+    )
+  }
+
+  # Create dosing data
+  df_dose <- format_pkncadose_data(
+    pkncaconc_data = df_conc,
+    group_columns = c(group_columns, usubjid_column)
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
