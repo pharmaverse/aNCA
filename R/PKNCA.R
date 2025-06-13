@@ -184,7 +184,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
-#' @param selected_dosno User selected dose numbers/profiles
+#' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
@@ -202,7 +202,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   auc_data,
   method,
   selected_analytes,
-  selected_dosno,
+  selected_profile,
   selected_pcspec,
   params,
   should_impute_c0 = TRUE
@@ -238,7 +238,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      NCA_PROFILE %in% selected_dosno,
+      NCA_PROFILE %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
 
@@ -394,13 +394,12 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 #' PKNCA_impute_method_start_logslope(conc, time, start, end)
 
 PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., options = list()) { # nolint
-
   d_conc_time <- data.frame(conc = conc, time = time)
   if (!any(time == start)) {
     all_concs <- conc[time >= start  &  time <= end]
     all_times <- time[time >= start  &  time <= end]
     if (!all(is.na(all_concs))) {
-      c0 <- PKNCA::pk.calc.c0(all_concs, all_times, method = "logslope")
+      c0 <- PKNCA::pk.calc.c0(all_concs, all_times, time.dose = start, method = "logslope")
       if (!is.na(c0)) {
         d_conc_time <- rbind(d_conc_time, data.frame(time = start, conc = c0))
         d_conc_time <- d_conc_time[order(d_conc_time$time), ]
