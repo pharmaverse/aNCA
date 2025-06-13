@@ -130,6 +130,9 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #'    (i.e., `1 unit_target / unit_original`) and retries.
 #'   \item Leaves units unchanged for non-excreta samples or already-valid combinations.
 #' }
+#' 
+#' The function assumes that the `AVALU` column contains concentration units
+#' in the form of "x/y" (e.g., "ug/mL", "mg/g").
 #'
 #' @importFrom units set_units drop_units
 #' @importFrom stringr str_split str_trim

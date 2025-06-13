@@ -58,6 +58,9 @@ The function:
 (i.e., \verb{1 unit_target / unit_original}) and retries.
 \item Leaves units unchanged for non-excreta samples or already-valid combinations.
 }
+
+The function assumes that the \code{AVALU} column contains concentration units
+in the form of "x/y" (e.g., "ug/mL", "mg/g").
 }
 \examples{
 df <- data.frame(
