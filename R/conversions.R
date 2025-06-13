@@ -153,85 +153,59 @@ convert_volume_units <- function(df,
                                  avalu = "AVALU",
                                  volume = "VOLUME",
                                  volumeu = "VOLUMEU") {
-
+  
   required_cols <- c(avalu, volume, volumeu)
   if (!all(required_cols %in% names(df))) {
     return(df)
   }
-
+  
   for (i in seq_len(nrow(df))) {
     concu <- df[[avalu]][i]
     vol <- df[[volume]][i]
     volu <- df[[volumeu]][i]
-
+    
     if (any(is.na(c(concu, vol, volu)))) next
-
-    tryCatch({
-      # Extract denominator unit from AVALU
-      unit_parts <- str_split(concu, "/", simplify = TRUE)
-      if (ncol(unit_parts) != 2) {
-        warning(sprintf("Row %d: Could not parse AVALU '%s' as 'x/y'", i, avalu))
-        next
-      }
-
-      denom_unit <- str_trim(unit_parts[2])
-
-      # try to create a unit-aware volume
-      u_vol <- tryCatch({
-        set_units(vol, volu, mode = "standard")
-      }, error = function(e) {
-        return(NULL)
-      })
-      
-      if (is.null(u_vol)) next
-
-      # Try direct conversion of volume to concentration denominator unit
-      conversion_success <- FALSE
-      try({
-        u_vol_new <- set_units(u_vol, denom_unit, mode = "standard")
-        conversion_success <- TRUE
-      }, silent = TRUE)
-
-      # If direct conversion fails, try applying neutral density (1 denom_unit / volu)
-      if (!conversion_success) {
-        try({
-          density_unit <- paste(denom_unit, "/", volu)
+    
+    unit_parts <- str_split(concu, "/", simplify = TRUE)
+    if (ncol(unit_parts) != 2) next
+    
+    denom_unit <- str_trim(unit_parts[2])
+    
+    result <- tryCatch({
+      u_vol <- set_units(vol, volu, mode = "standard")
+      u_vol_new <- tryCatch(
+        set_units(u_vol, denom_unit, mode = "standard"),
+        error = function(e) {
+          # Attempt indirect conversion via neutral density
+          density_unit <- paste0(denom_unit, "/", volu)
           density <- set_units(1, density_unit, mode = "standard")
-          u_vol_new <- u_vol * density
-          conversion_success <- TRUE
-        }, silent = TRUE)
-      }
-
-      # If conversion worked, apply it to the dataframe
-      if (conversion_success && !is.null(u_vol_new)) {
-        df[[volume]][i] <- drop_units(u_vol_new)
-        df[[volumeu]][i] <- denom_unit
-      } else {
-        warning(sprintf("Row %d: Could not convert volume from '%s' to '%s'", i, volu, denom_unit))
-      }
-
+          u_vol * density
+        }
+      )
+      df[[volume]][i] <- drop_units(u_vol_new)
+      df[[volumeu]][i] <- denom_unit
+      TRUE
     }, error = function(e) {
-      warning(sprintf("Row %d: Unit conversion error — %s", i, e$message))
+      FALSE
     })
+  
   }
-
+  
   df <- df %>%
-    # Create amountu column as AVALU * VOLUMEU
     mutate(
       AMOUNTU = pmap_chr(
         list(!!sym(avalu), !!sym(volumeu)),
-        function(avalu, volumeu) {
+        function(avalu_val, volumeu_val) {
           tryCatch({
-            if (is.na(avalu) || is.na(volumeu)) return(NA_character_)
-            u1 <- set_units(1, avalu, mode = "standard")
-            u2 <- set_units(1, volumeu, mode = "standard")
+            if (is.na(avalu_val) || is.na(volumeu_val)) return(NA_character_)
+            u1 <- set_units(1, avalu_val, mode = "standard")
+            u2 <- set_units(1, volumeu_val, mode = "standard")
             deparse_unit(u1 * u2)
           }, error = function(e) {
-            warning(sprintf("Could not convert units: %s", e$message))
-            return(NA_character_) 
+            NA_character_
           })
         })
     )
-
+  
   return(df)
 }

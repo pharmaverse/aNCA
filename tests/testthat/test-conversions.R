@@ -168,7 +168,7 @@ describe("convert_volume_units()", {
     expect_true(is.na(result$AMOUNTU))
   })
 
-  it("should warn and skip invalid AVALU formats", {
+  it("should handle invalid AVALU formats", {
     df <- data.frame(
       PCSPEC = c("urine"),
       AVAL = c(100),
@@ -177,10 +177,8 @@ describe("convert_volume_units()", {
       VOLUMEU = c("L"),
       stringsAsFactors = FALSE
     )
-    expect_warning(
-      result <- convert_volume_units(df),
-      "Could not parse"
-    )
+    result <- convert_volume_units(df)
+    expect_true(result$AMOUNTU[1] == "L ug")
   })
 
   it("should handle multiple rows correctly", {
@@ -208,7 +206,7 @@ describe("convert_volume_units()", {
     expect_equal(result, df)  # No conversion applied
   })
   
-  it("gives a warning if conversion is not possible", {
+  it("returns NA if conversion is not possible", {
     df <- data.frame(
       PCSPEC = c("urine"),
       AVAL = c(100),
@@ -218,9 +216,8 @@ describe("convert_volume_units()", {
       stringsAsFactors = FALSE
     )
 
-    expect_warning(
-      result <- convert_volume_units(df)
-    )
+    result <- convert_volume_units(df)
+    expect_true(is.na(result$AMOUNTU))
 
   })
 })
