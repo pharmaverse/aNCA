@@ -617,6 +617,7 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
     }
   }
   df[strata_cols]
+}
 
 #' Exclude NCA results based on user-defined rules over the half-life related parameters
 #' This function applies exclusion rules to the NCA results based on user-defined parameters.
