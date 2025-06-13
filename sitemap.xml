@@ -41,8 +41,10 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncaconc_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncadata_intervals.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncadose_data.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkconc_ind_lin.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkconc_ind_log.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg01_lin.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg01_log.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg02_lin.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg02_log.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/general_lineplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/general_meanplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_conversion_factor.html</loc></url>
@@ -58,6 +60,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/parse_annotation.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pivot_wider_pknca_results.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg01.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg02.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_cdisc_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
