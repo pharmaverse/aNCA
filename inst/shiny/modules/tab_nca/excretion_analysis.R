@@ -1,4 +1,13 @@
-# UI function
+
+#' NCA Excretion Analysis Module
+#'
+#' This module handles logic for excretion analysis in NCA.
+#' It allows users to select matrices, map end time columns,
+#' adjust for body weight, and select parameters for analysis.
+#' 
+#' @param id A character string used to uniquely identify the module.
+#' @param input_pknca_data the input data, which should be a PKNCAdata object
+#' 
 excretion_ui <- function(id) {
   ns <- NS(id)
 
@@ -87,12 +96,6 @@ excretion_server <- function(id, input_pknca_data) {
       doseu <- data$dose$columns$doseu
       weight_col <- "WEIGHT"
       weightu <- "WEIGHTU"
-      # Check if VOLUME and VOLUMEU columns exist
-      if (!("VOLUME" %in% names(data$conc$data)) || !("VOLUMEU" %in% names(data$conc$data))) {
-        showNotification("VOLUME and VOLUMEU columns are required in the data.
-                         Please go back to mapping.", type = "error")
-        return(NULL)
-      }
 
       # Adjust dose by bodyweight if selected
       if (input$adjust_bw) {
