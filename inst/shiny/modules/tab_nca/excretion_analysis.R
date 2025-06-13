@@ -4,10 +4,10 @@
 #' This module handles logic for excretion analysis in NCA.
 #' It allows users to select matrices, map end time columns,
 #' adjust for body weight, and select parameters for analysis.
-#' 
+#'
 #' @param id A character string used to uniquely identify the module.
 #' @param input_pknca_data the input data, which should be a PKNCAdata object
-#' 
+#'
 excretion_ui <- function(id) {
   ns <- NS(id)
 

@@ -130,7 +130,7 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #'    (i.e., `1 unit_target / unit_original`) and retries.
 #'   \item Leaves units unchanged for non-excreta samples or already-valid combinations.
 #' }
-#' 
+#'
 #' The function assumes that the `AVALU` column contains concentration units
 #' in the form of "x/y" (e.g., "ug/mL", "mg/g").
 #'
@@ -176,8 +176,14 @@ convert_volume_units <- function(df,
 
       denom_unit <- str_trim(unit_parts[2])
 
-      # Create unit-aware volume
-      u_vol <- set_units(vol, volu, mode = "standard")
+      # try to create a unit-aware volume
+      u_vol <- tryCatch({
+        set_units(vol, volu, mode = "standard")
+      }, error = function(e) {
+        return(NULL)
+      })
+      
+      if (is.null(u_vol)) next
 
       # Try direct conversion of volume to concentration denominator unit
       conversion_success <- FALSE
@@ -197,8 +203,8 @@ convert_volume_units <- function(df,
       }
 
       # If conversion worked, apply it to the dataframe
-      if (conversion_success) {
-        df[[volume]][i] <- set_units(u_vol_new, NULL)
+      if (conversion_success && !is.null(u_vol_new)) {
+        df[[volume]][i] <- drop_units(u_vol_new)
         df[[volumeu]][i] <- denom_unit
       } else {
         warning(sprintf("Row %d: Could not convert volume from '%s' to '%s'", i, volu, denom_unit))
@@ -215,15 +221,16 @@ convert_volume_units <- function(df,
       AMOUNTU = pmap_chr(
         list(!!sym(avalu), !!sym(volumeu)),
         function(avalu, volumeu) {
-          if (is.na(avalu) || is.na(volumeu)) {
-            return(NA_character_)
-          } else {
+          tryCatch({
+            if (is.na(avalu) || is.na(volumeu)) return(NA_character_)
             u1 <- set_units(1, avalu, mode = "standard")
             u2 <- set_units(1, volumeu, mode = "standard")
             deparse_unit(u1 * u2)
-          }
-        }
-      )
+          }, error = function(e) {
+            warning(sprintf("Could not convert units: %s", e$message))
+            return(NA_character_) 
+          })
+        })
     )
 
   return(df)
