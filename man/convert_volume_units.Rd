@@ -6,7 +6,6 @@
 \usage{
 convert_volume_units(
   df,
-  pcspec = "PCSPEC",
   avalu = "AVALU",
   volume = "VOLUME",
   volumeu = "VOLUMEU"
@@ -15,13 +14,14 @@ convert_volume_units(
 \arguments{
 \item{df}{A data frame containing pharmacokinetic data.}
 
-\item{pcspec}{A character string specifying the column name for sample type (default: "PCSPEC").}
+\item{avalu}{A character string specifying the column name for
+concentration values (default: "AVALU").}
 
-\item{avalu}{A character string specifying the column name for concentration values (default: "AVALU").}
+\item{volume}{A character string specifying the column name for
+volume or mass values (default: "VOLUME").}
 
-\item{volume}{A character string specifying the column name for volume or mass values (default: "VOLUME").}
-
-\item{volumeu}{A character string specifying the column name for volume or mass units (default: "VOLUMEU").
+\item{volumeu}{A character string specifying the column name for
+volume or mass units (default: "VOLUMEU").
 It must contain the following columns:
 \describe{
 \item{PCSPEC}{Sample type (e.g., urine, feces, bile, plasma).}
@@ -32,8 +32,9 @@ It must contain the following columns:
 }}
 }
 \value{
-A modified data frame with \code{VOLUME} and \code{VOLUMEU} converted (where necessary) so that
-multiplying \code{AVAL * VOLUME} results in a unit with consistent dimensionality (typically mass or moles).
+A modified data frame with \code{VOLUME} and \code{VOLUMEU} converted (where necessary)
+so that multiplying \code{AVAL * VOLUME} results in a unit with consistent dimensionality
+(typically mass or moles).
 A new column \code{AMOUNTU} is created to represent the product of \code{AVALU} and \code{VOLUMEU}.
 }
 \description{
@@ -51,11 +52,10 @@ other data unchanged.
 
 The function:
 \enumerate{
-\item Identifies rows where \code{PCSPEC} contains "urine", "feces", or "bile" (case-insensitive).
 \item Parses the denominator from \code{AVALU} (e.g., "ug/mL" → "mL").
 \item Attempts to convert the corresponding \code{VOLUME} to that unit.
-\item If direct conversion fails, assumes a neutral density of 1 (i.e., \verb{1 unit_target / unit_original})
-and retries.
+\item If direct conversion fails, assumes a neutral density of 1
+(i.e., \verb{1 unit_target / unit_original}) and retries.
 \item Leaves units unchanged for non-excreta samples or already-valid combinations.
 }
 }

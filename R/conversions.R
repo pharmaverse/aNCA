@@ -101,7 +101,6 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' other data unchanged.
 #'
 #' @param df A data frame containing pharmacokinetic data.
-#' @param pcspec A character string specifying the column name for sample type (default: "PCSPEC").
 #' @param avalu A character string specifying the column name for
 #' concentration values (default: "AVALU").
 #' @param volume A character string specifying the column name for
@@ -125,7 +124,6 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' @details
 #' The function:
 #' \enumerate{
-#'   \item Identifies rows where `PCSPEC` contains "urine", "feces", or "bile" (case-insensitive).
 #'   \item Parses the denominator from `AVALU` (e.g., "ug/mL" → "mL").
 #'   \item Attempts to convert the corresponding `VOLUME` to that unit.
 #'   \item If direct conversion fails, assumes a neutral density of 1
@@ -148,12 +146,12 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' df_converted <- convert_excretion_units(df)
 #'
 #' @export
-convert_volume_units <- function(df, pcspec = "PCSPEC",
+convert_volume_units <- function(df,
                                  avalu = "AVALU",
                                  volume = "VOLUME",
                                  volumeu = "VOLUMEU") {
 
-  required_cols <- c(pcspec, avalu, volume, volumeu)
+  required_cols <- c(avalu, volume, volumeu)
   if (!all(required_cols %in% names(df))) {
     return(df)
   }
@@ -213,12 +211,12 @@ convert_volume_units <- function(df, pcspec = "PCSPEC",
     mutate(
       AMOUNTU = pmap_chr(
         list(!!sym(avalu), !!sym(volumeu)),
-        function(avalu, volume) {
-          if (is.na(avalu) || is.na(volume)) {
+        function(avalu, volumeu) {
+          if (is.na(avalu) || is.na(volumeu)) {
             return(NA_character_)
           } else {
             u1 <- set_units(1, avalu, mode = "standard")
-            u2 <- set_units(1, volume, mode = "standard")
+            u2 <- set_units(1, volumeu, mode = "standard")
             deparse_unit(u1 * u2)
           }
         }
