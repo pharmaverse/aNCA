@@ -134,7 +134,8 @@ export_cdisc <- function(res_nca) {
       ATPTREF = {
         if ("PCTPTREF" %in% names(.)) PCTPTREF
         else NA_character_
-      }
+      },
+      PCSTRESU = AVALU
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
     select(any_of(CDISC_COLS$ADPC), everything())  %>%

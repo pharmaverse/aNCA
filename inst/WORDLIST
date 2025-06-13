@@ -10,7 +10,6 @@ Analyte
 CDISC
 DOSEA
 DOSEU
-DOSNO
 DOSNOA
 EVID
 Kezia
@@ -27,6 +26,7 @@ PARAM
 PARAMCD
 PCSPEC
 PKNCA
+PKNCAconc
 PKNCAdata
 PKNCAdose
 PKNCAresults
@@ -40,7 +40,6 @@ Pharmacokinetic
 Pharmaverse
 Plotly
 Pre
-predose
 RRLTU
 RStudio
 SBS
@@ -50,14 +49,17 @@ TLGs
 TRT
 USUBJID
 USUBJIDs
+amountu
 analysing
 analyte
 analytes
+aucpext
 aucs
 bioavailability
 cdisc
 cmax
 codebase
+concu
 csv
 customizable
 devtools
@@ -69,7 +71,6 @@ intravascular
 lintr
 md
 nca
-NCA_PROFILE
 pak
 pharmacokinetic
 pkcg
@@ -77,12 +78,15 @@ pknca
 plotly
 pptest
 pre
+pred
+predose
 reupload
 ruleset
 rulesets
 signif
 tidyverse
 timepoint
+timeu
 tlg
 utilise
 visualizable
