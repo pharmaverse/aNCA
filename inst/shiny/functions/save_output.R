@@ -2,7 +2,7 @@
 #'
 #' @param output Output object, can be a data frame, plot or a list of them.
 #' @param output_path Path to the output directory (should exist or be creatable).
-#' @return Invisibly returns the file path written.
+#' @returns Invisibly returns the file path written.
 save_output <- function(output, output_path) {
   # Create output directory if it doesn't exist
   output_path <- paste0("output/", output_path)

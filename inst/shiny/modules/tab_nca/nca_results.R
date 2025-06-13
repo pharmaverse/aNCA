@@ -31,7 +31,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       })
     )
 
-    results_dir <<- reactive({
+    session$userData$results_dir <- reactive({
       req(res_nca())
       project <- project_name()
       datetime <- attr(res_nca(), "provenance")$datetime

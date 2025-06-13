@@ -129,9 +129,8 @@ server <- function(input, output, session) {
   log_info("Startup")
 
   # Store globally the name of the project
-  project_name <<- reactive({
-    if (input$project_name != "") return(input$project_name)
-    "Unnamed_Project"
+  session$userData$project_name <- reactive({
+    if (input$project_name != "") input$project_name else "Unnamed_Project"
   })
 
   # Initially disable all tabs except the 'Data' tab
