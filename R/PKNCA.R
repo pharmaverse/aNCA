@@ -617,4 +617,35 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
     }
   }
   df[strata_cols]
+
+#' Exclude NCA results based on user-defined rules over the half-life related parameters
+#' This function applies exclusion rules to the NCA results based on user-defined parameters.
+#' @param res A PKNCAresults object containing the NCA results.
+#' @param rules A list of exclusion rules where each rule is a named vector.
+#' @returns A PKNCAresults object with the exclusions applied.
+#' @details
+#' The function iterates over the rules and applies the exclusion criteria to the NCA results.
+#' For any parameter that is not aucpext.obs or aucpext.pred it applies a minimum threshold,
+#' and for aucpext.obs and aucpext.pred it applies a maximum threshold.
+#' @importFrom PKNCA exclude
+
+PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
+
+  for (param in names(rules)) {
+    if (startsWith(param, "aucpext")) {
+      exc_fun <- exclude_nca_by_param(
+        param,
+        max_thr = rules[[param]],
+        affected_parameters = PKNCA::get.parameter.deps("half.life")
+      )
+    } else {
+      exc_fun <- exclude_nca_by_param(
+        param,
+        min_thr = rules[[param]],
+        affected_parameters = PKNCA::get.parameter.deps("half.life")
+      )
+    }
+    res <- PKNCA::exclude(res, FUN = exc_fun)
+  }
+  res
 }
