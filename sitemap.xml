@@ -10,6 +10,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/articles/index.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/authors.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/index.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_build_units_table.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_calculate_nca.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_hl_rules_exclusion.html</loc></url>
@@ -31,6 +32,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-compress_range.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-eval_range.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-plotly_empty_plot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/ensure_column_unit_exists.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/exclude_nca_by_param.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/export_cdisc.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/filter_breaks.html</loc></url>
@@ -61,6 +63,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/select_minimal_grouping_cols.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/set_empty_label.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/validate_pk.html</loc></url>
