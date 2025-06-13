@@ -56,6 +56,7 @@
     "PARAM",
     "PARAMCD",
     "PPCAT",
+    "PPSTRES_log",
     "PCGRPID",
     "PCRFTDTC",
     "PCRFTDTM",
