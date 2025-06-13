@@ -184,7 +184,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
-#' @param selected_dosno User selected dose numbers/profiles
+#' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
@@ -202,7 +202,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   auc_data,
   method,
   selected_analytes,
-  selected_dosno,
+  selected_profile,
   selected_pcspec,
   params,
   should_impute_c0 = TRUE
@@ -238,7 +238,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      NCA_PROFILE %in% selected_dosno,
+      NCA_PROFILE %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
 
@@ -443,4 +443,36 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
     }
   }
   d_conc_time
+}
+
+#' Exclude NCA results based on user-defined rules over the half-life related parameters
+#' This function applies exclusion rules to the NCA results based on user-defined parameters.
+#' @param res A PKNCAresults object containing the NCA results.
+#' @param rules A list of exclusion rules where each rule is a named vector.
+#' @returns A PKNCAresults object with the exclusions applied.
+#' @details
+#' The function iterates over the rules and applies the exclusion criteria to the NCA results.
+#' For any parameter that is not aucpext.obs or aucpext.pred it applies a minimum threshold,
+#' and for aucpext.obs and aucpext.pred it applies a maximum threshold.
+#' @importFrom PKNCA exclude
+
+PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
+
+  for (param in names(rules)) {
+    if (startsWith(param, "aucpext")) {
+      exc_fun <- exclude_nca_by_param(
+        param,
+        max_thr = rules[[param]],
+        affected_parameters = PKNCA::get.parameter.deps("half.life")
+      )
+    } else {
+      exc_fun <- exclude_nca_by_param(
+        param,
+        min_thr = rules[[param]],
+        affected_parameters = PKNCA::get.parameter.deps("half.life")
+      )
+    }
+    res <- PKNCA::exclude(res, FUN = exc_fun)
+  }
+  res
 }
