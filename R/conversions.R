@@ -153,24 +153,24 @@ convert_volume_units <- function(df,
                                  avalu = "AVALU",
                                  volume = "VOLUME",
                                  volumeu = "VOLUMEU") {
-  
+
   required_cols <- c(avalu, volume, volumeu)
   if (!all(required_cols %in% names(df))) {
     return(df)
   }
-  
+
   for (i in seq_len(nrow(df))) {
     concu <- df[[avalu]][i]
     vol <- df[[volume]][i]
     volu <- df[[volumeu]][i]
-    
+
     if (any(is.na(c(concu, vol, volu)))) next
-    
+
     unit_parts <- str_split(concu, "/", simplify = TRUE)
     if (ncol(unit_parts) != 2) next
-    
+
     denom_unit <- str_trim(unit_parts[2])
-    
+
     result <- tryCatch({
       u_vol <- set_units(vol, volu, mode = "standard")
       u_vol_new <- tryCatch(
@@ -188,9 +188,9 @@ convert_volume_units <- function(df,
     }, error = function(e) {
       FALSE
     })
-  
+
   }
-  
+
   df <- df %>%
     mutate(
       AMOUNTU = pmap_chr(
@@ -204,8 +204,9 @@ convert_volume_units <- function(df,
           }, error = function(e) {
             NA_character_
           })
-        })
+        }
+      )
     )
-  
+
   return(df)
 }
