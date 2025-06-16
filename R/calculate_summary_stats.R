@@ -72,13 +72,14 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
         ModeUnit == "",
         PPTESTCD,
         paste0(PPTESTCD, "[", ModeUnit, "]")
-      )
+      ),
+      PPSTRES_log = log(ifelse(PPSTRES > 0, PPSTRES, NA_real_)),
     ) %>%
 
     # Calculate summary statistics
     summarise(
-      Geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
-      Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
+      Geomean = exp(mean(PPSTRES_log, na.rm = TRUE)),
+      Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(PPSTRES_log, na.rm = TRUE))) * 100,
       Mean = mean(PPSTRES, na.rm = TRUE),
       SD = sd(PPSTRES, na.rm = TRUE),
       Min = ifelse(all(is.na(PPSTRES)), NA, min(PPSTRES, na.rm = TRUE)),
