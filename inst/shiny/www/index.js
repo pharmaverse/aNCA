@@ -23,3 +23,41 @@ const buttonTimeout = function(selector, debounce, placeholder, ready) {
     $(selector).html(ready).prop("disabled", false);
   }, debounce)
 }
+
+/**
+ * Enable drag-and-drop file upload on a custom container (e.g., a div wrapping a file input).
+ * 
+ * This script listens for drag-and-drop events on a container element and
+ * redirects any dropped files to the corresponding file input element, so
+ * Shiny can process the files as if they were uploaded normally.
+ * 
+ * Requirements:
+ * - The container must have a known ID (e.g., "data-raw_data-upload_container'").
+ * - Inside the container, there must be an <input type="file"> element (Shiny fileInput).
+ * - CSS class 'dragover' can be used to style the container during drag.
+ */
+const enableDragAndDropUpload = function(element_id) {
+  const container = document.getElementById(element_id);
+  if (!container) return;
+  const fileInput = container.querySelector('input[type="file"]');
+  if (!fileInput) return;
+  container.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    container.classList.add('dragover');
+  });
+  container.addEventListener('dragleave', function (e) {
+    e.preventDefault();
+    container.classList.remove('dragover');
+  });
+  container.addEventListener('drop', function (e) {
+    e.preventDefault();
+    container.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      fileInput.dispatchEvent(new Event('change'));
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', function () {
+  enableDragAndDropUpload('data-raw_data-upload_container');
+});
