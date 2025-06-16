@@ -201,10 +201,10 @@ format_pkncadata_intervals <- function(pknca_conc,
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
     group_by(!!!syms(dose_groups)) %>%
-    mutate(one_dose = length(unique(DOSNOA)) == 1) %>%
+    mutate(is_one_dose = length(unique(DOSNOA)) == 1) %>%
     ungroup() %>%
     select(any_of(c(dose_groups,
-                    pknca_dose$columns$time, "DOSNOA", "one_dose")))
+                    pknca_dose$columns$time, "DOSNOA", "is_one_dose")))
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
@@ -229,14 +229,14 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(end = if (has_tau) {
       case_when(
         !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
-        is.na(TAU) & one_dose ~ Inf,
+        is.na(TAU) & is_one_dose ~ Inf,
         is.na(TAU) ~ max_end,
         TRUE ~ start + TAU
       )
     } else {
       case_when(
         !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
-        one_dose ~ Inf,
+        is_one_dose ~ Inf,
         TRUE ~ max_end
       )
     }
