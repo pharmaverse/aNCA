@@ -367,7 +367,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     ratio_calculations <- ratio_calculations_table_server(
       id = "ratio_calculations",
       adnca_data = adnca_data,
-      nca_params = nca_params
+      nca_params = nca_params,
+      select_nca_profiles = input$select_doseno,
+      select_analytes = input$select_analyte,
+      select_pcspec = input$select_pcspec
     )
 
     settings <- reactive({

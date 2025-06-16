@@ -18,16 +18,48 @@ ratio_calculations_table_ui <- function(id) {
   )
 }
 
-ratio_calculations_table_server <- function(id, adnca_data, nca_params) {
+ratio_calculations_table_server <- function(
+    id, adnca_data, nca_params, select_nca_profiles, select_analytes, select_pcspec
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Helper: get group vars and group values
     group_vars <- reactive({
-      dplyr::group_vars(adnca_data())
+      c(
+        adnca_data()$conc$columns$groups$group_analyte,
+        dplyr::group_vars(adnca_data()$conc),
+        dplyr::group_vars(adnca_data()$dose),
+        adnca_data()$dose$columns$route
+      ) |>
+        unique()
     })
+
     group_values <- reactive({
-      adnca_data()$intervals
+      nca_profile_col <- "NCA_PROFILE"
+      analyte_col <- adnca_data()$conc$columns$groups$group_analyte
+      pcspec_col <- "PCSPEC"
+
+      left_join(adnca_data()$conc$data %>%
+                  select(any_of(c(group_vars(), "NCA_PROFILE"))) %>%
+                  unique(),
+                adnca_data()$dose$data %>%
+                  select(any_of(group_vars())) %>%
+                  unique(),
+                by = c(intersect(names(adnca_data()$conc$data), group_vars()))
+      ) %>%
+        filter(
+          .[[nca_profile_col]] %in% select_nca_profiles,
+          .[[analyte_col]] %in% select_analytes,
+          .[[pcspec_col]] %in% select_pcspec
+        )
+    })
+
+    ratio_params <- reactive({
+      # Get all nca_params() starting with auc or with cmax
+      nca_params() |>
+        purrr::keep(~ grepl("^(auc[li\\.]|cmax)", ., ignore.case = TRUE)) |>
+        unique()
     })
 
     # Table columns
@@ -47,14 +79,13 @@ ratio_calculations_table_server <- function(id, adnca_data, nca_params) {
 
     # Add row
     observeEvent(input$add_row, {
-      req(nca_params(), group_vars())
-browser()
-      if (length(nca_params()) == 0 || length(group_vars()) == 0) {
+
+      if (length(nca_params()) == 0 || nrow(group_values()) == 0) {
         showNotification("No parameters or group variables available to add a row.", type = "error")
         return()
       }
       new_row <- data.frame(
-        Parameter = nca_params()[1],
+        Parameter = ratio_params()[1],
         ContrastVar = group_vars()[1],
         ReferenceValue = group_values()[[group_vars()[1]]][1],
         AggregateSubject = "no",
@@ -77,30 +108,16 @@ browser()
       refresh_reactable(refresh_reactable() + 1)
     })
 
-    # For dynamic ReferenceValue choices per row
-    get_reference_choices <- function(contrast_var) {
-      vals <- group_values()
-      if (!is.null(contrast_var) && contrast_var %in% names(vals)) {
-        unique(vals[[contrast_var]])
-      } else {
-        character(0)
-      }
-    }
-
     # Render table
     refresh_reactable <- reactiveVal(1)
     output$ratio_calculations <- renderReactable({
-      data <- ratio_table()
-      # Dynamic ReferenceValue choices per row
-      ref_choices_list <- lapply(seq_len(nrow(data)), function(i) {
-        get_reference_choices(data$ContrastVar[i])
-      })
+
       # Column definitions
       col_defs <- list(
         Parameter = colDef(
           cell = dropdown_extra(
             id = ns("edit_Parameter"),
-            choices = nca_params(),
+            choices = ratio_params(),
             class = "dropdown-extra"
           ),
           width = 180
@@ -114,14 +131,11 @@ browser()
           width = 180
         ),
         ReferenceValue = colDef(
-          cell = function(value, index) {
-            dropdown_extra(
-              id = ns(paste0("edit_ReferenceValue_", index)),
-              choices = ref_choices_list[[index]],
-              value = value,
+          cell = dropdown_extra(
+              id = ns(paste0("edit_ReferenceValue")),
+              choices = group_values()[[group_vars()[1]]],,
               class = "dropdown-extra"
-            )
-          },
+            ),
           width = 180
         ),
         AggregateSubject = colDef(
@@ -140,7 +154,7 @@ browser()
         )
       )
       reactable(
-        data = data,
+        data = ratio_table(),
         defaultColDef = colDef(align = "center"),
         columns = col_defs,
         selection = "multiple",
