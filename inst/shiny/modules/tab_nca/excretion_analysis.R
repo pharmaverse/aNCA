@@ -81,8 +81,7 @@ excretion_server <- function(id, input_pknca_data) {
       updateSelectInput(session, "end_time_col", choices = available_cols,
                         selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
       updateSelectInput(session, "param_select", choices = pknca_cdisc_terms %>%
-                          filter(startsWith(PPTESTCD, "RCA") |
-                                   startsWith(PPTESTCD, "FREX")) %>%
+                          filter(startsWith(PPTESTCD, "RCA")) %>%
                           pull(PKNCA, PPTESTCD),
                         selected = c("ae"))
     })
@@ -99,6 +98,13 @@ excretion_server <- function(id, input_pknca_data) {
 
       # Adjust dose by bodyweight if selected
       if (input$adjust_bw) {
+        # Check if weight columns exist
+        if (!(weight_col %in% names(data$dose$data)) || !(weightu %in% names(data$dose$data))) {
+          showNotification("Please ensure WEIGHT and WEIGHTU columns exist in the dose data.
+                           No adjustments can be made.", type = "warning")
+          return(NULL)
+        }
+        
         # mutate dose_col and doseu to be dose * weight
         data$dose$data <- data$dose$data %>%
           mutate(
