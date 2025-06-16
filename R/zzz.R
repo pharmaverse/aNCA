@@ -157,6 +157,7 @@
     "var_name",
     "view",
     "VISIT",
+    "VOLUME",
     "zero_str"
   ))
 }
