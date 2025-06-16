@@ -115,10 +115,6 @@ settings_ui <- function(id) {
         .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
         .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
       ),
-      accordion_panel(
-        title = "Ratio Calculations",
-        ratio_calculations_table_ui(ns("ratio_calculations"))
-      ),
       id = "acc",
       open = c("General Settings", "Parameter Selection")
     )
@@ -362,16 +358,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         })
       })
     })
-
-    # Ratio Calculations Table
-    ratio_calculations <- ratio_calculations_table_server(
-      id = "ratio_calculations",
-      adnca_data = adnca_data,
-      nca_params = nca_params,
-      select_nca_profiles = input$select_doseno,
-      select_analytes = input$select_analyte,
-      select_pcspec = input$select_pcspec
-    )
 
     settings <- reactive({
       req(input$select_analyte) # Wait on general settings UI to be loaded

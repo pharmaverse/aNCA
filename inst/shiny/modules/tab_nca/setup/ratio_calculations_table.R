@@ -19,58 +19,69 @@ ratio_calculations_table_ui <- function(id) {
 }
 
 ratio_calculations_table_server <- function(
-    id, adnca_data, nca_params, select_nca_profiles, select_analytes, select_pcspec
+    id, adnca_data
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Helper: get group vars and group values
-    group_vars <- reactive({
-      c(
-        adnca_data()$conc$columns$groups$group_analyte,
-        dplyr::group_vars(adnca_data()$conc),
-        dplyr::group_vars(adnca_data()$dose),
-        adnca_data()$dose$columns$route
-      ) |>
-        unique()
+    ratio_groups <- reactive({
+      adnca_data()$intervals %>%
+        # Only consider main intervals for ratios
+        dplyr::filter(type_interval == "main") %>%
+        dplyr::select(
+          -any_of(c(names(PKNCA::get.interval.cols()), "impute", "type_interval"))
+        ) %>%
+        # Join route information (bioavailability ratios)
+        left_join(
+          dplyr::select(
+            adnca_data()$dose$data,
+            any_of(c(dplyr::group_vars(adnca_data()$dose), adnca_data()$dose$columns$route))
+          )
+        ) %>%
+        # Filter out the columns with one one unique value (no ratio possible!)
+        dplyr::select(dplyr::where(~ length(unique(.)) > 1)) %>%
+        dplyr::select(-any_of(adnca_data()$conc$columns$subject))
     })
 
-    group_values <- reactive({
-      nca_profile_col <- "NCA_PROFILE"
-      analyte_col <- adnca_data()$conc$columns$groups$group_analyte
-      pcspec_col <- "PCSPEC"
-
-      left_join(adnca_data()$conc$data %>%
-                  select(any_of(c(group_vars(), "NCA_PROFILE"))) %>%
-                  unique(),
-                adnca_data()$dose$data %>%
-                  select(any_of(group_vars())) %>%
-                  unique(),
-                by = c(intersect(names(adnca_data()$conc$data), group_vars()))
-      ) %>%
-        filter(
-          .[[nca_profile_col]] %in% select_nca_profiles,
-          .[[analyte_col]] %in% select_analytes,
-          .[[pcspec_col]] %in% select_pcspec
-        )
+    ratio_reference_options <- reactive({
+      # We paste the column name and value to use as a specified input
+      ratio_groups() %>%
+      # Convert all columns to character
+        dplyr::mutate(across(everything(), as.character)) %>%
+        pivot_longer(cols = everything()) %>%
+        mutate(input_name = paste0(name, ": ", value)) %>%
+        pull(input_name) %>%
+        unique() %>%
+        sort()
     })
 
-    ratio_params <- reactive({
-      # Get all nca_params() starting with auc or with cmax
-      nca_params() |>
-        purrr::keep(~ grepl("^(auc[li\\.]|cmax)", ., ignore.case = TRUE)) |>
-        unique()
+    ratio_param_options <- reactive({
+
+      adnca_data()$intervals %>%
+        # Only consider main intervals for ratios
+        dplyr::filter(type_interval == "main") %>%
+        dplyr::select(
+          any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+        ) %>%
+        # For logical columns transform all FALSE to NA
+        dplyr::mutate(across(where(is.logical), ~ ifelse(. == FALSE, NA, .))) %>%
+        # Select only columns where all values are not NA
+        dplyr::select(dplyr::where(~ !all(is.na(.)))) %>%
+        names() %>%
+        purrr::keep(~ grepl("^(auc[li\\.]|cmax)", ., ignore.case = TRUE)) %>%
+        translate_terms("PKNCA", "PPTESTCD")
     })
 
     # Table columns
-    table_columns <- c("Parameter", "ContrastVar", "ReferenceValue", "AggregateSubject", "AdjustingFactor")
+    table_columns <- c("Parameter", "Reference", "Numerator", "AggregateSubject", "AdjustingFactor")
 
     # Store table data
     ratio_table <- reactiveVal({
       data.frame(
         Parameter = character(),
-        ContrastVar = character(),
-        ReferenceValue = character(),
+        Reference = character(),
+        Numerator = character(),
         AggregateSubject = character(),
         AdjustingFactor = numeric(),
         stringsAsFactors = FALSE
@@ -79,15 +90,14 @@ ratio_calculations_table_server <- function(
 
     # Add row
     observeEvent(input$add_row, {
-
-      if (length(nca_params()) == 0 || nrow(group_values()) == 0) {
+      if (length(ratio_param_options()) == 0 || length(ratio_reference_options()) == 0) {
         showNotification("No parameters or group variables available to add a row.", type = "error")
         return()
       }
       new_row <- data.frame(
-        Parameter = ratio_params()[1],
-        ContrastVar = group_vars()[1],
-        ReferenceValue = group_values()[[group_vars()[1]]][1],
+        Parameter = ratio_param_options()[1],
+        Reference = ratio_reference_options()[1],
+        Numerator = "(all)",
         AggregateSubject = "no",
         AdjustingFactor = 1,
         stringsAsFactors = FALSE
@@ -112,33 +122,37 @@ ratio_calculations_table_server <- function(
     refresh_reactable <- reactiveVal(1)
     output$ratio_calculations <- renderReactable({
 
-      # Column definitions
+      # Update column names for display in the UI
       col_defs <- list(
         Parameter = colDef(
+          name = "Parameter",
           cell = dropdown_extra(
             id = ns("edit_Parameter"),
-            choices = ratio_params(),
+            choices = ratio_param_options(),
             class = "dropdown-extra"
           ),
           width = 180
         ),
-        ContrastVar = colDef(
+        Reference = colDef(
+          name = "Reference",
           cell = dropdown_extra(
-            id = ns("edit_ContrastVar"),
-            choices = group_vars(),
-            class = "dropdown-extra"
-          ),
+              id = ns("edit_Reference"),
+              choices = ratio_reference_options(),
+              class = "dropdown-extra"
+            ),
           width = 180
         ),
-        ReferenceValue = colDef(
+        Numerator = colDef(
+          name = "Numerator",
           cell = dropdown_extra(
-              id = ns(paste0("edit_ReferenceValue")),
-              choices = group_values()[[group_vars()[1]]],,
+              id = ns("edit_Numerator"),
+              choices = c(ratio_reference_options(), "(all)"),
               class = "dropdown-extra"
             ),
           width = 180
         ),
         AggregateSubject = colDef(
+          name = "Aggregate Subject?",
           cell = dropdown_extra(
             id = ns("edit_AggregateSubject"),
             choices = c("yes", "no", "if-needed"),
@@ -147,6 +161,7 @@ ratio_calculations_table_server <- function(
           width = 120
         ),
         AdjustingFactor = colDef(
+          name = "Adj. Factor",
           cell = text_extra(
             id = ns("edit_AdjustingFactor")
           ),
@@ -186,8 +201,8 @@ ratio_calculations_table_server <- function(
         nrows <- nrow(ratio_table())
         if (nrows > 0) {
           for (i in seq_len(nrows)) {
-            observeEvent(input[[paste0("edit_ReferenceValue_", i)]], {
-              edit <- input[[paste0("edit_ReferenceValue_", i)]]
+            observeEvent(input[[paste0("edit_Reference_", i)]], {
+              edit <- input[[paste0("edit_Reference_", i)]]
               tbl <- ratio_table()
               tbl[edit$row, edit$column] <- edit$value
               ratio_table(tbl)
