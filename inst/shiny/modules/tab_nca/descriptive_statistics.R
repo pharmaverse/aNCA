@@ -110,7 +110,13 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       req(summary_stats())
 
       # Save the results in the output folder
-      save_output(summary_stats(), paste0(session$userData$results_dir(), "/nca_results/descriptive_statistics.csv"))
+      save_output(
+        summary_stats(),
+        paste0(
+          session$userData$results_dir(),
+          "/nca_results/descriptive_statistics.csv"
+        )
+      )
 
       # Update the select display parameters picker input
       updatePickerInput(

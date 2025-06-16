@@ -112,9 +112,9 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
     # Provide the zip file for download
     output$download_zip <- downloadHandler(
       filename = function() {
-          project <- session$userData$project_name()
-          datetime <- attr(res_nca(), "provenance")$datetime
-          paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
+        project <- session$userData$project_name()
+        datetime <- attr(res_nca(), "provenance")$datetime
+        paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
         res_tmp_dir <- session$userData$results_dir()
