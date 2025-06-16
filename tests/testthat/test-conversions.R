@@ -124,3 +124,100 @@ describe("convert_to_iso8601_duration", {
   })
 })
 
+describe("convert_volume_units()", {
+
+  it("should convert L to mL when AVALU has denominator mL", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      AVALU = c("ug/mL"),
+      VOLUME = c(1),
+      VOLUMEU = c("L"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result$VOLUME, 1000)
+    expect_equal(result$VOLUMEU, "mL")
+    expect_equal(result$AMOUNTU, "ug")
+  })
+
+  it("should apply fallback conversion when direct conversion is not possible", {
+    df <- data.frame(
+      PCSPEC = c("feces"),
+      AVAL = c(5),
+      AVALU = c("mg/g"),
+      VOLUME = c(2),
+      VOLUMEU = c("mL"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result$VOLUMEU, "g")
+    expect_equal(result$AMOUNTU, "mg")
+  })
+
+  it("should skip rows with NA values", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(1),
+      AVALU = c("ng/mL"),
+      VOLUME = c(NA),
+      VOLUMEU = c(NA),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_true(is.na(result$AMOUNTU))
+  })
+
+  it("should handle invalid AVALU formats", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      AVALU = c("ug"),  # invalid format
+      VOLUME = c(1),
+      VOLUMEU = c("L"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_true(result$AMOUNTU[1] == "L ug")
+  })
+
+  it("should handle multiple rows correctly", {
+    df <- data.frame(
+      PCSPEC = c("urine", "feces", "plasma"),
+      AVAL = c(100, 10, 50),
+      AVALU = c("ug/mL", "mg/g", "ng/mL"),
+      VOLUME = c(1, 0.5, 1),
+      VOLUMEU = c("L", "mL", "mL"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result$VOLUMEU[1], "mL")  # Converted from L to mL
+    expect_equal(result$VOLUMEU[2], "g")   # Fallback conversion
+    expect_equal(result$VOLUMEU[3], "mL")  # Unchanged
+  })
+
+  it("should return original dataframe if required columns are missing", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result, df)  # No conversion applied
+  })
+
+  it("returns NA if conversion is not possible", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      AVALU = c("ug/mL"),
+      VOLUME = c(1),
+      VOLUMEU = c("unknown_unit"),  # Invalid unit
+      stringsAsFactors = FALSE
+    )
+
+    result <- convert_volume_units(df)
+    expect_true(is.na(result$AMOUNTU))
+
+  })
+})
