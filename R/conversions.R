@@ -146,7 +146,7 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #'   stringsAsFactors = FALSE
 #' )
 #'
-#' df_converted <- convert_excretion_units(df)
+#' df_converted <- convert_volume_units(df)
 #'
 #' @export
 convert_volume_units <- function(df,

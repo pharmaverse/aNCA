@@ -72,6 +72,6 @@ df <- data.frame(
   stringsAsFactors = FALSE
 )
 
-df_converted <- convert_excretion_units(df)
+df_converted <- convert_volume_units(df)
 
 }
