@@ -93,6 +93,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+    ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
@@ -130,6 +131,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
               )
+              browser()
           },
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),

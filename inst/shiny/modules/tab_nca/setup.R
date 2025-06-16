@@ -93,10 +93,10 @@ setup_server <- function(id, data, adnca_data) {
     })
     
     # Keep the post processing ratio calculations requested by the user
-    ratio_calculations <- ratio_calculations_table_server(
+    ratio_table <- ratio_calculations_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data
-    )
+    )$ratio_table
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
@@ -148,6 +148,7 @@ setup_server <- function(id, data, adnca_data) {
     list(
       processed_pknca_data = processed_pknca_data,
       settings = settings,
+      ratio_table = ratio_table,
       slope_rules = slope_rules
     )
   })

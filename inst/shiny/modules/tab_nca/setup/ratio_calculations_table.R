@@ -214,8 +214,7 @@ ratio_calculations_table_server <- function(
 
     # Return the table as a reactive
     return(list(
-      ratio_table = ratio_table,
-      refresh_reactable = refresh_reactable
+      ratio_table = ratio_table
     ))
   })
 }
