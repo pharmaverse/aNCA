@@ -104,7 +104,7 @@ excretion_server <- function(id, input_pknca_data) {
                            No adjustments can be made.", type = "warning")
           return(NULL)
         }
-        
+
         # mutate dose_col and doseu to be dose * weight
         data$dose$data <- data$dose$data %>%
           mutate(
