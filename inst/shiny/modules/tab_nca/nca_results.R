@@ -35,7 +35,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
     session$userData$results_dir <- reactive({
       req(res_nca())
 
-      tempdir()
+      paste0(tempdir(), "/output")
     })
 
     final_results <- reactive({
