@@ -19,12 +19,14 @@
 #' @returns A data frame containing the ratios.
 #' @examples
 #' data <- data.frame(
-#' USUBJID = c("A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"),
-#' NFRLT = c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2),
-#' MATRIX = c("BLOOD", "BLOOD", "BLOOD", "PLASMA", "PLASMA", "PLASMA",
-#'            "BRAIN", "BRAIN", "BRAIN", "LIVER", "LIVER", "LIVER"),
-#' CONC = c(10, 20, 15, 25, 30, 40, 5, 10, 8, 12, 18, 16),
-#' UNITS = rep("ng/mL", 12)
+#'   USUBJID = c("A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"),
+#'   NFRLT = c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2),
+#'   MATRIX = c(
+#'     "BLOOD", "BLOOD", "BLOOD", "PLASMA", "PLASMA", "PLASMA",
+#'     "BRAIN", "BRAIN", "BRAIN", "LIVER", "LIVER", "LIVER"
+#'   ),
+#'   CONC = c(10, 20, 15, 25, 30, 40, 5, 10, 8, 12, 18, 16),
+#'   UNITS = rep("ng/mL", 12)
 #' )
 #' multiple_matrix_ratios(data, "MATRIX", "CONC", "UNITS", c("NFRLT", "USUBJID"), "BLOOD", "PLASMA")
 #'
@@ -33,20 +35,23 @@
 multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
                                    groups = c("NFRLT", "USUBJID"),
                                    spec1, spec2) {
-
   # Separate Samples
   df_spec1 <- data %>%
     filter(!!sym(matrix_col) %in% spec1) %>%
-    rename(Spec1_Value = !!sym(conc_col),
-           Spec1_Label = !!sym(matrix_col),
-           Spec1_Units = !!sym(units_col)) %>%
+    rename(
+      Spec1_Value = !!sym(conc_col),
+      Spec1_Label = !!sym(matrix_col),
+      Spec1_Units = !!sym(units_col)
+    ) %>%
     select(all_of(groups), Spec1_Value, Spec1_Label, Spec1_Units)
 
   df_spec2 <- data %>%
     filter(!!sym(matrix_col) %in% spec2) %>%
-    rename(Spec2_Value = !!sym(conc_col),
-           Spec2_Label = !!sym(matrix_col),
-           Spec2_Units = !!sym(units_col)) %>%
+    rename(
+      Spec2_Value = !!sym(conc_col),
+      Spec2_Label = !!sym(matrix_col),
+      Spec2_Units = !!sym(units_col)
+    ) %>%
     select(all_of(groups), Spec2_Value, Spec2_Label, Spec2_Units)
 
   # Merge Data
@@ -62,8 +67,8 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
     select(all_of(groups), Ratio_Type, Spec1_Value, Spec1_Units, Spec2_Value, Spec2_Units, Ratio)
 }
 
-' Calculate Ratios from PKNCA Results
-#'
+" Calculate Ratios from PKNCA Results
+#"
 #' This function calculates ratios of PPORRES values from a PKNCA results object (e.g., res$results),
 #' matching rows according to user-specified parameters, matching columns, and denominator_groups variables.
 #'
@@ -81,13 +86,12 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID", "VISIT"), denominator_groups = c("TREATMENT"))
 #' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), denominator_groups = data.frame(TREATMENT = "Placebo"))
 #' @export
-#' 
+#'
 calculate_ratios <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
   UseMethod("calculate_ratios", data)
 }
 
 calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
-
   if (!any(data$PPTESTCD == parameter)) {
     warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
   }
@@ -112,18 +116,20 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
 
   # Join numerator and denominator by their matching columns
   merge(df_num, df_den, by = c(match_cols, "PPTESTCD"), suffixes = c("", "_den")) %>%
-
     # If possible compute conversion factors for the units of numerator and denominator
     mutate(
       PPORRESU_factor = get_conversion_factor(PPORRESU_den, PPORRESU),
       PPSTRESU_factor = if ("PPSTRESU" %in% names(.)) {
         get_conversion_factor(PPSTRESU_den, PPSTRESU)
-      } else NULL,
-      PPORRES_den = ifelse (!is.na(PPORRESU_factor), PPORRES_den * PPORRESU_factor, PPORRES_den),
+      } else {
+        NULL
+      },
+      PPORRES_den = ifelse(!is.na(PPORRESU_factor), PPORRES_den * PPORRESU_factor, PPORRES_den),
       PPSTRES_den = if ("PPSTRESU" %in% names(.)) {
         ifelse(!is.na(PPSTRESU_factor), PPSTRESU_factor * PPSTRES_den, PPSTRES_den)
-      } else NULL
-
+      } else {
+        NULL
+      }
     ) %>%
     group_by(across(all_of(c(match_cols, contrast_var, "PPTESTCD", paste0(contrast_var, "_den"))))) %>%
     unique() %>%
@@ -138,11 +144,15 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
       PPORRES = (PPORRES / PPORRES_den) * adjusting_factor,
       PPSTRES = if ("PPSTRES" %in% names(.)) {
         (PPSTRES / PPSTRES_den) * adjusting_factor
-      } else NULL,
+      } else {
+        NULL
+      },
       PPORRESU = ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPORRESU, "/", PPORRESU_den)),
       PPSTRESU = if ("PPSTRESU" %in% names(.)) {
         ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPSTRESU, "/", PPSTRESU_den))
-      } else NULL,
+      } else {
+        NULL
+      },
       PPTESTCD = if (!is.null(custom.pptestcd)) {
         custom.pptestcd
       } else {
@@ -186,9 +196,9 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominat
   data
 }
 
-
-calculate_ratios_app <- function(PKNCAresults, parameter, contrast_var = "ANALYTE", reference_values = "A", match_cols = c("USUBJID", "start", "end"), aggregate_subject = "no", adjusting_factor = 1) {
-  match_cols <- unique(c(dplyr::group_vars(PKNCAresults$data), "end"))
+calculate_ratio_app <- function(PKNCAresults, parameter, numerator = "(all)", reference = "ANALYTE: A", match_cols = c("USUBJID", "start", "end"), aggregate_subject = "no", adjusting_factor = 1) {
+  reference_colname <- gsub("(.*): (.*)", "\\1", reference)
+  match_cols <- setdiff(unique(c(dplyr::group_vars(PKNCAresults), "start", "end")), reference_colname)
   if (aggregate_subject == "yes") {
     match_cols <- list(setdiff(match_cols, "USUBJID"))
   } else if (aggregate_subject == "no") {
@@ -203,19 +213,68 @@ calculate_ratios_app <- function(PKNCAresults, parameter, contrast_var = "ANALYT
     }
   }
 
+  # Get all available groups
+  o_dose <- PKNCAresults$data$dose
+  res_groups <- PKNCAresults$result[c(group_vars(PKNCAresults), "start", "end")] %>%
+    # Join route information (bioavailability ratios)
+    left_join(
+      dplyr::select(
+        o_dose$data,
+        any_of(c(dplyr::group_vars(o_dose), o_dose$columns$route))
+      )
+    )
+
+  if (numerator == "(all)") {
+    numerator_groups <- NULL
+  } else {
+    num_colname <- gsub("(.*): (.*)", "\\1", numerator)
+    num_value <- gsub("(.*): (.*)", "\\2", numerator)
+    numerator_groups <- data.frame(
+      matrix(
+        num_value,
+        nrow = 1,
+        ncol = length(num_colname),
+        dimnames = list(NULL, num_colname)
+      )
+    )
+    numerator_groups <- merge(
+      numerator_groups,
+      res_groups,
+      by = intersect(names(numerator_groups), names(res_groups))
+    )
+  }
+
+  reference_colname <- gsub("(.*): (.*)", "\\1", reference)
+  reference_value <- gsub("(.*): (.*)", "\\2", reference)
+  denominator_groups <- data.frame(
+    matrix(
+      reference_value,
+      nrow = 1,
+      ncol = length(reference_colname),
+      dimnames = list(NULL, reference_colname)
+    )
+  )
+  denominator_groups <- merge(
+    denominator_groups,
+    res_groups,
+    by = intersect(names(denominator_groups), names(res_groups))
+  ) %>%
+    # Ensure that the contrast variable is not in match_cols
+    select(any_of(c(group_vars(PKNCAresults), "start", "end")))
+
   all_ratios <- data.frame()
   for (ix in seq_along(match_cols)) {
-  ratio_calculations <- calculate_ratios(
-    PKNCAresults, 
-    parameter = parameter,
-    match_cols = match_cols[[ix]],
-    denominator_groups = data.frame(contrast_var = reference_values),
-    numerator_groups = NULL,
-    adjusting_factor = adjusting_factor,
-    custom.pptestcd = NULL,
-    custom.pptest = NULL
-  )
-  all_ratios <- bind_rows(all_ratios, ratio_calculations)
+    ratio_calculations <- calculate_ratios(
+      PKNCAresults,
+      parameter = parameter,
+      match_cols = match_cols[[ix]],
+      denominator_groups = denominator_groups,
+      numerator_groups = numerator_groups,
+      adjusting_factor = adjusting_factor,
+      custom.pptestcd = NULL,
+      custom.pptest = NULL
+    )
+    all_ratios <- bind_rows(all_ratios, ratio_calculations)
   }
   unnest(all_ratios) %>%
     # Make sure there are no duplicate rows for: parameter, contrast_var, and match_cols
@@ -255,7 +314,7 @@ create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var =
 
 
 
-  
+
   match_cols <- setdiff(c(names(PKNCA::getGroups(PKNCAdata)), "start", "end"), c(contrast_var))
 
   denominator_groups <- data.frame(contrast_var = reference_values)
@@ -266,9 +325,9 @@ create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var =
   } else if (aggregate_subject == "never") {
     if (!"USUBJID" %in% match_cols) {
       stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
-    } 
+    }
   } else if (aggregate_subject == "if_available") {
-    
+
   }
 }
 
@@ -299,7 +358,6 @@ add_interval_row <- function(o_data, groups, parameters, impute = NULL) {
 }
 
 add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NULL, ...) {
-
   # Perform checks on the groups input
   all_params <- setdiff(names(get.interval.cols()), c("start", "end"))
   group_names_o_data <- setdiff(names(o_data), all_params)
@@ -307,7 +365,7 @@ add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NUL
   if (length(missing_group_cols) > 0) {
     stop(paste("The following group columns are missing in the PKNCA data:", paste(missing_group_cols, collapse = ", ")))
   }
-  
+
   # Based on the groups data.frame, define all the actual groups matching in the PKNCA data
   groups_o_data <- o_data[, group_names_o_data, drop = FALSE]
   groups <- unique(left_join(groups, groups_o_data, by = names(groups)))
@@ -319,7 +377,7 @@ add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NUL
       ". Please, if your groups are valid and completely defined try using the function on the PKNCAdata object."
     ))
   }
-  
+
   # If specified consider the impute column for the matching
   if (!is.null(impute)) {
     groups <- bind_cols(groups, data.frame(impute = impute))
@@ -327,15 +385,14 @@ add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NUL
       o_data$intervals[["impute"]] <- NA_character
     }
   }
-  
+
   # If parameters is not a data.frame, convert it to a data.frame with TRUE values
   if (!is.data.frame(parameters)) {
     parameters <- as.data.frame(matrix(TRUE, nrow = 1, ncol = length(parameters), dimnames = list(NULL, parameters)))
   }
-  
+
   # Ensure that, unless already present, the parameters are added to the interval groups
   for (ix_parameter in seq_len(ncol(parameters))) {
-
     param <- parameters[, ix_parameter, drop = FALSE]
     groups_with_parameter <- cbind(groups, param)
     intervals_missing <- anti_join(groups_with_parameter, o_data, by = names(groups_with_parameter))
@@ -345,7 +402,7 @@ add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NUL
     ) %>%
       pull(n)
     o_data[ix_intervals_only_missing_param, names(param)] <- param[[1]]
-    intervals_missing_groups <- anti_join(groups_with_parameter, o_data[-ix_intervals_only_missing_param,], by = names(groups_with_parameter))
+    intervals_missing_groups <- anti_join(groups_with_parameter, o_data[-ix_intervals_only_missing_param, ], by = names(groups_with_parameter))
     o_data <- bind_rows(o_data, intervals_missing)
   }
   o_data
@@ -354,7 +411,7 @@ add_interval_row.data.frame <- function(o_data, groups, parameters, impute = NUL
 add_interval_row.PKNCAdata <- function(o_data, groups, parameters, impute = NULL, ...) {
   # Ensure that the groups are valid PKNCA groups
   groups <- unique(merge(groups, getGroups(o_data$conc)))
-  
+
   # If specified consider the impute column for the matching
   if (!is.null(impute)) {
     if (!impute %in% names(o_data$data)) {
