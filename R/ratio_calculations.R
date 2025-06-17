@@ -95,10 +95,9 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
   if (!any(data$PPTESTCD == parameter)) {
     warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
   }
-  contrast_var <- setdiff(names(denominator_groups), match_cols)
-  if (length(contrast_var) < 1) {
-    stop("The denominator_groups must contain at least one contrast variable that is not in match_cols.")
-  }
+  # Deduce what are all the group columns in the result data.frame
+  extra_res_cols <- c("PPTEST", "PPORRES", "PPORRESU", "PPSTRES", "PPSTRESU", "type_interval", "exclude")
+  group_cols <- setdiff(colnames(data), extra_res_cols)
 
   # Filter for the parameter of interest
   df <- data[data$PPTESTCD == parameter, ]
@@ -131,7 +130,7 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
         NULL
       }
     ) %>%
-    group_by(across(all_of(c(match_cols, contrast_var, "PPTESTCD", paste0(contrast_var, "_den"))))) %>%
+    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_den"))))) %>%
     unique() %>%
     # Use mean values in case of multiple denominator rows per numerator
     mutate(
@@ -156,7 +155,7 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
       PPTESTCD = if (!is.null(custom.pptestcd)) {
         custom.pptestcd
       } else {
-        ifelse(n > 1, paste0(PPTESTCD, "_RATIO (mean)"), paste0(PPTESTCD, "_RATIO"))
+        ifelse(n > 1, paste0("RA", PPTESTCD, " (mean)"), paste0("RA", PPTESTCD))
       }
     ) %>%
     # Keep same foramt as the input (PKNCAresults)
@@ -190,7 +189,7 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominat
   data
 }
 
-calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference = "PARAM: Analyte01", aggregate_subject = "no", adjusting_factor = 1.4) {
+calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference = "PARAM: Analyte01", aggregate_subject = "no", adjusting_factor = 1.4, custom.pptestcd = NULL) {
   reference_colname <- gsub("(.*): (.*)", "\\1", reference)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
   if (aggregate_subject == "yes") {
@@ -267,7 +266,7 @@ calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference =
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups,
       adjusting_factor = adjusting_factor,
-      custom.pptestcd = NULL
+      custom.pptestcd = custom.pptestcd
     )
     all_ratios <- bind_rows(all_ratios, ratio_calculations)
   }
@@ -278,4 +277,38 @@ calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference =
     distinct(across(all_of(
       c("PPTESTCD", group_vars(res$data), "end"))
     ), .keep_all = TRUE)
+}
+
+#' Apply Ratio Calculations to PKNCAresult Object
+#'
+#' This function takes a PKNCAresult object and a data.frame containing ratio calculation parameters,
+#' applies the `calculate_ratio_app` function for each row, and updates the PKNCAresult object.
+#'
+#' @param res A PKNCAresult object.
+#' @param ratio_table A data.frame containing columns: Parameter, Reference, Numerator, AggregateSubject, AdjustingFactor.
+#' @return The updated PKNCAresult object with added rows in the `result` data.frame.
+#' @export
+calculate_table_ratios_app <- function(res, ratio_table) {
+
+  # Make a list to save all results
+  ratio_results <- vector("list", nrow(ratio_table))
+
+  # Loop through each row of the ratio_table
+  for (i in seq_len(nrow(ratio_table))) {
+
+    ratio_results[[i]] <- calculate_ratio_app(
+      res = res,
+      parameter = ratio_table$Parameter[i],
+      numerator = ratio_table$Numerator[i],
+      reference = ratio_table$Reference[i],
+      aggregate_subject = ratio_table$AggregateSubject[i],
+      adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
+      custom.pptestcd = if(ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
+    )
+  }
+
+  # Combine all results into the original PKNCAresult object
+  res$result <- do.call(rbind, c(list(res$result), lapply(ratio_results, function(x) x$result)))
+#browser()
+  res
 }

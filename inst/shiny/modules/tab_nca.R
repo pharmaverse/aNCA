@@ -130,8 +130,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-              )
-              browser()
+              ) %>%
+              # Add parameter ratio calculations
+              calculate_table_ratios_app(ratio_table = ratio_table())
           },
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),

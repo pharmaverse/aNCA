@@ -57,7 +57,6 @@ ratio_calculations_table_server <- function(
     })
 
     ratio_param_options <- reactive({
-
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         dplyr::filter(type_interval == "main") %>%
@@ -90,6 +89,7 @@ ratio_calculations_table_server <- function(
 
     # Add row
     observeEvent(input$add_row, {
+
       if (length(ratio_param_options()) == 0 || length(ratio_reference_options()) == 0) {
         showNotification("No parameters or group variables available to add a row.", type = "error")
         return()
@@ -100,6 +100,7 @@ ratio_calculations_table_server <- function(
         Numerator = "(all)",
         AggregateSubject = "no",
         AdjustingFactor = 1,
+        PPTESTCD = "",
         stringsAsFactors = FALSE
       )
       updated <- rbind(ratio_table(), new_row)
@@ -169,7 +170,7 @@ ratio_calculations_table_server <- function(
         )
       )
       reactable(
-        data = ratio_table(),
+        data = dplyr::select(ratio_table(), -PPTESTCD),
         defaultColDef = colDef(align = "center"),
         columns = col_defs,
         selection = "multiple",
@@ -189,10 +190,6 @@ ratio_calculations_table_server <- function(
           edit <- input[[paste0("edit_", colname)]]
           tbl <- ratio_table()
           tbl[edit$row, edit$column] <- edit$value
-          # If ContrastVar changed, reset ReferenceValue for that row
-          if (colname == "ContrastVar") {
-            tbl[edit$row, "ReferenceValue"] <- ""
-          }
           ratio_table(tbl)
         })
       })
@@ -209,6 +206,25 @@ ratio_calculations_table_server <- function(
             }, ignoreInit = TRUE)
           }
         }
+      })
+      
+      # Add special names for certain ratios
+      observe({
+        analyte_col <- adnca_data()$conc$columns$groups$group_analyte
+        profile_col <- "NCA_PROFILE"
+        pcspec_col <- "PCSPEC"
+        route_col <- adnca_data()$dose$columns$route
+        
+        tbl <- ratio_table() %>% mutate(
+          PPTESTCD = case_when(
+            startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
+            startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
+            startsWith(Reference, pcspec_col) ~ paste0("PR", Parameter),
+            startsWith(Reference, paste0(route_col, ": intravascular")) ~ "FABS",
+            TRUE ~ paste0("RA", Parameter)
+          )
+        )
+        ratio_table(tbl)
       })
     })
 
