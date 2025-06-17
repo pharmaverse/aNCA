@@ -255,12 +255,13 @@ calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference =
     by = intersect(names(denominator_groups), names(res_groups))
   ) %>%
     # Ensure that the contrast variable is not in match_cols
-    select(any_of(c(group_vars(res), "start", "end")))
+    select(any_of(c(group_vars(res), "start", "end"))) %>%
+    unique()
 
   all_ratios <- data.frame()
   for (ix in seq_along(match_cols)) {
     ratio_calculations <- calculate_ratios(
-      res,
+      data = res$result,
       parameter = parameter,
       match_cols = match_cols[[ix]],
       denominator_groups = denominator_groups,
@@ -270,9 +271,13 @@ calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference =
     )
     all_ratios <- bind_rows(all_ratios, ratio_calculations)
   }
+  # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
+  # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed
   unnest(all_ratios) %>%
     # Make sure there are no duplicate rows for: parameter, contrast_var, and match_cols
-    distinct(across(all_of(c(parameter, group_vars(res$data), "end", "impute"))), .keep_all = TRUE)
+    distinct(across(all_of(
+      c("PPTESTCD", group_vars(res$data), "end"))
+    ), .keep_all = TRUE)
 }
 
 create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var = "PARAM", reference_values = "A", aggregate_subject = "never", adjusting_factor = 1) {
