@@ -419,7 +419,7 @@ div[data-value="Settings"] > div.row a {
   flex: 1;
   overflow-y: auto;
   margin-top: 10px;
-  padding: 20px 20px 0px 20px;
+  padding: 20px;
 }
 
 /* data tab styling */
@@ -468,10 +468,6 @@ div[data-value="Settings"] > div.row a {
   margin: 0;
 }
 
-.data-tab-content .reactable {
-  margin-top: 2em;
-}
-
 .data-tab-content .data-mapping-container .column-mapping-row {
   display: flex;
   align-items: center;
@@ -514,6 +510,7 @@ div[data-value="Settings"] > div.row a {
 
 .upload-container {
   padding: 32px 16px;
+  margin-bottom: 32px;
   border: 1px dashed #007bc2;
   display: flex;
   justify-content: center;
@@ -535,6 +532,31 @@ div[data-value="Settings"] > div.row a {
 .upload-container .shiny-input-container .input-group .input-group-btn .btn:hover {
   background-color: #007bc2;
   color: #ffffff;
+}
+
+.data-filtering-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.filtered-table-container {
+  flex: 1 1 0;
+  min-width: 300px;
+  overflow-x: auto;
+}
+
+.filters-container {
+  width: 300px;
+  background-color: whitesmoke;
+  flex-shrink: 0;
+  padding: 20px;
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  height: 70vh;
+  overflow-y: auto;
 }
 
 .reactable-table .rt-search {

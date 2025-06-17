@@ -8,7 +8,7 @@
   flex: 1;
   overflow-y: auto;
   margin-top: 10px;
-  padding: 20px 20px 0px 20px;
+  padding: 20px;
 }
 
 /* data tab styling */
@@ -54,10 +54,6 @@
       padding: 0;
       margin: 0;
     }
-  }
-
-  .reactable {
-    margin-top: 2em;
   }
 
   /* column mapping UI */
@@ -106,6 +102,7 @@
 
 .upload-container {
   padding: 32px 16px;
+  margin-bottom: 32px;
   border: 1px dashed $anca-blue;
   display: flex;
   justify-content: center;
@@ -130,4 +127,29 @@
       }
     }
   }
+}
+
+.data-filtering-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.filtered-table-container {
+  flex: 1 1 0;
+  min-width: 300px;
+  overflow-x: auto;
+}
+
+.filters-container {
+  width: 300px;
+  background-color: whitesmoke;
+  flex-shrink: 0;
+  padding: 20px;
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  height: 70vh;
+  overflow-y: auto;
 }
