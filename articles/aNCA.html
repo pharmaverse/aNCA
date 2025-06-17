@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9098</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9099</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,11 +88,12 @@ with the aNCA app.</p>
 <h4 id="uploading-a-dataset">Uploading a dataset<a class="anchor" aria-label="anchor" href="#uploading-a-dataset"></a>
 </h4>
 <p>Click <strong>Upload File</strong> and select the dataset you would
-like to use. The data must be in <code>.csv</code> or <code>.rds</code>
-format. The best input for the app is data that follows the ADNCA
-format. Other formats of data will also work. Alternatively, for
-exploring the app, Users can use the Dummy dataset that is already
-uploaded.</p>
+like to use. The data can be in <code>.csv</code>,
+<code>sas7bdat</code>, <code>.xslx</code>, <code>.parquet</code> or
+<code>.rds</code> format. The best input for the app is data that
+follows the ADNCA format according to CDISC guidelines. Other formats of
+data will also work. Alternatively, for exploring the app, Users can use
+the Dummy dataset that is already uploaded.</p>
 <p><img src="images/get_started/01.png" alt="Data upload"></p>
 </div>
 <div class="section level4">
@@ -277,21 +278,20 @@ Mapping</a> step.</p>
 </table>
 </div>
 <div class="section level4">
-<h4 id="verifying-and-adding-filters">Verifying and adding filters<a class="anchor" aria-label="anchor" href="#verifying-and-adding-filters"></a>
+<h4 id="adding-filters">Adding Filters<a class="anchor" aria-label="anchor" href="#adding-filters"></a>
 </h4>
-<p>Check that the data contains all the information you were expecting
-and is mapped correctly. If you want to change the data by adding
-filters, click the <em>Add Filter</em> button.</p>
+<p>Once your data is uploaded, examine it and then click “Next”. If you
+want to change the data by adding filters, click the <em>Add Filter</em>
+button.</p>
 <p><img src="images/get_started/02.png" alt="Adding filters"></p>
 <blockquote class="important">
-<p>Don’t forget to scroll down and click <strong>Submit
-Filters</strong>!</p>
+<p>Don’t forget to click <strong>Submit Filters</strong>!</p>
 </blockquote>
 </div>
 <div class="section level4">
-<h4 id="data-mapping">Data mapping<a class="anchor" aria-label="anchor" href="#data-mapping"></a>
+<h4 id="data-mapping">Data Mapping<a class="anchor" aria-label="anchor" href="#data-mapping"></a>
 </h4>
-<p>Click on the <em>Column Mapping</em> tab.</p>
+<p>Click “Next” to get to the <em>Mapping</em> section.</p>
 <ul>
 <li><p>Map the correct columns in your dataset to the corresponding
 label.</p></li>
@@ -301,10 +301,10 @@ for the corresponding columns.</p></li>
 <li><p>Click <strong>Submit Mapping</strong>. You will be automatically
 directed to the next tab.</p></li>
 </ul>
-<p><img src="images/get_started/04.png" alt="Mapping tab"><img src="images/get_started/03.png" alt="Mapping"></p>
+<p><img src="images/get_started/03.png" alt="Mapping"></p>
 </div>
 <div class="section level4">
-<h4 id="review">Review<a class="anchor" aria-label="anchor" href="#review"></a>
+<h4 id="preview">Preview<a class="anchor" aria-label="anchor" href="#preview"></a>
 </h4>
 <p>Review the data and ensure that the columns have been mapped
 correctly, and all your filters have been applied. If there are any
@@ -316,27 +316,25 @@ requested. Just follow the instructions.</p>
 <div class="section level2">
 <h2 id="step-2-run-nca">Step 2: Run NCA<a class="anchor" aria-label="anchor" href="#step-2-run-nca"></a>
 </h2>
-<p>Click on the <em>NCA</em> tab at the top of the screen to switch to
-the next section.</p>
+<p>Click on the <em>NCA</em> tab in the menu bar to switch to the next
+section.</p>
 <div class="section level3">
 <h3 id="data-selection">Data selection<a class="anchor" aria-label="anchor" href="#data-selection"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li><p><em>NCA settings</em>: Choose the Analyte, Dose Number(s) and/or
+<li><p><em>Settings</em>: Choose the Analyte, Dose Number(s) and/or
 Specimen(s) you would like to run the NCA on, the extrapolation method
 and the NCA parameters to calculate. Select additional options including
-partial AUCs, or rule sets to flag the data. In the summary tab, a table
-summarizes the settings you have selected.
-<img src="images/get_started/06.png" alt="NCA settings"></p></li>
+partial AUCs, units, or rule sets to flag the data. In the summary tab,
+a table summarizes the settings you have selected. You can also download
+the settings you have created, and upload them again the next time you
+use the app, which will implement the saved setup.
+<img src="images/get_started/04.png" alt="NCA settings"></p></li>
 <li><p>Click <strong>Run NCA</strong> at the top of the page and check
 that the data is as expected. You will automatically be redirected to
 the <em>Results</em> tab.</p></li>
 </ol>
-<p><img src="images/get_started/07.png" alt="Running NCA"></p>
-<blockquote class="note">
-<p>The <strong>Save Project Settings</strong>/<strong>Upload
-Settings</strong> option is not working currently.</p>
-</blockquote>
+<p><img src="images/get_started/05.png" alt="Running NCA"></p>
 </div>
 </div>
 <div class="section level2">
@@ -354,10 +352,10 @@ flagged.</p>
 <div class="section level3">
 <h3 id="exclusions-and-manual-slopes">Exclusions and Manual Slopes<a class="anchor" aria-label="anchor" href="#exclusions-and-manual-slopes"></a>
 </h3>
-<p>Click on the <em>Slopes</em> tab to view more detailed information
-about the slopes selected in the NCA. To add exclusions or manual slope
-selections, redirect to the <em>Slope Selector</em> tab in the
-<em>Setup</em> page.</p>
+<p>Click on the <em>Slopes Information</em> tab to view more detailed
+information about the slopes selected in the NCA. To add exclusions or
+manual slope selections, redirect to the <em>Slope Selector</em> tab in
+the <em>Setup</em> page.</p>
 <p><img src="images/get_started/08.png" alt="Slope selection"></p>
 <p>There are two different ways to add exclusions/selections to the
 slopes.</p>
@@ -392,21 +390,20 @@ action (i.e. select a new slope, double click the same point).</li>
 <div class="section level5">
 <h5 id="applying-the-exclusions">Applying the exclusions<a class="anchor" aria-label="anchor" href="#applying-the-exclusions"></a>
 </h5>
-<p>Once the exclusions/selections have been added, click
-<strong>Apply</strong>.</p>
-<p><img src="images/get_started/11.png" alt="Applying exclusions/selections"></p>
-<p>You can check if they have been applied in the <em>Results</em> page,
-on the <em>Exclusions</em> tab.</p>
+<p>Once the exclusions/selections have been added, click <strong>Run
+NCA</strong> again.</p>
+<p>You can check if they have been applied in the <em>Slopes
+Information</em> page, on the <em>Manual Adjustments</em> tab.</p>
 <blockquote class="important">
-<p>If you do not click <strong>Apply</strong>, the manual slopes will
+<p>If you do not click <strong>Run NCA</strong>, the manual slopes will
 not be added!</p>
 </blockquote>
 </div>
 <div class="section level4">
 <h4 id="parameter-datasets">Parameter Datasets<a class="anchor" aria-label="anchor" href="#parameter-datasets"></a>
 </h4>
-<p>In the Parameter Datasets tab you can see and export the ADPP and PP
-datasets.</p>
+<p>In the Parameter Datasets tab you can see and export the ADPP, ADPC,
+and PP datasets.</p>
 <p><img src="images/get_started/12.png" alt="Parameter Datasets"></p>
 </div>
 </div>
@@ -418,29 +415,6 @@ tissue-matrix ratios using the concentration ratios tab. Input which
 specimen you would like as the numerator and denominator, and click
 <strong>Submit</strong>.</p>
 <p><img src="images/get_started/13.png" alt="Additional Analysis"></p>
-</div>
-<div class="section level3">
-<h3 id="saving-and-uploading-settings">Saving and uploading settings<a class="anchor" aria-label="anchor" href="#saving-and-uploading-settings"></a>
-</h3>
-<blockquote class="warning">
-<p>Currently work in progress</p>
-</blockquote>
-<p>After completing an NCA and creating manual slopes, you may want to
-save these for next time.</p>
-<div class="section level5">
-<h5 id="saving">Saving<a class="anchor" aria-label="anchor" href="#saving"></a>
-</h5>
-<p>Click the button <em>Save Project Settings</em> on top of the tabs.
-This will download a .csv file.</p>
-</div>
-<div class="section level5">
-<h5 id="uploading">Uploading<a class="anchor" aria-label="anchor" href="#uploading"></a>
-</h5>
-<p>To upload settings in a later analysis, after column mapping, in
-<em>Setup</em>, in the <em>NCA Settings</em> tab, click <em>Browse</em>.
-The inclusions and exclusions will be automatically added to the
-data.</p>
-</div>
 </div>
 </div>
 <div class="section level2">
