@@ -115,7 +115,7 @@
 <polyline points='30.49,76.55 33.23,76.55 ' style='stroke-width: 1.07; stroke: #333333; stroke-linecap: butt;' />
 <text x='373.88' y='555.80' text-anchor='middle' style='font-size: 10.00px; font-family: sans;' textLength='48.90px' lengthAdjust='spacingAndGlyphs'>AFRLT [hr]</text>
 <text transform='translate(12.36,294.42) rotate(-90)' text-anchor='middle' style='font-size: 10.00px; font-family: sans;' textLength='100.07px' lengthAdjust='spacingAndGlyphs'>Analysis value [ng/mL]</text>
-<text x='33.23' y='31.07' style='font-size: 11.00px; font-family: sans;' textLength='476.65px' lengthAdjust='spacingAndGlyphs'>Treatment Group:  (N=20)&lt;br&gt;Route: extravascular, Specimen: SERUM, Analyte: A, Subject ID: 2</text>
+<text x='33.23' y='31.07' style='font-size: 11.00px; font-family: sans;' textLength='567.75px' lengthAdjust='spacingAndGlyphs'>Treatment Group: Dummy Treatment (N=20)&lt;br&gt;Route: extravascular, Specimen: SERUM, Analyte: A, Subject ID: 2</text>
 <text x='33.23' y='15.11' style='font-size: 14.00px; font-family: sans;' textLength='499.61px' lengthAdjust='spacingAndGlyphs'>Plot of PK Concentration-Time Profile linear and logarithmic scale, by Cohort: S1</text>
 </g>
 </svg>
