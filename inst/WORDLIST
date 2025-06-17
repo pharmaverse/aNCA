@@ -1,5 +1,6 @@
 ADNCA
 ADOSEDUR
+ADPC
 ADPP
 AFRLT
 ARRLT
@@ -42,7 +43,6 @@ Plotly
 Pre
 RRLTU
 RStudio
-SBS
 STUDYID
 TLG
 TLGs
@@ -60,7 +60,6 @@ cdisc
 cmax
 codebase
 concu
-csv
 customizable
 devtools
 df
