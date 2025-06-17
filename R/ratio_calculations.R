@@ -87,11 +87,11 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), denominator_groups = data.frame(TREATMENT = "Placebo"))
 #' @export
 #'
-calculate_ratios <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+calculate_ratios <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
   UseMethod("calculate_ratios", data)
 }
 
-calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
   if (!any(data$PPTESTCD == parameter)) {
     warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
   }
@@ -157,11 +157,6 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
         custom.pptestcd
       } else {
         ifelse(n > 1, paste0(PPTESTCD, "_RATIO (mean)"), paste0(PPTESTCD, "_RATIO"))
-      },
-      PPTEST = if (!is.null(custom.pptest)) {
-        custom.pptest
-      } else {
-        ifelse(n > 1, paste0(PPTEST, " Ratio (mean)"), paste0(PPTEST, " Ratio"))
       }
     ) %>%
     # Keep same foramt as the input (PKNCAresults)
@@ -169,7 +164,7 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
     unique()
 }
 
-calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL, custom.pptest = NULL) {
+calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominator_groups, numerator_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
   # Check if match_cols and denominator_groups are valid group columns
   # Make checks on the input formats
   if (!all(c(match_cols, names(denominator_groups), names(numerator_groups)) %in% c(names(PKNCA::getGroups(data)), "start", "end"))) {
@@ -187,8 +182,7 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominat
     denominator_groups = denominator_groups,
     numerator_groups = numerator_groups,
     adjusting_factor = adjusting_factor,
-    custom.pptestcd = custom.pptestcd,
-    custom.pptest = custom.pptest
+    custom.pptestcd = custom.pptestcd
   )
 
   # Update the PKNCA results with the new ratios
@@ -196,9 +190,9 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominat
   data
 }
 
-calculate_ratio_app <- function(PKNCAresults, parameter, numerator = "(all)", reference = "ANALYTE: A", match_cols = c("USUBJID", "start", "end"), aggregate_subject = "no", adjusting_factor = 1) {
+calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference = "PARAM: Analyte01", aggregate_subject = "no", adjusting_factor = 1.4) {
   reference_colname <- gsub("(.*): (.*)", "\\1", reference)
-  match_cols <- setdiff(unique(c(dplyr::group_vars(PKNCAresults), "start", "end")), reference_colname)
+  match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
   if (aggregate_subject == "yes") {
     match_cols <- list(setdiff(match_cols, "USUBJID"))
   } else if (aggregate_subject == "no") {
@@ -214,14 +208,15 @@ calculate_ratio_app <- function(PKNCAresults, parameter, numerator = "(all)", re
   }
 
   # Get all available groups
-  o_dose <- PKNCAresults$data$dose
-  res_groups <- PKNCAresults$result[c(group_vars(PKNCAresults), "start", "end")] %>%
+  o_dose <- res$data$dose
+  res_groups <- res$result[c(group_vars(res), "start", "end")] %>%
     # Join route information (bioavailability ratios)
     left_join(
       dplyr::select(
         o_dose$data,
         any_of(c(dplyr::group_vars(o_dose), o_dose$columns$route))
-      )
+      ),
+      by = dplyr::group_vars(o_dose)
     )
 
   if (numerator == "(all)") {
@@ -260,25 +255,24 @@ calculate_ratio_app <- function(PKNCAresults, parameter, numerator = "(all)", re
     by = intersect(names(denominator_groups), names(res_groups))
   ) %>%
     # Ensure that the contrast variable is not in match_cols
-    select(any_of(c(group_vars(PKNCAresults), "start", "end")))
+    select(any_of(c(group_vars(res), "start", "end")))
 
   all_ratios <- data.frame()
   for (ix in seq_along(match_cols)) {
     ratio_calculations <- calculate_ratios(
-      PKNCAresults,
+      res,
       parameter = parameter,
       match_cols = match_cols[[ix]],
       denominator_groups = denominator_groups,
       numerator_groups = numerator_groups,
       adjusting_factor = adjusting_factor,
-      custom.pptestcd = NULL,
-      custom.pptest = NULL
+      custom.pptestcd = NULL
     )
     all_ratios <- bind_rows(all_ratios, ratio_calculations)
   }
   unnest(all_ratios) %>%
     # Make sure there are no duplicate rows for: parameter, contrast_var, and match_cols
-    distinct(across(all_of(c(parameter, group_vars(PKNCAresults$data), "end", "impute"))), .keep_all = TRUE)
+    distinct(across(all_of(c(parameter, group_vars(res$data), "end", "impute"))), .keep_all = TRUE)
 }
 
 create_ratio_intervals <- function(PKNCAdata, parameter = "cmax", contrast_var = "PARAM", reference_values = "A", aggregate_subject = "never", adjusting_factor = 1) {
