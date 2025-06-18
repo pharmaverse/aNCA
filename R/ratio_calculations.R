@@ -303,12 +303,12 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       reference = ratio_table$Reference[i],
       aggregate_subject = ratio_table$AggregateSubject[i],
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
-      custom.pptestcd = if(ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
+      custom.pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
     )
   }
 
   # Combine all results into the original PKNCAresult object
-  res$result <- do.call(rbind, c(list(res$result), lapply(ratio_results, function(x) x$result)))
-#browser()
+  res$result <- do.call(rbind, c(list(res$result), ratio_results))
+
   res
 }
