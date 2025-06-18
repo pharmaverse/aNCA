@@ -31,7 +31,7 @@
 #' @examples
 #' \dontrun{
 #' data <- data.frame(
-#' DOSNO = c(1, 1, 1, 1, 1, 1),
+#' NCA_PROFILE = c(1, 1, 1, 1, 1, 1),
 #' PPTESTCD = c("A", "A", "B", "B", "C", "C"),
 #' PPSTRES = c(10, 20, 5, 15, NA, 30),
 #' PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
@@ -39,7 +39,7 @@
 #' calculate_summary_stats(data)
 #' }
 
-calculate_summary_stats <- function(data, input_groups = "DOSNO") {
+calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
 
   # Return an empty data frame if the input data is empty
   if (nrow(data) == 0) {
@@ -56,11 +56,7 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
     # Only use unique records and calculate the conversion factor between PPSTRESU/PPORRESU
     unique() %>%
     mutate(
-      conv_factor = case_when(
-        PPSTRESU == PPORRESU | PPSTRES == PPORRES ~ 1,
-        is.na(PPSTRES) & is.na(PPORRES) ~ 1,
-        TRUE ~ PPSTRES / PPORRES
-      )
+      conv_factor = get_conversion_factor(PPORRESU, PPSTRESU)
     ) %>%
 
     # Group by the input groups and the parameter test codes
@@ -76,13 +72,14 @@ calculate_summary_stats <- function(data, input_groups = "DOSNO") {
         ModeUnit == "",
         PPTESTCD,
         paste0(PPTESTCD, "[", ModeUnit, "]")
-      )
+      ),
+      PPSTRES_log = log(ifelse(PPSTRES > 0, PPSTRES, NA_real_)),
     ) %>%
 
     # Calculate summary statistics
     summarise(
-      Geomean = exp(mean(log(PPSTRES), na.rm = TRUE)),
-      Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(log(PPSTRES), na.rm = TRUE))) * 100,
+      Geomean = exp(mean(PPSTRES_log, na.rm = TRUE)),
+      Geocv = (sd(PPSTRES, na.rm = TRUE) / exp(mean(PPSTRES_log, na.rm = TRUE))) * 100,
       Mean = mean(PPSTRES, na.rm = TRUE),
       SD = sd(PPSTRES, na.rm = TRUE),
       Min = ifelse(all(is.na(PPSTRES)), NA, min(PPSTRES, na.rm = TRUE)),

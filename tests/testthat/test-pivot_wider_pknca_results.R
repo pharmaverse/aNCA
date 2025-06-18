@@ -66,15 +66,28 @@
 
 describe("pivot_wider_pknca_results", {
 
-  pivoted_res <- expect_no_error(pivot_wider_pknca_results(FIXTURE_PKNCA_RES))
+  pknca_res <- FIXTURE_PKNCA_RES %>%
+    filter(USUBJID %in% 1:5)
+  pivoted_res <- expect_no_error(pivot_wider_pknca_results(pknca_res))
+
+  # Store the expected parameter columns in pivoted_res
+  exp_main_param_cols <- pknca_res$result %>%
+    filter(type_interval == "main") %>%
+    mutate(param_col = ifelse(
+      PPSTRESU != "",
+      paste0(PPTESTCD, "[", PPSTRESU, "]"),
+      PPTESTCD
+    )) %>%
+    pull(param_col) %>%
+    unique()
 
   it("produces a data.frame", {
     expect_s3_class(pivoted_res, "data.frame")
   })
 
   it("produces a data.frame with expected format when only reshaping main intervals", {
-    res_only_main <- FIXTURE_PKNCA_RES
-    res_only_main$result <- FIXTURE_PKNCA_RES$result  %>%
+    res_only_main <- pknca_res
+    res_only_main$result <- pknca_res$result  %>%
       filter(type_interval == "main")
     pivoted_res_only_main <- pivot_wider_pknca_results(res_only_main)
     expect_s3_class(pivoted_res_only_main, "data.frame")
@@ -82,21 +95,20 @@ describe("pivot_wider_pknca_results", {
     # Check that the result contains expected columns
     group_columns <- PKNCA::getGroups(res_only_main$data$conc)
     expected_colnames <- c(
-      "start", "end", "DOSNO", "AFRLT", "ARRLT",
-      "NFRLT", "NRRLT", "ADOSE", "ROUTE", "ADOSEDUR",
-      "AUCLST[hr*ng/mL]", "AUCIFO[hr*ng/mL]", "CLST[ng/mL]",
-      "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
-      "R2", "R2ADJ", "LAMZLL[hr]",
-      "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
-      "LAMZSPN", "LAMZIX",
-      "LAMZMTD", "Exclude",
+      "start", "end",
+      # Parameter columns transformed by the function
+      exp_main_param_cols,
+      # Columns currently made by the function
+      "LAMZIX", "LAMZMTD", "Exclude",
+      # Concentration group columns
       colnames(group_columns),
+      # Columns from dose data
       intersect(colnames(res_only_main$data$dose$data), colnames(pivoted_res_only_main))
     )
     expect_setequal(colnames(pivoted_res_only_main), expected_colnames)
 
-    # Check number of rows is the expected (each dose has 1 row in the pivoted data)
-    expect_equal(nrow(pivoted_res_only_main), nrow(res_only_main$data$dose$data))
+    # Check number of rows is the expected (1 per results group)
+    expect_equal(nrow(pivoted_res_only_main), nrow(unique(PKNCA::getGroups(res_only_main))))
 
     # Check parameter values match the ones in the PKNCA results object
     expect_no_error(.validate_pknca_params(res_only_main, pivoted_res_only_main))
@@ -107,23 +119,22 @@ describe("pivot_wider_pknca_results", {
     expect_s3_class(pivoted_res, "data.frame")
 
     # Check that the result contains expected columns
-    group_columns <- PKNCA::getGroups(FIXTURE_PKNCA_RES$data$conc)
+    group_columns <- PKNCA::getGroups(pknca_res$data$conc)
     expected_colnames <- c(
-      "start", "end", "DOSNO", "AFRLT", "ARRLT",
-      "NFRLT", "NRRLT", "ADOSE", "ROUTE", "ADOSEDUR",
-      "AUCLST[hr*ng/mL]", "AUCIFO[hr*ng/mL]", "CLST[ng/mL]",
-      "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
-      "R2", "R2ADJ", "LAMZLL[hr]",
-      "LAMZNPT[count]", "CLSTP[ng/mL]", "LAMZHL[hr]",
-      "LAMZSPN", "LAMZIX", "LAMZMTD", "Exclude",
+      "start", "end",
+      # Parameter columns transformed by the function
+      exp_main_param_cols,
       "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]",
+      # Columns currently made by the function
+      "LAMZIX", "LAMZMTD", "Exclude",
       colnames(group_columns),
-      intersect(colnames(FIXTURE_PKNCA_RES$data$dose$data), colnames(pivoted_res))
+      intersect(colnames(pknca_res$data$dose$data), colnames(pivoted_res))
     )
     expect_setequal(colnames(pivoted_res), expected_colnames)
-    expect_equal(nrow(pivoted_res), nrow(FIXTURE_PKNCA_RES$data$dose$data))
+    main_res <- filter(pknca_res, type_interval == "main")
+    expect_equal(nrow(pivoted_res), nrow(unique(PKNCA::getGroups(main_res))))
 
-    expect_no_error(.validate_pknca_params(FIXTURE_PKNCA_RES, pivoted_res))
+    expect_no_error(.validate_pknca_params(pknca_res, pivoted_res))
   })
 
   it("rounds numeric values to three decimals", {
@@ -143,9 +154,9 @@ describe("pivot_wider_pknca_results", {
   it("adds appropriate labels to columns (CDISC PPTEST)", {
     labels <- formatters::var_labels(pivoted_res)
     expected_labels <- c(
-      USUBJID = NA, PARAM = NA, start = NA, end = NA, DOSNO = NA, DOSNOA = NA,
+      USUBJID = NA, PARAM = NA, start = NA, end = NA, NCA_PROFILE = NA, DOSNOA = NA,
       AFRLT = NA, ARRLT = NA, NFRLT = NA, NRRLT = NA, ROUTE = NA,
-      ADOSE = NA, DRUG = NA, ADOSEDUR = NA,
+      DOSEA = NA, DRUG = NA, ADOSEDUR = NA, DOSEU = NA,
       `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
       `CMAX[ng/mL]` = "Max Conc",
       `TMAX[hr]` = "Time of CMAX",
@@ -168,22 +179,22 @@ describe("pivot_wider_pknca_results", {
   })
 
   it("handles exclude values correctly", {
-    # Modify FIXTURE_PKNCA_RES$result to include exclude values
-    res_with_exclude <- FIXTURE_PKNCA_RES
+    # Modify pknca_res$result to include exclude values
+    res_with_exclude <- pknca_res
     res_with_exclude$result <- res_with_exclude$result %>%
       mutate(
-        exclude = ifelse(USUBJID == 1 & DOSNO == 1, "Reason 1; Reason 2", NA_character_)
+        exclude = ifelse(USUBJID == 1 & NCA_PROFILE == 1, "Reason 1; Reason 2", NA_character_)
       )
 
     # Apply pivot_wider_pknca_results
     result <- pivot_wider_pknca_results(res_with_exclude)
 
     # Check that the Exclude column combines and deduplicates exclude values
-    exclude_values <- result %>% filter(USUBJID == 1 & DOSNO == 1) %>% pull(Exclude)
+    exclude_values <- result %>% filter(USUBJID == 1 & NCA_PROFILE == 1) %>% pull(Exclude)
     expect_equal(exclude_values, "Reason 1, Reason 2")
 
     # Check that rows without exclude values have NA in the Exclude column
-    exclude_values_na <- result %>% filter(USUBJID == 2 & DOSNO == 2) %>% pull(Exclude)
+    exclude_values_na <- result %>% filter(USUBJID == 2 & NCA_PROFILE == 2) %>% pull(Exclude)
     expect_true(all(is.na(exclude_values_na)))
   })
 })

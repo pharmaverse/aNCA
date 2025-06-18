@@ -24,7 +24,7 @@ base::local({
   # Create Testing Concentration Data
   FIXTURE_CONC_DATA <<- data.frame(
     # Columns that are mapped from the data
-    AVAL = c(                 # USUBJID.DOSNO
+    AVAL = c(                 # USUBJID.NCA_PROFILE
       0:4,                    # 1.1 (Extravascular, linear & sample at dose)
       c(1, 2, 1.5, 1, 0.5),   # 2.1 (Extravascular eq, with max)
       c(1, 2, 1.5, 1, 0.5),   # 2.2 (Extravascular eq, 2nd dose)
@@ -33,7 +33,11 @@ base::local({
       rep(2, 5),              # 4.1 (IV bolus, abnormal profile)
       c(1, 2.5, 1, 0.7, 0.5), # 5.1 (Infusion)
       5:1,                    # 6.1 (IV bolus, metabolite)
-      c(1:3, NA, 0.5)         # 7.1 (Extravascular, with NA)
+      c(1:3, NA, 0.5),        # 7.1 (Extravascular, with NA)
+      c(1:3, NA, 0.5),        # 8.1 (A)
+      c(0:2, NA, 0.5),        # 8.1 (B)
+      c(5:3, NA, 0.5),        # 8.2 (A)
+      c(4:2, NA, 0.5)         # 8.2 (B)
     ),
     AFRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -44,7 +48,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(5.5, 9.5, 1),        # 8.2 (A)
+      seq(5.5, 9.5, 1)         # 8.2 (B)
     ),
     ARRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -55,7 +64,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+
+      seq(0.5, 4.5, 1),        # 8.1 (A)
+      seq(0.5, 4.5, 1),        # 8.1 (B)
+      seq(0.5, 4.5, 1),        # 8.2 (A)
+      seq(0.5, 4.5, 1)         # 8.2 (B)
     ),
     NFRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -66,7 +80,12 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+
+      seq(0.5, 4.5, 1),      # 8.1 (A)
+      seq(0.5, 4.5, 1),      # 8.1 (B)
+      seq(5.5, 9.5, 1),      # 8.2 (A)
+      seq(5.5, 9.5, 1)       # 8.2 (B)
     ),
     NRRLT = c(                # Assumption 1: CDISC time variables
       0:4,                   # 1.1
@@ -77,17 +96,30 @@ base::local({
       seq(0.5, 4.5, 1),      # 4.1
       seq(0.5, 4.5, 1),      # 5.1
       seq(0.5, 4.5, 1),      # 6.1
-      seq(0.5, 4.5, 1)       # 7.1
+      seq(0.5, 4.5, 1),      # 7.1
+      seq(0.5, 4.5, 1),      # 8.1 (A)
+      seq(0.5, 4.5, 1),      # 8.1 (B)
+      seq(0.5, 4.5, 1),      # 8.2 (A)
+      seq(0.5, 4.5, 1)       # 8.2 (B)
     ),
     ROUTE = c(
       rep("extravascular", 5 * 3), # 1.1 - 2.2
-      rep("intravascular", 5 * 6)  # 3.1 - 7.1
+      rep("intravascular", 5 * 6),  # 3.1 - 7.1
+      rep("extravascular", 5), # 8.1 (A)
+      rep("extravascular", 5), # 8.1 (B)
+      rep("intravascular", 5), # 8.2 (A)
+      rep("intravascular", 5)  # 8.2 (B)
     ),
     PARAM = c(
       rep("A", 5 * 7),          # 1.1 - 5.1
       rep("B", 5 * 1),          # 6.1 (IV bolus, metabolite)
-      rep("A", 5 * 1)           # 7.1 (Extravascular, with NA)
+      rep("A", 5 * 1),          # 7.1 (Extravascular, with NA)
+      rep("A", 5),              # 8.1 (A)
+      rep("B", 5),              # 8.1 (B)
+      rep("A", 5),              # 8.2 (A)
+      rep("B", 5)               # 8.2 (B)
     ),
+    PCSPEC = "SERUM",
     USUBJID = c(
       rep(1, 5),
       rep(2, 5 * 2),
@@ -95,34 +127,42 @@ base::local({
       rep(4, 5),
       rep(5, 5),
       rep(6, 5),
-      rep(7, 5)
+      rep(7, 5),
+      rep(8, 20)                # 8.1 (A,B), 8.2 (A,B)
     ),
-    DOSNO = c(
+    NCA_PROFILE = c(
       rep(1, 5),
       rep(1:2, each = 5),
       rep(1:2, each = 5),
       rep(1, 5),
       rep(1, 5),
       rep(1, 5),
-      rep(1, 5)
-    ),
-    DOSNO = c(
-      1,
-      c(1, 2),
-      c(1, 2),
-      1,
-      1,
-      1,
-      1
+      rep(1, 5),
+      rep(1, 10),               # 8.1 (A,B)
+      rep(2, 10)                # 8.2 (A,B)
     ),
     # Included by aNCA internally
     is.excluded.hl = FALSE,
     is.included.hl = FALSE,
     exclude_half.life = FALSE,
     # Units
-    AVALU = "mg/L",
-    RRLTU = "h"
-  )
+    AVALU = c(
+      rep("ng/mL", 5 * 7),     # 1.1 - 5.1 (A)
+      rep("ug/mL", 5),         # 6.1 (B)
+      rep("ng/mL", 5),         # 7.1 (A)
+      rep("ng/mL", 5),         # 8.1 (A)
+      rep("ug/mL", 5),         # 8.1 (B)
+      rep("ng/mL", 5),         # 8.2 (A)
+      rep("ug/mL", 5)          # 8.2 (B)
+    ),
+    RRLTU = "hr",
+    STUDYID = "S1"
+  ) %>%
+    # Needed for pivot_wider_pknca_results (dose_profile_duplicates)
+    # TODO (Gerardo): Kill this assumption
+    mutate(
+      DOSNOA = NCA_PROFILE
+    )
 
   # Create Testing Dose Data
   FIXTURE_DOSE_DATA <<- data.frame(
@@ -133,12 +173,16 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,
+      5
     ),
     ARRLT = c(
       0,
       c(0, 0),
       c(0, 0),
+      0,
+      0,
       0,
       0,
       0,
@@ -151,7 +195,9 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,
+      5
     ),
     NRRLT = c(
       0,
@@ -160,18 +206,34 @@ base::local({
       0,
       0,
       0,
-      0
+      0,
+      0,  # 8.1 (A,B)
+      0   # 8.2 (A,B)
     ),
     ROUTE = c(
-      rep("extravascular", 3),
-      rep("intravascular", 5),
-      "extravascular"
+      rep("extravascular", 3), # 1.1, 2.1, 2.2
+      rep("intravascular", 5), # 2.2 - 6.1
+      "extravascular",  # 7.1 (A)
+      "extravascular",  # 8.1 (A,B)
+      "intravascular"   # 8.2 (A,B)
     ),
-    ADOSE = 1,
+    DOSEA = c(
+      1,
+      c(1, 2),
+      c(1, 2),
+      1,
+      1,
+      1,
+      1,
+      10,             # 8.1 (A,B)
+      5               # 8.2 (A,B)
+    ),
     DRUG = "A",
     ADOSEDUR = c(
       rep(0, 6),
       1,            # 5.1 (Infusion)
+      0,
+      0,
       0,
       0
     ),
@@ -182,16 +244,18 @@ base::local({
       4,
       5,
       6,
-      7
+      7,
+      rep(8, 2)
     ),
-    DOSNO = c(
+    NCA_PROFILE = c(
       1,
       c(1, 2),
       c(1, 2),
       1,
       1,
       1,
-      1
+      1,
+      c(1, 2)
     ),
     DOSNOA = c(
       1,
@@ -200,10 +264,11 @@ base::local({
       1,
       1,
       1,
-      1
-    )
+      1,
+      c(1, 2)
+    ),
+    DOSEU = "mg/kg"
   )
-
   # Perform NCA Analysis
   all_params <- setdiff(names(PKNCA::get.interval.cols()),
                         c("start", "end"))
@@ -211,11 +276,11 @@ base::local({
     start = c(0, 5),
     end = c(5, 10),
     type_interval = "main",  # Assumption 2: Include type_interval column
-    DOSNO = c(1, 2)
+    NCA_PROFILE = c(1, 2)
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO, DOSNOA) %>%
+        select(USUBJID, NCA_PROFILE, DOSNOA) %>%
         unique()
     )
   main_intervals[, all_params] <- FALSE
@@ -231,13 +296,13 @@ base::local({
     start = c(0, 2, 5, 7),
     end = c(2, 4, 7, 9),
     type_interval = "manual",  # Assumption 2: Include type_interval column
-    DOSNO = c(1, 1, 2, 2)
+    NCA_PROFILE = c(1, 1, 2, 2)
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, DOSNO, DOSNOA) %>%
+        select(USUBJID, NCA_PROFILE, DOSNOA) %>%
         unique(),
-      by = "DOSNO",
+      by = "NCA_PROFILE",
       relationship = "many-to-many"
     )
   auc_intervals[, all_params] <- FALSE
@@ -247,33 +312,47 @@ base::local({
     )
   FIXTURE_INTERVALS <<- rbind(main_intervals, auc_intervals) %>%
     mutate(impute = case_when(
-      USUBJID == 1 & DOSNO == 1 ~ NA_character_,
-      USUBJID == 2 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 2 & DOSNO == 2 ~ "start_predose",
-      USUBJID == 3 & DOSNO == 1 ~ "start_logslope",
-      USUBJID == 3 & DOSNO == 2 ~ "start_logslope",
-      USUBJID == 4 & DOSNO == 1 ~ "start_c1",
-      USUBJID == 4 & DOSNO == 2 ~ "start_c1",
-      USUBJID == 5 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 5 & DOSNO == 2 ~ "start_conc0",
-      USUBJID == 6 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 6 & DOSNO == 2 ~ "start_conc0",
-      USUBJID == 7 & DOSNO == 1 ~ "start_conc0",
-      USUBJID == 7 & DOSNO == 2 ~ "start_conc0",
+      USUBJID == 1 & NCA_PROFILE == 1 ~ NA_character_,
+      USUBJID == 2 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 2 & NCA_PROFILE == 2 ~ "start_predose",
+      USUBJID == 3 & NCA_PROFILE == 1 ~ "start_logslope",
+      USUBJID == 3 & NCA_PROFILE == 2 ~ "start_logslope",
+      USUBJID == 4 & NCA_PROFILE == 1 ~ "start_c1",
+      USUBJID == 4 & NCA_PROFILE == 2 ~ "start_c1",
+      USUBJID == 5 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 5 & NCA_PROFILE == 2 ~ "start_conc0",
+      USUBJID == 6 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 6 & NCA_PROFILE == 2 ~ "start_conc0",
+      USUBJID == 7 & NCA_PROFILE == 1 ~ "start_conc0",
+      USUBJID == 7 & NCA_PROFILE == 2 ~ "start_conc0",
       TRUE ~ NA_character_
     ))
 
+
+  units_table <- rbind(
+    PKNCA::pknca_units_table(
+      concu = "ng/mL",
+      timeu = "hr",
+      doseu = "mg/kg"
+    )  %>%  mutate(PARAM = "A"),
+    PKNCA::pknca_units_table(
+      concu = "ug/mL",
+      timeu = "hr",
+      doseu = "mg/kg"
+    )  %>%  mutate(PARAM = "B")
+  )
+
   FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
     data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
-    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, ADOSE ~ AFRLT | USUBJID,
-                                 route = "ROUTE", duration = "ADOSEDUR",
-                                 time.nominal = "NFRLT"),
-    units = PKNCA::pknca_units_table(
-      concu = "ng/mL", doseu = "mg/kg", amountu = "mg", timeu = "hr"
-    )
+    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
+                                 route = "ROUTE", duration = "ADOSEDUR"),
+    units = units_table
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
-  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("DOSNO", "DOSNOA", "type_interval"))
+
+  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("NCA_PROFILE",
+                                                             "DOSNOA",
+                                                             "type_interval"))
 
   # Add start_dose and end_dose columns
   FIXTURE_PKNCA_RES <<- withCallingHandlers(
@@ -285,7 +364,6 @@ base::local({
       }
     }
   )
-
   #####################################################################
   # Temporarily for some odd reason we cannot use keep_interval_cols,
   # so we are manually making it
@@ -298,8 +376,8 @@ base::local({
       } else {
         ifelse((end - start) == 2, "manual", "main")
       },
-      DOSNO = if ("DOSNO" %in% names(.)) {
-        DOSNO
+      NCA_PROFILE = if ("NCA_PROFILE" %in% names(.)) {
+        NCA_PROFILE
       } else {
         ifelse(
           start < 5,
@@ -318,13 +396,11 @@ base::local({
       }
     )
   #####################################################################
-
   dose_data_to_join_fixture <- select(
     FIXTURE_PKNCA_RES$data$dose$data,
     -exclude,
     -FIXTURE_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
   )
-
   FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
     inner_join(
       dose_data_to_join_fixture,
@@ -341,15 +417,10 @@ base::local({
       PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
     )
 })
-
 # Dummy data
 # Import dataset from testthat/data folder
-
-# ToDo (Gerardo): These fixtures are supporting still test-bioavailability.R
-# We need to substitute them with the previous ones for consistency
-
+#
 DUMMY_DATA_FIXTURE <- read.csv(testthat::test_path("data", "adnca_dummy_sm_dataset.csv"))
-
 # Create PKNCAdata object
 PKNCA_DATA_FIXTURE <- PKNCA_create_data_object(DUMMY_DATA_FIXTURE %>% filter(PCSPEC == "Plasma"))
 # Set intervals
@@ -361,7 +432,6 @@ PKNCA_DATA_FIXTURE$intervals <- format_pkncadata_intervals(
              "r.squared", "adj.r.squared", "lambda.z.time.first")
 )
 PKNCA_DATA_FIXTURE <- create_start_impute(PKNCA_DATA_FIXTURE)
-
 # Create NCA results
 PKNCA_RESULTS_FIXTURE <- withCallingHandlers(
   PKNCA_calculate_nca(PKNCA_DATA_FIXTURE),

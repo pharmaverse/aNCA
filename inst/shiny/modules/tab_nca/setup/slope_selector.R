@@ -1,10 +1,25 @@
+#' NCA Slope selector module handling slope selection via interactive plots and tables.
+#'
+#' Generates appropriate interface and gathers user input from the table, as well as interactive
+#' plotly plots, with with user can define inclusions and exclusions for the data.
+#'
+#' @param id ID of the module.
+#' @param pknca_data `PKNCAdata` object with data to base the plots on.
+#' @param manual_slopes_override Reactive experssion with override for the manual slopes selection.
+#'                               If changes are detected, current settings will be overwritten with
+#'                               values from that reactive.
+#'
+#' @returns List with reactive expressions:
+#'   * manual_slopes - Data frame containing inclusions / exclusions.
+#'   * profiles_per_subject - Grouping for each subject.
+#'   * slopes_groups - Grouping for the slopes, in accordance to the settings.
+
 slope_selector_ui <- function(id) {
   ns <- NS(id)
   assets <- system.file("shiny/www", package = "aNCA")
 
   div(
     class = "slope-selector-module",
-    includeCSS(file.path(assets, "slope_selector.css")),
     manual_slopes_table_ui(ns("manual_slopes")),
     # Help widget #
     dropdown(
@@ -105,8 +120,8 @@ slope_selector_ui <- function(id) {
 }
 
 
-slope_selector_server <- function(
-  id, pknca_data, res_nca, settings_upload
+slope_selector_server <- function( # nolint
+  id, pknca_data, manual_slopes_override
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -119,7 +134,7 @@ slope_selector_server <- function(
 
       pknca_data()$conc$columns$groups %>%
         purrr::list_c() %>%
-        append("DOSNO") %>%
+        append(c("NCA_PROFILE", "DOSNOA")) %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "DRUG" && length(unique(pknca_data()$conc$data[[col]])) > 1
         })
@@ -155,11 +170,9 @@ slope_selector_server <- function(
     # Generate dynamically the minimum results you need for the lambda plots
     lambdas_res <- reactive({
       req(plot_data())
-
       if (!"type_interval" %in% names(plot_data()$intervals)) {
         NULL
       } else {
-        all_params <- names(PKNCA::get.interval.cols())
         result_obj <- suppressWarnings(PKNCA::pk.nca(data = plot_data(), verbose = FALSE))
         result_obj$result <- result_obj$result %>%
           mutate(start_dose = start, end_dose = end)
@@ -175,10 +188,11 @@ slope_selector_server <- function(
 
       pknca_data()$intervals %>%
         mutate(USUBJID = as.character(USUBJID),
-               DOSNO = as.character(DOSNO)) %>%
-        group_by(!!!syms(unname(unlist(pknca_data()$conc$columns$groups)))) %>%
-        summarise(DOSNO = unique(DOSNO), .groups = "drop") %>%
-        unnest(DOSNO)  # Convert lists into individual rows
+               NCA_PROFILE = as.character(NCA_PROFILE),
+               DOSNOA = as.character(DOSNOA)) %>%
+        group_by(!!!syms(c(unname(unlist(pknca_data()$conc$columns$groups)), "DOSNOA"))) %>%
+        summarise(NCA_PROFILE = unique(NCA_PROFILE), .groups = "drop") %>%
+        unnest(NCA_PROFILE)  # Convert lists into individual rows
     })
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
@@ -203,9 +217,9 @@ slope_selector_server <- function(
       subject_profile_plot_ids <- pknca_data()$intervals %>%
         select(any_of(c(unname(unlist(pknca_data()$dose$columns$groups)),
                         unname(unlist(pknca_data()$conc$columns$groups)),
-                        "DOSNO"))) %>%
+                        "NCA_PROFILE", "DOSNOA"))) %>%
         filter(USUBJID %in% search_subject) %>%
-        select(slopes_groups(), USUBJID) %>%
+        select(slopes_groups(), USUBJID, DOSNOA) %>%
         unique() %>%
         arrange(USUBJID)
 
@@ -323,23 +337,34 @@ slope_selector_server <- function(
     })
 
     #' If any settings are uploaded by the user, overwrite current rules
-    observeEvent(settings_upload(), {
-      req(settings_upload()$datapath)
+    observeEvent(manual_slopes_override(), {
+      req(manual_slopes_override())
 
-      #' TODO(mateusz): This is suboptimal, as currently the .csv file is read twice (once in the
-      #' nca.R file, and second time here). Ideally, file should be loaded once and then relevant
-      #' info passed to appropriate modules. This should be reworked once the application is
-      #' modularized and improved further.
-      setts <- read.csv(settings_upload()$datapath)
-      imported_slopes <- setts %>%
-        select(TYPE, USUBJID, PARAM, PCSPEC, DOSNO, IX, REASON) %>%
-        mutate(SUBJECT = as.character(USUBJID), PROFILE = as.character(DOSNO)) %>%
-        group_by(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, REASON) %>%
-        summarise(RANGE = .compress_range(IX), .groups = "keep") %>%
-        select(TYPE, SUBJECT, PARAM, PCSPEC, PROFILE, RANGE, REASON) %>%
-        na.omit()
+      if (nrow(manual_slopes_override()) == 0) return(NULL)
 
-      manual_slopes(imported_slopes)
+      log_debug_list("Manual slopes override:", manual_slopes_override())
+
+      override_valid <- apply(manual_slopes_override(), 1, function(r) {
+        dplyr::filter(
+          plot_data()$conc$data,
+          PCSPEC == r["PCSPEC"],
+          USUBJID == r["USUBJID"],
+          PARAM == r["PARAM"],
+          NCA_PROFILE == r["NCA_PROFILE"],
+          DOSNOA == r["DOSNOA"]
+        ) |>
+          NROW() != 0
+      }) |>
+        all()
+
+      if (!override_valid) {
+        msg <- "Manual slopes not compatible with current data, leaving as default."
+        log_warn(msg)
+        showNotification(msg, type = "warning", duration = 5)
+        return(NULL)
+      }
+
+      manual_slopes(manual_slopes_override())
     })
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab

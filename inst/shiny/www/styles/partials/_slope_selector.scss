@@ -53,15 +53,15 @@
   .plot-widgets-container-2 {
     position: fixed; 
     bottom: 0;
-    width: 80%;
-    background: white;
+    width: 75%;
+    background: $anca-white;
     padding: 10px;
     z-index: 1000;
-    border-top: 1px solid #ccc;
+    border-top: 1px solid $grey-5;
     display: flex;
     justify-content: space-around;
     align-items: center; 
-}
+  }
   
   /* Style each group of widgets */
   .plot-widget-group {

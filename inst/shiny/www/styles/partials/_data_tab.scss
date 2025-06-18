@@ -1,0 +1,133 @@
+.data-tab-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.data-tab-content-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding: 20px 20px 0px 20px;
+}
+
+/* data tab styling */
+.data-tab-content {
+  > .tabbable {
+    > ul {
+      display: none !important;
+    }
+  }
+
+  .card {
+    margin-top: 1em;
+    margin-bottom: 0em;
+
+    .card-body > div {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+  }
+
+  .error-string {
+    color: var(--bs-danger);
+    font-weight: bold;
+  }
+
+  /* filters on data page */
+  .filters-buttons-container {
+    display: grid;
+    grid-template-columns: 49% 49%;
+    gap: 2%;
+  }
+
+  .filter-widget-container {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+
+    .btn-danger {
+      align-self: flex-end;
+      width: 2.5em;
+      height: 2.5em;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  .reactable {
+    margin-top: 2em;
+  }
+
+  /* column mapping UI */
+  .data-mapping-container {
+    .column-mapping-row {
+      display: flex;
+      align-items: center;
+      margin: -0.75rem 0 0.25em 1em;
+    }
+
+    .column-mapping-output {
+      margin: 1.25rem 0 0 0.625rem;
+      color: $anca-black;
+    }
+
+    .column-mapping-label {
+      margin: 1.25rem 0 0 0.625rem;
+      color: $grey-1;
+    }
+
+    h5 {
+      font-weight: bold;
+      margin-top: 0.75em;
+      margin-bottom: 0;
+    }
+
+    button {
+      margin-top: 1em;
+    }
+  }
+}
+
+.data-tab-btns-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid $grey-5;
+
+  .nav-btns {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+.upload-container {
+  padding: 32px 16px;
+  border: 1px dashed $anca-blue;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+
+  &.dragover {
+    background-color: rgba($anca-blue, 0.05);
+    border-color: darken($anca-blue, 10%);
+  }
+
+  .shiny-input-container {
+    .input-group {
+      .input-group-btn .btn,
+      .form-control {
+        border: 1px solid $anca-blue;
+        color: $anca-blue;
+      }
+      .input-group-btn .btn:hover {
+        background-color: $anca-blue;
+        color: $anca-white
+      }
+    }
+  }
+}

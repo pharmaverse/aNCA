@@ -15,7 +15,7 @@ This guide will provide users with information on how to get started with the aN
 
 ### Uploading a dataset
 
-Click **Upload File** and select the dataset you would like to use. The data must be in `.csv` or `.rds` format. The best input for the app is data that follows the ADNCA format. Other formats of data will also work. Alternatively, for exploring the app, Users can use the Dummy dataset that is already uploaded.
+Click **Upload File** and select the dataset you would like to use. The data can be in `.csv`, `sas7bdat`, `.xslx`, `.parquet` or `.rds` format. The best input for the app is data that follows the ADNCA format according to CDISC guidelines. Other formats of data will also work. Alternatively, for exploring the app, Users can use the Dummy dataset that is already uploaded.
 
 <img src="images/get_started/01.png" alt="Data upload"/>
 
@@ -23,50 +23,50 @@ Click **Upload File** and select the dataset you would like to use. The data mus
 
 Some variables are mandatory (marked with \*), while others are optional. Custom variable names are supported as long as they are correctly mapped during the [Data Mapping](###%20Data%20mapping) step.
 
-|                          | **Variable** | **Description**                                                    | **Format**        |
+|                          | **Variable**   | **Description**                                                    | **Format**        |
 |------------------|------------------|-------------------|------------------|
-| **Grouping Identifiers** | STUDYID \*   | Study Identifier                                                   | character         |
-|                          | USUBJID \*   | Unique Subject Identifier                                          | character/numeric |
-|                          | TRT01A       | Treatment Group Identifier (Actual)                                | character         |
-|                          | TRT01P       | Treatment Group Identifier (Planned)                               | character         |
-|                          | AGE          | Age of Subject                                                     | numeric           |
-|                          | RACE         | Race of Subject                                                    | character         |
-|                          | SEX          | Sex of Subject                                                     | character         |
-|                          |              |                                                                    |                   |
-| **Sample variables**     | PARAM \*     | Analyte studied in the sample                                      | character         |
-|                          | PCSPEC \*    | Specimen Material Type                                             | character         |
-|                          | AVAL \*      | Analysis Value                                                     | numeric           |
-|                          |              |                                                                    |                   |
-| **Dose Variables**       | DRUG \*      | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
-|                          | DOSNO \*     | Dose Number of administration. Used to split interval calculations | numeric           |
-|                          | ROUTE \*     | Route of Administration, either {intravascular} or {extravascular} | character         |
-|                          | DOSEA \*     | Actual Treatment Dose                                              | numeric           |
-|                          | ADOSEDUR     | Actual Treatment Dose                                              | numeric           |
-|                          |              |                                                                    |                   |
-| **Time Variables**       | AFRLT \*     | Actual Relative Time from Analyte First Dose                       | numeric           |
-|                          | ARRLT \*     | Actual Relative Time from Reference Dose                           | numeric           |
-|                          | NFRLT \*     | Nominal Relative Time from Analyte First Dose                      | numeric           |
-|                          | NRRLT \*     | Nominal Relative Time from Reference Dose                          | numeric           |
-|                          |              |                                                                    |                   |
-| **Time Variables**       | AVALU        | Analysis Value Unit                                                | character         |
-|                          | DOSEU        | Treatment Dose Units                                               | character         |
-|                          | RRLTU        | Relative Time from Reference Dose Unit                             | character         |
+| **Grouping Identifiers** | STUDYID \*     | Study Identifier                                                   | character         |
+|                          | USUBJID \*     | Unique Subject Identifier                                          | character/numeric |
+|                          | NCA_PROFILE \* | Can be any column, and used to filter data for NCA calculations     | any               |
+|                          | TRT01A         | Treatment Group Identifier (Actual)                                | character         |
+|                          | TRT01P         | Treatment Group Identifier (Planned)                               | character         |
+|                          | AGE            | Age of Subject                                                     | numeric           |
+|                          | RACE           | Race of Subject                                                    | character         |
+|                          | SEX            | Sex of Subject                                                     | character         |
+|                          |                |                                                                    |                   |
+| **Sample variables**     | PARAM \*       | Analyte studied in the sample                                      | character         |
+|                          | PCSPEC \*      | Specimen Material Type                                             | character         |
+|                          | AVAL \*        | Analysis Value                                                     | numeric           |
+|                          |                |                                                                    |                   |
+| **Dose Variables**       | DRUG \*        | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
+|                          | ROUTE \*       | Route of Administration, either {intravascular} or {extravascular} | character         |
+|                          | DOSEA \*       | Actual Treatment Dose                                              | numeric           |
+|                          | ADOSEDUR       | Actual Treatment Dose                                              | numeric           |
+|                          |                |                                                                    |                   |
+| **Time Variables**       | AFRLT \*       | Actual Relative Time from Analyte First Dose                       | numeric           |
+|                          | ARRLT \*       | Actual Relative Time from Reference Dose                           | numeric           |
+|                          | NFRLT \*       | Nominal Relative Time from Analyte First Dose                      | numeric           |
+|                          | NRRLT \*       | Nominal Relative Time from Reference Dose                          | numeric           |
+|                          |                |                                                                    |                   |
+| **Time Variables**       | AVALU          | Analysis Value Unit                                                | character         |
+|                          | DOSEU          | Treatment Dose Units                                               | character         |
+|                          | RRLTU          | Relative Time from Reference Dose Unit                             | character         |
 
-### Verifying and adding filters
+### Adding Filters
 
-Check that the data contains all the information you were expecting and is mapped correctly. If you want to change the data by adding filters, click the *Add Filter* button.
+Once your data is uploaded, examine it and then click "Next". If you want to change the data by adding filters, click the *Add Filter* button.
 
 <img src="images/get_started/02.png" alt="Adding filters"/>
 
 <blockquote class="important">
 
-Don’t forget to scroll down and click **Submit Filters**!
+Don’t forget to click **Submit Filters**!
 
 </blockquote>
 
-### Data mapping
+### Data Mapping
 
-Click on the *Column Mapping* tab.
+Click "Next" to get to the *Mapping* section.
 
 -   Map the correct columns in your dataset to the corresponding label.
 
@@ -74,29 +74,26 @@ Click on the *Column Mapping* tab.
 
 -   Click **Submit Mapping**. You will be automatically directed to the next tab.
 
-<img src="images/get_started/04.png" alt="Mapping tab"/> <img src="images/get_started/03.png" alt="Mapping"/>
+<img src="images/get_started/03.png" alt="Mapping"/>
 
-### Review
+### Preview
 
 Review the data and ensure that the columns have been mapped correctly, and all your filters have been applied. If there are any problems with your data (duplicates, missing times), application will display a warning message and in certain situations manual edits will be requested. Just follow the instructions.
 
 # Step 2: Run NCA
 
-Click on the *NCA* tab at the top of the screen to switch to the next section.
+Click on the *NCA* tab in the menu bar to switch to the next section.
 
 ## Data selection
 
-1.  *NCA settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s) you would like to run the NCA on, the extrapolation method and the NCA parameters to calculate. Select additional options including partial AUCs, or rule sets to flag the data. In the summary tab, a table summarizes the settings you have selected. <img src="images/get_started/06.png" alt="NCA settings"/>
+1.  *Settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s) you would like to run the NCA on, the extrapolation method and the NCA parameters to calculate.
+Select additional options including partial AUCs, units, or rule sets to flag the data. In the summary tab, a table summarizes the settings you have selected.
+You can also download the settings you have created, and upload them again the next time you use the app, which will implement the saved setup.
+<img src="images/get_started/04.png" alt="NCA settings"/>
 
 2.  Click **Run NCA** at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
 
-<img src="images/get_started/07.png" alt="Running NCA"/>
-
-<blockquote class="note">
-
-The **Save Project Settings**/**Upload Settings** option is not working currently.
-
-</blockquote>
+<img src="images/get_started/05.png" alt="Running NCA"/>
 
 # Step 3: NCA Results
 
@@ -106,7 +103,7 @@ The *NCA Results* tab shows the individual results of the NCA. You can select wh
 
 ## Exclusions and Manual Slopes
 
-Click on the *Slopes* tab to view more detailed information about the slopes selected in the NCA. To add exclusions or manual slope selections, redirect to the *Slope Selector* tab in the *Setup* page.
+Click on the *Slopes Information* tab to view more detailed information about the slopes selected in the NCA. To add exclusions or manual slope selections, redirect to the *Slope Selector* tab in the *Setup* page.
 
 <img src="images/get_started/08.png" alt="Slope selection"/>
 
@@ -131,21 +128,19 @@ For in-app guidance, you can click the [?]{.help-button} button.
 
 #### Applying the exclusions
 
-Once the exclusions/selections have been added, click **Apply**.
+Once the exclusions/selections have been added, click **Run NCA** again.
 
-<img src="images/get_started/11.png" alt="Applying exclusions/selections"/>
-
-You can check if they have been applied in the *Results* page, on the *Exclusions* tab.
+You can check if they have been applied in the *Slopes Information* page, on the *Manual Adjustments* tab.
 
 <blockquote class="important">
 
-If you do not click **Apply**, the manual slopes will not be added!
+If you do not click **Run NCA**, the manual slopes will not be added!
 
 </blockquote>
 
 ### Parameter Datasets
 
-In the Parameter Datasets tab you can see and export the ADPP and PP datasets.
+In the Parameter Datasets tab you can see and export the ADPP, ADPC, and PP datasets.
 
 <img src="images/get_started/12.png" alt="Parameter Datasets"/>
 
@@ -154,24 +149,6 @@ In the Parameter Datasets tab you can see and export the ADPP and PP datasets.
 In the *Additional Analysis* tab, you can calculate tissue-matrix ratios using the concentration ratios tab. Input which specimen you would like as the numerator and denominator, and click **Submit**.
 
 <img src="images/get_started/13.png" alt="Additional Analysis"/>
-
-## Saving and uploading settings
-
-<blockquote class="warning">
-
-Currently work in progress
-
-</blockquote>
-
-After completing an NCA and creating manual slopes, you may want to save these for next time.
-
-#### Saving
-
-Click the button *Save Project Settings* on top of the tabs. This will download a .csv file.
-
-#### Uploading
-
-To upload settings in a later analysis, after column mapping, in *Setup*, in the *NCA Settings* tab, click *Browse*. The inclusions and exclusions will be automatically added to the data.
 
 # Step 4: Visualization
 

@@ -53,8 +53,9 @@ lambda_slope_plot <- function(
 ) {
 
   column_names <- names(row_values)
+  grouping_names <- setdiff(column_names, "NCA_PROFILE")
   #Create duplicates for predose and last dose points per profile
-  conc_pknca_df <- dose_profile_duplicates(conc_pknca_df, column_names)
+  conc_pknca_df <- dose_profile_duplicates(conc_pknca_df, grouping_names)
   #Obtain values for slopes selection
   lambda_res <- myres$result %>%
     filter(if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])) %>%
@@ -64,12 +65,12 @@ lambda_slope_plot <- function(
   lambda_z_n_points <- as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "lambda.z.n.points"])
   if (is.na(lambda_z_n_points)) lambda_z_n_points <- 0
 
-  row_values <- row_values[column_names]
+  grouping_values <- row_values[grouping_names]
 
   lambda_z_ix_rows <- conc_pknca_df %>%
     ungroup() %>%
     filter(
-      if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]]),
+      if_all(all_of(grouping_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
       TIME >= sum(
         subset(
@@ -133,7 +134,7 @@ lambda_slope_plot <- function(
   plot_data <- conc_pknca_df %>%
     ungroup() %>%
     filter(
-      if_all(all_of(column_names), ~ .x == row_values[[deparse(substitute(.x))]])
+      if_all(all_of(grouping_names), ~ .x == grouping_values[[deparse(substitute(.x))]])
     ) %>%
     arrange(IX) %>%
     mutate(

@@ -4,7 +4,7 @@ sample_data <- data.frame(
   USUBJID = rep(c("Subject1", "Subject2", "Subject3", "Subject4"), each = 12),
   PARAM = rep(c("Analyte1", "Analyte 2"), each = 24),
   PCSPEC = rep(c("Spec1", "Spec2"), each = 24),
-  DOSNO = rep(1, 48),
+  NCA_PROFILE = rep(1, 48),
   EVID = rep(0, 48),
   NRRLT = rep(1:6, 8),
   AVAL = rep(c(

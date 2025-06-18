@@ -1,0 +1,66 @@
+.stepper-wrapper {
+  max-width: 100%;
+  margin-bottom: 40px;
+  --circle-size: 24px;
+  --spacing: 8px;
+}
+
+.stepper-wrapper > ol {
+  padding-left: 0px;
+  padding-right: 2rem;
+}
+
+.c-stepper {
+  display: flex;
+  counter-reset: step;
+}
+
+.c-stepper__item {
+  display: flex;
+  gap: var(--spacing);
+  align-items: center;
+
+  &:before {
+    counter-increment: step;
+    content: counter(step);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: var(--circle-size);
+    height: var(--circle-size);
+    border-radius: 50%;
+    font-size: 12px;
+    background-color: $grey-5;
+    color: $anca-white;
+  }
+
+  &.active:before {
+    background-color: $anca-blue;
+    color: $anca-white;
+  }
+
+  &:not(:last-child) {
+    flex: 1;
+
+    &:after {
+      content: "";
+      position: relative;
+      z-index: -1;
+      height: 2px;
+      background-color: $grey-5;
+      flex: 1;
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+.c-stepper__title {
+  font-size: 16px;
+  margin: 0px;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}

@@ -11,17 +11,23 @@
 data_upload_ui <- function(id) {
   ns <- NS(id)
 
-  card(
+  div(
+    stepper_ui("Upload"),
     div(
-      h3("Upload"),
-      uiOutput(ns("file_loading_message")),
+      class = "upload-container",
+      id = ns("upload_container"),
+      p("Upload your PK dataset."),
       fileInput(
         ns("data_upload"),
-        width = "60%",
+        width = "50%",
         label = NULL,
         placeholder = paste(names(aNCA:::readers), collapse = ", "),
         buttonLabel = list(icon("folder"), "Upload File...")
-      )
+      ),
+      uiOutput(ns("file_loading_message"))
+    ),
+    withSpinner(
+      reactableOutput(ns("data_display"))
     )
   )
 }
@@ -38,33 +44,53 @@ data_upload_server <- function(id) {
     file_loading_error <- reactiveVal(NULL)
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
-        p("Upload your PK dataset.")
+        p("")
       } else {
         p(file_loading_error(), class = "error-string")
       }
     })
 
-    reactive({
-      #' if no data is provided by the user, load dummy data
-      if (is.null(input$data_upload$datapath)) {
-        DUMMY_DATA
-      } else {
-        df <- tryCatch({
-          file_loading_error(NULL)
-          read_pk(input$data_upload$datapath)
-        }, error = function(e) {
-          file_loading_error(e$message)
-        })
-
-        if (is.null(file_loading_error())) {
-          log_success("User data loaded successfully.")
-          df
-        } else {
-          log_error("Error loading user data: ", file_loading_error())
+    raw_data <- (
+      reactive({
+        #' if no data is provided by the user, load dummy data
+        if (is.null(input$data_upload$datapath)) {
           DUMMY_DATA
+        } else {
+          df <- tryCatch({
+            file_loading_error(NULL)
+            read_pk(input$data_upload$datapath)
+          }, error = function(e) {
+            file_loading_error(e$message)
+          })
+
+          if (is.null(file_loading_error())) {
+            log_success("User data loaded successfully.")
+            df
+          } else {
+            log_error("Error loading user data: ", file_loading_error())
+            DUMMY_DATA
+          }
         }
-      }
-    }) |>
-      bindEvent(input$data_upload, ignoreNULL = FALSE)
+      }) |>
+        bindEvent(input$data_upload, ignoreNULL = FALSE)
+    )
+
+    output$data_display <- renderReactable({
+      req(raw_data())
+      reactable(
+        raw_data(),
+        searchable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        wrap = FALSE,
+        resizable = TRUE,
+        defaultPageSize = 25,
+        showPageSizeOptions = TRUE,
+        height = "70vh",
+        class = "reactable-table"
+      )
+    })
+
+    raw_data
   })
 }
