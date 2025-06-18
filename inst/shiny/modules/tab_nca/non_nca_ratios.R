@@ -116,7 +116,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         ),
       )
     })
-    
+
     # Save the results in the output folder
     observeEvent(results(), {
       save_output(

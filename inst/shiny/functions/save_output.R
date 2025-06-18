@@ -5,7 +5,7 @@
 #' @returns Invisibly returns the file path written.
 save_output <- function(output, output_path) {
 
-  if (inherits(output, "ggplot") | inherits(output, "data.frame")) {
+  if (inherits(output, "ggplot") || inherits(output, "data.frame")) {
     # Make it a list being its name the name of the file
     output <- list(output)
     names(output) <- basename(output_path)
