@@ -118,7 +118,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       },
       content = function(fname) {
         res_tmp_dir <- session$userData$results_dir()
-        files <- list.files(res_tmp_dir, full.names = TRUE, pattern = ".csv", recursive = TRUE)
+        files <- list.files(res_tmp_dir, full.names = TRUE, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
         setwd(res_tmp_dir)
         files <- gsub(paste0(res_tmp_dir, "/"), "", fixed = TRUE, files)
         utils::zip(zipfile = fname, files = files)
@@ -131,7 +131,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       # Save the results in the output folder
       save_output(
         output = final_results(),
-        output_path = paste0(session$userData$results_dir(), "/nca_results/pivoted_results.csv")
+        output_path = paste0(session$userData$results_dir(), "/nca_results/pivoted_results")
       )
 
       param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)

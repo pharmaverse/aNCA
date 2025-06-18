@@ -114,7 +114,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         summary_stats(),
         paste0(
           session$userData$results_dir(),
-          "/nca_results/descriptive_statistics.csv"
+          "/nca_results/descriptive_statistics"
         )
       )
 
