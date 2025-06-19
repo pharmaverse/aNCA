@@ -37,7 +37,14 @@ ratio_calculations_table_server <- function(
           dplyr::select(
             adnca_data()$dose$data,
             any_of(c(dplyr::group_vars(adnca_data()$dose), adnca_data()$dose$columns$route))
-          )
+          ) %>%
+            unique(),
+          by = dplyr::group_vars(adnca_data()$dose)
+        ) %>%
+        dplyr::select(any_of(
+          c(dplyr::group_vars(adnca_data()$conc),
+            adnca_data()$dose$columns$route,
+            "NCA_PROFILE"))
         ) %>%
         # Filter out the columns with one one unique value (no ratio possible!)
         dplyr::select(dplyr::where(~ length(unique(.)) > 1)) %>%
@@ -46,14 +53,16 @@ ratio_calculations_table_server <- function(
 
     ratio_reference_options <- reactive({
       # We paste the column name and value to use as a specified input
-      ratio_groups() %>%
-      # Convert all columns to character
-        dplyr::mutate(across(everything(), as.character)) %>%
-        pivot_longer(cols = everything()) %>%
-        mutate(input_name = paste0(name, ": ", value)) %>%
-        pull(input_name) %>%
-        unique() %>%
-        sort()
+      if (ncol(ratio_groups()) > 0) {
+        ratio_groups() %>%
+          # Convert all columns to character
+          dplyr::mutate(across(everything(), as.character)) %>%
+          pivot_longer(cols = everything()) %>%
+          mutate(input_name = paste0(name, ": ", value)) %>%
+          pull(input_name) %>%
+          unique() %>%
+          sort()
+      } else NULL
     })
 
     ratio_param_options <- reactive({
@@ -68,7 +77,7 @@ ratio_calculations_table_server <- function(
         # Select only columns where all values are not NA
         dplyr::select(dplyr::where(~ !all(is.na(.)))) %>%
         names() %>%
-        purrr::keep(~ grepl("^(auc[li\\.]|cmax)", ., ignore.case = TRUE)) %>%
+        purrr::keep(~ grepl("^(auc[it\\.]|cmax)", ., ignore.case = TRUE)) %>%
         translate_terms("PKNCA", "PPTESTCD")
     })
 
@@ -214,7 +223,7 @@ ratio_calculations_table_server <- function(
         profile_col <- "NCA_PROFILE"
         pcspec_col <- "PCSPEC"
         route_col <- adnca_data()$dose$columns$route
-        
+
         tbl <- ratio_table() %>% mutate(
           PPTESTCD = case_when(
             startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
@@ -224,6 +233,7 @@ ratio_calculations_table_server <- function(
             TRUE ~ paste0("RA", Parameter)
           )
         )
+
         ratio_table(tbl)
       })
     })

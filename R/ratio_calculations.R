@@ -95,6 +95,7 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
   if (!any(data$PPTESTCD == parameter)) {
     warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
   }
+  browser()
   # Deduce what are all the group columns in the result data.frame
   extra_res_cols <- c("PPTEST", "PPORRES", "PPORRESU", "PPSTRES", "PPSTRESU", "type_interval", "exclude")
   group_cols <- setdiff(colnames(data), extra_res_cols)
@@ -111,7 +112,7 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
   } else {
     df_num <- df
   }
-  df_num <- anti_join(df_num, df_den, by = intersect(names(df_num), names(df_den)))
+  df_num <- anti_join(df_num, df_den, by = match_cols)
 
   # Join numerator and denominator by their matching columns
   merge(df_num, df_den, by = c(match_cols, "PPTESTCD"), suffixes = c("", "_den")) %>%
@@ -192,6 +193,13 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominat
 calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference = "PARAM: Analyte01", aggregate_subject = "no", adjusting_factor = 1.4, custom.pptestcd = NULL) {
   reference_colname <- gsub("(.*): (.*)", "\\1", reference)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
+
+  ########### This is very App specific ###############
+  if ("NCA_PROFILE" %in% reference_colname) {
+    match_cols <- setdiff(match_cols, c("start", "end"))
+  }
+  #####################################################
+
   if (aggregate_subject == "yes") {
     match_cols <- list(setdiff(match_cols, "USUBJID"))
   } else if (aggregate_subject == "no") {
@@ -213,7 +221,7 @@ calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference =
     left_join(
       dplyr::select(
         o_dose$data,
-        any_of(c(dplyr::group_vars(o_dose), o_dose$columns$route))
+        any_of(c(dplyr::group_vars(o_dose), o_dose$columns$route, "NCA_PROFILE", "DOSNOA"))
       ),
       by = dplyr::group_vars(o_dose)
     )
@@ -235,7 +243,9 @@ calculate_ratio_app <- function(res, parameter, numerator = "(all)", reference =
       numerator_groups,
       res_groups,
       by = intersect(names(numerator_groups), names(res_groups))
-    )
+    ) %>%
+      select(any_of(c(group_vars(res), "start", "end"))) %>%
+      unique()
   }
 
   reference_colname <- gsub("(.*): (.*)", "\\1", reference)
@@ -309,6 +319,5 @@ calculate_table_ratios_app <- function(res, ratio_table) {
 
   # Combine all results into the original PKNCAresult object
   res$result <- do.call(rbind, c(list(res$result), ratio_results))
-
   res
 }
