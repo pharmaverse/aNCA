@@ -288,8 +288,7 @@ CDISC_COLS <- list(
 
     # Not CDISC  ADPP standard
     "VISIT",
-    "AVISIT",
-    "NCA_PROFILE"
+    "AVISIT"
   ),
 
   PP = c(
@@ -320,8 +319,7 @@ CDISC_COLS <- list(
 
     # Not CDISC PP standard
     "VISIT",
-    "AVISIT",
-    "NCA_PROFILE"
+    "AVISIT"
   )
 )
 
