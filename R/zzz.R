@@ -21,6 +21,7 @@
     "DRUG",
     "Dataset",
     "Depends",
+    "EXFAST",
     "Geocv",
     "Geomean",
     "IX",
@@ -57,6 +58,7 @@
     "PCSTRESU",
     "PKNCA",
     "PKNCA_cdisc_terms",
+    "PCFAST",
     "PPORRES",
     "PPORRESU",
     "PPREASND",
@@ -94,6 +96,7 @@
     "USUBJID",
     "Unit",
     "Value",
+    "VISIT",
     "aucs",
     "aucs_extravascular",
     "aucs_intravascular",
@@ -150,7 +153,6 @@
     "time_dose",
     "type_interval",
     "view",
-    "VISIT",
     "zero_str"
   ))
 }
