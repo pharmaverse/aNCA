@@ -108,10 +108,13 @@ export_cdisc <- function(res_nca) {
           EXFAST
         } else if ("PCFAST" %in% names(.)) {
           PCFAST
+        } else if ("FEDSTATE" %in% names(.)) {
+          FEDSTATE
         } else {
           NULL
         }
-      }
+      },
+      NCA_PROFILE = NCA_PROFILE
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
@@ -286,7 +289,8 @@ CDISC_COLS <- list(
     # Not CDISC standard
     "VISIT",
     "AVISIT",
-    "PPFAST"
+    "PPFAST",
+    "NCA_PROFILE"
   ),
 
   PP = c(
@@ -318,7 +322,8 @@ CDISC_COLS <- list(
     # Not CDISC standard
     "VISIT",
     "AVISIT",
-    "PPFAST"
+    "PPFAST",
+    "NCA_PROFILE"
   )
 )
 
