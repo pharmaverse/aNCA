@@ -123,13 +123,13 @@ export_cdisc <- function(res_nca) {
 
   # select pp columns
   pp <- cdisc_info %>%
-    select(any_of(CDISC_COLS$PP))
+    select(any_of(c(CDISC_COLS$PP, "PPFAST")))
 
   adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(CDISC_COLS$ADPP)))
+    select(any_of(c(CDISC_COLS$ADPP, "PPFAST")))
 
   adpc <- res_nca$data$conc$data %>%
     mutate(
@@ -286,10 +286,9 @@ CDISC_COLS <- list(
     "AVALC",
     "AVALU",
 
-    # Not CDISC standard
+    # Not CDISC  ADPP standard
     "VISIT",
     "AVISIT",
-    "PPFAST",
     "NCA_PROFILE"
   ),
 
@@ -319,10 +318,9 @@ CDISC_COLS <- list(
     "PPSTINT",
     "PPENINT",
 
-    # Not CDISC standard
+    # Not CDISC PP standard
     "VISIT",
     "AVISIT",
-    "PPFAST",
     "NCA_PROFILE"
   )
 )

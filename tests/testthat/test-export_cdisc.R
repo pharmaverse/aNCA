@@ -199,7 +199,7 @@ describe("export_cdisc", {
     expect_equal(filter(result$pp, PPTESTCD == "AUCINT") %>%
                    pull(PPREASND) %>%
                    unique(),
-                 "Unspecified")
+                 "NOT DERIVED")
     expect_equal(filter(result$pp, PPTESTCD == "AUCINF") %>%
                    pull(PPREASND) %>%
                    unique(),
