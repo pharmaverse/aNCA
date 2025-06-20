@@ -75,7 +75,7 @@ export_cdisc <- function(res_nca) {
       PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
       PPREASND = case_when(
         !is.na(exclude) ~ exclude,
-        is.na(PPSTRES) ~ "Unspecified",
+        is.na(PPSTRES) ~ "NOT DERIVED",
         TRUE ~ ""
       ),
       PPREASND = substr(PPREASND, 0, 200),
@@ -102,7 +102,16 @@ export_cdisc <- function(res_nca) {
         startsWith(PPTESTCD, "AUCINT"),
         convert_to_iso8601_duration(end, RRLTU),
         NA
-      )
+      ),
+      PPFAST = {
+        if ("EXFAST" %in% names(.)) {
+          EXFAST
+        } else if ("PCFAST" %in% names(.)) {
+          PCFAST
+        } else {
+          NULL
+        }
+      }
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
@@ -224,7 +233,7 @@ CDISC_COLS <- list(
     "SITEID",
     "VISITNUM",
     "VISIT",
-    "AVISIT",
+    "AVISIT", # Roche specific
     "AVISITN",
     "PCSTRESC",
     "PCSTRESN",
@@ -240,7 +249,6 @@ CDISC_COLS <- list(
     # Columns taken from the original data if present (still not directly mapped)
     "SEX",
     "RACE",
-    "ACTARM",
     "AGE",
     "AGEU",
     "AVISIT"
@@ -266,7 +274,6 @@ CDISC_COLS <- list(
     # Columns taken from the original data if present (still not directly mapped)
     "SEX",
     "RACE",
-    "ACTARM",
     "AGE",
     "AGEU",
     "TRT01P",
@@ -274,13 +281,20 @@ CDISC_COLS <- list(
 
     "AVAL",
     "AVALC",
-    "AVALU"
+    "AVALU",
+
+    # Not CDISC standard
+    "VISIT",
+    "AVISIT",
+    "PPFAST"
   ),
 
   PP = c(
     "STUDYID",
     "DOMAIN",
     "USUBJID",
+    "VISIT",
+    "AVISIT",
     "PPSEQ",
     "PPCAT",
     "PPGRPID",
@@ -288,6 +302,7 @@ CDISC_COLS <- list(
     "PPTESTCD",
     "PPTEST",
     "PPSCAT",
+    "PPDTC",
     "PPORRES",
     "PPORRESU",
     "PPSTRESC",
@@ -298,7 +313,12 @@ CDISC_COLS <- list(
     "PPSPEC",
     "PPRFTDTC",
     "PPSTINT",
-    "PPENINT"
+    "PPENINT",
+
+    # Not CDISC standard
+    "VISIT",
+    "AVISIT",
+    "PPFAST"
   )
 )
 
