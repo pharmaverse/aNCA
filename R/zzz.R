@@ -22,6 +22,8 @@
     "Dataset",
     "Depends",
     "EXFAST",
+    "EVID",
+    "FEDSTATE",
     "Geocv",
     "Geomean",
     "IX",
@@ -100,6 +102,7 @@
     "aucs",
     "aucs_extravascular",
     "aucs_intravascular",
+    "combn",
     "conv_factor",
     "conversion_factor",
     "data",
@@ -152,6 +155,7 @@
     "strata_cols_comb",
     "time_dose",
     "type_interval",
+    "var_name",
     "view",
     "zero_str"
   ))
