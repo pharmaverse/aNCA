@@ -98,7 +98,7 @@ ratio_calculations_table_server <- function(
       new_row <- data.frame(
         Parameter = ratio_param_options()[1],
         Reference = ratio_reference_options()[1],
-        Test = "(all)",
+        Test = "(all other levels)",
         AggregateSubject = "no",
         AdjustingFactor = 1,
         PPTESTCD = "",
@@ -148,7 +148,7 @@ ratio_calculations_table_server <- function(
           name = "Test",
           cell = dropdown_extra(
               id = ns("edit_Test"),
-              choices = c(ratio_reference_options(), "(all)"),
+              choices = c(ratio_reference_options(), "(all other levels)"),
               class = "dropdown-extra"
             ),
           width = 180
@@ -213,7 +213,8 @@ ratio_calculations_table_server <- function(
                 startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
                 startsWith(Reference, paste0(route_col, ": intravascular")) ~ "FABS",
                 TRUE ~ paste0("RA", Parameter)
-              )
+              ),
+              PPTESTCD = make.unique(PPTESTCD, sep = "")
             )
             ratio_table(tbl)
             refresh_reactable(refresh_reactable() + 1)
@@ -249,7 +250,8 @@ ratio_calculations_table_server <- function(
             startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
             startsWith(Reference, paste0(route_col, ": intravascular")) ~ "FABS",
             TRUE ~ paste0("RA", Parameter)
-          )
+          ),
+          PPTESTCD = make.unique(PPTESTCD, sep = "")
         )
 
         ratio_table(tbl)

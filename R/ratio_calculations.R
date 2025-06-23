@@ -190,7 +190,7 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominat
   data
 }
 
-calculate_ratio_app <- function(res, parameter, test = "(all)", reference = "PARAM: Analyte01", aggregate_subject = "no", adjusting_factor = 1.4, custom.pptestcd = NULL) {
+calculate_ratio_app <- function(res, parameter, test = "(all other levels)", reference = "PARAM: Analyte01", aggregate_subject = "no", adjusting_factor = 1.4, custom.pptestcd = NULL) {
   reference_colname <- gsub("(.*): (.*)", "\\1", reference)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
 
@@ -217,7 +217,7 @@ calculate_ratio_app <- function(res, parameter, test = "(all)", reference = "PAR
     }
   }
 
-  if (test == "(all)") {
+  if (test == "(all other levels)") {
     test_groups <- NULL
   } else {
     num_colname <- gsub("(.*): (.*)", "\\1", test)
