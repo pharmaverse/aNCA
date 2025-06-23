@@ -23,22 +23,21 @@
 export_cdisc <- function(res_nca) {
 
   # Define group columns in the data
-  group_cols <- unique(
-    unlist(
-      c(res_nca$data$conc$columns$groups,
-        res_nca$data$dose$columns$groups,
-        res_nca$data$dose$columns$route)
-    )
-  )
+  group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
+  group_dose_cols <- unique(unlist(res_nca$data$dose$columns$groups))
+  group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
 
   dose_info <- res_nca$data$dose$data %>%
     # Select only the columns that are used in the NCA results
     select(
       any_of(c(
         # Variables defined for the dose information
-        group_vars(res_nca$data$dose), "NCA_PROFILE",  res_nca$data$dose$columns$route,
-        # Variables that could be present and may be used if so
-        "PCRFTDTM", "PCRFDTC", "SUBJID", "VSIIT", "AVISIT", "EXFAST", "PCFAST", "FEDSTATE"
+        group_dose_cols, "NCA_PROFILE",  res_nca$data$dose$columns$route,
+        # TOOD (Gerardo): Test should use a real PKNCA obj (FIXTURE) so this var is accessed via mapping 
+        "RRLTU",
+        "PCRFTDTC", "PCRFTDTM", "EXFAST", "PCFAST", "FEEDSTATE", "PCSEQ",
+        # Raw variables that can be directly used in PP or ADPP if present
+        CDISC_COLS$PP, CDISC_COLS$ADPP
       ))
     ) %>%
     unique()
@@ -49,10 +48,10 @@ export_cdisc <- function(res_nca) {
               suffix = c("", ".y")) %>%
     group_by(
       across(any_of(c(
-        group_vars(res_nca$data), "start", "end", "PPTESTCD", "type_interval"
+        group_conc_cols, "start", "end", "PPTESTCD", "type_interval"
       )))
     )  %>%
-    arrange(!!!syms(c(group_vars(res_nca$data$dose), "start", "end"))) %>%
+    arrange(!!!syms(c(group_conc_cols, "start", "end"))) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
@@ -247,7 +246,6 @@ CDISC_COLS <- list(
     "SITEID",
     "VISITNUM",
     "VISIT",
-    "AVISIT", # Roche specific
     "AVISITN",
     "PCSTRESC",
     "PCSTRESN",
@@ -306,8 +304,6 @@ CDISC_COLS <- list(
     "STUDYID",
     "DOMAIN",
     "USUBJID",
-    "VISIT",
-    "AVISIT",
     "PPSEQ",
     "PPCAT",
     "PPGRPID",
