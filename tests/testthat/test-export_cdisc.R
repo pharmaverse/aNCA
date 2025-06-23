@@ -1,4 +1,3 @@
-
 # Simplified test_pknca_res object for testing with additional variables
 test_pknca_res <- list(
   result = data.frame(
@@ -297,6 +296,31 @@ describe("export_cdisc", {
     expected_vals <- unique(test_with_subjid$data$dose$data$SUBJID)
     expect_equal(unique(res_with_subjid$adpc$SUBJID), expected_vals)
     expect_equal(unique(res_no_subjid_no_studyid$adpc$SUBJID), expected_vals)
+  })
+
+  it("derives PPFAST from EXFAST, PCFAST, or FEDSTATE as appropriate", {
+    # Case 1: EXFAST present
+    test_exfast <- test_pknca_res
+    test_exfast$data$dose$data$EXFAST <- c("Y", "N")
+    res_exfast <- export_cdisc(test_exfast)
+    expect_equal(unique(res_exfast$pp$PPFAST), c("Y", "N"))
+
+    # Case 2: PCFAST present
+    test_pcfast <- test_pknca_res
+    test_pcfast$data$dose$data$PCFAST <- c("Y", "N")
+    res_pcfast <- export_cdisc(test_pcfast)
+    expect_equal(unique(res_pcfast$pp$PPFAST), c("Y", "N"))
+
+    # Case 3: FEDSTATE present
+    test_fedstate <- test_pknca_res
+    test_fedstate$data$dose$data$FEDSTATE <- c("Y", "N")
+    res_fedstate <- export_cdisc(test_fedstate)
+    expect_equal(unique(res_fedstate$pp$PPFAST), c("Y", "N"))
+
+    # Case 4: No variable to derive PPFAST
+    test_no_fast <- test_pknca_res
+    res_no_fast <- export_cdisc(test_no_fast)
+    expect_true(!"PPFAST" %in% names(res_no_fast$pp))
   })
 })
 
