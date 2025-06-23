@@ -193,7 +193,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_profile,
   selected_pcspec,
   params,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  # PKNCA default BLQ imputation rule
+  blq_imputation_rule = list(first = "keep", middle = "drop", last = "keep")
 ) {
 
   data <- adnca_data
@@ -202,6 +204,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   data$options <- list(
     auc.method = method,
+    conc.blq = blq_imputation_rule,
     progress = FALSE,
     keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
     min.hl.r.squared = 0.01
@@ -251,7 +254,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   # Impute start values if requested
   if (should_impute_c0) {
     data <- create_start_impute(data)
-
+  
     # Don't impute parameters that are not AUC dependent
     params_auc_dep <- pknca_cdisc_terms %>%
       filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
@@ -262,7 +265,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
       pull(PKNCA) |>
       intersect(names(PKNCA::get.interval.cols()))
-
+  
     all_impute_methods <- na.omit(unique(data$intervals$impute))
 
     data$intervals <- Reduce(function(d, ti_arg) {
