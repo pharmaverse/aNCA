@@ -74,14 +74,14 @@ ratio_calculations_table_server <- function(
     })
 
     # Table columns
-    table_columns <- c("Parameter", "Reference", "Numerator", "AggregateSubject", "AdjustingFactor", "PPTESTCD")
+    table_columns <- c("Parameter", "Reference", "Test", "AggregateSubject", "AdjustingFactor", "PPTESTCD")
 
     # Store table data
     ratio_table <- reactiveVal({
       data.frame(
         Parameter = character(),
         Reference = character(),
-        Numerator = character(),
+        Test = character(),
         AggregateSubject = character(),
         AdjustingFactor = numeric(),
         stringsAsFactors = FALSE
@@ -98,7 +98,7 @@ ratio_calculations_table_server <- function(
       new_row <- data.frame(
         Parameter = ratio_param_options()[1],
         Reference = ratio_reference_options()[1],
-        Numerator = "(all)",
+        Test = "(all)",
         AggregateSubject = "no",
         AdjustingFactor = 1,
         PPTESTCD = "",
@@ -144,10 +144,10 @@ ratio_calculations_table_server <- function(
             ),
           width = 180
         ),
-        Numerator = colDef(
-          name = "Numerator",
+        Test = colDef(
+          name = "Test",
           cell = dropdown_extra(
-              id = ns("edit_Numerator"),
+              id = ns("edit_Test"),
               choices = c(ratio_reference_options(), "(all)"),
               class = "dropdown-extra"
             ),
