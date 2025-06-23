@@ -51,7 +51,7 @@ export_cdisc <- function(res_nca) {
         group_conc_cols, "start", "end", "PPTESTCD", "type_interval"
       )))
     )  %>%
-    arrange(!!!syms(c(group_conc_cols, "start", "end"))) %>%
+    arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
