@@ -31,16 +31,28 @@ export_cdisc <- function(res_nca) {
     )
   )
 
+  dose_info <- res_nca$data$dose$data %>%
+    # Select only the columns that are used in the NCA results
+    select(
+      any_of(c(
+        # Variables defined for the dose information
+        group_vars(res_nca$data$dose), "NCA_PROFILE",  res_nca$data$dose$columns$route,
+        # Variables that could be present and may be used if so
+        "PCRFTDTM", "PCRFDTC", "SUBJID", "VSIIT", "AVISIT", "EXFAST", "PCFAST", "FEDSTATE"
+      ))
+    ) %>%
+    unique()
+
   cdisc_info <- res_nca$result  %>%
-    left_join(res_nca$data$dose$data,
-              by = unname(unlist(res_nca$data$dose$columns$groups)),
+    left_join(dose_info,
+              by = intersect(names(res_nca$result), names(dose_info)),
               suffix = c("", ".y")) %>%
     group_by(
-      across(all_of(c(
-        unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
+      across(any_of(c(
+        group_vars(res_nca$data), "start", "end", "PPTESTCD", "type_interval"
       )))
     )  %>%
-    arrange(USUBJID, NCA_PROFILE, !is.na(PPSTRES)) %>%
+    arrange(!!!syms(c(group_vars(res_nca$data$dose), "start", "end"))) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
@@ -226,7 +238,6 @@ get_subjid <- function(data) {
     NA
   }
 }
-
 
 CDISC_COLS <- list(
   ADPC = c(
