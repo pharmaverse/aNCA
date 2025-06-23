@@ -69,29 +69,32 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 
 " Calculate Ratios from PKNCA Results
 #"
-#' This function calculates ratios of PPORRES values from a PKNCA results object (e.g., res$results),
-#' matching rows according to user-specified parameters, matching columns, and denominator_groups variables.
+#' This function calculates ratios of PPORRES values from a PKNCA results object
+#' matching rows according to user-specified parameters.
 #'
 #' @param results A data.frame, typically res$results, containing PPORRES and grouping columns.
 #' @param parameter Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").
-#' @param match_cols Character vector of column names to match between test and denominator_groups, or a data.frame specifying columns and values to filter.
-#' @param denominator_groups A data.frame specifying denominator_groups. At is minimum, it must contain the contrast variable value/s for the denominator.
-#' @param test_groups A data.frame specifying test_groups. Optional argument. By default is NULL and all rows not in the denominator_groups will be used as test.
-#' @param adjusting_factor Numeric. A factor to adjust the calculated ratios. Default is 1.
+#' @param match_cols Character vector of column names to match between test and denominator groups, or a data.frame specifying columns and values.
+#' @param ref_groups A data.frame specifying ref_groups. At is minimum, contains the contrast variable value/s for the denominator.
+#' @param test_groups A data.frame specifying tests. Optional argument. By default is NULL and all rows not in ref_groups will be used as test.
+#' @param adjusting_factor Numeric. A factor to multiply with the ratio for adjustments. Default is 1.
 #'
-#' @return A data.frame with the original columns, plus columns for test, denominator_groups, and the calculated ratio.
+#' @return A data.frame with the original columns, plus columns for test, ref_groups, and the calculated ratio.
 #'
 #' @examples
 #' # Example usage:
-#' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID", "VISIT"), denominator_groups = c("TREATMENT"))
-#' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), denominator_groups = data.frame(TREATMENT = "Placebo"))
+#' # calculate_ratios(
+#'     res$results, parameter = "AUCINF",
+#'     match_cols = c("USUBJID", "VISIT"),
+#'     ref_groups = c("TREATMENT"))
+#' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), ref_groups = data.frame(TREATMENT = "Placebo"))
 #' @export
 #'
-calculate_ratios <- function(data, parameter, match_cols, denominator_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
+calculate_ratios <- function(data, parameter, match_cols, ref_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
   UseMethod("calculate_ratios", data)
 }
 
-calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
+calculate_ratios.data.frame <- function(data, parameter, match_cols, ref_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
   if (!any(data$PPTESTCD == parameter)) {
     warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
   }
@@ -104,9 +107,9 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
   df <- data[data$PPTESTCD == parameter, ]
 
   # Define the denominator rows
-  df_den <- merge(df, denominator_groups)
+  df_den <- merge(df, ref_groups)
 
-  # Define the test rows, which should exclude the denominator_groups
+  # Define the test rows, which should exclude the ref_groups
   if (!is.null(test_groups)) {
     df_num <- merge(df, test_groups)
   } else {
@@ -164,12 +167,12 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, denominator
     unique()
 }
 
-calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominator_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
-  # Check if match_cols and denominator_groups are valid group columns
+calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, ref_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
+  # Check if match_cols and ref_groups are valid group columns
   # Make checks on the input formats
-  if (!all(c(match_cols, names(denominator_groups), names(test_groups)) %in% c(names(PKNCA::getGroups(data)), "start", "end"))) {
+  if (!all(c(match_cols, names(ref_groups), names(test_groups)) %in% c(names(PKNCA::getGroups(data)), "start", "end"))) {
     stop(paste0(
-      "match_cols and denominator_groups must contain valid group column names in PKNCAres: ",
+      "match_cols and ref_groups must contain valid group column names in PKNCAres: ",
       paste(names(PKNCA::getGroups(data)), collapse = ", ")
     ))
   }
@@ -179,7 +182,7 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, denominat
     data = data$result,
     parameter = parameter,
     match_cols = match_cols,
-    denominator_groups = denominator_groups,
+    ref_groups = ref_groups,
     test_groups = test_groups,
     adjusting_factor = adjusting_factor,
     custom.pptestcd = custom.pptestcd
@@ -234,7 +237,7 @@ calculate_ratio_app <- function(res, parameter, test = "(all other levels)", ref
 
   reference_colname <- gsub("(.*): (.*)", "\\1", reference)
   reference_value <- gsub("(.*): (.*)", "\\2", reference)
-  denominator_groups <- data.frame(
+  ref_groups <- data.frame(
     matrix(
       reference_value,
       nrow = 1,
@@ -250,7 +253,7 @@ calculate_ratio_app <- function(res, parameter, test = "(all other levels)", ref
       data = res$result,
       parameter = parameter,
       match_cols = match_cols[[ix]],
-      denominator_groups = denominator_groups,
+      ref_groups = ref_groups,
       test_groups = test_groups,
       adjusting_factor = adjusting_factor,
       custom.pptestcd = custom.pptestcd
@@ -268,11 +271,11 @@ calculate_ratio_app <- function(res, parameter, test = "(all other levels)", ref
 
 #' Apply Ratio Calculations to PKNCAresult Object
 #'
-#' This function takes a PKNCAresult object and a data.frame containing ratio calculation parameters,
+#' This function takes a PKNCAresult object and a data.frame specifying ratio calculations,
 #' applies the `calculate_ratio_app` function for each row, and updates the PKNCAresult object.
 #'
 #' @param res A PKNCAresult object.
-#' @param ratio_table A data.frame containing columns: Parameter, Reference, test, AggregateSubject, AdjustingFactor.
+#' @param ratio_table Data.frame with columns: Parameter, Reference, Test, AggregateSubject, AdjustingFactor.
 #' @return The updated PKNCAresult object with added rows in the `result` data.frame.
 #' @export
 calculate_table_ratios_app <- function(res, ratio_table) {

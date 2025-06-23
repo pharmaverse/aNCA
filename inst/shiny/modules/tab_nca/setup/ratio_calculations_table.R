@@ -1,7 +1,7 @@
 # ratio_calculations_table.R
 # Module for dynamic ratio calculation table in Shiny
 
-ratio_calculations_table_ui <- function(id) {
+ratios_table_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
 
@@ -14,17 +14,35 @@ ratio_calculations_table_ui <- function(id) {
       dropdown(
         div(
           tags$h1("Ratio calculations guide"),
-          p("This section is to perform ratio calculations within the allowed parameters that you chose before. You can add a row for each ratio calculation you want, as well as select and remove rows."),
+          p("
+            This section is to perform ratio calculations within the allowed parameters that you chose before.
+            You can add a row for each ratio calculation you want, as well as select and remove rows.
+            "
+          ),
           p("For each ratio you need to specify:"),
           tags$ul(
-            tags$li(tags$b("Parameter"), ": The parameter you want to calculate the ratio for."),
-            tags$li(tags$b("Reference"), ": The level/value to use as reference (denominator)."),
-            tags$li(tags$b("Test"), ": The level/value to use as test (numerator). If you select '(all other levels)' will use all other levels of the Reference variable."),
-            tags$li(tags$b("Aggregate Subject"), ": `yes` will aggregate for each test the reference values across all subjects, `no` will not aggregate, and `if-needed` will only aggregate if ratios cannot be performed within the same subject."),
-            tags$li(tags$b("Adjusting Factor"), ": Factor to multiply the ratio with i.e, for molecular weight ratios (MW_ref / MW_test)."),
-            tags$li(tags$b("PPTESTCD"), ": Code name for the ratio in the outputs. By default automatically generated using CDISC style. Will always be unique.")
+            tags$li(tags$b(
+              "Parameter"), ": The parameter you want to calculate the ratio for."
+            ),
+            tags$li(tags$b(
+              "Reference"), ": The level/value to use as reference (denominator)."
+            ),
+            tags$li(tags$b(
+              "Test"), ": The level/value to use as test (numerator). If you select '(all other levels)' will use all other levels of the Reference variable."
+            ),
+            tags$li(tags$b(
+              "Aggregate Subject"), ": `yes` aggregates reference values across all subjects, `no` does not, and `if-needed` only if ratios cannot be performed within the same subject."
+            ),
+            tags$li(tags$b(
+              "Adjusting Factor"), ": Factor to multiply the ratio with i.e, for molecular weight ratios (MW_ref / MW_test)."
+            ),
+            tags$li(tags$b(
+              "PPTESTCD"), ": Code name for the ratio in the outputs. By default generates names with CDISC style. Will always be unique."
+            )
           ),
-          tags$div(withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$"))
+          tags$div(
+            withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
+          )
         ),
         style = "unite",
         right = TRUE,
@@ -38,25 +56,25 @@ ratio_calculations_table_ui <- function(id) {
   )
 }
 
-ratio_calculations_table_server <- function(
-    id, adnca_data
+ratios_table_server <- function(
+  id, adnca_data
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Helper: get group vars and group values
     ratio_groups <- reactive({
-      
+
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         dplyr::filter(type_interval == "main") %>%
         dplyr::select(
           -any_of(c(names(PKNCA::get.interval.cols()), "impute", "type_interval"))
         ) %>%
-        dplyr::select(any_of(
-          c(dplyr::group_vars(adnca_data()$conc),
-            "ROUTE",
-            "NCA_PROFILE"))
+        dplyr::select(
+          any_of(
+            c(dplyr::group_vars(adnca_data()$conc), "ROUTE", "NCA_PROFILE")
+          )
         ) %>%
         # Filter out the columns with one one unique value (no ratio possible!)
         dplyr::select(dplyr::where(~ length(unique(.)) > 1)) %>%
@@ -74,7 +92,9 @@ ratio_calculations_table_server <- function(
           pull(input_name) %>%
           unique() %>%
           sort()
-      } else NULL
+      } else {
+        NULL
+      }
     })
 
     ratio_param_options <- reactive({
@@ -94,7 +114,9 @@ ratio_calculations_table_server <- function(
     })
 
     # Table columns
-    table_columns <- c("Parameter", "Reference", "Test", "AggregateSubject", "AdjustingFactor", "PPTESTCD")
+    table_columns <- c(
+      "Parameter", "Reference", "Test", "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+    )
 
     # Store table data
     ratio_table <- reactiveVal({
@@ -158,19 +180,19 @@ ratio_calculations_table_server <- function(
         Reference = colDef(
           name = "Reference",
           cell = dropdown_extra(
-              id = ns("edit_Reference"),
-              choices = ratio_reference_options(),
-              class = "dropdown-extra"
-            ),
+            id = ns("edit_Reference"),
+            choices = ratio_reference_options(),
+            class = "dropdown-extra"
+          ),
           width = 180
         ),
         Test = colDef(
           name = "Test",
           cell = dropdown_extra(
-              id = ns("edit_Test"),
-              choices = c(ratio_reference_options(), "(all other levels)"),
-              class = "dropdown-extra"
-            ),
+            id = ns("edit_Test"),
+            choices = c(ratio_reference_options(), "(all other levels)"),
+            class = "dropdown-extra"
+          ),
           width = 180
         ),
         AggregateSubject = colDef(
@@ -256,7 +278,7 @@ ratio_calculations_table_server <- function(
           }
         }
       })
-      
+
       # Add special names for certain ratios
       observe({
         analyte_col <- adnca_data()$conc$columns$groups$group_analyte

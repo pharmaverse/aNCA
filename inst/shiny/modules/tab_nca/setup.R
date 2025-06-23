@@ -42,7 +42,7 @@ setup_ui <- function(id) {
       accordion(
         accordion_panel(
           title = "Ratio Calculations",
-          ratio_calculations_table_ui(ns("ratio_calculations_table"))
+          ratios_table_ui(ns("ratio_calculations_table"))
         ),
         id = "acc",
         open = c("General Settings", "Parameter Selection")
@@ -91,9 +91,9 @@ setup_server <- function(id, data, adnca_data) {
 
       processed_pknca_data
     })
-    
+
     # Keep the post processing ratio calculations requested by the user
-    ratio_table <- ratio_calculations_table_server(
+    ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data
     )$ratio_table
