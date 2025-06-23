@@ -4,13 +4,33 @@
 ratio_calculations_table_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
+
+    # Main widgets for the ratio table
     div(
       class = "plot-widget-group",
-      actionButton(ns("add_row"), "+ Add Ratio Row", class = "btn-success")
-    ),
-    div(
-      class = "plot-widget-group",
-      actionButton(ns("remove_row"), "- Remove selected rows", class = "btn-warning")
+      actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
+      actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning"),
+      # Help button
+      dropdown(
+        div(
+          tags$h1("Ratio calculations guide"),
+          p("This section is to perform ratio calculations within the allowed parameters that you chose before. You can add a row for each ratio calculation you want, as well as select and remove rows."),
+          p("For each ratio you need to specify:"),
+          tags$ul(
+            tags$li(tags$b("Parameter"), ": The parameter you want to calculate the ratio for."),
+            tags$li(tags$b("Reference"), ": The level/value to use as reference (denominator)."),
+            tags$li(tags$b("Test"), ": The level/value to use as test (numerator). If you select '(all other levels)' will use all other levels of the Reference variable."),
+            tags$li(tags$b("Aggregate Subject"), ": `yes` will aggregate for each test the reference values across all subjects, `no` will not aggregate, and `if-needed` will only aggregate if ratios cannot be performed within the same subject."),
+            tags$li(tags$b("Adjusting Factor"), ": Factor to multiply the ratio with i.e, for molecular weight ratios (MW_ref / MW_test)."),
+            tags$li(tags$b("PPTESTCD"), ": Code name for the ratio in the outputs. By default automatically generated using CDISC style. Will always be unique.")
+          ),
+          tags$div(withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$"))
+        ),
+        style = "unite",
+        right = TRUE,
+        icon = icon("question"),
+        status = "primary"
+      ),
     ),
     fluidRow(
       reactableOutput(ns("ratio_calculations"))
