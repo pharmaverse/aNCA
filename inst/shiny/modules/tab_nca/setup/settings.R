@@ -264,7 +264,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       "lambda.z",
       "lambda.z.n.points", "r.squared",
       "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred"
+      "aucpext.obs", "aucpext.pred",
+      "ae", "fe"
     )
 
     output$nca_parameters <- renderReactable({
