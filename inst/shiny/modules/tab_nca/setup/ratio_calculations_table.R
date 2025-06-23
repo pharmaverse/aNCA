@@ -26,24 +26,16 @@ ratio_calculations_table_server <- function(
 
     # Helper: get group vars and group values
     ratio_groups <- reactive({
+      
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         dplyr::filter(type_interval == "main") %>%
         dplyr::select(
           -any_of(c(names(PKNCA::get.interval.cols()), "impute", "type_interval"))
         ) %>%
-        # Join route information (bioavailability ratios)
-        left_join(
-          dplyr::select(
-            adnca_data()$dose$data,
-            any_of(c(dplyr::group_vars(adnca_data()$dose), adnca_data()$dose$columns$route))
-          ) %>%
-            unique(),
-          by = dplyr::group_vars(adnca_data()$dose)
-        ) %>%
         dplyr::select(any_of(
           c(dplyr::group_vars(adnca_data()$conc),
-            adnca_data()$dose$columns$route,
+            "ROUTE",
             "NCA_PROFILE"))
         ) %>%
         # Filter out the columns with one one unique value (no ratio possible!)
@@ -77,12 +69,12 @@ ratio_calculations_table_server <- function(
         # Select only columns where all values are not NA
         dplyr::select(dplyr::where(~ !all(is.na(.)))) %>%
         names() %>%
-        purrr::keep(~ grepl("^(auc[it\\.]|cmax)", ., ignore.case = TRUE)) %>%
+        purrr::keep(~ grepl("^(auc[itl\\.]|cmax)", ., ignore.case = TRUE)) %>%
         translate_terms("PKNCA", "PPTESTCD")
     })
 
     # Table columns
-    table_columns <- c("Parameter", "Reference", "Numerator", "AggregateSubject", "AdjustingFactor")
+    table_columns <- c("Parameter", "Reference", "Numerator", "AggregateSubject", "AdjustingFactor", "PPTESTCD")
 
     # Store table data
     ratio_table <- reactiveVal({
@@ -176,10 +168,17 @@ ratio_calculations_table_server <- function(
             id = ns("edit_AdjustingFactor")
           ),
           width = 120
+        ),
+        PPTESTCD = colDef(
+          name = "PPTESTCD",
+          cell = text_extra(
+            id = ns("edit_PPTESTCD")
+          ),
+          width = 140
         )
       )
       reactable(
-        data = dplyr::select(ratio_table(), -PPTESTCD),
+        data = ratio_table(),
         defaultColDef = colDef(align = "center"),
         columns = col_defs,
         selection = "multiple",
@@ -199,6 +198,26 @@ ratio_calculations_table_server <- function(
           edit <- input[[paste0("edit_", colname)]]
           tbl <- ratio_table()
           tbl[edit$row, edit$column] <- edit$value
+
+          # If Parameter or Reference changed, update PPTESTCD for that row
+          if (colname %in% c("Parameter", "Reference")) {
+            analyte_col <- adnca_data()$conc$columns$groups$group_analyte
+            profile_col <- "NCA_PROFILE"
+            pcspec_col <- "PCSPEC"
+            route_col <- adnca_data()$dose$columns$route
+            ref <- tbl[edit$row, "Reference"]
+            param <- tbl[edit$row, "Parameter"]
+            tbl <- tbl %>% mutate(
+              PPTESTCD = case_when(
+                startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
+                startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
+                startsWith(Reference, paste0(route_col, ": intravascular")) ~ "FABS",
+                TRUE ~ paste0("RA", Parameter)
+              )
+            )
+            ratio_table(tbl)
+            refresh_reactable(refresh_reactable() + 1)
+          }
           ratio_table(tbl)
         })
       })
@@ -228,7 +247,6 @@ ratio_calculations_table_server <- function(
           PPTESTCD = case_when(
             startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
             startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
-            startsWith(Reference, pcspec_col) ~ paste0("PR", Parameter),
             startsWith(Reference, paste0(route_col, ": intravascular")) ~ "FABS",
             TRUE ~ paste0("RA", Parameter)
           )

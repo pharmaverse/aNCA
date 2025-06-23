@@ -222,7 +222,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
+    keep_interval_cols = c(
+      "NCA_PROFILE", "DOSNOA", "type_interval",
+      adnca_data$dose$columns$route, "ROUTE"
+    ),
     min.hl.r.squared = 0.01
   )
 
@@ -232,7 +235,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     pknca_dose = data$dose,
     params = params,
     start_from_last_dose = should_impute_c0
-  )
+  ) %>%
+    # Join route information
+    left_join(
+      dplyr::select(
+        adnca_data$dose$data,
+        any_of(c(dplyr::group_vars(adnca_data$dose), adnca_data$dose$columns$route, "ROUTE"))
+      ) %>% unique(),
+      by = dplyr::group_vars(adnca_data$dose)
+    )
 
   # Apply filtering
   data$intervals <- data$intervals %>%
