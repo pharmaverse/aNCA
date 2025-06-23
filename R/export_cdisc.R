@@ -33,7 +33,7 @@ export_cdisc <- function(res_nca) {
       any_of(c(
         # Variables defined for the dose information
         group_dose_cols, "NCA_PROFILE",  res_nca$data$dose$columns$route,
-        # TOOD (Gerardo): Test should use a real PKNCA obj (FIXTURE) so this var is accessed via mapping 
+        # TODO (Gerardo): Test should use a PKNCA obj (FIXTURE) so the var is accessed via mapping
         "RRLTU",
         "PCRFTDTC", "PCRFTDTM", "EXFAST", "PCFAST", "FEEDSTATE", "PCSEQ",
         # Raw variables that can be directly used in PP or ADPP if present
