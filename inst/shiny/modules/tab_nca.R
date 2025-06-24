@@ -198,7 +198,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
 
-    nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)
+    nca_results_server("nca_results", processed_pknca_data, res_nca, settings, ratio_table, grouping_vars)
 
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)

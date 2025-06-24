@@ -372,7 +372,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           impute_c0 = input$should_impute_c0
         ),
         partial_aucs = auc_data(),
-        # ratio_calculations = ratio_calculations$ratio_table(),
         flags = list(
           adj.r.squared = list(
             is.checked = input$adj.r.squared_rule,
