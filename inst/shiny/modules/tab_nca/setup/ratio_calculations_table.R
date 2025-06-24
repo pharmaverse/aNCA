@@ -15,29 +15,40 @@ ratios_table_ui <- function(id) {
         div(
           tags$h1("Ratio calculations guide"),
           p("
-            This section is to perform ratio calculations within the allowed parameters that you chose before.
-            You can add a row for each ratio calculation you want, as well as select and remove rows.
+            This section is to perform ratio calculations within the allowed parameters
+            that you chose before. You can add a row for each ratio calculation you want, 
+            as well as select and remove rows.
             "
           ),
           p("For each ratio you need to specify:"),
           tags$ul(
-            tags$li(tags$b(
-              "Parameter"), ": The parameter you want to calculate the ratio for."
+            tags$li(
+              tags$b("Parameter"),
+              ": The parameter you want to calculate the ratio for."
             ),
-            tags$li(tags$b(
-              "Reference"), ": The level/value to use as reference (denominator)."
+            tags$li(
+              tags$b("Reference"),
+              ": The level/value to use as reference (denominator)."
             ),
-            tags$li(tags$b(
-              "Test"), ": The level/value to use as test (numerator). If you select '(all other levels)' will use all other levels of the Reference variable."
+            tags$li(
+              tags$b("Test"),
+              ": The level/value to use as test (numerator). If you select '(all other levels)'
+              will use all other levels of the Reference variable."
             ),
-            tags$li(tags$b(
-              "Aggregate Subject"), ": `yes` aggregates reference values across all subjects, `no` does not, and `if-needed` only if ratios cannot be performed within the same subject."
+            tags$li(
+              tags$b("Aggregate Subject"),
+              ": `yes` aggregates reference values across all subjects, `no` does not, and 
+              `if-needed` only if ratios cannot be performed within the same subject."
             ),
-            tags$li(tags$b(
-              "Adjusting Factor"), ": Factor to multiply the ratio with i.e, for molecular weight ratios (MW_ref / MW_test)."
+            tags$li(
+              tags$b("Adjusting Factor"),
+              ": Factor to multiply the ratio with i.e, for molecular weight ratios 
+              (MW_ref / MW_test)."
             ),
-            tags$li(tags$b(
-              "PPTESTCD"), ": Code name for the ratio in the outputs. By default generates names with CDISC style. Will always be unique."
+            tags$li(
+              tags$b("PPTESTCD"),
+              ": Code name for the ratio in the outputs. By default generates names with 
+              CDISC style. Will always be unique."
             )
           ),
           tags$div(

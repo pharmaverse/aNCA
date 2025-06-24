@@ -74,12 +74,17 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #'
 #' @param results A data.frame, typically res$results, containing PPORRES and grouping columns.
 #' @param parameter Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").
-#' @param match_cols Character vector of column names to match between test and denominator groups, or a data.frame specifying columns and values.
-#' @param ref_groups A data.frame specifying ref_groups. At is minimum, contains the contrast variable value/s for the denominator.
-#' @param test_groups A data.frame specifying tests. Optional argument. By default is NULL and all rows not in ref_groups will be used as test.
-#' @param adjusting_factor Numeric. A factor to multiply with the ratio for adjustments. Default is 1.
+#' @param match_cols Character vector of column names to match between test and denominator groups,
+#' or a data.frame specifying columns and values.
+#' @param ref_groups A data.frame specifying ref_groups. At its minimum, contains the contrast
+#' variable value/s for the denominator.
+#' @param test_groups A data.frame specifying tests. Optional argument.
+#' By default is NULL and all rows not in ref_groups will be used as test.
+#' @param adjusting_factor Numeric. A factor to multiply with the ratio for adjustments.
+#' Default is 1.
 #'
-#' @return A data.frame with the original columns, plus columns for test, ref_groups, and the calculated ratio.
+#' @return A data.frame with the original columns, plus columns for test, ref_groups
+#' and the calculated ratio.
 #'
 #' @examples
 #' # Example usage:
@@ -87,20 +92,44 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #'     res$results, parameter = "AUCINF",
 #'     match_cols = c("USUBJID", "VISIT"),
 #'     ref_groups = c("TREATMENT"))
-#' # calculate_ratios(res$results, parameter = "AUCINF", match_cols = c("USUBJID"), ref_groups = data.frame(TREATMENT = "Placebo"))
+#'
 #' @export
 #'
-calculate_ratios <- function(data, parameter, match_cols, ref_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
+calculate_ratios <- function(
+  data,
+  parameter,
+  match_cols,
+  ref_groups,
+  test_groups = NULL,
+  adjusting_factor = 1,
+  custom_pptestcd = NULL
+) {
   UseMethod("calculate_ratios", data)
 }
 
-calculate_ratios.data.frame <- function(data, parameter, match_cols, ref_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
+calculate_ratios.data.frame <- function(
+  data,
+  parameter,
+  match_cols,
+  ref_groups,
+  test_groups = NULL,
+  adjusting_factor = 1,
+  custom_pptestcd = NULL
+) {
   if (!any(data$PPTESTCD == parameter)) {
-    warning(paste0("No parameter with PPTESTCD: '", paste(parameter, collapse = ","), "' is not found in the PKNCA results."))
+    warning(
+      paste0(
+        "No parameter with PPTESTCD: '",
+        paste(parameter, collapse = ","),
+        "' is not found in the PKNCA results."
+      )
+    )
   }
 
   # Deduce what are all the group columns in the result data.frame
-  extra_res_cols <- c("PPTEST", "PPORRES", "PPORRESU", "PPSTRES", "PPSTRESU", "type_interval", "exclude")
+  extra_res_cols <- c(
+    "PPTEST", "PPORRES", "PPORRESU", "PPSTRES", "PPSTRESU", "type_interval", "exclude"
+  )
   group_cols <- setdiff(colnames(data), extra_res_cols)
 
   # Filter for the parameter of interest
@@ -156,8 +185,8 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, ref_groups,
       } else {
         NULL
       },
-      PPTESTCD = if (!is.null(custom.pptestcd)) {
-        custom.pptestcd
+      PPTESTCD = if (!is.null(custom_pptestcd)) {
+        custom_pptestcd
       } else {
         ifelse(n > 1, paste0("RA", PPTESTCD, " (mean)"), paste0("RA", PPTESTCD))
       }
@@ -167,10 +196,19 @@ calculate_ratios.data.frame <- function(data, parameter, match_cols, ref_groups,
     unique()
 }
 
-calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, ref_groups, test_groups = NULL, adjusting_factor = 1, custom.pptestcd = NULL) {
+calculate_ratios.PKNCAresults <- function(
+  data,
+  parameter,
+  match_cols,
+  ref_groups,
+  test_groups = NULL,
+  adjusting_factor = 1,
+  custom_pptestcd = NULL
+) {
   # Check if match_cols and ref_groups are valid group columns
   # Make checks on the input formats
-  if (!all(c(match_cols, names(ref_groups), names(test_groups)) %in% c(names(PKNCA::getGroups(data)), "start", "end"))) {
+  cols_used_for_ratios <- c(match_cols, names(ref_groups), names(test_groups))
+  if (!all(cols_used_for_ratios %in% c(names(PKNCA::getGroups(data)), "start", "end"))) {
     stop(paste0(
       "match_cols and ref_groups must contain valid group column names in PKNCAres: ",
       paste(names(PKNCA::getGroups(data)), collapse = ", ")
@@ -185,7 +223,7 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, ref_group
     ref_groups = ref_groups,
     test_groups = test_groups,
     adjusting_factor = adjusting_factor,
-    custom.pptestcd = custom.pptestcd
+    custom_pptestcd = custom_pptestcd
   )
 
   # Update the PKNCA results with the new ratios
@@ -193,7 +231,15 @@ calculate_ratios.PKNCAresults <- function(data, parameter, match_cols, ref_group
   data
 }
 
-calculate_ratio_app <- function(res, parameter, test = "(all other levels)", reference = "PARAM: Analyte01", aggregate_subject = "no", adjusting_factor = 1.4, custom.pptestcd = NULL) {
+calculate_ratio_app <- function(
+  res,
+  parameter,
+  test = "(all other levels)",
+  reference = "PARAM: Analyte01",
+  aggregate_subject = "no",
+  adjusting_factor = 1.4,
+  custom_pptestcd = NULL
+) {
   reference_colname <- gsub("(.*): (.*)", "\\1", reference)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
 
@@ -215,7 +261,7 @@ calculate_ratio_app <- function(res, parameter, test = "(all other levels)", ref
     match_cols <- list(match_cols)
   } else if (aggregate_subject == "if-needed") {
     if ("USUBJID" %in% match_cols) {
-      # Perform both individual and aggregate calculations and then eliminate duplicates in the group columns
+      # Perform both individual & aggregated calculations, then eliminate duplicates
       match_cols <- list(match_cols, setdiff(match_cols, "USUBJID"))
     }
   }
@@ -256,7 +302,7 @@ calculate_ratio_app <- function(res, parameter, test = "(all other levels)", ref
       ref_groups = ref_groups,
       test_groups = test_groups,
       adjusting_factor = adjusting_factor,
-      custom.pptestcd = custom.pptestcd
+      custom_pptestcd = custom_pptestcd
     )
     all_ratios <- bind_rows(all_ratios, ratio_calculations)
   }
@@ -264,9 +310,10 @@ calculate_ratio_app <- function(res, parameter, test = "(all other levels)", ref
   # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed
   unnest(all_ratios) %>%
     # Make sure there are no duplicate rows for: parameter, contrast_var, and match_cols
-    distinct(across(all_of(
-      c("PPTESTCD", group_vars(res$data), "end"))
-    ), .keep_all = TRUE)
+    distinct(across(
+      all_of(c("PPTESTCD", group_vars(res$data), "end"))
+    ),
+    .keep_all = TRUE)
 }
 
 #' Apply Ratio Calculations to PKNCAresult Object
@@ -275,7 +322,8 @@ calculate_ratio_app <- function(res, parameter, test = "(all other levels)", ref
 #' applies the `calculate_ratio_app` function for each row, and updates the PKNCAresult object.
 #'
 #' @param res A PKNCAresult object.
-#' @param ratio_table Data.frame with columns: Parameter, Reference, Test, AggregateSubject, AdjustingFactor.
+#' @param ratio_table Data.frame with columns:
+#' Parameter, Reference, Test, AggregateSubject, AdjustingFactor.
 #' @return The updated PKNCAresult object with added rows in the `result` data.frame.
 #' @export
 calculate_table_ratios_app <- function(res, ratio_table) {
@@ -293,7 +341,7 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       reference = ratio_table$Reference[i],
       aggregate_subject = ratio_table$AggregateSubject[i],
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
-      custom.pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
+      custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
     )
   }
 

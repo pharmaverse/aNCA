@@ -69,20 +69,20 @@ describe("multiple_matrix_ratios function", {
 
 describe("calculate_ratios function", {
 
-    res <- FIXTURE_PKNCA_RES
-    res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
-    numerator_groups <- data.frame(PARAM = "B")
-    denominator_groups <- data.frame(PARAM = "A")
+  res <- FIXTURE_PKNCA_RES
+  res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+  numerator_groups <- data.frame(PARAM = "B")
+  denominator_groups <- data.frame(PARAM = "A")
 
 
-    # Make a simple input version that has same units and only 1 subject
-    res_simple <- res
-    res_simple$result <- res$result %>%
-      filter(USUBJID == 8) %>%
-      mutate(
-        PPORRESU = "ng/mL",
-        PPSTRESU = "ng/mL"
-      )
+  # Make a simple input version that has same units and only 1 subject
+  res_simple <- res
+  res_simple$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
 
   it("computes correct ratios for simple case (data.frame)", {
 
@@ -94,11 +94,11 @@ describe("calculate_ratios function", {
       numerator_groups = numerator_groups
     )
 
-    expect_equal(ratios$PPSTRES, c(2/3, 4/5), tolerance = 1e-2)
+    expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
     expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
   })
 
-    it("computes correct ratios for simple case (PKNCAresults)", {
+  it("computes correct ratios for simple case (PKNCAresults)", {
 
     pknca_res_with_ratios <- calculate_ratios(
       res_simple,
@@ -111,7 +111,7 @@ describe("calculate_ratios function", {
       filter(PPTESTCD == "CMAX_RATIO")
 
     expect_equal(nrow(pknca_res_with_ratios$result), nrow(res_simple$result) + 2)
-    expect_equal(ratios$PPSTRES, c(2/3, 4/5), tolerance = 1e-2)
+    expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
     expect_true(all(grepl("CMAX_RATIO", ratios$PPTESTCD)))
   })
 
@@ -126,7 +126,7 @@ describe("calculate_ratios function", {
       adjusting_factor = 2
     )
 
-    expect_equal(ratios$PPORRES, c(2/3, 4/5) * 2)
+    expect_equal(ratios$PPORRES, c(2 / 3, 4 / 5) * 2)
     expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
   })
 
@@ -148,7 +148,7 @@ describe("calculate_ratios function", {
     ratios <- ratios$result %>%
       filter(PPTESTCD == "CMAX_RATIO")
 
-    expect_equal(ratios$PPORRES, c(2/3, 4/5) * 1000)
+    expect_equal(ratios$PPORRES, c(2 / 3, 4 / 5) * 1000)
     expect_equal(ratios$PPORRESU, rep("fraction", 2))
     expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
   })
@@ -171,8 +171,8 @@ describe("calculate_ratios function", {
     ratios <- ratios$result %>%
       filter(PPTESTCD == "CMAX_RATIO")
 
-     expect_equal(ratios$PPORRES, c(2/3, 4/5))
-     expect_equal(ratios$PPORRESU, rep("ng/mL/unknown_unit", 2))
+    expect_equal(ratios$PPORRES, c(2 / 3, 4 / 5))
+    expect_equal(ratios$PPORRESU, rep("ng/mL/unknown_unit", 2))
   })
 
   it("returns error when a non-group column is used for match_cols or denominator_groups", {
