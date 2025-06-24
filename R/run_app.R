@@ -1,7 +1,8 @@
 #' Run the Shiny app
 #' @param ... Arguments passed to `shiny::runApp()`
 #' @export
-run_app <- function(...) {
+run_app <- function(datapath = NULL, ...) {
+  .GlobalEnv$datapath <- datapath
   check_app_dependencies()
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }
