@@ -257,6 +257,8 @@ ratios_table_server <- function(
             analyte_col <- adnca_data()$conc$columns$groups$group_analyte
             profile_col <- "NCA_PROFILE"
             pcspec_col <- "PCSPEC"
+            raw_route_col <- "ROUTE"
+            duration_col <- adnca_data()$dose$columns$duration
             route_col <- adnca_data()$dose$columns$route
             ref <- tbl[edit$row, "Reference"]
             param <- tbl[edit$row, "Parameter"]
@@ -264,7 +266,10 @@ ratios_table_server <- function(
               PPTESTCD = case_when(
                 startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
                 startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
-                startsWith(Reference, paste0(route_col, ": intravascular")) ~ "FABS",
+                startsWith(toupper(Reference), paste0(toupper(route_col), ": INTRAVASCULAR")) ~ "FABS",
+                startsWith(toupper(Reference), paste0(toupper(raw_route_col), ": INTRA")) ~ "FABS",
+                startsWith(Reference, paste0(route_col)) ~ "FREL",
+                startsWith(Reference, raw_route_col) ~ "FREL",
                 TRUE ~ paste0("RA", Parameter)
               ),
               PPTESTCD = make.unique(PPTESTCD, sep = "")
@@ -295,13 +300,17 @@ ratios_table_server <- function(
         analyte_col <- adnca_data()$conc$columns$groups$group_analyte
         profile_col <- "NCA_PROFILE"
         pcspec_col <- "PCSPEC"
+        raw_route_col <- "ROUTE"
         route_col <- adnca_data()$dose$columns$route
 
         tbl <- ratio_table() %>% mutate(
           PPTESTCD = case_when(
             startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
             startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
-            startsWith(Reference, paste0(route_col, ": intravascular")) ~ "FABS",
+            startsWith(toupper(Reference), paste0(toupper(route_col), ": INTRAVASCULAR")) ~ "FABS",
+            startsWith(toupper(Reference), paste0(toupper(raw_route_col), ": INTRA")) ~ "FABS",
+            startsWith(Reference, paste0(route_col)) ~ "FREL",
+            startsWith(Reference, raw_route_col) ~ "FREL",
             TRUE ~ paste0("RA", Parameter)
           ),
           PPTESTCD = make.unique(PPTESTCD, sep = "")
