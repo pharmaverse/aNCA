@@ -60,11 +60,11 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 
   dataset <- dataset %>%
     .apply_manual_units(mapping, manual_units) %>%
-    relocate(all_of(desired_order)) %>%
+    relocate(any_of(desired_order)) %>%
     apply_labels(LABELS, "ADPC")
 
   conc_duplicates <- dataset %>%
-    group_by(across(all_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
+    group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
     filter(n() > 1) %>%
     slice(1) %>%
     ungroup() %>%
