@@ -4,9 +4,12 @@ ADPC
 ADPP
 AFRLT
 ARRLT
+AUCINF
 AUClast
 AVAL
 AVALU
+AdjustingFactor
+AggregateSubject
 Analyte
 CDISC
 DOSEA
@@ -30,6 +33,7 @@ PKNCA
 PKNCAconc
 PKNCAdata
 PKNCAdose
+PKNCAresult
 PKNCAresults
 PPORRES
 PPSTRES
