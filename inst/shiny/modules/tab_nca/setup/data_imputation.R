@@ -69,7 +69,11 @@ data_imputation_server <- function(id) {
                             middle = input$in_between_non_blqs,
                             last = input$after_last_non_blq
                           ),
-                          "Set value for all BLQ" = input$blq_value,
+                          "Set value for all BLQ" = list(
+                            first = input$blq_value,
+                            middle = input$blq_value,
+                            last = input$blq_value
+                          ),
                           NULL
       )
       are_valid_inputs <- sapply(rule_list, function(x) grepl('[0-9]*', x) || x %in% c('drop', 'keep'))
