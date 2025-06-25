@@ -16,6 +16,5 @@ Parameter, Reference, Test, AggregateSubject, AdjustingFactor.}
 The updated PKNCAresult object with added rows in the \code{result} data.frame.
 }
 \description{
-This function takes a PKNCAresult object and a data.frame specifying ratio calculations,
-applies the \code{calculate_ratio_app} function for each row, and updates the PKNCAresult object.
+This function takes a PKNCAresult object and a data.frame specifying ratio calculations, applies the \code{calculate_ratio_app} function for each row, and updates the PKNCAresult object.
 }

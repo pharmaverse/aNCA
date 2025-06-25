@@ -2,8 +2,7 @@
 % Please edit documentation in R/ratio_calculations.R
 \name{calculate_ratios}
 \alias{calculate_ratios}
-\title{This function calculates ratios of PPORRES values from a PKNCA results object
-matching rows according to user-specified parameters.}
+\title{Calculate Ratios from PKNCA Results}
 \usage{
 calculate_ratios(
   data,
@@ -16,35 +15,23 @@ calculate_ratios(
 )
 }
 \arguments{
+\item{data}{A PKNCAresults object or its result data.frame, containing PPORRES and grouping columns.}
+
 \item{parameter}{Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").}
 
-\item{match_cols}{Character vector of column names to match between test and denominator groups,
-or a data.frame specifying columns and values.}
+\item{match_cols}{Character vector of column names to match between test and denominator groups, or a data.frame specifying columns and values.}
 
-\item{ref_groups}{A data.frame specifying ref_groups. At its minimum, contains the contrast
-variable value/s for the denominator.}
+\item{ref_groups}{A data.frame specifying reference groups. At its minimum, contains the contrast variable value(s) for the denominator.}
 
-\item{test_groups}{A data.frame specifying tests. Optional argument.
-By default is NULL and all rows not in ref_groups will be used as test.}
+\item{test_groups}{A data.frame specifying test groups. Optional argument. By default is NULL and all rows not in ref_groups will be used as test.}
 
-\item{adjusting_factor}{Numeric. A factor to multiply with the ratio for adjustments.
-Default is 1.}
+\item{adjusting_factor}{Numeric. A factor to multiply with the ratio for adjustments. Default is 1.}
 
-\item{results}{A data.frame, typically res$results, containing PPORRES and grouping columns.}
+\item{custom_pptestcd}{Optional character. If provided, will be used as the PPTESTCD value.}
 }
 \value{
-A data.frame with the original columns, plus columns for test, ref_groups
-and the calculated ratio.
+A data.frame with the original columns, plus columns for test, ref_groups, and the calculated ratio.
 }
 \description{
-This function calculates ratios of PPORRES values from a PKNCA results object
-matching rows according to user-specified parameters.
-}
-\examples{
-# Example usage:
-# calculate_ratios(
-    res$results, parameter = "AUCINF",
-    match_cols = c("USUBJID", "VISIT"),
-    ref_groups = c("TREATMENT"))
-
+This function is a generic for calculating ratios of PPORRES values from a PKNCA results object or its result data.frame, matching rows according to user-specified parameters.
 }
