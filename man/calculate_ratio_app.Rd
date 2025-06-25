@@ -10,7 +10,7 @@ calculate_ratio_app(
   test = "(all other levels)",
   reference = "PARAM: Analyte01",
   aggregate_subject = "no",
-  adjusting_factor = 1.4,
+  adjusting_factor = 1,
   custom_pptestcd = NULL
 )
 }
@@ -25,7 +25,7 @@ calculate_ratio_app(
 
 \item{aggregate_subject}{Character. Aggregation mode: "yes", "no", or "if-needed".}
 
-\item{adjusting_factor}{Numeric. A factor to multiply with the ratio for adjustments. Default is 1.4.}
+\item{adjusting_factor}{Numeric that multiplies the calculated ratio. Default is 1.}
 
 \item{custom_pptestcd}{Optional character. If provided, will be used as the PPTESTCD value.}
 }
@@ -33,5 +33,5 @@ calculate_ratio_app(
 A data.frame with the calculated ratios for the specified settings.
 }
 \description{
-This function calculates a ratio for a given parameter, test, and reference group, with options for subject aggregation and adjusting factor. Used in the app context.
+Calculate a Ratio for the App
 }

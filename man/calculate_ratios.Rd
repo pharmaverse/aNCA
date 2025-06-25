@@ -15,23 +15,26 @@ calculate_ratios(
 )
 }
 \arguments{
-\item{data}{A PKNCAresults object or its result data.frame, containing PPORRES and grouping columns.}
+\item{data}{A PKNCAresults object or its result data.frame.}
 
 \item{parameter}{Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").}
 
-\item{match_cols}{Character vector of column names to match between test and denominator groups, or a data.frame specifying columns and values.}
+\item{match_cols}{Character vector of column names to match between test and reference groups
+or a data.frame specifying columns and values.}
 
-\item{ref_groups}{A data.frame specifying reference groups. At its minimum, contains the contrast variable value(s) for the denominator.}
+\item{ref_groups}{A data.frame specifying reference groups.
+At its minimum, contains the contrast variable value(s) for the reference.}
 
-\item{test_groups}{A data.frame specifying test groups. Optional argument. By default is NULL and all rows not in ref_groups will be used as test.}
+\item{test_groups}{A data.frame specifying test groups. Optional.
+By default is NULL, allowing rows not in ref_groups be used as test.}
 
-\item{adjusting_factor}{Numeric. A factor to multiply with the ratio for adjustments. Default is 1.}
+\item{adjusting_factor}{Numeric to multiply the ratio. Default is 1.}
 
 \item{custom_pptestcd}{Optional character. If provided, will be used as the PPTESTCD value.}
 }
 \value{
-A data.frame with the original columns, plus columns for test, ref_groups, and the calculated ratio.
+A data.frame result object with the calculated ratios.
 }
 \description{
-This function is a generic for calculating ratios of PPORRES values from a PKNCA results object or its result data.frame, matching rows according to user-specified parameters.
+Calculate Ratios from PKNCA Results
 }
