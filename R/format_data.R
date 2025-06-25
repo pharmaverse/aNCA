@@ -142,7 +142,14 @@ format_pkncadose_data <- function(pkncaconc_data,
 #' The function performs the following steps:
 #'   - Creates a vector with all pharmacokinetic parameters.
 #'   - Based on dose times, creates a data frame with start and end times.
+#'   - If TAU column is present in data, sets last dose end time to start + TAU,
+#'   or if TAU is NA then either Inf if only one dose present, or max end time if not.
+#'   - If no TAU column in data, sets last dose end time to the time of last sample
+#'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
+#'
+#'  Assumes that multiple dose data will have a TAU column
+#'  or contain multiple doses in dataset
 #'
 #' @examples
 #' \dontrun{
@@ -186,14 +193,18 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
+
+  has_tau <- "TAU" %in% names(sub_pknca_conc)
 
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
+    group_by(!!!syms(dose_groups)) %>%
+    mutate(is_one_dose = length(unique(DOSNOA)) == 1) %>%
+    ungroup() %>%
     select(any_of(c(dose_groups,
-                    pknca_dose$columns$time, "DOSNOA")))
-
+                    pknca_dose$columns$time, "DOSNOA", "is_one_dose")))
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
@@ -204,6 +215,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Pick 1 per concentration group and dose number
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
+    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>%
     slice(1) %>%
     ungroup() %>%
 
@@ -213,19 +225,30 @@ format_pkncadata_intervals <- function(pknca_conc,
     group_by(!!!syms(conc_groups)) %>%
     arrange(TIME_DOSE) %>%
 
-    # Make end based on next dose time (if no more, Inf)
-    mutate(end = lead(TIME_DOSE, default = Inf)) %>%
+    # Make end based on next dose time (if no more, Tau or last NFRLT)
+    mutate(end = if (has_tau) {
+      case_when(
+        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        is.na(TAU) & is_one_dose ~ Inf,
+        is.na(TAU) ~ max_end,
+        TRUE ~ start + TAU
+      )
+    } else {
+      case_when(
+        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        is_one_dose ~ Inf,
+        TRUE ~ max_end
+      )
+    }
+    ) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
     mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
-
     # Set FALSE for aucint when end = Inf
-    mutate(across(starts_with("aucint.inf.pred"), ~ if_else(end == Inf, FALSE, .))) %>%
-    #TODO: once TAU is included in the app, add new line for aucint to be end = TAU
-
+    mutate(across(starts_with("aucint"), ~ if_else(end == Inf, FALSE, .))) %>%
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 

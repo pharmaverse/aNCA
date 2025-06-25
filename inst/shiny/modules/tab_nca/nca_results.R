@@ -56,27 +56,6 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       # Transform results
       final_results <- pivot_wider_pknca_results(results)
 
-      # Apply flag rules
-      current_rules <- isolate(settings()$flags)
-      for (param in names(current_rules)) {
-        if (current_rules[[param]]$is.checked) {
-          # Find the proper column/s that should be considered (in principle should be 1)
-          param_cdisc <- translate_terms(param, "PKNCA", "PPTESTCD")
-          param_cols <- grep(paste0("^", param_cdisc, "(\\[.*\\])?$"),
-                             names(final_results),
-                             value = TRUE)
-
-          # Include a flag column for that parameter that is TRUE when the threshold is surpassed
-          final_results <- final_results %>%
-            mutate(!!paste0("flag_", param) := case_when(
-              startsWith(param, "auc") ~ rowSums(
-                .[, param_cols] >= current_rules[[param]]$threshold
-              ) > 0,
-              TRUE ~ rowSums(.[, param_cols] <= current_rules[[param]]$threshold) > 0
-            ))
-        }
-      }
-
       # Join subject data to allow the user to group by it
       conc_data_to_join <- res_nca()$data$conc$data %>%
         select(any_of(c(
@@ -91,15 +70,29 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
         distinct()
 
-      # Add flagged column
-      final_results %>%
-        mutate(
-          flagged = case_when(
-            rowSums(is.na(select(., starts_with("flag_")))) > 0 ~ "MISSING",
-            rowSums(select(., starts_with("flag_")), na.rm = TRUE) > 0 ~ "FLAGGED",
-            TRUE ~ "ACCEPTED"
+      # Add flaging column in the pivoted results
+      # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared,
+      #                we can simplify this part by using the PKNCA object
+      rules <- settings()$flags
+      rule_thr <- lapply(rules, FUN =  \(x) x$threshold)
+      rule_pretty_names <- translate_terms(names(rules), "PKNCA", "PPTEST")
+      rule_msgs <- paste0(rule_pretty_names, c(" < ", " > ", " > ", " < "))
+
+      rules_applied <- sapply(rules, FUN =  \(x) x$is.checked)
+      params_applied <- translate_terms(names(rules), "PKNCA", "PPTEST")[rules_applied]
+      params_applied <- names(final_results)[var_labels(final_results) %in% params_applied]
+
+      if (length(params_applied) > 0) {
+        final_results <- final_results %>%
+          mutate(
+            flagged = case_when(
+              rowSums(is.na(select(., any_of(params_applied)))) > 0 ~ "MISSING",
+              is.na(Exclude) ~ "ACCEPTED",
+              any(sapply(rule_msgs, \(msg) str_detect(Exclude, fixed(msg)))) ~ "FLAGGED",
+              TRUE ~ "ACCEPTED"
+            )
           )
-        )
+      }
     })
 
     observeEvent(final_results(), {
