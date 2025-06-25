@@ -72,7 +72,7 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' This function calculates ratios of PPORRES values from a PKNCA results object
 #' matching rows according to user-specified parameters.
 #'
-#' @param results A data.frame, typically res$results, containing PPORRES and grouping columns.
+#' @param data A PKNCAresults or its result data.frame, containing PPORRES and grouping columns.
 #' @param parameter Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").
 #' @param match_cols Character vector of column names to match between test and denominator groups,
 #' or a data.frame specifying columns and values.
@@ -82,16 +82,10 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' By default is NULL and all rows not in ref_groups will be used as test.
 #' @param adjusting_factor Numeric. A factor to multiply with the ratio for adjustments.
 #' Default is 1.
+#' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD for the calculated ratios.
 #'
 #' @return A data.frame with the original columns, plus columns for test, ref_groups
 #' and the calculated ratio.
-#'
-#' @examples
-#' # Example usage:
-#' # calculate_ratios(
-#'     res$results, parameter = "AUCINF",
-#'     match_cols = c("USUBJID", "VISIT"),
-#'     ref_groups = c("TREATMENT"))
 #'
 #' @export
 #'
