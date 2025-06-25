@@ -142,6 +142,13 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             invokeRestart("muffleWarning")
           })
 
+          # Apply flag rules to mark results in the `exclude` column
+          current_rules <- isolate(settings()$flags)
+          flag_rules_to_apply <- current_rules |>
+            purrr::keep(~ .x$is.checked) |>
+            purrr::map(~ .x$threshold)
+          res <- PKNCA_hl_rules_exclusion(res, flag_rules_to_apply)
+
           # Display unique warnings thrown by PKNCA run.
           purrr::walk(unique(pknca_warn_env$warnings), \(w) {
             w_message <- paste0("PKNCA run produced a warning: ", w)
@@ -149,14 +156,14 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             showNotification(w_message, type = "warning", duration = 5)
           })
 
+
           #' Apply units
           if (!is.null(session$userData$units_table())) {
             res$data$units <- session$userData$units_table()
             res$result <- res$result %>%
               select(-PPSTRESU, -PPSTRES) %>%
               left_join(
-                session$userData$units_table() %>%
-                  mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
+                session$userData$units_table(),
                 by = intersect(names(.), names(session$userData$units_table()))
               ) %>%
               mutate(PPSTRES = PPORRES * conversion_factor) %>%
@@ -167,7 +174,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
           log_success("NCA results calculated.")
 
-          res
+          # Apply standard CDISC names and return the object
+          res %>%
+            mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+
         }, error = function(e) {
           log_error("Error calculating NCA results:\n{conditionMessage(e)}")
           showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
