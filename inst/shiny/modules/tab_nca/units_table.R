@@ -56,10 +56,11 @@ units_table_server <- function(id, mydata) {
 
     # Define rows from units table not of interest for the user
     rows_to_hide_units_table <- reactive({
+
       group_cols <- intersect(
         names(PKNCA::getGroups(mydata()$conc)), names(mydata()$units)
       )
-      groups_to_keep <- select(mydata()$intervals, any_of(group_cols)) %>% unique()
+      groups_to_keep <- select(mydata()$intervals, any_of(group_cols))
       params_to_keep <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
 
       rows_to_keep <- mydata()$units %>%
@@ -67,7 +68,7 @@ units_table_server <- function(id, mydata) {
         filter(PPTESTCD %in% params_to_keep)
       if (ncol(groups_to_keep) > 0) {
         rows_to_keep <- inner_join(
-          rows_to_keep, groups_to_keep,
+          rows_to_keep, unique(groups_to_keep),
           by = intersect(names(rows_to_keep), names(groups_to_keep))
         )
       }
