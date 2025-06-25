@@ -71,8 +71,8 @@ describe("calculate_ratios function", {
 
   res <- FIXTURE_PKNCA_RES
   res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
-  numerator_groups <- data.frame(PARAM = "B")
-  denominator_groups <- data.frame(PARAM = "A")
+  test_groups <- data.frame(PARAM = "B")
+  ref_groups <- data.frame(PARAM = "A")
 
 
   # Make a simple input version that has same units and only 1 subject
@@ -90,8 +90,8 @@ describe("calculate_ratios function", {
       res_simple$result,
       parameter = "CMAX",
       match_cols = c("start", "end", "USUBJID"),
-      denominator_groups = denominator_groups,
-      numerator_groups = numerator_groups
+      ref_groups = ref_groups,
+      test_groups = test_groups
     )
 
     expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
@@ -104,8 +104,8 @@ describe("calculate_ratios function", {
       res_simple,
       parameter = "CMAX",
       match_cols = c("start", "end", "USUBJID"),
-      denominator_groups = denominator_groups,
-      numerator_groups = numerator_groups
+      ref_groups = ref_groups,
+      test_groups = test_groups
     )
     ratios <- pknca_res_with_ratios$result %>%
       filter(PPTESTCD == "CMAX_RATIO")
@@ -121,8 +121,8 @@ describe("calculate_ratios function", {
       res_simple$result,
       parameter = "CMAX",
       match_cols = c("start", "end", "USUBJID"),
-      denominator_groups = denominator_groups,
-      numerator_groups = numerator_groups,
+      ref_groups = ref_groups,
+      test_groups = test_groups,
       adjusting_factor = 2
     )
 
@@ -142,8 +142,8 @@ describe("calculate_ratios function", {
       res_with_diff_units,
       parameter = "CMAX",
       match_cols = c("start"),
-      denominator_groups = denominator_groups,
-      numerator_groups = numerator_groups
+      ref_groups = ref_groups,
+      test_groups = test_groups
     )
     ratios <- ratios$result %>%
       filter(PPTESTCD == "CMAX_RATIO")
@@ -165,8 +165,8 @@ describe("calculate_ratios function", {
       res_with_diff_units,
       parameter = "CMAX",
       match_cols = c("start"),
-      denominator_groups = denominator_groups,
-      numerator_groups = numerator_groups
+      ref_groups = ref_groups,
+      test_groups = test_groups
     )
     ratios <- ratios$result %>%
       filter(PPTESTCD == "CMAX_RATIO")
@@ -175,17 +175,17 @@ describe("calculate_ratios function", {
     expect_equal(ratios$PPORRESU, rep("ng/mL/unknown_unit", 2))
   })
 
-  it("returns error when a non-group column is used for match_cols or denominator_groups", {
+  it("returns error when a non-group column is used for match_cols or ref_groups", {
 
     expect_error(
       calculate_ratios(
         res,
         parameter = "CMAX",
         match_cols = c("UNKNOWN_COL"),
-        denominator_groups = c(denominator_groups, "UNKNOWN_COL"),
-        numerator_groups = numerator_groups
+        ref_groups = c(ref_groups, "UNKNOWN_COL"),
+        test_groups = test_groups
       ),
-      "match_cols and denominator_groups must contain valid group column names in PKNCAres:"
+      "match_cols and ref_groups must contain valid group column names in PKNCAres:"
     )
 
     expect_error(
@@ -193,10 +193,10 @@ describe("calculate_ratios function", {
         res,
         parameter = "CMAX",
         match_cols = c("start"),
-        denominator_groups = denominator_groups,
-        numerator_groups = data.frame(UNKNOWN_COL = "X")
+        ref_groups = ref_groups,
+        test_groups = data.frame(UNKNOWN_COL = "X")
       ),
-      "match_cols and denominator_groups must contain valid group column names in PKNCAres:"
+      "match_cols and ref_groups must contain valid group column names in PKNCAres:"
     )
   })
 
@@ -206,8 +206,8 @@ describe("calculate_ratios function", {
       res_simple,
       parameter = "CMAX",
       match_cols = c("start"),
-      denominator_groups = denominator_groups,
-      numerator_groups = numerator_groups,
+      ref_groups = ref_groups,
+      test_groups = test_groups,
       custom.pptestcd = "MYRATIO",
       custom.pptest = "My Custom Ratio"
     )
