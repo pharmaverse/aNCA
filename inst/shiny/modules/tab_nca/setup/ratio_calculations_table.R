@@ -266,7 +266,10 @@ ratios_table_server <- function(
               PPTESTCD = case_when(
                 startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
                 startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
-                startsWith(toupper(Reference), paste0(toupper(route_col), ": INTRAVASCULAR")) ~ "FABS",
+                startsWith(
+                  toupper(Reference),
+                  paste0(toupper(route_col), ": INTRAVASCULAR")
+                ) ~ "FABS",
                 startsWith(toupper(Reference), paste0(toupper(raw_route_col), ": INTRA")) ~ "FABS",
                 startsWith(Reference, paste0(route_col)) ~ "FREL",
                 startsWith(Reference, raw_route_col) ~ "FREL",
