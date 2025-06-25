@@ -95,7 +95,7 @@ describe("calculate_ratios function", {
     )
 
     expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
-    expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
+    expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
   })
 
   it("computes correct ratios for simple case (PKNCAresults)", {
@@ -108,11 +108,11 @@ describe("calculate_ratios function", {
       test_groups = test_groups
     )
     ratios <- pknca_res_with_ratios$result %>%
-      filter(PPTESTCD == "CMAX_RATIO")
+      filter(PPTESTCD == "RACMAX")
 
     expect_equal(nrow(pknca_res_with_ratios$result), nrow(res_simple$result) + 2)
     expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
-    expect_true(all(grepl("CMAX_RATIO", ratios$PPTESTCD)))
+    expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
   })
 
   it("handles adjusting_factor", {
@@ -127,7 +127,7 @@ describe("calculate_ratios function", {
     )
 
     expect_equal(ratios$PPORRES, c(2 / 3, 4 / 5) * 2)
-    expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
+    expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
   })
 
   it("handles unit conversions when needed and possible to convert", {
@@ -146,11 +146,11 @@ describe("calculate_ratios function", {
       test_groups = test_groups
     )
     ratios <- ratios$result %>%
-      filter(PPTESTCD == "CMAX_RATIO")
+      filter(PPTESTCD == "RACMAX")
 
     expect_equal(ratios$PPORRES, c(2 / 3, 4 / 5) * 1000)
     expect_equal(ratios$PPORRESU, rep("fraction", 2))
-    expect_true(all(grepl("RATIO", ratios$PPTESTCD)))
+    expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
   })
 
   it("handles when unit conversions are needed but not possible to convert", {
@@ -169,7 +169,7 @@ describe("calculate_ratios function", {
       test_groups = test_groups
     )
     ratios <- ratios$result %>%
-      filter(PPTESTCD == "CMAX_RATIO")
+      filter(PPTESTCD == "RACMAX")
 
     expect_equal(ratios$PPORRES, c(2 / 3, 4 / 5))
     expect_equal(ratios$PPORRESU, rep("ng/mL/unknown_unit", 2))
@@ -200,7 +200,7 @@ describe("calculate_ratios function", {
     )
   })
 
-  it("allows custom PPTESTCD and PPTEST", {
+  it("allows custom PPTESTCD", {
 
     ratios <- calculate_ratios(
       res_simple,
@@ -208,12 +208,10 @@ describe("calculate_ratios function", {
       match_cols = c("start"),
       ref_groups = ref_groups,
       test_groups = test_groups,
-      custom.pptestcd = "MYRATIO",
-      custom.pptest = "My Custom Ratio"
+      custom_pptestcd = "MYRATIO"
     )
     ratios <- ratios$result %>%
       filter(PPTESTCD == "MYRATIO")
     expect_equal(ratios$PPTESTCD, c("MYRATIO", "MYRATIO"))
-    expect_equal(ratios$PPTEST, c("My Custom Ratio", "My Custom Ratio"))
   })
 })
