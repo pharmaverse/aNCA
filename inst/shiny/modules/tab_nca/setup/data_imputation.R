@@ -1,6 +1,6 @@
 data_imputation_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
     input_switch(
       id = ns("should_impute_c0"),
@@ -33,18 +33,20 @@ data_imputation_ui <- function(id) {
       style = "margin-top: 1em;",
       conditionalPanel(
         condition = sprintf("input['%s'] == 'tmax based imputation'", ns("select_blq_strategy")),
-        selectizeInput(ns("before_tmax"), "Before tmax",  choices = c("drop", "keep"), selected = "keep", options = list(create = TRUE), width = "25%"),
-        selectizeInput(ns("after_tmax"), "After tmax", choices = c("drop", "keep"), selected = "drop", options = list(create = TRUE), width = "25%")
+        blq_selectize(ns("before_tmax"), "Before tmax", selected = "keep"),
+        blq_selectize(ns("after_tmax"), "After tmax", selected = "drop")
       ),
       conditionalPanel(
-        condition = sprintf("input['%s'] == 'Positional BLQ imputation'", ns("select_blq_strategy")),
-        selectizeInput(ns("before_first_non_blq"), "Before first non-BLQ", choices = c("drop", "keep"), selected = "drop", options = list(create = TRUE), width = "25%"),
-        selectizeInput(ns("in_between_non_blqs"), "In between non-BLQs", choices = c("drop", "keep"), selected = "keep", options = list(create = TRUE), width = "25%"),
-        selectizeInput(ns("after_last_non_blq"), "After last non-BLQ", choices = c("drop", "keep"), selected = "drop", options = list(create = TRUE), width = "25%")
+        condition = sprintf(
+          "input['%s'] == 'Positional BLQ imputation'", ns("select_blq_strategy")
+        ),
+        blq_selectize(ns("before_first_non_blq"), "Before first non-BLQ", selected = "drop"),
+        blq_selectize(ns("in_between_non_blqs"), "In between non-BLQs", selected = "keep"),
+        blq_selectize(ns("after_last_non_blq"), "After last non-BLQ", selected = "drop")
       ),
       conditionalPanel(
         condition = sprintf("input['%s'] == 'Set value for all BLQ'", ns("select_blq_strategy")),
-        selectizeInput(ns("blq_value"), "BLQ value", choices = c("drop", "keep"), selected = "0.05", options = list(create = TRUE), width = "25%")
+        blq_selectize(ns("blq_value_first"), "BLQ value (first)", selected = "0.05"),
       )
     )
   )
@@ -53,35 +55,36 @@ data_imputation_ui <- function(id) {
 data_imputation_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     should_impute_c0 <- reactive({
       input$should_impute_c0
     })
-    
+
     blq_rule <- reactive({
       req(input$select_blq_strategy)
-      rule_list <- switch(input$select_blq_strategy,
-                          "tmax based imputation" = list(
-                            before.tmax = input$before_tmax,
-                            after.tmax = input$after_tmax
-                          ),
-                          "Positional BLQ imputation" = list(
-                            first = input$before_first_non_blq,
-                            middle = input$in_between_non_blqs,
-                            last = input$after_last_non_blq
-                          ),
-                          "Set value for all BLQ" = list(
-                            first = input$blq_value,
-                            middle = input$blq_value,
-                            last = input$blq_value
-                          ),
-                          NULL
+      rule_list <- switch(
+        input$select_blq_strategy,
+        "tmax based imputation" = list(
+          before.tmax = input$before_tmax,
+          after.tmax = input$after_tmax
+        ),
+        "Positional BLQ imputation" = list(
+          first = input$before_first_non_blq,
+          middle = input$in_between_non_blqs,
+          last = input$after_last_non_blq
+        ),
+        "Set value for all BLQ" = list(
+          first = input$blq_value,
+          middle = input$blq_value,
+          last = input$blq_value
+        ),
+        NULL
       )
       # Transform in the list text number to numeric
       rule_list <- lapply(rule_list, function(x) {
         if (x %in% c("drop", "keep")) {
           return(x)
-        } else if (grepl('^[0-9]+(\\.[0-9]+)?$', x)) {
+        } else if (grepl("^[0-9]+(\\.[0-9]+)?$", x)) {
           return(as.numeric(x))
         } else {
           return(NA)
@@ -100,10 +103,21 @@ data_imputation_server <- function(id) {
 
       rule_list
     })
-    
+
     return(list(
       should_impute_c0 = should_impute_c0,
       blq_imputation_rule = blq_rule
     ))
   })
+}
+
+# Helper function for BLQ selectize inputs
+blq_selectize <- function(id, label, selected = NULL) {
+  selectizeInput(
+    id, label,
+    choices = c("drop", "keep", selected),
+    selected = selected,
+    options = list(create = TRUE),
+    width = "25%"
+  )
 }
