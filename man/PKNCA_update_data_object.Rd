@@ -32,6 +32,12 @@ PKNCA_update_data_object(
 \item{params}{A list of parameters for NCA calculation}
 
 \item{should_impute_c0}{Logical indicating if start values should be imputed}
+
+\item{blq_imputation_rule}{A list defining the BLQ imputation rule using PKNCA format.
+The list should either contain three elements named: \code{first}, \code{middle}, and \code{last} or
+two elements named \code{before.tmax} and \code{after.tmax}. Each element can be a numeric value
+(substituting the BLQ value), or a string such as \code{"drop"} (ignores the value)
+or \code{"keep"} (keeps the value as 0).}
 }
 \value{
 A fully configured \code{PKNCAdata} object.
