@@ -1,6 +1,10 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
+<<<<<<< 484-bug-corrections-pp_adpp
 Version: 0.0.0.9101
+=======
+Version: 0.0.0.9100
+>>>>>>> main
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-1626-1526")),
