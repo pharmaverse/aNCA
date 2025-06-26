@@ -17,6 +17,7 @@ data_imputation_ui <- function(id) {
       sep = "<br>"
     ))),
     br(),
+    br(),
     selectInput(
       ns("select_blq_strategy"),
       "Select BLQ Imputation Strategy",
@@ -76,12 +77,27 @@ data_imputation_server <- function(id) {
                           ),
                           NULL
       )
-      are_valid_inputs <- sapply(rule_list, function(x) grepl('[0-9]*', x) || x %in% c('drop', 'keep'))
-      if (any(!are_valid_inputs) && !is.null(rule_list[[1]])) {
-        browser()
-        showNotification("Please, BLQ imputation values should be numeric or NA.", type = "error")
+      # Transform in the list text number to numeric
+      rule_list <- lapply(rule_list, function(x) {
+        if (x %in% c("drop", "keep")) {
+          return(x)
+        } else if (grepl('^[0-9]+(\\.[0-9]+)?$', x)) {
+          return(as.numeric(x))
+        } else {
+          return(NA)
+        }
+      })
+      are_invalid_inputs <- is.na(unlist(rule_list))
+      if (any(are_invalid_inputs)) {
+        showNotification(
+          "BLQ imputation values must be numeric, 'drop' or 'keep'. 
+          Otherwise, default PKNCA imputation (BLQ position) will be used",
+          type = "warning",
+          duration = 8
+        )
         return(NULL)
       }
+
       rule_list
     })
     
