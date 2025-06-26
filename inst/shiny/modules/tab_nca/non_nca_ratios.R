@@ -57,11 +57,11 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
     id_groups <- reactive({
       req(data())
       data()$conc$columns$groups %>%
-      purrr::list_c() %>%
-      append("NCA_PROFILE") %>%
-      purrr::keep(\(col) {
-        !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
-      })
+        purrr::list_c() %>%
+        append("NCA_PROFILE") %>%
+        purrr::keep(\(col) {
+          !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
+        })
     })
     # Update select inputs dynamically
     observeEvent(data(), {
@@ -70,7 +70,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       ratio_groups <- c(grouping_vars(), id_groups(),
                         data()$dose$columns$dose, data()$dose$columns$time.nominal,
                         data()$dose$columns$route)
-      
+
       updateSelectInput(session, "selected_spec1", choices = spec_options)
       updateSelectInput(session, "selected_spec2", choices = spec_options)
       updateSelectInput(session, "summary_groups", choices = ratio_groups)
@@ -82,7 +82,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       data()$conc$data %>%
         filter(PCSPEC %in% c(input$selected_spec1, input$selected_spec2))
     })
-    
+
     # Perform Calculation on Submit
     results <- eventReactive(input$submit, {
       req(filtered_samples())
@@ -105,7 +105,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         spec2 = spec2
       )
     })
-    
+
     summary <- reactive({
       req(results())
       results() %>%
@@ -116,7 +116,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
           .groups = "drop"
         )
     })
-    
+
     full_output <- reactive({
       req(results())
       results() %>%
