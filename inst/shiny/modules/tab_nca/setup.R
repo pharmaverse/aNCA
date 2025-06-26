@@ -16,25 +16,27 @@
 
 setup_ui <- function(id) {
   ns <- NS(id)
-  
+
   navset_pill_list(
     nav_panel(
       "Settings",
       fluidRow(
-        column(6,
-               fileInput(
-                 ns("settings_upload"),
-                 width = "100%",
-                 label = "Upload settings",
-                 buttonLabel = list(icon("folder"), "Browse"),
-                 accept = ".rds"
-               )
+        column(
+          6,
+          fileInput(
+            ns("settings_upload"),
+            width = "100%",
+            label = "Upload settings",
+            buttonLabel = list(icon("folder"), "Browse"),
+            accept = ".rds"
+          )
         ),
-        column(6,
-               downloadButton(
-                 ns("settings_download"),
-                 label = "Download settings"
-               )
+        column(
+          6,
+          downloadButton(
+            ns("settings_download"),
+            label = "Download settings"
+          )
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
@@ -49,13 +51,13 @@ setup_server <- function(id, data, adnca_data) {
   moduleServer(id, function(input, output, session) {
     # Gather all settings from the appropriate module
     settings <- settings_server("nca_settings", data, adnca_data, settings_override)
-    
+
     # Create processed data object with applied settings.
-    
+
     processed_pknca_data <- reactive({
       req(adnca_data(), settings())
       log_trace("Updating PKNCA::data object.")
-      
+
       processed_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = settings()$partial_aucs,
@@ -67,14 +69,14 @@ setup_server <- function(id, data, adnca_data) {
         should_impute_c0 = settings()$data_imputation$impute_c0,
         blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
-      
+
       # Show bioavailability widget if it is possible to calculate
       if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")
       } else {
         shinyjs::hide(selector = ".bioavailability-picker")
       }
-      
+
       if (nrow(processed_pknca_data$intervals) == 0) {
         showNotification(
           "All intervals were filtered. Please revise your settings",
@@ -82,13 +84,13 @@ setup_server <- function(id, data, adnca_data) {
           duration = 10
         )
       }
-      
+
       processed_pknca_data
     })
-    
+
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
-    
+
     # Create version for slope plots
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
@@ -96,7 +98,7 @@ setup_server <- function(id, data, adnca_data) {
       req(adnca_data(), settings(), settings()$profile,
           settings()$analyte, settings()$pcspec, settings()$data_imputation$blq_imputation_rule)
       log_trace("Updating PKNCA::data object for slopes.")
-      
+
       PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = settings()$partial_aucs,
@@ -110,15 +112,15 @@ setup_server <- function(id, data, adnca_data) {
         blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
     })
-    
+
     slope_rules <- slope_selector_server(
       "slope_selector",
       slopes_pknca_data,
       manual_slopes_override
     )
-    
+
     summary_server("nca_setup_summary", processed_pknca_data)
-    
+
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = paste0("aNCA_settings_", Sys.Date(), ".rds"),
@@ -126,15 +128,15 @@ setup_server <- function(id, data, adnca_data) {
         saveRDS(list(settings = settings(), slope_rules = slope_rules$manual_slopes()), con)
       }
     )
-    
+
     imported_settings <- reactive({
       req(input$settings_upload)
       readRDS(input$settings_upload$datapath)
     })
-    
+
     settings_override <- reactive(imported_settings()$settings)
     manual_slopes_override <- reactive(imported_settings()$slope_rules)
-    
+
     list(
       processed_pknca_data = processed_pknca_data,
       settings = settings,

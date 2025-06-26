@@ -15,63 +15,68 @@
 
 settings_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
     accordion(
       accordion_panel(
         title = "General Settings",
         # Selection of analyte, dose number and specimen
         fluidRow(
-          column(4,
-                 selectInput(
-                   ns("select_analyte"),
-                   "Choose the Analyte:",
-                   multiple = TRUE,
-                   choices = NULL
-                 )
+          column(
+            4,
+            selectInput(
+              ns("select_analyte"),
+              "Choose the Analyte:",
+              multiple = TRUE,
+              choices = NULL
+            )
           ),
-          column(4,
-                 selectInput(
-                   ns("select_profile"),
-                   "Choose the NCA Profile:",
-                   multiple = TRUE,
-                   choices = NULL
-                 )
+          column(
+            4,
+            selectInput(
+              ns("select_profile"),
+              "Choose the NCA Profile:",
+              multiple = TRUE,
+              choices = NULL
+            )
           ),
-          column(4,
-                 selectInput(
-                   ns("select_pcspec"),
-                   "Choose the Specimen:",
-                   multiple = TRUE,
-                   choices = NULL
-                 )
+          column(
+            4,
+            selectInput(
+              ns("select_pcspec"),
+              "Choose the Specimen:",
+              multiple = TRUE,
+              choices = NULL
+            )
           )
         ),
         # Method, NCA parameters, and units table
         fluidRow(
-          column(4,
-                 selectInput(
-                   ns("method"),
-                   "Extrapolation Method:",
-                   choices = c("lin-log", "lin up/log down", "linear"),
-                   selected = "lin up/log down"
-                 )
+          column(
+            4,
+            selectInput(
+              ns("method"),
+              "Extrapolation Method:",
+              choices = c("lin-log", "lin up/log down", "linear"),
+              selected = "lin up/log down"
+            )
           ),
-          column(4, # pickerinput only enabled when IV and EX data present
-                 shinyjs::hidden(
-                   div(
-                     class = "bioavailability-picker",
-                     pickerInput(
-                       ns("bioavailability"),
-                       "Calculate Bioavailability:",
-                       choices = pknca_cdisc_terms %>%
-                         filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
-                         pull(PKNCA, PPTESTCD),
-                       multiple = TRUE,
-                       selected = NULL
-                     )
-                   )
-                 )
+          column(
+            4, # pickerinput only enabled when IV and EX data present
+            shinyjs::hidden(
+              div(
+                class = "bioavailability-picker",
+                pickerInput(
+                  ns("bioavailability"),
+                  "Calculate Bioavailability:",
+                  choices = pknca_cdisc_terms %>%
+                    filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
+                    pull(PKNCA, PPTESTCD),
+                  multiple = TRUE,
+                  selected = NULL
+                )
+              )
+            )
           )
         )
       ),
@@ -112,39 +117,39 @@ settings_ui <- function(id) {
 settings_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     conc_data <- reactive(adnca_data()$conc$data)
-    
+
     # Modules for Data Imputation
     data_imputation <- data_imputation_server("data_imputation")
-    
+
     # File Upload Handling
     observeEvent(settings_override(), {
       settings <- settings_override()
-      
+
       log_debug_list("User settings override:", settings)
-      
+
       not_compatible <- c()
-      
+
       # General #
       if (all(settings$analyte %in% unique(data()$PARAM))) {
         updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
       } else {
         not_compatible <- append(not_compatible, "Analyte")
       }
-      
+
       if (all(settings$profile %in% unique(data()$NCA_PROFILE))) {
         updateSelectInput(inputId = "select_profile", selected = settings$profile)
       } else {
         not_compatible <- append(not_compatible, "NCA Profile")
       }
-      
+
       if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
         updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
       } else {
         not_compatible <- append(not_compatible, "Dose Specimen")
       }
-      
+
       if (length(not_compatible) != 0) {
         msg <- paste0(
           paste0(not_compatible, collapse = ", "),
@@ -153,31 +158,31 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 10)
       }
-      
+
       updateSelectInput(inputId = "method", selected = settings$method)
-      
+
       if (!is.null(settings$bioavailability))
         updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
-      
+
       # Parmeter selection #
       reset_reactable_memory()
-      
+
       params_data <- pknca_cdisc_terms %>%
         filter(TYPE != "PKNCA-not-covered") %>%
         pull("PKNCA")
-      
+
       updateReactable(
         "nca_parameters",
         selected = which(params_data %in% settings$parameter_selection)
       )
-      
+
       # Data imputation #
       update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
-      
+
       # Partial AUCs #
       auc_data(settings$partial_aucs)
       refresh_reactable(refresh_reactable() + 1)
-      
+
       # Flags #
       .update_rule_input(
         session,
@@ -185,21 +190,21 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         settings$flags$adj.r.squared$is.checked,
         settings$flags$adj.r.squared$threshold
       )
-      
+
       .update_rule_input(
         session,
         "aucpext.obs",
         settings$flags$aucpext.obs$is.checked,
         settings$flags$aucpext.obs$threshold
       )
-      
+
       .update_rule_input(
         session,
         "aucpext.pred",
         settings$flags$aucpext.pred$is.checked,
         settings$flags$aucpext.pred$threshold
       )
-      
+
       .update_rule_input(
         session,
         "span.ratio",
@@ -207,34 +212,34 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         settings$flags$span.ratio$threshold
       )
     })
-    
+
     # Include keyboard limits for the settings GUI display
-    
+
     # Keyboard limits for the setting thresholds
     limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "RSQADJ")
     limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, lab = "AUCPEO")
     limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
-    
-    
+
+
     # Choose dosenumbers to be analyzed
     observeEvent(data()$DOSNO, priority = -1, {
       req(data())
-      
+
       updateSelectInput(
         session,
         inputId = "select_profile",
         choices = unique(data()$NCA_PROFILE),
         selected = unique(data()$NCA_PROFILE)[1]
       )
-      
+
       updateSelectInput(
         session,
         inputId = "select_analyte",
         choices = unique(data()$PARAM),
         selected = unique(data()$PARAM)[1]
       )
-      
+
       updateSelectInput(
         session,
         inputId = "select_pcspec",
@@ -242,7 +247,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         selected = unique(data()$PCSPEC)[1]
       )
     })
-    
+
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
       "auclast", "auclast.dn",
@@ -256,14 +261,14 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       "adj.r.squared", "lambda.z.time.first",
       "aucpext.obs", "aucpext.pred"
     )
-    
+
     output$nca_parameters <- renderReactable({
       #remove parameters that are currently unavailable in PKNCA
       params_data <- pknca_cdisc_terms %>%
         filter(TYPE != "PKNCA-not-covered")
-      
+
       default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
-      
+
       reactable(
         params_data %>%
           select(TYPE, PPTESTCD, PPTEST, CAT),
@@ -277,22 +282,22 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         defaultSelected = default_row_indices
       )
     })
-    
+
     nca_params <- reactive({
       selected_rows <- getReactableState("nca_parameters", "selected")
       if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
-      
+
       params_data <- pknca_cdisc_terms %>%
         filter(TYPE != "PKNCA-not-covered")
       selected_terms <- params_data[selected_rows, , drop = FALSE]
-      
+
       # Return PKNCA column names
       selected_terms$PKNCA
     })
-    
+
     output$nca_param_display <- renderUI({
       req(nca_params())
-      
+
       div(
         class = "nca-pill-grid",
         lapply(nca_params(), function(param) {
@@ -300,12 +305,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         })
       )
     })
-    
+
     # Reactive value to store the AUC data table
     auc_data <- reactiveVal(
       tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
     )
-    
+
     # Render the editable reactable table
     refresh_reactable <- reactiveVal(1)
     output$auc_table <- renderReactable({
@@ -326,7 +331,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       )
     }) %>%
       shiny::bindEvent(refresh_reactable())
-    
+
     # Add a blank row on button click
     observeEvent(input$addRow, {
       df <- auc_data()
@@ -334,7 +339,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
-    
+
     #' For each of the columns in partial aucs data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
@@ -349,7 +354,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         })
       })
     })
-    
+
     settings <- reactive({
       req(input$select_analyte) # Wait on general settings UI to be loaded
       list(
@@ -384,11 +389,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         )
       )
     })
-    
+
     # Debounce the trigger, so the data is not updated too often.
     settings_debounce <- 2500
     settings_debounced <- debounce(settings, settings_debounce)
-    
+
     # On all changes, disable NCA button for given period of time to prevent the user from running
     # the NCA before settings are applied.
     observeEvent(settings(), {
@@ -401,7 +406,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         );"
       ))
     })
-    
+
     settings_debounced
   })
 }
@@ -425,12 +430,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     step = step,
     min = min
   )
-  
+
   # Only include `max` if not NULL
   if (!is.null(max)) {
     numeric_args$max <- max
   }
-  
+
   fluidRow(
     column(
       width = 6,
@@ -458,7 +463,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 .update_rule_input <- function(session, id, checked, value) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
-  
+
   updateCheckboxInput(session = session, inputId = rule_id, value = checked)
   if (checked)
     updateNumericInput(session = session, inputId = threshold_id, value = value)

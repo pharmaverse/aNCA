@@ -20,7 +20,7 @@
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
-  
+
   fluidPage(
     div(
       class = "d-flex justify-content-between",
@@ -58,27 +58,27 @@ tab_nca_ui <- function(id) {
 tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     #' Setup session-wide object for storing data units. Units can be edited by the user on
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
-    
+
     #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
     pknca_data <- reactive({
       req(adnca_data())
       log_trace("Creating PKNCA::data object.")
-      
+
       tryCatch({
         #' Create data object
         pknca_object <- PKNCA_create_data_object(adnca_data())
         log_success("PKNCA data object created.")
-        
+
         #' Enable related tabs and update the curent view if data is created succesfully.
         purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
           shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
         })
-        
+
         pknca_object
       }, error = function(e) {
         log_error(e$message)
@@ -87,26 +87,26 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       })
     }) |>
       bindEvent(adnca_data())
-    
+
     # #' NCA Setup module
     nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
-    
+
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
     slope_rules <- nca_setup$slope_rules
-    
+
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
-    
+
     # List all irrelevant warnings to suppres in the NCA calculation
     irrelevant_regex_warnings <- c(
       "No intervals for data$",
       "^Too few points for half-life"
     )
-    
+
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
-      
+
       withProgress(message = "Calculating NCA...", value = 0, {
         log_info("Calculating NCA results...")
         tryCatch({
@@ -114,7 +114,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           # from within warning handler without bleeding to global env.
           pknca_warn_env <- new.env()
           pknca_warn_env$warnings <- c()
-          
+
           #' Calculate results
           res <- withCallingHandlers({
             processed_pknca_data() %>%
@@ -135,22 +135,22 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             }
             invokeRestart("muffleWarning")
           })
-          
+
           # Apply flag rules to mark results in the `exclude` column
           current_rules <- isolate(settings()$flags)
           flag_rules_to_apply <- current_rules |>
             purrr::keep(~ .x$is.checked) |>
             purrr::map(~ .x$threshold)
           res <- PKNCA_hl_rules_exclusion(res, flag_rules_to_apply)
-          
+
           # Display unique warnings thrown by PKNCA run.
           purrr::walk(unique(pknca_warn_env$warnings), \(w) {
             w_message <- paste0("PKNCA run produced a warning: ", w)
             log_warn(w_message)
             showNotification(w_message, type = "warning", duration = 5)
           })
-          
-          
+
+
           #' Apply units
           if (!is.null(session$userData$units_table())) {
             res$data$units <- session$userData$units_table()
@@ -163,15 +163,15 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               mutate(PPSTRES = PPORRES * conversion_factor) %>%
               select(-conversion_factor)
           }
-          
+
           updateTabsetPanel(session, "ncapanel", selected = "Results")
-          
+
           log_success("NCA results calculated.")
-          
+
           # Apply standard CDISC names and return the object
           res %>%
             mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
-          
+
         }, error = function(e) {
           log_error("Error calculating NCA results:\n{conditionMessage(e)}")
           showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
@@ -180,7 +180,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       })
     }) |>
       bindEvent(input$nca)
-    
+
     #' Show slopes results
     output$slope_results <- DT::renderDataTable({
       req(res_nca())
@@ -201,18 +201,18 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         formatStyle("Exclude", target = "row",
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
-    
+
     nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)
-    
+
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
-    
+
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
-    
+
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
-    
+
     # return results for use in other modules
     res_nca
   })
@@ -226,7 +226,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 #' @returns String with html-formatted error message.
 .parse_pknca_error <- function(e) {
   msg <- conditionMessage(e)
-  
+
   if (grepl("pk.calc.", msg)) {
     # Handle errors from PKNCA package.
     param_of_error <- gsub(".*'pk\\.calc\\.(.*)'.*", "\\1", msg)
@@ -236,11 +236,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       "<br><br>", msg,
       "<br><br>If the error is unexpected, please report a bug."
     )
-    
+
   } else if (grepl("^No reason provided", msg)) {
     # Handle no reason provided erros from the calculation function.
     msg <- paste(msg, "<br><br>Please provide the reason in Setup > Slope Selector tab.")
-    
+
   } else {
     # Handle unknown error
     msg <- paste0(
@@ -248,6 +248,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       " please inspect the logs and report a bug."
     )
   }
-  
+
   HTML(gsub("\\\n", "<br>", msg))
 }
