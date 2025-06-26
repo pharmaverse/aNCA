@@ -34,8 +34,7 @@ export_cdisc <- function(res_nca) {
         # Variables defined for the dose information
         group_dose_cols, "NCA_PROFILE",  res_nca$data$dose$columns$route,
         # TODO (Gerardo): Test should use a PKNCA obj (FIXTURE) so the var is accessed via mapping
-        "RRLTU",
-        "PCRFTDTC", "PCRFTDTM", "EXFAST", "PCFAST", "FEDSTATE", "PCSEQ",
+        OPTIONAL_COLUMNS,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP, CDISC_COLS$ADPP
       ))
@@ -335,3 +334,6 @@ INTERNAL_ANCA_COLS <- c(
   "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
   "conc_groups", "REASON"
 )
+
+# They will be used if present. We assume they follow CDISC standard names
+OPTIONAL_COLUMNS <- c("RRLTU", "PCRFTDTC", "PCRFTDTM", "EXFAST", "PCFAST", "FEDSTATE", "PCSEQ")
