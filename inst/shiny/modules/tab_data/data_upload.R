@@ -10,7 +10,7 @@
 
 data_upload_ui <- function(id) {
   ns <- NS(id)
-
+  
   div(
     stepper_ui("Upload"),
     div(
@@ -42,11 +42,11 @@ data_upload_server <- function(id) {
     )
     
     # debugging
-    if(!is.null(datapath)) {
-      log_info("Data upload module initialized with datapath: ", datapath)
-    } else {
-      log_info("Data upload module initialized without a specific datapath.")
-    }
+    # if(!is.null(datapath)) {
+    #   log_info("Data upload module initialized with datapath: ", datapath)
+    # } else {
+    #   log_info("Data upload module initialized without a specific datapath.")
+    # }
     
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
@@ -57,7 +57,7 @@ data_upload_server <- function(id) {
         p(file_loading_error(), class = "error-string")
       }
     })
-
+    
     raw_data <- (
       reactive({
         #' if no data is provided by the user, load dummy data
@@ -67,18 +67,16 @@ data_upload_server <- function(id) {
           if (!is.null(datapath)) {
             log_info("Loading data from provided datapath: ", datapath)
             final_datapath <- datapath
-          }
-          else {
+          } else {
             final_datapath <- input$data_upload$datapath
           }
           df <- tryCatch({
             file_loading_error(NULL)
-            # think of catching errors for file loading in argument too 
             read_pk(final_datapath)
           }, error = function(e) {
             file_loading_error(e$message)
           })
-
+          
           if (is.null(file_loading_error())) {
             log_success("User data loaded successfully.")
             df
@@ -90,7 +88,7 @@ data_upload_server <- function(id) {
       }) |>
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
-
+    
     output$data_display <- renderReactable({
       req(raw_data())
       reactable(
@@ -106,7 +104,7 @@ data_upload_server <- function(id) {
         class = "reactable-table"
       )
     })
-
+    
     raw_data
   })
 }
