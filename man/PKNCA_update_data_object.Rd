@@ -12,7 +12,8 @@ PKNCA_update_data_object(
   selected_profile,
   selected_pcspec,
   params,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  blq_imputation_rule = list(first = "keep", middle = "drop", last = "keep")
 )
 }
 \arguments{
