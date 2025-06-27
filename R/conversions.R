@@ -192,7 +192,7 @@ convert_volume_units <- function(df,
 
   }
 
-  df <- df %>%
+  df %>%
     mutate(
       AMOUNTU = pmap_chr(
         list(!!sym(avalu), !!sym(volumeu)),
@@ -208,6 +208,4 @@ convert_volume_units <- function(df,
         }
       )
     )
-
-  return(df)
 }
