@@ -292,7 +292,7 @@ verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
           col <- cur_column()
           case_when(
             (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ !is.na(VOLUME) & col %in% params,
-            TRUE ~ is.na(VOLUME) & col %in% param
+            TRUE ~ is.na(VOLUME) & col %in% params
             )
         }
       )) %>%
