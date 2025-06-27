@@ -5,15 +5,6 @@
 #' @returns Invisibly returns the file path written.
 save_output <- function(output, output_path) {
 
-  # if (inherits(output, "ggplot") || inherits(output, "data.frame")) {
-  #   # Make it a list being its name the name of the file
-  #   output <- list(output)
-  #   names(output) <- basename(output_path)
-  #   output_path <- gsub(paste0("/", basename(output_path), "$"), "", output_path)
-  # } else if (!inherits(output, "list")) {
-  #   stop("Unsupported output type object")
-  # }
-
   # Create output directory if it doesn't exist
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
 
