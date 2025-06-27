@@ -67,13 +67,15 @@ excretion_server <- function(id, input_pknca_data) {
 
       available_cols <- names(conc_data)
       # Check if VOLUME exists before trying to filter
-      if (!volume_missing) {
-        pcspecs <- conc_data %>%
-          filter(!is.na(VOLUME)) %>%
-          distinct(PCSPEC) %>%
-          pull(PCSPEC)
-      } else {
-        pcspecs <- character(0)
+      pcspecs <- {
+        if (!volume_missing) {
+          conc_data %>%
+            filter(!is.na(VOLUME)) %>%
+            distinct(PCSPEC) %>%
+            pull(PCSPEC)
+        } else {
+          character(0)
+        }
       }
 
       updateSelectInput(session, "matrix_select", choices = pcspecs,
