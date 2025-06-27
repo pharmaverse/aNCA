@@ -37,11 +37,7 @@ parameter_datasets_server <- function(id, res_nca) {
 
     # Save the results in the output folder
     observeEvent(CDISC(), {
-
-      save_output(
-        output = CDISC()[c("pp", "adpp", "adpc")],
-        output_path = paste0(session$userData$results_dir(), "/cdisc")
-      )
+      session$userData$results$CDISC <- CDISC()[c("pp", "adpp", "adpc")]
     })
   })
 }

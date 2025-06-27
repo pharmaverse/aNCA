@@ -32,12 +32,6 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       })
     )
 
-    session$userData$results_dir <- reactive({
-      req(res_nca())
-
-      paste0(tempdir(), "/output")
-    })
-
     final_results <- reactive({
       req(res_nca())
       res <- res_nca()
@@ -117,12 +111,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
-        res_tmp_dir <- session$userData$results_dir()
+        output_tmpdir <- paste0(tempdir(), "/output")
+
+        save_output(output = session$userData$results, output_path = output_tmpdir)
         files <- list.files(
-          res_tmp_dir, full.names = TRUE, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE
+          output_tmpdir, full.names = TRUE, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE
         )
-        setwd(res_tmp_dir)
-        files <- gsub(paste0(res_tmp_dir, "/"), "", fixed = TRUE, files)
+        files <- gsub(paste0(output_tmpdir, "/"), "", fixed = TRUE, files)
+        setwd(output_tmpdir)
         utils::zip(zipfile = fname, files = files)
       }
     )
@@ -130,11 +126,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
     observeEvent(final_results(), {
       req(final_results())
 
-      # Save the results in the output folder
-      save_output(
-        output = final_results(),
-        output_path = paste0(session$userData$results_dir(), "/nca_results/pivoted_results")
-      )
+      session$userData$results$nca_results$pivoted_results <- final_results()
 
       param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")

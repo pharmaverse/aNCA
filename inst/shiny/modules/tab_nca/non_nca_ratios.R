@@ -119,12 +119,8 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
 
     # Save the results in the output folder
     observeEvent(results(), {
-      save_output(
-        output = results(),
-        output_path = paste0(
-          session$userData$results_dir(), "/additional_analysis/matrix_ratios"
-        )
-      )
+
+      session$userData$results$additional_analysis$matrix_ratios <- results()
     })
 
   })
