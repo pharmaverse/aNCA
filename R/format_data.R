@@ -300,13 +300,7 @@ case_when(
     pknca_intervals <- pknca_intervals %>%
       mutate(across(
         any_of(all_pknca_params),
-        ~ {
-          col <- cur_column()
-          case_when(
-            (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ FALSE,
-            TRUE ~ col %in% params
-          )
-        }
+        !(col %in% c("ae", "fe") | startsWith(col, "clr.")) & col %in% params
       ))
   }
 
