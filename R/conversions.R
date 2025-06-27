@@ -185,11 +185,12 @@ convert_volume_units <- function(df,
       )
       df[[volume]][i] <- drop_units(u_vol_new)
       df[[volumeu]][i] <- denom_unit
-      
+
       log_conversion(i, vol, volu, u_vol_new, denom_unit, concu, verbose = TRUE)
       TRUE
     }, error = function(e) {
-      warning(glue::glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit} (concentration: {concu}): {e$message}"))
+      warning(glue::glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit}
+                         (concentration: {concu}): {e$message}"))
       FALSE
     })
 
@@ -231,7 +232,7 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
   same_units <- denom_unit == volu
 
   if (!verbose || same_units) return()
-  
+
   msg <- sprintf(
     "Row %d: Converted volume from %.6g %s to %.6g %s based on concentration unit %s",
     row, vol, volu, u_vol_new, denom_unit, concu

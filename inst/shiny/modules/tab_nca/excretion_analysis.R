@@ -170,7 +170,7 @@ excretion_server <- function(id, input_pknca_data) {
 
       conc_groups <- unname(unlist(input_pknca_data()$conc$columns$groups))
       #pivot wider
-     analysis_result()$result %>%
+      analysis_result()$result %>%
         mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
         mutate(PPTESTCD = ifelse(PPSTRESU != "",
                                  paste0(PPTESTCD, "[", PPSTRESU, "]"),
@@ -178,7 +178,7 @@ excretion_server <- function(id, input_pknca_data) {
         select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude) %>%
         pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
         select(-DOSNOA) %>%
-      # Add "label" attribute to columns
+        # Add "label" attribute to columns
         add_label_attribute(analysis_result())
     })
 
