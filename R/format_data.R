@@ -255,7 +255,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
-  dose_intervals <- .verify_parameters(dose_intervals, params, all_pknca_params)
+  dose_intervals <- verify_parameters(dose_intervals, params, all_pknca_params)
 
   dose_intervals
 }
@@ -278,7 +278,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 #'  @returns A modified version of the `pknca_intervals` data frame with appropriate
 #'  parameters updated based on the specimen type.
 
-.verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
+verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
 
   has_volume <- "VOLUME" %in% names(pknca_intervals)
 
