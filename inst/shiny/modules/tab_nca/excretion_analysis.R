@@ -13,12 +13,10 @@ excretion_ui <- function(id) {
 
   tagList(
     div(
-      class = "excretion_section_container",
+      class = "excretion-section-container",
       id = ns("excretion_section_container"),
       div(
-        id = ns("excretion_overlay"),
         class = "excretion-overlay",
-        style = "display: none;",
         "Excretion analysis is disabled: 'VOLUME' column required."
       ),
       div(style = "position: relative;",  # Wrapping makes overlay work
@@ -59,11 +57,7 @@ excretion_server <- function(id, input_pknca_data) {
       conc_data <- input_pknca_data()$conc$data
       volume_missing <- !all(c("VOLUME", "VOLUMEU") %in% names(conc_data))
 
-      if (volume_missing) {
-        session$sendCustomMessage("showOverlay", list(id = session$ns("excretion_overlay")))
-      } else {
-        session$sendCustomMessage("hideOverlay", list(id = session$ns("excretion_overlay")))
-      }
+      shinyjs::toggle(selector = ".excretion-overlay", condition = volume_missing)
 
       available_cols <- names(conc_data)
       # Check if VOLUME exists before trying to filter
