@@ -4,9 +4,11 @@
 \alias{run_app}
 \title{Run the Shiny app}
 \usage{
-run_app(...)
+run_app(datapath = NULL, ...)
 }
 \arguments{
+\item{datapath}{Path to the directory containing the data files.}
+
 \item{...}{Arguments passed to \code{shiny::runApp()}}
 }
 \description{
