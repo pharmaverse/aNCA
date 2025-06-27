@@ -173,7 +173,7 @@ convert_volume_units <- function(df,
 
     denom_unit <- str_trim(unit_parts[2])
 
-    result <- tryCatch({
+    tryCatch({
       u_vol <- set_units(vol, volu, mode = "standard")
       u_vol_new <- tryCatch(
         set_units(u_vol, denom_unit, mode = "standard"),

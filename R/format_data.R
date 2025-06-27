@@ -275,7 +275,9 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param all_pknca_params A character vector of all pharmacokinetic parameters
 #'   that may be present in `pknca_intervals`. These will be checked and updated accordingly.
 #'
-#'  @returns A modified version of the `pknca_intervals` data frame with appropriate
+#' @importFrom dplyr mutate across select case_when
+#'
+#' @returns A modified version of the `pknca_intervals` data frame with appropriate
 #'  parameters updated based on the specimen type.
 
 verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
@@ -288,10 +290,10 @@ verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
         any_of(all_pknca_params),
         ~ {
           col <- cur_column()
-case_when(
-  (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ !is.na(VOLUME) & col %in% params,
-  TRUE ~ is.na(VOLUME) & col %in% params
-)
+          case_when(
+            (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ !is.na(VOLUME) & col %in% params,
+            TRUE ~ is.na(VOLUME) & col %in% param
+            )
         }
       )) %>%
       select(-VOLUME)
