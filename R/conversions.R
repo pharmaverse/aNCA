@@ -133,7 +133,8 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #'
 #' The function assumes that the `AVALU` column contains concentration units
 #' in the form of "x/y" (e.g., "ug/mL", "mg/g").
-#'
+#' @importFrom dplyr `%>%` mutate sym
+#' @importFrom purrr pmap_chr
 #' @importFrom units set_units drop_units
 #' @importFrom stringr str_split str_trim
 #' @examples
