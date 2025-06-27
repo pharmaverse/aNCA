@@ -41,13 +41,6 @@ data_upload_server <- function(id) {
       na.strings = c("", "NA")
     )
     
-    # debugging
-    # if(!is.null(datapath)) {
-    #   log_info("Data upload module initialized with datapath: ", datapath)
-    # } else {
-    #   log_info("Data upload module initialized without a specific datapath.")
-    # }
-    
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
     output$file_loading_message <- renderUI({
@@ -60,16 +53,17 @@ data_upload_server <- function(id) {
     
     raw_data <- (
       reactive({
-        #' if no data is provided by the user, load dummy data
+        #' If no data is provided by the user, load dummy data
         if (is.null(input$data_upload$datapath) & is.null(datapath)) {
           DUMMY_DATA
         } else {
-          if (!is.null(datapath)) {
-            log_info("Loading data from provided datapath: ", datapath)
+          if(is.null(input$data_upload$datapath)) {
+            log_info("Data upload module initialized with datapath: ", datapath)
             final_datapath <- datapath
           } else {
             final_datapath <- input$data_upload$datapath
           }
+          
           df <- tryCatch({
             file_loading_error(NULL)
             read_pk(final_datapath)
