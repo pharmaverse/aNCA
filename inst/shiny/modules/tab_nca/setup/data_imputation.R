@@ -46,7 +46,7 @@ data_imputation_ui <- function(id) {
       ),
       conditionalPanel(
         condition = sprintf("input['%s'] == 'Set value for all BLQ'", ns("select_blq_strategy")),
-        blq_selectize(ns("blq_value_first"), "BLQ value (first)", selected = "0.05"),
+        blq_selectize(ns("blq_value"), "Value for BLQ", selected = "0.05"),
       )
     )
   )
@@ -80,6 +80,7 @@ data_imputation_server <- function(id) {
         ),
         NULL
       )
+
       # Transform in the list text number to numeric
       rule_list <- lapply(rule_list, function(x) {
         if (x %in% c("drop", "keep")) {
@@ -115,7 +116,7 @@ data_imputation_server <- function(id) {
 blq_selectize <- function(id, label, selected = NULL) {
   selectizeInput(
     id, label,
-    choices = c("drop", "keep", selected),
+    choices = unique(c("drop", "keep", selected)),
     selected = selected,
     options = list(create = TRUE),
     width = "25%"

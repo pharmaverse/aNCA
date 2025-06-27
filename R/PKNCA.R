@@ -144,6 +144,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
+
   pknca_data_object
 }
 
