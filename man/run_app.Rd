@@ -2,8 +2,7 @@
 % Please edit documentation in R/run_app.R
 \name{run_app}
 \alias{run_app}
-\title{Run the Shiny app
-This function runs the Shiny application included in the \code{aNCA} package.}
+\title{Run the Shiny app}
 \usage{
 run_app(datapath = NULL, ...)
 }
@@ -14,5 +13,4 @@ run_app(datapath = NULL, ...)
 }
 \description{
 Run the Shiny app
-This function runs the Shiny application included in the \code{aNCA} package.
 }
