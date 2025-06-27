@@ -110,6 +110,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     observeEvent(summary_stats(), {
       req(summary_stats())
 
+      session$userData$results$nca_results$descriptive_statistics <- summary_stats()
+
       # Update the select display parameters picker input
       updatePickerInput(
         session,
@@ -149,9 +151,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     output$download_summary <- downloadHandler(
       filename = function() {
         paste0(
-          format(Sys.time(), "%Y-%m-%d"), "_",
-          summary_stats_filtered()$STUDYID[1],
-          "_NCA_summary.csv"
+          session$userData$project_name(), "-",
+          "NCA_summary_",
+          format(Sys.time(), "%Y-%m-%d"), ".csv"
         )
       },
       content = function(file) {
