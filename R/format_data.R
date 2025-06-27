@@ -304,5 +304,5 @@ case_when(
       ))
   }
 
-  return(pknca_intervals)
+  pknca_intervals
 }
