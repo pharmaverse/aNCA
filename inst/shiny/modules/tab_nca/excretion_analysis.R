@@ -166,13 +166,9 @@ excretion_server <- function(id, input_pknca_data) {
         arrange(PCSPEC, start, end)
 
       # Run PKNCA analysis
-      results <- suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
+      suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
         # Apply standard CDISC names
-        mutate(
-          PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-        )
-
-      results
+        mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
     })
 
     results_output <- reactive({
