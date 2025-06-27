@@ -185,8 +185,10 @@ convert_volume_units <- function(df,
       )
       df[[volume]][i] <- drop_units(u_vol_new)
       df[[volumeu]][i] <- denom_unit
+      log_info("Row {i}: Converted volume from {vol} {volu} to {signif(drop_units(u_vol_new), 6)} {denom_unit} based on concentration unit {concu}")
       TRUE
     }, error = function(e) {
+      log_warn("Row {i}: Failed to convert {vol} {volu} to {denom_unit} (concentration: {concu}): {e$message}")
       FALSE
     })
 
