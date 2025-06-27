@@ -302,7 +302,10 @@ verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
     pknca_intervals <- pknca_intervals %>%
       mutate(across(
         any_of(all_pknca_params),
-        !(col %in% c("ae", "fe") | startsWith(col, "clr.")) & col %in% params
+        ~ {
+          col <- cur_column()
+          !(col %in% c("ae", "fe") || startsWith(col, "clr.")) && col %in% params
+        }
       ))
   }
 
