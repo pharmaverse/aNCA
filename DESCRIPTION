@@ -50,6 +50,7 @@ Suggests:
     arrow,
     DT,
     ggh4x,
+    glue,
     haven,
     htmlwidgets,
     jsonlite,
