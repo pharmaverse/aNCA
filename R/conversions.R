@@ -116,7 +116,7 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #'     \item{VOLUMEU}{Units for the `VOLUME` column (e.g., "mL", "g").}
 #'   }
 #'
-#' @return A modified data frame with `VOLUME` and `VOLUMEU` converted (where necessary)
+#' @returns A modified data frame with `VOLUME` and `VOLUMEU` converted (where necessary)
 #'  so that multiplying `AVAL * VOLUME` results in a unit with consistent dimensionality
 #'  (typically mass or moles).
 #' A new column `AMOUNTU` is created to represent the product of `AVALU` and `VOLUMEU`.
