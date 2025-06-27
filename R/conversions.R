@@ -137,7 +137,6 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units drop_units
 #' @importFrom stringr str_split str_trim
-#' @importFrom logger log_info log_warn
 #' @examples
 #' df <- data.frame(
 #'   PCSPEC = c("urine", "feces", "plasma"),
@@ -237,5 +236,5 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
     "Row %d: Converted volume from %.6g %s to %.6g %s based on concentration unit %s",
     row, vol, volu, u_vol_new, denom_unit, concu
   )
-  log_info(msg)
+  message(msg)
 }
