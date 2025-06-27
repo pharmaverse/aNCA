@@ -288,12 +288,10 @@ format_pkncadata_intervals <- function(pknca_conc,
         any_of(all_pknca_params),
         ~ {
           col <- cur_column()
-          case_when(
-            !is.na(VOLUME) & (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ col %in% params,
-            !is.na(VOLUME) ~ FALSE,
-            is.na(VOLUME) & (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ FALSE,
-            is.na(VOLUME) ~ col %in% params
-          )
+case_when(
+  (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ !is.na(VOLUME) & col %in% params,
+  TRUE ~ is.na(VOLUME) & col %in% params
+)
         }
       )) %>%
       select(-VOLUME)
