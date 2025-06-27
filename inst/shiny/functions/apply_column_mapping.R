@@ -47,7 +47,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   ]
 
   # Rename necessary columns
-  dataset <- rename_columns(dataset, selected_cols)
+  dataset <- .rename_columns(dataset, selected_cols)
 
   # Handle special case for NCA_PROFILE
   nca_profile_col <- mapping$select_NCA_PROFILE
@@ -85,7 +85,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 #' @param selected_cols A named list of vectors representing mapped columns
 #'
 #' @returns A data frame with renamed columns based on the provided mappings.
-rename_columns <- function(dataset, selected_cols) {
+.rename_columns <- function(dataset, selected_cols) {
   colnames(dataset) <- sapply(colnames(dataset), function(col) {
     for (group in names(selected_cols)) {
       mapped_values <- selected_cols[[group]]
