@@ -33,7 +33,7 @@ data_imputation_ui <- function(id) {
       style = "margin-top: 1em;",
       conditionalPanel(
         condition = sprintf("input['%s'] == 'tmax based imputation'", ns("select_blq_strategy")),
-        blq_selectize(ns("before_tmax"), "Before tmax", selected = "keep"),
+        blq_selectize(ns("before_tmax"), "Before tmax", selected = "0"),
         blq_selectize(ns("after_tmax"), "After tmax", selected = "drop")
       ),
       conditionalPanel(
