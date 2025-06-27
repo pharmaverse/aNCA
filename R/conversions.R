@@ -190,7 +190,7 @@ convert_volume_units <- function(df,
       log_conversion(i, vol, volu, u_vol_new, denom_unit, concu, verbose = TRUE)
       TRUE
     }, error = function(e) {
-      log_warn("Row {i}: Failed to convert {vol} {volu} to {denom_unit} (concentration: {concu}): {e$message}")
+      warning(glue::glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit} (concentration: {concu}): {e$message}"))
       FALSE
     })
 
