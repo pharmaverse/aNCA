@@ -137,6 +137,7 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units drop_units
 #' @importFrom stringr str_split str_trim
+#' @importFrom logger log_info log_warn
 #' @examples
 #' df <- data.frame(
 #'   PCSPEC = c("urine", "feces", "plasma"),
@@ -185,7 +186,8 @@ convert_volume_units <- function(df,
       )
       df[[volume]][i] <- drop_units(u_vol_new)
       df[[volumeu]][i] <- denom_unit
-      log_info("Row {i}: Converted volume from {vol} {volu} to {signif(drop_units(u_vol_new), 6)} {denom_unit} based on concentration unit {concu}")
+      
+      log_conversion(i, vol, volu, u_vol_new, denom_unit, concu, verbose = TRUE)
       TRUE
     }, error = function(e) {
       log_warn("Row {i}: Failed to convert {vol} {volu} to {denom_unit} (concentration: {concu}): {e$message}")
@@ -210,4 +212,30 @@ convert_volume_units <- function(df,
         }
       )
     )
+}
+
+#'Log conversions applied to dataset
+#'
+#' This helper function logs the conversion of volume units in a dataset.
+#'
+#' @param row The row number where the conversion is applied.
+#' @param vol The original volume value.
+#' @param volu The original volume unit.
+#' @param u_vol_new The new volume value after conversion.
+#' @param denom_unit The denominator unit derived from the concentration unit.
+#' @param concu The concentration unit.
+#' @param verbose A logical indicating whether to log the conversion (default: TRUE).
+#' @returns NULL if units remained the same, or log info of the conversions that were applied
+#'
+#' @keywords internal
+log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose = TRUE) {
+  same_units <- denom_unit == volu
+
+  if (!verbose || same_units) return()
+  
+  msg <- sprintf(
+    "Row %d: Converted volume from %.6g %s to %.6g %s based on concentration unit %s",
+    row, vol, volu, u_vol_new, denom_unit, concu
+  )
+  log_info(msg)
 }
