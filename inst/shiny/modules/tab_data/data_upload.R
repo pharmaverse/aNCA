@@ -10,7 +10,7 @@
 
 data_upload_ui <- function(id) {
   ns <- NS(id)
-  
+
   div(
     stepper_ui("Upload"),
     div(
@@ -34,13 +34,13 @@ data_upload_ui <- function(id) {
 
 data_upload_server <- function(id) {
   moduleServer(id, function(input, output, session) {
-    
+
     #' Dummy data is automatically loaded on startup if no data path is provided
     DUMMY_DATA <- read.csv(
       system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
       na.strings = c("", "NA")
     )
-    
+
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
     output$file_loading_message <- renderUI({
@@ -50,27 +50,27 @@ data_upload_server <- function(id) {
         p(file_loading_error(), class = "error-string")
       }
     })
-    
+
     raw_data <- (
       reactive({
         #' If no data is provided by the user, load dummy data
         if (is.null(input$data_upload$datapath) & is.null(datapath)) {
           DUMMY_DATA
         } else {
-          if(is.null(input$data_upload$datapath)) {
+          if (is.null(input$data_upload$datapath)) {
             log_info("Data upload module initialized with datapath: ", datapath)
             final_datapath <- datapath
           } else {
             final_datapath <- input$data_upload$datapath
           }
-          
+
           df <- tryCatch({
             file_loading_error(NULL)
             read_pk(final_datapath)
           }, error = function(e) {
             file_loading_error(e$message)
           })
-          
+
           if (is.null(file_loading_error())) {
             log_success("User data loaded successfully.")
             df
@@ -82,7 +82,7 @@ data_upload_server <- function(id) {
       }) |>
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
-    
+
     output$data_display <- renderReactable({
       req(raw_data())
       reactable(
@@ -98,7 +98,7 @@ data_upload_server <- function(id) {
         class = "reactable-table"
       )
     })
-    
+
     raw_data
   })
 }

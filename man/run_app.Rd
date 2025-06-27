@@ -2,13 +2,17 @@
 % Please edit documentation in R/run_app.R
 \name{run_app}
 \alias{run_app}
-\title{Run the Shiny app}
+\title{Run the Shiny app
+This function runs the Shiny application included in the \code{aNCA} package.}
 \usage{
-run_app(...)
+run_app(datapath = NULL, ...)
 }
 \arguments{
+\item{datapath}{Path to the directory containing the data files.}
+
 \item{...}{Arguments passed to \code{shiny::runApp()}}
 }
 \description{
 Run the Shiny app
+This function runs the Shiny application included in the \code{aNCA} package.
 }

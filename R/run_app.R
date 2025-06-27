@@ -1,8 +1,9 @@
 #' Run the Shiny app
+#' @param datapath Path to the directory containing the data files.
 #' @param ... Arguments passed to `shiny::runApp()`
 #' @export
 run_app <- function(datapath = NULL, ...) {
-  .GlobalEnv$datapath <- datapath
+  .GlobalEnv$datapath <- datapath #nolint
   check_app_dependencies()
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }
