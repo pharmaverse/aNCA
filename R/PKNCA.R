@@ -628,7 +628,7 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' For any parameter that is not aucpext.obs or aucpext.pred it applies a minimum threshold,
 #' and for aucpext.obs and aucpext.pred it applies a maximum threshold.
 #' @importFrom PKNCA exclude
-
+#' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 
   for (param in names(rules)) {
