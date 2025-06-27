@@ -13,18 +13,20 @@ MANUAL_UNITS <- list(
 
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE", "Grouping_Variables"),
+  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "DOSEA", "ADOSEDUR"),
+  "Dose Variables" = c("DRUG", "DOSEA"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
-  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
+  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU"),
+  "Supplemental Variables" = c("Grouping_Variables", "ADOSEDUR", "VOLUME", "VOLUMEU")
 )
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR"
+  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR",
+  "VOLUME", "VOLUMEU"
 )
 
 #' Column Mapping Widget
@@ -136,25 +138,6 @@ data_mapping_ui <- function(id) {
             "NCA_PROFILE",
             "Select the column you want to use for selecting the NCA profiles."
           ),
-          div(
-            class = "column-mapping-row",
-            tooltip(
-              selectizeInput(
-                ns("select_Grouping_Variables"),
-                "",
-                choices = NULL,
-                multiple = TRUE,
-                options = list(placeholder = "Select Column(s)"),
-                width = "40%"
-              ),
-              "Select the additional column(s) that will be used to group the data 
-              in the outputs. E.g. Treatment Arm, Age, Sex, Race"
-            ),
-            div(
-              class = "column-mapping-output",
-              span("Additional Grouping Variables")
-            )
-          )
         ),
         tags$section(
           h5("Sample Variables"),
@@ -170,11 +153,6 @@ data_mapping_ui <- function(id) {
             "Character format, stating either 'intravascular' or 'extravascular'."
           ),
           .column_mapping_widget(ns, "DOSEA", "Numeric format."),
-          .column_mapping_widget(
-            ns, "ADOSEDUR",
-            "Numeric format. Only required for infusion studies,
-            otherwise select NA"
-          )
         ),
         tags$section(
           h5("Time Variables"),
@@ -189,6 +167,38 @@ data_mapping_ui <- function(id) {
           .column_mapping_widget(ns, "DOSEU", "Character format."),
           .column_mapping_widget(ns, "RRLTU", "Character format.")
         ),
+        tags$section(
+          h5("Supplemental Variables"),
+          div(
+            class = "column-mapping-row",
+            tooltip(
+              selectizeInput(
+                ns("select_Grouping_Variables"),
+                "",
+                choices = NULL,
+                multiple = TRUE,
+                options = list(placeholder = "Select Column(s)"),
+                width = "40%"
+              ),
+              "Select the additional column(s) that will be used to group the data 
+                      in the outputs. E.g. Treatment Arm, Age, Sex, Race"
+            ),
+            div(
+              class = "column-mapping-output",
+              span("Additional Grouping Variables")
+            )
+          ),
+          .column_mapping_widget(
+            ns, "ADOSEDUR",
+            "Numeric format. Only required for infusion studies,
+                    otherwise select NA"
+          ),
+          .column_mapping_widget(ns, "VOLUME", "Numeric format.
+                                 Only required for urine/excretion studies."),
+          .column_mapping_widget(ns, "VOLUMEU", "Character format.
+                                 Only required for urine/excretion studies.")
+        ),
+
         input_task_button(ns("submit_columns"), "Submit Mapping")
       )
     )
@@ -218,8 +228,11 @@ data_mapping_server <- function(id, adnca_data) {
     # Observe submit button click and update processed_data
     mapping <- reactive({
       input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
-      input_ids <- c(input_ids, "select_Grouping_Variables") # Include manually added input
       mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+
+      if (mapping_list$select_VOLUME == "") {
+        mapping_list <- mapping_list[!names(mapping_list) %in% c("select_VOLUME", "select_VOLUMEU")]
+      }
       mapping_list
     })
 

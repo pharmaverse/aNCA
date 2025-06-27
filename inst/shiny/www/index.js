@@ -22,7 +22,27 @@ const buttonTimeout = function(selector, debounce, placeholder, ready) {
   disable_button_timeouts[selector] = setTimeout(() => {
     $(selector).html(ready).prop("disabled", false);
   }, debounce)
-}
+};
+
+/**
+ * Shows overlay div by ID
+ */
+Shiny.addCustomMessageHandler("showOverlay", function(message) {
+  const el = document.getElementById(message.id);
+  if (el) {
+    el.style.display = 'block';
+  }
+});
+
+/**
+ * Hides overlay div by ID
+ */
+Shiny.addCustomMessageHandler("hideOverlay", function(message) {
+  const el = document.getElementById(message.id);
+  if (el) {
+    el.style.display = 'none';
+  }
+});
 
 /**
  * Enable drag-and-drop file upload on a custom container (e.g., a div wrapping a file input).
@@ -60,4 +80,5 @@ const enableDragAndDropUpload = function(element_id) {
 }
 document.addEventListener('DOMContentLoaded', function () {
   enableDragAndDropUpload('data-raw_data-upload_container');
+
 });
