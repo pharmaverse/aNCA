@@ -107,7 +107,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
 
     full_output <- reactive({
       req(results())
-      
+
       summary <- results() %>%
         group_by(across(all_of(input$summary_groups))) %>%
         summarise(
