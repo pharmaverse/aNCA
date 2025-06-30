@@ -31,17 +31,17 @@ input_filter_ui <- function(id, cols) {
       ns("column"),
       "",
       choices = cols,
-      width = "20em",
+      width = "100%",
       options = list(dropdownParent = "body")
     ),
     selectizeInput(
       ns("condition"),
       "",
       choices = c("==", ">", "<", ">=", "<=", "!="),
-      width = "5em",
+      width = "100%",
       options = list(dropdownParent = "body")
     ),
-    textInput(ns("value"), "", width = "15em"),
+    textInput(ns("value"), "", width = "100%"),
     actionButton(ns("remove"), "X", class = "btn-danger")
   )
 }
