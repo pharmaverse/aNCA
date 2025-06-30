@@ -219,11 +219,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   ) %>%
     # Join route information
     left_join(
-      dplyr::select(
+      select(
         adnca_data$dose$data,
-        any_of(c(dplyr::group_vars(adnca_data$dose), adnca_data$dose$columns$route, "ROUTE"))
+        any_of(c(group_vars(adnca_data$dose), adnca_data$dose$columns$route, "ROUTE"))
       ) %>% unique(),
-      by = dplyr::group_vars(adnca_data$dose)
+      by = group_vars(adnca_data$dose)
     )
 
   # Apply filtering

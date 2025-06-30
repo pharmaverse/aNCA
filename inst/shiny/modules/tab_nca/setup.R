@@ -96,7 +96,7 @@ setup_server <- function(id, data, adnca_data) {
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data
-    )$ratio_table
+    )
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
