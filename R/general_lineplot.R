@@ -60,7 +60,8 @@
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
-  colorby_var, time_scale, yaxis_scale, show_threshold = FALSE, threshold_value = 0, cycle = NULL
+  colorby_var, time_scale, yaxis_scale, show_threshold = FALSE,
+  threshold_value = 0, show_dose = FALSE, cycle = NULL
 ) {
 
   # preprocess data according to user selection
@@ -141,6 +142,12 @@ general_lineplot <- function(
   if (show_threshold) {
     plt <- plt +
       ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  }
+  
+  if (show_dose && length(unique(preprocessed_data$USUBJID)) < 5) { # limit to 5 subjects to avoid overcrowding
+    dose_times <- unique(preprocessed_data$TIME_DOSE)
+    plt <- plt +
+      ggplot2::geom_vline(aes(colour = USUBJID), xintercept = dose_times, linetype = "dotted", color = "orange")
   }
 
   return(plt)
