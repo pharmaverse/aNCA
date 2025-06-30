@@ -30,8 +30,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
           "Summarise By:",
           choices = NULL,
           multiple = TRUE
-        ),
-        actionButton(ns("submit"), "Submit", class = "btn-primary")
+        )
       )
     ),
     card(
@@ -84,7 +83,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
     })
 
     # Perform Calculation on Submit
-    results <- eventReactive(input$submit, {
+    results <- reactive({
       req(filtered_samples())
 
       spec1 <- input$selected_spec1
@@ -106,21 +105,18 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       )
     })
 
-    summary <- reactive({
+    full_output <- reactive({
       req(results())
-      results() %>%
+      
+      summary <- results() %>%
         group_by(across(all_of(input$summary_groups))) %>%
         summarise(
           Mean_Ratio = round(mean(Ratio, na.rm = TRUE), 3),
           N = n(),
           .groups = "drop"
         )
-    })
-
-    full_output <- reactive({
-      req(results())
       results() %>%
-        bind_rows(summary()) %>%
+        bind_rows(summary) %>%
         arrange(across(all_of(input$summary_groups)))
     })
 
