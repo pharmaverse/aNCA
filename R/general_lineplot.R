@@ -144,10 +144,14 @@ general_lineplot <- function(
       ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
   }
   
-  if (show_dose && length(unique(preprocessed_data$USUBJID)) < 5) { # limit to 5 subjects to avoid overcrowding
+  if (show_dose && length(unique(preprocessed_data$USUBJID)) < 5 && time_scale != "By Dose Profile") { # limit to 5 subjects to avoid overcrowding
     dose_times <- unique(preprocessed_data$TIME_DOSE)
     plt <- plt +
-      ggplot2::geom_vline(aes(colour = USUBJID), xintercept = dose_times, linetype = "dotted", color = "orange")
+      ggplot2::geom_vline(aes(colour = USUBJID),
+                          xintercept = dose_times,
+                          linetype = "dotted",
+                          color = "orange",
+                          size = 0.8)
   }
 
   return(plt)
