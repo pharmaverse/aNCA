@@ -9,7 +9,7 @@ data <- data.frame(
   UNITS = rep("ng/mL", 12)
 )
 
-describe("multiple_matrix_ratios function", {
+describe("multiple_matrix_ratios", {
   it("computes correct ratios", {
     result <- multiple_matrix_ratios(
       data, "MATRIX", "CONC", "UNITS",
@@ -67,7 +67,7 @@ describe("multiple_matrix_ratios function", {
   })
 })
 
-describe("calculate_ratios function", {
+describe("calculate_ratios", {
 
   res <- FIXTURE_PKNCA_RES
   res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")

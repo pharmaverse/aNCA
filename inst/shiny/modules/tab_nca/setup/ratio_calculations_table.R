@@ -16,8 +16,8 @@ ratios_table_ui <- function(id) {
           tags$h1("Ratio calculations guide"),
           p("
             This section is to perform ratio calculations within the allowed parameters
-            that you chose before. You can add a row for each ratio calculation you want, 
-            as well as select and remove rows.
+            that you previously selected. Add a new row for each ratio calculation to
+            compute. You can also select and remove rows.
             "
           ),
           p("For each ratio you need to specify:"),
@@ -37,8 +37,8 @@ ratios_table_ui <- function(id) {
             ),
             tags$li(
               tags$b("Aggregate Subject"),
-              ": `yes` aggregates reference values across all subjects, `no` does not, and 
-              `if-needed` only if ratios cannot be performed within the same subject."
+              ": `yes` aggregates reference values using the mean of all subjects, `no` does not, and 
+              `if-needed` only when ratios cannot be performed within the same subject."
             ),
             tags$li(
               tags$b("Adjusting Factor"),
@@ -47,8 +47,8 @@ ratios_table_ui <- function(id) {
             ),
             tags$li(
               tags$b("PPTESTCD"),
-              ": Code name for the ratio in the outputs. By default generates names with 
-              CDISC style. Will always be unique."
+              ": Code name for the ratio. By default, unique
+              CDISC style names are generated."
             )
           ),
           tags$div(
@@ -78,18 +78,18 @@ ratios_table_server <- function(
 
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
-        dplyr::filter(type_interval == "main") %>%
-        dplyr::select(
+        filter(type_interval == "main") %>%
+        select(
           -any_of(c(names(PKNCA::get.interval.cols()), "impute", "type_interval"))
         ) %>%
-        dplyr::select(
+        select(
           any_of(
-            c(dplyr::group_vars(adnca_data()$conc), "ROUTE", "NCA_PROFILE")
+            c(group_vars(adnca_data()$conc), "ROUTE", "NCA_PROFILE")
           )
         ) %>%
         # Filter out the columns with one one unique value (no ratio possible!)
-        dplyr::select(dplyr::where(~ length(unique(.)) > 1)) %>%
-        dplyr::select(-any_of(adnca_data()$conc$columns$subject))
+        select(where(~ length(unique(.)) > 1)) %>%
+        select(-any_of(adnca_data()$conc$columns$subject))
     })
 
     ratio_reference_options <- reactive({
@@ -97,7 +97,7 @@ ratios_table_server <- function(
       if (ncol(ratio_groups()) > 0) {
         ratio_groups() %>%
           # Convert all columns to character
-          dplyr::mutate(across(everything(), as.character)) %>%
+          mutate(across(everything(), as.character)) %>%
           pivot_longer(cols = everything()) %>%
           mutate(input_name = paste0(name, ": ", value)) %>%
           pull(input_name) %>%
@@ -111,14 +111,14 @@ ratios_table_server <- function(
     ratio_param_options <- reactive({
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
-        dplyr::filter(type_interval == "main") %>%
-        dplyr::select(
+        filter(type_interval == "main") %>%
+        select(
           any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
         ) %>%
         # For logical columns transform all FALSE to NA
-        dplyr::mutate(across(where(is.logical), ~ ifelse(. == FALSE, NA, .))) %>%
+        mutate(across(where(is.logical), ~ ifelse(. == FALSE, NA, .))) %>%
         # Select only columns where all values are not NA
-        dplyr::select(dplyr::where(~ !all(is.na(.)))) %>%
+        select(where(~ !all(is.na(.)))) %>%
         names() %>%
         purrr::keep(~ grepl("^(auc[itl\\.]|cmax)", ., ignore.case = TRUE)) %>%
         translate_terms("PKNCA", "PPTESTCD")
@@ -145,7 +145,7 @@ ratios_table_server <- function(
     observeEvent(input$add_row, {
 
       if (length(ratio_param_options()) == 0 || length(ratio_reference_options()) == 0) {
-        showNotification("No parameters or group variables available to add a row.", type = "error")
+        showNotification("No parameters or group variables available to add a row.", type = "warning")
         return()
       }
       new_row <- data.frame(
@@ -277,10 +277,9 @@ ratios_table_server <- function(
               ),
               PPTESTCD = make.unique(PPTESTCD, sep = "")
             )
-            ratio_table(tbl)
-            refresh_reactable(refresh_reactable() + 1)
           }
           ratio_table(tbl)
+          refresh_reactable(refresh_reactable() + 1)
         })
       })
       # ReferenceValue per row

@@ -79,7 +79,7 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' By default is NULL, allowing rows not in ref_groups be used as test.
 #' @param adjusting_factor Numeric to multiply the ratio. Default is 1.
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
-#' @return A data.frame result object with the calculated ratios.
+#' @returns A data.frame result object with the calculated ratios.
 #' @export
 calculate_ratios <- function(
   data,
@@ -107,7 +107,7 @@ calculate_ratios.data.frame <- function(
       paste0(
         "No parameter with PPTESTCD: '",
         paste(parameter, collapse = ","),
-        "' is not found in the PKNCA results."
+        "' found in the PKNCA results."
       )
     )
   }
@@ -226,7 +226,7 @@ calculate_ratios.PKNCAresults <- function(
 #' @param aggregate_subject Character. Aggregation mode: "yes", "no", or "if-needed".
 #' @param adjusting_factor Numeric that multiplies the calculated ratio. Default is 1.
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
-#' @return A data.frame with the calculated ratios for the specified settings.
+#' @returns A data.frame with the calculated ratios for the specified settings.
 calculate_ratio_app <- function(
   res,
   parameter,
@@ -319,7 +319,7 @@ calculate_ratio_app <- function(
 #' @param res A PKNCAresult object.
 #' @param ratio_table Data.frame with columns:
 #' Parameter, Reference, Test, AggregateSubject, AdjustingFactor.
-#' @return The updated PKNCAresult object with added rows in the `result` data.frame.
+#' @returns The updated PKNCAresult object with added rows in the `result` data.frame.
 #' @export
 calculate_table_ratios_app <- function(res, ratio_table) {
 
