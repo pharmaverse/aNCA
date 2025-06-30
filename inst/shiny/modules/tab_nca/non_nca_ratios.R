@@ -9,6 +9,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
 
   tagList(
     card(
+      style = "height: 33vh;",
       card_header(paste0(title, " Setup")),
       card_body(
         fluidRow(
@@ -23,14 +24,14 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
             select_label2,
             choices = NULL,
             multiple = TRUE
+          ),
+          selectInput(
+            ns("summary_groups"),
+            "Summarise By:",
+            choices = NULL,
+            multiple = TRUE
           )
         ),
-        selectInput(
-          ns("summary_groups"),
-          "Summarise By:",
-          choices = NULL,
-          multiple = TRUE
-        )
       )
     ),
     card(
@@ -109,7 +110,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       req(results())
 
       summary <- results() %>%
-        group_by(across(all_of(input$summary_groups))) %>%
+        group_by(across(all_of(input$summary_groups)), Ratio_Type) %>%
         summarise(
           Mean_Ratio = round(mean(Ratio, na.rm = TRUE), 3),
           N = n(),
@@ -117,7 +118,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         )
       results() %>%
         bind_rows(summary) %>%
-        arrange(across(all_of(input$summary_groups)))
+        arrange(across(all_of(input$summary_groups)), Ratio_Type)
     })
 
     # Display results
