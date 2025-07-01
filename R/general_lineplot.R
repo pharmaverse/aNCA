@@ -159,7 +159,7 @@ general_lineplot <- function(
 #' @param data The data used for plotting
 #' @param time_scale The time scale used for plotting
 #' #' @returns The modified ggplot object with optional layers added
-#' 
+#'
 add_optional_layers <- function(plt, yaxis_scale, show_threshold,
                                 threshold_value, show_dose,
                                 data, time_scale) {
@@ -170,16 +170,16 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
                     label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
       labs(y = paste0("Log 10 - ", plt$labels$y))
   }
-  
+
   # Add a horizontal line for the threshold value if specified
   if (show_threshold) {
     plt <- plt +
       geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
   }
-  
+
   # Add vertical lines for dose times if specified and conditions are met
   if (show_dose && length(unique(data$USUBJID)) < 5 &&
-      time_scale != "By Dose Profile") {
+        time_scale != "By Dose Profile") {
     dose_times <- unique(data$TIME_DOSE)
     plt <- plt +
       geom_vline(aes(colour = USUBJID),
@@ -188,6 +188,6 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
                  color = "orange",
                  size = 0.8)
   }
-  
+
   return(plt)
 }
