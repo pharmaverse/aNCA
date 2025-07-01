@@ -144,6 +144,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
+
   pknca_data_object
 }
 
@@ -176,6 +177,11 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
+#' @param blq_imputation_rule A list defining the BLQ imputation rule using PKNCA format.
+#' The list should either contain three elements named: `first`, `middle`, and `last` or
+#' two elements named `before.tmax` and `after.tmax`. Each element can be a numeric value
+#' (substituting the BLQ value), or a string such as `"drop"` (ignores the value)
+#' or `"keep"` (keeps the value as 0).
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -193,7 +199,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_profile,
   selected_pcspec,
   params,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  # PKNCA default BLQ imputation rule
+  blq_imputation_rule = list(first = "keep", middle = "drop", last = "keep")
 ) {
 
   data <- adnca_data
@@ -202,6 +210,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   data$options <- list(
     auc.method = method,
+    conc.blq = blq_imputation_rule,
     progress = FALSE,
     keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
     min.hl.r.squared = 0.01
