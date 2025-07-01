@@ -127,7 +127,7 @@ calculate_ratios.data.frame <- function(
   # Define the test rows, which should exclude the ref_groups
   df_num <- {
     if (!is.null(test_groups)) {
-      full_join(df, test_groups)
+      merge(df, test_groups)
     } else {
       anti_join(df, df_den, by = intersect(names(df), names(df_den)))
     }
