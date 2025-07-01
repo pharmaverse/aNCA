@@ -1,4 +1,3 @@
-
 #' NCA Settings Server Module
 #'
 #' This module handles logic for basic / general settings for the NCA run. Generates appropriate
