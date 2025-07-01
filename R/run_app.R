@@ -3,7 +3,11 @@
 #' @param ... Arguments passed to `shiny::runApp()`
 #' @export
 run_app <- function(datapath = NULL, ...) {
-  .GlobalEnv$datapath <- datapath #nolint
+  if (!is.null(datapath)) {
+    opt <- options(aNCA.datapath = datapath)
+    on.exit(options(opt), add = TRUE)
+  }
+  
   check_app_dependencies()
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }

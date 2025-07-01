@@ -51,6 +51,8 @@ data_upload_server <- function(id) {
       }
     })
 
+    datapath <- getOption("aNCA.datapath", NULL)
+
     raw_data <- (
       reactive({
         #' If no data is provided by the user, load dummy data
