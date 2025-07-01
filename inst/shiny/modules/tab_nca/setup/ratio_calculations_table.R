@@ -37,7 +37,8 @@ ratios_table_ui <- function(id) {
             ),
             tags$li(
               tags$b("Aggregate Subject"),
-              ": `yes` aggregates reference values using the mean of all subjects, `no` does not, and 
+              ": `yes` aggregates reference values using the mean of all subjects, 
+              `no` does not, and 
               `if-needed` only when ratios cannot be performed within the same subject."
             ),
             tags$li(
@@ -145,7 +146,10 @@ ratios_table_server <- function(
     observeEvent(input$add_row, {
 
       if (length(ratio_param_options()) == 0 || length(ratio_reference_options()) == 0) {
-        showNotification("No parameters or group variables available to add a row.", type = "warning")
+        showNotification(
+          "No parameters or group variables available to add a row.",
+          type = "warning"
+        )
         return()
       }
       new_row <- data.frame(

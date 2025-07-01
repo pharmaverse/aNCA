@@ -1,4 +1,4 @@
-#' Calculate a Ratio for the App. These functions communicate the table UI with the PKNCA via of ratio calculation
+#' Links the table ratio of the App with the ratio calculations via PKNCA results
 #'
 #' @param res A PKNCAresult object.
 #' @param parameter Character. The PPTESTCD value to use for the calculation.
