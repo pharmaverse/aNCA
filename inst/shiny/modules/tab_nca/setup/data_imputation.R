@@ -22,17 +22,18 @@ data_imputation_ui <- function(id) {
       ns("select_blq_strategy"),
       "Select BLQ Imputation Strategy",
       choices = c(
-        "tmax based imputation",
+        "Tmax based imputation",
         "Positional BLQ imputation",
-        "Set value for all BLQ"
+        "Set value for all BLQ",
+        "No BLQ handling"
       ),
-      selected = "tmax based imputation"
+      selected = "Tmax based imputation"
     ),
     # Always render all inputs, but use conditionalPanel to show/hide
     div(
       style = "margin-top: 1em;",
       conditionalPanel(
-        condition = sprintf("input['%s'] == 'tmax based imputation'", ns("select_blq_strategy")),
+        condition = sprintf("input['%s'] == 'Tmax based imputation'", ns("select_blq_strategy")),
         blq_selectize(ns("before_tmax"), "Before tmax", selected = "0"),
         blq_selectize(ns("after_tmax"), "After tmax", selected = "drop")
       ),
@@ -47,6 +48,10 @@ data_imputation_ui <- function(id) {
       conditionalPanel(
         condition = sprintf("input['%s'] == 'Set value for all BLQ'", ns("select_blq_strategy")),
         blq_selectize(ns("blq_value"), "Value for BLQ", selected = "0.05"),
+      ),
+      conditionalPanel(
+        condition = sprintf("input['%s'] == 'No BLQ handling'", ns("select_blq_strategy")),
+        helpText("No BLQ imputation will be applied. All values are kept as is")
       )
     )
   )
@@ -64,7 +69,7 @@ data_imputation_server <- function(id) {
       req(input$select_blq_strategy)
       rule_list <- switch(
         input$select_blq_strategy,
-        "tmax based imputation" = list(
+        "Tmax based imputation" = list(
           before.tmax = input$before_tmax,
           after.tmax = input$after_tmax
         ),
@@ -77,6 +82,11 @@ data_imputation_server <- function(id) {
           first = input$blq_value,
           middle = input$blq_value,
           last = input$blq_value
+        ),
+        "No BLQ handling" = list(
+          first = "keep",
+          middle = "keep",
+          last = "keep"
         ),
         NULL
       )
