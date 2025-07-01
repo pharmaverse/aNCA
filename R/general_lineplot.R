@@ -21,6 +21,7 @@
 #'                          Default is FALSE.
 #' @param threshold_value   A numeric value to set the y value of the threshold line.
 #'                          Default is 0.
+#' @param show_dose         A boolean specifying whether to show dose times as vertical lines.
 #'
 #' @return A ggplot object representing the line plot of pharmacokinetic concentration over time.
 #'
@@ -35,6 +36,9 @@
 #'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
 #'   \item Generates a line plot using the `g_ipp` function with the specified parameters.
 #'   \item Adjusts the y-axis to logarithmic scale if `yaxis_scale` is "Log".
+#'   \item Adds a horizontal line for the threshold value if `show_threshold` is TRUE.
+#'   \item Adds vertical lines for dose times if `show_dose` is TRUE 
+#'   and the number of subjects is less than 5.
 #' }
 #'
 #' @examples
@@ -141,13 +145,13 @@ general_lineplot <- function(
 
   if (show_threshold) {
     plt <- plt +
-      ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+      geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
   }
   
   if (show_dose && length(unique(preprocessed_data$USUBJID)) < 5 && time_scale != "By Dose Profile") { # limit to 5 subjects to avoid overcrowding
     dose_times <- unique(preprocessed_data$TIME_DOSE)
     plt <- plt +
-      ggplot2::geom_vline(aes(colour = USUBJID),
+      geom_vline(aes(colour = USUBJID),
                           xintercept = dose_times,
                           linetype = "dotted",
                           color = "orange",
