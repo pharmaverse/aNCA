@@ -112,7 +112,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       summary <- results() %>%
         group_by(across(all_of(input$summary_groups)), Ratio_Type) %>%
         summarise(
-          Mean_Ratio = round(mean(Ratio, na.rm = TRUE), 3),
+          Geomean_Ratio = round(exp(mean(log(Ratio), na.rm = TRUE)), 3),
           N = n(),
           .groups = "drop"
         )
