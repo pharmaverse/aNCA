@@ -135,8 +135,13 @@ export_cdisc <- function(res_nca) {
   pp <- cdisc_info %>%
     select(any_of(c(CDISC_COLS$PP, "PPFAST"))) %>%
     # Deselect permitted columns with only NAs
-    select(-which(names(.) %in% c("PPSTINT", "PPENINT", "PPTPTREF", "PPDY", "PPDTC", "EPOCH", "TAETORD", "PPANMETH", "PPREASND", "PPSTAT", "PPSCAT", "PPGRPID", "PPRFTDTC", "PPSPEC") & sapply(., function(x) all(is.na(x)))))
-
+    select(
+      -which(names(.) %in% c(
+        "PPSTINT", "PPENINT", "PPTPTREF", "PPDY", "PPDTC", "EPOCH",
+        "TAETORD", "PPANMETH", "PPREASND", "PPSTAT", "PPSCAT",
+        "PPGRPID", "PPRFTDTC", "PPSPEC"
+      ) & sapply(., function(x) all(is.na(x))))
+    )
 
   adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
