@@ -24,27 +24,30 @@ settings_ui <- function(id) {
         # Selection of analyte, dose number and specimen
         fluidRow(
           column(4,
-            selectInput(
+            pickerInput(
               ns("select_analyte"),
               "Choose the Analyte:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           ),
           column(4,
-            selectInput(
+            pickerInput(
               ns("select_profile"),
               "Choose the NCA Profile:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           ),
           column(4,
-            selectInput(
+            pickerInput(
               ns("select_pcspec"),
               "Choose the Specimen:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           )
         ),
@@ -138,19 +141,19 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       # General #
       if (all(settings$analyte %in% unique(data()$PARAM))) {
-        updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
+        updatePickerInput(inputId = "select_analyte", selected = settings$analyte)
       } else {
         not_compatible <- append(not_compatible, "Analyte")
       }
 
       if (all(settings$profile %in% unique(data()$NCA_PROFILE))) {
-        updateSelectInput(inputId = "select_profile", selected = settings$profile)
+        updatePickerInput(inputId = "select_profile", selected = settings$profile)
       } else {
         not_compatible <- append(not_compatible, "NCA Profile")
       }
 
       if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
-        updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
+        updatePickerInput(inputId = "select_pcspec", selected = settings$pcspec)
       } else {
         not_compatible <- append(not_compatible, "Dose Specimen")
       }
@@ -231,25 +234,25 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     observeEvent(data()$DOSNO, priority = -1, {
       req(data())
 
-      updateSelectInput(
+      updatePickerInput(
         session,
         inputId = "select_profile",
         choices = unique(data()$NCA_PROFILE),
         selected = unique(data()$NCA_PROFILE)[1]
       )
 
-      updateSelectInput(
+      updatePickerInput(
         session,
         inputId = "select_analyte",
         choices = unique(data()$PARAM),
-        selected = unique(data()$PARAM)[1]
+        selected = unique(data()$PARAM)
       )
 
-      updateSelectInput(
+      updatePickerInput(
         session,
         inputId = "select_pcspec",
         choices = unique(data()$PCSPEC),
-        selected = unique(data()$PCSPEC)[1]
+        selected = unique(data()$PCSPEC)
       )
     })
 
