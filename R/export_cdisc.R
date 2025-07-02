@@ -79,7 +79,7 @@ export_cdisc <- function(res_nca) {
       # Parameter Variables
       PPORRES = as.character(round(as.numeric(PPORRES), 12)),
       PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = format(PPSTRESN, scientific = FALSE, trim = TRUE),
+      PPSTRESC = format(PPSTRESN, scientific = FALSE, trim = FALSE),
       PPSTRESU = PPSTRESU,
       # Status and Reason for Exclusion
       PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
@@ -331,6 +331,7 @@ CDISC_COLS <- list(
     "PPSPEC",
     # Timing
     "EPOCH",
+    "PPDTC",
     "PPRFTDTC",
     "PPSTINT",
     "PPENINT"
