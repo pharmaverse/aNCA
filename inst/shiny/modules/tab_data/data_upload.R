@@ -34,7 +34,8 @@ data_upload_ui <- function(id) {
 
 data_upload_server <- function(id) {
   moduleServer(id, function(input, output, session) {
-    #' Pre-load dummy data - it is always automatically loaded on startup
+
+    #' Dummy data is automatically loaded on startup if no data path is provided
     DUMMY_DATA <- read.csv(
       system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
       na.strings = c("", "NA")
@@ -50,15 +51,24 @@ data_upload_server <- function(id) {
       }
     })
 
+    datapath <- getOption("aNCA.datapath", NULL)
+
     raw_data <- (
       reactive({
-        #' if no data is provided by the user, load dummy data
-        if (is.null(input$data_upload$datapath)) {
+        #' If no data is provided by the user, load dummy data
+        if (is.null(input$data_upload$datapath) & is.null(datapath)) {
           DUMMY_DATA
         } else {
+          if (is.null(input$data_upload$datapath)) {
+            log_info("Data upload module initialized with datapath: ", datapath)
+            final_datapath <- datapath
+          } else {
+            final_datapath <- input$data_upload$datapath
+          }
+
           df <- tryCatch({
             file_loading_error(NULL)
-            read_pk(input$data_upload$datapath)
+            read_pk(final_datapath)
           }, error = function(e) {
             file_loading_error(e$message)
           })
