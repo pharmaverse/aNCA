@@ -67,7 +67,7 @@ slope_selector_ui <- function(id) {
         selectInput(
           ns("plots_per_page"),
           "Plots per page:",
-          choices = c(1, 2, 4, 8, 16),
+          choices = c(1, 2, 3, 4, 6, 8, 9, 12, 16),
           selected = 1
         )
       ),
