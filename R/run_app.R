@@ -7,7 +7,7 @@ run_app <- function(datapath = NULL, ...) {
     opt <- options(aNCA.datapath = datapath)
     on.exit(options(opt), add = TRUE)
   }
-  
+
   check_app_dependencies()
   shiny::runApp(system.file("shiny", package = "aNCA"), ...)
 }
