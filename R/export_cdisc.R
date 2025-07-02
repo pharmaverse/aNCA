@@ -77,9 +77,9 @@ export_cdisc <- function(res_nca) {
       },
       SUBJID = get_subjid(.),
       # Parameter Variables
-      PPORRES = round(as.numeric(PPORRES), 12),
+      PPORRES = as.character(round(as.numeric(PPORRES), 12)),
       PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = as.character(PPSTRESN),
+      PPSTRESC = format(PPSTRESN, scientific = FALSE, trim = TRUE),
       PPSTRESU = PPSTRESU,
       # Status and Reason for Exclusion
       PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
@@ -106,12 +106,12 @@ export_cdisc <- function(res_nca) {
       PPSTINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
         convert_to_iso8601_duration(start, RRLTU),
-        NA
+        NA_character_
       ),
       PPENINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
         convert_to_iso8601_duration(end, RRLTU),
-        NA
+        NA_character_
       ),
       PPFAST = {
         if ("EXFAST" %in% names(.)) {
@@ -133,7 +133,10 @@ export_cdisc <- function(res_nca) {
 
   # select pp columns
   pp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$PP, "PPFAST")))
+    select(any_of(c(CDISC_COLS$PP, "PPFAST"))) %>%
+    # Deselect permitted columns with only NAs
+    select(-which(names(.) %in% c("PPSTINT", "PPENINT", "PPTPTREF", "PPDY", "PPDTC", "EPOCH", "TAETORD", "PPANMETH", "PPREASND", "PPSTAT", "PPSCAT", "PPGRPID", "PPRFTDTC", "PPSPEC") & sapply(., function(x) all(is.na(x)))))
+
 
   adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
@@ -300,17 +303,19 @@ CDISC_COLS <- list(
   ),
 
   PP = c(
+    # Identifiers
     "STUDYID",
     "DOMAIN",
     "USUBJID",
     "PPSEQ",
-    "PPCAT",
     "PPGRPID",
-    "PPSPID",
+    # Topic
     "PPTESTCD",
     "PPTEST",
+    # Qualifier
+    "PPCAT",
     "PPSCAT",
-    "PPDTC",
+    "PPSPID",
     "PPORRES",
     "PPORRESU",
     "PPSTRESC",
@@ -319,13 +324,11 @@ CDISC_COLS <- list(
     "PPSTAT",
     "PPREASND",
     "PPSPEC",
+    # Timing
+    "EPOCH",
     "PPRFTDTC",
     "PPSTINT",
-    "PPENINT",
-
-    # Not CDISC PP standard
-    "VISIT",
-    "AVISIT"
+    "PPENINT"
   )
 )
 
