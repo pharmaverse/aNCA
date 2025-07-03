@@ -74,7 +74,7 @@ jobs:
           key: staged-deps
 
       - name: Run Staged dependencies
-        uses: insightsengineering/staged-dependencies-action@v1
+        uses: insightsengineering/staged-dependencies-action@v2
         with:
           run-system-dependencies: true
           renv-restore: false
