@@ -41,10 +41,14 @@ tab_data_ui <- function(id) {
               id = ns("data_navset-review"),
               div(
                 stepper_ui("Preview"),
-                card(
-                  uiOutput(ns("processed_data_message")),
-                  reactableOutput(ns("data_processed"))
+                variable_browser_ui(
+                  ns("var_browser"),
+                  dataname = "ADNCA"
                 )
+                # card(
+                #   # uiOutput(ns("processed_data_message")),
+                #   # reactableOutput(ns("data_processed"))
+                # )
               )
             )
           )
@@ -135,43 +139,66 @@ tab_data_server <- function(id) {
     #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables
 
-    output$processed_data_message <- renderUI({
-      tryCatch(
-        {
-          req(processed_data())
-          div(
-            "This is the data set that will be used for the analysis.
-          If you would like to make any changes please return to the previous tabs."
-          )
-        },
-        error = function(e) {
-          div("Please map your data in the 'Column Mapping' section before reviewing it.")
-        }
-      )
-    })
-
-    # Update the data table object with the filtered data
-    output$data_processed <- renderReactable({
+    # Call the server function for the variable browser
+    data_for_vb <- reactive({
       req(processed_data())
-
-      # Generate column definitions
-      col_defs <- generate_col_defs(processed_data())
-
-      reactable(
-        processed_data(),
-        columns = col_defs,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
+      
+      # Create an empty join_keys object since there are none for this single dataset.
+      jks <- teal.data::join_keys()
+      
+      # Use the constructor to create the final S4 teal_data object.
+      data_list <- teal.data::teal_data(
+        ADNCA = processed_data(),
+        join_keys = jks
       )
+      
+      data_list
     })
+    
+    # Pass the reactive expression directly
+    variable_browser_server(
+      id = "var_browser",
+      data_list_reactive = data_for_vb(),
+      dataname_param = "ADNCA",
+      parent_dataname_param = "ADNCA"
+    )
+    # output$processed_data_message <- renderUI({
+    #   tryCatch(
+    #     {
+    #       req(processed_data())
+    #       div(
+    #         "This is the data set that will be used for the analysis.
+    #       If you would like to make any changes please return to the previous tabs."
+    #       )
+    #     },
+    #     error = function(e) {
+    #       div("Please map your data in the 'Column Mapping' section before reviewing it.")
+    #     }
+    #   )
+    # })
+    # 
+    # # Update the data table object with the filtered data
+    # output$data_processed <- renderReactable({
+    #   req(processed_data())
+    # 
+    #   # Generate column definitions
+    #   col_defs <- generate_col_defs(processed_data())
+    # 
+    #   reactable(
+    #     processed_data(),
+    #     columns = col_defs,
+    #     searchable = TRUE,
+    #     sortable = TRUE,
+    #     highlight = TRUE,
+    #     wrap = TRUE,
+    #     resizable = TRUE,
+    #     defaultPageSize = 25,
+    #     showPageSizeOptions = TRUE,
+    #     striped = TRUE,
+    #     bordered = TRUE,
+    #     height = "98vh"
+    #   )
+    # })
 
     list(
       data = processed_data,

@@ -271,7 +271,8 @@ data_mapping_server <- function(id, adnca_data) {
               mutate(DFLAG = TRUE) %>%
               select(names(dataset)),
             by = intersect(names(dataset), names(removed))
-          )
+          ) %>%
+          apply_labels(LABELS, "ADPC")
 
         return(dataset)
       }
