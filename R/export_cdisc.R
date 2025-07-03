@@ -22,17 +22,25 @@
 #' @export
 export_cdisc <- function(res_nca) {
 
+  # Only select from results the requested parameters by the user
+  res_nca_req <- res_nca
+  res_nca_req$result <- res_nca_req$result %>%
+    mutate(PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA"))
+  res_nca_req$result <- as.data.frame(res_nca_req, filter_requested = TRUE) %>%
+    mutate(translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+
   # Define group columns in the data
   group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
   group_dose_cols <- unique(unlist(res_nca$data$dose$columns$groups))
   group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
+  route_col <- res_nca$data$dose$columns$route
 
   dose_info <- res_nca$data$dose$data %>%
     # Select only the columns that are used in the NCA results
     select(
       any_of(c(
         # Variables defined for the dose information
-        group_dose_cols, "NCA_PROFILE",  res_nca$data$dose$columns$route,
+        group_dose_cols, "NCA_PROFILE",  route_col,
         # TODO (Gerardo): Test should use a PKNCA obj (FIXTURE) so the var is accessed via mapping
         OPTIONAL_COLUMNS,
         # Raw variables that can be directly used in PP or ADPP if present
@@ -41,7 +49,7 @@ export_cdisc <- function(res_nca) {
     ) %>%
     unique()
 
-  cdisc_info <- res_nca$result  %>%
+  cdisc_info <- res_nca_req$result  %>%
     left_join(dose_info,
               by = intersect(names(res_nca$result), names(dose_info)),
               suffix = c("", ".y")) %>%
@@ -129,7 +137,25 @@ export_cdisc <- function(res_nca) {
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
-    ungroup()
+    ungroup() %>%
+    # Parameters with a one-to-many mapping in PKNCA / CDISC
+    mutate(
+      # one-to-many based on route
+      PPTEST = case_when(
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~ 
+          gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~ 
+          gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
+        TRUE ~ PPTESTCD
+      ),
+      PPTESTCD = case_when(
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~ 
+          gsub("(MRT)(LST|IFO|IFP)", "\\1IF\\2", PPTESTCD),
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~ 
+          gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
+        TRUE ~ PPTESTCD
+      )
+    )
 
   # select pp columns
   pp <- cdisc_info %>%
@@ -171,7 +197,7 @@ export_cdisc <- function(res_nca) {
     select(any_of(CDISC_COLS$ADPC), everything())  %>%
     # Deselect columns that are only used internally in the App
     select(-any_of(INTERNAL_ANCA_COLS))
-
+browser()
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
 
