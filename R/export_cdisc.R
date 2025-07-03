@@ -27,7 +27,7 @@ export_cdisc <- function(res_nca) {
   res_nca_req$result <- res_nca_req$result %>%
     mutate(PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA"))
   res_nca_req$result <- as.data.frame(res_nca_req, filter_requested = TRUE) %>%
-    mutate(translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
 
   # Define group columns in the data
   group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
@@ -88,11 +88,13 @@ export_cdisc <- function(res_nca) {
       PPORRES = as.character(round(as.numeric(PPORRES), 12)),
       PPSTRESN = round(as.numeric(PPSTRES), 12),
       PPSTRESC = format(PPSTRESN, scientific = FALSE, trim = FALSE),
-      PPSTRESU = PPSTRESU,
+      # SD0027: Units should be NA if there is no value
+      PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
+      PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
       # Status and Reason for Exclusion
       PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
       PPREASND = case_when(
-        !is.na(exclude) ~ exclude,
+        !is.na(exclude) & is.na(PPSTRES) ~ exclude,
         is.na(PPSTRES) ~ "NOT DERIVED",
         TRUE ~ ""
       ),
