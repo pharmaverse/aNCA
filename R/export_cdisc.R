@@ -87,7 +87,7 @@ export_cdisc <- function(res_nca) {
       # Parameter Variables
       PPORRES = as.character(round(as.numeric(PPORRES), 12)),
       PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = format(PPSTRESN, scientific = FALSE, trim = FALSE),
+      PPSTRESC = as.character(format(PPSTRESN, scientific = FALSE, trim = TRUE)),
       # SD0027: Units should be NA if there is no value
       PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
       PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
@@ -109,6 +109,12 @@ export_cdisc <- function(res_nca) {
         } else {
           NA_character_
         }
+      },
+      PPDY = as.numeric(difftime(PPDTC, PPRFTDTC, units = "days")),
+      EPOCH = if ("EPOCH" %in% names(.)) {
+        EPOCH
+      } else {
+        NA_character_
       },
       # Matrix
       PPSPEC = PCSPEC,
@@ -148,11 +154,11 @@ export_cdisc <- function(res_nca) {
           gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
         grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~ 
           gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
-        TRUE ~ PPTESTCD
+        TRUE ~ PPTEST
       ),
       PPTESTCD = case_when(
         grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~ 
-          gsub("(MRT)(LST|IFO|IFP)", "\\1IF\\2", PPTESTCD),
+          gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
         grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~ 
           gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
         TRUE ~ PPTESTCD
@@ -167,7 +173,7 @@ export_cdisc <- function(res_nca) {
       -which(names(.) %in% c(
         "PPSTINT", "PPENINT", "PPTPTREF", "PPDY", "PPDTC", "EPOCH",
         "TAETORD", "PPANMETH", "PPREASND", "PPSTAT", "PPSCAT",
-        "PPGRPID", "PPRFTDTC", "PPSPEC"
+        "PPGRPID"
       ) & sapply(., function(x) all(is.na(x))))
     )
 
@@ -348,7 +354,6 @@ CDISC_COLS <- list(
     # Qualifier
     "PPCAT",
     "PPSCAT",
-    "PPSPID",
     "PPORRES",
     "PPORRESU",
     "PPSTRESC",
