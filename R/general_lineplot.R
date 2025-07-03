@@ -178,7 +178,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
   }
 
   # Add vertical lines for dose times if specified and conditions are met
-  if (show_dose && length(unique(data$USUBJID)) < 5 &&
+  if (show_dose &&
         time_scale != "By Dose Profile") {
     dose_times <- unique(data$TIME_DOSE)
     plt <- plt +
