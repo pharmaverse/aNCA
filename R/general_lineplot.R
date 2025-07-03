@@ -23,7 +23,7 @@
 #'                          Default is 0.
 #' @param show_dose         A boolean specifying whether to show dose times as vertical lines.
 #'
-#' @return A ggplot object representing the line plot of pharmacokinetic concentration over time.
+#' @returns A ggplot object representing the line plot of pharmacokinetic concentration over time.
 #'
 #' @details
 #' The function performs the following steps:a
@@ -180,12 +180,14 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
   # Add vertical lines for dose times if specified and conditions are met
   if (show_dose &&
         time_scale != "By Dose Profile") {
-    dose_times <- unique(data$TIME_DOSE)
+    dose_info <- data %>%
+      distinct(USUBJID, TIME_DOSE, DOSEA) %>%
+      filter(!is.na(TIME_DOSE))
+    
     plt <- plt +
-      geom_vline(aes(colour = USUBJID),
-                 xintercept = dose_times,
+      geom_vline(data = dose_info,
+                 aes(xintercept = TIME_DOSE, colour = DOSEA),
                  linetype = "dotted",
-                 color = "orange",
                  size = 0.8)
   }
 
