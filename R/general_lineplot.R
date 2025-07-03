@@ -189,7 +189,8 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
                  aes(xintercept = TIME_DOSE),
                  linetype = "dotted",
                  size = 0.8,
-                 color = "green")
+                 color = "green",
+                 alpha = 0.5)
   }
 
   return(plt)
