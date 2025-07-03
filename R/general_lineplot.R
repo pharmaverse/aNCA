@@ -132,7 +132,7 @@ general_lineplot <- function(
     caption = NULL,
     add_baseline_hline = FALSE,
     yvar_baseline = "AVAL",
-    col = NULL
+    col = colorby_var
   ) +
     labs(color = paste(colorby_var, collapse = ", "))
 
@@ -181,14 +181,15 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
   if (show_dose &&
         time_scale != "By Dose Profile") {
     dose_info <- data %>%
-      distinct(USUBJID, TIME_DOSE, DOSEA) %>%
+      distinct(TIME_DOSE, DOSEA) %>%
       filter(!is.na(TIME_DOSE))
     
     plt <- plt +
       geom_vline(data = dose_info,
-                 aes(xintercept = TIME_DOSE, colour = DOSEA),
+                 aes(xintercept = TIME_DOSE),
                  linetype = "dotted",
-                 size = 0.8)
+                 size = 0.8,
+                 color = "green")
   }
 
   return(plt)
