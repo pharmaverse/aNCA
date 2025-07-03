@@ -12,9 +12,6 @@ variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = N
           6,
           teal.widgets::white_small_well(
             uiOutput(ns("ui_variable_browser")),
-            shinyjs::hidden({
-              checkboxInput(ns("show_parent_vars"), "Show parent dataset variables", value = FALSE)
-            })
           )
         ),
         column(
@@ -63,7 +60,6 @@ variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = N
 
 # Corrected variable_browser_server function
 variable_browser_server <- function(id, data_list_reactive,
-                                    dataname_param, parent_dataname_param,
                                     ggplot2_args_param = teal.widgets::ggplot2_args()) {
   moduleServer(id, function(input, output,
                session) {
@@ -76,31 +72,23 @@ variable_browser_server <- function(id, data_list_reactive,
     varname_numeric_as_factor <- reactiveValues()
     
     output$ui_variable_browser <- renderUI({
-      req(dataname_param)
       tabsetPanel(
         id = ns("tabset_panel"),
         tabPanel(
-          dataname_param,
+          "ADNCA",
           tags$div(
             class = "mt-4",
-            textOutput(ns("dataset_summary_", dataname_param))
+            textOutput(ns("dataset_summary_ADNCA"))
           ),
           tags$div(
             class = "mt-4",
             teal.widgets::get_dt_rows(
-              ns("variable_browser_", dataname_param),
-              ns("variable_browser_", dataname_param, "_rows")
+              ns("variable_browser_ADNCA"),
+              ns("variable_browser_ADNCA_rows")
             ),
-            DT::dataTableOutput(ns("variable_browser_", dataname_param), width = "100%")
+            DT::dataTableOutput(ns("variable_browser_ADNCA"), width = "100%")
           )
         )
-      )
-    })
-    
-    observe({
-      shinyjs::toggle(
-        id = "show_parent_vars",
-        condition = length(parent_dataname_param) > 0 && parent_dataname_param %in% names(data_list_reactive)
       )
     })
     
@@ -109,15 +97,14 @@ variable_browser_server <- function(id, data_list_reactive,
     plot_var <- reactiveValues(data = NULL, variable = list())
     
     observe({
-      # Only establish for the single dataname
-      establish_updating_selection(dataname_param, input, plot_var, columns_names)
+      establish_updating_selection("ADNCA", input, plot_var, columns_names)
     })
     
-    validation_checks <- validate_input(input, plot_var, data_list_reactive, dataname_param)
+    validation_checks <- validate_input(input, plot_var, data_list_reactive, "ADNCA")
     
     plotted_data <- reactive({
       validation_checks()
-      get_plotted_data(input, plot_var, data_list_reactive, dataname_param)
+      get_plotted_data(input, plot_var, data_list_reactive, "ADNCA")
     })
     
     treat_numeric_as_factor <- reactive({
@@ -131,8 +118,8 @@ variable_browser_server <- function(id, data_list_reactive,
     # Render content for the single tab
     observe({
       render_single_tab_content(
-        dataset_name = dataname_param,
-        parent_dataname = parent_dataname_param,
+        dataset_name = "ADNCA",
+        parent_dataname = "ADNCA",
         output = output,
         data_list_reactive = data_list_reactive,
         input = input,
@@ -162,7 +149,7 @@ variable_browser_server <- function(id, data_list_reactive,
     
     output$ui_numeric_display <- renderUI({
       validation_checks()
-      dataname <- dataname_param # Using the direct parameter
+      dataname <- "ADNCA" # Using the direct parameter
       varname <- plot_var$variable[[dataname]]
       df <- data_list_reactive[[dataname]]
       
@@ -237,10 +224,10 @@ variable_browser_server <- function(id, data_list_reactive,
     
     output$ui_histogram_display <- renderUI({
       validation_checks()
-      dataname <- dataname_param # Using the direct parameter
+      dataname <- "ADNCA" # Using the direct parameter
       varname <- plot_var$variable[[dataname]]
       df <- data_list_reactive[[dataname]]
-      
+
       numeric_ui <- tagList(fluidRow(
         tags$div(
           class = "col-md-4",

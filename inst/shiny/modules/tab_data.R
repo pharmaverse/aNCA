@@ -158,9 +158,7 @@ tab_data_server <- function(id) {
     # Pass the reactive expression directly
     variable_browser_server(
       id = "var_browser",
-      data_list_reactive = data_for_vb(),
-      dataname_param = "ADNCA",
-      parent_dataname_param = "ADNCA"
+      data_list_reactive = data_for_vb()
     )
     # output$processed_data_message <- renderUI({
     #   tryCatch(
