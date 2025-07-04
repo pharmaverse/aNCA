@@ -10,7 +10,7 @@ save_output <- function(output, output_path) {
 
   for (name in names(output)) {
 
-    if (length(output[[name]]) > 1) {
+    if (length(output[[name]]) > 1 && inherits(output[[name]], "list")) {
       save_output(output = output[[name]], output_path = paste0(output_path, "/", name))
     } else if (inherits(output[[name]], "ggplot")) {
       file_name <- paste0(output_path, "/", name, ".png")
