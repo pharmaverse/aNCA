@@ -71,28 +71,36 @@ jobs:
         with:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.staged.dependencies
-          key: staged-deps
+      # - name: Restore cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.staged.dependencies
+      #     key: staged-deps
 
-      - name: Run Staged dependencies
-        uses: insightsengineering/staged-dependencies-action@v2
+      # - name: Run Staged dependencies
+      #   uses: insightsengineering/staged-dependencies-action@v2
+      #   if: |
+      #     (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+      #     matrix.r_version != 'devel'
+      #   with:
+      #     git-ref: ${{ steps.branch-name.outputs.current_branch }}
+      #     run-system-dependencies: true
+      #     renv-restore: false
+      #     enable-check: false
+      #     cran-repos: "https://cloud.r-project.org"
+      #     direction: upstream
+      #   env:
+      #     GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install system dependencies
         if: |
           (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
           matrix.r_version != 'devel'
-        with:
-          git-ref: ${{ steps.branch-name.outputs.current_branch }}
-          run-system-dependencies: true
-          renv-restore: false
-          enable-check: false
-          cran-repos: "https://cloud.r-project.org"
-          direction: upstream
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
+        run: |
+          apt-get update
+          apt-get -y install make cmake libarchive13 libicu-dev libudunits2-dev
+          
       - name: Install dependencies from DESCRIPTION
         if: |
           (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
