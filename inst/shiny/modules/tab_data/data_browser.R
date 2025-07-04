@@ -1,4 +1,6 @@
 # UI function for the variable browser
+#' @import teal.widgets
+#' @import teal
 variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = NULL) {
   ns <- NS(id)
   
@@ -336,7 +338,7 @@ variable_browser_server <- function(id, data_list_reactive,
     })
     
     teal.widgets::plot_with_settings_srv(
-      id = ns("variable_plot"),
+      id = "variable_plot",
       plot_r = variable_plot_r,
       height = c(500, 200, 2000)
     )
