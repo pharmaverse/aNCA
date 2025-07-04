@@ -111,13 +111,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
-        output_tmpdir <- paste0(tempdir(), "/output")
+        output_tmpdir <- file.path(tempdir(), "output")
 
         save_output(output = session$userData$results, output_path = output_tmpdir)
-        files <- list.files(
-          output_tmpdir, full.names = TRUE, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE
-        )
-        files <- gsub(paste0(output_tmpdir, "/"), "", fixed = TRUE, files)
+        files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
         setwd(output_tmpdir)
         utils::zip(zipfile = fname, files = files)
       }
