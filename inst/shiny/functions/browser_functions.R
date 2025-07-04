@@ -232,7 +232,7 @@ plot_var_summary <- function(var,
 }
 
 is_num_var_short <- function(.unique_records_for_factor, input, data_for_analysis) {
-  length(unique(data_for_analysis()$data)) < .unique_records_for_factor && !is.null(input$vb_numeric_as_factor)
+  length(unique(data_for_analysis()$data)) < .unique_records_for_factor && !is.null(input$numeric_as_factor)
 }
 
 validate_input <- function(input, plot_var, data_list_reactive, dataset_name) {
@@ -242,7 +242,7 @@ validate_input <- function(input, plot_var, data_list_reactive, dataset_name) {
     
     validate(need(dataset_name, "No data selected"))
     validate(need(varname, "No variable selected"))
-    df <- data_list_reactive()[[dataset_name]]
+    df <- data_list_reactive[[dataset_name]]
     # These functions are in the `teal` package, which is now loaded.
     teal::validate_has_data(df, 1)
     teal::validate_has_variable(varname = varname, data = df, "Variable not available")
@@ -253,7 +253,7 @@ validate_input <- function(input, plot_var, data_list_reactive, dataset_name) {
 
 get_plotted_data <- function(input, plot_var, data_list_reactive, dataset_name) {
   varname <- plot_var$variable[[dataset_name]]
-  df <- data_list_reactive()[[dataset_name]]
+  df <- data_list_reactive[[dataset_name]]
   
   var_description <- attr(df[[varname]], "label") %||% varname
   list(data = df[[varname]], var_description = var_description)
@@ -275,14 +275,14 @@ render_single_tab_content <- function(dataset_name, parent_dataname, output, dat
 
 # CORRECTED RENDER_TAB_HEADER
 render_tab_header <- function(dataset_name, output, data_list_reactive) {
-  dataset_ui_id <- paste0("vb_dataset_summary_", dataset_name)
+  dataset_ui_id <- paste0("dataset_summary_", dataset_name)
   output[[dataset_ui_id]] <- renderText({
-    df <- data_list_reactive()[[dataset_name]]
+    df <- data_list_reactive[[dataset_name]]
     join_keys_info <- "N/A"
     
     # CORRECTED: Use the teal.data::join_keys() accessor function
-    if (inherits(data_list_reactive(), "teal_data")) {
-      keys_obj <- teal.data::join_keys(data_list_reactive())
+    if (inherits(data_list_reactive, "teal_data")) {
+      keys_obj <- teal.data::join_keys(data_list_reactive)
       keys <- keys_obj[dataset_name] # Extract keys for the specific dataset
       
       # Check if there are any keys and they are not empty
@@ -305,14 +305,14 @@ render_tab_header <- function(dataset_name, output, data_list_reactive) {
 
 # CORRECTED RENDER_TAB_TABLE
 render_tab_table <- function(dataset_name, parent_dataname, output, data_list_reactive, input, columns_names, plot_var) {
-  table_ui_id <- paste0("vb_variable_browser_", dataset_name)
+  table_ui_id <- paste0("variable_browser_", dataset_name)
   
   output[[table_ui_id]] <- DT::renderDataTable({
-    df <- data_list_reactive()[[dataset_name]]
+    df <- data_list_reactive[[dataset_name]]
     
     get_vars_df <- function(input, dataset_name, parent_name, data_list_reactive_inner) {
       data_cols <- colnames(df)
-      if (isTRUE(input$vb_show_parent_vars)) {
+      if (isTRUE(input$show_parent_vars)) {
         data_cols
       } else if (dataset_name != parent_name && parent_name %in% names(data_list_reactive_inner())) {
         setdiff(data_cols, colnames(data_list_reactive_inner()[[parent_name]]))
@@ -351,7 +351,7 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
       icons <- vapply(df, function(x) class(x)[1L], character(1L))
       
       # CORRECTED: Use the teal.data::join_keys() accessor
-      join_keys_object <- teal.data::join_keys(data_list_reactive())
+      join_keys_object <- teal.data::join_keys(data_list_reactive)
       if (!is.null(join_keys_object)) {
         keys_list <- as.list(join_keys_object) # Convert to a simple list
         if (!is.null(keys_list[[dataset_name]])) {
@@ -412,7 +412,7 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
 
 
 establish_updating_selection <- function(dataset_name, input, plot_var, columns_names) {
-  table_ui_id <- paste0("vb_variable_browser_", dataset_name)
+  table_ui_id <- paste0("variable_browser_", dataset_name)
   table_id_sel <- paste0(table_ui_id, "_rows_selected")
   observeEvent(input[[table_id_sel]], {
     plot_var$data <- dataset_name
