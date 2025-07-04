@@ -116,7 +116,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
         save_output(output = session$userData$results, output_path = output_tmpdir)
         files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
         wd <- getwd()
-        on.exit(setwd(wd), add = TRUE) # this will reset the wd when download handler function is done
+        on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler function
         setwd(output_tmpdir)
         utils::zip(zipfile = fname, files = files)
       }
