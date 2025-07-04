@@ -65,6 +65,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
+  all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -76,7 +77,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
-    group_columns = c(group_columns, usubjid_column, analyte_column, matrix_column),
+    group_columns = all_group_columns,
     time_column = time_column,
     rrlt_column = "ARRLT",
     route_column = route_column
@@ -84,7 +85,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     arrange(across(all_of(c(usubjid_column, time_column))))
 
   # Check for missing values in group columns
-  na_columns <- group_columns[sapply(df_conc[, group_columns], function(x) any(is.na(x)))]
+  na_columns <- all_group_columns[sapply(df_conc[, all_group_columns], function(x) any(is.na(x)))]
 
   if (length(na_columns) > 0) {
     stop(
@@ -112,7 +113,9 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
-    time.nominal = "NFRLT"
+    time.nominal = "NFRLT",
+    concu = "AVALU",
+    timeu = "RRLTU"
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
@@ -120,7 +123,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
     route = std_route_column,
     time.nominal = "NFRLT",
-    duration = "ADOSEDUR"
+    duration = "ADOSEDUR",
+    doseu = "DOSEU"
   )
 
   # create basic intervals so that PKNCAdata can be created
@@ -138,24 +142,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     data.conc = pknca_conc,
     data.dose = pknca_dose,
     intervals = intervals, #TODO: should be default
-    units = PKNCA::pknca_units_table(
-      concu = pknca_conc$data$AVALU[1],
-      doseu = pknca_conc$data$DOSEU[1],
-      amountu = pknca_conc$data$AVALU[1],
-      timeu = pknca_conc$data$RRLTU[1]
-    )
+    units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
-
-  # Update units
-  unique_analytes <- unique(
-    pknca_data_object$conc$data[[pknca_data_object$conc$columns$groups$group_analyte]]
-  )
-  analyte_column <- pknca_data_object$conc$columns$groups$group_analyte
-  pknca_data_object$units <- tidyr::crossing(
-    pknca_data_object$units, !!sym(analyte_column) := unique_analytes
-  ) %>%
-    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
-
   pknca_data_object
 }
 
@@ -184,7 +172,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
-#' @param selected_dosno User selected dose numbers/profiles
+#' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
@@ -202,7 +190,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   auc_data,
   method,
   selected_analytes,
-  selected_dosno,
+  selected_profile,
   selected_pcspec,
   params,
   should_impute_c0 = TRUE
@@ -211,13 +199,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
-
-  # Add and expand units
-  data$units <-  data$units %>%
-    filter(!!sym(analyte_column) %in% selected_analytes) %>%
-    select(-!!sym(analyte_column)) %>%
-    tidyr::crossing(!!sym(analyte_column) := unique_analytes) %>%
-    mutate(PPSTRESU = PPORRESU, conversion_factor = 1)
 
   data$options <- list(
     auc.method = method,
@@ -238,7 +219,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      NCA_PROFILE %in% selected_dosno,
+      NCA_PROFILE %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
 
@@ -358,8 +339,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
-    # Make empty strings for units that have no metric (unitless, fraction...)
-    mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
+
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
@@ -394,13 +374,12 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 #' PKNCA_impute_method_start_logslope(conc, time, start, end)
 
 PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., options = list()) { # nolint
-
   d_conc_time <- data.frame(conc = conc, time = time)
   if (!any(time == start)) {
     all_concs <- conc[time >= start  &  time <= end]
     all_times <- time[time >= start  &  time <= end]
     if (!all(is.na(all_concs))) {
-      c0 <- PKNCA::pk.calc.c0(all_concs, all_times, method = "logslope")
+      c0 <- PKNCA::pk.calc.c0(all_concs, all_times, time.dose = start, method = "logslope")
       if (!is.na(c0)) {
         d_conc_time <- rbind(d_conc_time, data.frame(time = start, conc = c0))
         d_conc_time <- d_conc_time[order(d_conc_time$time), ]
@@ -444,4 +423,229 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
     }
   }
   d_conc_time
+}
+
+#' Build Units Table for PKNCA
+#'
+#' This function generates a PKNCA units table including the potential unit segregating columns
+#' among the dose and/or concentration groups.
+#'
+#' @param o_conc A PKNCA concentration object (PKNCAconc).
+#' @param o_dose A PKNCA dose object (PKNCAdose).
+#'
+#' @returns A data frame containing the PKNCA formatted units table.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Ensures the unit columns (e.g., `concu`, `timeu`, `doseu`, `amountu`) exist in the inputs.
+#' 2. Joins the concentration and dose data based on their grouping columns.
+#' 3. Generates a PKNCA units table for each group, including conversion factors and custom units.
+#' 4. Returns a unique table with relevant columns for PKNCA analysis.
+#'
+#' @examples
+#' # Assuming `o_conc` and `o_dose` are valid PKNCA objects:
+#' # 1) Sharing group variables in their formulas
+#' # 2) Time units are the same within dose groups
+#' # 3) Units are the same for subjects within the same concentration group
+#'
+#' d_conc <- data.frame(
+#'   subj = 1,
+#'   analyte = rep(c("A", "B"), each = 2),
+#'   concu = rep(c("ng/mL", "ug/mL"), each = 2),
+#'   conc = c(0, 2, 0, 5),
+#'   time = rep(0:1, 2),
+#'   timeu = "h"
+#' )
+#' d_dose <- data.frame(
+#'   subj = 1,
+#'   dose = 100,
+#'   doseu = "mg",
+#'   time = 0,
+#'   timeu = "h"
+#' )
+#' o_conc <- PKNCA::PKNCAconc(d_conc, conc ~ time | subj / analyte, concu = "concu")
+#' o_dose <- PKNCA::PKNCAdose(d_dose, dose ~ time | subj, doseu = "doseu")
+#' units_table <- PKNCA_build_units_table(o_conc, o_dose)
+#'
+#' @importFrom dplyr select mutate rowwise any_of across everything %>% add_count inner_join
+#' @importFrom tidyr unnest
+#' @importFrom rlang sym syms
+#' @importFrom utils capture.output
+#' @export
+PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
+
+  o_conc <- ensure_column_unit_exists(o_conc, c("concu", "timeu", "amountu"))
+  o_dose <- ensure_column_unit_exists(o_dose, c("doseu"))
+
+  # Extract relevant columns from o_conc and o_dose
+  group_dose_cols <- group_vars(o_dose)
+  group_conc_cols <- group_vars(o_conc)
+  concu_col <- o_conc$columns$concu
+  amountu_col <- o_conc$columns$amountu
+  timeu_col <- o_conc$columns$timeu
+  doseu_col <- o_dose$columns$doseu
+  all_unit_cols <- c(concu_col, amountu_col, timeu_col, doseu_col)
+
+  # Join dose units with concentration group columns and units
+  groups_units_tbl <- left_join(
+    o_conc$data %>%
+      select(any_of(c(group_conc_cols, concu_col, amountu_col, timeu_col))) %>%
+      unique(),
+    o_dose$data %>%
+      select(any_of(c(group_dose_cols, doseu_col))) %>%
+      unique(),
+    by = intersect(group_conc_cols, group_dose_cols)
+  ) %>%
+    # Prevent any issue with NAs in the group(s) or unit columns
+    mutate(across(everything(), ~ as.character(.))) %>%
+    unique()
+
+  # Check that at least for each concentration group units are uniform
+  mismatching_units_groups <- groups_units_tbl %>%
+    add_count(!!!syms(group_conc_cols), name = "n") %>%
+    filter(n > 1) %>%
+    select(-n)
+  if (nrow(mismatching_units_groups) > 0) {
+    stop(
+      "Units should be uniform at least across concentration groups.",
+      "Review the units for the next group(s):\n",
+      paste(utils::capture.output(print(mismatching_units_groups)), collapse = "\n")
+    )
+  }
+
+  # Generate the PKNCA units table
+  groups_units_tbl %>%
+    # Pick only the group columns that are relevant in stratifying the units
+    select_minimal_grouping_cols(all_unit_cols) %>%
+    unique() %>%
+    # Create a PKNCA units table for each group
+    rowwise() %>%
+    mutate(
+      pknca_units_tbl = list(
+        PKNCA::pknca_units_table(
+          concu = !!sym(concu_col),
+          doseu = !!sym(doseu_col),
+          amountu = !!sym(amountu_col),
+          timeu = !!sym(timeu_col)
+        )
+      )
+    ) %>%
+    # Combine all PKNCA units tables into one
+    unnest(cols = c(pknca_units_tbl)) %>%
+    mutate(
+      PPSTRESU = PPORRESU,
+      conversion_factor = 1
+    ) %>%
+    # Order the columns to have them in a clean display
+    select(any_of(c(group_conc_cols, group_dose_cols)),
+           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor)
+}
+
+#' Ensure Unit Columns Exist in PKNCA Object
+#'
+#' Checks if specified unit columns exist in a PKNCA object (either PKNCAconc or PKNCAdose).
+#' If the columns do not exist, it creates them and assigns default values (NA or existing units).
+#'
+#' @param pknca_obj A PKNCA object (either PKNCAconc or PKNCAdose).
+#' @param unit_name A character vector of unit column names to ensure (concu, amountu, timeu...).
+#' @returns The updated PKNCA object with ensured unit columns.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Checks if the specified unit columns exist in the PKNCA object.
+#' 2. If a column does not exist, it creates the column and assigns default values.
+#' 3. If not default values are provided, it assigns NA to the new column.
+ensure_column_unit_exists <- function(pknca_obj, unit_name) {
+  for (unit in unit_name) {
+    if (is.null(pknca_obj$columns[[unit]])) {
+      unit_colname <- make.unique(c(names(pknca_obj$data), unit))[ncol(pknca_obj$data) + 1]
+      pknca_obj$columns[[unit]] <- unit_colname
+      if (!is.null(pknca_obj$units[[unit]])) {
+        pknca_obj$data[[unit_colname]] <- pknca_obj$units[[unit]]
+      } else {
+        pknca_obj$data[[unit_colname]] <- NA_character_
+      }
+    }
+  }
+  pknca_obj
+}
+
+#' Find Minimal Grouping Columns for Strata Reconstruction
+#'
+#' This function identifies the smallest set of columns in a data frame whose unique combinations
+#' can reconstruct the grouping structure defined by the specified strata columns.
+#' It removes duplicate, constant, and redundant columns, then searches for the minimal combination
+#' that uniquely identifies each stratum.
+#'
+#' @param df A data frame.
+#' @param strata_cols Column names in df whose unique combination defines the strata.
+#' @returns A data frame containing the strata columns and their minimal set of grouping columns.
+select_minimal_grouping_cols <- function(df, strata_cols) {
+  # If there is no strata_cols specified, simply return the original df
+  if (length(strata_cols) == 0) return(df)
+
+  # Obtain the comb_vals values of the target column(s)
+  strata_vals <- df %>%
+    mutate(strata_cols_comb = paste(!!!syms(strata_cols), sep = "_")) %>%
+    pull(strata_cols_comb)
+
+  # If the target column(s) only has one level, there are no relevant columns
+  if (length(unique(strata_vals)) == 1) {
+    return(df[strata_cols])
+  }
+
+  candidate_cols <- setdiff(names(df), strata_cols)
+  # 1. Remove columns that are duplicates in levels terms
+  candidate_levels <- lapply(
+    df[candidate_cols], function(x) as.numeric(factor(x, levels = unique(x)))
+  )
+  candidate_cols <- candidate_cols[!duplicated(candidate_levels)]
+
+  # 2. Remove columns with only 1 level
+  candidate_n_levels <- sapply(df[candidate_cols], function(x) length(unique(x)))
+  candidate_cols <- candidate_cols[candidate_n_levels > 1]
+
+  # 3. Check combinations of columns to find minimal key combination to level group strata_cols
+  for (n in seq_len(length(candidate_cols))) {
+    all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
+    for (comb in all_candidate_combs) {
+      comb_vals <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
+      if (all(tapply(strata_vals, comb_vals, FUN = \(x) length(unique(x)) == 1))) {
+        return(df[c(comb, strata_cols)])
+      }
+    }
+  }
+  df[strata_cols]
+}
+
+#' Exclude NCA results based on user-defined rules over the half-life related parameters
+#' This function applies exclusion rules to the NCA results based on user-defined parameters.
+#' @param res A PKNCAresults object containing the NCA results.
+#' @param rules A list of exclusion rules where each rule is a named vector.
+#' @returns A PKNCAresults object with the exclusions applied.
+#' @details
+#' The function iterates over the rules and applies the exclusion criteria to the NCA results.
+#' For any parameter that is not aucpext.obs or aucpext.pred it applies a minimum threshold,
+#' and for aucpext.obs and aucpext.pred it applies a maximum threshold.
+#' @importFrom PKNCA exclude
+#' @export
+PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
+
+  for (param in names(rules)) {
+    if (startsWith(param, "aucpext")) {
+      exc_fun <- exclude_nca_by_param(
+        param,
+        max_thr = rules[[param]],
+        affected_parameters = PKNCA::get.parameter.deps("half.life")
+      )
+    } else {
+      exc_fun <- exclude_nca_by_param(
+        param,
+        min_thr = rules[[param]],
+        affected_parameters = PKNCA::get.parameter.deps("half.life")
+      )
+    }
+    res <- PKNCA::exclude(res, FUN = exc_fun)
+  }
+  res
 }

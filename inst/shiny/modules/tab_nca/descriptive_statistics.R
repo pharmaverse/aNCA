@@ -92,7 +92,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       stats_data <- inner_join(
         results$result,
         results_to_join,
-        by = intersect(names(results$result), names(results_to_join))
+        by = intersect(names(results$result), names(results_to_join)),
+        relationship = "many-to-many"
       ) %>%
         filter(type_interval != "manual")
 

@@ -23,24 +23,34 @@
 export_cdisc <- function(res_nca) {
 
   # Define group columns in the data
-  group_cols <- unique(
-    unlist(
-      c(res_nca$data$conc$columns$groups,
-        res_nca$data$dose$columns$groups,
-        res_nca$data$dose$columns$route)
-    )
-  )
+  group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
+  group_dose_cols <- unique(unlist(res_nca$data$dose$columns$groups))
+  group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
+
+  dose_info <- res_nca$data$dose$data %>%
+    # Select only the columns that are used in the NCA results
+    select(
+      any_of(c(
+        # Variables defined for the dose information
+        group_dose_cols, "NCA_PROFILE",  res_nca$data$dose$columns$route,
+        # TODO (Gerardo): Test should use a PKNCA obj (FIXTURE) so the var is accessed via mapping
+        OPTIONAL_COLUMNS,
+        # Raw variables that can be directly used in PP or ADPP if present
+        CDISC_COLS$PP, CDISC_COLS$ADPP
+      ))
+    ) %>%
+    unique()
 
   cdisc_info <- res_nca$result  %>%
-    left_join(res_nca$data$dose$data,
-              by = unname(unlist(res_nca$data$dose$columns$groups)),
+    left_join(dose_info,
+              by = intersect(names(res_nca$result), names(dose_info)),
               suffix = c("", ".y")) %>%
     group_by(
-      across(all_of(c(
-        unname(unlist(res_nca$data$conc$columns$groups)), "start", "end", "PPTESTCD"
+      across(any_of(c(
+        group_conc_cols, "start", "end", "PPTESTCD", "type_interval"
       )))
     )  %>%
-    arrange(USUBJID, NCA_PROFILE, !is.na(PPSTRES)) %>%
+    arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
@@ -75,7 +85,7 @@ export_cdisc <- function(res_nca) {
       PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
       PPREASND = case_when(
         !is.na(exclude) ~ exclude,
-        is.na(PPSTRES) ~ "Unspecified",
+        is.na(PPSTRES) ~ "NOT DERIVED",
         TRUE ~ ""
       ),
       PPREASND = substr(PPREASND, 0, 200),
@@ -102,7 +112,19 @@ export_cdisc <- function(res_nca) {
         startsWith(PPTESTCD, "AUCINT"),
         convert_to_iso8601_duration(end, RRLTU),
         NA
-      )
+      ),
+      PPFAST = {
+        if ("EXFAST" %in% names(.)) {
+          EXFAST
+        } else if ("PCFAST" %in% names(.)) {
+          PCFAST
+        } else if ("FEDSTATE" %in% names(.)) {
+          FEDSTATE
+        } else {
+          NULL
+        }
+      },
+      NCA_PROFILE = NCA_PROFILE
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
@@ -111,13 +133,13 @@ export_cdisc <- function(res_nca) {
 
   # select pp columns
   pp <- cdisc_info %>%
-    select(any_of(CDISC_COLS$PP))
+    select(any_of(c(CDISC_COLS$PP, "PPFAST")))
 
   adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(CDISC_COLS$ADPP)))
+    select(any_of(c(CDISC_COLS$ADPP, "PPFAST")))
 
   adpc <- res_nca$data$conc$data %>%
     mutate(
@@ -134,7 +156,8 @@ export_cdisc <- function(res_nca) {
       ATPTREF = {
         if ("PCTPTREF" %in% names(.)) PCTPTREF
         else NA_character_
-      }
+      },
+      PCSTRESU = AVALU
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
     select(any_of(CDISC_COLS$ADPC), everything())  %>%
@@ -214,7 +237,6 @@ get_subjid <- function(data) {
   }
 }
 
-
 CDISC_COLS <- list(
   ADPC = c(
     "STUDYID",
@@ -223,7 +245,6 @@ CDISC_COLS <- list(
     "SITEID",
     "VISITNUM",
     "VISIT",
-    "AVISIT",
     "AVISITN",
     "PCSTRESC",
     "PCSTRESN",
@@ -239,7 +260,6 @@ CDISC_COLS <- list(
     # Columns taken from the original data if present (still not directly mapped)
     "SEX",
     "RACE",
-    "ACTARM",
     "AGE",
     "AGEU",
     "AVISIT"
@@ -265,7 +285,6 @@ CDISC_COLS <- list(
     # Columns taken from the original data if present (still not directly mapped)
     "SEX",
     "RACE",
-    "ACTARM",
     "AGE",
     "AGEU",
     "TRT01P",
@@ -273,7 +292,11 @@ CDISC_COLS <- list(
 
     "AVAL",
     "AVALC",
-    "AVALU"
+    "AVALU",
+
+    # Not CDISC  ADPP standard
+    "VISIT",
+    "AVISIT"
   ),
 
   PP = c(
@@ -287,6 +310,7 @@ CDISC_COLS <- list(
     "PPTESTCD",
     "PPTEST",
     "PPSCAT",
+    "PPDTC",
     "PPORRES",
     "PPORRESU",
     "PPSTRESC",
@@ -297,7 +321,11 @@ CDISC_COLS <- list(
     "PPSPEC",
     "PPRFTDTC",
     "PPSTINT",
-    "PPENINT"
+    "PPENINT",
+
+    # Not CDISC PP standard
+    "VISIT",
+    "AVISIT"
   )
 )
 
@@ -306,3 +334,6 @@ INTERNAL_ANCA_COLS <- c(
   "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
   "conc_groups", "REASON"
 )
+
+# They will be used if present. We assume they follow CDISC standard names
+OPTIONAL_COLUMNS <- c("RRLTU", "PCRFTDTC", "PCRFTDTM", "EXFAST", "PCFAST", "FEDSTATE", "PCSEQ")

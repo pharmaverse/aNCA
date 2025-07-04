@@ -39,6 +39,41 @@ describe("format_pkncaconc_data", {
     )
   })
 
+  it("filters EVID if column is present", {
+    # Create base data with EVID = 0
+    ADNCA <- ADNCA %>%
+      mutate(EVID = 0)
+
+    # Create one dosing row per USUBJID
+    dosing_rows <- ADNCA %>%
+      distinct(STUDYID) %>%
+      mutate(
+        USUBJID = 1,
+        PCSPEC = "Plasma",
+        DRUG = "DrugA",
+        PARAM = "Analyte1",
+        AFRLT = 0,
+        ARRLT = 0,
+        NFRLT = 0,
+        NCA_PROFILE = 1,
+        DOSEA = 5,
+        ROUTE = "intravascular",
+        ADOSEDUR = 0,
+        AVAL = 10,
+        EVID = 1
+      )
+
+    # Append the dosing rows to the original data
+    ADNCA <- bind_rows(ADNCA, dosing_rows)
+    df_conc <- format_pkncaconc_data(ADNCA,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DRUG", "PARAM"),
+                                     time_column = "AFRLT",
+                                     rrlt_column = "ARRLT")
+
+    expect_true(all(df_conc$EVID == 0))
+  })
+
   it("filters out rows where PARAMCD contains DOSE", {
     data_with_paramcd <- ADNCA %>%
       mutate(PARAMCD = c(rep("DOSE1", 10), rep("PARAM", 10)))
@@ -50,7 +85,6 @@ describe("format_pkncaconc_data", {
     )
     expect_true(all(!grepl("DOSE", result$PARAMCD, ignore.case = TRUE)))
   })
-
 
   it("returns an error for empty input dataframe", {
     empty_adnca <- data.frame()
@@ -228,6 +262,75 @@ describe("format_pkncadata_intervals", {
       regexp = "Missing required columns: DRUG"
     )
   })
+
+  it("correctly uses tau if column is available", {
+    df_conc_tau <- df_conc %>%
+      mutate(TAU = 5)  # Add a tau column for testing
+
+    pknca_conc_tau <- PKNCA::PKNCAconc(
+      df_conc_tau,
+      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+
+    result_tau <- format_pkncadata_intervals(pknca_conc_tau, pknca_dose, params = params)
+
+    expect_equal(result_tau$end[4], 10)
+  })
+
+  it("sets last time to end AFRLT if no TAU available", {
+    result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
+    expect_equal(result$end[4], 9)
+  })
+
+  it("sets end to Inf if no TAU and single dose", {
+    single_dose_pknca_conc <- pknca_conc
+    single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
+      filter(DOSNOA == 1)  # Filter to a single dose
+
+    single_dose_pknca_dose <- pknca_dose
+    single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
+      filter(DOSNOA == 1)  # Filter to a single dose
+
+    result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc,
+                                                     single_dose_pknca_dose,
+                                                     params = params)
+    expect_true(all(is.infinite(result_single_dose$end)))
+  })
+
+  it("sets end to Inf if TAU= NA and single dose", {
+    single_dose_pknca_conc <- pknca_conc
+    single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
+      mutate(TAU = NA) %>%  # Set TAU to NA
+      filter(DOSNOA == 1)  # Filter to a single dose
+
+    single_dose_pknca_dose <- pknca_dose
+    single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
+      mutate(TAU = NA) %>%  # Set TAU to NA
+      filter(DOSNOA == 1)  # Filter to a single dose
+
+    result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc,
+                                                     single_dose_pknca_dose,
+                                                     params = params)
+    expect_true(all(is.infinite(result_single_dose$end)))
+  })
+
+  it("sets end to last time point if TAU= NA and multiple dose", {
+    pknca_conc_na_tau <- pknca_conc
+    pknca_conc_na_tau$data <- pknca_conc$data %>%
+      mutate(TAU = NA) # Set TAU to NA
+
+    pknca_dose_na_tau <- pknca_dose
+    pknca_dose_na_tau$data <- pknca_dose$data %>%
+      mutate(TAU = NA)  # Set TAU to NA
+
+    result_single_dose <- format_pkncadata_intervals(pknca_conc_na_tau,
+                                                     pknca_dose_na_tau,
+                                                     params = params)
+    expect_equal(result_single_dose$end[4], max(pknca_conc_na_tau$data$AFRLT, na.rm = TRUE))
+  })
+
 
   it("uses ARRLT for start when start_from_last_dose is FALSE", {
     result <- format_pkncadata_intervals(
