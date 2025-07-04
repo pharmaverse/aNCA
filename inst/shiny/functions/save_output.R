@@ -27,7 +27,7 @@ save_output <- function(output, output_path) {
         }
       )
     } else {
-      stop("Unsupported output type object in the list")
+      stop("Unsupported output type object in the list: ", paste0(class(output[[name]]), collapse = ", "))
     }
   }
 }
