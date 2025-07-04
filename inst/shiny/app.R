@@ -41,12 +41,13 @@ setup_logger()
 ui <- function() {
   page_sidebar(
     id = "sidebar",
-    title = "aNCA",
-
-    div(
-      class = "project-name-container",
-      textInput("project_name", label = NULL, placeholder = "Project Name"),
-      icon("file", class = "project-name-icon")
+    title = tagList(
+      span("aNCA"),
+      div(
+        class = "project-name-container",
+        textInput("project_name", label = NULL, placeholder = "Project Name"),
+        icon("file", class = "project-name-icon")
+      )
     ),
 
     tags$script("
