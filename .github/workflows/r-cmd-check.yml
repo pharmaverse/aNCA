@@ -71,6 +71,16 @@ jobs:
         with:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
 
+      # Staged dependencies were crashing for an unknown reason for this particular workflow:
+      # Error: 
+      # ! error in pak subprocess
+      # Caused by error in `value$ref %in% private$state$ref && !value$direct`:
+      # ! 'length = 41' in coercion to 'logical(1)'
+      # I couldnt find a way to fix it properly, so decided to implement manual installation
+      # of system dependencies. It is not optimal and probably should be revisited in the future,
+      # when the time allows. I leave the original steps commented out below.
+      # ~ @m-kolomanski
+
       # - name: Restore cache
       #   uses: actions/cache@v4
       #   with:
