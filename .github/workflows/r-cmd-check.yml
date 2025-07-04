@@ -71,28 +71,46 @@ jobs:
         with:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.staged.dependencies
-          key: staged-deps
+      # Staged dependencies were crashing for an unknown reason for this particular workflow:
+      # Error: 
+      # ! error in pak subprocess
+      # Caused by error in `value$ref %in% private$state$ref && !value$direct`:
+      # ! 'length = 41' in coercion to 'logical(1)'
+      # I couldnt find a way to fix it properly, so decided to implement manual installation
+      # of system dependencies. It is not optimal and probably should be revisited in the future,
+      # when the time allows. I leave the original steps commented out below.
+      # ~ @m-kolomanski
 
-      - name: Run Staged dependencies
-        uses: insightsengineering/staged-dependencies-action@v1
+      # - name: Restore cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.staged.dependencies
+      #     key: staged-deps
+
+      # - name: Run Staged dependencies
+      #   uses: insightsengineering/staged-dependencies-action@v2
+      #   if: |
+      #     (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+      #     matrix.r_version != 'devel'
+      #   with:
+      #     git-ref: ${{ steps.branch-name.outputs.current_branch }}
+      #     run-system-dependencies: true
+      #     renv-restore: false
+      #     enable-check: false
+      #     cran-repos: "https://cloud.r-project.org"
+      #     direction: upstream
+      #   env:
+      #     GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install system dependencies
         if: |
           (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
           matrix.r_version != 'devel'
-        with:
-          git-ref: ${{ steps.branch-name.outputs.current_branch }}
-          run-system-dependencies: true
-          renv-restore: false
-          enable-check: false
-          cran-repos: "https://cloud.r-project.org"
-          direction: upstream
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
+        run: |
+          apt-get update
+          apt-get -y install make cmake libarchive13 libicu-dev libudunits2-dev
+          
       - name: Install dependencies from DESCRIPTION
         if: |
           (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
