@@ -68,12 +68,12 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
       if ("DOSEAU" %in% column_names) {
         selected <- "DOSEAU"
       } else {
-        selected =
+        selected <-
           if (sub("select_", "", input_id) %in% column_names)
             sub("select_", "", input_id) else NULL
       }
     } else {
-      selected =
+      selected <-
         if (sub("select_", "", input_id) %in% column_names)
           sub("select_", "", input_id) else NULL
     }
