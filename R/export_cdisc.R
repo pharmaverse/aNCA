@@ -44,7 +44,7 @@ export_cdisc <- function(res_nca) {
         # TODO (Gerardo): Test should use a PKNCA obj (FIXTURE) so the var is accessed via mapping
         OPTIONAL_COLUMNS,
         # Raw variables that can be directly used in PP or ADPP if present
-        CDISC_COLS$PP, CDISC_COLS$ADPP
+        CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable
       ))
     ) %>%
     unique()
@@ -163,25 +163,52 @@ export_cdisc <- function(res_nca) {
           gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
         TRUE ~ PPTESTCD
       )
+    ) %>%
+    # Make NA expected columns if not present in the data (character)
+    mutate(
+      across(
+        .cols = setdiff(
+          bind_rows(CDISC_COLS) %>%
+            filter(Core == "Exp" & (Type == "Char" | Type == "Text")) %>%
+            pull(Variable),
+          names(.)
+          ),
+        .fns = ~ NA_character_,
+        .names = "{.col}"
+      )
+    ) %>%
+    # Make NA expected columns if not present in the data (numeric)
+    mutate(
+      across(
+        .cols = setdiff(
+          bind_rows(CDISC_COLS) %>%
+            filter(Core == "Exp" & (Type != "Char" & Type != "Text")) %>%
+            pull(Variable),
+          names(.)
+        ),
+        .fns = ~ NA,
+        .names = "{.col}"
+      )
     )
 
   # select pp columns
   pp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$PP, "PPFAST"))) %>%
+    select(any_of(c(CDISC_COLS$PP$Variable, "PPFAST"))) %>%
     # Deselect permitted columns with only NAs
     select(
-      -which(names(.) %in% c(
-        "PPSTINT", "PPENINT", "PPTPTREF", "PPDY", "PPDTC", "EPOCH",
-        "TAETORD", "PPANMETH", "PPREASND", "PPSTAT", "PPSCAT",
-        "PPGRPID"
-      ) & sapply(., function(x) all(is.na(x))))
+      -which(
+        names(.) %in% CDISC_COLS$PP$Variable[CDISC_COLS$PP$Core == "Perm"] &
+        sapply(., function(x) all(is.na(x))) &
+        !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
+      )
     )
+  browser()
 
   adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
     mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
            PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(CDISC_COLS$ADPP, "PPFAST")))
+    select(any_of(c(CDISC_COLS$ADPP$Variable, "PPFAST")))
 
   adpc <- res_nca$data$conc$data %>%
     mutate(
@@ -202,10 +229,10 @@ export_cdisc <- function(res_nca) {
       PCSTRESU = AVALU
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC), everything())  %>%
+    select(any_of(CDISC_COLS$ADPC$Variable), everything())  %>%
     # Deselect columns that are only used internally in the App
     select(-any_of(INTERNAL_ANCA_COLS))
-browser()
+
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
 
@@ -280,95 +307,20 @@ get_subjid <- function(data) {
 }
 
 CDISC_COLS <- list(
-  ADPC = c(
-    "STUDYID",
-    "SUBJID",
-    "USUBJID",
-    "SITEID",
-    "VISITNUM",
-    "VISIT",
-    "AVISITN",
-    "PCSTRESC",
-    "PCSTRESN",
-    "PCSTRESU",
-    "PCORRES",
-    "PCORRESU",
-    "PCTPT",
-    "PCTPTNUM",
-    "ATPT",
-    "ATPTN",
-    "AVAL",
-    "ANL01FL",
-    # Columns taken from the original data if present (still not directly mapped)
-    "SEX",
-    "RACE",
-    "AGE",
-    "AGEU",
-    "AVISIT"
-  ),
+  ADPC = metadata_variables %>%
+    filter(Dataset == "ADPC") %>%
+    arrange(Order) %>%
+    select(Variable, Label, Type, Role, Core, Length),
 
-  ADPP = c(
-    "STUDYID",
-    "USUBJID",
-    "PPSEQ",
-    "PPGRPID",
-    "PPSPID",
-    "PARAMCD",
-    "PARAM",
-    "PPCAT",
-    "PPSCAT",
-    "PPREASND",
-    "PPSPEC",
-    "PPDTC",
-    "PPSTINT",
-    "PPENINT",
-    "SUBJID",
-    "SITEID",
-    # Columns taken from the original data if present (still not directly mapped)
-    "SEX",
-    "RACE",
-    "AGE",
-    "AGEU",
-    "TRT01P",
-    "TRT01A",
+  ADPP = metadata_variables %>%
+    filter(Dataset == "ADPP") %>%
+    arrange(Order) %>%
+    select(Variable, Label, Type, Role, Core, Length),
 
-    "AVAL",
-    "AVALC",
-    "AVALU",
-
-    # Not CDISC  ADPP standard
-    "VISIT",
-    "AVISIT"
-  ),
-
-  PP = c(
-    # Identifiers
-    "STUDYID",
-    "DOMAIN",
-    "USUBJID",
-    "PPSEQ",
-    "PPGRPID",
-    # Topic
-    "PPTESTCD",
-    "PPTEST",
-    # Qualifier
-    "PPCAT",
-    "PPSCAT",
-    "PPORRES",
-    "PPORRESU",
-    "PPSTRESC",
-    "PPSTRESN",
-    "PPSTRESU",
-    "PPSTAT",
-    "PPREASND",
-    "PPSPEC",
-    # Timing
-    "EPOCH",
-    "PPDTC",
-    "PPRFTDTC",
-    "PPSTINT",
-    "PPENINT"
-  )
+  PP = metadata_variables %>%
+    filter(Dataset == "PP") %>%
+    arrange(Order) %>%
+    select(Variable, Label, Type, Role, Core, Length)
 )
 
 INTERNAL_ANCA_COLS <- c(

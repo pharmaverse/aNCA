@@ -20,6 +20,9 @@
 #' @source Generated for use in the `translate_nomenclature` function.
 "pknca_cdisc_terms"
 
+
+#' metadata_variables
+#'
 #' Pharmacokinetic Parameters (ADPC) and Pharmacodynamic Parameters (PP)
 #'
 #' A dataset containing pharmacokinetic variable specifications. 

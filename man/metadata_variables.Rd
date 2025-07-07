@@ -3,7 +3,7 @@
 \docType{data}
 \name{metadata_variables}
 \alias{metadata_variables}
-\title{Pharmacokinetic Parameters (ADPC) and Pharmacodynamic Parameters (PP)}
+\title{metadata_variables}
 \format{
 A data frame with 361 rows and 14 variables:
 \describe{
@@ -30,6 +30,9 @@ Used for PP and ADPP mapping rules and checks in the export_cdisc function
 metadata_variables
 }
 \description{
+Pharmacokinetic Parameters (ADPC) and Pharmacodynamic Parameters (PP)
+}
+\details{
 A dataset containing pharmacokinetic variable specifications.
 }
 \keyword{datasets}
