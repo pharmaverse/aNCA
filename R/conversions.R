@@ -191,7 +191,6 @@ convert_volume_units <- function(df,
     }, error = function(e) {
       warning(glue::glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit}
                          (concentration: {concu}): {e$message}"))
-      FALSE
     })
 
   }
