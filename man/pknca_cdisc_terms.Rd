@@ -5,7 +5,7 @@
 \alias{pknca_cdisc_terms}
 \title{pknca_cdisc_terms}
 \format{
-A data frame with 120 rows and 6 variables:
+A data frame with 123 rows and 6 variables:
 \describe{
 \item{PKNCA}{PKNCA term}
 \item{PPTESTCD}{CDISC term}

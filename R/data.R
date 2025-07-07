@@ -3,7 +3,7 @@
 #'
 #' A dataset containing the mapping between PKNCA terms and CDISC terms. It mainly involves:
 #' - Parameters: PPTEST, PPTESTCD
-#' @format A data frame with 120 rows and 6 variables:
+#' @format A data frame with 123 rows and 6 variables:
 #' \describe{
 #'   \item{PKNCA}{PKNCA term}
 #'   \item{PPTESTCD}{CDISC term}
@@ -19,3 +19,27 @@
 #' }
 #' @source Generated for use in the `translate_nomenclature` function.
 "pknca_cdisc_terms"
+
+#' Pharmacokinetic Parameters (ADPC) and Pharmacodynamic Parameters (PP)
+#'
+#' A dataset containing pharmacokinetic variable specifications. 
+#'
+#' @format A data frame with 361 rows and 14 variables:
+#' \describe{
+#'   \item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADPC, ADPP).}
+#'   \item{Order}{Numeric. The sequential order of the variable within its domain. Established based on Role, Core and Variable}
+#'   \item{Variable}{Character. The short name of the variable.}
+#'   \item{Label}{Character. A descriptive label for the variable.}
+#'   \item{Type}{Character. The data type of the variable (e.g., Char, Num, text, integer, float, dateTime).}
+#'   \item{Role}{Character. The CDISC role of the variable (e.g., Identifier, Topic, Timing, Result Qualifier, Record Qualifier, Grouping Qualifier, Synonym Qualifier, Variable Qualifier).}
+#'   \item{Core}{Character. Indicates the core status of the variable (Req = Required, Perm = Permissible, Exp = Expected, Cond = Conditional).}
+#'   \item{Roche_Specific}{Character. Indicates if the variable is Roche-specific.}
+#'   \item{is.core}{Logical. TRUE if the variable is a core variable, otherwise FALSE.}
+#'   \item{Length}{Numeric. The maximum length of the variable.}
+#'   \item{Controlled_Terms}{Character. Reference to controlled terminology (e.g., C85839, C66731).}
+#'   \item{is.used}{Logical. TRUE if the variable is used, otherwise FALSE.}
+#'   \item{Values}{Character. Possible values for the variable (if applicable).}
+#'   \item{is.mapped}{Logical. TRUE if the variable is mapped, otherwise FALSE.}
+#' }
+#' @source Used for PP and ADPP mapping rules and checks in the export_cdisc function
+"metadata_variables"
