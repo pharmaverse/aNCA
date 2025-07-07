@@ -63,12 +63,24 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
   )
 
   for (input_id in names(special_cases)) {
-    updateSelectizeInput(
-      session, input_id,
-      choices = c("Select Column" = "", special_cases[[input_id]]),
+    # Custom logic for DOSEU fallback to DOSEAU
+    if (input_id == "select_DOSEU") {
+      if ("DOSEU" %in% column_names) {
+        selected <- "DOSEU"
+      } else if ("DOSEAU" %in% column_names) {
+        selected <- "DOSEAU"
+      } else {
+        selected <- NULL
+      }
+    } else {
       selected =
         if (sub("select_", "", input_id) %in% column_names)
           sub("select_", "", input_id) else NULL
+    }
+    updateSelectizeInput(
+      session, input_id,
+      choices = c("Select Column" = "", special_cases[[input_id]]),
+      selected = selected
     )
   }
 }
