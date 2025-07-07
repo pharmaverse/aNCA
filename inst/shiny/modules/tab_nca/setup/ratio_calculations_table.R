@@ -308,7 +308,6 @@ ratios_table_server <- function(
           PPTESTCD = make.unique(PPTESTCD, sep = "")
         )
         ratio_table(tbl)
-        refresh_reactable(refresh_reactable() + 1)
       })
     })
 
