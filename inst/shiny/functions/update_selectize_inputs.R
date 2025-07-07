@@ -9,7 +9,7 @@
 #' @param column_names A vector of column names from the dataset.
 #' @param manual_units A list containing manual units for concentration, dose, and time.
 #' @param desired_order A vector of desired column order.
-#' @details  
+#' @details
 #' This function updates the selectize inputs in the Shiny session based on the
 #' provided column names and manual units. It handles special cases for
 #' `Grouping_Variables`, `NCA_PROFILE`, and units columns. It also
