@@ -286,20 +286,6 @@ ratios_table_server <- function(
           refresh_reactable(refresh_reactable() + 1)
         })
       })
-      # ReferenceValue per row
-      observe({
-        nrows <- nrow(ratio_table())
-        if (nrows > 0) {
-          for (i in seq_len(nrows)) {
-            observeEvent(input[[paste0("edit_Reference_", i)]], {
-              edit <- input[[paste0("edit_Reference_", i)]]
-              tbl <- ratio_table()
-              tbl[edit$row, edit$column] <- edit$value
-              ratio_table(tbl)
-            }, ignoreInit = TRUE)
-          }
-        }
-      })
 
       # Add special names for certain ratios
       observe({
@@ -321,8 +307,8 @@ ratios_table_server <- function(
           ),
           PPTESTCD = make.unique(PPTESTCD, sep = "")
         )
-
         ratio_table(tbl)
+        refresh_reactable(refresh_reactable() + 1)
       })
     })
 
