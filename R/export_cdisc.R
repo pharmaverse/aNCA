@@ -21,24 +21,13 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
-  
+
   # Define the CDISC columns we need and its rules using the metadata_variables object
-  CDISC_COLS <- list(
-    ADPC = metadata_variables %>%
-      filter(Dataset == "ADPC") %>%
-      arrange(Order) %>%
-      select(Variable, Label, Type, Role, Core, Length),
-    
-    ADPP = metadata_variables %>%
-      filter(Dataset == "ADPP") %>%
-      arrange(Order) %>%
-      select(Variable, Label, Type, Role, Core, Length),
-    
-    PP = metadata_variables %>%
-      filter(Dataset == "PP") %>%
-      arrange(Order) %>%
-      select(Variable, Label, Type, Role, Core, Length)
-  )
+  CDISC_COLS <- metadata_variables %>%
+    filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
+    arrange(Order) %>%
+    group_by(Dataset) %>%
+    group_split()
 
   # Only select from results the requested parameters by the user
   res_nca_req <- res_nca
@@ -59,8 +48,6 @@ export_cdisc <- function(res_nca) {
       any_of(c(
         # Variables defined for the dose information
         group_dose_cols, "NCA_PROFILE",  route_col,
-        # TODO (Gerardo): Test should use a PKNCA obj (FIXTURE) so the var is accessed via mapping
-        OPTIONAL_COLUMNS,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable
       ))
@@ -247,9 +234,7 @@ export_cdisc <- function(res_nca) {
       PCSTRESU = AVALU
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC$Variable), everything())  %>%
-    # Deselect columns that are only used internally in the App
-    select(-any_of(INTERNAL_ANCA_COLS))
+    select(any_of(CDISC_COLS$ADPC$Variable))
 
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
@@ -323,13 +308,3 @@ get_subjid <- function(data) {
     NA
   }
 }
-
-
-INTERNAL_ANCA_COLS <- c(
-  "exclude", "is.excluded.hl", "volume", "std_route",
-  "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
-  "conc_groups", "REASON"
-)
-
-# They will be used if present. We assume they follow CDISC standard names
-OPTIONAL_COLUMNS <- c("RRLTU", "PCRFTDTC", "PCRFTDTM", "EXFAST", "PCFAST", "FEDSTATE", "PCSEQ")
