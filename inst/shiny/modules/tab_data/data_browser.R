@@ -9,7 +9,6 @@ variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = N
     
     teal.widgets::standard_layout(
       output = fluidRow(
-        htmlwidgets::getDependency("sparkline"),
         column(
           6,
           teal.widgets::white_small_well(
@@ -27,7 +26,7 @@ variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = N
               class = "block",
               uiOutput(ns("ui_numeric_display"))
             ),
-            teal.widgets::plot_with_settings_ui(ns("variable_plot")),
+            uiOutput(ns("plot_ui")),
             tags$br(),
             teal.widgets::panel_item(
               title = "Plot settings",
@@ -211,8 +210,8 @@ variable_browser_server <- function(id, data_list_reactive,
               )
             ),
             conditionalPanel(
-              !input$numeric_as_factor,
-              ns = function(id) id,
+              condition = "input.numeric_as_factor === false",
+              ns = ns,
               numeric_ui
             )
           )
@@ -314,6 +313,7 @@ variable_browser_server <- function(id, data_list_reactive,
     })
     
     variable_plot_r <- reactive({
+      req(plotted_data())
       display_density <- `if`(is.null(input$display_density), FALSE, input$display_density)
       remove_outliers <- `if`(is.null(input$remove_outliers), FALSE, input$remove_outliers)
       
@@ -337,11 +337,19 @@ variable_browser_server <- function(id, data_list_reactive,
       )
     })
     
-    teal.widgets::plot_with_settings_srv(
-      id = "variable_plot",
-      plot_r = variable_plot_r,
-      height = c(500, 200, 2000)
-    )
+    output$plot_ui <- renderUI({
+      req(plot_var$variable[["ADNCA"]])
+      teal.widgets::plot_with_settings_ui(ns(paste0("variable_plot_", plot_var$variable[["ADNCA"]])))
+    })
+    
+    observe({
+      req(plot_var$variable[["ADNCA"]])
+      teal.widgets::plot_with_settings_srv(
+        id = paste0("variable_plot_", plot_var$variable[["ADNCA"]]),
+        plot_r = variable_plot_r,
+        height = c(500, 200, 2000)
+      )
+    })
     
     output$variable_summary_table <- DT::renderDataTable({
       var_summary_table(

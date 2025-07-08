@@ -303,7 +303,6 @@ render_tab_header <- function(dataset_name, output, data_list_reactive) {
 }
 
 
-# CORRECTED RENDER_TAB_TABLE
 render_tab_table <- function(dataset_name, parent_dataname, output, data_list_reactive, input, columns_names, plot_var) {
   table_ui_id <- paste0("variable_browser_", dataset_name)
   
@@ -333,7 +332,7 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
         Variable = character(0),
         Label = character(0),
         Missings = character(0),
-        Sparklines = character(0),
+        #Sparklines = character(0),
         stringsAsFactors = FALSE
       )
     } else {
@@ -363,19 +362,19 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
       }
       icons <- variable_type_icons(icons)
       
-      sparklines_html <- vapply(
-        df,
-        create_sparklines,
-        FUN.VALUE = character(1),
-        USE.NAMES = FALSE
-      )
+      # sparklines_html <- vapply(
+      #   df,
+      #   create_sparklines,
+      #   FUN.VALUE = character(1),
+      #   USE.NAMES = FALSE
+      # )
       
       df_output <- data.frame(
         Type = icons,
         Variable = names(labels),
         Label = labels,
         Missings = missings,
-        Sparklines = sparklines_html,
+        #Sparklines = sparklines_html,
         stringsAsFactors = FALSE
       )
     }
@@ -438,166 +437,166 @@ remove_outliers_from <- function(var, outlier_definition) {
   iqr <- q1_q3[2] - q1_q3[1]
   var[var >= q1_q3[1] - outlier_definition * iqr & var <= q1_q3[2] + outlier_definition * iqr]
 }
+# 
+# create_sparklines <- function(arr, width = 150, ...) {
+#   if (all(is.null(arr))) {
+#     return("")
+#   }
+#   UseMethod("create_sparklines")
+# }
 
-create_sparklines <- function(arr, width = 150, ...) {
-  if (all(is.null(arr))) {
-    return("")
-  }
-  UseMethod("create_sparklines")
-}
-
-create_sparklines.logical <- function(arr, ...) {
-  create_sparklines(as.factor(arr))
-}
-
-create_sparklines.numeric <- function(arr, width = 150, ...) {
-  if (any(is.infinite(arr))) {
-    return(as.character(tags$code("infinite values", class = "text-blue")))
-  }
-  if (length(arr) > 100000) {
-    return(as.character(tags$code("Too many rows (>100000)", class = "text-blue")))
-  }
-  
-  arr <- arr[!is.na(arr)]
-  sparkline::spk_chr(unname(arr), type = "box", width = width, ...)
-}
-
-create_sparklines.character <- function(arr, ...) {
-  return(create_sparklines(as.factor(arr)))
-}
-
-# MINOR BUG FIX in this function
-create_sparklines.factor <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
-  decreasing_order <- TRUE
-  
-  counts <- table(arr)
-  if (length(counts) >= 100) {
-    return(as.character(tags$code("> 99 levels", class = "text-blue")))
-  } else if (length(counts) == 0) {
-    return(as.character(tags$code("no levels", class = "text-blue")))
-  } else if (length(counts) == 1) {
-    return(as.character(tags$code("one level", class = "text-blue")))
-  }
-  
-  counts <- sort(counts, decreasing = decreasing_order, method = "radix")
-  # Corrected: length[counts] to length(counts)
-  max_value <- if (decreasing_order) counts[1] else counts[length(counts)]
-  max_value <- unname(max_value)
-  
-  sparkline::spk_chr(
-    unname(counts),
-    type = "bar",
-    chartRangeMin = 0,
-    chartRangeMax = max_value,
-    width = width,
-    barWidth = bar_width,
-    barSpacing = bar_spacing,
-    tooltipFormatter = custom_sparkline_formatter(names(counts), as.vector(counts))
-  )
-}
-
-create_sparklines.Date <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
-  arr_num <- as.numeric(arr)
-  arr_num <- sort(arr_num, decreasing = FALSE, method = "radix")
-  binwidth <- get_bin_width(arr_num, 1)
-  bins <- floor(diff(range(arr_num)) / binwidth) + 1
-  if (all(is.na(bins))) {
-    return(as.character(tags$code("only NA", class = "text-blue")))
-  } else if (bins == 1) {
-    return(as.character(tags$code("one date", class = "text-blue")))
-  }
-  counts <- as.vector(unname(base::table(cut(arr_num, breaks = bins))))
-  max_value <- max(counts)
-  
-  start_bins <- as.integer(seq(1, length(arr_num), length.out = bins))
-  labels_start <- as.character(as.Date(arr_num[start_bins], origin = as.Date("1970-01-01")))
-  labels <- paste("Start:", labels_start)
-  
-  sparkline::spk_chr(
-    unname(counts),
-    type = "bar",
-    chartRangeMin = 0,
-    chartRangeMax = max_value,
-    width = width,
-    barWidth = bar_width,
-    barSpacing = bar_spacing,
-    tooltipFormatter = custom_sparkline_formatter(labels, counts)
-  )
-}
-
-create_sparklines.POSIXct <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
-  arr_num <- as.numeric(arr)
-  arr_num <- sort(arr_num, decreasing = FALSE, method = "radix")
-  binwidth <- get_bin_width(arr_num, 1)
-  bins <- floor(diff(range(arr_num)) / binwidth) + 1
-  if (all(is.na(bins))) {
-    return(as.character(tags$code("only NA", class = "text-blue")))
-  } else if (bins == 1) {
-    return(as.character(tags$code("one date-time", class = "text-blue")))
-  }
-  counts <- as.vector(unname(base::table(cut(arr_num, breaks = bins))))
-  max_value <- max(counts)
-  
-  start_bins <- as.integer(seq(1, length(arr_num), length.out = bins))
-  labels_start <- as.character(format(as.POSIXct(arr_num[start_bins], origin = as.Date("1970-01-01")), "%Y-%m-%d"))
-  labels <- paste("Start:", labels_start)
-  
-  sparkline::spk_chr(
-    unname(counts),
-    type = "bar",
-    chartRangeMin = 0,
-    chartRangeMax = max_value,
-    width = width,
-    barWidth = bar_width,
-    barSpacing = bar_spacing,
-    tooltipFormatter = custom_sparkline_formatter(labels, counts)
-  )
-}
-
-create_sparklines.POSIXlt <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
-  arr_num <- as.numeric(arr)
-  arr_num <- sort(arr_num, decreasing = FALSE, method = "radix")
-  binwidth <- get_bin_width(arr_num, 1)
-  bins <- floor(diff(range(arr_num)) / binwidth) + 1
-  if (all(is.na(bins))) {
-    return(as.character(tags$code("only NA", class = "text-blue")))
-  } else if (bins == 1) {
-    return(as.character(tags$code("one date-time", class = "text-blue")))
-  }
-  counts <- as.vector(unname(base::table(cut(arr_num, breaks = bins))))
-  max_value <- max(counts)
-  
-  start_bins <- as.integer(seq(1, length(arr_num), length.out = bins))
-  labels_start <- as.character(format(as.POSIXct(arr_num[start_bins], origin = as.Date("1970-01-01")), "%Y-%m-%d"))
-  labels <- paste("Start:", labels_start)
-  
-  sparkline::spk_chr(
-    unname(counts),
-    type = "bar",
-    chartRangeMin = 0,
-    chartRangeMax = max_value,
-    width = width,
-    barWidth = bar_width,
-    barSpacing = bar_spacing,
-    tooltipFormatter = custom_sparkline_formatter(labels, counts)
-  )
-}
-
-create_sparklines.default <- function(arr, width = 150, ...) {
-  as.character(tags$code("unsupported variable type", class = "text-blue"))
-}
-
-custom_sparkline_formatter <- function(labels, counts) {
-  htmlwidgets::JS(
-    sprintf(
-      "function(sparkline, options, field) {
-        return 'ID: ' + %s[field[0].offset] + '<br>' + 'Count: ' + %s[field[0].offset];
-        }",
-      jsonlite::toJSON(labels),
-      jsonlite::toJSON(counts)
-    )
-  )
-}
+# create_sparklines.logical <- function(arr, ...) {
+#   create_sparklines(as.factor(arr))
+# }
+# 
+# create_sparklines.numeric <- function(arr, width = 150, ...) {
+#   if (any(is.infinite(arr))) {
+#     return(as.character(tags$code("infinite values", class = "text-blue")))
+#   }
+#   if (length(arr) > 100000) {
+#     return(as.character(tags$code("Too many rows (>100000)", class = "text-blue")))
+#   }
+#   
+#   arr <- arr[!is.na(arr)]
+#   sparkline::spk_chr(unname(arr), type = "box", width = width, ...)
+# }
+# 
+# create_sparklines.character <- function(arr, ...) {
+#   return(create_sparklines(as.factor(arr)))
+# }
+# 
+# # MINOR BUG FIX in this function
+# create_sparklines.factor <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
+#   decreasing_order <- TRUE
+#   
+#   counts <- table(arr)
+#   if (length(counts) >= 100) {
+#     return(as.character(tags$code("> 99 levels", class = "text-blue")))
+#   } else if (length(counts) == 0) {
+#     return(as.character(tags$code("no levels", class = "text-blue")))
+#   } else if (length(counts) == 1) {
+#     return(as.character(tags$code("one level", class = "text-blue")))
+#   }
+#   
+#   counts <- sort(counts, decreasing = decreasing_order, method = "radix")
+#   # Corrected: length[counts] to length(counts)
+#   max_value <- if (decreasing_order) counts[1] else counts[length(counts)]
+#   max_value <- unname(max_value)
+#   
+#   sparkline::spk_chr(
+#     unname(counts),
+#     type = "bar",
+#     chartRangeMin = 0,
+#     chartRangeMax = max_value,
+#     width = width,
+#     barWidth = bar_width,
+#     barSpacing = bar_spacing,
+#     tooltipFormatter = custom_sparkline_formatter(names(counts), as.vector(counts))
+#   )
+# }
+# 
+# create_sparklines.Date <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
+#   arr_num <- as.numeric(arr)
+#   arr_num <- sort(arr_num, decreasing = FALSE, method = "radix")
+#   binwidth <- get_bin_width(arr_num, 1)
+#   bins <- floor(diff(range(arr_num)) / binwidth) + 1
+#   if (all(is.na(bins))) {
+#     return(as.character(tags$code("only NA", class = "text-blue")))
+#   } else if (bins == 1) {
+#     return(as.character(tags$code("one date", class = "text-blue")))
+#   }
+#   counts <- as.vector(unname(base::table(cut(arr_num, breaks = bins))))
+#   max_value <- max(counts)
+#   
+#   start_bins <- as.integer(seq(1, length(arr_num), length.out = bins))
+#   labels_start <- as.character(as.Date(arr_num[start_bins], origin = as.Date("1970-01-01")))
+#   labels <- paste("Start:", labels_start)
+#   
+#   sparkline::spk_chr(
+#     unname(counts),
+#     type = "bar",
+#     chartRangeMin = 0,
+#     chartRangeMax = max_value,
+#     width = width,
+#     barWidth = bar_width,
+#     barSpacing = bar_spacing,
+#     tooltipFormatter = custom_sparkline_formatter(labels, counts)
+#   )
+# }
+# 
+# create_sparklines.POSIXct <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
+#   arr_num <- as.numeric(arr)
+#   arr_num <- sort(arr_num, decreasing = FALSE, method = "radix")
+#   binwidth <- get_bin_width(arr_num, 1)
+#   bins <- floor(diff(range(arr_num)) / binwidth) + 1
+#   if (all(is.na(bins))) {
+#     return(as.character(tags$code("only NA", class = "text-blue")))
+#   } else if (bins == 1) {
+#     return(as.character(tags$code("one date-time", class = "text-blue")))
+#   }
+#   counts <- as.vector(unname(base::table(cut(arr_num, breaks = bins))))
+#   max_value <- max(counts)
+#   
+#   start_bins <- as.integer(seq(1, length(arr_num), length.out = bins))
+#   labels_start <- as.character(format(as.POSIXct(arr_num[start_bins], origin = as.Date("1970-01-01")), "%Y-%m-%d"))
+#   labels <- paste("Start:", labels_start)
+#   
+#   sparkline::spk_chr(
+#     unname(counts),
+#     type = "bar",
+#     chartRangeMin = 0,
+#     chartRangeMax = max_value,
+#     width = width,
+#     barWidth = bar_width,
+#     barSpacing = bar_spacing,
+#     tooltipFormatter = custom_sparkline_formatter(labels, counts)
+#   )
+# }
+# 
+# create_sparklines.POSIXlt <- function(arr, width = 150, bar_spacing = 5, bar_width = 20, ...) {
+#   arr_num <- as.numeric(arr)
+#   arr_num <- sort(arr_num, decreasing = FALSE, method = "radix")
+#   binwidth <- get_bin_width(arr_num, 1)
+#   bins <- floor(diff(range(arr_num)) / binwidth) + 1
+#   if (all(is.na(bins))) {
+#     return(as.character(tags$code("only NA", class = "text-blue")))
+#   } else if (bins == 1) {
+#     return(as.character(tags$code("one date-time", class = "text-blue")))
+#   }
+#   counts <- as.vector(unname(base::table(cut(arr_num, breaks = bins))))
+#   max_value <- max(counts)
+#   
+#   start_bins <- as.integer(seq(1, length(arr_num), length.out = bins))
+#   labels_start <- as.character(format(as.POSIXct(arr_num[start_bins], origin = as.Date("1970-01-01")), "%Y-%m-%d"))
+#   labels <- paste("Start:", labels_start)
+#   
+#   sparkline::spk_chr(
+#     unname(counts),
+#     type = "bar",
+#     chartRangeMin = 0,
+#     chartRangeMax = max_value,
+#     width = width,
+#     barWidth = bar_width,
+#     barSpacing = bar_spacing,
+#     tooltipFormatter = custom_sparkline_formatter(labels, counts)
+#   )
+# }
+# 
+# create_sparklines.default <- function(arr, width = 150, ...) {
+#   as.character(tags$code("unsupported variable type", class = "text-blue"))
+# }
+# 
+# custom_sparkline_formatter <- function(labels, counts) {
+#   htmlwidgets::JS(
+#     sprintf(
+#       "function(sparkline, options, field) {
+#         return 'ID: ' + %s[field[0].offset] + '<br>' + 'Count: ' + %s[field[0].offset];
+#         }",
+#       jsonlite::toJSON(labels),
+#       jsonlite::toJSON(counts)
+#     )
+#   )
+# }
 
 variable_type_icons <- function(x) {
   gsub("numeric", '<i>&#xf1d4;</i>',
