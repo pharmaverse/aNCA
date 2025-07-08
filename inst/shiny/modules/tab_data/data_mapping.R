@@ -248,7 +248,8 @@ data_mapping_server <- function(id, adnca_data) {
       dataset <- mapped_data()
 
       if (nrow(df_duplicates()) == 0) {
-        return(mutate(dataset, DFLAG = FALSE))
+        return(mutate(dataset, DFLAG = FALSE) %>%
+                 apply_labels(LABELS, "ADPC"))
       }
 
       # User resolves duplicates, apply DFLAG
