@@ -27,7 +27,8 @@ export_cdisc <- function(res_nca) {
     filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
     arrange(Order) %>%
     group_by(Dataset) %>%
-    group_split()
+    group_split() %>%
+    setNames(c("ADPC", "ADPP", "PP"))
 
   # Only select from results the requested parameters by the user
   res_nca_req <- res_nca
@@ -169,11 +170,13 @@ export_cdisc <- function(res_nca) {
         TRUE ~ PPTESTCD
       )
     ) %>%
-    # Make NA expected columns if not present in the data (character)
+    # Select only columns needed for PP, ADPP, ADPC
+    select(any_of(bind_rows(unname(CDISC_COLS))[["Variable"]])) %>%
+    # Make character expected columns NA_character_ if missing
     mutate(
       across(
         .cols = setdiff(
-          bind_rows(CDISC_COLS) %>%
+          bind_rows(unname(CDISC_COLS)) %>%
             filter(Core == "Exp" & (Type == "Char" | Type == "Text")) %>%
             pull(Variable),
           names(.)
@@ -182,11 +185,11 @@ export_cdisc <- function(res_nca) {
         .names = "{.col}"
       )
     ) %>%
-    # Make NA expected columns if not present in the data (numeric)
+    # Make numeric expected columns NA if missing
     mutate(
       across(
         .cols = setdiff(
-          bind_rows(CDISC_COLS) %>%
+          bind_rows(unname(CDISC_COLS)) %>%
             filter(Core == "Exp" & (Type != "Char" & Type != "Text")) %>%
             pull(Variable),
           names(.)
@@ -195,6 +198,24 @@ export_cdisc <- function(res_nca) {
         .names = "{.col}"
       )
     )
+
+  # Adjust class and length to the standards
+  for (var in names(cdisc_info)) {
+    var_specs <- metadata_variables %>%
+      filter(Variable == var, !duplicated(Variable))
+
+    if (var_specs$Type %in% c("Char", "text")) {
+      cdisc_info[[var]] <- substr(cdisc_info[[var]], 0, var_specs$Length)
+    } else if (var_specs$Type %in% c("Num", "integer", "float", "duration")) {
+      cdisc_info[[var]] <- round(as.numeric(cdisc_info[[var]]), var_specs$Length)
+    }
+  }
+
+  # Add labels to the columns
+  labels_map <- metadata_variables %>%
+    filter(!duplicated(Variable)) %>%
+    pull(Label, Variable)
+  var_labels(cdisc_info) <- labels_map[names(cdisc_info)]
 
   # select pp columns
   pp <- cdisc_info %>%
@@ -207,7 +228,6 @@ export_cdisc <- function(res_nca) {
         !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
       )
     )
-  browser()
 
   adpp <- cdisc_info %>%
     # Rename/mutate variables from PP
