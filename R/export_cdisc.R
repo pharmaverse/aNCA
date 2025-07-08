@@ -21,6 +21,24 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
+  
+  # Define the CDISC columns we need and its rules using the metadata_variables object
+  CDISC_COLS <- list(
+    ADPC = metadata_variables %>%
+      filter(Dataset == "ADPC") %>%
+      arrange(Order) %>%
+      select(Variable, Label, Type, Role, Core, Length),
+    
+    ADPP = metadata_variables %>%
+      filter(Dataset == "ADPP") %>%
+      arrange(Order) %>%
+      select(Variable, Label, Type, Role, Core, Length),
+    
+    PP = metadata_variables %>%
+      filter(Dataset == "PP") %>%
+      arrange(Order) %>%
+      select(Variable, Label, Type, Role, Core, Length)
+  )
 
   # Only select from results the requested parameters by the user
   res_nca_req <- res_nca
@@ -306,22 +324,6 @@ get_subjid <- function(data) {
   }
 }
 
-CDISC_COLS <- list(
-  ADPC = metadata_variables %>%
-    filter(Dataset == "ADPC") %>%
-    arrange(Order) %>%
-    select(Variable, Label, Type, Role, Core, Length),
-
-  ADPP = metadata_variables %>%
-    filter(Dataset == "ADPP") %>%
-    arrange(Order) %>%
-    select(Variable, Label, Type, Role, Core, Length),
-
-  PP = metadata_variables %>%
-    filter(Dataset == "PP") %>%
-    arrange(Order) %>%
-    select(Variable, Label, Type, Role, Core, Length)
-)
 
 INTERNAL_ANCA_COLS <- c(
   "exclude", "is.excluded.hl", "volume", "std_route",
