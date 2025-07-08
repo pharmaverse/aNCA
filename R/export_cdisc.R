@@ -106,7 +106,6 @@ export_cdisc <- function(res_nca) {
       ),
       PPREASND = substr(PPREASND, 0, 200),
       # Datetime
-      PPDTC = Sys.time() %>% format("%Y-%m-%dT%H:%M"),
       PPRFTDTC = {
         if ("PCRFTDTC" %in% names(.)) {
           PCRFTDTC
@@ -116,14 +115,11 @@ export_cdisc <- function(res_nca) {
           NA_character_
         }
       },
-      PPDY = as.numeric(difftime(PPDTC, PPRFTDTC, units = "days")),
       EPOCH = if ("EPOCH" %in% names(.)) {
         EPOCH
       } else {
         NA_character_
       },
-      # Matrix
-      PPSPEC = PCSPEC,
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
