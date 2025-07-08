@@ -101,8 +101,6 @@ variable_browser_server <- function(id, data_list_reactive,
       establish_updating_selection("ADNCA", input, plot_var, columns_names)
     })
     
-    validation_checks <- validate_input(input, plot_var, data_list_reactive, "ADNCA")
-    
     plotted_data <- reactive({
       validation_checks()
       get_plotted_data(input, plot_var, data_list_reactive, "ADNCA")

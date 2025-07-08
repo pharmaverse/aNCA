@@ -1,14 +1,11 @@
-# --- Helper functions (extracted from the tm_variable_browser's internal functions) ---
 
-ggplot_themes <- c(
-  "grey", "bw", "linedraw", "light", "dark", "minimal", "classic", "void"
-)
-
-var_missings_info <- function(x) {
-  sprintf("%s [%s%%]", sum(is.na(x)), round(mean(is.na(x) * 100), 2))
-}
-
-
+#' Create a summary table for a variable
+#' @param x A vector containing the variable data
+#' @param numeric_as_factor Logical indicating whether to treat numeric variables as factors
+#' @param dt_rows Number of rows to display in the summary table
+#' @param outlier_definition Numeric value defining the outlier threshold
+#' 
+#' @returns A DataTable object containing the summary statistics or counts for the variable
 var_summary_table <- function(x, numeric_as_factor, dt_rows, outlier_definition) {
   if (is.null(dt_rows)) {
     dt_rows <- 10
@@ -85,6 +82,18 @@ var_summary_table <- function(x, numeric_as_factor, dt_rows, outlier_definition)
   }
 }
 
+#' Plot a summary of a variable
+#' @param var A vector containing the variable data
+#' @param var_lab A label for the variable
+#' @param wrap_character Optional character width for wrapping text in the plot
+#' @param numeric_as_factor Logical indicating whether to treat numeric variables as factors
+#' @param display_density Logical indicating whether to display density in the plot
+#' @param remove_NA_hist Logical indicating whether to remove NA values from the histogram
+#' @param outlier_definition Numeric value defining the outlier threshold
+#' @param records_for_factor Integer defining the minimum number of unique records for factor variables
+#' @param ggplot2_args A list of additional ggplot2 arguments
+#' 
+#' @returns A ggplot object or a grid grob for the variable summary plot
 plot_var_summary <- function(var,
                              var_lab,
                              wrap_character = NULL,
@@ -231,34 +240,17 @@ plot_var_summary <- function(var,
   plot_main
 }
 
-is_num_var_short <- function(.unique_records_for_factor, input, data_for_analysis) {
-  length(unique(data_for_analysis()$data)) < .unique_records_for_factor && !is.null(input$numeric_as_factor)
-}
 
-validate_input <- function(input, plot_var, data_list_reactive, dataset_name) {
-  reactive({
-    req(dataset_name)
-    varname <- plot_var$variable[[dataset_name]]
-    
-    validate(need(dataset_name, "No data selected"))
-    validate(need(varname, "No variable selected"))
-    df <- data_list_reactive[[dataset_name]]
-
-    teal::validate_has_data(df, 1)
-    teal::validate_has_variable(varname = varname, data = df, "Variable not available")
-    
-    TRUE
-  })
-}
-
-get_plotted_data <- function(input, plot_var, data_list_reactive, dataset_name) {
-  varname <- plot_var$variable[[dataset_name]]
-  df <- data_list_reactive[[dataset_name]]
-  
-  var_description <- attr(df[[varname]], "label") %||% varname
-  list(data = df[[varname]], var_description = var_description)
-}
-
+#' Render the content for a single tab in the variable browser
+#' @param dataset_name The name of the dataset to be displayed
+#' @param parent_dataname The name of the parent dataset, if any
+#' @param output The Shiny output object
+#' @param data_list_reactive A reactive list containing the datasets
+#' @param input The Shiny input object
+#' @param columns_names A reactive list containing the column names for each dataset
+#' @param plot_var A reactive list containing the variable to be plotted
+#' 
+#' @returns A rendered tab content for the variable browser
 render_single_tab_content <- function(dataset_name, parent_dataname, output, data_list_reactive, input, columns_names, plot_var) {
   render_tab_header(dataset_name, output, data_list_reactive)
   
@@ -273,6 +265,13 @@ render_single_tab_content <- function(dataset_name, parent_dataname, output, dat
   )
 }
 
+
+#' Render the header for a tab in the variable browser
+#' @param dataset_name The name of the dataset to be displayed
+#' @param output The Shiny output object
+#' @param data_list_reactive A reactive list containing the datasets
+#' 
+#' @returns A rendered text output containing the dataset summary
 render_tab_header <- function(dataset_name, output, data_list_reactive) {
   dataset_ui_id <- paste0("dataset_summary_", dataset_name)
   output[[dataset_ui_id]] <- renderText({
@@ -286,7 +285,16 @@ render_tab_header <- function(dataset_name, output, data_list_reactive) {
   })
 }
 
-
+#' Render the table for a tab in the variable browser
+#' @param dataset_name The name of the dataset to be displayed
+#' @param parent_dataname The name of the parent dataset, if any
+#' @param output The Shiny output object
+#' @param data_list_reactive A reactive list containing the datasets
+#' @param input The Shiny input object
+#' @param columns_names A reactive list containing the column names for each dataset
+#' @param plot_var A reactive list containing the variable to be plotted
+#' 
+#' @returns A rendered DataTable containing the variable information
 render_tab_table <- function(dataset_name, parent_dataname, output, data_list_reactive, input, columns_names, plot_var) {
   table_ui_id <- paste0("variable_browser_", dataset_name)
   
@@ -382,45 +390,5 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
       )
     )
   })
-}
-
-establish_updating_selection <- function(dataset_name, input, plot_var, columns_names) {
-  table_ui_id <- paste0("variable_browser_", dataset_name)
-  table_id_sel <- paste0(table_ui_id, "_rows_selected")
-  observeEvent(input[[table_id_sel]], {
-    plot_var$data <- dataset_name
-    plot_var$variable[[dataset_name]] <- columns_names[[dataset_name]][input[[table_id_sel]]]
-  })
-}
-
-get_bin_width <- function(x_vec, scaling_factor = 2) {
-  x_vec <- x_vec[!is.na(x_vec)]
-  qntls <- stats::quantile(x_vec, probs = c(0.1, 0.25, 0.75, 0.9), type = 2)
-  iqr <- qntls[3] - qntls[2]
-  binwidth <- max(scaling_factor * iqr / length(x_vec) ^ (1 / 3), sqrt(qntls[4] - qntls[1]))
-  binwidth <- ifelse(binwidth == 0, 1, binwidth)
-  x_span <- diff(range(x_vec))
-  if (isTRUE(x_span / binwidth >= 2)) binwidth else x_span / 2
-}
-
-remove_outliers_from <- function(var, outlier_definition) {
-  if (outlier_definition == 0) {
-    return(var)
-  }
-  q1_q3 <- stats::quantile(var, probs = c(0.25, 0.75), type = 2, na.rm = TRUE)
-  iqr <- q1_q3[2] - q1_q3[1]
-  var[var >= q1_q3[1] - outlier_definition * iqr & var <= q1_q3[2] + outlier_definition * iqr]
-}
-
-variable_type_icons <- function(x) {
-  x <- gsub("numeric", '<i class="fa fa-calculator"></i>', x, fixed = TRUE)
-  x <- gsub("factor", '<i class="fa fa-list-ol"></i>', x, fixed = TRUE)
-  x <- gsub("character", '<i class="fa fa-font"></i>', x, fixed = TRUE)
-  x <- gsub("Date", '<i class="fa fa-calendar"></i>', x, fixed = TRUE)
-  x <- gsub("POSIXct", '<i class="fa fa-calendar"></i>', x, fixed = TRUE)
-  x <- gsub("POSIXlt", '<i class="fa fa-calendar"></i>', x, fixed = TRUE)
-  x <- gsub("logical", '<i class="fa fa-toggle-on"></i>', x, fixed = TRUE)
-  x <- gsub("primary_key", '<i class="fa fa-key"></i>', x, fixed = TRUE)
-  x
 }
 
