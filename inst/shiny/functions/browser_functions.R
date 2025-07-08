@@ -281,7 +281,7 @@ render_tab_header <- function(dataset_name, output, data_list_reactive) {
     sprintf(
       "Dataset with %s rows and %s variables",
       nrow(df),
-      ncol(df),
+      ncol(df)
     )
   })
 }
@@ -333,7 +333,6 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
       
       icons <- vapply(df, function(x) class(x)[1L], character(1L))
       
-      # CORRECTED: Use the teal.data::join_keys() accessor
       join_keys_object <- teal.data::join_keys(data_list_reactive)
       if (!is.null(join_keys_object)) {
         keys_list <- as.list(join_keys_object) # Convert to a simple list
@@ -414,19 +413,14 @@ remove_outliers_from <- function(var, outlier_definition) {
 }
 
 variable_type_icons <- function(x) {
-  gsub("numeric", '<i>&#xf1d4;</i>',
-       gsub("factor", '<i>&#xf036;</i>',
-            gsub("character", '<i>&#xf035;</i>',
-                 gsub("Date", '<i>&#xf073;</i>',
-                      gsub("POSIXct", '<i>&#xf073;</i>',
-                           gsub("POSIXlt", '<i>&#xf073;</i>',
-                                gsub("logical", '<i>&#xf03d;</i>',
-                                     gsub("primary_key", '<i>&#xf084;</i>', x, fixed = TRUE), fixed = TRUE),
-                                fixed = TRUE),
-                           fixed = TRUE),
-                      fixed = TRUE),
-                 fixed = TRUE),
-            fixed = TRUE),
-       fixed = TRUE)
+  x <- gsub("numeric", '<i class="fa fa-calculator"></i>', x, fixed = TRUE)
+  x <- gsub("factor", '<i class="fa fa-list-ol"></i>', x, fixed = TRUE)
+  x <- gsub("character", '<i class="fa fa-font"></i>', x, fixed = TRUE)
+  x <- gsub("Date", '<i class="fa fa-calendar"></i>', x, fixed = TRUE)
+  x <- gsub("POSIXct", '<i class="fa fa-calendar"></i>', x, fixed = TRUE)
+  x <- gsub("POSIXlt", '<i class="fa fa-calendar"></i>', x, fixed = TRUE)
+  x <- gsub("logical", '<i class="fa fa-toggle-on"></i>', x, fixed = TRUE)
+  x <- gsub("primary_key", '<i class="fa fa-key"></i>', x, fixed = TRUE)
+  x
 }
 
