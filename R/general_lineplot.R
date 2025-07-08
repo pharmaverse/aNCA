@@ -183,7 +183,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
     dose_info <- data %>%
       distinct(TIME_DOSE, DOSEA) %>%
       filter(!is.na(TIME_DOSE))
-    
+
     plt <- plt +
       geom_vline(data = dose_info,
                  aes(xintercept = TIME_DOSE),
