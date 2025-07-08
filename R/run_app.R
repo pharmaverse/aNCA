@@ -4,8 +4,10 @@
 #'
 #' @details
 #' If a `datapath` is provided, the app will attempt to automatically load the
-#' specified dataset on startup.This is achieved by setting an internal option
+#' specified dataset on startup. This is achieved by setting an internal option
 #' (`options(aNCA.datapath = datapath)`), which the app then reads.
+#' **This pre-loaded dataset can be overwritten; if a new file is uploaded using
+#' the widget within the app, it will replace the initial data for the current session.**
 #'
 #' If `datapath` is `NULL` (default), the app will launch without pre-loading any
 #' data, and a file must be uploaded manually within the app.
