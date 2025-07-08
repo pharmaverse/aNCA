@@ -1,6 +1,29 @@
 #' Run the Shiny app
-#' @param datapath Path to the directory containing the data files.
+#' @param datapath Full path to a single `.csv` or `.rds` data file.
 #' @param ... Arguments passed to `shiny::runApp()`
+#'
+#' @details
+#' If a `datapath` is provided, the app will attempt to automatically load the
+#' specified dataset on startup.This is achieved by setting an internal option
+#' (`options(aNCA.datapath = datapath)`), which the app then reads.
+#' 
+#' If `datapath` is `NULL` (default), the app will launch without pre-loading any
+#' data, and a file must be uploaded manually within the app.
+#'
+#' @examples
+#' \dontrun{
+#'   # Create a dummy data file
+#'   temp_data_path <- tempfile(fileext = ".csv")
+#'   write.csv(data.frame(USUBJID = 1, AFRLT = 0:4, AVAL = c(0, 10, 8, 4, 1)),
+#'             file = temp_data_path, row.names = FALSE)
+#'
+#'   # Run the app, automatically loading the dummy data
+#'   run_app(datapath = temp_data_path)
+#'
+#'   # Run the app without pre-loading data (standard usage)
+#'   run_app()
+#' }
+#'
 #' @export
 run_app <- function(datapath = NULL, ...) {
   if (!is.null(datapath)) {
