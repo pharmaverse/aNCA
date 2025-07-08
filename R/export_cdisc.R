@@ -50,7 +50,9 @@ export_cdisc <- function(res_nca) {
         # Variables defined for the dose information
         group_dose_cols, "NCA_PROFILE",  route_col,
         # Raw variables that can be directly used in PP or ADPP if present
-        CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable
+        CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
+        # Variables that can be used to guess other missing variables
+        "PCRFTDTM"
       ))
     ) %>%
     unique()
@@ -110,7 +112,7 @@ export_cdisc <- function(res_nca) {
         if ("PCRFTDTC" %in% names(.)) {
           PCRFTDTC
         } else if ("PCRFTDTM" %in% names(.)) {
-          strptime(PCRFTDTM, format = "%Y-%m-%d %H:%M:%S") %>% format("%Y-%m-%dT%H:%M:%S")
+          strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
         } else {
           NA_character_
         }
