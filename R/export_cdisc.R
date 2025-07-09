@@ -237,7 +237,17 @@ export_cdisc <- function(res_nca) {
     select(any_of(c(CDISC_COLS$ADPP$Variable)))
 
   adpc <- res_nca$data$conc$data %>%
+    left_join(dose_info,
+              by = intersect(names( res_nca$data$conc$data), names(dose_info)),
+              suffix = c("", ".y")) %>%
     mutate(
+      PARAMCD = if ("PARAMCD" %in% names(.)) {
+        PARAMCD
+      } else if ("PCTESTCD" %in% names(.)) {
+        PCTESTCD
+      } else {
+        NA_character_
+      },
       ANL01FL = ifelse(is.excluded.hl, NA_character_, "Y"),
       SUBJID = get_subjid(.),
       ATPT = {
@@ -252,10 +262,30 @@ export_cdisc <- function(res_nca) {
         if ("PCTPTREF" %in% names(.)) PCTPTREF
         else NA_character_
       },
-      PCSTRESU = AVALU
+      PCSTRESU = AVALU,
+      PCRFTDTM = if ("PCRFTDTM" %in% names(.)) {
+        as.POSIXct(strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M"))
+      } else {
+        NA
+      }
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
     select(any_of(CDISC_COLS$ADPC$Variable))
+
+  # Adjust class and length to the standards
+  for (var in names(adpc)) {
+    var_specs <- metadata_variables %>%
+      filter(Variable == var, !duplicated(Variable))
+    
+    if (var_specs$Type %in% c("Char", "text")) {
+      adpc[[var]] <- substr(adpc[[var]], 0, var_specs$Length)
+    } else if (var_specs$Type %in% c("Num", "integer", "float", "duration") && !endsWith(var, "DTM")) {
+      adpc[[var]] <- round(as.numeric(adpc[[var]]), var_specs$Length)
+    }
+  }
+
+  # Add variable labels in ADPC
+  var_labels(adpc) <- labels_map[names(adpc)]
 
   # Keep StudyID value to use for file naming
   studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
