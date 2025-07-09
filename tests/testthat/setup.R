@@ -343,7 +343,8 @@ base::local({
   )
 
   FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM),
+    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | USUBJID / PARAM,
+                                 timeu = "RRLTU"),
     data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
                                  route = "ROUTE", duration = "ADOSEDUR"),
     units = units_table
