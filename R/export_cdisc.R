@@ -200,10 +200,7 @@ export_cdisc <- function(res_nca) {
   adpc <- adjust_class_and_length(adpc, metadata_variables)
   var_labels(adpc) <- labels_map[names(adpc)]
 
-  # Keep StudyID value to use for file naming
-  studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
-
-  list(pp = pp, adpp = adpp, adpc = adpc, studyid = studyid)
+  list(pp = pp, adpp = adpp, adpc = adpc)
 }
 
 #' Function to identify the common prefix in a character vector.
