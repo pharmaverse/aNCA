@@ -9,18 +9,18 @@ var_missings_info <- function(x) {
 #' Validate input for plotting
 #' @param input The Shiny input object
 #' @param plot_var A reactive list containing the variable to be plotted
-#' @param data_list_reactive A reactive list containing the datasets
+#' @param data_list A reactive list containing the datasets
 #' @param dataset_name The name of the dataset to be validated
 #' 
 #' @returns A reactive expression that validates the input and returns TRUE if valid
-validate_input <- function(input, plot_var, data_list_reactive, dataset_name) {
+validate_input <- function(input, plot_var, data_list, dataset_name) {
   reactive({
     req(dataset_name)
     varname <- plot_var$variable[[dataset_name]]
     
     validate(need(dataset_name, "No data selected"))
     validate(need(varname, "No variable selected"))
-    df <- data_list_reactive[[dataset_name]]
+    df <- data_list[[dataset_name]]
     # These functions are in the `teal` package, which is now loaded.
     teal::validate_has_data(df, 1)
     teal::validate_has_variable(varname = varname, data = df, "Variable not available")
@@ -43,13 +43,13 @@ is_num_var_short <- function(.unique_records_for_factor, input, data_for_analysi
 #' Get the data and variable description for plotting
 #' @param input The Shiny input object
 #' @param plot_var A reactive list containing the variable to be plotted
-#' @param data_list_reactive A reactive list containing the datasets
+#' @param data_list A reactive list containing the datasets
 #' @param dataset_name The name of the dataset to be plotted
 #' 
 #' @returns A list containing the data for plotting and the variable description
-get_plotted_data <- function(input, plot_var, data_list_reactive, dataset_name) {
+get_plotted_data <- function(input, plot_var, data_list, dataset_name) {
   varname <- plot_var$variable[[dataset_name]]
-  df <- data_list_reactive[[dataset_name]]
+  df <- data_list[[dataset_name]]
   
   var_description <- attr(df[[varname]], "label") %||% varname
   list(data = df[[varname]], var_description = var_description)

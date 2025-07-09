@@ -245,20 +245,20 @@ plot_var_summary <- function(var,
 #' @param dataset_name The name of the dataset to be displayed
 #' @param parent_dataname The name of the parent dataset, if any
 #' @param output The Shiny output object
-#' @param data_list_reactive A reactive list containing the datasets
+#' @param data_list A reactive list containing the datasets
 #' @param input The Shiny input object
 #' @param columns_names A reactive list containing the column names for each dataset
 #' @param plot_var A reactive list containing the variable to be plotted
 #' 
 #' @returns A rendered tab content for the variable browser
-render_single_tab_content <- function(dataset_name, parent_dataname, output, data_list_reactive, input, columns_names, plot_var) {
-  render_tab_header(dataset_name, output, data_list_reactive)
+render_single_tab_content <- function(dataset_name, parent_dataname, output, data_list, input, columns_names, plot_var) {
+  render_tab_header(dataset_name, output, data_list)
   
   render_tab_table(
     dataset_name = dataset_name,
     parent_dataname = parent_dataname,
     output = output,
-    data = data_list_reactive,
+    data = data_list,
     input = input,
     columns_names = columns_names,
     plot_var = plot_var
@@ -269,13 +269,13 @@ render_single_tab_content <- function(dataset_name, parent_dataname, output, dat
 #' Render the header for a tab in the variable browser
 #' @param dataset_name The name of the dataset to be displayed
 #' @param output The Shiny output object
-#' @param data_list_reactive A reactive list containing the datasets
+#' @param data_list A reactive list containing the datasets
 #' 
 #' @returns A rendered text output containing the dataset summary
-render_tab_header <- function(dataset_name, output, data_list_reactive) {
+render_tab_header <- function(dataset_name, output, data_list) {
   dataset_ui_id <- paste0("dataset_summary_", dataset_name)
   output[[dataset_ui_id]] <- renderText({
-    df <- data_list_reactive[[dataset_name]]
+    df <- data_list[[dataset_name]]
     
     sprintf(
       "Dataset with %s rows and %s variables",
@@ -289,31 +289,31 @@ render_tab_header <- function(dataset_name, output, data_list_reactive) {
 #' @param dataset_name The name of the dataset to be displayed
 #' @param parent_dataname The name of the parent dataset, if any
 #' @param output The Shiny output object
-#' @param data_list_reactive A reactive list containing the datasets
+#' @param data_list A reactive list containing the datasets
 #' @param input The Shiny input object
 #' @param columns_names A reactive list containing the column names for each dataset
 #' @param plot_var A reactive list containing the variable to be plotted
 #' 
 #' @returns A rendered DataTable containing the variable information
-render_tab_table <- function(dataset_name, parent_dataname, output, data_list_reactive, input, columns_names, plot_var) {
+render_tab_table <- function(dataset_name, parent_dataname, output, data_list, input, columns_names, plot_var) {
   table_ui_id <- paste0("variable_browser_", dataset_name)
   
   output[[table_ui_id]] <- DT::renderDataTable({
-    df <- data_list_reactive[[dataset_name]]
+    df <- data_list[[dataset_name]]
     
-    get_vars_df <- function(input, dataset_name, parent_name, data_list_reactive_inner) {
+    get_vars_df <- function(input, dataset_name, parent_name, data_list_inner) {
       data_cols <- colnames(df)
       if (isTRUE(input$show_parent_vars)) {
         data_cols
-      } else if (dataset_name != parent_name && parent_name %in% names(data_list_reactive_inner)) {
-        setdiff(data_cols, colnames(data_list_reactive_inner[[parent_name]]))
+      } else if (dataset_name != parent_name && parent_name %in% names(data_list_inner)) {
+        setdiff(data_cols, colnames(data_list_inner[[parent_name]]))
       } else {
         data_cols
       }
     }
     
     if (length(parent_dataname) > 0) {
-      df_vars <- get_vars_df(input, dataset_name, parent_dataname, data_list_reactive)
+      df_vars <- get_vars_df(input, dataset_name, parent_dataname, data_list)
       df <- df[df_vars]
     }
     
@@ -341,7 +341,7 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
       
       icons <- vapply(df, function(x) class(x)[1L], character(1L))
       
-      join_keys_object <- teal.data::join_keys(data_list_reactive)
+      join_keys_object <- teal.data::join_keys(data_list)
       if (!is.null(join_keys_object)) {
         keys_list <- as.list(join_keys_object) # Convert to a simple list
         if (!is.null(keys_list[[dataset_name]])) {

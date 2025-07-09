@@ -71,10 +71,10 @@ variable_browser_ui <- function(id) {
 #' Variable browser server function
 #' This function handles the server-side logic for the variable browser module.
 #' @param id The module ID
-#' @param data_list_reactive A reactive list containing the datasets
+#' @param data_list A reactive list containing the datasets
 #' @param ggplot2_args_param A parameter for ggplot2 arguments
 #' @returns A Shiny module server function that manages the variable browser logic.
-variable_browser_server <- function(id, data_list_reactive,
+variable_browser_server <- function(id, data_list,
                                     ggplot2_args_param = teal.widgets::ggplot2_args()) {
   moduleServer(id, function(input, output,
                session) {
@@ -87,23 +87,17 @@ variable_browser_server <- function(id, data_list_reactive,
     varname_numeric_as_factor <- reactiveValues()
     
     output$ui_variable_browser <- renderUI({
-      tabsetPanel(
-        id = ns("tabset_panel"),
-        tabPanel(
-          "ADNCA",
-          tags$div(
-            class = "mt-4",
-            textOutput(ns("dataset_summary_ADNCA"))
-          ),
-          tags$div(
-            class = "mt-4",
-            teal.widgets::get_dt_rows(
-              ns("variable_browser_ADNCA"),
-              ns("variable_browser_ADNCA_rows")
-            ),
-            DT::dataTableOutput(ns("variable_browser_ADNCA"), width = "100%")
-          )
-        )
+      tags$div(
+        class = "mt-4",
+        textOutput(ns("dataset_summary_ADNCA"))
+      )
+      tags$div(
+        class = "mt-4",
+        teal.widgets::get_dt_rows(
+          ns("variable_browser_ADNCA"),
+          ns("variable_browser_ADNCA_rows")
+        ),
+        DT::dataTableOutput(ns("variable_browser_ADNCA"), width = "100%")
       )
     })
     
@@ -115,11 +109,11 @@ variable_browser_server <- function(id, data_list_reactive,
       establish_updating_selection("ADNCA", input, plot_var, columns_names)
     })
     
-    validation_checks <- validate_input(input, plot_var, data_list_reactive, "ADNCA")
+    validation_checks <- validate_input(input, plot_var, data_list, "ADNCA")
     
     plotted_data <- reactive({
       validation_checks()
-      get_plotted_data(input, plot_var, data_list_reactive, "ADNCA")
+      get_plotted_data(input, plot_var, data_list, "ADNCA")
     })
     
     treat_numeric_as_factor <- reactive({
@@ -136,7 +130,7 @@ variable_browser_server <- function(id, data_list_reactive,
         dataset_name = "ADNCA",
         parent_dataname = "ADNCA",
         output = output,
-        data_list_reactive = data_list_reactive,
+        data_list = data_list,
         input = input,
         columns_names = columns_names,
         plot_var = plot_var
@@ -166,7 +160,7 @@ variable_browser_server <- function(id, data_list_reactive,
       validation_checks()
       dataname <- "ADNCA" # Using the direct parameter
       varname <- plot_var$variable[[dataname]]
-      df <- data_list_reactive[[dataname]]
+      df <- data_list[[dataname]]
       
       numeric_ui <- tagList(
         fluidRow(
@@ -241,7 +235,7 @@ variable_browser_server <- function(id, data_list_reactive,
       validation_checks()
       dataname <- "ADNCA" # Using the direct parameter
       varname <- plot_var$variable[[dataname]]
-      df <- data_list_reactive[[dataname]]
+      df <- data_list[[dataname]]
 
       numeric_ui <- tagList(fluidRow(
         tags$div(

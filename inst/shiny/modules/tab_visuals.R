@@ -198,7 +198,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     # Pass the reactive expression directly
     variable_browser_server(
       id = "var_browser",
-      data_list_reactive = data_for_vb()
+      data_list = data_for_vb()
     )
     
     ## Plotting Input widgets --------------------------------------------------------
