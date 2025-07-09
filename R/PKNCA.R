@@ -112,7 +112,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   # ensure units are correct for excretion calculations
   df_conc <- convert_volume_units(df_conc)
-  
+
   args_list <- list(
     data = df_conc,
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
@@ -127,7 +127,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   if ("VOLUME" %in% colnames(df_conc)) {
     args_list$volume <- volume_column
   }
-  
+
   pknca_conc <- do.call(PKNCA::PKNCAconc, args_list)
 
   # Create dosing data
