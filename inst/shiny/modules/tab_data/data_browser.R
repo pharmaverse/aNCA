@@ -158,7 +158,7 @@ variable_browser_server <- function(id, data_list,
     
     output$ui_numeric_display <- renderUI({
       validation_checks()
-      dataname <- "ADNCA" # Using the direct parameter
+      dataname <- "ADNCA"
       varname <- plot_var$variable[[dataname]]
       df <- data_list[[dataname]]
       
