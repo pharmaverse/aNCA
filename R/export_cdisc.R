@@ -184,7 +184,7 @@ export_cdisc <- function(res_nca) {
             filter(Core == "Exp" & (Type == "Char" | Type == "Text")) %>%
             pull(Variable),
           names(.)
-          ),
+        ),
         .fns = ~ NA_character_,
         .names = "{.col}"
       )
@@ -204,16 +204,7 @@ export_cdisc <- function(res_nca) {
     )
 
   # Adjust class and length to the standards
-  for (var in names(cdisc_info)) {
-    var_specs <- metadata_variables %>%
-      filter(Variable == var, !duplicated(Variable))
-
-    if (var_specs$Type %in% c("Char", "text")) {
-      cdisc_info[[var]] <- substr(cdisc_info[[var]], 0, var_specs$Length)
-    } else if (var_specs$Type %in% c("Num", "integer", "float", "duration")) {
-      cdisc_info[[var]] <- round(as.numeric(cdisc_info[[var]]), var_specs$Length)
-    }
-  }
+  cdisc_info <- adjust_class_and_length(cdisc_info, metadata_variables)
 
   # Add labels to the columns
   labels_map <- metadata_variables %>%
@@ -238,7 +229,7 @@ export_cdisc <- function(res_nca) {
 
   adpc <- res_nca$data$conc$data %>%
     left_join(dose_info,
-              by = intersect(names( res_nca$data$conc$data), names(dose_info)),
+              by = intersect(names(res_nca$data$conc$data), names(dose_info)),
               suffix = c("", ".y")) %>%
     mutate(
       PARAMCD = if ("PARAMCD" %in% names(.)) {
@@ -272,19 +263,7 @@ export_cdisc <- function(res_nca) {
     # Order columns using a standard, and then put the rest of the columns
     select(any_of(CDISC_COLS$ADPC$Variable))
 
-  # Adjust class and length to the standards
-  for (var in names(adpc)) {
-    var_specs <- metadata_variables %>%
-      filter(Variable == var, !duplicated(Variable))
-    
-    if (var_specs$Type %in% c("Char", "text")) {
-      adpc[[var]] <- substr(adpc[[var]], 0, var_specs$Length)
-    } else if (var_specs$Type %in% c("Num", "integer", "float", "duration") && !endsWith(var, "DTM")) {
-      adpc[[var]] <- round(as.numeric(adpc[[var]]), var_specs$Length)
-    }
-  }
-
-  # Add variable labels in ADPC
+  adpc <- adjust_class_and_length(adpc, metadata_variables)
   var_labels(adpc) <- labels_map[names(adpc)]
 
   # Keep StudyID value to use for file naming
@@ -359,3 +338,17 @@ get_subjid <- function(data) {
     NA
   }
 }
+
+  # Helper: adjust class and length for a data.frame based on metadata_variables
+  adjust_class_and_length <- function(df, metadata) {
+    for (var in names(df)) {
+      var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
+      if (nrow(var_specs) == 0) next
+      if (var_specs$Type %in% c("Char", "text")) {
+        df[[var]] <- substr(as.character(df[[var]]), 1, var_specs$Length)
+      } else if (var_specs$Type %in% c("Num", "integer", "float", "duration") && !endsWith(var, "DTM")) {
+        df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
+      }
+    }
+    df
+  }
