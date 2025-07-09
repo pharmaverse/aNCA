@@ -42,13 +42,18 @@ export_cdisc <- function(res_nca) {
   group_dose_cols <- unique(unlist(res_nca$data$dose$columns$groups))
   group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
   route_col <- res_nca$data$dose$columns$route
+  conc_group_sp_cols <- setdiff(
+    unname(unlist(res_nca$data$conc$columns$groups)),
+    unname(unlist(res_nca$data$dose$columns$groups))
+  )
+  timeu_col <- res_nca$data$conc$columns$timeu[[1]]
 
   dose_info <- res_nca$data$dose$data %>%
     # Select only the columns that are used in the NCA results
     select(
       any_of(c(
         # Variables defined for the dose information
-        group_dose_cols, "NCA_PROFILE",  route_col,
+        group_dose_cols, "NCA_PROFILE",  route_col, timeu_col,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
@@ -56,10 +61,19 @@ export_cdisc <- function(res_nca) {
       ))
     ) %>%
     unique()
+  
+  conc_info <- res_nca$data$conc$data %>%
+    select(
+      group_conc_cols, timeu_col
+    ) %>%
+    unique()
 
   cdisc_info <- res_nca_req$result  %>%
     left_join(dose_info,
               by = intersect(names(res_nca$result), names(dose_info)),
+              suffix = c("", ".y")) %>%
+    left_join(conc_info,
+              by = intersect(names(res_nca$result), names(conc_info)),
               suffix = c("", ".y")) %>%
     group_by(
       across(any_of(c(
@@ -71,7 +85,7 @@ export_cdisc <- function(res_nca) {
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
-    add_derived_cdisc_vars() %>%
+    add_derived_cdisc_vars(timeu_col = timeu_col, conc_group_sp_cols = conc_group_sp_cols) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
@@ -275,7 +289,7 @@ adjust_class_and_length <- function(df, metadata) {
 }
 
 # Helper: add derived CDISC variables based on PKNCA terms
-add_derived_cdisc_vars <- function(df) {
+add_derived_cdisc_vars <- function(df, conc_group_sp_cols, timeu_col) {
   df %>%
     mutate(
       PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
@@ -283,14 +297,20 @@ add_derived_cdisc_vars <- function(df) {
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("AVISIT" %in% names(.)) paste(PARAM, PCSPEC, AVISIT, sep = "-")
-        else if ("VISIT" %in% names(.)) paste(PARAM, PCSPEC, VISIT, sep = "-")
-        else paste(PARAM, PCSPEC, NCA_PROFILE, sep = "-")
+        if ("AVISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
+          paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
+        } else if ("VISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
+          paste(!!!syms(c(conc_group_sp_cols, "VISIT")), sep = "-")
+        } else if (!is.null(conc_group_sp_cols)) {
+          paste(!!!syms(c(conc_group_sp_cols, "NCA_PROFILE")), sep = "-")
+        } else {
+          NA_character_
+        }
       },
       # Parameter Category
       PPCAT = PARAM,
       PPSCAT = "NON-COMPARTMENTAL",
-      PPSPEC = PCSPEC,
+      PPSPEC = if ("PCSPEC" %in% names(.)) PCSPEC else NA_character_,
       # Specific ID variables
       PPSPID = if ("STUDYID" %in% names(.)) {
         paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA")
@@ -331,12 +351,12 @@ add_derived_cdisc_vars <- function(df) {
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(start, RRLTU),
+        convert_to_iso8601_duration(start, !!!syms(timeu_col)),
         NA_character_
       ),
       PPENINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(end, RRLTU),
+        convert_to_iso8601_duration(end, !!!syms(timeu_col)),
         NA_character_
       ),
       PPFAST = {
