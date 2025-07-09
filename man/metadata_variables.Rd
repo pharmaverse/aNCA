@@ -8,12 +8,13 @@
 A data frame with 361 rows and 14 variables:
 \describe{
 \item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADPC, ADPP).}
-\item{Order}{Numeric. The sequential order of the variable within its domain. Established based on Role, Core and Variable}
+\item{Order}{Numeric. Order of the variable within its domain, based on Role, Core and Variable}
 \item{Variable}{Character. The short name of the variable.}
 \item{Label}{Character. A descriptive label for the variable.}
-\item{Type}{Character. The data type of the variable (e.g., Char, Num, text, integer, float, dateTime).}
-\item{Role}{Character. The CDISC role of the variable (e.g., Identifier, Topic, Timing, Result Qualifier, Record Qualifier, Grouping Qualifier, Synonym Qualifier, Variable Qualifier).}
-\item{Core}{Character. Indicates the core status of the variable (Req = Required, Perm = Permissible, Exp = Expected, Cond = Conditional).}
+\item{Type}{Character. Data type of the variable (Char, Num, text, integer, float, dateTime).}
+\item{Role}{Character. The CDISC role of the variable (e.g., Identifier, Topic, Timing...).}
+\item{Core}{Character. Indicates the core status of the variable
+(Req = Required, Perm = Permissible, Exp = Expected, Cond = Conditional).}
 \item{Roche_Specific}{Character. Indicates if the variable is Roche-specific.}
 \item{is.core}{Logical. TRUE if the variable is a core variable, otherwise FALSE.}
 \item{Length}{Numeric. The maximum length of the variable.}
