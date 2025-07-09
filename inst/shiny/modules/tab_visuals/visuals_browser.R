@@ -34,7 +34,7 @@ variable_browser_ui <- function(id) {
               class = "block",
               uiOutput(ns("ui_numeric_display"))
             ),
-            uiOutput(ns("plot_ui")),
+            teal.widgets::plot_with_settings_ui(ns("variable_plot")),
             tags$br(),
             teal.widgets::panel_item(
               title = "Plot settings",
@@ -86,6 +86,9 @@ variable_browser_server <- function(id, data_list,
     
     varname_numeric_as_factor <- reactiveValues()
     
+    # Create a reactive trigger for the plots
+    plot_trigger <- reactiveVal(0)
+    
     output$ui_variable_browser <- renderUI({
       tags$div(
         class = "mt-4",
@@ -108,6 +111,10 @@ variable_browser_server <- function(id, data_list,
     observe({
       establish_updating_selection("ADNCA", input, plot_var, columns_names)
     })
+    
+    observeEvent(plot_var$variable[["ADNCA"]], {
+      plot_trigger(plot_trigger() + 1)
+    }, ignoreNULL = TRUE)
     
     validation_checks <- validate_input(input, plot_var, data_list, "ADNCA")
     
@@ -321,6 +328,8 @@ variable_browser_server <- function(id, data_list,
     })
     
     variable_plot_r <- reactive({
+      plot_trigger()
+      
       req(plotted_data())
       display_density <- `if`(is.null(input$display_density), FALSE, input$display_density)
       remove_outliers <- `if`(is.null(input$remove_outliers), FALSE, input$remove_outliers)
@@ -345,19 +354,11 @@ variable_browser_server <- function(id, data_list,
       )
     })
     
-    output$plot_ui <- renderUI({
-      req(plot_var$variable[["ADNCA"]])
-      teal.widgets::plot_with_settings_ui(ns(paste0("variable_plot_", plot_var$variable[["ADNCA"]])))
-    })
-    
-    observe({
-      req(plot_var$variable[["ADNCA"]])
-      teal.widgets::plot_with_settings_srv(
-        id = paste0("variable_plot_", plot_var$variable[["ADNCA"]]),
-        plot_r = variable_plot_r,
-        height = c(500, 200, 2000)
-      )
-    })
+    teal.widgets::plot_with_settings_srv(
+      id = "variable_plot", # Corresponds to the static ID in the UI
+      plot_r = variable_plot_r,
+      height = c(500, 200, 2000)
+    )
     
     output$variable_summary_table <- DT::renderDataTable({
       var_summary_table(

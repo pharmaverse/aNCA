@@ -112,7 +112,7 @@ plot_var_summary <- function(var,
   checkmate::assert_integerish(records_for_factor, lower = 0, len = 1, any.missing = FALSE)
   checkmate::assert_class(ggplot2_args, "ggplot2_args")
   
-  grid::grid.newpage()
+  #grid::grid.newpage()
   
   plot_main <- if (is.factor(var) || is.character(var) || is.logical(var)) {
     groups <- unique(as.character(var))
@@ -236,7 +236,7 @@ plot_var_summary <- function(var,
     plot_main <- ggplot2::ggplotGrob(plot_main)
   }
   
-  grid::grid.draw(plot_main)
+  #grid::grid.draw(plot_main)
   plot_main
 }
 
