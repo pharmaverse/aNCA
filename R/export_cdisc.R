@@ -144,6 +144,12 @@ export_cdisc <- function(res_nca) {
           NULL
         }
       },
+      # ADPP Specific
+      AVAL = PPSTRESN,
+      AVALC = PPSTRESC,
+      AVALU = PPSTRESU,
+      PARAMCD = PPTESTCD,
+      PARAM = PPTEST,
       NCA_PROFILE = NCA_PROFILE
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
@@ -228,10 +234,7 @@ export_cdisc <- function(res_nca) {
     )
 
   adpp <- cdisc_info %>%
-    # Rename/mutate variables from PP
-    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
-           PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable, "PPFAST")))
+    select(any_of(c(CDISC_COLS$ADPP$Variable)))
 
   adpc <- res_nca$data$conc$data %>%
     mutate(
