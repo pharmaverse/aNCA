@@ -21,7 +21,6 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
-
   # Define the CDISC columns we need and its rules using the metadata_variables object
   CDISC_COLS <- metadata_variables %>%
     filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
@@ -79,7 +78,7 @@ export_cdisc <- function(res_nca) {
       across(any_of(c(
         group_conc_cols, "start", "end", "PPTESTCD", "type_interval"
       )))
-    )  %>%
+    ) %>%
     arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
     # Identify all dulicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
@@ -135,10 +134,9 @@ export_cdisc <- function(res_nca) {
         .fns = ~ NA,
         .names = "{.col}"
       )
-    )
-
-  # Adjust class and length to the standards
-  cdisc_info <- adjust_class_and_length(cdisc_info, metadata_variables)
+    ) %>%
+    # Adjust class and length to the standards
+    adjust_class_and_length(metadata_variables)
 
   # Add labels to the columns
   labels_map <- metadata_variables %>%
@@ -195,9 +193,11 @@ export_cdisc <- function(res_nca) {
       }
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC$Variable))
-
-  adpc <- adjust_class_and_length(adpc, metadata_variables)
+    select(any_of(CDISC_COLS$ADPC$Variable)) %>%
+    # Adjust class and length to the standards
+    adjust_class_and_length(metadata_variables)
+  
+  # Add variable labels for ADPC
   var_labels(adpc) <- labels_map[names(adpc)]
 
   list(pp = pp, adpp = adpp, adpc = adpc)
@@ -274,10 +274,10 @@ get_subjid <- function(data) {
 adjust_class_and_length <- function(df, metadata) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
-    if (nrow(var_specs) == 0) next
+    if (nrow(var_specs) == 0 | all(is.na(df[[var]]))) next
     if (var_specs$Type %in% c("Char", "text")) {
-      df[[var]] <- substr(as.character(df[[var]]), 1, var_specs$Length)
-    } else if (var_specs$Type %in% c("Num", "integer", "float", "duration") &&
+      df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
+    } else if (var_specs$Type %in% c("Num", "integer", "float") &&
                  !endsWith(var, "DTM")) {
       df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     }
@@ -348,12 +348,12 @@ add_derived_cdisc_vars <- function(df, conc_group_sp_cols, timeu_col) {
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(start, !!!syms(timeu_col)),
+        convert_to_iso8601_duration(start, .[[timeu_col]]),
         NA_character_
       ),
       PPENINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(end, !!!syms(timeu_col)),
+        convert_to_iso8601_duration(end, .[[timeu_col]]),
         NA_character_
       ),
       PPFAST = {
