@@ -175,12 +175,12 @@ export_cdisc <- function(res_nca) {
       )
     ) %>%
     # Select only columns needed for PP, ADPP, ADPC
-    select(any_of(bind_rows(unname(CDISC_COLS))[["Variable"]])) %>%
+    select(any_of(metadata_variables[["Variable"]])) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
         .cols = setdiff(
-          bind_rows(unname(CDISC_COLS)) %>%
+          metadata_variables %>%
             filter(Core == "Exp" & (Type == "Char" | Type == "Text")) %>%
             pull(Variable),
           names(.)
@@ -193,7 +193,7 @@ export_cdisc <- function(res_nca) {
     mutate(
       across(
         .cols = setdiff(
-          bind_rows(unname(CDISC_COLS)) %>%
+          metadata_variables %>%
             filter(Core == "Exp" & (Type != "Char" & Type != "Text")) %>%
             pull(Variable),
           names(.)
