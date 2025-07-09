@@ -44,6 +44,14 @@ tab_visuals_ui <- function(id) {
             multiple = TRUE,
             options = list(`actions-box` = TRUE)
           ),
+          pickerInput(
+            inputId = ns("generalplot_facetby"),
+            label = "Choose the variables to facet by:",
+            choices = NULL,
+            selected = NULL,
+            multiple = TRUE,
+            options = list(`actions-box` = TRUE)
+          ),
           radioButtons(
             ns("log"),
             "Select the Plot type:",
@@ -214,16 +222,25 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected = param_choices_usubjid[1]
       )
 
-      # Update the colorby picker input
-      param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "PARAM", "DOSEA", "NCA_PROFILE", "USUBJID", grouping_vars())
-      )
+      # Update the colorby and facet by picker inputs
+      all_cols <- names(data())
+      cols_to_exclude <- c("AVAL", "ARRLT", "AFRLT", "NRRLT", "NFRLT")
+      unit_cols <- all_cols[endsWith(all_cols, "U")]
+      cols_to_exclude <- c(cols_to_exclude, unit_cols)
+      param_choices <- sort(setdiff(all_cols, cols_to_exclude))
 
       updatePickerInput(
         session,
         "generalplot_colorby",
-        choices = param_choices_colorby,
-        selected = param_choices_colorby[length(param_choices_colorby)]
+        choices = param_choices,
+        selected = param_choices[1]
+      )
+      
+      updatePickerInput(
+        session,
+        "generalplot_facetby",
+        choices = param_choices,
+        selected = NULL
       )
 
       # Update the analyte mean select input
@@ -302,6 +319,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         input$generalplot_pcspec,
         input$generalplot_usubjid,
         input$generalplot_colorby,
+        input$generalplot_facetby,
         input$timescale,
         input$log,
         input$show_threshold,

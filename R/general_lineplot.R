@@ -11,6 +11,7 @@
 #'                          to be included in the plot.
 #' @param colorby_var       A character string specifying the variable by which to color
 #'                          the lines in the plot.
+#' @param facet_by          A character vector specifying the variables by which to facet the plot.
 #' @param time_scale        A character string specifying the time scale.
 #'                          Options are "By Cycle" or other values.
 #' @param yaxis_scale       A character string specifying the x-axis scale.
@@ -60,7 +61,7 @@
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
-  colorby_var, time_scale, yaxis_scale, show_threshold = FALSE, threshold_value = 0, cycle = NULL
+  colorby_var = "USUBJID", facet_by = NULL, time_scale, yaxis_scale, show_threshold = FALSE, threshold_value = 0, cycle = NULL
 ) {
 
   # preprocess data according to user selection
@@ -141,6 +142,10 @@ general_lineplot <- function(
   if (show_threshold) {
     plt <- plt +
       ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  }
+  
+  if (!is.null(facet_by) && length(facet_by) > 0) {
+    plt <- plt + facet_wrap(vars(!!!syms(facet_by)))
   }
 
   return(plt)
