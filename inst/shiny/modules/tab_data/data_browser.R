@@ -1,7 +1,15 @@
-# UI function for the variable browser
-#' @import teal.widgets
-#' @import teal
-variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = NULL) {
+#' UI function for the variable browser
+#' This function creates the UI for the variable browser module.
+#' @param id The module ID
+#' @returns A Shiny tag list containing the UI elements for the variable browser
+#' 
+#' @details
+#' The UI consists of a tabset panel with a single tab for ADNCA data.
+#' It includes a variable browser for the User to select variables in the data
+#' which then generates a histogram or bar chart displaying the distribution of the selected variable.
+#' There is also a summary table underneath containing summary statistics of the variable.
+
+variable_browser_ui <- function(id) {
   ns <- NS(id)
   
   tagList(
@@ -54,14 +62,18 @@ variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = N
             DT::dataTableOutput(ns("variable_summary_table"))
           )
         )
-      ),
-      pre_output = pre_output,
-      post_output = post_output
+      )
     )
   )
 }
 
-# Corrected variable_browser_server function
+
+#' Variable browser server function
+#' This function handles the server-side logic for the variable browser module.
+#' @param id The module ID
+#' @param data_list_reactive A reactive list containing the datasets
+#' @param ggplot2_args_param A parameter for ggplot2 arguments
+#' @returns A Shiny module server function that manages the variable browser logic.
 variable_browser_server <- function(id, data_list_reactive,
                                     ggplot2_args_param = teal.widgets::ggplot2_args()) {
   moduleServer(id, function(input, output,

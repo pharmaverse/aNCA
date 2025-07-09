@@ -10,8 +10,7 @@ tab_visuals_ui <- function(id) {
     id = "visuals",
     nav_panel("Variable Browser",
       variable_browser_ui(
-        ns("var_browser"),
-        dataname = "ADNCA"
+        ns("var_browser")
       )
     ),
     nav_panel("Individual Plots",
