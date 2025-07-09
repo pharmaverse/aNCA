@@ -8,7 +8,7 @@
 A data frame with 361 rows and 14 variables:
 \describe{
 \item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADPC, ADPP).}
-\item{Order}{Numeric. Order of the variable within its domain, based on Role, Core and Variable}
+\item{Order}{Numeric. Variable order within its domain, based on Role, Core and Variable}
 \item{Variable}{Character. The short name of the variable.}
 \item{Label}{Character. A descriptive label for the variable.}
 \item{Type}{Character. Data type of the variable (Char, Num, text, integer, float, dateTime).}
@@ -31,9 +31,6 @@ Used for PP and ADPP mapping rules and checks in the export_cdisc function
 metadata_variables
 }
 \description{
-Pharmacokinetic Parameters (ADPC) and Pharmacodynamic Parameters (PP)
-}
-\details{
 A dataset containing pharmacokinetic variable specifications.
 }
 \keyword{datasets}

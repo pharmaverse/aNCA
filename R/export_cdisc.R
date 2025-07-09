@@ -71,87 +71,7 @@ export_cdisc <- function(res_nca) {
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
-    mutate(
-      PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
-      PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
-      DOMAIN = "PP",
-      # Group ID
-      PPGRPID = {
-        if ("AVISIT" %in% names(.)) paste(PARAM, PCSPEC, AVISIT, sep = "-")
-        else if ("VISIT" %in% names(.)) paste(PARAM, PCSPEC, VISIT, sep = "-")
-        else paste(PARAM, PCSPEC, NCA_PROFILE, sep = "-")
-      },
-      # Parameter Category
-      PPCAT = PARAM,
-      PPSCAT = "NON-COMPARTMENTAL",
-      PPSPEC = PCSPEC,
-      # Specific ID variables
-      PPSPID = if ("STUDYID" %in% names(.)) {
-        paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA")
-      } else {
-        NA_character_
-      },
-      SUBJID = get_subjid(.),
-      # Parameter Variables
-      PPORRES = as.character(round(as.numeric(PPORRES), 12)),
-      PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = as.character(format(PPSTRESN, scientific = FALSE, trim = TRUE)),
-      # SD0027: Units should be NA if there is no value
-      PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
-      PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
-      # Status and Reason for Exclusion
-      PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
-      PPREASND = case_when(
-        !is.na(exclude) & is.na(PPSTRES) ~ exclude,
-        is.na(PPSTRES) ~ "NOT DERIVED",
-        TRUE ~ ""
-      ),
-      PPREASND = substr(PPREASND, 0, 200),
-      # Datetime
-      PPRFTDTC = {
-        if ("PCRFTDTC" %in% names(.)) {
-          PCRFTDTC
-        } else if ("PCRFTDTM" %in% names(.)) {
-          strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
-        } else {
-          NA_character_
-        }
-      },
-      EPOCH = if ("EPOCH" %in% names(.)) {
-        EPOCH
-      } else {
-        NA_character_
-      },
-      # TODO start and end intervals in case of partial aucs -> see oak file in templates
-      PPSTINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(start, RRLTU),
-        NA_character_
-      ),
-      PPENINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(end, RRLTU),
-        NA_character_
-      ),
-      PPFAST = {
-        if ("EXFAST" %in% names(.)) {
-          EXFAST
-        } else if ("PCFAST" %in% names(.)) {
-          PCFAST
-        } else if ("FEDSTATE" %in% names(.)) {
-          FEDSTATE
-        } else {
-          NULL
-        }
-      },
-      # ADPP Specific
-      AVAL = PPSTRESN,
-      AVALC = PPSTRESC,
-      AVALU = PPSTRESU,
-      PARAMCD = PPTESTCD,
-      PARAM = PPTEST,
-      NCA_PROFILE = NCA_PROFILE
-    ) %>%
+    add_derived_cdisc_vars() %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
@@ -219,8 +139,8 @@ export_cdisc <- function(res_nca) {
     select(
       -which(
         names(.) %in% CDISC_COLS$PP$Variable[CDISC_COLS$PP$Core == "Perm"] &
-        sapply(., function(x) all(is.na(x))) &
-        !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
+          sapply(., function(x) all(is.na(x))) &
+          !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
       )
     )
 
@@ -347,9 +267,95 @@ adjust_class_and_length <- function(df, metadata) {
     if (var_specs$Type %in% c("Char", "text")) {
       df[[var]] <- substr(as.character(df[[var]]), 1, var_specs$Length)
     } else if (var_specs$Type %in% c("Num", "integer", "float", "duration") &&
-               !endsWith(var, "DTM")) {
+                 !endsWith(var, "DTM")) {
       df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     }
   }
   df
+}
+
+# Helper: add derived CDISC variables based on PKNCA terms
+add_derived_cdisc_vars <- function(df) {
+  df %>%
+    mutate(
+      PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
+      PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
+      DOMAIN = "PP",
+      # Group ID
+      PPGRPID = {
+        if ("AVISIT" %in% names(.)) paste(PARAM, PCSPEC, AVISIT, sep = "-")
+        else if ("VISIT" %in% names(.)) paste(PARAM, PCSPEC, VISIT, sep = "-")
+        else paste(PARAM, PCSPEC, NCA_PROFILE, sep = "-")
+      },
+      # Parameter Category
+      PPCAT = PARAM,
+      PPSCAT = "NON-COMPARTMENTAL",
+      PPSPEC = PCSPEC,
+      # Specific ID variables
+      PPSPID = if ("STUDYID" %in% names(.)) {
+        paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA")
+      } else {
+        NA_character_
+      },
+      SUBJID = get_subjid(.),
+      # Parameter Variables
+      PPORRES = as.character(round(as.numeric(PPORRES), 12)),
+      PPSTRESN = round(as.numeric(PPSTRES), 12),
+      PPSTRESC = as.character(format(PPSTRESN, scientific = FALSE, trim = TRUE)),
+      # SD0027: Units should be NA if there is no value
+      PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
+      PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
+      # Status and Reason for Exclusion
+      PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
+      PPREASND = case_when(
+        !is.na(exclude) & is.na(PPSTRES) ~ exclude,
+        is.na(PPSTRES) ~ "NOT DERIVED",
+        TRUE ~ ""
+      ),
+      PPREASND = substr(PPREASND, 0, 200),
+      # Datetime
+      PPRFTDTC = {
+        if ("PCRFTDTC" %in% names(.)) {
+          PCRFTDTC
+        } else if ("PCRFTDTM" %in% names(.)) {
+          strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
+        } else {
+          NA_character_
+        }
+      },
+      EPOCH = if ("EPOCH" %in% names(.)) {
+        EPOCH
+      } else {
+        NA_character_
+      },
+      # TODO start and end intervals in case of partial aucs -> see oak file in templates
+      PPSTINT = ifelse(
+        startsWith(PPTESTCD, "AUCINT"),
+        convert_to_iso8601_duration(start, RRLTU),
+        NA_character_
+      ),
+      PPENINT = ifelse(
+        startsWith(PPTESTCD, "AUCINT"),
+        convert_to_iso8601_duration(end, RRLTU),
+        NA_character_
+      ),
+      PPFAST = {
+        if ("EXFAST" %in% names(.)) {
+          EXFAST
+        } else if ("PCFAST" %in% names(.)) {
+          PCFAST
+        } else if ("FEDSTATE" %in% names(.)) {
+          FEDSTATE
+        } else {
+          NULL
+        }
+      },
+      # ADPP Specific
+      AVAL = PPSTRESN,
+      AVALC = PPSTRESC,
+      AVALU = PPSTRESU,
+      PARAMCD = PPTESTCD,
+      PARAM = PPTEST,
+      NCA_PROFILE = NCA_PROFILE
+    )
 }
