@@ -305,8 +305,8 @@ render_tab_table <- function(dataset_name, parent_dataname, output, data_list_re
       data_cols <- colnames(df)
       if (isTRUE(input$show_parent_vars)) {
         data_cols
-      } else if (dataset_name != parent_name && parent_name %in% names(data_list_reactive_inner())) {
-        setdiff(data_cols, colnames(data_list_reactive_inner()[[parent_name]]))
+      } else if (dataset_name != parent_name && parent_name %in% names(data_list_reactive_inner)) {
+        setdiff(data_cols, colnames(data_list_reactive_inner[[parent_name]]))
       } else {
         data_cols
       }

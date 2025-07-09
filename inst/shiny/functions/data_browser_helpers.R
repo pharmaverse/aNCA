@@ -6,6 +6,28 @@ var_missings_info <- function(x) {
   sprintf("%s [%s%%]", sum(is.na(x)), round(mean(is.na(x) * 100), 2))
 }
 
+#' Validate input for plotting
+#' @param input The Shiny input object
+#' @param plot_var A reactive list containing the variable to be plotted
+#' @param data_list_reactive A reactive list containing the datasets
+#' @param dataset_name The name of the dataset to be validated
+#' 
+#' @returns A reactive expression that validates the input and returns TRUE if valid
+validate_input <- function(input, plot_var, data_list_reactive, dataset_name) {
+  reactive({
+    req(dataset_name)
+    varname <- plot_var$variable[[dataset_name]]
+    
+    validate(need(dataset_name, "No data selected"))
+    validate(need(varname, "No variable selected"))
+    df <- data_list_reactive[[dataset_name]]
+    # These functions are in the `teal` package, which is now loaded.
+    teal::validate_has_data(df, 1)
+    teal::validate_has_variable(varname = varname, data = df, "Variable not available")
+    
+    TRUE
+  })
+}
 
 #' Check if the variable is a numeric variable that should be treated as a factor
 #' @param .unique_records_for_factor Integer defining the minimum number of unique records for factor variables
@@ -85,7 +107,7 @@ remove_outliers_from <- function(var, outlier_definition) {
 #' 
 #' @returns A character vector with variable types replaced by corresponding Font Awesome icons
 variable_type_icons <- function(x) {
-  x <- gsub("numeric", '<i class="fa fa-calculator"></i>', x, fixed = TRUE)
+  x <- gsub("numeric", '<i class="fa fa-arrow-up-1-9"></i>', x, fixed = TRUE)
   x <- gsub("factor", '<i class="fa fa-list-ol"></i>', x, fixed = TRUE)
   x <- gsub("character", '<i class="fa fa-font"></i>', x, fixed = TRUE)
   x <- gsub("Date", '<i class="fa fa-calendar"></i>', x, fixed = TRUE)

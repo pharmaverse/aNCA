@@ -41,10 +41,6 @@ tab_data_ui <- function(id) {
               id = ns("data_navset-review"),
               div(
                 stepper_ui("Preview"),
-                variable_browser_ui(
-                  ns("var_browser"),
-                  dataname = "ADNCA"
-                ),
                 card(
                   uiOutput(ns("processed_data_message")),
                   reactableOutput(ns("data_processed"))
@@ -139,27 +135,6 @@ tab_data_server <- function(id) {
     #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables
 
-    # Call the server function for the variable browser
-    data_for_vb <- reactive({
-      req(processed_data())
-
-      # Create an empty join_keys object since there are none for this single dataset.
-      jks <- teal.data::join_keys()
-      
-      # Use the constructor to create the final S4 teal_data object.
-      data_list <- teal.data::teal_data(
-        ADNCA = processed_data(),
-        join_keys = jks
-      )
-      
-      data_list
-    })
-    
-    # Pass the reactive expression directly
-    variable_browser_server(
-      id = "var_browser",
-      data_list_reactive = data_for_vb()
-    )
     output$processed_data_message <- renderUI({
       tryCatch(
         {

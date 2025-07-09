@@ -33,8 +33,10 @@ variable_browser_ui <- function(id, dataname, pre_output = NULL, post_output = N
               collapsed = TRUE,
               selectInput(
                 inputId = ns("ggplot_theme"), label = "ggplot2 theme",
-                choices = ggplot_themes,
-                selected = "grey"
+                choices = c(
+                  "bw", "grey", "linedraw", "light", "dark", "minimal", "classic", "void"
+                ),
+                selected = "bw"
               ),
               fluidRow(
                 column(6, sliderInput(
@@ -100,6 +102,8 @@ variable_browser_server <- function(id, data_list_reactive,
     observe({
       establish_updating_selection("ADNCA", input, plot_var, columns_names)
     })
+    
+    validation_checks <- validate_input(input, plot_var, data_list_reactive, "ADNCA")
     
     plotted_data <- reactive({
       validation_checks()
