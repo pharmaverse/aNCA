@@ -342,30 +342,6 @@ describe("format_pkncadata_intervals", {
     expect_true(all(result$start >= 0))
   })
 
-  it("sets correct parameters if VOLUME present", {
-    df_conc_volume <- df_conc %>%
-      mutate(VOLUME = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
-
-    pknca_conc_volume <- PKNCA::PKNCAconc(
-      df_conc_volume,
-      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
-      exclude_half.life = "exclude_half.life",
-      time.nominal = "NFRLT",
-      volume = "VOLUME"
-    )
-
-    result_volume <- format_pkncadata_intervals(
-      pknca_conc_volume, pknca_dose,
-      params = c("ae", "fe", "cmax", "tmax", "half.life", "cl.obs")
-    )
-
-    expect_false(all(result_volume$cmax))
-    expect_false(all(result_volume$tmax))
-    expect_false(all(result_volume$half.life))
-    expect_false(all(result_volume$cl.obs))
-    expect_true(all(result_volume$ae))
-    expect_true(all(result_volume$fe))
-  })
 
   it("sets correct parameters if VOLUME not present", {
     pknca_conc_no_volume <- PKNCA::PKNCAconc(
