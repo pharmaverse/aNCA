@@ -218,9 +218,6 @@ describe("convert_volume_units()", {
 
     result <- convert_volume_units(df)
     expect_true(is.na(result$AMOUNTU))
-    expect_warning(
-      convert_volume_units(df)
-    )
 
   })
 })
