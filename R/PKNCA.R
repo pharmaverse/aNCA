@@ -109,35 +109,26 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   df_conc$exclude_half.life <- FALSE
 
   # Create PKNCA conc object
-  if (volume_column %in% colnames(df_conc)) {
 
-    # ensure units are correct for excretion calculations
-    df_conc <- convert_volume_units(df_conc)
+  # ensure units are correct for excretion calculations
+  df_conc <- convert_volume_units(df_conc)
+  
+  args_list <- list(
+    data = df_conc,
+    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+    exclude_half.life = "exclude_half.life",
+    include_half.life = "include_half.life",
+    time.nominal = "NFRLT",
+    concu = "AVALU",
+    timeu = "RRLTU",
+    amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL
+  )
 
-    pknca_conc <- PKNCA::PKNCAconc(
-      df_conc,
-      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
-      exclude_half.life = "exclude_half.life",
-      include_half.life = "include_half.life",
-      time.nominal = "NFRLT",
-      volume = volume_column,
-      concu = "AVALU",
-      timeu = "RRLTU",
-      amountu = "AMOUNTU"
-    )
-
-  } else {
-    # Create PKNCA objects
-    pknca_conc <- PKNCA::PKNCAconc(
-      df_conc,
-      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
-      exclude_half.life = "exclude_half.life",
-      include_half.life = "include_half.life",
-      time.nominal = "NFRLT",
-      concu = "AVALU",
-      timeu = "RRLTU"
-    )
+  if ("VOLUME" %in% colnames(df_conc)) {
+    args_list$volume <- volume_column
   }
+  
+  pknca_conc <- do.call(PKNCA::PKNCAconc, args_list)
 
   # Create dosing data
   df_dose <- format_pkncadose_data(
