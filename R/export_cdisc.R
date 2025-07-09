@@ -160,16 +160,16 @@ export_cdisc <- function(res_nca) {
     mutate(
       # one-to-many based on route
       PPTEST = case_when(
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~ 
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~
           gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~ 
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~
           gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
         TRUE ~ PPTEST
       ),
       PPTESTCD = case_when(
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~ 
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~
           gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~ 
+        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~
           gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
         TRUE ~ PPTESTCD
       )
@@ -339,16 +339,17 @@ get_subjid <- function(data) {
   }
 }
 
-  # Helper: adjust class and length for a data.frame based on metadata_variables
-  adjust_class_and_length <- function(df, metadata) {
-    for (var in names(df)) {
-      var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
-      if (nrow(var_specs) == 0) next
-      if (var_specs$Type %in% c("Char", "text")) {
-        df[[var]] <- substr(as.character(df[[var]]), 1, var_specs$Length)
-      } else if (var_specs$Type %in% c("Num", "integer", "float", "duration") && !endsWith(var, "DTM")) {
-        df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
-      }
+# Helper: adjust class and length for a data.frame based on metadata_variables
+adjust_class_and_length <- function(df, metadata) {
+  for (var in names(df)) {
+    var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
+    if (nrow(var_specs) == 0) next
+    if (var_specs$Type %in% c("Char", "text")) {
+      df[[var]] <- substr(as.character(df[[var]]), 1, var_specs$Length)
+    } else if (var_specs$Type %in% c("Num", "integer", "float", "duration") &&
+               !endsWith(var, "DTM")) {
+      df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     }
-    df
   }
+  df
+}
