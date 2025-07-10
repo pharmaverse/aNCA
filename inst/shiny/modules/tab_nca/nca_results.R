@@ -81,7 +81,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
       rules_applied <- sapply(rules, FUN =  \(x) x$is.checked)
       params_applied <- translate_terms(names(rules), "PKNCA", "PPTEST")[rules_applied]
-      params_applied <- names(final_results)[formatters::var_labels(final_results) %in% params_applied]
+      params_applied <- names(final_results)[formatters::var_labels(final_results)
+                                             %in% params_applied]
 
       if (length(params_applied) > 0) {
         final_results <- final_results %>%
@@ -120,7 +121,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
       session$userData$results$nca_results$pivoted_results <- final_results()
 
-      param_pptest_cols <- intersect(unname(formatters::var_labels(final_results())), pknca_cdisc_terms$PPTEST)
+      param_pptest_cols <- intersect(unname(formatters::var_labels(final_results())),
+                                     pknca_cdisc_terms$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(
