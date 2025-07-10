@@ -45,34 +45,38 @@ export_cdisc <- function(res_nca) {
     unname(unlist(res_nca$data$conc$columns$groups)),
     unname(unlist(res_nca$data$dose$columns$groups))
   )
-  timeu_col <- res_nca$data$conc$columns$timeu[[1]]
+  conc_timeu_col <- res_nca$data$conc$columns$timeu[[1]]
+  dose_time_col <- res_nca$data$dose$columns$time[[1]]
+  to_match_res_cols <- setdiff(colnames(res_nca_req$result), names(PKNCA::get.interval.cols()))
 
   dose_info <- res_nca$data$dose$data %>%
     # Select only the columns that are used in the NCA results
     select(
       any_of(c(
         # Variables defined for the dose information
-        group_dose_cols, "NCA_PROFILE",  route_col, timeu_col,
+        group_dose_cols, "NCA_PROFILE", dose_time_col,  route_col, conc_timeu_col,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM"
+        "PCRFTDTM", "PCRFTDTC"
       ))
     ) %>%
     unique()
   
   conc_info <- res_nca$data$conc$data %>%
     select(
-      group_conc_cols, timeu_col
+      any_of(c(
+        group_conc_cols, conc_timeu_col
+      ))
     ) %>%
     unique()
 
   cdisc_info <- res_nca_req$result  %>%
     left_join(dose_info,
-              by = intersect(names(res_nca$result), names(dose_info)),
+              by = intersect(to_match_res_cols, names(dose_info)),
               suffix = c("", ".y")) %>%
     left_join(conc_info,
-              by = intersect(names(res_nca$result), names(conc_info)),
+              by = intersect(to_match_res_cols, names(conc_info)),
               suffix = c("", ".y")) %>%
     group_by(
       across(any_of(c(
@@ -84,7 +88,11 @@ export_cdisc <- function(res_nca) {
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
-    add_derived_cdisc_vars(timeu_col = timeu_col, conc_group_sp_cols = conc_group_sp_cols) %>%
+    add_derived_cdisc_vars(
+      conc_timeu_col = conc_timeu_col,
+      conc_group_sp_cols = conc_group_sp_cols,
+      dose_time_col = dose_time_col
+    ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
@@ -286,7 +294,7 @@ adjust_class_and_length <- function(df, metadata) {
 }
 
 # Helper: add derived CDISC variables based on PKNCA terms
-add_derived_cdisc_vars <- function(df, conc_group_sp_cols, timeu_col) {
+add_derived_cdisc_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
   df %>%
     mutate(
       PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
@@ -348,12 +356,12 @@ add_derived_cdisc_vars <- function(df, conc_group_sp_cols, timeu_col) {
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(start, .[[timeu_col]]),
+        convert_to_iso8601_duration(start - .[[dose_time_col]], .[[conc_timeu_col]]),
         NA_character_
       ),
       PPENINT = ifelse(
         startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(end, .[[timeu_col]]),
+        convert_to_iso8601_duration(end - .[[dose_time_col]], .[[conc_timeu_col]]),
         NA_character_
       ),
       PPFAST = {
