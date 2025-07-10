@@ -347,7 +347,11 @@ base::local({
                                  timeu = "RRLTU"),
     data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
                                  route = "ROUTE", duration = "ADOSEDUR"),
-    units = units_table
+    units = units_table,
+    options = list(
+      keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval")
+    ),
+    intervals = FIXTURE_INTERVALS
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
 
@@ -370,53 +374,53 @@ base::local({
   # so we are manually making it
   #
   # TODO: Substitute this dirty hard coded trick with the proper way
-  FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
-    mutate(
-      type_interval = if ("type_interval" %in% names(.)) {
-        type_interval
-      } else {
-        ifelse((end - start) == 2, "manual", "main")
-      },
-      NCA_PROFILE = if ("NCA_PROFILE" %in% names(.)) {
-        NCA_PROFILE
-      } else {
-        ifelse(
-          start < 5,
-          1,
-          2
-        )
-      },
-      DOSNOA = if ("DOSNOA" %in% names(.)) {
-        DOSNOA
-      } else {
-        ifelse(
-          start < 5,
-          1,
-          2
-        )
-      }
-    )
-  #####################################################################
-  dose_data_to_join_fixture <- select(
-    FIXTURE_PKNCA_RES$data$dose$data,
-    -exclude,
-    -FIXTURE_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
-  )
-  FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
-    inner_join(
-      dose_data_to_join_fixture,
-      by = intersect(names(.), names(dose_data_to_join_fixture))
-    ) %>%
-    mutate(
-      # Assumption 4: start_dose &  end_dose relative to the dose time
-      start_dose = start - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
-      end_dose = end - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
-      # Assumption 3: PPSTRESU & PPSTRES are always in the results object
-      PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
-      PPSTRES = PPORRES,
-      # Assumption 5: PPTESTCD column folllows CDISC format
-      PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-    )
+  # FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
+  #   mutate(
+  #     type_interval = if ("type_interval" %in% names(.)) {
+  #       type_interval
+  #     } else {
+  #       ifelse((end - start) == 2, "manual", "main")
+  #     },
+  #     NCA_PROFILE = if ("NCA_PROFILE" %in% names(.)) {
+  #       NCA_PROFILE
+  #     } else {
+  #       ifelse(
+  #         start < 5,
+  #         1,
+  #         2
+  #       )
+  #     },
+  #     DOSNOA = if ("DOSNOA" %in% names(.)) {
+  #       DOSNOA
+  #     } else {
+  #       ifelse(
+  #         start < 5,
+  #         1,
+  #         2
+  #       )
+  #     }
+  #   )
+  # #####################################################################
+  # dose_data_to_join_fixture <- select(
+  #   FIXTURE_PKNCA_RES$data$dose$data,
+  #   -exclude,
+  #   -FIXTURE_PKNCA_RES$data$dose$data$conc$columns$groups$group_analyte
+  # )
+  # FIXTURE_PKNCA_RES$result <<- FIXTURE_PKNCA_RES$result %>%
+  #   inner_join(
+  #     dose_data_to_join_fixture,
+  #     by = intersect(names(.), names(dose_data_to_join_fixture))
+  #   ) %>%
+  #   mutate(
+  #     # Assumption 4: start_dose &  end_dose relative to the dose time
+  #     start_dose = start - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
+  #     end_dose = end - !!sym(FIXTURE_PKNCA_RES$data$dose$columns$time),
+  #     # Assumption 3: PPSTRESU & PPSTRES are always in the results object
+  #     PPSTRESU = ifelse(PPORRESU %in% c("fraction", "unitless"), "", PPORRESU),
+  #     PPSTRES = PPORRES,
+  #     # Assumption 5: PPTESTCD column folllows CDISC format
+  #     PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+  #   )
 })
 # Dummy data
 # Import dataset from testthat/data folder
