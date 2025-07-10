@@ -9,7 +9,7 @@ CDISC_COLS <- metadata_variables %>%
 test_pknca_res <- FIXTURE_PKNCA_RES %>%
   filter(
     USUBJID %in% unique(USUBJID)[1:2],
-    PPTESTCD %in% c("CMAX", "AUCINT", "R2")
+    PPTESTCD %in% c("cmax", "aucint.last", "r.squared")
   )
 # Add special columns for testing in the concentration data
 test_pknca_res$data$conc$data <- test_pknca_res$data$conc$data %>%
@@ -22,7 +22,8 @@ test_pknca_res$data$conc$data <- test_pknca_res$data$conc$data %>%
     AVISIT = paste0("VISIT ", as.integer(NFRLT %% 24)),
     VISIT = AVISIT,
     AVISITN = as.integer(NFRLT %% 24),
-    VISITNUM = AVISITN
+    VISITNUM = AVISITN,
+    EPOCH = "OBSERVATION"
   )
 test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
   mutate(
@@ -38,7 +39,6 @@ test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
     )
   )
 
-
 describe("export_cdisc", {
   it("exports CDISC-compliant datasets (PP, ADPP, ADPC)", {
     result <- export_cdisc(test_pknca_res)
@@ -52,18 +52,30 @@ describe("export_cdisc", {
     expect_s3_class(pp, "data.frame")
     expect_true(all(names(pp) %in% CDISC_COLS$PP$Variable))
     expect_equal(nrow(pp), 9)
+    expect_equal(
+      unname(formatters::var_labels(pp)),
+      translate_terms(names(pp), "Variable", "Label", metadata_variables)
+    )
 
     # Check the ADPP
     adpp <- result$adpp
     expect_s3_class(adpp, "data.frame")
     expect_true(all(names(adpp) %in% CDISC_COLS$ADPP$Variable))
     expect_equal(nrow(adpp), 9) # Ensure all variables are included
+    expect_equal(
+      unname(formatters::var_labels(adpp)),
+      translate_terms(names(adpp), "Variable", "Label", metadata_variables)
+    )
 
     # Check the ADPC
     adpc <- result$adpc
     expect_s3_class(adpc, "data.frame")
     expect_true(all(names(adpc) %in% CDISC_COLS$ADPC$Variable))
     expect_equal(nrow(adpc), nrow(test_pknca_res$data$conc$data))
+    expect_equal(
+      unname(formatters::var_labels(adpc)),
+      translate_terms(names(adpc), "Variable", "Label", metadata_variables)
+    )
   })
 
   it("derives when possible ATPT, ATPTN, ATPTREF (PCTPT, PCTPTNUM, PCTPTREF)", {
@@ -126,14 +138,14 @@ describe("export_cdisc", {
     modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
       mutate(
         # Case NA without reason
-        PPSTRES = ifelse(PPTESTCD == "AUCINT", NA, PPSTRES),
-        exclude = ifelse(PPTESTCD == "AUCINT", NA, exclude),
+        PPSTRES = ifelse(PPTESTCD == "aucint.last", NA, PPSTRES),
+        exclude = ifelse(PPTESTCD == "cmax", NA, exclude),
         # Case NA with reason
-        PPSTRES = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1], NA, PPSTRES),
-        exclude = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1], "Excluded due to protocol deviation", exclude),
+        PPSTRES = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1], NA, PPSTRES),
+        exclude = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1], "Excluded due to protocol deviation", exclude),
         # Reason with > 200 characters
-        PPSTRES = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[2], NA, PPSTRES),
-        exclude = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[2], paste(rep("A", 201), collapse = ""), exclude),
+        PPSTRES = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[2], NA, PPSTRES),
+        exclude = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[2], paste(rep("A", 201), collapse = ""), exclude),
       )
 
     result <- export_cdisc(modified_test_pknca_res)
@@ -169,8 +181,8 @@ describe("export_cdisc", {
     res_nothing <- export_cdisc(test_nothing)
 
 
-    # Check that PPRFTDTC is derived correctly (specifying seconds)
-    expected_val <- unique(test_pknca_res$data$dose$data$PCRFTDTC)
+    # Check that PPRFTDTC is derived correctly (specifying also seconds)
+    expected_val <- paste0(unique(test_pknca_res$data$dose$data$PCRFTDTC), ":00")
 
     expect_equal(unique(res$pp$PPRFTDTC), expected_val)
     expect_equal(unique(res_no_pcrftdtc$pp$PPRFTDTC), expected_val)
@@ -183,11 +195,11 @@ describe("export_cdisc", {
     test_no_avisit_visit <- test_pknca_res
     test_nothing <- test_pknca_res
 
-    test_no_avisit$data$dose$data <- test_no_avisit$data$conc$data %>%
+    test_no_avisit$data$conc$data <- test_no_avisit$data$conc$data %>%
       select(-AVISIT)
-    test_no_avisit_visit$data$dose$data <- test_no_avisit_visit$data$dose$data %>%
+    test_no_avisit_visit$data$conc$data <- test_no_avisit_visit$data$conc$data %>%
       select(-AVISIT, -VISIT)
-    test_nothing$data$dose$data <- test_nothing$data$dose$data %>%
+    test_nothing$data$conc$data <- test_nothing$data$conc$data %>%
       select(-AVISIT, -VISIT)
     test_nothing$result <- test_nothing$result %>% select(-NCA_PROFILE)
 
@@ -196,32 +208,54 @@ describe("export_cdisc", {
     res_no_avisit_visit <- export_cdisc(test_no_avisit_visit)
 
     # Check that PPGRPID is derived correctly
-    data <- left_join(test_pknca_res$result, test_pknca_res$data$dose$data,
-                      by = intersect(names(test_pknca_res$result),
-                                     names(test_pknca_res$data$dose$data)))
-    expected_val_all <- data %>%
-      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", AVISIT)) %>%
-      pull(PPGRPID) %>%
-      unique()
-    expected_val_no_avisit <- data %>%
-      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", VISIT)) %>%
-      pull(PPGRPID) %>%
-      unique()
-    expected_val_no_avisit_visit <- data  %>%
-      mutate(PPGRPID = paste0(PARAM, "-", PCSPEC, "-", NCA_PROFILE)) %>%
-      pull(PPGRPID) %>%
-      unique()
+    conc_group_cols <- c(group_vars(test_pknca_res$data$conc), "NCA_PROFILE")
+    group_dose_cols <- group_vars(test_pknca_res$data$dose)
+    exp_grpid <- as.data.frame(test_pknca_res, filter_requested = TRUE) %>%
+      left_join(test_pknca_res$data$conc$data %>%
+                  select(all_of(c(conc_group_cols, "AVISIT", "VISIT"))) %>%
+                  group_by(!!!syms(conc_group_cols)) %>%
+                  slice(1),
+                by = conc_group_cols) %>%
+      # Expected derivations
+      mutate(
+        GRPID_VISIT = paste0(PARAM, "-", PCSPEC, "-", VISIT),
+        GRPID_AVISIT = paste0(PARAM, "-", PCSPEC, "-", AVISIT),
+        GRPID_NCAPROFILE = paste0(PARAM, "-", PCSPEC, "-", NCA_PROFILE)
+      ) %>%
+      # Arrange in same order as results
+      arrange(!!!syms(c(group_dose_cols, "start", "end", "PPTESTCD")))
 
-    expect_equal(unique(res$pp$PPGRPID), unique(expected_val_all))
-    expect_equal(unique(res_no_avisit$pp$PPGRPID), unique(expected_val_no_avisit))
-    expect_equal(unique(res_no_avisit_visit$pp$PPGRPID), unique(expected_val_no_avisit_visit))
+    expect_equal(res$pp$PPGRPID, exp_grpid$GRPID_AVISIT, ignore_attr = TRUE)
+    expect_equal(res_no_avisit$pp$PPGRPID, exp_grpid$GRPID_VISIT, ignore_attr = TRUE)
+    expect_equal(res_no_avisit_visit$pp$PPGRPID, exp_grpid$GRPID_NCAPROFILE, ignore_attr = TRUE)
   })
 
   it("does not derive SUBJID if not present with USUBJID, STUDYID", {
-
     test_with_subjid <- test_pknca_res
+    test_with_subjid$data$conc$data <- test_pknca_res$data$dose$data %>%
+      mutate(
+        STUDYID = "S1",
+        SUBJID = ifelse(USUBJID == unique(USUBJID)[1], 1, 2),
+        USUBJID = paste0(STUDYID, "-", SUBJID)
+      )
     test_with_subjid$data$dose$data <- test_pknca_res$data$dose$data %>%
-      mutate(SUBJID = as.character(1:2))
+      mutate(
+        STUDYID = "S1",
+        SUBJID = ifelse(USUBJID == unique(USUBJID)[1], 1, 2),
+        USUBJID = paste0(STUDYID, "-", SUBJID)
+      )
+    test_with_subjid$data$intervals <- test_with_subjid$data$intervals %>%
+      mutate(
+        STUDYID = "S1",
+        SUBJID = ifelse(USUBJID == unique(USUBJID)[1], 1, 2),
+        USUBJID = paste0(STUDYID, "-", SUBJID)
+      )
+    test_with_subjid$result <- test_with_subjid$result %>%
+      mutate(
+        STUDYID = "S1",
+        SUBJID = ifelse(USUBJID == unique(USUBJID)[1], 1, 2),
+        USUBJID = paste0(STUDYID, "-", SUBJID)
+      )
 
     test_no_subjid <- test_with_subjid
     test_no_subjid$data$dose$data <- test_with_subjid$data$dose$data %>%
@@ -236,27 +270,33 @@ describe("export_cdisc", {
     res_no_subjid_no_studyid <- export_cdisc(test_no_subjid_no_studyid)
 
     # Check that SUBJID is derived correctly
-    expected_vals <- unique(test_with_subjid$data$dose$data$SUBJID)
-    expect_equal(unique(res_with_subjid$adpc$SUBJID), expected_vals)
-    expect_equal(unique(res_no_subjid_no_studyid$adpc$SUBJID), expected_vals)
+    expected_vals <- as.character(test_with_subjid$data$dose$data$SUBJID)
+    expect_equal(res_with_subjid$adpc$SUBJID, expected_vals, ignore_attr = TRUE)
+    expect_equal(res_no_subjid_no_studyid$adpc$SUBJID, expected_vals, ignore_attr = TRUE)
   })
 
   it("derives PPFAST from EXFAST, PCFAST, or FEDSTATE as appropriate", {
     # Case 1: EXFAST present
     test_exfast <- test_pknca_res
-    test_exfast$data$dose$data$EXFAST <- c("Y", "N")
+    test_exfast$data$dose$data$EXFAST <- ifelse(
+      test_exfast$data$dose$data$USUBJID == unique(test_exfast$data$dose$data$USUBJID)[1],
+      "Y",
+      "N"
+    )
     res_exfast <- export_cdisc(test_exfast)
     expect_equal(unique(res_exfast$pp$PPFAST), c("Y", "N"))
 
     # Case 2: PCFAST present
-    test_pcfast <- test_pknca_res
-    test_pcfast$data$dose$data$PCFAST <- c("Y", "N")
+    test_pcfast <- test_exfast 
+    test_pcfast$data$dose$data <- test_pcfast$data$dose$data %>%
+      rename(PCFAST = EXFAST)
     res_pcfast <- export_cdisc(test_pcfast)
     expect_equal(unique(res_pcfast$pp$PPFAST), c("Y", "N"))
 
     # Case 3: FEDSTATE present
-    test_fedstate <- test_pknca_res
-    test_fedstate$data$dose$data$FEDSTATE <- c("Y", "N")
+    test_fedstate <- test_exfast 
+    test_fedstate$data$dose$data <- test_fedstate$data$dose$data %>%
+      rename(FEDSTATE = EXFAST)
     res_fedstate <- export_cdisc(test_fedstate)
     expect_equal(unique(res_fedstate$pp$PPFAST), c("Y", "N"))
 
@@ -264,6 +304,26 @@ describe("export_cdisc", {
     test_no_fast <- test_pknca_res
     res_no_fast <- export_cdisc(test_no_fast)
     expect_true(!"PPFAST" %in% names(res_no_fast$pp))
+  })
+
+  it("derives PARAMCD (analyte) if PARAMCD or PCTESTCD are present for ADPC", {
+    # Case 1: PARAMCD present
+    test_paramcd <- test_pknca_res
+    analyte_codes <- paste0(test_paramcd$data$conc$data$PARAM, 1)
+    test_paramcd$data$conc$data$PARAMCD <- analyte_codes
+    res_paramcd <- export_cdisc(test_paramcd)
+    expect_equal(unique(res_paramcd$adpc$PARAMCD), unique(analyte_codes))
+
+    # Case 2: PCTESTCD present
+    test_pctestcd <- test_pknca_res
+    test_pctestcd$data$conc$data$PCTESTCD <- analyte_codes
+    res_pctestcd <- export_cdisc(test_pctestcd)
+    expect_equal(unique(res_pctestcd$adpc$PARAMCD), unique(analyte_codes))
+
+    # Case 3: Neither PARAMCD nor PCTESTCD present, then is NA
+    test_no_paramcd_pctestcd <- test_pknca_res
+    res_no_paramcd_pctestcd <- export_cdisc(test_no_paramcd_pctestcd)
+    expect_true(all(is.na(res_no_paramcd_pctestcd$adpc$PARAMCD)))
   })
 })
 
