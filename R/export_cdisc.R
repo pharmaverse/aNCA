@@ -341,9 +341,14 @@ add_derived_cdisc_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_
       # Datetime
       PPRFTDTC = {
         if ("PCRFTDTC" %in% names(.)) {
-          PCRFTDTC
+          vals <- strptime(.[["PCRFTDTC"]], format = "%Y-%m-%dT%H:%M:%S") %>% format("%Y-%m-%dT%H:%M:%S")
+          vals2 <- strptime(.[["PCRFTDTC"]], format = "%Y-%m-%dT%H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
+          coalesce(coalesce(vals, vals2), .[["PCRFTDTC"]])
         } else if ("PCRFTDTM" %in% names(.)) {
           strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
+          vals <- strptime(.[["PCRFTDTM"]], format = "%d-%m-%Y %H:%M:%S") %>% format("%Y-%m-%dT%H:%M:%S")
+          vals2 <- strptime(.[["PCRFTDTM"]], format = "%d-%m-%Y %H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
+          coalesce(coalesce(vals, vals2), .[["PCRFTDTM"]])
         } else {
           NA_character_
         }
