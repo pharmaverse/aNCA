@@ -351,7 +351,11 @@ base::local({
     ),
     data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
                                  route = "ROUTE", duration = "ADOSEDUR"),
-    units = units_table
+    units = units_table,
+    options = list(
+      keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval")
+    ),
+    intervals = FIXTURE_INTERVALS
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
 
