@@ -70,18 +70,16 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
 
   for (input_id in names(special_cases)) {
     # Custom logic for DOSEU fallback to DOSEAU
-    if (input_id == "select_DOSEU") {
-      if ("DOSEAU" %in% column_names) {
-        selected <- "DOSEAU"
+    selected <- {
+      # Custom logic for DOSEU fallback to DOSEAU
+      param_name <- sub("select_", "", input_id)
+      if (input_id == "select_DOSEU" && "DOSEAU" %in% column_names) {
+        "DOSEAU"
+      } else if (param_name %in% column_names) {
+        param_name
       } else {
-        selected <-
-          if (sub("select_", "", input_id) %in% column_names)
-            sub("select_", "", input_id) else NULL
+        NULL
       }
-    } else {
-      selected <-
-        if (sub("select_", "", input_id) %in% column_names)
-          sub("select_", "", input_id) else NULL
     }
     updateSelectizeInput(
       session, input_id,
