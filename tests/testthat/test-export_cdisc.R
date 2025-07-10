@@ -11,6 +11,33 @@ test_pknca_res <- FIXTURE_PKNCA_RES %>%
     USUBJID %in% unique(USUBJID)[1:2],
     PPTESTCD %in% c("CMAX", "AUCINT", "R2")
   )
+# Add special columns for testing in the concentration data
+test_pknca_res$data$conc$data <- test_pknca_res$data$conc$data %>%
+  mutate(
+    ATPT = "Post-dose",
+    ATPTN = 1,
+    PCTPT = "Post-dose",
+    PCTPTNUM = 1,
+    PCTPTREF = "Most Recent Dose",
+    AVISIT = paste0("VISIT ", as.integer(NFRLT %% 24)),
+    VISIT = AVISIT,
+    AVISITN = as.integer(NFRLT %% 24),
+    VISITNUM = AVISITN
+  )
+test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
+  mutate(
+    PCRFTDTC = case_when(
+      NCA_PROFILE == 1 ~ "2023-01-01T00:00",
+      NCA_PROFILE == 2 ~ "2023-01-02T00:00",
+      TRUE ~ NA_character_
+    ),
+    PCRFTDTM = case_when(
+      NCA_PROFILE == 1 ~ "01-01-2023 00:00",
+      NCA_PROFILE == 2 ~ "02-01-2023 00:00",
+      TRUE ~ NA_character_
+    )
+  )
+
 
 describe("export_cdisc", {
   it("exports CDISC-compliant datasets (PP, ADPP, ADPC)", {
@@ -90,8 +117,8 @@ describe("export_cdisc", {
     # Check that PPSTINT and PPENINT are derived correctly
     expect_true("PPSTINT" %in% names(result$pp))
     expect_true("PPENINT" %in% names(result$pp))
-    expect_equal(result$pp$PPSTINT[which(result$pp$PPTESTCD == "AUCINT")], "PT2H")
-    expect_equal(result$pp$PPENINT[which(result$pp$PPTESTCD == "AUCINT")], "PT4H")
+    expect_equal(result$pp$PPSTINT[which(result$pp$PPTESTCD == "AUCINT")], rep(c("PT0H", "PT2H"), times = 3))
+    expect_equal(result$pp$PPENINT[which(result$pp$PPTESTCD == "AUCINT")], rep(c("PT2H", "PT4H"), times = 3))
   })
 
   it("derives PPREASND & PPSTAT correctly in all situations", {
@@ -102,11 +129,11 @@ describe("export_cdisc", {
         PPSTRES = ifelse(PPTESTCD == "AUCINT", NA, PPSTRES),
         exclude = ifelse(PPTESTCD == "AUCINT", NA, exclude),
         # Case NA with reason
-        PPSTRES = ifelse(PPTESTCD == "AUCINF", NA, PPSTRES),
-        exclude = ifelse(PPTESTCD == "AUCINF", "Excluded due to protocol deviation", exclude),
+        PPSTRES = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1], NA, PPSTRES),
+        exclude = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1], "Excluded due to protocol deviation", exclude),
         # Reason with > 200 characters
-        exclude = ifelse(PPTESTCD == "R2", paste(rep("A", 201), collapse = ""), exclude),
-        PPSTRES = ifelse(PPTESTCD == "R2", NA, PPSTRES)
+        PPSTRES = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[2], NA, PPSTRES),
+        exclude = ifelse(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[2], paste(rep("A", 201), collapse = ""), exclude),
       )
 
     result <- export_cdisc(modified_test_pknca_res)
@@ -115,11 +142,11 @@ describe("export_cdisc", {
                    pull(PPREASND) %>%
                    unique(),
                  "NOT DERIVED")
-    expect_equal(filter(result$pp, PPTESTCD == "AUCINF") %>%
+    expect_equal(filter(result$pp, PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]) %>%
                    pull(PPREASND) %>%
                    unique(),
                  "Excluded due to protocol deviation")
-    expect_equal(filter(result$pp, PPTESTCD == "R2") %>%
+    expect_equal(filter(result$pp, PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[2]) %>%
                    pull(PPREASND) %>%
                    unique(),
                  paste0(rep("A", 200), collapse = ""))
@@ -142,7 +169,7 @@ describe("export_cdisc", {
     res_nothing <- export_cdisc(test_nothing)
 
 
-    # Check that PPRFTDTC is derived correctly
+    # Check that PPRFTDTC is derived correctly (specifying seconds)
     expected_val <- unique(test_pknca_res$data$dose$data$PCRFTDTC)
 
     expect_equal(unique(res$pp$PPRFTDTC), expected_val)
@@ -156,7 +183,7 @@ describe("export_cdisc", {
     test_no_avisit_visit <- test_pknca_res
     test_nothing <- test_pknca_res
 
-    test_no_avisit$data$dose$data <- test_no_avisit$data$dose$data %>%
+    test_no_avisit$data$dose$data <- test_no_avisit$data$conc$data %>%
       select(-AVISIT)
     test_no_avisit_visit$data$dose$data <- test_no_avisit_visit$data$dose$data %>%
       select(-AVISIT, -VISIT)
