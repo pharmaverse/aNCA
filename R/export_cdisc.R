@@ -40,6 +40,7 @@ export_cdisc <- function(res_nca) {
   group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
   group_dose_cols <- unique(unlist(res_nca$data$dose$columns$groups))
   group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
+  concu_col <- res_nca$data$conc$columns$concu
   route_col <- res_nca$data$dose$columns$route
   conc_group_sp_cols <- res_nca$data$conc$columns$groups$group_analyte %>%
     append(
@@ -67,7 +68,8 @@ export_cdisc <- function(res_nca) {
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT"
+        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT", "EXFAST",
+        "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
     unique()
@@ -77,7 +79,8 @@ export_cdisc <- function(res_nca) {
       any_of(c(
         to_match_res_cols, conc_timeu_col, conc_time_col,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT"
+        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT", "EXFAST",
+        "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>% unique() %>%
     # Select the first record as dose record information
@@ -195,7 +198,12 @@ export_cdisc <- function(res_nca) {
       } else {
         NA_character_
       },
-      ANL01FL = ifelse(is.excluded.hl, NA_character_, "Y"),
+      ANL01FL = if ("is.excluded.hl" %in% names(.)) {
+        vals <- .[["is.excluded.hl"]]
+        ifelse(is.excluded.hl, NA_character_, "Y")
+      } else {
+        NULL
+      },
       SUBJID = get_subjid(.),
       ATPT = {
         if ("PCTPT" %in% names(.)) PCTPT
@@ -209,7 +217,11 @@ export_cdisc <- function(res_nca) {
         if ("PCTPTREF" %in% names(.)) PCTPTREF
         else NA_character_
       },
-      PCSTRESU = AVALU,
+      PCSTRESU = if (!is.null(concu_col)) {
+        .[[concu_col]]
+      } else {
+        NA_character_
+      },
       PCRFTDTM = if ("PCRFTDTM" %in% names(.)) {
         as.POSIXct(strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M"))
       } else {
