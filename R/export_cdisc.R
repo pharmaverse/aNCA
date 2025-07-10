@@ -41,42 +41,58 @@ export_cdisc <- function(res_nca) {
   group_dose_cols <- unique(unlist(res_nca$data$dose$columns$groups))
   group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
   route_col <- res_nca$data$dose$columns$route
-  conc_group_sp_cols <- setdiff(
-    unname(unlist(res_nca$data$conc$columns$groups)),
-    unname(unlist(res_nca$data$dose$columns$groups))
-  )
+  conc_group_sp_cols <- res_nca$data$conc$columns$groups$group_analyte %>%
+    append(
+      setdiff(
+        unname(unlist(res_nca$data$conc$columns$groups)),
+        unname(unlist(res_nca$data$dose$columns$groups))
+      )
+    ) %>%
+    unique()
+
   conc_timeu_col <- res_nca$data$conc$columns$timeu[[1]]
+  conc_time_col <- res_nca$data$conc$columns$time[[1]]
   dose_time_col <- res_nca$data$dose$columns$time[[1]]
-  to_match_res_cols <- setdiff(colnames(res_nca_req$result), names(PKNCA::get.interval.cols()))
+  to_match_res_cols <- c(
+    group_vars(res_nca$data$conc),
+    unname(unlist(res_nca$data$options["keep_interval_cols"]))
+  )
 
   dose_info <- res_nca$data$dose$data %>%
     # Select only the columns that are used in the NCA results
     select(
       any_of(c(
         # Variables defined for the dose information
-        group_dose_cols, "NCA_PROFILE", dose_time_col,  route_col, conc_timeu_col,
+        to_match_res_cols, dose_time_col,  route_col, conc_timeu_col,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC"
-      ))
-    ) %>%
-    unique()
-  
-  conc_info <- res_nca$data$conc$data %>%
-    select(
-      any_of(c(
-        group_conc_cols, conc_timeu_col
+        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT"
       ))
     ) %>%
     unique()
 
+  conc_info <- res_nca$data$conc$data %>%
+    select(
+      any_of(c(
+        to_match_res_cols, conc_timeu_col, conc_time_col,
+        # Variables that can be used to guess other missing variables
+        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT"
+      ))
+    ) %>% unique() %>%
+    # Select the first record as dose record information
+    arrange(.[[conc_time_col]]) %>%
+    select(-!!sym(conc_time_col)) %>%
+    group_by(!!!syms(intersect(to_match_res_cols, names(.)))) %>%
+    slice(1) %>%
+    ungroup()
+
   cdisc_info <- res_nca_req$result  %>%
+    left_join(conc_info,
+              by = intersect(names(.), names(conc_info)),
+              suffix = c("", ".y")) %>%
     left_join(dose_info,
               by = intersect(to_match_res_cols, names(dose_info)),
-              suffix = c("", ".y")) %>%
-    left_join(conc_info,
-              by = intersect(to_match_res_cols, names(conc_info)),
               suffix = c("", ".y")) %>%
     group_by(
       across(any_of(c(
