@@ -82,7 +82,8 @@ export_cdisc <- function(res_nca) {
         "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
-    ) %>% unique() %>%
+    ) %>%
+    unique() %>%
     # Select the first record as dose record information
     arrange(.[[conc_time_col]]) %>%
     select(-!!sym(conc_time_col)) %>%
@@ -232,7 +233,7 @@ export_cdisc <- function(res_nca) {
     select(any_of(CDISC_COLS$ADPC$Variable)) %>%
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_variables)
-  
+
   # Add variable labels for ADPC
   var_labels(adpc) <- labels_map[names(adpc)]
 
@@ -310,7 +311,7 @@ get_subjid <- function(data) {
 adjust_class_and_length <- function(df, metadata) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
-    if (nrow(var_specs) == 0 | all(is.na(df[[var]]))) next
+    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
     if (var_specs$Type %in% c("Char", "text")) {
       df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
     } else if (var_specs$Type %in% c("Num", "integer", "float") &&
@@ -369,13 +370,18 @@ add_derived_cdisc_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_
       # Datetime
       PPRFTDTC = {
         if ("PCRFTDTC" %in% names(.)) {
-          vals <- strptime(.[["PCRFTDTC"]], format = "%Y-%m-%dT%H:%M:%S") %>% format("%Y-%m-%dT%H:%M:%S")
-          vals2 <- strptime(.[["PCRFTDTC"]], format = "%Y-%m-%dT%H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
+          vals <- strptime(.[["PCRFTDTC"]], format = "%Y-%m-%dT%H:%M:%S") %>%
+            format("%Y-%m-%dT%H:%M:%S")
+          vals2 <- strptime(.[["PCRFTDTC"]], format = "%Y-%m-%dT%H:%M") %>%
+            format("%Y-%m-%dT%H:%M:%S")
           coalesce(coalesce(vals, vals2), .[["PCRFTDTC"]])
         } else if ("PCRFTDTM" %in% names(.)) {
-          strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
-          vals <- strptime(.[["PCRFTDTM"]], format = "%d-%m-%Y %H:%M:%S") %>% format("%Y-%m-%dT%H:%M:%S")
-          vals2 <- strptime(.[["PCRFTDTM"]], format = "%d-%m-%Y %H:%M") %>% format("%Y-%m-%dT%H:%M:%S")
+          strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M") %>%
+            format("%Y-%m-%dT%H:%M:%S")
+          vals <- strptime(.[["PCRFTDTM"]], format = "%d-%m-%Y %H:%M:%S") %>%
+            format("%Y-%m-%dT%H:%M:%S")
+          vals2 <- strptime(.[["PCRFTDTM"]], format = "%d-%m-%Y %H:%M") %>%
+            format("%Y-%m-%dT%H:%M:%S")
           coalesce(coalesce(vals, vals2), .[["PCRFTDTM"]])
         } else {
           NA_character_

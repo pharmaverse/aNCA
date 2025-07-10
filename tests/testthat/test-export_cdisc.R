@@ -129,8 +129,14 @@ describe("export_cdisc", {
     # Check that PPSTINT and PPENINT are derived correctly
     expect_true("PPSTINT" %in% names(result$pp))
     expect_true("PPENINT" %in% names(result$pp))
-    expect_equal(result$pp$PPSTINT[which(result$pp$PPTESTCD == "AUCINT")], rep(c("PT0H", "PT2H"), times = 3))
-    expect_equal(result$pp$PPENINT[which(result$pp$PPTESTCD == "AUCINT")], rep(c("PT2H", "PT4H"), times = 3))
+    expect_equal(
+      result$pp$PPSTINT[which(result$pp$PPTESTCD == "AUCINT")],
+      rep(c("PT0H", "PT2H"), times = 3)
+    )
+    expect_equal(
+      result$pp$PPENINT[which(result$pp$PPTESTCD == "AUCINT")],
+      rep(c("PT2H", "PT4H"), times = 3)
+    )
   })
 
   it("derives PPREASND & PPSTAT correctly in all situations", {
@@ -142,10 +148,18 @@ describe("export_cdisc", {
         exclude = ifelse(PPTESTCD == "cmax", NA, exclude),
         # Case NA with reason
         PPSTRES = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1], NA, PPSTRES),
-        exclude = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1], "Excluded due to protocol deviation", exclude),
+        exclude = ifelse(
+          PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1],
+          "Excluded due to protocol deviation",
+          exclude
+        ),
         # Reason with > 200 characters
         PPSTRES = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[2], NA, PPSTRES),
-        exclude = ifelse(PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[2], paste(rep("A", 201), collapse = ""), exclude),
+        exclude = ifelse(
+          PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[2],
+          paste(rep("A", 201), collapse = ""),
+          exclude
+        ),
       )
 
     result <- export_cdisc(modified_test_pknca_res)
@@ -287,14 +301,14 @@ describe("export_cdisc", {
     expect_equal(unique(res_exfast$pp$PPFAST), c("Y", "N"))
 
     # Case 2: PCFAST present
-    test_pcfast <- test_exfast 
+    test_pcfast <- test_exfast
     test_pcfast$data$dose$data <- test_pcfast$data$dose$data %>%
       rename(PCFAST = EXFAST)
     res_pcfast <- export_cdisc(test_pcfast)
     expect_equal(unique(res_pcfast$pp$PPFAST), c("Y", "N"))
 
     # Case 3: FEDSTATE present
-    test_fedstate <- test_exfast 
+    test_fedstate <- test_exfast
     test_fedstate$data$dose$data <- test_fedstate$data$dose$data %>%
       rename(FEDSTATE = EXFAST)
     res_fedstate <- export_cdisc(test_fedstate)
