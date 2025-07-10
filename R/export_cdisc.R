@@ -68,7 +68,7 @@ export_cdisc <- function(res_nca) {
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
@@ -79,7 +79,7 @@ export_cdisc <- function(res_nca) {
       any_of(c(
         to_match_res_cols, conc_timeu_col, conc_time_col,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
