@@ -9,12 +9,14 @@ general_lineplot(
   selected_analytes,
   selected_pcspec,
   selected_usubjids,
-  colorby_var,
+  colorby_var = "USUBJID",
+  facet_by = NULL,
   time_scale,
   yaxis_scale,
   show_threshold = FALSE,
   threshold_value = 0,
-  cycle = NULL
+  cycle = NULL,
+  palettes_list = NULL
 )
 }
 \arguments{
@@ -30,6 +32,8 @@ to be included in the plot.}
 \item{colorby_var}{A character string specifying the variable by which to color
 the lines in the plot.}
 
+\item{facet_by}{A character vector specifying the variables by which to facet the plot.}
+
 \item{time_scale}{A character string specifying the time scale.
 Options are "By Cycle" or other values.}
 
@@ -44,6 +48,8 @@ Default is 0.}
 
 \item{cycle}{A character string or numeric value specifying the cycle to filter by
 when \code{time_scale} is "By Cycle". Default is NULL.}
+
+\item{palettes_list}{A list of color palettes to be used for coloring the lines.}
 }
 \value{
 A ggplot object representing the line plot of pharmacokinetic concentration over time.

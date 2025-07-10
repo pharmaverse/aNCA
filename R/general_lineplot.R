@@ -22,8 +22,9 @@
 #'                          Default is FALSE.
 #' @param threshold_value   A numeric value to set the y value of the threshold line.
 #'                          Default is 0.
+#' @param palettes_list     A list of color palettes to be used for coloring the lines.
 #'
-#' @return A ggplot object representing the line plot of pharmacokinetic concentration over time.
+#' @returns A ggplot object representing the line plot of pharmacokinetic concentration over time.
 #'
 #' @details
 #' The function performs the following steps:a
@@ -61,63 +62,32 @@
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
-  colorby_var = "USUBJID", facet_by = NULL, time_scale, yaxis_scale, show_threshold = FALSE, threshold_value = 0, cycle = NULL
+  colorby_var = "USUBJID", facet_by = NULL, time_scale, yaxis_scale, show_threshold = FALSE,
+  threshold_value = 0, cycle = NULL, palettes_list = NULL
 ) {
 
   # preprocess data according to user selection
-  preprocessed_data <- data %>%
-    filter(
-      USUBJID %in% selected_usubjids,
-      PARAM %in% selected_analytes,
-      PCSPEC %in% selected_pcspec,
-      if ("EVID" %in% names(data)) EVID == 0 else TRUE
-    ) %>%
-    filter(!is.na(AVAL)) %>%
-    mutate(
-      USUBJID = factor(USUBJID),
-      NCA_PROFILE = factor(NCA_PROFILE),
-      DOSEA = factor(DOSEA),
-      color_var = interaction(!!!syms(colorby_var), sep = ", ")
-    )
-  # Check if the data is empty
+  preprocessed_data <- preprocess_data_for_plot(
+    data, selected_usubjids, selected_analytes, selected_pcspec,
+    colorby_var, time_scale, yaxis_scale, cycle
+  )
+
+  # 1. Handle empty data
   if (nrow(preprocessed_data) == 0) {
     return(ggplot() + ggtitle("No data available for selected parameters"))
   }
-
-
-  # Adjust the data selection according to input
-  if (time_scale == "By Dose Profile") {
-    # If there are predose records duplicate them in the previous line so they are considered
-
-    if ("ARRLT" %in% names(preprocessed_data) &&
-          any(preprocessed_data$ARRLT < 0 & preprocessed_data$AFRLT > 0)) {
-
-      preprocessed_data <- dose_profile_duplicates(preprocessed_data,
-                                                   groups = c("USUBJID", "PCSPEC",
-                                                              "PARAM", "NCA_PROFILE"),
-                                                   dosno = "NCA_PROFILE")
-
-    }
-
-    preprocessed_data <- preprocessed_data %>%
-      mutate(id_var = interaction(!!!syms(colorby_var), sep = ", ")) %>%
-      filter(NCA_PROFILE %in% cycle)
-  }
-
-  if (yaxis_scale == "Log") {
-    preprocessed_data <- preprocessed_data %>%
-      filter(AVAL > 0)
-  }
-
-  time <- if (time_scale == "By Dose Profile") "ARRLT" else "AFRLT"
-
+  
+  # 2. Set up plot variables
+  time_var <- if (time_scale == "By Dose Profile") "ARRLT" else "AFRLT"
+  
+  # 3. Build the plot layers
   plt <- tern::g_ipp(
     df = preprocessed_data,
-    xvar = time,
+    xvar = time_var,
     yvar = "AVAL",
+    id_var = "USUBJID", # Always group lines by subject
     xlab = paste0("Time [", unique(preprocessed_data$RRLTU), "]"),
     ylab = paste0("Concentration [", unique(preprocessed_data$AVALU), "]"),
-    id_var = "USUBJID",
     title = "Plot of PK Concentration - Time Profile",
     subtitle = paste0(
       "Subjects: ",
@@ -125,29 +95,77 @@ general_lineplot <- function(
       "\nAnalyte(s): ",
       paste(unique(preprocessed_data$PARAM), collapse = ", ")
     ),
-    caption = NULL,
-    add_baseline_hline = FALSE,
     yvar_baseline = "AVAL",
-    col = NULL
   ) +
-    aes(color = color_var) +
+    aes(color = color_var) + # Apply coloring using the pre-made color_var
     labs(color = paste(colorby_var, collapse = ", "))
-
+  
+  # 4. Conditionally add palette
+  if (!is.null(palettes_list) && length(colorby_var) == 1 && colorby_var %in% names(palettes_list)) {
+    plt <- plt + scale_color_manual(values = palettes_list[[colorby_var]])
+  }
+  
+  # 5. Conditionally add other layers
   if (yaxis_scale == "Log") {
     plt <- plt +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
-                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
+                    labels = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
       labs(y = paste0("Log 10 - ", plt$labels$y))
   }
-
   if (show_threshold) {
-    plt <- plt +
-      ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+    plt <- plt + geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
   }
-  
   if (!is.null(facet_by) && length(facet_by) > 0) {
     plt <- plt + facet_wrap(vars(!!!syms(facet_by)))
   }
-
+  
   return(plt)
+}
+
+
+#' Prepare Data for PK Lineplot
+#'
+#' @param data Raw data frame.
+#' @param selected_usubjids,selected_analytes,selected_pcspec,cycle Inputs for filtering.
+#' @param colorby_var The variable(s) to be used for coloring.
+#' @param time_scale String, either "By Dose Profile" or "Actual Time".
+#' @param yaxis_scale String, either "Log" or "Linear".
+#' @returns A processed and filtered data.frame.
+preprocess_data_for_plot <- function(
+    data, selected_usubjids, selected_analytes, selected_pcspec,
+    colorby_var, time_scale, yaxis_scale, cycle
+) {
+  processed <- data %>%
+    filter(
+      USUBJID %in% selected_usubjids,
+      PARAM %in% selected_analytes,
+      PCSPEC %in% selected_pcspec,
+      if ("EVID" %in% names(data)) EVID == 0 else TRUE,
+      !is.na(AVAL)
+    ) %>%
+    mutate(
+      USUBJID = factor(USUBJID),
+      NCA_PROFILE = factor(NCA_PROFILE),
+      DOSEA = factor(DOSEA),
+      color_var = interaction(!!!syms(colorby_var), sep = ", ")
+    )
+  
+  # Handle log scale filtering
+  if (yaxis_scale == "Log") {
+    processed <- processed %>% filter(AVAL > 0)
+  }
+  
+  # Handle time scale processing for dose profiles
+  if (time_scale == "By Dose Profile") {
+    if ("ARRLT" %in% names(processed) && any(processed$ARRLT < 0 & processed$AFRLT > 0)) {
+      processed <- dose_profile_duplicates(
+        processed,
+        groups = c("USUBJID", "PCSPEC", "PARAM", "NCA_PROFILE"),
+        dosno = "NCA_PROFILE"
+      )
+    }
+    processed <- processed %>% filter(NCA_PROFILE %in% cycle)
+  }
+  
+  processed
 }

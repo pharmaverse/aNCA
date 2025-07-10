@@ -12,6 +12,16 @@ tab_visuals_ui <- function(id) {
       layout_sidebar(
         sidebar = sidebar(
           position = "right", open = TRUE,
+          selectInput(
+            ns("palette_theme"),
+            "Select Color Theme:",
+            choices = c(
+              "Default (ggplot2)" = "default",
+              "Viridis" = "viridis",
+              "Spectral" = "spectral"
+            ),
+            selected = "default"
+          ),
           pickerInput(
             inputId = ns("generalplot_analyte"),
             label = "Select Analyte:",
@@ -302,9 +312,21 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
     # TAB: General Lineplot --------------------------------------------------------
 
+    master_palettes_list <- reactive({
+      req(input$palette_theme)
+      req(input$generalplot_colorby)
+
+      create_master_palettes(
+        data(), 
+        input$generalplot_colorby,
+        palette_name = input$palette_theme # Use the user's choice
+      )
+    })
+    
     # render the general lineplot output in plotly
     output$individualplot <- renderPlotly({
       req(data())
+      req(master_palettes_list())
       req(input$generalplot_analyte)
       req(input$generalplot_pcspec)
       req(input$generalplot_usubjid)
@@ -313,6 +335,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$log)
       log_info("Rendering individual plots")
 
+      palettes <- master_palettes_list()
+      
       p <- general_lineplot(
         data(),
         input$generalplot_analyte,
@@ -324,7 +348,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         input$log,
         input$show_threshold,
         input$threshold_value,
-        cycle = input$cycles
+        cycle = input$cycles,
+        palettes_list = palettes
       ) %>%
         ggplotly()
 
@@ -337,7 +362,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
             )
           )
       }
-      p
+      return(p)
     })
     
     # TAB: Mean Plot -----------------------------------------------------------
@@ -500,4 +525,70 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
     })
 
   })
+}
+
+
+
+#' Create a List of Persistent Color Palettes
+#'
+#' @param data A data.frame containing all possible data.
+#' @param variables A character vector of column names for which to create palettes.
+#' @param palette_name The name of the color palette to use. Supported options:
+#'   "default" (ggplot2), "viridis", "spectral".
+#'
+#' @return A named list, where each element is a named color vector (palette)
+#'   corresponding to a variable in `variables`.
+#' @importFrom scales hue_pal
+#' @importFrom viridisLite viridis
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom grDevices colorRampPalette
+#' @examples
+#' \dontrun{
+#'   # Define variables for which you want stable colors
+#'   my_vars <- c("USUBJID", "DOSEA", "SEX")
+#'
+#'   # Generate the list of palettes
+#'   master_palettes <- create_master_palettes(full_data, my_vars)
+#' }
+create_master_palettes <- function(data, variables, palette_name = "default") {
+  # Use lapply to iterate over the provided variable names and create a palette for each
+  palettes_list <- lapply(variables, function(var_name) {
+    # Error handling: check if the column actually exists in the data
+    if (!var_name %in% names(data)) {
+      warning(paste("Variable '", var_name, "' not found in data. Skipping."))
+      return(NULL) # Return NULL if column is not found
+    }
+    
+    # Get all unique, non-NA levels for the current variable
+    all_levels <- sort(unique(na.omit(data[[var_name]])))
+    n <- length(all_levels)
+    
+    # If there are no levels after removing NAs, return an empty list
+    if (n == 0) {
+      return(list())
+    }
+    
+    colors <- if (palette_name == "viridis") {
+      viridisLite::viridis(n)
+    } else if (palette_name == "spectral") {
+      # RColorBrewer needs special handling for n > 11
+      if (n > 11) {
+        grDevices::colorRampPalette(RColorBrewer::brewer.pal(11, "Spectral"))(n)
+      } else {
+        RColorBrewer::brewer.pal(max(n, 3), "Spectral")[1:n]
+      }
+    } else {
+      # Default ggplot2 colors
+      scales::hue_pal()(n)
+    }
+    
+    # Create and return the named color vector (the palette)
+    setNames(colors, all_levels)
+  })
+  
+  # Assign the variable names to the elements of the list we just created
+  names(palettes_list) <- variables
+  
+  # Clean up: remove any NULL elements that resulted from missing columns
+  palettes_list[!sapply(palettes_list, is.null)]
 }
