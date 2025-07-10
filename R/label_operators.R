@@ -7,7 +7,7 @@
 #'  for the dataset you are applying it .
 #' @param type The type variable in labels_df for which the labels are to be applied.
 #'
-#' @return The same dataset with label attributes applied to all columns.
+#' @returns The same dataset with label attributes applied to all columns.
 #' If a column is not present in the labels list, it will be assigned the name of the col.
 #' If label already exists in the original data, it will be preserved.
 #'

@@ -8,6 +8,11 @@ tab_visuals_ui <- function(id) {
   navset_card_pill(
     header = "Exploratory Analysis",
     id = "visuals",
+    nav_panel("Variable Browser",
+      variable_browser_ui(
+        ns("var_browser")
+      )
+    ),
     nav_panel("Individual Plots",
       layout_sidebar(
         sidebar = sidebar(
@@ -174,6 +179,28 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Call the server function for the variable browser
+    data_for_vb <- reactive({
+      req(data())
+      
+      # Create an empty join_keys object since there are none for this single dataset.
+      jks <- teal.data::join_keys()
+      
+      # Use the constructor to create the final S4 teal_data object.
+      data_list <- teal.data::teal_data(
+        ADNCA = data(),
+        join_keys = jks
+      )
+      
+      data_list
+    })
+    
+    # Pass the reactive expression directly
+    variable_browser_server(
+      id = "var_browser",
+      data_list = data_for_vb()
+    )
+    
     ## Plotting Input widgets --------------------------------------------------------
 
     observeEvent(data(), {
