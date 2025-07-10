@@ -233,7 +233,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         session,
         "generalplot_colorby",
         choices = param_choices,
-        selected = param_choices[1]
+        selected = "USUBJID"
       )
       
       updatePickerInput(
@@ -313,7 +313,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$log)
       log_info("Rendering individual plots")
 
-      general_lineplot(
+      p <- general_lineplot(
         data(),
         input$generalplot_analyte,
         input$generalplot_pcspec,
@@ -326,15 +326,20 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         input$threshold_value,
         cycle = input$cycles
       ) %>%
-        ggplotly() %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
+        ggplotly()
+
+      # Conditionally add rangeslider only if the plot is not faceted
+      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
+        p <- p %>%
+          layout(
+            xaxis = list(
+              rangeslider = list(type = "time")
+            )
           )
-        )
-
+      }
+      p
     })
-
+    
     # TAB: Mean Plot -----------------------------------------------------------
 
     # This tabs plots the mean concentration of the input data in a dynamic plot

@@ -77,7 +77,7 @@ general_lineplot <- function(
       USUBJID = factor(USUBJID),
       NCA_PROFILE = factor(NCA_PROFILE),
       DOSEA = factor(DOSEA),
-      id_var = interaction(!!!syms(colorby_var), sep = ", ")
+      color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
   # Check if the data is empty
   if (nrow(preprocessed_data) == 0) {
@@ -117,7 +117,7 @@ general_lineplot <- function(
     yvar = "AVAL",
     xlab = paste0("Time [", unique(preprocessed_data$RRLTU), "]"),
     ylab = paste0("Concentration [", unique(preprocessed_data$AVALU), "]"),
-    id_var = "id_var",
+    id_var = "USUBJID",
     title = "Plot of PK Concentration - Time Profile",
     subtitle = paste0(
       "Subjects: ",
@@ -130,6 +130,7 @@ general_lineplot <- function(
     yvar_baseline = "AVAL",
     col = NULL
   ) +
+    aes(color = color_var) +
     labs(color = paste(colorby_var, collapse = ", "))
 
   if (yaxis_scale == "Log") {
