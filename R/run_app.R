@@ -48,6 +48,7 @@ check_app_dependencies <- function() {
     "DT",
     "htmlwidgets",
     "logger",
+    "formatters",
     "magrittr",
     "plotly",
     "purrr",
