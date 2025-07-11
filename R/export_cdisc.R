@@ -72,6 +72,7 @@ export_cdisc <- function(res_nca) {
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
+    select(-any_of(conc_group_sp_cols))
     unique()
 
   conc_info <- res_nca$data$conc$data %>%
@@ -97,7 +98,7 @@ export_cdisc <- function(res_nca) {
               suffix = c("", ".y")) %>%
     left_join(dose_info,
               by = intersect(to_match_res_cols, names(dose_info)),
-              suffix = c("", ".y")) %>%
+              suffix = c("", ".z")) %>%
     group_by(
       across(any_of(c(
         group_conc_cols, "start", "end", "PPTESTCD", "type_interval"
@@ -386,6 +387,11 @@ add_derived_cdisc_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_
         } else {
           NA_character_
         }
+      },
+      PPTPTREF = if ("PCTPTREF" %in% names(.)) {
+        PCTPTREF
+      } else {
+        NA_character_
       },
       EPOCH = if ("EPOCH" %in% names(.)) {
         EPOCH
