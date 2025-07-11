@@ -1,5 +1,5 @@
 # Load the testing data (PKNCA result)
-pknca_res <- FIXTURE_PKNCA_RES2
+pknca_res <- FIXTURE_PKNCA_RES
 pknca_res$result <- pknca_res$result %>%
   filter(USUBJID %in% 1:6)
 
