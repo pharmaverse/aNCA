@@ -20,7 +20,7 @@ nca_results_ui <- function(id) {
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars) {
+nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -118,9 +118,11 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
     observeEvent(final_results(), {
       req(final_results())
 
+      param_pptest_cols <- intersect(
+        unname(var_labels(final_results())),
+        unique(c(pknca_cdisc_terms$PPTEST, ratio_table()$PPTESTCD))
+      )
       session$userData$results$nca_results$pivoted_results <- final_results()
-
-      param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(
