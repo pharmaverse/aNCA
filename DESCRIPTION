@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9105
+Version: 0.0.0.9111
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -10,6 +10,7 @@ Authors@R: c(
            comment = c(ORCID = "0000-0002-6533-0399")),
     person("Jana", "Spinner", , "spinnerjana@gmail.com", role = "aut",
            comment = c(ORCID = "0009-0009-2197-9530")),
+    person("Valentin", "Legras", , "val35131@gmail.com", role = "aut"),
     person("F. Hoffmann-La Roche AG", role = c("cph", "fnd"))
   )
 Description: This application enables users to upload their datasets and
