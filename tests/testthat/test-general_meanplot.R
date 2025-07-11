@@ -57,19 +57,36 @@ describe("general_meanplot functions correctly", {
     )
   })
   it("can plot with standard deviation error bars", {
+    # Can plot both min and max standard deviation error bars
     p <- general_meanplot(
       data = sample_data,
       selected_studyids = "Study1",
       selected_analytes = "Analyte1",
       selected_pcspecs = "Spec1",
       selected_cycles = 1,
-      plot_sd = TRUE
+      plot_sd_min = TRUE,
+      plot_sd_max = TRUE
     )
     expect_s3_class(p, "ggplot")
     expect_s3_class(ggplotly(p), "plotly")
     # Check for error bars in the plotly object
     has_error_bars <- any(sapply(ggplotly(p)$x$data, function(trace) "error_y" %in% names(trace)))
     expect_true(has_error_bars)
+
+    # Can plot only min standard deviation error bars
+    p_min <- general_meanplot(
+      data = sample_data,
+      selected_studyids = "Study1",
+      selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
+      selected_cycles = 1,
+      plot_sd_min = TRUE,
+      plot_sd_max = FALSE
+    )
+    expect_s3_class(p_min, "ggplot")
+    expect_s3_class(ggplotly(p_min), "plotly")
+    has_error_bars_min <- any(sapply(ggplotly(p_min)$x$data, function(trace) "error_y" %in% names(trace)))
+    expect_true(has_error_bars_min)
   })
 
   it("can plot with confidence interval ribbon", {

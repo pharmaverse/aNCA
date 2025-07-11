@@ -14,8 +14,8 @@
 #'                          in the plot. Default is "DOSEA".
 #' @param plot_ylog         A logical value indicating whether to use a logarithmic scale for
 #'                          the y-axis. Default is FALSE.
-#' @param plot_sd           A logical value indicating whether to include standard deviation
-#'                          error bars. Default is FALSE.
+#' @param plot_sd_min       A logical value indicating whether to include SD error bar below the mean. Default is FALSE.
+#' @param plot_sd_max       A logical value indicating whether to include SD error bar above the mean. Default is FALSE.
 #' @param plot_ci           A logical value indicating whether to include confidence interval 95%
 #'                          ribbon. Default is FALSE.
 #'
@@ -33,7 +33,8 @@ general_meanplot <- function(data,
                              selected_cycles,
                              id_variable = "DOSEA",
                              plot_ylog = FALSE,
-                             plot_sd = FALSE,
+                             plot_sd_min = FALSE,
+                             plot_sd_max = FALSE,
                              plot_ci = FALSE) {
 
   # preprocess the data by summarising
@@ -112,10 +113,19 @@ general_meanplot <- function(data,
           strip.background = element_rect(fill = "grey90", color = "grey50"),
           plot.margin = margin(10, 10, 10, 10, "pt"))
 
-  # add sd
-  if (plot_sd) {
-    p <- p +
-      geom_errorbar(aes(ymin = SD_min, ymax = SD_max, color = id_variable), width = 0.4)
+  # add sd error bars
+  if (plot_sd_min || plot_sd_max) {
+    if (plot_ylog) {
+      ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$log10_Mean
+      ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$log10_Mean
+      p <- p +
+        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable), width = 0.4)
+    } else {
+      ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$Mean
+      ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$Mean
+      p <- p +
+        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable), width = 0.4)
+    }
   }
 
   # add ci

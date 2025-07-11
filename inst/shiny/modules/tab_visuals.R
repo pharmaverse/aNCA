@@ -105,7 +105,8 @@ tab_visuals_ui <- function(id) {
             choices = NULL
           ),
           checkboxInput(ns("log_mean_plot"), label = "Scale y Log"),
-          checkboxInput(ns("sd_mean_plot"), label = "Show SD"),
+          checkboxInput(ns("sd_mean_plot_min"), label = "+SD"),
+          checkboxInput(ns("sd_mean_plot_max"), label = "-SD"),
           checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
           position = "right",
           open = TRUE
@@ -381,7 +382,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected_cycles = input$cycles_mean,
         id_variable = input$select_id_var,
         plot_ylog = input$log_mean_plot,
-        plot_sd = input$sd_mean_plot,
+        plot_sd_min = input$sd_mean_plot_min,
+        plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
       ) %>%
         ggplotly() %>%
