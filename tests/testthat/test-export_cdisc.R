@@ -345,15 +345,15 @@ describe("export_cdisc", {
   })
 
   # Performs correctly the one-to-many mappings between PKNCA and PPTESTCD
-  it("derives the one-to-many mappings for mrt.xxx to distinguish extravascular (EV) and infusion (IC) denominations", {
+  it("differentiates mrt.xxx for extravascular (EV) and infusion (IC)", {
     test_mrt_data <- FIXTURE_PKNCA_DATA
     test_mrt_data$intervals <- test_mrt_data$intervals %>%
       filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
-        mutate(
-          mrt.last = TRUE,
-          mrt.obs = TRUE,
-          mrt.pred = TRUE
-        )
+      mutate(
+        mrt.last = TRUE,
+        mrt.obs = TRUE,
+        mrt.pred = TRUE
+      )
     test_mrt_result <- PKNCA::pk.nca(test_mrt_data)
     test_mrt_result$result <- test_mrt_result$result %>%
       filter(PPTESTCD %in% c("mrt.last", "mrt.obs", "mrt.pred")) %>%
@@ -363,7 +363,7 @@ describe("export_cdisc", {
       )
 
     res <- export_cdisc(test_mrt_result)
-    
+
     res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
     res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
 
@@ -373,7 +373,8 @@ describe("export_cdisc", {
         "MRT IV Cont Inf Infinity Obs",
         "MRT IV Cont Inf Infinity Pred",
         "MRT IV Cont Inf to Last Nonzero Conc"
-    )))
+      )
+    ))
     expect_true(all(res_of_ev_subj$PPTESTCD %in% c("MRTEVIFO", "MRTEVIFP", "MRTEVLST")))
     expect_true(all(res_of_ev_subj$PPTEST %in% c(
       "MRT Extravasc Infinity Obs",

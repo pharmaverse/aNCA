@@ -72,7 +72,7 @@ export_cdisc <- function(res_nca) {
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
-    select(-any_of(conc_group_sp_cols))
+    select(-any_of(conc_group_sp_cols)) %>%
     unique()
 
   conc_info <- res_nca$data$conc$data %>%
