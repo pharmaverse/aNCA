@@ -2,6 +2,7 @@
 sample_data <- data.frame(
   STUDYID = rep("Study1", 48),
   USUBJID = rep(c("Subject1", "Subject2", "Subject3", "Subject4"), each = 12),
+  SEX = rep(rep(c("M", "F"), each = 12), times = 2),
   PARAM = rep(c("Analyte1", "Analyte 2"), each = 24),
   PCSPEC = rep(c("Spec1", "Spec2"), each = 24),
   NCA_PROFILE = rep(1, 48),
@@ -123,5 +124,18 @@ describe("general_meanplot functions correctly", {
     # Check data was log transformed in ggplot
     has_log_data <- all(log10(p$data$Mean) == ggplot_build(p)$data[[1]][["y"]])
     expect_true(has_log_scale && has_log_data)
+  })
+
+  it("can handle multiple id variables to group and color", {
+    p <- general_meanplot(
+      data = sample_data,
+      selected_studyids = "Study1",
+      selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
+      selected_cycles = 1,
+      id_variable = c("PARAM", "SEX")
+    )
+    expect_s3_class(p, "ggplot")
+    expect_s3_class(ggplotly(p), "plotly")    
   })
 })
