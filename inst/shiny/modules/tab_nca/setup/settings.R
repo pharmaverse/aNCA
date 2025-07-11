@@ -230,29 +230,46 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
 
 
-    # Choose dosenumbers to be analyzed
-    observeEvent(data()$DOSNO, priority = -1, {
+    # Choose data to be analyzed
+    observeEvent(data(), priority = -1, {
       req(data())
-
-      updatePickerInput(
-        session,
-        inputId = "select_profile",
-        choices = unique(data()$NCA_PROFILE),
-        selected = unique(data()$NCA_PROFILE)[1]
-      )
+      
+      choices <- unique(data()$PARAM) %>%
+        na.omit()
 
       updatePickerInput(
         session,
         inputId = "select_analyte",
-        choices = unique(data()$PARAM),
-        selected = unique(data()$PARAM)
+        choices = choices,
+        selected = choices
+      )
+      
+    })
+    
+    observeEvent(input$select_analyte, {
+      req(data(), input$select_analyte)
+      
+      filtered_data <- data() %>%
+        filter(PARAM %in% input$select_analyte) %>%
+        na.omit(PCSPEC, NCA_PROFILE) # Filter together so there's no combinations of NAs
+      
+      profile_choices <- unique(filtered_data$NCA_PROFILE) %>%
+        sort()
+      
+      pcspec_choices <- unique(filtered_data$PCSPEC)
+      
+      updatePickerInput(
+        session,
+        inputId = "select_profile",
+        choices = profile_choices,
+        selected = profile_choices[1]
       )
 
       updatePickerInput(
         session,
         inputId = "select_pcspec",
-        choices = unique(data()$PCSPEC),
-        selected = unique(data()$PCSPEC)
+        choices = pcspec_choices,
+        selected = pcspec_choices
       )
     })
 
