@@ -69,7 +69,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
       final_results <- final_results %>%
         inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct()
+        distinct() %>%
+        mutate(
+          flagged = "NOT DONE"
+        )
 
       # Add flaging column in the pivoted results
       # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared,
@@ -95,6 +98,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
             )
           )
       }
+      final_results
     })
 
     # Provide the zip file for download

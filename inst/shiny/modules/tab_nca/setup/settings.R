@@ -233,7 +233,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # Choose data to be analyzed
     observeEvent(data(), priority = -1, {
       req(data())
-      
+
       choices <- unique(data()$PARAM) %>%
         na.omit()
 
@@ -243,21 +243,22 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         choices = choices,
         selected = choices
       )
-      
+
     })
-    
+
     observeEvent(input$select_analyte, {
       req(data(), input$select_analyte)
-      
+
       filtered_data <- data() %>%
-        filter(PARAM %in% input$select_analyte) %>%
-        na.omit(PCSPEC, NCA_PROFILE) # Filter together so there's no combinations of NAs
-      
+        filter(PARAM %in% input$select_analyte,
+               !is.na(PCSPEC),
+               !is.na(NCA_PROFILE)) # Filter together so there's no combinations of NAs
+
       profile_choices <- unique(filtered_data$NCA_PROFILE) %>%
         sort()
-      
+
       pcspec_choices <- unique(filtered_data$PCSPEC)
-      
+
       updatePickerInput(
         session,
         inputId = "select_profile",
@@ -284,7 +285,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       "lambda.z",
       "lambda.z.n.points", "r.squared",
       "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred"
+      "aucpext.obs", "aucpext.pred",
+      "ae", "fe"
     )
 
     output$nca_parameters <- renderReactable({
