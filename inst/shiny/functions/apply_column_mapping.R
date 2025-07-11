@@ -38,17 +38,11 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   if (!.validate_column_mapping(selected_cols)) return(NULL)
 
   selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-    names(selected_cols[["Group Identifiers"]]) != c("Grouping_Variables", "NCA_PROFILE")
+    !(names(selected_cols[["Group Identifiers"]]) %in% c("Grouping_Variables", "NCA_PROFILE"))
   ]
 
   # Rename necessary columns
-  colnames(dataset) <- sapply(colnames(dataset), function(col) {
-    for (group in names(selected_cols)) {
-      column_names <- names(selected_cols[[group]])
-      mapped_values <- selected_cols[[group]]
-    }
-    col
-  })
+  dataset <- .rename_columns(dataset, selected_cols)
 
   # Handle special case for NCA_PROFILE
   nca_profile_col <- mapping$select_NCA_PROFILE
@@ -61,11 +55,11 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 
   dataset <- dataset %>%
     .apply_manual_units(mapping, manual_units) %>%
-    relocate(all_of(desired_order)) %>%
+    relocate(any_of(desired_order)) %>%
     apply_labels(LABELS, "ADPC")
 
   conc_duplicates <- dataset %>%
-    group_by(across(all_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
+    group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
     filter(n() > 1) %>%
     slice(1) %>%
     ungroup() %>%
@@ -80,6 +74,24 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   dataset %>% anti_join(conc_duplicates, by = colnames(conc_duplicates))
 }
 
+#' Internal helper to rename dataset columns based on selected column mappings.
+#'
+#' @param dataset A data frame whose columns are to be renamed.
+#' @param selected_cols A named list of vectors representing mapped columns
+#'
+#' @returns A data frame with renamed columns based on the provided mappings.
+.rename_columns <- function(dataset, selected_cols) {
+  colnames(dataset) <- sapply(colnames(dataset), function(col) {
+    for (group in names(selected_cols)) {
+      mapped_values <- selected_cols[[group]]
+      if (col %in% mapped_values) {
+        return(names(mapped_values)[which(mapped_values == col)])
+      }
+    }
+    col
+  })
+  dataset
+}
 
 
 #' Internal helper to check for missing or duplicate column mappings.
