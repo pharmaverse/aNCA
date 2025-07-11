@@ -52,10 +52,10 @@ general_meanplot <- function(data,
   conc_unit <- unique(preprocessed_data$AVALU)
 
   summarised_data <- preprocessed_data %>%
-    mutate(id_variable = as.factor(!!sym(id_variable))) %>%
+    mutate(id_variable_col = interaction(!!!syms(id_variable), sep = ", ",  drop = TRUE)) %>%
     # Create a groups variables for the labels
     mutate(groups = paste(STUDYID, PARAM, PCSPEC, NCA_PROFILE, sep = ", ")) %>%
-    group_by(id_variable, NRRLT, groups) %>%
+    group_by(id_variable_col, NRRLT, groups) %>%
     summarise(
               Mean = round(mean(AVAL, na.rm = TRUE), 3),
               SD = sd(AVAL, na.rm = TRUE),
@@ -66,7 +66,7 @@ general_meanplot <- function(data,
               CI_lower = Mean - 1.96 * SE,
               CI_upper = Mean + 1.96 * SE,
               .groups = "drop") %>%
-    select(NRRLT, Mean, SD, N, CI_lower, CI_upper, id_variable, groups, SD_min, SD_max, SE) %>%
+    select(NRRLT, Mean, SD, N, CI_lower, CI_upper, id_variable_col, groups, SD_min, SD_max, SE) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
 
@@ -93,9 +93,9 @@ general_meanplot <- function(data,
   }
 
   # plot the preprocess data
-  p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean), group = id_variable) +
-    geom_line(aes(colour = id_variable)) +
-    geom_point(aes(colour = id_variable)) +
+  p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean), group = id_variable_col) +
+    geom_line(aes(colour = id_variable_col)) +
+    geom_point(aes(colour = id_variable_col)) +
     facet_wrap(~groups,
                strip.position = "top") +
     labs(
@@ -103,7 +103,7 @@ general_meanplot <- function(data,
       y = paste0(
         "Mean concentration", " [", conc_unit, "]"
       ),
-      color = id_variable,
+      color = paste0(id_variable, collapse = ", "),
       fill = "95% Confidence Interval"
     ) +
     theme_bw() +
@@ -119,19 +119,19 @@ general_meanplot <- function(data,
       ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$log10_Mean
       ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$log10_Mean
       p <- p +
-        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable), width = 0.4)
+        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable_col), width = 0.4)
     } else {
       ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$Mean
       ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$Mean
       p <- p +
-        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable), width = 0.4)
+        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable_col), width = 0.4)
     }
   }
 
   # add ci
   if (plot_ci) {
     p <- p +
-      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, color = id_variable), alpha = 0.3)
+      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, color = id_variable_col), alpha = 0.3)
   }
 
   # add log scale

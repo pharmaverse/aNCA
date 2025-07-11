@@ -96,8 +96,9 @@ tab_visuals_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("select_id_var"),
-            label = "Choose the variable to group by:",
-            choices = NULL
+            label = "Choose the variable(s) to group by:",
+            choices = NULL,
+            multiple = TRUE
           ),
           selectInput(
             inputId = ns("cycles_mean"),
@@ -362,7 +363,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
             ) %>%
-            group_by(!!sym(input$select_id_var), NRRLT) %>%
+            group_by(!!!syms(input$select_id_var), NRRLT) %>%
             summarise(N = n()) %>%
             filter(N >= 3) %>%
             nrow(.) > 0,
