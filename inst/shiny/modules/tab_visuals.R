@@ -68,7 +68,8 @@ tab_visuals_ui <- function(id) {
               value = 0
             ),
             ns = NS(id)
-          )
+          ),
+          checkboxInput(ns("show_dose"), label = "Show Dose Times"),
         ),
         plotlyOutput(ns("individualplot"))
       )
@@ -296,8 +297,12 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$log)
       log_info("Rendering individual plots")
 
+      plot_data <- data() %>%
+        mutate( #round to prevent floating point precision issues
+          TIME_DOSE = round(AFRLT - ARRLT, 6)
+        )
       general_lineplot(
-        data(),
+        plot_data,
         input$generalplot_analyte,
         input$generalplot_pcspec,
         input$generalplot_usubjid,
@@ -306,6 +311,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         input$log,
         input$show_threshold,
         input$threshold_value,
+        input$show_dose,
         cycle = input$cycles
       ) %>%
         ggplotly() %>%
