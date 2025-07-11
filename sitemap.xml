@@ -27,6 +27,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_to_iso8601_duration.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/convert_volume_units.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_start_impute.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dose_profile_duplicates.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-apply_slope_rules.html</loc></url>
@@ -57,6 +58,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/interval_remove_impute.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/l_pkconc.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/lambda_slope_plot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/log_conversion.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/multiple_matrix_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/parse_annotation.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pivot_wider_pknca_results.html</loc></url>
@@ -71,5 +73,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/set_empty_label.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/validate_pk.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/verify_parameters.html</loc></url>
 </urlset>
 
