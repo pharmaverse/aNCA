@@ -7,10 +7,14 @@ CDISC_COLS <- metadata_variables %>%
 
 # Subset results just to simplify the testing
 test_pknca_res <- FIXTURE_PKNCA_RES %>%
+  mutate(PPTESTCD = translate_terms(
+    PPTESTCD, "PPTESTCD", "PKNCA"
+  )) %>%
   filter(
     USUBJID %in% unique(USUBJID)[1:2],
     PPTESTCD %in% c("cmax", "aucint.last", "r.squared")
   )
+
 # Add special columns for testing in the concentration data
 test_pknca_res$data$conc$data <- test_pknca_res$data$conc$data %>%
   mutate(
@@ -338,6 +342,44 @@ describe("export_cdisc", {
     test_no_paramcd_pctestcd <- test_pknca_res
     res_no_paramcd_pctestcd <- export_cdisc(test_no_paramcd_pctestcd)
     expect_true(all(is.na(res_no_paramcd_pctestcd$adpc$PARAMCD)))
+  })
+
+  # Performs correctly the one-to-many mappings between PKNCA and PPTESTCD
+  it("derives the one-to-many mappings for mrt.xxx to distinguish extravascular (EV) and infusion (IC) denominations", {
+    test_mrt_data <- FIXTURE_PKNCA_DATA
+    test_mrt_data$intervals <- test_mrt_data$intervals %>%
+      filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
+        mutate(
+          mrt.last = TRUE,
+          mrt.obs = TRUE,
+          mrt.pred = TRUE
+        )
+    test_mrt_result <- PKNCA::pk.nca(test_mrt_data)
+    test_mrt_result$result <- test_mrt_result$result %>%
+      filter(PPTESTCD %in% c("mrt.last", "mrt.obs", "mrt.pred")) %>%
+      mutate(
+        PPSTRES = PPORRES,
+        PPSTRESU = PPORRESU
+      )
+
+    res <- export_cdisc(test_mrt_result)
+    
+    res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
+    res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
+
+    expect_true(all(res_of_infusion_subj$PPTESTCD %in% c("MRTICIFO", "MRTICIFP", "MRTICLST")))
+    expect_true(all(
+      res_of_infusion_subj$PPTEST %in% c(
+        "MRT IV Cont Inf Infinity Obs",
+        "MRT IV Cont Inf Infinity Pred",
+        "MRT IV Cont Inf to Last Nonzero Conc"
+    )))
+    expect_true(all(res_of_ev_subj$PPTESTCD %in% c("MRTEVIFO", "MRTEVIFP", "MRTEVLST")))
+    expect_true(all(res_of_ev_subj$PPTEST %in% c(
+      "MRT Extravasc Infinity Obs",
+      "MRT Extravasc Infinity Pred",
+      "MRT Extravasc to Last Nonzero Conc"
+    )))
   })
 })
 
