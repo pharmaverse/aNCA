@@ -24,27 +24,30 @@ settings_ui <- function(id) {
         # Selection of analyte, dose number and specimen
         fluidRow(
           column(4,
-            selectInput(
+            pickerInput(
               ns("select_analyte"),
               "Choose the Analyte:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           ),
           column(4,
-            selectInput(
+            pickerInput(
               ns("select_profile"),
               "Choose the NCA Profile:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           ),
           column(4,
-            selectInput(
+            pickerInput(
               ns("select_pcspec"),
               "Choose the Specimen:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           )
         ),
@@ -97,7 +100,7 @@ settings_ui <- function(id) {
         br(),
         helpText(HTML(paste(
           "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-          "- If DOSNO = 1 & IV bolus: C0 = 0",
+          "- If DOSNO = 1 & IV infusion: C0 = 0",
           "- If DOSNO > 1 & not IV bolus: C0 = predose",
           "- If IV bolus & monoexponential data: logslope",
           "- If IV bolus & not monoexponential data: C0 = C1",
@@ -138,19 +141,19 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       # General #
       if (all(settings$analyte %in% unique(data()$PARAM))) {
-        updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
+        updatePickerInput(inputId = "select_analyte", selected = settings$analyte)
       } else {
         not_compatible <- append(not_compatible, "Analyte")
       }
 
       if (all(settings$profile %in% unique(data()$NCA_PROFILE))) {
-        updateSelectInput(inputId = "select_profile", selected = settings$profile)
+        updatePickerInput(inputId = "select_profile", selected = settings$profile)
       } else {
         not_compatible <- append(not_compatible, "NCA Profile")
       }
 
       if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
-        updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
+        updatePickerInput(inputId = "select_pcspec", selected = settings$pcspec)
       } else {
         not_compatible <- append(not_compatible, "Dose Specimen")
       }
@@ -227,29 +230,46 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
 
 
-    # Choose dosenumbers to be analyzed
-    observeEvent(data()$DOSNO, priority = -1, {
+    # Choose data to be analyzed
+    observeEvent(data(), priority = -1, {
       req(data())
+      
+      choices <- unique(data()$PARAM) %>%
+        na.omit()
 
-      updateSelectInput(
-        session,
-        inputId = "select_profile",
-        choices = unique(data()$NCA_PROFILE),
-        selected = unique(data()$NCA_PROFILE)[1]
-      )
-
-      updateSelectInput(
+      updatePickerInput(
         session,
         inputId = "select_analyte",
-        choices = unique(data()$PARAM),
-        selected = unique(data()$PARAM)[1]
+        choices = choices,
+        selected = choices
+      )
+      
+    })
+    
+    observeEvent(input$select_analyte, {
+      req(data(), input$select_analyte)
+      
+      filtered_data <- data() %>%
+        filter(PARAM %in% input$select_analyte) %>%
+        na.omit(PCSPEC, NCA_PROFILE) # Filter together so there's no combinations of NAs
+      
+      profile_choices <- unique(filtered_data$NCA_PROFILE) %>%
+        sort()
+      
+      pcspec_choices <- unique(filtered_data$PCSPEC)
+      
+      updatePickerInput(
+        session,
+        inputId = "select_profile",
+        choices = profile_choices,
+        selected = profile_choices[1]
       )
 
-      updateSelectInput(
+      updatePickerInput(
         session,
         inputId = "select_pcspec",
-        choices = unique(data()$PCSPEC),
-        selected = unique(data()$PCSPEC)[1]
+        choices = pcspec_choices,
+        selected = pcspec_choices
       )
     })
 
