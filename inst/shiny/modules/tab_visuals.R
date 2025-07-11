@@ -388,7 +388,11 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         plot_ci = input$mean_plot_ci
       ) %>%
         ggplotly() %>%
-        plotly_build()
+        layout(
+          xaxis = list(
+            rangeslider = list(type = "time")
+          )
+        )
 
     })
 
