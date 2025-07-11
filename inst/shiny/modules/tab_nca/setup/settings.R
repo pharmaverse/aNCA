@@ -250,8 +250,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       req(data(), input$select_analyte)
 
       filtered_data <- data() %>%
-        filter(PARAM %in% input$select_analyte) %>%
-        na.omit(PCSPEC, NCA_PROFILE) # Filter together so there's no combinations of NAs
+        filter(PARAM %in% input$select_analyte,
+               !is.na(PCSPEC),
+               !is.na(NCA_PROFILE)) # Filter together so there's no combinations of NAs
 
       profile_choices <- unique(filtered_data$NCA_PROFILE) %>%
         sort()
