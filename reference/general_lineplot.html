@@ -11,7 +11,7 @@ logarithmic scale and can be filtered by cycle."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9107</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,7 @@ logarithmic scale and can be filtered by cycle.</p>
 <span>  <span class="va">yaxis_scale</span>,</span>
 <span>  show_threshold <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  threshold_value <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  show_dose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  cycle <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -116,6 +117,10 @@ Default is FALSE.</p></dd>
 Default is 0.</p></dd>
 
 
+<dt id="arg-show-dose">show_dose<a class="anchor" aria-label="anchor" href="#arg-show-dose"></a></dt>
+<dd><p>A boolean specifying whether to show dose times as vertical lines.</p></dd>
+
+
 <dt id="arg-cycle">cycle<a class="anchor" aria-label="anchor" href="#arg-cycle"></a></dt>
 <dd><p>A character string or numeric value specifying the cycle to filter by
 when <code>time_scale</code> is "By Cycle". Default is NULL.</p></dd>
@@ -135,6 +140,9 @@ while creating duplicates for predose samples if needed.</p></li>
 <li><p>Adjusts concentration values for logarithmic scale if <code>yaxis_scale</code> is "Log".</p></li>
 <li><p>Generates a line plot using the <code>g_ipp</code> function with the specified parameters.</p></li>
 <li><p>Adjusts the y-axis to logarithmic scale if <code>yaxis_scale</code> is "Log".</p></li>
+<li><p>Adds a horizontal line for the threshold value if <code>show_threshold</code> is TRUE.</p></li>
+<li><p>Adds vertical lines for dose times if <code>show_dose</code> is TRUE
+and the number of subjects is less than 5.</p></li>
 </ul></div>
 
     <div class="section level2">
