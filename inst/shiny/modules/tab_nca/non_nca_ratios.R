@@ -130,7 +130,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         options = list(
           scrollX = TRUE,
           fixedHeader = TRUE,
-          dom = "Bfrtip",
+          dom = "Blfrtip",
           buttons = list(
             list(
               extend = "copy",
@@ -140,9 +140,24 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
               extend = "csv",
               filename = paste0("Ratios_result_", Sys.Date())
             )
-          )
+          ),
+          headerCallback = DT::JS(
+            "function(thead) {",
+            "  $(thead).css('font-size', '0.75em');",
+            "  $(thead).find('th').css('text-align', 'center');",
+            "}"
+          ),
+          columnDefs = list(
+            list(className = "dt-center", targets = "_all")
+          ),
+          lengthMenu = list(c(10, 50, -1), 
+                            c('10', '50', 'All')),
+          paging = T
         ),
-      )
+        class = "row-border compact",
+        rownames = FALSE
+      ) %>%
+        DT::formatStyle(columns = 1:ncol(full_output()), fontSize = "75%")
     })
 
     # Save the results in the output folder

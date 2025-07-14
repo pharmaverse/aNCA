@@ -202,13 +202,31 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           "Exclude"
         ) %>%
         DT::datatable(
-          extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = "80vh",
-                         lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-                         pageLength = -1, fixedHeader = TRUE)
+          extensions = c("FixedHeader", "Buttons"),
+          options = list(
+            scrollX = TRUE,
+            fixedHeader = TRUE,
+            dom = "Blfrtip",
+            buttons = list(
+              list(extend = "copy", title = paste0("NCA_Slope_Results_", Sys.Date())),
+              list(extend = "csv", filename = paste0("NCA_Slope_Results_", Sys.Date()))
+            ),
+            headerCallback = DT::JS(
+              "function(thead) {",
+              "  $(thead).css('font-size', '0.75em');",
+              "  $(thead).find('th').css('text-align', 'center');",
+              "}"
+            ),
+            columnDefs = list(
+              list(className = "dt-center", targets = "_all")
+            ),
+            lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+            paging = TRUE
+          ),
+          class = "row-border compact",
+          rownames = FALSE
         ) %>%
-        formatStyle("Exclude", target = "row",
-                    backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
+        DT::formatStyle(columns = 1:ncol(pivot_wider_pknca_results(res_nca())), fontSize = "75%")
     })
 
     nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)

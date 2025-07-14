@@ -50,30 +50,25 @@ parameter_datasets_server <- function(id, res_nca) {
     extensions = c("FixedHeader", "Buttons"),
     options = list(
       scrollX = TRUE,
-      scrollY = "80vh",
-      searching = TRUE,
-      fixedColumns = TRUE,
       fixedHeader = TRUE,
-      autoWidth = TRUE,
-      pageLength = -1,
-      lengthMenu = -1,
-      dom = "Bfrtip",
+      dom = "Blfrtip",
       buttons = list(
-        list(
-          extend = "copy",
-          title = paste0(filename, "_", Sys.Date())
-        ),
-        list(
-          extend = "csv",
-          filename = paste0(filename, "_", Sys.Date())
-        ),
-        list(
-          extend = "excel",
-          title = NULL,
-          header = colnames(data),
-          filename = paste0(filename, "_", Sys.Date())
-        )
-      )
-    )
-  )
+        list(extend = "copy", title = paste0(filename, "_", Sys.Date())),
+        list(extend = "csv", filename = paste0(filename, "_", Sys.Date()))
+      ),
+      headerCallback = DT::JS(
+        "function(thead) {",
+        "  $(thead).css('font-size', '0.75em');",
+        "  $(thead).find('th').css('text-align', 'center');",
+        "}"
+      ),
+      columnDefs = list(
+        list(className = "dt-center", targets = "_all")
+      ),
+      lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+      paging = TRUE
+    ),
+    class = "row-border compact"
+  ) %>%
+    DT::formatStyle(columns = seq_len(ncol(data)), fontSize = "75%")
 }
