@@ -156,7 +156,7 @@ tab_tlg_server <- function(id, data) {
             )
           ),
           rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
-          lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
           paging = TRUE
         ),
         class = "row-border compact"
@@ -226,7 +226,7 @@ tab_tlg_server <- function(id, data) {
             list(width = "150px", targets = "_all")
           ),
           rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
-          lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
           paging = TRUE
         ),
         class = "row-border compact"

@@ -150,14 +150,14 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
           columnDefs = list(
             list(className = "dt-center", targets = "_all")
           ),
-          lengthMenu = list(c(10, 50, -1), 
-                            c('10', '50', 'All')),
-          paging = T
+          lengthMenu = list(c(10, 50, -1),
+                            c("10", "50", "All")),
+          paging = TRUE
         ),
         class = "row-border compact",
         rownames = FALSE
       ) %>%
-        DT::formatStyle(columns = 1:ncol(full_output()), fontSize = "75%")
+        DT::formatStyle(columns = seq_len(ncol(full_output())), fontSize = "75%")
     })
 
     # Save the results in the output folder

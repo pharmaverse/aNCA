@@ -220,13 +220,15 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             columnDefs = list(
               list(className = "dt-center", targets = "_all")
             ),
-            lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+            lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
             paging = TRUE
           ),
           class = "row-border compact",
           rownames = FALSE
         ) %>%
-        DT::formatStyle(columns = 1:ncol(pivot_wider_pknca_results(res_nca())), fontSize = "75%")
+        DT::formatStyle(
+          columns = seq_len(ncol(pivot_wider_pknca_results(res_nca()))), fontSize = "75%"
+        )
     })
 
     nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)

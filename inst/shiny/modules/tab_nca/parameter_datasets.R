@@ -65,7 +65,7 @@ parameter_datasets_server <- function(id, res_nca) {
       columnDefs = list(
         list(className = "dt-center", targets = "_all")
       ),
-      lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+      lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
       paging = TRUE
     ),
     class = "row-border compact"
