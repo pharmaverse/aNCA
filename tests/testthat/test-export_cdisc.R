@@ -63,14 +63,14 @@ describe("metadata_variables is consistent with what is expected", {
 })
 
 describe("export_cdisc", {
-  it("exports CDISC-compliant datasets (PP, ADPP, ADPC)", {
+  it("exports a list with CDISC objects", {
     result <- export_cdisc(test_pknca_res)
-
-    # Check that the result contains the expected components
     expect_type(result, "list")
     expect_named(result, c("pp", "adpp", "adpc"))
+  })
 
-    # Check the PP
+  it("exports a PP dataset with CDISC labels", {
+    result <- export_cdisc(test_pknca_res)
     pp <- result$pp
     expect_s3_class(pp, "data.frame")
     expect_true(all(names(pp) %in% CDISC_COLS$PP$Variable))
@@ -79,18 +79,22 @@ describe("export_cdisc", {
       unname(formatters::var_labels(pp)),
       translate_terms(names(pp), "Variable", "Label", metadata_variables)
     )
+  })
 
-    # Check the ADPP
+  it("exports a ADPP dataset with CDISC labels", {
+    result <- export_cdisc(test_pknca_res)
     adpp <- result$adpp
     expect_s3_class(adpp, "data.frame")
     expect_true(all(names(adpp) %in% CDISC_COLS$ADPP$Variable))
-    expect_equal(nrow(adpp), 9) # Ensure all variables are included
+    expect_equal(nrow(adpp), 9)
     expect_equal(
       unname(formatters::var_labels(adpp)),
       translate_terms(names(adpp), "Variable", "Label", metadata_variables)
     )
+  })
 
-    # Check the ADPC
+  it("exports a ADPC dataset with CDISC labels", {
+    result <- export_cdisc(test_pknca_res)
     adpc <- result$adpc
     expect_s3_class(adpc, "data.frame")
     expect_true(all(names(adpc) %in% CDISC_COLS$ADPC$Variable))
