@@ -315,11 +315,9 @@ adjust_class_and_length <- function(df, metadata) {
     } else if (var_specs$Type %in% c("Num", "integer", "float") &&
                  !endsWith(var, "DTM")) {
       df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
-    } else if (var_specs$Type == "integer" && endsWith(var, "DTM")) {
-      # No check developed for now
-    } else if (var_specs$Type %in% c("dateTime", "duration")) {
-      # No check developed for now
-    } else {
+    } else if (!var_specs$Type %in% c(
+      "Num", "integer", "float", "text", "dateTime", "duration", "Char"
+    )) {
       warning(
         "Unknown var specification type: ", var_specs$Type,
         " (", var_specs$Variable, ")"
