@@ -95,18 +95,18 @@ ratios_table_server <- function(
 
     ratio_reference_options <- reactive({
       # We paste the column name and value to use as a specified input
-      if (ncol(ratio_groups()) > 0) {
-        ratio_groups() %>%
-          # Convert all columns to character
-          mutate(across(everything(), as.character)) %>%
-          pivot_longer(cols = everything()) %>%
-          mutate(input_name = paste0(name, ": ", value)) %>%
-          pull(input_name) %>%
-          unique() %>%
-          sort()
-      } else {
-        NULL
+      if (ncol(ratio_groups()) == 0) {
+        return(NULL)
       }
+
+      ratio_groups() %>%
+        # Convert all columns to character
+        mutate(across(everything(), as.character)) %>%
+        pivot_longer(cols = everything()) %>%
+        mutate(input_name = paste0(name, ": ", value)) %>%
+        pull(input_name) %>%
+        unique() %>%
+        sort()
     })
 
     ratio_param_options <- reactive({
@@ -312,6 +312,6 @@ ratios_table_server <- function(
     })
 
     # Return the table as a reactive
-    return(ratio_table)
+    ratio_table
   })
 }
