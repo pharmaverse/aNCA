@@ -35,7 +35,7 @@
 #'   \item{Role}{Character. The CDISC role of the variable (e.g., Identifier, Topic, Timing...).}
 #'   \item{Core}{Character. Indicates the core status of the variable
 #'   (Req = Required, Perm = Permissible, Exp = Expected, Cond = Conditional).}
-#'   \item{Roche_Specific}{Character. Indicates if the variable is Roche-specific.}
+#'   \item{company_specific}{Character. Indicates if the variable is Compnay-specific.}
 #'   \item{is.core}{Logical. TRUE if the variable is a core variable, otherwise FALSE.}
 #'   \item{Length}{Numeric. The maximum length of the variable.}
 #'   \item{Controlled_Terms}{Character. Reference to controlled terminology (e.g., C85839, C66731).}
