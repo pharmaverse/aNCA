@@ -15,8 +15,13 @@ general_lineplot(
   yaxis_scale,
   show_threshold = FALSE,
   threshold_value = 0,
+<<<<<<< HEAD
   cycle = NULL,
   palettes_list = NULL
+=======
+  show_dose = FALSE,
+  cycle = NULL
+>>>>>>> main
 )
 }
 \arguments{
@@ -46,6 +51,8 @@ Default is FALSE.}
 \item{threshold_value}{A numeric value to set the y value of the threshold line.
 Default is 0.}
 
+\item{show_dose}{A boolean specifying whether to show dose times as vertical lines.}
+
 \item{cycle}{A character string or numeric value specifying the cycle to filter by
 when \code{time_scale} is "By Cycle". Default is NULL.}
 
@@ -70,6 +77,9 @@ while creating duplicates for predose samples if needed.
 \item Adjusts concentration values for logarithmic scale if \code{yaxis_scale} is "Log".
 \item Generates a line plot using the \code{g_ipp} function with the specified parameters.
 \item Adjusts the y-axis to logarithmic scale if \code{yaxis_scale} is "Log".
+\item Adds a horizontal line for the threshold value if \code{show_threshold} is TRUE.
+\item Adds vertical lines for dose times if \code{show_dose} is TRUE
+and the number of subjects is less than 5.
 }
 }
 \examples{

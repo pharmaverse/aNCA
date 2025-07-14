@@ -22,7 +22,8 @@
 #'                          Default is FALSE.
 #' @param threshold_value   A numeric value to set the y value of the threshold line.
 #'                          Default is 0.
-#' @param palettes_list     A list of color palettes to be used for coloring the lines.
+#' @param palette           Specification of the color palette to use for the plot.
+#' @param show_dose         A boolean specifying whether to show dose times as vertical lines.
 #'
 #' @returns A ggplot object representing the line plot of pharmacokinetic concentration over time.
 #'
@@ -37,6 +38,9 @@
 #'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
 #'   \item Generates a line plot using the `g_ipp` function with the specified parameters.
 #'   \item Adjusts the y-axis to logarithmic scale if `yaxis_scale` is "Log".
+#'   \item Adds a horizontal line for the threshold value if `show_threshold` is TRUE.
+#'   \item Adds vertical lines for dose times if `show_dose` is TRUE
+#'   and the number of subjects is less than 5.
 #' }
 #'
 #' @examples
@@ -63,7 +67,7 @@
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
   colorby_var = "USUBJID", facet_by = NULL, time_scale, yaxis_scale, show_threshold = FALSE,
-  threshold_value = 0, cycle = NULL, palettes_list = NULL
+  threshold_value = 0, show_dose = FALSE, cycle = NULL, palette = NULL
 ) {
 
   # preprocess data according to user selection
@@ -101,19 +105,76 @@ general_lineplot <- function(
     labs(color = paste(colorby_var, collapse = ", "))
   
   # 4. Conditionally add palette
-  if (!is.null(palettes_list) && length(colorby_var) == 1 && colorby_var %in% names(palettes_list)) {
-    plt <- plt + scale_color_manual(values = palettes_list[[colorby_var]])
+  if (!is.null(palette)) {
+    levels_in_plot <- unique(preprocessed_data$color_var)
+    palette_for_plot <- palette[names(palette) %in% levels_in_plot]
+    
+    plt <- plt + scale_color_manual(values = palette_for_plot)
   }
   
   # 5. Conditionally add other layers
+
+  # Add optional layers based on user input
+  plt <- add_optional_layers(
+    plt = plt,
+    yaxis_scale = yaxis_scale,
+    show_threshold = show_threshold,
+    threshold_value = threshold_value,
+    show_dose = show_dose,
+    data = preprocessed_data,
+    time_scale = time_scale,
+    facet_by = facet_by
+  )
+
+  return(plt)
+}
+
+#' Helper function to handle optional layers
+#' @param plt The ggplot object to modify
+#' @param yaxis_scale The scale of the y-axis ("Log" or "Linear")
+#' @param show_threshold Whether to show a threshold line
+#' @param threshold_value The value of the threshold line
+#' @param show_dose Whether to show dose times as vertical lines
+#' @param data The data used for plotting
+#' @param time_scale The time scale used for plotting
+#' #' @returns The modified ggplot object with optional layers added
+#'
+add_optional_layers <- function(plt, yaxis_scale, show_threshold,
+                                threshold_value, show_dose,
+                                data, time_scale, facet_by = NULL) {
+  # Adjust the y-axis scale if specified
   if (yaxis_scale == "Log") {
     plt <- plt +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
                     labels = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
       labs(y = paste0("Log 10 - ", plt$labels$y))
   }
+
+  # Add a horizontal line for the threshold value if specified
   if (show_threshold) {
-    plt <- plt + geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+    plt <- plt +
+      geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  }
+
+  # Add vertical lines for dose times if specified and conditions are met
+  if (show_dose &&
+        time_scale != "By Dose Profile") {
+    
+    #    This makes the dose lines facet-specific.
+    dose_info_vars <- unique(c(facet_by, "TIME_DOSE", "DOSEA"))
+    
+    dose_info <- data %>%
+      select(all_of(dose_info_vars)) %>%
+      distinct() %>%
+      filter(!is.na(TIME_DOSE))
+
+    plt <- plt +
+      geom_vline(data = dose_info,
+                 aes(xintercept = TIME_DOSE),
+                 linetype = "dotted",
+                 size = 0.8,
+                 color = "grey",
+                 alpha = 0.8)
   }
   if (!is.null(facet_by) && length(facet_by) > 0) {
     plt <- plt + facet_wrap(vars(!!!syms(facet_by)))
