@@ -25,9 +25,7 @@ export_cdisc <- function(res_nca) {
   CDISC_COLS <- metadata_variables %>%
     filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
     arrange(Order) %>%
-    group_by(Dataset) %>%
-    group_split() %>%
-    setNames(c("ADPC", "ADPP", "PP"))
+    split(.[["Dataset"]])
 
   # Only select from results the requested parameters by the user
   res_nca_req <- res_nca
@@ -73,7 +71,7 @@ export_cdisc <- function(res_nca) {
       ))
     ) %>%
     select(-any_of(conc_group_sp_cols)) %>%
-    unique()
+    distinct()
 
   conc_info <- res_nca$data$conc$data %>%
     select(
@@ -84,7 +82,7 @@ export_cdisc <- function(res_nca) {
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
-    unique() %>%
+    distinct() %>%
     # Select the first record as dose record information
     arrange(.[[conc_time_col]]) %>%
     select(-!!sym(conc_time_col)) %>%

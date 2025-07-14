@@ -1,9 +1,7 @@
 CDISC_COLS <- metadata_variables %>%
   filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
   arrange(Order) %>%
-  group_by(Dataset) %>%
-  group_split() %>%
-  setNames(c("ADPC", "ADPP", "PP"))
+  split(.[["Dataset"]])
 
 # Subset results just to simplify the testing
 test_pknca_res <- FIXTURE_PKNCA_RES %>%
