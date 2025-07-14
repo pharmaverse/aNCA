@@ -116,24 +116,23 @@ export_cdisc <- function(res_nca) {
     group_by(USUBJID)  %>%
     mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
     ungroup() %>%
+
     # Parameters with a one-to-many mapping in PKNCA / CDISC
     mutate(
-      # one-to-many based on route
+      is.iv.route = !!sym(route_col) == "intravascular",
+      is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
       PPTEST = case_when(
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~
-          gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~
-          gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
+        is.mrt.parameter & is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
+        is.mrt.parameter & !is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
         TRUE ~ PPTEST
       ),
       PPTESTCD = case_when(
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "intravascular" ~
-          gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
-        grepl("MRT(LST|IFO|IFP)", PPTESTCD) & !!sym(route_col) == "extravascular" ~
-          gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
+        is.mrt.parameter & is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
+        is.mrt.parameter & !is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
         TRUE ~ PPTESTCD
       )
     ) %>%
+
     # Select only columns needed for PP, ADPP, ADPC
     select(any_of(metadata_variables[["Variable"]])) %>%
     # Make character expected columns NA_character_ if missing
