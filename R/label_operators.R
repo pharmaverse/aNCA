@@ -153,3 +153,68 @@ get_label <- function(labels_df, variable, type) {
   }
   label
 }
+
+generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
+  
+  pmap_chr(
+    .l = select(data, all_of(tooltip_vars)),
+    .f = function(...) {
+      
+      row_values <- list(...)
+      
+      # For each variable, create a formatted line retrieving its label
+      lines <- map_chr(tooltip_vars, ~ paste0(
+        "<b>", get_label(labels_df, .x, type), "</b>: ", row_values[[.x]]
+      ))
+      
+      # Paste all lines together with HTML line breaks
+      paste(lines, collapse = "<br>")
+    }
+  )
+  
+}
+  
+
+#   # list containing values of var + units if present
+#   values_units <- data %>%
+#     select(all_of(tooltip_vars))
+# 
+#   # list containing each line of the tooltip
+#   text_lines <- lapply(tooltip_vars, \(var) paste(get_label(LABELS, var, "ADPC")))
+# 
+#   # paste together lines
+#   tooltip_text <- paste(text_lines, collapse = " <br>")
+# 
+#   purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
+#     output[[paste0("label_", label)]] <- renderText(get_label(LABELS, label, "ADPC"))
+#   })
+# }
+
+
+
+
+
+
+
+
+# 
+# 
+# data = data.frame(
+#   AFRRT = rep(5:6, each = 2),
+#   AFRLT = rep(11:12, times = 2),
+#   y_var = "rnorm(50)"
+# )
+# 
+# vars = c("AFRLT", "AFRRT")
+# # change label
+# # check if no label
+# fun = lapply(vars, function(var) paste0("\nLabel", ":", data[[var]]))
+# 
+# fun
+# paste0(fun[[1]][1], fun[[2]][1])
+
+
+
+
+
+
