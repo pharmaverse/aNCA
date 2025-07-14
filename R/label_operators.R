@@ -143,7 +143,7 @@ set_empty_label <- function(x) {
 #'  )
 #'  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
 #'  get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
-#'  }
+#' }
 #'
 #' @export
 get_label <- function(labels_df, variable, type) {
@@ -154,6 +154,52 @@ get_label <- function(labels_df, variable, type) {
   label
 }
 
+
+#' Generate HTML Tooltip Text
+#'
+#' Creates a character vector of HTML tooltips for each row of a data frame,
+#' suitable for use with `ggplotly`.
+#' 
+#' @param data A data.frame with the source data.
+#' @param labels_df A data.frame used by `get_label()` to find variable labels.
+#' @param tooltip_vars A character vector of column names to include in the tooltip.
+#' @param type A character string specifying the label type for `get_label()`.
+#' 
+#' @return A character vector of formatted HTML tooltip strings.
+#' 
+#' @examples
+#' \dontrun{
+#' # Dummy get_label function for demonstration purposes
+#' get_label <- function(labels, var, type) {
+#'   # A real function would look up the label in a data frame.
+#'   # This dummy function just capitalizes the variable name.
+#'   toupper(var)
+#' }
+#'
+#' # Sample data
+#' my_data <- data.frame(
+#'   USUBJID = c("Subject-01", "Subject-02"),
+#'   DOSE = c(100, 200),
+#'   RESPONSE = c(5.4, 8.1)
+#' )
+#'
+#' my_labels <- data.frame() # Dummy labels object
+#'
+#' vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
+#'
+#' # Generate the tooltip text vector
+#' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
+#'
+#' # View the output
+#' tooltips
+#' # [1] "<b>USUBJID</b>: Subject-01<br><b>DOSE</b>: 100<br><b>RESPONSE</b>: 5.4"
+#' # [2] "<b>USUBJID</b>: Subject-02<br><b>DOSE</b>: 200<br><b>RESPONSE</b>: 8.1"
+#'
+#' # Example of adding it to the data frame for plotting
+#' my_data$tooltip <- tooltips
+#' }
+#'
+#' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
   
   pmap_chr(
@@ -171,50 +217,4 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
       paste(lines, collapse = "<br>")
     }
   )
-  
 }
-  
-
-#   # list containing values of var + units if present
-#   values_units <- data %>%
-#     select(all_of(tooltip_vars))
-# 
-#   # list containing each line of the tooltip
-#   text_lines <- lapply(tooltip_vars, \(var) paste(get_label(LABELS, var, "ADPC")))
-# 
-#   # paste together lines
-#   tooltip_text <- paste(text_lines, collapse = " <br>")
-# 
-#   purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
-#     output[[paste0("label_", label)]] <- renderText(get_label(LABELS, label, "ADPC"))
-#   })
-# }
-
-
-
-
-
-
-
-
-# 
-# 
-# data = data.frame(
-#   AFRRT = rep(5:6, each = 2),
-#   AFRLT = rep(11:12, times = 2),
-#   y_var = "rnorm(50)"
-# )
-# 
-# vars = c("AFRLT", "AFRRT")
-# # change label
-# # check if no label
-# fun = lapply(vars, function(var) paste0("\nLabel", ":", data[[var]]))
-# 
-# fun
-# paste0(fun[[1]][1], fun[[2]][1])
-
-
-
-
-
-
