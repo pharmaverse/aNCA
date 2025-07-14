@@ -9,17 +9,17 @@ get_persistent_palette <- function(data, colorby_vars, palette_name = "default")
   if (is.null(colorby_vars) || length(colorby_vars) == 0) {
     return(NULL)
   }
-  
+
   # Create a temporary column in the data representing the interaction of the variables
   interaction_data <- data %>%
     mutate(interaction_col = interaction(!!!syms(colorby_vars), sep = ", "))
-  
+
   # Get all unique levels of this new interaction column
   all_levels <- sort(unique(na.omit(interaction_data$interaction_col)))
   n <- length(all_levels)
-  
+
   if (n == 0) return(NULL)
-  
+
   # Generate colors using the selected theme
   colors <- if (palette_name == "viridis") {
     viridisLite::viridis(n)
@@ -32,7 +32,7 @@ get_persistent_palette <- function(data, colorby_vars, palette_name = "default")
   } else {
     scales::hue_pal()(n)
   }
-  
+
   # Return the final named palette
   setNames(colors, all_levels)
 }

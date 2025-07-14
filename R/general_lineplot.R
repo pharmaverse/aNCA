@@ -80,10 +80,10 @@ general_lineplot <- function(
   if (nrow(preprocessed_data) == 0) {
     return(ggplot() + ggtitle("No data available for selected parameters"))
   }
-  
+
   # 2. Set up plot variables
   time_var <- if (time_scale == "By Dose Profile") "ARRLT" else "AFRLT"
-  
+
   # 3. Build the plot layers
   plt <- tern::g_ipp(
     df = preprocessed_data,
@@ -103,15 +103,15 @@ general_lineplot <- function(
   ) +
     aes(color = color_var) + # Apply coloring using the pre-made color_var
     labs(color = paste(colorby_var, collapse = ", "))
-  
+
   # 4. Conditionally add palette
   if (!is.null(palette)) {
     levels_in_plot <- unique(preprocessed_data$color_var)
     palette_for_plot <- palette[names(palette) %in% levels_in_plot]
-    
+
     plt <- plt + scale_color_manual(values = palette_for_plot)
   }
-  
+
   # 5. Conditionally add other layers
 
   # Add optional layers based on user input
@@ -159,10 +159,10 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
   # Add vertical lines for dose times if specified and conditions are met
   if (show_dose &&
         time_scale != "By Dose Profile") {
-    
+
     #    This makes the dose lines facet-specific.
     dose_info_vars <- unique(c(facet_by, "TIME_DOSE", "DOSEA"))
-    
+
     dose_info <- data %>%
       select(all_of(dose_info_vars)) %>%
       distinct() %>%
@@ -179,10 +179,9 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
   if (!is.null(facet_by) && length(facet_by) > 0) {
     plt <- plt + facet_wrap(vars(!!!syms(facet_by)))
   }
-  
+
   return(plt)
 }
-
 
 #' Prepare Data for PK Lineplot
 #'
@@ -193,8 +192,8 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
 #' @param yaxis_scale String, either "Log" or "Linear".
 #' @returns A processed and filtered data.frame.
 preprocess_data_for_plot <- function(
-    data, selected_usubjids, selected_analytes, selected_pcspec,
-    colorby_var, time_scale, yaxis_scale, cycle
+  data, selected_usubjids, selected_analytes, selected_pcspec,
+  colorby_var, time_scale, yaxis_scale, cycle
 ) {
   processed <- data %>%
     filter(
@@ -210,12 +209,12 @@ preprocess_data_for_plot <- function(
       DOSEA = factor(DOSEA),
       color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
-  
+
   # Handle log scale filtering
   if (yaxis_scale == "Log") {
     processed <- processed %>% filter(AVAL > 0)
   }
-  
+
   # Handle time scale processing for dose profiles
   if (time_scale == "By Dose Profile") {
     if ("ARRLT" %in% names(processed) && any(processed$ARRLT < 0 & processed$AFRLT > 0)) {
@@ -227,6 +226,6 @@ preprocess_data_for_plot <- function(
     }
     processed <- processed %>% filter(NCA_PROFILE %in% cycle)
   }
-  
+
   processed
 }

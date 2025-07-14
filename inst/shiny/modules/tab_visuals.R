@@ -246,7 +246,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         choices = param_choices,
         selected = "USUBJID"
       )
-      
+
       updatePickerInput(
         session,
         "generalplot_facetby",
@@ -318,12 +318,12 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$generalplot_colorby)
 
       get_persistent_palette(
-        data(), 
+        data(),
         input$generalplot_colorby,
         palette_name = input$palette_theme # Use the user's choice
       )
     })
-    
+
     # render the general lineplot output in plotly
     output$individualplot <- renderPlotly({
       req(data())
@@ -343,7 +343,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         mutate( #round to prevent floating point precision issues
           TIME_DOSE = round(AFRLT - ARRLT, 6)
         )
-      
+
       p <- general_lineplot(
         plot_data,
         input$generalplot_analyte,
@@ -372,7 +372,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       }
       return(p)
     })
-    
+
     # TAB: Mean Plot -----------------------------------------------------------
 
     # This tabs plots the mean concentration of the input data in a dynamic plot
