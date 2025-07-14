@@ -15,13 +15,9 @@ general_lineplot(
   yaxis_scale,
   show_threshold = FALSE,
   threshold_value = 0,
-<<<<<<< HEAD
-  cycle = NULL,
-  palettes_list = NULL
-=======
   show_dose = FALSE,
-  cycle = NULL
->>>>>>> main
+  cycle = NULL,
+  palette = NULL
 )
 }
 \arguments{
@@ -56,7 +52,7 @@ Default is 0.}
 \item{cycle}{A character string or numeric value specifying the cycle to filter by
 when \code{time_scale} is "By Cycle". Default is NULL.}
 
-\item{palettes_list}{A list of color palettes to be used for coloring the lines.}
+\item{palette}{Specification of the color palette to use for the plot.}
 }
 \value{
 A ggplot object representing the line plot of pharmacokinetic concentration over time.

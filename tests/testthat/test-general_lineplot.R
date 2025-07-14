@@ -201,20 +201,20 @@ describe("general_lineplot functions correctly", {
     expect_s3_class(p, "ggplot")
     expect_true("AFRLT" %in% names(p$data)) # Ensure time variable is AFRLT
   })
-  
+
   it("correctly filters out EVID != 0", {
     evid_data <- sample_data
-    evid_data$EVID[1:5] <- 1 
-    
+    evid_data$EVID[1:5] <- 1
+
     p <- general_lineplot(
       data = evid_data, selected_analytes = "Analyte1",
       selected_usubjids = "Subject1", selected_pcspec = "Spec1",
       colorby_var = "USUBJID", time_scale = "Overall", yaxis_scale = "Linear"
     )
-    
+
     expect_true(all(p$data$EVID == 0))
   })
-  
+
   it("correctly applies faceting", {
     p <- general_lineplot(
       data = sample_data, selected_analytes = "Analyte1",
@@ -224,55 +224,55 @@ describe("general_lineplot functions correctly", {
     )
     expect_s3_class(p$facet, "FacetWrap")
   })
-  
+
   it("shows dose lines when requested", {
     test_data <- sample_data %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6))
-    
+
     p <- general_lineplot(
       data = test_data, selected_analytes = "Analyte1",
       selected_usubjids = "Subject1", selected_pcspec = "Spec1",
       colorby_var = "USUBJID", time_scale = "Overall", yaxis_scale = "Linear",
       show_dose = TRUE
     )
-    
+
     # Check that a GeomVline layer was added to the plot
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
   })
-  
+
   it("dose lines are facet-specific", {
     test_data <- sample_data %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6))
-    
+
     p <- general_lineplot(
       data = test_data, selected_analytes = c("Analyte1", "Analyte2"),
       selected_usubjids = "Subject1", selected_pcspec = "Spec1",
       colorby_var = "USUBJID", time_scale = "Overall", yaxis_scale = "Linear",
       show_dose = TRUE, facet_by = "PARAM" # Facet by Analyte
     )
-    
+
     # Find the GeomVline layer
     vline_layer_index <- which(sapply(p$layers, function(x) "GeomVline" %in% class(x$geom)))
     vline_layer <- p$layers[[vline_layer_index]]
-    
+
     # Check that the vline data includes the faceting variable
     expect_true("PARAM" %in% names(vline_layer$data))
   })
-  
+
   it("correctly applies a persistent color palette", {
     # Create a sample palette for the USUBJID variable
     test_palette <- c("Subject1" = "#FF0000", "Subject2" = "#0000FF") # Red and Blue
-    
+
     p <- general_lineplot(
       data = sample_data, selected_analytes = "Analyte1",
       selected_usubjids = c("Subject1", "Subject2"), selected_pcspec = "Spec1",
       colorby_var = "USUBJID", time_scale = "Overall", yaxis_scale = "Linear",
       palette = test_palette # Pass the custom palette
     )
-    
+
     # Build the plot to inspect its components
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
-    
+
     # Check that the colors actually used in the plot match our palette
     expect_true(all(plot_colors %in% test_palette))
   })
