@@ -14,8 +14,8 @@
 #'                          in the plot. Default is "DOSEA".
 #' @param plot_ylog         A logical value indicating whether to use a logarithmic scale for
 #'                          the y-axis. Default is FALSE.
-#' @param plot_sd_min       A logical value indicating whether to include SD error bar below the mean. Default is FALSE.
-#' @param plot_sd_max       A logical value indicating whether to include SD error bar above the mean. Default is FALSE.
+#' @param plot_sd_min       A logical value to add a SD error bar below the mean. Default is FALSE.
+#' @param plot_sd_max       A logical value to add a SD error bar above the mean. Default is FALSE.
 #' @param plot_ci           A logical value indicating whether to include confidence interval 95%
 #'                          ribbon. Default is FALSE.
 #'

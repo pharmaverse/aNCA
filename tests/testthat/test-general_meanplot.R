@@ -86,7 +86,11 @@ describe("general_meanplot functions correctly", {
     )
     expect_s3_class(p_min, "ggplot")
     expect_s3_class(ggplotly(p_min), "plotly")
-    has_error_bars_min <- any(sapply(ggplotly(p_min)$x$data, function(trace) "error_y" %in% names(trace)))
+    has_error_bars_min <- any(
+      sapply(
+        ggplotly(p_min)$x$data, function(trace) "error_y" %in% names(trace)
+      )
+    )
     expect_true(has_error_bars_min)
   })
 
@@ -136,6 +140,6 @@ describe("general_meanplot functions correctly", {
       id_variable = c("PARAM", "SEX")
     )
     expect_s3_class(p, "ggplot")
-    expect_s3_class(ggplotly(p), "plotly")    
+    expect_s3_class(ggplotly(p), "plotly")
   })
 })
