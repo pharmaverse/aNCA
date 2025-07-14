@@ -174,14 +174,14 @@ get_label <- function(labels_df, variable, type) {
 #'   # A real function would look up the label in a data frame.
 #'   # This dummy function just capitalizes the variable name.
 #'   toupper(var)
-#' }
+#'   }
 #'
 #' # Sample data
 #' my_data <- data.frame(
 #'   USUBJID = c("Subject-01", "Subject-02"),
 #'   DOSE = c(100, 200),
 #'   RESPONSE = c(5.4, 8.1)
-#' )
+#'   )
 #'
 #' my_labels <- data.frame() # Dummy labels object
 #'
