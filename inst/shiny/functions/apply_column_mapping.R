@@ -27,6 +27,7 @@
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
 
 apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, desired_order) {
+
   selected_cols <- sapply(names(column_groups), function(group) {
     sapply(column_groups[[group]], function(column) {
       mapping[[paste0("select_", column)]]
@@ -38,7 +39,11 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   if (!.validate_column_mapping(selected_cols)) return(NULL)
 
   selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-    !(names(selected_cols[["Group Identifiers"]]) %in% c("Grouping_Variables", "NCA_PROFILE"))
+    names(selected_cols[["Group Identifiers"]]) != "NCA_PROFILE"
+  ]
+
+  selected_cols[["Supplemental Variables"]] <- selected_cols[["Supplemental Variables"]][
+    names(selected_cols[["Supplemental Variables"]]) != "Grouping_Variables"
   ]
 
   # Rename necessary columns
@@ -92,7 +97,6 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   })
   dataset
 }
-
 
 #' Internal helper to check for missing or duplicate column mappings.
 #'
