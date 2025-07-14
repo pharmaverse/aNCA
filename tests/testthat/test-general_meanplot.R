@@ -92,6 +92,45 @@ describe("general_meanplot functions correctly", {
       )
     )
     expect_true(has_error_bars_min)
+
+    # Can plot only max standard deviation error bars
+    p_max <- general_meanplot(
+      data = sample_data,
+      selected_studyids = "Study1",
+      selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
+      selected_cycles = 1,
+      plot_sd_min = FALSE,
+      plot_sd_max = TRUE
+    )
+    expect_s3_class(p_max, "ggplot")
+    expect_s3_class(ggplotly(p_max), "plotly")
+    has_error_bars_max <- any(
+      sapply(
+        ggplotly(p_max)$x$data, function(trace) "error_y" %in% names(trace)
+      )
+    )
+    expect_true(has_error_bars_max)
+
+    # Can SD bar for a plot in log scale
+    p_log <- general_meanplot(
+      data = sample_data,
+      selected_studyids = "Study1",
+      selected_analytes = "Analyte1",
+      selected_pcspecs = "Spec1",
+      selected_cycles = 1,
+      plot_ylog = TRUE,
+      plot_sd_min = TRUE,
+      plot_sd_max = TRUE
+    )
+    expect_s3_class(p_log, "ggplot")
+    expect_s3_class(ggplotly(p_log), "plotly")
+    has_error_bars_log <- any(
+      sapply(
+        ggplotly(p_log)$x$data, function(trace) "error_y" %in% names(trace)
+      )
+    )
+    expect_true(has_error_bars_log)
   })
 
   it("can plot with confidence interval ribbon", {
