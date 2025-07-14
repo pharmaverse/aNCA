@@ -118,14 +118,12 @@ general_meanplot <- function(data,
     if (plot_ylog) {
       ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$log10_Mean
       ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$log10_Mean
-      p <- p +
-        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable_col), width = 0.4)
     } else {
       ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$Mean
       ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$Mean
-      p <- p +
-        geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable_col), width = 0.4)
     }
+    p <- p +
+      geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable_col), width = 0.4)
   }
 
   # add ci
