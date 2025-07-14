@@ -172,7 +172,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
       geom_vline(data = dose_info,
                  aes(xintercept = TIME_DOSE),
                  linetype = "dotted",
-                 size = 0.8,
+                 linewidth = 0.8,
                  color = "grey",
                  alpha = 0.8)
   }
