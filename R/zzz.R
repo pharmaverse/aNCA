@@ -13,6 +13,7 @@
     "AVISIT",
     "CI_lower",
     "CI_upper",
+    "color_var",
     "Count.missing",
     "Count.total",
     "DFLAG",

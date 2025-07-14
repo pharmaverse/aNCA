@@ -137,6 +137,7 @@ general_lineplot <- function(
 #' @param show_dose Whether to show dose times as vertical lines
 #' @param data The data used for plotting
 #' @param time_scale The time scale used for plotting
+#' @param facet_by Variables to facet the plot by
 #' #' @returns The modified ggplot object with optional layers added
 #'
 add_optional_layers <- function(plt, yaxis_scale, show_threshold,

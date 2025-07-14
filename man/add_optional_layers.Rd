@@ -28,7 +28,9 @@ add_optional_layers(
 
 \item{data}{The data used for plotting}
 
-\item{time_scale}{The time scale used for plotting
+\item{time_scale}{The time scale used for plotting}
+
+\item{facet_by}{Variables to facet the plot by
 #' @returns The modified ggplot object with optional layers added}
 }
 \description{
