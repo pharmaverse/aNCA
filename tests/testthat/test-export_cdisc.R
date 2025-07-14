@@ -41,6 +41,27 @@ test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
     )
   )
 
+describe("metadata_variables is consistent with what is expected", {
+  pp_var <- CDISC_COLS$PP %>%
+    filter(Variable == "PTAETORD")
+  expect_equal(
+    pp_var$Label,
+    "Planned Order of Element within Arm"
+  )
+  adpp_var <- CDISC_COLS$ADPP %>%
+    filter(Variable == "PPFAST")
+  expect_equal(
+    adpp_var$Label,
+    "Fasting Status"
+  )
+  adpc_var <- CDISC_COLS$ADPC %>%
+    filter(Variable == "ROUTE")
+  expect_equal(
+    adpc_var$Label,
+    "Route of Administration"
+  )
+})
+
 describe("export_cdisc", {
   it("exports CDISC-compliant datasets (PP, ADPP, ADPC)", {
     result <- export_cdisc(test_pknca_res)
