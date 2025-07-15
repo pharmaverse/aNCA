@@ -48,7 +48,11 @@ input_filter_ui <- function(id, cols) {
       choices = NULL,
       width = "100%",
       multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+      options = list(
+        `actions-box` = TRUE,
+        container = "body",
+        `dropup-auto` = FALSE
+      )
     ),
     actionButton(ns("remove"), "X", class = "btn-danger")
   )
