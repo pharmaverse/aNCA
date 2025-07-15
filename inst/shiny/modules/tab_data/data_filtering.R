@@ -62,14 +62,18 @@ data_filtering_server <- function(id, raw_adnca_data) {
     })
 
     observeEvent(input$add_filter, {
+      accordion_panel_close(id = "filters", values = TRUE)
+      
       # Create a unique ID for each filter
       filter_id <- paste0("filter_", input$add_filter)
 
       # Insert a new filter UI
-      insertUI(
-        selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), names(filters_metadata()))
+      accordion_panel_insert(
+        id = "filters",
+        panel = input_filter_ui(session$ns(filter_id), names(filters_metadata()))
       )
+
+      accordion_panel_open(id = "filters", value = session$ns(filter_id))
 
       filters[[filter_id]] <- input_filter_server(filter_id, filters_metadata = filters_metadata)
     })

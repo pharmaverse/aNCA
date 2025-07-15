@@ -27,7 +27,6 @@ input_filter_ui <- function(id, cols) {
   accordion_panel(
     title = textOutput(ns("title"), inline = TRUE),
     value = id,
-    id = ns("filter_container"),
     class = "filter-widget-container",
     selectizeInput(
       ns("column"),
