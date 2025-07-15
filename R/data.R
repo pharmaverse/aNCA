@@ -1,5 +1,5 @@
 
-#' pknca_cdisc_terms
+#' metadata_nca_parameters
 #'
 #' A dataset containing the mapping between PKNCA terms and CDISC terms. It mainly involves:
 #' - Parameters: PPTEST, PPTESTCD
@@ -18,7 +18,7 @@
 #'   \item{Depends}{PKNCA derived. Designates all directly used parameters in calculation}\
 #' }
 #' @source Generated for use in the `translate_nomenclature` function.
-"pknca_cdisc_terms"
+"metadata_nca_parameters"
 
 
 #' metadata_variables
