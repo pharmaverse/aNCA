@@ -283,7 +283,10 @@ ratios_table_server <- function(
             )
           }
           ratio_table(tbl)
-          refresh_reactable(refresh_reactable() + 1)
+          if (colname %in% c("Parameter", "Reference", "PPTESTCD")) {
+            reset_reactable_memory()
+            refresh_reactable(refresh_reactable() + 1)
+          }
         })
       })
 
