@@ -67,7 +67,7 @@ slope_selector_ui <- function(id) {
         selectInput(
           ns("plots_per_page"),
           "Plots per page:",
-          choices = c(1, 2, 4, 8, 16),
+          choices = c(1, 2, 3, 4, 6, 8, 9, 12, 16),
           selected = 1
         )
       ),
@@ -171,6 +171,8 @@ slope_selector_server <- function( # nolint
     lambdas_res <- reactive({
       req(plot_data())
       if (!"type_interval" %in% names(plot_data()$intervals)) {
+        NULL
+      } else if (all(!unlist(plot_data()$intervals[sapply(plot_data()$intervals, is.logical)]))) {
         NULL
       } else {
         result_obj <- suppressWarnings(PKNCA::pk.nca(data = plot_data(), verbose = FALSE))

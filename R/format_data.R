@@ -188,12 +188,12 @@ format_pkncadata_intervals <- function(pknca_conc,
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
 
   # Obtain all possible pknca parameters
-  all_pknca_params <- setdiff(names(PKNCA::PKNCA.options()$single.dose.auc),
+  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
                               c("start", "end"))
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU"))) %>%
+    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU", "VOLUME"))) %>%
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
 
   has_tau <- "TAU" %in% names(sub_pknca_conc)
@@ -214,9 +214,10 @@ format_pkncadata_intervals <- function(pknca_conc,
 
     # Pick 1 per concentration group and dose number
     arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
+    group_by(!!!syms(dose_groups), DOSNOA) %>%
+    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
-    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>%
-    slice(1) %>%
+    slice(1) %>% # slice one row per conc group
     ungroup() %>%
 
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
@@ -242,7 +243,9 @@ format_pkncadata_intervals <- function(pknca_conc,
     }
     ) %>%
     ungroup() %>%
-    select(any_of(c("start", "end", conc_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"))) %>%
+    select(any_of(c("start", "end",
+                    conc_groups, "TIME_DOSE",
+                    "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
@@ -252,6 +255,59 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
+  dose_intervals <- verify_parameters(dose_intervals, params, all_pknca_params)
+
   dose_intervals
 }
 
+#' Conditionally Verify and Override PK Parameters Based on Sample Type
+#'
+#' This helper function updates a PKNCA intervals data frame by verifying and overriding
+#' specific pharmacokinetic parameters depending on whether the sample is identified
+#' as excreta (e.g., urine, feces, bile). Parameters related to excretion
+#' (such as `ae`, `fe`, and those starting with `"clr."`) are selectively enabled
+#' only for excreta samples and set to `FALSE` otherwise.
+#' @param pknca_intervals A data frame containing PKNCA interval information,
+#'   including pharmacokinetic parameters and a `PCSPEC` column that describes the
+#'   specimen type.
+#' @param params A character vector of parameter names selected by the user.
+#'   Only these parameters will remain `TRUE` for excreta types.
+#' @param all_pknca_params A character vector of all pharmacokinetic parameters
+#'   that may be present in `pknca_intervals`. These will be checked and updated accordingly.
+#'
+#' @importFrom dplyr mutate across select case_when
+#'
+#' @returns A modified version of the `pknca_intervals` data frame with appropriate
+#'  parameters updated based on the specimen type.
+
+verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
+
+  has_volume <- "VOLUME" %in% names(pknca_intervals)
+
+  if (has_volume) {
+    pknca_intervals <- pknca_intervals %>%
+      mutate(across(
+        any_of(all_pknca_params),
+        ~ {
+          col <- cur_column()
+          case_when(
+            (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ !is.na(VOLUME) & col %in% params,
+            TRUE ~ col %in% params
+          )
+        }
+      )) %>%
+      select(-VOLUME)
+
+  } else {
+    pknca_intervals <- pknca_intervals %>%
+      mutate(across(
+        any_of(all_pknca_params),
+        ~ {
+          col <- cur_column()
+          !(col %in% c("ae", "fe") || startsWith(col, "clr.")) && col %in% params
+        }
+      ))
+  }
+
+  pknca_intervals
+}

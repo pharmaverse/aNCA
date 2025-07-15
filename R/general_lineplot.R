@@ -21,8 +21,9 @@
 #'                          Default is FALSE.
 #' @param threshold_value   A numeric value to set the y value of the threshold line.
 #'                          Default is 0.
+#' @param show_dose         A boolean specifying whether to show dose times as vertical lines.
 #'
-#' @return A ggplot object representing the line plot of pharmacokinetic concentration over time.
+#' @returns A ggplot object representing the line plot of pharmacokinetic concentration over time.
 #'
 #' @details
 #' The function performs the following steps:a
@@ -35,6 +36,9 @@
 #'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
 #'   \item Generates a line plot using the `g_ipp` function with the specified parameters.
 #'   \item Adjusts the y-axis to logarithmic scale if `yaxis_scale` is "Log".
+#'   \item Adds a horizontal line for the threshold value if `show_threshold` is TRUE.
+#'   \item Adds vertical lines for dose times if `show_dose` is TRUE
+#'   and the number of subjects is less than 5.
 #' }
 #'
 #' @examples
@@ -60,7 +64,8 @@
 #' @export
 general_lineplot <- function(
   data, selected_analytes, selected_pcspec, selected_usubjids,
-  colorby_var, time_scale, yaxis_scale, show_threshold = FALSE, threshold_value = 0, cycle = NULL
+  colorby_var, time_scale, yaxis_scale, show_threshold = FALSE,
+  threshold_value = 0, show_dose = FALSE, cycle = NULL
 ) {
 
   # preprocess data according to user selection
@@ -127,10 +132,38 @@ general_lineplot <- function(
     caption = NULL,
     add_baseline_hline = FALSE,
     yvar_baseline = "AVAL",
-    col = NULL
+    col = colorby_var
   ) +
     labs(color = paste(colorby_var, collapse = ", "))
 
+  # Add optional layers based on user input
+  plt <- add_optional_layers(
+    plt = plt,
+    yaxis_scale = yaxis_scale,
+    show_threshold = show_threshold,
+    threshold_value = threshold_value,
+    show_dose = show_dose,
+    data = preprocessed_data,
+    time_scale = time_scale
+  )
+
+  return(plt)
+}
+
+#' Helper function to handle optional layers
+#' @param plt The ggplot object to modify
+#' @param yaxis_scale The scale of the y-axis ("Log" or "Linear")
+#' @param show_threshold Whether to show a threshold line
+#' @param threshold_value The value of the threshold line
+#' @param show_dose Whether to show dose times as vertical lines
+#' @param data The data used for plotting
+#' @param time_scale The time scale used for plotting
+#' #' @returns The modified ggplot object with optional layers added
+#'
+add_optional_layers <- function(plt, yaxis_scale, show_threshold,
+                                threshold_value, show_dose,
+                                data, time_scale) {
+  # Adjust the y-axis scale if specified
   if (yaxis_scale == "Log") {
     plt <- plt +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
@@ -138,9 +171,26 @@ general_lineplot <- function(
       labs(y = paste0("Log 10 - ", plt$labels$y))
   }
 
+  # Add a horizontal line for the threshold value if specified
   if (show_threshold) {
     plt <- plt +
-      ggplot2::geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+      geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  }
+
+  # Add vertical lines for dose times if specified and conditions are met
+  if (show_dose &&
+        time_scale != "By Dose Profile") {
+    dose_info <- data %>%
+      distinct(TIME_DOSE, DOSEA) %>%
+      filter(!is.na(TIME_DOSE))
+
+    plt <- plt +
+      geom_vline(data = dose_info,
+                 aes(xintercept = TIME_DOSE),
+                 linetype = "dotted",
+                 size = 0.8,
+                 color = "green",
+                 alpha = 0.5)
   }
 
   return(plt)
