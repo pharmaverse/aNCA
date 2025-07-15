@@ -100,7 +100,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       if (length(applied_filters) == 0) return(raw_adnca_data())
 
       applied_filters |>
-        sapply(\(filt) str_glue("* {filt$column} {filt$condition} {filt$value}")) |>
+        sapply(\(filt) str_glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) |> # nolint
         paste0(collapse = "\n") %>%
         paste0("Submitting the following filters:\n", .) %>%
         log_info()
