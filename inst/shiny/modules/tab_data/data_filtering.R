@@ -58,12 +58,11 @@ data_filtering_server <- function(id, raw_adnca_data) {
       }) |>
         setNames(colnames(raw_adnca_data())) |>
         purrr::keep(~ .x$type == "numeric" || length(.x$choices) > 1)
-        
     })
 
     observeEvent(input$add_filter, {
       accordion_panel_close(id = "filters", values = TRUE)
-      
+
       # Create a unique ID for each filter
       filter_id <- paste0("filter_", input$add_filter)
 
