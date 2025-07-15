@@ -15,7 +15,7 @@ get_persistent_palette <- function(data, colorby_vars, palette_name = "default")
     mutate(interaction_col = interaction(!!!syms(colorby_vars), sep = ", "))
 
   # Get all unique levels of this new interaction column
-  all_levels <- sort(unique(na.omit(interaction_data$interaction_col)))
+  all_levels <- sample(unique(na.omit(interaction_data$interaction_col)))
   n <- length(all_levels)
 
   if (n == 0) return(NULL)
