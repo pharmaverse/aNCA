@@ -126,7 +126,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
       session$userData$results$nca_results$pivoted_results <- final_results()
 
       param_pptest_cols <- intersect(unname(formatters::var_labels(final_results())),
-                                     pknca_cdisc_terms$PPTEST)
+                                     metadata_nca_parameters$PPTEST)
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(
