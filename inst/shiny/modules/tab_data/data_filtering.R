@@ -45,6 +45,20 @@ data_filtering_server <- function(id, raw_adnca_data) {
     # Handle user-provided filters
     filters <- reactiveValues()
 
+    # Hold information about data types and choices for filters.
+    filters_metadata <- reactive({
+      req(raw_adnca_data())
+
+      lapply(colnames(raw_adnca_data()), function(col) {
+        if (is.numeric(raw_adnca_data()[[col]])) {
+          list(type = "numeric")
+        } else {
+          list(type = "text", choices = unique(raw_adnca_data()[[col]]))
+        }
+      }) |>
+        setNames(colnames(raw_adnca_data()))
+    })
+
     observeEvent(input$add_filter, {
       # Create a unique ID for each filter
       filter_id <- paste0("filter_", input$add_filter)
@@ -55,7 +69,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
         ui = input_filter_ui(session$ns(filter_id), colnames(raw_adnca_data()))
       )
 
-      filters[[filter_id]] <- input_filter_server(filter_id)
+      filters[[filter_id]] <- input_filter_server(filter_id, filters_metadata = filters_metadata)
     })
 
     #' When filters change, show notification reminding the user about submitting
