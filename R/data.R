@@ -36,12 +36,12 @@
 #'   \item{Core}{Character. Indicates the core status of the variable
 #'   (Req = Required, Perm = Permissible, Exp = Expected, Cond = Conditional).}
 #'   \item{company_specific}{Logical. Indicates if the variable is company-specific (not CDISC).}
-#'   \item{is.core}{Logical. TRUE if the variable is a core variable (always needed), otherwise FALSE.}
+#'   \item{is.core}{Logical. TRUE if the variable is a core variable (always needed to be present).}
 #'   \item{Length}{Numeric. The maximum length of the variable.}
 #'   \item{Controlled_Terms}{Character. Reference to controlled terminology (e.g., C85839, C66731).}
-#'   \item{is.used}{Logical. TRUE if the variable is meant to be included, otherwise FALSE.}
+#'   \item{is.used}{Logical. TRUE if the variable is meant to be included.}
 #'   \item{Values}{Character. Possible values for the variable (if applicable).}
-#'   \item{is.mapped}{Logical. TRUE if the variable is mapped in ADNCA (App's input), otherwise FALSE.}
+#'   \item{is.mapped}{Logical. TRUE if the variable is mapped in ADNCA (App's input).}
 #' }
 #' @source Used for PP and ADPP mapping rules and checks in the export_cdisc function
 "metadata_variables"
