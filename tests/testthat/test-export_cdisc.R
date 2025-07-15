@@ -224,7 +224,7 @@ describe("export_cdisc", {
 
     # Check that PPRFTDTC is derived correctly (specifying also seconds)
     expected_val <- paste0(unique(test_pknca_res$data$dose$data$PCRFTDTC), ":00") %>%
-      as.POSIXct()
+      as.character()
 
     expect_equal(unique(res$pp$PPRFTDTC), expected_val)
     expect_equal(unique(res_no_pcrftdtc$pp$PPRFTDTC), expected_val)

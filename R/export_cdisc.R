@@ -435,5 +435,6 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     lapply(\(format) strptime(dt, format = format))
 
   dtc_vectors_nas <- sapply(dtc_vectors, \(x) sum(is.na(x)))
-  as.POSIXct(dtc_vectors[[which.min(dtc_vectors_nas)]])
+  dtc_vectors[[which.min(dtc_vectors_nas)]] %>%
+    format("%Y-%m-%dT%H:%M:%S")
 }
