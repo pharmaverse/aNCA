@@ -380,7 +380,7 @@ describe("export_cdisc", {
         mrt.obs = TRUE,
         mrt.pred = TRUE
       )
-    test_mrt_result <- PKNCA::pk.nca(test_mrt_data)
+    test_mrt_result <- suppressWarnings(PKNCA::pk.nca(test_mrt_data))
     test_mrt_result$result <- test_mrt_result$result %>%
       filter(PPTESTCD %in% c("mrt.last", "mrt.obs", "mrt.pred")) %>%
       mutate(
