@@ -123,7 +123,7 @@ export_cdisc <- function(res_nca) {
       is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
       PPTEST = case_when(
         is.mrt.parameter & is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
-        is.mrt.parameter & !is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
+        is.mrt.parameter & !is.iv.route ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
         TRUE ~ PPTEST
       ),
       PPTESTCD = case_when(
