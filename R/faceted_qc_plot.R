@@ -66,8 +66,8 @@ faceted_qc_plot <- function(data,
   plt <- ggplot(processed_data,
                 aes(x = !!sym(x_var),
                     y = !!sym(y_var),
-                    colour = colour_factored,
-                    text = tooltip_text)) +
+                    colour = .data$colour_factored,
+                    text = .data$tooltip_text)) +
     geom_point(size = 1.5) +
     facet_grid(rows = vars(!!!syms(grouping_vars)), scales = "free_y", space = "free_y") +
     labs(

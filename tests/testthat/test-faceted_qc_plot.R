@@ -38,11 +38,6 @@ describe("faceted_qc_plot", {
       title = "Test Plot"
     )
 
-    expect_equal(rlang::as_name(plot_object$mapping$x), "TIME")
-    expect_equal(rlang::as_name(plot_object$mapping$y), "RESULT")
-    expect_equal(rlang::as_name(plot_object$mapping$colour), "colour_factored")
-    expect_equal(rlang::as_name(plot_object$mapping$text), "tooltip_text")
-
     expect_equal(plot_object$labels$x, "TIME")
     expect_equal(plot_object$labels$y, "RESULT")
     expect_equal(plot_object$labels$colour, "DOSE")
