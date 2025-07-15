@@ -24,7 +24,9 @@
 input_filter_ui <- function(id, cols) {
   ns <- NS(id)
 
-  div(
+  accordion_panel(
+    title = textOutput(ns("title"), inline = TRUE),
+    value = id,
     id = ns("filter_container"),
     class = "filter-widget-container",
     selectizeInput(
@@ -82,6 +84,8 @@ input_filter_server <- function(id, filters_metadata) {
       shinyjs::toggleState("condition", is_numeric())
     })
 
+    output$title <- renderText(paste("Filter: ", input$column))
+
     # update filter list #
     applied_filters <- reactive({
       req(!is.null(is_numeric()), input$column)
@@ -100,7 +104,7 @@ input_filter_server <- function(id, filters_metadata) {
 
     # remove filter #
     observeEvent(input$remove, {
-      removeUI(selector = paste0("#", session$ns("filter_container")))
+      removeUI(selector = paste0(".accordion-item[data-value='", session$ns(NULL), "']"))
       is_active(FALSE)
     })
 

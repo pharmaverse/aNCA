@@ -33,7 +33,7 @@ data_filtering_ui <- function(id) {
             actionButton(ns("add_filter"), "Add Filter", width = "100%"),
             input_task_button(ns("submit_filters"), "Submit Filters", class = "w-100")
           ),
-          div(id = ns("filters"), class = "filters-inputs")
+          accordion(id = ns("filters"), class = "filters-inputs")
         )
       )
     )
@@ -56,7 +56,9 @@ data_filtering_server <- function(id, raw_adnca_data) {
           list(type = "text", choices = unique(raw_adnca_data()[[col]]))
         }
       }) |>
-        setNames(colnames(raw_adnca_data()))
+        setNames(colnames(raw_adnca_data())) |>
+        purrr::keep(~ .x$type == "numeric" || length(.x$choices) > 1)
+        
     })
 
     observeEvent(input$add_filter, {
@@ -66,7 +68,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       # Insert a new filter UI
       insertUI(
         selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), colnames(raw_adnca_data()))
+        ui = input_filter_ui(session$ns(filter_id), names(filters_metadata()))
       )
 
       filters[[filter_id]] <- input_filter_server(filter_id, filters_metadata = filters_metadata)
