@@ -47,7 +47,7 @@
     flex-direction: column;
     width: 100%;
     padding: 10px;
-    background-color: #dfdfdf;
+    background-color: var(--bs-gray-200);
     border: 1px solid #c3c3c3;
     border-radius: 4px;
 
@@ -149,18 +149,21 @@
 
 .filters-container {
   width: 300px;
-  background-color: whitesmoke;
+  background-color: white;
   flex-shrink: 0;
   padding: 20px;
   border: 1px solid #e6e6e6;
   border-radius: 4px;
   height: 70vh;
   overflow-y: auto;
+
+  .accordion-header > button {
+    padding: 0.75em 1.25em;
+  }
 }
 
 .filters-inputs {
   display: flex;
   flex-direction: column;
-  gap: 15px;
   margin-top: 15px;
 }
