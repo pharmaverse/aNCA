@@ -30,6 +30,6 @@ This function retrieves the label of a heading from a labels file.
  )
  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
  get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
- }
+}
 
 }

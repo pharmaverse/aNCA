@@ -92,7 +92,6 @@ as_factor_preserve_label <- function(x) {
 #' }
 #'
 #' @export
-
 has_label <- function(x) {
   return(!is.null(attr(x, "label")))
 }
@@ -114,7 +113,6 @@ has_label <- function(x) {
 #' }
 #'
 #' @export
-
 set_empty_label <- function(x) {
   if (is.null(attr(x, "label"))) {
     attr(x, "label") <- ""
@@ -149,24 +147,23 @@ set_empty_label <- function(x) {
 get_label <- function(labels_df, variable, type) {
   label <- labels_df$Label[labels_df$Variable == variable & labels_df$Dataset == type]
   if (length(label) == 0) {
-    return("No label available")
+    return(variable)
   }
   label
 }
-
 
 #' Generate HTML Tooltip Text
 #'
 #' Creates a character vector of HTML tooltips for each row of a data frame,
 #' suitable for use with `ggplotly`.
-#' 
+#'
 #' @param data A data.frame with the source data.
 #' @param labels_df A data.frame used by `get_label()` to find variable labels.
 #' @param tooltip_vars A character vector of column names to include in the tooltip.
 #' @param type A character string specifying the label type for `get_label()`.
-#' 
+#'
 #' @return A character vector of formatted HTML tooltip strings.
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' # Dummy get_label function for demonstration purposes
@@ -201,18 +198,22 @@ get_label <- function(labels_df, variable, type) {
 #'
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
-  
+
+  if (length(tooltip_vars) == 0) {
+    return(rep("", nrow(data)))
+  }
+
   pmap_chr(
     .l = select(data, all_of(tooltip_vars)),
     .f = function(...) {
-      
+
       row_values <- list(...)
-      
+
       # For each variable, create a formatted line retrieving its label
       lines <- map_chr(tooltip_vars, ~ paste0(
         "<b>", get_label(labels_df, .x, type), "</b>: ", row_values[[.x]]
       ))
-      
+
       # Paste all lines together with HTML line breaks
       paste(lines, collapse = "<br>")
     }
