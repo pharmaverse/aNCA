@@ -141,7 +141,7 @@
     "log10_Mean",
     "log10_SD",
     "log10_SE",
-    "metadata_variables",
+    "metadata_nca_variables",
     "new_NCA_PROFILE",
     "next_dose",
     "next_dose_time",

@@ -21,7 +21,7 @@
 "metadata_nca_parameters"
 
 
-#' metadata_variables
+#' metadata_nca_variables
 #'
 #' A dataset containing pharmacokinetic variable specifications.
 #'
@@ -44,4 +44,4 @@
 #'   \item{is.mapped}{Logical. TRUE if the variable is mapped in ADNCA (App's input).}
 #' }
 #' @source Used for PP and ADPP mapping rules and checks in the export_cdisc function
-"metadata_variables"
+"metadata_nca_variables"

@@ -1,4 +1,4 @@
-CDISC_COLS <- metadata_variables %>%
+CDISC_COLS <- metadata_nca_variables %>%
   filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
   arrange(Order) %>%
   split(.[["Dataset"]])
@@ -41,7 +41,7 @@ test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
     )
   )
 
-describe("metadata_variables is consistent with what is expected", {
+describe("metadata_nca_variables is consistent with what is expected", {
   pp_var <- CDISC_COLS$PP %>%
     filter(Variable == "PTAETORD")
   expect_equal(
@@ -77,7 +77,7 @@ describe("export_cdisc", {
     expect_equal(nrow(pp), 9)
     expect_equal(
       unname(formatters::var_labels(pp)),
-      translate_terms(names(pp), "Variable", "Label", metadata_variables)
+      translate_terms(names(pp), "Variable", "Label", metadata_nca_variables)
     )
   })
 
@@ -89,7 +89,7 @@ describe("export_cdisc", {
     expect_equal(nrow(adpp), 9)
     expect_equal(
       unname(formatters::var_labels(adpp)),
-      translate_terms(names(adpp), "Variable", "Label", metadata_variables)
+      translate_terms(names(adpp), "Variable", "Label", metadata_nca_variables)
     )
   })
 
@@ -101,7 +101,7 @@ describe("export_cdisc", {
     expect_equal(nrow(adpc), nrow(test_pknca_res$data$conc$data))
     expect_equal(
       unname(formatters::var_labels(adpc)),
-      translate_terms(names(adpc), "Variable", "Label", metadata_variables)
+      translate_terms(names(adpc), "Variable", "Label", metadata_nca_variables)
     )
   })
 

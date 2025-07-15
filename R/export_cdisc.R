@@ -21,8 +21,8 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
-  # Define the CDISC columns we need and its rules using the metadata_variables object
-  CDISC_COLS <- metadata_variables %>%
+  # Define the CDISC columns we need and its rules using the metadata_nca_variables object
+  CDISC_COLS <- metadata_nca_variables %>%
     filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
     arrange(Order) %>%
     split(.[["Dataset"]])
@@ -107,7 +107,7 @@ export_cdisc <- function(res_nca) {
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
-    add_derived_cdisc_vars(
+    add_derived_pp_vars(
       conc_timeu_col = conc_timeu_col,
       conc_group_sp_cols = conc_group_sp_cols,
       dose_time_col = dose_time_col
@@ -134,12 +134,12 @@ export_cdisc <- function(res_nca) {
     ) %>%
 
     # Select only columns needed for PP, ADPP, ADPC
-    select(any_of(metadata_variables[["Variable"]])) %>%
+    select(any_of(metadata_nca_variables[["Variable"]])) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
         .cols = setdiff(
-          metadata_variables %>%
+          metadata_nca_variables %>%
             filter(Core == "Exp" & (Type == "Char" | Type == "text")) %>%
             pull(Variable),
           names(.)
@@ -152,7 +152,7 @@ export_cdisc <- function(res_nca) {
     mutate(
       across(
         .cols = setdiff(
-          metadata_variables %>%
+          metadata_nca_variables %>%
             filter(Core == "Exp" & (Type != "Char" & Type != "text")) %>%
             pull(Variable),
           names(.)
@@ -162,10 +162,10 @@ export_cdisc <- function(res_nca) {
       )
     ) %>%
     # Adjust class and length to the standards
-    adjust_class_and_length(metadata_variables)
+    adjust_class_and_length(metadata_nca_variables)
 
   # Add labels to the columns
-  labels_map <- metadata_variables %>%
+  labels_map <- metadata_nca_variables %>%
     filter(!duplicated(Variable)) %>%
     pull(Label, Variable)
   var_labels(cdisc_info) <- labels_map[names(cdisc_info)]
@@ -230,7 +230,7 @@ export_cdisc <- function(res_nca) {
     # Order columns using a standard, and then put the rest of the columns
     select(any_of(CDISC_COLS$ADPC$Variable)) %>%
     # Adjust class and length to the standards
-    adjust_class_and_length(metadata_variables)
+    adjust_class_and_length(metadata_nca_variables)
 
   # Add variable labels for ADPC
   var_labels(adpc) <- labels_map[names(adpc)]
@@ -305,7 +305,7 @@ get_subjid <- function(data) {
   }
 }
 
-# Helper: adjust class and length for a data.frame based on metadata_variables
+# Helper: adjust class and length for a data.frame based on metadata_nca_variables
 adjust_class_and_length <- function(df, metadata) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
@@ -328,7 +328,7 @@ adjust_class_and_length <- function(df, metadata) {
 }
 
 # Helper: add derived CDISC variables based on PKNCA terms
-add_derived_cdisc_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
+add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
   df %>%
     mutate(
       PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
@@ -426,14 +426,14 @@ add_derived_cdisc_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_
 
 # Helper function to format date columns
 .format_to_dtc <- function(dt) {
-  dtc_vectors <- c(  
-    "%Y-%m-%dT%H:%M:%S",  
-    "%Y-%m-%dT%H:%M",  
-    "%d-%m-%Y %H:%M:%S",  
-    "%d-%m-%Y %H:%M"  
+  dtc_vectors <- c(
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%dT%H:%M",
+    "%d-%m-%Y %H:%M:%S",
+    "%d-%m-%Y %H:%M"
   ) %>%
     lapply(\(format) strptime(dt, format = format))
-  
+
   dtc_vectors_nas <- sapply(dtc_vectors, \(x) sum(is.na(x)))
   as.POSIXct(dtc_vectors[[which.min(dtc_vectors_nas)]])
 }
