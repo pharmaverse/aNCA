@@ -157,6 +157,9 @@
     "type_interval",
     "var_name",
     "view",
+    "VISIT",
+    "VOLUME",
+    "VOLUMEU",
     "zero_str"
   ))
 }

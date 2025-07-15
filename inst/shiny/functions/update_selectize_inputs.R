@@ -9,8 +9,14 @@
 #' @param column_names A vector of column names from the dataset.
 #' @param manual_units A list containing manual units for concentration, dose, and time.
 #' @param desired_order A vector of desired column order.
+#' @details
+#' This function updates the selectize inputs in the Shiny session based on the
+#' provided column names and manual units. It handles special cases for
+#' `Grouping_Variables`, `NCA_PROFILE`, and units columns. It also
+#' ensures that the selectize inputs are populated with the correct choices and
+#' selected values based on the current dataset.
 #'
-#' @return None. This function updates the selectize inputs in the Shiny session.
+#' @returns None. This function updates the selectize inputs in the Shiny session.
 
 update_selectize_inputs <- function(session, input_ids, column_names, manual_units, desired_order) {
 
@@ -63,12 +69,22 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
   )
 
   for (input_id in names(special_cases)) {
+    # Custom logic for DOSEU fallback to DOSEAU
+    selected <- {
+      # Custom logic for DOSEU fallback to DOSEAU
+      param_name <- sub("select_", "", input_id)
+      if (input_id == "select_DOSEU" && "DOSEAU" %in% column_names) {
+        "DOSEAU"
+      } else if (param_name %in% column_names) {
+        param_name
+      } else {
+        NULL
+      }
+    }
     updateSelectizeInput(
       session, input_id,
       choices = c("Select Column" = "", special_cases[[input_id]]),
-      selected =
-        if (sub("select_", "", input_id) %in% column_names)
-          sub("select_", "", input_id) else NULL
+      selected = selected
     )
   }
 }
