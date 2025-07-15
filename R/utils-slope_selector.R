@@ -74,7 +74,6 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
     },
     include_half.life = case_when(
       is.included.hl ~ TRUE,
-      is.excluded.hl ~ FALSE,
       TRUE ~ NA
     )) %>%
     ungroup()
