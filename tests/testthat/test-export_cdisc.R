@@ -273,13 +273,15 @@ describe("export_cdisc", {
 
   it("does not derive SUBJID if not present with USUBJID, STUDYID", {
     test_with_subjid <- test_pknca_res
-    test_with_subjid$data$conc$data <- test_pknca_res$data$dose$data %>%
+    test_with_subjid$data$conc$data <- test_pknca_res$data$conc$data %>%
+      filter(USUBJID %in% unique(USUBJID)[1:2]) %>%
       mutate(
         STUDYID = "S1",
         SUBJID = ifelse(USUBJID == unique(USUBJID)[1], 1, 2),
         USUBJID = paste0(STUDYID, "-", SUBJID)
       )
     test_with_subjid$data$dose$data <- test_pknca_res$data$dose$data %>%
+      filter(USUBJID %in% unique(USUBJID)[1:2]) %>%
       mutate(
         STUDYID = "S1",
         SUBJID = ifelse(USUBJID == unique(USUBJID)[1], 1, 2),
@@ -311,7 +313,7 @@ describe("export_cdisc", {
     res_no_subjid_no_studyid <- export_cdisc(test_no_subjid_no_studyid)
 
     # Check that SUBJID is derived correctly
-    expected_vals <- as.character(test_with_subjid$data$dose$data$SUBJID)
+    expected_vals <- as.character(test_with_subjid$data$conc$data$SUBJID)
     expect_equal(res_with_subjid$adpc$SUBJID, expected_vals, ignore_attr = TRUE)
     expect_equal(res_no_subjid_no_studyid$adpc$SUBJID, expected_vals, ignore_attr = TRUE)
   })
