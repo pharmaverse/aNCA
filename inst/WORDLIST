@@ -47,6 +47,7 @@ STUDYID
 TLG
 TLGs
 TRT
+Tooltip
 USUBJID
 USUBJIDs
 amountu
@@ -59,6 +60,7 @@ bioavailability
 cdisc
 cmax
 codebase
+colour
 concu
 customizable
 devtools
@@ -87,6 +89,8 @@ tidyverse
 timepoint
 timeu
 tlg
+tooltip
+tooltips
 utilise
 visualizable
 yaml

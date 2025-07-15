@@ -164,6 +164,8 @@ get_label <- function(labels_df, variable, type) {
 #'
 #' @return A character vector of formatted HTML tooltip strings.
 #'
+#' @importFrom purrr pmap_chr map_chr
+#'
 #' @examples
 #' \dontrun{
 #' # Dummy get_label function for demonstration purposes
