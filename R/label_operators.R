@@ -129,7 +129,7 @@ set_empty_label <- function(x) {
 #' @param labels_df A data frame with three columns: Variable, Label, and Dataset.
 #'
 #' @return The label of the heading if it exists in the labels file,
-#' otherwise "No label available".
+#' otherwise the variable name.
 #'
 #' @examples
 #' \dontrun{
@@ -140,7 +140,7 @@ set_empty_label <- function(x) {
 #'  Dataset = c("ADPC", "ADPC")
 #'  )
 #'  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
-#'  get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
+#'  get_label(LABELS, "AGE", "ADPC")  # Returns "AGE"
 #' }
 #'
 #' @export
