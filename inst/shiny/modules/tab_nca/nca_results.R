@@ -69,7 +69,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
       final_results <- final_results %>%
         inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct()
+        distinct() %>%
+        mutate(
+          flagged = "NOT DONE"
+        )
 
       # Add flaging column in the pivoted results
       # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared,
@@ -81,7 +84,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
       rules_applied <- sapply(rules, FUN =  \(x) x$is.checked)
       params_applied <- translate_terms(names(rules), "PKNCA", "PPTEST")[rules_applied]
-      params_applied <- names(final_results)[var_labels(final_results) %in% params_applied]
+      params_applied <- names(final_results)[formatters::var_labels(final_results)
+                                             %in% params_applied]
 
       if (length(params_applied) > 0) {
         final_results <- final_results %>%
@@ -94,6 +98,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             )
           )
       }
+      final_results
     })
 
     # Provide the zip file for download
@@ -119,7 +124,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       req(final_results())
 
       param_pptest_cols <- intersect(
-        unname(var_labels(final_results())),
+        unname(formatters::var_labels(final_results())),
         unique(c(pknca_cdisc_terms$PPTEST, ratio_table()$PPTESTCD))
       )
       session$userData$results$nca_results$pivoted_results <- final_results()
