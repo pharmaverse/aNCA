@@ -11,7 +11,7 @@ logarithmic scale and can optionally include standard deviation error bars."></h
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9114</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9115</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,8 @@ logarithmic scale and can optionally include standard deviation error bars.</p>
 <span>  <span class="va">selected_cycles</span>,</span>
 <span>  id_variable <span class="op">=</span> <span class="st">"DOSEA"</span>,</span>
 <span>  plot_ylog <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  plot_sd <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  plot_sd_min <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  plot_sd_max <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot_ci <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -104,9 +105,12 @@ in the plot. Default is "DOSEA".</p></dd>
 the y-axis. Default is FALSE.</p></dd>
 
 
-<dt id="arg-plot-sd">plot_sd<a class="anchor" aria-label="anchor" href="#arg-plot-sd"></a></dt>
-<dd><p>A logical value indicating whether to include standard deviation
-error bars. Default is FALSE.</p></dd>
+<dt id="arg-plot-sd-min">plot_sd_min<a class="anchor" aria-label="anchor" href="#arg-plot-sd-min"></a></dt>
+<dd><p>A logical value to add a SD error bar below the mean. Default is FALSE.</p></dd>
+
+
+<dt id="arg-plot-sd-max">plot_sd_max<a class="anchor" aria-label="anchor" href="#arg-plot-sd-max"></a></dt>
+<dd><p>A logical value to add a SD error bar above the mean. Default is FALSE.</p></dd>
 
 
 <dt id="arg-plot-ci">plot_ci<a class="anchor" aria-label="anchor" href="#arg-plot-ci"></a></dt>
