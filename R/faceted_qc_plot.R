@@ -18,11 +18,6 @@
 #'
 #'
 #' @examples
-#' \dontrun{
-#' # Dummy helper functions required for the example to run
-#' get_label <- function(df, var, type) paste(var, "(units)")
-#' generate_tooltip_text <- function(data, ...) "details"
-#'
 #' # Sample data
 #' qc_data <- data.frame(
 #'   TIME = 1:6,
@@ -42,7 +37,6 @@
 #'   labels_df = label_data,
 #'   title = "Sample QC Plot"
 #'   )
-#' }
 #'
 #' @export
 faceted_qc_plot <- function(data,
