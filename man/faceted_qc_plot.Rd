@@ -10,8 +10,8 @@ faceted_qc_plot(
   y_var,
   colour_var,
   grouping_vars,
-  labels_df,
-  title
+  labels_df = data.frame(),
+  title = NULL
 )
 }
 \arguments{
@@ -40,11 +40,6 @@ control (QC). The function supports dynamic labels and automatically
 prepares tooltips for interactive use with \code{ggplotly}.
 }
 \examples{
-\dontrun{
-# Dummy helper functions required for the example to run
-get_label <- function(df, var, type) paste(var, "(units)")
-generate_tooltip_text <- function(data, ...) "details"
-
 # Sample data
 qc_data <- data.frame(
   TIME = 1:6,
@@ -64,6 +59,5 @@ faceted_qc_plot(
   labels_df = label_data,
   title = "Sample QC Plot"
   )
-}
 
 }

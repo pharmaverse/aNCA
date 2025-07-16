@@ -95,7 +95,7 @@ describe("generate_tooltip_text", {
   TEST_VARS <- c("USUBJID", "AVAL", "RACE")
 
   it("generates correct tooltip string for multiple rows and data types", {
-    tooltips <- generate_tooltip_text(test_data, ADNCA_LABELS_FIXTURE, vars, "ADPC")
+    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADPC")
     expected_output <- c(
       "<b>Unique Subject Identifier</b>: S1-1<br><b>Analysis Value</b>: 10.5<br><b>Race</b>: WHITE",
       "<b>Unique Subject Identifier</b>: S1-2<br><b>Analysis Value</b>: NA<br><b>Race</b>: ASIAN"
@@ -104,23 +104,23 @@ describe("generate_tooltip_text", {
   })
 
   it("returns an empty string for each row if tooltip_vars is empty", {
-    tooltips <- generate_tooltip_text(test_data, ADNCA_LABELS_FIXTURE, character(0), "ADPC")
+    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, character(0), "ADPC")
     expect_equal(tooltips, c("", ""))
   })
 
   it("throws an error if a variable in tooltip_vars is not in the data", {
     invalid_vars <- c("USUBJID", "NON_EXISTENT_VAR")
-    expect_error(generate_tooltip_text(test_data, ADNCA_LABELS_FIXTURE, invalid_vars, "ADPC"))
+    expect_error(generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, invalid_vars, "ADPC"))
   })
 
   it("returns an empty vector for data with zero rows", {
-    empty_data <- test_data[0, ]
-    tooltips <- generate_tooltip_text(empty_data, ADNCA_LABELS_FIXTURE, vars, "ADPC")
+    empty_data <- TEST_DATA[0, ]
+    tooltips <- generate_tooltip_text(empty_data, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADPC")
     expect_equal(tooltips, character(0))
   })
 
   it("uses the variable name as a label if it's not in labels_df", {
-    data_with_unlabeled_var <- test_data %>% mutate(AGE = c(45, 52))
+    data_with_unlabeled_var <- TEST_DATA %>% mutate(AGE = c(45, 52))
     vars_with_unlabeled <- c("USUBJID", "AGE")
     expected_output <- c(
       "<b>Unique Subject Identifier</b>: S1-1<br><b>AGE</b>: 45",
