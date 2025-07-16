@@ -60,6 +60,7 @@ describe("faceted_qc_plot", {
 
   it("handles multiple grouping variables for faceting", {
     data_multi_group <- TEST_DATA %>% mutate(SEX = rep(c("F", "M", "F"), 2))
+    num_groups <- nrow(unique(data_multi_group[, c("ARM", "SEX")]))
     plot_object <- faceted_qc_plot(
       data = data_multi_group,
       x_var = "TIME",
@@ -71,7 +72,6 @@ describe("faceted_qc_plot", {
     )
     built_plot <- ggplot2::ggplot_build(plot_object)
     num_panels <- length(unique(built_plot$layout$layout$PANEL))
-    num_groups <- nrow(unique(data_multi_group[, c("ARM", "SEX")]))
 
     expect_equal(num_panels, num_groups)
   })
