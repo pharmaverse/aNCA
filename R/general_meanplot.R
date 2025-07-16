@@ -54,7 +54,9 @@ general_meanplot <- function(data,
   summarised_data <- preprocessed_data %>%
     mutate(id_variable_col = interaction(!!!syms(id_variable), sep = ", ",  drop = TRUE)) %>%
     # Create a groups variables for the labels
-    mutate(groups = paste0(paste(STUDYID, PARAM, PCSPEC, NCA_PROFILE, sep = ", "), " [", AVALU, "]")) %>%
+    mutate(groups = paste0(
+      paste(STUDYID, PARAM, PCSPEC, NCA_PROFILE, sep = ", "), " [", AVALU, "]"
+    )) %>%
     group_by(id_variable_col, NRRLT, groups) %>%
     summarise(
               Mean = round(mean(AVAL, na.rm = TRUE), 3),
