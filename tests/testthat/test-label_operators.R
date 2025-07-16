@@ -86,16 +86,6 @@ describe("set_empty_label", {
   })
 })
 
-# A mock of the get_label function for isolated testing
-get_label <- function(labels_df, var, type) {
-  label <- ADNCA_LABELS_FIXTURE$Label[ADNCA_LABELS_FIXTURE$Variable == var &
-                                        ADNCA_LABELS_FIXTURE$Dataset == type]
-  if (length(label) == 0) {
-    return(var)
-  }
-  label
-}
-
 describe("generate_tooltip_text", {
   test_data <- data.frame(
     USUBJID = c("S1-1", "S1-2"),

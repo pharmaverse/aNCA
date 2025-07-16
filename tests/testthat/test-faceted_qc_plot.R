@@ -1,8 +1,3 @@
-get_label <- function(df, var, type) toupper(var)
-generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
-  paste("Tooltip for row", seq_len(nrow(data)))
-}
-
 TEST_DATA <- data.frame(
   TIME = 1:6,
   RESULT = c(5, 6, 8, 9, 12, 11),
