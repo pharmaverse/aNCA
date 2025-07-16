@@ -87,12 +87,12 @@ describe("set_empty_label", {
 })
 
 describe("generate_tooltip_text", {
-  test_data <- data.frame(
+  TEST_DATA <- data.frame(
     USUBJID = c("S1-1", "S1-2"),
     AVAL = c(10.5, NA_real_),
     RACE = as.factor(c("WHITE", "ASIAN"))
   )
-  vars <- c("USUBJID", "AVAL", "RACE")
+  TEST_VARS <- c("USUBJID", "AVAL", "RACE")
 
   it("generates correct tooltip string for multiple rows and data types", {
     tooltips <- generate_tooltip_text(test_data, ADNCA_LABELS_FIXTURE, vars, "ADPC")
