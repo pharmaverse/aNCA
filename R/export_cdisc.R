@@ -183,7 +183,15 @@ export_cdisc <- function(res_nca) {
     )
 
   adpp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable)))
+    select(any_of(c(CDISC_COLS$ADPP$Variable))) %>%
+    # Deselect permitted columns with only NAs
+    select(
+      -which(
+        names(.) %in% CDISC_COLS$ADPP$Variable[CDISC_COLS$ADPP$Core == "Perm"] &
+          sapply(., function(x) all(is.na(x))) &
+          !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
+      )
+    )
 
   adpc <- res_nca$data$conc$data %>%
     left_join(dose_info,
