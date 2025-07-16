@@ -120,6 +120,7 @@
     "format_fun",
     "id_list",
     "id_plot",
+    "id_variable_col",
     "install.packages",
     "interval_name",
     "interval_name_col",
