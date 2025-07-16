@@ -45,7 +45,7 @@ faceted_qc_plot <- function(data,
                             colour_var,
                             grouping_vars,
                             labels_df = data.frame(),
-                            title) {
+                            title = NULL) {
 
   # Include all variables from the plot in the tooltips
   tooltip_vars <- c(x_var, y_var, colour_var, grouping_vars)
