@@ -114,7 +114,7 @@ export_cdisc <- function(res_nca) {
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
-    mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
+    mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
     # Parameters with a one-to-many mapping in PKNCA / CDISC
