@@ -41,6 +41,8 @@ describe("faceted_qc_plot", {
   })
 
   it("creates the correct number of facets", {
+    num_groups <- length(unique(TEST_DATA$ARM))
+
     plot_object <- faceted_qc_plot(
       data = TEST_DATA,
       x_var = "TIME",
@@ -52,7 +54,6 @@ describe("faceted_qc_plot", {
     )
     built_plot <- ggplot2::ggplot_build(plot_object)
     num_panels <- length(unique(built_plot$layout$layout$PANEL))
-    num_groups <- length(unique(TEST_DATA$ARM))
 
     expect_equal(num_panels, num_groups)
   })
