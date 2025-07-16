@@ -48,7 +48,7 @@ summary_server <- function(id, processed_pknca_data) {
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        height = "98vh"
+        height = "68vh"
       )
     })
   })

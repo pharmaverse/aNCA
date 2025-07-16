@@ -105,7 +105,9 @@ data_filtering_server <- function(id, raw_adnca_data) {
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        height = "98vh"
+        compact = TRUE,
+        style = list(fontSize = "0.75em"),
+        height = "48vh"
       )
     })
 

@@ -172,7 +172,7 @@ tab_data_server <- function(id) {
         bordered = TRUE,
         compact = TRUE,
         style = list(fontSize = "0.75em"),
-        height = "98vh"
+        height = "48vh"
       )
     })
 
