@@ -154,8 +154,11 @@ get_label <- function(labels_df, variable, type) {
 
 #' Generate HTML Tooltip Text
 #'
+#' @details
 #' Creates a character vector of HTML tooltips for each row of a data frame,
 #' suitable for use with `ggplotly`.
+#'  The output vector of this function should be added to original plotting data as a column,
+#' which then can be used as tooltip argument in the plotting function.
 #'
 #' @param data A data.frame with the source data.
 #' @param labels_df A data.frame used by `get_label()` to find variable labels.
@@ -167,14 +170,6 @@ get_label <- function(labels_df, variable, type) {
 #' @importFrom purrr pmap_chr map_chr
 #'
 #' @examples
-#' \dontrun{
-#' # Dummy get_label function for demonstration purposes
-#' get_label <- function(labels, var, type) {
-#'   # A real function would look up the label in a data frame.
-#'   # This dummy function just capitalizes the variable name.
-#'   toupper(var)
-#'   }
-#'
 #' # Sample data
 #' my_data <- data.frame(
 #'   USUBJID = c("Subject-01", "Subject-02"),
@@ -188,15 +183,7 @@ get_label <- function(labels_df, variable, type) {
 #'
 #' # Generate the tooltip text vector
 #' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
-#'
-#' # View the output
-#' tooltips
-#' # [1] "<b>USUBJID</b>: Subject-01<br><b>DOSE</b>: 100<br><b>RESPONSE</b>: 5.4"
-#' # [2] "<b>USUBJID</b>: Subject-02<br><b>DOSE</b>: 200<br><b>RESPONSE</b>: 8.1"
-#'
-#' # Example of adding it to the data frame for plotting
 #' my_data$tooltip <- tooltips
-#' }
 #'
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
