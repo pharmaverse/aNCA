@@ -83,9 +83,10 @@ calculate_ratio_app <- function(
     )
     all_ratios <- bind_rows(all_ratios, ratio_calculations)
   }
+
   # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
   # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed
-  unnest(all_ratios) %>%
+  all_ratios %>%
     # Make sure there are no duplicate rows for: parameter, contrast_var, and match_cols
     distinct(across(
       all_of(c("PPTESTCD", group_vars(res$data), "end"))
