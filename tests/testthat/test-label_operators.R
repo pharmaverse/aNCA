@@ -122,12 +122,12 @@ describe("generate_tooltip_text", {
   it("uses the variable name as a label if it's not in labels_df", {
     data_with_unlabeled_var <- test_data %>% mutate(AGE = c(45, 52))
     vars_with_unlabeled <- c("USUBJID", "AGE")
-    tooltips <- generate_tooltip_text(data_with_unlabeled_var, ADNCA_LABELS_FIXTURE,
-                                      vars_with_unlabeled, "ADPC")
     expected_output <- c(
       "<b>Unique Subject Identifier</b>: S1-1<br><b>AGE</b>: 45",
       "<b>Unique Subject Identifier</b>: S1-2<br><b>AGE</b>: 52"
     )
+    tooltips <- generate_tooltip_text(data_with_unlabeled_var, ADNCA_LABELS_FIXTURE,
+                                      vars_with_unlabeled, "ADPC")
     expect_equal(tooltips, expected_output)
   })
 })
