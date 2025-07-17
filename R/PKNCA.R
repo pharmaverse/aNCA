@@ -271,11 +271,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     data <- create_start_impute(data)
 
     # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- pknca_cdisc_terms %>%
+    params_auc_dep <- metadata_nca_parameters %>%
       filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
       pull(PKNCA)
 
-    params_not_to_impute <- pknca_cdisc_terms %>%
+    params_not_to_impute <- metadata_nca_parameters %>%
       filter(!grepl("auc|aumc", PKNCA),
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
       pull(PKNCA) |>
