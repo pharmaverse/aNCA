@@ -14,8 +14,8 @@
 #'                          in the plot. Default is "DOSEA".
 #' @param plot_ylog         A logical value indicating whether to use a logarithmic scale for
 #'                          the y-axis. Default is FALSE.
-#' @param plot_sd           A logical value indicating whether to include standard deviation
-#'                          error bars. Default is FALSE.
+#' @param plot_sd_min       A logical value to add a SD error bar below the mean. Default is FALSE.
+#' @param plot_sd_max       A logical value to add a SD error bar above the mean. Default is FALSE.
 #' @param plot_ci           A logical value indicating whether to include confidence interval 95%
 #'                          ribbon. Default is FALSE.
 #'
@@ -33,7 +33,8 @@ general_meanplot <- function(data,
                              selected_cycles,
                              id_variable = "DOSEA",
                              plot_ylog = FALSE,
-                             plot_sd = FALSE,
+                             plot_sd_min = FALSE,
+                             plot_sd_max = FALSE,
                              plot_ci = FALSE) {
 
   # preprocess the data by summarising
@@ -51,10 +52,10 @@ general_meanplot <- function(data,
   conc_unit <- unique(preprocessed_data$AVALU)
 
   summarised_data <- preprocessed_data %>%
-    mutate(id_variable = as.factor(!!sym(id_variable))) %>%
+    mutate(id_variable_col = interaction(!!!syms(id_variable), sep = ", ",  drop = TRUE)) %>%
     # Create a groups variables for the labels
     mutate(groups = paste(STUDYID, PARAM, PCSPEC, NCA_PROFILE, sep = ", ")) %>%
-    group_by(id_variable, NRRLT, groups) %>%
+    group_by(id_variable_col, NRRLT, groups) %>%
     summarise(
               Mean = round(mean(AVAL, na.rm = TRUE), 3),
               SD = sd(AVAL, na.rm = TRUE),
@@ -65,7 +66,7 @@ general_meanplot <- function(data,
               CI_lower = Mean - 1.96 * SE,
               CI_upper = Mean + 1.96 * SE,
               .groups = "drop") %>%
-    select(NRRLT, Mean, SD, N, CI_lower, CI_upper, id_variable, groups, SD_min, SD_max, SE) %>%
+    select(NRRLT, Mean, SD, N, CI_lower, CI_upper, id_variable_col, groups, SD_min, SD_max, SE) %>%
     # Filter means/averages calculated with less than 3 points
     filter(N >= 3)
 
@@ -92,9 +93,9 @@ general_meanplot <- function(data,
   }
 
   # plot the preprocess data
-  p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean), group = id_variable) +
-    geom_line(aes(colour = id_variable)) +
-    geom_point(aes(colour = id_variable)) +
+  p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean), group = id_variable_col) +
+    geom_line(aes(colour = id_variable_col)) +
+    geom_point(aes(colour = id_variable_col)) +
     facet_wrap(~groups,
                strip.position = "top") +
     labs(
@@ -102,7 +103,7 @@ general_meanplot <- function(data,
       y = paste0(
         "Mean concentration", " [", conc_unit, "]"
       ),
-      color = id_variable,
+      color = paste0(id_variable, collapse = ", "),
       fill = "95% Confidence Interval"
     ) +
     theme_bw() +
@@ -112,16 +113,23 @@ general_meanplot <- function(data,
           strip.background = element_rect(fill = "grey90", color = "grey50"),
           plot.margin = margin(10, 10, 10, 10, "pt"))
 
-  # add sd
-  if (plot_sd) {
+  # add sd error bars
+  if (plot_sd_min || plot_sd_max) {
+    if (plot_ylog) {
+      ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$log10_Mean
+      ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$log10_Mean
+    } else {
+      ymin <- if (plot_sd_min) summarised_data$SD_min else summarised_data$Mean
+      ymax <- if (plot_sd_max) summarised_data$SD_max else summarised_data$Mean
+    }
     p <- p +
-      geom_errorbar(aes(ymin = SD_min, ymax = SD_max, color = id_variable), width = 0.4)
+      geom_errorbar(aes(ymin = ymin, ymax = ymax, color = id_variable_col), width = 0.4)
   }
 
   # add ci
   if (plot_ci) {
     p <- p +
-      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, color = id_variable), alpha = 0.3)
+      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, color = id_variable_col), alpha = 0.3)
   }
 
   # add log scale

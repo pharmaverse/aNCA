@@ -123,11 +123,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
     observeEvent(final_results(), {
       req(final_results())
 
+      # Save the latest version of the object
+      session$userData$results$nca_results$pivoted_results <- final_results()
+
+      # Represent the available parameters in the input
       param_pptest_cols <- intersect(
         unname(formatters::var_labels(final_results())),
-        unique(c(pknca_cdisc_terms$PPTEST, ratio_table()$PPTESTCD))
+        unique(c(metadata_nca_parameters$PPTEST, ratio_table()$PPTESTCD))
       )
-      session$userData$results$nca_results$pivoted_results <- final_results()
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(

@@ -67,7 +67,7 @@ settings_ui <- function(id) {
                 pickerInput(
                   ns("bioavailability"),
                   "Calculate Bioavailability:",
-                  choices = pknca_cdisc_terms %>%
+                  choices = metadata_nca_parameters %>%
                     filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
                     pull(PKNCA, PPTESTCD),
                   multiple = TRUE,
@@ -174,7 +174,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       # Parmeter selection #
       reset_reactable_memory()
 
-      params_data <- pknca_cdisc_terms %>%
+      params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered") %>%
         pull("PKNCA")
 
@@ -290,7 +290,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     output$nca_parameters <- renderReactable({
       #remove parameters that are currently unavailable in PKNCA
-      params_data <- pknca_cdisc_terms %>%
+      params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered")
 
       default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
@@ -313,7 +313,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       selected_rows <- getReactableState("nca_parameters", "selected")
       if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
 
-      params_data <- pknca_cdisc_terms %>%
+      params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered")
       selected_terms <- params_data[selected_rows, , drop = FALSE]
 

@@ -12,6 +12,7 @@ AdjustingFactor
 AggregateSubject
 Analyte
 CDISC
+Cond
 DOSEA
 DOSEU
 DOSNOA
@@ -26,6 +27,7 @@ NCA
 NFRLT
 NNN
 NRRLT
+Num
 PARAM
 PARAMCD
 PCSPEC
@@ -47,6 +49,7 @@ Plotly
 Pre
 RRLTU
 RStudio
+Req
 STUDYID
 TLG
 TLGs
@@ -66,6 +69,7 @@ cmax
 codebase
 concu
 customizable
+dateTime
 devtools
 df
 extravascular
