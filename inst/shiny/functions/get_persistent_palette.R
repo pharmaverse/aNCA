@@ -11,28 +11,28 @@ get_persistent_palette <- function(data, colorby_vars, palette_name = "default")
   }
 
   # Create a temporary column in the data representing the interaction of the variables
-  interaction_data <- data %>%
-    mutate(interaction_col = interaction(!!!syms(colorby_vars), sep = ", "))
-
-  # Get all unique levels of this new interaction column
-  all_levels <- sample(unique(na.omit(interaction_data$interaction_col)))
+  # and get all unique values
+  all_levels <- data %>%
+    mutate(interaction_col = interaction(!!!syms(colorby_vars), sep = ", ")) %>%
+    pull(interaction_col) %>%
+    na.omit() %>%
+    unique() %>%
+    sample()
+  
   n <- length(all_levels)
 
   if (n == 0) return(NULL)
 
-  # Generate colors using the selected theme
-  colors <- if (palette_name == "viridis") {
-    viridisLite::viridis(n)
-  } else if (palette_name == "spectral") {
-    if (n > 11) {
+  switch(
+    palette_name,
+    "default" = scales::hue_pal()(n),
+    "viridis" = viridisLite::viridis(n),
+    "spectral" = if (n > 11) {
       grDevices::colorRampPalette(RColorBrewer::brewer.pal(11, "Spectral"))(n)
     } else {
       RColorBrewer::brewer.pal(max(n, 3), "Spectral")[1:n]
-    }
-  } else {
-    scales::hue_pal()(n)
-  }
-
-  # Return the final named palette
-  setNames(colors, all_levels)
+    },
+    scales::hue_pal()(n)  # Fallback to default hue palette
+  ) %>%
+    setNames(all_levels)
 }

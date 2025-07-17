@@ -370,7 +370,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
             )
           )
       }
-      return(p)
+      p
     })
 
     # TAB: Mean Plot -----------------------------------------------------------
