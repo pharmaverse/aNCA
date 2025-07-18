@@ -40,14 +40,14 @@ apply_filters <- function(data, filters) {
     # check if data if correct #
     if (!column %in% names(data)) stop("Data is missing filtered column: ", column)
 
-    if (is.numeric(data[[column]])) {
+    if (is.numeric(data[[column]]) && filter$condition != "min-max") {
       value <- as.numeric(value)
     }
 
     switch(
       filter$condition,
       "==" = {
-        data <- dplyr::filter(data, !!sym(column) == value)
+        data <- dplyr::filter(data, !!sym(column) %in% value)
       },
       ">" = {
         data <- dplyr::filter(data, !!sym(column) > value)
@@ -63,6 +63,20 @@ apply_filters <- function(data, filters) {
       },
       "!=" = {
         data <- dplyr::filter(data, !!sym(column) != value)
+      },
+      "min-max" = {
+        min_max <- value %>%
+          strsplit("-") %>%
+          unlist() %>%
+          as.numeric() %>%
+          suppressWarnings()
+
+        if (any(is.na(min_max)) || length(min_max) != 2) {
+          warning("Invalid min-max value format for ", column, ". Ignoring.")
+          return(data)
+        }
+
+        data <- dplyr::filter(data, dplyr::between(!!sym(column), min_max[1], min_max[2]))
       }
     )
   }

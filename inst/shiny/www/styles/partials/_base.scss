@@ -1,9 +1,10 @@
 /* custom css for progress bar */
 .shiny-notification {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  width: 450px !important;
+  font-size: 16px;
   z-index: 10000;
 }
 
