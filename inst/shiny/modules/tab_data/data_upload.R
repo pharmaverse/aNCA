@@ -93,13 +93,13 @@ data_upload_server <- function(id) {
         sortable = TRUE,
         highlight = TRUE,
         wrap = FALSE,
+        compact = TRUE,
         resizable = TRUE,
-        defaultPageSize = 10,
+        defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         pageSizeOptions = c(10, 25, 50, 100, nrow(raw_data())),
-        height = "48vh",
+        height = "50vh",
         class = "reactable-table",
-        compact = TRUE,
         style = list(fontSize = "0.75em")
       )
     })

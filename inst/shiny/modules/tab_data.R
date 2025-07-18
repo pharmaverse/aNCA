@@ -163,16 +163,16 @@ tab_data_server <- function(id) {
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = TRUE,
+        wrap = FALSE,
+        compact = TRUE,
         resizable = TRUE,
-        defaultPageSize = 10,
+        defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         pageSizeOptions = c(10, 25, 50, 100, nrow(processed_data())),
         striped = TRUE,
         bordered = TRUE,
-        compact = TRUE,
         style = list(fontSize = "0.75em"),
-        height = "48vh"
+        height = "50vh"
       )
     })
 

@@ -171,7 +171,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
         sortable = TRUE,
         highlight = TRUE,
         resizable = TRUE,
-        defaultPageSize = 10,
+        defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         pageSizeOptions = c(10, 25, 50, 100, nrow(output_results())),
         striped = TRUE,

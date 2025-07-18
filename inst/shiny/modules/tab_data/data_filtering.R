@@ -15,14 +15,12 @@ data_filtering_ui <- function(id) {
 
   div(
     stepper_ui("Filtering"),
-    card(
+    div(
       div(
-        h3("Filters"),
-        p("
-          Click the 'Add Filters' button to add filters to your data.
-          Be sure to click 'Submit' in order to apply the changes.\n
-          Any filters added here will be applied across the whole analysis.
-        "),
+        p(
+          "Use 'Add Filters' and click 'Submit'. Only filtered data will be analyzed.",
+          style = "text-align: center;"
+        ),
         div(
           class = "filters-buttons-container",
           actionButton(ns("add_filter"), "Add Filter"),
@@ -99,15 +97,16 @@ data_filtering_server <- function(id, raw_adnca_data) {
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = TRUE,
+        wrap = FALSE,
+        compact = TRUE,
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        compact = TRUE,
+        class = "reactable-table",
         style = list(fontSize = "0.75em"),
-        height = "48vh"
+        height = "50vh"
       )
     })
 
