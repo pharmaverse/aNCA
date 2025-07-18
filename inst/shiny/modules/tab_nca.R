@@ -93,6 +93,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+    ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
@@ -135,7 +136,13 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               ) %>%
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
-              add_f_to_pknca_results(settings()$bioavailability)
+              add_f_to_pknca_results(settings()$bioavailability) %>%
+              # Apply standard CDISC names
+              mutate(
+                PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+              ) %>%
+              # Add parameter ratio calculations
+              calculate_table_ratios_app(ratio_table = ratio_table())
           },
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
@@ -211,7 +218,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
 
-    nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)
+    #' Prepares and displays the pivoted NCA results
+    nca_results_server(
+      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, grouping_vars
+    )
 
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
