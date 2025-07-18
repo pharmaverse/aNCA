@@ -136,12 +136,14 @@ tab_tlg_server <- function(id, data) {
         selection = list(
           mode = "multiple"
         ),
-        extensions = c("RowGroup"),
+        # 1. Add "Buttons" to the extensions
+        extensions = c("RowGroup", "Buttons"),
         options = list(
           paging = FALSE,
           searching = TRUE,
           autoWidth = TRUE,
-          dom = "ft",
+          # 2. Add 'B' to the dom string to show Buttons
+          dom = "Bft",
           columnDefs = list(
             list(width = "150px", targets = "_all"),
             list(className = "dt-center", targets = "_all"),
@@ -155,7 +157,23 @@ tab_tlg_server <- function(id, data) {
               )
             )
           ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset")))
+          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
+          buttons = list(
+            list(
+              extend = "copy",
+              title = paste0("TLG_order_", Sys.Date())
+            ),
+            list(
+              extend = "csv",
+              filename = paste0("TLG_order_", Sys.Date())
+            ),
+            list(
+              extend = "excel",
+              title = NULL,
+              header = colnames(dplyr::filter(tlg_order(), Selection)),
+              filename = paste0("TLG_order_", Sys.Date())
+            )
+          )
         )
       ) %>%
         formatStyle(
