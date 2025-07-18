@@ -13,6 +13,7 @@
     "AVISIT",
     "CI_lower",
     "CI_upper",
+    "color_var",
     "colour_factored",
     "Core",
     "Count.missing",
