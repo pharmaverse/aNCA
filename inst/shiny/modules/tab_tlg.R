@@ -39,6 +39,15 @@
     setNames(names(defs))
 }
 
+js_close_button <- tags$button(
+  type = "button",
+  onclick = "$(this).closest('.modal').modal('hide');",
+  `aria-label` = "Close",
+  # Style updated for color and size
+  style = "color: white; border: none; background: transparent; font-size: 1.2em; padding: 0;",
+  icon("times")
+)
+
 tab_tlg_ui <- function(id) {
   ns <- NS(id)
 
@@ -168,16 +177,12 @@ tab_tlg_server <- function(id, data) {
     # Show modal when the add_tlg button is pressed
     observeEvent(input$add_tlg, {
       showModal(modalDialog(
-        title = tagList(
-          span("Add TLGs to Order"),
-          tags$button(
-            type = "button",
-            class = "close",
-            `data-dismiss` = "modal",
-            `aria-label` = "Close",
-            span(`aria-hidden` = "true", HTML("&times;"))
-          )
+        title = div(
+          "Add TLGs to Order",
+          js_close_button,
+          style = "position: relative;"
         ),
+        
         DTOutput(session$ns("modal_tlg_table")),
         footer = tagList(
           modalButton("Close"),
