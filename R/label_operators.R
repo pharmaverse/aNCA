@@ -92,7 +92,6 @@ as_factor_preserve_label <- function(x) {
 #' }
 #'
 #' @export
-
 has_label <- function(x) {
   return(!is.null(attr(x, "label")))
 }
@@ -114,7 +113,6 @@ has_label <- function(x) {
 #' }
 #'
 #' @export
-
 set_empty_label <- function(x) {
   if (is.null(attr(x, "label"))) {
     attr(x, "label") <- ""
@@ -131,7 +129,7 @@ set_empty_label <- function(x) {
 #' @param labels_df A data frame with three columns: Variable, Label, and Dataset.
 #'
 #' @return The label of the heading if it exists in the labels file,
-#' otherwise "No label available".
+#' otherwise the variable name.
 #'
 #' @examples
 #' \dontrun{
@@ -142,14 +140,71 @@ set_empty_label <- function(x) {
 #'  Dataset = c("ADPC", "ADPC")
 #'  )
 #'  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
-#'  get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
-#'  }
+#'  get_label(LABELS, "AGE", "ADPC")  # Returns "AGE"
+#' }
 #'
 #' @export
 get_label <- function(labels_df, variable, type) {
   label <- labels_df$Label[labels_df$Variable == variable & labels_df$Dataset == type]
   if (length(label) == 0) {
-    return("No label available")
+    return(variable)
   }
   label
+}
+
+#' Generate HTML Tooltip Text
+#'
+#' @details
+#' Creates a character vector of HTML tooltips for each row of a data frame,
+#' suitable for use with `ggplotly`.
+#'  The output vector of this function should be added to original plotting data as a column,
+#' which then can be used as tooltip argument in the plotting function.
+#'
+#' @param data A data.frame with the source data.
+#' @param labels_df A data.frame used by `get_label()` to find variable labels.
+#' @param tooltip_vars A character vector of column names to include in the tooltip.
+#' @param type A character string specifying the label type for `get_label()`.
+#'
+#' @return A character vector of formatted HTML tooltip strings.
+#'
+#' @importFrom purrr pmap_chr map_chr
+#'
+#' @examples
+#' # Sample data
+#' my_data <- data.frame(
+#'   USUBJID = c("Subject-01", "Subject-02"),
+#'   DOSE = c(100, 200),
+#'   RESPONSE = c(5.4, 8.1)
+#'   )
+#'
+#' my_labels <- data.frame() # Dummy labels object
+#'
+#' vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
+#'
+#' # Generate the tooltip text vector
+#' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
+#' my_data$tooltip <- tooltips
+#'
+#' @export
+generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
+
+  if (length(tooltip_vars) == 0) {
+    return(rep("", nrow(data)))
+  }
+
+  pmap_chr(
+    .l = select(data, all_of(tooltip_vars)),
+    .f = function(...) {
+
+      row_values <- list(...)
+
+      # For each variable, create a formatted line retrieving its label
+      lines <- map_chr(tooltip_vars, ~ paste0(
+        "<b>", get_label(labels_df, .x, type), "</b>: ", row_values[[.x]]
+      ))
+
+      # Paste all lines together with HTML line breaks
+      paste(lines, collapse = "<br>")
+    }
+  )
 }
