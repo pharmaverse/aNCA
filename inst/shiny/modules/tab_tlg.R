@@ -56,11 +56,6 @@ tab_tlg_ui <- function(id) {
       ),
       card(
         DTOutput(ns("selected_tlg_table"))
-      ),
-      card(
-        div(
-          actionButton(ns("submit_tlg_order_alt"), "Submit Order Details", class = "btn-primary")
-        )
       )
     ),
     nav_panel("Tables", "To be added"),
@@ -85,9 +80,9 @@ tab_tlg_server <- function(id, data) {
         Dataset = .x$dataset,
         PKid = paste0("<a href='", .x$link, "' target='_blank'>", .x$pkid, "</a>"),
         Description = .x$description,
+        Condition = .x$condition,
         Footnote = NA_character_,
         Stratification = NA_character_,
-        Condition = NA_character_,
         Comment = NA_character_
       )) %>%
         dplyr::mutate(id = dplyr::row_number(), .before = dplyr::everything())
@@ -96,15 +91,13 @@ tab_tlg_server <- function(id, data) {
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
     observeEvent(list(tlg_order(), data()), {
       req(data())
-      column_of_conditions <- gsub("([=<>!].*)", "", tlg_order()$Condition)
 
       new_tlg_order <- tlg_order() %>%
         mutate(
           Selection = case_when(
-            Condition == "" | is.na(Condition) ~ Selection,
-            !column_of_conditions %in% names(data()) ~ FALSE,
-            sum(eval(parse(text = Condition), envir = data())) > 0 ~ TRUE,
-            TRUE ~ FALSE
+            Condition == "" | is.na(Condition) | is.null(Condition) ~ Selection,
+            any(unique(toupper(data()$PCSPEC)) %in% Condition) ~ TRUE,
+            TRUE ~ Selection
           )
         )
 
@@ -243,13 +236,12 @@ tab_tlg_server <- function(id, data) {
     # Toggle submit button depending on whether the data is available #
     observeEvent(data(), ignoreInit = FALSE, ignoreNULL = FALSE, {
       shinyjs::toggleState("submit_tlg_order", !is.null(data()))
-      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
     })
 
     #' change tab to first populated tab
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
-    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+    observeEvent(list(input$submit_tlg_order), ignoreInit = TRUE, {
       tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) |> paste0("s")
       shinyjs::runjs(
         paste0("
@@ -267,12 +259,13 @@ tab_tlg_server <- function(id, data) {
     # Submit the TLG order, filter selected TLGs
     tlg_order_filtered <- reactive({
       req(data())
+      print(tlg_order())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
       tlg_order_filt
     }) |>
-      bindEvent(c(input$submit_tlg_order, input$submit_tlg_order_alt))
+      bindEvent(c(input$submit_tlg_order))
 
     # Create and render Graph interface and modules
     output$graphs <- renderUI({
