@@ -89,7 +89,8 @@ data_upload_server <- function(id) {
       req(raw_data())
       reactable(
         raw_data(),
-        searchable = TRUE,
+        searchable = FALSE,
+        defaultColDef = colDef(filterable = TRUE),
         sortable = TRUE,
         highlight = TRUE,
         wrap = FALSE,
