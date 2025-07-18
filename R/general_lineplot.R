@@ -143,6 +143,7 @@ general_lineplot <- function(
 add_optional_layers <- function(plt, yaxis_scale, show_threshold,
                                 threshold_value, show_dose,
                                 data, time_scale, facet_by = NULL) {
+
   # Adjust the y-axis scale if specified
   if (yaxis_scale == "Log") {
     plt <- plt +
@@ -178,7 +179,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
                  alpha = 0.8)
   }
   if (!is.null(facet_by) && length(facet_by) > 0) {
-    plt <- plt + facet_wrap(vars(!!!syms(facet_by)), axes = "all". scales = "free"))
+    plt <- plt + facet_wrap(vars(!!!syms(facet_by)), axes = "all", scales = "free")
   }
 
   return(plt)

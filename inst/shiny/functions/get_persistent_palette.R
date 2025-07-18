@@ -18,7 +18,7 @@ get_persistent_palette <- function(data, colorby_vars, palette_name = "default")
     na.omit() %>%
     unique() %>%
     sample()
-  
+
   n <- length(all_levels)
 
   if (n == 0) return(NULL)
