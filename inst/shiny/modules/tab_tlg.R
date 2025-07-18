@@ -77,8 +77,14 @@ tab_tlg_server <- function(id, data) {
       purrr::map_dfr(.TLG_DEFINITIONS, ~ dplyr::tibble(
         Selection = .x$is_default,
         Type = .x$type,
-        Dataset = .x$dataset,
-        PKid = paste0("<a href='", .x$link, "' target='_blank'>", .x$pkid, "</a>"),
+        Dataset = case_when(
+          .x$dataset == "ADPC" ~ "PK Concentrations",
+          .x$dataset == "ADPP" ~ "PK Parameters",
+          TRUE ~ .x$dataset
+        ),
+        PKid = .x$pkid,
+        Output = paste0("<a href='", .x$link, "' target='_blank'>", .x$description, "</a>"),
+        Label = .x$label,
         Description = .x$description,
         Condition = .x$condition,
         Footnote = NA_character_,
@@ -135,7 +141,7 @@ tab_tlg_server <- function(id, data) {
               targets = c(
                 0,
                 which(!names(tlg_order()) %in% c(
-                  "Type", "Dataset", "PKid", "Label", "Footnote", "Stratification", "Comment"
+                  "Output", "Condition", "Footnote", "Stratification", "Comment"
                 ))
               )
             )
@@ -198,7 +204,7 @@ tab_tlg_server <- function(id, data) {
           columnDefs = list(
             list(
               visible = FALSE,
-              targets = which(!names(tlg_order()) %in% c("Type", "Dataset", "PKid", "Label"))
+              targets = which(!names(tlg_order()) %in% c("Output", "Condition"))
             ),
             list(targets = 0, orderable = FALSE, className = "select-checkbox")
           ),

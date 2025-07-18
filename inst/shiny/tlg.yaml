@@ -1,6 +1,254 @@
 # Configuration file containing TLG definitions.
 # To learn more, please check .github/contributing/adding-tlg.md
 
+######################################## TABLES ########################################
+####### TABLES - Individual
+t_pkct01:
+  is_default: true
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by TRT (first dose)"
+  description: "Summary Concentration Table by TRT (from first dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01
+  condition: null
+
+t_pkct01_dose:
+  is_default: false
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by Dose (first dose)"
+  description: "Summary Concentration Table by Dose (from first dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01_dose
+  condition: null
+
+t_pkct01_tad:
+  is_default: false
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by TRT (TAD)"
+  description: "Summary Concentration Table by TRT (from most recent dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01_tad
+  condition: null
+
+t_pkct01_dose_tad:
+  is_default: false
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by Dose (TAD)"
+  description: "Summary Concentration Table by Dose (from most recent dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01_dose_tad
+  condition: null
+
+####### TABLES - PK Parameters
+t_pkpt03_col:
+  is_default: true
+  type: Table
+  dataset: ADPP
+  pkid: pkpt03
+  label: "pkpt03 - Summary PK Parameters (stats in cols)"
+  description: "Summary of PK parameters (Stats in columns)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
+  fun: t_pkpt03_col
+  condition: null
+
+t_pkpt03_MP_col:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt03
+  label: "pkpt03 - Summary M/P Ratios (stats in cols)"
+  description: "Summary of metabolite to parent ratios by TRT [stats in columns]"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
+  fun: t_pkpt03_MP_col
+  condition: null
+
+t_pkpt07_norm:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt07
+  label: "pkpt07 - Mean Dose-Normalized Parameters"
+  description: "Table of mean dose-normalized selected PK parameters [stats in columns]"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt07.html
+  fun: t_pkpt07_norm
+  condition: null
+
+t_pkpt08_uri:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt08
+  label: "pkpt08 - Mean Urine Amount and Percent"
+  description: "Mean table of cumulative amount and Percentage recovered in urine"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt08.html
+  fun: t_pkpt08_uri
+  condition: "URINE"
+
+t_pkpt11_gmr:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt11
+  label: "pkpt11 - GMR Table"
+  description: "GMR Table with CIs for selected PK parameters"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt11.html
+  fun: t_pkpt11_gmr
+  condition: null
+
+
+
+
+
+  
+######################################## LISTINGS ########################################
+####### LISTINGS - Individual
+l_pkcl01:
+  is_default: true
+  type: Listing
+  dataset: ADPC
+  pkid: pkcl01
+  label: "pkcl01 - Concentration Listing (first dose)"
+  description: "Individual listing of PK concentrations (from first dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl01.html
+  fun: l_pkcl01
+  condition: null
+  options:
+    .group_label_1: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    .group_label_2: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC", "ROUTE"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "USUBJID", "AVISIT"]
+    displaying_vars:
+      label: "Displayed variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["NFRLT", "AFRLT", "AVALC"]
+    .group_label_3: "Formatting"
+    formatting_vars_table:
+      label: "Variables formatting"
+      type: table
+      cols: 
+        var_name:
+          type: select
+          choices: .colnames
+          label: "Variable name"
+        Label:
+          type: text
+          label: Label
+        na_str:
+          type: text
+          label: "NA string"
+        zero_str:
+          type: text
+          label: "0 string"
+        align:
+          type: select
+          choices: ["", "left", "center", "right"]
+          label: "Align"
+        format_fun:
+          type: select
+          choices: ["", "round", "signif"]
+          label: "Formatting function"
+        digits:
+          type: select
+          label: "Digits"
+          choices: ["", "0", "1", "2", "3", "4"]
+      default_rows:
+        - ["USUBJID", "Unique Subject Identifier",                       "NA", "0", "center", "$NA",   "$NA"]
+        - ["AVISIT",  "Analysis Visit",                                  "NA", "0", "center", "$NA",   "$NA"]
+        - ["TRT01A",  "Actual Treatment for Period 01",                  "NA", "0", "center", "$NA",   "$NA"]
+        - ["AFRLT",   "Act. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
+        - ["NFRLT",   "Nom. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
+        
+l_pkcl01_tad:
+  is_default: false
+  type: Listing
+  dataset: ADPC
+  pkid: pkcl01
+  label: "pkcl01 - Concentration Listing (TAD)"
+  description: "Individual listing of PK concentrations (from most recent dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl01.html
+  fun: l_pkcl01_tad
+  condition: null
+
+####### LISTINGS - Urine
+l_pkcl02_uri:
+  is_default: false
+  type: Listing
+  dataset: ADPC
+  pkid: pkcl02
+  label: "pkcl02 - Urine Concentration Listing"
+  description: "Individual listings of urine concentration and volumes, cumulative radioactive level"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl02.html
+  fun: l_pkcl02_uri
+  condition: "URINE"
+
+####### LISTINGS - PK parameters
+l_pkpl01:
+  is_default: true
+  type: Listing
+  dataset: ADPP
+  pkid: pkpl01
+  label: "pkpl01 - PK Parameters Listing"
+  description: "Individual listing of PK parameters (ClinPharm to define parms)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
+  fun: l_pkpl01
+  condition: null
+
+l_pkpl01_mp:
+  is_default: false
+  type: Listing
+  dataset: ADPP
+  pkid: pkpl01
+  label: "pkpl01 - M/P Ratio Listing"
+  description: "Individual listings of metabolite to parent ratios vs. TRT, by TRT/dose (Metabolite/Parent Ratio as header names)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
+  fun: l_pkpl01_mp
+  condition: null
+
+l_pkpl04_mp:
+  is_default: false
+  type: Listing
+  dataset: ADPP
+  pkid: pkpl04
+  label: "pkpl04 - Treatment Ratio Listing"
+  description: "Individual listing of treatment ratios for selected PK parameters, by TRT"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl04.html
+  fun: l_pkpl04_mp
+  condition: null
+
+
+
+
+
+  
 ######################################## GRAPHS ########################################
 ####### GRAPHS - Individual
 g_pkcg01_lin:
@@ -111,7 +359,7 @@ g_pkcg02_lin:
   type: Graph
   dataset: ADPC
   pkid: pkcg02
-  label: "pkcg02 - Overlaid Linear"
+  label: "pkcg02 - Combined Linear"
   description: "Combined plot of concentrations vs. time (over laid by cohort/TRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_lin
@@ -123,7 +371,7 @@ g_pkcg02_log:
   type: Graph
   dataset: ADPC
   pkid: pkcg02
-  label: "pkcg02 - Overlaid Log"
+  label: "pkcg02 - Combined Log"
   description: "Combined plot of concentrations vs. time in Log Scale (over laid by cohort/TRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
@@ -135,7 +383,7 @@ g_pkcg02_sbs:
   type: Graph
   dataset: ADPC
   pkid: pkcg02
-  label: "pkcg02 - Overlaid Side-by-Side"
+  label: "pkcg02 - Combined Side-by-Side"
   description: "Side-by-Side Linear and Log scale plots of concentration vs. time (over laid by cohort/TRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
@@ -151,8 +399,6 @@ g_pkcg02_sbs:
         - PCSPEC
         - PARAM
         - TRT01A
-
-
 
 ####### GRAPHS - Mean
 p_pkcg03_lin:
@@ -290,243 +536,3 @@ p_pkpg06_mp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
   fun: p_pkpg06_mp
   condition: null
-  
-
-######################################## LISTINGS ########################################
-####### LISTINGS - Individual
-l_pkcl01:
-  is_default: true
-  type: Listing
-  dataset: ADPC
-  pkid: pkcl01
-  label: "pkcl01 - Concentration Listing (first dose)"
-  description: "Individual listing of PK concentrations (from first dose)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl01.html
-  fun: l_pkcl01
-  condition: null
-  options:
-    .group_label_1: "Labs"
-    title:
-      type: text
-      label: Title
-    subtitle:
-      type: text
-      label: Subtitle
-    footnote:
-      type: text
-      label: Footnote
-    .group_label_2: "Grouping"
-    listgroup_vars:
-      label: "Table grouping variables"
-      type: select
-      choices: .colnames
-      multiple: true
-      default: ["PARAM", "PCSPEC", "ROUTE"]
-    grouping_vars:
-      label: "Listing grouping variables"
-      type: select
-      choices: .colnames
-      multiple: true
-      default: ["TRT01A", "USUBJID", "AVISIT"]
-    displaying_vars:
-      label: "Displayed variables"
-      type: select
-      choices: .colnames
-      multiple: true
-      default: ["NFRLT", "AFRLT", "AVALC"]
-    .group_label_3: "Formatting"
-    formatting_vars_table:
-      label: "Variables formatting"
-      type: table
-      cols: 
-        var_name:
-          type: select
-          choices: .colnames
-          label: "Variable name"
-        Label:
-          type: text
-          label: Label
-        na_str:
-          type: text
-          label: "NA string"
-        zero_str:
-          type: text
-          label: "0 string"
-        align:
-          type: select
-          choices: ["", "left", "center", "right"]
-          label: "Align"
-        format_fun:
-          type: select
-          choices: ["", "round", "signif"]
-          label: "Formatting function"
-        digits:
-          type: select
-          label: "Digits"
-          choices: ["", "0", "1", "2", "3", "4"]
-      default_rows:
-        - ["USUBJID", "Unique Subject Identifier",                       "NA", "0", "center", "$NA",   "$NA"]
-        - ["AVISIT",  "Analysis Visit",                                  "NA", "0", "center", "$NA",   "$NA"]
-        - ["TRT01A",  "Actual Treatment for Period 01",                  "NA", "0", "center", "$NA",   "$NA"]
-        - ["AFRLT",   "Act. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
-        - ["NFRLT",   "Nom. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
-        
-l_pkcl01_tad:
-  is_default: false
-  type: Listing
-  dataset: ADPC
-  pkid: pkcl01
-  label: "pkcl01 - Concentration Listing (TAD)"
-  description: "Individual listing of PK concentrations (from most recent dose)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl01.html
-  fun: l_pkcl01_tad
-  condition: null
-
-####### LISTINGS - Urine
-l_pkcl02_uri:
-  is_default: false
-  type: Listing
-  dataset: ADPC
-  pkid: pkcl02
-  label: "pkcl02 - Urine Concentration Listing"
-  description: "Individual listings of urine concentration and volumes, cumulative radioactive level"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl02.html
-  fun: l_pkcl02_uri
-  condition: "URINE"
-
-####### LISTINGS - PK parameters
-l_pkpl01:
-  is_default: true
-  type: Listing
-  dataset: ADPP
-  pkid: pkpl01
-  label: "pkpl01 - PK Parameters Listing"
-  description: "Individual listing of PK parameters (ClinPharm to define parms)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
-  fun: l_pkpl01
-  condition: null
-
-l_pkpl01_mp:
-  is_default: false
-  type: Listing
-  dataset: ADPP
-  pkid: pkpl01
-  label: "pkpl01 - M/P Ratio Listing"
-  description: "Individual listings of metabolite to parent ratios vs. TRT, by TRT/dose (Metabolite/Parent Ratio as header names)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
-  fun: l_pkpl01_mp
-  condition: null
-
-l_pkpl04_mp:
-  is_default: false
-  type: Listing
-  dataset: ADPP
-  pkid: pkpl04
-  label: "pkpl04 - Treatment Ratio Listing"
-  description: "Individual listing of treatment ratios for selected PK parameters, by TRT"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl04.html
-  fun: l_pkpl04_mp
-  condition: null
-
-######################################## TABLES ########################################
-####### TABLES - Individual
-t_pkct01:
-  is_default: true
-  type: Table
-  dataset: ADPC
-  pkid: pkct01
-  label: "pkct01 - Summary Conc by TRT (first dose)"
-  description: "Summary Concentration Table by TRT (from first dose)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
-  fun: t_pkct01
-  condition: null
-
-t_pkct01_dose:
-  is_default: false
-  type: Table
-  dataset: ADPC
-  pkid: pkct01
-  label: "pkct01 - Summary Conc by Dose (first dose)"
-  description: "Summary Concentration Table by Dose (from first dose)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
-  fun: t_pkct01_dose
-  condition: null
-
-t_pkct01_tad:
-  is_default: false
-  type: Table
-  dataset: ADPC
-  pkid: pkct01
-  label: "pkct01 - Summary Conc by TRT (TAD)"
-  description: "Summary Concentration Table by TRT (from most recent dose)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
-  fun: t_pkct01_tad
-  condition: null
-
-t_pkct01_dose_tad:
-  is_default: false
-  type: Table
-  dataset: ADPC
-  pkid: pkct01
-  label: "pkct01 - Summary Conc by Dose (TAD)"
-  description: "Summary Concentration Table by Dose (from most recent dose)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
-  fun: t_pkct01_dose_tad
-  condition: null
-
-####### TABLES - PK Parameters
-t_pkpt03_col:
-  is_default: true
-  type: Table
-  dataset: ADPP
-  pkid: pkpt03
-  label: "pkpt03 - Summary PK Parameters (stats in cols)"
-  description: "Summary of PK parameters (Stats in columns)"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
-  fun: t_pkpt03_col
-  condition: null
-
-t_pkpt03_MP_col:
-  is_default: false
-  type: Table
-  dataset: ADPP
-  pkid: pkpt03
-  label: "pkpt03 - Summary M/P Ratios (stats in cols)"
-  description: "Summary of metabolite to parent ratios by TRT [stats in columns]"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
-  fun: t_pkpt03_MP_col
-  condition: null
-
-t_pkpt07_norm:
-  is_default: false
-  type: Table
-  dataset: ADPP
-  pkid: pkpt07
-  label: "pkpt07 - Mean Dose-Normalized Parameters"
-  description: "Table of mean dose-normalized selected PK parameters [stats in columns]"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt07.html
-  fun: t_pkpt07_norm
-  condition: null
-
-t_pkpt08_uri:
-  is_default: false
-  type: Table
-  dataset: ADPP
-  pkid: pkpt08
-  label: "pkpt08 - Mean Urine Amount and Percent"
-  description: "Mean table of cumulative amount and Percentage recovered in urine"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt08.html
-  fun: t_pkpt08_uri
-  condition: "URINE"
-
-t_pkpt11_gmr:
-  is_default: false
-  type: Table
-  dataset: ADPP
-  pkid: pkpt11
-  label: "pkpt11 - GMR Table"
-  description: "GMR Table with CIs for selected PK parameters"
-  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt11.html
-  fun: t_pkpt11_gmr
-  condition: null
-  
