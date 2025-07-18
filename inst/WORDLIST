@@ -4,11 +4,15 @@ ADPC
 ADPP
 AFRLT
 ARRLT
+AUCINF
 AUClast
 AVAL
 AVALU
+AdjustingFactor
+AggregateSubject
 Analyte
 CDISC
+Cond
 DOSEA
 DOSEU
 DOSNOA
@@ -24,6 +28,7 @@ NCA
 NFRLT
 NNN
 NRRLT
+Num
 PARAM
 PARAMCD
 PCSPEC
@@ -31,6 +36,7 @@ PKNCA
 PKNCAconc
 PKNCAdata
 PKNCAdose
+PKNCAresult
 PKNCAresults
 PPORRES
 PPSTRES
@@ -44,10 +50,12 @@ Plotly
 Pre
 RRLTU
 RStudio
+Req
 STUDYID
 TLG
 TLGs
 TRT
+Tooltip
 USUBJID
 USUBJIDs
 VOLUMEU
@@ -61,8 +69,10 @@ bioavailability
 cdisc
 cmax
 codebase
+colour
 concu
 customizable
+dateTime
 devtools
 df
 extravascular
@@ -90,6 +100,8 @@ tidyverse
 timepoint
 timeu
 tlg
+tooltip
+tooltips
 ug
 utilise
 visualizable
