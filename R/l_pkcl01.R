@@ -58,8 +58,8 @@
 #'                                                      "round", "round", NA, "round", NA),
 #'                                       digits = c(NA, NA, NA, NA, 2, 2, NA, 3, NA))
 #'
-#'   # Call the l_pkconc function with the sample data
-#'   listing_ex <- l_pkconc(data = data,
+#'   # Call the l_pkcl01 function with the sample data
+#'   listing_ex <- l_pkcl01(data = data,
 #'                          listgroup_vars = c("PARAM", "PCSPEC"),
 #'                          grouping_vars = c("TRT01A", "USUBJID"),
 #'                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
@@ -73,7 +73,7 @@
 #' @importFrom stats setNames
 #' @export
 #' @author Gerardo Rodriguez
-l_pkconc <- function(
+l_pkcl01 <- function(
   data,
   listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
   grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
