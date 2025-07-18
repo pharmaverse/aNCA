@@ -200,7 +200,6 @@ tab_tlg_server <- function(id, data) {
           js_close_button,
           style = "position: relative;"
         ),
-        
         DTOutput(session$ns("modal_tlg_table")),
         footer = tagList(
           modalButton("Close"),
