@@ -38,6 +38,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/ensure_column_unit_exists.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/exclude_nca_by_param.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/export_cdisc.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/faceted_qc_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/filter_breaks.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/filter_slopes.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/flexible_violinboxplot.html</loc></url>
@@ -50,6 +51,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg02_log.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/general_lineplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/general_meanplot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/generate_tooltip_text.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_conversion_factor.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_label.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/has_label.html</loc></url>
