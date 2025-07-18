@@ -337,7 +337,11 @@ data_mapping_server <- function(id, adnca_data) {
         onClick = "select",
         compact = TRUE,
         wrap = FALSE,
-        resizable = TRUE
+        resizable = TRUE,
+        showPageSizeOptions = TRUE,
+        pageSizeOptions = c(10, 25, 50, 100, nrow(df_duplicates())),
+        defaultPageSize = 10,
+        style = list(fontSize = "0.75em")
       )
     })
 

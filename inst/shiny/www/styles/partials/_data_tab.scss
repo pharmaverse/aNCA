@@ -8,6 +8,7 @@
   flex: 1;
   overflow-y: auto;
   margin-top: 10px;
+  margin-bottom: 0px;
   padding: 20px 20px 0px 20px;
 }
 
@@ -57,7 +58,7 @@
   }
 
   .reactable {
-    margin-top: 2em;
+    margin-top: 1em;
   }
 
   /* column mapping UI */
@@ -104,9 +105,12 @@
   }
 }
 
+
 .upload-container {
-  padding: 32px 16px;
-  border: 1px dashed $anca-blue;
+  padding: 0px 4px !important;
+  margin: 0 !important;
+  border: none !important;
+  margin-bottom: 0em !important;
   display: flex;
   justify-content: center;
   flex-direction: column;

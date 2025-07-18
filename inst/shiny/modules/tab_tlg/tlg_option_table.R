@@ -84,6 +84,11 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
         highlight = TRUE,
         columns = edit_widgets,
         selection = "multiple",
+        compact = TRUE,
+        style = list(fontSize = "0.75em"),
+        showPageSizeOptions = TRUE,
+        pageSizeOptions = c(10, 25, 50, 100, nrow(edits_table())),
+        defaultPageSize = 10,
         theme = reactableTheme(
           rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
         )

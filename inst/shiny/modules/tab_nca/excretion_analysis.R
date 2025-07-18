@@ -1,4 +1,3 @@
-
 #' NCA Excretion Analysis Module
 #'
 #' This module handles logic for excretion analysis in NCA.
@@ -190,7 +189,11 @@ excretion_server <- function(id, input_pknca_data) {
       reactable(results_output(),
                 defaultPageSize = 10,
                 searchable = TRUE,
-                highlight = TRUE)
+                highlight = TRUE,
+                compact = TRUE,
+                showPageSizeOptions = TRUE,
+                pageSizeOptions = c(10, 25, 50, 100, nrow(results_output())),
+                style = list(fontSize = "0.75em"))
 
     })
   })
