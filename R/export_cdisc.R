@@ -350,7 +350,7 @@ adjust_class_and_length <- function(df, metadata) {
                  !endsWith(var, "DTM")) {
       df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     } else if (!var_specs$Type %in% c(
-      "dateTime", "duration"
+      "dateTime", "duration", "integer", "float", "Num"
     )) {
       warning(
         "Unknown var specification type: ", var_specs$Type,
