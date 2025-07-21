@@ -74,7 +74,8 @@ calculate_ratio_app <- function(
   for (ix in seq_along(match_cols)) {
     ratio_calculations <- calculate_ratios(
       data = res$result,
-      parameter = parameter,
+      test_parameter = parameter,
+      ref_parameter = parameter,
       match_cols = match_cols[[ix]],
       ref_groups = ref_groups,
       test_groups = test_groups,

@@ -70,7 +70,8 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' Calculate Ratios from PKNCA Results
 #'
 #' @param data A PKNCAresults object or its result data.frame.
-#' @param parameter Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").
+#' @param test_parameter Character. The PPTESTCD value to use for the test (numerator) calculation (e.g., "AUCINF").
+#' @param ref_parameter Character. The PPTESTCD value to use for the reference (denominator) calculation. Defaults to test_parameter.
 #' @param match_cols Character vector of column names to match between test and reference groups
 #'  or a data.frame specifying columns and values.
 #' @param ref_groups A data.frame specifying reference groups.
@@ -81,9 +82,11 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
 #' @returns A data.frame result object with the calculated ratios.
 #' @export
+#' @export
 calculate_ratios <- function(
   data,
-  parameter,
+  test_parameter,
+  ref_parameter = test_parameter,
   match_cols,
   ref_groups,
   test_groups = NULL,
@@ -93,20 +96,32 @@ calculate_ratios <- function(
   UseMethod("calculate_ratios", data)
 }
 #' @export
+
+#' @export
 calculate_ratios.data.frame <- function(
   data,
-  parameter,
+  test_parameter,
+  ref_parameter = test_parameter,
   match_cols,
   ref_groups,
   test_groups = NULL,
   adjusting_factor = 1,
   custom_pptestcd = NULL
 ) {
-  if (!any(data$PPTESTCD == parameter)) {
+  if (!any(data$PPTESTCD == test_parameter)) {
     warning(
       paste0(
-        "No parameter with PPTESTCD: '",
-        paste(parameter, collapse = ","),
+        "No test_parameter with PPTESTCD: '",
+        paste(test_parameter, collapse = ","),
+        "' found in the PKNCA results."
+      )
+    )
+  }
+  if (!any(data$PPTESTCD == ref_parameter)) {
+    warning(
+      paste0(
+        "No ref_parameter with PPTESTCD: '",
+        paste(ref_parameter, collapse = ","),
         "' found in the PKNCA results."
       )
     )
@@ -118,23 +133,24 @@ calculate_ratios.data.frame <- function(
   )
   group_cols <- setdiff(colnames(data), extra_res_cols)
 
-  # Filter for the parameter of interest
-  df <- data[data$PPTESTCD == parameter, ]
+  # Filter for the test and reference parameters
+  df_test <- data[data$PPTESTCD == test_parameter, ]
+  df_ref <- data[data$PPTESTCD == ref_parameter, ]
 
   # Define the denominator rows
-  df_den <- merge(df, ref_groups)
+  df_den <- merge(df_ref, ref_groups)
 
   # Define the test rows, which should exclude the ref_groups
   df_num <- {
     if (!is.null(test_groups)) {
-      merge(df, test_groups)
+      merge(df_test, test_groups)
     } else {
-      anti_join(df, df_den, by = intersect(names(df), names(df_den)))
+      anti_join(df_test, df_den, by = intersect(names(df_test), names(df_den)))
     }
   }
 
   # Join test and denominator by their matching columns
-  merge(df_num, df_den, by = c(match_cols, "PPTESTCD"), suffixes = c("", "_den")) %>%
+  merge(df_num, df_den, by = c(match_cols), suffixes = c("", "_den")) %>%
     # If possible compute conversion factors for the units of test and denominator
     mutate(
       PPORRESU_factor = get_conversion_factor(PPORRESU_den, PPORRESU),
@@ -150,7 +166,7 @@ calculate_ratios.data.frame <- function(
         NULL
       }
     ) %>%
-    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_den"))))) %>%
+    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_den")))) ) %>%
     unique() %>%
     # Use mean values in case of multiple denominator rows per test
     mutate(
@@ -175,17 +191,20 @@ calculate_ratios.data.frame <- function(
       PPTESTCD = if (!is.null(custom_pptestcd)) {
         custom_pptestcd
       } else {
-        ifelse(n > 1, paste0("RA", PPTESTCD, " (mean)"), paste0("RA", PPTESTCD))
+        ifelse(n > 1, paste0("RA", test_parameter, " (mean)"), paste0("RA", test_parameter))
       }
     ) %>%
-    # Keep same foramt as the input (PKNCAresults)
-    select(any_of(names(df))) %>%
+    # Keep same format as the input (PKNCAresults)
+    select(any_of(names(df_test))) %>%
     unique()
 }
 #' @export
+
+#' @export
 calculate_ratios.PKNCAresults <- function(
   data,
-  parameter,
+  test_parameter,
+  ref_parameter = test_parameter,
   match_cols,
   ref_groups,
   test_groups = NULL,
@@ -205,7 +224,8 @@ calculate_ratios.PKNCAresults <- function(
   # Calculate ratios using the data.frame method
   ratios_result <- calculate_ratios.data.frame(
     data = data$result,
-    parameter = parameter,
+    test_parameter = test_parameter,
+    ref_parameter = ref_parameter,
     match_cols = match_cols,
     ref_groups = ref_groups,
     test_groups = test_groups,

@@ -88,7 +88,8 @@ describe("calculate_ratios", {
 
     ratios <- calculate_ratios(
       res_simple$result,
-      parameter = "CMAX",
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
       match_cols = c("start", "end", "USUBJID"),
       ref_groups = ref_groups,
       test_groups = test_groups
@@ -102,7 +103,8 @@ describe("calculate_ratios", {
 
     pknca_res_with_ratios <- calculate_ratios(
       res_simple,
-      parameter = "CMAX",
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
       match_cols = c("start", "end", "USUBJID"),
       ref_groups = ref_groups,
       test_groups = test_groups
@@ -119,7 +121,8 @@ describe("calculate_ratios", {
 
     ratios <- calculate_ratios(
       res_simple$result,
-      parameter = "CMAX",
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
       match_cols = c("start", "end", "USUBJID"),
       ref_groups = ref_groups,
       test_groups = test_groups,
@@ -140,7 +143,8 @@ describe("calculate_ratios", {
 
     ratios <- calculate_ratios(
       res_with_diff_units,
-      parameter = "CMAX",
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
       match_cols = c("start"),
       ref_groups = ref_groups,
       test_groups = test_groups
@@ -163,7 +167,8 @@ describe("calculate_ratios", {
 
     ratios <- calculate_ratios(
       res_with_diff_units,
-      parameter = "CMAX",
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
       match_cols = c("start"),
       ref_groups = ref_groups,
       test_groups = test_groups
@@ -180,7 +185,8 @@ describe("calculate_ratios", {
     expect_error(
       calculate_ratios(
         res,
-        parameter = "CMAX",
+        test_parameter = "CMAX",
+        ref_parameter = "CMAX",
         match_cols = c("UNKNOWN_COL"),
         ref_groups = c(ref_groups, "UNKNOWN_COL"),
         test_groups = test_groups
@@ -191,7 +197,8 @@ describe("calculate_ratios", {
     expect_error(
       calculate_ratios(
         res,
-        parameter = "CMAX",
+        test_parameter = "CMAX",
+        ref_parameter = "CMAX",
         match_cols = c("start"),
         ref_groups = ref_groups,
         test_groups = data.frame(UNKNOWN_COL = "X")
@@ -204,12 +211,34 @@ describe("calculate_ratios", {
 
     ratios <- calculate_ratios(
       res_simple,
-      parameter = "CMAX",
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
       match_cols = c("start"),
       ref_groups = ref_groups,
       test_groups = test_groups,
       custom_pptestcd = "MYRATIO"
     )
+  it("computes correct ratios when test_parameter and ref_parameter are different", {
+    # Create a result with two parameters: CMAX and TMAX
+    res_diff <- res_simple
+    res_diff$result <- rbind(
+      res_simple$result %>% mutate(PPTESTCD = "CMAX", PPORRES = c(2, 4), PPSTRES = c(2, 4)),
+      res_simple$result %>% mutate(PPTESTCD = "TMAX", PPORRES = c(3, 5), PPSTRES = c(3, 5))
+    )
+    # Use CMAX as test, TMAX as reference
+    ratios <- calculate_ratios(
+      res_diff,
+      test_parameter = "CMAX",
+      ref_parameter = "TMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
+    )
+    ratios_df <- ratios$result %>% filter(PPTESTCD == "RACMAX")
+    expect_equal(ratios_df$PPORRES, c(2 / 3, 4 / 5))
+    expect_equal(ratios_df$PPSTRES, c(2 / 3, 4 / 5))
+    expect_true(all(grepl("RACMAX", ratios_df$PPTESTCD)))
+  })
     ratios <- ratios$result %>%
       filter(PPTESTCD == "MYRATIO")
     expect_equal(ratios$PPTESTCD, c("MYRATIO", "MYRATIO"))
