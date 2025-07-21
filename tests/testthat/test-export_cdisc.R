@@ -408,6 +408,85 @@ describe("export_cdisc", {
       "MRT Extravasc to Last Nonzero Conc"
     )))
   })
+
+  it("differentiates cl.xxx for extravascular (bioavailability, F) and intravascular", {
+    test_cl_data <- FIXTURE_PKNCA_DATA
+    test_cl_data$intervals <- test_cl_data$intervals %>%
+      filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
+      mutate(
+        cl.last = TRUE,
+        cl.obs = TRUE,
+        cl.pred = TRUE,
+        cl.all = TRUE
+      )
+    test_cl_result <- suppressWarnings(PKNCA::pk.nca(test_cl_data))
+    test_cl_result$result <- test_cl_result$result %>%
+      filter(PPTESTCD %in% c("cl.last", "cl.obs", "cl.pred")) %>%
+      mutate(
+        PPSTRES = PPORRES,
+        PPSTRESU = PPORRESU
+      )
+
+    res <- export_cdisc(test_cl_result)
+
+    res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
+    res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
+
+    expect_true(all(res_of_infusion_subj$PPTESTCD %in% c("CLO", "CLP", "CLALL", "CLLST")))
+    expect_true(all(
+      res_of_infusion_subj$PPTEST %in% c(
+        "Total CL Obs",
+        "Total CL Pred",
+        "CL (based on AUCall)",
+        "CL (based on AUClast)"
+      )
+    ))
+    expect_true(all(res_of_ev_subj$PPTESTCD %in% c("CLEVIFO", "CLEVIFP", "CLEVLST")))
+    expect_true(all(
+      res_of_ev_subj$PPTEST %in% c(
+        "Total CL Obs by F",
+        "Total CL Pred by F",
+        "CL (based on AUCall) by F",
+        "CL (based on AUClast) by F"
+      )
+    ))
+  })
+
+  it("differentiates vz.xxx for extravascular (bioavailability, F) and intravascular", {
+    test_vz_data <- FIXTURE_PKNCA_DATA
+    test_vz_data$intervals <- test_vz_data$intervals %>%
+      filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
+      mutate(
+        vz.last = TRUE,
+        vz.obs = TRUE,
+        vz.pred = TRUE
+      )
+    test_vz_result <- suppressWarnings(PKNCA::pk.nca(test_vz_data))
+    test_vz_result$result <- test_vz_result$result %>%
+      filter(PPTESTCD %in% c("vz.last", "vz.obs", "vz.pred")) %>%
+      mutate(
+        PPSTRES = PPORRES,
+        PPSTRESU = PPORRESU
+      )
+
+    res <- export_cdisc(test_vz_result)
+
+    res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
+    res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
+
+    expect_true(all(res_of_infusion_subj$PPTESTCD %in% c("VZO", "VZP")))
+    expect_true(all(
+      res_of_infusion_subj$PPTEST %in% c(
+        "Vz Obs",
+        "Vz Pred"
+      )
+    ))
+    expect_true(all(res_of_ev_subj$PPTESTCD %in% c("VZFO", "VZFP")))
+    expect_true(all(res_of_ev_subj$PPTEST %in% c(
+      "Vz Obs by F",
+      "Vz Pred by F"
+    )))
+  })
 })
 
 describe(".get_subjid", {
