@@ -134,8 +134,8 @@ calculate_ratios.data.frame <- function(
   group_cols <- setdiff(colnames(data), extra_res_cols)
 
   # Filter for the test and reference parameters
-  df_test <- data[data$PPTESTCD == test_parameter, ]
-  df_ref <- data[data$PPTESTCD == ref_parameter, ]
+  df_test <- data[data$PPTESTCD == test_parameter, drop = FALSE]
+  df_ref <- data[data$PPTESTCD == ref_parameter, drop = FALSE]
 
   # Define the denominator rows
   df_den <- merge(df_ref, ref_groups)
@@ -148,6 +148,9 @@ calculate_ratios.data.frame <- function(
       anti_join(df_test, df_den, by = intersect(names(df_test), names(df_den)))
     }
   }
+  
+  # Define the key column(s) to use for group reference in PPANMETH
+  ref_cols <- colnames(ref_groups[, !names(ref_groups) %in% match_cols, drop = FALSE])
 
   # Join test and denominator by their matching columns
   merge(df_num, df_den, by = c(match_cols), suffixes = c("", "_den")) %>%
@@ -187,7 +190,24 @@ calculate_ratios.data.frame <- function(
         ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPSTRESU, "/", PPSTRESU_den))
       } else {
         NULL
-      },
+      }
+    ) %>%
+    rowwise() %>% 
+    mutate(
+      ppanmeth_test_groups = paste0(
+        paste(paste(ref_cols, c_across(all_of(ref_cols)), sep = ": "), collapse = ", ")
+      ),
+      ppanmeth_ref_groups = paste0(
+        paste(paste(paste0(ref_cols), c_across(all_of(paste0(ref_cols, "_den"))), sep = ": "), collapse = ", ")
+      )
+    ) %>%
+    ungroup() %>%
+    mutate(
+      PPANMETH = ifelse(
+        ppanmeth_test_groups == ppanmeth_ref_groups,
+        paste0(PPTESTCD, " TO ", PPTESTCD_den),
+        paste0(PPTESTCD, " TO ", PPTESTCD_den, " [", ppanmeth_ref_groups, "]")
+      ),
       PPTESTCD = if (!is.null(custom_pptestcd)) {
         custom_pptestcd
       } else {
@@ -195,7 +215,7 @@ calculate_ratios.data.frame <- function(
       }
     ) %>%
     # Keep same format as the input (PKNCAresults)
-    select(any_of(names(df_test))) %>%
+    select(any_of(c(names(df_test), "PPANMETH"))) %>%
     unique()
 }
 #' @export
