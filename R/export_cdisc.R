@@ -30,9 +30,14 @@ export_cdisc <- function(res_nca) {
   # Only select from results the requested parameters by the user
   res_nca_req <- res_nca
   res_nca_req$result <- res_nca_req$result %>%
-    mutate(PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA"))
+    mutate(
+      PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA")
+    )
   res_nca_req$result <- as.data.frame(res_nca_req, filter_requested = TRUE) %>%
-    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+    mutate(
+      PPTEST = translate_terms(PPTESTCD, "PKNCA", "PPTEST"),
+      PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+    )
 
   # Define group columns in the data
   group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
@@ -108,12 +113,12 @@ export_cdisc <- function(res_nca) {
     mutate(
       # Column for one-to-many criteria
       is.iv.route = !!sym(route_col) == "intravascular",
-      
+
       # Parameters affected
-      is.cl.parameter = grepl("CL(O|P|LST|LSTD|LSTP|LSTPD)", PPTESTCD),
+      is.cl.parameter = grepl("CL(LST|O|P|ALL)", PPTESTCD),
       is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
       is.vz.parameter = grepl("VZ(O|P)", PPTESTCD),
-      
+
       PPTEST = case_when(
         # cl, vz
         (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ paste0(PPTEST, " by F"),
@@ -127,7 +132,7 @@ export_cdisc <- function(res_nca) {
       ),
       PPTESTCD = case_when(
         # cl, vz
-        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ paste0(PPTESTCD, " by F"),
+        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ gsub("(CL|VZ)(.*)", "\\1F\\2", PPTESTCD),
         
         # mrt
         is.mrt.parameter & is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
@@ -138,8 +143,6 @@ export_cdisc <- function(res_nca) {
       )
     ) %>%
 
-    # Identify all duplicates (fromlast and fromfirst) and keep only the first one
-    filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     add_derived_pp_vars(
@@ -358,8 +361,6 @@ adjust_class_and_length <- function(df, metadata) {
 add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
   df %>%
     mutate(
-      PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
-      PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
