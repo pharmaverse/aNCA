@@ -136,12 +136,12 @@ export_cdisc <- function(res_nca) {
       PPTESTCD = case_when(
         # cl, vz
         (is.cl.parameter | is.vz.parameter) & !is.iv ~ gsub("(CL|VZ)(.*)", "\\1F\\2", PPTESTCD),
-        
+
         # mrt
         is.mrt.parameter & is.iv.bolus ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IB\\2", PPTESTCD),
         is.mrt.parameter & is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
         is.mrt.parameter & !is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
-        
+
         # others
         TRUE ~ PPTESTCD
       )

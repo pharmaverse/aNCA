@@ -449,7 +449,7 @@ describe("export_cdisc", {
       "Vz Pred by F"
     )))
   })
-  
+
   it("differentiates mrt.xxx for extravascular (EV), infusion (IC) and bolus (IB)", {
     test_mrt_data <- FIXTURE_PKNCA_DATA
     test_mrt_data$intervals <- test_mrt_data$intervals %>%
@@ -466,13 +466,13 @@ describe("export_cdisc", {
         PPSTRES = PPORRES,
         PPSTRESU = PPORRESU
       )
-    
+
     res <- export_cdisc(test_mrt_result)
-    
+
     res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
     res_of_bolus_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
     res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[3])
-    
+
     expect_true(all(res_of_infusion_subj$PPTESTCD %in% c("MRTICIFO", "MRTICIFP", "MRTICLST")))
     expect_true(all(
       res_of_infusion_subj$PPTEST %in% c(
