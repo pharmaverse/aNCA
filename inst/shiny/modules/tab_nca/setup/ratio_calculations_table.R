@@ -127,17 +127,19 @@ ratios_table_server <- function(
 
     # Table columns
     table_columns <- c(
-      "Parameter", "Reference", "Test", "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+      "TestParameter", "RefParameter", "Reference", "Test", "AggregateSubject", "AdjustingFactor", "PPTESTCD"
     )
 
     # Store table data
     ratio_table <- reactiveVal({
       data.frame(
-        Parameter = character(),
+        TestParameter = character(),
+        RefParameter = character(),
         Reference = character(),
         Test = character(),
         AggregateSubject = character(),
         AdjustingFactor = numeric(),
+        PPTESTCD = character(),
         stringsAsFactors = FALSE
       )
     })
@@ -155,7 +157,8 @@ ratios_table_server <- function(
 
       # Add a new row with default values
       new_row <- data.frame(
-        Parameter = ratio_param_options()[1],
+        TestParameter = ratio_param_options()[1],
+        RefParameter = ratio_param_options()[1],
         Reference = ratio_reference_options()[1],
         Test = "(all other levels)",
         AggregateSubject = "no",
@@ -187,10 +190,19 @@ ratios_table_server <- function(
 
       # Update column names for display in the UI
       col_defs <- list(
-        Parameter = colDef(
-          name = "Parameter",
+        TestParameter = colDef(
+          name = "Test Parameter",
           cell = dropdown_extra(
-            id = ns("edit_Parameter"),
+            id = ns("edit_TestParameter"),
+            choices = ratio_param_options(),
+            class = "dropdown-extra"
+          ),
+          width = 180
+        ),
+        RefParameter = colDef(
+          name = "Ref Parameter",
+          cell = dropdown_extra(
+            id = ns("edit_RefParameter"),
             choices = ratio_param_options(),
             class = "dropdown-extra"
           ),
@@ -261,14 +273,14 @@ ratios_table_server <- function(
           tbl[edit$row, edit$column] <- edit$value
 
           # If Parameter or Reference changed, update PPTESTCD for that row
-          if (colname %in% c("Parameter", "Reference")) {
+          if (colname %in% c("TestParameter", "Reference")) {
             ref <- tbl[edit$row, "Reference"]
-            param <- tbl[edit$row, "Parameter"]
+            param <- tbl[edit$row, "TestParameter"]
             automatic_tbl <- .generate_pptestcd_for_ratios(tbl, adnca_data = adnca_data())
             tbl[edit$row, ] <- automatic_tbl[edit$row, ]
           }
           ratio_table(tbl)
-          if (colname %in% c("Parameter", "Reference", "PPTESTCD")) {
+          if (colname %in% c("TestParameter", "Reference", "PPTESTCD")) {
             reset_reactable_memory()
             refresh_reactable(refresh_reactable() + 1)
           }
@@ -292,8 +304,8 @@ ratios_table_server <- function(
   tbl %>%
     mutate(
       PPTESTCD = case_when(
-        startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
-        startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
+        startsWith(Reference, analyte_col) ~ paste0("MR", TestParameter),
+        startsWith(Reference, profile_col) ~ paste0("AR", TestParameter),
         startsWith(
           toupper(Reference),
           paste0(toupper(route_col), ": INTRAVASCULAR")
@@ -301,7 +313,7 @@ ratios_table_server <- function(
         startsWith(toupper(Reference), paste0(toupper(raw_route_col), ": INTRA")) ~ "FABS",
         startsWith(Reference, paste0(route_col)) ~ "FREL",
         startsWith(Reference, raw_route_col) ~ "FREL",
-        TRUE ~ paste0("RA", Parameter)
+        TRUE ~ paste0("RA", TestParameter)
       ),
       PPTESTCD = make.unique(PPTESTCD, sep = "")
     )

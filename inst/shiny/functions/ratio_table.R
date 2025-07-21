@@ -1,7 +1,8 @@
 #' Links the table ratio of the App with the ratio calculations via PKNCA results
 #'
 #' @param res A PKNCAresult object.
-#' @param parameter Character. The PPTESTCD value to use for the calculation.
+#' @param test_parameter Character. The PPTESTCD value to use for the test (numerator) calculation.
+#' @param ref_parameter Character. The PPTESTCD value to use for the reference (denominator) calculation. Defaults to test_parameter.
 #' @param test Character. The test group (numerator). Default is "(all other levels)".
 #' @param reference Character. The reference group (denominator).
 #' @param aggregate_subject Character. Aggregation mode: "yes", "no", or "if-needed".
@@ -10,7 +11,8 @@
 #' @returns A data.frame with the calculated ratios for the specified settings.
 calculate_ratio_app <- function(
   res,
-  parameter,
+  test_parameter,
+  ref_parameter = test_parameter,
   test = "(all other levels)",
   reference = "PARAM: Analyte01",
   aggregate_subject = "no",
@@ -74,8 +76,8 @@ calculate_ratio_app <- function(
   for (ix in seq_along(match_cols)) {
     ratio_calculations <- calculate_ratios(
       data = res$result,
-      test_parameter = parameter,
-      ref_parameter = parameter,
+      test_parameter = test_parameter,
+      ref_parameter = ref_parameter,
       match_cols = match_cols[[ix]],
       ref_groups = ref_groups,
       test_groups = test_groups,
@@ -101,20 +103,19 @@ calculate_ratio_app <- function(
 #'
 #' @param res A PKNCAresult object.
 #' @param ratio_table Data.frame with columns:
-#' Parameter, Reference, Test, AggregateSubject, AdjustingFactor.
+#' TestParameter, RefParameter, Reference, Test, AggregateSubject, AdjustingFactor.
 #' @returns The updated PKNCAresult object with added rows in the `result` data.frame.
 #' @export
 calculate_table_ratios_app <- function(res, ratio_table) {
-
   # Make a list to save all results
   ratio_results <- vector("list", nrow(ratio_table))
 
   # Loop through each row of the ratio_table
   for (i in seq_len(nrow(ratio_table))) {
-
     ratio_results[[i]] <- calculate_ratio_app(
       res = res,
-      parameter = ratio_table$Parameter[i],
+      test_parameter = ratio_table$TestParameter[i],
+      ref_parameter = ratio_table$RefParameter[i],
       test = ratio_table$Test[i],
       reference = ratio_table$Reference[i],
       aggregate_subject = ratio_table$AggregateSubject[i],
