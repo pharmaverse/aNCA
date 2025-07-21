@@ -103,7 +103,42 @@ export_cdisc <- function(res_nca) {
       )))
     ) %>%
     arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
-    # Identify all dulicates (fromlast and fromfirst) and keep only the first one
+
+    # Parameters with a one-to-many mapping in PKNCA / CDISC
+    mutate(
+      # Column for one-to-many criteria
+      is.iv.route = !!sym(route_col) == "intravascular",
+      
+      # Parameters affected
+      is.cl.parameter = grepl("CL(O|P|LST|LSTD|LSTP|LSTPD)", PPTESTCD),
+      is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
+      is.vz.parameter = grepl("VZ(O|P)", PPTESTCD),
+      
+      PPTEST = case_when(
+        # cl, vz
+        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ paste0(PPTEST, " by F"),
+        
+        # mrt
+        is.mrt.parameter & is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
+        is.mrt.parameter & !is.iv.route ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
+        
+        # others
+        TRUE ~ PPTEST
+      ),
+      PPTESTCD = case_when(
+        # cl, vz
+        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ paste0(PPTESTCD, " by F"),
+        
+        # mrt
+        is.mrt.parameter & is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
+        is.mrt.parameter & !is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
+        
+        # others
+        TRUE ~ PPTESTCD
+      )
+    ) %>%
+
+    # Identify all duplicates (fromlast and fromfirst) and keep only the first one
     filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
@@ -116,40 +151,6 @@ export_cdisc <- function(res_nca) {
     group_by(USUBJID)  %>%
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
-
-    # Parameters with a one-to-many mapping in PKNCA / CDISC
-    mutate(
-      # Column for one-to-many criteria
-      is.iv.route = !!sym(route_col) == "intravascular",
-
-      # Parameters affected
-      is.cl.parameter = grepl("CL(O|P|LST|LSTD|LSTP|LSTPD)", PPTESTCD),
-      is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
-      is.vz.parameter = grepl("VZ(O|P)", PPTESTCD),
-
-      PPTEST = case_when(
-        # cl, vz
-        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ paste0(PPTEST, " by F"),
-
-        # mrt
-        is.mrt.parameter & is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
-        is.mrt.parameter & !is.iv.route ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
-
-        # others
-        TRUE ~ PPTEST
-      ),
-      PPTESTCD = case_when(
-        # cl, vz
-        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ paste0(PPTESTCD, " by F"),
-
-        # mrt
-        is.mrt.parameter & is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
-        is.mrt.parameter & !is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
-
-        # others
-        TRUE ~ PPTESTCD
-      )
-    ) %>%
 
     # Select only columns needed for PP, ADPP, ADPC
     select(any_of(metadata_nca_variables[["Variable"]])) %>%
