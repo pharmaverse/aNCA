@@ -45,6 +45,7 @@ export_cdisc <- function(res_nca) {
   group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
   concu_col <- res_nca$data$conc$columns$concu
   route_col <- res_nca$data$dose$columns$route
+  duration_col <- res_nca$data$dose$columns$duration
   conc_group_sp_cols <- res_nca$data$conc$columns$groups$group_analyte %>%
     append(
       setdiff(
@@ -67,7 +68,7 @@ export_cdisc <- function(res_nca) {
     select(
       any_of(c(
         # Variables defined for the dose information
-        to_match_res_cols, dose_time_col,  route_col, conc_timeu_col,
+        to_match_res_cols, dose_time_col,  route_col, duration_col, conc_timeu_col,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
@@ -112,7 +113,8 @@ export_cdisc <- function(res_nca) {
     # Parameters with a one-to-many mapping in PKNCA / CDISC
     mutate(
       # Column for one-to-many criteria
-      is.iv.route = !!sym(route_col) == "intravascular",
+      is.iv = !!sym(route_col) == "intravascular",
+      is.iv.bolus = is.iv & !!sym(duration_col) == 0,
 
       # Parameters affected
       is.cl.parameter = grepl("CL(LST|O|P|ALL)", PPTESTCD),
@@ -121,22 +123,24 @@ export_cdisc <- function(res_nca) {
 
       PPTEST = case_when(
         # cl, vz
-        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ paste0(PPTEST, " by F"),
-        
+        (is.cl.parameter | is.vz.parameter) & !is.iv ~ paste0(PPTEST, " by F"),
+
         # mrt
-        is.mrt.parameter & is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
-        is.mrt.parameter & !is.iv.route ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
-        
+        is.mrt.parameter & is.iv.bolus ~ gsub("(MRT )(.*)", "\\1IV Bolus \\2", PPTEST),
+        is.mrt.parameter & is.iv ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
+        is.mrt.parameter & !is.iv ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
+
         # others
         TRUE ~ PPTEST
       ),
       PPTESTCD = case_when(
         # cl, vz
-        (is.cl.parameter | is.vz.parameter) & !is.iv.route ~ gsub("(CL|VZ)(.*)", "\\1F\\2", PPTESTCD),
+        (is.cl.parameter | is.vz.parameter) & !is.iv ~ gsub("(CL|VZ)(.*)", "\\1F\\2", PPTESTCD),
         
         # mrt
-        is.mrt.parameter & is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
-        is.mrt.parameter & !is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
+        is.mrt.parameter & is.iv.bolus ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IB\\2", PPTESTCD),
+        is.mrt.parameter & is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
+        is.mrt.parameter & !is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
         
         # others
         TRUE ~ PPTESTCD
