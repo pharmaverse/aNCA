@@ -233,7 +233,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     parameter_datasets_server("parameter_datasets", res_nca)
 
     # return results for use in other modules
-    res_nca
+    list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
   })
 }
 
