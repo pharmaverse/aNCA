@@ -181,6 +181,9 @@ tab_visuals_ui <- function(id) {
         ),
         plotlyOutput(ns("boxplot"))
       )
+    ),
+    nav_panel("QC plot",
+              plotlyOutput(ns("qc_plot"))
     )
   )
 }
@@ -538,6 +541,18 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         box = input$violinplot_toggle_switch
       )
     })
-
+    
+    # TAB: QC plot ----------------------------------------------------
+    output$qc_plot <- renderPlotly({
+      faceted_qc_plot(
+        data = data(),
+        x_var = "AFRLT",
+        y_var = "USUBJID",
+        colour_var = "DOSEA",
+        grouping_vars = c("TRT01A"),
+        labels_df = LABELS,
+        title = "Dose Plot",
+        as.plotly = TRUE) 
+    })
   })
 }
