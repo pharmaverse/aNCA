@@ -124,10 +124,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           # from within warning handler without bleeding to global env.
           pknca_warn_env <- new.env()
           pknca_warn_env$warnings <- c()
-          
+
           # Update units table
           processed_pknca_data <- processed_pknca_data()
-          processed_pknca_data$units = session$userData$units_table()
+          processed_pknca_data$units <- session$userData$units_table()
 
           #' Calculate results
           res <- withCallingHandlers({
