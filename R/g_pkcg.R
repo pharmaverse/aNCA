@@ -1055,7 +1055,7 @@ define_summary_settings <- function(summary_method, whiskers_lwr_upr) {
   whiskers_base <- summary_settings[[summary_method]]$whiskers
 
   if (whiskers_lwr_upr == "Both") {
-    whiskers_value <- whiskers_base # Assign the full vector
+    whiskers_value <- whiskers_base
   } else if (whiskers_lwr_upr == "Upper") {
     whiskers_value <- whiskers_base[2]
   } else if (whiskers_lwr_upr == "Lower") {
