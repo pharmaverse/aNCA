@@ -211,8 +211,8 @@ export_cdisc <- function(res_nca) {
       },
       SUBJID = get_subjid(.),
       ATPT = {
-        if ("PCTPT" %in% names(.)) PCTPT
         if ("ATPT" %in% names(.)) ATPT
+        if ("PCTPT" %in% names(.)) PCTPT
         else NA_character_
       },
       ATPTN = {
