@@ -73,6 +73,7 @@ calculate_ratio_app <- function(
 
 
   all_ratios <- data.frame()
+
   for (ix in seq_along(match_cols)) {
     ratio_calculations <- calculate_ratios(
       data = res$result,
@@ -122,6 +123,9 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
       custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
     )
+  }
+  if (!"PPANMETH" %in% names(res$result)) {
+    res$result$PPANMETH = ""
   }
 
   # Combine all results into the original PKNCAresult object

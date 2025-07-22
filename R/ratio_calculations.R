@@ -133,9 +133,9 @@ calculate_ratios.data.frame <- function(
   )
   group_cols <- setdiff(colnames(data), extra_res_cols)
 
-  # Filter for the test and reference parameters
-  df_test <- data[data$PPTESTCD == test_parameter, drop = FALSE]
-  df_ref <- data[data$PPTESTCD == ref_parameter, drop = FALSE]
+  # Define the test and reference data based on the parameters and groups
+  df_test <- as.data.frame(data)[data$PPTESTCD == test_parameter, , drop = FALSE]
+  df_ref <- as.data.frame(data)[data$PPTESTCD == ref_parameter, , drop = FALSE]
 
   # Define the denominator rows
   df_den <- merge(df_ref, ref_groups)
@@ -231,6 +231,7 @@ calculate_ratios.PKNCAresults <- function(
   adjusting_factor = 1,
   custom_pptestcd = NULL
 ) {
+
   # Check if match_cols and ref_groups are valid group columns
   # Make checks on the input formats
   cols_used_for_ratios <- c(match_cols, names(ref_groups), names(test_groups))
@@ -239,6 +240,9 @@ calculate_ratios.PKNCAresults <- function(
       "match_cols and ref_groups must contain valid group column names in PKNCAres: ",
       paste(names(PKNCA::getGroups(data)), collapse = ", ")
     ))
+  }
+  if (!"PPANMETH" %in% names(data$result)) {
+    data$result$PPANMETH = ""
   }
 
   # Calculate ratios using the data.frame method
