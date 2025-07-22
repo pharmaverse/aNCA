@@ -62,9 +62,9 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
               id = session$ns(colname),
               choices = {
                 if (isTRUE(def$choices == ".colnames")) {
-                  names(data())
+                  names(data()$conc$data)
                 } else if (length(def$choices) == 1 && grepl("^\\$", def$choices)) {
-                  unique(data()[, sub("^\\$", "", def$choices)])
+                  unique(data()$conc$data[, sub("^\\$", "", def$choices)])
                 } else {
                   def$choices
                 }

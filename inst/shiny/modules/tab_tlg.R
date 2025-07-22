@@ -102,8 +102,8 @@ tab_tlg_server <- function(id, data) {
         mutate(
           Selection = case_when(
             Condition == "" | is.na(Condition) ~ Selection,
-            !column_of_conditions %in% names(data()) ~ FALSE,
-            sum(eval(parse(text = Condition), envir = data())) > 0 ~ TRUE,
+            !column_of_conditions %in% names(data()$conc$data) ~ FALSE,
+            sum(eval(parse(text = Condition), envir = data()$conc$data)) > 0 ~ TRUE,
             TRUE ~ FALSE
           )
         )
@@ -242,8 +242,8 @@ tab_tlg_server <- function(id, data) {
 
     # Toggle submit button depending on whether the data is available #
     observeEvent(data(), ignoreInit = FALSE, ignoreNULL = FALSE, {
-      shinyjs::toggleState("submit_tlg_order", !is.null(data()))
-      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
+      shinyjs::toggleState("submit_tlg_order", !is.null(data()$conc$data))
+      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()$conc$data))
     })
 
     #' change tab to first populated tab
