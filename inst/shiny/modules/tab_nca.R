@@ -93,6 +93,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+    ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
@@ -106,6 +107,16 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
+
+      if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
+                                                              is.logical)]))) {
+        log_error("Invalid parameters")
+        showNotification("No suitable parameters selected for NCA calculation.
+         Please go back and select parameters suitable for the data.",
+                         type = "error", duration = NULL)
+        return(NULL)
+      }
+
       withProgress(message = "Calculating NCA...", value = 0, {
         log_info("Calculating NCA results...")
         tryCatch({
@@ -125,7 +136,13 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               ) %>%
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
-              add_f_to_pknca_results(settings()$bioavailability)
+              add_f_to_pknca_results(settings()$bioavailability) %>%
+              # Apply standard CDISC names
+              mutate(
+                PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+              ) %>%
+              # Add parameter ratio calculations
+              calculate_table_ratios_app(ratio_table = ratio_table())
           },
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
@@ -201,7 +218,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                     backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
     })
 
-    nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)
+    #' Prepares and displays the pivoted NCA results
+    nca_results_server(
+      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, grouping_vars
+    )
 
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)

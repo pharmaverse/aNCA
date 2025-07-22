@@ -50,7 +50,7 @@ dose_profile_duplicates <- function(conc_data,
     return(conc_data %>%
              group_by(across(all_of(groups))) %>%
              arrange(across(all_of(c(groups, arrlt)))) %>%
-             mutate(IX = seq_len(n())) %>%
+             mutate(IX = as.character(seq_len(n()))) %>%
              ungroup())
   }
 

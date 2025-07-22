@@ -1,6 +1,3 @@
-library(testthat)
-library(dplyr)
-
 # Sample data frame for testing
 adpc <- data.frame(
   PARAM = c("A", "A", "B", "B"),
@@ -109,7 +106,7 @@ describe("l_pkconc", {
                                        AVALU = "AVALU",
                                        id_list = "id")
 
-    expect_equal(var_labels(listings[[1]]),
+    expect_equal(formatters::var_labels(listings[[1]]),
                  expected = label_strings_with_aval_units)
   })
 

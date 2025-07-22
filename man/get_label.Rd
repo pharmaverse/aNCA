@@ -15,7 +15,7 @@ get_label(labels_df, variable, type)
 }
 \value{
 The label of the heading if it exists in the labels file,
-otherwise "No label available".
+otherwise the variable name.
 }
 \description{
 This function retrieves the label of a heading from a labels file.
@@ -29,7 +29,7 @@ This function retrieves the label of a heading from a labels file.
  Dataset = c("ADPC", "ADPC")
  )
  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
- get_label(LABELS, "AGE", "ADPC")  # Returns "No label available"
- }
+ get_label(LABELS, "AGE", "ADPC")  # Returns "AGE"
+}
 
 }

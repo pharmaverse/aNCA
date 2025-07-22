@@ -5,6 +5,7 @@ require(dplyr)
 require(DT)
 require(htmlwidgets)
 require(logger)
+require(formatters)
 require(magrittr)
 require(plotly)
 require(purrr)
@@ -41,7 +42,14 @@ setup_logger()
 ui <- function() {
   page_sidebar(
     id = "sidebar",
-    title = "aNCA",
+    title = tagList(
+      span("aNCA"),
+      div(
+        class = "project-name-container",
+        textInput("project_name", label = NULL, placeholder = "Project Name"),
+        icon("file", class = "project-name-icon")
+      )
+    ),
 
     tags$script("
       Shiny.addCustomMessageHandler('update', function(value) {
@@ -121,6 +129,11 @@ ui <- function() {
 
 server <- function(input, output, session) {
   log_info("Startup")
+
+  # Store globally the name of the project
+  session$userData$project_name <- reactive({
+    if (input$project_name != "") input$project_name else "Unnamed_Project"
+  })
 
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")

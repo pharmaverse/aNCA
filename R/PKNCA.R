@@ -54,6 +54,10 @@
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
+#' @importFrom dplyr filter select arrange across
+#' @importFrom purrr pmap_chr
+#' @importFrom units set_units deparse_unit
+#'
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
@@ -65,7 +69,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
+  volume_column <- "VOLUME"
+
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
+
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -95,27 +102,38 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     )
   }
 
-  # Create dosing data
-  df_dose <- format_pkncadose_data(
-    pkncaconc_data = df_conc,
-    group_columns = c(group_columns, usubjid_column)
-  )
-
   # Set default settings
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- NA
   df_conc$exclude_half.life <- FALSE
 
-  # Create PKNCA objects
-  pknca_conc <- PKNCA::PKNCAconc(
-    df_conc,
+  # Create PKNCA conc object
+
+  # ensure units are correct for excretion calculations
+  df_conc <- convert_volume_units(df_conc)
+
+  args_list <- list(
+    data = df_conc,
     formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
     concu = "AVALU",
-    timeu = "RRLTU"
+    timeu = "RRLTU",
+    amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL
+  )
+
+  if ("VOLUME" %in% colnames(df_conc)) {
+    args_list$volume <- volume_column
+  }
+
+  pknca_conc <- do.call(PKNCA::PKNCAconc, args_list)
+
+  # Create dosing data
+  df_dose <- format_pkncadose_data(
+    pkncaconc_data = df_conc,
+    group_columns = c(group_columns, usubjid_column)
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
@@ -203,7 +221,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
+    keep_interval_cols = c(
+      "NCA_PROFILE", "DOSNOA", "type_interval",
+      adnca_data$dose$columns$route, "ROUTE"
+    ),
     min.hl.r.squared = 0.01
   )
 
@@ -213,7 +234,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     pknca_dose = data$dose,
     params = params,
     start_from_last_dose = should_impute_c0
-  )
+  ) %>%
+    # Join route information
+    left_join(
+      select(
+        adnca_data$dose$data,
+        any_of(c(group_vars(adnca_data$dose), adnca_data$dose$columns$route, "ROUTE"))
+      ) %>% unique(),
+      by = group_vars(adnca_data$dose)
+    )
 
   # Apply filtering
   data$intervals <- data$intervals %>%
@@ -253,11 +282,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     data <- create_start_impute(data)
 
     # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- pknca_cdisc_terms %>%
+    params_auc_dep <- metadata_nca_parameters %>%
       filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
       pull(PKNCA)
 
-    params_not_to_impute <- pknca_cdisc_terms %>%
+    params_not_to_impute <- metadata_nca_parameters %>%
       filter(!grepl("auc|aumc", PKNCA),
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
       pull(PKNCA) |>
@@ -339,8 +368,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
-    # Make empty strings for units that have no metric (unitless, fraction...)
-    mutate(PPSTRESU = ifelse(PPSTRESU %in% c("unitless", "fraction"), "", PPSTRESU)) %>%
+
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
@@ -629,7 +657,7 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' For any parameter that is not aucpext.obs or aucpext.pred it applies a minimum threshold,
 #' and for aucpext.obs and aucpext.pred it applies a maximum threshold.
 #' @importFrom PKNCA exclude
-
+#' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 
   for (param in names(rules)) {
