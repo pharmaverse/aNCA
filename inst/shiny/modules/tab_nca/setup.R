@@ -55,6 +55,15 @@ setup_ui <- function(id) {
 
 setup_server <- function(id, data, adnca_data) {
   moduleServer(id, function(input, output, session) {
+    
+    imported_settings <- reactive({
+      req(input$settings_upload)
+      readRDS(input$settings_upload$datapath)
+    })
+    
+    settings_override <- reactive(imported_settings()$settings)
+    manual_slopes_override <- reactive(imported_settings()$slope_rules)
+
     # Gather all settings from the appropriate module
     settings <- settings_server("nca_settings", data, adnca_data, settings_override)
 
@@ -98,6 +107,12 @@ setup_server <- function(id, data, adnca_data) {
       adnca_data = processed_pknca_data
     )
 
+    # Automatically update the units table when settings are uploaded.
+    observeEvent(settings_override(), {
+      req(settings_override()$units)
+      session$userData$units_table(settings_override()$units)
+    })
+    
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
 
@@ -137,14 +152,6 @@ setup_server <- function(id, data, adnca_data) {
         saveRDS(list(settings = settings(), slope_rules = slope_rules$manual_slopes()), con)
       }
     )
-
-    imported_settings <- reactive({
-      req(input$settings_upload)
-      readRDS(input$settings_upload$datapath)
-    })
-
-    settings_override <- reactive(imported_settings()$settings)
-    manual_slopes_override <- reactive(imported_settings()$slope_rules)
 
     list(
       processed_pknca_data = processed_pknca_data,

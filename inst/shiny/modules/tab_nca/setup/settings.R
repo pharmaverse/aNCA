@@ -411,7 +411,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             is.checked = input$span.ratio_rule,
             threshold = input$span.ratio_threshold
           )
-        )
+        ),
+        units = session$userData$units_table()
       )
     })
 
