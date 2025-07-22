@@ -35,8 +35,8 @@ test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
       TRUE ~ NA_character_
     ),
     PCRFTDTM = case_when(
-      NCA_PROFILE == 1 ~ "01-01-2023 00:00",
-      NCA_PROFILE == 2 ~ "02-01-2023 00:00",
+      NCA_PROFILE == 1 ~ "2023-01-01 00:00",
+      NCA_PROFILE == 2 ~ "2023-01-02 00:00",
       TRUE ~ NA_character_
     )
   )
