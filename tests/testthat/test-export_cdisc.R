@@ -403,7 +403,7 @@ describe("export_cdisc", {
         "CL (based on AUClast)"
       )
     ))
-    expect_true(all(res_of_ev_subj$PPTESTCD %in% c("CLEVIFO", "CLEVIFP", "CLEVLST")))
+    expect_true(all(res_of_ev_subj$PPTESTCD %in% c("CLFO", "CLFP", "CLFLST")))
     expect_true(all(
       res_of_ev_subj$PPTEST %in% c(
         "Total CL Obs by F",
