@@ -116,10 +116,10 @@ pkcg01 <- function(
   }
 
   # save col labels, as further adpc tranformations cause them to be lost #
-
   adpc_grouped <- adpc %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
+    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars))) %>% 
+    filter(!is.na(id_plot))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
   old_labels <- c(formatters::var_labels(adpc), id_plot = NA)
