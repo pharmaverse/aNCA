@@ -528,15 +528,19 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$selected_filters_boxplot)
       log_info("Rendering boxplot")
 
-      flexible_violinboxplot(
+      boxplot <- flexible_violinboxplot(
         boxplotdata = boxplotdata(),
         parameter = input$selected_param_boxplot,
         xvars = input$selected_xvars_boxplot,
         colorvars = input$selected_colorvars_boxplot,
         varvalstofilter = input$selected_filters_boxplot,
         columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
-        box = input$violinplot_toggle_switch
+        box = input$violinplot_toggle_switch,
+        plotly = FALSE
       )
+
+      session$userData$results$visualization$boxplot <- boxplot
+      as.ggplotly(boxplot)
     })
 
   })
