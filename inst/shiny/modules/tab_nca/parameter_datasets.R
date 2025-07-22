@@ -11,7 +11,24 @@ parameter_datasets_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
     CDISC <- reactive({
       req(res_nca())
-      export_cdisc(res_nca())
+
+      # Only select from results the requested parameters by the user
+      ############################################################################
+      # TODO (Gerardo): Once PKNCA non covered parameters start being covered,
+      # this can be done instead using filter_requested = TRUE
+      res_nca_req <- res_nca()
+      params_not_requested <- res_nca_req$data$intervals %>%
+        select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
+        # For all logical columns, mutate FALSE to NA
+        mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
+        # Only select column that are only NA
+        select(where(~ all(is.na(.x)))) %>%
+        names()
+      res_nca_req$result <- res_nca_req$result %>%
+        filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
+      ############################################################################
+
+      export_cdisc(res_nca_req)
     })
 
     output$pp_dataset <- DT::renderDataTable(

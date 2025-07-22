@@ -29,10 +29,6 @@ export_cdisc <- function(res_nca) {
 
   # Only select from results the requested parameters by the user
   res_nca_req <- res_nca
-  res_nca_req$result <- res_nca_req$result %>%
-    mutate(PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA"))
-  res_nca_req$result <- as.data.frame(res_nca_req, filter_requested = TRUE) %>%
-    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
 
   # Define group columns in the data
   group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
