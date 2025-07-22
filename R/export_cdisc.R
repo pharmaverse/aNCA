@@ -198,12 +198,10 @@ export_cdisc <- function(res_nca) {
               by = intersect(names(res_nca$data$conc$data), names(dose_info)),
               suffix = c("", ".y")) %>%
     mutate(
-      PARAMCD = if ("PARAMCD" %in% names(.)) {
-        PARAMCD
-      } else if ("PCTESTCD" %in% names(.)) {
-        PCTESTCD
-      } else {
-        NA_character_
+      PARAMCD = {
+        if ("PARAMCD" %in% names(.)) PARAMCD
+        if ("PCTESTCD" %in% names(.)) PCTESTCD
+        else NA_character_
       },
       ANL01FL = if ("is.excluded.hl" %in% names(.)) {
         vals <- .[["is.excluded.hl"]]
@@ -214,13 +212,16 @@ export_cdisc <- function(res_nca) {
       SUBJID = get_subjid(.),
       ATPT = {
         if ("PCTPT" %in% names(.)) PCTPT
+        if ("ATPT" %in% names(.)) ATPT
         else NA_character_
       },
       ATPTN = {
+        if ("ATPTN" %in% names(.)) ATPTN
         if ("PCTPTNUM" %in% names(.)) PCTPTNUM
         else NA
       },
       ATPTREF = {
+        if ("ATPTREF" %in% names(.)) ATPTREF
         if ("PCTPTREF" %in% names(.)) PCTPTREF
         else NA_character_
       },
