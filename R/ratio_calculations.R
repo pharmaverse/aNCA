@@ -70,8 +70,9 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' Calculate Ratios from PKNCA Results
 #'
 #' @param data A PKNCAresults object or its result data.frame.
-#' @param test_parameter Character. The PPTESTCD value to use for the test (numerator) calculation (e.g., "AUCINF").
-#' @param ref_parameter Character. The PPTESTCD value to use for the reference (denominator) calculation. Defaults to test_parameter.
+#' @param test_parameter Character. The PPTESTCD value to use as test (numerator).
+#' @param ref_parameter Character. The PPTESTCD value to use as reference (denominator).
+#' Defaults to test_parameter.
 #' @param match_cols Character vector of column names to match between test and reference groups
 #'  or a data.frame specifying columns and values.
 #' @param ref_groups A data.frame specifying reference groups.
@@ -133,27 +134,24 @@ calculate_ratios.data.frame <- function(
   )
   group_cols <- setdiff(colnames(data), extra_res_cols)
 
-  # Define the test and reference data based on the parameters and groups
-  df_test <- as.data.frame(data)[data$PPTESTCD == test_parameter, , drop = FALSE]
+  # Define the reference and test data based on the parameters and groups
   df_ref <- as.data.frame(data)[data$PPTESTCD == ref_parameter, , drop = FALSE]
+  df_ref <- merge(df_ref, ref_groups)
 
-  # Define the denominator rows
-  df_den <- merge(df_ref, ref_groups)
-
-  # Define the test rows, which should exclude the ref_groups
-  df_num <- {
+  df_test <- as.data.frame(data)[data$PPTESTCD == test_parameter, , drop = FALSE]
+  df_test <- {
     if (!is.null(test_groups)) {
       merge(df_test, test_groups)
     } else {
-      anti_join(df_test, df_den, by = intersect(names(df_test), names(df_den)))
+      anti_join(df_test, ref_groups)
     }
   }
-  
+
   # Define the key column(s) to use for group reference in PPANMETH
   ref_cols <- colnames(ref_groups[, !names(ref_groups) %in% match_cols, drop = FALSE])
 
   # Join test and denominator by their matching columns
-  merge(df_num, df_den, by = c(match_cols), suffixes = c("", "_den")) %>%
+  merge(df_test, df_ref, by = c(match_cols), suffixes = c("", "_den")) %>%
     # If possible compute conversion factors for the units of test and denominator
     mutate(
       PPORRESU_factor = get_conversion_factor(PPORRESU_den, PPORRESU),
@@ -169,7 +167,7 @@ calculate_ratios.data.frame <- function(
         NULL
       }
     ) %>%
-    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_den")))) ) %>%
+    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_den"))))) %>%
     unique() %>%
     # Use mean values in case of multiple denominator rows per test
     mutate(
@@ -192,13 +190,16 @@ calculate_ratios.data.frame <- function(
         NULL
       }
     ) %>%
-    rowwise() %>% 
+    rowwise() %>%
     mutate(
       ppanmeth_test_groups = paste0(
         paste(paste(ref_cols, c_across(all_of(ref_cols)), sep = ": "), collapse = ", ")
       ),
       ppanmeth_ref_groups = paste0(
-        paste(paste(paste0(ref_cols), c_across(all_of(paste0(ref_cols, "_den"))), sep = ": "), collapse = ", ")
+        paste(
+          paste(paste0(ref_cols), c_across(all_of(paste0(ref_cols, "_den"))), sep = ": "),
+          collapse = ", "
+        )
       )
     ) %>%
     ungroup() %>%
@@ -242,7 +243,7 @@ calculate_ratios.PKNCAresults <- function(
     ))
   }
   if (!"PPANMETH" %in% names(data$result)) {
-    data$result$PPANMETH = ""
+    data$result$PPANMETH <- ""
   }
 
   # Calculate ratios using the data.frame method

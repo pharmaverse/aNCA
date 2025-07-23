@@ -218,6 +218,11 @@ describe("calculate_ratios", {
       test_groups = test_groups,
       custom_pptestcd = "MYRATIO"
     )
+    ratios <- ratios$result %>%
+      filter(PPTESTCD == "MYRATIO")
+    expect_equal(ratios$PPTESTCD, c("MYRATIO", "MYRATIO"))
+  })
+
   it("computes correct ratios when test_parameter and ref_parameter are different", {
     # Create a result with two parameters: CMAX and TMAX
     res_diff <- res_simple
@@ -238,9 +243,5 @@ describe("calculate_ratios", {
     expect_equal(ratios_df$PPORRES, c(2 / 3, 4 / 5))
     expect_equal(ratios_df$PPSTRES, c(2 / 3, 4 / 5))
     expect_true(all(grepl("RACMAX", ratios_df$PPTESTCD)))
-  })
-    ratios <- ratios$result %>%
-      filter(PPTESTCD == "MYRATIO")
-    expect_equal(ratios$PPTESTCD, c("MYRATIO", "MYRATIO"))
   })
 })

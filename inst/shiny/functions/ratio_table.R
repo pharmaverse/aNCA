@@ -1,8 +1,9 @@
 #' Links the table ratio of the App with the ratio calculations via PKNCA results
 #'
 #' @param res A PKNCAresult object.
-#' @param test_parameter Character. The PPTESTCD value to use for the test (numerator) calculation.
-#' @param ref_parameter Character. The PPTESTCD value to use for the reference (denominator) calculation. Defaults to test_parameter.
+#' @param test_parameter Character. The PPTESTCD value to use as test (numerator).
+#' @param ref_parameter Character. The PPTESTCD value to use as reference (denominator).
+#' Defaults to test_parameter.
 #' @param test Character. The test group (numerator). Default is "(all other levels)".
 #' @param reference Character. The reference group (denominator).
 #' @param aggregate_subject Character. Aggregation mode: "yes", "no", or "if-needed".
@@ -125,7 +126,7 @@ calculate_table_ratios_app <- function(res, ratio_table) {
     )
   }
   if (!"PPANMETH" %in% names(res$result)) {
-    res$result$PPANMETH = ""
+    res$result$PPANMETH <- ""
   }
 
   # Combine all results into the original PKNCAresult object

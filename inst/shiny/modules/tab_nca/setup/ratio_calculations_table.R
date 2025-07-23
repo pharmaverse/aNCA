@@ -132,7 +132,8 @@ ratios_table_server <- function(
 
     # Table columns
     table_columns <- c(
-      "TestParameter", "RefParameter", "RefGroups", "TestGroups", "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+      "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+      "AggregateSubject", "AdjustingFactor", "PPTESTCD"
     )
 
     # Store table data
