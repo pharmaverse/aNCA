@@ -165,10 +165,15 @@ tab_data_server <- function(id) {
         sortable = TRUE,
         highlight = TRUE,
         wrap = FALSE,
+        compact = TRUE,
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
-        height = "70vh",
+        pageSizeOptions = c(10, 25, 50, 100, nrow(processed_data())),
+        striped = TRUE,
+        bordered = TRUE,
+        style = list(fontSize = "0.75em"),
+        height = "50vh",
         class = "reactable-table"
       )
     })

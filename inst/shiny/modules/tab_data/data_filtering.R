@@ -16,8 +16,13 @@ data_filtering_ui <- function(id) {
   div(
     stepper_ui("Filtering"),
     div(
-      h3("Filtering"),
-      p("Any filters added here will be applied across the whole analysis."),
+      p(
+        # TODO (Gerardo): We will need to think how to really tell the user more about this
+        # This is intended for removing specific rows, but not whole profiles which is done later
+        # Removing whole profiles here in multidose studies can lead to issues with dose times
+        "Any filters added here will be applied across the whole analysis.",
+        style = "text-align: center;"
+      ),
       div(
         class = "data-filtering-container",
         div(
@@ -134,11 +139,15 @@ data_filtering_server <- function(id, raw_adnca_data) {
         sortable = TRUE,
         highlight = TRUE,
         wrap = FALSE,
+        compact = TRUE,
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
-        height = "70vh",
-        class = "reactable-table"
+        striped = TRUE,
+        bordered = TRUE,
+        class = "reactable-table",
+        style = list(fontSize = "0.75em"),
+        height = "50vh"
       )
     })
 
