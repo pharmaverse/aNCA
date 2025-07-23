@@ -22,15 +22,29 @@ reactable_ui <- function(id) {
 
 reactable_server <- function(id, data, download_buttons = c(), ...) {
   moduleServer(id, function(input, output, session) {
+    default_reactable_opts <- list(
+      searchable = TRUE,
+      sortable = TRUE,
+      highlight = TRUE,
+      wrap = FALSE,
+      resizable = TRUE,
+      defaultPageSize = 25,
+      showPageSizeOptions = TRUE,
+      class = "reactable-table"
+    )
+
+    args <- list(...)
+    reactable_opts <- c(
+      default_reactable_opts[!names(default_reactable_opts) %in% names(args)],
+      args
+    )
+
     # Show requested download  buttons
     purrr::walk(download_buttons, \(x) shinyjs::show(paste0("download_", x)))
 
     output$table <- renderReactable({
       req(data())
-      reactable(
-        data(),
-        ...
-      )
+      do.call(reactable, c(list(data = data()), reactable_opts))
     })
 
     output$download_csv <- downloadHandler(
