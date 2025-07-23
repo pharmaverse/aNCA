@@ -15,23 +15,27 @@ data_filtering_ui <- function(id) {
 
   div(
     stepper_ui("Filtering"),
-    card(
+    div(
+      h3("Filtering"),
+      p("Any filters added here will be applied across the whole analysis."),
       div(
-        h3("Filters"),
-        p("
-          Click the 'Add Filters' button to add filters to your data.
-          Be sure to click 'Submit' in order to apply the changes.\n
-          Any filters added here will be applied across the whole analysis.
-        "),
+        class = "data-filtering-container",
         div(
-          class = "filters-buttons-container",
-          actionButton(ns("add_filter"), "Add Filter"),
-          input_task_button(ns("submit_filters"), "Submit Filters")
+          class = "filtered-table-container",
+          withSpinner(
+            reactableOutput(ns("filtered_data_display"))
+          )
         ),
-        div(id = ns("filters")), # container for filter widgets inserted in the server part
-        reactableOutput(ns("filtered_data_display"))
+        div(
+          class = "filters-container",
+          div(
+            style = "display: flex; flex-direction: column; gap: 10px;",
+            actionButton(ns("add_filter"), "Add Filter", width = "100%"),
+            input_task_button(ns("submit_filters"), "Submit Filters", class = "w-100")
+          ),
+          accordion(id = ns("filters"), class = "filters-inputs")
+        )
       )
-
     )
   )
 }
@@ -41,17 +45,36 @@ data_filtering_server <- function(id, raw_adnca_data) {
     # Handle user-provided filters
     filters <- reactiveValues()
 
+    # Hold information about data types and choices for filters.
+    filters_metadata <- reactive({
+      req(raw_adnca_data())
+
+      lapply(colnames(raw_adnca_data()), function(col) {
+        if (is.numeric(raw_adnca_data()[[col]]) && length(unique(raw_adnca_data()[[col]])) > 20) {
+          list(type = "numeric")
+        } else {
+          list(type = "text", choices = sort(unique(raw_adnca_data()[[col]])))
+        }
+      }) |>
+        setNames(colnames(raw_adnca_data())) |>
+        purrr::keep(~ .x$type == "numeric" || length(.x$choices) > 1)
+    })
+
     observeEvent(input$add_filter, {
+      accordion_panel_close(id = "filters", values = TRUE)
+
       # Create a unique ID for each filter
       filter_id <- paste0("filter_", input$add_filter)
 
       # Insert a new filter UI
-      insertUI(
-        selector = paste0("#", session$ns("filters")),
-        ui = input_filter_ui(session$ns(filter_id), colnames(raw_adnca_data()))
+      accordion_panel_insert(
+        id = "filters",
+        panel = input_filter_ui(session$ns(filter_id), names(filters_metadata()))
       )
 
-      filters[[filter_id]] <- input_filter_server(filter_id)
+      accordion_panel_open(id = "filters", value = session$ns(filter_id))
+
+      filters[[filter_id]] <- input_filter_server(filter_id, filters_metadata = filters_metadata)
     })
 
     #' When filters change, show notification reminding the user about submitting
@@ -73,22 +96,32 @@ data_filtering_server <- function(id, raw_adnca_data) {
     })
 
     filtered_data <- reactive({
-      # Extract filters from reactive values
-      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x())
-
-      if (length(applied_filters) != 0) {
-        applied_filters |>
-          purrr::keep(\(x) !is.null(x)) |>
-          sapply(\(filt) str_glue("* {filt$column} {filt$condition} {filt$value}")) |>
-          paste0(collapse = "\n") %>%
-          paste0("Submitting the following filters:\n", .) %>%
-          log_info()
-      }
-
       removeNotification(filter_reminder_notification())
 
+      # Extract filters from reactive values
+      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) |>
+        purrr::keep(\(x) !is.null(x))
+
+      if (length(applied_filters) == 0) return(raw_adnca_data())
+
+      applied_filters |>
+        sapply(\(filt) str_glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) |> # nolint
+        paste0(collapse = "\n") %>%
+        paste0("Submitting the following filters:\n", .) %>%
+        log_info()
+
       # Filter and return data
-      apply_filters(raw_adnca_data(), applied_filters)
+      withCallingHandlers({
+        apply_filters(raw_adnca_data(), applied_filters)
+      }, warning = function(w) {
+        log_warn(conditionMessage(w))
+        showNotification(
+          paste0("Warning during filtering: ", conditionMessage(w)),
+          type = "warning",
+          duration = 10
+        )
+        invokeRestart("muffleWarning")
+      })
     }) |>
       bindEvent(input$submit_filters, raw_adnca_data())
 
@@ -96,16 +129,16 @@ data_filtering_server <- function(id, raw_adnca_data) {
       req(filtered_data())
       reactable(
         filtered_data(),
+        rownames = FALSE,
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = TRUE,
+        wrap = FALSE,
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
+        height = "70vh",
+        class = "reactable-table"
       )
     })
 
