@@ -125,9 +125,15 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           pknca_warn_env <- new.env()
           pknca_warn_env$warnings <- c()
 
+          # Update units table
+          processed_pknca_data <- processed_pknca_data()
+          if (!is.null(session$userData$units_table())) {
+            processed_pknca_data$units <- session$userData$units_table()
+          }
+
           #' Calculate results
           res <- withCallingHandlers({
-            processed_pknca_data() %>%
+            processed_pknca_data %>%
               filter_slopes(
                 slope_rules$manual_slopes(),
                 slope_rules$profiles_per_subject(),
@@ -165,20 +171,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             log_warn(w_message)
             showNotification(w_message, type = "warning", duration = 5)
           })
-
-
-          #' Apply units
-          if (!is.null(session$userData$units_table())) {
-            res$data$units <- session$userData$units_table()
-            res$result <- res$result %>%
-              select(-PPSTRESU, -PPSTRES) %>%
-              left_join(
-                session$userData$units_table(),
-                by = intersect(names(.), names(session$userData$units_table()))
-              ) %>%
-              mutate(PPSTRES = PPORRES * conversion_factor) %>%
-              select(-conversion_factor)
-          }
 
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
