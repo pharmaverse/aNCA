@@ -29,7 +29,7 @@ data_filtering_ui <- function(id) {
           input_task_button(ns("submit_filters"), "Submit Filters")
         ),
         div(id = ns("filters")), # container for filter widgets inserted in the server part
-        reactableOutput(ns("filtered_data_display"))
+        reactable_ui(ns("filtered_data_display"))
       )
 
     )
@@ -92,22 +92,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
     }) |>
       bindEvent(input$submit_filters, raw_adnca_data())
 
-    output$filtered_data_display <- renderReactable({
-      req(filtered_data())
-      reactable(
-        filtered_data(),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
-      )
-    })
+    reactable_server("filtered_data_display", filtered_data, height = "98vh")
 
     filtered_data
   })

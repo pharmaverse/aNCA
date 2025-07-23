@@ -43,7 +43,7 @@ tab_data_ui <- function(id) {
                 stepper_ui("Preview"),
                 card(
                   uiOutput(ns("processed_data_message")),
-                  reactableOutput(ns("data_processed"))
+                  reactable_ui(ns("data_processed"))
                 )
               )
             )
@@ -151,27 +151,12 @@ tab_data_server <- function(id) {
     })
 
     # Update the data table object with the filtered data
-    output$data_processed <- renderReactable({
-      req(processed_data())
-
-      # Generate column definitions
-      col_defs <- generate_col_defs(processed_data())
-
-      reactable(
-        processed_data(),
-        columns = col_defs,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
-      )
-    })
+    reactable_server(
+      "data_processed",
+      processed_data,
+      height = "98vh",
+      columns = generate_col_defs
+    )
 
     list(
       data = processed_data,
