@@ -24,40 +24,76 @@
 input_filter_ui <- function(id, cols) {
   ns <- NS(id)
 
-  div(
-    id = ns("filter_container"),
+  accordion_panel(
+    title = textOutput(ns("title"), inline = TRUE),
+    value = id,
     class = "filter-widget-container",
     selectizeInput(
       ns("column"),
       "",
       choices = cols,
-      width = "20em",
+      width = "100%",
       options = list(dropdownParent = "body")
     ),
     selectizeInput(
       ns("condition"),
       "",
-      choices = c("==", ">", "<", ">=", "<=", "!="),
-      width = "5em",
+      choices = c("==", ">", "<", ">=", "<=", "!=", "min-max"),
+      width = "100%",
       options = list(dropdownParent = "body")
     ),
-    textInput(ns("value"), "", width = "15em"),
+    textInput(ns("value_text"), "", width = "100%"),
+    pickerInput(
+      ns("value_select"),
+      "",
+      choices = NULL,
+      width = "100%",
+      multiple = TRUE,
+      options = list(
+        `actions-box` = TRUE,
+        container = "body",
+        `dropup-auto` = FALSE
+      )
+    ),
     actionButton(ns("remove"), "X", class = "btn-danger")
   )
 }
 
-input_filter_server <- function(id) {
+input_filter_server <- function(id, filters_metadata) {
   moduleServer(id, function(input, output, session) {
     is_active <- reactiveVal(TRUE)
+    is_numeric <- reactive({
+      req(input$column)
+      filters_metadata()[[input$column]]$type == "numeric"
+    })
+
+    observeEvent(input$column, {
+      if (!is_numeric()) {
+        updateSelectInput(session, "condition", selected = "==")
+        updatePickerInput(
+          session,
+          "value_select",
+          choices = filters_metadata()[[input$column]]$choices,
+          selected = filters_metadata()[[input$column]]$choices
+        )
+      }
+
+      shinyjs::toggleElement("value_text", condition = is_numeric())
+      shinyjs::toggleElement("value_select", condition = !is_numeric())
+      shinyjs::toggleState("condition", is_numeric())
+    })
+
+    output$title <- renderText(paste("Filter: ", input$column))
 
     # update filter list #
     applied_filters <- reactive({
+      req(!is.null(is_numeric()), input$column)
       # check if filter was not removed #
       if (is_active()) {
         list(
           column = input$column,
           condition = input$condition,
-          value = input$value
+          value = if (is_numeric()) input$value_text else input$value_select
         )
       } else {
         # if filter was removed, return NULL #
@@ -67,7 +103,7 @@ input_filter_server <- function(id) {
 
     # remove filter #
     observeEvent(input$remove, {
-      removeUI(selector = paste0("#", session$ns("filter_container")))
+      removeUI(selector = paste0(".accordion-item[data-value='", session$ns(NULL), "']"))
       is_active(FALSE)
     })
 
