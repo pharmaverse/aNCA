@@ -95,7 +95,8 @@ export_cdisc <- function(res_nca) {
     group_by(!!!syms(intersect(to_match_res_cols, names(.)))) %>%
     slice(1) %>%
     ungroup()
-
+  
+  options(digits = 15)
   cdisc_info <- res_nca_req$result  %>%
     left_join(conc_info,
               by = intersect(names(.), names(conc_info)),
@@ -267,7 +268,6 @@ export_cdisc <- function(res_nca) {
 
   # Add variable labels for ADPC
   var_labels(adpc) <- labels_map[names(adpc)]
-
   list(pp = pp, adpp = adpp, adpc = adpc)
 }
 
@@ -347,7 +347,7 @@ adjust_class_and_length <- function(df, metadata) {
       df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
     } else if (var_specs$Type %in% c("Num", "integer", "float") &&
                  !endsWith(var, "DTM")) {
-      df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
+      # df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     } else if (!var_specs$Type %in% c(
       "dateTime", "duration", "integer", "float", "Num"
     )) {
@@ -361,8 +361,8 @@ adjust_class_and_length <- function(df, metadata) {
 }
 
 # Helper: add derived CDISC variables based on PKNCA terms
-options(digits = 15)
 add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
+  options(digits = 15)
   df %>%
     mutate(
       DOMAIN = "PP",
