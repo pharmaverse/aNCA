@@ -55,12 +55,12 @@ setup_ui <- function(id) {
 
 setup_server <- function(id, data, adnca_data) {
   moduleServer(id, function(input, output, session) {
-    
+
     imported_settings <- reactive({
       req(input$settings_upload)
       readRDS(input$settings_upload$datapath)
     })
-    
+
     settings_override <- reactive(imported_settings()$settings)
     manual_slopes_override <- reactive(imported_settings()$slope_rules)
 
@@ -112,7 +112,7 @@ setup_server <- function(id, data, adnca_data) {
       req(settings_override()$units)
       session$userData$units_table(settings_override()$units)
     })
-    
+
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
 
@@ -147,7 +147,7 @@ setup_server <- function(id, data, adnca_data) {
 
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
-      filename = paste0(session$userData$project_name(),"_settings_", Sys.Date(), ".rds"),
+      filename = paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds"),
       content = function(con) {
         saveRDS(list(settings = settings(), slope_rules = slope_rules$manual_slopes()), con)
       }
