@@ -18,8 +18,8 @@ data_filtering_ui <- function(id) {
     div(
       p(
         # TODO (Gerardo): We will need to think how to really tell the user more about this
-        # This is intended for removing specific rows, but not whole profiles which can be done later
-        # Removing whole profiles here in multidose studies can lead to issues, as the dose times are also lost
+        # This is intended for removing specific rows, but not whole profiles which is done later
+        # Removing whole profiles here in multidose studies can lead to issues with dose times
         "Any filters added here will be applied across the whole analysis.",
         style = "text-align: center;"
       ),
