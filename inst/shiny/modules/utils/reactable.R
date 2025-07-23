@@ -6,7 +6,8 @@
 #' @param data Reactive containing data to be displayed.
 #' @param download_buttons Character vector containing file extensions to be available for the user
 #'                         to download. Currently available: `csv`, `xlsx`.
-#' @param ... Any other parameters to be passed to `reactable()` call.
+#' @param ... Any other parameters to be passed to `reactable()` call. Can be simple values,
+#'            reactives or callback functions accepting the `data()` as argument.
 reactable_ui <- function(id) {
   ns <- NS(id)
 
@@ -44,7 +45,17 @@ reactable_server <- function(id, data, download_buttons = c(), ...) {
 
     output$table <- renderReactable({
       req(data())
-      do.call(reactable, c(list(data = data()), reactable_opts))
+      opts <- lapply(reactable_opts, function(x) {
+        if (is.reactive(x))  {
+          x()
+        } else if (is.function(x)) {
+          x(data())
+        } else {
+          x
+        }
+      })
+
+      do.call(reactable, c(list(data = data()), opts))
     })
 
     output$download_csv <- downloadHandler(
