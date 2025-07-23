@@ -6,6 +6,8 @@
 #' @param data Reactive containing data to be displayed.
 #' @param download_buttons Character vector containing file extensions to be available for the user
 #'                         to download. Currently available: `csv`, `xlsx`.
+#' @param file_name Character string with file name, or `reactive()` or callback function that
+#'                  returns character string.
 #' @param ... Any other parameters to be passed to `reactable()` call. Can be simple values,
 #'            reactives or callback functions accepting the `data()` as argument.
 reactable_ui <- function(id) {
@@ -21,7 +23,7 @@ reactable_ui <- function(id) {
   )
 }
 
-reactable_server <- function(id, data, download_buttons = c(), ...) {
+reactable_server <- function(id, data, download_buttons = c(), file_name = NULL, ...) {
   moduleServer(id, function(input, output, session) {
     default_reactable_opts <- list(
       searchable = TRUE,
@@ -59,21 +61,27 @@ reactable_server <- function(id, data, download_buttons = c(), ...) {
     })
 
     output$download_csv <- downloadHandler(
-      filename = function() {
-        paste0(id, "_", Sys.Date(), ".csv")
-      },
-      content = function(con) {
-        write.csv(data(), con, row.names = FALSE)
-      }
+      filename = .reactable_file_name(file_name, "csv"),
+      content = \(con) write.csv(data(), con, row.names = FALSE)
     )
 
     output$download_xlsx <- downloadHandler(
-      filename = function() {
-        paste0(id, "_", Sys.Date(), ".xlsx")
-      },
-      content = function(con) {
-        openxlsx2::write_xlsx(data(), con)
-      }
+      filename = .reactable_file_name(file_name, "xlsx"),
+      content = \(con) openxlsx2::write_xlsx(data(), con)
     )
   })
+}
+
+# Creates file name for export
+.reactable_file_name <- function(file_name, ext) {
+  f_name <- {
+    if (is.character(file_name)) {
+      file_name
+    } else if (is.reactive(file_name) || is.function(file_name)) {
+      file_name()
+    } else {
+      paste0(Sys.Date(), "_", id)
+    }
+  }
+  paste0(f_name, ".", ext)
 }
