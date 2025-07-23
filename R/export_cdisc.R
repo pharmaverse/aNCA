@@ -96,7 +96,6 @@ export_cdisc <- function(res_nca) {
     slice(1) %>%
     ungroup()
   
-  options(digits = 15)
   cdisc_info <- res_nca_req$result  %>%
     left_join(conc_info,
               by = intersect(names(.), names(conc_info)),
