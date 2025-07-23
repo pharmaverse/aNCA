@@ -665,15 +665,13 @@ g_pkcg03_log <- function(data, ...) {
 
 #' Generate PK Concentration-Time Profile Plots
 #'
-#' This function generates a list of ggplots for PK concentration-time profiles.
+#' This function generates a list of ggplots for Mean PK concentration-time profiles.
 #'
 #' @param adpc            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
 #' @param yvar            A character string of the variable name for the y-axis.
 #' @param xvar_unit       A character string of the unit for the x-axis variable.
 #' @param yvar_unit       A character string of the unit for the y-axis variable.
-#' @param color_var       A character string of the variable name for the color.
-#' @param color_var_label A character string of the color label.
 #' @param xbreaks_var     A character string of the x-axis breaks.
 #' @param xbreaks_mindist A numeric value for minimum distance between x-axis breaks in centimeters.
 #' @param xmin            A numeric value specifying the minimum x-axis limit.
@@ -692,7 +690,7 @@ g_pkcg03_log <- function(data, ...) {
 #' @param mean_group_var  A character string specifying the grouping variable to plot by group.
 #' @param plotly          Logical indicating whether to return plotly objects. Defaults to TRUE.
 #' @param summary_method  A character string specifying the stat method to summarize observations.
-#' @param whiskers_lwr_upr A chararcter string specifying the whisker type (upper, lower or both)
+#' @param whiskers_lwr_upr A character string specifying the whisker type (upper, lower or both)
 #' @returns A list of ggplot objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
@@ -706,10 +704,9 @@ g_pkcg03_log <- function(data, ...) {
 #'   attr(adpc[["AVAL"]], "label") <- "Analysis val"
 #'
 #'   plots_lin <- pckg03(adpc = adpc, xmax = 1)
-#'   plots_log <- pckg03(adpc = adpc, color_var = "USUBJID", scale = "LOG")
+#'   plots_log <- pckg03(adpc = adpc, scale = "LOG")
 #'   plots_sbs <- pckg03(
 #'     adpc = adpc,
-#'     color_var = "USUBJID",
 #'     xbreaks_var = "NFRLT",
 #'     xmin = 100,
 #'     xmax = 1000,
@@ -808,7 +805,7 @@ pkcg03 <- function(
           summary_method == "Median_ci" ~ "Median"
         ),
         dplyr::case_when(
-          whiskers_lwr_upr == "Both"  ~ "±",
+          whiskers_lwr_upr == "Both"  ~ "\u00b1",
           whiskers_lwr_upr == "Upper" ~ "+",
           whiskers_lwr_upr == "Lower" ~ "-"
         ),

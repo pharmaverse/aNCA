@@ -78,17 +78,13 @@ pkcg03(
 
 \item{summary_method}{A character string specifying the stat method to summarize observations.}
 
-\item{whiskers_lwr_upr}{A chararcter string specifying the whisker type (upper, lower or both)}
-
-\item{color_var}{A character string of the variable name for the color.}
-
-\item{color_var_label}{A character string of the color label.}
+\item{whiskers_lwr_upr}{A character string specifying the whisker type (upper, lower or both)}
 }
 \value{
 A list of ggplot objects for each unique group.
 }
 \description{
-This function generates a list of ggplots for PK concentration-time profiles.
+This function generates a list of ggplots for Mean PK concentration-time profiles.
 }
 \examples{
 \dontrun{
@@ -97,10 +93,9 @@ This function generates a list of ggplots for PK concentration-time profiles.
   attr(adpc[["AVAL"]], "label") <- "Analysis val"
 
   plots_lin <- pckg03(adpc = adpc, xmax = 1)
-  plots_log <- pckg03(adpc = adpc, color_var = "USUBJID", scale = "LOG")
+  plots_log <- pckg03(adpc = adpc, scale = "LOG")
   plots_sbs <- pckg03(
     adpc = adpc,
-    color_var = "USUBJID",
     xbreaks_var = "NFRLT",
     xmin = 100,
     xmax = 1000,

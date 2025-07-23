@@ -187,3 +187,92 @@ g_pkcg02_log:
         - PCSPEC
         - PARAM
         - TRT01A
+g_pkcg03_lin:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg03
+  label: "pkcg03 - linear"
+  description: "Mean plots of concentrations vs. time with linear scale"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+  fun: g_pkcg03_lin
+  options:
+    .group_label_1: "General"
+    xvar:
+      type: select
+      label: X axis
+      choices: .colnames
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+    mean_group_var:
+      type: select
+      label: "Mean Grouping variable"
+      choices: .colnames
+      default: "DOSEA" 
+    summary_method:
+      type: select
+      label: "Summary Statistic"
+      default: "mean_sdi"
+      multiple: false
+      choices:
+        - Mean_ci
+        - Mean_sdi
+        - Mean_se
+        - Median_ci
+    whiskers_lwr_upr:
+      type: select
+      label: "Whiskers selection"
+      default: "Both"
+      multiple: false
+      choices:
+        - Both
+        - Lower
+        - Upper
+        
+    .group_label_2: "Labels"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    xlab:
+      type: text
+      label: X axis label
+    ylab:
+      type: text
+      label: Y axis label
+    xbreaks_var:
+      type: select
+      label: "X ticks"
+      choices: .colnames
+      default: "NFRLT"
+    color_var_label:
+      type: text
+      label: Color variable label
+
+    .group_label_3: "Limits"
+    xmin:
+      type: numeric
+    xmax:
+      type: numeric
+    ymin:
+      type: numeric
+    ymax:
+      type: numeric
+
+g_pkcg03_log:
+  template: g_pkcg03_lin
+  label: "pkcg03 - log"
+  description: "Mean plots of concentrations vs. time with log10 scale"
+  fun: g_pkcg03_log
