@@ -50,10 +50,10 @@ data_filtering_server <- function(id, raw_adnca_data) {
       req(raw_adnca_data())
 
       lapply(colnames(raw_adnca_data()), function(col) {
-        if (is.numeric(raw_adnca_data()[[col]])) {
+        if (is.numeric(raw_adnca_data()[[col]]) && length(unique(raw_adnca_data()[[col]])) > 20) {
           list(type = "numeric")
         } else {
-          list(type = "text", choices = unique(raw_adnca_data()[[col]]))
+          list(type = "text", choices = sort(unique(raw_adnca_data()[[col]])))
         }
       }) |>
         setNames(colnames(raw_adnca_data())) |>
