@@ -21,129 +21,222 @@
 #' @import dplyr
 #' @export
 export_cdisc <- function(res_nca) {
+  # Define the CDISC columns we need and its rules using the metadata_nca_variables object
+  CDISC_COLS <- metadata_nca_variables %>%
+    filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
+    arrange(Order) %>%
+    split(.[["Dataset"]])
+
+  # Only select from results the requested parameters by the user
+  res_nca_req <- res_nca
+  res_nca_req$result <- res_nca_req$result %>%
+    mutate(
+      PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA")
+    )
+  res_nca_req$result <- as.data.frame(res_nca_req, filter_requested = TRUE) %>%
+    mutate(
+      PPTEST = translate_terms(PPTESTCD, "PKNCA", "PPTEST"),
+      PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+    )
 
   # Define group columns in the data
   group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
   group_dose_cols <- unique(unlist(res_nca$data$dose$columns$groups))
   group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
+  concu_col <- res_nca$data$conc$columns$concu
+  route_col <- res_nca$data$dose$columns$route
+  duration_col <- res_nca$data$dose$columns$duration
+  conc_group_sp_cols <- res_nca$data$conc$columns$groups$group_analyte %>%
+    append(
+      setdiff(
+        unname(unlist(res_nca$data$conc$columns$groups)),
+        unname(unlist(res_nca$data$dose$columns$groups))
+      )
+    ) %>%
+    unique()
+
+  conc_timeu_col <- res_nca$data$conc$columns$timeu[[1]]
+  conc_time_col <- res_nca$data$conc$columns$time[[1]]
+  dose_time_col <- res_nca$data$dose$columns$time[[1]]
+  to_match_res_cols <- c(
+    group_vars(res_nca$data$conc),
+    unname(unlist(res_nca$data$options["keep_interval_cols"]))
+  )
 
   dose_info <- res_nca$data$dose$data %>%
     # Select only the columns that are used in the NCA results
     select(
       any_of(c(
         # Variables defined for the dose information
-        group_dose_cols, "NCA_PROFILE",  res_nca$data$dose$columns$route,
-        # TODO (Gerardo): Test should use a PKNCA obj (FIXTURE) so the var is accessed via mapping
-        OPTIONAL_COLUMNS,
+        to_match_res_cols, dose_time_col,  route_col, duration_col, conc_timeu_col,
         # Raw variables that can be directly used in PP or ADPP if present
-        CDISC_COLS$PP, CDISC_COLS$ADPP
+        CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
+        # Variables that can be used to guess other missing variables
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
-    unique()
+    select(-any_of(conc_group_sp_cols)) %>%
+    distinct()
 
-  cdisc_info <- res_nca$result  %>%
-    left_join(dose_info,
-              by = intersect(names(res_nca$result), names(dose_info)),
+  conc_info <- res_nca$data$conc$data %>%
+    select(
+      any_of(c(
+        to_match_res_cols, conc_timeu_col, conc_time_col,
+        # Variables that can be used to guess other missing variables
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCFAST", "FEDSTATE", "EPOCH"
+      ))
+    ) %>%
+    distinct() %>%
+    # Select the first record as dose record information
+    arrange(.[[conc_time_col]]) %>%
+    select(-!!sym(conc_time_col)) %>%
+    group_by(!!!syms(intersect(to_match_res_cols, names(.)))) %>%
+    slice(1) %>%
+    ungroup()
+
+  cdisc_info <- res_nca_req$result  %>%
+    left_join(conc_info,
+              by = intersect(names(.), names(conc_info)),
               suffix = c("", ".y")) %>%
+    left_join(dose_info,
+              by = intersect(to_match_res_cols, names(dose_info)),
+              suffix = c("", ".z")) %>%
     group_by(
       across(any_of(c(
         group_conc_cols, "start", "end", "PPTESTCD", "type_interval"
       )))
-    )  %>%
+    ) %>%
     arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
-    # Identify all dulicates (fromlast and fromfirst) and keep only the first one
-    filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
+
+    # Parameters with a one-to-many mapping in PKNCA / CDISC
+    mutate(
+      # Column for one-to-many criteria
+      is.iv = !!sym(route_col) == "intravascular",
+      is.iv.bolus = is.iv & !!sym(duration_col) == 0,
+
+      # Parameters affected
+      is.cl.parameter = grepl("CL(LST|O|P|ALL)", PPTESTCD),
+      is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
+      is.vz.parameter = grepl("VZ(O|P)", PPTESTCD),
+
+      PPTEST = case_when(
+        # cl, vz
+        (is.cl.parameter | is.vz.parameter) & !is.iv ~ paste0(PPTEST, " by F"),
+
+        # mrt
+        is.mrt.parameter & is.iv.bolus ~ gsub("(MRT )(.*)", "\\1IV Bolus \\2", PPTEST),
+        is.mrt.parameter & is.iv ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
+        is.mrt.parameter & !is.iv ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
+
+        # others
+        TRUE ~ PPTEST
+      ),
+      PPTESTCD = case_when(
+        # cl, vz
+        (is.cl.parameter | is.vz.parameter) & !is.iv ~ gsub("(CL|VZ)(.*)", "\\1F\\2", PPTESTCD),
+
+        # mrt
+        is.mrt.parameter & is.iv.bolus ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IB\\2", PPTESTCD),
+        is.mrt.parameter & is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
+        is.mrt.parameter & !is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
+
+        # others
+        TRUE ~ PPTESTCD
+      )
+    ) %>%
+
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
-    mutate(
-      PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
-      PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
-      DOMAIN = "PP",
-      # Group ID
-      PPGRPID = {
-        if ("AVISIT" %in% names(.)) paste(PARAM, PCSPEC, AVISIT, sep = "-")
-        else if ("VISIT" %in% names(.)) paste(PARAM, PCSPEC, VISIT, sep = "-")
-        else paste(PARAM, PCSPEC, NCA_PROFILE, sep = "-")
-      },
-      # Parameter Category
-      PPCAT = PARAM,
-      PPSCAT = "NON-COMPARTMENTAL",
-      PPSPEC = PCSPEC,
-      # Specific ID variables
-      PPSPID = if ("STUDYID" %in% names(.)) {
-        paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA")
-      } else {
-        NA_character_
-      },
-      SUBJID = get_subjid(.),
-      # Parameter Variables
-      PPORRES = round(as.numeric(PPORRES), 12),
-      PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = as.character(PPSTRESN),
-      PPSTRESU = PPSTRESU,
-      # Status and Reason for Exclusion
-      PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
-      PPREASND = case_when(
-        !is.na(exclude) ~ exclude,
-        is.na(PPSTRES) ~ "NOT DERIVED",
-        TRUE ~ ""
-      ),
-      PPREASND = substr(PPREASND, 0, 200),
-      # Datetime
-      PPDTC = Sys.time() %>% format("%Y-%m-%dT%H:%M"),
-      PPRFTDTC = {
-        if ("PCRFTDTC" %in% names(.)) {
-          PCRFTDTC
-        } else if ("PCRFTDTM" %in% names(.)) {
-          strptime(PCRFTDTM, format = "%Y-%m-%d %H:%M:%S") %>% format("%Y-%m-%dT%H:%M:%S")
-        } else {
-          NA_character_
-        }
-      },
-      # Matrix
-      PPSPEC = PCSPEC,
-      # TODO start and end intervals in case of partial aucs -> see oak file in templates
-      PPSTINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(start, RRLTU),
-        NA
-      ),
-      PPENINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
-        convert_to_iso8601_duration(end, RRLTU),
-        NA
-      ),
-      PPFAST = {
-        if ("EXFAST" %in% names(.)) {
-          EXFAST
-        } else if ("PCFAST" %in% names(.)) {
-          PCFAST
-        } else if ("FEDSTATE" %in% names(.)) {
-          FEDSTATE
-        } else {
-          NULL
-        }
-      },
-      NCA_PROFILE = NCA_PROFILE
+    add_derived_pp_vars(
+      conc_timeu_col = conc_timeu_col,
+      conc_group_sp_cols = conc_group_sp_cols,
+      dose_time_col = dose_time_col
     ) %>%
     # Map PPTEST CDISC descriptions using PPTESTCD CDISC names
     group_by(USUBJID)  %>%
-    mutate(PPSEQ = if ("PCSEQ" %in% names(.)) PCSEQ else row_number())  %>%
-    ungroup()
+    mutate(PPSEQ = row_number())  %>%
+    ungroup() %>%
+
+    # Select only columns needed for PP, ADPP, ADPC
+    select(any_of(metadata_nca_variables[["Variable"]])) %>%
+    # Make character expected columns NA_character_ if missing
+    mutate(
+      across(
+        .cols = setdiff(
+          metadata_nca_variables %>%
+            filter(Core == "Exp" & (Type == "Char" | Type == "text")) %>%
+            pull(Variable),
+          names(.)
+        ),
+        .fns = ~ NA_character_,
+        .names = "{.col}"
+      )
+    ) %>%
+    # Make numeric expected columns NA if missing
+    mutate(
+      across(
+        .cols = setdiff(
+          metadata_nca_variables %>%
+            filter(Core == "Exp" & (Type != "Char" & Type != "text")) %>%
+            pull(Variable),
+          names(.)
+        ),
+        .fns = ~ NA,
+        .names = "{.col}"
+      )
+    ) %>%
+    # Adjust class and length to the standards
+    adjust_class_and_length(metadata_nca_variables)
+
+  # Add labels to the columns
+  labels_map <- metadata_nca_variables %>%
+    filter(!duplicated(Variable)) %>%
+    pull(Label, Variable)
+  var_labels(cdisc_info) <- labels_map[names(cdisc_info)]
 
   # select pp columns
   pp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$PP, "PPFAST")))
+    select(any_of(c(CDISC_COLS$PP$Variable, "PPFAST"))) %>%
+    # Deselect permitted columns with only NAs
+    select(
+      -which(
+        names(.) %in% CDISC_COLS$PP$Variable[CDISC_COLS$PP$Core == "Perm"] &
+          sapply(., function(x) all(is.na(x))) &
+          !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
+      )
+    )
 
   adpp <- cdisc_info %>%
-    # Rename/mutate variables from PP
-    mutate(AVAL = PPSTRESN, AVALC = PPSTRESC, AVALU = PPSTRESU,
-           PARAMCD = PPTESTCD, PARAM = PPTEST) %>%
-    select(any_of(c(CDISC_COLS$ADPP, "PPFAST")))
+    select(any_of(c(CDISC_COLS$ADPP$Variable))) %>%
+    # Deselect permitted columns with only NAs
+    select(
+      -which(
+        names(.) %in% CDISC_COLS$ADPP$Variable[CDISC_COLS$ADPP$Core == "Perm"] &
+          sapply(., function(x) all(is.na(x))) &
+          !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
+      )
+    )
 
   adpc <- res_nca$data$conc$data %>%
+    left_join(dose_info,
+              by = intersect(names(res_nca$data$conc$data), names(dose_info)),
+              suffix = c("", ".y")) %>%
     mutate(
-      ANL01FL = ifelse(is.excluded.hl, NA_character_, "Y"),
+      PARAMCD = if ("PARAMCD" %in% names(.)) {
+        PARAMCD
+      } else if ("PCTESTCD" %in% names(.)) {
+        PCTESTCD
+      } else {
+        NA_character_
+      },
+      ANL01FL = if ("is.excluded.hl" %in% names(.)) {
+        vals <- .[["is.excluded.hl"]]
+        ifelse(is.excluded.hl, NA_character_, "Y")
+      } else {
+        NULL
+      },
       SUBJID = get_subjid(.),
       ATPT = {
         if ("PCTPT" %in% names(.)) PCTPT
@@ -157,17 +250,26 @@ export_cdisc <- function(res_nca) {
         if ("PCTPTREF" %in% names(.)) PCTPTREF
         else NA_character_
       },
-      PCSTRESU = AVALU
+      PCSTRESU = if (!is.null(concu_col)) {
+        .[[concu_col]]
+      } else {
+        NA_character_
+      },
+      PCRFTDTM = if ("PCRFTDTM" %in% names(.)) {
+        as.POSIXct(strptime(PCRFTDTM, format = "%d-%m-%Y %H:%M"))
+      } else {
+        NA
+      }
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC), everything())  %>%
-    # Deselect columns that are only used internally in the App
-    select(-any_of(INTERNAL_ANCA_COLS))
+    select(any_of(CDISC_COLS$ADPC$Variable)) %>%
+    # Adjust class and length to the standards
+    adjust_class_and_length(metadata_nca_variables)
 
-  # Keep StudyID value to use for file naming
-  studyid <- if ("STUDYID" %in% names(cdisc_info)) unique(cdisc_info$STUDYID)[1] else ""
+  # Add variable labels for ADPC
+  var_labels(adpc) <- labels_map[names(adpc)]
 
-  list(pp = pp, adpp = adpp, adpc = adpc, studyid = studyid)
+  list(pp = pp, adpp = adpp, adpc = adpc)
 }
 
 #' Function to identify the common prefix in a character vector.
@@ -237,103 +339,134 @@ get_subjid <- function(data) {
   }
 }
 
-CDISC_COLS <- list(
-  ADPC = c(
-    "STUDYID",
-    "SUBJID",
-    "USUBJID",
-    "SITEID",
-    "VISITNUM",
-    "VISIT",
-    "AVISITN",
-    "PCSTRESC",
-    "PCSTRESN",
-    "PCSTRESU",
-    "PCORRES",
-    "PCORRESU",
-    "PCTPT",
-    "PCTPTNUM",
-    "ATPT",
-    "ATPTN",
-    "AVAL",
-    "ANL01FL",
-    # Columns taken from the original data if present (still not directly mapped)
-    "SEX",
-    "RACE",
-    "AGE",
-    "AGEU",
-    "AVISIT"
-  ),
+# Helper: adjust class and length for a data.frame based on metadata_nca_variables
+adjust_class_and_length <- function(df, metadata) {
+  for (var in names(df)) {
+    var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
+    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
+    if (var_specs$Type %in% c("Char", "text")) {
+      df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
+    } else if (var_specs$Type %in% c("Num", "integer", "float") &&
+                 !endsWith(var, "DTM")) {
+      df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
+    } else if (!var_specs$Type %in% c(
+      "dateTime", "duration", "integer", "float", "Num"
+    )) {
+      warning(
+        "Unknown var specification type: ", var_specs$Type,
+        " (", var_specs$Variable, ")"
+      )
+    }
+  }
+  df
+}
 
-  ADPP = c(
-    "STUDYID",
-    "USUBJID",
-    "PPSEQ",
-    "PPGRPID",
-    "PPSPID",
-    "PARAMCD",
-    "PARAM",
-    "PPCAT",
-    "PPSCAT",
-    "PPREASND",
-    "PPSPEC",
-    "PPDTC",
-    "PPSTINT",
-    "PPENINT",
-    "SUBJID",
-    "SITEID",
-    # Columns taken from the original data if present (still not directly mapped)
-    "SEX",
-    "RACE",
-    "AGE",
-    "AGEU",
-    "TRT01P",
-    "TRT01A",
+# Helper: add derived CDISC variables based on PKNCA terms
+add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
+  df %>%
+    mutate(
+      DOMAIN = "PP",
+      # Group ID
+      PPGRPID = {
+        if ("AVISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
+          paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
+        } else if ("VISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
+          paste(!!!syms(c(conc_group_sp_cols, "VISIT")), sep = "-")
+        } else if (!is.null(conc_group_sp_cols)) {
+          paste(!!!syms(c(conc_group_sp_cols, "NCA_PROFILE")), sep = "-")
+        } else {
+          NA_character_
+        }
+      },
+      # Parameter Category
+      PPCAT = PARAM,
+      PPSCAT = "NON-COMPARTMENTAL",
+      PPSPEC = if ("PCSPEC" %in% names(.)) PCSPEC else NA_character_,
+      # Specific ID variables
+      PPSPID = if ("STUDYID" %in% names(.)) {
+        paste0("/F:EDT-", STUDYID, "_PKPARAM_aNCA")
+      } else {
+        NA_character_
+      },
+      SUBJID = get_subjid(.),
+      # Parameter Variables
+      PPORRES = as.character(round(as.numeric(PPORRES), 12)),
+      PPSTRESN = round(as.numeric(PPSTRES), 12),
+      PPSTRESC = as.character(format(PPSTRESN, scientific = FALSE, trim = TRUE)),
+      # SD0027: Units should be NA if there is no value
+      PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
+      PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
+      # Status and Reason for Exclusion
+      PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
+      PPREASND = case_when(
+        !is.na(exclude) & is.na(PPSTRES) ~ exclude,
+        is.na(PPSTRES) ~ "NOT DERIVED",
+        TRUE ~ ""
+      ),
+      PPREASND = substr(PPREASND, 0, 200),
+      # Datetime
+      PPRFTDTC = {
+        if ("PCRFTDTC" %in% names(.)) {
+          .format_to_dtc(.[["PCRFTDTC"]])
+        } else if ("PCRFTDTM" %in% names(.)) {
+          .format_to_dtc(.[["PCRFTDTM"]])
+        } else {
+          NA_character_
+        }
+      },
+      PPTPTREF = if ("PCTPTREF" %in% names(.)) {
+        PCTPTREF
+      } else {
+        NA_character_
+      },
+      EPOCH = if ("EPOCH" %in% names(.)) {
+        EPOCH
+      } else {
+        NA_character_
+      },
+      # TODO start and end intervals in case of partial aucs -> see oak file in templates
+      PPSTINT = ifelse(
+        startsWith(PPTESTCD, "AUCINT"),
+        convert_to_iso8601_duration(start - .[[dose_time_col]], .[[conc_timeu_col]]),
+        NA_character_
+      ),
+      PPENINT = ifelse(
+        startsWith(PPTESTCD, "AUCINT"),
+        convert_to_iso8601_duration(end - .[[dose_time_col]], .[[conc_timeu_col]]),
+        NA_character_
+      ),
+      PPFAST = {
+        if ("EXFAST" %in% names(.)) {
+          EXFAST
+        } else if ("PCFAST" %in% names(.)) {
+          PCFAST
+        } else if ("FEDSTATE" %in% names(.)) {
+          FEDSTATE
+        } else {
+          NULL
+        }
+      },
+      # ADPP Specific
+      AVAL = PPSTRESN,
+      AVALC = PPSTRESC,
+      AVALU = PPSTRESU,
+      PARAMCD = PPTESTCD,
+      PARAM = PPTEST,
+      NCA_PROFILE = NCA_PROFILE
+    )
+}
 
-    "AVAL",
-    "AVALC",
-    "AVALU",
+# Helper function to format date columns
+.format_to_dtc <- function(dt) {
+  dtc_vectors <- c(
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%dT%H:%M",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%d %H:%M"
+  ) %>%
+    lapply(\(format) strptime(dt, format = format))
 
-    # Not CDISC  ADPP standard
-    "VISIT",
-    "AVISIT"
-  ),
-
-  PP = c(
-    "STUDYID",
-    "DOMAIN",
-    "USUBJID",
-    "PPSEQ",
-    "PPCAT",
-    "PPGRPID",
-    "PPSPID",
-    "PPTESTCD",
-    "PPTEST",
-    "PPSCAT",
-    "PPDTC",
-    "PPORRES",
-    "PPORRESU",
-    "PPSTRESC",
-    "PPSTRESN",
-    "PPSTRESU",
-    "PPSTAT",
-    "PPREASND",
-    "PPSPEC",
-    "PPRFTDTC",
-    "PPSTINT",
-    "PPENINT",
-
-    # Not CDISC PP standard
-    "VISIT",
-    "AVISIT"
-  )
-)
-
-INTERNAL_ANCA_COLS <- c(
-  "exclude", "is.excluded.hl", "volume", "std_route",
-  "duration", "TIME", "IX", "exclude_half.life", "is.included.hl",
-  "conc_groups", "REASON"
-)
-
-# They will be used if present. We assume they follow CDISC standard names
-OPTIONAL_COLUMNS <- c("RRLTU", "PCRFTDTC", "PCRFTDTM", "EXFAST", "PCFAST", "FEDSTATE", "PCSEQ")
+  dtc_vectors_nas <- sapply(dtc_vectors, \(x) sum(is.na(x)))
+  dtc_vectors[[which.min(dtc_vectors_nas)]] %>%
+    format("%Y-%m-%dT%H:%M:%S")
+}

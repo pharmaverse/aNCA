@@ -221,7 +221,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
+    keep_interval_cols = c(
+      "NCA_PROFILE", "DOSNOA", "type_interval",
+      adnca_data$dose$columns$route, "ROUTE"
+    ),
     min.hl.r.squared = 0.01
   )
 
@@ -231,7 +234,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     pknca_dose = data$dose,
     params = params,
     start_from_last_dose = should_impute_c0
-  )
+  ) %>%
+    # Join route information
+    left_join(
+      select(
+        adnca_data$dose$data,
+        any_of(c(group_vars(adnca_data$dose), adnca_data$dose$columns$route, "ROUTE"))
+      ) %>% unique(),
+      by = group_vars(adnca_data$dose)
+    )
 
   # Apply filtering
   data$intervals <- data$intervals %>%
@@ -271,11 +282,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     data <- create_start_impute(data)
 
     # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- pknca_cdisc_terms %>%
+    params_auc_dep <- metadata_nca_parameters %>%
       filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
       pull(PKNCA)
 
-    params_not_to_impute <- pknca_cdisc_terms %>%
+    params_not_to_impute <- metadata_nca_parameters %>%
       filter(!grepl("auc|aumc", PKNCA),
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
       pull(PKNCA) |>
