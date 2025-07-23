@@ -43,12 +43,14 @@ The ratios are calculated as specimen1 / specimen 2.
 }
 \examples{
 data <- data.frame(
-USUBJID = c("A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"),
-NFRLT = c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2),
-MATRIX = c("BLOOD", "BLOOD", "BLOOD", "PLASMA", "PLASMA", "PLASMA",
-           "BRAIN", "BRAIN", "BRAIN", "LIVER", "LIVER", "LIVER"),
-CONC = c(10, 20, 15, 25, 30, 40, 5, 10, 8, 12, 18, 16),
-UNITS = rep("ng/mL", 12)
+  USUBJID = c("A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"),
+  NFRLT = c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2),
+  MATRIX = c(
+    "BLOOD", "BLOOD", "BLOOD", "PLASMA", "PLASMA", "PLASMA",
+    "BRAIN", "BRAIN", "BRAIN", "LIVER", "LIVER", "LIVER"
+  ),
+  CONC = c(10, 20, 15, 25, 30, 40, 5, 10, 8, 12, 18, 16),
+  UNITS = rep("ng/mL", 12)
 )
 multiple_matrix_ratios(data, "MATRIX", "CONC", "UNITS", c("NFRLT", "USUBJID"), "BLOOD", "PLASMA")
 
