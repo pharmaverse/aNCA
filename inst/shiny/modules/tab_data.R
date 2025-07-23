@@ -41,7 +41,7 @@ tab_data_ui <- function(id) {
               id = ns("data_navset-review"),
               div(
                 stepper_ui("Preview"),
-                card(
+                div(
                   uiOutput(ns("processed_data_message")),
                   reactableOutput(ns("data_processed"))
                 )
@@ -139,13 +139,13 @@ tab_data_server <- function(id) {
       tryCatch(
         {
           req(processed_data())
-          div(
+          p(
             "This is the data set that will be used for the analysis.
           If you would like to make any changes please return to the previous tabs."
           )
         },
         error = function(e) {
-          div("Please map your data in the 'Column Mapping' section before reviewing it.")
+          p("Please map your data in the 'Column Mapping' section before reviewing it.")
         }
       )
     })
@@ -160,6 +160,7 @@ tab_data_server <- function(id) {
       reactable(
         processed_data(),
         columns = col_defs,
+        rownames = FALSE,
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -172,7 +173,8 @@ tab_data_server <- function(id) {
         striped = TRUE,
         bordered = TRUE,
         style = list(fontSize = "0.75em"),
-        height = "50vh"
+        height = "50vh",
+        class = "reactable-table"
       )
     })
 

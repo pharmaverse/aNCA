@@ -38,7 +38,15 @@ setup_ui <- function(id) {
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
-      settings_ui(ns("nca_settings"))
+      settings_ui(ns("nca_settings")),
+      accordion(
+        accordion_panel(
+          title = "Ratio Calculations",
+          ratios_table_ui(ns("ratio_calculations_table"))
+        ),
+        id = "acc",
+        open = c("General Settings", "Parameter Selection")
+      )
     ),
     nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
     nav_panel("Summary", summary_ui(ns("nca_setup_summary")))
@@ -51,7 +59,6 @@ setup_server <- function(id, data, adnca_data) {
     settings <- settings_server("nca_settings", data, adnca_data, settings_override)
 
     # Create processed data object with applied settings.
-
     processed_pknca_data <- reactive({
       req(adnca_data(), settings())
       log_trace("Updating PKNCA::data object.")
@@ -84,6 +91,12 @@ setup_server <- function(id, data, adnca_data) {
 
       processed_pknca_data
     })
+
+    # Keep the post processing ratio calculations requested by the user
+    ratio_table <- ratios_table_server(
+      id = "ratio_calculations_table",
+      adnca_data = processed_pknca_data
+    )
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
@@ -136,6 +149,7 @@ setup_server <- function(id, data, adnca_data) {
     list(
       processed_pknca_data = processed_pknca_data,
       settings = settings,
+      ratio_table = ratio_table,
       slope_rules = slope_rules
     )
   })
