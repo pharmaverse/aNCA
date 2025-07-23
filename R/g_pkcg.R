@@ -816,7 +816,7 @@ pkcg03 <- function(
           summary_method == "Median_ci" ~ "CI"
         )
       )
-      generated_title = generate_title_mean(plot_data, title, scale, studyid, mean_group_var)
+      generated_title <- generate_title_mean(plot_data, title, scale, studyid, mean_group_var)
       if (generated_title[[2]] == 0) {
         title <- paste0(
           method_label, " ", generated_title[[1]]
