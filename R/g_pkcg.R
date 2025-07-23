@@ -816,15 +816,13 @@ pkcg03 <- function(
           summary_method == "Median_ci" ~ "CI"
         )
       )
-
-      if (generate_title_mean(plot_data, title, scale, studyid, mean_group_var)[[2]] == 0) {
+      generated_title = generate_title_mean(plot_data, title, scale, studyid, mean_group_var)
+      if (generated_title[[2]] == 0) {
         title <- paste0(
-          method_label, " ", generate_title_mean(plot_data, title, scale, studyid,
-                                                 mean_group_var)[[1]]
+          method_label, " ", generated_title[[1]]
         )
-      } else if (generate_title_mean(plot_data, title, scale, studyid,
-                                     mean_group_var)[[2]] == 1) {
-        title <- generate_title_mean(plot_data, title, scale, studyid, mean_group_var)[[1]]
+      } else if (generated_title[[2]] == 1) {
+        title <- generated_title[[1]]
       }
 
       subtitle <- generate_subtitle_mean(
@@ -986,8 +984,7 @@ pkcg03 <- function(
           )
       }
     } else {
-      # This block should be empty, or explicitly return NULL,
-      # so that NULL is returned when nrow(plot_data) == 0
+      # NULL is returned when nrow(plot_data) == 0
       NULL
     }
   })

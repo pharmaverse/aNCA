@@ -257,9 +257,6 @@ g_pkcg03_lin:
       label: "X ticks"
       choices: .colnames
       default: "NFRLT"
-    color_var_label:
-      type: text
-      label: Color variable label
 
     .group_label_3: "Limits"
     xmin:
