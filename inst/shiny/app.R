@@ -152,10 +152,10 @@ server <- function(input, output, session) {
 
   # NCA ----
   list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
-  
+
   # VISUALISATION ----
   tab_visuals_server("visuals", adnca_data, grouping_vars, list_tab_nca$res_nca)
-  
+
   # TLG
   tab_tlg_server("tlg", list_tab_nca$processed_pknca_data)
 }
