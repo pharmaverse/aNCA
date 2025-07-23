@@ -145,6 +145,8 @@
     "interval_prev",
     "is.excluded.hl",
     "is.included.hl",
+    "is.iv",
+    "is.iv.bolus",
     "lambda.z",
     "lambda.z.ix",
     "lambda.z.method",
