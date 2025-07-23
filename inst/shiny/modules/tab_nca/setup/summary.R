@@ -8,12 +8,12 @@
 #'
 summary_ui <- function(id) {
   ns <- NS(id)
-  reactableOutput(ns("nca_intervals_summary"))
+  reactable_ui(ns("nca_intervals_summary"))
 }
 
 summary_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
-    output$nca_intervals_summary <- renderReactable({
+    summary_data <- reactive({
       req(processed_pknca_data())
 
       data <- processed_pknca_data()$intervals %>%
@@ -24,7 +24,7 @@ summary_server <- function(id, processed_pknca_data) {
       std_route_column <- "std_route"
       col_groups <- unname(unlist(processed_pknca_data()$dose$columns$groups))
 
-      data <- data %>%
+      data %>%
         left_join(
           processed_pknca_data()$dose$data %>%
             select(all_of(c(
@@ -36,20 +36,13 @@ summary_server <- function(id, processed_pknca_data) {
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
         mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
         select(!!!syms(colnames(data)), all_of(c(route_column, std_route_column)))
-
-      reactable(
-        data,
-        columns = generate_col_defs(data),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
-      )
     })
+
+    reactable_server(
+      "nca_intervals_summary",
+      summary_data,
+      columns = generate_col_defs,
+      height = "98vh"
+    )
   })
 }
