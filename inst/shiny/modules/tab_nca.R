@@ -127,7 +127,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
           # Update units table
           processed_pknca_data <- processed_pknca_data()
-          processed_pknca_data$units <- session$userData$units_table()
+          if (!is.null(session$userData$units_table())) {
+            processed_pknca_data$units <- session$userData$units_table()
+          }
 
           #' Calculate results
           res <- withCallingHandlers({
