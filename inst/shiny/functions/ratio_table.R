@@ -117,8 +117,8 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       res = res,
       test_parameter = ratio_table$TestParameter[i],
       ref_parameter = ratio_table$RefParameter[i],
-      test = ratio_table$Test[i],
-      reference = ratio_table$Reference[i],
+      test = ratio_table$TestGroups[i],
+      reference = ratio_table$RefGroups[i],
       aggregate_subject = ratio_table$AggregateSubject[i],
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
       custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
