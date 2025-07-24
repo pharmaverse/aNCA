@@ -9,8 +9,7 @@ apply_labels(data, labels_df = metadata_nca_variables, type = "ADPC")
 \arguments{
 \item{data}{The dataset to which labels will be applied.}
 
-\item{labels_df}{A data frame with three columns: Variable, Label, and Dataset,
-for the dataset you are applying it .}
+\item{labels_df}{A data frame containing at least the columns "Variable", "Label", and "Dataset".}
 
 \item{type}{The type variable in labels_df for which the labels are to be applied.}
 }
