@@ -147,7 +147,9 @@ setup_server <- function(id, data, adnca_data) {
 
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
-      filename = paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds"),
+      filename = function() {
+        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
+      },
       content = function(con) {
         saveRDS(list(settings = settings(), slope_rules = slope_rules$manual_slopes()), con)
       }
