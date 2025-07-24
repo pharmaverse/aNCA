@@ -284,16 +284,11 @@ ratios_table_server <- function(
             param <- tbl[edit$row, "TestParameter"]
             automatic_tbl <- .generate_pptestcd_for_ratios(tbl, adnca_data = adnca_data())
             tbl[edit$row, ] <- automatic_tbl[edit$row, ]
-          }
-          ratio_table(tbl)
-          if (colname %in% c("TestParameter", "RefGroups", "PPTESTCD")) {
-            # Add a small delay if the column is PPTESTCD
-            if (colname == "PPTESTCD") {
-              Sys.sleep(0.1)
-            }
+
             reset_reactable_memory()
             refresh_reactable(refresh_reactable() + 1)
           }
+          ratio_table(tbl)
         })
       })
     })
