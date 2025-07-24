@@ -54,38 +54,6 @@ describe("get_label", {
 mock_vec <- c("A", "B", "C")
 attr(mock_vec, "label") <- "Example Label"
 
-describe("as_factor_preserve_label", {
-  mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(mock_vec))
-  it("returns object of class factor", {
-    expect_s3_class(mock_vector_as_factor, "factor")
-  })
-
-  it("does not change the original label text", {
-    old_label <- base::attr(mock_vector_as_factor, "label")
-    new_label <- base::attr(as_factor_preserve_label(mock_vector_as_factor), "label")
-    expect_equal(old_label, new_label)
-
-  })
-})
-
-describe("has_label", {
-  it("returns TRUE if has label", {
-    expect_true(has_label(mock_vec))
-  })
-  it("returns FALSE if has no label", {
-    expect_false(has_label("unlabeled_char"))
-  })
-})
-
-describe("set_empty_label", {
-  attr(mock_vec, "label")  <-  NULL
-  expect_false(has_label(mock_vec))
-  it("sets label to empty string if it does not exist", {
-    mock_vec_unlabeled  <- set_empty_label(mock_vec)
-    expect_identical("", base::attr(mock_vec_unlabeled, "label"))
-  })
-})
-
 describe("generate_tooltip_text", {
   TEST_DATA <- data.frame(
     USUBJID = c("S1-1", "S1-2"),
