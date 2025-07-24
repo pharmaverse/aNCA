@@ -20,12 +20,12 @@
 #'   colour variable. It is expected that this column contains a single unique value.
 #' @param labels_df A data.frame used by helper functions to look up variable labels.
 #' @param title Character. The main title for the plot.
-#' @param show_PK_samples Logical. If `TRUE`, plots the concentration data.
+#' @param show_pk_samples Logical. If `TRUE`, plots the concentration data.
 #' @param show_doses Logical. If `TRUE`, plots the dose data.
-#' @param as.plotly Logical. If `TRUE`, converts the final plot to an interactive
+#' @param as_plotly Logical. If `TRUE`, converts the final plot to an interactive
 #'   `plotly` object.
 #'
-#' @return A `ggplot` object or, if `as.plotly = TRUE`, a `plotly` object.
+#' @return A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
 #'
 #' @importFrom purrr pmap_chr
 #' @importFrom scales hue_pal
@@ -80,18 +80,22 @@ faceted_qc_plot <- function(data_conc,
                             colour_var_units = NULL,
                             labels_df = data.frame(),
                             title = NULL,
-                            show_PK_samples = TRUE,
+                            show_pk_samples = TRUE,
                             show_doses = TRUE,
-                            as.plotly = FALSE) {
+                            as_plotly = FALSE) {
+
+  # Define boolean flags
+  plot_conc_data <- show_pk_samples && !is.null(data_conc)
+  plot_dose_data <- show_doses && !is.null(data_dose)
 
   # Define the levels for the shape and colour variables
-  if (show_PK_samples && !is.null(data_conc)) {
+  if (plot_conc_data) {
     shape_levels <- sort(unique(data_conc[[shape_var]]))
   } else {
     shape_levels <- character()
   }
 
-  if (show_doses && !is.null(data_dose)) {
+  if (plot_dose_data) {
     colour_levels <- as.character(sort(unique(data_dose[[colour_var]])))
   } else {
     colour_levels <- character()
@@ -105,30 +109,33 @@ faceted_qc_plot <- function(data_conc,
   x_unit_lab <- ifelse(length(x_unit_lab) != 1, "", paste0(" (", x_unit_lab, ")"))
 
   colour_unit_lab <- data_conc %>% select(any_of(colour_var_units)) %>% distinct()
-  colour_unit_lab <- ifelse(length(colour_unit_lab) != 1, "" , paste0(" (", colour_unit_lab, ")"))
-  
+  colour_unit_lab <- ifelse(length(colour_unit_lab) != 1, "", paste0(" (", colour_unit_lab, ")"))
+
   # Define a title for the legend
-  legend_title = paste(paste(
-    ifelse(
-      show_PK_samples && !is.null(data_conc),
-      get_label(labels_df, shape_var, "ADPC"),
-      ""
+  legend_title <- paste(
+    paste(
+      ifelse(
+        plot_conc_data,
+        get_label(labels_df, shape_var, "ADPC"),
+        ""
+      ),
+      ifelse(
+        plot_dose_data,
+        paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab),
+        ""
+      ),
+      sep = "<br>"
     ),
-    ifelse(
-      show_doses && !is.null(data_dose),
-      paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab),
-      ""
-    ),
-    sep = "<br>"),
-    "<br>")
+    "<br>"
+  )
 
   # Preprocess the data
   plot_data_list <- list()
-  if (show_PK_samples && !is.null(data_conc)) {
+  if (plot_conc_data) {
     plot_data_list$conc <- data_conc %>%
       mutate(legend_group = as.character(!!sym(shape_var)))
   }
-  if (show_doses && !is.null(data_dose)) {
+  if (plot_dose_data) {
     plot_data_list$dose <- data_dose %>%
       mutate(legend_group = as.character(!!sym(colour_var)))
   }
@@ -161,7 +168,7 @@ faceted_qc_plot <- function(data_conc,
   )
 
   # Define colors: black for PK samples, hue palette for doses
-  if(length(colour_levels) > 0) {
+  if (length(colour_levels) > 0) {
     dose_colours <- scales::hue_pal()(length(colour_levels))
   } else {
     dose_colours <- character()
@@ -176,15 +183,16 @@ faceted_qc_plot <- function(data_conc,
       y = .data[[y_var]],
       text = tooltip_text,
       colour = legend_group,
-      shape = legend_group)
-    ) +
+      shape = legend_group
+    )
+  ) +
     geom_point(aes(alpha = legend_group), size = 2.5, stroke = 0.25) +
     facet_wrap(vars(facet_title), scales = "free_y", ncol = 1) +
-  
+
     # Apply the manual scales
     scale_shape_manual(name = legend_title, values = shape_values) +
     scale_colour_manual(name = legend_title, values = colour_values) +
-    
+
     # Make doses semi-transparent and hide the alpha legend
     scale_alpha_manual(values = setNames(c(rep(1, length(shape_levels)),
                                            rep(0.6, length(colour_levels))),
@@ -196,7 +204,7 @@ faceted_qc_plot <- function(data_conc,
     ) +
     theme_bw()
 
-  if (as.plotly) {
+  if (as_plotly) {
     ggplotly(p, tooltip = "text") %>%
       layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
   } else {

@@ -17,9 +17,9 @@ faceted_qc_plot(
   colour_var_units = NULL,
   labels_df = data.frame(),
   title = NULL,
-  show_PK_samples = TRUE,
+  show_pk_samples = TRUE,
   show_doses = TRUE,
-  as.plotly = FALSE
+  as_plotly = FALSE
 )
 }
 \arguments{
@@ -50,18 +50,18 @@ colour variable. It is expected that this column contains a single unique value.
 
 \item{title}{Character. The main title for the plot.}
 
-\item{show_PK_samples}{Logical. If \code{TRUE}, plots the concentration data.}
+\item{show_pk_samples}{Logical. If \code{TRUE}, plots the concentration data.}
 
 \item{show_doses}{Logical. If \code{TRUE}, plots the dose data.}
 
-\item{as.plotly}{Logical. If \code{TRUE}, converts the final plot to an interactive
+\item{as_plotly}{Logical. If \code{TRUE}, converts the final plot to an interactive
 \code{plotly} object.}
 }
 \value{
-A \code{ggplot} object or, if \code{as.plotly = TRUE}, a \code{plotly} object.
+A \code{ggplot} object or, if \code{as_plotly = TRUE}, a \code{plotly} object.
 }
 \description{
-Generates a flexible, faceted QC plot by layering concentration data (as
+Generates a faceted QC plot by layering concentration data (as
 black shapes) and dose data (as colored points). It creates a single, unified
 legend for both data types and can return either a static \code{ggplot} or an
 interactive \code{plotly} object.
