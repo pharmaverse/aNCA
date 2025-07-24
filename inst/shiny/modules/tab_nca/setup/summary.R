@@ -37,12 +37,16 @@ summary_server <- function(id, processed_pknca_data) {
         searchable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
-        wrap = TRUE,
+        wrap = FALSE,
+        compact = TRUE,
         resizable = TRUE,
         showPageSizeOptions = TRUE,
         striped = TRUE,
         bordered = TRUE,
-        height = "98vh"
+        defaultPageSize = 25,
+        height = "50vh",
+        class = "reactable-table",
+        style = list(fontSize = "0.75em")
       )
     })
   })

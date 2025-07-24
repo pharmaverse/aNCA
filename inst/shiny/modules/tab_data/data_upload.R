@@ -89,15 +89,19 @@ data_upload_server <- function(id) {
       req(raw_data())
       reactable(
         raw_data(),
-        searchable = TRUE,
+        searchable = FALSE,
+        defaultColDef = colDef(filterable = TRUE),
         sortable = TRUE,
         highlight = TRUE,
         wrap = FALSE,
+        compact = TRUE,
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
-        height = "70vh",
-        class = "reactable-table"
+        pageSizeOptions = c(10, 25, 50, 100, nrow(raw_data())),
+        height = "50vh",
+        class = "reactable-table",
+        style = list(fontSize = "0.75em")
       )
     })
 

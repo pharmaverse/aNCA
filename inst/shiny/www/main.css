@@ -420,6 +420,7 @@ div[data-value="Settings"] > div.row a {
   flex: 1;
   overflow-y: auto;
   margin-top: 10px;
+  margin-bottom: 0px;
   padding: 20px;
 }
 
@@ -473,6 +474,10 @@ div[data-value="Settings"] > div.row a {
   margin-top: 1.5em;
 }
 
+.data-tab-content .reactable {
+  margin-top: 1em;
+}
+
 .data-tab-content .data-mapping-container .column-mapping-row {
   display: flex;
   align-items: center;
@@ -514,9 +519,10 @@ div[data-value="Settings"] > div.row a {
 }
 
 .upload-container {
-  padding: 32px 16px;
-  margin-bottom: 32px;
-  border: 1px dashed #007bc2;
+  padding: 0px 4px !important;
+  margin: 0 !important;
+  border: none !important;
+  margin-bottom: 0em !important;
   display: flex;
   justify-content: center;
   flex-direction: column;
