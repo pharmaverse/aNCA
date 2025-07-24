@@ -44,7 +44,8 @@ to include in the tooltip.}
 x-axis variable. It is expected that this column contains a single unique value.}
 
 \item{colour_var_units}{Character. The column name for the units of the
-colour variable. It is expected that this column contains a single unique value.}
+colour variable in \code{data_dose}. It is expected that this column contains a
+single unique value.}
 
 \item{labels_df}{A data.frame used by helper functions to look up variable labels.}
 
@@ -65,6 +66,10 @@ Generates a faceted QC plot by layering concentration data (as
 black shapes) and dose data (as colored points). It creates a single, unified
 legend for both data types and can return either a static \code{ggplot} or an
 interactive \code{plotly} object.
+}
+\details{
+Unless specified, the variables required as arguments are expected to
+be present in both \code{data_conc} and \code{data_dose}.
 }
 \examples{
 # Dummy helper functions required for the example
