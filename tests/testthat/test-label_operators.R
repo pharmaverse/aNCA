@@ -9,8 +9,9 @@ data <- data.frame(
   AVAL = c(10, 20, 30),
   RACE = as.factor(c("WHITE", "ASIAN", "ASIAN"))
 )
+
 describe("apply_labels", {
-  labeled_data  <- expect_no_error(apply_labels(data, ADNCA_LABELS_FIXTURE, type = "ADPC"))
+  labeled_data  <- expect_no_error(apply_labels(data, ADNCA_LABELS_FIXTURE))
   it("applies labels to the data frame", {
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "Unique Subject Identifier")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
@@ -23,8 +24,7 @@ describe("apply_labels", {
       Label = character(),
       Dataset = character()
     )
-    labeled_data <- expect_no_error(apply_labels(data, EMPTY_ADNCA_LABELS_FIXTURE,
-                                                 c("ADPC", "ADPC")))
+    labeled_data <- expect_no_error(apply_labels(data, EMPTY_ADNCA_LABELS_FIXTURE))
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "USUBJID")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "AVAL")
     expect_equal(base::attr(labeled_data$RACE, "label"), "RACE")
@@ -35,7 +35,7 @@ describe("apply_labels", {
     data_with_existing_labels <- data
     attr(data_with_existing_labels$USUBJID, "label") <- "Existing label for USUBJID"
 
-    labeled_data <- apply_labels(data_with_existing_labels, ADNCA_LABELS_FIXTURE, "ADPC")
+    labeled_data <- apply_labels(data_with_existing_labels, ADNCA_LABELS_FIXTURE)
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "Existing label for USUBJID")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
   })
@@ -43,48 +43,16 @@ describe("apply_labels", {
 
 describe("get_label", {
   it("returns label of a heading if it exists in the label file", {
-    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADPC"), "Unique Subject Identifier")
+    expect_equal(get_label("USUBJID", "ADPC", ADNCA_LABELS_FIXTURE), "Unique Subject Identifier")
   })
 
   it("returns the variable name if the label does not exist", {
-    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADP"), "USUBJID")
+    expect_equal(get_label("USUBJID", "ADP", ADNCA_LABELS_FIXTURE), "USUBJID")
   })
 })
 
 mock_vec <- c("A", "B", "C")
 attr(mock_vec, "label") <- "Example Label"
-
-describe("as_factor_preserve_label", {
-  mock_vector_as_factor <- expect_no_error(as_factor_preserve_label(mock_vec))
-  it("returns object of class factor", {
-    expect_s3_class(mock_vector_as_factor, "factor")
-  })
-
-  it("does not change the original label text", {
-    old_label <- base::attr(mock_vector_as_factor, "label")
-    new_label <- base::attr(as_factor_preserve_label(mock_vector_as_factor), "label")
-    expect_equal(old_label, new_label)
-
-  })
-})
-
-describe("has_label", {
-  it("returns TRUE if has label", {
-    expect_true(has_label(mock_vec))
-  })
-  it("returns FALSE if has no label", {
-    expect_false(has_label("unlabeled_char"))
-  })
-})
-
-describe("set_empty_label", {
-  attr(mock_vec, "label")  <-  NULL
-  expect_false(has_label(mock_vec))
-  it("sets label to empty string if it does not exist", {
-    mock_vec_unlabeled  <- set_empty_label(mock_vec)
-    expect_identical("", base::attr(mock_vec_unlabeled, "label"))
-  })
-})
 
 describe("generate_tooltip_text", {
   TEST_DATA <- data.frame(

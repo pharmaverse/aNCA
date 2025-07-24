@@ -4,7 +4,12 @@ TEST_DATA <- data.frame(
   DOSE = as.factor(c(10, 10, 20, 20, 30, 30)),
   ARM = rep(c("A", "B"), each = 3)
 )
-DUMMY_LABELS_DF <- data.frame()
+DUMMY_LABELS_DF <- data.frame(
+  Variable = character(),
+  Dataset = character(),
+  Type = character(),
+  Label = character()
+)
 
 describe("faceted_qc_plot", {
   it("returns a ggplot object without errors", {

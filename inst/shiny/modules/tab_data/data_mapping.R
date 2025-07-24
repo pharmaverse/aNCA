@@ -216,7 +216,9 @@ data_mapping_server <- function(id, adnca_data) {
 
     # Loop through each label and create the renderText outputs
     purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
-      output[[paste0("label_", label)]] <- renderText(get_label(LABELS, label, "ADPC"))
+      output[[paste0("label_", label)]] <- renderText(
+        get_label(labels_df = metadata_nca_variables, label, "ADPC")
+      )
     })
 
     # Populate the static inputs with column names
