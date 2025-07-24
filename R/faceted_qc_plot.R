@@ -5,6 +5,9 @@
 #' legend for both data types and can return either a static `ggplot` or an
 #' interactive `plotly` object.
 #'
+#' @details Unless specified, the variables required as arguments are expected to
+#' be present in both `data_conc` and `data_dose`.
+#'
 #' @param data_conc A data.frame containing concentration data (e.g., PK samples).
 #' @param data_dose An optional data.frame containing dosing information.
 #' @param x_var Character. The column name to be used for the x-axis.
@@ -150,14 +153,11 @@ faceted_qc_plot <- function(data_conc,
     dose_colours <- character()
   }
   colour_values <- setNames(c(rep("black", length(shape_levels)), dose_colours), all_legend_levels)
-  
-  # Check that x and the colour variable have a single unit value
-  x_unit_lab <- processed_data %>% select(any_of(x_var_units)) %>% distinct()
-  x_unit_lab <- ifelse(length(x_unit_lab) != 1, "", paste0(" (", x_unit_lab, ")"))
-  
-  colour_unit_lab <- processed_data %>% select(any_of(colour_var_units)) %>% distinct()
-  colour_unit_lab <- ifelse(length(colour_unit_lab) != 1, "", paste0(" (", colour_unit_lab, ")"))
-  
+
+  # If unique and available, format units to a string for plot labels
+  x_unit_lab <- processed_data %>% format_unit_string(x_var_units)
+  colour_unit_lab <- processed_data %>% format_unit_string(colour_var_units)
+
   # Define a title for the legend
   legend_title <- paste(
     paste(
@@ -210,5 +210,30 @@ faceted_qc_plot <- function(data_conc,
       layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
   } else {
     p
+  }
+}
+
+
+#' Formats a unit string if a unique unit exists
+#' @param data The data frame to check.
+#' @param unit_var The column name of the unit variable.
+#' @return A formatted string like " (hr)" or an empty string "".
+format_unit_string <- function(data, unit_var) {
+  # Return "" if the unit variable is not specified or doesn't exist
+  if (is.null(unit_var) || !all(unit_var %in% names(data))) {
+    return("")
+  }
+
+  # Get the distinct unit values
+  distinct_units <- data %>%
+    select(all_of(unit_var)) %>%
+    distinct()
+
+  # If there is exactly one unique unit, format it. Otherwise, return "".
+  if (nrow(distinct_units) == 1) {
+    unit_value <- distinct_units %>% pull()
+    paste0(" (", unit_value, ")")
+  } else {
+    ""
   }
 }

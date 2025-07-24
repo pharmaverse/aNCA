@@ -11,10 +11,15 @@ DOSE_DATA <- data.frame(
   ACTUAL_TIME = c(0, 0),
   DOSE_LEVEL = c(100, 100),
   COHORT = "A",
-  DOSE_UNIT = "mg"
+  DOSE_UNIT = "mg",
+  TIME_UNIT = "hr"
 )
 
-DUMMY_LABELS_DF <- data.frame()
+DUMMY_LABELS_DF <- data.frame(
+  Variable = character(),
+  Label = character(),
+  Dataset = character()
+)
 
 describe("faceted_qc_plot", {
 
@@ -97,5 +102,46 @@ describe("faceted_qc_plot", {
     )
 
     expect_false(grepl("(", p$labels$x, fixed = TRUE))
+  })
+})
+
+
+TEST_DATA <- data.frame(
+  TIME_UNIT = c("hr", "hr", "hr"),
+  MULTI_UNIT = c("mg", "kg", "mg"),
+  NA_UNIT = c("A", NA, "A")
+)
+
+describe("format_unit_string", {
+
+  it("returns a formatted string when exactly one unique unit exists", {
+    result <- format_unit_string(TEST_DATA, "TIME_UNIT")
+    expect_equal(result, " (hr)")
+  })
+
+  it("returns an empty string when multiple unique units exist", {
+    result <- format_unit_string(TEST_DATA, "MULTI_UNIT")
+    expect_equal(result, "")
+  })
+
+  it("returns an empty string when a mix of values and NA exist", {
+    result <- format_unit_string(TEST_DATA, "NA_UNIT")
+    expect_equal(result, "")
+  })
+
+  it("returns an empty string when the unit variable is NULL", {
+    result <- format_unit_string(TEST_DATA, NULL)
+    expect_equal(result, "")
+  })
+
+  it("returns an empty string when the unit variable does not exist in the data", {
+    result <- format_unit_string(TEST_DATA, "NON_EXISTENT_COLUMN")
+    expect_equal(result, "")
+  })
+
+  it("returns an empty string for data with zero rows", {
+    empty_data <- TEST_DATA[0, ]
+    result <- format_unit_string(empty_data, "TIME_UNIT")
+    expect_equal(result, "")
   })
 })

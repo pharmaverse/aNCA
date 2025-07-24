@@ -187,7 +187,7 @@ get_label <- function(labels_df, variable, type) {
 #'
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
-  
+
   tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
 
   if (length(tooltip_vars) == 0) {
