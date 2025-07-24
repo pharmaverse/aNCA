@@ -197,14 +197,21 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
   pmap_chr(
     .l = select(data, all_of(tooltip_vars)),
     .f = function(...) {
-
       row_values <- list(...)
-
+      
       # For each variable, create a formatted line retrieving its label
-      lines <- map_chr(tooltip_vars, ~ paste0(
-        "<b>", get_label(labels_df, .x, type), "</b>: ", row_values[[.x]]
-      ))
-
+      lines <- map_chr(tooltip_vars,
+                       ~ paste0(
+                         "<b>",
+                         get_label(
+                           labels_df = labels_df,
+                           variable = .x,
+                           type = type
+                         ),
+                         "</b>: ",
+                         row_values[[.x]]
+                       ))
+      
       # Paste all lines together with HTML line breaks
       paste(lines, collapse = "<br>")
     }
