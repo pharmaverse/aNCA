@@ -17,7 +17,8 @@
 #' @param x_var_units Character. The column name containing the units for the
 #'   x-axis variable. It is expected that this column contains a single unique value.
 #' @param colour_var_units Character. The column name for the units of the
-#'   colour variable. It is expected that this column contains a single unique value.
+#'   colour variable in `data_dose`. It is expected that this column contains a
+#'   single unique value.
 #' @param labels_df A data.frame used by helper functions to look up variable labels.
 #' @param title Character. The main title for the plot.
 #' @param show_pk_samples Logical. If `TRUE`, plots the concentration data.
@@ -104,31 +105,6 @@ faceted_qc_plot <- function(data_conc,
   # Select variables to include in the plotly tooltips
   tooltip_vars <- c(y_var, grouping_vars, other_tooltip_vars, x_var, colour_var)
 
-  # Check that x and the colour variable have a single unit value
-  x_unit_lab <- data_conc %>% select(any_of(x_var_units)) %>% distinct()
-  x_unit_lab <- ifelse(length(x_unit_lab) != 1, "", paste0(" (", x_unit_lab, ")"))
-
-  colour_unit_lab <- data_conc %>% select(any_of(colour_var_units)) %>% distinct()
-  colour_unit_lab <- ifelse(length(colour_unit_lab) != 1, "", paste0(" (", colour_unit_lab, ")"))
-
-  # Define a title for the legend
-  legend_title <- paste(
-    paste(
-      ifelse(
-        plot_conc_data,
-        get_label(labels_df, shape_var, "ADPC"),
-        ""
-      ),
-      ifelse(
-        plot_dose_data,
-        paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab),
-        ""
-      ),
-      sep = "<br>"
-    ),
-    "<br>"
-  )
-
   # Preprocess the data
   plot_data_list <- list()
   if (plot_conc_data) {
@@ -174,6 +150,31 @@ faceted_qc_plot <- function(data_conc,
     dose_colours <- character()
   }
   colour_values <- setNames(c(rep("black", length(shape_levels)), dose_colours), all_legend_levels)
+  
+  # Check that x and the colour variable have a single unit value
+  x_unit_lab <- processed_data %>% select(any_of(x_var_units)) %>% distinct()
+  x_unit_lab <- ifelse(length(x_unit_lab) != 1, "", paste0(" (", x_unit_lab, ")"))
+  
+  colour_unit_lab <- processed_data %>% select(any_of(colour_var_units)) %>% distinct()
+  colour_unit_lab <- ifelse(length(colour_unit_lab) != 1, "", paste0(" (", colour_unit_lab, ")"))
+  
+  # Define a title for the legend
+  legend_title <- paste(
+    paste(
+      ifelse(
+        plot_conc_data,
+        get_label(labels_df, shape_var, "ADPC"),
+        ""
+      ),
+      ifelse(
+        plot_dose_data,
+        paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab),
+        ""
+      ),
+      sep = "<br>"
+    ),
+    "<br>"
+  )
 
   # Build the plot
   p <- ggplot(
