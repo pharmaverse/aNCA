@@ -130,7 +130,16 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     })
 
     # Render the reactive summary table in a data table
-    reactable_server("descriptive_stats", summary_stats_filtered)
+    reactable_server(
+      "descriptive_stats",
+      summary_stats_filtered,
+      pageSizeOptions = c(10, 25, 50, 100, nrow(summary_stats_filtered())),
+      defaultPageSize = 10,
+      striped = TRUE,
+      bordered = TRUE,
+      compact = TRUE,
+      style = list(fontSize = "0.75em")
+    )
 
     # Download summary statistics as CSV
     output$download_summary <- downloadHandler(

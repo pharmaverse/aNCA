@@ -93,6 +93,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+    ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 
     output$manual_slopes <- renderTable(slope_rules$manual_slopes())
@@ -124,9 +125,15 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           pknca_warn_env <- new.env()
           pknca_warn_env$warnings <- c()
 
+          # Update units table
+          processed_pknca_data <- processed_pknca_data()
+          if (!is.null(session$userData$units_table())) {
+            processed_pknca_data$units <- session$userData$units_table()
+          }
+
           #' Calculate results
           res <- withCallingHandlers({
-            processed_pknca_data() %>%
+            processed_pknca_data %>%
               filter_slopes(
                 slope_rules$manual_slopes(),
                 slope_rules$profiles_per_subject(),
@@ -135,7 +142,13 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               ) %>%
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
-              add_f_to_pknca_results(settings()$bioavailability)
+              add_f_to_pknca_results(settings()$bioavailability) %>%
+              # Apply standard CDISC names
+              mutate(
+                PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+              ) %>%
+              # Add parameter ratio calculations
+              calculate_table_ratios_app(ratio_table = ratio_table())
           },
           warning = function(w) {
             if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
@@ -158,20 +171,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             log_warn(w_message)
             showNotification(w_message, type = "warning", duration = 5)
           })
-
-
-          #' Apply units
-          if (!is.null(session$userData$units_table())) {
-            res$data$units <- session$userData$units_table()
-            res$result <- res$result %>%
-              select(-PPSTRESU, -PPSTRES) %>%
-              left_join(
-                session$userData$units_table(),
-                by = intersect(names(.), names(session$userData$units_table()))
-              ) %>%
-              mutate(PPSTRES = PPORRES * conversion_factor) %>%
-              select(-conversion_factor)
-          }
 
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
@@ -202,16 +201,39 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           "Exclude"
         ) %>%
         DT::datatable(
-          extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = "80vh",
-                         lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-                         pageLength = -1, fixedHeader = TRUE)
+          extensions = c("FixedHeader", "Buttons"),
+          options = list(
+            scrollX = TRUE,
+            fixedHeader = TRUE,
+            dom = "Blfrtip",
+            buttons = list(
+              list(extend = "copy", title = paste0("NCA_Slope_Results_", Sys.Date())),
+              list(extend = "csv", filename = paste0("NCA_Slope_Results_", Sys.Date()))
+            ),
+            headerCallback = DT::JS(
+              "function(thead) {",
+              "  $(thead).css('font-size', '0.75em');",
+              "  $(thead).find('th').css('text-align', 'center');",
+              "}"
+            ),
+            columnDefs = list(
+              list(className = "dt-center", targets = "_all")
+            ),
+            lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
+            paging = TRUE
+          ),
+          class = "row-border compact",
+          rownames = FALSE
         ) %>%
-        formatStyle("Exclude", target = "row",
-                    backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
+        DT::formatStyle(
+          columns = seq_len(ncol(pivot_wider_pknca_results(res_nca()))), fontSize = "75%"
+        )
     })
 
-    nca_results_server("nca_results", processed_pknca_data, res_nca, settings, grouping_vars)
+    #' Prepares and displays the pivoted NCA results
+    nca_results_server(
+      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, grouping_vars
+    )
 
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)

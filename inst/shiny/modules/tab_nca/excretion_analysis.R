@@ -1,4 +1,3 @@
-
 #' NCA Excretion Analysis Module
 #'
 #' This module handles logic for excretion analysis in NCA.
@@ -76,7 +75,7 @@ excretion_server <- function(id, input_pknca_data) {
                         selected = if ("Urine" %in% pcspecs) "Urine" else NULL)
       updateSelectInput(session, "end_time_col", choices = available_cols,
                         selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
-      updateSelectInput(session, "param_select", choices = pknca_cdisc_terms %>%
+      updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
                           filter(startsWith(PPTESTCD, "RCA")) %>%
                           pull(PKNCA, PPTESTCD),
                         selected = c("ae"))
@@ -187,7 +186,11 @@ excretion_server <- function(id, input_pknca_data) {
     reactable_server(
       "results_table",
       results_output,
-      defaultPageSize = 10
+      defaultPageSize = 10,
+      compact = TRUE,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = c(10, 25, 50, 100, nrow(results_output())),
+      style = list(fontSize = "0.75em")
     )
   })
 }

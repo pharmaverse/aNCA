@@ -16,8 +16,13 @@ summary_server <- function(id, processed_pknca_data) {
     summary_data <- reactive({
       req(processed_pknca_data())
 
+      conc_group_columns <- group_vars(processed_pknca_data()$conc)
+      dose_group_columns <- group_vars(processed_pknca_data()$dose)
+      time_dose <- processed_pknca_data()$dose$columns$time
+
       data <- processed_pknca_data()$intervals %>%
         apply_labels(LABELS, "ADPC") %>%
+#<<<<<<< 527-enhancement-add-option-to-download-files-to-reactable-tables
         select(where(~!is.logical(.) | any(. == TRUE)))
 
       route_column <- "ROUTE"
@@ -25,17 +30,41 @@ summary_server <- function(id, processed_pknca_data) {
       col_groups <- unname(unlist(processed_pknca_data()$dose$columns$groups))
 
       data %>%
+#=======
+        select(where(~!is.logical(.) | any(. == TRUE))) %>%
+#>>>>>>> main
         left_join(
           processed_pknca_data()$dose$data %>%
-            select(all_of(c(
-              col_groups, route_column, std_route_column, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"
-            ))),
-          by = c(col_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA")
+            mutate(TIME_DOSE = .[[time_dose]]) %>%
+            select(any_of(c(dose_group_columns, "TIME_DOSE")))
         ) %>%
+#<<<<<<< 527-enhancement-add-option-to-download-files-to-reactable-tables
         group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
         arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
         mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
         select(!!!syms(colnames(data)), all_of(c(route_column, std_route_column)))
+#=======
+        arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end"))) %>%
+        mutate(start = start - TIME_DOSE, end = end - TIME_DOSE)
+
+      reactable(
+        data,
+        columns = generate_col_defs(data),
+        searchable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        wrap = FALSE,
+        compact = TRUE,
+        resizable = TRUE,
+        showPageSizeOptions = TRUE,
+        striped = TRUE,
+        bordered = TRUE,
+        defaultPageSize = 25,
+        height = "50vh",
+        class = "reactable-table",
+        style = list(fontSize = "0.75em")
+      )
+#>>>>>>> main
     })
 
     reactable_server(

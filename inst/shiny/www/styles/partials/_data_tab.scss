@@ -8,7 +8,8 @@
   flex: 1;
   overflow-y: auto;
   margin-top: 10px;
-  padding: 20px 20px 0px 20px;
+  margin-bottom: 0px;
+  padding: 20px;
 }
 
 /* data tab styling */
@@ -44,20 +45,24 @@
 
   .filter-widget-container {
     display: flex;
-    justify-content: center;
-    gap: 1em;
+    flex-direction: column;
+    width: 100%;
+    padding: 10px;
+    background-color: var(--bs-gray-200);
+    border: 1px solid #c3c3c3;
+    border-radius: 4px;
 
     .btn-danger {
       align-self: flex-end;
-      width: 2.5em;
+      width: 100%;
       height: 2.5em;
       padding: 0;
-      margin: 0;
+      margin-top: 1.5em;
     }
   }
 
   .reactable {
-    margin-top: 2em;
+    margin-top: 1em;
   }
 
   /* column mapping UI */
@@ -104,9 +109,12 @@
   }
 }
 
+
 .upload-container {
-  padding: 32px 16px;
-  border: 1px dashed $anca-blue;
+  padding: 0px 4px !important;
+  margin: 0 !important;
+  border: none !important;
+  margin-bottom: 0em !important;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -130,4 +138,39 @@
       }
     }
   }
+}
+
+.data-filtering-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.filtered-table-container {
+  flex: 1 1 0;
+  min-width: 300px;
+  overflow-x: auto;
+}
+
+.filters-container {
+  width: 300px;
+  background-color: white;
+  flex-shrink: 0;
+  padding: 20px;
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  height: 70vh;
+  overflow-y: auto;
+
+  .accordion-header > button {
+    padding: 0.75em 1.25em;
+  }
+}
+
+.filters-inputs {
+  display: flex;
+  flex-direction: column;
+  margin-top: 15px;
 }

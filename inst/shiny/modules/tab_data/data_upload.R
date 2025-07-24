@@ -83,7 +83,15 @@ data_upload_server <- function(id) {
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
 
-    reactable_server("data_display", raw_data, height = "70vh")
+    reactable_server(
+      "data_display",
+      raw_data,
+      height = "70vh",
+      pageSizeOptions = c(10, 25, 50, 100, nrow(raw_data())),
+      height = "50vh",
+      class = "reactable-table",
+      style = list(fontSize = "0.75em")
+    )
 
     raw_data
   })

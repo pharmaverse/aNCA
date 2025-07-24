@@ -46,8 +46,8 @@ describe("get_label", {
     expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADPC"), "Unique Subject Identifier")
   })
 
-  it("returns 'No label available' if the label does not exist", {
-    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADP"), "No label available")
+  it("returns the variable name if the label does not exist", {
+    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADP"), "USUBJID")
   })
 })
 
@@ -83,5 +83,51 @@ describe("set_empty_label", {
   it("sets label to empty string if it does not exist", {
     mock_vec_unlabeled  <- set_empty_label(mock_vec)
     expect_identical("", base::attr(mock_vec_unlabeled, "label"))
+  })
+})
+
+describe("generate_tooltip_text", {
+  TEST_DATA <- data.frame(
+    USUBJID = c("S1-1", "S1-2"),
+    AVAL = c(10.5, NA_real_),
+    RACE = as.factor(c("WHITE", "ASIAN"))
+  )
+  TEST_VARS <- c("USUBJID", "AVAL", "RACE")
+
+  it("generates correct tooltip string for multiple rows and data types", {
+    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADPC")
+    expected_output <- c(
+      "<b>Unique Subject Identifier</b>: S1-1<br><b>Analysis Value</b>: 10.5<br><b>Race</b>: WHITE",
+      "<b>Unique Subject Identifier</b>: S1-2<br><b>Analysis Value</b>: NA<br><b>Race</b>: ASIAN"
+    )
+    expect_equal(tooltips, expected_output)
+  })
+
+  it("returns an empty string for each row if tooltip_vars is empty", {
+    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, character(0), "ADPC")
+    expect_equal(tooltips, c("", ""))
+  })
+
+  it("throws an error if a variable in tooltip_vars is not in the data", {
+    invalid_vars <- c("USUBJID", "NON_EXISTENT_VAR")
+    expect_error(generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, invalid_vars, "ADPC"))
+  })
+
+  it("returns an empty vector for data with zero rows", {
+    empty_data <- TEST_DATA[0, ]
+    tooltips <- generate_tooltip_text(empty_data, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADPC")
+    expect_equal(tooltips, character(0))
+  })
+
+  it("uses the variable name as a label if it's not in labels_df", {
+    data_with_unlabeled_var <- TEST_DATA %>% mutate(AGE = c(45, 52))
+    vars_with_unlabeled <- c("USUBJID", "AGE")
+    expected_output <- c(
+      "<b>Unique Subject Identifier</b>: S1-1<br><b>AGE</b>: 45",
+      "<b>Unique Subject Identifier</b>: S1-2<br><b>AGE</b>: 52"
+    )
+    tooltips <- generate_tooltip_text(data_with_unlabeled_var, ADNCA_LABELS_FIXTURE,
+                                      vars_with_unlabeled, "ADPC")
+    expect_equal(tooltips, expected_output)
   })
 })
