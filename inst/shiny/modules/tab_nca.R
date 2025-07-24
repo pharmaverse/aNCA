@@ -20,7 +20,7 @@
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
-
+  
   fluidPage(
     div(
       class = "d-flex justify-content-between",
@@ -55,10 +55,15 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, adnca_data, grouping_vars) {
+tab_nca_server <- function(id, adnca_data, grouping_vars, switch_trigger = reactiveVal(0)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
+    # Observe the incoming trigger
+    observeEvent(switch_trigger(), {
+      updateTabsetPanel(session, "ncapanel", selected = "Setup")
+    }, ignoreInit = TRUE)
+    
     #' Setup session-wide object for storing data units. Units can be edited by the user on
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
