@@ -133,7 +133,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     reactable_server(
       "descriptive_stats",
       summary_stats_filtered,
-      pageSizeOptions = c(10, 25, 50, 100, nrow(summary_stats_filtered())),
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered()))),
       defaultPageSize = 10,
       striped = TRUE,
       bordered = TRUE,

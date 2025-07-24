@@ -86,8 +86,7 @@ data_upload_server <- function(id) {
     reactable_server(
       "data_display",
       raw_data,
-      height = "70vh",
-      pageSizeOptions = c(10, 25, 50, 100, nrow(raw_data())),
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data()))),
       height = "50vh",
       class = "reactable-table",
       style = list(fontSize = "0.75em")

@@ -154,13 +154,12 @@ tab_data_server <- function(id) {
     reactable_server(
       "data_processed",
       processed_data,
-      height = "98vh",
       columns = generate_col_defs,
       compact = TRUE,
       style = list(fontSize = "0.75em"),
       height = "50vh",
       showPageSizeOptions = TRUE,
-      pageSizeOptions = c(10, 25, 50, 100, nrow(processed_data())),
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
     )
 
     list(

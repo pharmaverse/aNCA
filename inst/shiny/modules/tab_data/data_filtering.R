@@ -25,7 +25,10 @@ data_filtering_ui <- function(id) {
       ),
       div(
         class = "data-filtering-container",
-        reactable_ui(ns("filtered_data_display"))
+        div(
+          class = "filtered-table-container",
+          reactable_ui(ns("filtered_data_display"))
+        ),
         div(
           class = "filters-container",
           div(
@@ -131,7 +134,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       height = "50vh",
       defaultPageSize = 25,
       style = list(fontSize = "0.75em")
-     )
+    )
 
     filtered_data
   })

@@ -189,7 +189,7 @@ excretion_server <- function(id, input_pknca_data) {
       defaultPageSize = 10,
       compact = TRUE,
       showPageSizeOptions = TRUE,
-      pageSizeOptions = c(10, 25, 50, 100, nrow(results_output())),
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
       style = list(fontSize = "0.75em")
     )
   })

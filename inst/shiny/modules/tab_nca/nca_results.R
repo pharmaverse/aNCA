@@ -165,7 +165,6 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       "myresults",
       output_results,
       columns = generate_col_defs,
-      height = "68vh",
       compact = TRUE,
       style = list(fontSize = "0.75em"),
       height = "68vh",
