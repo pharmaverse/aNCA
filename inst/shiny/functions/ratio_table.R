@@ -124,6 +124,16 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
       custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
     )
+
+    if (nrow(ratio_results[[i]]) == 0) {
+      warning(
+        "Ratio ", ratio_table$PPTESTCD[i], " not computed.",
+        "No comparable groups found between RefGroups",
+        " (", ratio_table$RefGroups[i], ")",
+        "and TestGroups",
+        " (", ratio_table$TestGroups[i], ")"
+      )
+    }
   }
   if (!"PPANMETH" %in% names(res$result)) {
     res$result$PPANMETH <- ""
