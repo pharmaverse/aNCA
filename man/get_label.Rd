@@ -4,14 +4,14 @@
 \alias{get_label}
 \title{Get the Label of a Heading}
 \usage{
-get_label(labels_df, variable, type)
+get_label(variable, type = "ADPC", labels_df = metadata_nca_variables)
 }
 \arguments{
-\item{labels_df}{A data frame with three columns: Variable, Label, and Dataset.}
-
 \item{variable}{The variable for which the label is to be retrieved.}
 
 \item{type}{The type of the dataset for which the label is to be retrieved.}
+
+\item{labels_df}{A data frame with three columns: Variable, Label, and Dataset.}
 }
 \value{
 The label of the heading if it exists in the labels file,
