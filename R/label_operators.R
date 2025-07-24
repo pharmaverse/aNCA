@@ -25,15 +25,10 @@
 #' @importFrom formatters var_labels
 #'
 #' @export
-apply_labels <- function(data, labels_df = metadata_nca_variables) {
+apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC") {
   formatters::var_labels(data) <- ifelse(
     is.na(formatters::var_labels(data)),
-    translate_terms(
-      colnames(data),
-      mapping_col = "Variable",
-      target_col = "Label",
-      metadata = labels_df
-    ),
+    get_label(colnames(data), type = type, labels_df = labels_df),
     formatters::var_labels(data)
   )
 
@@ -64,12 +59,13 @@ apply_labels <- function(data, labels_df = metadata_nca_variables) {
 #' }
 #'
 #' @export
-get_label <- function(labels_df, variable, type) {
-  label <- labels_df$Label[labels_df$Variable == variable & labels_df$Dataset == type]
-  if (length(label) == 0) {
-    return(variable)
-  }
-  label
+get_label <- function(labels_df = metadata_nca_variables, variable = "USUBJID", type = "ADPC") {
+  translate_terms(
+    variable,
+    "Variable",
+    "Label",
+    metadata = dplyr::filter(labels_df, Dataset == type)
+  )
 }
 
 #' Generate HTML Tooltip Text
