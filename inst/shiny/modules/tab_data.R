@@ -44,7 +44,7 @@ tab_data_ui <- function(id) {
                 stepper_ui("Preview"),
                 div(
                   uiOutput(ns("processed_data_message")),
-                  reactableOutput(ns("data_processed"))
+                  reactable_ui(ns("data_processed"))
                 )
               )
             )
@@ -164,30 +164,16 @@ tab_data_server <- function(id) {
       )
     })
     # Update the data table object with the filtered data
-    output$data_processed <- renderReactable({
-      req(processed_data())
-      # Generate column definitions
-      col_defs <- generate_col_defs(processed_data())
-      reactable(
-        processed_data(),
-        columns = col_defs,
-        rownames = FALSE,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = FALSE,
-        compact = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        pageSizeOptions = c(10, 25, 50, 100, nrow(processed_data())),
-        striped = TRUE,
-        bordered = TRUE,
-        style = list(fontSize = "0.75em"),
-        height = "50vh",
-        class = "reactable-table"
-      )
-    })
+    reactable_server(
+      "data_processed",
+      processed_data,
+      columns = generate_col_defs,
+      compact = TRUE,
+      style = list(fontSize = "0.75em"),
+      height = "50vh",
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
+    )
     list(
       data = processed_data,
       grouping_variables = grouping_variables,
