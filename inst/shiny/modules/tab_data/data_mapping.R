@@ -197,15 +197,13 @@ data_mapping_ui <- function(id) {
                                  Only required for urine/excretion studies."),
           .column_mapping_widget(ns, "VOLUMEU", "Character format.
                                  Only required for urine/excretion studies.")
-        ),
-
-        input_task_button(ns("submit_columns"), "Submit Mapping")
+        )
       )
     )
   )
 }
 
-data_mapping_server <- function(id, adnca_data) {
+data_mapping_server <- function(id, adnca_data, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -236,14 +234,13 @@ data_mapping_server <- function(id, adnca_data) {
       mapping_list
     })
 
-    mapped_data <- reactive({
+    mapped_data <- eventReactive(trigger(), {
       req(adnca_data())
       log_info("Processing data mapping...")
       apply_column_mapping(adnca_data(), mapping(),
                            MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
                            MAPPING_DESIRED_ORDER)
-    }) |>
-      bindEvent(input$submit_columns)
+    }, ignoreInit = TRUE)
 
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
@@ -344,10 +341,21 @@ data_mapping_server <- function(id, adnca_data) {
         style = list(fontSize = "0.75em")
       )
     })
-
+    mapping_complete <- reactive({
+      # List all inputs that MUST be filled before proceeding
+      required_inputs <- c(
+        input$select_STUDYID,
+        input$select_USUBJID,
+        input$select_PARAM,
+        input$select_AVAL,
+        input$select_AFRLT
+      )
+      all(sapply(required_inputs, shiny::isTruthy))
+    })
     list(
       processed_data = processed_data,
-      grouping_variables = reactive(input$select_Grouping_Variables)
+      grouping_variables = reactive(input$select_Grouping_Variables),
+      mapping_complete = mapping_complete
     )
   })
 }

@@ -71,6 +71,7 @@ tab_data_server <- function(id) {
     ns <- session$ns
     # Create a reactive trigger to signal the switch
     switch_to_nca <- reactiveVal(0)
+    trigger_mapping_submit <- reactiveVal(0)
     steps <- c("upload", "filtering", "mapping", "preview")
     step_labels <- c("Upload", "Filtering", "Mapping", "Preview")
     data_step <- reactiveVal("upload")
@@ -81,10 +82,10 @@ tab_data_server <- function(id) {
       } else {
         shinyjs::enable("prev_step")
       }
-      shinyjs::enable("next_step")
-      if (current == steps[3]) {
-        shinyjs::disable("next_step")
-        shinyjs::toggleState(id = "next_step", condition = shiny::isTruthy(processed_data()))
+      if (current == "mapping") {
+        shinyjs::toggleState(id = "next_step", condition = mapping_is_complete())
+      } else {
+        shinyjs::enable("next_step")
       }
     })
     observeEvent(input$restart, {
@@ -92,13 +93,31 @@ tab_data_server <- function(id) {
       updateTabsetPanel(session, "data_navset", selected = step_labels[1])
     })
     observeEvent(input$next_step, {
-      current <- data_step()
-      idx <- match(current, steps)
-      if (!is.na(idx) && idx < length(steps)) {
+      current_step <- isolate(data_step())
+      if (current_step == "mapping") {
+        # Check if the mapping is complete
+        if (isolate(mapping_is_complete())) {
+          trigger_mapping_submit(trigger_mapping_submit() + 1)
+        } else {
+          showNotification(
+            "Some required columns are not mapped. Please complete all selections.",
+            type = "error",
+            duration = 5
+          )
+        }
+      } else if (current_step %in% c("upload", "filtering")) {
+        idx <- match(current_step, steps)
         data_step(steps[idx + 1])
         updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
-      } else {
+      } else if (current_step == "preview") {
         switch_to_nca(switch_to_nca() + 1)
+      }
+    })
+    mapping_trigger <- eventReactive(input$next_step, {
+      if (data_step() == "mapping") {
+        input$next_step
+      } else {
+        NULL
       }
     })
     observeEvent(input$prev_step, {
@@ -116,8 +135,11 @@ tab_data_server <- function(id) {
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
-      adnca_data = adnca_filtered
+      adnca_data = adnca_filtered,
+      trigger = trigger_mapping_submit
     )
+    # Get the signal from the child module
+    mapping_is_complete <- column_mapping$mapping_complete
     #' Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data
     observeEvent(processed_data(), {
