@@ -4,8 +4,8 @@
 #' @param test_parameter Character. The PPTESTCD value to use as test (numerator).
 #' @param ref_parameter Character. The PPTESTCD value to use as reference (denominator).
 #' Defaults to test_parameter.
-#' @param test Character. The test group (numerator). Default is "(all other levels)".
-#' @param reference Character. The reference group (denominator).
+#' @param test_group Character. The test group (numerator). Default is "(all other levels)".
+#' @param ref_group Character. The reference group (denominator).
 #' @param aggregate_subject Character. Aggregation mode: "yes", "no", or "if-needed".
 #' @param adjusting_factor Numeric that multiplies the calculated ratio. Default is 1.
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
@@ -14,13 +14,13 @@ calculate_ratio_app <- function(
   res,
   test_parameter,
   ref_parameter = test_parameter,
-  test = "(all other levels)",
-  reference = "PARAM: Analyte01",
+  test_group = "(all other levels)",
+  ref_group = "PARAM: Analyte01",
   aggregate_subject = "no",
   adjusting_factor = 1,
   custom_pptestcd = NULL
 ) {
-  reference_colname <- gsub("(.*): (.*)", "\\1", reference)
+  reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
 
   ########### This is very App specific ###############
@@ -46,11 +46,11 @@ calculate_ratio_app <- function(
     }
   }
 
-  if (test == "(all other levels)") {
+  if (test_group == "(all other levels)") {
     test_groups <- NULL
   } else {
-    num_colname <- gsub("(.*): (.*)", "\\1", test)
-    num_value <- gsub("(.*): (.*)", "\\2", test)
+    num_colname <- gsub("(.*): (.*)", "\\1", test_group)
+    num_value <- gsub("(.*): (.*)", "\\2", test_group)
     test_groups <- data.frame(
       matrix(
         num_value,
@@ -61,8 +61,8 @@ calculate_ratio_app <- function(
     )
   }
 
-  reference_colname <- gsub("(.*): (.*)", "\\1", reference)
-  reference_value <- gsub("(.*): (.*)", "\\2", reference)
+  reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
+  reference_value <- gsub("(.*): (.*)", "\\2", ref_group)
   ref_groups <- data.frame(
     matrix(
       reference_value,
@@ -118,8 +118,8 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       res = res,
       test_parameter = ratio_table$TestParameter[i],
       ref_parameter = ratio_table$RefParameter[i],
-      test = ratio_table$TestGroups[i],
-      reference = ratio_table$RefGroups[i],
+      test_group = ratio_table$TestGroups[i],
+      ref_group = ratio_table$RefGroups[i],
       aggregate_subject = ratio_table$AggregateSubject[i],
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
       custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
