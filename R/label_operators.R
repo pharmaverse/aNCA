@@ -116,7 +116,7 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
       # For each variable, create a formatted line retrieving its label
       lines <- map_chr(tooltip_vars, ~ paste0(
-        "<b>", get_label(labels_df, .x, type), "</b>: ", row_values[[.x]]
+        "<b>", get_label(.x, type, labels_df = labels_df), "</b>: ", row_values[[.x]]
       ))
 
       # Paste all lines together with HTML line breaks

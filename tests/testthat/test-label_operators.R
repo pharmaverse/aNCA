@@ -9,7 +9,7 @@ data <- data.frame(
   AVAL = c(10, 20, 30),
   RACE = as.factor(c("WHITE", "ASIAN", "ASIAN"))
 )
-ADNCA_LABELS_FIXTURE <- metadata_nca_variables
+
 describe("apply_labels", {
   labeled_data  <- expect_no_error(apply_labels(data, ADNCA_LABELS_FIXTURE))
   it("applies labels to the data frame", {
@@ -43,11 +43,11 @@ describe("apply_labels", {
 
 describe("get_label", {
   it("returns label of a heading if it exists in the label file", {
-    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADPC"), "Unique Subject Identifier")
+    expect_equal(get_label("USUBJID", "ADPC", ADNCA_LABELS_FIXTURE), "Unique Subject Identifier")
   })
 
   it("returns the variable name if the label does not exist", {
-    expect_equal(get_label(ADNCA_LABELS_FIXTURE, "USUBJID", "ADP"), "USUBJID")
+    expect_equal(get_label("USUBJID", "ADP", ADNCA_LABELS_FIXTURE), "USUBJID")
   })
 })
 
