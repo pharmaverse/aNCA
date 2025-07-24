@@ -36,6 +36,7 @@ export_cdisc <- function(res_nca) {
   group_diff_cols <- setdiff(group_conc_cols, group_dose_cols)
   concu_col <- res_nca$data$conc$columns$concu
   route_col <- res_nca$data$dose$columns$route
+  duration_col <- res_nca$data$dose$columns$duration
   conc_group_sp_cols <- res_nca$data$conc$columns$groups$group_analyte %>%
     append(
       setdiff(
@@ -58,7 +59,7 @@ export_cdisc <- function(res_nca) {
     select(
       any_of(c(
         # Variables defined for the dose information
-        to_match_res_cols, dose_time_col,  route_col, conc_timeu_col,
+        to_match_res_cols, dose_time_col,  route_col, duration_col, conc_timeu_col,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
@@ -99,8 +100,44 @@ export_cdisc <- function(res_nca) {
       )))
     ) %>%
     arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
-    # Identify all dulicates (fromlast and fromfirst) and keep only the first one
-    filter(!duplicated(paste0(USUBJID, NCA_PROFILE, PPTESTCD))) %>%
+
+    # Parameters with a one-to-many mapping in PKNCA / CDISC
+    mutate(
+      # Column for one-to-many criteria
+      is.iv = !!sym(route_col) == "intravascular",
+      is.iv.bolus = is.iv & !!sym(duration_col) == 0,
+
+      # Parameters affected
+      is.cl.parameter = grepl("CL(LST|O|P|ALL)", PPTESTCD),
+      is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
+      is.vz.parameter = grepl("VZ(O|P)", PPTESTCD),
+
+      PPTEST = case_when(
+        # cl, vz
+        (is.cl.parameter | is.vz.parameter) & !is.iv ~ paste0(PPTEST, " by F"),
+
+        # mrt
+        is.mrt.parameter & is.iv.bolus ~ gsub("(MRT )(.*)", "\\1IV Bolus \\2", PPTEST),
+        is.mrt.parameter & is.iv ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
+        is.mrt.parameter & !is.iv ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
+
+        # others
+        TRUE ~ PPTEST
+      ),
+      PPTESTCD = case_when(
+        # cl, vz
+        (is.cl.parameter | is.vz.parameter) & !is.iv ~ gsub("(CL|VZ)(.*)", "\\1F\\2", PPTESTCD),
+
+        # mrt
+        is.mrt.parameter & is.iv.bolus ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IB\\2", PPTESTCD),
+        is.mrt.parameter & is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
+        is.mrt.parameter & !is.iv ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
+
+        # others
+        TRUE ~ PPTESTCD
+      )
+    ) %>%
+
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     add_derived_pp_vars(
@@ -112,22 +149,6 @@ export_cdisc <- function(res_nca) {
     group_by(USUBJID)  %>%
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
-
-    # Parameters with a one-to-many mapping in PKNCA / CDISC
-    mutate(
-      is.iv.route = !!sym(route_col) == "intravascular",
-      is.mrt.parameter = grepl("MRT(LST|IFO|IFP)", PPTESTCD),
-      PPTEST = case_when(
-        is.mrt.parameter & is.iv.route ~ gsub("(MRT )(.*)", "\\1IV Cont Inf \\2", PPTEST),
-        is.mrt.parameter & !is.iv.route ~ gsub("(MRT )(.*)", "\\1Extravasc \\2", PPTEST),
-        TRUE ~ PPTEST
-      ),
-      PPTESTCD = case_when(
-        is.mrt.parameter & is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1IC\\2", PPTESTCD),
-        is.mrt.parameter & !is.iv.route ~ gsub("(MRT)(LST|IFO|IFP)", "\\1EV\\2", PPTESTCD),
-        TRUE ~ PPTESTCD
-      )
-    ) %>%
 
     # Select only columns needed for PP, ADPP, ADPC
     select(any_of(metadata_nca_variables[["Variable"]])) %>%
@@ -320,7 +341,7 @@ adjust_class_and_length <- function(df, metadata) {
                  !endsWith(var, "DTM")) {
       df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     } else if (!var_specs$Type %in% c(
-      "dateTime", "duration"
+      "dateTime", "duration", "integer", "float", "Num"
     )) {
       warning(
         "Unknown var specification type: ", var_specs$Type,
@@ -335,8 +356,6 @@ adjust_class_and_length <- function(df, metadata) {
 add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
   df %>%
     mutate(
-      PPTESTCD = translate_terms(PPTESTCD, mapping_col = "PKNCA", target_col = "PPTESTCD"),
-      PPTEST = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
@@ -433,8 +452,8 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   dtc_vectors <- c(
     "%Y-%m-%dT%H:%M:%S",
     "%Y-%m-%dT%H:%M",
-    "%d-%m-%Y %H:%M:%S",
-    "%d-%m-%Y %H:%M"
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%d %H:%M"
   ) %>%
     lapply(\(format) strptime(dt, format = format))
 

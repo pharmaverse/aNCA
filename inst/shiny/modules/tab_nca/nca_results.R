@@ -177,8 +177,11 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         resizable = TRUE,
         defaultPageSize = 25,
         showPageSizeOptions = TRUE,
+        pageSizeOptions = c(10, 25, 50, 100, nrow(output_results())),
         striped = TRUE,
         bordered = TRUE,
+        compact = TRUE,
+        style = list(fontSize = "0.75em"),
         height = "68vh",
         rowStyle = function(index) {
           flagged_value <- output_results()$flagged[index]

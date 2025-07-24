@@ -35,8 +35,8 @@ test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
       TRUE ~ NA_character_
     ),
     PCRFTDTM = case_when(
-      NCA_PROFILE == 1 ~ "01-01-2023 00:00",
-      NCA_PROFILE == 2 ~ "02-01-2023 00:00",
+      NCA_PROFILE == 1 ~ "2023-01-01 00:00",
+      NCA_PROFILE == 2 ~ "2023-01-02 00:00",
       TRUE ~ NA_character_
     )
   )
@@ -371,10 +371,89 @@ describe("export_cdisc", {
   })
 
   # Performs correctly the one-to-many mappings between PKNCA and PPTESTCD
-  it("differentiates mrt.xxx for extravascular (EV) and infusion (IC)", {
+  it("differentiates cl.xxx for extravascular (bioavailability, F) and intravascular", {
+    test_cl_data <- FIXTURE_PKNCA_DATA
+    test_cl_data$intervals <- test_cl_data$intervals %>%
+      filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
+      mutate(
+        cl.last = TRUE,
+        cl.obs = TRUE,
+        cl.pred = TRUE,
+        cl.all = TRUE
+      )
+    test_cl_result <- suppressWarnings(PKNCA::pk.nca(test_cl_data))
+    test_cl_result$result <- test_cl_result$result %>%
+      filter(PPTESTCD %in% c("cl.last", "cl.obs", "cl.pred")) %>%
+      mutate(
+        PPSTRES = PPORRES,
+        PPSTRESU = PPORRESU
+      )
+
+    res <- export_cdisc(test_cl_result)
+
+    res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
+    res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
+
+    expect_true(all(res_of_infusion_subj$PPTESTCD %in% c("CLO", "CLP", "CLALL", "CLLST")))
+    expect_true(all(
+      res_of_infusion_subj$PPTEST %in% c(
+        "Total CL Obs",
+        "Total CL Pred",
+        "CL (based on AUCall)",
+        "CL (based on AUClast)"
+      )
+    ))
+    expect_true(all(res_of_ev_subj$PPTESTCD %in% c("CLFO", "CLFP", "CLFLST")))
+    expect_true(all(
+      res_of_ev_subj$PPTEST %in% c(
+        "Total CL Obs by F",
+        "Total CL Pred by F",
+        "CL (based on AUCall) by F",
+        "CL (based on AUClast) by F"
+      )
+    ))
+  })
+
+  it("differentiates vz.xxx for extravascular (bioavailability, F) and intravascular", {
+    test_vz_data <- FIXTURE_PKNCA_DATA
+    test_vz_data$intervals <- test_vz_data$intervals %>%
+      filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
+      mutate(
+        vz.last = TRUE,
+        vz.obs = TRUE,
+        vz.pred = TRUE
+      )
+    test_vz_result <- suppressWarnings(PKNCA::pk.nca(test_vz_data))
+    test_vz_result$result <- test_vz_result$result %>%
+      filter(PPTESTCD %in% c("vz.last", "vz.obs", "vz.pred")) %>%
+      mutate(
+        PPSTRES = PPORRES,
+        PPSTRESU = PPORRESU
+      )
+
+    res <- export_cdisc(test_vz_result)
+
+    res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
+    res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
+
+    expect_true(all(res_of_infusion_subj$PPTESTCD %in% c("VZO", "VZP")))
+    expect_true(all(
+      res_of_infusion_subj$PPTEST %in% c(
+        "Vz Obs",
+        "Vz Pred"
+      )
+    ))
+    expect_true(all(res_of_ev_subj$PPTESTCD %in% c("VZFO", "VZFP")))
+    expect_true(all(res_of_ev_subj$PPTEST %in% c(
+      "Vz Obs by F",
+      "Vz Pred by F"
+    )))
+  })
+
+  it("differentiates mrt.xxx for extravascular (EV), infusion (IC) and bolus (IB)", {
     test_mrt_data <- FIXTURE_PKNCA_DATA
     test_mrt_data$intervals <- test_mrt_data$intervals %>%
-      filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
+      filter(USUBJID %in% unique(USUBJID)[c(5, 6, 7)]) %>%
       mutate(
         mrt.last = TRUE,
         mrt.obs = TRUE,
@@ -391,7 +470,8 @@ describe("export_cdisc", {
     res <- export_cdisc(test_mrt_result)
 
     res_of_infusion_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[1])
-    res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
+    res_of_bolus_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[2])
+    res_of_ev_subj <- res$pp %>% filter(USUBJID == unique(USUBJID)[3])
 
     expect_true(all(res_of_infusion_subj$PPTESTCD %in% c("MRTICIFO", "MRTICIFP", "MRTICLST")))
     expect_true(all(
@@ -399,6 +479,14 @@ describe("export_cdisc", {
         "MRT IV Cont Inf Infinity Obs",
         "MRT IV Cont Inf Infinity Pred",
         "MRT IV Cont Inf to Last Nonzero Conc"
+      )
+    ))
+    expect_true(all(res_of_bolus_subj$PPTESTCD %in% c("MRTIBIFO", "MRTIBIFP", "MRTIBLST")))
+    expect_true(all(
+      res_of_bolus_subj$PPTEST %in% c(
+        "MRT IV Bolus Infinity Obs",
+        "MRT IV Bolus Infinity Pred",
+        "MRT IV Bolus to Last Nonzero Conc"
       )
     ))
     expect_true(all(res_of_ev_subj$PPTESTCD %in% c("MRTEVIFO", "MRTEVIFP", "MRTEVLST")))
