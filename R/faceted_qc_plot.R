@@ -1,176 +1,205 @@
-#' Create a Faceted Scatter Plot for QC
+#' Create a Faceted Quality Control (QC) Plot
 #'
-#' Generates a customizable, faceted ggplot scatter plot, typically for quality
-#' control (QC). The function supports dynamic labels and automatically
-#' prepares tooltips for interactive use with `ggplotly`.
+#' Generates a faceted QC plot by layering concentration data (as
+#' black shapes) and dose data (as colored points). It creates a single, unified
+#' legend for both data types and can return either a static `ggplot` or an
+#' interactive `plotly` object.
 #'
-#' @param data A data.frame containing the plotting data.
+#' @param data_conc A data.frame containing concentration data (e.g., PK samples).
+#' @param data_dose An optional data.frame containing dosing information.
 #' @param x_var Character. The column name to be used for the x-axis.
 #' @param y_var Character. The column name to be used for the y-axis.
-#' @param colour_var Character. The column name to map to the colour aesthetic.
-#' @param grouping_vars Character vector. Column names used to create vertical
-#'   facets (panels).
-#' @param labels_df A data.frame used by helper functions (`get_label`,
-#'   `generate_tooltip_text`) to look up variable labels.
-#' @param title Character. The main title of the plot.
+#' @param colour_var Character. The column in `data_dose` to map to color.
+#' @param shape_var Character. The column in `data_conc` to map to shape.
+#' @param grouping_vars Character vector. Column names to use for faceting.
+#' @param other_tooltip_vars Optional character vector of additional column names
+#'   to include in the tooltip.
+#' @param x_var_units Character. The column name containing the units for the
+#'   x-axis variable. It is expected that this column contains a single unique value.
+#' @param colour_var_units Character. The column name for the units of the
+#'   colour variable. It is expected that this column contains a single unique value.
+#' @param labels_df A data.frame used by helper functions to look up variable labels.
+#' @param title Character. The main title for the plot.
+#' @param show_PK_samples Logical. If `TRUE`, plots the concentration data.
+#' @param show_doses Logical. If `TRUE`, plots the dose data.
+#' @param as.plotly Logical. If `TRUE`, converts the final plot to an interactive
+#'   `plotly` object.
 #'
-#' @return A `ggplot` object ready to be printed or passed to `ggplotly`.
+#' @return A `ggplot` object or, if `as.plotly = TRUE`, a `plotly` object.
 #'
+#' @importFrom purrr pmap_chr
+#' @importFrom scales hue_pal
 #'
+#' @export
 #' @examples
-#' # Sample data
-#' qc_data <- data.frame(
-#'   TIME = 1:6,
-#'   RESULT = c(5, 6, 8, 9, 12, 11),
-#'   DOSE = as.factor(c(10, 10, 20, 20, 30, 30)),
-#'   ARM = rep(c("A", "B", "C"), each = 2)
+#' # Dummy helper functions required for the example
+#' get_label <- function(df, var, type) tools::toTitleCase(var)
+#' generate_tooltip_text <- function(data, ...) "details"
+#'
+#' # Sample concentration data
+#' conc_data <- data.frame(
+#'   USUBJID = rep(paste0("S-", 1:2), each = 2),
+#'   ACTUAL_TIME = c(0, 24, 0, 24),
+#'   SAMPLE_TYPE = rep(c("PLASMA", "URINE"), 2),
+#'   COHORT = "A",
+#'   TIME_UNIT = "hr"
 #'   )
-#' label_data <- data.frame() # Dummy labels object
+#'
+#' # Sample dose data
+#' dose_data <- data.frame(
+#'   USUBJID = rep(paste0("S-", 1:2), each = 1),
+#'   ACTUAL_TIME = c(0, 0),
+#'   DOSE_LEVEL = c(100, 100),
+#'   COHORT = "A",
+#'   DOSE_UNIT = "mg"
+#'  )
 #'
 #' # Generate the plot
 #' faceted_qc_plot(
-#'   data = qc_data,
-#'   x_var = "TIME",
-#'   y_var = "RESULT",
-#'   colour_var = "DOSE",
-#'   grouping_vars = "ARM",
-#'   labels_df = label_data,
-#'   title = "Sample QC Plot"
-#'   )
-#'
+#'   data_conc = conc_data,
+#'   data_dose = dose_data,
+#'   x_var = "ACTUAL_TIME",
+#'   y_var = "USUBJID",
+#'   colour_var = "DOSE_LEVEL",
+#'   shape_var = "SAMPLE_TYPE",
+#'   grouping_vars = "COHORT",
+#'   x_var_units = "TIME_UNIT",
+#'   colour_var_units = "DOSE_UNIT",
+#'   title = "Sample Dosing and PK Plot"
+#'  )
 #' @export
-faceted_qc_plot <- function(data,
+faceted_qc_plot <- function(data_conc,
+                            data_dose = NULL,
                             x_var,
                             y_var,
                             colour_var,
+                            shape_var,
                             grouping_vars,
+                            other_tooltip_vars = NULL,
+                            x_var_units = NULL,
+                            colour_var_units = NULL,
                             labels_df = data.frame(),
                             title = NULL,
                             show_PK_samples = TRUE,
-                            show_actual_dose_bars = TRUE,
-                            show_nominal_dose_lines = TRUE,
+                            show_doses = TRUE,
                             as.plotly = FALSE) {
 
-  # Include all variables from the plot in the tooltips
-  tooltip_vars <- c(x_var, y_var, colour_var, grouping_vars)
-  
-  all_colour_levels <- unique(data[[colour_var]])
-  all_y_levels <- sort(unique(data[[y_var]]))
-  
-  # Get dynamic labels for axes and legend
-  x_axis_title <- get_label(labels_df, x_var, "ADPC")
-  y_axis_title <- get_label(labels_df, y_var, "ADPC")
-  legend_title <- get_label(labels_df, colour_var, "ADPC")
+  # Define the levels for the shape and colour variables
+  if (show_PK_samples && !is.null(data_conc)) {
+    shape_levels <- sort(unique(data_conc[[shape_var]]))
+  } else {
+    shape_levels <- character()
+  }
 
-  # Build the tooltip text for each row
-  processed_data <- data %>%
+  if (show_doses && !is.null(data_dose)) {
+    colour_levels <- as.character(sort(unique(data_dose[[colour_var]])))
+  } else {
+    colour_levels <- character()
+  }
+
+  # Select variables to include in the plotly tooltips
+  tooltip_vars <- c(y_var, grouping_vars, other_tooltip_vars, x_var, colour_var)
+
+  # Check that x and the colour variable have a single unit value
+  x_unit_lab <- data_conc %>% select(any_of(x_var_units)) %>% distinct()
+  x_unit_lab <- ifelse(length(x_unit_lab) != 1, "", paste0(" (", x_unit_lab, ")"))
+
+  colour_unit_lab <- data_conc %>% select(any_of(colour_var_units)) %>% distinct()
+  colour_unit_lab <- ifelse(length(colour_unit_lab) != 1, "" , paste0(" (", colour_unit_lab, ")"))
+  
+  # Define a title for the legend
+  legend_title = paste(paste(
+    ifelse(
+      show_PK_samples && !is.null(data_conc),
+      get_label(labels_df, shape_var, "ADPC"),
+      ""
+    ),
+    ifelse(
+      show_doses && !is.null(data_dose),
+      paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab),
+      ""
+    ),
+    sep = "<br>"),
+    "<br>")
+
+  # Preprocess the data
+  plot_data_list <- list()
+  if (show_PK_samples && !is.null(data_conc)) {
+    plot_data_list$conc <- data_conc %>%
+      mutate(legend_group = as.character(!!sym(shape_var)))
+  }
+  if (show_doses && !is.null(data_dose)) {
+    plot_data_list$dose <- data_dose %>%
+      mutate(legend_group = as.character(!!sym(colour_var)))
+  }
+
+  # Return an empty plot for empty datasets
+  if (length(plot_data_list) == 0)
+    return(ggplot() + labs(title = "No data to display."))
+
+  # Combine data and create tooltip text
+  all_legend_levels <- unique(c(shape_levels, colour_levels))
+  processed_data <- bind_rows(plot_data_list) %>%
     mutate(
-      colour_factored = factor(!!sym(colour_var), levels = all_colour_levels),
+      legend_group = factor(legend_group, levels = all_legend_levels),
+      facet_title = pmap_chr(
+        select(., all_of(grouping_vars)),
+        ~ paste(list(...), collapse = ", ")
+      ),
       tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
     )
 
-  plot_list <- processed_data %>%
-    group_by(across(all_of(grouping_vars))) %>%
-    group_split() %>%
+  # Define shapes
+  shape_values <- setNames(
+    c(
+      # select specific shapes for PK samples
+      rep(c(1, 4, 5, 0, 2, 6, 3), length.out = length(shape_levels)),
+      # select a filled-in circle for doses
+      rep(16, length(colour_levels))
+    ),
+    all_legend_levels
+  )
+
+  # Define colors: black for PK samples, hue palette for doses
+  if(length(colour_levels) > 0) {
+    dose_colours <- scales::hue_pal()(length(colour_levels))
+  } else {
+    dose_colours <- character()
+  }
+  colour_values <- setNames(c(rep("black", length(shape_levels)), dose_colours), all_legend_levels)
+
+  # Build the plot
+  p <- ggplot(
+    processed_data,
+    aes(
+      x = .data[[x_var]],
+      y = .data[[y_var]],
+      text = tooltip_text,
+      colour = legend_group,
+      shape = legend_group)
+    ) +
+    geom_point(aes(alpha = legend_group), size = 2.5, stroke = 0.25) +
+    facet_wrap(vars(facet_title), scales = "free_y", ncol = 1) +
   
-  
-  # solution 1: make ggplot subplots and convert to plotly only if required
-  plot_list <- imap(split_processed_data, ~{
-
-    group_name <- .x %>%
-      select(all_of(grouping_vars)) %>%
-      slice(1) %>%
-      paste(collapse = " | ")
-
-    p <- ggplot(data = .x,
-           aes(x = !!sym(x_var),
-               y = !!sym(y_var),
-               colour = colour_factored,
-               text = tooltip_text)) +
-      geom_point(size = 1) +
-      scale_colour_discrete(drop = FALSE) +
-      theme_bw() +
-      theme(strip.text.y = element_text(angle = -90),
-            panel.spacing = unit(0.2, "lines"))
-
-
-    if(as.plotly) ggplotly(p, tooltip = "text") else p
-
-  })
-
-  
-  # solution 2: make ggplotly subplots directly
-  # imap(~{
-  #   
-  #   group_name <- .x %>% 
-  #     select(all_of(grouping_vars)) %>% 
-  #     slice(1) %>% 
-  #     paste(collapse = " | ")
-  #   
-  #   plot_ly(
-  #     data = .x,
-  #     x = ~get(x_var),
-  #     y = ~get(y_var),
-  #     color = ~colour_factored,
-  #     text = ~tooltip_text,
-  #     type = "scatter",
-  #     mode = "markers",
-  #     showlegend = (.y == 1)
-  #   ) %>%
-  #     layout(annotations = list(
-  #       x = 0.5, y = 1.05, text = group_name,
-  #       showarrow = FALSE, xref = "paper", yref = "paper",
-  #       xanchor = "left", yanchor = "middle"
-  #     ))
-  # })
-  # 
-  # subplot(plot_list,
-  #         nrows = length(plot_list),
-  #         shareX = TRUE,
-  #         shareY = TRUE,
-  #         titleX = TRUE,
-  #         titleY = TRUE
-  # ) %>%
-  #   layout(
-  #     title = title,
-  #     legend = list(title = list(text = legend_title)),
-  #     # REQ 3 & 4: Set axis titles (Y-title will only appear once)
-  #     xaxis = list(title = x_axis_title),
-  #     yaxis = list(
-  #       title = y_axis_title,
-  #       # REQ 5: Show all unique y-values on the axis
-  #       tickmode = 'array',
-  #       tickvals = all_y_levels,
-  #       ticktext = all_y_levels
-  #     ),
-  #     # REQ 1 (cont.): Add margin space for the subplot titles on the right
-  #     margin = list(r = 180) 
-  #   )
-    # geom_point(size = 1.5) +
-    # facet_grid(rows = vars(!!!syms(grouping_vars)), scales = "free_y", space = "free_y") +
-    # labs(
-    #   x = get_label(labels_df, x_var, "ADPC"),
-    #   y = get_label(labels_df, y_var, "ADPC"),
-    #   title = title,
-    #   subtitle = paste("Subjects grouped by",
-    #                    paste(grouping_vars, collapse = ", ")),
-    #   colour = get_label(labels_df, colour_var, "ADPC")
-    # ) +
-    # theme_bw() +
-    # theme(
-    #   # Keep cohort labels horizontal
-    #   strip.text.y = element_text(angle = -90),
-    #   # Adjust spacing between panels
-    #   panel.spacing = unit(0.2, "lines")
-    # )
+    # Apply the manual scales
+    scale_shape_manual(name = legend_title, values = shape_values) +
+    scale_colour_manual(name = legend_title, values = colour_values) +
+    
+    # Make doses semi-transparent and hide the alpha legend
+    scale_alpha_manual(values = setNames(c(rep(1, length(shape_levels)),
+                                           rep(0.6, length(colour_levels))),
+                                         all_legend_levels), guide = "none") +
+    labs(
+      x = paste0(get_label(labels_df, x_var, "ADPC"), x_unit_lab),
+      y = get_label(labels_df, y_var, "ADPC"),
+      title = title
+    ) +
+    theme_bw()
 
   if (as.plotly) {
-    plt %>%
-      ggplotly(tooltip = "text") %>%
-      layout(title = list(
-        text = paste0(p$labels$title, "<br><sup>", p$labels$subtitle, "</sup>")
-      ))
+    ggplotly(p, tooltip = "text") %>%
+      layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
   } else {
-    plt
+    p
   }
 }
