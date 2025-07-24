@@ -9,8 +9,9 @@ data <- data.frame(
   AVAL = c(10, 20, 30),
   RACE = as.factor(c("WHITE", "ASIAN", "ASIAN"))
 )
+ADNCA_LABELS_FIXTURE <- metadata_nca_variables
 describe("apply_labels", {
-  labeled_data  <- expect_no_error(apply_labels(data, ADNCA_LABELS_FIXTURE, type = "ADPC"))
+  labeled_data  <- expect_no_error(apply_labels(data, ADNCA_LABELS_FIXTURE))
   it("applies labels to the data frame", {
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "Unique Subject Identifier")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
@@ -23,8 +24,7 @@ describe("apply_labels", {
       Label = character(),
       Dataset = character()
     )
-    labeled_data <- expect_no_error(apply_labels(data, EMPTY_ADNCA_LABELS_FIXTURE,
-                                                 c("ADPC", "ADPC")))
+    labeled_data <- expect_no_error(apply_labels(data, EMPTY_ADNCA_LABELS_FIXTURE))
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "USUBJID")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "AVAL")
     expect_equal(base::attr(labeled_data$RACE, "label"), "RACE")
@@ -35,7 +35,7 @@ describe("apply_labels", {
     data_with_existing_labels <- data
     attr(data_with_existing_labels$USUBJID, "label") <- "Existing label for USUBJID"
 
-    labeled_data <- apply_labels(data_with_existing_labels, ADNCA_LABELS_FIXTURE, "ADPC")
+    labeled_data <- apply_labels(data_with_existing_labels, ADNCA_LABELS_FIXTURE)
     expect_equal(base::attr(labeled_data$USUBJID, "label"), "Existing label for USUBJID")
     expect_equal(base::attr(labeled_data$AVAL, "label"), "Analysis Value")
   })

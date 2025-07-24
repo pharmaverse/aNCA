@@ -22,29 +22,20 @@
 #'  print(attr(data$USUBJID, "label")) # "Unique Subject Identifier"
 #'  print(attr(data$AVAL, "label"))    # "Analysis Value"
 #'
-#' @importFrom dplyr filter
-#' @importFrom magrittr `%>%`
-#' @importFrom stats setNames
+#' @importFrom formatters var_labels
 #'
 #' @export
-apply_labels <- function(data, labels_df, type) {
-  labels_df <- dplyr::filter(labels_df, Dataset == type)
-  labels_reference <- stats::setNames(labels_df$Label, labels_df$Variable)
-
-  for (col in colnames(data)) {
-    if (!is.null(attr(data[[col]], "label"))) next # Preserve existing labels
-
-    if (col %in% names(labels_reference)) {
-      base::attr(data[[col]], "label") <- labels_reference[[col]]
-    } else {
-      base::attr(data[[col]], "label") <- col
-    }
-
-    # Check if the column is a factor and keep the levels order
-    if (is.factor(data[[col]])) {
-      data[[col]] <- as_factor_preserve_label(data[[col]])
-    }
-  }
+apply_labels <- function(data, labels_df = metadata_nca_variables) {
+  formatters::var_labels(data) <- ifelse(
+    is.na(formatters::var_labels(data)),
+    translate_terms(
+      colnames(data),
+      mapping_col = "Variable",
+      target_col = "Label",
+      metadata = labels_df
+    ),
+    formatters::var_labels(data)
+  )
 
   data
 }

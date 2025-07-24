@@ -4,7 +4,7 @@
 \alias{apply_labels}
 \title{Apply Labels to a dataset}
 \usage{
-apply_labels(data, labels_df, type)
+apply_labels(data, labels_df = metadata_nca_variables)
 }
 \arguments{
 \item{data}{The dataset to which labels will be applied.}
