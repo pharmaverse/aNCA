@@ -27,9 +27,7 @@ data_filtering_ui <- function(id) {
         class = "data-filtering-container",
         div(
           class = "filtered-table-container",
-          withSpinner(
-            reactableOutput(ns("filtered_data_display"))
-          )
+          reactable_ui(ns("filtered_data_display"))
         ),
         div(
           class = "filters-container",
@@ -130,26 +128,13 @@ data_filtering_server <- function(id, raw_adnca_data) {
     }) |>
       bindEvent(input$submit_filters, raw_adnca_data())
 
-    output$filtered_data_display <- renderReactable({
-      req(filtered_data())
-      reactable(
-        filtered_data(),
-        rownames = FALSE,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = FALSE,
-        compact = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        class = "reactable-table",
-        style = list(fontSize = "0.75em"),
-        height = "50vh"
-      )
-    })
+    reactable_server(
+      "filtered_data_display",
+      filtered_data,
+      height = "50vh",
+      defaultPageSize = 25,
+      style = list(fontSize = "0.75em")
+    )
 
     filtered_data
   })
