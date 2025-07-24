@@ -3,9 +3,10 @@
 #' This function adds "label" attributes to all columns in a dataset
 #'
 #' @param data The dataset to which labels will be applied.
-#' @param labels_df A data frame with three columns: Variable, Label, and Dataset,
-#'  for the dataset you are applying it .
+#' @param labels_df A data frame containing at least the columns specified by mapping_colname, "Label", and "Dataset".
+#'  This allows flexible mapping of variable names to labels for the dataset you are applying it to.
 #' @param type The type variable in labels_df for which the labels are to be applied.
+#' @param mapping_colname The column name in labels_df that contains variable names to be mapped. Default is "Variable".
 #'
 #' @return The same dataset with label attributes applied to all columns.
 #' If a column is not present in the labels list, it will be assigned the name of the col.
@@ -25,10 +26,10 @@
 #' @importFrom formatters var_labels
 #'
 #' @export
-apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC") {
+apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC", mapping_colname = "Variable") {
   formatters::var_labels(data) <- ifelse(
     is.na(formatters::var_labels(data)),
-    get_label(colnames(data), type = type, labels_df = labels_df),
+    get_label(colnames(data), type = type, labels_df = labels_df, mapping_colname = mapping_colname),
     formatters::var_labels(data)
   )
 
@@ -41,7 +42,8 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC"
 #'
 #' @param variable The variable for which the label is to be retrieved.
 #' @param type The type of the dataset for which the label is to be retrieved.
-#' @param labels_df A data frame with three columns: Variable, Label, and Dataset.
+#' @param labels_df A data frame containing at least the columns specified by mapping_colname, "Label", and "Dataset".
+#' @param mapping_colname The column name in labels_df that contains variable names to be mapped. Default is "Variable".
 #'
 #' @return The label of the heading if it exists in the labels file,
 #' otherwise the variable name.
@@ -50,19 +52,26 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC"
 #' \dontrun{
 #'  # Example usage:
 #'  LABELS <- data.frame(
-#'  Variable = c("USUBJID", "AVAL"),
-#'  Label = c("Unique Subject Identifier", "Analysis Value"),
-#'  Dataset = c("ADPC", "ADPC")
+#'    Variable = c("USUBJID", "AVAL"),
+#'    Label = c("Unique Subject Identifier", "Analysis Value"),
+#'    Dataset = c("ADPC", "ADPC")
 #'  )
-#'  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
-#'  get_label(LABELS, "AGE", "ADPC")  # Returns "AGE"
+#'  get_label("USUBJID", "ADPC", LABELS)  # Returns "Unique Subject Identifier"
+#'  get_label("AGE", "ADPC", LABELS)  # Returns "AGE"
+#'  # Using a custom mapping column:
+#'  LABELS2 <- data.frame(
+#'    ColName = c("USUBJID", "AVAL"),
+#'    Label = c("Unique Subject Identifier", "Analysis Value"),
+#'    Dataset = c("ADPC", "ADPC")
+#'  )
+#'  get_label("USUBJID", "ADPC", LABELS2, mapping_colname = "ColName")  # Returns "Unique Subject Identifier"
 #' }
 #'
 #' @export
-get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variables) {
+get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variables, mapping_colname = "Variable") {
   translate_terms(
     variable,
-    "Variable",
+    mapping_colname,
     "Label",
     metadata = dplyr::filter(labels_df, Dataset == type)
   )
