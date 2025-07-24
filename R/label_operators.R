@@ -59,7 +59,7 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC"
 #' }
 #'
 #' @export
-get_label <- function(labels_df = metadata_nca_variables, variable = "USUBJID", type = "ADPC") {
+get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variables) {
   translate_terms(
     variable,
     "Variable",

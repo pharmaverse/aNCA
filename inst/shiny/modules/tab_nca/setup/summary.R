@@ -21,7 +21,7 @@ summary_server <- function(id, processed_pknca_data) {
       time_dose <- processed_pknca_data()$dose$columns$time
 
       data <- processed_pknca_data()$intervals %>%
-        apply_labels(LABELS, "ADPC") %>%
+        apply_labels(type = "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE))) %>%
         left_join(
           processed_pknca_data()$dose$data %>%
