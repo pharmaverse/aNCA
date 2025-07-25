@@ -12,6 +12,16 @@ tab_visuals_ui <- function(id) {
       layout_sidebar(
         sidebar = sidebar(
           position = "right", open = TRUE,
+          selectInput(
+            ns("palette_theme"),
+            "Select Color Theme:",
+            choices = c(
+              "Default (ggplot2)" = "default",
+              "Viridis" = "viridis",
+              "Spectral" = "spectral"
+            ),
+            selected = "default"
+          ),
           pickerInput(
             inputId = ns("generalplot_analyte"),
             label = "Select Analyte:",
@@ -39,6 +49,14 @@ tab_visuals_ui <- function(id) {
           pickerInput(
             inputId = ns("generalplot_colorby"),
             label = "Choose the variables to color by",
+            choices = NULL,
+            selected = NULL,
+            multiple = TRUE,
+            options = list(`actions-box` = TRUE)
+          ),
+          pickerInput(
+            inputId = ns("generalplot_facetby"),
+            label = "Choose the variables to facet by:",
             choices = NULL,
             selected = NULL,
             multiple = TRUE,
@@ -217,16 +235,25 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected = param_choices_usubjid[1]
       )
 
-      # Update the colorby picker input
-      param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "PARAM", "DOSEA", "NCA_PROFILE", "USUBJID", grouping_vars())
-      )
+      # Update the colorby and facet by picker inputs
+      all_cols <- names(data())
+      cols_to_exclude <- c("AVAL", "ARRLT", "AFRLT", "NRRLT", "NFRLT")
+      unit_cols <- all_cols[endsWith(all_cols, "U")]
+      cols_to_exclude <- c(cols_to_exclude, unit_cols)
+      param_choices <- sort(setdiff(all_cols, cols_to_exclude))
 
       updatePickerInput(
         session,
         "generalplot_colorby",
-        choices = param_choices_colorby,
-        selected = param_choices_colorby[length(param_choices_colorby)]
+        choices = param_choices,
+        selected = "USUBJID"
+      )
+
+      updatePickerInput(
+        session,
+        "generalplot_facetby",
+        choices = param_choices,
+        selected = NULL
       )
 
       # Update the analyte mean select input
@@ -288,9 +315,21 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
     # TAB: General Lineplot --------------------------------------------------------
 
+    master_palettes_list <- reactive({
+      req(input$palette_theme)
+      req(input$generalplot_colorby)
+
+      get_persistent_palette(
+        data(),
+        input$generalplot_colorby,
+        palette_name = input$palette_theme # Use the user's choice
+      )
+    })
+
     # render the general lineplot output in plotly
     output$individualplot <- renderPlotly({
       req(data())
+      req(master_palettes_list())
       req(input$generalplot_analyte)
       req(input$generalplot_pcspec)
       req(input$generalplot_usubjid)
@@ -299,30 +338,41 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$log)
       log_info("Rendering individual plots")
 
+
+      palettes <- master_palettes_list()
+
       plot_data <- data() %>%
         mutate( #round to prevent floating point precision issues
           TIME_DOSE = round(AFRLT - ARRLT, 6)
         )
-      general_lineplot(
+
+      p <- general_lineplot(
         plot_data,
         input$generalplot_analyte,
         input$generalplot_pcspec,
         input$generalplot_usubjid,
         input$generalplot_colorby,
+        input$generalplot_facetby,
         input$timescale,
         input$log,
         input$show_threshold,
         input$threshold_value,
         input$show_dose,
-        cycle = input$cycles
+        cycle = input$cycles,
+        palette = palettes
       ) %>%
-        ggplotly() %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
-          )
-        )
+        ggplotly()
 
+      # Conditionally add rangeslider only if the plot is not faceted
+      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
+        p <- p %>%
+          layout(
+            xaxis = list(
+              rangeslider = list(type = "time")
+            )
+          )
+      }
+      p
     })
 
     # TAB: Mean Plot -----------------------------------------------------------
