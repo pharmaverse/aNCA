@@ -26,9 +26,7 @@ data_upload_ui <- function(id) {
       ),
       uiOutput(ns("file_loading_message"))
     ),
-    withSpinner(
-      reactableOutput(ns("data_display"))
-    )
+    reactable_ui(ns("data_display"))
   )
 }
 
@@ -85,21 +83,14 @@ data_upload_server <- function(id) {
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
 
-    output$data_display <- renderReactable({
-      req(raw_data())
-      reactable(
-        raw_data(),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = FALSE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        height = "70vh",
-        class = "reactable-table"
-      )
-    })
+    reactable_server(
+      "data_display",
+      raw_data,
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data()))),
+      height = "50vh",
+      class = "reactable-table",
+      style = list(fontSize = "0.75em")
+    )
 
     raw_data
   })

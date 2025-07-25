@@ -8,12 +8,12 @@
 #'
 summary_ui <- function(id) {
   ns <- NS(id)
-  reactableOutput(ns("nca_intervals_summary"))
+  reactable_ui(ns("nca_intervals_summary"))
 }
 
 summary_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
-    output$nca_intervals_summary <- renderReactable({
+    summary_data <- reactive({
       req(processed_pknca_data())
 
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
@@ -30,20 +30,13 @@ summary_server <- function(id, processed_pknca_data) {
         ) %>%
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end"))) %>%
         mutate(start = start - TIME_DOSE, end = end - TIME_DOSE)
-
-      reactable(
-        data,
-        columns = generate_col_defs(data),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
-      )
     })
+
+    reactable_server(
+      "nca_intervals_summary",
+      summary_data,
+      columns = generate_col_defs,
+      height = "98vh"
+    )
   })
 }
