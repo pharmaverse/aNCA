@@ -10,7 +10,7 @@ save_output <- function(output, output_path) {
 
   for (name in names(output)) {
 
-    if (length(output[[name]]) > 1 && inherits(output[[name]], "list")) {
+    if (inherits(output[[name]], "list")) {
       save_output(output = output[[name]], output_path = paste0(output_path, "/", name))
     } else if (inherits(output[[name]], "ggplot")) {
       file_name <- paste0(output_path, "/", name, ".png")
@@ -26,6 +26,10 @@ save_output <- function(output, output_path) {
           message("Error writing XPT file for ", name, ": ", e$message)
         }
       )
+    } else if (inherits(output[[name]], "plotly")) {
+      file_name <- paste0(output_path, "/", name, ".html")
+      htmlwidgets::saveWidget(output[[name]], file = file_name, selfcontained = TRUE)
+
     } else {
       stop(
         "Unsupported output type object in the list: ",
