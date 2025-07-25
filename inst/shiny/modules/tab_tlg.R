@@ -123,7 +123,6 @@ tab_tlg_server <- function(id, data) {
     output$selected_tlg_table <- DT::renderDT({
       log_trace("Rendering TLG table.")
       datatable(
-        class = "table table-striped table-bordered",
         data = dplyr::filter(tlg_order(), Selection),
         editable = list(
           target = "cell",
@@ -136,17 +135,24 @@ tab_tlg_server <- function(id, data) {
         selection = list(
           mode = "multiple"
         ),
-        # 1. Add "Buttons" to the extensions
         extensions = c("RowGroup", "Buttons"),
         options = list(
-          paging = FALSE,
-          searching = TRUE,
-          autoWidth = TRUE,
-          # 2. Add 'B' to the dom string to show Buttons
-          dom = "Bft",
+          scrollX = TRUE,
+          fixedHeader = TRUE,
+          dom = "Blfrtip",
+          buttons = list(
+            list(extend = "copy", title = paste0("TLG_table_", Sys.Date())),
+            list(extend = "csv", filename = paste0("TLG_table_", Sys.Date()))
+          ),
+          headerCallback = DT::JS(
+            "function(thead) {",
+            "  $(thead).css('font-size', '0.75em');",
+            "  $(thead).find('th').css('text-align', 'center');",
+            "}"
+          ),
           columnDefs = list(
-            list(width = "150px", targets = "_all"),
             list(className = "dt-center", targets = "_all"),
+            list(width = "150px", targets = "_all"),
             list(
               visible = FALSE,
               targets = c(
@@ -174,11 +180,15 @@ tab_tlg_server <- function(id, data) {
               filename = paste0("TLG_order_", Sys.Date())
             )
           )
-        )
+        ),
+          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
+          paging = TRUE
+        ),
+        class = "row-border compact"
       ) %>%
         formatStyle(
           columns = colnames(tlg_order()),
-          fontSize = "14px",
+          fontSize = "75%",
           fontFamily = "Arial"
         )
     }, server = FALSE)
@@ -216,8 +226,7 @@ tab_tlg_server <- function(id, data) {
         selection = list(mode = "multiple"),
         escape = FALSE,
         editable = FALSE,
-        class = "table table-striped table-bordered",
-        extensions = c("RowGroup", "Select"),
+        extensions = c("RowGroup", "Select", "Buttons"),
         options = list(
           paging = FALSE,
           searching = TRUE,
@@ -229,15 +238,34 @@ tab_tlg_server <- function(id, data) {
               targets = which(!names(tlg_order()) %in% c("Output", "Condition"))
             ),
             list(targets = 0, orderable = FALSE, className = "select-checkbox")
+          scrollX = TRUE,
+          fixedHeader = TRUE,
+          dom = "Blfrtip",
+          buttons = list(
+            list(extend = "copy", title = paste0("TLG_modal_table_", Sys.Date())),
+            list(extend = "csv", filename = paste0("TLG_modal_table_", Sys.Date()))
           ),
-          select = list(
-            style = "multiple",
-            selector = "td:first-child",
-            server = FALSE
+          headerCallback = DT::JS(
+            "function(thead) {",
+            "  $(thead).css('font-size', '0.75em');",
+            "  $(thead).find('th').css('text-align', 'center');",
+            "}"
           ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset")))
+          columnDefs = list(
+            list(className = "dt-center", targets = "_all"),
+            list(width = "150px", targets = "_all")
+          ),
+          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
+          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
+          paging = TRUE
+        ),
+        class = "row-border compact"
+      ) %>%
+        formatStyle(
+          columns = colnames(tlg_order()),
+          fontSize = "75%",
+          fontFamily = "Arial"
         )
-      )
     })
 
     # Update the Selection column when the confirm_add_tlg button is pressed

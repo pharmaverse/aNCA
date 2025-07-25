@@ -54,7 +54,9 @@ general_meanplot <- function(data,
   summarised_data <- preprocessed_data %>%
     mutate(id_variable_col = interaction(!!!syms(id_variable), sep = ", ",  drop = TRUE)) %>%
     # Create a groups variables for the labels
-    mutate(groups = paste(STUDYID, PARAM, PCSPEC, NCA_PROFILE, sep = ", ")) %>%
+    mutate(groups = paste0(
+      paste(STUDYID, PARAM, PCSPEC, NCA_PROFILE, sep = ", "), " [", AVALU, "]"
+    )) %>%
     group_by(id_variable_col, NRRLT, groups) %>%
     summarise(
               Mean = round(mean(AVAL, na.rm = TRUE), 3),
@@ -96,13 +98,14 @@ general_meanplot <- function(data,
   p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean), group = id_variable_col) +
     geom_line(aes(colour = id_variable_col)) +
     geom_point(aes(colour = id_variable_col)) +
-    facet_wrap(~groups,
-               strip.position = "top") +
+    facet_wrap(
+      ~groups,
+      strip.position = "top",
+      scales = "free_y"
+    ) +
     labs(
       x = paste0("Nominal Time [", time_unit, "]"),
-      y = paste0(
-        "Mean concentration", " [", conc_unit, "]"
-      ),
+      y = paste0("Mean concentration [", paste0(conc_unit, collapse = ", "), "]"),
       color = paste0(id_variable, collapse = ", "),
       fill = "95% Confidence Interval"
     ) +
