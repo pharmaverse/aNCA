@@ -113,10 +113,22 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Flag Rule Sets",
-        .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
-        .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
-        .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
-        .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
+        .rule_input(
+          ns("adj.r.squared"), "RSQADJ >=", 0.7, 0.05, 0, 1,
+          tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
+        ),
+        .rule_input(
+          ns("aucpext.obs"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (observed) for AUC related parameters"
+        ),
+        .rule_input(
+          ns("aucpext.pred"), "AUCPEP (% ext.predicted) <=", 20, 5, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (predicted) for AUC related parameters"
+        ),
+        .rule_input(
+          ns("span.ratio"), "LAMZSPN >=", 2, 1, 0,
+          tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
+        )
       ),
       id = "acc",
       open = c("General Settings", "Parameter Selection")
@@ -445,7 +457,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 #' @param min     Min value for the `shiny::numericInput` widget.
 #' @param max     Max value for the `shiny::numericInput` widget.
 #' @returns `shiny::fluidRow` containing html elements of the widget.
-.rule_input <- function(id, label, default, step, min, max = NULL) {
+.rule_input <- function(id, label, tooltip, default, step, min, max = NULL) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
   numeric_args <- list(
@@ -459,6 +471,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   # Only include `max` if not NULL
   if (!is.null(max)) {
     numeric_args$max <- max
+  }
+
+  label_tag <- if (!is.null(tooltip)) {
+    tooltip(tags$span(label), tooltip)
+  } else {
+    id
   }
 
   fluidRow(
