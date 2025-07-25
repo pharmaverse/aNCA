@@ -425,7 +425,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         )
       )
 
-      general_meanplot(
+      meanplot <- general_meanplot(
         data = data(),
         selected_studyids = input$studyid_mean,
         selected_analytes = input$analyte_mean,
@@ -443,7 +443,8 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
             rangeslider = list(type = "time")
           )
         )
-
+      session$userData$results$visualization$meanplot <- meanplot
+      meanplot
     })
 
     # TAB: Parameter Box plots ----------------------------------------------------
@@ -536,11 +537,10 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         varvalstofilter = input$selected_filters_boxplot,
         columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
         box = input$violinplot_toggle_switch,
-        plotly = FALSE
       )
 
       session$userData$results$visualization$boxplot <- boxplot
-      as.ggplotly(boxplot)
+      boxplot
     })
 
   })
