@@ -38,7 +38,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
       height = "60vh",
       card_header(paste0(title, " Results")),
       card_body(
-        DTOutput(ns("results"))
+        reactable_ui(ns("results"))
       )
     )
   )
@@ -121,50 +121,20 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         arrange(across(all_of(input$summary_groups)), Ratio_Type)
     })
 
-    # Display results
-    output$results <- renderDT({
-      req(full_output())
-      datatable(
-        full_output(),
-        extensions = "Buttons",
-        options = list(
-          scrollX = TRUE,
-          fixedHeader = TRUE,
-          dom = "Blfrtip",
-          buttons = list(
-            list(
-              extend = "copy",
-              title = paste0("Ratios_result", Sys.Date())
-            ),
-            list(
-              extend = "csv",
-              filename = paste0("Ratios_result_", Sys.Date())
-            )
-          ),
-          headerCallback = DT::JS(
-            "function(thead) {",
-            "  $(thead).css('font-size', '0.75em');",
-            "  $(thead).find('th').css('text-align', 'center');",
-            "}"
-          ),
-          columnDefs = list(
-            list(className = "dt-center", targets = "_all")
-          ),
-          lengthMenu = list(c(10, 50, -1),
-                            c("10", "50", "All")),
-          paging = TRUE
-        ),
-        class = "row-border compact",
-        rownames = FALSE
-      ) %>%
-        DT::formatStyle(columns = seq_len(ncol(full_output())), fontSize = "75%")
-    })
+    reactable_server(
+      "results",
+      full_output,
+      download_buttons = c("csv", "xlsx"),
+      file_name = \() paste0("Ratios_result_", Sys.Date()),
+      defaultPageSize = 10,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = reactive(c(10, 50, nrow(full_output()))),
+      style = list(fontSize = "0.75em")
+    )
 
     # Save the results in the output folder
     observeEvent(results(), {
-
       session$userData$results$additional_analysis$matrix_ratios <- results()
     })
-
   })
 }
