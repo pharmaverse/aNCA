@@ -6,6 +6,9 @@
     "AFRLT.dose",
     "ANALYTE",
     "ARRLT",
+    "ATPT",
+    "ATPTN".
+    "ATPTREF",
     "AUCdn_IV",
     "AUCdn_IV_prof",
     "AVAL",
