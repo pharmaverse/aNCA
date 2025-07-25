@@ -7,7 +7,7 @@
     "ANALYTE",
     "ARRLT",
     "ATPT",
-    "ATPTN".
+    "ATPTN",
     "ATPTREF",
     "AUCdn_IV",
     "AUCdn_IV_prof",
