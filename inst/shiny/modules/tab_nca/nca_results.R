@@ -13,7 +13,7 @@ nca_results_ui <- function(id) {
       options = list(`actions-box` = TRUE)
     ),
     units_table_ui(ns("units_table")),
-    reactableOutput(ns("myresults")),
+    reactable_ui(ns("myresults")),
     downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data"),
     downloadButton(ns("download_zip"), "Download All Results as ZIP")
   )
@@ -161,30 +161,16 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
     })
 
-    output$myresults <- reactable::renderReactable({
-      req(output_results())
-
-      # Generate column definitions that can be hovered in the UI
-      col_defs <- generate_col_defs(output_results())
-
-      # Make the reactable object
-      reactable(
-        output_results(),
-        columns = col_defs,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        pageSizeOptions = c(10, 25, 50, 100, nrow(output_results())),
-        striped = TRUE,
-        bordered = TRUE,
-        compact = TRUE,
-        style = list(fontSize = "0.75em"),
-        height = "68vh",
-        rowStyle = function(index) {
-          flagged_value <- output_results()$flagged[index]
+    reactable_server(
+      "myresults",
+      output_results,
+      columns = generate_col_defs,
+      compact = TRUE,
+      style = list(fontSize = "0.75em"),
+      height = "68vh",
+      rowStyle = function(x) {
+        function(index) {
+          flagged_value <- x$flagged[index]
           if (flagged_value == "FLAGGED") {
             list(backgroundColor = "#f5b4b4")
           } else if (flagged_value == "MISSING") {
@@ -193,8 +179,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             NULL
           }
         }
-      )
-    })
+      }
+    )
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
