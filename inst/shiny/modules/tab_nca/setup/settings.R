@@ -471,7 +471,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 #' @param min     Min value for the `shiny::numericInput` widget.
 #' @param max     Max value for the `shiny::numericInput` widget.
 #' @returns `shiny::fluidRow` containing html elements of the widget.
-.rule_input <- function(id, label, default, step, min, max = NULL) {
+.rule_input <- function(id, label, tooltip, default, step, min, max = NULL) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
   numeric_args <- list(
