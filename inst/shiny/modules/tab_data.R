@@ -82,11 +82,6 @@ tab_data_server <- function(id) {
       } else {
         shinyjs::enable("prev_step")
       }
-      if (current == "mapping") {
-        shinyjs::toggleState(id = "next_step", condition = mapping_is_complete())
-      } else {
-        shinyjs::enable("next_step")
-      }
     })
     observeEvent(input$restart, {
       data_step(steps[1])
@@ -94,21 +89,12 @@ tab_data_server <- function(id) {
     })
     observeEvent(input$next_step, {
       current_step <- isolate(data_step())
-      if (current_step == "mapping") {
-        # Check if the mapping is complete
-        if (isolate(mapping_is_complete())) {
-          trigger_mapping_submit(trigger_mapping_submit() + 1)
-        } else {
-          showNotification(
-            "Some required columns are not mapped. Please complete all selections.",
-            type = "error",
-            duration = 5
-          )
-        }
-      } else if (current_step %in% c("upload", "filtering")) {
+      if (current_step %in% c("upload", "filtering")) {
         idx <- match(current_step, steps)
         data_step(steps[idx + 1])
         updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
+      } else if (current_step == "mapping") {
+        trigger_mapping_submit(trigger_mapping_submit() + 1)
       } else if (current_step == "preview") {
         switch_to_nca(switch_to_nca() + 1)
       }
@@ -138,8 +124,6 @@ tab_data_server <- function(id) {
       adnca_data = adnca_filtered,
       trigger = trigger_mapping_submit
     )
-    # Get the signal from the child module
-    mapping_is_complete <- column_mapping$mapping_complete
     #' Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data
     observeEvent(processed_data(), {

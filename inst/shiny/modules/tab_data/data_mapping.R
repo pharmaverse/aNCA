@@ -341,21 +341,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         style = list(fontSize = "0.75em")
       )
     })
-    mapping_complete <- reactive({
-      # List all inputs that MUST be filled before proceeding
-      required_inputs <- c(
-        input$select_STUDYID,
-        input$select_USUBJID,
-        input$select_PARAM,
-        input$select_AVAL,
-        input$select_AFRLT
-      )
-      all(sapply(required_inputs, shiny::isTruthy))
-    })
     list(
       processed_data = processed_data,
-      grouping_variables = reactive(input$select_Grouping_Variables),
-      mapping_complete = mapping_complete
+      grouping_variables = reactive(input$select_Grouping_Variables)
     )
   })
 }
