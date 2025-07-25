@@ -234,13 +234,14 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       mapping_list
     })
 
-    mapped_data <- eventReactive(trigger(), {
+    mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
       apply_column_mapping(adnca_data(), mapping(),
                            MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
                            MAPPING_DESIRED_ORDER)
-    }, ignoreInit = TRUE)
+    }) |>
+      bindEvent(trigger(), ignoreInit = TRUE)
 
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
