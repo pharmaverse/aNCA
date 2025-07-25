@@ -99,13 +99,6 @@ tab_data_server <- function(id) {
         )
       }
     })
-    mapping_trigger <- eventReactive(input$next_step, {
-      if (data_step() == "mapping") {
-        input$next_step
-      } else {
-        NULL
-      }
-    })
     observeEvent(input$prev_step, {
       current <- data_step()
       idx <- match(current, steps)
