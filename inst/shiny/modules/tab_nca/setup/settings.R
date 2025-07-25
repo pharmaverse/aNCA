@@ -115,19 +115,19 @@ settings_ui <- function(id) {
         title = "Flag Rule Sets",
         .rule_input(
           ns("adj.r.squared"), "RSQADJ >=", 0.7, 0.05, 0, 1,
-          tooltip = "Adjusted R-squared threshold for model fit."
+          tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
         ),
         .rule_input(
           ns("aucpext.obs"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
-          tooltip = "Maximum allowed percent extrapolated (observed) for AUC."
+          tooltip = "Maximum allowed percent extrapolated (observed) for AUC related parameters"
         ),
         .rule_input(
           ns("aucpext.pred"), "AUCPEP (% ext.predicted) <=", 20, 5, 0, 100,
-          tooltip = "Maximum allowed percent extrapolated (predicted) for AUC."
+          tooltip = "Maximum allowed percent extrapolated (predicted) for AUC related parameters"
         ),
         .rule_input(
           ns("span.ratio"), "LAMZSPN >=", 2, 1, 0,
-          tooltip = "Minimum required span ratio for lambda z calculation."
+          tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
         )
       ),
       id = "acc",
