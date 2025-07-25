@@ -197,15 +197,13 @@ data_mapping_ui <- function(id) {
                                  Only required for urine/excretion studies."),
           .column_mapping_widget(ns, "VOLUMEU", "Character format.
                                  Only required for urine/excretion studies.")
-        ),
-
-        input_task_button(ns("submit_columns"), "Submit Mapping")
+        )
       )
     )
   )
 }
 
-data_mapping_server <- function(id, adnca_data) {
+data_mapping_server <- function(id, adnca_data, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -243,7 +241,7 @@ data_mapping_server <- function(id, adnca_data) {
                            MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
                            MAPPING_DESIRED_ORDER)
     }) |>
-      bindEvent(input$submit_columns)
+      bindEvent(trigger(), ignoreInit = TRUE)
 
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
@@ -344,7 +342,6 @@ data_mapping_server <- function(id, adnca_data) {
         style = list(fontSize = "0.75em")
       )
     })
-
     list(
       processed_data = processed_data,
       grouping_variables = reactive(input$select_Grouping_Variables)
