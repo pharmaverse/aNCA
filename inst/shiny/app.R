@@ -149,14 +149,9 @@ server <- function(input, output, session) {
 
   # Grouping Variables
   grouping_vars <- data_module$grouping_variables
-  switch_to_nca <- data_module$switch_to_nca
 
-  # Trigger and switches to NCA nav_panel.
-  observeEvent(switch_to_nca(), {
-    bslib::nav_select(id = "page", selected = "nca")
-  }, ignoreInit = TRUE)
   # NCA ----
-  res_nca <- tab_nca_server("nca", adnca_data, grouping_vars, switch_to_nca)
+  res_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
 
   # VISUALISATION ----
   tab_visuals_server("visuals", adnca_data, grouping_vars, res_nca)

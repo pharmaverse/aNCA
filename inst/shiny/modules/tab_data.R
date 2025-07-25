@@ -69,8 +69,6 @@ tab_data_ui <- function(id) {
 tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    # Create a reactive trigger to signal the switch
-    switch_to_nca <- reactiveVal(0)
     trigger_mapping_submit <- reactiveVal(0)
     steps <- c("upload", "filtering", "mapping", "preview")
     step_labels <- c("Upload", "Filtering", "Mapping", "Preview")
@@ -96,7 +94,9 @@ tab_data_server <- function(id) {
       } else if (current_step == "mapping") {
         trigger_mapping_submit(trigger_mapping_submit() + 1)
       } else if (current_step == "preview") {
-        switch_to_nca(switch_to_nca() + 1)
+        shinyjs::runjs("document.querySelector(`a[data-value='nca']`).click();
+        document.querySelector(`a[data-value='Setup']`).click();"
+        )
       }
     })
     mapping_trigger <- eventReactive(input$next_step, {
@@ -160,8 +160,7 @@ tab_data_server <- function(id) {
     )
     list(
       data = processed_data,
-      grouping_variables = grouping_variables,
-      switch_to_nca = switch_to_nca
+      grouping_variables = grouping_variables
     )
   })
 }

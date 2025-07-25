@@ -54,13 +54,9 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, adnca_data, grouping_vars, switch_trigger = reactiveVal(0)) {
+tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    # Observe the incoming trigger
-    observeEvent(switch_trigger(), {
-      updateTabsetPanel(session, "ncapanel", selected = "Setup")
-    }, ignoreInit = TRUE)
     #' Setup session-wide object for storing data units. Units can be edited by the user on
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
