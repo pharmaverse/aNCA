@@ -179,12 +179,11 @@ tab_tlg_server <- function(id, data) {
               header = colnames(dplyr::filter(tlg_order(), Selection)),
               filename = paste0("TLG_order_", Sys.Date())
             )
-          )
-        ),
+          ),
           lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
-          paging = TRUE
-        ),
-        class = "row-border compact"
+          paging = TRUE,
+          class = "row-border compact"
+        )
       ) %>%
         formatStyle(
           columns = colnames(tlg_order()),
@@ -238,6 +237,7 @@ tab_tlg_server <- function(id, data) {
               targets = which(!names(tlg_order()) %in% c("Output", "Condition"))
             ),
             list(targets = 0, orderable = FALSE, className = "select-checkbox")
+          ),
           scrollX = TRUE,
           fixedHeader = TRUE,
           dom = "Blfrtip",
