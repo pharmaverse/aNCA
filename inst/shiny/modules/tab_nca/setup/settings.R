@@ -113,10 +113,22 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Flag Rule Sets",
-        .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
-        .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
-        .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
-        .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
+        .rule_input(
+          ns("adj.r.squared"), "RSQADJ >=", 0.7, 0.05, 0, 1,
+          tooltip = "Adjusted R-squared threshold for model fit."
+        ),
+        .rule_input(
+          ns("aucpext.obs"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (observed) for AUC."
+        ),
+        .rule_input(
+          ns("aucpext.pred"), "AUCPEP (% ext.predicted) <=", 20, 5, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (predicted) for AUC."
+        ),
+        .rule_input(
+          ns("span.ratio"), "LAMZSPN >=", 2, 1, 0,
+          tooltip = "Minimum required span ratio for lambda z calculation."
+        )
       ),
       id = "acc",
       open = c("General Settings", "Parameter Selection")
@@ -473,6 +485,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   # Only include `max` if not NULL
   if (!is.null(max)) {
     numeric_args$max <- max
+  }
+
+  label_tag <- if (!is.null(tooltip)) {
+    tooltip(tags$span(label), tooltip)
+  } else {
+    id
   }
 
   fluidRow(
