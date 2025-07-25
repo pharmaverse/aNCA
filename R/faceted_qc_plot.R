@@ -90,7 +90,7 @@ faceted_qc_plot <- function(data_conc,
 
   # Define boolean flags
   plot_conc_data <- show_pk_samples && !is.null(data_conc)
-  plot_dose_data <- show_doses && !is.null(data_dose)
+  plot_dose_data <- show_doses && !is.null(data_dose) && nrow(data_dose) > 0
 
   # Define the levels for the shape and colour variables
   if (plot_conc_data) {
@@ -112,11 +112,17 @@ faceted_qc_plot <- function(data_conc,
   plot_data_list <- list()
   if (plot_conc_data) {
     plot_data_list$conc <- data_conc %>%
-      mutate(legend_group = as.character(!!sym(shape_var)))
+      mutate(
+        legend_group = as.character(!!sym(shape_var)),
+        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+      )
   }
   if (plot_dose_data) {
     plot_data_list$dose <- data_dose %>%
-      mutate(legend_group = as.character(!!sym(colour_var)))
+      mutate(
+        legend_group = as.character(!!sym(colour_var)),
+        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+      )
   }
 
   # Return an empty plot for empty datasets
@@ -131,8 +137,7 @@ faceted_qc_plot <- function(data_conc,
       facet_title = pmap_chr(
         select(., all_of(grouping_vars)),
         ~ paste(list(...), collapse = ", ")
-      ),
-      tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+      )
     )
 
   # Define shapes
