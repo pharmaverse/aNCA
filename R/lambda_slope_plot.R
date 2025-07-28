@@ -49,7 +49,8 @@ lambda_slope_plot <- function(
   conc_pknca_df,
   row_values,
   myres = myres,
-  r2adj_threshold = 0.7
+  r2adj_threshold = 0.7,
+  time_column
 ) {
 
   column_names <- names(row_values)
@@ -72,7 +73,7 @@ lambda_slope_plot <- function(
     filter(
       if_all(all_of(grouping_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
-      TIME >= sum(
+      !!sym(time_column) >= sum(
         subset(
           lambda_res,
           lambda_res$PPTESTCD == "lambda.z.time.first",
@@ -88,7 +89,7 @@ lambda_slope_plot <- function(
   r2adj_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
   half_life_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "half.life"]), 3)
   time_span <- signif(
-    abs(lambda_z_ix_rows$TIME[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$TIME[1]), 3
+    abs(lambda_z_ix_rows[[time_column]][nrow(lambda_z_ix_rows)] - lambda_z_ix_rows[[time_column]][1]), 3
   )
 
   subtitle_color <- ifelse(

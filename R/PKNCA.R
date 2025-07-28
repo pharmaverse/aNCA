@@ -70,9 +70,35 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
   volume_column <- "VOLUME"
+  conc_column <- "AVAL"
+  studyid_column <- "STUDYID"
+  drug_column <- "DRUG"
 
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
+  conc_formula <- as.formula(
+    formula_string <- sprintf(
+      "%s ~ %s | %s + %s + %s + %s / %s",
+      conc_column,
+      time_column,
+      studyid_column,
+      matrix_column,
+      drug_column,
+      usubjid_column,
+      analyte_column
+    )
+  )
+  
+  dose_formula <- as.formula(
+    formula_string <- sprintf(
+      "%s ~ %s | %s + %s + %s",
+      "DOSEA",
+      "TIME_DOSE",
+      studyid_column,
+      drug_column,
+      usubjid_column
+    )
+  )
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -115,7 +141,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   args_list <- list(
     data = df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+    formula = conc_formula,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
@@ -138,7 +164,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
+    formula = dose_formula,
     route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR",
