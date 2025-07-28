@@ -23,6 +23,7 @@ summary_server <- function(id, processed_pknca_data) {
         apply_labels(LABELS, "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE))) %>%
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
+    })
 
     reactable_server(
       "nca_intervals_summary",

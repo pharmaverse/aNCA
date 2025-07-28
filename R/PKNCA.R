@@ -227,6 +227,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @importFrom tidyr crossing
 #' @importFrom rlang sym
 #' @importFrom purrr pmap
+#' @importFrom "stats", "as.formula"
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
