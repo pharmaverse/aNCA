@@ -85,6 +85,8 @@ format_pkncaconc_data <- function(ADNCA,
 #' This function creates a pharmacokinetic dose dataset from the provided concentration data.
 #'
 #' @param pkncaconc_data A data frame containing the concentration data.
+#' @param time_column A character string specifying the time from first dose column.
+#' @param rrlt_column A character string specifying the time since last dose column.
 #' @param group_columns A character vector specifying the columns to group by.
 #'
 #' @returns A data frame containing the dose data.

@@ -8,7 +8,8 @@ lambda_slope_plot(
   conc_pknca_df,
   row_values,
   myres = myres,
-  r2adj_threshold = 0.7
+  r2adj_threshold = 0.7,
+  time_column
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ lambda_slope_plot(
 
 \item{r2adj_threshold}{Numeric value representing the R-squared adjusted threshold for
 determining the subtitle color (default is 0.7).}
+
+\item{time_column}{The name of the time column in the concentration data frame.}
 }
 \value{
 A plotly object representing the lambda slope plot.

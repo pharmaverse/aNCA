@@ -10,6 +10,7 @@
 #' @param myres          A PKNCAresults object containing the results of the NCA analysis
 #' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
 #'                      determining the subtitle color (default is 0.7).
+#' @param time_column   The name of the time column in the concentration data frame.
 #'
 #' @return A plotly object representing the lambda slope plot.
 #'

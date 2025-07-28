@@ -23,9 +23,9 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
+#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ TIME | STUDYID + DRUG + USUBJID`.
+#' with formula `DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
