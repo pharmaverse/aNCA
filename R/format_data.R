@@ -76,6 +76,7 @@ format_pkncaconc_data <- function(ADNCA,
     mutate(
       DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
     ) %>%
+    select(-TIME_DOSE) %>%
     arrange(!!!syms(group_columns))
 }
 
@@ -100,6 +101,8 @@ format_pkncaconc_data <- function(ADNCA,
 #' @export
 
 format_pkncadose_data <- function(pkncaconc_data,
+                                  time_column = "AFRLT",
+                                  rrlt_column = "ARRLT",
                                   group_columns) {
 
   # Check: Dataset is not empty
@@ -108,7 +111,7 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   # Check: All necessary columns are present
-  required_columns <- c(group_columns, "TIME_DOSE", "DOSNOA")
+  required_columns <- c(group_columns, "DOSNOA")
   missing_columns <- setdiff(required_columns, colnames(pkncaconc_data))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
@@ -116,6 +119,9 @@ format_pkncadose_data <- function(pkncaconc_data,
 
   # Select unique doses
   pkncaconc_data %>%
+    mutate( #round to prevent floating point precision issues
+      !!sym(time_column) := round(!!sym(time_column) - !!sym(rrlt_column), 6)
+    ) %>%
     group_by(!!!syms(group_columns), DOSNOA) %>%
     slice(1) %>%
     ungroup() %>%
@@ -191,8 +197,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU", "VOLUME"))) %>%
-    arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
+    select(any_of(c(conc_groups, "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU", "VOLUME")))
 
   has_tau <- "TAU" %in% names(sub_pknca_conc)
 
@@ -211,38 +216,37 @@ format_pkncadata_intervals <- function(pknca_conc,
                               relationship = "many-to-many") %>%
 
     # Pick 1 per concentration group and dose number
-    arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
     group_by(!!!syms(dose_groups), DOSNOA) %>%
-    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
+    mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
+    filter(ARRLT >= 0) %>% # filter out negative ARRLT values
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
     ungroup() %>%
 
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
-    mutate(start = if (start_from_last_dose) TIME_DOSE
-           else TIME_DOSE + !!sym("ARRLT")) %>%
+    mutate(start = if (start_from_last_dose) AFRLT
+           else AFRLT + !!sym("ARRLT")) %>%
     group_by(!!!syms(conc_groups)) %>%
-    arrange(TIME_DOSE) %>%
+    arrange(AFRLT) %>%
 
     # Make end based on next dose time (if no more, Tau or last NFRLT)
     mutate(end = if (has_tau) {
       case_when(
-        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        !is.na(lead(AFRLT)) ~ lead(AFRLT),
         is.na(TAU) & is_one_dose ~ Inf,
-        is.na(TAU) ~ max_end,
+        is.na(TAU) ~ start + max_end,
         TRUE ~ start + TAU
       )
     } else {
       case_when(
-        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        !is.na(lead(AFRLT)) ~ lead(AFRLT),
         is_one_dose ~ Inf,
-        TRUE ~ max_end
+        TRUE ~ start + max_end
       )
     }
     ) %>%
     ungroup() %>%
-    select(any_of(c("start", "end",
-                    conc_groups, "TIME_DOSE",
+    select(any_of(c("start", "end", conc_groups,
                     "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user

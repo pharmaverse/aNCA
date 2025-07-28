@@ -93,7 +93,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     formula_string <- sprintf(
       "%s ~ %s | %s + %s + %s",
       "DOSEA",
-      "TIME_DOSE",
+      time_column,
       studyid_column,
       drug_column,
       usubjid_column
