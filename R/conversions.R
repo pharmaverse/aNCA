@@ -19,7 +19,7 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
     )
     unname(as.numeric(conversion))
   }, error = function(e) {
-    if (initial_unit == target_unit) {
+    if (isTRUE(paste0(initial_unit) == paste0(target_unit))) {
       1
     } else {
       NA

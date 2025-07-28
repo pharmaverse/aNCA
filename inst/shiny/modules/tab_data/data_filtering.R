@@ -16,15 +16,18 @@ data_filtering_ui <- function(id) {
   div(
     stepper_ui("Filtering"),
     div(
-      h3("Filtering"),
-      p("Any filters added here will be applied across the whole analysis."),
+      p(
+        # TODO (Gerardo): We will need to think how to really tell the user more about this
+        # This is intended for removing specific rows, but not whole profiles which is done later
+        # Removing whole profiles here in multidose studies can lead to issues with dose times
+        "Any filters added here will be applied across the whole analysis.",
+        style = "text-align: center;"
+      ),
       div(
         class = "data-filtering-container",
         div(
           class = "filtered-table-container",
-          withSpinner(
-            reactableOutput(ns("filtered_data_display"))
-          )
+          reactable_ui(ns("filtered_data_display"))
         ),
         div(
           class = "filters-container",
@@ -125,22 +128,13 @@ data_filtering_server <- function(id, raw_adnca_data) {
     }) |>
       bindEvent(input$submit_filters, raw_adnca_data())
 
-    output$filtered_data_display <- renderReactable({
-      req(filtered_data())
-      reactable(
-        filtered_data(),
-        rownames = FALSE,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = FALSE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        height = "70vh",
-        class = "reactable-table"
-      )
-    })
+    reactable_server(
+      "filtered_data_display",
+      filtered_data,
+      height = "50vh",
+      defaultPageSize = 25,
+      style = list(fontSize = "0.75em")
+    )
 
     filtered_data
   })
