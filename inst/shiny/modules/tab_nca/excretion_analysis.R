@@ -1,4 +1,3 @@
-
 #' NCA Excretion Analysis Module
 #'
 #' This module handles logic for excretion analysis in NCA.
@@ -36,7 +35,7 @@ excretion_ui <- function(id) {
           )
         ),
         card(
-          reactableOutput(ns("results_table"))
+          reactable_ui(ns("results_table"))
         )
       )
     )
@@ -184,14 +183,14 @@ excretion_server <- function(id, input_pknca_data) {
     })
 
     # Render results
-    output$results_table <- renderReactable({
-      req(results_output())
-
-      reactable(results_output(),
-                defaultPageSize = 10,
-                searchable = TRUE,
-                highlight = TRUE)
-
-    })
+    reactable_server(
+      "results_table",
+      results_output,
+      defaultPageSize = 10,
+      compact = TRUE,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
+      style = list(fontSize = "0.75em")
+    )
   })
 }

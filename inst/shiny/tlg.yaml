@@ -1,16 +1,125 @@
 # Configuration file containing TLG definitions.
 # To learn more, please check .github/contributing/adding-tlg.md
 
-# LISTS #
-l_pkconc:
+######################################## TABLES ########################################
+####### TABLES - Individual
+t_pkct01:
+  is_default: true
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by TRT (first dose)"
+  description: "Summary Concentration Table by TRT (from first dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01
+  condition: null
+
+t_pkct01_dose:
+  is_default: false
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by Dose (first dose)"
+  description: "Summary Concentration Table by Dose (from first dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01_dose
+  condition: null
+
+t_pkct01_tad:
+  is_default: false
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by TRT (TAD)"
+  description: "Summary Concentration Table by TRT (from most recent dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01_tad
+  condition: null
+
+t_pkct01_dose_tad:
+  is_default: false
+  type: Table
+  dataset: ADPC
+  pkid: pkct01
+  label: "pkct01 - Summary Conc by Dose (TAD)"
+  description: "Summary Concentration Table by Dose (from most recent dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
+  fun: t_pkct01_dose_tad
+  condition: null
+
+####### TABLES - PK Parameters
+t_pkpt03_col:
+  is_default: true
+  type: Table
+  dataset: ADPP
+  pkid: pkpt03
+  label: "pkpt03 - Summary PK Parameters (stats in cols)"
+  description: "Summary of PK parameters (Stats in columns)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
+  fun: t_pkpt03_col
+  condition: null
+
+t_pkpt03_MP_col:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt03
+  label: "pkpt03 - Summary M/P Ratios (stats in cols)"
+  description: "Summary of metabolite to parent ratios by TRT [stats in columns]"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
+  fun: t_pkpt03_MP_col
+  condition: null
+
+t_pkpt07_norm:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt07
+  label: "pkpt07 - Mean Dose-Normalized Parameters"
+  description: "Table of mean dose-normalized selected PK parameters [stats in columns]"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt07.html
+  fun: t_pkpt07_norm
+  condition: null
+
+t_pkpt08_uri:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt08
+  label: "pkpt08 - Mean Urine Amount and Percent"
+  description: "Mean table of cumulative amount and Percentage recovered in urine"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt08.html
+  fun: t_pkpt08_uri
+  condition: "URINE"
+
+t_pkpt11_gmr:
+  is_default: false
+  type: Table
+  dataset: ADPP
+  pkid: pkpt11
+  label: "pkpt11 - GMR Table"
+  description: "GMR Table with CIs for selected PK parameters"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt11.html
+  fun: t_pkpt11_gmr
+  condition: null
+
+
+
+
+
+  
+######################################## LISTINGS ########################################
+####### LISTINGS - Individual
+l_pkcl01:
   is_default: true
   type: Listing
   dataset: ADPC
-  pkid: pkconc
-  label: "pkconc"
-  description: "TBA"
-  link: TBA
-  fun: l_pkconc
+  pkid: pkcl01
+  label: "pkcl01 - Concentration Listing (first dose)"
+  description: "Individual listing of PK concentrations (from first dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl01.html
+  fun: l_pkcl01
+  condition: null
   options:
     .group_label_1: "Labs"
     title:
@@ -77,17 +186,81 @@ l_pkconc:
         - ["TRT01A",  "Actual Treatment for Period 01",                  "NA", "0", "center", "$NA",   "$NA"]
         - ["AFRLT",   "Act. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
         - ["NFRLT",   "Nom. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
+        
+l_pkcl01_tad:
+  is_default: false
+  type: Listing
+  dataset: ADPC
+  pkid: pkcl01
+  label: "pkcl01 - Concentration Listing (TAD)"
+  description: "Individual listing of PK concentrations (from most recent dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl01.html
+  fun: l_pkcl01_tad
+  condition: null
 
-# GRAPHS #
+####### LISTINGS - Urine
+l_pkcl02_uri:
+  is_default: false
+  type: Listing
+  dataset: ADPC
+  pkid: pkcl02
+  label: "pkcl02 - Urine Concentration Listing"
+  description: "Individual listings of urine concentration and volumes, cumulative radioactive level"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl02.html
+  fun: l_pkcl02_uri
+  condition: "URINE"
+
+####### LISTINGS - PK parameters
+l_pkpl01:
+  is_default: true
+  type: Listing
+  dataset: ADPP
+  pkid: pkpl01
+  label: "pkpl01 - PK Parameters Listing"
+  description: "Individual listing of PK parameters (ClinPharm to define parms)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
+  fun: l_pkpl01
+  condition: null
+
+l_pkpl01_mp:
+  is_default: false
+  type: Listing
+  dataset: ADPP
+  pkid: pkpl01
+  label: "pkpl01 - M/P Ratio Listing"
+  description: "Individual listings of metabolite to parent ratios vs. TRT, by TRT/dose (Metabolite/Parent Ratio as header names)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
+  fun: l_pkpl01_mp
+  condition: null
+
+l_pkpl04_mp:
+  is_default: false
+  type: Listing
+  dataset: ADPP
+  pkid: pkpl04
+  label: "pkpl04 - Treatment Ratio Listing"
+  description: "Individual listing of treatment ratios for selected PK parameters, by TRT"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl04.html
+  fun: l_pkpl04_mp
+  condition: null
+
+
+
+
+
+  
+######################################## GRAPHS ########################################
+####### GRAPHS - Individual
 g_pkcg01_lin:
   is_default: true
   type: Graph
   dataset: ADPC
   pkid: pkcg01
-  label: "pkcg01 - linear"
-  description: "Individual plots of concentrations vs. time (one plot per subject) with linear scale"
+  label: "pkcg01 - Individual Linear"
+  description: "Individual plots of concentrations vs. time (one plot per patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkcg01_lin
+  condition: null
   options:
     .group_label_1: "General"
     xvar:
@@ -146,36 +319,75 @@ g_pkcg01_lin:
 
 g_pkcg01_log:
   template: g_pkcg01_lin
-  label: "pkcg01 - log"
-  description: "Individual plots of concentrations vs. time (one plot per patient/subject) with log10 scale"
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg01
+  label: "pkcg01 - Individual Log"
+  description: "Individual plots of concentrations vs. time in Log Scale (one plot per patient/subject)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
   fun: g_pkcg01_log
-
+  condition: null
+  
+g_pkcg01_sbs:
+  template: g_pkcg01_lin
+  is_default: false
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg01
+  label: "pkcg01 - Individual Side-by-Side"
+  description: "Side-by-Side Linear and Log scale plots of concentration vs. time (per patient/subject)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg01.html
+  fun: g_pkcg01_sbs
+  condition: null
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+        
+####### GRAPHS - By treatment
 g_pkcg02_lin:
   template: g_pkcg01_lin
+  is_default: true
+  type: Graph
+  dataset: ADPC
   pkid: pkcg02
-  label: "pkcg02 - linear"
-  description: "Combined plot of PK concentrations vs. time with linear scale"
+  label: "pkcg02 - Combined Linear"
+  description: "Combined plot of concentrations vs. time (over laid by cohort/TRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_lin
-  options:
-    plotgroup_vars:
-      type: select
-      label: "Grouping variables"
-      default: .all
-      multiple: true
-      choices:
-        - ROUTE
-        - PCSPEC
-        - PARAM
-        - TRT01A
-    
+  condition: null
+
 g_pkcg02_log:
   template: g_pkcg01_lin
+  is_default: true
+  type: Graph
+  dataset: ADPC
   pkid: pkcg02
-  label: "pkcg02 - log"
-  description: "Combined plots of PK concentrations vs. time with log10 scale"
+  label: "pkcg02 - Combined Log"
+  description: "Combined plot of concentrations vs. time in Log Scale (over laid by cohort/TRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
+  condition: null
+  
+g_pkcg02_sbs:
+  template: g_pkcg01_lin
+  is_default: false
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg02
+  label: "pkcg02 - Combined Side-by-Side"
+  description: "Side-by-Side Linear and Log scale plots of concentration vs. time (over laid by cohort/TRT/dose/patient/subject)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
+  fun: g_pkcg02_log
+  condition: null
   options:
     plotgroup_vars:
       type: select
@@ -187,3 +399,140 @@ g_pkcg02_log:
         - PCSPEC
         - PARAM
         - TRT01A
+
+####### GRAPHS - Mean
+p_pkcg03_lin:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg03
+  label: "pkcg03 - Mean Linear by Treatment"
+  description: "Mean plot of concentrations vs. time (overlaid by treatment)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+  fun: p_pkcg03_lin
+  condition: null
+
+p_pkcg03_log:
+  is_default: true
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg03
+  label: "pkcg03 - Mean Log by Treatment"
+  description: "Mean plot of concentrations vs. time in Log Scale (overlaid by treatment)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+  fun: p_pkcg03_log
+  condition: null
+
+p_pkcg03_sbs:
+  is_default: false
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg03
+  label: "pkcg03 - Mean Side-by-Side by Treatment"
+  description: "Side-by-side Mean plot of concentration vs. time, linear and log scale (overlaid by treatment)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+  fun: p_pkcg03_sbs
+  condition: null
+
+####### GRAPHS - Mean by Dose
+p_pkcg03_lin_dose:
+  is_default: false
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg03
+  label: "pkcg03 - Mean Linear by Dose"
+  description: "Mean plot of concentrations vs. time (overlaid by dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+  fun: p_pkcg03_lin_dose
+  condition: null
+
+p_pkcg03_log_dose:
+  is_default: false
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg03
+  label: "pkcg03 - Mean Log by Dose"
+  description: "Mean plot of concentrations vs. time in Log Scale (overlaid by dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+  fun: p_pkcg03_log_dose
+  condition: null
+
+p_pkcg03_sbs_dose:
+  is_default: false
+  type: Graph
+  dataset: ADPC
+  pkid: pkcg03
+  label: "pkcg03 - Mean Side-by-Side by Dose"
+  description: "Side-by-side Mean plot of concentration vs. time, linear and log scale (overlaid by dose)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
+  fun: p_pkcg03_sbs_dose
+  condition: null
+
+####### GRAPHS - Urine
+p_pkpg01_cum:
+  is_default: false
+  type: Graph
+  dataset: ADPP
+  pkid: pkpg01
+  label: "pkpg01 - Mean Cumulative Urine"
+  description: "Mean plot of cumulative amount recovered in urine vs. time"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
+  fun: p_pkpg01_cum
+  condition: "URINE"
+
+p_pkpg01_per:
+  is_default: false
+  type: Graph
+  dataset: ADPP
+  pkid: pkpg01
+  label: "pkpg01 - Mean Percent Urine"
+  description: "Mean plot of percentage dose recovered in urine vs. time"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
+  fun: p_pkpg01_per
+  condition: "URINE"
+
+####### GRAPHS - Dose Proportionality
+p_pkpg02_doseprop:
+  is_default: false
+  type: Graph
+  dataset: ADPP
+  pkid: pkpg02
+  label: "pkpg02 - Dose Proportionality"
+  description: "Dose-proportionality plots for selected PK parameters (including mean/SD or SE bars if selected)"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg02.html
+  fun: p_pkpg02_doseprop
+  condition: null
+
+####### GRAPHS - PK Parameters - Boxplots
+p_pkpg03_boxp:
+  is_default: false
+  type: Graph
+  dataset: ADPP
+  pkid: pkpg03
+  label: "pkpg03 - Boxplot Primary Parameters"
+  description: "Boxplots plots for primary PK parameters, with whiskers and outlier data points."
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg03.html
+  fun: p_pkpg03_boxp
+  condition: null
+
+p_pkpg04_boxp:
+  is_default: false
+  type: Graph
+  dataset: ADPP
+  pkid: pkpg04
+  label: "pkpg04 - Boxplot Primary Parameters (all points)"
+  description: "Boxplots plots for primary PK parameters, with whiskers and all data points(scatter), including outliers."
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg04.html
+  fun: p_pkpg04_boxp
+  condition: null
+
+p_pkpg06_mp:
+  is_default: false
+  type: Graph
+  dataset: ADPP
+  pkid: pkpg06
+  label: "pkpg06 - Boxplot Metabolite/Parent Ratios"
+  description: "Boxplots for Metabolite/Parent ratios by TRT"
+  link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
+  fun: p_pkpg06_mp
+  condition: null
