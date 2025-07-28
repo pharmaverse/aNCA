@@ -246,7 +246,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     })
 
     observeEvent(input$select_analyte, {
-      req(data(), input$select_analyte)
+      req(data())
+
+      # Isolate current selections to prevent reactive loops
+      current_profile <- isolate(input$select_profile)
+      current_pcspec <- isolate(input$select_pcspec)
 
       filtered_data <- data() %>%
         filter(PARAM %in% input$select_analyte,
@@ -258,18 +262,27 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       pcspec_choices <- unique(filtered_data$PCSPEC)
 
+
+      # Fallback if the current selection is empty
+      if (length(current_profile) == 0) {
+        current_profile <- profile_choices[1]
+      }
+      if (length(current_pcspec) == 0) {
+        current_pcspec <- pcspec_choices
+      }
+
       updatePickerInput(
         session,
         inputId = "select_profile",
         choices = profile_choices,
-        selected = profile_choices[1]
+        selected = current_profile
       )
 
       updatePickerInput(
         session,
         inputId = "select_pcspec",
         choices = pcspec_choices,
-        selected = pcspec_choices
+        selected = current_pcspec
       )
     })
 
@@ -411,7 +424,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             is.checked = input$span.ratio_rule,
             threshold = input$span.ratio_threshold
           )
-        )
+        ),
+        units = session$userData$units_table()
       )
     })
 
