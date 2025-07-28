@@ -61,22 +61,20 @@ format_pkncaconc_data <- function(ADNCA,
   tol <- 0.02
 
   ADNCA %>%
-    arrange(!!sym(time_column)) %>%
     mutate( #round to prevent floating point precision issues
-      TIME_DOSE = round(!!sym(time_column) - !!sym(rrlt_column), 6)
-    ) %>%
-    mutate(std_route = ifelse(
-                              grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
-                                    gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
-                              "intravascular",
-                              "extravascular")) %>%
-    arrange(!!!syms(group_columns), TIME_DOSE) %>%
+      dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
+      std_route = ifelse(
+        grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
+              gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
+        "intravascular",
+        "extravascular")) %>%
+    arrange(!!!syms(group_columns), dose_time) %>%
     group_by(!!!syms(group_columns)) %>%
     mutate(
-      DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
+      DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
     ) %>%
-    select(-TIME_DOSE) %>%
-    arrange(!!!syms(group_columns))
+    ungroup() %>%
+    select(-dose_time)
 }
 
 #' Create PK Dose Dataset
@@ -120,15 +118,15 @@ format_pkncadose_data <- function(pkncaconc_data,
 
   # Select unique doses
   pkncaconc_data %>%
-    mutate( #round to prevent floating point precision issues
-      !!sym(time_column) := round(!!sym(time_column) - !!sym(rrlt_column), 6)
-    ) %>%
     group_by(!!!syms(group_columns), DOSNOA) %>%
     slice(1) %>%
     ungroup() %>%
-    arrange(!!!syms(group_columns)) %>%
+    mutate( #round to prevent floating point precision issues
+      !!sym(time_column) := round(!!sym(time_column) - !!sym(rrlt_column), 6)
+    ) %>%
     # filter out rows with NA in DOSEA column
-    filter(!is.na(DOSEA))
+    filter(!is.na(DOSEA)) %>%
+    arrange(across(all_of(c(group_columns, time_column))))
 
 }
 
@@ -228,7 +226,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(start = if (start_from_last_dose) AFRLT
            else AFRLT + !!sym("ARRLT")) %>%
     group_by(!!!syms(conc_groups)) %>%
-    arrange(AFRLT) %>%
+    arrange(start) %>%
 
     # Make end based on next dose time (if no more, Tau or last NFRLT)
     mutate(end = if (has_tau) {
@@ -258,9 +256,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
-  dose_intervals <- verify_parameters(dose_intervals, params, all_pknca_params)
-
-  dose_intervals
+  verify_parameters(dose_intervals, params, all_pknca_params)
 }
 
 #' Conditionally Verify and Override PK Parameters Based on Sample Type
