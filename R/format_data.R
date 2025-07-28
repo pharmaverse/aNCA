@@ -15,7 +15,6 @@
 #'   - Checks for required columns and data.
 #'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 #'   (dosing data- not CDISC standard)
-#'   - Calculates `TIME_DOSE`as the time of dose reference by the PK sample
 #'   - Creates `DOSNOA` variable, sequential numbers based on time of dose
 #'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
 #'   - Arranges the data by group_columns.
