@@ -11,6 +11,7 @@
 #' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
 #'                      determining the subtitle color (default is 0.7).
 #' @param time_column   The name of the time column in the concentration data frame.
+#'                      (default is "AFRLT").
 #'
 #' @return A plotly object representing the lambda slope plot.
 #'
@@ -51,7 +52,7 @@ lambda_slope_plot <- function(
   row_values,
   myres = myres,
   r2adj_threshold = 0.7,
-  time_column
+  time_column = "AFRLT"
 ) {
 
   column_names <- names(row_values)
