@@ -91,7 +91,8 @@ lambda_slope_plot <- function(
   r2adj_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
   half_life_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "half.life"]), 3)
   time_span <- signif(
-    abs(lambda_z_ix_rows[[time_column]][nrow(lambda_z_ix_rows)] - lambda_z_ix_rows[[time_column]][1]), 3
+    abs(lambda_z_ix_rows[[time_column]][nrow(lambda_z_ix_rows)]
+        - lambda_z_ix_rows[[time_column]][1]), 3
   )
 
   subtitle_color <- ifelse(

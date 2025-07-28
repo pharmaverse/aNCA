@@ -57,6 +57,7 @@
 #' @importFrom dplyr filter select arrange across
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units deparse_unit
+#' @importFrom stats as.formula
 #'
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
@@ -88,7 +89,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
       analyte_column
     )
   )
-  
+
   dose_formula <- as.formula(
     formula_string <- sprintf(
       "%s ~ %s | %s + %s + %s",
@@ -227,7 +228,6 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @importFrom tidyr crossing
 #' @importFrom rlang sym
 #' @importFrom purrr pmap
-#' @importFrom "stats", "as.formula"
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter

@@ -67,7 +67,9 @@ format_pkncaconc_data <- function(ADNCA,
         grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
               gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
         "intravascular",
-        "extravascular")) %>%
+        "extravascular"
+      )
+    ) %>%
     arrange(!!!syms(group_columns), dose_time) %>%
     group_by(!!!syms(group_columns)) %>%
     mutate(
