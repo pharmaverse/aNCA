@@ -62,7 +62,6 @@ format_pkncaconc_data <- function(ADNCA,
   tol <- 0.02
 
   ADNCA %>%
-    mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
     arrange(!!sym(time_column)) %>%
     mutate( #round to prevent floating point precision issues
       TIME_DOSE = round(!!sym(time_column) - !!sym(rrlt_column), 6)
