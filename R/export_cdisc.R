@@ -238,17 +238,26 @@ export_cdisc <- function(res_nca) {
         NULL
       },
       SUBJID = get_subjid(.),
-      ATPT = {
-        if ("PCTPT" %in% names(.)) PCTPT
-        else NA_character_
+      ATPT = if ("ATPT" %in% names(.)) {
+        ATPT
+      } else if ("PCTPT" %in% names(.)) {
+        PCTPT
+      } else {
+        NA_character_
       },
-      ATPTN = {
-        if ("PCTPTNUM" %in% names(.)) PCTPTNUM
-        else NA
+      ATPTN = if ("ATPTN" %in% names(.)) {
+        ATPTN
+      } else if ("PCTPTNUM" %in% names(.)) {
+        PCTPTNUM
+      } else {
+        NA
       },
-      ATPTREF = {
-        if ("PCTPTREF" %in% names(.)) PCTPTREF
-        else NA_character_
+      ATPTREF = if ("ATPTREF" %in% names(.)) {
+        ATPTREF
+      } else if ("PCTPTREF" %in% names(.)) {
+        PCTPTREF
+      } else {
+        NA_character_
       },
       PCSTRESU = if (!is.null(concu_col)) {
         .[[concu_col]]
