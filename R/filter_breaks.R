@@ -1,4 +1,3 @@
-
 #' Filter Breaks for X-Axis
 #'
 #' Filters X-axis for consecutive breaks with at least the specified distance.
@@ -22,13 +21,8 @@ filter_breaks <- function(breaks = NA,
   plot_build <- ggplot_build(plot)
   plot_table <- ggplot_gtable(plot_build)
 
-  # Extract axis scale information
-  if (axis == "x") {
-    scale_range <- plot_build$layout$panel_params[[1]]$x.range
-  } else if (axis == "y") {
-    scale_range <- plot_build$layout$panel_params[[1]]$y.range
-  } else {
-    stop("Error: Invalid axis specified. Use 'x' or 'y'.")
+  if (length(breaks) <= 1) {
+    return(breaks)
   }
 
   # Identify the panel grob
@@ -40,22 +34,31 @@ filter_breaks <- function(breaks = NA,
   }
   panel <- plot_table$grobs[[panel_index]]
 
-  # Extract the panel border grob to get the width or height
-  panel_border <- panel$children[[
-    which(sapply(panel$children, function(x) {
-      grepl("panel.border", x$name)
-    }))
-  ]]
+  # Find the panel border grob index
+  border_index <- which(sapply(panel$children, function(x) {
+    grepl("panel.border", x$name)
+  }))
 
+  # Extract the panel border grob to get the width or height
+  panel_border <- panel$children[[border_index]]
+  
+  if (is.null(panel_border$width) || is.null(panel_border$height)) {
+    stop("Error: Panel border lacks a 'width' or 'height' property.")
+  }
+  # Extract axis scale informatino and
   # Convert panel width or height to cm
   if (axis == "x") {
+    scale_range <- plot_build$layout$panel_params[[1]]$x.range
     panel_size_cm <- grid::convertUnit(panel_border$width,
                                        unitTo =  "cm",
                                        valueOnly = TRUE)
-  } else {
+  } else if (axis == "y") {
+    scale_range <- plot_build$layout$panel_params[[1]]$y.range
     panel_size_cm <- grid::convertUnit(panel_border$height,
                                        unitTo =  "cm",
                                        valueOnly = TRUE)
+  } else {
+    stop("Error: Invalid axis specified. Use 'x' or 'y'.")
   }
 
   # Calculate the distance between breaks in cm
