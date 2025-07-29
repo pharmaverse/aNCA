@@ -164,7 +164,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
-        do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
+        do.call(render_list, purrr::list_modify(list(data = data()$conc$data), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")

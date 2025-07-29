@@ -12,6 +12,16 @@ tab_visuals_ui <- function(id) {
       layout_sidebar(
         sidebar = sidebar(
           position = "right", open = TRUE,
+          selectInput(
+            ns("palette_theme"),
+            "Select Color Theme:",
+            choices = c(
+              "Default (ggplot2)" = "default",
+              "Viridis" = "viridis",
+              "Spectral" = "spectral"
+            ),
+            selected = "default"
+          ),
           pickerInput(
             inputId = ns("generalplot_analyte"),
             label = "Select Analyte:",
@@ -44,6 +54,14 @@ tab_visuals_ui <- function(id) {
             multiple = TRUE,
             options = list(`actions-box` = TRUE)
           ),
+          pickerInput(
+            inputId = ns("generalplot_facetby"),
+            label = "Choose the variables to facet by:",
+            choices = NULL,
+            selected = NULL,
+            multiple = TRUE,
+            options = list(`actions-box` = TRUE)
+          ),
           radioButtons(
             ns("log"),
             "Select the Plot type:",
@@ -68,7 +86,8 @@ tab_visuals_ui <- function(id) {
               value = 0
             ),
             ns = NS(id)
-          )
+          ),
+          checkboxInput(ns("show_dose"), label = "Show Dose Times"),
         ),
         plotlyOutput(ns("individualplot"))
       )
@@ -95,8 +114,9 @@ tab_visuals_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("select_id_var"),
-            label = "Choose the variable to group by:",
-            choices = NULL
+            label = "Choose the variable(s) to group by:",
+            choices = NULL,
+            multiple = TRUE
           ),
           selectInput(
             inputId = ns("cycles_mean"),
@@ -104,7 +124,8 @@ tab_visuals_ui <- function(id) {
             choices = NULL
           ),
           checkboxInput(ns("log_mean_plot"), label = "Scale y Log"),
-          checkboxInput(ns("sd_mean_plot"), label = "Show SD"),
+          checkboxInput(ns("sd_mean_plot_max"), label = "+SD"),
+          checkboxInput(ns("sd_mean_plot_min"), label = "-SD"),
           checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
           position = "right",
           open = TRUE
@@ -214,16 +235,25 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected = param_choices_usubjid[1]
       )
 
-      # Update the colorby picker input
-      param_choices_colorby <- sort(
-        c("STUDYID", "PCSPEC", "PARAM", "DOSEA", "NCA_PROFILE", "USUBJID", grouping_vars())
-      )
+      # Update the colorby and facet by picker inputs
+      all_cols <- names(data())
+      cols_to_exclude <- c("AVAL", "ARRLT", "AFRLT", "NRRLT", "NFRLT")
+      unit_cols <- all_cols[endsWith(all_cols, "U")]
+      cols_to_exclude <- c(cols_to_exclude, unit_cols)
+      param_choices <- sort(setdiff(all_cols, cols_to_exclude))
 
       updatePickerInput(
         session,
         "generalplot_colorby",
-        choices = param_choices_colorby,
-        selected = param_choices_colorby[length(param_choices_colorby)]
+        choices = param_choices,
+        selected = "USUBJID"
+      )
+
+      updatePickerInput(
+        session,
+        "generalplot_facetby",
+        choices = param_choices,
+        selected = NULL
       )
 
       # Update the analyte mean select input
@@ -285,9 +315,21 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
 
     # TAB: General Lineplot --------------------------------------------------------
 
+    master_palettes_list <- reactive({
+      req(input$palette_theme)
+      req(input$generalplot_colorby)
+
+      get_persistent_palette(
+        data(),
+        input$generalplot_colorby,
+        palette_name = input$palette_theme # Use the user's choice
+      )
+    })
+
     # render the general lineplot output in plotly
     output$individualplot <- renderPlotly({
       req(data())
+      req(master_palettes_list())
       req(input$generalplot_analyte)
       req(input$generalplot_pcspec)
       req(input$generalplot_usubjid)
@@ -296,25 +338,41 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
       req(input$log)
       log_info("Rendering individual plots")
 
-      general_lineplot(
-        data(),
+
+      palettes <- master_palettes_list()
+
+      plot_data <- data() %>%
+        mutate( #round to prevent floating point precision issues
+          TIME_DOSE = round(AFRLT - ARRLT, 6)
+        )
+
+      p <- general_lineplot(
+        plot_data,
         input$generalplot_analyte,
         input$generalplot_pcspec,
         input$generalplot_usubjid,
         input$generalplot_colorby,
+        input$generalplot_facetby,
         input$timescale,
         input$log,
         input$show_threshold,
         input$threshold_value,
-        cycle = input$cycles
+        input$show_dose,
+        cycle = input$cycles,
+        palette = palettes
       ) %>%
-        ggplotly() %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
-          )
-        )
+        ggplotly()
 
+      # Conditionally add rangeslider only if the plot is not faceted
+      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
+        p <- p %>%
+          layout(
+            xaxis = list(
+              rangeslider = list(type = "time")
+            )
+          )
+      }
+      p
     })
 
     # TAB: Mean Plot -----------------------------------------------------------
@@ -355,7 +413,7 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
             ) %>%
-            group_by(!!sym(input$select_id_var), NRRLT) %>%
+            group_by(!!!syms(input$select_id_var), NRRLT) %>%
             summarise(N = n()) %>%
             filter(N >= 3) %>%
             nrow(.) > 0,
@@ -375,11 +433,16 @@ tab_visuals_server <- function(id, data, grouping_vars, res_nca) {
         selected_cycles = input$cycles_mean,
         id_variable = input$select_id_var,
         plot_ylog = input$log_mean_plot,
-        plot_sd = input$sd_mean_plot,
+        plot_sd_min = input$sd_mean_plot_min,
+        plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
       ) %>%
         ggplotly() %>%
-        plotly_build()
+        layout(
+          xaxis = list(
+            rangeslider = list(type = "time")
+          )
+        )
 
     })
 

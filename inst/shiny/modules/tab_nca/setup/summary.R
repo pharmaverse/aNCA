@@ -8,48 +8,35 @@
 #'
 summary_ui <- function(id) {
   ns <- NS(id)
-  reactableOutput(ns("nca_intervals_summary"))
+  reactable_ui(ns("nca_intervals_summary"))
 }
 
 summary_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
-    output$nca_intervals_summary <- renderReactable({
+    summary_data <- reactive({
       req(processed_pknca_data())
+
+      conc_group_columns <- group_vars(processed_pknca_data()$conc)
+      dose_group_columns <- group_vars(processed_pknca_data()$dose)
+      time_dose <- processed_pknca_data()$dose$columns$time
 
       data <- processed_pknca_data()$intervals %>%
         apply_labels(LABELS, "ADPC") %>%
-        select(where(~!is.logical(.) | any(. == TRUE)))
-
-      route_column <- "ROUTE"
-      std_route_column <- "std_route"
-      col_groups <- unname(unlist(processed_pknca_data()$dose$columns$groups))
-
-      data <- data %>%
+        select(where(~!is.logical(.) | any(. == TRUE))) %>%
         left_join(
           processed_pknca_data()$dose$data %>%
-            select(all_of(c(
-              col_groups, route_column, std_route_column, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"
-            ))),
-          by = c(col_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA")
+            mutate(TIME_DOSE = .[[time_dose]]) %>%
+            select(any_of(c(dose_group_columns, "TIME_DOSE")))
         ) %>%
-        group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
-        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
-        mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
-        select(!!!syms(colnames(data)), all_of(c(route_column, std_route_column)))
-
-      reactable(
-        data,
-        columns = generate_col_defs(data),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
-      )
+        arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end"))) %>%
+        mutate(start = start - TIME_DOSE, end = end - TIME_DOSE)
     })
+
+    reactable_server(
+      "nca_intervals_summary",
+      summary_data,
+      columns = generate_col_defs,
+      height = "98vh"
+    )
   })
 }

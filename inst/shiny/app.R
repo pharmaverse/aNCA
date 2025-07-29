@@ -5,6 +5,7 @@ require(dplyr)
 require(DT)
 require(htmlwidgets)
 require(logger)
+require(formatters)
 require(magrittr)
 require(plotly)
 require(purrr)
@@ -41,7 +42,14 @@ setup_logger()
 ui <- function() {
   page_sidebar(
     id = "sidebar",
-    title = "aNCA",
+    title = tagList(
+      span("aNCA"),
+      div(
+        class = "project-name-container",
+        textInput("project_name", label = NULL, placeholder = "Project Name"),
+        icon("file", class = "project-name-icon")
+      )
+    ),
 
     tags$script("
       Shiny.addCustomMessageHandler('update', function(value) {
@@ -122,6 +130,11 @@ ui <- function() {
 server <- function(input, output, session) {
   log_info("Startup")
 
+  # Store globally the name of the project
+  session$userData$project_name <- reactive({
+    if (input$project_name != "") input$project_name else "Unnamed_Project"
+  })
+
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
   shinyjs::disable(selector = "#page li a[data-value=visualisation]")
@@ -138,12 +151,13 @@ server <- function(input, output, session) {
   grouping_vars <- data_module$grouping_variables
 
   # NCA ----
-  res_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
+  list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
+
   # VISUALISATION ----
-  tab_visuals_server("visuals", adnca_data, grouping_vars, res_nca)
+  tab_visuals_server("visuals", adnca_data, grouping_vars, list_tab_nca$res_nca)
 
   # TLG
-  tab_tlg_server("tlg", adnca_data)
+  tab_tlg_server("tlg", list_tab_nca$processed_pknca_data)
 }
 
 shiny::shinyApp(ui, server)

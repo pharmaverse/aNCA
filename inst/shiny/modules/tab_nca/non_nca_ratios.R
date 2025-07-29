@@ -9,6 +9,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
 
   tagList(
     card(
+      style = "height: 33vh;",
       card_header(paste0(title, " Setup")),
       card_body(
         fluidRow(
@@ -23,9 +24,14 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
             select_label2,
             choices = NULL,
             multiple = TRUE
+          ),
+          selectInput(
+            ns("summary_groups"),
+            "Summarise By:",
+            choices = NULL,
+            multiple = TRUE
           )
         ),
-        actionButton(ns("submit"), "Submit", class = "btn-primary")
       )
     ),
     card(
@@ -48,12 +54,26 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    id_groups <- reactive({
+      req(data())
+      data()$conc$columns$groups %>%
+        purrr::list_c() %>%
+        append("NCA_PROFILE") %>%
+        purrr::keep(\(col) {
+          !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
+        })
+    })
     # Update select inputs dynamically
     observeEvent(data(), {
       spec_options <- unique(data()$conc$data$PCSPEC)
 
+      ratio_groups <- c(grouping_vars(), id_groups(),
+                        data()$dose$columns$dose, data()$dose$columns$time.nominal,
+                        data()$dose$columns$route)
+
       updateSelectInput(session, "selected_spec1", choices = spec_options)
       updateSelectInput(session, "selected_spec2", choices = spec_options)
+      updateSelectInput(session, "summary_groups", choices = ratio_groups)
     })
 
     # Filter & prepare data for calculation
@@ -64,20 +84,13 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
     })
 
     # Perform Calculation on Submit
-    results <- eventReactive(input$submit, {
+    results <- reactive({
       req(filtered_samples())
 
       spec1 <- input$selected_spec1
       spec2 <- input$selected_spec2
 
-      id_groups <- data()$conc$columns$groups %>%
-        purrr::list_c() %>%
-        append("NCA_PROFILE") %>%
-        purrr::keep(\(col) {
-          !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
-        })
-
-      ratio_groups <- c(grouping_vars(), id_groups,
+      ratio_groups <- c(grouping_vars(), id_groups(),
                         data()$dose$columns$dose, data()$dose$columns$time.nominal,
                         data()$dose$columns$route)
 
@@ -93,16 +106,31 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       )
     })
 
+    full_output <- reactive({
+      req(results())
+
+      summary <- results() %>%
+        group_by(across(all_of(input$summary_groups)), Ratio_Type) %>%
+        summarise(
+          Geomean_Ratio = round(exp(mean(log(Ratio), na.rm = TRUE)), 3),
+          N = n(),
+          .groups = "drop"
+        )
+      results() %>%
+        bind_rows(summary) %>%
+        arrange(across(all_of(input$summary_groups)), Ratio_Type)
+    })
+
     # Display results
     output$results <- renderDT({
-      req(results())
+      req(full_output())
       datatable(
-        results(),
+        full_output(),
         extensions = "Buttons",
         options = list(
           scrollX = TRUE,
           fixedHeader = TRUE,
-          dom = "Bfrtip",
+          dom = "Blfrtip",
           buttons = list(
             list(
               extend = "copy",
@@ -112,9 +140,30 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
               extend = "csv",
               filename = paste0("Ratios_result_", Sys.Date())
             )
-          )
+          ),
+          headerCallback = DT::JS(
+            "function(thead) {",
+            "  $(thead).css('font-size', '0.75em');",
+            "  $(thead).find('th').css('text-align', 'center');",
+            "}"
+          ),
+          columnDefs = list(
+            list(className = "dt-center", targets = "_all")
+          ),
+          lengthMenu = list(c(10, 50, -1),
+                            c("10", "50", "All")),
+          paging = TRUE
         ),
-      )
+        class = "row-border compact",
+        rownames = FALSE
+      ) %>%
+        DT::formatStyle(columns = seq_len(ncol(full_output())), fontSize = "75%")
+    })
+
+    # Save the results in the output folder
+    observeEvent(results(), {
+
+      session$userData$results$additional_analysis$matrix_ratios <- results()
     })
 
   })

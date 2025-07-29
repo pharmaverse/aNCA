@@ -14,7 +14,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, c
   req(click_data, click_data$customdata)
 
   identifiers <- click_data$customdata
-  if (!all(names(identifiers) %in% c(slopes_groups, "IX"))) {
+  if (!all(names(identifiers) %in% c(slopes_groups, "IX", "DOSNOA"))) {
     stop("Error: Missing expected keys in customdata")
   }
 

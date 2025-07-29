@@ -13,13 +13,14 @@ nca_results_ui <- function(id) {
       options = list(`actions-box` = TRUE)
     ),
     units_table_ui(ns("units_table")),
-    reactableOutput(ns("myresults")),
-    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
+    reactable_ui(ns("myresults")),
+    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data"),
+    downloadButton(ns("download_zip"), "Download All Results as ZIP")
   )
 }
 
 # nca_results Server Module
-nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars) {
+nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -68,7 +69,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
       final_results <- final_results %>%
         inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct()
+        distinct() %>%
+        mutate(
+          flagged = "NOT DONE"
+        )
 
       # Add flaging column in the pivoted results
       # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared,
@@ -80,7 +84,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
 
       rules_applied <- sapply(rules, FUN =  \(x) x$is.checked)
       params_applied <- translate_terms(names(rules), "PKNCA", "PPTEST")[rules_applied]
-      params_applied <- names(final_results)[var_labels(final_results) %in% params_applied]
+      params_applied <- names(final_results)[formatters::var_labels(final_results)
+                                             %in% params_applied]
 
       if (length(params_applied) > 0) {
         final_results <- final_results %>%
@@ -93,12 +98,39 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
             )
           )
       }
+      final_results
     })
+
+    # Provide the zip file for download
+    output$download_zip <- downloadHandler(
+      filename = function() {
+        project <- session$userData$project_name()
+        datetime <- attr(res_nca(), "provenance")$datetime
+        paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
+      },
+      content = function(fname) {
+        output_tmpdir <- file.path(tempdir(), "output")
+
+        save_output(output = session$userData$results, output_path = output_tmpdir)
+        files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
+        wd <- getwd()
+        on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler function
+        setwd(output_tmpdir)
+        utils::zip(zipfile = fname, files = files)
+      }
+    )
 
     observeEvent(final_results(), {
       req(final_results())
 
-      param_pptest_cols <- intersect(unname(var_labels(final_results())), pknca_cdisc_terms$PPTEST)
+      # Save the latest version of the object
+      session$userData$results$nca_results$pivoted_results <- final_results()
+
+      # Represent the available parameters in the input
+      param_pptest_cols <- intersect(
+        unname(formatters::var_labels(final_results())),
+        unique(c(metadata_nca_parameters$PPTEST, ratio_table()$PPTESTCD))
+      )
       param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
 
       updatePickerInput(
@@ -129,27 +161,16 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
         select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
     })
 
-    output$myresults <- reactable::renderReactable({
-      req(output_results())
-
-      # Generate column definitions that can be hovered in the UI
-      col_defs <- generate_col_defs(output_results())
-
-      # Make the reactable object
-      reactable(
-        output_results(),
-        columns = col_defs,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "68vh",
-        rowStyle = function(index) {
-          flagged_value <- output_results()$flagged[index]
+    reactable_server(
+      "myresults",
+      output_results,
+      columns = generate_col_defs,
+      compact = TRUE,
+      style = list(fontSize = "0.75em"),
+      height = "68vh",
+      rowStyle = function(x) {
+        function(index) {
+          flagged_value <- x$flagged[index]
           if (flagged_value == "FLAGGED") {
             list(backgroundColor = "#f5b4b4")
           } else if (flagged_value == "MISSING") {
@@ -158,12 +179,12 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, grouping_vars)
             NULL
           }
         }
-      )
-    })
+      }
+    )
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
-        paste0(res_nca()$data$conc$data$STUDYID[1], "PK_Parameters.csv")
+        paste0(session$userData$project_name(), "-pivoted_NCA_results.csv")
       },
       content = function(file) {
         write.csv(output_results(), file, row.names = FALSE)

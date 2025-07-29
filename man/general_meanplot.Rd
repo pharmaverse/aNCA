@@ -12,7 +12,8 @@ general_meanplot(
   selected_cycles,
   id_variable = "DOSEA",
   plot_ylog = FALSE,
-  plot_sd = FALSE,
+  plot_sd_min = FALSE,
+  plot_sd_max = FALSE,
   plot_ci = FALSE
 )
 }
@@ -34,8 +35,9 @@ in the plot. Default is "DOSEA".}
 \item{plot_ylog}{A logical value indicating whether to use a logarithmic scale for
 the y-axis. Default is FALSE.}
 
-\item{plot_sd}{A logical value indicating whether to include standard deviation
-error bars. Default is FALSE.}
+\item{plot_sd_min}{A logical value to add a SD error bar below the mean. Default is FALSE.}
+
+\item{plot_sd_max}{A logical value to add a SD error bar above the mean. Default is FALSE.}
 
 \item{plot_ci}{A logical value indicating whether to include confidence interval 95\%
 ribbon. Default is FALSE.}
