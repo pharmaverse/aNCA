@@ -456,8 +456,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 #' @param step    Step for the `shiny::numericInput` widget.
 #' @param min     Min value for the `shiny::numericInput` widget.
 #' @param max     Max value for the `shiny::numericInput` widget.
+#' @param tooltip Optional tooltip function to add a tooltip to the label.
 #' @returns `shiny::fluidRow` containing html elements of the widget.
-.rule_input <- function(id, label, tooltip, default, step, min, max = NULL) {
+.rule_input <- function(id, label, tooltip = NULL, default, step, min, max = NULL) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
   numeric_args <- list(
@@ -482,7 +483,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   fluidRow(
     column(
       width = 6,
-      checkboxInput(rule_id, label, value = TRUE)
+      checkboxInput(rule_id, label_tag, value = TRUE)
     ),
     column(
       width = 6,
