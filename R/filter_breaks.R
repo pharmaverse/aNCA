@@ -41,7 +41,7 @@ filter_breaks <- function(breaks = NA,
 
   # Extract the panel border grob to get the width or height
   panel_border <- panel$children[[border_index]]
-  
+
   if (is.null(panel_border$width) || is.null(panel_border$height)) {
     stop("Error: Panel border lacks a 'width' or 'height' property.")
   }
