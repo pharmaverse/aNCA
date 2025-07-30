@@ -59,6 +59,7 @@ Suggests:
     lintr (>= 3.1.2),
     logger,
     markdown,
+    mockery,
     nestcolor,
     openxlsx2,
     pak,

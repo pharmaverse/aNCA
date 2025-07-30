@@ -48,16 +48,12 @@ describe("filter_breaks", {
     breaks_messy <- c(8, 2, NA, 5, 2, 1)
     breaks_clean <- c(1, 2, 5, 8)
     
-    # Mock grid::convertUnit for the duration of the test code
-    testthat::with_mocked_bindings(
-      code = {
-        expect_equal(
-          filter_breaks(breaks = breaks_messy, plot = base_plot, min_cm_distance = 0.1),
-          breaks_clean
-        )
-      },
-      # Define the replacement function
-      "convertUnit" = function(...) 10
+    # For the next call to filter_breaks, replace 'grid::convertUnit' with the value 10
+    mockery::stub(filter_breaks, 'grid::convertUnit', 10)
+    
+    expect_equal(
+      filter_breaks(breaks = breaks_messy, plot = base_plot, min_cm_distance = 0.1),
+      breaks_clean
     )
   })
   
@@ -83,6 +79,33 @@ describe("filter_breaks", {
     expect_equal(
       filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 100),
       0
+    )
+  })
+  
+  it("should correctly filter x-axis breaks based on distance", {
+    breaks_in <- c(0, 1, 2.5, 2.6, 5, 8, 8.2)
+    min_dist  <- 1.5
+    breaks_out <- c(0, 2.5, 5, 8)
+    
+    mockery::stub(filter_breaks, 'grid::convertUnit', 10)
+    
+    expect_equal(
+      filter_breaks(breaks = breaks_in, plot = base_plot, min_cm_distance = min_dist, axis = "x"),
+      breaks_out
+    )
+  })
+  
+  it("should correctly filter y-axis breaks based on distance", {
+    breaks_in <- c(0, 1, 3, 3.2, 7, 9)
+    min_dist_cm  <- 5
+    breaks_out <- c(0, 3, 7)
+    
+    # For the next call to filter_breaks, replace 'grid::convertUnit' with the value 20
+    mockery::stub(filter_breaks, 'grid::convertUnit', 20)
+    
+    expect_equal(
+      filter_breaks(breaks = breaks_in, plot = base_plot, min_cm_distance = min_dist_cm, axis = "y"),
+      breaks_out
     )
   })
 })
