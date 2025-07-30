@@ -90,8 +90,7 @@ tab_data_server <- function(id) {
     })
 
     observeEvent(input$restart, {
-      data_step(steps[1])
-      updateTabsetPanel(session, "data_navset", selected = step_labels[1])
+      shinyjs::refresh()
     })
 
     observeEvent(input$next_step, {
