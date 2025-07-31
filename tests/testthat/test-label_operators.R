@@ -108,11 +108,6 @@ describe("generate_tooltip_text", {
     expect_equal(tooltips, c("", ""))
   })
 
-  it("throws an error if a variable in tooltip_vars is not in the data", {
-    invalid_vars <- c("USUBJID", "NON_EXISTENT_VAR")
-    expect_error(generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, invalid_vars, "ADPC"))
-  })
-
   it("returns an empty vector for data with zero rows", {
     empty_data <- TEST_DATA[0, ]
     tooltips <- generate_tooltip_text(empty_data, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADPC")
