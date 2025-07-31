@@ -191,7 +191,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   # Select relevant group columns
   conc_groups <- unname(unlist(pknca_conc$columns$groups))
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
-
+  time_column <- pknca_dose$columns$time
   # Obtain all possible pknca parameters
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
                               c("start", "end"))
@@ -208,7 +208,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(is_one_dose = length(unique(DOSNOA)) == 1) %>%
     ungroup() %>%
     select(any_of(c(dose_groups,
-                    pknca_dose$columns$time, "DOSNOA", "is_one_dose")))
+                    time_column, "DOSNOA", "is_one_dose")))
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
@@ -225,22 +225,22 @@ format_pkncadata_intervals <- function(pknca_conc,
     ungroup() %>%
 
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
-    mutate(start = if (start_from_last_dose) AFRLT
-           else AFRLT + !!sym("ARRLT")) %>%
+    mutate(start = if (start_from_last_dose) !!sym(time_column)
+           else !!sym(time_column) + !!sym("ARRLT")) %>%
     group_by(!!!syms(conc_groups)) %>%
     arrange(start) %>%
 
     # Make end based on next dose time (if no more, Tau or last NFRLT)
     mutate(end = if (has_tau) {
       case_when(
-        !is.na(lead(AFRLT)) ~ lead(AFRLT),
+        !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
         is.na(TAU) & is_one_dose ~ Inf,
         is.na(TAU) ~ start + max_end,
         TRUE ~ start + TAU
       )
     } else {
       case_when(
-        !is.na(lead(AFRLT)) ~ lead(AFRLT),
+        !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
         is_one_dose ~ Inf,
         TRUE ~ start + max_end
       )
