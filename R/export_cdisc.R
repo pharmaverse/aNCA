@@ -95,7 +95,6 @@ export_cdisc <- function(res_nca) {
     group_by(!!!syms(intersect(to_match_res_cols, names(.)))) %>%
     slice(1) %>%
     ungroup()
-
   cdisc_info <- res_nca_req$result  %>%
     left_join(conc_info,
               by = intersect(names(.), names(conc_info)),
@@ -146,7 +145,6 @@ export_cdisc <- function(res_nca) {
         TRUE ~ PPTESTCD
       )
     ) %>%
-
     ungroup() %>%
     #  Recode PPTESTCD PKNCA names to CDISC abbreviations
     add_derived_pp_vars(
@@ -277,7 +275,6 @@ export_cdisc <- function(res_nca) {
 
   # Add variable labels for ADPC
   var_labels(adpc) <- labels_map[names(adpc)]
-
   list(pp = pp, adpp = adpp, adpc = adpc)
 }
 
@@ -357,7 +354,6 @@ adjust_class_and_length <- function(df, metadata) {
       df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
     } else if (var_specs$Type %in% c("Num", "integer", "float") &&
                  !endsWith(var, "DTM")) {
-      df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     } else if (!var_specs$Type %in% c(
       "dateTime", "duration", "integer", "float", "Num"
     )) {
@@ -372,6 +368,7 @@ adjust_class_and_length <- function(df, metadata) {
 
 # Helper: add derived CDISC variables based on PKNCA terms
 add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_time_col) {
+  options(digits = 15)
   df %>%
     mutate(
       DOMAIN = "PP",
@@ -399,11 +396,12 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       },
       SUBJID = get_subjid(.),
       # Parameter Variables
-      PPORRES = as.character(round(as.numeric(PPORRES), 12)),
-      PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = as.character(format(PPSTRESN, scientific = FALSE, trim = TRUE)),
+      PPSTRES = as.character(round(as.numeric(PPSTRES), 12)),
+      PPORRES = PPSTRES,
+      PPSTRESN = prettyNum(as.numeric(PPSTRES), drop0trailing = TRUE),
+      PPSTRESC = PPSTRES,
       # SD0027: Units should be NA if there is no value
-      PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
+      PPORRESU = ifelse(is.na(PPSTRES), NA_character_, PPORRESU),
       PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
       # Status and Reason for Exclusion
       PPSTAT = ifelse(is.na(PPSTRES), "NOT DONE",  ""),
