@@ -204,12 +204,6 @@ preprocess_data_for_plot <- function(
       PCSPEC %in% selected_pcspec,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       !is.na(AVAL)
-    ) %>%
-    mutate(
-      USUBJID = factor(USUBJID),
-      NCA_PROFILE = factor(NCA_PROFILE),
-      DOSEA = factor(DOSEA),
-      color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
 
   # Handle log scale filtering
@@ -229,5 +223,11 @@ preprocess_data_for_plot <- function(
     processed <- processed %>% filter(NCA_PROFILE %in% cycle)
   }
 
-  processed
+  processed %>%
+    mutate(
+      USUBJID = factor(USUBJID),
+      NCA_PROFILE = factor(NCA_PROFILE),
+      DOSEA = factor(DOSEA),
+      color_var = interaction(!!!syms(colorby_var), sep = ", ")
+    )
 }
