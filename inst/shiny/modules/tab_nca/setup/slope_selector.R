@@ -250,7 +250,8 @@ slope_selector_server <- function( # nolint
           conc_pknca_df = plot_data()$conc$data,
           row_values = as.list(row),
           myres = lambdas_res(),
-          r2adj_threshold = 0.7
+          r2adj_threshold = 0.7,
+          time_column = pknca_data()$conc$columns$time
         ) |>
           htmlwidgets::onRender(
             # nolint start

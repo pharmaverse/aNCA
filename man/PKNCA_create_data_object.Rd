@@ -40,9 +40,9 @@ It requires the following columns in the ADNCA data:
 \item Creating pk concentration data using \code{format_pkncaconc_data()}.
 \item Creating dosing data using \code{format_pkncadose_data()}.
 \item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}.
-with formula \code{AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM}.
+with formula \code{AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM}.
 \item Creating PKNCAdose object using \code{PKNCA::PKNCAdose()}.
-with formula \code{DOSEA ~ TIME | STUDYID + DRUG + USUBJID}.
+with formula \code{DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID}.
 \item Creating PKNCAdata object using \code{PKNCA::PKNCAdata()}.
 \item Updating units in PKNCAdata object so each analyte has its own unit.
 }

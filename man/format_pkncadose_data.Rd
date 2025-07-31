@@ -4,10 +4,19 @@
 \alias{format_pkncadose_data}
 \title{Create PK Dose Dataset}
 \usage{
-format_pkncadose_data(pkncaconc_data, group_columns)
+format_pkncadose_data(
+  pkncaconc_data,
+  time_column = "AFRLT",
+  rrlt_column = "ARRLT",
+  group_columns
+)
 }
 \arguments{
 \item{pkncaconc_data}{A data frame containing the concentration data.}
+
+\item{time_column}{A character string specifying the time from first dose column.}
+
+\item{rrlt_column}{A character string specifying the time since last dose column.}
 
 \item{group_columns}{A character vector specifying the columns to group by.}
 }
