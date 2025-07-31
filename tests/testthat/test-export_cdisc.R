@@ -74,7 +74,7 @@ describe("export_cdisc", {
     pp <- result$pp
     expect_s3_class(pp, "data.frame")
     expect_true(all(names(pp) %in% CDISC_COLS$PP$Variable))
-    expect_equal(nrow(pp), 9)
+    expect_equal(nrow(pp), 12)
     expect_equal(
       unname(formatters::var_labels(pp)),
       translate_terms(names(pp), "Variable", "Label", metadata_nca_variables)
@@ -86,7 +86,7 @@ describe("export_cdisc", {
     adpp <- result$adpp
     expect_s3_class(adpp, "data.frame")
     expect_true(all(names(adpp) %in% CDISC_COLS$ADPP$Variable))
-    expect_equal(nrow(adpp), 9)
+    expect_equal(nrow(adpp), 12)
     expect_equal(
       unname(formatters::var_labels(adpp)),
       translate_terms(names(adpp), "Variable", "Label", metadata_nca_variables)
@@ -252,7 +252,7 @@ describe("export_cdisc", {
     # Check that PPGRPID is derived correctly
     conc_group_cols <- c(group_vars(test_pknca_res$data$conc), "NCA_PROFILE")
     group_dose_cols <- group_vars(test_pknca_res$data$dose)
-    exp_grpid <- as.data.frame(test_pknca_res, filter_requested = TRUE) %>%
+    exp_grpid <- as.data.frame(test_pknca_res) %>%
       left_join(test_pknca_res$data$conc$data %>%
                   select(all_of(c(conc_group_cols, "AVISIT", "VISIT"))) %>%
                   group_by(!!!syms(conc_group_cols)) %>%
