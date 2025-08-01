@@ -23,7 +23,9 @@ reactable_ui <- function(id) {
   )
 }
 
-reactable_server <- function(id, data, download_buttons = c(), file_name = NULL, ...) {
+reactable_server <- function(
+  id, data, download_buttons = c(), file_name = NULL, on_render = NULL, ...
+) {
   moduleServer(id, function(input, output, session) {
     default_reactable_opts <- list(
       searchable = TRUE,
@@ -33,6 +35,8 @@ reactable_server <- function(id, data, download_buttons = c(), file_name = NULL,
       resizable = TRUE,
       defaultPageSize = 25,
       showPageSizeOptions = TRUE,
+      compact = TRUE,
+      style = list(fontSize = "0.75em"),
       class = "reactable-table"
     )
 
@@ -57,23 +61,32 @@ reactable_server <- function(id, data, download_buttons = c(), file_name = NULL,
         }
       })
 
-      do.call(reactable, c(list(data = data()), opts))
+      do.call(reactable, c(list(data = data()), opts)) %>%
+        htmlwidgets::onRender(on_render)
     })
 
     output$download_csv <- downloadHandler(
-      filename = .reactable_file_name(file_name, "csv"),
+      filename = .reactable_file_name(file_name, "csv", id),
       content = \(con) write.csv(data(), con, row.names = FALSE)
     )
 
     output$download_xlsx <- downloadHandler(
-      filename = .reactable_file_name(file_name, "xlsx"),
+      filename = .reactable_file_name(file_name, "xlsx", id),
       content = \(con) openxlsx2::write_xlsx(data(), con)
     )
+    
+    reactive(
+      list(
+        selected = getReactableState("table", "selected"),
+        edit = input$table_cell_edit
+      )
+    ) |>
+      invisible()
   })
 }
 
 # Creates file name for export
-.reactable_file_name <- function(file_name, ext) {
+.reactable_file_name <- function(file_name, ext, id) {
   f_name <- {
     if (is.character(file_name)) {
       file_name
