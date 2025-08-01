@@ -54,9 +54,7 @@ tab_tlg_ui <- function(id) {
           actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
         )
       ),
-      card(
-        DTOutput(ns("selected_tlg_table"))
-      ),
+      card(reactable_ui(ns("selected_tlg_table"))),
       card(
         div(
           actionButton(ns("submit_tlg_order_alt"), "Submit Order Details", class = "btn-primary")
@@ -111,71 +109,31 @@ tab_tlg_server <- function(id, data) {
       tlg_order(new_tlg_order)
     })
 
-    # Render the TLG list for the user's inspection
-    output$selected_tlg_table <- DT::renderDT({
-      log_trace("Rendering TLG table.")
-      datatable(
-        data = dplyr::filter(tlg_order(), Selection),
-        editable = list(
-          target = "cell",
-          disable = list(
-            columns = which(!names(tlg_order()) %in% c("Footnote", "Stratification", "Comment"))
-          )
-        ),
-        rownames = TRUE,
-        escape = FALSE,
-        selection = list(
-          mode = "multiple"
-        ),
-        extensions = c("RowGroup", "Buttons"),
-        options = list(
-          scrollX = TRUE,
-          fixedHeader = TRUE,
-          dom = "Blfrtip",
-          buttons = list(
-            list(extend = "copy", title = paste0("TLG_table_", Sys.Date())),
-            list(extend = "csv", filename = paste0("TLG_table_", Sys.Date()))
-          ),
-          headerCallback = DT::JS(
-            "function(thead) {",
-            "  $(thead).css('font-size', '0.75em');",
-            "  $(thead).find('th').css('text-align', 'center');",
-            "}"
-          ),
-          columnDefs = list(
-            list(className = "dt-center", targets = "_all"),
-            list(width = "150px", targets = "_all"),
-            list(
-              visible = FALSE,
-              targets = c(
-                0,
-                which(!names(tlg_order()) %in% c(
-                  "Type", "Dataset", "PKid", "Label", "Footnote", "Stratification", "Comment"
-                ))
-              )
-            )
-          ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
-          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
-          paging = TRUE
-        ),
-        class = "row-border compact"
-      ) %>%
-        formatStyle(
-          columns = colnames(tlg_order()),
-          fontSize = "75%",
-          fontFamily = "Arial"
-        )
-    }, server = FALSE)
+    reactable_state <- reactable_server(
+      "selected_tlg_table",
+      reactive({
+        dplyr::filter(tlg_order(), Selection) %>%
+          dplyr::select(-id, -Selection)
+      }),
+      download_buttons = c("csv", "xlsx"),
+      groupBy = c("Type", "Dataset"),
+      defaultExpanded = TRUE,
+      wrap = TRUE,
+      selection = "multiple",
+      columns = list(
+        PKid = colDef(html = TRUE)
+      )
+    )
 
     # Save table changes from the UI into the server
-    observeEvent(input$selected_tlg_table_cell_edit, {
-      info <- input$selected_tlg_table_cell_edit
+    # TODO(mateusz): restore this
+    # observeEvent(input$selected_tlg_table_cell_edit, {
+    #   info <- input$selected_tlg_table_cell_edit
 
-      new_tlg_order <- tlg_order()
-      new_tlg_order[new_tlg_order$Selection, ][info$row, info$col] <- info$value
-      tlg_order(new_tlg_order)
-    })
+    #   new_tlg_order <- tlg_order()
+    #   new_tlg_order[new_tlg_order$Selection, ][info$row, info$col] <- info$value
+    #   tlg_order(new_tlg_order)
+    # })
 
     # Show modal when the add_tlg button is pressed
     observeEvent(input$add_tlg, {
@@ -251,7 +209,7 @@ tab_tlg_server <- function(id, data) {
 
     # Update the Selection column when the remove_tlg button is pressed
     observeEvent(input$remove_tlg, {
-      selected_rows <- input$selected_tlg_table_rows_selected
+      selected_rows <- reactable_state()$selected
       if (length(selected_rows) > 0) {
         tlg_order_data <- tlg_order()
         tlg_order_data$Selection[tlg_order_data$Selection][selected_rows] <- FALSE
