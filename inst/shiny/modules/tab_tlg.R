@@ -109,7 +109,7 @@ tab_tlg_server <- function(id, data) {
       tlg_order(new_tlg_order)
     })
 
-    reactable_state <- reactable_server(
+    selected_tlg_state <- reactable_server(
       "selected_tlg_table",
       reactive({
         dplyr::filter(tlg_order(), Selection) %>%
@@ -148,7 +148,7 @@ tab_tlg_server <- function(id, data) {
             span(`aria-hidden` = "true", HTML("&times;"))
           )
         ),
-        DTOutput(session$ns("modal_tlg_table")),
+        reactable_ui(session$ns("modal_tlg_table")),
         footer = tagList(
           modalButton("Close"),
           actionButton(session$ns("confirm_add_tlg"), "Add TLGs to Order")
@@ -157,48 +157,26 @@ tab_tlg_server <- function(id, data) {
       ))
     })
 
-    # Render the DT table in the modal
-    output$modal_tlg_table <- DT::renderDT({
-      datatable(
-        data = dplyr::filter(tlg_order(), !Selection),
-        selection = list(mode = "multiple"),
-        escape = FALSE,
-        editable = FALSE,
-        extensions = c("RowGroup", "Select", "Buttons"),
-        options = list(
-          scrollX = TRUE,
-          fixedHeader = TRUE,
-          dom = "Blfrtip",
-          buttons = list(
-            list(extend = "copy", title = paste0("TLG_modal_table_", Sys.Date())),
-            list(extend = "csv", filename = paste0("TLG_modal_table_", Sys.Date()))
-          ),
-          headerCallback = DT::JS(
-            "function(thead) {",
-            "  $(thead).css('font-size', '0.75em');",
-            "  $(thead).find('th').css('text-align', 'center');",
-            "}"
-          ),
-          columnDefs = list(
-            list(className = "dt-center", targets = "_all"),
-            list(width = "150px", targets = "_all")
-          ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
-          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
-          paging = TRUE
-        ),
-        class = "row-border compact"
-      ) %>%
-        formatStyle(
-          columns = colnames(tlg_order()),
-          fontSize = "75%",
-          fontFamily = "Arial"
-        )
-    })
+    modal_tlg_state <- reactable_server(
+      "modal_tlg_table",
+      reactive({
+        dplyr::filter(tlg_order(), !Selection) %>%
+          dplyr::select(-id, -Selection, -Footnote, -Stratification, -Condition, -Comment)
+      }),
+      download_buttons = c("csv", "xlsx"),
+      groupBy = c("Type", "Dataset"),
+      wrap = TRUE,
+      selection = "multiple",
+      defaultExpanded = TRUE,
+      width = "775px", # fit to the modal width
+      columns = list(
+        PKid = colDef(html = TRUE)
+      )
+    )
 
     # Update the Selection column when the confirm_add_tlg button is pressed
     observeEvent(input$confirm_add_tlg, {
-      selected_rows <- input$modal_tlg_table_rows_selected
+      selected_rows <- modal_tlg_state()$selected
       if (length(selected_rows) > 0) {
         tlg_order_data <- tlg_order()
         tlg_order_data$Selection[!tlg_order_data$Selection][selected_rows] <- TRUE
@@ -209,7 +187,7 @@ tab_tlg_server <- function(id, data) {
 
     # Update the Selection column when the remove_tlg button is pressed
     observeEvent(input$remove_tlg, {
-      selected_rows <- reactable_state()$selected
+      selected_rows <- selected_tlg_state()$selected
       if (length(selected_rows) > 0) {
         tlg_order_data <- tlg_order()
         tlg_order_data$Selection[tlg_order_data$Selection][selected_rows] <- FALSE
