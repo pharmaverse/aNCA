@@ -97,7 +97,7 @@ tab_visuals_ui <- function(id) {
         sidebar = sidebar(
           selectInput(
             inputId = ns("analyte_mean"),
-            label = "Choose the Analyte:",
+            label = "Select Analyte:",
             choices = NULL,
             multiple = TRUE
           ),
