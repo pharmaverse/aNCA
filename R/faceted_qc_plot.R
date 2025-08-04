@@ -200,11 +200,10 @@ faceted_qc_plot <- function(data_conc,
     theme_bw()
 
   if (as_plotly) {
-    ggplotly(p, tooltip = "text") %>%
+    p <- ggplotly(p, tooltip = "text") %>%
       layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
-  } else {
-    p
   }
+  p
 }
 
 
