@@ -37,9 +37,6 @@
 #' @export
 #' @examples
 #' # Dummy helper functions required for the example
-#' get_label <- function(df, var, type) tools::toTitleCase(var)
-#' generate_tooltip_text <- function(data, ...) "details"
-#'
 #' # Sample concentration data
 #' conc_data <- data.frame(
 #'   USUBJID = rep(paste0("S-", 1:2), each = 2),
@@ -166,16 +163,8 @@ faceted_qc_plot <- function(data_conc,
   # Define a title for the legend
   legend_title <- paste(
     paste(
-      ifelse(
-        plot_conc_data,
-        get_label(labels_df, shape_var, "ADPC"),
-        ""
-      ),
-      ifelse(
-        plot_dose_data,
-        paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab),
-        ""
-      ),
+      if (plot_conc_data) get_label(labels_df, shape_var, "ADPC") else "",
+      if (plot_dose_data) paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab) else "",
       sep = "<br>"
     ),
     "<br>"
@@ -185,8 +174,8 @@ faceted_qc_plot <- function(data_conc,
   p <- ggplot(
     processed_data,
     aes(
-      x = .data[[x_var]],
-      y = .data[[y_var]],
+      x = !!sym(x_var),
+      y = !!sym(y_var),
       text = tooltip_text,
       colour = legend_group,
       shape = legend_group
@@ -211,11 +200,10 @@ faceted_qc_plot <- function(data_conc,
     theme_bw()
 
   if (as_plotly) {
-    ggplotly(p, tooltip = "text") %>%
+    p <- ggplotly(p, tooltip = "text") %>%
       layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
-  } else {
-    p
   }
+  p
 }
 
 
