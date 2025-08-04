@@ -106,7 +106,7 @@ describe("faceted_qc_plot", {
 })
 
 describe("prepare_plot_data", {
-  
+
   common_args <- list(
     data_conc = CONC_DATA,
     data_dose = DOSE_DATA,
@@ -116,46 +116,46 @@ describe("prepare_plot_data", {
     labels_df = DUMMY_LABELS_DF,
     tooltip_vars = c("USUBJID", "COHORT")
   )
-  
+
   it("processes only concentration data when plot_dose_data is FALSE", {
     args <- c(list(plot_conc_data = TRUE, plot_dose_data = FALSE), common_args)
-    
+
     result <- do.call(prepare_plot_data, args)
-    
+
     expect_equal(nrow(result$data), 4)
     expect_equal(result$shape_levels, c("PLASMA", "URINE"))
     expect_equal(result$colour_levels, character(0))
   })
-  
+
   it("processes only dose data when plot_conc_data is FALSE", {
     args <- c(list(plot_conc_data = FALSE, plot_dose_data = TRUE), common_args)
-    
+
     result <- do.call(prepare_plot_data, args)
-    
+
     expect_equal(nrow(result$data), 2)
     expect_equal(result$shape_levels, character(0))
     expect_equal(result$colour_levels, "100")
   })
-  
+
   it("combines both data sources and calculates combined levels correctly", {
     args <- c(list(plot_conc_data = TRUE, plot_dose_data = TRUE), common_args)
-    
+
     result <- do.call(prepare_plot_data, args)
-    
+
     expect_equal(nrow(result$data), 6)
     expect_equal(result$shape_levels, c("PLASMA", "URINE"))
     expect_equal(result$colour_levels, "100")
-    
+
     # Check that the factor in the final data has all levels
     expected_levels <- c("PLASMA", "URINE", "100")
     expect_equal(levels(result$data$legend_group), expected_levels)
   })
-  
+
   it("returns an empty structure when no data is plotted", {
     args <- c(list(plot_conc_data = FALSE, plot_dose_data = FALSE), common_args)
-    
+
     result <- do.call(prepare_plot_data, args)
-    
+
     expect_equal(nrow(result$data), 0)
     expect_equal(result$shape_levels, character(0))
     expect_equal(result$colour_levels, character(0))
