@@ -10,9 +10,9 @@ tlg_option_select_ui <- function(id, opt_def, data) {
 
   choices <- {
     if (isTRUE(opt_def$choices == ".colnames")) {
-      names(data())
+      names(data()$conc$data)
     } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
-      unique(data()[, sub("^\\$", "", opt_def$choices)])
+      unique(data()$conc$data[, sub("^\\$", "", opt_def$choices)])
     } else {
       opt_def$choices
     }

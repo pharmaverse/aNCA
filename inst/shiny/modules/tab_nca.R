@@ -20,7 +20,6 @@
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
-
   fluidPage(
     div(
       class = "d-flex justify-content-between",
@@ -58,7 +57,6 @@ tab_nca_ui <- function(id) {
 tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
     #' Setup session-wide object for storing data units. Units can be edited by the user on
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
@@ -245,7 +243,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     parameter_datasets_server("parameter_datasets", res_nca)
 
     # return results for use in other modules
-    res_nca
+    list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
   })
 }
 
