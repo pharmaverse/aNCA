@@ -37,9 +37,6 @@
 #' @export
 #' @examples
 #' # Dummy helper functions required for the example
-#' get_label <- function(df, var, type) tools::toTitleCase(var)
-#' generate_tooltip_text <- function(data, ...) "details"
-#'
 #' # Sample concentration data
 #' conc_data <- data.frame(
 #'   USUBJID = rep(paste0("S-", 1:2), each = 2),
