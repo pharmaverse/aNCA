@@ -90,7 +90,8 @@ tab_data_server <- function(id) {
     })
 
     observeEvent(input$restart, {
-      shinyjs::refresh()
+      log_info("Application restarting...")
+      session$reload()
     })
 
     observeEvent(input$next_step, {
