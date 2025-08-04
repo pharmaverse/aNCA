@@ -678,7 +678,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
       exc_fun <- exclude_nca_by_param(
         param,
         max_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = PKNCA::get.parameter.deps(gsub("pext", "inf", param))
       )
     } else {
       exc_fun <- exclude_nca_by_param(
