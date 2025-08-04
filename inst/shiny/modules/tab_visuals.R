@@ -97,19 +97,19 @@ tab_visuals_ui <- function(id) {
         sidebar = sidebar(
           selectInput(
             inputId = ns("analyte_mean"),
-            label = "Choose the Analyte:",
+            label = "Select Analyte:",
             choices = NULL,
             multiple = TRUE
           ),
           selectInput(
             inputId = ns("pcspec_mean"),
-            label = "Choose the Matrix:",
+            label = "Select Matrix:",
             choices = NULL,
             multiple = TRUE
           ),
           selectInput(
             inputId = ns("studyid_mean"),
-            label = "Choose the Study ID:",
+            label = "Select Subjects:",
             choices = NULL
           ),
           selectInput(
