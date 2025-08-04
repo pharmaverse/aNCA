@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9128</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9129</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,9 +87,9 @@ It requires the following columns in the ADNCA data:</p><ul><li><p>STUDYID: Stud
 </ul><ol><li><p>Creating pk concentration data using <code><a href="format_pkncaconc_data.html">format_pkncaconc_data()</a></code>.</p></li>
 <li><p>Creating dosing data using <code><a href="format_pkncadose_data.html">format_pkncadose_data()</a></code>.</p></li>
 <li><p>Creating <code>PKNCAconc</code> object using <code><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAconc.html" class="external-link">PKNCA::PKNCAconc()</a></code>.
-with formula <code>AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM</code>.</p></li>
+with formula <code>AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM</code>.</p></li>
 <li><p>Creating PKNCAdose object using <code><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAdose.html" class="external-link">PKNCA::PKNCAdose()</a></code>.
-with formula <code>DOSEA ~ TIME | STUDYID + DRUG + USUBJID</code>.</p></li>
+with formula <code>DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID</code>.</p></li>
 <li><p>Creating PKNCAdata object using <code><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAdata.html" class="external-link">PKNCA::PKNCAdata()</a></code>.</p></li>
 <li><p>Updating units in PKNCAdata object so each analyte has its own unit.</p></li>
 </ol></div>
@@ -116,8 +116,8 @@ with formula <code>DOSEA ~ TIME | STUDYID + DRUG + USUBJID</code>.</p></li>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">PKNCA_create_data_object</span><span class="op">(</span><span class="va">adnca_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Formula for concentration:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID/PARAM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55ba34795d50&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID/PARAM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x557493e2fb70&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data are dense PK.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With 1 subjects defined in the 'USUBJID' column.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>
@@ -130,47 +130,38 @@ with formula <code>DOSEA ~ TIME | STUDYID + DRUG + USUBJID</code>.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001           1 AnalyteA    7 ng/mL   100</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001           1 AnalyteA    3 ng/mL   100</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001           1 AnalyteA    1 ng/mL   100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSEU AFRLT ARRLT NFRLT ADOSEDUR RRLTU</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     0     0     0      0.5  hour</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     1     1     1      0.5  hour</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     2     2     2      0.5  hour</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     3     3     3      0.5  hour</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     4     4     4      0.5  hour</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     6     6     6      0.5  hour</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                     conc_groups TIME TIME_DOSE     std_route</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001\nIV\nDrugA\nSUBJ001\nAnalyteA\nPlasma    0         0 intravascular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001\nIV\nDrugA\nSUBJ001\nAnalyteA\nPlasma    1         0 intravascular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001\nIV\nDrugA\nSUBJ001\nAnalyteA\nPlasma    2         0 intravascular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001\nIV\nDrugA\nSUBJ001\nAnalyteA\nPlasma    3         0 intravascular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001\nIV\nDrugA\nSUBJ001\nAnalyteA\nPlasma    4         0 intravascular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001\nIV\nDrugA\nSUBJ001\nAnalyteA\nPlasma    6         0 intravascular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSNOA is.excluded.hl is.included.hl REASON exclude_half.life exclude volume</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1          FALSE          FALSE     NA             FALSE    &lt;NA&gt;     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1          FALSE          FALSE     NA             FALSE    &lt;NA&gt;     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1          FALSE          FALSE     NA             FALSE    &lt;NA&gt;     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1          FALSE          FALSE     NA             FALSE    &lt;NA&gt;     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1          FALSE          FALSE     NA             FALSE    &lt;NA&gt;     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1          FALSE          FALSE     NA             FALSE    &lt;NA&gt;     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  duration include_half.life</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSEU AFRLT ARRLT NFRLT ADOSEDUR RRLTU     std_route DOSNOA is.excluded.hl</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     0     0     0      0.5  hour intravascular      1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     1     1     1      0.5  hour intravascular      1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     2     2     2      0.5  hour intravascular      1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     3     3     3      0.5  hour intravascular      1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     4     4     4      0.5  hour intravascular      1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     6     6     6      0.5  hour intravascular      1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  is.included.hl REASON exclude_half.life exclude volume duration</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE     NA             FALSE    &lt;NA&gt;     NA        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE     NA             FALSE    &lt;NA&gt;     NA        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE     NA             FALSE    &lt;NA&gt;     NA        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE     NA             FALSE    &lt;NA&gt;     NA        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE     NA             FALSE    &lt;NA&gt;     NA        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE     NA             FALSE    &lt;NA&gt;     NA        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  include_half.life</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Formula for dosing:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data for dosing:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   STUDYID PCSPEC ROUTE  DRUG USUBJID NCA_PROFILE    PARAM AVAL AVALU DOSEA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV DrugA SUBJ001           1 AnalyteA    0 ng/mL   100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSEU AFRLT ARRLT NFRLT ADOSEDUR RRLTU</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     0     0     0      0.5  hour</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                     conc_groups TIME TIME_DOSE     std_route</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001\nIV\nDrugA\nSUBJ001\nAnalyteA\nPlasma    0         0 intravascular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSNOA is.excluded.hl is.included.hl REASON exclude_half.life exclude</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1          FALSE          FALSE     NA             FALSE    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  DOSEU AFRLT ARRLT NFRLT ADOSEDUR RRLTU     std_route DOSNOA is.excluded.hl</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mg     0     0     0      0.5  hour intravascular      1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  is.included.hl REASON exclude_half.life exclude</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE     NA             FALSE    &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With 1 rows of interval specifications.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With units</span>

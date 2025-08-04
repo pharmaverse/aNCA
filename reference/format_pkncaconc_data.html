@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9128</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9129</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,7 +92,6 @@
     <p>The function performs the following steps:</p><ul><li><p>Checks for required columns and data.</p></li>
 <li><p>Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 (dosing data- not CDISC standard)</p></li>
-<li><p>Calculates <code>TIME_DOSE</code>as the time of dose reference by the PK sample</p></li>
 <li><p>Creates <code>DOSNOA</code> variable, sequential numbers based on time of dose</p></li>
 <li><p>Adds a 'std_route' column taking values "intravascular" or "extravascular".</p></li>
 <li><p>Arranges the data by group_columns.</p></li>
