@@ -77,29 +77,15 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
-  conc_formula <- as.formula(
-    formula_string <- sprintf(
-      "%s ~ %s | %s + %s + %s + %s / %s",
-      conc_column,
-      time_column,
-      studyid_column,
-      matrix_column,
-      drug_column,
-      usubjid_column,
-      analyte_column
-    )
-  )
+  conc_formula <-
+    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" |> # nolint
+    glue::glue() |>
+    as.formula()
 
-  dose_formula <- as.formula(
-    formula_string <- sprintf(
-      "%s ~ %s | %s + %s + %s",
-      "DOSEA",
-      time_column,
-      studyid_column,
-      drug_column,
-      usubjid_column
-    )
-  )
+  dose_formula <-
+        "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" |> # nolint
+    glue::glue() |>
+    as.formula()
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
