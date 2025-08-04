@@ -72,9 +72,6 @@ Unless specified, the variables required as arguments are expected to
 be present in both \code{data_conc} and \code{data_dose}.
 }
 \examples{
-# Dummy helper functions required for the example
-get_label <- function(df, var, type) tools::toTitleCase(var)
-generate_tooltip_text <- function(data, ...) "details"
 
 # Sample concentration data
 conc_data <- data.frame(
@@ -83,7 +80,7 @@ conc_data <- data.frame(
   SAMPLE_TYPE = rep(c("PLASMA", "URINE"), 2),
   COHORT = "A",
   TIME_UNIT = "hr"
-  )
+ )
 
 # Sample dose data
 dose_data <- data.frame(
@@ -92,7 +89,7 @@ dose_data <- data.frame(
   DOSE_LEVEL = c(100, 100),
   COHORT = "A",
   DOSE_UNIT = "mg"
- )
+)
 
 # Generate the plot
 faceted_qc_plot(
@@ -106,5 +103,5 @@ faceted_qc_plot(
   x_var_units = "TIME_UNIT",
   colour_var_units = "DOSE_UNIT",
   title = "Sample Dosing and PK Plot"
- )
+)
 }
