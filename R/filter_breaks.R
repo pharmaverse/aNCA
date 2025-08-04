@@ -35,9 +35,10 @@ filter_breaks <- function(breaks = NA,
   panel <- plot_table$grobs[[panel_index]]
 
   # Find the panel border grob index
-  border_index <- which(sapply(panel$children, function(x) {
-    grepl("panel.border", x$name)
-  }))
+  border_index <- panel$children %>%
+    sapply(\(x) x$name) %>%
+    grepl("panel.border", .) %>%
+    which()
 
   # Extract the panel border grob to get the width or height
   panel_border <- panel$children[[border_index]]
