@@ -163,16 +163,8 @@ faceted_qc_plot <- function(data_conc,
   # Define a title for the legend
   legend_title <- paste(
     paste(
-      ifelse(
-        plot_conc_data,
-        get_label(labels_df, shape_var, "ADPC"),
-        ""
-      ),
-      ifelse(
-        plot_dose_data,
-        paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab),
-        ""
-      ),
+      if (plot_conc_data) get_label(labels_df, shape_var, "ADPC") else "",
+      if (plot_dose_data) paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab) else "",
       sep = "<br>"
     ),
     "<br>"
