@@ -174,8 +174,8 @@ faceted_qc_plot <- function(data_conc,
   p <- ggplot(
     processed_data,
     aes(
-      x = .data[[x_var]],
-      y = .data[[y_var]],
+      x = !!sym(x_var),
+      y = !!sym(y_var),
       text = tooltip_text,
       colour = legend_group,
       shape = legend_group
