@@ -151,7 +151,7 @@ server <- function(input, output, session) {
   grouping_vars <- data_module$grouping_variables
 
   # EXPLORATION ----
-  tab_visuals_server("visuals", adnca_data, grouping_vars, list_tab_nca$res_nca)
+  tab_visuals_server("visuals", adnca_data, grouping_vars)
 
   # NCA ----
   list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)

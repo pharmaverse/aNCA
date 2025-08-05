@@ -45,8 +45,9 @@ tab_nca_ui <- function(id) {
             )
           ),
           nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
-          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
-        )
+          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+          )
       ),
       #' Additional analysis
       nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
@@ -241,6 +242,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
+    
+    #' Parameter plots module
+    parameter_plots_server("parameter_plots", res_nca)
 
     # return results for use in other modules
     list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
