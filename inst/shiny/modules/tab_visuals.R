@@ -1,7 +1,7 @@
-# The Visualisation Navbar tab loads the data from the Data tab, and results from NCA tab
+# The Exploration Navbar tab loads the data from the Data tab, and results from NCA tab
 # The user can then explore the data using various visualisation tools
 
-# VISUALISATION ----
+# EXPLORATION ----
 tab_visuals_ui <- function(id) {
   ns <- NS(id)
 

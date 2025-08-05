@@ -94,7 +94,7 @@ tab_data_server <- function(id) {
       } else if (current_step == "mapping") {
         trigger_mapping_submit(trigger_mapping_submit() + 1)
       } else if (current_step == "preview") {
-        shinyjs::runjs("document.querySelector(`a[data-value='visualisation']`).click();"
+        shinyjs::runjs("document.querySelector(`a[data-value='exploration']`).click();"
         )
       }
     })
