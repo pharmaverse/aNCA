@@ -26,6 +26,10 @@ save_output <- function(output, output_path) {
           message("Error writing XPT file for ", name, ": ", e$message)
         }
       )
+    } else if (inherits(output[[name]], "plotly")) {
+      file_name <- paste0(output_path, "/", name, ".html")
+      htmlwidgets::saveWidget(output[[name]], file = file_name, selfcontained = TRUE)
+
     } else {
       stop(
         "Unsupported output type object in the list: ",
