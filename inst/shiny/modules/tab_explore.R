@@ -4,10 +4,18 @@
 # EXPLORATION ----
 tab_explore_ui <- function(id) {
   ns <- NS(id)
-
+  
+  mods <- teal::modules(
+    teal.modules.general::tm_variable_browser(label = "Variable Browser")
+  )
+  
   navset_card_pill(
     header = "Exploratory Analysis",
     id = "visuals",
+    nav_panel(
+      "Variable Browser",
+      teal::ui_teal(ns("variable_browser"), mods)
+    ),
     nav_panel("Individual Plots",
       layout_sidebar(
         sidebar = sidebar(
@@ -147,6 +155,26 @@ tab_explore_ui <- function(id) {
 tab_explore_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
+    # TEAL VARIABLE BROWSER ----
+    observeEvent(input$visuals, {
+      req(input$visuals == "Variable Browser")
+      
+      teal_data_rv <- reactive({
+        req(data())
+        teal.data::teal_data(DATA = data())
+      })
+      
+      mods <- teal::modules(
+        teal.modules.general::tm_variable_browser(label = "Variable Browser")
+      )
+      
+      teal::srv_teal(
+        id = "variable_browser",
+        data = teal_data_rv,
+        modules = mods
+      )
+    }, once = TRUE, ignoreInit = TRUE)
 
     ## Plotting Input widgets --------------------------------------------------------
 
