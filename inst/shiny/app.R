@@ -77,18 +77,18 @@ ui <- function() {
         icon = icon("database"),
         fluid = TRUE
       ),
-      # NCA ----
-      nav_panel(
-        "NCA",
-        value = "nca",
-        icon = icon("microscope"),
-        fluid = TRUE
-      ),
       # VISUALISATION ----
       nav_panel(
         "Visualisation",
         value = "visualisation",
         icon = icon("chart-line"),
+        fluid = TRUE
+      ),
+      # NCA ----
+      nav_panel(
+        "NCA",
+        value = "nca",
+        icon = icon("microscope"),
         fluid = TRUE
       ),
       # New TLG tab
@@ -150,11 +150,11 @@ server <- function(input, output, session) {
   # Grouping Variables
   grouping_vars <- data_module$grouping_variables
 
-  # NCA ----
-  list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
-
   # VISUALISATION ----
   tab_visuals_server("visuals", adnca_data, grouping_vars, list_tab_nca$res_nca)
+
+  # NCA ----
+  list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
 
   # TLG
   tab_tlg_server("tlg", list_tab_nca$processed_pknca_data)
