@@ -158,7 +158,9 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)]))) %>%
+        # Add group variable labels (others were added in pivot_wider_pknca_result)
+        apply_labels()
     })
 
     reactable_server(

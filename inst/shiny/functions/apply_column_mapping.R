@@ -61,7 +61,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   dataset <- dataset %>%
     .apply_manual_units(mapping, manual_units) %>%
     relocate(any_of(desired_order)) %>%
-    apply_labels(LABELS, "ADPC")
+    apply_labels(type = "ADPC")
 
   conc_duplicates <- dataset %>%
     group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%

@@ -54,7 +54,12 @@ faceted_qc_plot <- function(data,
   processed_data <- data %>%
     mutate(
       colour_factored = as.factor(!!sym(colour_var)),
-      tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+      tooltip_text = generate_tooltip_text(
+        data = .,
+        labels_df = labels_df,
+        tooltip_vars = tooltip_vars,
+        type = "ADPC"
+      )
     )
 
   plt <- ggplot(processed_data,
@@ -65,12 +70,12 @@ faceted_qc_plot <- function(data,
     geom_point(size = 1.5) +
     facet_grid(rows = vars(!!!syms(grouping_vars)), scales = "free_y", space = "free_y") +
     labs(
-      x = get_label(labels_df, x_var, "ADPC"),
-      y = get_label(labels_df, y_var, "ADPC"),
+      x = get_label(variable = x_var, type =  "ADPC", labels_df = labels_df),
+      y = get_label(variable = y_var, type =  "ADPC", labels_df = labels_df),
       title = title,
       subtitle = paste("Subjects grouped by",
                        paste(grouping_vars, collapse = ", ")),
-      colour = get_label(labels_df, colour_var, "ADPC")
+      colour = get_label(variable = colour_var, type =  "ADPC", labels_df = labels_df)
     ) +
     theme_bw() +
     theme(

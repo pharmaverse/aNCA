@@ -104,7 +104,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     summary_stats_filtered <- reactive({
       summary_stats() %>%
         select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
-        filter(Statistic %in% input$select_display_statistic)
+        filter(Statistic %in% input$select_display_statistic) %>%
+        apply_labels()
     })
 
     observeEvent(summary_stats(), {
@@ -133,6 +134,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     reactable_server(
       "descriptive_stats",
       summary_stats_filtered,
+      columns = generate_col_defs,
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered()))),
       defaultPageSize = 10,
       striped = TRUE,
