@@ -113,7 +113,7 @@ ui <- function() {
       conditionalPanel(
         class = "page-container",
         condition = "input.page == 'exploration'",
-        tab_visuals_ui("visuals")
+        tab_explore_ui("explore")
       ),
       conditionalPanel(
         class = "page-container",
@@ -151,7 +151,7 @@ server <- function(input, output, session) {
   grouping_vars <- data_module$grouping_variables
 
   # EXPLORATION ----
-  tab_visuals_server("visuals", adnca_data, grouping_vars)
+  tab_explore_server("explore", adnca_data, grouping_vars)
 
   # NCA ----
   list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)

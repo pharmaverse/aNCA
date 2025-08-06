@@ -2,7 +2,7 @@
 # The user can then explore the data using various visualisation tools
 
 # EXPLORATION ----
-tab_visuals_ui <- function(id) {
+tab_explore_ui <- function(id) {
   ns <- NS(id)
 
   navset_card_pill(
@@ -144,7 +144,7 @@ tab_visuals_ui <- function(id) {
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
 
-tab_visuals_server <- function(id, data, grouping_vars) {
+tab_explore_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
