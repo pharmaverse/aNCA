@@ -77,18 +77,18 @@ ui <- function() {
         icon = icon("database"),
         fluid = TRUE
       ),
+      # VISUALISATION ----
+      nav_panel(
+        "Exploration",
+        value = "exploration",
+        icon = icon("chart-line"),
+        fluid = TRUE
+      ),
       # NCA ----
       nav_panel(
         "NCA",
         value = "nca",
         icon = icon("microscope"),
-        fluid = TRUE
-      ),
-      # VISUALISATION ----
-      nav_panel(
-        "Visualisation",
-        value = "visualisation",
-        icon = icon("chart-line"),
         fluid = TRUE
       ),
       # New TLG tab
@@ -112,8 +112,8 @@ ui <- function() {
       ),
       conditionalPanel(
         class = "page-container",
-        condition = "input.page == 'visualisation'",
-        tab_visuals_ui("visuals")
+        condition = "input.page == 'exploration'",
+        tab_explore_ui("explore")
       ),
       conditionalPanel(
         class = "page-container",
@@ -137,7 +137,7 @@ server <- function(input, output, session) {
 
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
-  shinyjs::disable(selector = "#page li a[data-value=visualisation]")
+  shinyjs::disable(selector = "#page li a[data-value=exploration]")
   shinyjs::disable(selector = "#page li a[data-value=tlg]")
 
   # DATA ----
@@ -150,11 +150,11 @@ server <- function(input, output, session) {
   # Grouping Variables
   grouping_vars <- data_module$grouping_variables
 
+  # EXPLORATION ----
+  tab_explore_server("explore", adnca_data, grouping_vars)
+
   # NCA ----
   list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
-
-  # VISUALISATION ----
-  tab_visuals_server("visuals", adnca_data, grouping_vars, list_tab_nca$res_nca)
 
   # TLG
   tab_tlg_server("tlg", list_tab_nca$processed_pknca_data)
