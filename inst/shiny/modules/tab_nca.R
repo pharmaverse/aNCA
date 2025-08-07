@@ -45,7 +45,8 @@ tab_nca_ui <- function(id) {
             )
           ),
           nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
-          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
+          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
         )
       ),
       #' Additional analysis
@@ -73,7 +74,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
+        purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
           shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
         })
 
@@ -241,6 +242,9 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
+
+    #' Parameter plots module
+    parameter_plots_server("parameter_plots", res_nca)
 
     # return results for use in other modules
     list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)

@@ -569,4 +569,3 @@ describe("remove_impute_method", {
     expect_equal(remove_impute_method(character(), "new_impute"), character())
   })
 })
-
