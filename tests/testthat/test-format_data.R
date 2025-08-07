@@ -25,14 +25,13 @@ describe("format_pkncaconc_data", {
 
     expect_s3_class(df_conc, "data.frame")
     expect_setequal(
-      c(names(ADNCA), "std_route", "conc_groups", "TIME", "TIME_DOSE", "DOSNOA"),
+      c(names(ADNCA), "std_route", "DOSNOA"),
       colnames(df_conc)
     )
-    expect_equal(df_conc$TIME, df_conc$AFRLT)
     expect_no_error(
       PKNCA::PKNCAconc(
         df_conc,
-        formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+        formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
         exclude_half.life = "exclude_half.life",
         time.nominal = "NFRLT"
       )
@@ -130,7 +129,7 @@ describe("format_pkncadose_data", {
 
     expect_s3_class(df_dose, "data.frame")
     expect_setequal(
-      c(names(ADNCA), "conc_groups", "TIME", "TIME_DOSE", "std_route", "DOSNOA"),
+      c(names(ADNCA), "std_route", "DOSNOA"),
       colnames(df_dose)
     )
 
@@ -138,7 +137,7 @@ describe("format_pkncadose_data", {
     expect_no_error(
       PKNCA::PKNCAdose(
         data = df_dose,
-        formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
+        formula = DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID,
         route = "ROUTE",
         time.nominal = "NFRLT",
         duration = "ADOSEDUR"
@@ -186,7 +185,7 @@ describe("format_pkncadose_data", {
     df_dose <- format_pkncadose_data(df_conc,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DRUG", "PARAM"))
-    expect_true(all(df_dose$TIME_DOSE >= 0))
+    expect_true(all(df_dose$AFRLT >= 0))
   })
 })
 
@@ -203,14 +202,14 @@ describe("format_pkncadata_intervals", {
 
   pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+    formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID
+    formula = DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID
   )
 
   params <- c("cmax", "tmax", "half.life", "cl.obs")
@@ -231,7 +230,7 @@ describe("format_pkncadata_intervals", {
         data.dose = pknca_dose,
         intervals = result,
         options = list(
-          keep_interval_cols = c("TIME_DOSE", "NCA_PROFILE", "DOSNOA", "type_interval")
+          keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval")
         ),
         units = PKNCA::pknca_units_table(
           concu = "ng/mL",
@@ -269,7 +268,7 @@ describe("format_pkncadata_intervals", {
 
     pknca_conc_tau <- PKNCA::PKNCAconc(
       df_conc_tau,
-      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
       exclude_half.life = "exclude_half.life",
       time.nominal = "NFRLT"
     )
@@ -346,7 +345,7 @@ describe("format_pkncadata_intervals", {
   it("sets correct parameters if VOLUME not present", {
     pknca_conc_no_volume <- PKNCA::PKNCAconc(
       df_conc,
-      formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
       exclude_half.life = "exclude_half.life",
       time.nominal = "NFRLT"
     )
