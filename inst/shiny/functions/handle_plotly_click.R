@@ -74,4 +74,3 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, c
   # Return updated values
   list(last_click_data = updated_click_data, manual_slopes = updated_slopes)
 }
-
