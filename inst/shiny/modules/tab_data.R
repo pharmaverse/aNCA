@@ -37,7 +37,8 @@ tab_data_ui <- function(id) {
               "Mapping",
               data_mapping_ui(ns("column_mapping"))
             ),
-            nav_panel("Preview",
+            nav_panel(
+              "Preview",
               id = ns("data_navset-review"),
               div(
                 stepper_ui("Preview"),
@@ -54,7 +55,6 @@ tab_data_ui <- function(id) {
         class = "data-tab-btns-container",
         # Left side: Restart button
         actionButton(ns("restart"), "Restart"),
-
         # Right side: Previous and Next buttons
         div(
           class = "nav-btns",
@@ -69,11 +69,10 @@ tab_data_ui <- function(id) {
 tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    trigger_mapping_submit <- reactiveVal(0)
     steps <- c("upload", "filtering", "mapping", "preview")
     step_labels <- c("Upload", "Filtering", "Mapping", "Preview")
     data_step <- reactiveVal("upload")
-
     observe({
       current <- data_step()
       if (current == steps[1]) {
@@ -81,28 +80,25 @@ tab_data_server <- function(id) {
       } else {
         shinyjs::enable("prev_step")
       }
-
-      if (current == steps[length(steps)]) {
-        shinyjs::disable("next_step")
-      } else {
-        shinyjs::enable("next_step")
-      }
     })
-
     observeEvent(input$restart, {
       data_step(steps[1])
       updateTabsetPanel(session, "data_navset", selected = step_labels[1])
     })
-
     observeEvent(input$next_step, {
-      current <- data_step()
-      idx <- match(current, steps)
-      if (!is.na(idx) && idx < length(steps)) {
+      current_step <- isolate(data_step())
+      if (current_step %in% c("upload", "filtering")) {
+        idx <- match(current_step, steps)
         data_step(steps[idx + 1])
+        updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
+      } else if (current_step == "mapping") {
+        trigger_mapping_submit(trigger_mapping_submit() + 1)
+      } else if (current_step == "preview") {
+        shinyjs::runjs("document.querySelector(`a[data-value='nca']`).click();
+        document.querySelector(`a[data-value='Setup']`).click();"
+        )
       }
-      updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
     })
-
     observeEvent(input$prev_step, {
       current <- data_step()
       idx <- match(current, steps)
@@ -111,19 +107,16 @@ tab_data_server <- function(id) {
       }
       updateTabsetPanel(session, "data_navset", selected = step_labels[idx - 1])
     })
-
     #' Load raw ADNCA data
     adnca_raw <- data_upload_server("raw_data")
-
     #' Filter data
     adnca_filtered <- data_filtering_server("data_filtering", adnca_raw)
-
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
-      adnca_data = adnca_filtered
+      adnca_data = adnca_filtered,
+      trigger = trigger_mapping_submit
     )
-
     #' Reactive value for the processed dataset
     processed_data <- column_mapping$processed_data
     observeEvent(processed_data(), {
@@ -131,10 +124,8 @@ tab_data_server <- function(id) {
       data_step("preview")
       updateTabsetPanel(session, "data_navset", selected = "Preview")
     })
-
     #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables
-
     output$processed_data_message <- renderUI({
       tryCatch(
         {
@@ -149,7 +140,6 @@ tab_data_server <- function(id) {
         }
       )
     })
-
     # Update the data table object with the filtered data
     reactable_server(
       "data_processed",
@@ -161,7 +151,6 @@ tab_data_server <- function(id) {
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
     )
-
     list(
       data = processed_data,
       grouping_variables = grouping_variables

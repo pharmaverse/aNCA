@@ -113,10 +113,22 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Flag Rule Sets",
-        .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
-        .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
-        .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
-        .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
+        .rule_input(
+          ns("adj.r.squared"), "RSQADJ >=", 0.7, 0.05, 0, 1,
+          tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
+        ),
+        .rule_input(
+          ns("aucpext.obs"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (observed) for AUC related parameters"
+        ),
+        .rule_input(
+          ns("aucpext.pred"), "AUCPEP (% ext.predicted) <=", 20, 5, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (predicted) for AUC related parameters"
+        ),
+        .rule_input(
+          ns("span.ratio"), "LAMZSPN >=", 2, 1, 0,
+          tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
+        )
       ),
       id = "acc",
       open = c("General Settings", "Parameter Selection")
@@ -246,7 +258,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     })
 
     observeEvent(input$select_analyte, {
-      req(data(), input$select_analyte)
+      req(data())
+
+      # Isolate current selections to prevent reactive loops
+      current_profile <- isolate(input$select_profile)
+      current_pcspec <- isolate(input$select_pcspec)
 
       filtered_data <- data() %>%
         filter(PARAM %in% input$select_analyte,
@@ -258,18 +274,27 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       pcspec_choices <- unique(filtered_data$PCSPEC)
 
+
+      # Fallback if the current selection is empty
+      if (length(current_profile) == 0) {
+        current_profile <- profile_choices[1]
+      }
+      if (length(current_pcspec) == 0) {
+        current_pcspec <- pcspec_choices
+      }
+
       updatePickerInput(
         session,
         inputId = "select_profile",
         choices = profile_choices,
-        selected = profile_choices[1]
+        selected = current_profile
       )
 
       updatePickerInput(
         session,
         inputId = "select_pcspec",
         choices = pcspec_choices,
-        selected = pcspec_choices
+        selected = current_pcspec
       )
     })
 
@@ -411,7 +436,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             is.checked = input$span.ratio_rule,
             threshold = input$span.ratio_threshold
           )
-        )
+        ),
+        units = session$userData$units_table()
       )
     })
 
@@ -444,8 +470,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 #' @param step    Step for the `shiny::numericInput` widget.
 #' @param min     Min value for the `shiny::numericInput` widget.
 #' @param max     Max value for the `shiny::numericInput` widget.
+#' @param tooltip Optional tooltip function to add a tooltip to the label.
 #' @returns `shiny::fluidRow` containing html elements of the widget.
-.rule_input <- function(id, label, default, step, min, max = NULL) {
+.rule_input <- function(id, label, tooltip = NULL, default, step, min, max = NULL) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
   numeric_args <- list(
@@ -461,10 +488,16 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     numeric_args$max <- max
   }
 
+  label_tag <- if (!is.null(tooltip)) {
+    tooltip(tags$span(label), tooltip)
+  } else {
+    id
+  }
+
   fluidRow(
     column(
       width = 6,
-      checkboxInput(rule_id, label, value = TRUE)
+      checkboxInput(rule_id, label_tag, value = TRUE)
     ),
     column(
       width = 6,
