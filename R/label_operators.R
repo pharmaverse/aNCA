@@ -72,7 +72,7 @@ as_factor_preserve_label <- function(x) {
   label <- attr(x, "label")
   x <- as.factor(x)
   attr(x, "label") <- label
-  return(x)
+  x
 }
 
 #' Check if a Vector Has a Label
@@ -93,7 +93,7 @@ as_factor_preserve_label <- function(x) {
 #'
 #' @export
 has_label <- function(x) {
-  return(!is.null(attr(x, "label")))
+  !is.null(attr(x, "label"))
 }
 
 #' Set an Empty Label if None Exists
@@ -117,7 +117,7 @@ set_empty_label <- function(x) {
   if (is.null(attr(x, "label"))) {
     attr(x, "label") <- ""
   }
-  return(x)
+  x
 }
 
 #' Get the Label of a Heading
