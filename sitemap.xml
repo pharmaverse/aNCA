@@ -45,6 +45,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncaconc_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncadata_intervals.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncadose_data.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/format_unit_string.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg01_lin.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg01_log.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg02_lin.html</loc></url>
@@ -70,6 +71,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg01.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg02.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/preprocess_data_for_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
