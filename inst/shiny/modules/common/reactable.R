@@ -24,7 +24,7 @@ reactable_ui <- function(id) {
 }
 
 reactable_server <- function(
-  id, data, download_buttons = c(), file_name = NULL, on_render = NULL, ...
+  id, data, download_buttons = c(), file_name = NULL, on_render = NULL, editable = NULL, ...
 ) {
   moduleServer(id, function(input, output, session) {
     default_reactable_opts <- list(
@@ -49,6 +49,19 @@ reactable_server <- function(
     # Show requested download  buttons
     purrr::walk(download_buttons, \(x) shinyjs::show(paste0("download_", x)))
 
+    # Attach observers for editable columns
+    table_edit <- reactiveVal(NULL)
+    purrr::walk(editable, \(col) {
+      observe({
+        table_edit(input[[paste0("edit_", col)]])
+      })
+    })
+    table_edit_debounced <- reactive({
+      req(table_edit())
+      table_edit()
+    }) |>
+      debounce(500)
+
     output$table <- renderReactable({
       req(data())
       opts <- lapply(reactable_opts, function(x) {
@@ -60,6 +73,23 @@ reactable_server <- function(
           x
         }
       })
+
+      if (!is.null(editable)) {
+        col_defs <- lapply(editable, function(col) {
+          colDef(
+            cell = text_extra(
+              id = session$ns(paste0("edit_", col))
+            )
+          )
+        }) |>
+          setNames(editable)
+
+        if (is.null(opts$columns)) {
+          opts$columns <- col_defs
+        } else {
+          opts$columns <- c(opts$columns, col_defs)
+        }
+      }
 
       do.call(reactable, c(list(data = data()), opts)) %>%
         htmlwidgets::onRender(on_render)
@@ -74,11 +104,11 @@ reactable_server <- function(
       filename = .reactable_file_name(file_name, "xlsx", id),
       content = \(con) openxlsx2::write_xlsx(data(), con)
     )
-    
+
     reactive(
       list(
         selected = getReactableState("table", "selected"),
-        edit = input$table_cell_edit
+        edit = table_edit_debounced
       )
     ) |>
       invisible()

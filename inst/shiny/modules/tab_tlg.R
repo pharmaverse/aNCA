@@ -96,44 +96,51 @@ tab_tlg_server <- function(id, data) {
       req(data())
       column_of_conditions <- gsub("([=<>!].*)", "", tlg_order()$Condition)
 
-      new_tlg_order <- tlg_order() %>%
-        mutate(
-          Selection = case_when(
-            Condition == "" | is.na(Condition) ~ Selection,
-            !column_of_conditions %in% names(data()) ~ FALSE,
-            sum(eval(parse(text = Condition), envir = data())) > 0 ~ TRUE,
-            TRUE ~ FALSE
+      # Unparsable conditions will be ignored
+      new_tlg_order <- tryCatch({
+        tlg_order() %>%
+          mutate(
+            Selection = case_when(
+              Condition == "" | is.na(Condition) ~ Selection,
+              !column_of_conditions %in% names(data()) ~ FALSE,
+              sum(eval(parse(text = Condition), envir = data())) > 0 ~ TRUE,
+              TRUE ~ FALSE
+            )
           )
-        )
+      }, error = function(e) {
+        tlg_order()
+      })
 
       tlg_order(new_tlg_order)
     })
 
+    displayed_order <- reactive({
+      dplyr::filter(tlg_order(), Selection) %>%
+        dplyr::select(-id, -Selection)
+    }) |>
+      bindEvent(data(), input$confirm_add_tlg, input$remove_tlg)
+
     selected_tlg_state <- reactable_server(
       "selected_tlg_table",
-      reactive({
-        dplyr::filter(tlg_order(), Selection) %>%
-          dplyr::select(-id, -Selection)
-      }),
+      displayed_order,
       download_buttons = c("csv", "xlsx"),
       groupBy = c("Type", "Dataset"),
       defaultExpanded = TRUE,
       wrap = TRUE,
       selection = "multiple",
+      editable = c("Footnote", "Stratification", "Condition", "Comment"),
       columns = list(
         PKid = colDef(html = TRUE)
       )
     )
 
-    # Save table changes from the UI into the server
-    # TODO(mateusz): restore this
-    # observeEvent(input$selected_tlg_table_cell_edit, {
-    #   info <- input$selected_tlg_table_cell_edit
+    observeEvent(selected_tlg_state()$edit(), {
+      info <- selected_tlg_state()$edit()
 
-    #   new_tlg_order <- tlg_order()
-    #   new_tlg_order[new_tlg_order$Selection, ][info$row, info$col] <- info$value
-    #   tlg_order(new_tlg_order)
-    # })
+      new_tlg_order <- tlg_order()
+      new_tlg_order[new_tlg_order$Selection, ][info$row, info$column] <- info$value
+      tlg_order(new_tlg_order)
+    })
 
     # Show modal when the add_tlg button is pressed
     observeEvent(input$add_tlg, {
