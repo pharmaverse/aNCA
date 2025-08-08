@@ -64,7 +64,6 @@ tab_tlg_ui <- function(id) {
         )
       ),
       card(reactable_ui(ns("selected_tlg_table"))),
-      )
     ),
     nav_panel("Tables", "To be added"),
     nav_panel("Listings", uiOutput(ns("listings"), class = "tlg-module"), value = "Listings"),
@@ -140,7 +139,7 @@ tab_tlg_server <- function(id, data) {
       selection = "multiple",
       editable = c("Footnote", "Stratification", "Condition", "Comment"),
       columns = list(
-        PKid = colDef(html = TRUE)
+        Output = colDef(html = TRUE)
       )
     )
 
@@ -185,7 +184,7 @@ tab_tlg_server <- function(id, data) {
         PKid = colDef(html = TRUE)
       )
     )
- 
+
     # Update the Selection column when the confirm_add_tlg button is pressed
     observeEvent(input$confirm_add_tlg, {
       selected_rows <- modal_tlg_state()$selected
