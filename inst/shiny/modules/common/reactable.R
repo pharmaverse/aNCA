@@ -117,7 +117,7 @@ reactable_server <- function(
 }
 
 # Creates file name for export
-.reactable_file_name <- function(file_name, ext, id) {
+.reactable_file_name <- function(file_name, ext, id = NULL) {
   f_name <- {
     if (is.character(file_name)) {
       file_name

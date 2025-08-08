@@ -111,7 +111,6 @@ tab_tlg_server <- function(id, data) {
           mutate(
             Selection = case_when(
               Condition == "" | is.na(Condition) | is.null(Condition) ~ Selection,
-              !column_of_conditions %in% names(data()) ~ FALSE,
               any(unique(toupper(data()$conc$data$PCSPEC)) %in% Condition) ~ TRUE,
               TRUE ~ Selection
             )

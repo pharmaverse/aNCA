@@ -118,7 +118,7 @@ units_table_server <- function(id, mydata) {
       }
 
       # Make the edition in the units table
-      modal_units_table[info$row, info$col] <- info$value
+      modal_units_table[info$row, info$column] <- info$value
 
       # If the custom unit was changed recalculate the conversion factor
       if (info$column == "PPSTRESU") {
