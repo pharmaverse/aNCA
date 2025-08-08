@@ -198,8 +198,7 @@ data_mapping_ui <- function(id) {
                                  Only required for urine/excretion studies."),
           .column_mapping_widget(ns, "TAU", "Numeric Format.
                                  Can be actual Tau or planned Tau (TRTINT).
-                                 If the TAU column has non-null values the data will
-                                 be assumed to be for a multiple dose study.")
+                                 Assumed to have same units as RRTLU")
         )
       )
     )
