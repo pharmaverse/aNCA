@@ -129,7 +129,3 @@ reactable_server <- function(
   }
   paste0(f_name, ".", ext)
 }
-
-.append_col_def <- function(...) {
-  colDef(...)
-}

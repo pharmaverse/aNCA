@@ -181,7 +181,7 @@ units_table_server <- function(id, mydata) {
       removeModal()
     })
 
-    #' Update local `modal_units_table()` is the global value changes.
+    #' Update local `modal_units_table()` if the global value changes.
     observeEvent(session$userData$units_table(), {
       session$userData$units_table() %>%
         modal_units_table()

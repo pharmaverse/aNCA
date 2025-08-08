@@ -39,6 +39,15 @@
     setNames(names(defs))
 }
 
+js_close_button <- tags$button(
+  type = "button",
+  onclick = "$(this).closest('.modal').modal('hide');",
+  `aria-label` = "Close",
+  # Style updated for color and size
+  style = "color: white; border: none; background: transparent; font-size: 1.2em; padding: 0;",
+  icon("times")
+)
+
 tab_tlg_ui <- function(id) {
   ns <- NS(id)
 
@@ -55,10 +64,6 @@ tab_tlg_ui <- function(id) {
         )
       ),
       card(reactable_ui(ns("selected_tlg_table"))),
-      card(
-        div(
-          actionButton(ns("submit_tlg_order_alt"), "Submit Order Details", class = "btn-primary")
-        )
       )
     ),
     nav_panel("Tables", "To be added"),
@@ -80,12 +85,18 @@ tab_tlg_server <- function(id, data) {
       purrr::map_dfr(.TLG_DEFINITIONS, ~ dplyr::tibble(
         Selection = .x$is_default,
         Type = .x$type,
-        Dataset = .x$dataset,
-        PKid = paste0("<a href='", .x$link, "' target='_blank'>", .x$pkid, "</a>"),
+        Dataset = case_when(
+          .x$dataset == "ADPC" ~ "PK Concentrations",
+          .x$dataset == "ADPP" ~ "PK Parameters",
+          TRUE ~ .x$dataset
+        ),
+        PKid = .x$pkid,
+        Output = paste0("<a href='", .x$link, "' target='_blank'>", .x$description, "</a>"),
+        Label = .x$label,
         Description = .x$description,
+        Condition = .x$condition,
         Footnote = NA_character_,
         Stratification = NA_character_,
-        Condition = NA_character_,
         Comment = NA_character_
       )) %>%
         dplyr::mutate(id = dplyr::row_number(), .before = dplyr::everything())
@@ -94,17 +105,16 @@ tab_tlg_server <- function(id, data) {
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
     observeEvent(list(tlg_order(), data()), {
       req(data())
-      column_of_conditions <- gsub("([=<>!].*)", "", tlg_order()$Condition)
 
       # Unparsable conditions will be ignored
       new_tlg_order <- tryCatch({
         tlg_order() %>%
           mutate(
             Selection = case_when(
-              Condition == "" | is.na(Condition) ~ Selection,
+              Condition == "" | is.na(Condition) | is.null(Condition) ~ Selection,
               !column_of_conditions %in% names(data()) ~ FALSE,
-              sum(eval(parse(text = Condition), envir = data())) > 0 ~ TRUE,
-              TRUE ~ FALSE
+              any(unique(toupper(data()$conc$data$PCSPEC)) %in% Condition) ~ TRUE,
+              TRUE ~ Selection
             )
           )
       }, error = function(e) {
@@ -145,15 +155,10 @@ tab_tlg_server <- function(id, data) {
     # Show modal when the add_tlg button is pressed
     observeEvent(input$add_tlg, {
       showModal(modalDialog(
-        title = tagList(
-          span("Add TLGs to Order"),
-          tags$button(
-            type = "button",
-            class = "close",
-            `data-dismiss` = "modal",
-            `aria-label` = "Close",
-            span(`aria-hidden` = "true", HTML("&times;"))
-          )
+        title = div(
+          "Add TLGs to Order",
+          js_close_button,
+          style = "position: relative;"
         ),
         reactable_ui(session$ns("modal_tlg_table")),
         footer = tagList(
@@ -180,7 +185,7 @@ tab_tlg_server <- function(id, data) {
         PKid = colDef(html = TRUE)
       )
     )
-
+ 
     # Update the Selection column when the confirm_add_tlg button is pressed
     observeEvent(input$confirm_add_tlg, {
       selected_rows <- modal_tlg_state()$selected
@@ -204,14 +209,14 @@ tab_tlg_server <- function(id, data) {
 
     # Toggle submit button depending on whether the data is available #
     observeEvent(data(), ignoreInit = FALSE, ignoreNULL = FALSE, {
-      shinyjs::toggleState("submit_tlg_order", !is.null(data()))
-      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
+      shinyjs::toggleState("submit_tlg_order", !is.null(data()$conc$data))
+      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()$conc$data))
     })
 
     #' change tab to first populated tab
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
-    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+    observeEvent(list(input$submit_tlg_order), ignoreInit = TRUE, {
       tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) |> paste0("s")
       shinyjs::runjs(
         paste0("
@@ -229,12 +234,13 @@ tab_tlg_server <- function(id, data) {
     # Submit the TLG order, filter selected TLGs
     tlg_order_filtered <- reactive({
       req(data())
+      print(tlg_order())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
       tlg_order_filt
     }) |>
-      bindEvent(c(input$submit_tlg_order, input$submit_tlg_order_alt))
+      bindEvent(c(input$submit_tlg_order))
 
     # Create and render Graph interface and modules
     output$graphs <- renderUI({

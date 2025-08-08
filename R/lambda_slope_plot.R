@@ -10,6 +10,8 @@
 #' @param myres          A PKNCAresults object containing the results of the NCA analysis
 #' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
 #'                      determining the subtitle color (default is 0.7).
+#' @param time_column   The name of the time column in the concentration data frame.
+#'                      (default is "AFRLT").
 #'
 #' @return A plotly object representing the lambda slope plot.
 #'
@@ -49,7 +51,8 @@ lambda_slope_plot <- function(
   conc_pknca_df,
   row_values,
   myres = myres,
-  r2adj_threshold = 0.7
+  r2adj_threshold = 0.7,
+  time_column = "AFRLT"
 ) {
 
   column_names <- names(row_values)
@@ -72,7 +75,7 @@ lambda_slope_plot <- function(
     filter(
       if_all(all_of(grouping_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
-      TIME >= sum(
+      !!sym(time_column) >= sum(
         subset(
           lambda_res,
           lambda_res$PPTESTCD == "lambda.z.time.first",
@@ -88,7 +91,8 @@ lambda_slope_plot <- function(
   r2adj_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
   half_life_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "half.life"]), 3)
   time_span <- signif(
-    abs(lambda_z_ix_rows$TIME[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$TIME[1]), 3
+    abs(dplyr::last(lambda_z_ix_rows[[time_column]])
+        - dplyr::first(lambda_z_ix_rows[[time_column]])), 3
   )
 
   subtitle_color <- ifelse(
