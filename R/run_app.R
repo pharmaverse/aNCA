@@ -45,7 +45,6 @@ check_app_dependencies <- function() {
   deps <- c(
     "bslib",
     "dplyr",
-    "DT",
     "htmlwidgets",
     "logger",
     "formatters",
