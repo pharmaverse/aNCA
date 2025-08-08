@@ -49,7 +49,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests:
     arrow,
-    DT,
     ggh4x,
     glue,
     haven,

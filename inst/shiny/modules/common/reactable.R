@@ -19,8 +19,7 @@ reactable_ui <- function(id) {
       hidden(downloadButton(ns("download_csv"), label = "csv")),
       hidden(downloadButton(ns("download_xlsx"), label = "xlsx"))
     ),
-    #withSpinner(reactableOutput(ns("table")))
-    reactableOutput(ns("table"))
+    withSpinner(reactableOutput(ns("table")))
   )
 }
 
