@@ -63,6 +63,8 @@ check_app_dependencies <- function() {
     "stats",
     "stringi",
     "stringr",
+    "teal",
+    "teal.modules.general",
     "tidyr",
     "tools",
     "utils",

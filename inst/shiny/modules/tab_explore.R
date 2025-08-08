@@ -4,11 +4,11 @@
 # EXPLORATION ----
 tab_explore_ui <- function(id) {
   ns <- NS(id)
-  
+
   mods <- teal::modules(
     teal.modules.general::tm_variable_browser(label = "Variable Browser")
   )
-  
+
   navset_card_pill(
     header = "Exploratory Analysis",
     id = "visuals",
