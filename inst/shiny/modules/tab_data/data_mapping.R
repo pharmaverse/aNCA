@@ -18,7 +18,7 @@ MAPPING_COLUMN_GROUPS <- list(
   "Dose Variables" = c("DRUG", "DOSEA"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
   "Unit Variables" = c("AVALU", "DOSEU", "RRLTU"),
-  "Supplemental Variables" = c("Grouping_Variables", "ADOSEDUR", "VOLUME", "VOLUMEU")
+  "Supplemental Variables" = c("Grouping_Variables", "TAU", "ADOSEDUR", "VOLUME", "VOLUMEU")
 )
 
 # Define the desired column order
@@ -26,7 +26,7 @@ MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
   "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR",
-  "VOLUME", "VOLUMEU"
+  "VOLUME", "VOLUMEU", "TAU"
 )
 
 #' Column Mapping Widget
@@ -190,13 +190,16 @@ data_mapping_ui <- function(id) {
           ),
           .column_mapping_widget(
             ns, "ADOSEDUR",
-            "Numeric format. Only required for infusion studies,
-                    otherwise select NA"
+            "Numeric format. Only required for infusion studies."
           ),
           .column_mapping_widget(ns, "VOLUME", "Numeric format.
                                  Only required for urine/excretion studies."),
           .column_mapping_widget(ns, "VOLUMEU", "Character format.
-                                 Only required for urine/excretion studies.")
+                                 Only required for urine/excretion studies."),
+          .column_mapping_widget(ns, "TAU", "Numeric Format.
+                                 Can be actual Tau or planned Tau (TRTINT).
+                                 If the TAU column has non-null values the data will
+                                 be assumed to be for a multiple dose study.")
         )
       )
     )
@@ -225,13 +228,24 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
-      input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
-      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      all_input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
+      mapping_list <- setNames(lapply(all_input_ids, \(id) input[[id]]), all_input_ids)
 
-      if (mapping_list$select_VOLUME == "") {
-        mapping_list <- mapping_list[!names(mapping_list) %in% c("select_VOLUME", "select_VOLUMEU")]
-      }
-      mapping_list
+      supplemental_ids <- unlist(lapply(
+        MAPPING_COLUMN_GROUPS$`Supplemental Variables`,
+        \(cols) paste0("select_", cols)
+      ))
+      
+      # Get the names to keep
+      names_to_keep <- names(mapping_list) |>
+        keep(\(name) {
+          # The logical condition with the any() fix
+          !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
+        })
+      
+      # Subset the list with the final names
+      mapping_list[names_to_keep]
+      
     })
 
     mapped_data <- reactive({

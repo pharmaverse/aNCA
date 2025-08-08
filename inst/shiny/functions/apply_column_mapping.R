@@ -56,7 +56,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     dataset <- dataset %>% mutate(NCA_PROFILE = as.factor(.data[[nca_profile_col]]))
   }
 
-  if (mapping$select_ADOSEDUR == "NA") dataset$ADOSEDUR <- 0
+  if (mapping$select_ADOSEDUR == "") dataset$ADOSEDUR <- 0
 
   dataset <- dataset %>%
     .apply_manual_units(mapping, manual_units) %>%
