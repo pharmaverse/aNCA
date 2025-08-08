@@ -19,7 +19,8 @@ reactable_ui <- function(id) {
       hidden(downloadButton(ns("download_csv"), label = "csv")),
       hidden(downloadButton(ns("download_xlsx"), label = "xlsx"))
     ),
-    withSpinner(reactableOutput(ns("table")))
+    #withSpinner(reactableOutput(ns("table")))
+    reactableOutput(ns("table"))
   )
 }
 
@@ -60,7 +61,7 @@ reactable_server <- function(
       req(table_edit())
       table_edit()
     }) |>
-      debounce(500)
+      debounce(750)
 
     output$table <- renderReactable({
       req(data())
@@ -76,18 +77,19 @@ reactable_server <- function(
 
       if (!is.null(editable)) {
         col_defs <- lapply(editable, function(col) {
-          colDef(
-            cell = text_extra(
-              id = session$ns(paste0("edit_", col))
-            )
-          )
+          col_def <- lapply(opts$columns[[col]], \(x) x) # unpack other existing colDef-s
+          col_def$cell <- text_extra(id = session$ns(paste0("edit_", col)))
+
+          do.call(colDef, col_def)
         }) |>
           setNames(editable)
 
         if (is.null(opts$columns)) {
           opts$columns <- col_defs
         } else {
-          opts$columns <- c(opts$columns, col_defs)
+          purrr::iwalk(col_defs, \(val, name) {
+            opts$columns[[name]] <<- val
+          })
         }
       }
 
@@ -127,4 +129,8 @@ reactable_server <- function(
     }
   }
   paste0(f_name, ".", ext)
+}
+
+.append_col_def <- function(...) {
+  colDef(...)
 }
