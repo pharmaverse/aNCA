@@ -74,6 +74,8 @@ Suggests:
     shinyjqui,
     shinyWidgets,
     stringi,
+    teal,
+    teal.modules.general,
     testthat (>= 3.0.0),
     tools,
     vdiffr,
