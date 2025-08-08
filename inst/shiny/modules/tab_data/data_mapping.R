@@ -196,7 +196,7 @@ data_mapping_ui <- function(id) {
                                  Only required for urine/excretion studies."),
           .column_mapping_widget(ns, "VOLUMEU", "Character format.
                                  Only required for urine/excretion studies."),
-          .column_mapping_widget(ns, "TAU", "Numeric Format.
+          .column_mapping_widget(ns, "TAU", "Numeric Format. Optional for multiple dose studies.
                                  Can be actual Tau or planned Tau (TRTINT).
                                  Assumed to have same units as RRTLU")
         )
@@ -234,17 +234,17 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         MAPPING_COLUMN_GROUPS$`Supplemental Variables`,
         \(cols) paste0("select_", cols)
       ))
-      
+
       # Get the names to keep
       names_to_keep <- names(mapping_list) |>
         keep(\(name) {
           # The logical condition with the any() fix
           !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
         })
-      
+
       # Subset the list with the final names
       mapping_list[names_to_keep]
-      
+
     })
 
     mapped_data <- reactive({
