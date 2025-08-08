@@ -343,3 +343,4 @@ ANALYTE,Analyte,ADPC
 EVID,Event ID,ADPC
 DOSEU,Treatment Dose Units,ADPC
 NCA_PROFILE,NCA Profile,ADPC
+TAU,Dosing Interval,ADPC
