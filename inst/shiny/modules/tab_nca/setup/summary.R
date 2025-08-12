@@ -8,7 +8,10 @@
 #'
 summary_ui <- function(id) {
   ns <- NS(id)
-  reactable_ui(ns("nca_intervals_summary"))
+  tagList(
+    uiOutput(ns("study_types")),
+    reactable_ui(ns("nca_intervals_summary"))
+  )
 }
 
 summary_server <- function(id, processed_pknca_data) {
@@ -23,6 +26,17 @@ summary_server <- function(id, processed_pknca_data) {
         apply_labels(LABELS, "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE))) %>%
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
+    })
+
+    output$study_types <- renderUI({
+      
+      grouping <- unname(unlist(processed_pknca_data()$dose$columns$groups))
+      study_types <- detect_study_types(processed_pknca_data(), grouping)
+      
+      p(
+        "Detected study types: ",
+        paste(study_types, collapse = ", ")
+      )
     })
 
     reactable_server(
