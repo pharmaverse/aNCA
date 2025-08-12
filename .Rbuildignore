@@ -11,3 +11,4 @@
 ^LICENSE\.md$
 ^\.covrignore$
 ^man/figures/*
+_\.new\.png$
