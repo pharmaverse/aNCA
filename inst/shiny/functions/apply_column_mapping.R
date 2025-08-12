@@ -21,7 +21,7 @@
 #' @details
 #' - Logs the mapping selections for debugging.
 #' - Validates that all required columns are mapped and no duplicates exist.
-#' - If `ADOSEDUR` is mapped to `"NA"`, it is assigned a value of `0`.
+#' - If `ADOSEDUR` is not mapped, it is assigned a value of `0`.
 #' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`,
 #'  and `NCA_PROFILE`.
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
