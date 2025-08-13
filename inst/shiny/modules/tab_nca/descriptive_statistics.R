@@ -48,7 +48,7 @@ descriptive_statistics_ui <- function(id) {
       )
     ),
     card(
-      reactableOutput(ns("descriptive_stats"))
+      reactable_ui(ns("descriptive_stats"))
     ),
     card(
       downloadButton(ns("download_summary"), "Download the NCA Summary Data")
@@ -130,26 +130,16 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     })
 
     # Render the reactive summary table in a data table
-    output$descriptive_stats <- renderReactable({
-      req(summary_stats_filtered())
-      log_trace("Rendering descriptive statistics table")
-
-      reactable(
-        summary_stats_filtered(),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        pageSizeOptions = c(10, 25, 50, 100, nrow(summary_stats_filtered())),
-        defaultPageSize = 10,
-        striped = TRUE,
-        bordered = TRUE,
-        compact = TRUE,
-        style = list(fontSize = "0.75em")
-      )
-    })
+    reactable_server(
+      "descriptive_stats",
+      summary_stats_filtered,
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered()))),
+      defaultPageSize = 10,
+      striped = TRUE,
+      bordered = TRUE,
+      compact = TRUE,
+      style = list(fontSize = "0.75em")
+    )
 
     # Download summary statistics as CSV
     output$download_summary <- downloadHandler(

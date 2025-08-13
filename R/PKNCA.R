@@ -23,9 +23,9 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
+#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ TIME | STUDYID + DRUG + USUBJID`.
+#' with formula `DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
@@ -57,6 +57,7 @@
 #' @importFrom dplyr filter select arrange across
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units deparse_unit
+#' @importFrom stats as.formula
 #'
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
@@ -70,9 +71,21 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
   volume_column <- "VOLUME"
+  conc_column <- "AVAL"
+  studyid_column <- "STUDYID"
+  drug_column <- "DRUG"
 
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
+  conc_formula <-
+    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" |> # nolint
+    glue::glue() |>
+    as.formula()
+
+  dose_formula <-
+        "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" |> # nolint
+    glue::glue() |>
+    as.formula()
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -115,7 +128,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   args_list <- list(
     data = df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+    formula = conc_formula,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
@@ -138,7 +151,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
+    formula = dose_formula,
     route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR",
@@ -665,7 +678,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
       exc_fun <- exclude_nca_by_param(
         param,
         max_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = PKNCA::get.parameter.deps(gsub("pext", "inf", param))
       )
     } else {
       exc_fun <- exclude_nca_by_param(

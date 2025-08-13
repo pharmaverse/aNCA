@@ -20,7 +20,6 @@
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
-
   fluidPage(
     div(
       class = "d-flex justify-content-between",
@@ -46,7 +45,8 @@ tab_nca_ui <- function(id) {
             )
           ),
           nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
-          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
+          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
         )
       ),
       #' Additional analysis
@@ -58,7 +58,6 @@ tab_nca_ui <- function(id) {
 tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
     #' Setup session-wide object for storing data units. Units can be edited by the user on
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
@@ -75,7 +74,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
+        purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
           shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
         })
 
@@ -244,8 +243,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
 
+    #' Parameter plots module
+    parameter_plots_server("parameter_plots", res_nca)
+
     # return results for use in other modules
-    res_nca
+    list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
   })
 }
 
