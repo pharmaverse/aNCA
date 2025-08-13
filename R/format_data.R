@@ -15,7 +15,6 @@
 #'   - Checks for required columns and data.
 #'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 #'   (dosing data- not CDISC standard)
-#'   - Calculates `TIME_DOSE`as the time of dose reference by the PK sample
 #'   - Creates `DOSNOA` variable, sequential numbers based on time of dose
 #'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
 #'   - Arranges the data by group_columns.
@@ -62,23 +61,22 @@ format_pkncaconc_data <- function(ADNCA,
   tol <- 0.02
 
   ADNCA %>%
-    mutate(conc_groups = interaction(!!!syms(group_columns), sep = "\n")) %>%
-    arrange(!!sym(time_column)) %>%
-    mutate(TIME = !!sym(time_column)) %>%
     mutate( #round to prevent floating point precision issues
-      TIME_DOSE = round(!!sym(time_column) - !!sym(rrlt_column), 6)
+      dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
+      std_route = ifelse(
+        grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
+              gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
+        "intravascular",
+        "extravascular"
+      )
     ) %>%
-    mutate(std_route = ifelse(
-                              grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
-                                    gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
-                              "intravascular",
-                              "extravascular")) %>%
-    arrange(!!!syms(group_columns), TIME_DOSE) %>%
+    arrange(!!!syms(group_columns), dose_time) %>%
     group_by(!!!syms(group_columns)) %>%
     mutate(
-      DOSNOA = cumsum(c(TRUE, diff(TIME_DOSE) > tol))
+      DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
     ) %>%
-    arrange(!!!syms(group_columns))
+    ungroup() %>%
+    select(-dose_time)
 }
 
 #' Create PK Dose Dataset
@@ -86,6 +84,8 @@ format_pkncaconc_data <- function(ADNCA,
 #' This function creates a pharmacokinetic dose dataset from the provided concentration data.
 #'
 #' @param pkncaconc_data A data frame containing the concentration data.
+#' @param time_column A character string specifying the time from first dose column.
+#' @param rrlt_column A character string specifying the time since last dose column.
 #' @param group_columns A character vector specifying the columns to group by.
 #'
 #' @returns A data frame containing the dose data.
@@ -102,6 +102,8 @@ format_pkncaconc_data <- function(ADNCA,
 #' @export
 
 format_pkncadose_data <- function(pkncaconc_data,
+                                  time_column = "AFRLT",
+                                  rrlt_column = "ARRLT",
                                   group_columns) {
 
   # Check: Dataset is not empty
@@ -110,7 +112,7 @@ format_pkncadose_data <- function(pkncaconc_data,
   }
 
   # Check: All necessary columns are present
-  required_columns <- c(group_columns, "TIME_DOSE", "DOSNOA")
+  required_columns <- c(group_columns, "DOSNOA")
   missing_columns <- setdiff(required_columns, colnames(pkncaconc_data))
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
@@ -121,9 +123,12 @@ format_pkncadose_data <- function(pkncaconc_data,
     group_by(!!!syms(group_columns), DOSNOA) %>%
     slice(1) %>%
     ungroup() %>%
-    arrange(!!!syms(group_columns)) %>%
+    mutate( #round to prevent floating point precision issues
+      !!sym(time_column) := round(!!sym(time_column) - !!sym(rrlt_column), 6)
+    ) %>%
     # filter out rows with NA in DOSEA column
-    filter(!is.na(DOSEA))
+    filter(!is.na(DOSEA)) %>%
+    arrange(across(all_of(c(group_columns, time_column))))
 
 }
 
@@ -186,15 +191,14 @@ format_pkncadata_intervals <- function(pknca_conc,
   # Select relevant group columns
   conc_groups <- unname(unlist(pknca_conc$columns$groups))
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
-
+  time_column <- pknca_dose$columns$time
   # Obtain all possible pknca parameters
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
                               c("start", "end"))
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "AFRLT", "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU", "VOLUME"))) %>%
-    arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT)
+    select(any_of(c(conc_groups, "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU", "VOLUME")))
 
   has_tau <- "TAU" %in% names(sub_pknca_conc)
 
@@ -204,7 +208,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(is_one_dose = length(unique(DOSNOA)) == 1) %>%
     ungroup() %>%
     select(any_of(c(dose_groups,
-                    pknca_dose$columns$time, "DOSNOA", "is_one_dose")))
+                    time_column, "DOSNOA", "is_one_dose")))
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
@@ -213,38 +217,37 @@ format_pkncadata_intervals <- function(pknca_conc,
                               relationship = "many-to-many") %>%
 
     # Pick 1 per concentration group and dose number
-    arrange(!!!syms(conc_groups), ARRLT < 0, AFRLT) %>%
     group_by(!!!syms(dose_groups), DOSNOA) %>%
-    mutate(max_end = max(AFRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
+    mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
+    filter(ARRLT >= 0) %>% # filter out negative ARRLT values
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
     ungroup() %>%
 
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
-    mutate(start = if (start_from_last_dose) TIME_DOSE
-           else TIME_DOSE + !!sym("ARRLT")) %>%
+    mutate(start = if (start_from_last_dose) !!sym(time_column)
+           else !!sym(time_column) + !!sym("ARRLT")) %>%
     group_by(!!!syms(conc_groups)) %>%
-    arrange(TIME_DOSE) %>%
+    arrange(start) %>%
 
     # Make end based on next dose time (if no more, Tau or last NFRLT)
     mutate(end = if (has_tau) {
       case_when(
-        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
         is.na(TAU) & is_one_dose ~ Inf,
-        is.na(TAU) ~ max_end,
+        is.na(TAU) ~ start + max_end,
         TRUE ~ start + TAU
       )
     } else {
       case_when(
-        !is.na(lead(TIME_DOSE)) ~ lead(TIME_DOSE),
+        !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
         is_one_dose ~ Inf,
-        TRUE ~ max_end
+        TRUE ~ start + max_end
       )
     }
     ) %>%
     ungroup() %>%
-    select(any_of(c("start", "end",
-                    conc_groups, "TIME_DOSE",
+    select(any_of(c("start", "end", conc_groups,
                     "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
@@ -255,9 +258,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
-  dose_intervals <- verify_parameters(dose_intervals, params, all_pknca_params)
-
-  dose_intervals
+  verify_parameters(dose_intervals, params, all_pknca_params)
 }
 
 #' Conditionally Verify and Override PK Parameters Based on Sample Type

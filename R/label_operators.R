@@ -111,6 +111,8 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
+  tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
+
   if (length(tooltip_vars) == 0) {
     return(rep("", nrow(data)))
   }
@@ -118,9 +120,8 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
   pmap_chr(
     .l = select(data, all_of(tooltip_vars)),
     .f = function(...) {
-
       row_values <- list(...)
-
+      
       # For each variable, create a formatted line retrieving its label
       lines <- map_chr(tooltip_vars, ~ paste0(
         "<b>", get_label(.x, type, labels_df = labels_df), "</b>: ", row_values[[.x]]
