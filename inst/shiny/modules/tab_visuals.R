@@ -103,7 +103,7 @@ tab_visuals_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("pcspec_mean"),
-            label = "Select Matrix:",
+            label = "Select Specimen:",
             choices = NULL,
             multiple = TRUE
           ),
