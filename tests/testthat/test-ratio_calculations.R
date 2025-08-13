@@ -227,8 +227,8 @@ describe("calculate_ratios", {
     # Create a result with two parameters: CMAX and TMAX
     res_diff <- res_simple
     res_diff$result <- rbind(
-      res_simple$result %>% mutate(PPTESTCD = "CMAX", PPORRES = c(2, 4), PPSTRES = c(2, 4)),
-      res_simple$result %>% mutate(PPTESTCD = "TMAX", PPORRES = c(3, 5), PPSTRES = c(3, 5))
+      res_simple$result %>% mutate(PPTESTCD = "CMAX", PPORRES = 2, PPSTRES = 2),
+      res_simple$result %>% mutate(PPTESTCD = "TMAX", PPORRES = 3, PPSTRES = 3)
     )
     # Use CMAX as test, TMAX as reference
     ratios <- calculate_ratios(
@@ -240,8 +240,8 @@ describe("calculate_ratios", {
       test_groups = test_groups
     )
     ratios_df <- ratios$result %>% filter(PPTESTCD == "RACMAX")
-    expect_equal(ratios_df$PPORRES, c(2 / 3, 4 / 5))
-    expect_equal(ratios_df$PPSTRES, c(2 / 3, 4 / 5))
+    expect_equal(ratios_df$PPORRES, rep(c(2 / 3), 4))
+    expect_equal(ratios_df$PPSTRES, rep(c(2 / 3), 4))
     expect_true(all(grepl("RACMAX", ratios_df$PPTESTCD)))
   })
 })
