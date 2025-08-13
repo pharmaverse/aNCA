@@ -186,7 +186,6 @@ excretion_server <- function(id, input_pknca_data) {
     reactable_server(
       "results_table",
       results_output,
-      columns = generate_col_defs,
       defaultPageSize = 10,
       compact = TRUE,
       showPageSizeOptions = TRUE,
