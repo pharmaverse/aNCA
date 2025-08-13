@@ -109,7 +109,7 @@ tab_visuals_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("studyid_mean"),
-            label = "Select Subjects:",
+            label = "Select Study ID:",
             choices = NULL
           ),
           selectInput(
