@@ -139,6 +139,7 @@ tab_data_server <- function(id) {
         }
       )
     })
+    
     # Update the data table object with the filtered data
     reactable_server(
       "data_processed",
