@@ -151,41 +151,41 @@ calculate_ratios.data.frame <- function(
   ref_cols <- colnames(ref_groups[, !names(ref_groups) %in% match_cols, drop = FALSE])
 
   # Join test and denominator by their matching columns
-  merge(df_test, df_ref, by = c(match_cols), suffixes = c("", "_den")) %>%
+  merge(df_test, df_ref, by = c(match_cols), suffixes = c("", "_ref")) %>%
     # If possible compute conversion factors for the units of test and denominator
     mutate(
-      PPORRESU_factor = get_conversion_factor(PPORRESU_den, PPORRESU),
+      PPORRESU_factor = get_conversion_factor(PPORRESU_ref, PPORRESU),
       PPSTRESU_factor = if ("PPSTRESU" %in% names(.)) {
-        get_conversion_factor(PPSTRESU_den, PPSTRESU)
+        get_conversion_factor(PPSTRESU_ref, PPSTRESU)
       } else {
         NULL
       },
-      PPORRES_den = ifelse(!is.na(PPORRESU_factor), PPORRES_den * PPORRESU_factor, PPORRES_den),
-      PPSTRES_den = if ("PPSTRESU" %in% names(.)) {
-        ifelse(!is.na(PPSTRESU_factor), PPSTRESU_factor * PPSTRES_den, PPSTRES_den)
+      PPORRES_ref = ifelse(!is.na(PPORRESU_factor), PPORRES_ref * PPORRESU_factor, PPORRES_ref),
+      PPSTRES_ref = if ("PPSTRESU" %in% names(.)) {
+        ifelse(!is.na(PPSTRESU_factor), PPSTRESU_factor * PPSTRES_ref, PPSTRES_ref)
       } else {
         NULL
       }
     ) %>%
-    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_den"))))) %>%
+    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_ref"))))) %>%
     unique() %>%
     # Use mean values in case of multiple denominator rows per test
     mutate(
-      PPORRES_den = mean(PPORRES_den, na.rm = TRUE),
-      PPSTRES_den = mean(PPSTRES_den, na.rm = TRUE),
+      PPORRES_ref = mean(PPORRES_ref, na.rm = TRUE),
+      PPSTRES_ref = mean(PPSTRES_ref, na.rm = TRUE),
       n = n()
     ) %>%
     ungroup() %>%
     mutate(
-      PPORRES = (PPORRES / PPORRES_den) * adjusting_factor,
+      PPORRES = (PPORRES / PPORRES_ref) * adjusting_factor,
       PPSTRES = if ("PPSTRES" %in% names(.)) {
-        (PPSTRES / PPSTRES_den) * adjusting_factor
+        (PPSTRES / PPSTRES_ref) * adjusting_factor
       } else {
         NULL
       },
-      PPORRESU = ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPORRESU, "/", PPORRESU_den)),
+      PPORRESU = ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPORRESU, "/", PPORRESU_ref)),
       PPSTRESU = if ("PPSTRESU" %in% names(.)) {
-        ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPSTRESU, "/", PPSTRESU_den))
+        ifelse(!is.na(PPORRESU_factor), "fraction", paste0(PPSTRESU, "/", PPSTRESU_ref))
       } else {
         NULL
       }
@@ -197,7 +197,7 @@ calculate_ratios.data.frame <- function(
       ),
       ppanmeth_ref_groups = paste0(
         paste(
-          paste(paste0(ref_cols), c_across(all_of(paste0(ref_cols, "_den"))), sep = ": "),
+          paste(paste0(ref_cols), c_across(all_of(paste0(ref_cols, "_ref"))), sep = ": "),
           collapse = ", "
         )
       )
@@ -206,8 +206,8 @@ calculate_ratios.data.frame <- function(
     mutate(
       PPANMETH = ifelse(
         ppanmeth_test_groups == ppanmeth_ref_groups,
-        paste0(PPTESTCD, " TO ", PPTESTCD_den),
-        paste0(PPTESTCD, " TO ", PPTESTCD_den, " [", ppanmeth_ref_groups, "]")
+        paste0(PPTESTCD, " TO ", PPTESTCD_ref),
+        paste0(PPTESTCD, " TO ", PPTESTCD_ref, " [", ppanmeth_ref_groups, "]")
       ),
       PPTESTCD = if (!is.null(custom_pptestcd)) {
         custom_pptestcd
