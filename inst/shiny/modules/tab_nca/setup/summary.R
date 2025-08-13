@@ -30,8 +30,9 @@ summary_server <- function(id, processed_pknca_data) {
 
     output$study_types <- renderUI({
       
-      grouping <- unname(unlist(processed_pknca_data()$dose$columns$groups))
-      study_types <- detect_study_types(processed_pknca_data(), grouping)
+      study_types <- detect_study_types(processed_pknca_data()$conc$data,
+                                        route_column = processed_pknca_data()$dose$columns$route,
+                                        volume_column = processed_pknca_data()$conc$columns$volume)
       
       p(
         "Detected study types: ",

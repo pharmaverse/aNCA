@@ -1,6 +1,8 @@
 #' Detect study types in data
 #' This function detects the type of study based on the provided data.
-#' @param data A PKNCA object containing the concentration and dose data.
+#' @param data The dataset containing the study types to be identified.
+#' @param route_column A character string specifying the column name for the route of administration.
+#' @param volume_column A character string specifying the column name for the volume of distribution.
 #' @param grouping A character vector of column names to group by in the data.
 #'      Must include a variable to separate the specimen types, eg `PCSPEC`.
 #'      Default will be `c("DRUG", "USUBJID", "PCSPEC")`.
@@ -10,17 +12,20 @@
 #' @importFrom dplyr group_by mutate case_when ungroup
 #' @importFrom rlang sym syms
 #' 
+#' @example
+#' # \dontrun{
+#' study_types <- detect_study_types(data)
+#' 
+#' 
 #' @export
-detect_study_types <- function(data, grouping = c("DRUG", "USUBJID", "PCSPEC")) {
-browser()
-  route_column <- data$dose$columns$route
-  volume_column <- data$conc$columns$volume
+detect_study_types <- function(data, route_column, volume_column,
+                               grouping = c("DRUG", "USUBJID", "PCSPEC")) {
+
+  has_tau <- "TAU" %in% names(data)
   
-  has_tau <- "TAU" %in% names(data$conc$data)
-  
-  study_data <- data$conc$data %>%
+  study_data <- data %>%
     #group by grouping and route columne
-    group_by( !!!syms(grouping), !!sym(route_column)) %>%
+    group_by(!!!syms(grouping), !!sym(route_column)) %>%
     # Only one dosnoa and has_tau is FALSE or TAU column is NA
     mutate(is_one_dose = length(unique(DOSNOA)) == 1 && (!has_tau || all(is.na(get("TAU")))),
            is_extravascular = !!sym(route_column) == "extravascular",
