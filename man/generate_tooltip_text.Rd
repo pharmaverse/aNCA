@@ -35,7 +35,11 @@ my_data <- data.frame(
   RESPONSE = c(5.4, 8.1)
   )
 
-my_labels <- data.frame() # Dummy labels object
+my_labels <- data.frame(
+  Dataset = "ADPC",
+  Variable = "USUBJID",
+  Label = "Unique Subject ID"
+  ) # Dummy labels object
 
 vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
 
