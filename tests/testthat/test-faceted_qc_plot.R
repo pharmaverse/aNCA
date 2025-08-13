@@ -202,4 +202,3 @@ describe("format_unit_string", {
     expect_equal(result, "")
   })
 })
-
