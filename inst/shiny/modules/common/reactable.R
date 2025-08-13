@@ -33,7 +33,8 @@ reactable_server <- function(id, data, download_buttons = c(), file_name = NULL,
       resizable = TRUE,
       defaultPageSize = 25,
       showPageSizeOptions = TRUE,
-      class = "reactable-table"
+      class = "reactable-table",
+      columns = generate_col_defs
     )
 
     args <- list(...)
