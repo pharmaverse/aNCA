@@ -101,6 +101,12 @@ export_cdisc <- function(res_nca) {
     ) %>%
     arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
 
+    # Name parameters according to CDISC standards
+    mutate(
+      PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"),
+      PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")
+    ) %>%
+
     # Parameters with a one-to-many mapping in PKNCA / CDISC
     mutate(
       # Column for one-to-many criteria
