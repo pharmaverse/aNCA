@@ -80,6 +80,29 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Parameter Selection",
+        virtualSelectInput(
+          inputId = "nca_parameters_selector",
+          label = "Select:",
+          choices = metadata_nca_parameters %>%
+            filter(TYPE != "PKNCA-not-covered") %>%
+            prepare_choices(
+              label = PPTESTCD,
+              value = PKNCA,
+              group_by = TYPE,
+              description = PPTEST,
+              alias = PPTEST
+            ),
+          selected = metadata_nca_parameters %>%
+            filter(TYPE == "Standard") %>%
+            pull(PKNCA),
+          showSelectedOptionsFirst = TRUE,
+          hasOptionDescription = TRUE,
+          showValueAsTags = TRUE,
+          noOfDisplayValues = 15,
+          search = TRUE,
+          multiple = TRUE,
+          width = "100%"
+        ),
         reactableOutput(ns("nca_parameters")),
         card(
           full_screen = FALSE,
