@@ -9,7 +9,7 @@
 summary_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    uiOutput(ns("study_types")),
+    reactable_ui(ns("study_types")),
     reactable_ui(ns("nca_intervals_summary"))
   )
 }
@@ -28,17 +28,19 @@ summary_server <- function(id, processed_pknca_data) {
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
     })
 
-    output$study_types <- renderUI({
-      
-      study_types <- detect_study_types(processed_pknca_data()$conc$data,
-                                        route_column = processed_pknca_data()$dose$columns$route,
-                                        volume_column = processed_pknca_data()$conc$columns$volume)
-      
-      p(
-        "Detected study types: ",
-        paste(study_types, collapse = ", ")
-      )
+
+    study_types <- reactive ({
+      req(processed_pknca_data())
+      detect_study_types(processed_pknca_data()$conc$data,
+                         route_column = processed_pknca_data()$dose$columns$route,
+                         volume_column = processed_pknca_data()$conc$columns$volume)
     })
+    
+    reactable_server(
+      "study_types",
+      study_types,
+      height = "28vh"
+    )
 
     reactable_server(
       "nca_intervals_summary",
