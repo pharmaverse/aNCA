@@ -24,7 +24,8 @@ reactable_ui <- function(id) {
 }
 
 reactable_server <- function(
-  id, data, download_buttons = c(), file_name = NULL, on_render = NULL, editable = NULL, ...
+  id, data, download_buttons = c(), file_name = NULL, on_render = NULL, editable = NULL,
+  edit_debounce = 750, ...
 ) {
   moduleServer(id, function(input, output, session) {
     default_reactable_opts <- list(
@@ -60,7 +61,7 @@ reactable_server <- function(
       req(table_edit())
       table_edit()
     }) |>
-      debounce(750)
+      debounce(edit_debounce)
 
     output$table <- renderReactable({
       req(data())
