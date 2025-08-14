@@ -24,10 +24,46 @@
 #' @importFrom dplyr group_by mutate case_when ungroup
 #' @importFrom rlang sym syms
 #' 
-#' @example
-#' # \dontrun{
-#' 
-#' 
+#' @examples
+#' sample_data <- data.frame(
+#'   STUDYID = "STUDY001",
+#'   DRUG = "Drug",
+#'   USUBJID = c(
+#'     # 1. Single IV Dose subject
+#'     "Subj-01", "Subj-01",
+#'     # 4. Multiple Extravascular Doses subject (identified by TAU)
+#'     "Subj-02", "Subj-02",
+#'     # 5. Excretion Data subject (identified by positive volume)
+#'     "Subj-03", "Subj-03"
+#'   ),
+#'   PCSPEC = "PLASMA",
+#'   DOSNOA = c(
+#'     1, 1,        # Single dose
+#'     1, 1,        # Appears as single dose...
+#'     1, 1         # Single dose
+#'   ),
+#'   ROUTE = c(
+#'     "INTRAVENOUS", "INTRAVENOUS",
+#'     "extravascular", "extravascular",
+#'     "INTRAVENOUS", "INTRAVENOUS"
+#'   ),
+#'   SAMPLE_VOLUME = c(
+#'     NA, 0,
+#'     NA, 0,
+#'     10, 12       # Positive volume indicates excretion
+#'   ),
+#'   TAU = c(
+#'     NA, NA,
+#'     24, 24,      # ...but TAU indicates a multiple-dose regimen
+#'     NA, NA
+#'   )
+#' )
+#'
+#' study_summary <- detect_study_types(
+#'   data = sample_data,
+#'   route_column = "ROUTE",
+#'   volume_column = "SAMPLE_VOLUME"
+#' )
 #' 
 #' @export
 detect_study_types <- function(data, route_column, volume_column) {
