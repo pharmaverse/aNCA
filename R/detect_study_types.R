@@ -1,8 +1,22 @@
 #' Detect study types in data
 #' This function detects the type of study based on the provided data.
 #' @param data The dataset containing the study types to be identified.
+#' Assumed to be the output from aNCA formatted concentration data.
+#' Must contain the columns `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, `DOSNOA` and the specified route column.
 #' @param route_column A character string specifying the column name for the route of administration.
-#' @param volume_column A character string specifying the column name for the volume of distribution.
+#' @param volume_column A character string specifying the column name for the volume of a sample.
+#' 
+#' @details
+#' The function identifies a possible five different types of studies
+#' based on grouping by `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, and the specified route column.
+#' The study types are determined as follows:
+#'  - "Excretion Data": If the volume column for a group is greater than 0.
+#'  - "Single Extravascular Dose": If there is only one dose and TAU is NA, and the route is extravascular.
+#'  - "Single IV Dose": If there is only one dose and TAU is NA, and the route is not extravascular.
+#'  - "Multiple Extravascular Doses": If there are multiple doses (or TAU is available) and the route is extravascular.
+#'  - "Multiple IV Doses": If there are multiple doses (or TAU is available) and the route is not extravascular.
+#' If none of these conditions are met, the type is marker as "Unknown".
+#' 
 #' 
 #' @returns A data frame summarizing the detected study types,
 #' including the number of unique subjects (USUBJID) for each type.
@@ -12,7 +26,7 @@
 #' 
 #' @example
 #' # \dontrun{
-#' study_types <- detect_study_types(data)
+#' 
 #' 
 #' 
 #' @export
