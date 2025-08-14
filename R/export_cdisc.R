@@ -357,7 +357,8 @@ adjust_class_and_length <- function(df, metadata) {
       df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
     } else if (var_specs$Type %in% c("Num", "integer", "float") &&
                  !endsWith(var, "DTM")) {
-      df[[var]] <- round(as.numeric(df[[var]]), 12)
+      df[[var]] <- substr(as.numeric(df[[var]]), 0, var_specs$Length + grepl("\\.", as.character(df[[var]])))
+      df[[var]] <- as.numeric(df[[var]])
     } else if (!var_specs$Type %in% c(
       "dateTime", "duration", "integer", "float", "Num"
     )) {
@@ -399,9 +400,21 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       },
       SUBJID = get_subjid(.),
       # Parameter Variables
-      PPORRES = as.character(round(as.numeric(PPORRES), 12)),
-      PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = as.character(round(as.numeric(PPSTRES), 12)),
+      PPORRES = as.numeric(
+        substr(
+          as.numeric(round(PPORRES, 8)),
+          0,
+          8 + grepl("\\.", as.character(PPORRES))
+        )
+      ),
+      PPSTRESN = as.numeric(
+        substr(
+          as.numeric(round(PPSTRES, 8)),
+          0,
+          8 + grepl("\\.", as.character(PPSTRES))
+        )
+      ),
+      PPSTRESC = as.character(format(PPSTRESN, scientific = FALSE, trim = TRUE)),
       # SD0027: Units should be NA if there is no value
       PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
       PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
