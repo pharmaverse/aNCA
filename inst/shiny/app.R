@@ -20,6 +20,8 @@ require(shinyWidgets)
 require(stats)
 require(stringi)
 require(stringr)
+require(teal)
+require(teal.modules.general)
 require(tidyr)
 require(tools)
 require(utils)
@@ -31,6 +33,8 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 
 LABELS <<- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 assets <- system.file("shiny/www", package = "aNCA")
+
+options("teal.bs_theme" = bslib::bs_theme(version = "5", bootswatch = "lux"))
 
 sass(
   sass_file(file.path(assets, "styles/main.scss")),
