@@ -63,9 +63,7 @@ tab_tlg_ui <- function(id) {
           actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
         )
       ),
-      card(
-        DTOutput(ns("selected_tlg_table"))
-      )
+      card(reactable_ui(ns("selected_tlg_table"))),
     ),
     nav_panel("Tables", "To be added"),
     nav_panel("Listings", uiOutput(ns("listings"), class = "tlg-module"), value = "Listings"),
@@ -107,97 +105,48 @@ tab_tlg_server <- function(id, data) {
     observeEvent(list(tlg_order(), data()), {
       req(data())
 
-      new_tlg_order <- tlg_order() %>%
-        mutate(
-          Selection = case_when(
-            Condition == "" | is.na(Condition) | is.null(Condition) ~ Selection,
-            any(unique(toupper(data()$conc$data$PCSPEC)) %in% Condition) ~ TRUE,
-            TRUE ~ Selection
+      # Unparsable conditions will be ignored
+      new_tlg_order <- tryCatch({
+        tlg_order() %>%
+          mutate(
+            Selection = case_when(
+              Condition == "" | is.na(Condition) | is.null(Condition) ~ Selection,
+              any(unique(toupper(data()$conc$data$PCSPEC)) %in% Condition) ~ TRUE,
+              TRUE ~ Selection
+            )
           )
-        )
+      }, error = function(e) {
+        tlg_order()
+      })
 
       tlg_order(new_tlg_order)
     })
 
-    # Render the TLG list for the user's inspection
-    output$selected_tlg_table <- DT::renderDT({
-      log_trace("Rendering TLG table.")
-      datatable(
-        data = dplyr::filter(tlg_order(), Selection),
-        editable = list(
-          target = "cell",
-          disable = list(
-            columns = which(!names(tlg_order()) %in% c("Footnote", "Stratification", "Comment"))
-          )
-        ),
-        rownames = TRUE,
-        escape = FALSE,
-        selection = list(
-          mode = "multiple"
-        ),
-        extensions = c("RowGroup", "Buttons"),
-        options = list(
-          scrollX = TRUE,
-          fixedHeader = TRUE,
-          dom = "Blfrtip",
-          buttons = list(
-            list(extend = "copy", title = paste0("TLG_table_", Sys.Date())),
-            list(extend = "csv", filename = paste0("TLG_table_", Sys.Date()))
-          ),
-          headerCallback = DT::JS(
-            "function(thead) {",
-            "  $(thead).css('font-size', '0.75em');",
-            "  $(thead).find('th').css('text-align', 'center');",
-            "}"
-          ),
-          columnDefs = list(
-            list(className = "dt-center", targets = "_all"),
-            list(width = "150px", targets = "_all"),
-            list(
-              visible = FALSE,
-              targets = c(
-                0,
-                which(!names(tlg_order()) %in% c(
-                  "Output", "Condition", "Footnote", "Stratification", "Comment"
-                ))
-              )
-            )
-          ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
-          buttons = list(
-            list(
-              extend = "copy",
-              title = paste0("TLG_order_", Sys.Date())
-            ),
-            list(
-              extend = "csv",
-              filename = paste0("TLG_order_", Sys.Date())
-            ),
-            list(
-              extend = "excel",
-              title = NULL,
-              header = colnames(dplyr::filter(tlg_order(), Selection)),
-              filename = paste0("TLG_order_", Sys.Date())
-            )
-          ),
-          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
-          paging = TRUE,
-          class = "row-border compact"
-        )
-      ) %>%
-        formatStyle(
-          columns = colnames(tlg_order()),
-          fontSize = "75%",
-          fontFamily = "Arial"
-        )
-    }, server = FALSE)
+    displayed_order <- reactive({
+      dplyr::filter(tlg_order(), Selection) %>%
+        dplyr::select(-id, -Selection)
+    }) |>
+      bindEvent(data(), input$confirm_add_tlg, input$remove_tlg)
 
-    # Save table changes from the UI into the server
-    observeEvent(input$selected_tlg_table_cell_edit, {
-      info <- input$selected_tlg_table_cell_edit
+    selected_tlg_state <- reactable_server(
+      "selected_tlg_table",
+      displayed_order,
+      download_buttons = c("csv", "xlsx"),
+      groupBy = c("Type", "Dataset"),
+      defaultExpanded = TRUE,
+      wrap = TRUE,
+      selection = "multiple",
+      editable = c("Footnote", "Stratification", "Condition", "Comment"),
+      columns = list(
+        Output = colDef(html = TRUE)
+      )
+    )
+
+    observeEvent(selected_tlg_state()$edit(), {
+      info <- selected_tlg_state()$edit()
 
       new_tlg_order <- tlg_order()
-      new_tlg_order[new_tlg_order$Selection, ][info$row, info$col] <- info$value
+      new_tlg_order[new_tlg_order$Selection, ][info$row, info$column] <- info$value
       tlg_order(new_tlg_order)
     })
 
@@ -209,7 +158,7 @@ tab_tlg_server <- function(id, data) {
           js_close_button,
           style = "position: relative;"
         ),
-        DTOutput(session$ns("modal_tlg_table")),
+        reactable_ui(session$ns("modal_tlg_table")),
         footer = tagList(
           modalButton("Close"),
           actionButton(session$ns("confirm_add_tlg"), "Add TLGs to Order")
@@ -218,59 +167,26 @@ tab_tlg_server <- function(id, data) {
       ))
     })
 
-    # Render the DT table in the modal
-    output$modal_tlg_table <- DT::renderDT({
-      datatable(
-        data = dplyr::filter(tlg_order(), !Selection),
-        selection = list(mode = "multiple"),
-        escape = FALSE,
-        editable = FALSE,
-        extensions = c("RowGroup", "Select", "Buttons"),
-        options = list(
-          paging = FALSE,
-          searching = TRUE,
-          autoWidth = TRUE,
-          dom = "ft",
-          columnDefs = list(
-            list(
-              visible = FALSE,
-              targets = which(!names(tlg_order()) %in% c("Output", "Condition"))
-            ),
-            list(targets = 0, orderable = FALSE, className = "select-checkbox")
-          ),
-          scrollX = TRUE,
-          fixedHeader = TRUE,
-          dom = "Blfrtip",
-          buttons = list(
-            list(extend = "copy", title = paste0("TLG_modal_table_", Sys.Date())),
-            list(extend = "csv", filename = paste0("TLG_modal_table_", Sys.Date()))
-          ),
-          headerCallback = DT::JS(
-            "function(thead) {",
-            "  $(thead).css('font-size', '0.75em');",
-            "  $(thead).find('th').css('text-align', 'center');",
-            "}"
-          ),
-          columnDefs = list(
-            list(className = "dt-center", targets = "_all"),
-            list(width = "150px", targets = "_all")
-          ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset"))),
-          lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
-          paging = TRUE
-        ),
-        class = "row-border compact"
-      ) %>%
-        formatStyle(
-          columns = colnames(tlg_order()),
-          fontSize = "75%",
-          fontFamily = "Arial"
-        )
-    })
+    modal_tlg_state <- reactable_server(
+      "modal_tlg_table",
+      reactive({
+        dplyr::filter(tlg_order(), !Selection) %>%
+          dplyr::select(-id, -Selection, -Footnote, -Stratification, -Condition, -Comment)
+      }),
+      download_buttons = c("csv", "xlsx"),
+      groupBy = c("Type", "Dataset"),
+      wrap = TRUE,
+      selection = "multiple",
+      defaultExpanded = TRUE,
+      width = "775px", # fit to the modal width
+      columns = list(
+        PKid = colDef(html = TRUE)
+      )
+    )
 
     # Update the Selection column when the confirm_add_tlg button is pressed
     observeEvent(input$confirm_add_tlg, {
-      selected_rows <- input$modal_tlg_table_rows_selected
+      selected_rows <- modal_tlg_state()$selected
       if (length(selected_rows) > 0) {
         tlg_order_data <- tlg_order()
         tlg_order_data$Selection[!tlg_order_data$Selection][selected_rows] <- TRUE
@@ -281,7 +197,7 @@ tab_tlg_server <- function(id, data) {
 
     # Update the Selection column when the remove_tlg button is pressed
     observeEvent(input$remove_tlg, {
-      selected_rows <- input$selected_tlg_table_rows_selected
+      selected_rows <- selected_tlg_state()$selected
       if (length(selected_rows) > 0) {
         tlg_order_data <- tlg_order()
         tlg_order_data$Selection[tlg_order_data$Selection][selected_rows] <- FALSE
