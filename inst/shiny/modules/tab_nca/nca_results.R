@@ -110,9 +110,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       },
       content = function(fname) {
         output_tmpdir <- file.path(tempdir(), "output")
-
         save_output(output = session$userData$results, output_path = output_tmpdir)
-        files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)|(html)|(png)]$", recursive = TRUE)
+        files <- list.files(output_tmpdir, pattern = ".(csv)|(rds)|(xpt)|(zip)$", recursive = TRUE)
         wd <- getwd()
         on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler function
         setwd(output_tmpdir)

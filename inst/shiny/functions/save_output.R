@@ -11,7 +11,25 @@ save_output <- function(output, output_path) {
   for (name in names(output)) {
 
     if (inherits(output[[name]], "list")) {
-      save_output(output = output[[name]], output_path = paste0(output_path, "/", name))
+
+      # If it is just a list of plotly, save them together in a zip file
+      if (inherits(output[[name]][[1]], "plotly")) {
+        plotly_filenames <- paste0(output_path, "/", names(output[[name]]), ".html")
+        lib_dir <- paste0(output_path, "/", "lib")
+        for (i in seq_len(length(plotly_filenames))) {
+          htmlwidgets::saveWidget(
+            output[[name]][[i]],
+            file = plotly_filenames[[i]],
+            selfcontained = FALSE,
+            libdir = lib_dir
+          )
+        }
+        zip(paste0(output_path, "/", name, ".zip"), c(plotly_filenames, lib_dir))
+
+      # If not files can be saved independently in the folder
+      } else {
+        save_output(output = output[[name]], output_path = paste0(output_path, "/", name))
+      }
     } else if (inherits(output[[name]], "ggplot")) {
       file_name <- paste0(output_path, "/", name, ".png")
       ggsave(file_name, plot = output[[name]], width = 10, height = 6)
@@ -26,10 +44,6 @@ save_output <- function(output, output_path) {
           message("Error writing XPT file for ", name, ": ", e$message)
         }
       )
-    } else if (inherits(output[[name]], "plotly")) {
-      file_name <- paste0(output_path, "/", name, ".html")
-      htmlwidgets::saveWidget(output[[name]], file = file_name, selfcontained = TRUE)
-
     } else {
       stop(
         "Unsupported output type object in the list: ",
