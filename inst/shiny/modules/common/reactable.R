@@ -8,6 +8,9 @@
 #'                         to download. Currently available: `csv`, `xlsx`.
 #' @param file_name Character string with file name, or `reactive()` or callback function that
 #'                  returns character string.
+#' @param on_render JavaScript code to be executed on the table after it is rendered.
+#' @param editable Character vector with names of columns that should be editable.
+#' @param edit_debounce Time in milliseconds to debounce the edit events. Default is 750ms.
 #' @param ... Any other parameters to be passed to `reactable()` call. Can be simple values,
 #'            reactives or callback functions accepting the `data()` as argument.
 reactable_ui <- function(id) {
