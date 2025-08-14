@@ -357,7 +357,11 @@ adjust_class_and_length <- function(df, metadata) {
       df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
     } else if (var_specs$Type %in% c("Num", "integer", "float") &&
                  !endsWith(var, "DTM")) {
-      df[[var]] <- substr(as.numeric(df[[var]]), 0, var_specs$Length + grepl("\\.", as.character(df[[var]])))
+      df[[var]] <- substr(
+        as.numeric(df[[var]]),
+        0,
+        var_specs$Length + grepl("\\.", as.character(df[[var]]))
+      )
       df[[var]] <- as.numeric(df[[var]])
     } else if (!var_specs$Type %in% c(
       "dateTime", "duration", "integer", "float", "Num"
