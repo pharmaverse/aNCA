@@ -21,7 +21,7 @@
 #' @details
 #' - Logs the mapping selections for debugging.
 #' - Validates that all required columns are mapped and no duplicates exist.
-#' - If `ADOSEDUR` is mapped to `"NA"`, it is assigned a value of `0`.
+#' - If `ADOSEDUR` is not mapped, it is assigned a value of `0`.
 #' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`,
 #'  and `NCA_PROFILE`.
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
@@ -56,7 +56,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     dataset <- dataset %>% mutate(NCA_PROFILE = as.factor(.data[[nca_profile_col]]))
   }
 
-  if (mapping$select_ADOSEDUR == "NA") dataset$ADOSEDUR <- 0
+  if (is.null(mapping$select_ADOSEDUR)) dataset$ADOSEDUR <- 0
 
   dataset <- dataset %>%
     .apply_manual_units(mapping, manual_units) %>%
