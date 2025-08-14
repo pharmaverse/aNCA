@@ -20,7 +20,6 @@
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
-
   fluidPage(
     div(
       class = "d-flex justify-content-between",
@@ -46,7 +45,8 @@ tab_nca_ui <- function(id) {
             )
           ),
           nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
-          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
+          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
         )
       ),
       #' Additional analysis
@@ -58,7 +58,6 @@ tab_nca_ui <- function(id) {
 tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
     #' Setup session-wide object for storing data units. Units can be edited by the user on
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
@@ -75,7 +74,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
+        purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
           shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
         })
 
@@ -125,9 +124,15 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           pknca_warn_env <- new.env()
           pknca_warn_env$warnings <- c()
 
+          # Update units table
+          processed_pknca_data <- processed_pknca_data()
+          if (!is.null(session$userData$units_table())) {
+            processed_pknca_data$units <- session$userData$units_table()
+          }
+
           #' Calculate results
           res <- withCallingHandlers({
-            processed_pknca_data() %>%
+            processed_pknca_data %>%
               filter_slopes(
                 slope_rules$manual_slopes(),
                 slope_rules$profiles_per_subject(),
@@ -166,20 +171,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             showNotification(w_message, type = "warning", duration = 5)
           })
 
-
-          #' Apply units
-          if (!is.null(session$userData$units_table())) {
-            res$data$units <- session$userData$units_table()
-            res$result <- res$result %>%
-              select(-PPSTRESU, -PPSTRES) %>%
-              left_join(
-                session$userData$units_table(),
-                by = intersect(names(.), names(session$userData$units_table()))
-              ) %>%
-              mutate(PPSTRES = PPORRES * conversion_factor) %>%
-              select(-conversion_factor)
-          }
-
           updateTabsetPanel(session, "ncapanel", selected = "Results")
 
           log_success("NCA results calculated.")
@@ -209,13 +200,33 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           "Exclude"
         ) %>%
         DT::datatable(
-          extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = "80vh",
-                         lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-                         pageLength = -1, fixedHeader = TRUE)
+          extensions = c("FixedHeader", "Buttons"),
+          options = list(
+            scrollX = TRUE,
+            fixedHeader = TRUE,
+            dom = "Blfrtip",
+            buttons = list(
+              list(extend = "copy", title = paste0("NCA_Slope_Results_", Sys.Date())),
+              list(extend = "csv", filename = paste0("NCA_Slope_Results_", Sys.Date()))
+            ),
+            headerCallback = DT::JS(
+              "function(thead) {",
+              "  $(thead).css('font-size', '0.75em');",
+              "  $(thead).find('th').css('text-align', 'center');",
+              "}"
+            ),
+            columnDefs = list(
+              list(className = "dt-center", targets = "_all")
+            ),
+            lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
+            paging = TRUE
+          ),
+          class = "row-border compact",
+          rownames = FALSE
         ) %>%
-        formatStyle("Exclude", target = "row",
-                    backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
+        DT::formatStyle(
+          columns = seq_len(ncol(pivot_wider_pknca_results(res_nca()))), fontSize = "75%"
+        )
     })
 
     #' Prepares and displays the pivoted NCA results
@@ -232,8 +243,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
 
+    #' Parameter plots module
+    parameter_plots_server("parameter_plots", res_nca)
+
     # return results for use in other modules
-    res_nca
+    list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
   })
 }
 
