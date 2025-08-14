@@ -82,7 +82,7 @@ settings_ui <- function(id) {
         title = "Parameter Selection",
         virtualSelectInput(
           inputId = ns("nca_parameters"),
-          label = "Select:",
+          label = NULL,
           choices = metadata_nca_parameters %>%
             filter(TYPE != "PKNCA-not-covered") %>%
             prepare_choices(
@@ -102,13 +102,13 @@ settings_ui <- function(id) {
             "adj.r.squared", "lambda.z.time.first", "aucpext.obs", "aucpext.pred",
             "ae", "fe"
           ),
-          showSelectedOptionsFirst = TRUE,
+          showSelectedOptionsFirst = FALSE,
           hasOptionDescription = TRUE,
           showValueAsTags = TRUE,
-          noOfDisplayValues = 15,
+          noOfDisplayValues = 25,
           search = TRUE,
           multiple = TRUE,
-          width = "100%"
+          width = "75%"
         )
       ),
       accordion_panel(
