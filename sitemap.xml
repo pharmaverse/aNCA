@@ -22,7 +22,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_optional_layers.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_filters.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_labels.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/as_factor_preserve_label.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
@@ -55,7 +54,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/generate_tooltip_text.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_conversion_factor.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_label.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/has_label.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/identify_target_rows.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/index.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/interval_add_impute.html</loc></url>
@@ -77,7 +75,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/select_minimal_grouping_cols.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/set_empty_label.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/validate_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/verify_parameters.html</loc></url>

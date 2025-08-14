@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9135</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9136</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,23 +50,23 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_label</span><span class="op">(</span><span class="va">labels_df</span>, <span class="va">variable</span>, <span class="va">type</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_label</span><span class="op">(</span><span class="va">variable</span>, type <span class="op">=</span> <span class="st">"ADPC"</span>, labels_df <span class="op">=</span> <span class="va">metadata_nca_variables</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-labels-df">labels_df<a class="anchor" aria-label="anchor" href="#arg-labels-df"></a></dt>
-<dd><p>A data frame with three columns: Variable, Label, and Dataset.</p></dd>
-
-
-<dt id="arg-variable">variable<a class="anchor" aria-label="anchor" href="#arg-variable"></a></dt>
+<dl><dt id="arg-variable">variable<a class="anchor" aria-label="anchor" href="#arg-variable"></a></dt>
 <dd><p>The variable for which the label is to be retrieved.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>The type of the dataset for which the label is to be retrieved.</p></dd>
+
+
+<dt id="arg-labels-df">labels_df<a class="anchor" aria-label="anchor" href="#arg-labels-df"></a></dt>
+<dd><p>A data frame containing at least the columns "Variable", "Label", and "Dataset".</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -80,12 +80,20 @@ otherwise the variable name.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span> <span class="co"># Example usage:</span></span></span>
 <span class="r-in"><span> <span class="va">LABELS</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span> Variable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"AVAL"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span> Label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Unique Subject Identifier"</span>, <span class="st">"Analysis Value"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span> Dataset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADPC"</span>, <span class="st">"ADPC"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>   Variable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"AVAL"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>   Label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Unique Subject Identifier"</span>, <span class="st">"Analysis Value"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>   Dataset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADPC"</span>, <span class="st">"ADPC"</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="op">)</span></span></span>
-<span class="r-in"><span> <span class="fu">get_label</span><span class="op">(</span><span class="va">LABELS</span>, <span class="st">"USUBJID"</span>, <span class="st">"ADPC"</span><span class="op">)</span>  <span class="co"># Returns "Unique Subject Identifier"</span></span></span>
-<span class="r-in"><span> <span class="fu">get_label</span><span class="op">(</span><span class="va">LABELS</span>, <span class="st">"AGE"</span>, <span class="st">"ADPC"</span><span class="op">)</span>  <span class="co"># Returns "AGE"</span></span></span>
+<span class="r-in"><span> <span class="fu">get_label</span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"ADPC"</span>, <span class="va">LABELS</span><span class="op">)</span>  <span class="co"># Returns "Unique Subject Identifier"</span></span></span>
+<span class="r-in"><span> <span class="fu">get_label</span><span class="op">(</span><span class="st">"AGE"</span>, <span class="st">"ADPC"</span>, <span class="va">LABELS</span><span class="op">)</span>  <span class="co"># Returns "AGE"</span></span></span>
+<span class="r-in"><span> <span class="co"># Using a custom mapping column:</span></span></span>
+<span class="r-in"><span> <span class="va">LABELS2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>   ColName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"AVAL"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>   Label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Unique Subject Identifier"</span>, <span class="st">"Analysis Value"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>   Dataset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADPC"</span>, <span class="st">"ADPC"</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="fu">get_label</span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"ADPC"</span>, <span class="va">LABELS2</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="co"># Returns "Unique Subject Identifier"</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
