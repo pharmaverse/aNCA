@@ -325,7 +325,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
             )
           )
       }
-      session$userData$results$visualization$individualplot <- p
+      session$userData$results$exploration$individualplot <- p
       p
     })
 
@@ -397,7 +397,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
             rangeslider = list(type = "time")
           )
         )
-      session$userData$results$visualization$meanplot <- meanplot
+      session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })
   })

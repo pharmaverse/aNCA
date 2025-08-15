@@ -139,7 +139,7 @@ parameter_plots_server <- function(id, res_nca) {
         box = input$violinplot_toggle_switch,
       )
 
-      session$userData$results$visualization$boxplot <- boxplot
+      session$userData$results$nca_results$boxplot <- boxplot
       boxplot
     })
 
