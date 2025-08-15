@@ -43,9 +43,9 @@ sample_data <- data.frame(
   USUBJID = c(
     # 1. Single IV Dose subject
     "Subj-01", "Subj-01",
-    # 4. Multiple Extravascular Doses subject (identified by TAU)
+    # 2. Multiple Extravascular Doses subject (identified by TAU)
     "Subj-02", "Subj-02",
-    # 5. Excretion Data subject (identified by positive volume)
+    # 3. Excretion Data subject (identified by positive volume)
     "Subj-03", "Subj-03"
   ),
   PCSPEC = "PLASMA",
