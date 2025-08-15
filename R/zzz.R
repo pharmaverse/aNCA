@@ -69,6 +69,7 @@
     "PCTESTCD",
     "PKNCA",
     "PCFAST",
+    "PPANMETH",
     "PPORRES",
     "PPORRESU",
     "PPREASND",
