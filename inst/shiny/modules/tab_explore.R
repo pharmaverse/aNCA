@@ -325,6 +325,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
             )
           )
       }
+      session$userData$results$visualization$individualplot <- p
       p
     })
 
