@@ -2,8 +2,7 @@
 % Please edit documentation in R/detect_study_types.R
 \name{detect_study_types}
 \alias{detect_study_types}
-\title{Detect study types in data
-This function detects the type of study based on the provided data.}
+\title{Detect study types}
 \usage{
 detect_study_types(data, route_column, volume_column)
 }
@@ -14,14 +13,14 @@ Must contain the columns \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSP
 
 \item{route_column}{A character string specifying the column name for the route of administration.}
 
-\item{volume_column}{A character string specifying the column name for the volume of a sample.}
+\item{volume_column}{A character string specifying the column name for the volume of a sample. Extravascular
+samples must be written as \code{extravascular}.}
 }
 \value{
 A data frame summarizing the detected study types,
 including the number of unique subjects (USUBJID) for each type.
 }
 \description{
-Detect study types in data
 This function detects the type of study based on the provided data.
 }
 \details{
@@ -34,7 +33,7 @@ The study types are determined as follows:
 \item "Single IV Dose": If there is only one dose and TAU is NA, and the route is not extravascular.
 \item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available) and the route is extravascular.
 \item "Multiple IV Doses": If there are multiple doses (or TAU is available) and the route is not extravascular.
-If none of these conditions are met, the type is marker as "Unknown".
+\item If none of these conditions are met, the type is marker as "Unknown".
 }
 }
 \examples{

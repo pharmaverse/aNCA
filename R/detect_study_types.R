@@ -1,10 +1,12 @@
-#' Detect study types in data
+#' Detect study types
+#' 
 #' This function detects the type of study based on the provided data.
 #' @param data The dataset containing the study types to be identified.
 #' Assumed to be the output from aNCA formatted concentration data.
 #' Must contain the columns `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, `DOSNOA` and the specified route column.
 #' @param route_column A character string specifying the column name for the route of administration.
-#' @param volume_column A character string specifying the column name for the volume of a sample.
+#' @param volume_column A character string specifying the column name for the volume of a sample. Extravascular
+#' samples must be written as `extravascular`.
 #' 
 #' @details
 #' The function identifies a possible five different types of studies
@@ -15,7 +17,7 @@
 #'  - "Single IV Dose": If there is only one dose and TAU is NA, and the route is not extravascular.
 #'  - "Multiple Extravascular Doses": If there are multiple doses (or TAU is available) and the route is extravascular.
 #'  - "Multiple IV Doses": If there are multiple doses (or TAU is available) and the route is not extravascular.
-#' If none of these conditions are met, the type is marker as "Unknown".
+#'  - If none of these conditions are met, the type is marker as "Unknown".
 #' 
 #' 
 #' @returns A data frame summarizing the detected study types,
