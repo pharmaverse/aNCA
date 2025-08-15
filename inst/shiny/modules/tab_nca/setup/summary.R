@@ -28,14 +28,13 @@ summary_server <- function(id, processed_pknca_data) {
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
     })
 
-
-    study_types <- reactive ({
+    study_types <- reactive({
       req(processed_pknca_data())
       detect_study_types(processed_pknca_data()$conc$data,
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })
-    
+
     reactable_server(
       "study_types",
       study_types,
