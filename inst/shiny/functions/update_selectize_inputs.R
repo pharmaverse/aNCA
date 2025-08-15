@@ -53,7 +53,6 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
   }
 
   special_cases <- list(
-    "select_ADOSEDUR" = c("Select Column" = "", column_names, "NA"),
     "select_AVALU" = list(
       "Dataset Columns" = column_names,
       "Manual Units" = manual_units$concentration

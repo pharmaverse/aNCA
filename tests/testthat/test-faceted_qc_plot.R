@@ -17,8 +17,9 @@ DOSE_DATA <- data.frame(
 
 DUMMY_LABELS_DF <- data.frame(
   Variable = character(),
-  Label = character(),
-  Dataset = character()
+  Dataset = character(),
+  Type = character(),
+  Label = character()
 )
 
 describe("faceted_qc_plot", {

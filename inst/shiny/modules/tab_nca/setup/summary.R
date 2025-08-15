@@ -20,7 +20,7 @@ summary_server <- function(id, processed_pknca_data) {
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
 
       data <- processed_pknca_data()$intervals %>%
-        apply_labels(LABELS, "ADPC") %>%
+        apply_labels(type = "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE))) %>%
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
     })
