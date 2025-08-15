@@ -197,13 +197,13 @@ describe("pivot_wider_pknca_results", {
     exclude_values_na <- result %>% filter(USUBJID == 2 & NCA_PROFILE == 2) %>% pull(Exclude)
     expect_true(all(is.na(exclude_values_na)))
   })
-  it("excludes the presence of the column PPANMETH") {
-    res_with_ppanmeth = pknca_res
-    res_with_ppanmeth$PPANMETH = "Analysis Method 1"
+  it("excludes the presence of the column PPANMETH", {
+    res_with_ppanmeth <- pknca_res
+    res_with_ppanmeth$PPANMETH <- "Analysis Method 1"
 
     # Apply pivot_wider_pknca_results
-    result <- pivot_wider_pknca_results(res_with_exclude)
-    
+    result <- pivot_wider_pknca_results(res_with_ppanmeth)
+
     expect_false("PPANMETH" %in% result)
-  }
+  })
 })
