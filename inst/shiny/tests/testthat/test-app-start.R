@@ -1,24 +1,24 @@
 describe("Test for initial app load", {
   skip_on_cran()
-  # NOTE: method app$expect_values cannot be used as it crashes due to some input/output
+  # NOTE: method app$expect_values cannot be used as it crashes due to some output
 
   it("App ui does not crash and remains constant at start", {
     app <- AppDriver$new(
       name = "app_start",
       height = 407,
       width = 348,
-      variant = platform_variant()
+      variant = NULL
     )
     app$wait_for_idle()
     app$expect_screenshot()
   })
-  
+ 
   it("App starts without JavaScript errors", {
     app <- AppDriver$new(
       name = "app_js_errors",
       height = 407,
       width = 348,
-      variant = platform_variant()
+      variant = NULL
     )
     
     # Wait for app to fully load
@@ -56,5 +56,23 @@ describe("Test for initial app load", {
     error_elements <- app$get_html(".shiny-output-error, .error, .alert-danger")
     expect_equal(length(error_elements), 0, 
                  info = "Error elements found in UI")
+  })
+
+  it("On start, dummy data is loaded correctly and displayed", {
+    app <- AppDriver$new(
+      name = "app_dummy_data",
+      height = 407,
+      width = 348,
+      variant = NULL
+    )
+
+    app$wait_for_value(output = "data-raw_data-data_display-table")
+    default_table <- app$get_values(output = "data-raw_data-data_display-table")
+
+    app$upload_file(`data-raw_data-data_upload` = "Dummy_complex_data.csv")
+    app$wait_for_value(output = "data-raw_data-data_display-table")
+    loaded_table <- app$get_values(output = "data-raw_data-data_display-table")
+
+    expect_identical(default_table, loaded_table)
   })
 })
