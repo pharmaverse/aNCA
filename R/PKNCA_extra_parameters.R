@@ -6,15 +6,15 @@
 pk.calc.volpk <- function(volume) {
   sum(volume, na.rm = TRUE)
 }
-add.interval.col("volpk",
+PKNCA::add.interval.col("volpk",
                  FUN="pk.calc.volpk",
                  values=c(FALSE, TRUE),
                  unit_type="volume",
                  pretty_name="Total Urine Volume",
                  desc="The sum of urine volumes for the interval")
-PKNCA.set.summary(
+PKNCA::PKNCA.set.summary(
   name="volpk",
   description="geometric mean and geometric coefficient of variation",
-  point=business.geomean,
-  spread=business.geocv
+  point=PKNCA::business.geomean,
+  spread=PKNCA::business.geocv
 )
