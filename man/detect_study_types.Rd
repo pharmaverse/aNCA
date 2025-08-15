@@ -9,11 +9,14 @@ detect_study_types(data, route_column, volume_column)
 \arguments{
 \item{data}{The dataset containing the study types to be identified.
 Assumed to be the output from aNCA formatted concentration data.
-Must contain the columns \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC}, \code{DOSNOA} and the specified route column.}
+Must contain the columns \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC}, \code{DOSNOA}
+and the specified route column.}
 
-\item{route_column}{A character string specifying the column name for the route of administration.}
+\item{route_column}{A character string specifying the
+column name for the route of administration.}
 
-\item{volume_column}{A character string specifying the column name for the volume of a sample. Extravascular
+\item{volume_column}{A character string specifying the
+column name for the volume of a sample. Extravascular
 samples must be written as \code{extravascular}.}
 }
 \value{
@@ -29,10 +32,14 @@ based on grouping by \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC},
 The study types are determined as follows:
 \itemize{
 \item "Excretion Data": If the volume column for a group is greater than 0.
-\item "Single Extravascular Dose": If there is only one dose and TAU is NA, and the route is extravascular.
-\item "Single IV Dose": If there is only one dose and TAU is NA, and the route is not extravascular.
-\item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available) and the route is extravascular.
-\item "Multiple IV Doses": If there are multiple doses (or TAU is available) and the route is not extravascular.
+\item "Single Extravascular Dose": If there is only one dose and TAU is NA,
+and the route is extravascular.
+\item "Single IV Dose": If there is only one dose and TAU is NA,
+and the route is not extravascular.
+\item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
+and the route is extravascular.
+\item "Multiple IV Doses": If there are multiple doses (or TAU is available)
+and the route is not extravascular.
 \item If none of these conditions are met, the type is marker as "Unknown".
 }
 }
