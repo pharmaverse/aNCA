@@ -65,7 +65,12 @@ setup_server <- function(id, data, adnca_data) {
     manual_slopes_override <- reactive(imported_settings()$slope_rules)
 
     # Gather all settings from the appropriate module
-    settings <- settings_server("nca_settings", data, adnca_data, settings_override)
+    settings <- settings_server(
+      "nca_settings",
+      data,
+      adnca_data,
+      settings_override,
+      parameter_selections)
 
     # Create processed data object with applied settings.
     processed_pknca_data <- reactive({
@@ -143,8 +148,8 @@ setup_server <- function(id, data, adnca_data) {
       manual_slopes_override
     )
 
-    summary_server("nca_setup_summary", processed_pknca_data)
-
+    parameter_selections <- summary_server("nca_setup_summary", processed_pknca_data)
+    
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {
