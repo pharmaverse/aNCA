@@ -1,84 +1,312 @@
-#' Create a Faceted Scatter Plot for QC
+#' Create a Faceted Quality Control (QC) Plot
 #'
-#' Generates a customizable, faceted ggplot scatter plot, typically for quality
-#' control (QC). The function supports dynamic labels and automatically
-#' prepares tooltips for interactive use with `ggplotly`.
+#' Generates a faceted QC plot by layering concentration data (as
+#' black shapes) and dose data (as colored points). It creates a single, unified
+#' legend for both data types and can return either a static `ggplot` or an
+#' interactive `plotly` object.
 #'
-#' @param data A data.frame containing the plotting data.
+#' @details Unless specified, the variables required as arguments are expected to
+#' be present in both `data_conc` and `data_dose`.
+#'
+#' @param data_conc A data.frame containing concentration data (e.g., PK samples).
+#' @param data_dose An optional data.frame containing dosing information.
 #' @param x_var Character. The column name to be used for the x-axis.
 #' @param y_var Character. The column name to be used for the y-axis.
-#' @param colour_var Character. The column name to map to the colour aesthetic.
-#' @param grouping_vars Character vector. Column names used to create vertical
-#'   facets (panels).
-#' @param labels_df A data.frame used by helper functions (`get_label`,
-#'   `generate_tooltip_text`) to look up variable labels.
-#' @param title Character. The main title of the plot.
+#' @param colour_var Character. The column in `data_dose` to map to color.
+#' @param shape_var Character. The column in `data_conc` to map to shape.
+#' @param grouping_vars Character vector. Column names to use for faceting.
+#' @param other_tooltip_vars Optional character vector of additional column names
+#'   to include in the tooltip.
+#' @param x_var_units Character. The column name containing the units for the
+#'   x-axis variable. It is expected that this column contains a single unique value.
+#' @param colour_var_units Character. The column name for the units of the
+#'   colour variable in `data_dose`. It is expected that this column contains a
+#'   single unique value.
+#' @param labels_df A data.frame used by helper functions to look up variable labels.
+#' It uses metadata_nca_variables as default
+#' @param title Character. The main title for the plot.
+#' @param show_pk_samples Logical. If `TRUE`, plots the concentration data.
+#' @param show_doses Logical. If `TRUE`, plots the dose data.
+#' @param as_plotly Logical. If `TRUE`, converts the final plot to an interactive
+#'   `plotly` object.
 #'
-#' @return A `ggplot` object ready to be printed or passed to `ggplotly`.
+#' @return A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
 #'
-#'
+#' @export
 #' @examples
-#' # Sample data
-#' qc_data <- data.frame(
-#'   TIME = 1:6,
-#'   RESULT = c(5, 6, 8, 9, 12, 11),
-#'   DOSE = as.factor(c(10, 10, 20, 20, 30, 30)),
-#'   ARM = rep(c("A", "B", "C"), each = 2)
-#'   )
-#' label_data <- data.frame() # Dummy labels object
+#'
+#' # Sample concentration data
+#' conc_data <- data.frame(
+#'   USUBJID = rep(paste0("S-", 1:2), each = 2),
+#'   ACTUAL_TIME = c(0, 24, 0, 24),
+#'   SAMPLE_TYPE = rep(c("PLASMA", "URINE"), 2),
+#'   COHORT = "A",
+#'   TIME_UNIT = "hr"
+#'  )
+#'
+#' # Sample dose data
+#' dose_data <- data.frame(
+#'   USUBJID = rep(paste0("S-", 1:2), each = 1),
+#'   ACTUAL_TIME = c(0, 0),
+#'   DOSE_LEVEL = c(100, 100),
+#'   COHORT = "A",
+#'   DOSE_UNIT = "mg"
+#' )
 #'
 #' # Generate the plot
 #' faceted_qc_plot(
-#'   data = qc_data,
-#'   x_var = "TIME",
-#'   y_var = "RESULT",
-#'   colour_var = "DOSE",
-#'   grouping_vars = "ARM",
-#'   labels_df = label_data,
-#'   title = "Sample QC Plot"
-#'   )
-#'
+#'   data_conc = conc_data,
+#'   data_dose = dose_data,
+#'   x_var = "ACTUAL_TIME",
+#'   y_var = "USUBJID",
+#'   colour_var = "DOSE_LEVEL",
+#'   shape_var = "SAMPLE_TYPE",
+#'   grouping_vars = "COHORT",
+#'   x_var_units = "TIME_UNIT",
+#'   colour_var_units = "DOSE_UNIT",
+#'   title = "Sample Dosing and PK Plot"
+#' )
 #' @export
-faceted_qc_plot <- function(data,
+faceted_qc_plot <- function(data_conc,
+                            data_dose = NULL,
                             x_var,
                             y_var,
                             colour_var,
+                            shape_var,
                             grouping_vars,
-                            labels_df = data.frame(),
-                            title = NULL) {
+                            other_tooltip_vars = NULL,
+                            x_var_units = NULL,
+                            colour_var_units = NULL,
+                            labels_df = metadata_nca_variables,
+                            title = NULL,
+                            show_pk_samples = TRUE,
+                            show_doses = TRUE,
+                            as_plotly = FALSE) {
 
-  # Include all variables from the plot in the tooltips
-  tooltip_vars <- c(x_var, y_var, colour_var, grouping_vars)
+  # Define boolean flags
+  plot_conc_data <- show_pk_samples && !is.null(data_conc)
+  plot_dose_data <- show_doses && !is.null(data_dose) && nrow(data_dose) > 0
 
-  # Build the tooltip text for each row
-  processed_data <- data %>%
-    mutate(
-      colour_factored = as.factor(!!sym(colour_var)),
-      tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+
+  # Select variables to include in the plotly tooltips
+  tooltip_vars <- c(y_var, grouping_vars, other_tooltip_vars, x_var, colour_var)
+
+  # Prerocess the data and unpack the results
+  prep_results <- prepare_plot_data(
+    data_conc,
+    data_dose,
+    shape_var,
+    colour_var,
+    grouping_vars,
+    labels_df,
+    tooltip_vars,
+    plot_conc_data,
+    plot_dose_data
+  )
+
+  processed_data <- prep_results$data
+  shape_levels <- prep_results$shape_levels
+  colour_levels <- prep_results$colour_levels
+
+  # Return a empty plot for null data
+  if (nrow(processed_data) == 0) {
+    return(ggplot() + labs(title = "No data to display."))
+  }
+
+  all_legend_levels <- levels(processed_data$legend_group)
+
+  # Define shapes
+  shape_values <- setNames(
+    c(
+      # select specific shapes for PK samples
+      rep(c(1, 4, 5, 0, 2, 6, 3), length.out = length(shape_levels)),
+      # select a filled-in circle for doses
+      rep(16, length(colour_levels))
+    ),
+    all_legend_levels
+  )
+
+  # Define colors: black for PK samples, hue palette for doses
+  if (length(colour_levels) > 0) {
+    dose_colours <- scales::hue_pal()(length(colour_levels))
+  } else {
+    dose_colours <- character()
+  }
+  colour_values <- setNames(c(rep("black", length(shape_levels)), dose_colours), all_legend_levels)
+
+  # If unique and available, format units to a string for plot labels
+  x_unit_lab <- processed_data %>% format_unit_string(x_var_units)
+  colour_unit_lab <- processed_data %>% format_unit_string(colour_var_units)
+
+  # Define a title for the legend
+  legend_title <- paste(
+    paste(
+      if (plot_conc_data) {
+        get_label(variable = shape_var, type = "ADPC", labels_df = labels_df)
+      } else {
+        ""
+      },
+      if (plot_dose_data) {
+        paste0(
+          get_label(variable = colour_var, type = "ADPC", labels_df = labels_df),
+          colour_unit_lab
+        )
+      } else {
+        ""
+      },
+      sep = "<br>"
+    ),
+    "<br>"
+  )
+
+  # Build the plot
+  p <- ggplot(
+    processed_data,
+    aes(
+      x = !!sym(x_var),
+      y = !!sym(y_var),
+      text = generate_tooltip_text(
+        data = processed_data,
+        labels_df = labels_df,
+        tooltip_vars = tooltip_vars,
+        type = "ADPC"
+      ),
+      colour = legend_group,
+      shape = legend_group
     )
+  ) +
+    geom_point(aes(alpha = legend_group), size = 2.5, stroke = 0.25) +
+    facet_wrap(vars(facet_title), scales = "free_y", ncol = 1) +
 
-  plt <- ggplot(processed_data,
-                aes(x = !!sym(x_var),
-                    y = !!sym(y_var),
-                    colour = colour_factored,
-                    text = tooltip_text)) +
-    geom_point(size = 1.5) +
-    facet_grid(rows = vars(!!!syms(grouping_vars)), scales = "free_y", space = "free_y") +
+    # Apply the manual scales
+    scale_shape_manual(name = legend_title, values = shape_values) +
+    scale_colour_manual(name = legend_title, values = colour_values) +
+
+    # Make doses semi-transparent and hide the alpha legend
+    scale_alpha_manual(values = setNames(c(rep(1, length(shape_levels)),
+                                           rep(0.6, length(colour_levels))),
+                                         all_legend_levels), guide = "none") +
     labs(
-      x = get_label(labels_df, x_var, "ADPC"),
-      y = get_label(labels_df, y_var, "ADPC"),
-      title = title,
-      subtitle = paste("Subjects grouped by",
-                       paste(grouping_vars, collapse = ", ")),
-      colour = get_label(labels_df, colour_var, "ADPC")
+      x = paste0(get_label(variable = x_var, type =  "ADPC", labels_df = labels_df), x_unit_lab),
+      y = get_label(variable = y_var, type =  "ADPC", labels_df = labels_df),
+      title = title
     ) +
-    theme_bw() +
-    theme(
-      # Keep cohort labels horizontal
-      strip.text.y = element_text(angle = -90),
-      # Adjust spacing between panels
-      panel.spacing = unit(0.2, "lines")
+    theme_bw()
+
+  if (as_plotly) {
+    p <- ggplotly(p, tooltip = "text") %>%
+      layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
+  }
+  p
+}
+
+#' Prepare Data for QC Plotting
+#'
+#' A helper function that validates, processes, and combines
+#' concentration and dose data. It creates the unified legend and faceting
+#' variables and calculates the factor levels for the plot scales.
+#'
+#' @param data_conc A data.frame of concentration data.
+#' @param data_dose An optional data.frame of dosing data.
+#' @param shape_var Character. The column name from `data_conc` for the legend.
+#' @param colour_var Character. The column name from `data_dose` for the legend.
+#' @param grouping_vars Character vector. Column names for faceting.
+#' @param labels_df A data.frame for label lookups.
+#' @param tooltip_vars Character vector of variables for the tooltip.
+#' @param plot_conc_data Logical flag derived from `show_pk_samples` and `data_conc`.
+#' @param plot_dose_data Logical flag derived from `show_doses` and `data_dose`.
+#'
+#' @return A `list` containing `data` (the processed tibble), `shape_levels`,
+#'   and `colour_levels`.
+prepare_plot_data <- function(data_conc,
+                              data_dose,
+                              shape_var,
+                              colour_var,
+                              grouping_vars,
+                              labels_df,
+                              tooltip_vars,
+                              plot_conc_data,
+                              plot_dose_data) {
+
+  # Return a list with empty elements for null data
+  if (!plot_conc_data && !plot_dose_data) {
+    # Return a list with empty elements if there's no data
+    return(list(
+      data = data.frame(),
+      shape_levels = character(),
+      colour_levels = character()
+    ))
+  }
+
+  # Define plot data and add tooltip texts
+  plot_data_list <- list()
+  if (plot_conc_data) {
+    plot_data_list$conc <- data_conc %>%
+      mutate(
+        legend_group = as.character(!!sym(shape_var)),
+        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+      )
+  }
+  if (plot_dose_data) {
+    plot_data_list$dose <- data_dose %>%
+      mutate(
+        legend_group = as.character(!!sym(colour_var)),
+        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+      )
+  }
+
+  # Define the levels for the shape and colour variables
+  if (plot_conc_data) {
+    shape_levels <- sort(unique(data_conc[[shape_var]]))
+  } else {
+    shape_levels <- character()
+  }
+  if (plot_dose_data) {
+    colour_levels <- as.character(sort(unique(data_dose[[colour_var]])))
+  } else {
+    colour_levels <- character()
+  }
+  all_legend_levels <- unique(c(shape_levels, colour_levels))
+
+  # Assign legend groups and facet titles to the data points
+  processed_data <- bind_rows(plot_data_list) %>%
+    mutate(
+      legend_group = factor(legend_group, levels = all_legend_levels),
+      facet_title = pmap_chr(
+        select(., all_of(grouping_vars)),
+        ~ paste(list(...), collapse = ", ")
+      )
     )
 
-  plt
+  # Return a list containing the processed data and the factor levels
+  list(
+    data = processed_data,
+    shape_levels = shape_levels,
+    colour_levels = colour_levels
+  )
+}
+
+#' Formats a unit string if a unique unit exists
+#' @param data The data frame to check.
+#' @param unit_var The column name of the unit variable.
+#' @return A formatted string like " (hr)" or an empty string "".
+format_unit_string <- function(data, unit_var) {
+  # Return "" if the unit variable is not specified or doesn't exist
+  if (is.null(unit_var) || !all(unit_var %in% names(data))) {
+    return("")
+  }
+
+  # Get the distinct unit values
+  distinct_units <- data %>%
+    select(all_of(unit_var)) %>%
+    distinct()
+
+  # If there is exactly one unique unit, format it. Otherwise, return "".
+  if (nrow(distinct_units) != 1) {
+    return("")
+  }
+
+  distinct_units %>%
+    pull() %>%
+    paste0(" (", ., ")")
 }
