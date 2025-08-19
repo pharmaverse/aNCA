@@ -216,7 +216,7 @@ describe("convert_volume_units()", {
       stringsAsFactors = FALSE
     )
 
-    result <- convert_volume_units(df)
+    result <- suppressWarnings(convert_volume_units(df))
     expect_true(is.na(result$AMOUNTU))
 
   })
