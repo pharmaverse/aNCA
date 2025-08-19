@@ -23,7 +23,6 @@ summary_server <- function(id, processed_pknca_data, override) {
       req(processed_pknca_data())
 
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
-      dose_group_columns <- group_vars(processed_pknca_data()$dose)
 
       data <- processed_pknca_data()$intervals %>%
         apply_labels(type = "ADPC") %>%
@@ -33,7 +32,16 @@ summary_server <- function(id, processed_pknca_data, override) {
 
     study_types_df <- reactive({
       req(processed_pknca_data())
-      detect_study_types(processed_pknca_data()$conc$data,
+      # Get the concentration data and the final, filtered intervals data
+      conc_data <- processed_pknca_data()$conc$data
+      intervals_data <- processed_pknca_data()$intervals
+      
+      # Filter the main concentration data to include only the groups
+      # that are present in the final intervals list.
+      filtered_conc_data <- conc_data %>%
+        semi_join(intervals_data, by = intersect(names(conc_data), names(intervals_data)))
+      
+      detect_study_types(filtered_conc_data,
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })
