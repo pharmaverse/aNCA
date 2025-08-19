@@ -166,6 +166,7 @@ describe("pivot_wider_pknca_results", {
       `R2` = "R Squared",
       `R2ADJ` = "R Squared Adjusted",
       `LAMZLL[hr]` = "Lambda z Lower Limit",
+      `LAMZUL[hr]` = "Lambda z Upper Limit",
       `LAMZNPT[count]` = "Number of Points for Lambda z",
       `CLSTP[ng/mL]` = "Clast pred",
       `LAMZHL[hr]` = "Half-Life Lambda z",
