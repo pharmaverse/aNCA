@@ -3,17 +3,18 @@
 #' This function detects the type of study based on the provided data.
 #' @param data The dataset containing the study types to be identified.
 #' Assumed to be the output from aNCA formatted concentration data.
-#' Must contain the columns `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, `DOSNOA`
-#'  and the specified route column.
+#' Must contain the columns `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`,
+#'  `DOSNOA` (created in `format_pkncaconc_data`) and the specified route column.
 #' @param route_column A character string specifying the
 #'  column name for the route of administration.
 #' @param volume_column A character string specifying the
 #'  column name for the volume of a sample. Extravascular
 #' samples must be written as `extravascular`.
+#' Can be set to `NULL` if not applicable.
 #'
 #' @details
 #' The function identifies a possible five different types of studies
-#' based on grouping by `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, and the specified route column.
+#' based on grouping by `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, and the route column.
 #' The study types are determined as follows:
 #'  - "Excretion Data": If the volume column for a group is greater than 0.
 #'  - "Single Extravascular Dose": If there is only one dose and TAU is NA,
@@ -74,11 +75,17 @@
 #' )
 #'
 #' @export
-detect_study_types <- function(data, route_column, volume_column) {
+detect_study_types <- function(data, route_column, volume_column = NULL) {
   full_grouping <- c("STUDYID", "DRUG", "USUBJID", "PCSPEC", route_column)
   summary_grouping <- c("DRUG", "STUDYID", "PCSPEC")
 
   has_tau <- "TAU" %in% names(data)
+  
+  # If volume column is not provided, create volume_column and set to NA
+  if (is.null(volume_column)) {
+    volume_column <- "volume"
+    data[[volume_column]] <- NA
+  }
 
   study_data <- data %>%
     #group by grouping and route columne

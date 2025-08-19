@@ -4,20 +4,21 @@
 \alias{detect_study_types}
 \title{Detect study types}
 \usage{
-detect_study_types(data, route_column, volume_column)
+detect_study_types(data, route_column, volume_column = NULL)
 }
 \arguments{
 \item{data}{The dataset containing the study types to be identified.
 Assumed to be the output from aNCA formatted concentration data.
-Must contain the columns \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC}, \code{DOSNOA}
-and the specified route column.}
+Must contain the columns \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC},
+\code{DOSNOA} (created in \code{format_pkncaconc_data}) and the specified route column.}
 
 \item{route_column}{A character string specifying the
 column name for the route of administration.}
 
 \item{volume_column}{A character string specifying the
 column name for the volume of a sample. Extravascular
-samples must be written as \code{extravascular}.}
+samples must be written as \code{extravascular}.
+Can be set to \code{NULL} if not applicable.}
 }
 \value{
 A data frame summarizing the detected study types,
@@ -28,7 +29,7 @@ This function detects the type of study based on the provided data.
 }
 \details{
 The function identifies a possible five different types of studies
-based on grouping by \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC}, and the specified route column.
+based on grouping by \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC}, and the route column.
 The study types are determined as follows:
 \itemize{
 \item "Excretion Data": If the volume column for a group is greater than 0.
