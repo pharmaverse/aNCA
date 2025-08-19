@@ -78,7 +78,7 @@ describe("detect_study_types", {
     result_multi <- detect_study_types(test_data_multi, "ROUTE", "VOL")
     expect_equal(result_multi$Type, "Multiple IV Doses")
   })
-  
+
   it("handles data frames without a volume column correctly", {
     # Test for single dose without volume column
     test_data_single <- base_data %>% select(-VOL)
