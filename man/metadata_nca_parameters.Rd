@@ -19,10 +19,14 @@ A data frame with 123 rows and 6 variables:
 \item{CAT}{Arbitrary assigned subclass for the parameter/term}
 \item{Depends}{PKNCA derived. Designates all directly used parameters in calculation}
 \item{can_excretion}{Logical. Indicates if the parameter can be used in excretion analysis}
-\item{can_non_excretion}{Logical. Indicates if the parameter can be used in non-excretion analysis}
-\item{can_single_dose}{Logical. Indicates if the parameter can be used in single dose analysis}
-\item{can_multiple_dose}{Logical. Indicates if the parameter can be used in multiple dose analysis}
-\item{can_extravascular}{Logical. Indicates if the parameter can be used in extravascular analysis}
+\item{can_non_excretion}{Logical.
+Indicates if the parameter can be used in non-excretion analysis}
+\item{can_single_dose}{Logical.
+Indicates if the parameter can be used in single dose analysis}
+\item{can_multiple_dose}{Logical.
+Indicates if the parameter can be used in multiple dose analysis}
+\item{can_extravascular}{Logical.
+Indicates if the parameter can be used in extravascular analysis}
 }
 }
 \source{
