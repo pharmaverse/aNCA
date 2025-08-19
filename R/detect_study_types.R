@@ -88,9 +88,9 @@ detect_study_types <- function(data, route_column, volume_column = NULL) {
   }
 
   study_data <- data %>%
-    #group by grouping and route columne
+    #group by grouping and route column
     group_by(!!!syms(full_grouping)) %>%
-    # Only one dosnoa and has_tau is FALSE or TAU column is NA
+    # determine study types based on dosnoa, tau, route and volumes
     mutate(is_one_dose = length(unique(DOSNOA)) == 1 && (!has_tau || all(is.na(get("TAU")))),
            is_extravascular = !!sym(route_column) == "extravascular",
            is_excretion = (!is.na(!!sym(volume_column)) & !!sym(volume_column) > 0)) %>%
