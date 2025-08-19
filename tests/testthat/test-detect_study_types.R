@@ -79,6 +79,14 @@ describe("detect_study_types", {
     expect_equal(result_multi$Type, "Multiple IV Doses")
   })
 
+  it("handles data frames without a volume column correctly", {
+    # Test for single dose without volume column
+    test_data_single <- base_data %>% select(-VOL)
+    result_single <- detect_study_types(test_data_single, "ROUTE")
+    expect_equal(result_single$Type, "Single IV Dose")
+
+  })
+
   it("correctly summarizes a complex dataset with multiple study types and subjects", {
     combined_data <- bind_rows(
       # USUBJID: Subj-1, Type: Single IV
