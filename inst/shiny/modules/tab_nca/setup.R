@@ -148,7 +148,11 @@ setup_server <- function(id, data, adnca_data) {
       manual_slopes_override
     )
 
-    parameter_selections <- summary_server("nca_setup_summary", processed_pknca_data)
+    param_selection_override <- reactive({
+      req(imported_settings())
+      imported_settings()$settings$parameter_selection
+    })
+    parameter_selections <- summary_server("nca_setup_summary", processed_pknca_data, override = param_selection_override)
     
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(

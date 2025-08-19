@@ -172,18 +172,6 @@ settings_server <- function(id, data, adnca_data, settings_override, parameter_s
       if (!is.null(settings$bioavailability))
         updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
 
-      # Parmeter selection #
-      reset_reactable_memory()
-
-      params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered") %>%
-        pull("PKNCA")
-
-      updateReactable(
-        "nca_parameters",
-        selected = which(params_data %in% settings$parameter_selection)
-      )
-
       # Data imputation #
       update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
 
@@ -344,7 +332,7 @@ settings_server <- function(id, data, adnca_data, settings_override, parameter_s
         pcspec = input$select_pcspec,
         method = input$method,
         bioavailability = input$bioavailability,
-        parameter_selection = parameter_selection(),
+        #parameter_selection = parameter_selection(),
         data_imputation = list(
           impute_c0 = input$should_impute_c0
         ),

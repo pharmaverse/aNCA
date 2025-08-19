@@ -5,7 +5,9 @@
 #' by the user.
 #'
 #' @param processed_pknca_data PKNCA data that was processed in accordance to setup rules.
+#' @param override A reactive expression containing parameter selection overrides from a settings file.
 #'
+#' @returns A reactive data frame with the parameter selections by study type.
 summary_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -15,7 +17,7 @@ summary_ui <- function(id) {
   )
 }
 
-summary_server <- function(id, processed_pknca_data) {
+summary_server <- function(id, processed_pknca_data, override) {
   moduleServer(id, function(input, output, session) {
     summary_data <- reactive({
       req(processed_pknca_data())
@@ -29,12 +31,27 @@ summary_server <- function(id, processed_pknca_data) {
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
     })
 
-    study_types <- reactive({
+    study_types_df <- reactive({
       req(processed_pknca_data())
       detect_study_types(processed_pknca_data()$conc$data,
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })
+    
+    # #Update params based on settings override
+    # observeEvent(override(), {
+    #   uploaded_params <- override()
+    #   reset_reactable_memory()
+    #   # The full parameter dataset used to build the table
+    #   params_data <- metadata_nca_parameters %>%
+    #     filter(TYPE != "PKNCA-not-covered")
+    #   browser()
+    #   # Find the row indices corresponding to the uploaded parameter names
+    #   new_selected_indices <- which(params_data$PKNCA %in% uploaded_params)
+    #   
+    #   # Update the reactable with the new selections
+    #   updateReactable("nca_parameters", selected = new_selected_indices)
+    # })
     
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
@@ -51,42 +68,81 @@ summary_server <- function(id, processed_pknca_data) {
       "ae", "fe"
     )
     
-    nca_params <- reactive({
-      selected_rows <- getReactableState("nca_parameters", "selected")
-      if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
+    # ReactiveVal to store the entire state of the selection data frame
+    selection_state <- reactiveVal()
+    
+    observe({
+      req(study_types_df())
       
       params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered")
-      selected_terms <- params_data[selected_rows, , drop = FALSE]
+        filter(TYPE != "PKNCA-not-covered") %>%
+        select(TYPE, PKNCA, PPTESTCD, PPTEST)
       
-      # Return PKNCA column names
-      selected_terms$PKNCA
+      study_type_names <- study_types_df()$Type
+      
+      selection_df <- params_data
+      for (st_name in study_type_names) {
+        selection_df[[st_name]] <- selection_df$PKNCA %in% DEFAULT_PARAMS
+      }
+      
+      selection_state(selection_df)
     })
     
+    # Render the new, dynamic reactable
     output$nca_parameters <- renderReactable({
-      #remove parameters that are currently unavailable in PKNCA
-      params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered")
+      req(selection_state())
       
-      default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
+      # Dynamically create column definitions for each study type
+      study_type_cols <- lapply(
+        study_types_df()$Type,
+        function(st_name) {
+          colDef(
+            name = st_name,
+            cell = checkbox_extra("check", class = "table-check"),
+            html = TRUE,
+            align = "center",
+            width = 150
+          )
+        }
+      )
+      names(study_type_cols) <- study_types_df()$Type
+      
+      # Combine with definitions for parameter info columns
+      col_defs <- c(
+        list(
+          PKNCA = colDef(show = FALSE),
+          PPTESTCD = colDef(name = "Code", sticky = "left", minWidth = 120),
+          PPTEST = colDef(name = "Label", minWidth = 200)
+        ),
+        study_type_cols
+      )
       
       reactable(
-        params_data %>%
-          select(TYPE, PPTESTCD, PPTEST, CAT),
-        groupBy = c("TYPE"),
-        pagination = FALSE,
+        selection_state(),
+        columns = col_defs,
+        groupBy = "TYPE",
         filterable = TRUE,
         compact = TRUE,
-        onClick = "select",
         height = "49vh",
-        selection = "multiple",
-        defaultSelected = default_row_indices
+        bordered = TRUE,
+        resizable = TRUE
       )
+    })
+    
+    # Observer to update the state when a checkbox is clicked
+    observeEvent(input$check, {
+      req(selection_state())
+      info <- input$check
+      
+      current_state <- selection_state()
+      
+      current_state[info$row, info$col] <- info$value
+      selection_state(current_state)
     })
 
     reactable_server(
       "study_types",
-      study_types,
+      study_types_df,
       height = "28vh"
     )
 
@@ -96,6 +152,6 @@ summary_server <- function(id, processed_pknca_data) {
       height = "98vh"
     )
     
-    nca_params
+    selection_state
   })
 }
