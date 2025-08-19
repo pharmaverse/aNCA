@@ -77,7 +77,7 @@
 #' @export
 detect_study_types <- function(data, route_column, volume_column = NULL) {
   full_grouping <- c("STUDYID", "DRUG", "USUBJID", "PCSPEC", route_column)
-  summary_grouping <- c("DRUG", "STUDYID", "PCSPEC")
+  summary_grouping <- c("STUDYID", "DRUG", "PCSPEC")
 
   has_tau <- "TAU" %in% names(data)
 

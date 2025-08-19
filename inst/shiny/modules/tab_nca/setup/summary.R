@@ -36,10 +36,11 @@ summary_server <- function(id, processed_pknca_data, override) {
       conc_data <- processed_pknca_data()$conc$data
       intervals_data <- processed_pknca_data()$intervals
       
+      conc_group_columns <- group_vars(processed_pknca_data()$conc)
       # Filter the main concentration data to include only the groups
       # that are present in the final intervals list.
       filtered_conc_data <- conc_data %>%
-        semi_join(intervals_data, by = intersect(names(conc_data), names(intervals_data)))
+        semi_join(intervals_data, by = conc_group_columns)
       
       detect_study_types(filtered_conc_data,
                          route_column = processed_pknca_data()$dose$columns$route,
