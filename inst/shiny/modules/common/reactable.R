@@ -41,7 +41,8 @@ reactable_server <- function(
       showPageSizeOptions = TRUE,
       compact = TRUE,
       style = list(fontSize = "0.75em"),
-      class = "reactable-table"
+      class = "reactable-table",
+      columns = generate_col_defs
     )
 
     args <- list(...)
