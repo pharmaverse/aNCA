@@ -11,7 +11,7 @@ for a parameter and excludes rows that fall outside these thresholds."></head><b
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9138</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9139</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,31 +87,31 @@ By default is the defined parameter.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A function that can be used with <code><a href="https://rdrr.io/pkg/PKNCA/man/exclude.html" class="external-link">PKNCA::exclude</a></code> to mark through the 'exclude'  column
+    <p>A function that can be used with <code><a href="http://humanpred.github.io/pknca/reference/exclude.html" class="external-link">PKNCA::exclude</a></code> to mark through the 'exclude'  column
 the rows in the PKNCA results based on the specified thresholds for a parameter.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example dataset</span></span></span>
-<span class="r-in"><span><span class="va">my_data</span> <span class="op">&lt;-</span> <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAdata.html" class="external-link">PKNCAdata</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAconc.html" class="external-link">PKNCAconc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>conc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span><span class="va">my_data</span> <span class="op">&lt;-</span> <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="http://humanpred.github.io/pknca/reference/PKNCAdata.html" class="external-link">PKNCAdata</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="http://humanpred.github.io/pknca/reference/PKNCAconc.html" class="external-link">PKNCAconc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>conc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                              time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                              subject <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                   <span class="va">conc</span> <span class="op">~</span> <span class="va">time</span> <span class="op">|</span> <span class="va">subject</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/PKNCA/man/PKNCAdose.html" class="external-link">PKNCAdose</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>subject <span class="op">=</span> <span class="fl">1</span>, dose <span class="op">=</span> <span class="fl">100</span>, time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="http://humanpred.github.io/pknca/reference/PKNCAdose.html" class="external-link">PKNCAdose</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>subject <span class="op">=</span> <span class="fl">1</span>, dose <span class="op">=</span> <span class="fl">100</span>, time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                   <span class="va">dose</span> <span class="op">~</span> <span class="va">time</span> <span class="op">|</span> <span class="va">subject</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">my_result</span> <span class="op">&lt;-</span> <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/PKNCA/man/pk.nca.html" class="external-link">pk.nca</a></span><span class="op">(</span><span class="va">my_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">my_result</span> <span class="op">&lt;-</span> <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="http://humanpred.github.io/pknca/reference/pk.nca.html" class="external-link">pk.nca</a></span><span class="op">(</span><span class="va">my_data</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Too few points for half-life calculation (min.hl.points=3 with only 0 points)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Exclude rows where span.ratio is less than 100</span></span></span>
-<span class="r-in"><span><span class="va">excluded_result</span> <span class="op">&lt;-</span> <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/PKNCA/man/exclude.html" class="external-link">exclude</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="va">excluded_result</span> <span class="op">&lt;-</span> <span class="fu">PKNCA</span><span class="fu">::</span><span class="fu"><a href="http://humanpred.github.io/pknca/reference/exclude.html" class="external-link">exclude</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">my_result</span>,</span></span>
 <span class="r-in"><span>  FUN <span class="op">=</span> <span class="fu">exclude_nca_by_param</span><span class="op">(</span><span class="st">"span.ratio"</span>, min_thr <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">excluded_result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 14 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    subject start   end PPTESTCD            PPORRES exclude                      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>       1     0    24 auclast                 7.5 <span style="color: #BB0000;">NA</span>                           </span>
@@ -123,11 +123,12 @@ the rows in the PKNCA results based on the specified thresholds for a parameter.
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>       1     0   <span style="color: #BB0000;">Inf</span> r.squared              <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>       1     0   <span style="color: #BB0000;">Inf</span> adj.r.squared          <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>       1     0   <span style="color: #BB0000;">Inf</span> lambda.z.time.first    <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>       1     0   <span style="color: #BB0000;">Inf</span> lambda.z.n.points      <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span>       1     0   <span style="color: #BB0000;">Inf</span> clast.pred             <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>       1     0   <span style="color: #BB0000;">Inf</span> half.life              <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span>       1     0   <span style="color: #BB0000;">Inf</span> span.ratio             <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span>       1     0   <span style="color: #BB0000;">Inf</span> aucinf.obs             <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>       1     0   <span style="color: #BB0000;">Inf</span> lambda.z.time.last     <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span>       1     0   <span style="color: #BB0000;">Inf</span> lambda.z.n.points      <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>       1     0   <span style="color: #BB0000;">Inf</span> clast.pred             <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span>       1     0   <span style="color: #BB0000;">Inf</span> half.life              <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span>       1     0   <span style="color: #BB0000;">Inf</span> span.ratio             <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span>       1     0   <span style="color: #BB0000;">Inf</span> aucinf.obs             <span style="color: #BB0000;">NA</span>   Too few points for half-life…</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
