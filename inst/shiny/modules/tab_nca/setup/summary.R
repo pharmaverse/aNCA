@@ -23,7 +23,7 @@ summary_server <- function(id, processed_pknca_data) {
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
 
       data <- processed_pknca_data()$intervals %>%
-        apply_labels(LABELS, "ADPC") %>%
+        apply_labels(type = "ADPC") %>%
         select(where(~!is.logical(.) | any(. == TRUE))) %>%
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
     })
@@ -44,7 +44,6 @@ summary_server <- function(id, processed_pknca_data) {
     reactable_server(
       "nca_intervals_summary",
       summary_data,
-      columns = generate_col_defs,
       height = "98vh"
     )
   })

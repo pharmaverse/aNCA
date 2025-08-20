@@ -15,7 +15,7 @@ faceted_qc_plot(
   other_tooltip_vars = NULL,
   x_var_units = NULL,
   colour_var_units = NULL,
-  labels_df = data.frame(),
+  labels_df = metadata_nca_variables,
   title = NULL,
   show_pk_samples = TRUE,
   show_doses = TRUE,
@@ -47,7 +47,8 @@ x-axis variable. It is expected that this column contains a single unique value.
 colour variable in \code{data_dose}. It is expected that this column contains a
 single unique value.}
 
-\item{labels_df}{A data.frame used by helper functions to look up variable labels.}
+\item{labels_df}{A data.frame used by helper functions to look up variable labels.
+It uses metadata_nca_variables as default}
 
 \item{title}{Character. The main title for the plot.}
 
