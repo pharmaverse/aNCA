@@ -2,7 +2,6 @@ require(aNCA)
 
 require(bslib)
 require(dplyr)
-require(DT)
 require(htmlwidgets)
 require(logger)
 require(formatters)
@@ -31,7 +30,6 @@ require(yaml)
 lapply(list.files("modules", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 
-LABELS <<- read.csv(system.file("shiny/data/adnca_labels.csv", package = "aNCA"))
 assets <- system.file("shiny/www", package = "aNCA")
 
 options("teal.bs_theme" = bslib::bs_theme(version = "5", bootswatch = "lux"))

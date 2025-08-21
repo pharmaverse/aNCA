@@ -38,7 +38,13 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
       }
     } else if (column_name == "NCA_PROFILE") {
       # Find which desired grouping columns are present
-      selected_values <- if ("DOSNO" %in% column_names) "DOSNO" else NULL
+      selected_values <- if ("DOSNOP" %in% column_names) {
+        "DOSNOP"
+      } else if ("DOSNO" %in% column_names) {
+        "DOSNO"
+      } else {
+        NULL
+      }
     } else {
       # For other columns, use basic logic
       selected_values <- if (column_name %in% column_names) column_name else NULL
@@ -53,7 +59,6 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
   }
 
   special_cases <- list(
-    "select_ADOSEDUR" = c("Select Column" = "", column_names, "NA"),
     "select_AVALU" = list(
       "Dataset Columns" = column_names,
       "Manual Units" = manual_units$concentration
