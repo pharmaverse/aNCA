@@ -20,7 +20,8 @@
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
-  fluidPage(
+  div(
+    style = "padding: 20px;",
     div(
       class = "d-flex justify-content-between",
       actionButton(ns("nca"), "Run NCA", class = "run-nca-btn")
