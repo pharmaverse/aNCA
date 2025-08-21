@@ -23,17 +23,22 @@ ratios_table_ui <- function(id) {
           p("For each ratio you need to specify:"),
           tags$ul(
             tags$li(
-              tags$b("Parameter"),
-              ": The parameter you want to calculate the ratio for."
+              tags$b("RefParameter"),
+              ": The parameter to use for the reference (denominator)."
             ),
             tags$li(
-              tags$b("Reference"),
+              tags$b("TestParameter"),
+              ": The parameter to use for the test (numerator)."
+            ),
+            tags$li(
+              tags$b("RefGroups"),
               ": The level/value to use as reference (denominator)."
             ),
             tags$li(
-              tags$b("Test"),
-              ": The level/value to use as test (numerator). If you select '(all other levels)'
-              will use all other levels of the Reference variable."
+              tags$b("TestGroups"),
+              ": The level/value to use as test (numerator). If you select 'all other levels,' 
+              the ratio is calculated using the reference level (e.g., Group = A) against all 
+              other values of the variable (e.g., Groups = B, C, D)"
             ),
             tags$li(
               tags$b("Aggregate Subject"),
@@ -127,17 +132,20 @@ ratios_table_server <- function(
 
     # Table columns
     table_columns <- c(
-      "Parameter", "Reference", "Test", "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+      "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+      "AggregateSubject", "AdjustingFactor", "PPTESTCD"
     )
 
     # Store table data
     ratio_table <- reactiveVal({
       data.frame(
-        Parameter = character(),
-        Reference = character(),
-        Test = character(),
+        TestParameter = character(),
+        RefParameter = character(),
+        RefGroups = character(),
+        TestGroups = character(),
         AggregateSubject = character(),
         AdjustingFactor = numeric(),
+        PPTESTCD = character(),
         stringsAsFactors = FALSE
       )
     })
@@ -155,9 +163,10 @@ ratios_table_server <- function(
 
       # Add a new row with default values
       new_row <- data.frame(
-        Parameter = ratio_param_options()[1],
-        Reference = ratio_reference_options()[1],
-        Test = "(all other levels)",
+        TestParameter = ratio_param_options()[1],
+        RefParameter = ratio_param_options()[1],
+        RefGroups = ratio_reference_options()[1],
+        TestGroups = "(all other levels)",
         AggregateSubject = "no",
         AdjustingFactor = 1,
         PPTESTCD = "",
@@ -187,28 +196,37 @@ ratios_table_server <- function(
 
       # Update column names for display in the UI
       col_defs <- list(
-        Parameter = colDef(
-          name = "Parameter",
+        TestParameter = colDef(
+          name = "Test Parameter",
           cell = dropdown_extra(
-            id = ns("edit_Parameter"),
+            id = ns("edit_TestParameter"),
             choices = ratio_param_options(),
             class = "dropdown-extra"
           ),
           width = 180
         ),
-        Reference = colDef(
-          name = "Reference",
+        RefParameter = colDef(
+          name = "Ref Parameter",
           cell = dropdown_extra(
-            id = ns("edit_Reference"),
+            id = ns("edit_RefParameter"),
+            choices = ratio_param_options(),
+            class = "dropdown-extra"
+          ),
+          width = 180
+        ),
+        RefGroups = colDef(
+          name = "Ref Groups",
+          cell = dropdown_extra(
+            id = ns("edit_RefGroups"),
             choices = ratio_reference_options(),
             class = "dropdown-extra"
           ),
           width = 180
         ),
-        Test = colDef(
-          name = "Test",
+        TestGroups = colDef(
+          name = "Test Groups",
           cell = dropdown_extra(
-            id = ns("edit_Test"),
+            id = ns("edit_TestGroups"),
             choices = c(ratio_reference_options(), "(all other levels)"),
             class = "dropdown-extra"
           ),
@@ -261,17 +279,16 @@ ratios_table_server <- function(
           tbl[edit$row, edit$column] <- edit$value
 
           # If Parameter or Reference changed, update PPTESTCD for that row
-          if (colname %in% c("Parameter", "Reference")) {
-            ref <- tbl[edit$row, "Reference"]
-            param <- tbl[edit$row, "Parameter"]
+          if (colname %in% c("TestParameter", "RefGroups")) {
+            ref <- tbl[edit$row, "RefGroups"]
+            param <- tbl[edit$row, "TestParameter"]
             automatic_tbl <- .generate_pptestcd_for_ratios(tbl, adnca_data = adnca_data())
             tbl[edit$row, ] <- automatic_tbl[edit$row, ]
-          }
-          ratio_table(tbl)
-          if (colname %in% c("Parameter", "Reference", "PPTESTCD")) {
+
             reset_reactable_memory()
             refresh_reactable(refresh_reactable() + 1)
           }
+          ratio_table(tbl)
         })
       })
     })
@@ -292,16 +309,16 @@ ratios_table_server <- function(
   tbl %>%
     mutate(
       PPTESTCD = case_when(
-        startsWith(Reference, analyte_col) ~ paste0("MR", Parameter),
-        startsWith(Reference, profile_col) ~ paste0("AR", Parameter),
+        startsWith(RefGroups, analyte_col) ~ paste0("MR", TestParameter),
+        startsWith(RefGroups, profile_col) ~ paste0("AR", TestParameter),
         startsWith(
-          toupper(Reference),
+          toupper(RefGroups),
           paste0(toupper(route_col), ": INTRAVASCULAR")
         ) ~ "FABS",
-        startsWith(toupper(Reference), paste0(toupper(raw_route_col), ": INTRA")) ~ "FABS",
-        startsWith(Reference, paste0(route_col)) ~ "FREL",
-        startsWith(Reference, raw_route_col) ~ "FREL",
-        TRUE ~ paste0("RA", Parameter)
+        startsWith(toupper(RefGroups), paste0(toupper(raw_route_col), ": INTRA")) ~ "FABS",
+        startsWith(RefGroups, paste0(route_col)) ~ "FREL",
+        startsWith(RefGroups, raw_route_col) ~ "FREL",
+        TRUE ~ paste0("RA", TestParameter)
       ),
       PPTESTCD = make.unique(PPTESTCD, sep = "")
     )

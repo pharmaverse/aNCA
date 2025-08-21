@@ -23,6 +23,7 @@
 #'   colour variable in `data_dose`. It is expected that this column contains a
 #'   single unique value.
 #' @param labels_df A data.frame used by helper functions to look up variable labels.
+#' It uses metadata_nca_variables as default
 #' @param title Character. The main title for the plot.
 #' @param show_pk_samples Logical. If `TRUE`, plots the concentration data.
 #' @param show_doses Logical. If `TRUE`, plots the dose data.
@@ -76,7 +77,7 @@ faceted_qc_plot <- function(data_conc,
                             other_tooltip_vars = NULL,
                             x_var_units = NULL,
                             colour_var_units = NULL,
-                            labels_df = data.frame(),
+                            labels_df = metadata_nca_variables,
                             title = NULL,
                             show_pk_samples = TRUE,
                             show_doses = TRUE,
@@ -85,6 +86,7 @@ faceted_qc_plot <- function(data_conc,
   # Define boolean flags
   plot_conc_data <- show_pk_samples && !is.null(data_conc)
   plot_dose_data <- show_doses && !is.null(data_dose) && nrow(data_dose) > 0
+
 
   # Select variables to include in the plotly tooltips
   tooltip_vars <- c(y_var, grouping_vars, other_tooltip_vars, x_var, colour_var)
@@ -139,8 +141,19 @@ faceted_qc_plot <- function(data_conc,
   # Define a title for the legend
   legend_title <- paste(
     paste(
-      if (plot_conc_data) get_label(labels_df, shape_var, "ADPC") else "",
-      if (plot_dose_data) paste0(get_label(labels_df, colour_var, "ADPC"), colour_unit_lab) else "",
+      if (plot_conc_data) {
+        get_label(variable = shape_var, type = "ADPC", labels_df = labels_df)
+      } else {
+        ""
+      },
+      if (plot_dose_data) {
+        paste0(
+          get_label(variable = colour_var, type = "ADPC", labels_df = labels_df),
+          colour_unit_lab
+        )
+      } else {
+        ""
+      },
       sep = "<br>"
     ),
     "<br>"
@@ -152,7 +165,12 @@ faceted_qc_plot <- function(data_conc,
     aes(
       x = !!sym(x_var),
       y = !!sym(y_var),
-      text = tooltip_text,
+      text = generate_tooltip_text(
+        data = processed_data,
+        labels_df = labels_df,
+        tooltip_vars = tooltip_vars,
+        type = "ADPC"
+      ),
       colour = legend_group,
       shape = legend_group
     )
@@ -169,8 +187,8 @@ faceted_qc_plot <- function(data_conc,
                                            rep(0.6, length(colour_levels))),
                                          all_legend_levels), guide = "none") +
     labs(
-      x = paste0(get_label(labels_df, x_var, "ADPC"), x_unit_lab),
-      y = get_label(labels_df, y_var, "ADPC"),
+      x = paste0(get_label(variable = x_var, type =  "ADPC", labels_df = labels_df), x_unit_lab),
+      y = get_label(variable = y_var, type =  "ADPC", labels_df = labels_df),
       title = title
     ) +
     theme_bw()
