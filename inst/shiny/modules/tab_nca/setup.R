@@ -69,33 +69,31 @@ setup_server <- function(id, data, adnca_data) {
       "nca_settings",
       data,
       adnca_data,
-      settings_override,
-      parameter_selections)
+      settings_override)
 
     # Create processed data object with applied settings.
-    processed_pknca_data <- reactive({
+    base_pknca_data <- reactive({
       req(adnca_data(), settings())
       log_trace("Updating PKNCA::data object.")
 
-      processed_pknca_data <- PKNCA_update_data_object(
+      base_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         auc_data = settings()$partial_aucs,
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        params = settings()$parameter_selection,
         should_impute_c0 = settings()$data_imputation$impute_c0
       )
 
       # Show bioavailability widget if it is possible to calculate
-      if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")
       } else {
         shinyjs::hide(selector = ".bioavailability-picker")
       }
 
-      if (nrow(processed_pknca_data$intervals) == 0) {
+      if (nrow(base_pknca_data$intervals) == 0) {
         showNotification(
           "All intervals were filtered. Please revise your settings",
           type = "warning",
@@ -103,9 +101,27 @@ setup_server <- function(id, data, adnca_data) {
         )
       }
 
-      processed_pknca_data
+      base_pknca_data
     })
 
+    summary_output <- summary_server("nca_setup_summary", base_pknca_data, override = param_selection_override)
+    
+    # Update intervals using summary output
+    processed_pknca_data <- reactive({
+      req(base_pknca_data(), summary_output$selections(), summary_output$types_df())
+      
+      final_data <- base_pknca_data()
+      
+      # Call the updated function with the direct inputs
+      final_data$intervals <- update_parameter_intervals(
+        intervals_df = base_pknca_data()$intervals,
+        parameter_selections = summary_output$selections(),
+        study_types_df = summary_output$types_df()
+      )
+      
+      final_data
+    })
+    
     # Keep the post processing ratio calculations requested by the user
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
@@ -147,12 +163,7 @@ setup_server <- function(id, data, adnca_data) {
       slopes_pknca_data,
       manual_slopes_override
     )
-
-    param_selection_override <- reactive({
-      req(imported_settings())
-      imported_settings()$settings$parameter_selection
-    })
-    parameter_selections <- summary_server("nca_setup_summary", processed_pknca_data, override = param_selection_override)
+    
     
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(

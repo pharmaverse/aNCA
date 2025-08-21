@@ -99,7 +99,7 @@ detect_study_types <- function(data, route_column, volume_column = NULL) {
 
   # Identify unique combinations of study types
   study_types <- study_data %>%
-    mutate(Type = case_when(
+    mutate(type = case_when(
       is_excretion ~ "Excretion Data",
       is_one_dose & is_extravascular ~ "Single Extravascular Dose",
       is_one_dose & !is_extravascular ~ "Single IV Dose",
@@ -108,6 +108,6 @@ detect_study_types <- function(data, route_column, volume_column = NULL) {
       TRUE ~ "Unknown"
     )) %>%
     #summarise each unique Type and group with number of USUBJID
-    group_by(across(all_of(summary_grouping)), Type) %>%
+    group_by(across(all_of(summary_grouping)), type) %>%
     summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
 }

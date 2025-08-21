@@ -125,7 +125,7 @@ settings_ui <- function(id) {
   )
 }
 
-settings_server <- function(id, data, adnca_data, settings_override, parameter_selection) {
+settings_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -332,7 +332,6 @@ settings_server <- function(id, data, adnca_data, settings_override, parameter_s
         pcspec = input$select_pcspec,
         method = input$method,
         bioavailability = input$bioavailability,
-        #parameter_selection = parameter_selection(),
         data_imputation = list(
           impute_c0 = input$should_impute_c0
         ),

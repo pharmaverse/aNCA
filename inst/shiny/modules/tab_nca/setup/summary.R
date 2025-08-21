@@ -87,7 +87,7 @@ summary_server <- function(id, processed_pknca_data, override) {
         filter(TYPE != "PKNCA-not-covered") %>%
         select(TYPE, PKNCA, PPTESTCD, PPTEST)
       
-      study_type_names <- study_types_df()$Type
+      study_type_names <- study_types_df()$type
       
       selection_df <- params_data
       for (st_name in study_type_names) {
@@ -103,7 +103,7 @@ summary_server <- function(id, processed_pknca_data, override) {
       
       # Dynamically create column definitions for each study type
       study_type_cols <- lapply(
-        study_types_df()$Type,
+        study_types_df()$type,
         function(st_name) {
           colDef(
             name = st_name,
@@ -114,7 +114,7 @@ summary_server <- function(id, processed_pknca_data, override) {
           )
         }
       )
-      names(study_type_cols) <- study_types_df()$Type
+      names(study_type_cols) <- study_types_df()$type
       
       # Combine with definitions for parameter info columns
       col_defs <- c(
@@ -161,6 +161,37 @@ summary_server <- function(id, processed_pknca_data, override) {
       height = "98vh"
     )
     
-    selection_state
+    # Transform the TRUE/FALSE data frame into a named list
+    # of parameter vectors
+    parameter_lists_by_type <- reactive({
+      req(selection_state(), study_types_df())
+      
+      df <- selection_state()
+      study_type_names <- study_types_df()$type
+      
+      # Return an empty list if there are no study types
+      if (length(study_type_names) == 0) {
+        return(list())
+      }
+      
+      # Convert from wide to long, filter for selected (TRUE) rows,
+      # and then split the result into a list by study_type.
+      df %>%
+        tidyr::pivot_longer(
+          cols = all_of(study_type_names),
+          names_to = "study_type",
+          values_to = "selected"
+        ) %>%
+        filter(selected == TRUE) %>%
+        select(study_type, PKNCA) %>%
+        split(.$study_type) %>%
+        purrr::map(~ .x$PKNCA)
+    })
+    
+    # Return list
+    list(
+      selections = parameter_lists_by_type,
+      types_df = study_types_df
+    )
   })
 }
