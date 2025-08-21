@@ -109,14 +109,22 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
-        output_tmpdir <- file.path(tempdir(), "output")
-
-        save_output(output = session$userData$results, output_path = output_tmpdir)
-        files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
-        wd <- getwd()
-        on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler function
-        setwd(output_tmpdir)
-        utils::zip(zipfile = fname, files = files)
+        shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
+          output_tmpdir <- file.path(tempdir(), "output")
+          save_output(output = session$userData$results, output_path = output_tmpdir)
+          incProgress(0.3)
+          files <- list.files(
+            output_tmpdir,
+            pattern = ".(csv)|(rds)|(xpt)|(html)$",
+            recursive = TRUE
+          )
+          wd <- getwd()
+          on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
+          setwd(output_tmpdir)
+          incProgress(0.6)
+          utils::zip(zipfile = fname, files = files)
+          incProgress(1)
+        })
       }
     )
 
