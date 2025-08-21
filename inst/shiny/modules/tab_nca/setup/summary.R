@@ -13,22 +13,25 @@ summary_ui <- function(id) {
   tagList(
     reactable_ui(ns("study_types")),
     reactableOutput(ns("nca_parameters")),
-    reactable_ui(ns("nca_intervals_summary"))
+    #reactable_ui(ns("nca_intervals_summary"))
   )
 }
 
-summary_server <- function(id, processed_pknca_data, override) {
+summary_server <- function(id, processed_pknca_data, override, param_trigger) {
   moduleServer(id, function(input, output, session) {
-    summary_data <- reactive({
-      req(processed_pknca_data())
-
-      conc_group_columns <- group_vars(processed_pknca_data()$conc)
-
-      data <- processed_pknca_data()$intervals %>%
-        apply_labels(type = "ADPC") %>%
-        select(where(~!is.logical(.) | any(. == TRUE))) %>%
-        arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
-    })
+    
+    ns <- session$ns
+    
+    # summary_data <- reactive({
+    #   req(processed_pknca_data())
+    # 
+    #   conc_group_columns <- group_vars(processed_pknca_data()$conc)
+    # 
+    #   data <- processed_pknca_data()$intervals %>%
+    #     apply_labels(type = "ADPC") %>%
+    #     select(where(~!is.logical(.) | any(. == TRUE))) %>%
+    #     arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
+    # })
 
     study_types_df <- reactive({
       req(processed_pknca_data())
@@ -77,44 +80,40 @@ summary_server <- function(id, processed_pknca_data, override) {
       "ae", "fe"
     )
     
-    # ReactiveVal to store the entire state of the selection data frame
+    # ReactiveVal for paramet selection state
     selection_state <- reactiveVal()
-    
-    observe({
+    # Render the new, dynamic reactable
+    output$nca_parameters <- renderReactable({
       req(study_types_df())
-      
+
       params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered") %>%
         select(TYPE, PKNCA, PPTESTCD, PPTEST)
       
-      study_type_names <- study_types_df()$type
+      study_type_names <- unique(study_types_df()$type)
       
       selection_df <- params_data
       for (st_name in study_type_names) {
         selection_df[[st_name]] <- selection_df$PKNCA %in% DEFAULT_PARAMS
       }
       
-      selection_state(selection_df)
-    })
-    
-    # Render the new, dynamic reactable
-    output$nca_parameters <- renderReactable({
-      req(selection_state())
-      
       # Dynamically create column definitions for each study type
       study_type_cols <- lapply(
-        study_types_df()$type,
+        study_type_names,
         function(st_name) {
           colDef(
             name = st_name,
-            cell = checkbox_extra("check", class = "table-check"),
+            cell = checkbox_extra(ns(st_name), class = "table-check"),
             html = TRUE,
             align = "center",
             width = 150
           )
         }
       )
-      names(study_type_cols) <- study_types_df()$type
+      names(study_type_cols) <- study_type_names
+      
+      # Set selection state
+      selection_state(selection_df)
       
       # Combine with definitions for parameter info columns
       col_defs <- c(
@@ -127,7 +126,7 @@ summary_server <- function(id, processed_pknca_data, override) {
       )
       
       reactable(
-        selection_state(),
+        selection_df,
         columns = col_defs,
         groupBy = "TYPE",
         filterable = TRUE,
@@ -137,17 +136,6 @@ summary_server <- function(id, processed_pknca_data, override) {
         resizable = TRUE
       )
     })
-    
-    # Observer to update the state when a checkbox is clicked
-    observeEvent(input$check, {
-      req(selection_state())
-      info <- input$check
-      
-      current_state <- selection_state()
-      
-      current_state[info$row, info$col] <- info$value
-      selection_state(current_state)
-    })
 
     reactable_server(
       "study_types",
@@ -155,24 +143,34 @@ summary_server <- function(id, processed_pknca_data, override) {
       height = "28vh"
     )
 
-    reactable_server(
-      "nca_intervals_summary",
-      summary_data,
-      height = "98vh"
-    )
+    # reactable_server(
+    #   "nca_intervals_summary",
+    #   summary_data,
+    #   height = "98vh"
+    # )
+    
+    observe({
+      study_type_names <- unique(study_types_df()$type)
+      req(study_type_names)
+      
+      lapply(study_type_names, function(st_name) {
+        
+        observeEvent(input[[st_name]], {
+          info <- input[[st_name]] 
+          current_state <- selection_state()
+          current_state[[st_name]] <- info$value
+          selection_state(current_state)
+        })
+      })
+    })
     
     # Transform the TRUE/FALSE data frame into a named list
     # of parameter vectors
     parameter_lists_by_type <- reactive({
-      req(selection_state(), study_types_df())
-      
+      req(selection_state())
+      # Get base data frame
       df <- selection_state()
-      study_type_names <- study_types_df()$type
-      
-      # Return an empty list if there are no study types
-      if (length(study_type_names) == 0) {
-        return(list())
-      }
+      study_type_names <- unique(study_types_df()$type)
       
       # Convert from wide to long, filter for selected (TRUE) rows,
       # and then split the result into a list by study_type.

@@ -103,13 +103,17 @@ setup_server <- function(id, data, adnca_data) {
 
       base_pknca_data
     })
+    
+    # A reactive value to act as a trigger for re-processing
+    param_trigger <- reactiveVal(0)
 
-    summary_output <- summary_server("nca_setup_summary", base_pknca_data, override = param_selection_override)
+    summary_output <- summary_server("nca_setup_summary", base_pknca_data,
+                                     override = param_selection_override)
     
     # Update intervals using summary output
     processed_pknca_data <- reactive({
       req(base_pknca_data(), summary_output$selections(), summary_output$types_df())
-      
+
       final_data <- base_pknca_data()
       
       # Call the updated function with the direct inputs
@@ -121,7 +125,6 @@ setup_server <- function(id, data, adnca_data) {
       
       final_data
     })
-    
     # Keep the post processing ratio calculations requested by the user
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
