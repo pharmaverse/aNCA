@@ -20,37 +20,65 @@
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
-  fluidPage(
+
+  tabs <- c("Setup", "Results", "Additional Analysis")
+
+  div(
+    class = "data-tab-container",
     div(
-      class = "d-flex justify-content-between",
-      actionButton(ns("nca"), "Run NCA", class = "run-nca-btn")
-    ),
-    navset_tab(
-      id = ns("ncapanel"),
-      nav_panel(
-        "Setup",
-        fluid = TRUE,
-        setup_ui(ns("nca_setup")),
-      ),
-      #' Results
-      nav_panel(
-        "Results", fluid = TRUE,
-        navset_pill_list(
-          nca_results_ui(ns("nca_results")),
+      class = "data-tab-content-container",
+      div(
+        class = "data-tab-content",
+        navset_pill(
+          id = ns("data_navset"),
           nav_panel(
-            "Slopes Information",
-            navset_pill(
-              nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
-              nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+            "Setup",
+            fluid = TRUE,
+            stepper_ui("Setup", tabs),
+            div(
+              class = "d-flex justify-content-between",
+              actionButton(ns("nca"), "Run NCA", class = "run-nca-btn")
+            ),
+            setup_ui(ns("nca_setup")),
+          ),
+          #' Results
+          nav_panel(
+            "Results", fluid = TRUE,
+            stepper_ui("Results", tabs),
+            navset_pill_list(
+              nca_results_ui(ns("nca_results")),
+              nav_panel(
+                "Slopes Information",
+                navset_pill(
+                  nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
+                  nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+                )
+              ),
+              nav_panel(
+                "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
+              ),
+              nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+              nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
             )
           ),
-          nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
-          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+          #' Additional analysis
+          nav_panel(
+            "Additional Analysis",
+            stepper_ui("Additional Analysis", tabs),
+            additional_analysis_ui(ns("non_nca"))
+          )
         )
-      ),
-      #' Additional analysis
-      nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
+      )
+    ),
+    div(
+      class = "data-tab-btns-container",
+      div(), # placeholder to keep the buttons on ther right
+      # Right side: Previous and Next buttons
+      div(
+        class = "nav-btns",
+        actionButton(ns("prev_step"), "Previous", disabled = TRUE),
+        actionButton(ns("next_step"), "Next", , class = "btn-primary")
+      )
     )
   )
 }
@@ -58,10 +86,51 @@ tab_nca_ui <- function(id) {
 tab_nca_server <- function(id, adnca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    settings_changed <- reactiveVal(TRUE)
+    calculate_nca_trigger <- reactiveVal(0)
+
     #' Setup session-wide object for storing data units. Units can be edited by the user on
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
+
+    #' For stepping through the different steps of the module
+    steps <- c("setup", "results", "additional_analysis")
+    step_labels <- c("Setup", "Results", "Additional Analysis")
+    data_step <- reactiveVal("setup")
+    observe({
+      current <- data_step()
+      if (current == steps[1]) {
+        shinyjs::disable("prev_step")
+      } else if (current == steps[length(steps)]) {
+        shinyjs::disable("next_step")
+      } else {
+        shinyjs::enable("prev_step")
+        shinyjs::enable("next_step")
+      }
+    })
+
+    observeEvent(input$next_step, {
+      current_step <- isolate(data_step())
+      if (current_step %in% c("setup", "results")) {
+        idx <- match(current_step, steps)
+        data_step(steps[idx + 1])
+        updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
+      }
+
+      if (current_step == "setup" && settings_changed()) {
+        calculate_nca_trigger(calculate_nca_trigger() + 1)
+        settings_changed(FALSE)
+      }
+    })
+    observeEvent(input$prev_step, {
+      current <- data_step()
+      idx <- match(current, steps)
+      if (!is.na(idx) && idx > 1) {
+        data_step(steps[idx - 1])
+      }
+      updateTabsetPanel(session, "data_navset", selected = step_labels[idx - 1])
+    })
 
     #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
     pknca_data <- reactive({
@@ -94,6 +163,10 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     settings <- nca_setup$settings
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
+
+    #' If settinsg has changed, recalculate NCA when user clicks next
+    observe(settings_changed(TRUE)) |>
+      bindEvent(settings(), ratio_table(), slope_rules$manual_slopes())
 
     reactable_server("manual_slopes", slope_rules$manual_slopes)
 
@@ -172,8 +245,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           showNotification(w_message, type = "warning", duration = 5)
         })
 
-        updateTabsetPanel(session, "ncapanel", selected = "Results")
-
         log_success("NCA results calculated.")
 
         # Apply standard CDISC names and return the object
@@ -190,7 +261,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
       res
     }) |>
-      bindEvent(input$nca)
+      bindEvent(calculate_nca_trigger())
 
     #' Show slopes results
     pivoted_slopes <- reactive({
