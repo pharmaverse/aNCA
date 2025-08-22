@@ -26,9 +26,9 @@ describe("Test for filter interface", {
 
     input_filter_values <- app$get_values(input = TRUE)
     expect_true(length(setdiff(
-        names(input_filter_values[["input"]]),
-        names(input_initial_values[["input"]])
-     )) > 0)
+      names(input_filter_values[["input"]]),
+      names(input_initial_values[["input"]])
+    )) > 0)
 
     app$expect_values(output = "data-data_filtering-filtered_data_display-table")
   })

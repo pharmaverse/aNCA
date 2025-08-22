@@ -14,9 +14,9 @@ describe("Test for mapping interface", {
     app$wait_for_idle()
     app$expect_screenshot()
   })
-})
 
-it("new inputs appear with mapping interface", {
+
+  it("new inputs appear with mapping interface", {
     app <- AppDriver$new(name = "app_mapping_inputs")
     namespace_mapping <- "data-column_mapping"
 
@@ -28,12 +28,15 @@ it("new inputs appear with mapping interface", {
     app$click("data-next_step")
 
     input_mapping_values <- app$get_values(input = TRUE)
-    mapping_inputs_set <- input_mapping_values[["input"]][grepl(namespace_mapping, names(input_mapping_values[["input"]]))]
+    mapping_inputs_set <-
+      input_mapping_values[["input"]][grepl(
+        namespace_mapping, names(input_mapping_values[["input"]]))] # nolint: indentation linter
     expect_true(length(setdiff(
-        names(input_mapping_values[["input"]]),
-        names(input_initial_values[["input"]])
-     )) > 0)
+      names(input_mapping_values[["input"]]),
+      names(input_initial_values[["input"]])
+    )) > 0)
 
     # mapping inputs are not null after clicking
     expect_false(any(purrr::map_lgl(mapping_inputs_set, is.null)))
   })
+})

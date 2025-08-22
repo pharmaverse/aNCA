@@ -29,7 +29,7 @@ describe("Test for data preview interface", {
 
     app$expect_values(output = "data-data_processed-table")
   })
-  
+
   it("runs nca analysis", {
     app <- AppDriver$new(
       name = "app_preview_run_nca",
@@ -43,19 +43,19 @@ describe("Test for data preview interface", {
     app$click("data-next_step")
 
     app$set_inputs("page" = "nca")
-  
+
     # Wait for settings to be applied and button to be re-enabled
     # The button is disabled for 2750ms after settings change
     app$wait_for_js("!$('#nca-nca').prop('disabled')", timeout = 5000)
     app$click("nca-nca")
-        
+
     app$wait_for_value(output = "nca-nca_results-myresults-table", timeout = 45000)
-    
+
 
     app$set_inputs("nca-ncapanel" = "Results")
     app$wait_for_idle()
     app$wait_for_js("$('#nca-nca_results-myresults-table').length > 0", timeout = 10000)
-  
+
     app$expect_screenshot()
   })
 })
