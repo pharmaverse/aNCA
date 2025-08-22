@@ -12,3 +12,4 @@
 ^\.covrignore$
 ^man/figures/*
 _\.new\.png$
+inst/shiny/tests/testthat/_snaps
