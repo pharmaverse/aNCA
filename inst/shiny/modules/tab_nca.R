@@ -247,8 +247,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         res %>%
           mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
 
-        removeModal()
-
       }, error = function(e) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
@@ -258,6 +256,11 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       res
     }) |>
       bindEvent(calculate_nca_trigger())
+
+    #' Remove loading modal when results are ready and visible
+    observeEvent(input$results_visible, {
+      removeModal()
+    })
 
     #' Show slopes results
     pivoted_slopes <- reactive({
