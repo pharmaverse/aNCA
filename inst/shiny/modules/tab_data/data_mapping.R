@@ -114,7 +114,6 @@ data_mapping_ui <- function(id) {
   ns <- NS(id)
 
   div(
-    stepper_ui("Mapping"),
     card(
       div(
         class = "data-mapping-container",
