@@ -35,10 +35,6 @@ tab_nca_ui <- function(id) {
             "Setup",
             fluid = TRUE,
             stepper_ui("Setup", tabs),
-            div(
-              class = "d-flex justify-content-between",
-              actionButton(ns("nca"), "Run NCA", class = "run-nca-btn")
-            ),
             setup_ui(ns("nca_setup")),
           ),
           #' Results
