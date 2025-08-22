@@ -10,16 +10,16 @@
 #' @param volume_column A character string specifying the
 #'  column name for the volume of a sample. Extravascular
 #' samples must be written as `extravascular`.
-#' Can be set to `NULL` if not applicable.
+#' Can be set to `volume` if not applicable.
 #'
 #' @details
 #' The function identifies a possible five different types of studies
 #' based on grouping by `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, and the route column.
 #' The study types are determined as follows:
-#'  - "Excretion Data": If the volume column for a group is not NA.
-#'  - "Single Extravascular Dose": If there is only one dose and TAU is NA,
+#'  - "Excretion Data": If the volume column for a group is not NA and has values > 0.
+#'  - "Single Extravascular Dose": If there is only one dose and TAU is not available,
 #'   and the route is extravascular.
-#'  - "Single IV Dose": If there is only one dose and TAU is NA,
+#'  - "Single IV Dose": If there is only one dose and TAU is not present,
 #'   and the route is not extravascular.
 #'  - "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 #'   and the route is extravascular.
