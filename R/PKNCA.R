@@ -218,12 +218,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
   adnca_data,
-  auc_data,
   method,
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  params = NULL,
   should_impute_c0 = TRUE
 ) {
 
@@ -264,8 +262,52 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       PCSPEC %in% selected_pcspec
     )
 
-  # # Add partial AUCs if any
+  data
+}
 
+#' Update an intervals data frame with user-selected parameters by study type
+#'
+#' @param data A PKNCAdata object containing intervals and dosing data.
+#' @param parameter_selections A named list of selected PKNCA parameters by study type.
+#' @param study_types_df A data frame mapping analysis profiles to their study type.
+#' @param auc_data A data frame containing partial AUC ranges.
+#' @param impute Logical indicating whether to impute start values for parameters.
+#'
+#' @returns An updated PKNCAdata object with parameter intervals based on user selections.
+#'
+update_parameter_intervals <- function(data, parameter_selections,
+                                       study_types_df, auc_data, impute = TRUE) {
+
+  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
+
+  # Determine the grouping columns from the study_types_df
+  grouping_cols <- setdiff(names(study_types_df), c("type", "USUBJID_Count"))
+  
+  # 1. Add the 'type' column to the intervals data
+  intervals_with_types <- data$intervals %>%
+    left_join(study_types_df, by = grouping_cols)
+  
+  # 3. Iterate over selections to set new flags to TRUE
+  updated_intervals <- intervals_with_types
+  if (length(parameter_selections) > 0) {
+    for (study_type in names(parameter_selections)) {
+      params_for_type <- parameter_selections[[study_type]]
+      if (length(params_for_type) > 0) {
+        updated_intervals <- updated_intervals %>%
+          mutate(across(
+            .cols = all_of(params_for_type),
+            .fns = ~ if_else(type == study_type, TRUE, .)
+          ))
+      }
+    }
+  }
+  
+  # Return the final data frame, removing the temporary 'type' column
+  data$intervals <- updated_intervals %>%
+    select(-type)
+  
+  # # Add partial AUCs if any
+  
   auc_ranges <- auc_data %>%
     filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
 
@@ -290,7 +332,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$impute <- NA
 
   # Impute start values if requested
-  if (should_impute_c0) {
+  if (impute) {
     data <- create_start_impute(data)
 
     # Don't impute parameters that are not AUC dependent
@@ -314,51 +356,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       )
     }, all_impute_methods, init = data$intervals)
   }
-
+  
   data
-}
-
-#' Update an intervals data frame with user-selected parameters by study type
-#'
-#' @param intervals_df The existing intervals data frame.
-#' @param parameter_selections A named list of selected PKNCA parameters by study type.
-#' @param study_types_df A data frame mapping analysis profiles to their study type.
-#'
-#' @returns An updated intervals data frame with correct parameter flags.
-#'
-update_parameter_intervals <- function(intervals_df, parameter_selections, study_types_df) {
-  
-  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
-
-  # Determine the grouping columns from the study_types_df
-  grouping_cols <- setdiff(names(study_types_df), c("type", "USUBJID_Count"))
-  
-  # 1. Add the 'type' column to the intervals data
-  intervals_with_types <- intervals_df %>%
-    left_join(study_types_df, by = grouping_cols)
-  
-  # 2. Reset all parameter flags to FALSE
-  intervals_reset <- intervals_with_types %>%
-    mutate(across(any_of(all_pknca_params), ~ FALSE))
-  
-  # 3. Iterate over selections to set new flags to TRUE
-  updated_intervals <- intervals_reset
-  if (length(parameter_selections) > 0) {
-    for (study_type in names(parameter_selections)) {
-      params_for_type <- parameter_selections[[study_type]]
-      if (length(params_for_type) > 0) {
-        updated_intervals <- updated_intervals %>%
-          mutate(across(
-            .cols = all_of(params_for_type),
-            .fns = ~ if_else(type == study_type, TRUE, .)
-          ))
-      }
-    }
-  }
-  
-  # Return the final data frame, removing the temporary 'type' column
-  updated_intervals %>%
-    select(-c(type, USUBJID_Count))
 }
 
 #' Calculates results for PKNCA analysis.

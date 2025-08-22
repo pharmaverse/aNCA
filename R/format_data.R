@@ -167,12 +167,6 @@ format_pkncadose_data <- function(pkncaconc_data,
 #' @export
 format_pkncadata_intervals <- function(pknca_conc,
                                        pknca_dose,
-                                       params =  c("aucinf.obs", "aucint.last", "auclast",
-                                                   "cmax", "half.life", "tmax", "lambda.z",
-                                                   "lambda.z.n.points", "r.squared",
-                                                   "adj.r.squared", "lambda.z.time.first",
-                                                   "aucpext.obs", "aucpext.pred", "clast.obs",
-                                                   "cl.obs"),
                                        start_from_last_dose = TRUE) {
   if (!inherits(pknca_conc, "PKNCAconc")) {
     stop("Input pknca_conc must be a PKNCAconc object from the PKNCA package.")
@@ -193,7 +187,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
   time_column <- pknca_dose$columns$time
   # Obtain all possible pknca parameters
-  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
+  params <- setdiff(names(PKNCA::get.interval.cols()),
                               c("start", "end"))
 
   # Select conc data and for time column give priority to non-predose samples
@@ -251,14 +245,10 @@ format_pkncadata_intervals <- function(pknca_conc,
                     "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
-    mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
-    mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
-    # Set FALSE for aucint when end = Inf
-    mutate(across(starts_with("aucint"), ~ if_else(end == Inf, FALSE, .))) %>%
+    mutate(!!!setNames(rep(FALSE, length(params)), params)) %>%
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
 
-  verify_parameters(dose_intervals, params, all_pknca_params)
 }
 
 #' Conditionally Verify and Override PK Parameters Based on Sample Type
@@ -282,7 +272,10 @@ format_pkncadata_intervals <- function(pknca_conc,
 #'  parameters updated based on the specimen type.
 
 verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
-
+  
+  # # Set FALSE for aucint when end = Inf
+  # mutate(across(starts_with("aucint"), ~ if_else(end == Inf, FALSE, .)))
+  
   has_volume <- "VOLUME" %in% names(pknca_intervals)
 
   if (has_volume) {

@@ -50,6 +50,14 @@ summary_server <- function(id, processed_pknca_data, override, param_trigger) {
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })
     
+    study_types_summary <- reactive({
+      req(study_types_df())
+      study_types_df()  %>%
+        #summarise each unique Type and group with number of USUBJID
+        group_by(STUDYID, DRUG, PCSPEC, type) %>%
+        summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
+    })
+    
     # #Update params based on settings override
     # observeEvent(override(), {
     #   uploaded_params <- override()
@@ -139,7 +147,7 @@ summary_server <- function(id, processed_pknca_data, override, param_trigger) {
 
     reactable_server(
       "study_types",
-      study_types_df,
+      study_types_summary,
       height = "28vh"
     )
 
@@ -152,13 +160,13 @@ summary_server <- function(id, processed_pknca_data, override, param_trigger) {
     observe({
       study_type_names <- unique(study_types_df()$type)
       req(study_type_names)
-      
+
       lapply(study_type_names, function(st_name) {
         
         observeEvent(input[[st_name]], {
           info <- input[[st_name]] 
           current_state <- selection_state()
-          current_state[[st_name]] <- info$value
+          current_state[[st_name]][info$row] <- info$value
           selection_state(current_state)
         })
       })

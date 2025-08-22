@@ -78,7 +78,6 @@ setup_server <- function(id, data, adnca_data) {
 
       base_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
-        auc_data = settings()$partial_aucs,
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
@@ -115,14 +114,16 @@ setup_server <- function(id, data, adnca_data) {
       req(base_pknca_data(), summary_output$selections(), summary_output$types_df())
 
       final_data <- base_pknca_data()
-      
+
       # Call the updated function with the direct inputs
-      final_data$intervals <- update_parameter_intervals(
-        intervals_df = base_pknca_data()$intervals,
+      final_data <- update_parameter_intervals(
+        data = base_pknca_data(),
         parameter_selections = summary_output$selections(),
-        study_types_df = summary_output$types_df()
+        study_types_df = summary_output$types_df(),
+        auc_data = settings()$partial_aucs,
+        impute = settings()$data_imputation$impute_c0
       )
-      
+
       final_data
     })
     # Keep the post processing ratio calculations requested by the user
@@ -148,9 +149,8 @@ setup_server <- function(id, data, adnca_data) {
           settings()$analyte, settings()$pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
 
-      PKNCA_update_data_object(
+      df <- PKNCA_create_slopes_object(
         adnca_data = adnca_data(),
-        auc_data = settings()$partial_aucs,
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
@@ -159,6 +159,7 @@ setup_server <- function(id, data, adnca_data) {
                    "r.squared", "adj.r.squared", "tmax"),
         should_impute_c0 = settings()$data_imputation$impute_c0
       )
+        
     })
 
     slope_rules <- slope_selector_server(

@@ -21,8 +21,8 @@ samples must be written as \code{extravascular}.
 Can be set to \code{NULL} if not applicable.}
 }
 \value{
-A data frame summarizing the detected study types,
-including the number of unique subjects (USUBJID) for each type.
+A data frame with the unique combinations of study types,
+including the grouping columns and the identified type.
 }
 \description{
 This function detects the type of study based on the provided data.
