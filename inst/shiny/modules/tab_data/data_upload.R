@@ -12,7 +12,6 @@ data_upload_ui <- function(id) {
   ns <- NS(id)
 
   div(
-    stepper_ui("Upload"),
     div(
       class = "upload-container",
       id = ns("upload_container"),
