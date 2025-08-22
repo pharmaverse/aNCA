@@ -75,15 +75,14 @@
 #' )
 #'
 #' @export
-detect_study_types <- function(data, route_column, volume_column = NULL) {
+detect_study_types <- function(data, route_column, volume_column = "volume") {
   full_grouping <- c("STUDYID", "DRUG", "USUBJID", "PCSPEC", route_column)
   summary_grouping <- c("DRUG", "STUDYID", "PCSPEC")
 
   has_tau <- "TAU" %in% names(data)
 
   # If volume column is not provided, create volume_column and set to NA
-  if (is.null(volume_column)) {
-    volume_column <- "volume"
+  if (missing(volume_column)) {
     data[[volume_column]] <- NA
   }
 
