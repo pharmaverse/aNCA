@@ -1,3 +1,8 @@
+#' Creates and displays a full loading popup with a spinner.
+#' Needs to be closed separately by running `removeModal()`
+#'
+#' @param text Text to be displayed as modal title.
+#'
 loading_popup <- function(text = "Loading...") {
   modal_body <- div(
     style = "height: 4em;",
