@@ -239,24 +239,38 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
   message(msg)
 }
 
-#' Simplify a compound unit expression
+#' Simplify compound unit expressions (vectorized)
 #'
-#' This function takes a units object with a compound unit expression and returns a simplified units object.
+#' This function takes a units object or a character string (or a vector of either) representing a compound unit expression
+#' and returns a simplified units object (or a list of units objects if vectorized).
 #' It splits the unit string into individual units, converts each to a units object, and multiplies them together.
 #'
-#' @param unit_obj A units object to be simplified.
-#' @returns A simplified units object.
+#' @param x A units object, character string, or vector of either to be simplified.
+#' @param as.character Logical indicating whether to return the result as a character string or otherwise as a unit object (default: FALSE).
+#' @returns A simplified units object, or a list of units objects if input is a vector.
 #' @examples
-#' u <- units::set_units(1, "mg*L/(L*ng/mL)", mode = "standard")
-#' simplify_unit(u)
+#' simplify_unit(units::set_units(1, "mg*L/(L*ng/mL)", mode = "standard"))
+#' simplify_unit("mg*L/(L*ng/mL)")
+#' simplify_unit(c("mg*L/(L*ng/mL)", "mg/L"))
 #' @export
-simplify_unit <- function(unit_obj) {
-  unit_str <- units::deparse_unit(unit_obj)
-  unit_val <- as.numeric(unit_obj)
+simplify_unit <- function(x, as.character = FALSE) {
+  # Accept either units object or character
+  if (is.character(x)) {
+    x = units::as_units(x, check_is_valid = FALSE)
+  } else if (!inherits(x, "units")) {
+    stop("Input must be a units object or character string.")
+  }
+  unit_str <- units::deparse_unit(x)
+  unit_val <- as.numeric(x)
   unit_parts <- unlist(strsplit(unit_str, split = " "))
   unit_objs <- lapply(
     unit_parts,
-    function(part) units::set_units(1, part, mode = "standard")
+    function(part) units::set_units(1, part, mode = "standard", check_is_valid = FALSE)
   )
-  Reduce(`*`, unit_objs) * unit_val
+  new_unit <- Reduce(`*`, unit_objs) * unit_val
+  if (as.character) {
+    units::deparse_unit(new_unit)
+  } else {
+    new_unit
+  }
 }
