@@ -116,6 +116,7 @@
     "TIME_DOSE",
     "TYPE",
     "Type",
+    "type",
     "USUBJID",
     "Unit",
     "Value",
