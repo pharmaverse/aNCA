@@ -252,6 +252,18 @@ describe("simplify_unit", {
     expect_equal(as.numeric(result), 0.01)
   })
 
+  it("handles character inputs", {
+    u <- "(mg*L)/(mL)"
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "mg")
+    expect_equal(as.numeric(result), 1000)
+  })
+
+  it("returns an error for invalid inputs", {
+    expect_error(simplify_unit(123), "Input must be a units object or character string")
+    expect_error(simplify_unit(list(a = 1)), "Input must be a units object or character string")
+  })
+
   it("returns only the unit as character when as.character = TRUE", {
     u <- units::set_units(2, "mg", mode = "standard")
     result <- simplify_unit(u, as.character = TRUE)
