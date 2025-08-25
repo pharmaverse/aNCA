@@ -216,7 +216,10 @@ describe("convert_volume_units()", {
       stringsAsFactors = FALSE
     )
 
-    result <- convert_volume_units(df)
+    expect_warning(
+      result <- convert_volume_units(df),
+      "Row 1: Failed to convert 1 unknown_unit to mL"
+    )
     expect_true(is.na(result$AMOUNTU))
 
   })
@@ -275,4 +278,3 @@ describe("simplify_unit", {
     expect_equal(simplify_unit(NA, as_character = TRUE), NA_character_)
   })
 })
-

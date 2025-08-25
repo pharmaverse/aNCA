@@ -2,62 +2,107 @@
 % Please edit documentation in R/faceted_qc_plot.R
 \name{faceted_qc_plot}
 \alias{faceted_qc_plot}
-\title{Create a Faceted Scatter Plot for QC}
+\title{Create a Faceted Quality Control (QC) Plot}
 \usage{
 faceted_qc_plot(
-  data,
+  data_conc,
+  data_dose = NULL,
   x_var,
   y_var,
   colour_var,
+  shape_var,
   grouping_vars,
-  labels_df = data.frame(),
-  title = NULL
+  other_tooltip_vars = NULL,
+  x_var_units = NULL,
+  colour_var_units = NULL,
+  labels_df = metadata_nca_variables,
+  title = NULL,
+  show_pk_samples = TRUE,
+  show_doses = TRUE,
+  as_plotly = FALSE
 )
 }
 \arguments{
-\item{data}{A data.frame containing the plotting data.}
+\item{data_conc}{A data.frame containing concentration data (e.g., PK samples).}
+
+\item{data_dose}{An optional data.frame containing dosing information.}
 
 \item{x_var}{Character. The column name to be used for the x-axis.}
 
 \item{y_var}{Character. The column name to be used for the y-axis.}
 
-\item{colour_var}{Character. The column name to map to the colour aesthetic.}
+\item{colour_var}{Character. The column in \code{data_dose} to map to color.}
 
-\item{grouping_vars}{Character vector. Column names used to create vertical
-facets (panels).}
+\item{shape_var}{Character. The column in \code{data_conc} to map to shape.}
 
-\item{labels_df}{A data.frame used by helper functions (\code{get_label},
-\code{generate_tooltip_text}) to look up variable labels.}
+\item{grouping_vars}{Character vector. Column names to use for faceting.}
 
-\item{title}{Character. The main title of the plot.}
+\item{other_tooltip_vars}{Optional character vector of additional column names
+to include in the tooltip.}
+
+\item{x_var_units}{Character. The column name containing the units for the
+x-axis variable. It is expected that this column contains a single unique value.}
+
+\item{colour_var_units}{Character. The column name for the units of the
+colour variable in \code{data_dose}. It is expected that this column contains a
+single unique value.}
+
+\item{labels_df}{A data.frame used by helper functions to look up variable labels.
+It uses metadata_nca_variables as default}
+
+\item{title}{Character. The main title for the plot.}
+
+\item{show_pk_samples}{Logical. If \code{TRUE}, plots the concentration data.}
+
+\item{show_doses}{Logical. If \code{TRUE}, plots the dose data.}
+
+\item{as_plotly}{Logical. If \code{TRUE}, converts the final plot to an interactive
+\code{plotly} object.}
 }
 \value{
-A \code{ggplot} object ready to be printed or passed to \code{ggplotly}.
+A \code{ggplot} object or, if \code{as_plotly = TRUE}, a \code{plotly} object.
 }
 \description{
-Generates a customizable, faceted ggplot scatter plot, typically for quality
-control (QC). The function supports dynamic labels and automatically
-prepares tooltips for interactive use with \code{ggplotly}.
+Generates a faceted QC plot by layering concentration data (as
+black shapes) and dose data (as colored points). It creates a single, unified
+legend for both data types and can return either a static \code{ggplot} or an
+interactive \code{plotly} object.
+}
+\details{
+Unless specified, the variables required as arguments are expected to
+be present in both \code{data_conc} and \code{data_dose}.
 }
 \examples{
-# Sample data
-qc_data <- data.frame(
-  TIME = 1:6,
-  RESULT = c(5, 6, 8, 9, 12, 11),
-  DOSE = as.factor(c(10, 10, 20, 20, 30, 30)),
-  ARM = rep(c("A", "B", "C"), each = 2)
-  )
-label_data <- data.frame() # Dummy labels object
+
+# Sample concentration data
+conc_data <- data.frame(
+  USUBJID = rep(paste0("S-", 1:2), each = 2),
+  ACTUAL_TIME = c(0, 24, 0, 24),
+  SAMPLE_TYPE = rep(c("PLASMA", "URINE"), 2),
+  COHORT = "A",
+  TIME_UNIT = "hr"
+ )
+
+# Sample dose data
+dose_data <- data.frame(
+  USUBJID = rep(paste0("S-", 1:2), each = 1),
+  ACTUAL_TIME = c(0, 0),
+  DOSE_LEVEL = c(100, 100),
+  COHORT = "A",
+  DOSE_UNIT = "mg"
+)
 
 # Generate the plot
 faceted_qc_plot(
-  data = qc_data,
-  x_var = "TIME",
-  y_var = "RESULT",
-  colour_var = "DOSE",
-  grouping_vars = "ARM",
-  labels_df = label_data,
-  title = "Sample QC Plot"
-  )
-
+  data_conc = conc_data,
+  data_dose = dose_data,
+  x_var = "ACTUAL_TIME",
+  y_var = "USUBJID",
+  colour_var = "DOSE_LEVEL",
+  shape_var = "SAMPLE_TYPE",
+  grouping_vars = "COHORT",
+  x_var_units = "TIME_UNIT",
+  colour_var_units = "DOSE_UNIT",
+  title = "Sample Dosing and PK Plot"
+)
 }

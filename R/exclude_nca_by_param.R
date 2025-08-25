@@ -78,4 +78,3 @@ is_single_numeric <- function(value, name) {
   }
   is_val
 }
-

@@ -109,14 +109,22 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
-        output_tmpdir <- file.path(tempdir(), "output")
-
-        save_output(output = session$userData$results, output_path = output_tmpdir)
-        files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
-        wd <- getwd()
-        on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler function
-        setwd(output_tmpdir)
-        utils::zip(zipfile = fname, files = files)
+        shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
+          output_tmpdir <- file.path(tempdir(), "output")
+          save_output(output = session$userData$results, output_path = output_tmpdir)
+          incProgress(0.3)
+          files <- list.files(
+            output_tmpdir,
+            pattern = ".(csv)|(rds)|(xpt)|(html)$",
+            recursive = TRUE
+          )
+          wd <- getwd()
+          on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
+          setwd(output_tmpdir)
+          incProgress(0.6)
+          utils::zip(zipfile = fname, files = files)
+          incProgress(1)
+        })
       }
     )
 
@@ -158,13 +166,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)]))) %>%
+        # Add group variable labels (others were added in pivot_wider_pknca_result)
+        apply_labels()
     })
 
     reactable_server(
       "myresults",
       output_results,
-      columns = generate_col_defs,
       compact = TRUE,
       style = list(fontSize = "0.75em"),
       height = "68vh",

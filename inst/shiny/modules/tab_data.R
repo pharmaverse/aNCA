@@ -82,8 +82,8 @@ tab_data_server <- function(id) {
       }
     })
     observeEvent(input$restart, {
-      data_step(steps[1])
-      updateTabsetPanel(session, "data_navset", selected = step_labels[1])
+      log_info("Application restarting...")
+      session$reload()
     })
     observeEvent(input$next_step, {
       current_step <- isolate(data_step())
@@ -94,8 +94,7 @@ tab_data_server <- function(id) {
       } else if (current_step == "mapping") {
         trigger_mapping_submit(trigger_mapping_submit() + 1)
       } else if (current_step == "preview") {
-        shinyjs::runjs("document.querySelector(`a[data-value='nca']`).click();
-        document.querySelector(`a[data-value='Setup']`).click();"
+        shinyjs::runjs("document.querySelector(`a[data-value='exploration']`).click();"
         )
       }
     })
@@ -144,7 +143,6 @@ tab_data_server <- function(id) {
     reactable_server(
       "data_processed",
       processed_data,
-      columns = generate_col_defs,
       compact = TRUE,
       style = list(fontSize = "0.75em"),
       height = "50vh",
