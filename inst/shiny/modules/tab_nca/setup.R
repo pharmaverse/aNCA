@@ -65,32 +65,34 @@ setup_server <- function(id, data, adnca_data) {
     manual_slopes_override <- reactive(imported_settings()$slope_rules)
 
     # Gather all settings from the appropriate module
-    settings <- settings_server("nca_settings", data, adnca_data, settings_override)
+    settings <- settings_server(
+      "nca_settings",
+      data,
+      adnca_data,
+      settings_override)
 
     # Create processed data object with applied settings.
-    processed_pknca_data <- reactive({
+    base_pknca_data <- reactive({
       req(adnca_data(), settings())
       log_trace("Updating PKNCA::data object.")
 
-      processed_pknca_data <- PKNCA_update_data_object(
+      base_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
-        auc_data = settings()$partial_aucs,
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        params = settings()$parameter_selection,
         should_impute_c0 = settings()$data_imputation$impute_c0
       )
 
       # Show bioavailability widget if it is possible to calculate
-      if (processed_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")
       } else {
         shinyjs::hide(selector = ".bioavailability-picker")
       }
 
-      if (nrow(processed_pknca_data$intervals) == 0) {
+      if (nrow(base_pknca_data$intervals) == 0) {
         showNotification(
           "All intervals were filtered. Please revise your settings",
           type = "warning",
@@ -98,7 +100,27 @@ setup_server <- function(id, data, adnca_data) {
         )
       }
 
-      processed_pknca_data
+      base_pknca_data
+    })
+
+    summary_output <- summary_server("nca_setup_summary", base_pknca_data)
+    
+    # Update intervals using summary output
+    processed_pknca_data <- reactive({
+      req(base_pknca_data(), summary_output$selections(), summary_output$types_df())
+
+      final_data <- base_pknca_data()
+
+      # Call the updated function with the direct inputs
+      final_data <- update_main_intervals(
+        data = base_pknca_data(),
+        parameter_selections = summary_output$selections(),
+        study_types_df = summary_output$types_df(),
+        auc_data = settings()$partial_aucs,
+        impute = settings()$data_imputation$impute_c0
+      )
+
+      final_data
     })
 
     # Keep the post processing ratio calculations requested by the user
@@ -124,17 +146,21 @@ setup_server <- function(id, data, adnca_data) {
           settings()$analyte, settings()$pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
 
-      PKNCA_update_data_object(
+      df <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
-        auc_data = settings()$partial_aucs,
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        params = c("lambda.z.n.points", "lambda.z.time.first",
-                   "r.squared", "adj.r.squared", "tmax"),
         should_impute_c0 = settings()$data_imputation$impute_c0
       )
+      
+      params = c("lambda.z.n.points", "lambda.z.time.first",
+                 "r.squared", "adj.r.squared", "tmax")
+      df %>%
+        update_slopes_intervals(params = params,
+                                should_impute_c0 = settings()$data_imputation$impute_c0)
+        
     })
 
     slope_rules <- slope_selector_server(
@@ -142,9 +168,8 @@ setup_server <- function(id, data, adnca_data) {
       slopes_pknca_data,
       manual_slopes_override
     )
-
-    summary_server("nca_setup_summary", processed_pknca_data)
-
+    
+    
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {

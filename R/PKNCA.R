@@ -200,12 +200,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' created using the `PKNCA_create_data_object()` function.
 #'
 #' @param adnca_data A reactive PKNCAdata object
-#' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
-#' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
 #'
 #' @returns A fully configured `PKNCAdata` object.
@@ -218,12 +216,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
   adnca_data,
-  auc_data,
   method,
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  params,
   should_impute_c0 = TRUE
 ) {
 
@@ -245,7 +241,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    params = params,
     start_from_last_dose = should_impute_c0
   ) %>%
     # Join route information
@@ -264,57 +259,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       NCA_PROFILE %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
-
-  # # Add partial AUCs if any
-
-  auc_ranges <- auc_data %>%
-    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
-
-  # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
-    data$intervals %>%
-      mutate(
-        start = start + start_auc,
-        end = start + (end_auc - start_auc),
-        across(where(is.logical), ~FALSE),
-        aucint.last = TRUE,
-        type_interval = "manual"
-      )
-  })
-
-  data$intervals <- bind_rows(
-    data$intervals,
-    intervals_list
-  ) %>%
-    unique()
-
-  data$impute <- NA
-
-  # Impute start values if requested
-  if (should_impute_c0) {
-    data <- create_start_impute(data)
-
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
-      intersect(names(PKNCA::get.interval.cols()))
-
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
-  }
 
   data
 }
