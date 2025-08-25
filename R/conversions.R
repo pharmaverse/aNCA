@@ -238,3 +238,25 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
   )
   message(msg)
 }
+
+#' Simplify a compound unit expression
+#'
+#' This function takes a units object with a compound unit expression and returns a simplified units object.
+#' It splits the unit string into individual units, converts each to a units object, and multiplies them together.
+#'
+#' @param unit_obj A units object to be simplified.
+#' @returns A simplified units object.
+#' @examples
+#' u <- units::set_units(1, "mg*L/(L*ng/mL)", mode = "standard")
+#' simplify_unit(u)
+#' @export
+simplify_unit <- function(unit_obj) {
+  unit_str <- units::deparse_unit(unit_obj)
+  unit_val <- as.numeric(unit_obj)
+  unit_parts <- unlist(strsplit(unit_str, split = " "))
+  unit_objs <- lapply(
+    unit_parts,
+    function(part) units::set_units(1, part, mode = "standard")
+  )
+  Reduce(`*`, unit_objs) * unit_val
+}
