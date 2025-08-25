@@ -245,7 +245,7 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' and returns a simplified units object
 #'
 #' @param x A units object, character string, or vector of either to be simplified.
-#' @param as_character Logical. TRUE returns the result as a character, 
+#' @param as_character Logical. TRUE returns the result as a character,
 #' FALSE (default) as a unit object.
 #' @returns A simplified units object, or a list of units objects if input is a vector.
 #' @export

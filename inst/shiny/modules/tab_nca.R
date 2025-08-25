@@ -70,7 +70,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       tryCatch({
         #' Create data object
         pknca_object <- PKNCA_create_data_object(adnca_data())
-        ##############################################################################################
+        ############################################################################################
         # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
         # this is implemented here via hardcoding in PPSTRESU
         pknca_object$units <- pknca_object$units %>%
@@ -90,7 +90,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               conversion_factor
             )
           )
-        ##############################################################################################
+        ############################################################################################
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and update the curent view if data is created succesfully.
