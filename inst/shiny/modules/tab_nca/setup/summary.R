@@ -35,11 +35,11 @@ summary_server <- function(id, processed_pknca_data) {
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })
-    
+
     study_types_summary <- reactive({
       req(study_types_df())
       study_types_df()  %>%
-        #summarise each unique Type and group with number of USUBJID
+        #summarise each unique type and group with number of USUBJID
         group_by(STUDYID, DRUG, PCSPEC, type) %>%
         summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
     })
