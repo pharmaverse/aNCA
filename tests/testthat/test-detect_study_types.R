@@ -20,8 +20,7 @@ describe("detect_study_types", {
 
     expect_s3_class(result, "data.frame")
     expect_equal(nrow(result), 1)
-    expect_equal(result$Type, "Single IV Dose")
-    expect_equal(result$USUBJID_Count, 1)
+    expect_equal(result$type, "Single IV Dose")
   })
 
   it("correctly identifies a 'Single Extravascular Dose' study", {
@@ -30,7 +29,7 @@ describe("detect_study_types", {
     result <- detect_study_types(test_data, "ROUTE", "VOL")
 
     expect_equal(nrow(result), 1)
-    expect_equal(result$Type, "Single Extravascular Dose")
+    expect_equal(result$type, "Single Extravascular Dose")
   })
 
   it("correctly identifies a 'Multiple IV Doses' study via multiple DOSNOA", {
@@ -41,7 +40,7 @@ describe("detect_study_types", {
     result <- detect_study_types(test_data, "ROUTE", "VOL")
 
     expect_equal(nrow(result), 1)
-    expect_equal(result$Type, "Multiple IV Doses")
+    expect_equal(result$type, "Multiple IV Doses")
   })
 
   it("correctly identifies a 'Multiple Extravascular Doses' study via a non-NA TAU", {
@@ -50,7 +49,7 @@ describe("detect_study_types", {
     result <- detect_study_types(test_data, "ROUTE", "VOL")
 
     expect_equal(nrow(result), 1)
-    expect_equal(result$Type, "Multiple Extravascular Doses")
+    expect_equal(result$type, "Multiple Extravascular Doses")
   })
 
   it("correctly identifies 'Excretion Data', which takes precedence over other types", {
@@ -60,14 +59,14 @@ describe("detect_study_types", {
     result <- detect_study_types(test_data, "ROUTE", "VOL")
 
     expect_equal(nrow(result), 1)
-    expect_equal(result$Type, "Excretion Data")
+    expect_equal(result$type, "Excretion Data")
   })
 
   it("handles data frames without a TAU column correctly", {
     # Test for single dose without TAU column
     test_data_single <- base_data %>% select(-TAU)
     result_single <- detect_study_types(test_data_single, "ROUTE", "VOL")
-    expect_equal(result_single$Type, "Single IV Dose")
+    expect_equal(result_single$type, "Single IV Dose")
 
     # Test for multiple doses without TAU column
     test_data_multi <- bind_rows(
@@ -76,14 +75,14 @@ describe("detect_study_types", {
     ) %>%
       select(-TAU)
     result_multi <- detect_study_types(test_data_multi, "ROUTE", "VOL")
-    expect_equal(result_multi$Type, "Multiple IV Doses")
+    expect_equal(result_multi$type, "Multiple IV Doses")
   })
 
   it("handles data frames without a volume column correctly", {
     # Test for single dose without volume column
     test_data_single <- base_data %>% select(-VOL)
     result_single <- detect_study_types(test_data_single, "ROUTE")
-    expect_equal(result_single$Type, "Single IV Dose")
+    expect_equal(result_single$type, "Single IV Dose")
 
   })
 
@@ -106,7 +105,7 @@ describe("detect_study_types", {
     # Expect 5 rows in the summary, one for each unique type detected
     expect_equal(nrow(result), 5)
 
-    # Check that all expected types are present in the 'Type' column
+    # Check that all expected types are present in the 'type' column
     expected_types <- c(
       "Single IV Dose",
       "Single Extravascular Dose",
@@ -114,9 +113,6 @@ describe("detect_study_types", {
       "Multiple Extravascular Doses",
       "Excretion Data"
     )
-    expect_setequal(result$Type, expected_types)
-
-    # Verify each type has a count of 1 subject
-    expect_true(all(result$USUBJID_Count == 1))
+    expect_setequal(result$type, expected_types)
   })
 })
