@@ -173,7 +173,23 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     data.conc = pknca_conc,
     data.dose = pknca_dose,
     intervals = intervals, #TODO: should be default
-    units = PKNCA_build_units_table(pknca_conc, pknca_dose)
+    units = PKNCA_build_units_table(pknca_conc, pknca_dose) %>%
+      ##############################################################################################
+      # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
+      # this is implemented here via hardcoding in PPSTRESU
+      mutate(
+        PPSTRESU = ifelse(
+          PPTESTCD %in% metadata_nca_parameters$PKNCA[metadata_nca_parameters$unit_type == "volume"],
+          sapply(PPSTRESU, \(x) simplify_unit(x, as.character = TRUE)),
+          PPSTRESU
+        ),
+        conversion_factor = ifelse(
+          PPTESTCD %in% metadata_nca_parameters$PKNCA[metadata_nca_parameters$unit_type == "volume"],
+          get_conversion_factor(PPORRESU, PPSTRESU),
+          conversion_factor
+        )
+      )
+    ##############################################################################################
   )
   pknca_data_object
 }
