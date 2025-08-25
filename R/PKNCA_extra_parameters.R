@@ -3,8 +3,9 @@
 #' @param volume The volume (or mass) of the sample
 #' @return The sum of urine volumes for the interval
 #' @export
-pk.calc.volpk <- function(volume) { #nolint
-  sum(volume, na.rm = TRUE)
+pk.calc.volpk <- function(volume) {
+  if (length(volume) == 0) return(NA_real_)
+  sum(volume)
 }
 PKNCA::add.interval.col(
   "volpk",
