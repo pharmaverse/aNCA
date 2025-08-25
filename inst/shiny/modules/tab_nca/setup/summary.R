@@ -4,8 +4,8 @@
 #' Provides a data table with summary of processed NCA data, based on settings provided
 #' by the user.
 #'
+#' @param id Shiny id for the module
 #' @param processed_pknca_data PKNCA data that was processed in accordance to setup rules.
-#' @param override A reactive expression containing parameter selection overrides from a settings file.
 #'
 #' @returns A reactive data frame with the parameter selections by study type.
 summary_ui <- function(id) {
@@ -17,21 +17,10 @@ summary_ui <- function(id) {
   )
 }
 
-summary_server <- function(id, processed_pknca_data, override, param_trigger) {
+summary_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
     
     ns <- session$ns
-    
-    # summary_data <- reactive({
-    #   req(processed_pknca_data())
-    # 
-    #   conc_group_columns <- group_vars(processed_pknca_data()$conc)
-    # 
-    #   data <- processed_pknca_data()$intervals %>%
-    #     apply_labels(type = "ADPC") %>%
-    #     select(where(~!is.logical(.) | any(. == TRUE))) %>%
-    #     arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
-    # })
 
     study_types_df <- reactive({
       req(processed_pknca_data())
@@ -58,21 +47,6 @@ summary_server <- function(id, processed_pknca_data, override, param_trigger) {
         summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
     })
     
-    # #Update params based on settings override
-    # observeEvent(override(), {
-    #   uploaded_params <- override()
-    #   reset_reactable_memory()
-    #   # The full parameter dataset used to build the table
-    #   params_data <- metadata_nca_parameters %>%
-    #     filter(TYPE != "PKNCA-not-covered")
-    #   browser()
-    #   # Find the row indices corresponding to the uploaded parameter names
-    #   new_selected_indices <- which(params_data$PKNCA %in% uploaded_params)
-    #   
-    #   # Update the reactable with the new selections
-    #   updateReactable("nca_parameters", selected = new_selected_indices)
-    # })
-    
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
       "auclast", "auclast.dn",
@@ -86,7 +60,7 @@ summary_server <- function(id, processed_pknca_data, override, param_trigger) {
       "adj.r.squared", "lambda.z.time.first",
       "aucpext.obs", "aucpext.pred"
     )
-    
+
     # ReactiveVal for paramet selection state
     selection_state <- reactiveVal()
     # Render the new, dynamic reactable
@@ -144,17 +118,14 @@ summary_server <- function(id, processed_pknca_data, override, param_trigger) {
       )
     })
 
+    # Ensure module is called when hidden (e.g., in a tab)
+    outputOptions(output, "nca_parameters", suspendWhenHidden = FALSE)
+    
     reactable_server(
       "study_types",
       study_types_summary,
       height = "28vh"
     )
-
-    # reactable_server(
-    #   "nca_intervals_summary",
-    #   summary_data,
-    #   height = "98vh"
-    # )
     
     observe({
       study_type_names <- unique(study_types_df()$type)
