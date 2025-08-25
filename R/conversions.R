@@ -269,7 +269,7 @@ simplify_unit <- function(x, as.character = FALSE) {
   unit_parts <- unlist(strsplit(unit_str, split = " "))
   unit_objs <- lapply(
     unit_parts,
-    function(part) units::set_units(1, part, mode = "standard", check_is_valid = FALSE)
+    function(part) units::as_units(part, check_is_valid = FALSE)
   )
   new_unit <- Reduce(`*`, unit_objs) * unit_val
   if (as.character) {
