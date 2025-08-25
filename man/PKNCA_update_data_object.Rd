@@ -25,10 +25,6 @@ PKNCA_update_data_object(
 \item{selected_pcspec}{User selected specimen}
 
 \item{should_impute_c0}{Logical indicating if start values should be imputed}
-
-\item{auc_data}{A data frame containing partial aucs added by user}
-
-\item{params}{A list of parameters for NCA calculation}
 }
 \value{
 A fully configured \code{PKNCAdata} object.

@@ -116,7 +116,7 @@ setup_server <- function(id, data, adnca_data) {
       final_data <- base_pknca_data()
 
       # Call the updated function with the direct inputs
-      final_data <- update_parameter_intervals(
+      final_data <- update_main_intervals(
         data = base_pknca_data(),
         parameter_selections = summary_output$selections(),
         study_types_df = summary_output$types_df(),
@@ -149,16 +149,20 @@ setup_server <- function(id, data, adnca_data) {
           settings()$analyte, settings()$pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
 
-      df <- PKNCA_create_slopes_object(
+      df <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        params = c("lambda.z.n.points", "lambda.z.time.first",
-                   "r.squared", "adj.r.squared", "tmax"),
         should_impute_c0 = settings()$data_imputation$impute_c0
       )
+      
+      params = c("lambda.z.n.points", "lambda.z.time.first",
+                 "r.squared", "adj.r.squared", "tmax")
+      df %>%
+        update_slopes_intervals(params = params,
+                                should_impute_c0 = settings()$data_imputation$impute_c0)
         
     })
 

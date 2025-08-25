@@ -200,12 +200,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' created using the `PKNCA_create_data_object()` function.
 #'
 #' @param adnca_data A reactive PKNCAdata object
-#' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
-#' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
 #'
 #' @returns A fully configured `PKNCAdata` object.
@@ -262,101 +260,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       PCSPEC %in% selected_pcspec
     )
 
-  data
-}
-
-#' Update an intervals data frame with user-selected parameters by study type
-#'
-#' @param data A PKNCAdata object containing intervals and dosing data.
-#' @param parameter_selections A named list of selected PKNCA parameters by study type.
-#' @param study_types_df A data frame mapping analysis profiles to their study type.
-#' @param auc_data A data frame containing partial AUC ranges.
-#' @param impute Logical indicating whether to impute start values for parameters.
-#'
-#' @returns An updated PKNCAdata object with parameter intervals based on user selections.
-#'
-update_parameter_intervals <- function(data, parameter_selections,
-                                       study_types_df, auc_data, impute = TRUE) {
-
-  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
-
-  # Determine the grouping columns from the study_types_df
-  grouping_cols <- setdiff(names(study_types_df), c("type", "USUBJID_Count"))
-  
-  # 1. Add the 'type' column to the intervals data
-  intervals_with_types <- data$intervals %>%
-    left_join(study_types_df, by = grouping_cols)
-  
-  # 3. Iterate over selections to set new flags to TRUE
-  updated_intervals <- intervals_with_types
-  if (length(parameter_selections) > 0) {
-    for (study_type in names(parameter_selections)) {
-      params_for_type <- parameter_selections[[study_type]]
-      if (length(params_for_type) > 0) {
-        updated_intervals <- updated_intervals %>%
-          mutate(across(
-            .cols = all_of(params_for_type),
-            .fns = ~ if_else(type == study_type, TRUE, .)
-          ))
-      }
-    }
-  }
-  
-  # Return the final data frame, removing the temporary 'type' column
-  data$intervals <- updated_intervals %>%
-    select(-type)
-  
-  # # Add partial AUCs if any
-  
-  auc_ranges <- auc_data %>%
-    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
-
-  # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
-    data$intervals %>%
-      mutate(
-        start = start + start_auc,
-        end = start + (end_auc - start_auc),
-        across(where(is.logical), ~FALSE),
-        aucint.last = TRUE,
-        type_interval = "manual"
-      )
-  })
-
-  data$intervals <- bind_rows(
-    data$intervals,
-    intervals_list
-  ) %>%
-    unique()
-
-  data$impute <- NA
-
-  # Impute start values if requested
-  if (impute) {
-    data <- create_start_impute(data)
-
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
-      intersect(names(PKNCA::get.interval.cols()))
-
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
-  }
-  
   data
 }
 

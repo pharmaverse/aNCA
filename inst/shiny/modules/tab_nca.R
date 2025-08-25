@@ -106,7 +106,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
-browser()
+
       if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
                                                               is.logical)]))) {
         log_error("Invalid parameters")

@@ -84,8 +84,7 @@ summary_server <- function(id, processed_pknca_data, override, param_trigger) {
       "lambda.z",
       "lambda.z.n.points", "r.squared",
       "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred",
-      "ae", "fe"
+      "aucpext.obs", "aucpext.pred"
     )
     
     # ReactiveVal for paramet selection state
