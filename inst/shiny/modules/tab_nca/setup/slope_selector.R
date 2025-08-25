@@ -243,7 +243,7 @@ slope_selector_server <- function( # nolint
       output$page_number <- renderUI(num_pages)
 
       plots_to_render <- slice(ungroup(subject_profile_plot_ids), page_start:page_end)
-
+browser()
       plot_outputs <- apply(plots_to_render, 1, function(row) {
 
         lambda_slope_plot(
