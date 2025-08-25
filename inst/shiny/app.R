@@ -2,7 +2,6 @@ require(aNCA)
 
 require(bslib)
 require(dplyr)
-require(DT)
 require(htmlwidgets)
 require(logger)
 require(formatters)

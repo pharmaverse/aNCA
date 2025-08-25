@@ -65,7 +65,7 @@ pivot_wider_pknca_results <- function(myres) {
       unique()
   }
   ############################################################################################
-
+  if ("PPANMETH" %in% names(myres$result)) myres$result <- select(myres$result, -PPANMETH)
   # Pivot main interval columns by Parameter and consider each exclude column separately
   main_intervals_vals <- myres$result %>%
     distinct() %>%
