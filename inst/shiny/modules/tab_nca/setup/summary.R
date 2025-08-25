@@ -11,6 +11,7 @@
 summary_ui <- function(id) {
   ns <- NS(id)
   tagList(
+    p("The following study types were detected in the data:"),
     reactable_ui(ns("study_types")),
     reactableOutput(ns("nca_parameters")),
     #reactable_ui(ns("nca_intervals_summary"))
@@ -29,6 +30,7 @@ summary_server <- function(id, processed_pknca_data) {
       intervals_data <- processed_pknca_data()$intervals
       
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
+      
       # Filter the main concentration data to include only the groups
       # that are present in the final intervals list.
       filtered_conc_data <- conc_data %>%

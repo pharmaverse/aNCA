@@ -38,7 +38,13 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
       }
     } else if (column_name == "NCA_PROFILE") {
       # Find which desired grouping columns are present
-      selected_values <- if ("DOSNO" %in% column_names) "DOSNO" else NULL
+      selected_values <- if ("DOSNOP" %in% column_names) {
+        "DOSNOP"
+      } else if ("DOSNO" %in% column_names) {
+        "DOSNO"
+      } else {
+        NULL
+      }
     } else {
       # For other columns, use basic logic
       selected_values <- if (column_name %in% column_names) column_name else NULL

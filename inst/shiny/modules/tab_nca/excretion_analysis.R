@@ -158,6 +158,7 @@ excretion_server <- function(id, input_pknca_data) {
         filter(type_interval %in% input$interval_types) %>%
         arrange(PCSPEC, start, end)
 
+      data$options$keep_interval_cols <- c("NCA_PROFILE", "type_interval")
       # Run PKNCA analysis
       suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
         # Apply standard CDISC names
@@ -177,7 +178,6 @@ excretion_server <- function(id, input_pknca_data) {
                                  PPTESTCD)) %>%
         select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude) %>%
         pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
-        select(-DOSNOA) %>%
         # Add "label" attribute to columns
         add_label_attribute(analysis_result())
     })
