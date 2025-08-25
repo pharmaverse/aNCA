@@ -9,7 +9,7 @@ simplify_unit(x, as_character = FALSE)
 \arguments{
 \item{x}{A units object, character string, or vector of either to be simplified.}
 
-\item{as.character}{Logical. TRUE returns the result as a character,
+\item{as_character}{Logical. TRUE returns the result as a character,
 FALSE (default) as a unit object.}
 }
 \value{

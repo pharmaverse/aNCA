@@ -245,14 +245,14 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' and returns a simplified units object
 #'
 #' @param x A units object, character string, or vector of either to be simplified.
-#' @param as.character Logical. TRUE returns the result as a character, 
+#' @param as_character Logical. TRUE returns the result as a character, 
 #' FALSE (default) as a unit object.
 #' @returns A simplified units object, or a list of units objects if input is a vector.
 #' @export
 simplify_unit <- function(x, as_character = FALSE) {
   # NA input returns NA output
   if (is.na(x)) {
-    if (as.character) return(NA_character_) else return(NA_real_)
+    if (as_character) return(NA_character_) else return(NA_real_)
   }
   # Accept either units object or character
   if (is.character(x)) {
@@ -268,7 +268,7 @@ simplify_unit <- function(x, as_character = FALSE) {
     function(part) units::as_units(part, check_is_valid = FALSE)
   )
   new_unit <- Reduce(`*`, unit_objs) * unit_val
-  if (as.character) {
+  if (as_character) {
     unname(units::deparse_unit(new_unit))
   } else {
     new_unit

@@ -264,15 +264,15 @@ describe("simplify_unit", {
     expect_error(simplify_unit(list(a = 1)), "Input must be a units object or character string")
   })
 
-  it("returns only the unit as character when as.character = TRUE", {
+  it("returns only the unit as character when as_character = TRUE", {
     u <- units::set_units(2, "mg", mode = "standard")
-    result <- simplify_unit(u, as.character = TRUE)
+    result <- simplify_unit(u, as_character = TRUE)
     expect_equal(result, "mg")
   })
 
   it("returns NA outputs for NA inputs", {
     expect_equal(simplify_unit(NA), NA_real_)
-    expect_equal(simplify_unit(NA, as.character = TRUE), NA_character_)
+    expect_equal(simplify_unit(NA, as_character = TRUE), NA_character_)
   })
 })
 
