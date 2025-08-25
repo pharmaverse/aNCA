@@ -22,7 +22,7 @@ Can be set to \code{volume} if not applicable.}
 }
 \value{
 A data frame summarizing the detected study types,
-including the number of unique subjects (USUBJID) for each type.
+including the grouping columns and the identified type.
 }
 \description{
 This function detects the type of study based on the provided data.

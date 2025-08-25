@@ -28,7 +28,7 @@
 #'  - If none of these conditions are met, the type is marker as "Unknown".
 #'
 #' @returns A data frame summarizing the detected study types,
-#' including the number of unique subjects (USUBJID) for each type.
+#' including the grouping columns and the identified type.
 #'
 #' @importFrom dplyr group_by mutate case_when ungroup
 #' @importFrom rlang sym syms
@@ -77,7 +77,6 @@
 #' @export
 detect_study_types <- function(data, route_column, volume_column = "volume") {
   full_grouping <- c("STUDYID", "DRUG", "USUBJID", "PCSPEC", route_column)
-  summary_grouping <- c("DRUG", "STUDYID", "PCSPEC")
 
   has_tau <- "TAU" %in% names(data)
 
@@ -99,7 +98,7 @@ detect_study_types <- function(data, route_column, volume_column = "volume") {
 
   # Identify unique combinations of study types
   study_types <- study_data %>%
-    mutate(Type = case_when(
+    mutate(type = case_when(
       is_excretion ~ "Excretion Data",
       is_one_dose & is_extravascular ~ "Single Extravascular Dose",
       is_one_dose & !is_extravascular ~ "Single IV Dose",
@@ -107,7 +106,6 @@ detect_study_types <- function(data, route_column, volume_column = "volume") {
       !is_one_dose & !is_extravascular ~ "Multiple IV Doses",
       TRUE ~ "Unknown"
     )) %>%
-    #summarise each unique Type and group with number of USUBJID
-    group_by(across(all_of(summary_grouping)), Type) %>%
-    summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
+    select(!!!syms(full_grouping), type) %>%
+    distinct()
 }
