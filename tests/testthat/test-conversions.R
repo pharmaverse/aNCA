@@ -251,4 +251,16 @@ describe("simplify_unit", {
     expect_equal(units::deparse_unit(result), "L g-1")
     expect_equal(as.numeric(result), 0.01)
   })
+
+  it("returns only the unit as character when as.character = TRUE", {
+    u <- units::set_units(2, "mg", mode = "standard")
+    result <- simplify_unit(u, as.character = TRUE)
+    expect_equal(result, "mg")
+  })
+
+  it("returns NA outputs for NA inputs", {
+    expect_equal(simplify_unit(NA), NA_real_)
+    expect_equal(simplify_unit(NA, as.character = TRUE), NA_character_)
+  })
 })
+
