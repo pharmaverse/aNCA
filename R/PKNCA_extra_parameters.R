@@ -3,7 +3,7 @@
 #' @param volume The volume (or mass) of the sample
 #' @return The sum of urine volumes for the interval
 #' @export
-pk.calc.volpk <- function(volume) {
+pk.calc.volpk <- function(volume) { #nolint
   if (length(volume) == 0) return(NA_real_)
   sum(volume)
 }
