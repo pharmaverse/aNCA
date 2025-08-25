@@ -254,6 +254,10 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' simplify_unit(c("mg*L/(L*ng/mL)", "mg/L"))
 #' @export
 simplify_unit <- function(x, as.character = FALSE) {
+  # NA input returns NA output
+  if (is.na(x)) {
+    if (as.character) return(NA_character_) else return(NA_real_)
+  }
   # Accept either units object or character
   if (is.character(x)) {
     x = units::as_units(x, check_is_valid = FALSE)
@@ -269,7 +273,7 @@ simplify_unit <- function(x, as.character = FALSE) {
   )
   new_unit <- Reduce(`*`, unit_objs) * unit_val
   if (as.character) {
-    units::deparse_unit(new_unit)
+    unname(units::deparse_unit(new_unit))
   } else {
     new_unit
   }
