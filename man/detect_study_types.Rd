@@ -4,7 +4,7 @@
 \alias{detect_study_types}
 \title{Detect study types}
 \usage{
-detect_study_types(data, route_column, volume_column = NULL)
+detect_study_types(data, route_column, volume_column = "volume")
 }
 \arguments{
 \item{data}{The dataset containing the study types to be identified.
@@ -18,7 +18,7 @@ column name for the route of administration.}
 \item{volume_column}{A character string specifying the
 column name for the volume of a sample. Extravascular
 samples must be written as \code{extravascular}.
-Can be set to \code{NULL} if not applicable.}
+Can be set to \code{volume} if not applicable.}
 }
 \value{
 A data frame with the unique combinations of study types,
@@ -32,10 +32,10 @@ The function identifies a possible five different types of studies
 based on grouping by \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC}, and the route column.
 The study types are determined as follows:
 \itemize{
-\item "Excretion Data": If the volume column for a group is greater than 0.
-\item "Single Extravascular Dose": If there is only one dose and TAU is NA,
+\item "Excretion Data": If the volume column for a group is not NA and has values > 0.
+\item "Single Extravascular Dose": If there is only one dose and TAU is not available,
 and the route is extravascular.
-\item "Single IV Dose": If there is only one dose and TAU is NA,
+\item "Single IV Dose": If there is only one dose and TAU is not present,
 and the route is not extravascular.
 \item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 and the route is extravascular.

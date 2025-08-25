@@ -10,16 +10,16 @@
 #' @param volume_column A character string specifying the
 #'  column name for the volume of a sample. Extravascular
 #' samples must be written as `extravascular`.
-#' Can be set to `NULL` if not applicable.
+#' Can be set to `volume` if not applicable.
 #'
 #' @details
 #' The function identifies a possible five different types of studies
 #' based on grouping by `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, and the route column.
 #' The study types are determined as follows:
-#'  - "Excretion Data": If the volume column for a group is greater than 0.
-#'  - "Single Extravascular Dose": If there is only one dose and TAU is NA,
+#'  - "Excretion Data": If the volume column for a group is not NA and has values > 0.
+#'  - "Single Extravascular Dose": If there is only one dose and TAU is not available,
 #'   and the route is extravascular.
-#'  - "Single IV Dose": If there is only one dose and TAU is NA,
+#'  - "Single IV Dose": If there is only one dose and TAU is not present,
 #'   and the route is not extravascular.
 #'  - "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 #'   and the route is extravascular.
@@ -75,14 +75,13 @@
 #' )
 #'
 #' @export
-detect_study_types <- function(data, route_column, volume_column = NULL) {
+detect_study_types <- function(data, route_column, volume_column = "volume") {
   full_grouping <- c("STUDYID", "DRUG", "USUBJID", "PCSPEC", route_column)
 
   has_tau <- "TAU" %in% names(data)
 
   # If volume column is not provided, create volume_column and set to NA
-  if (is.null(volume_column)) {
-    volume_column <- "volume"
+  if (missing(volume_column)) {
     data[[volume_column]] <- NA
   }
 
@@ -90,8 +89,9 @@ detect_study_types <- function(data, route_column, volume_column = NULL) {
     #group by grouping and route column
     group_by(!!!syms(full_grouping)) %>%
     # determine study types based on dosnoa, tau, route and volumes
-    mutate(is_one_dose = length(unique(DOSNOA)) == 1 && unique(DOSNOA) == 1
-           && (!has_tau || all(is.na(get("TAU")))),
+    mutate(single_dose_present = isTRUE(unique(DOSNOA) == 1),
+           missing_tau = !has_tau || all(is.na(get("TAU"))),
+           is_one_dose = single_dose_present & missing_tau,
            is_extravascular = !!sym(route_column) == "extravascular",
            is_excretion = (!is.na(!!sym(volume_column)) & !!sym(volume_column) > 0)) %>%
     ungroup()
