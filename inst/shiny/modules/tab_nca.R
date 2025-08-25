@@ -80,7 +80,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               PPTESTCD %in% metadata_nca_parameters$PKNCA[
                 metadata_nca_parameters$unit_type == "volume"
               ],
-              sapply(PPSTRESU, \(x) simplify_unit(x, as.character = TRUE)),
+              sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
               PPSTRESU
             ),
             conversion_factor = ifelse(
