@@ -239,7 +239,7 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
   message(msg)
 }
 
-#' Simplify compound unit expressions (vectorized)
+#' Simplify compound unit expressions
 #'
 #' This function takes a units object or a character string representing a unit expression
 #' and returns a simplified units object

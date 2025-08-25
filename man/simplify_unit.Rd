@@ -2,7 +2,7 @@
 % Please edit documentation in R/conversions.R
 \name{simplify_unit}
 \alias{simplify_unit}
-\title{Simplify compound unit expressions (vectorized)}
+\title{Simplify compound unit expressions}
 \usage{
 simplify_unit(x, as_character = FALSE)
 }
