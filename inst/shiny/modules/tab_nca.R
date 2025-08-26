@@ -139,9 +139,16 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                 slope_rules$slopes_groups(),
                 check_reasons = TRUE
               ) %>%
+              # Perform PKNCA parameter calculations
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
               add_f_to_pknca_results(settings()$bioavailability) %>%
+              # Apply flag rules to mark results in the `exclude` column
+              PKNCA_hl_rules_exclusion(
+                rules = isolate(settings()$flags) |>
+                  purrr::keep(~ .x$is.checked) |>
+                  purrr::map(~ .x$threshold)
+              ) %>%
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
@@ -156,13 +163,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             }
             invokeRestart("muffleWarning")
           })
-
-          # Apply flag rules to mark results in the `exclude` column
-          current_rules <- isolate(settings()$flags)
-          flag_rules_to_apply <- current_rules |>
-            purrr::keep(~ .x$is.checked) |>
-            purrr::map(~ .x$threshold)
-          res <- PKNCA_hl_rules_exclusion(res, flag_rules_to_apply)
 
           # Display unique warnings thrown by PKNCA run.
           purrr::walk(unique(pknca_warn_env$warnings), \(w) {
