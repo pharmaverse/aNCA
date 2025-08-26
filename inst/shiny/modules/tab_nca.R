@@ -143,15 +143,15 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
               add_f_to_pknca_results(settings()$bioavailability) %>%
+              # Apply standard CDISC names
+              mutate(
+                PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+              ) %>%
               # Apply flag rules to mark results in the `exclude` column
               PKNCA_hl_rules_exclusion(
                 rules = isolate(settings()$flags) |>
                   purrr::keep(~ .x$is.checked) |>
                   purrr::map(~ .x$threshold)
-              ) %>%
-              # Apply standard CDISC names
-              mutate(
-                PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
               ) %>%
               # Add parameter ratio calculations
               calculate_table_ratios_app(ratio_table = ratio_table())
