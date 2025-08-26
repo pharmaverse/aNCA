@@ -33,8 +33,8 @@ describe("Test for filter interface", {
     )) > 0)
 
     table_values <- app$get_values(output = "data-data_filtering-filtered_data_display-table")
-    
+
     expect_true(is.character(table_values[["output"]][[1]]) &&
-      jsonlite::validate(table_values[["output"]][[1]]))
+                  jsonlite::validate(table_values[["output"]][[1]]))
   })
 })
