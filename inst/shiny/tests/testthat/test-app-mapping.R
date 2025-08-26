@@ -12,7 +12,7 @@ describe("Test for mapping interface", {
     app$wait_for_idle()
     app$click("data-next_step")
     app$wait_for_idle()
-    app$expect_screenshot()
+    app$expect_values(input = "data-column_mapping-select_STUDYID")
   })
 
 

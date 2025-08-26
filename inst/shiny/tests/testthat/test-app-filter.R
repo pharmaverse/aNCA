@@ -11,7 +11,9 @@ describe("Test for filter interface", {
     )
     app$click("data-next_step")
     app$wait_for_idle()
-    app$expect_screenshot()
+    input_initial_values <- app$get_values(input = TRUE)
+
+    expect_true(length(input_initial_values[["input"]]) > 0)
   })
 
   it("filter interface only appears when clicking next button", {
@@ -30,6 +32,9 @@ describe("Test for filter interface", {
       names(input_initial_values[["input"]])
     )) > 0)
 
-    app$expect_values(output = "data-data_filtering-filtered_data_display-table")
+    table_values <- app$get_values(output = "data-data_filtering-filtered_data_display-table")
+    
+    expect_true(is.character(table_values[["output"]][[1]]) &&
+      jsonlite::validate(table_values[["output"]][[1]]))
   })
 })

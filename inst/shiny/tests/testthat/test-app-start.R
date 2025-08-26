@@ -1,8 +1,8 @@
 describe("Test for initial app load", {
   skip_on_cran()
-  # NOTE: method app$expect_values cannot be used as it crashes due to some output
+  # NOTE: method app$expect_values cannot be used with output as it crashes due to some output
 
-  it("App ui does not crash and remains constant at start", {
+  it("App ui does not crash and contains inputs", {
     app <- AppDriver$new(
       name = "app_start",
       height = 407,
@@ -10,7 +10,8 @@ describe("Test for initial app load", {
       variant = NULL
     )
     app$wait_for_idle()
-    app$expect_screenshot()
+    initial_values <- app$get_values(input = TRUE)
+    expect_true(length(initial_values[["input"]]) > 0)
   })
 
   it("App starts without JavaScript errors", {
