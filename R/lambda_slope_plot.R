@@ -442,7 +442,7 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
           symbol = ifelse(plot_data[[exclude_hl_col]], "x", "circle"),
           size = 20
         ),
-        customdata = ~plot_data[["ROWID"]] # Returns the row number in the object
+        customdata = ~df[, c(group_vars, time_col)] # Returns the row number in the object
       )
 
     plots[[i]] <- plotly_build(p)
