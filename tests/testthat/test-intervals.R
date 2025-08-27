@@ -148,88 +148,118 @@ describe("format_pkncadata_intervals", {
   
 })
 
+describe("update_main_intervals", {
+  
+  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
+                              c("start", "end"))
+  # setup data using FIXTURES
+  data <- FIXTURE_PKNCA_DATA
+  data$intervals <- data$intervals %>%
+    mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params),
+           PCSPEC = "SERUM",
+           STUDYID = "S1") %>%
+    filter(type_interval == "main") %>%
+    select(-impute)
+  
+  #create study types df
+  study_types_df <- tribble(
+    ~STUDYID, ~DRUG, ~USUBJID, ~PCSPEC, ~ROUTE,         ~type,
+    "S1",      "A",           1, "SERUM",  "extravascular", "Single Extravascular Dose",
+    "S1",      "A",           2, "SERUM",  "extravascular", "Multiple Extravascular Doses",
+    "S1",      "A",           3, "SERUM",  "intravascular", "Multiple IV Doses",
+    "S1",      "A",           4, "SERUM",  "intravascular", "Single IV Dose",
+    "S1",      "A",           5, "SERUM",  "intravascular", "Single IV Dose",
+    "S1",      "A",           6, "SERUM",  "intravascular", "Single IV Dose",
+    "S1",      "A",           7, "SERUM",  "intravascular", "Single IV Dose",
+    "S1",      "A",           8, "SERUM",  "extravascular", "Single Extravascular Dose",
+    "S1",      "A",           8, "SERUM",  "intravascular", "Multiple IV Doses"
+  )
+  
+  #Create parameter list for each study type (one different per type)
+  parameters <- list(
+    `Single Extravascular Dose`    = c("cmax", "tmax", "auclast"),
+    `Multiple Extravascular Doses` = c("cmax", "tmax", "half.life"),
+    `Multiple IV Doses`            = c("cmax", "auclast", "half.life"),
+    `Single IV Dose`               = c("tmax", "auclast", "half.life")
+  )
+  
+  auc_data <- tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
+  
+  it("correctly updates parameter flags based on study type", {
+    result <- update_main_intervals(data, parameters, study_types_df,
+                                    auc_data, impute = FALSE)
+    
+    # Check a specific profile: USUBJID 1 is 'Single Extravascular Dose'
+    profile_1 <- result$intervals %>% filter(USUBJID == 1)
+    expected_true <- parameters$`Single Extravascular Dose`
+    expected_false <- setdiff(all_pknca_params, expected_true)
+    
+    expect_true(all(profile_1[expected_true] == TRUE))
+    expect_true(all(profile_1[expected_false] == FALSE))
+    
+    # Check another profile: USUBJID 3 is 'Multiple IV Doses'
+    profile_3 <- result$intervals %>% filter(USUBJID == 3)
+    expected_true_3 <- parameters$`Multiple IV Doses`
+    expected_false_3 <- setdiff(all_pknca_params, expected_true_3)
+    
+    expect_true(all(profile_3[expected_true_3] == TRUE))
+    expect_true(all(profile_3[expected_false_3] == FALSE))
+  })
+  
+  it("handles partial AUCs (auc_data) creating proper intervals for each", {
 
-
-
-
-
-
-
-
-
-
-
-
-# 
-# expect_no_error(
-#   PKNCA::PKNCAdata(
-#     data.conc = pknca_conc,
-#     data.dose = pknca_dose,
-#     intervals = result,
-#     options = list(
-#       keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval")
-#     ),
-#     units = PKNCA::pknca_units_table(
-#       concu = "ng/mL",
-#       doseu = "mg",
-#       amountu = "ng",
-#       timeu = "h"
-#     )
-#   )
-# )
-
-
-
-# 
-# it("does not impute C0 when not requested", {
-#   updated_data <- PKNCA_update_data_object(
-#     adnca_data = pknca_data,
-#     method = method,
-#     selected_analytes = analytes,
-#     selected_profile = dosnos,
-#     selected_pcspec = pcspecs,
-#     should_impute_c0 = FALSE
-#   )
-#   expect_true("impute" %in% names(updated_data))
-#   expect_true(all(is.na(updated_data$impute)))
-# })
-# 
-# it("handles partial AUCs (auc_data) creating proper intervals for each", {
-#   auc_data <- data.frame(
-#     start_auc = c(0, 1, 2),
-#     end_auc = c(1, 2, 3)
-#   )
-#   updated_data <- PKNCA_update_data_object(
-#     adnca_data = pknca_data,
-#     auc_data = auc_data,
-#     method = method,
-#     selected_analytes = analytes,
-#     selected_profile = dosnos,
-#     selected_pcspec = pcspecs,
-#     params = params,
-#     should_impute_c0 = TRUE
-#   )
-#   # Check that the interval_type column is present with at least one "manual" value
-#   expect_true(any(updated_data$intervals$type_interval == "manual"))
-#   
-#   # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
-#   auc_intervals <- updated_data$intervals  %>%
-#     dplyr::filter(type_interval == "manual") %>%
-#     dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM,
-#                   NCA_PROFILE, auclast, aucint.last, tmax)
-#   
-#   expected_res <- tidyr::tibble(
-#     start = c(0, 1, 2),
-#     end = c(1, 2, 3),
-#     STUDYID = rep("STUDY001", 3),
-#     DRUG = rep("DrugA", 3),
-#     USUBJID = rep("SUBJ001", 3),
-#     PARAM = rep("AnalyteA", 3),
-#     NCA_PROFILE = rep(1, 3),
-#     auclast = rep(FALSE, 3),
-#     aucint.last = rep(TRUE, 3),
-#     tmax = rep(FALSE, 3)
-#   )
-#   
-#   expect_equal(auc_intervals, expected_res)
-# })
+    auc_data <- data.frame(
+      start_auc = c(0, 1, 2),
+      end_auc = c(1, 2, 3)
+    )
+    result <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = FALSE)
+    
+    manual_intervals <- result$intervals %>% filter(type_interval == "manual")
+    expect_true(all(manual_intervals$aucint.last == TRUE))
+    
+    new_interval_check <- manual_intervals %>%
+      filter(USUBJID == 1, start == 1)
+    
+    expect_equal(nrow(new_interval_check), 1)
+    expect_equal(new_interval_check$end, 2)
+  })
+  
+  it("does not impute C0 when not requested", {
+    result <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = FALSE)
+    expect_true("impute" %in% names(result))
+    expect_true(all(is.na(result$impute)))
+  })
+  
+  it("handles empty parameter selections and empty AUC data", {
+    # Test with empty parameter list
+    result_no_params <- update_main_intervals(data, list(), study_types_df, auc_data, impute = FALSE)
+    param_flags <- result_no_params$intervals %>% select(all_of(all_pknca_params))
+    expect_true(all(param_flags == FALSE))
+    
+    # Test with empty auc_data
+    result_no_auc <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = FALSE)
+    expect_equal(nrow(result_no_auc$intervals), nrow(data$intervals))
+  })
+  
+  it("filters out invalid AUC ranges before creating intervals", {
+    invalid_auc_data <- data.frame(
+      start_auc = c(0,  5, -1, 2, NA), # valid, start > end, negative, start > end, NA
+      end_auc   = c(4,  2,  1, 2, 4)
+    ) # Only first row is valid
+    
+    original_rows <- nrow(data$intervals)
+    result <- update_main_intervals(data, parameters, study_types_df, invalid_auc_data, impute = FALSE)
+    
+    # Expect one new set of intervals for the single valid AUC range
+    expect_equal(nrow(result$intervals), original_rows * 2)
+  })
+  
+  it("handles missing columns correctly", {
+    # remove PCSPEC column from intervals
+    data$intervals$PCSPEC <- NULL
+    
+    expect_error(update_main_intervals(data, parameters, study_types_df, auc_data, impute = FALSE),
+                 "Missing required columns: PCSPEC")
+  })
+  
+})

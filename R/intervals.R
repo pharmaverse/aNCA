@@ -129,11 +129,16 @@ format_pkncadata_intervals <- function(pknca_conc,
 #'
 update_main_intervals <- function(data, parameter_selections,
                                        study_types_df, auc_data, impute = TRUE) {
-  
+
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
   
   # Determine the grouping columns from the study_types_df
-  grouping_cols <- setdiff(names(study_types_df), c("type", "USUBJID_Count"))
+  grouping_cols <- setdiff(names(study_types_df), c("type"))
+  missing_columns <- setdiff(grouping_cols, colnames(data$intervals))
+  # check for grouping cols in intervals
+  if (length(missing_columns) > 0) {
+    stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
+  }
   
   # 1. Add the 'type' column to the intervals data
   intervals_with_types <- data$intervals %>%
