@@ -265,7 +265,7 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
       o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
     }
   }
-  
+ 
   # Get grouping structure for lambda.z
   groups <- getGroups(o_nca %>% dplyr::filter(PPTESTCD == "lambda.z")) %>% unique()
   groups <- o_nca$result %>%
@@ -275,7 +275,7 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
     unique()
 
   plots <- vector("list", nrow(groups))
-  
+
   for (i in seq_len(nrow(groups))) {
     group <- groups[i, ]
     group_vars <- setdiff(names(group), c("start", "end"))
@@ -292,7 +292,11 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
       o_nca$data$conc$data[["exclude_half.life"]] <- FALSE
       exclude_hl_col <- "exclude_half.life"
     }
-    
+    exclude_msg_col <- o_nca$data$conc$columns$exclude
+    if (is.null(exclude_msg_col)) {
+      exclude_msg_col <- "exclude"
+    }
+
     # Filter and order by time
     df <- df[df[[time_col]] >= group$start & df[[time_col]] <= group$end, ]
     df[["ROWID"]] <- seq_len(nrow(df))
@@ -303,44 +307,84 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
     group_nca <- o_nca
     group_nca$data$conc$data <- df
     group_nca$result <- merge(group_nca$result, group[, group_vars, drop = FALSE])
-    is_lz_used <- get_halflife_points(group_nca)
-    df_fit <- df[is_lz_used, ]
-    
-    # Fit log-linear model to green points
-    fit <- lm(as.formula(paste0("log10(", conc_col,") ~ ", time_col)), df_fit)
-    
+
     # Extract NCA results for annotation
     get_res <- function(testcd) group_nca$result$PPORRES[group_nca$result$PPTESTCD == testcd]
     get_unit <- function(testcd) group_nca$result$PPSTRESU[group_nca$result$PPTESTCD == testcd]
+    start <- unique(group_nca$result$start) # this has to have a better way
     tlast <- get_res("tlast")
     half_life <- get_res("half.life")
     adj.r.squared <- get_res("adj.r.squared")
     lz_time_first <- get_res("lambda.z.time.first")
     lz_time_last <- get_res("lambda.z.time.last")
     time_span <- lz_time_last - lz_time_first
-    
-    # Prepare fit line (on log scale, then back-transform)
-    fit_line_data <- data.frame(x = c(lz_time_first, tlast))
-    colnames(fit_line_data) <- time_col
-    fit_line_data$y <- predict(fit, fit_line_data)
-    
+    span_ratio <- get_res("span.ratio")
+    exclude_calc_reason <- group_nca$result$exclude[group_nca$result$PPTESTCD == "half.life"]
+
+    #########################################################
+    # TODO (Gerardo): This complication in the code comes from a PKNCA issue
+    # Once solved in a new version this can be simplified
+    group_nca_for_fun <- group_nca
+    group_nca_for_fun$result <- group_nca_for_fun$result %>%
+      mutate(
+        PPORRES = ifelse(
+          PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last", "tlast"),
+          PPORRES + start,
+          PPORRES
+        ),
+        PPSTRES = ifelse(
+          PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last", "tlast"),
+          PPSTRES + start,
+          PPSTRES
+        )
+      )
+    if (!is.na(half_life)) {
+      is_lz_used <- get_halflife_points(group_nca_for_fun)
+    } else {
+      is_lz_used <- rep(NA_real_, nrow(df))
+    }
+    #########################################################
+
+    # Compute the points to depict the lambda fit line (if there is)
+    if (!is.na(half_life)) {
+      df_fit <- df[is_lz_used, ]
+      fit <- lm(as.formula(paste0("log10(", conc_col,") ~ ", time_col)), df_fit)
+      fit_line_data <- data.frame(x = c(lz_time_first + start, tlast + start))
+      colnames(fit_line_data) <- time_col
+      fit_line_data$y <- predict(fit, fit_line_data)
+    } else {
+      fit_line_data <- data.frame(
+        x = c(start, start),
+        y = c(0, 0)
+      )
+      colnames(fit_line_data)[1] <- time_col
+    }
+
     # Plot data
     plot_data <- df
-    plot_data$color <- ifelse(is_lz_used, "green", "red")
+    plot_data$color <- case_when(
+      is.na(is_lz_used) ~ "black",
+      !is.na(is_lz_used) & is_lz_used ~ "green",
+      !is.na(is_lz_used) & !is_lz_used  ~ "red",
+      TRUE ~ "black"
+    )
     title <- paste0(paste0(group_vars, ": "), group[, group_vars, drop = FALSE], collapse = ", ")
     xlab <- if (!is.null(timeu_col)) paste0(time_col, " (", unique(plot_data[[timeu_col]]), ")") else time_col
     ylab <- if (!is.null(concu_col)) paste0(conc_col, " (", unique(plot_data[[concu_col]]), ")") else conc_col
     subtitle_text <- paste0(
       "R<sup>2</sup><sub>adj</sub> = ", signif(adj.r.squared, 2),
-      "&#9;&#9;",
-      "ln(2)/ \u03BB<sub>z</sub> = ", signif(half_life, 2), " ", get_unit("half.life"),
-      "&#9;&#9;",
-      "(T<sub>", df$IX[which(df[[time_col]] == lz_time_first)],
-      "</sub> - T<sub>", df$IX[which(df[[time_col]] == lz_time_last)], "</sub>)/2 = ",
-      "&#9;&#9;",
-      signif(time_span / 2, 2), " ", get_unit("lambda.z.time.first")
+      "&nbsp;&nbsp;&nbsp;&nbsp;",
+      #"ln(2)/ \u03BB<sub>z</sub> = ", signif(half_life, 2), " ", get_unit("half.life"),
+      #"&#9;&#9;",
+      #"(T<sub>", df$IX[which(df[[time_col]] == lz_time_first)],
+      #"</sub> - T<sub>", df$IX[which(df[[time_col]] == lz_time_last)], "</sub>)/(ln(2)/ \u03BB<sub>z</sub>) =",
+      "span ratio = ",
+      signif(span_ratio, 2)
     )
-    
+    if (is.na(half_life)) {
+      subtitle_text <- exclude_calc_reason
+    }
+
     # Build plotly object
     p <- plotly::plot_ly() %>%
       plotly::add_lines(
@@ -400,7 +444,8 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
         ),
         customdata = ~plot_data[["ROWID"]] # Returns the row number in the object
       )
-    plots[[i]] <- p
+
+    plots[[i]] <- plotly_build(p)
     names(plots)[i] <- title
   }
   return(plots)
