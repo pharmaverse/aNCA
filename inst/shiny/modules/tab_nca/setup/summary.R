@@ -13,14 +13,13 @@ summary_ui <- function(id) {
   tagList(
     p("The following study types were detected in the data:"),
     reactable_ui(ns("study_types")),
-    reactableOutput(ns("nca_parameters")),
-    #reactable_ui(ns("nca_intervals_summary"))
+    reactableOutput(ns("nca_parameters"))
   )
 }
 
 summary_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
-    
+
     ns <- session$ns
 
     study_types_df <- reactive({
@@ -28,19 +27,19 @@ summary_server <- function(id, processed_pknca_data) {
       # Get the concentration data and the final, filtered intervals data
       conc_data <- processed_pknca_data()$conc$data
       intervals_data <- processed_pknca_data()$intervals
-      
+
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
-      
+
       # Filter the main concentration data to include only the groups
       # that are present in the final intervals list.
       filtered_conc_data <- conc_data %>%
         semi_join(intervals_data, by = conc_group_columns)
-      
+
       detect_study_types(filtered_conc_data,
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })
-    
+
     study_types_summary <- reactive({
       req(study_types_df())
       study_types_df()  %>%
@@ -48,7 +47,7 @@ summary_server <- function(id, processed_pknca_data) {
         group_by(STUDYID, DRUG, PCSPEC, type) %>%
         summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
     })
-    
+
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
       "auclast", "auclast.dn",
@@ -72,14 +71,14 @@ summary_server <- function(id, processed_pknca_data) {
       params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered") %>%
         select(TYPE, PKNCA, PPTESTCD, PPTEST)
-      
+
       study_type_names <- unique(study_types_df()$type)
-      
+
       selection_df <- params_data
       for (st_name in study_type_names) {
         selection_df[[st_name]] <- selection_df$PKNCA %in% DEFAULT_PARAMS
       }
-      
+
       # Dynamically create column definitions for each study type
       study_type_cols <- lapply(
         study_type_names,
@@ -94,10 +93,10 @@ summary_server <- function(id, processed_pknca_data) {
         }
       )
       names(study_type_cols) <- study_type_names
-      
+
       # Set selection state
       selection_state(selection_df)
-      
+
       # Combine with definitions for parameter info columns
       col_defs <- c(
         list(
@@ -107,7 +106,7 @@ summary_server <- function(id, processed_pknca_data) {
         ),
         study_type_cols
       )
-      
+
       reactable(
         selection_df,
         columns = col_defs,
@@ -122,28 +121,28 @@ summary_server <- function(id, processed_pknca_data) {
 
     # Ensure module is called when hidden (e.g., in a tab)
     outputOptions(output, "nca_parameters", suspendWhenHidden = FALSE)
-    
+
     reactable_server(
       "study_types",
       study_types_summary,
       height = "28vh"
     )
-    
+
     observe({
       study_type_names <- unique(study_types_df()$type)
       req(study_type_names)
 
       lapply(study_type_names, function(st_name) {
-        
+
         observeEvent(input[[st_name]], {
-          info <- input[[st_name]] 
+          info <- input[[st_name]]
           current_state <- selection_state()
           current_state[[st_name]][info$row] <- info$value
           selection_state(current_state)
         })
       })
     })
-    
+
     # Transform the TRUE/FALSE data frame into a named list
     # of parameter vectors
     parameter_lists_by_type <- reactive({
@@ -151,7 +150,7 @@ summary_server <- function(id, processed_pknca_data) {
       # Get base data frame
       df <- selection_state()
       study_type_names <- unique(study_types_df()$type)
-      
+
       # Convert from wide to long, filter for selected (TRUE) rows,
       # and then split the result into a list by study_type.
       df %>%
@@ -165,7 +164,7 @@ summary_server <- function(id, processed_pknca_data) {
         split(.$study_type) %>%
         purrr::map(~ .x$PKNCA)
     })
-    
+
     # Return list
     list(
       selections = parameter_lists_by_type,

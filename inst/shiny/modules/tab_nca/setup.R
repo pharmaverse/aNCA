@@ -69,7 +69,8 @@ setup_server <- function(id, data, adnca_data) {
       "nca_settings",
       data,
       adnca_data,
-      settings_override)
+      settings_override
+    )
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
@@ -104,7 +105,7 @@ setup_server <- function(id, data, adnca_data) {
     })
 
     summary_output <- summary_server("nca_setup_summary", base_pknca_data)
-    
+
     # Update intervals using summary output
     processed_pknca_data <- reactive({
       req(base_pknca_data(), summary_output$selections(), summary_output$types_df())
@@ -154,14 +155,14 @@ setup_server <- function(id, data, adnca_data) {
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0
       )
-      
-      params = c("lambda.z.n.points", "lambda.z.time.first",
-                 "r.squared", "adj.r.squared", "tmax")
-    
+
+      params <- c("lambda.z.n.points", "lambda.z.time.first",
+                  "r.squared", "adj.r.squared", "tmax")
+
       df$intervals <- df$intervals %>%
         mutate(across(any_of(params), ~ TRUE, .names = "{.col}"),
                impute = NA)
-      
+
       df
     })
 
@@ -170,8 +171,7 @@ setup_server <- function(id, data, adnca_data) {
       slopes_pknca_data,
       manual_slopes_override
     )
-    
-    
+
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {
