@@ -76,13 +76,17 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         # this is implemented here via hardcoding in PPSTRESU
         pknca_object$units <- pknca_object$units %>%
           mutate(
-            PPSTRESU = ifelse(
-              PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                metadata_nca_parameters$unit_type == "volume"
-              ],
-              sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
-              PPSTRESU
-            ),
+            PPSTRESU = {
+              new_ppstresu <- ifelse(
+                PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                  metadata_nca_parameters$unit_type == "volume"
+                ],
+                sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
+                PPSTRESU
+              )
+              # Only accept changes producing simple units
+              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
+            },
             conversion_factor = ifelse(
               PPTESTCD %in% metadata_nca_parameters$PKNCA[
                 metadata_nca_parameters$unit_type == "volume"
