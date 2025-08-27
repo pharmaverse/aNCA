@@ -93,14 +93,6 @@ setup_server <- function(id, data, adnca_data) {
         shinyjs::hide(selector = ".bioavailability-picker")
       }
 
-      if (nrow(base_pknca_data$intervals) == 0) {
-        showNotification(
-          "All intervals were filtered. Please revise your settings",
-          type = "warning",
-          duration = 10
-        )
-      }
-
       base_pknca_data
     })
 
@@ -121,6 +113,14 @@ setup_server <- function(id, data, adnca_data) {
         impute = settings()$data_imputation$impute_c0
       )
 
+      if (nrow(final_data$intervals) == 0) {
+        showNotification(
+          "All intervals were filtered. Please revise your settings",
+          type = "warning",
+          duration = 10
+        )
+      }
+      
       final_data
     })
 
