@@ -230,7 +230,8 @@ update_main_intervals <- function(data, parameter_selections,
 #' @export
 update_slopes_intervals <- function(
     data,
-    params = NULL,
+    params = c("lambda.z.n.points", "lambda.z.time.first",
+               "r.squared", "adj.r.squared", "tmax"),
     should_impute_c0 = TRUE
 ) {
 

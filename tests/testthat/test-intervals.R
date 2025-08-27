@@ -263,3 +263,41 @@ describe("update_main_intervals", {
   })
   
 })
+
+describe("update_slope_intervals", {
+  # setup data using FIXTURES
+  data <- FIXTURE_PKNCA_DATA
+  
+  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
+                              c("start", "end"))
+  
+  data$intervals <- data$intervals %>%
+    mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params),
+           PCSPEC = "SERUM",
+           STUDYID = "S1") %>%
+    filter(type_interval == "main") %>%
+    select(-impute)
+  
+  slope_params <- c("cmax", "tmax", "half.life")
+  
+  it("correctly sets specified parameter flags to TRUE", {
+    result <- update_slopes_intervals(data, params = slope_params, should_impute_c0 = FALSE)
+    
+    # Check that the specified columns are now TRUE
+    expect_true(all(result$intervals[, slope_params] == TRUE))
+    
+    # Check that other parameter columns remain FALSE
+    other_params <- setdiff(all_pknca_params, slope_params)
+    expect_true(all(result$intervals[, other_params] == FALSE))
+  })
+  
+  it("does not impute when should_impute_c0 is FALSE", {
+    result <- update_slopes_intervals(data, params = slope_params, should_impute_c0 = FALSE)
+    
+    # The main object's impute slot should be NA
+    expect_true(is.na(result$impute))
+    
+    # The intervals data frame should not have an impute column
+    expect_false("impute" %in% names(result$intervals))
+  })
+})
