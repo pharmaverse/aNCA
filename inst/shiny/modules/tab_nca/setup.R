@@ -157,10 +157,12 @@ setup_server <- function(id, data, adnca_data) {
       
       params = c("lambda.z.n.points", "lambda.z.time.first",
                  "r.squared", "adj.r.squared", "tmax")
-      df %>%
-        update_slopes_intervals(params = params,
-                                should_impute_c0 = settings()$data_imputation$impute_c0)
-        
+    
+      df$intervals <- df$intervals %>%
+        mutate(across(any_of(params), ~ TRUE, .names = "{.col}"),
+               impute = NA)
+      
+      df
     })
 
     slope_rules <- slope_selector_server(

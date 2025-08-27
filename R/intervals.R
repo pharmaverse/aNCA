@@ -190,81 +190,45 @@ update_main_intervals <- function(data, parameter_selections,
   
   # Impute start values if requested
   if (impute) {
-    data <- create_start_impute(data)
-    
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-    
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
-      intersect(names(PKNCA::get.interval.cols()))
-    
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-    
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
+    data <- handle_imputation(data)
   }
   
   data
 }
 
-#' Update  a PKNCAdata object for slope calculations
+#' Handle Imputation for PKNCA Data
 #'
-#' @param data A PKNCAdata object containing intervals and dosing data.
-#' @param params A character vector of parameters to include in slope calculations.
-#' @param should_impute_c0 Logical indicating whether to impute start values for parameters.
+#' Applies imputation rules to a PKNCAdata object, imputing start values and then
+#' selectively removing imputation for parameters that are not dependent on AUC.
 #'
-#' @returns A fully configured `PKNCAdata` object.
-#'
+#' @param data A PKNCAdata object.
+#' @returns A PKNCAdata object with imputation rules applied.
 #' @import dplyr
 #'
-#' @export
-update_slopes_intervals <- function(
-    data,
-    params = c("lambda.z.n.points", "lambda.z.time.first",
-               "r.squared", "adj.r.squared", "tmax"),
-    should_impute_c0 = TRUE
-) {
-
-  data$intervals <- data$intervals %>%
-    mutate(across(any_of(params), ~ TRUE, .names = "{.col}"))
+handle_imputation <- function(data) {
+  data <- create_start_impute(data)
   
-  data$impute <- NA
+  # Don't impute parameters that are not AUC dependent
+  params_auc_dep <- metadata_nca_parameters %>%
+    filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
+    pull(PKNCA)
   
-  # Impute start values if requested
-  if (should_impute_c0) {
-    data <- create_start_impute(data)
-    
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-    
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
-      intersect(names(PKNCA::get.interval.cols()))
-    
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-    
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
-  }
+  params_not_to_impute <- metadata_nca_parameters %>%
+    filter(!grepl("auc|aumc", PKNCA),
+           !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
+    pull(PKNCA) |>
+    intersect(names(PKNCA::get.interval.cols()))
+  
+  all_impute_methods <- na.omit(unique(data$intervals$impute))
+  
+  # Iteratively remove imputation for non-AUC-dependent parameters
+  data$intervals <- Reduce(function(d, ti_arg) {
+    interval_remove_impute(
+      d,
+      target_impute = ti_arg,
+      target_params = params_not_to_impute
+    )
+  }, all_impute_methods, init = data$intervals)
   
   data
 }
