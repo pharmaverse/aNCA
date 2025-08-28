@@ -120,7 +120,7 @@ setup_server <- function(id, data, adnca_data) {
           duration = 10
         )
       }
-      
+
       final_data
     })
 

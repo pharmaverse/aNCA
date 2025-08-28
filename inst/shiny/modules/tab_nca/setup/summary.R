@@ -164,11 +164,11 @@ summary_server <- function(id, processed_pknca_data) {
         split(.$study_type) %>%
         purrr::map(~ .x$PKNCA)
     })
-    
+
     # Debounce the trigger, so the data is not updated too often.
     parameter_debounce <- 2500
     parameters_debounced <- debounce(parameter_lists_by_type, parameter_debounce)
-    
+
     # On all changes, disable NCA button for given period of time to prevent the user from running
     # the NCA before settings are applied.
     observeEvent(parameter_lists_by_type(), {
