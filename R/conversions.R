@@ -242,12 +242,19 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' Simplify compound unit expressions
 #'
 #' This function takes a units object or a character string representing a unit expression
-#' and returns a simplified units object
+#' and returns a simplified units object by canceling when possible its convertible terms.
 #'
 #' @param x A units object, character string, or vector of either to be simplified.
 #' @param as_character Logical. TRUE returns the result as a character,
 #' FALSE (default) as a unit object.
 #' @returns A simplified units object, or a list of units objects if input is a vector.
+#' @examples
+#' # Using a units object
+#' u <- units::set_units(1, "L*g/mg", mode = "standard")
+#' simplify_unit(u)
+#'
+#' # Using a character string
+#' simplify_unit("(mg*L)/(mL)")
 #' @export
 simplify_unit <- function(x, as_character = FALSE) {
   # NA input returns NA output

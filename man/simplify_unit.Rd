@@ -17,5 +17,13 @@ A simplified units object, or a list of units objects if input is a vector.
 }
 \description{
 This function takes a units object or a character string representing a unit expression
-and returns a simplified units object
+and returns a simplified units object by canceling when possible its convertible terms.
+}
+\examples{
+# Using a units object
+u <- units::set_units(1, "L*g/mg", mode = "standard")
+simplify_unit(u)
+
+# Using a character string
+simplify_unit("(mg*L)/(mL)")
 }
