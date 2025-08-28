@@ -12,7 +12,7 @@
 #' @returns List with reactive expressions:
 #'   * manual_slopes - Data frame containing inclusions / exclusions.
 #'   * profiles_per_subject - Grouping for each subject.
-#'   * slopes_groups - Grouping for the slopes, in accordance to the settings.
+#'   * slopes_pknca_groups - Grouping for the slopes, in accordance to the settings.
 
 slope_selector_ui <- function(id) {
   ns <- NS(id)
@@ -128,9 +128,22 @@ slope_selector_server <- function( # nolint
 
     ns <- session$ns
 
-    #Get grouping columns for plots and tables
-    slopes_groups <- reactive({
+    slopes_pknca_data <- reactive({
       req(pknca_data())
+      browser()
+      pknca_data <- pknca_data()
+      pknca_data$intervals <- pknca_data$intervals %>%
+        mutate(
+          half.life = TRUE
+        )
+      pknca_data
+    })
+
+    #Get grouping columns for plots and tables
+    slopes_pknca_groups <- reactive({
+      req(pknca_data())
+      browser()
+      get_groups(pknca_data())
 
       pknca_data()$conc$columns$groups %>%
         purrr::list_c() %>%
@@ -161,69 +174,38 @@ slope_selector_server <- function( # nolint
     #' Plot data is a local reactive copy of full data. The purpose is to display data that
     #' is already adjusted with the applied rules, so that the user can verify added selections
     #' and exclusions before applying them to the actual dataset.
-    plot_data <- reactive({
-      req(pknca_data(), manual_slopes(), profiles_per_subject())
-      filter_slopes(pknca_data(), manual_slopes(), profiles_per_subject(), slopes_groups())
-    }) %>%
-      shiny::debounce(750)
-
-    # Generate dynamically the minimum results you need for the lambda plots
-    lambdas_res <- reactive({
-      req(plot_data())
-      if (!"type_interval" %in% names(plot_data()$intervals)) {
-        NULL
-      } else if (all(!unlist(plot_data()$intervals[sapply(plot_data()$intervals, is.logical)]))) {
-        NULL
-      } else {
-        result_obj <- suppressWarnings(PKNCA::pk.nca(data = plot_data(), verbose = FALSE))
-        result_obj$result <- result_obj$result %>%
-          mutate(start_dose = start, end_dose = end)
-
-        result_obj
-      }
-    })
-
-    # Profiles per Patient ----
-    # Define the profiles per patient
-    profiles_per_subject <- reactive({
-      req(pknca_data())
-
-      pknca_data()$intervals %>%
-        mutate(USUBJID = as.character(USUBJID),
-               NCA_PROFILE = as.character(NCA_PROFILE),
-               DOSNOA = as.character(DOSNOA)) %>%
-        group_by(!!!syms(c(unname(unlist(pknca_data()$conc$columns$groups)), "DOSNOA"))) %>%
-        summarise(NCA_PROFILE = unique(NCA_PROFILE), .groups = "drop") %>%
-        unnest(NCA_PROFILE)  # Convert lists into individual rows
-    })
+    # plot_data <- reactive({
+    #   req(pknca_data(), manual_slopes(), profiles_per_subject())
+    #   filter_slopes(pknca_data(), manual_slopes(), profiles_per_subject(), slopes_pknca_groups())
+    # }) %>%
+    #   shiny::debounce(750)
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
     #' Scans for any related reactives (page number, subject filter etc) and updates the plot output
     #' UI to have only plotlyOutput elements for desired plots.
     observeEvent(list(
-      plot_data(), lambdas_res(), input$plots_per_page, input$search_subject, current_page()
+      pknca_data(), input$plots_per_page, input$search_subject, current_page()
     ), {
-      req(lambdas_res())
+      req(pknca_data())
       log_trace("{id}: Updating displayed plots")
-
+browser()
+      # Decide
       # Make sure the search_subject input is not NULL
       search_subject <- {
         if (is.null(input$search_subject) || length(input$search_subject) == 0) {
-          unique(lambdas_res()$result$USUBJID)
+          subject_col <- pknca_data()$conc$columns$subject
+          unique(
+            slopes_pknca_data()$intervals %>%
+              filter(half.life) %>%
+              .[[subject_col]]
+          )
         } else {
           input$search_subject
         }
       }
 
-      # create plot ids based on available data #
-      subject_profile_plot_ids <- pknca_data()$intervals %>%
-        select(any_of(c(unname(unlist(pknca_data()$dose$columns$groups)),
-                        unname(unlist(pknca_data()$conc$columns$groups)),
-                        "NCA_PROFILE", "DOSNOA"))) %>%
-        filter(USUBJID %in% search_subject) %>%
-        select(slopes_groups(), USUBJID, DOSNOA) %>%
-        unique() %>%
-        arrange(USUBJID)
+      # Get all lambda z slope plots
+      plot_outputs <- get_halflife_plot(pknca_data())
 
       # find which plots should be displayed based on page #
       num_plots <- nrow(subject_profile_plot_ids)
@@ -241,34 +223,12 @@ slope_selector_server <- function( # nolint
 
       # update page number display #
       output$page_number <- renderUI(num_pages)
-
-      plots_to_render <- slice(ungroup(subject_profile_plot_ids), page_start:page_end)
 browser()
-      plot_outputs <- apply(plots_to_render, 1, function(row) {
 
-        lambda_slope_plot(
-          conc_pknca_df = plot_data()$conc$data,
-          row_values = as.list(row),
-          myres = lambdas_res(),
-          r2adj_threshold = 0.7,
-          time_column = pknca_data()$conc$columns$time
-        ) |>
-          htmlwidgets::onRender(
-            # nolint start
-            "function(el, x) {
-              const plotlyElements = $('.slope-selector-module .plotly.html-widget.html-fill-item.html-widget-static-bound.js-plotly-plot');
-              plotlyElements.css('height', '100%');
-              plotlyElements.css('aspect-ratio', '1');
-              window.dispatchEvent(new Event('resize'));
-            }"
-            # nolint end
-          )
-      })
-
-
+      # Render only the plots requested by the user
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs
+        plot_outputs[page_start:page_end]
       })
 
       # update jump to page selector #
@@ -292,23 +252,20 @@ browser()
     })
 
     #' Rendering slope plots based on nca data.
-    observeEvent(lambdas_res(), {
-      req(
-        lambdas_res(),
-        profiles_per_subject()
-      )
+    observeEvent(pknca_data(), {
+      req(pknca_data())
       log_trace("{id}: Rendering plots")
       # Update the subject search input to make available choices for the user
       updateSelectInput(
         session = session,
         inputId = "search_subject",
         label = "Search Subject",
-        choices = unique(lambdas_res()$result$USUBJID)
+        choices = unique(pknca_data()$intervals$USUBJID)
       )
     })
 
     slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data,
-                                               profiles_per_subject, slopes_groups)
+                                               profiles_per_subject, slopes_pknca_groups)
 
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
@@ -316,9 +273,9 @@ browser()
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveValues()
 
-    observeEvent(slopes_groups(), {
-      # Reinitialize dynamic columns when slopes_groups changes
-      for (col in tolower(slopes_groups())) {
+    observeEvent(slopes_pknca_groups(), {
+      # Reinitialize dynamic columns when slopes_pknca_groups changes
+      for (col in tolower(slopes_pknca_groups())) {
         last_click_data[[col]] <- ""
       }
       last_click_data$idx_pnt <- ""
@@ -329,7 +286,7 @@ browser()
 
       result <- handle_plotly_click(last_click_data,
                                     manual_slopes,
-                                    slopes_groups(),
+                                    slopes_pknca_groups(),
                                     event_data("plotly_click"))
       # Update reactive values in the observer
       last_click_data <- result$last_click_data
@@ -373,8 +330,7 @@ browser()
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
     list(
       manual_slopes = manual_slopes,
-      profiles_per_subject = profiles_per_subject,
-      slopes_groups = slopes_groups
+      slopes_pknca_groups = slopes_pknca_groups
     )
   })
 }
