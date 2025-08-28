@@ -35,13 +35,13 @@ The study types are determined as follows:
 \item "Excretion Data": If the volume column for a group is not NA and has values > 0.
 \item "Single Extravascular Dose": If there is only one dose and TAU is not available,
 and the route is extravascular.
-\item "Single IV Dose": If there is only one dose and TAU is not present,
+\item "Single IV Infusion Dose": If there is only one dose and TAU is not present,
 and the route is not extravascular.
 \item "Single IV Bolus Dose": If there is only one dose and TAU is not present,
 the route is not extravascular, and ADOSEDUR == 0.
 \item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 and the route is extravascular.
-\item "Multiple IV Doses": If there are multiple doses (or TAU is available)
+\item "Multiple IV Infusion Doses": If there are multiple doses (or TAU is available)
 and the route is not extravascular.
 \item "Multiple IV Bolus Doses": If there are multiple doses or TAU is not present,
 the route is not extravascular, and ADOSEDUR == 0.

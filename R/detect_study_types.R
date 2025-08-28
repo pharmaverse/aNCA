@@ -19,13 +19,13 @@
 #'  - "Excretion Data": If the volume column for a group is not NA and has values > 0.
 #'  - "Single Extravascular Dose": If there is only one dose and TAU is not available,
 #'   and the route is extravascular.
-#'  - "Single IV Dose": If there is only one dose and TAU is not present,
+#'  - "Single IV Infusion Dose": If there is only one dose and TAU is not present,
 #'   and the route is not extravascular.
 #'  - "Single IV Bolus Dose": If there is only one dose and TAU is not present,
 #'   the route is not extravascular, and ADOSEDUR == 0.
 #'  - "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 #'   and the route is extravascular.
-#'  - "Multiple IV Doses": If there are multiple doses (or TAU is available)
+#'  - "Multiple IV Infusion Doses": If there are multiple doses (or TAU is available)
 #'   and the route is not extravascular.
 #'  - "Multiple IV Bolus Doses": If there are multiple doses or TAU is not present,
 #'   the route is not extravascular, and ADOSEDUR == 0.
@@ -106,10 +106,10 @@ detect_study_types <- function(data, route_column, volume_column = "volume") {
     mutate(type = case_when(
       is_excretion ~ "Excretion Data",
       is_one_dose & is_extravascular ~ "Single Extravascular Dose",
-      is_one_dose & !is_extravascular & !is_bolus ~ "Single IV Dose",
+      is_one_dose & !is_extravascular & !is_bolus ~ "Single IV Infusion Dose",
       is_one_dose & is_bolus ~ "Single IV Bolus Dose",
       !is_one_dose & is_extravascular ~ "Multiple Extravascular Doses",
-      !is_one_dose & !is_extravascular & !is_bolus ~ "Multiple IV Doses",
+      !is_one_dose & !is_extravascular & !is_bolus ~ "Multiple IV Infusion Doses",
       !is_one_dose & is_bolus ~ "Multiple IV Bolus Doses",
       TRUE ~ "Unknown"
     )) %>%
