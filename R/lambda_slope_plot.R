@@ -309,7 +309,7 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
     group_nca$result <- merge(group_nca$result, group[, group_vars, drop = FALSE])
 
     # Extract NCA results for annotation
-    get_res <- function(testcd) group_nca$result$PPORRES[group_nca$result$PPTESTCD == testcd]
+    get_res <- function(testcd) group_nca$result$PPSTRES[group_nca$result$PPTESTCD == testcd]
     get_unit <- function(testcd) group_nca$result$PPSTRESU[group_nca$result$PPTESTCD == testcd]
     start <- unique(group_nca$result$start) # this has to have a better way
     tlast <- get_res("tlast")
