@@ -24,7 +24,7 @@ summary_server <- function(id, processed_pknca_data) {
 
     study_types_df <- reactive({
       req(processed_pknca_data())
-      # Get the concentration data and the final, filtered intervals data
+      # Get the concentration data and the filtered intervals data
       conc_data <- processed_pknca_data()$conc$data
       intervals_data <- processed_pknca_data()$intervals
 
@@ -164,10 +164,27 @@ summary_server <- function(id, processed_pknca_data) {
         split(.$study_type) %>%
         purrr::map(~ .x$PKNCA)
     })
+    
+    # Debounce the trigger, so the data is not updated too often.
+    parameter_debounce <- 2500
+    parameters_debounced <- debounce(parameter_lists_by_type, parameter_debounce)
+    
+    # On all changes, disable NCA button for given period of time to prevent the user from running
+    # the NCA before settings are applied.
+    observeEvent(parameter_lists_by_type(), {
+      runjs(str_glue(
+        "buttonTimeout(
+          '.run-nca-btn',
+          {parameter_debounce + 250},
+          'Applying<br>settings...',
+          'Run NCA'
+        );"
+      ))
+    })
 
     # Return list
     list(
-      selections = parameter_lists_by_type,
+      selections = parameters_debounced,
       types_df = study_types_df
     )
   })
