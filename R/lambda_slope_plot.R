@@ -257,7 +257,11 @@ lambda_slope_plot <- function(
 }
 
 
-get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
+get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
+
+  # Obtain the results
+  o_nca <- PKNCA::pk.nca(pknca_data)
+
   # Ensure result columns are present
   if (!"PPSTRES" %in% names(o_nca$result)) {
     o_nca$result$PPSTRES <- o_nca$result$PPORRES
@@ -265,9 +269,9 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
       o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
     }
   }
- 
+
   # Get grouping structure for lambda.z
-  groups <- getGroups(o_nca %>% dplyr::filter(PPTESTCD == "lambda.z")) %>% unique()
+  groups <- PKNCA::getGroups(o_nca %>% dplyr::filter(PPTESTCD == "lambda.z")) %>% unique()
   groups <- o_nca$result %>%
     select(any_of(c(group_vars(o_nca), "start", "end", "PPTESTCD"))) %>%
     dplyr::filter(PPTESTCD == "lambda.z") %>%
@@ -339,7 +343,7 @@ get_halflife_plot <- function(o_nca, add_annotations = TRUE) {
         )
       )
     if (!is.na(half_life)) {
-      is_lz_used <- get_halflife_points(group_nca_for_fun)
+      is_lz_used <- PKNCA::get_halflife_points(group_nca_for_fun)
     } else {
       is_lz_used <- rep(NA_real_, nrow(df))
     }
