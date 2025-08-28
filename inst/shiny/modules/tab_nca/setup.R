@@ -48,8 +48,8 @@ setup_ui <- function(id) {
         open = c("General Settings", "Parameter Selection")
       )
     ),
-    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
-    nav_panel("Summary", summary_ui(ns("nca_setup_summary")))
+    nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
+    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
   )
 }
 
@@ -96,19 +96,19 @@ setup_server <- function(id, data, adnca_data) {
       base_pknca_data
     })
 
-    summary_output <- summary_server("nca_setup_summary", base_pknca_data)
+    parameters_output <- parameter_selection_server("nca_setup_parameter", base_pknca_data)
 
     # Update intervals using summary output
     processed_pknca_data <- reactive({
-      req(base_pknca_data(), summary_output$selections(), summary_output$types_df())
+      req(base_pknca_data(), parameters_output$selections(), parameters_output$types_df())
 
       final_data <- base_pknca_data()
 
       # Call the updated function with the direct inputs
       final_data <- update_main_intervals(
         data = base_pknca_data(),
-        parameter_selections = summary_output$selections(),
-        study_types_df = summary_output$types_df(),
+        parameter_selections = parameters_output$selections(),
+        study_types_df = parameters_output$types_df(),
         auc_data = settings()$partial_aucs,
         impute = settings()$data_imputation$impute_c0
       )

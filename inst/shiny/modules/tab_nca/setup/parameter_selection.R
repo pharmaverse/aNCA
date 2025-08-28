@@ -8,7 +8,7 @@
 #' @param processed_pknca_data PKNCA data that was processed in accordance to setup rules.
 #'
 #' @returns A reactive data frame with the parameter selections by study type.
-summary_ui <- function(id) {
+parameter_selection_ui <- function(id) {
   ns <- NS(id)
   tagList(
     p("The following study types were detected in the data:"),
@@ -17,7 +17,7 @@ summary_ui <- function(id) {
   )
 }
 
-summary_server <- function(id, processed_pknca_data) {
+parameter_selection_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
