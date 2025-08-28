@@ -37,10 +37,14 @@ The study types are determined as follows:
 and the route is extravascular.
 \item "Single IV Dose": If there is only one dose and TAU is not present,
 and the route is not extravascular.
+\item "Single IV Bolus Dose": If there is only one dose and TAU is not present,
+the route is not extravascular, and ADOSEDUR == 0.
 \item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 and the route is extravascular.
 \item "Multiple IV Doses": If there are multiple doses (or TAU is available)
 and the route is not extravascular.
+\item "Multiple IV Bolus Doses": If there are multiple doses or TAU is not present,
+the route is not extravascular, and ADOSEDUR == 0.
 \item If none of these conditions are met, the type is marker as "Unknown".
 }
 }

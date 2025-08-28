@@ -21,10 +21,14 @@
 #'   and the route is extravascular.
 #'  - "Single IV Dose": If there is only one dose and TAU is not present,
 #'   and the route is not extravascular.
+#'  - "Single IV Bolus Dose": If there is only one dose and TAU is not present,
+#'   the route is not extravascular, and ADOSEDUR == 0.
 #'  - "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 #'   and the route is extravascular.
 #'  - "Multiple IV Doses": If there are multiple doses (or TAU is available)
 #'   and the route is not extravascular.
+#'  - "Multiple IV Bolus Doses": If there are multiple doses or TAU is not present,
+#'   the route is not extravascular, and ADOSEDUR == 0.
 #'  - If none of these conditions are met, the type is marker as "Unknown".
 #'
 #' @returns A data frame summarizing the detected study types,
@@ -93,6 +97,7 @@ detect_study_types <- function(data, route_column, volume_column = "volume") {
            missing_tau = !has_tau || all(is.na(get("TAU"))),
            is_one_dose = single_dose_present & missing_tau,
            is_extravascular = !!sym(route_column) == "extravascular",
+           is_bolus = !is_extravascular & ADOSEDUR == 0,
            is_excretion = (!is.na(!!sym(volume_column)) & !!sym(volume_column) > 0)) %>%
     ungroup()
 
@@ -101,9 +106,11 @@ detect_study_types <- function(data, route_column, volume_column = "volume") {
     mutate(type = case_when(
       is_excretion ~ "Excretion Data",
       is_one_dose & is_extravascular ~ "Single Extravascular Dose",
-      is_one_dose & !is_extravascular ~ "Single IV Dose",
+      is_one_dose & !is_extravascular & !is_bolus ~ "Single IV Dose",
+      is_one_dose & is_bolus ~ "Single IV Bolus Dose",
       !is_one_dose & is_extravascular ~ "Multiple Extravascular Doses",
-      !is_one_dose & !is_extravascular ~ "Multiple IV Doses",
+      !is_one_dose & !is_extravascular & !is_bolus ~ "Multiple IV Doses",
+      !is_one_dose & is_bolus ~ "Multiple IV Bolus Doses",
       TRUE ~ "Unknown"
     )) %>%
     select(!!!syms(full_grouping), type) %>%
