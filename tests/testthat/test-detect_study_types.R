@@ -9,18 +9,19 @@ describe("detect_study_types", {
     DOSNOA = 1,
     ROUTE = "IV",
     VOL = 0,
-    TAU = NA_real_
+    TAU = NA_real_,
+    ADOSEDUR = 0
   )
 
   # --- Test each study type classification ---
 
-  it("correctly identifies a 'Single IV Dose' study", {
+  it("correctly identifies a 'Single IV Bolus Dose' study", {
     test_data <- base_data
     result <- detect_study_types(test_data, "ROUTE", "VOL")
 
     expect_s3_class(result, "data.frame")
     expect_equal(nrow(result), 1)
-    expect_equal(result$type, "Single IV Dose")
+    expect_equal(result$type, "Single IV Bolus Dose")
   })
 
   it("correctly identifies a 'Single Extravascular Dose' study", {
@@ -31,8 +32,18 @@ describe("detect_study_types", {
     expect_equal(nrow(result), 1)
     expect_equal(result$type, "Single Extravascular Dose")
   })
+  
+  it("correctly identifies a `Single IV Infusion Dose` study", {
+    test_data <- base_data %>%
+      mutate(ADOSEDUR = 2)
+    
+    result <- detect_study_types(test_data, "ROUTE", "VOL")
+    
+    expect_equal(nrow(result), 1)
+    expect_equal(result$type, "Single IV Infusion Dose")
+  })
 
-  it("correctly identifies a 'Multiple IV Doses' study via multiple DOSNOA", {
+  it("correctly identifies a 'Multiple IV Bolus Doses' study via multiple DOSNOA", {
     test_data <- bind_rows(
       base_data,
       base_data %>% mutate(DOSNOA = 2)
@@ -40,7 +51,7 @@ describe("detect_study_types", {
     result <- detect_study_types(test_data, "ROUTE", "VOL")
 
     expect_equal(nrow(result), 1)
-    expect_equal(result$type, "Multiple IV Doses")
+    expect_equal(result$type, "Multiple IV Bolus Doses")
   })
 
   it("correctly identifies a 'Multiple Extravascular Doses' study via a non-NA TAU", {
@@ -50,6 +61,17 @@ describe("detect_study_types", {
 
     expect_equal(nrow(result), 1)
     expect_equal(result$type, "Multiple Extravascular Doses")
+  })
+  
+  it("correctly identifies a 'Multiple IV Infusion Doses' study via multiple DOSNOA", {
+    test_data <- bind_rows(
+      base_data %>% mutate(ADOSEDUR = 2),
+      base_data %>% mutate(DOSNOA = 2, ADOSEDUR = 2)
+    )
+    result <- detect_study_types(test_data, "ROUTE", "VOL")
+    
+    expect_equal(nrow(result), 1)
+    expect_equal(result$type, "Multiple IV Infusion Doses")
   })
 
   it("correctly identifies 'Excretion Data', which takes precedence over other types", {
@@ -66,7 +88,7 @@ describe("detect_study_types", {
     # Test for single dose without TAU column
     test_data_single <- base_data %>% select(-TAU)
     result_single <- detect_study_types(test_data_single, "ROUTE", "VOL")
-    expect_equal(result_single$type, "Single IV Dose")
+    expect_equal(result_single$type, "Single IV Bolus Dose")
 
     # Test for multiple doses without TAU column
     test_data_multi <- bind_rows(
@@ -75,14 +97,14 @@ describe("detect_study_types", {
     ) %>%
       select(-TAU)
     result_multi <- detect_study_types(test_data_multi, "ROUTE", "VOL")
-    expect_equal(result_multi$type, "Multiple IV Doses")
+    expect_equal(result_multi$type, "Multiple IV Bolus Doses")
   })
 
   it("handles data frames without a volume column correctly", {
     # Test for single dose without volume column
     test_data_single <- base_data %>% select(-VOL)
     result_single <- detect_study_types(test_data_single, "ROUTE")
-    expect_equal(result_single$type, "Single IV Dose")
+    expect_equal(result_single$type, "Single IV Bolus Dose")
 
   })
 
@@ -94,8 +116,8 @@ describe("detect_study_types", {
       # USUBJID: Subj-2, Type: Single Extravascular
       base_data %>% mutate(USUBJID = "SUBJ02", ROUTE = "extravascular"),
       # USUBJID: Subj-3, Type: Multiple IV (via DOSNOA)
-      base_data %>% mutate(USUBJID = "SUBJ03"),
-      base_data %>% mutate(USUBJID = "SUBJ03", DOSNOA = 2),
+      base_data %>% mutate(USUBJID = "SUBJ03", ADOSEDUR = 2),
+      base_data %>% mutate(USUBJID = "SUBJ03", DOSNOA = 2, ADOSEDUR = 2),
       # USUBJID: Subj-4, Type: Multiple Extravascular (via TAU)
       base_data %>% mutate(USUBJID = "SUBJ04", ROUTE = "extravascular", TAU = 12)
     )
@@ -107,9 +129,9 @@ describe("detect_study_types", {
 
     # Check that all expected types are present in the 'type' column
     expected_types <- c(
-      "Single IV Dose",
+      "Single IV Bolus Dose",
       "Single Extravascular Dose",
-      "Multiple IV Doses",
+      "Multiple IV Infusion Doses",
       "Multiple Extravascular Doses",
       "Excretion Data"
     )
