@@ -75,7 +75,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         )
 
       # Add flaging column in the pivoted results
-      applied_flags <- settings()$flags[sapply(settings()$flags, FUN =  \(x) x$is.checked)]
+      applied_flags <- purrr::keep(settings()$flags, \(x) x$is.checked)
       flag_params <- names(settings()$flags)
       flag_thr <- sapply(settings()$flags, FUN =  \(x) x$threshold)
       flag_rule_msgs <- paste0(flag_params, c(" < ", " > ", " > ", " < "), flag_thr)

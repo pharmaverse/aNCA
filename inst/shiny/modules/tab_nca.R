@@ -150,8 +150,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
               # Apply flag rules to mark results in the `exclude` column
               PKNCA_hl_rules_exclusion(
                 rules = isolate(settings()$flags) |>
-                  purrr::keep(~ .x$is.checked) |>
-                  purrr::map(~ .x$threshold)
+                  purrr::keep(\(x) x$is.checked) |>
+                  purrr::map(\(x) x$threshold)
               ) %>%
               # Add parameter ratio calculations
               calculate_table_ratios_app(ratio_table = ratio_table())
