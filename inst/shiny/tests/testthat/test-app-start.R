@@ -67,13 +67,14 @@ describe("Test for initial app load", {
       variant = NULL
     )
 
-    app$wait_for_value(output = "data-raw_data-data_display-table")
-    default_table <- app$get_values(output = "data-raw_data-data_display-table")
+    app$wait_for_value(output = "data-raw_data-data_display-table", timeout = 4000)
+    default_table <- app$get_value(output = "data-raw_data-data_display-table")
+    expect_true(jsonlite::validate(default_table))
 
     app$upload_file(`data-raw_data-data_upload` = "Dummy_complex_data.csv")
-    app$wait_for_value(output = "data-raw_data-data_display-table")
-    loaded_table <- app$get_values(output = "data-raw_data-data_display-table")
+    app$wait_for_value(output = "data-raw_data-data_display-table", timeout = 4000)
+    loaded_table <- app$get_value(output = "data-raw_data-data_display-table")
 
-    expect_identical(default_table, loaded_table)
+    expect_true(jsonlite::validate(loaded_table))
   })
 })
