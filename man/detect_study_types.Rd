@@ -87,6 +87,10 @@ sample_data <- data.frame(
     "extravascular", "extravascular",
     "INTRAVENOUS", "INTRAVENOUS"
   ),
+  ADOSEDUR = c(
+  0, 0,
+  0, 0,
+  2, 2),
   SAMPLE_VOLUME = c(
     NA, 0,
     NA, 0,
