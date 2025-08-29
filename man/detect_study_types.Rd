@@ -101,7 +101,7 @@ sample_data <- data.frame(
 
 study_summary <- detect_study_types(
   data = sample_data,
-  groups = c("USUBJID, PCSPEC, DRUG"),
+  groups = c("USUBJID", "PCSPEC", "DRUG"),
   drug_column = "DRUG",
   analyte_column = "ANALYTE",
   route_column = "ROUTE",
