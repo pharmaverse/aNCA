@@ -672,19 +672,24 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' @importFrom PKNCA exclude
 #' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
-
   for (param in names(rules)) {
-    if (startsWith(param, "aucpext")) {
-      exc_fun <- exclude_nca_by_param(
+    if (startsWith(param, "AUCPE")) {
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         max_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps(gsub("pext", "inf", param))
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps(
+            translate_terms(gsub("PE", "IF", param), "PPTESTCD", "PKNCA")
+          )
+        )
       )
     } else {
-      exc_fun <- exclude_nca_by_param(
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         min_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps("half.life")
+        )
       )
     }
     res <- PKNCA::exclude(res, FUN = exc_fun)
