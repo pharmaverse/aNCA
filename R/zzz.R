@@ -2,6 +2,7 @@
   utils::globalVariables(c(
     ".",
     ":=",
+    "ADOSEDUR",
     "ARRLT",
     "ATPT",
     "ATPTN",
@@ -128,6 +129,9 @@
     "is.excluded.hl",
     "is.included.hl",
     "is.iv",
+    "is_extravascular",
+    "is_metabolite",
+    "is_one_dose",
     "legend_group",
     "log10_CI",
     "log10_Mean",

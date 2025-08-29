@@ -15,7 +15,9 @@ detect_study_types(
 }
 \arguments{
 \item{data}{The dataset containing the study types to be identified.
-Assumed to be the output from aNCA formatted concentration data.}
+Assumed to be the output from aNCA formatted concentration data.
+Must contain group columns, the specified route, analyte and drug columns,
+and ADOSEDUR.}
 
 \item{groups}{the grouping variables for the study type detection.}
 

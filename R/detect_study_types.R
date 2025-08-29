@@ -3,6 +3,8 @@
 #' This function detects the type of study based on the provided data.
 #' @param data The dataset containing the study types to be identified.
 #' Assumed to be the output from aNCA formatted concentration data.
+#' Must contain group columns, the specified route, analyte and drug columns,
+#' and ADOSEDUR.
 #' @param groups the grouping variables for the study type detection.
 #' @param drug_column A character string specifying the
 #'  column name for drug
