@@ -123,17 +123,22 @@ setup_server <- function(id, data, adnca_data) {
       req(adnca_data(), settings(), settings()$profile,
           settings()$analyte, settings()$pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
-
+browser()
       PKNCA_update_data_object(
         adnca_data = adnca_data(),
-        auc_data = settings()$partial_aucs,
-        method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        params = c("lambda.z.n.points", "lambda.z.time.first",
-                   "r.squared", "adj.r.squared", "tmax"),
-        should_impute_c0 = settings()$data_imputation$impute_c0
+        params = "half.life",
+        # The next parameters should not matter for the calculations
+        # So reactivity should not be involved
+        auc_data = data.frame(
+          start_auc = NA_real_,
+          end_auc = NA_real_
+        ),
+        method = "lin up/log down",
+        # TODO (Gerardo): This would better be FALSE, but start changes...
+        should_impute_c0 = TRUE
       )
     })
 

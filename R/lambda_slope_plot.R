@@ -259,6 +259,9 @@ lambda_slope_plot <- function(
 
 get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
 
+  # Add a ROWID in the data to track the points later
+  pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data)) 
+  
   # Obtain the results
   o_nca <- PKNCA::pk.nca(pknca_data)
 
@@ -303,7 +306,6 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
 
     # Filter and order by time
     df <- df[df[[time_col]] >= group$start & df[[time_col]] <= group$end, ]
-    df[["ROWID"]] <- seq_len(nrow(df))
     df <- df[order(df[[time_col]]), ]
     df$IX <- seq_len(nrow(df))
     
@@ -446,7 +448,11 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
           symbol = ifelse(plot_data[[exclude_hl_col]], "x", "circle"),
           size = 20
         ),
-        customdata = ~df[, c(group_vars, time_col)] # Returns the row number in the object
+        customdata = apply(
+          plot_data[, c(group_vars, "ROWID", "IX"), drop = FALSE],
+          1,
+          function(row) as.list(set_names(row, c(group_vars, "ROWID", "IX")))
+        )
       )
 
     plots[[i]] <- plotly_build(p)

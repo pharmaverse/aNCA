@@ -142,20 +142,23 @@ slope_selector_server <- function( # nolint
     #Get grouping columns for plots and tables
     slopes_pknca_groups <- reactive({
       req(pknca_data())
-
-      pknca_data()$intervals %>%
+      
+      browser()
+      relevant_group_cols <- pknca_data()$conc$data %>%
         select(
           any_of(
-            c(group_vars(pknca_data()), "start", "end", "NCA_PROFILE")
+            c(group_vars(pknca_data()), "NCA_PROFILE")
           )
         ) %>%
-        # Select only the columns that are strictly needed to identify each group
-        # That way the display for the user won't be saturated
-        mutate(GROUPID = 1:n()) %>%
-        select_minimal_grouping_cols(strata_cols = "GROUPID") %>%
-        select(-GROUPID)
+        # TODO (Gerardo): Include a better new version of select_minimal_grouping_cols
+        # Select columns that have more than 1 unique value
+        select(where(~ n_distinct(.) > 1)) %>%
+        colnames()
+
+      pknca_data()$intervals %>%
+        select(any_of(relevant_group_cols))
     })
-    
+
     # Get all lambda z slope plots
     plot_outputs <- reactiveVal(NULL)
     observeEvent(slopes_pknca_data(), {
@@ -213,8 +216,13 @@ slope_selector_server <- function( # nolint
         }
       }
 
+      has_plot_subject <- grepl(
+        paste0("USUBJID: ", "(", paste0(search_subject, collapse = ")|("), ")"),
+        names(plot_outputs())
+      )
+
       # find which plots should be displayed based on page #
-      num_plots <- nrow(slopes_pknca_groups())
+      num_plots <- sum(has_plot_subject)
       plots_per_page <- as.numeric(input$plots_per_page)
       num_pages <- ceiling(num_plots / plots_per_page)
       
@@ -233,7 +241,7 @@ slope_selector_server <- function( # nolint
       # Render only the plots requested by the user
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs()[page_start:page_end]
+        plot_outputs()[has_plot_subject][page_start:page_end]
       })
 
       # update jump to page selector #
@@ -288,8 +296,9 @@ slope_selector_server <- function( # nolint
     })
 
     observeEvent(event_data("plotly_click", priority = "event"), {
+      browser()
       log_trace("slope_selector: plotly click detected")
-      
+
       result <- handle_plotly_click(last_click_data,
                                     manual_slopes,
                                     slopes_pknca_groups(),

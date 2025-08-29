@@ -25,7 +25,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, c
   )
 
   # Extract additional information for idx_pnt
-  idx_pnt <- identifiers$IX
+  idx_pnt <- identifiers$ROWID
 
   # Create a copy of last_click_data
   updated_click_data <- last_click_data
