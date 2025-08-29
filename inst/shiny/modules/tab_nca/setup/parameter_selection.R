@@ -125,10 +125,15 @@ parameter_selection_server <- function(id, processed_pknca_data) {
         columns = col_defs,
         groupBy = "TYPE",
         filterable = TRUE,
+        sortable = TRUE,
+        highlight = TRUE,
+        wrap = FALSE,
+        resizable = TRUE,
         compact = TRUE,
-        height = "49vh",
-        bordered = TRUE,
-        resizable = TRUE
+        style = list(fontSize = "0.75em"),
+        class = "reactable-table",
+        #filterable = TRUE,
+        height = "49vh"
       )
     })
 
