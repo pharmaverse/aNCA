@@ -238,3 +238,46 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
   )
   message(msg)
 }
+
+#' Simplify compound unit expressions
+#'
+#' This function takes a units object or a character string representing a unit expression
+#' and returns a simplified units object by canceling when possible its convertible terms.
+#'
+#' @param x A units object, character string, or vector of either to be simplified.
+#' @param as_character Logical. TRUE returns the result as a character,
+#' FALSE (default) as a unit object.
+#' @returns A simplified units object, or a list of units objects if input is a vector.
+#' @examples
+#' # Using a units object
+#' u <- units::set_units(1, "L*g/mg", mode = "standard")
+#' simplify_unit(u)
+#'
+#' # Using a character string
+#' simplify_unit("(mg*L)/(mL)")
+#' @export
+simplify_unit <- function(x, as_character = FALSE) {
+  # NA input returns NA output
+  if (is.na(x)) {
+    if (as_character) return(NA_character_) else return(NA_real_)
+  }
+  # Accept either units object or character
+  if (is.character(x)) {
+    x <- units::as_units(x, check_is_valid = FALSE)
+  } else if (!inherits(x, "units")) {
+    stop("Input must be a units object or character string.")
+  }
+  unit_str <- units::deparse_unit(x)
+  unit_val <- as.numeric(x)
+  unit_parts <- unlist(strsplit(unit_str, split = " "))
+  unit_objs <- lapply(
+    unit_parts,
+    function(part) units::as_units(part, check_is_valid = FALSE)
+  )
+  new_unit <- Reduce(`*`, unit_objs) * unit_val
+  if (as_character) {
+    unname(units::deparse_unit(new_unit))
+  } else {
+    new_unit
+  }
+}
