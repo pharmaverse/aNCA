@@ -85,6 +85,8 @@ jobs:
 
       - name: Run tests
         shell: Rscript {0}
+        env:
+          NOT_CRAN: "true"
         run: |
           devtools::load_all(".")
-          testthat::test_dir("tests/testthat", stop_on_failure = TRUE)
+          testthat::test_local(stop_on_failure = TRUE)
