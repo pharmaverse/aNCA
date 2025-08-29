@@ -79,8 +79,10 @@
 #' )
 #'
 #' @export
-detect_study_types <- function(data, route_column, volume_column = "volume") {
-  full_grouping <- c("STUDYID", "DRUG", "USUBJID", "PCSPEC", route_column)
+detect_study_types <- function(data, groups, drug_column, analyte_column,
+                               route_column, volume_column = "volume") {
+
+  full_grouping <- c(groups, route_column)
 
   has_tau <- "TAU" %in% names(data)
 
@@ -98,21 +100,33 @@ detect_study_types <- function(data, route_column, volume_column = "volume") {
            is_one_dose = single_dose_present & missing_tau,
            is_extravascular = !!sym(route_column) == "extravascular",
            is_bolus = !is_extravascular & ADOSEDUR == 0,
-           is_excretion = (!is.na(!!sym(volume_column)) & !!sym(volume_column) > 0)) %>%
+           is_excretion = (!is.na(!!sym(volume_column)) & !!sym(volume_column) > 0),
+           is_metabolite = !!sym(analyte_column) != !!sym(drug_column)) %>%
     ungroup()
 
   # Identify unique combinations of study types
   study_types <- study_data %>%
-    mutate(type = case_when(
-      is_excretion ~ "Excretion Data",
-      is_one_dose & is_extravascular ~ "Single Extravascular Dose",
-      is_one_dose & !is_extravascular & !is_bolus ~ "Single IV Infusion Dose",
-      is_one_dose & is_bolus ~ "Single IV Bolus Dose",
-      !is_one_dose & is_extravascular ~ "Multiple Extravascular Doses",
-      !is_one_dose & !is_extravascular & !is_bolus ~ "Multiple IV Infusion Doses",
-      !is_one_dose & is_bolus ~ "Multiple IV Bolus Doses",
-      TRUE ~ "Unknown"
-    )) %>%
+    mutate(
+      # Determine dose frequency prefix
+      dose_prefix = if_else(is_one_dose, "Single", "Multiple"),
+      
+      # Determine the core route description
+      dose_description = case_when(
+        is_extravascular ~ "Extravascular",
+        !is_extravascular & !is_bolus ~ "IV Infusion",
+        is_bolus ~ "IV Bolus"
+      ),
+      
+      # Determine the metabolite suffix
+      metabolite_suffix = if_else(is_metabolite, " (Metabolite)", ""),
+      
+      # Combine, handling the special cases first
+      type = case_when(
+        is_excretion ~ "Excretion Data",
+        is.na(dose_description) ~ "Unknown",
+        TRUE ~ paste0(dose_prefix, " ", dose_description, metabolite_suffix)
+      )
+    ) %>%
     select(!!!syms(full_grouping), type) %>%
     distinct()
 }
