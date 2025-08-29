@@ -4,13 +4,26 @@
 \alias{detect_study_types}
 \title{Detect study types}
 \usage{
-detect_study_types(data, route_column, volume_column = "volume")
+detect_study_types(
+  data,
+  groups,
+  drug_column,
+  analyte_column,
+  route_column,
+  volume_column = "volume"
+)
 }
 \arguments{
 \item{data}{The dataset containing the study types to be identified.
-Assumed to be the output from aNCA formatted concentration data.
-Must contain the columns \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC},
-\code{DOSNOA} (created in \code{format_pkncaconc_data}) and the specified route column.}
+Assumed to be the output from aNCA formatted concentration data.}
+
+\item{groups}{the grouping variables for the study type detection.}
+
+\item{drug_column}{A character string specifying the
+column name for drug}
+
+\item{analyte_column}{A character string specifying the
+column name for analyte}
 
 \item{route_column}{A character string specifying the
 column name for the route of administration.}
@@ -52,6 +65,7 @@ the route is not extravascular, and ADOSEDUR == 0.
 sample_data <- data.frame(
   STUDYID = "STUDY001",
   DRUG = "Drug",
+  ANALYTE = "DRUG",
   USUBJID = c(
     # 1. Single IV Dose subject
     "Subj-01", "Subj-01",
@@ -85,6 +99,9 @@ sample_data <- data.frame(
 
 study_summary <- detect_study_types(
   data = sample_data,
+  groups = c("USUBJID, PCSPEC, DRUG"),
+  drug_column = "DRUG",
+  analyte_column = "ANALYTE",
   route_column = "ROUTE",
   volume_column = "SAMPLE_VOLUME"
 )

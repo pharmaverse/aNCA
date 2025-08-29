@@ -3,8 +3,11 @@
 #' This function detects the type of study based on the provided data.
 #' @param data The dataset containing the study types to be identified.
 #' Assumed to be the output from aNCA formatted concentration data.
-#' Must contain the columns `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`,
-#'  `DOSNOA` (created in `format_pkncaconc_data`) and the specified route column.
+#' @param groups the grouping variables for the study type detection.
+#' @param drug_column A character string specifying the
+#'  column name for drug
+#' @param analyte_column A character string specifying the
+#'  column name for analyte
 #' @param route_column A character string specifying the
 #'  column name for the route of administration.
 #' @param volume_column A character string specifying the
@@ -41,6 +44,7 @@
 #' sample_data <- data.frame(
 #'   STUDYID = "STUDY001",
 #'   DRUG = "Drug",
+#'   ANALYTE = "DRUG",
 #'   USUBJID = c(
 #'     # 1. Single IV Dose subject
 #'     "Subj-01", "Subj-01",
@@ -74,6 +78,9 @@
 #'
 #' study_summary <- detect_study_types(
 #'   data = sample_data,
+#'   groups = c("USUBJID, PCSPEC, DRUG"),
+#'   drug_column = "DRUG",
+#'   analyte_column = "ANALYTE",
 #'   route_column = "ROUTE",
 #'   volume_column = "SAMPLE_VOLUME"
 #' )
@@ -109,17 +116,17 @@ detect_study_types <- function(data, groups, drug_column, analyte_column,
     mutate(
       # Determine dose frequency prefix
       dose_prefix = if_else(is_one_dose, "Single", "Multiple"),
-      
+
       # Determine the core route description
       dose_description = case_when(
         is_extravascular ~ "Extravascular",
         !is_extravascular & !is_bolus ~ "IV Infusion",
         is_bolus ~ "IV Bolus"
       ),
-      
+
       # Determine the metabolite suffix
       metabolite_suffix = if_else(is_metabolite, " (Metabolite)", ""),
-      
+
       # Combine, handling the special cases first
       type = case_when(
         is_excretion ~ "Excretion Data",

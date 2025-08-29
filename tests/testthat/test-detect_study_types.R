@@ -34,13 +34,13 @@ describe("detect_study_types", {
     expect_equal(nrow(result), 1)
     expect_equal(result$type, "Single Extravascular")
   })
-  
+
   it("correctly identifies a `Single IV Infusion Dose` study", {
     test_data <- base_data %>%
       mutate(ADOSEDUR = 2)
-    
+
     result <- detect_study_types(test_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
-    
+
     expect_equal(nrow(result), 1)
     expect_equal(result$type, "Single IV Infusion")
   })
@@ -64,38 +64,38 @@ describe("detect_study_types", {
     expect_equal(nrow(result), 1)
     expect_equal(result$type, "Multiple Extravascular")
   })
-  
+
   it("correctly identifies a 'Multiple IV Infusion Doses' study via multiple DOSNOA", {
     test_data <- bind_rows(
       base_data %>% mutate(ADOSEDUR = 2),
       base_data %>% mutate(DOSNOA = 2, ADOSEDUR = 2)
     )
     result <- detect_study_types(test_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
-    
+
     expect_equal(nrow(result), 1)
     expect_equal(result$type, "Multiple IV Infusion")
   })
-  
+
   # --- Test Metabolite Types ---
-  
+
   it("correctly identifies a 'Single IV Bolus Dose Metabolite' study", {
     test_data <- base_data %>% mutate(ANALYTE = "METAB01")
     result <- detect_study_types(test_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
     expect_equal(result$type, "Single IV Bolus (Metabolite)")
   })
-  
+
   it("correctly identifies a 'Single Extravascular Dose Metabolite' study", {
     test_data <- base_data %>% mutate(ROUTE = "extravascular", ANALYTE = "METAB01")
     result <- detect_study_types(test_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
     expect_equal(result$type, "Single Extravascular (Metabolite)")
   })
-  
+
   it("correctly identifies a 'Single IV Infusion Dose Metabolite' study", {
     test_data <- base_data %>% mutate(ADOSEDUR = 2, ANALYTE = "METAB01")
     result <- detect_study_types(test_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
     expect_equal(result$type, "Single IV Infusion (Metabolite)")
   })
-  
+
   it("correctly identifies a 'Multiple IV Bolus Doses Metabolite' study", {
     test_data <- bind_rows(
       base_data %>% mutate(ANALYTE = "METAB01"),
@@ -104,7 +104,6 @@ describe("detect_study_types", {
     result <- detect_study_types(test_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
     expect_equal(result$type, "Multiple IV Bolus (Metabolite)")
   })
-  
 
   it("correctly identifies 'Excretion Data', which takes precedence over other types", {
     # This data would otherwise be classified as a "Single IV Dose"

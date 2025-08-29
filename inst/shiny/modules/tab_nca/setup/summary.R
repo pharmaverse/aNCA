@@ -31,11 +31,11 @@ summary_server <- function(id, processed_pknca_data) {
 
     study_types_df <- reactive({
       req(processed_pknca_data())
-      
+
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
       group_columns <- unique(c(conc_group_columns, dose_group_columns))
-      
+
       groups <- group_columns %>%
         purrr::keep(\(col) {
           !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
@@ -51,16 +51,17 @@ summary_server <- function(id, processed_pknca_data) {
 
     study_types_summary <- reactive({
       req(study_types_df())
-      
+
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
       group_columns <- unique(c(conc_group_columns, dose_group_columns))
-      
+
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "USUBJID" && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
+          !is.null(col) && col != "USUBJID" &&
+            length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
-      
+
       study_types_df()  %>%
         #summarise each unique type and group with number of USUBJID
         group_by(!!!syms(groups), type) %>%
