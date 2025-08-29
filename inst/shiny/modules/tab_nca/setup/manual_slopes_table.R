@@ -20,7 +20,7 @@ manual_slopes_table_ui <- function(id) {
 
 
 manual_slopes_table_server <- function(
-  id, mydata, slopes_groups
+  id, mydata, slopes_pknca_groups
 ) {
   moduleServer(id, function(input, output, session) {
 
@@ -28,9 +28,9 @@ manual_slopes_table_server <- function(
 
     # Reactive for Slope selector columns
     slope_selector_columns <- reactive({
-      req(slopes_groups())
+      req(slopes_pknca_groups())
       
-      c(names(slopes_groups()), "TYPE", "RANGE", "REASON")
+      c(names(slopes_pknca_groups()), "TYPE", "RANGE", "REASON")
     })
 
     #' Object for storing exclusion and selection data for lambda slope calculation
@@ -47,13 +47,13 @@ manual_slopes_table_server <- function(
       current_slopes <- manual_slopes()
       
       # Add missing dynamic columns with default values (e.g., NA_character_)
-      missing_cols <- setdiff(colnames(slopes_groups()), colnames(current_slopes))
+      missing_cols <- setdiff(colnames(slopes_pknca_groups()), colnames(current_slopes))
       for (missing_col in missing_cols) {
         current_slopes[[missing_col]] <- character()
       }
 
       # Define the desired column order
-      ordered_cols <- c(colnames(slopes_groups()), "TYPE", "RANGE", "REASON")
+      ordered_cols <- c(colnames(slopes_pknca_groups()), "TYPE", "RANGE", "REASON")
       current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
 
       # Update the reactive Val
@@ -68,7 +68,7 @@ manual_slopes_table_server <- function(
 
       # Create the new row with both fixed and dynamic columns
       new_row <- cbind(
-        slopes_groups()[1, ],
+        slopes_pknca_groups()[1, ],
         data.frame(
           TYPE = "Selection",
           RANGE = "1:3",
@@ -126,19 +126,19 @@ manual_slopes_table_server <- function(
           width = 400
         )
       )
-browser()
+
       # Dynamic group column definitions
-      dynamic_columns <- lapply(colnames(slopes_groups()), function(col) {
+      dynamic_columns <- lapply(colnames(slopes_pknca_groups()), function(col) {
         colDef(
           cell = dropdown_extra(
             id = ns(paste0("edit_", col)),
-            choices = unique(slopes_groups()[[col]]), # Dynamically set choices
+            choices = unique(slopes_pknca_groups()[[col]]), # Dynamically set choices
             class = "dropdown-extra"
           ),
           width = 150
         )
       })
-      names(dynamic_columns) <- colnames(slopes_groups())
+      names(dynamic_columns) <- colnames(slopes_pknca_groups())
 
       # Combine columns in the desired order
       all_columns <- c(

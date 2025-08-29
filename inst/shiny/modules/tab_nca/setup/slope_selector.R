@@ -148,7 +148,19 @@ slope_selector_server <- function( # nolint
           any_of(
             c(group_vars(pknca_data()), "start", "end", "NCA_PROFILE")
           )
-        )
+        ) %>%
+        # Select only the columns that are strictly needed to identify each group
+        # That way the display for the user won't be saturated
+        mutate(GROUPID = 1:n()) %>%
+        select_minimal_grouping_cols(strata_cols = "GROUPID") %>%
+        select(-GROUPID)
+    })
+    
+    # Get all lambda z slope plots
+    plot_outputs <- reactiveVal(NULL)
+    observeEvent(slopes_pknca_data(), {
+      plot_outputs <- get_halflife_plot(slopes_pknca_data())
+      plot_outputs(plot_outputs)
     })
 
     # HACK: workaround to avoid plotly_click not being registered warning
@@ -181,9 +193,9 @@ slope_selector_server <- function( # nolint
     #' Scans for any related reactives (page number, subject filter etc) and updates the plot output
     #' UI to have only plotlyOutput elements for desired plots.
     observeEvent(list(
-      pknca_data(), input$plots_per_page, input$search_subject, current_page()
+      plot_outputs(), input$plots_per_page, input$search_subject, current_page()
     ), {
-      req(pknca_data())
+      req(plot_outputs())
       log_trace("{id}: Updating displayed plots")
 
       # Decide
@@ -200,9 +212,6 @@ slope_selector_server <- function( # nolint
           input$search_subject
         }
       }
-
-      # Get all lambda z slope plots
-      plot_outputs <- get_halflife_plot(pknca_data())
 
       # find which plots should be displayed based on page #
       num_plots <- nrow(slopes_pknca_groups())
@@ -224,7 +233,7 @@ slope_selector_server <- function( # nolint
       # Render only the plots requested by the user
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs[page_start:page_end]
+        plot_outputs()[page_start:page_end]
       })
 
       # update jump to page selector #
