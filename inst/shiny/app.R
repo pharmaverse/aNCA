@@ -45,7 +45,8 @@ ui <- function() {
       div(
         class = "project-name-container",
         textInput("project_name", label = NULL, placeholder = "Project Name"),
-        icon("file", class = "project-name-icon")
+        icon("file", class = "project-name-icon"),
+        download_code_ui("download_code")
       )
     ),
 
@@ -132,6 +133,8 @@ server <- function(input, output, session) {
   session$userData$project_name <- reactive({
     if (input$project_name != "") input$project_name else "Unnamed_Project"
   })
+
+  download_code_server("download_code")
 
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
