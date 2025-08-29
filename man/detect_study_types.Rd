@@ -4,13 +4,28 @@
 \alias{detect_study_types}
 \title{Detect study types}
 \usage{
-detect_study_types(data, route_column, volume_column = "volume")
+detect_study_types(
+  data,
+  groups,
+  drug_column,
+  analyte_column,
+  route_column,
+  volume_column = "volume"
+)
 }
 \arguments{
 \item{data}{The dataset containing the study types to be identified.
 Assumed to be the output from aNCA formatted concentration data.
-Must contain the columns \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC},
-\code{DOSNOA} (created in \code{format_pkncaconc_data}) and the specified route column.}
+Must contain group columns, the specified route, analyte and drug columns,
+and ADOSEDUR.}
+
+\item{groups}{the grouping variables for the study type detection.}
+
+\item{drug_column}{A character string specifying the
+column name for drug}
+
+\item{analyte_column}{A character string specifying the
+column name for analyte}
 
 \item{route_column}{A character string specifying the
 column name for the route of administration.}
@@ -35,12 +50,16 @@ The study types are determined as follows:
 \item "Excretion Data": If the volume column for a group is not NA and has values > 0.
 \item "Single Extravascular Dose": If there is only one dose and TAU is not available,
 and the route is extravascular.
-\item "Single IV Dose": If there is only one dose and TAU is not present,
+\item "Single IV Infusion Dose": If there is only one dose and TAU is not present,
 and the route is not extravascular.
+\item "Single IV Bolus Dose": If there is only one dose and TAU is not present,
+the route is not extravascular, and ADOSEDUR == 0.
 \item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
 and the route is extravascular.
-\item "Multiple IV Doses": If there are multiple doses (or TAU is available)
+\item "Multiple IV Infusion Doses": If there are multiple doses (or TAU is available)
 and the route is not extravascular.
+\item "Multiple IV Bolus Doses": If there are multiple doses or TAU is not present,
+the route is not extravascular, and ADOSEDUR == 0.
 \item If none of these conditions are met, the type is marker as "Unknown".
 }
 }
@@ -48,6 +67,7 @@ and the route is not extravascular.
 sample_data <- data.frame(
   STUDYID = "STUDY001",
   DRUG = "Drug",
+  ANALYTE = "DRUG",
   USUBJID = c(
     # 1. Single IV Dose subject
     "Subj-01", "Subj-01",
@@ -81,6 +101,9 @@ sample_data <- data.frame(
 
 study_summary <- detect_study_types(
   data = sample_data,
+  groups = c("USUBJID, PCSPEC, DRUG"),
+  drug_column = "DRUG",
+  analyte_column = "ANALYTE",
   route_column = "ROUTE",
   volume_column = "SAMPLE_VOLUME"
 )

@@ -103,19 +103,19 @@ settings_ui <- function(id) {
       accordion_panel(
         title = "Flag Rule Sets",
         .rule_input(
-          ns("adj.r.squared"), "RSQADJ >=", 0.7, 0.05, 0, 1,
+          ns("R2ADJ"), "R2ADJ >=", 0.7, 0.05, 0, 1,
           tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
         ),
         .rule_input(
-          ns("aucpext.obs"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
+          ns("AUCPEO"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
           tooltip = "Maximum allowed percent extrapolated (observed) for AUC related parameters"
         ),
         .rule_input(
-          ns("aucpext.pred"), "AUCPEP (% ext.predicted) <=", 20, 5, 0, 100,
+          ns("AUCPEP"), "AUCPEP (% ext.predicted) <=", 20, 5, 0, 100,
           tooltip = "Maximum allowed percent extrapolated (predicted) for AUC related parameters"
         ),
         .rule_input(
-          ns("span.ratio"), "LAMZSPN >=", 2, 1, 0,
+          ns("LAMZSPN"), "LAMZSPN >=", 2, 1, 0,
           tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
         )
       ),
@@ -182,40 +182,40 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       # Flags #
       .update_rule_input(
         session,
-        "adj.r.squared",
-        settings$flags$adj.r.squared$is.checked,
-        settings$flags$adj.r.squared$threshold
+        "R2ADJ",
+        settings$flags$R2ADJ$is.checked,
+        settings$flags$R2ADJ$threshold
       )
 
       .update_rule_input(
         session,
-        "aucpext.obs",
-        settings$flags$aucpext.obs$is.checked,
-        settings$flags$aucpext.obs$threshold
+        "AUCPEO",
+        settings$flags$AUCPEO$is.checked,
+        settings$flags$AUCPEO$threshold
       )
 
       .update_rule_input(
         session,
-        "aucpext.pred",
-        settings$flags$aucpext.pred$is.checked,
-        settings$flags$aucpext.pred$threshold
+        "AUCPEP",
+        settings$flags$AUCPEP$is.checked,
+        settings$flags$AUCPEP$threshold
       )
 
       .update_rule_input(
         session,
-        "span.ratio",
-        settings$flags$span.ratio$is.checked,
-        settings$flags$span.ratio$threshold
+        "LAMZSPN",
+        settings$flags$LAMZSPN$is.checked,
+        settings$flags$LAMZSPN$threshold
       )
     })
 
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
-    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "RSQADJ")
-    limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, lab = "AUCPEO")
-    limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
-    limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
+    limit_input_value(input, session, "R2ADJ_threshold", max = 1, min = 0, lab = "RSQADJ")
+    limit_input_value(input, session, "AUCPEO_threshold", max = 100, min = 0, lab = "AUCPEO")
+    limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
+    limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
 
 
     # Choose data to be analyzed
@@ -326,6 +326,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     settings <- reactive({
       req(input$select_analyte) # Wait on general settings UI to be loaded
+
       list(
         analyte = input$select_analyte,
         profile = input$select_profile,
@@ -337,21 +338,21 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         ),
         partial_aucs = auc_data(),
         flags = list(
-          adj.r.squared = list(
-            is.checked = input$adj.r.squared_rule,
-            threshold = input$adj.r.squared_threshold
+          R2ADJ = list(
+            is.checked = input$R2ADJ_rule,
+            threshold = input$R2ADJ_threshold
           ),
-          aucpext.obs = list(
-            is.checked = input$aucpext.obs_rule,
-            threshold = input$aucpext.obs_threshold
+          AUCPEO = list(
+            is.checked = input$AUCPEO_rule,
+            threshold = input$AUCPEO_threshold
           ),
-          aucpext.pred = list(
-            is.checked = input$aucpext.pred_rule,
-            threshold = input$aucpext.pred_threshold
+          AUCPEP = list(
+            is.checked = input$AUCPEP_rule,
+            threshold = input$AUCPEP_threshold
           ),
-          span.ratio = list(
-            is.checked = input$span.ratio_rule,
-            threshold = input$span.ratio_threshold
+          LAMZSPN = list(
+            is.checked = input$LAMZSPN_rule,
+            threshold = input$LAMZSPN_threshold
           )
         ),
         units = session$userData$units_table()
