@@ -20,7 +20,7 @@ manual_slopes_table_ui <- function(id) {
 
 
 manual_slopes_table_server <- function(
-  id, mydata, profiles_per_subject, slopes_groups
+  id, mydata, slopes_groups
 ) {
   moduleServer(id, function(input, output, session) {
 
@@ -29,7 +29,8 @@ manual_slopes_table_server <- function(
     # Reactive for Slope selector columns
     slope_selector_columns <- reactive({
       req(slopes_groups())
-      c(slopes_groups(), "TYPE", "RANGE", "REASON")
+      
+      c(names(slopes_groups()), "TYPE", "RANGE", "REASON")
     })
 
     #' Object for storing exclusion and selection data for lambda slope calculation
@@ -43,16 +44,16 @@ manual_slopes_table_server <- function(
     })
 
     observeEvent(mydata(), {
-
       current_slopes <- manual_slopes()
+      
       # Add missing dynamic columns with default values (e.g., NA_character_)
-      for (col in slopes_groups()) {
-        if (!col %in% colnames(current_slopes)) {
-          current_slopes[[col]] <- character()
-        }
+      missing_cols <- setdiff(colnames(slopes_groups()), colnames(current_slopes))
+      for (missing_col in missing_cols) {
+        current_slopes[[missing_col]] <- character()
       }
+
       # Define the desired column order
-      ordered_cols <- c(slopes_groups(), "TYPE", "RANGE", "REASON")
+      ordered_cols <- c(colnames(slopes_groups()), "TYPE", "RANGE", "REASON")
       current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
 
       # Update the reactive Val
@@ -61,23 +62,19 @@ manual_slopes_table_server <- function(
 
     #' Adds new row to the selection/exclusion datatable
     observeEvent(input$add_rule, {
+      
       log_trace("{id}: adding manual slopes row")
 
-      # Create a named list for dynamic columns based on `profiles_per_subject`
-      dynamic_values <- lapply(slopes_groups(), function(col) {
-        value <- as.character(unique(profiles_per_subject()[[col]]))
-        if (length(value) > 0) value[1] else NA_character_  # Handle empty or NULL cases
-      })
-
-      names(dynamic_values) <- slopes_groups()
 
       # Create the new row with both fixed and dynamic columns
-      new_row <- as.data.frame(c(
-        dynamic_values,
-        TYPE = "Selection",
-        RANGE = "1:3",
-        REASON = ""
-      ), stringsAsFactors = FALSE)
+      new_row <- cbind(
+        slopes_groups()[1, ],
+        data.frame(
+          TYPE = "Selection",
+          RANGE = "1:3",
+          REASON = ""
+        )
+      )
 
       updated_data <- as.data.frame(rbind(manual_slopes(), new_row), stringsAsFactors = FALSE)
       manual_slopes(updated_data)
@@ -87,6 +84,7 @@ manual_slopes_table_server <- function(
 
     #' Removes selected row
     observeEvent(input$remove_rule, {
+      
       log_trace("{id}: removing manual slopes row")
 
       selected <- getReactableState("manual_slopes", "selected")
@@ -128,19 +126,19 @@ manual_slopes_table_server <- function(
           width = 400
         )
       )
-
+browser()
       # Dynamic group column definitions
-      dynamic_columns <- lapply(slopes_groups(), function(col) {
+      dynamic_columns <- lapply(colnames(slopes_groups()), function(col) {
         colDef(
           cell = dropdown_extra(
             id = ns(paste0("edit_", col)),
-            choices = unique(profiles_per_subject()[[col]]), # Dynamically set choices
+            choices = unique(slopes_groups()[[col]]), # Dynamically set choices
             class = "dropdown-extra"
           ),
           width = 150
         )
       })
-      names(dynamic_columns) <- slopes_groups()
+      names(dynamic_columns) <- colnames(slopes_groups())
 
       # Combine columns in the desired order
       all_columns <- c(
@@ -173,6 +171,7 @@ manual_slopes_table_server <- function(
     #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
     #' the table would mean losing focus on text inputs when entering values.
     observeEvent(manual_slopes(), {
+      req(manual_slopes())
 
       reactable::updateReactable(
         outputId = "manual_slopes",
@@ -184,6 +183,7 @@ manual_slopes_table_server <- function(
     #' edits for that column made in the reactable.
     observe({
       req(slope_selector_columns())
+      
       # Dynamically attach observers for each column
       purrr::walk(slope_selector_columns(), \(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {

@@ -130,7 +130,7 @@ slope_selector_server <- function( # nolint
 
     slopes_pknca_data <- reactive({
       req(pknca_data())
-      browser()
+
       pknca_data <- pknca_data()
       pknca_data$intervals <- pknca_data$intervals %>%
         mutate(
@@ -142,20 +142,17 @@ slope_selector_server <- function( # nolint
     #Get grouping columns for plots and tables
     slopes_pknca_groups <- reactive({
       req(pknca_data())
-      browser()
-      get_groups(pknca_data())
 
-      pknca_data()$conc$columns$groups %>%
-        purrr::list_c() %>%
-        append(c("NCA_PROFILE", "DOSNOA")) %>%
-        purrr::keep(\(col) {
-          !is.null(col) && col != "DRUG" && length(unique(pknca_data()$conc$data[[col]])) > 1
-        })
+      pknca_data()$intervals %>%
+        select(
+          any_of(
+            c(group_vars(pknca_data()), "start", "end", "NCA_PROFILE")
+          )
+        )
     })
 
     # HACK: workaround to avoid plotly_click not being registered warning
     session$userData$plotlyShinyEventIDs <- "plotly_click-A"
-
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
@@ -188,7 +185,7 @@ slope_selector_server <- function( # nolint
     ), {
       req(pknca_data())
       log_trace("{id}: Updating displayed plots")
-browser()
+
       # Decide
       # Make sure the search_subject input is not NULL
       search_subject <- {
@@ -208,10 +205,10 @@ browser()
       plot_outputs <- get_halflife_plot(pknca_data())
 
       # find which plots should be displayed based on page #
-      num_plots <- nrow(subject_profile_plot_ids)
+      num_plots <- nrow(slopes_pknca_groups())
       plots_per_page <- as.numeric(input$plots_per_page)
       num_pages <- ceiling(num_plots / plots_per_page)
-
+      
       if (current_page() > num_pages) {
         current_page(current_page() - 1)
         return(NULL)
@@ -223,7 +220,6 @@ browser()
 
       # update page number display #
       output$page_number <- renderUI(num_pages)
-browser()
 
       # Render only the plots requested by the user
       output$slope_plots_ui <- renderUI({
@@ -254,6 +250,7 @@ browser()
     #' Rendering slope plots based on nca data.
     observeEvent(pknca_data(), {
       req(pknca_data())
+      
       log_trace("{id}: Rendering plots")
       # Update the subject search input to make available choices for the user
       updateSelectInput(
@@ -265,7 +262,7 @@ browser()
     })
 
     slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data,
-                                               profiles_per_subject, slopes_pknca_groups)
+                                               slopes_pknca_groups)
 
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
@@ -283,7 +280,7 @@ browser()
 
     observeEvent(event_data("plotly_click", priority = "event"), {
       log_trace("slope_selector: plotly click detected")
-
+      
       result <- handle_plotly_click(last_click_data,
                                     manual_slopes,
                                     slopes_pknca_groups(),
@@ -299,7 +296,7 @@ browser()
     #' If any settings are uploaded by the user, overwrite current rules
     observeEvent(manual_slopes_override(), {
       req(manual_slopes_override())
-
+  
       if (nrow(manual_slopes_override()) == 0) return(NULL)
 
       log_debug_list("Manual slopes override:", manual_slopes_override())
@@ -318,6 +315,7 @@ browser()
         all()
 
       if (!override_valid) {
+        
         msg <- "Manual slopes not compatible with current data, leaving as default."
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 5)
@@ -330,7 +328,7 @@ browser()
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
     list(
       manual_slopes = manual_slopes,
-      slopes_pknca_groups = slopes_pknca_groups
+      slopes_groups = slopes_pknca_groups
     )
   })
 }
