@@ -720,10 +720,10 @@ div[data-value="Settings"] > div.row a {
 }
 
 #loading-spinner {
-  color: #3f8abf;
+  color: #007bc2;
   position: relative;
   font-size: 0.5em;
-  background: #3f8abf;
+  background: #007bc2;
   animation: escaleY 1s infinite ease-in-out;
   width: 1em;
   height: 1em;

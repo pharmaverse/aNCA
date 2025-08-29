@@ -3,10 +3,10 @@
 }
 
 #loading-spinner {
-  color: #3f8abf;
+  color: $anca-blue;
   position: relative;
   font-size: 0.5em;
-  background: #3f8abf;
+  background: $anca-blue;
   animation: escaleY 1s infinite ease-in-out;
   width: 1em;
   height: 1em;
