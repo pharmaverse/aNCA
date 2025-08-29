@@ -98,12 +98,17 @@ data_filtering_server <- function(id, raw_adnca_data) {
       }
     })
 
+    applied_filters <- reactive({
+      lapply(reactiveValuesToList(filters), \(x) x()) |>
+        purrr::keep(\(x) !is.null(x))
+    })
+    session$userData$applied_filters <- applied_filters
+
     filtered_data <- reactive({
       removeNotification(filter_reminder_notification())
 
       # Extract filters from reactive values
-      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) |>
-        purrr::keep(\(x) !is.null(x))
+      applied_filters <- applied_filters()
 
       if (length(applied_filters) == 0) return(raw_adnca_data())
 

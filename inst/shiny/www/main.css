@@ -714,3 +714,8 @@ div[data-value="Settings"] > div.row a {
   padding: 20px;
   border-radius: 8px;
 }
+
+.download-code-modal {
+  text-align: left;
+  width: 100%;
+}

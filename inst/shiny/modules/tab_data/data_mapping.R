@@ -249,6 +249,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     })
 
+    # assign mapping to userData for access in other modules
+    session$userData$mapping <- mapping
+
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
