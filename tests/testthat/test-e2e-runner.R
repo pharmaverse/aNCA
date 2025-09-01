@@ -6,5 +6,5 @@ test_that("End to End test pass", {
 
   appdir <- system.file(package = "aNCA", "shiny")
 
-  test_app(appdir)
+  expect_no_error(test_app(appdir))
 })
