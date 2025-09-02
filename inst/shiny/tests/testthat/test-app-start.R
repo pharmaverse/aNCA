@@ -71,7 +71,7 @@ describe("Test for initial app load", {
     default_table <- app$get_value(output = "data-raw_data-data_display-table")
     expect_true(jsonlite::validate(default_table))
 
-    app$upload_file(`data-raw_data-data_upload` = "Dummy_complex_data.csv")
+    app$upload_file(`data-raw_data-data_upload` = "dummy_simplified.csv")
     app$wait_for_value(output = "data-raw_data-data_display-table", timeout = 4000)
     loaded_table <- app$get_value(output = "data-raw_data-data_display-table")
 
