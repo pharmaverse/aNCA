@@ -20,7 +20,7 @@ manual_slopes_table_ui <- function(id) {
 
 
 manual_slopes_table_server <- function(
-  id, mydata, slopes_pknca_groups
+    id, mydata, slopes_pknca_groups
 ) {
   moduleServer(id, function(input, output, session) {
 
@@ -167,22 +167,24 @@ browser()
     }) %>%
       shiny::bindEvent(refresh_reactable())
 
-    #' Separate event handling updating displayed reactable upon every change (adding and removing
-    #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
-    #' the table would mean losing focus on text inputs when entering values.
-    observeEvent(manual_slopes(), {
-      req(manual_slopes())
-
-      reactable::updateReactable(
-        outputId = "manual_slopes",
-        data = manual_slopes()
-      )
-    })
+    #' #' Separate event handling updating displayed reactable upon every change (adding and removing
+    #' #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
+    #' #' the table would mean losing focus on text inputs when entering values.
+    #' observeEvent(manual_slopes(), {
+    #'   req(manual_slopes())
+    #' 
+    #'   reactable::updateReactable(
+    #'     outputId = "manual_slopes",
+    #'     data = manual_slopes()
+    #'   )
+    #'   
+    #'   update_plots <- function(pknca_data, pnew_rules)
+    #' })
 
     #' For each of the columns in slope selector data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
-      req(slope_selector_columns())
+      req(slope_selector_columns(), manual_slopes())
 
       # Dynamically attach observers for each column
       purrr::walk(slope_selector_columns(), \(colname) {
