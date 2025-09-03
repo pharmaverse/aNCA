@@ -131,6 +131,7 @@ slope_selector_server <- function( # nolint
     slopes_pknca_data <- reactive({
       req(pknca_data())
 
+
       pknca_data <- pknca_data()
       pknca_data$intervals <- pknca_data$intervals %>%
         mutate(
