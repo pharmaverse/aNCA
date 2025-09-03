@@ -29,7 +29,7 @@ manual_slopes_table_server <- function(
     # Reactive for Slope selector columns
     slope_selector_columns <- reactive({
       req(slopes_pknca_groups())
-      
+
       c(names(slopes_pknca_groups()), "TYPE", "RANGE", "REASON")
     })
 
@@ -64,7 +64,7 @@ manual_slopes_table_server <- function(
     observeEvent(input$add_rule, {
       
       log_trace("{id}: adding manual slopes row")
-
+browser()
 
       # Create the new row with both fixed and dynamic columns
       new_row <- cbind(
@@ -84,7 +84,7 @@ manual_slopes_table_server <- function(
 
     #' Removes selected row
     observeEvent(input$remove_rule, {
-      
+browser()
       log_trace("{id}: removing manual slopes row")
 
       selected <- getReactableState("manual_slopes", "selected")
@@ -183,10 +183,11 @@ manual_slopes_table_server <- function(
     #' edits for that column made in the reactable.
     observe({
       req(slope_selector_columns())
-      
+
       # Dynamically attach observers for each column
       purrr::walk(slope_selector_columns(), \(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
+          browser()
           edit <- input[[paste0("edit_", colname)]]
           edited_slopes <- manual_slopes()
           edited_slopes[edit$row, edit$column] <- edit$value
