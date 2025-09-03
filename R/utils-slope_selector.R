@@ -16,6 +16,7 @@
 #' @importFrom dplyr filter group_by mutate select all_of
 #' @export
 filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = FALSE) {
+  print("filter_slopes")
   if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
     stop("Please provide valid data.")
 
@@ -61,7 +62,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
   }
 
   # Update the exclusion/selection data for Lambda based on the current exc/sel table
-  data <- .apply_slope_rules(data, slopes, slope_groups)
+  data <- .update_pknca_with_rules(data, slopes, slope_groups)
 
   data$conc$data <- data$conc$data %>%
     group_by(!!!syms(slope_groups)) %>%
@@ -95,6 +96,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
 #' @returns Data frame with full ruleset, adjusted for new rules.
 #' @export
 check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
+  print("check_slope_rule_overlap")
   slope_groups <- setdiff(names(new), c("TYPE", "RANGE", "REASON"))
 
   # check if any rule already exists for specific subject and profile #
@@ -142,7 +144,9 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 #'
 #' @returns description The modified `data` object with updated inclusion/exclusion flags
 #'         and reasons in `data$conc$data`.
-.apply_slope_rules <- function(data, slopes) {
+.update_pknca_with_rules <- function(data, slopes) {
+  print(".update_pknca_with_rules")
+  browser()
   slope_groups <- group_vars(data)
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
@@ -154,7 +158,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     if (length(range) == 1) range <- rep(range, 2)
 
     # Build the condition dynamically for group columns and time range
-    selection_index <- which(
+    pnt_idx <- which(
       Reduce(`&`, lapply(slope_groups, function(col) {
         data$conc$data[[col]] == slopes[[col]][i]
       })) &
@@ -162,16 +166,32 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     )
 
     if (slopes$TYPE[i] == "Selection") {
-      data$conc$data[[include_hl_col]][selection_index] <- TRUE
+      data$conc$data[[include_hl_col]][pnt_idx] <- TRUE
     } else {
-      data$conc$data[[exclude_hl_col]][selection_index] <- TRUE
+      data$conc$data[[exclude_hl_col]][pnt_idx] <- TRUE
     }
 
-    data$conc$data$REASON[selection_index] <- paste0(
-      data$conc$data$REASON[selection_index],
-      slopes$REASON[i]
+    data$conc$data$REASON[pnt_idx] <- paste0(
+      data$conc$data$REASON[pnt_idx],
+      rep(slopes$REASON[i], length(pnt_idx))
     )
+    print(".update_pknca_with_rules")
   }
 
   data
+}
+
+.update_plots_with_rules <- function(pknca_data, manual_slopes, plot_outputs) {
+  print(".update_plots_with_rules")
+  pknca_for_plots <- .update_pknca_with_rules(pknca_data, manual_slopes)
+  browser()
+  pknca_for_plots$intervals <- inner_join(
+    manual_slopes %>% select(any_of(c(group_vars(pknca_for_plots), "NCA_PROFILE"))),
+    pknca_for_plots$intervals,
+    by = c(group_vars(pknca_for_plots), "NCA_PROFILE")
+  )
+  updated_plots <- suppressWarnings(get_halflife_plot(pknca_for_plots))
+  plot_outputs[names(plot_outputs) %in% names(updated_plots)] <- updated_plots
+  plot_outputs
+  print(".update_plots_with_rules")
 }

@@ -123,7 +123,7 @@ setup_server <- function(id, data, adnca_data) {
       req(adnca_data(), settings(), settings()$profile,
           settings()$analyte, settings()$pcspec)
       log_trace("Updating PKNCA::data object for slopes.")
-browser()
+
       PKNCA_update_data_object(
         adnca_data = adnca_data(),
         selected_analytes = settings()$analyte,

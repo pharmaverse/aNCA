@@ -140,23 +140,26 @@ slope_selector_server <- function( # nolint
       pknca_data
     })
 
-    #Get grouping columns for plots and tables
+    # Get grouping columns for plots and tables
     slopes_pknca_groups <- reactive({
       req(pknca_data())
 
-      relevant_group_cols <- pknca_data()$conc$data %>%
-        select(
-          any_of(
-            c(group_vars(pknca_data()), "NCA_PROFILE")
-          )
-        ) %>%
-        # TODO (Gerardo): Include a better new version of select_minimal_grouping_cols
-        # Select columns that have more than 1 unique value
-        select(where(~ n_distinct(.) > 1)) %>%
-        colnames()
-
       pknca_data()$intervals %>%
-        select(any_of(relevant_group_cols))
+        select(any_of(c(group_vars(pknca_data()), "NCA_PROFILE")))
+
+      # relevant_group_cols <- pknca_data()$conc$data %>%
+      #   select(
+      #     any_of(
+      #       c(group_vars(pknca_data()), "NCA_PROFILE")
+      #     )
+      #   ) %>%
+      #   # TODO (Gerardo): Include a better new version of select_minimal_grouping_cols
+      #   # Select columns that have more than 1 unique value
+      #   select(where(~ n_distinct(.) > 1)) %>%
+      #   colnames()
+
+      # pknca_data()$intervals %>%
+      #   select(any_of(relevant_group_cols))
     })
 
     # Get all lambda z slope plots
@@ -182,15 +185,6 @@ slope_selector_server <- function( # nolint
     })
     observeEvent(input$select_page, current_page(as.numeric(input$select_page)))
     observeEvent(list(input$plots_per_page, input$search_subject), current_page(1))
-
-    #' Plot data is a local reactive copy of full data. The purpose is to display data that
-    #' is already adjusted with the applied rules, so that the user can verify added selections
-    #' and exclusions before applying them to the actual dataset.
-    # plot_data <- reactive({
-    #   req(pknca_data(), manual_slopes(), profiles_per_subject())
-    #   filter_slopes(pknca_data(), manual_slopes(), profiles_per_subject(), slopes_pknca_groups())
-    # }) %>%
-    #   shiny::debounce(750)
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
     #' Scans for any related reactives (page number, subject filter etc) and updates the plot output
@@ -225,7 +219,7 @@ slope_selector_server <- function( # nolint
       num_plots <- sum(has_plot_subject)
       plots_per_page <- as.numeric(input$plots_per_page)
       num_pages <- ceiling(num_plots / plots_per_page)
-      
+
       if (current_page() > num_pages) {
         current_page(current_page() - 1)
         return(NULL)
@@ -283,7 +277,7 @@ slope_selector_server <- function( # nolint
 
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
-
+    
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveVal(NULL)
 
@@ -303,6 +297,25 @@ slope_selector_server <- function( # nolint
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
       refresh_reactable(refresh_reactable() + 1)
     })
+
+    #' Separate event handling updating displayed reactable upon every change (adding and removing
+    #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
+    #' the table would mean losing focus on text inputs when entering values.
+    observeEvent(manual_slopes(), {
+      req(manual_slopes())
+      print("observeEvent manual_slopes()")
+      reactable::updateReactable(
+        outputId = "manual_slopes",
+        data = manual_slopes()
+      )
+
+      if (nrow(manual_slopes())) {
+        plot_outputs(
+          .update_plots_with_rules(pknca_data(), manual_slopes(), plot_outputs())
+        )
+      }
+    })
+
 
     #' If any settings are uploaded by the user, overwrite current rules
     observeEvent(manual_slopes_override(), {

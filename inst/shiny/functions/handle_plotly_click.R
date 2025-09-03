@@ -44,7 +44,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
     new_rule$REASON <- ""
 
   # If it is in the same plot (interval), consider all points in the time range included
-  } else if (pnt$int == lstpnt$int) {
+  } else if (all.equal(pnt$int, lstpnt$int)) {
     new_rule$TYPE <- "Inclusion"
     new_rule$RANGE <- paste0(sort(c(pnt$time, lstpnt$time)), collapse = ":")
     new_rule$REASON <- ""
@@ -58,12 +58,12 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   }
 
   # Update the concentration data to add manual half life adjustments
-  updated_pknca <- .apply_slope_rules(pknca_data, new_rule)
+  updated_pknca <- .update_pknca_with_rules(pknca_data, new_rule)
 
-  # Update the specific plot affected
-  updated_pknca$intervals <- int_pnt
-  updated_plot <- suppressWarnings(get_halflife_plot(updated_pknca))
-  plot_outputs[names(plot_outputs) %in% names(updated_plot)] <- updated_plot
+  # # Update the specific plot (interval) affected
+  # updated_pknca$intervals <- pnt$int
+  # updated_plot <- suppressWarnings(get_halflife_plot(updated_pknca))
+  # plot_outputs[names(plot_outputs) %in% names(updated_plot)] <- updated_plot
 
   # Update manual_slopes without modifying it globally
   updated_slopes <- check_slope_rule_overlap(manual_slopes(), new_rule)
@@ -72,7 +72,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   list(
     last_click_data = NULL, # Action was finished and has to be updated
     manual_slopes = updated_slopes,
-    plot_outputs = plot_outputs
+    plot_outputs = plot_outputs # TODO: NOT NEEDED ANYMORE
   )
 }
 
