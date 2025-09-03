@@ -75,25 +75,20 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         )
 
       # Add flaging column in the pivoted results
-      # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared,
-      #                we can simplify this part by using the PKNCA object
-      rules <- settings()$flags
-      rule_thr <- lapply(rules, FUN =  \(x) x$threshold)
-      rule_pretty_names <- translate_terms(names(rules), "PKNCA", "PPTEST")
-      rule_msgs <- paste0(rule_pretty_names, c(" < ", " > ", " > ", " < "))
+      applied_flags <- purrr::keep(settings()$flags, \(x) x$is.checked)
+      flag_params <- names(settings()$flags)
+      flag_thr <- sapply(settings()$flags, FUN =  \(x) x$threshold)
+      flag_rule_msgs <- paste0(flag_params, c(" < ", " > ", " > ", " < "), flag_thr)
+      flag_cols <- names(final_results)[formatters::var_labels(final_results)
+                                        %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
-      rules_applied <- sapply(rules, FUN =  \(x) x$is.checked)
-      params_applied <- translate_terms(names(rules), "PKNCA", "PPTEST")[rules_applied]
-      params_applied <- names(final_results)[formatters::var_labels(final_results)
-                                             %in% params_applied]
-
-      if (length(params_applied) > 0) {
+      if (length(flag_params) > 0) {
         final_results <- final_results %>%
           mutate(
             flagged = case_when(
-              rowSums(is.na(select(., any_of(params_applied)))) > 0 ~ "MISSING",
+              rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
               is.na(Exclude) ~ "ACCEPTED",
-              any(sapply(rule_msgs, \(msg) str_detect(Exclude, fixed(msg)))) ~ "FLAGGED",
+              any(sapply(flag_rule_msgs, \(msg) str_detect(Exclude, fixed(msg)))) ~ "FLAGGED",
               TRUE ~ "ACCEPTED"
             )
           )
@@ -109,14 +104,22 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
-        output_tmpdir <- file.path(tempdir(), "output")
-
-        save_output(output = session$userData$results, output_path = output_tmpdir)
-        files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
-        wd <- getwd()
-        on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler function
-        setwd(output_tmpdir)
-        utils::zip(zipfile = fname, files = files)
+        shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
+          output_tmpdir <- file.path(tempdir(), "output")
+          save_output(output = session$userData$results, output_path = output_tmpdir)
+          incProgress(0.3)
+          files <- list.files(
+            output_tmpdir,
+            pattern = ".(csv)|(rds)|(xpt)|(html)$",
+            recursive = TRUE
+          )
+          wd <- getwd()
+          on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
+          setwd(output_tmpdir)
+          incProgress(0.6)
+          utils::zip(zipfile = fname, files = files)
+          incProgress(1)
+        })
       }
     )
 
@@ -158,13 +161,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)]))) %>%
+        # Add group variable labels (others were added in pivot_wider_pknca_result)
+        apply_labels()
     })
 
     reactable_server(
       "myresults",
       output_results,
-      columns = generate_col_defs,
       compact = TRUE,
       style = list(fontSize = "0.75em"),
       height = "68vh",

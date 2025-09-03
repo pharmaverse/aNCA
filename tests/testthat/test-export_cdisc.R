@@ -74,7 +74,7 @@ describe("export_cdisc", {
     pp <- result$pp
     expect_s3_class(pp, "data.frame")
     expect_true(all(names(pp) %in% CDISC_COLS$PP$Variable))
-    expect_equal(nrow(pp), 9)
+    expect_equal(nrow(pp), 12)
     expect_equal(
       unname(formatters::var_labels(pp)),
       translate_terms(names(pp), "Variable", "Label", metadata_nca_variables)
@@ -86,7 +86,7 @@ describe("export_cdisc", {
     adpp <- result$adpp
     expect_s3_class(adpp, "data.frame")
     expect_true(all(names(adpp) %in% CDISC_COLS$ADPP$Variable))
-    expect_equal(nrow(adpp), 9)
+    expect_equal(nrow(adpp), 12)
     expect_equal(
       unname(formatters::var_labels(adpp)),
       translate_terms(names(adpp), "Variable", "Label", metadata_nca_variables)
@@ -146,24 +146,27 @@ describe("export_cdisc", {
     )
   })
 
-  it("derives PPSTINT and PPENINT for partial AUC intervals", {
-    modified_test_pknca_res <- test_pknca_res
-    modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
-      mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", "AUCINT", PPTESTCD))
+  it("derives PPSTINT and PPENINT for interval (INT) parameters", {
+    for (int_param in c("AUCINT", "CAVGINT", "AUCINTD", "AUCINTPD", "RCAMINT")) {
+      modified_test_pknca_res <- test_pknca_res
+      modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
+        mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
+        mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", int_param, PPTESTCD))
 
-    result <- export_cdisc(modified_test_pknca_res)
+      result <- export_cdisc(modified_test_pknca_res)
 
-    # Check that PPSTINT and PPENINT are derived correctly
-    expect_true("PPSTINT" %in% names(result$pp))
-    expect_true("PPENINT" %in% names(result$pp))
-    expect_equal(
-      result$pp$PPSTINT[which(result$pp$PPTESTCD == "AUCINT")],
-      rep(c("PT0H", "PT2H"), times = 3)
-    )
-    expect_equal(
-      result$pp$PPENINT[which(result$pp$PPTESTCD == "AUCINT")],
-      rep(c("PT2H", "PT4H"), times = 3)
-    )
+      # Check that PPSTINT and PPENINT are derived correctly
+      expect_true("PPSTINT" %in% names(result$pp))
+      expect_true("PPENINT" %in% names(result$pp))
+      expect_equal(
+        result$pp$PPSTINT[which(result$pp$PPTESTCD == int_param)],
+        rep(c("PT0H", "PT2H"), times = 3)
+      )
+      expect_equal(
+        result$pp$PPENINT[which(result$pp$PPTESTCD == int_param)],
+        rep(c("PT2H", "PT4H"), times = 3)
+      )
+    }
   })
 
   it("derives PPREASND & PPSTAT correctly in all situations", {
@@ -252,7 +255,7 @@ describe("export_cdisc", {
     # Check that PPGRPID is derived correctly
     conc_group_cols <- c(group_vars(test_pknca_res$data$conc), "NCA_PROFILE")
     group_dose_cols <- group_vars(test_pknca_res$data$dose)
-    exp_grpid <- as.data.frame(test_pknca_res, filter_requested = TRUE) %>%
+    exp_grpid <- as.data.frame(test_pknca_res) %>%
       left_join(test_pknca_res$data$conc$data %>%
                   select(all_of(c(conc_group_cols, "AVISIT", "VISIT"))) %>%
                   group_by(!!!syms(conc_group_cols)) %>%

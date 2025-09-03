@@ -41,22 +41,17 @@ units_table_server <- function(id, mydata) {
         title = tagList(
           span("Units of NCA parameter results")
         ),
-        tagList(
-          modalButton("Close"),
-          actionButton(ns("save_units_table"), "Save Units Table")
-        ),
-        DTOutput(ns("modal_units_table")),
+        reactable_ui(ns("modal_units_table")),
         footer = tagList(
           modalButton("Close"),
           actionButton(ns("save_units_table"), "Save Units Table")
         ),
-        size = "xl"
+        size = "l"
       ))
     })
 
     # Define rows from units table not of interest for the user
     rows_to_hide_units_table <- reactive({
-
       group_cols <- intersect(
         names(PKNCA::getGroups(mydata()$conc)), names(mydata()$units)
       )
@@ -73,100 +68,60 @@ units_table_server <- function(id, mydata) {
         )
       }
 
-      rows_to_hide <- setdiff(seq_len(nrow(mydata()$units)), rows_to_keep$nrow)
-      paste0("[", paste(rows_to_hide, collapse = ", "), "]")
+      setdiff(seq_len(nrow(mydata()$units)), rows_to_keep$nrow)
     })
 
     #' Rendering the modal units table
-    output$modal_units_table <- DT::renderDT({
-      req(modal_units_table())
-      req(rows_to_hide_units_table())
-
-      datatable(
-        data = modal_units_table() %>%
-          mutate(
-            PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTEST"),
-            across(where(is.character), as.factor),
-            nrow = row_number()
-          ),
-        class = "cell-border compact striped",
-        escape = FALSE,
-        filter = "top",
-        selection = list(mode = "single", target = "cell"),
-        colnames = c(
-          "Parameter" = "PPTESTCD",
-          "Default unit" = "PPORRESU",
-          "Conversion Factor" = "conversion_factor",
-          "Custom unit" = "PPSTRESU"
-        ),
-        rownames = FALSE,
-        editable = list(
-          target = "cell",
-          disable = list(
-            columns = which(
-              !names(modal_units_table()) %in% c("PPSTRESU", "conversion_factor")
-            ) - 1
-          )
-        ),
-        options = list(
-          paging = FALSE,
-          scrollX = TRUE,
-          searching = TRUE,
-          autoWidth = TRUE,
-          dom = "t",
-          # Display only rows with the parameters to run for the NCA
-          rowCallback = htmlwidgets::JS(
-            paste0(
-              "
-              function(row, data, index) {
-                var rowsToHide =", rows_to_hide_units_table(),
-              ";
-                if (rowsToHide.includes(data[", ncol(modal_units_table()), "])) {
-                  $(row).hide();
-                }
-              }
-              "
-            )
-          ),
-          columnDefs = list(
-            list(
-              visible = FALSE,
-              targets = ncol(modal_units_table())
-            ),
-            list(className = "dt-center", targets = "_all")
-          )
-        )
-      ) %>%
-        # Format the conversion factor column with scientific notation
-        DT::formatSignif(columns = c("Conversion Factor"), digits = 2)
-    })
+    unit_edits <- reactable_server(
+      "modal_units_table",
+      modal_units_table,
+      wrap = TRUE,
+      width = "775px", # fit to the modal width
+      height = "65vh",
+      editable = c("PPSTRESU", "conversion_factor"),
+      columns = list(
+        PPTESTCD = colDef(name = "Parameter"),
+        PPORRESU = colDef(name = "Default Unit"),
+        PPSTRESU = colDef(name = "Custom Unit"),
+        conversion_factor = colDef(name = "Conversion Factor")
+      ),
+      pagination = FALSE,
+      on_render = paste0("function(el, x) {
+        const rows_to_hide = ", jsonlite::toJSON(rows_to_hide_units_table(), auto_unbox = TRUE), ";
+        $(el).find('.rt-tr-group').each(function(index) {
+          if (rows_to_hide.includes(index + 1)) {
+            $(this).hide();
+          }
+        });
+      }")
+    )
 
     # Accept user modifications in the modal units table
-    observeEvent(input$modal_units_table_cell_edit, {
+    observeEvent(unit_edits()$edit(), {
+      req(unit_edits()$edit())
 
-      info <- input$modal_units_table_cell_edit
+      info <- unit_edits()$edit()
       modal_units_table <- modal_units_table()
-      col_conv_factor <- which(names(modal_units_table) == "conversion_factor")
-      col_custom_unit <- which(names(modal_units_table) == "PPSTRESU")
 
       # If the edited cell is in the 'Conversion Factor' only accept numeric values
-      if ((info$col + 1) == col_conv_factor && !is.numeric(info$value)) {
-        # Report the user the expected numeric format
-        showNotification(
-          "Please enter a valid numeric value for the Conversion Factor.",
-          type = "error",
-          duration = 5
-        )
+      if (info$column == "conversion_factor") {
+        info$value <- suppressWarnings(as.numeric(info$value))
 
-        # Elude further actions
-        return()
+        if (is.na(info$value)) {
+          showNotification(
+            "Please enter a valid numeric value for the Conversion Factor.",
+            type = "error",
+            duration = 5
+          )
+          return()
+        }
       }
 
       # Make the edition in the units table
-      modal_units_table[info$row, info$col + 1] <- info$value
+      modal_units_table[info$row, info$column] <- info$value
 
       # If the custom unit was changed recalculate the conversion factor
-      if ((info$col + 1) == col_custom_unit) {
+      if (info$column == "PPSTRESU") {
         def_unit <- modal_units_table[info$row, "PPORRESU"]
         cust_unit <- modal_units_table[info$row, "PPSTRESU"]
         conversion_factor_value <- get_conversion_factor(def_unit, cust_unit)

@@ -40,8 +40,8 @@ tab_nca_ui <- function(id) {
           nav_panel(
             "Slopes Information",
             navset_pill(
-              nav_panel("Slopes Results", DTOutput(ns("slope_results"))),
-              nav_panel("Manual Adjustments", tableOutput(ns("manual_slopes"))),
+              nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
+              nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
             )
           ),
           nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
@@ -71,6 +71,31 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       tryCatch({
         #' Create data object
         pknca_object <- PKNCA_create_data_object(adnca_data())
+        ############################################################################################
+        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
+        # this is implemented here via hardcoding in PPSTRESU
+        pknca_object$units <- pknca_object$units %>%
+          mutate(
+            PPSTRESU = {
+              new_ppstresu <- ifelse(
+                PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                  metadata_nca_parameters$unit_type == "volume"
+                ],
+                sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
+                PPSTRESU
+              )
+              # Only accept changes producing simple units
+              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
+            },
+            conversion_factor = ifelse(
+              PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                metadata_nca_parameters$unit_type == "volume"
+              ],
+              get_conversion_factor(PPORRESU, PPSTRESU),
+              conversion_factor
+            )
+          )
+        ############################################################################################
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and update the curent view if data is created succesfully.
@@ -95,7 +120,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 
-    output$manual_slopes <- renderTable(slope_rules$manual_slopes())
+    reactable_server("manual_slopes", slope_rules$manual_slopes)
 
     # List all irrelevant warnings to suppres in the NCA calculation
     irrelevant_regex_warnings <- c(
@@ -139,12 +164,19 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                 slope_rules$slopes_groups(),
                 check_reasons = TRUE
               ) %>%
+              # Perform PKNCA parameter calculations
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
               add_f_to_pknca_results(settings()$bioavailability) %>%
               # Apply standard CDISC names
               mutate(
                 PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+              ) %>%
+              # Apply flag rules to mark results in the `exclude` column
+              PKNCA_hl_rules_exclusion(
+                rules = isolate(settings()$flags) |>
+                  purrr::keep(\(x) x$is.checked) |>
+                  purrr::map(\(x) x$threshold)
               ) %>%
               # Add parameter ratio calculations
               calculate_table_ratios_app(ratio_table = ratio_table())
@@ -156,13 +188,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             }
             invokeRestart("muffleWarning")
           })
-
-          # Apply flag rules to mark results in the `exclude` column
-          current_rules <- isolate(settings()$flags)
-          flag_rules_to_apply <- current_rules |>
-            purrr::keep(~ .x$is.checked) |>
-            purrr::map(~ .x$threshold)
-          res <- PKNCA_hl_rules_exclusion(res, flag_rules_to_apply)
 
           # Display unique warnings thrown by PKNCA run.
           purrr::walk(unique(pknca_warn_env$warnings), \(w) {
@@ -189,7 +214,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       bindEvent(input$nca)
 
     #' Show slopes results
-    output$slope_results <- DT::renderDataTable({
+    pivoted_slopes <- reactive({
       req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
@@ -198,36 +223,19 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           starts_with("lambda.z"),
           starts_with("R2ADJ"),
           "Exclude"
-        ) %>%
-        DT::datatable(
-          extensions = c("FixedHeader", "Buttons"),
-          options = list(
-            scrollX = TRUE,
-            fixedHeader = TRUE,
-            dom = "Blfrtip",
-            buttons = list(
-              list(extend = "copy", title = paste0("NCA_Slope_Results_", Sys.Date())),
-              list(extend = "csv", filename = paste0("NCA_Slope_Results_", Sys.Date()))
-            ),
-            headerCallback = DT::JS(
-              "function(thead) {",
-              "  $(thead).css('font-size', '0.75em');",
-              "  $(thead).find('th').css('text-align', 'center');",
-              "}"
-            ),
-            columnDefs = list(
-              list(className = "dt-center", targets = "_all")
-            ),
-            lengthMenu = list(c(10, 50, -1), c("10", "50", "All")),
-            paging = TRUE
-          ),
-          class = "row-border compact",
-          rownames = FALSE
-        ) %>%
-        DT::formatStyle(
-          columns = seq_len(ncol(pivot_wider_pknca_results(res_nca()))), fontSize = "75%"
         )
     })
+
+    reactable_server(
+      "slope_results",
+      pivoted_slopes,
+      download_buttons = c("csv", "xlsx"),
+      file_name = \() paste0("NCA_Slope_Results_", Sys.Date()),
+      defaultPageSize = 10,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = reactive(c(10, 50, nrow(pivoted_slopes()))),
+      style = list(fontSize = "0.75em")
+    )
 
     #' Prepares and displays the pivoted NCA results
     nca_results_server(

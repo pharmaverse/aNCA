@@ -166,6 +166,7 @@ describe("pivot_wider_pknca_results", {
       `R2` = "R Squared",
       `R2ADJ` = "R Squared Adjusted",
       `LAMZLL[hr]` = "Lambda z Lower Limit",
+      `LAMZUL[hr]` = "Lambda z Upper Limit",
       `LAMZNPT[count]` = "Number of Points for Lambda z",
       `CLSTP[ng/mL]` = "Clast pred",
       `LAMZHL[hr]` = "Half-Life Lambda z",
@@ -196,5 +197,14 @@ describe("pivot_wider_pknca_results", {
     # Check that rows without exclude values have NA in the Exclude column
     exclude_values_na <- result %>% filter(USUBJID == 2 & NCA_PROFILE == 2) %>% pull(Exclude)
     expect_true(all(is.na(exclude_values_na)))
+  })
+  it("excludes the presence of the column PPANMETH", {
+    res_with_ppanmeth <- pknca_res
+    res_with_ppanmeth$PPANMETH <- "Analysis Method 1"
+
+    # Apply pivot_wider_pknca_results
+    result <- pivot_wider_pknca_results(res_with_ppanmeth)
+
+    expect_false("PPANMETH" %in% result)
   })
 })
