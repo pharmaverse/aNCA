@@ -142,8 +142,7 @@ slope_selector_server <- function( # nolint
     #Get grouping columns for plots and tables
     slopes_pknca_groups <- reactive({
       req(pknca_data())
-      
-      browser()
+
       relevant_group_cols <- pknca_data()$conc$data %>%
         select(
           any_of(
@@ -161,7 +160,7 @@ slope_selector_server <- function( # nolint
 
     # Get all lambda z slope plots
     plot_outputs <- reactiveVal(NULL)
-    observeEvent(slopes_pknca_data(), {
+    observeEvent(slopes_pknca_data(), { # Maybe use directly pknca_data
       plot_outputs <- get_halflife_plot(slopes_pknca_data())
       plot_outputs(plot_outputs)
     })
@@ -285,26 +284,19 @@ slope_selector_server <- function( # nolint
     refresh_reactable <- slopes_table$refresh_reactable
 
     # Define the click events for the point exclusion and selection in the slope plots
-    last_click_data <- reactiveValues()
-
-    observeEvent(slopes_pknca_groups(), {
-      # Reinitialize dynamic columns when slopes_pknca_groups changes
-      for (col in tolower(slopes_pknca_groups())) {
-        last_click_data[[col]] <- ""
-      }
-      last_click_data$idx_pnt <- ""
-    })
+    last_click_data <- reactiveVal(NULL)
 
     observeEvent(event_data("plotly_click", priority = "event"), {
-      browser()
       log_trace("slope_selector: plotly click detected")
 
       result <- handle_plotly_click(last_click_data,
                                     manual_slopes,
-                                    slopes_pknca_groups(),
-                                    event_data("plotly_click"))
+                                    event_data("plotly_click"),
+                                    pknca_data(),
+                                    plot_outputs())
       # Update reactive values in the observer
-      last_click_data <- result$last_click_data
+      last_click_data(result$last_click_data)
+      plot_outputs(result$plot_outputs)
       manual_slopes(result$manual_slopes)
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets

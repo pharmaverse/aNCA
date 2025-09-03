@@ -94,7 +94,8 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
 #'                 If TRUE, in that case full range will be kept.
 #' @returns Data frame with full ruleset, adjusted for new rules.
 #' @export
-check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE) {
+check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
+  slope_groups <- setdiff(names(new), c("TYPE", "RANGE", "REASON"))
 
   # check if any rule already exists for specific subject and profile #
   existing_index <- which(
@@ -141,29 +142,35 @@ check_slope_rule_overlap <- function(existing, new, slope_groups, .keep = FALSE)
 #'
 #' @returns description The modified `data` object with updated inclusion/exclusion flags
 #'         and reasons in `data$conc$data`.
-.apply_slope_rules <- function(data, slopes, slope_groups) {
-
-  conc_data <- data$conc$data %>%
-    group_by(!!!syms(slope_groups)) %>%
-    mutate(index = seq_len(n())) %>%
-    ungroup()
+.apply_slope_rules <- function(data, slopes) {
+  slope_groups <- group_vars(data)
+  time_col <- data$conc$columns$time
+  exclude_hl_col <- data$conc$columns$exclude_half.life
+  include_hl_col <- data$conc$columns$include_half.life
 
   for (i in seq_len(nrow(slopes))) {
-    # Build the condition dynamically for group columns
+    # Determine the time range for the points adjusted
+    range <- strsplit(as.character(slopes$RANGE[i]), ":")[[1]]
+    if (length(range) == 1) range <- rep(range, 2)
+
+    # Build the condition dynamically for group columns and time range
     selection_index <- which(
       Reduce(`&`, lapply(slope_groups, function(col) {
-        conc_data[[col]] == slopes[[col]][i]
+        data$conc$data[[col]] == slopes[[col]][i]
       })) &
-        conc_data$index %in% .eval_range(slopes$RANGE[i])
+        between(data$conc$data[[time_col]], as.numeric(range[[1]]), as.numeric(range[[2]]))
     )
 
     if (slopes$TYPE[i] == "Selection") {
-      data$conc$data$is.included.hl[selection_index] <- TRUE
+      data$conc$data[[include_hl_col]][selection_index] <- TRUE
     } else {
-      data$conc$data$is.excluded.hl[selection_index] <- TRUE
+      data$conc$data[[exclude_hl_col]][selection_index] <- TRUE
     }
 
-    data$conc$data$REASON[selection_index] <- slopes$REASON[i]
+    data$conc$data$REASON[selection_index] <- paste0(
+      data$conc$data$REASON[selection_index],
+      slopes$REASON[i]
+    )
   }
 
   data
