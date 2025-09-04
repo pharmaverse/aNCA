@@ -4,6 +4,7 @@ boxplotdata <- FIXTURE_PKNCA_RES$result %>%
 
 describe("flexible_violinboxplot", {
   it("creates a simple plot with minimal arguments", {
+    withr::local_seed(1)
     simple_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",

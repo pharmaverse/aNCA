@@ -71,6 +71,7 @@ Suggests:
     shinycssloaders,
     shinyjs,
     shinyjqui,
+    shinytest2,
     shinyWidgets,
     stringi,
     testthat (>= 3.0.0),

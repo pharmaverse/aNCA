@@ -56,6 +56,20 @@ jobs:
             ~/.staged.dependencies
           key: staged-deps
 
+      - name: Install system dependencies
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -qq
+          apt-get install -qq -y wget gnupg cmake libudunits2-dev
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+          apt-get update -qq
+          apt-get install -qq -y google-chrome-stable
+
       - name: Run Staged dependencies
         uses: insightsengineering/staged-dependencies-action@v1
         with:
@@ -77,6 +91,9 @@ jobs:
 
       - name: Run tests
         shell: Rscript {0}
+        env:
+          NOT_CRAN: "true"
+          CHROMOTE_CHROME: "/usr/bin/google-chrome"
         run: |
           devtools::load_all(".")
-          testthat::test_dir("tests/testthat", stop_on_failure = TRUE)
+          testthat::test_local(stop_on_failure = TRUE)

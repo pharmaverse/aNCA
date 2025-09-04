@@ -14,3 +14,5 @@ inst/shiny/log/*
 .Rprofile
 /page
 .DS_Store
+# {shinytest2}: Ignore new debug snapshots for `$expect_values()`
+*_.new.png
