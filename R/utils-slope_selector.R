@@ -146,12 +146,13 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 #'         and reasons in `data$conc$data`.
 .update_pknca_with_rules <- function(data, slopes) {
   print(".update_pknca_with_rules")
-  browser()
-  slope_groups <- group_vars(data)
+  #browser()
+  slope_groups <- c(group_vars(data), "NCA_PROFILE")
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
   include_hl_col <- data$conc$columns$include_half.life
 
+  # Apply each rule action
   for (i in seq_len(nrow(slopes))) {
     # Determine the time range for the points adjusted
     range <- strsplit(as.character(slopes$RANGE[i]), ":")[[1]]
@@ -167,8 +168,10 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 
     if (slopes$TYPE[i] == "Selection") {
       data$conc$data[[include_hl_col]][pnt_idx] <- TRUE
-    } else {
+    } else if (slopes$TYPE[i] == "Exclusion") {
       data$conc$data[[exclude_hl_col]][pnt_idx] <- TRUE
+    } else {
+      stop("Unknown TYPE in slopes: ", slopes$TYPE[i])
     }
 
     data$conc$data$REASON[pnt_idx] <- paste0(
@@ -181,17 +184,27 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   data
 }
 
-.update_plots_with_rules <- function(pknca_data, manual_slopes, plot_outputs) {
+.update_plots_with_rules <- function(pknca_data, manual_slopes, plot_outputs, slopes_to_update = NULL) {
   print(".update_plots_with_rules")
   pknca_for_plots <- .update_pknca_with_rules(pknca_data, manual_slopes)
-  browser()
+  #browser()
+
+  # If the user does not specify which plots to update, update all plots in the manual slopes table
+  if (is.null(slopes_to_update)) {
+    slopes_to_update <- manual_slopes %>%
+      select(any_of(c(group_vars(pknca_for_plots), "NCA_PROFILE"))) %>%
+      distinct()
+    print(names(plot_outputs))
+    if (nrow(slopes_to_update) == 0) return(plot_outputs)
+  }
+
+  # Get the intervals of the plots affected by the current rules
   pknca_for_plots$intervals <- inner_join(
-    manual_slopes %>% select(any_of(c(group_vars(pknca_for_plots), "NCA_PROFILE"))),
+    slopes_to_update,
     pknca_for_plots$intervals,
     by = c(group_vars(pknca_for_plots), "NCA_PROFILE")
   )
   updated_plots <- suppressWarnings(get_halflife_plot(pknca_for_plots))
   plot_outputs[names(plot_outputs) %in% names(updated_plots)] <- updated_plots
   plot_outputs
-  print(".update_plots_with_rules")
 }

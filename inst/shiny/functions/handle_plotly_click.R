@@ -40,12 +40,12 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   # If it is the same point, consider the point excluded
   if (pnt$idx == lstpnt$idx) {
     new_rule$TYPE <- "Exclusion"
-    new_rule$RANGE <- pnt$time
+    new_rule$RANGE <- paste0(pnt$time)
     new_rule$REASON <- ""
 
   # If it is in the same plot (interval), consider all points in the time range included
   } else if (all.equal(pnt$int, lstpnt$int)) {
-    new_rule$TYPE <- "Inclusion"
+    new_rule$TYPE <- "Selection"
     new_rule$RANGE <- paste0(sort(c(pnt$time, lstpnt$time)), collapse = ":")
     new_rule$REASON <- ""
   } else {
@@ -56,9 +56,6 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
       plot_outputs = plot_outputs
     ))
   }
-
-  # Update the concentration data to add manual half life adjustments
-  updated_pknca <- .update_pknca_with_rules(pknca_data, new_rule)
 
   # # Update the specific plot (interval) affected
   # updated_pknca$intervals <- pnt$int

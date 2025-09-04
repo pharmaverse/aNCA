@@ -20,58 +20,46 @@ manual_slopes_table_ui <- function(id) {
 
 
 manual_slopes_table_server <- function(
-    id, mydata, slopes_pknca_groups
+    id, mydata
 ) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
-
-    # Reactive for Slope selector columns
-    slope_selector_columns <- reactive({
-      req(slopes_pknca_groups())
-
-      c(names(slopes_pknca_groups()), "TYPE", "RANGE", "REASON")
+    slopes_pknca_groups <- reactive({
+      req(mydata())
+      mydata()$conc$data %>%
+        select(any_of(c(group_vars(mydata()), "NCA_PROFILE")))
     })
 
     #' Object for storing exclusion and selection data for lambda slope calculation
-    manual_slopes <- reactiveVal({
-      data.frame(
-        TYPE = character(),
-        RANGE = character(),
-        REASON = character(),
-        stringsAsFactors = FALSE
-      )
-    })
-
+    # TODO (Gerardo): Parameter selection is still affecting mydata() and re-creating the manual slopes!
+    manual_slopes <- reactiveVal({NULL})
     observeEvent(mydata(), {
-      current_slopes <- manual_slopes()
-      
-      # Add missing dynamic columns with default values (e.g., NA_character_)
-      missing_cols <- setdiff(colnames(slopes_pknca_groups()), colnames(current_slopes))
-      for (missing_col in missing_cols) {
-        current_slopes[[missing_col]] <- character()
-      }
-
-      # Define the desired column order
-      ordered_cols <- c(colnames(slopes_pknca_groups()), "TYPE", "RANGE", "REASON")
-      current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
+      #browser()
+      req(slopes_pknca_groups())
+      ms_colnames <- c(colnames(slopes_pknca_groups()), c("TYPE", "RANGE", "REASON"))
+      initial_manual_slopes <- data.frame(
+        matrix(character(), ncol = length(ms_colnames), nrow = 0, dimnames = list(character(), ms_colnames))
+      )
 
       # Update the reactive Val
-      manual_slopes(current_slopes)
+      manual_slopes(initial_manual_slopes)
     })
 
     #' Adds new row to the selection/exclusion datatable
     observeEvent(input$add_rule, {
-      
+      #browser()
       log_trace("{id}: adding manual slopes row")
-browser()
 
       # Create the new row with both fixed and dynamic columns
+      first_group <- slopes_pknca_groups()[1, ]
       new_row <- cbind(
-        slopes_pknca_groups()[1, ],
+        first_group,
         data.frame(
-          TYPE = "Selection",
-          RANGE = "1:3",
+          TYPE = "Exclusion",
+          RANGE = paste0(
+            inner_join(slopes_pknca_groups()[1, ], mydata()$conc$data)[[mydata()$conc$columns$time]][2]
+          ),
           REASON = ""
         )
       )
@@ -84,7 +72,7 @@ browser()
 
     #' Removes selected row
     observeEvent(input$remove_rule, {
-browser()
+#browser()
       log_trace("{id}: removing manual slopes row")
 
       selected <- getReactableState("manual_slopes", "selected")
@@ -98,6 +86,7 @@ browser()
     #' Render manual slopes table
     refresh_reactable <- reactiveVal(1)
     output$manual_slopes <- renderReactable({
+      req(manual_slopes())
       log_trace("{id}: rendering slope edit data table")
       # Isolate to prevent unnecessary re-renders on every edit
       isolate({
@@ -141,14 +130,7 @@ browser()
       names(dynamic_columns) <- colnames(slopes_pknca_groups())
 
       # Combine columns in the desired order
-      all_columns <- c(
-        dynamic_columns,
-        list(
-          TYPE = fixed_columns$TYPE,
-          RANGE = fixed_columns$RANGE,
-          REASON = fixed_columns$REASON
-        )
-      )
+      all_columns <- c(dynamic_columns, fixed_columns)
 
       # Render reactable
       reactable(
@@ -167,29 +149,11 @@ browser()
     }) %>%
       shiny::bindEvent(refresh_reactable())
 
-    #' #' Separate event handling updating displayed reactable upon every change (adding and removing
-    #' #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
-    #' #' the table would mean losing focus on text inputs when entering values.
-    #' observeEvent(manual_slopes(), {
-    #'   req(manual_slopes())
-    #' 
-    #'   reactable::updateReactable(
-    #'     outputId = "manual_slopes",
-    #'     data = manual_slopes()
-    #'   )
-    #'   
-    #'   update_plots <- function(pknca_data, pnew_rules)
-    #' })
-
-    #' For each of the columns in slope selector data frame, attach an event that will read
-    #' edits for that column made in the reactable.
     observe({
-      req(slope_selector_columns(), manual_slopes())
-
+      req(manual_slopes())
       # Dynamically attach observers for each column
-      purrr::walk(slope_selector_columns(), \(colname) {
+      purrr::walk(colnames(manual_slopes()), \(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
-          browser()
           edit <- input[[paste0("edit_", colname)]]
           edited_slopes <- manual_slopes()
           edited_slopes[edit$row, edit$column] <- edit$value
