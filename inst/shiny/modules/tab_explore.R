@@ -1,13 +1,20 @@
 # The Exploration Navbar tab loads the data from the Data tab, and results from NCA tab
 # The user can then explore the data using various visualisation tools
 
-# EXPLORATION ----
+teal_explore_modules <- teal::modules(
+  teal.modules.general::tm_variable_browser(label = "Variable Browser")
+)
+
 tab_explore_ui <- function(id) {
   ns <- NS(id)
 
   navset_card_pill(
     header = "Exploratory Analysis",
     id = "visuals",
+    nav_panel(
+      "Variable Browser",
+      teal::ui_teal(ns("variable_browser"), teal_explore_modules)
+    ),
     nav_panel("Individual Plots",
       layout_sidebar(
         sidebar = sidebar(
@@ -147,6 +154,10 @@ tab_explore_ui <- function(id) {
 tab_explore_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # TEAL VARIABLE BROWSER ----
+    data_rv <- reactive(teal_data(DATA = data()))
+    srv_teal("variable_browser", data = data_rv, modules = teal_explore_modules)
 
     ## Plotting Input widgets --------------------------------------------------------
 

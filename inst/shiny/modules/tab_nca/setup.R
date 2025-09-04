@@ -44,7 +44,6 @@ setup_ui <- function(id) {
           title = "Ratio Calculations",
           ratios_table_ui(ns("ratio_calculations_table"))
         ),
-        id = "acc",
         open = c("General Settings", "Parameter Selection")
       )
     ),

@@ -19,6 +19,8 @@ require(shinyWidgets)
 require(stats)
 require(stringi)
 require(stringr)
+require(teal)
+require(teal.modules.general)
 require(tidyr)
 require(tools)
 require(utils)
@@ -29,6 +31,8 @@ lapply(list.files("modules", pattern = "\\.R$", full.names = TRUE, recursive = T
 lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 
 assets <- system.file("shiny/www", package = "aNCA")
+
+options("teal.bs_theme" = bslib::bs_theme(version = "5", bootswatch = "lux"))
 
 sass(
   sass_file(file.path(assets, "styles/main.scss")),
