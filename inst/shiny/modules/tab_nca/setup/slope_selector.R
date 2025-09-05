@@ -120,21 +120,43 @@ slope_selector_ui <- function(id) {
 }
 
 slope_selector_server <- function( # nolint
-  id, pknca_data, manual_slopes_override
+  id, adnca_data, selected_analytes, selected_profile, selected_pcspec, manual_slopes_override
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
 
     ns <- session$ns
+    
+    pknca_data <- reactiveVal(NULL)
+    plot_outputs <- reactiveVal(NULL)
+    observeEvent(list(adnca_data(), selected_analytes, selected_profile, selected_pcspec), {
+      req(adnca_data(), selected_analytes, selected_pcspec, selected_profile)
 
-    slopes_pknca_data <- reactive({
-      req(pknca_data())
-      pknca_data <- pknca_data()
-      pknca_data$intervals <- pknca_data$intervals %>%
-        mutate(
-          half.life = TRUE
-        )
-      pknca_data
+      browser()
+
+      # Prepare a standard PKNCA object with only the basic adjustments for the half-life plots
+      # and only over the user selected analytes, profiles and specimens
+      pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        selected_analytes = selected_analytes,
+        selected_profile = selected_profile,
+        selected_pcspec = selected_pcspec,
+        params = "half.life",
+        # The next parameters should not matter for the calculations
+        # So reactivity should not be involved
+        auc_data = data.frame(
+          start_auc = NA_real_,
+          end_auc = NA_real_
+        ),
+        method = "lin up/log down",
+        # TODO (Gerardo): This would better be FALSE, but start changes...
+        should_impute_c0 = TRUE,
+        hl_adj_rules = manual_slopes()
+      )
+      pknca_data(pknca_data)
+
+      # Prepare a default list with the half life plots
+      plot_outputs(get_halflife_plot(pknca_data()))
     })
 
     # Get grouping columns for plots and tables
@@ -157,13 +179,6 @@ slope_selector_server <- function( # nolint
 
       # pknca_data()$intervals %>%
       #   select(any_of(relevant_group_cols))
-    })
-
-    # Get all lambda z slope plots
-    plot_outputs <- reactiveVal(NULL)
-    observeEvent(slopes_pknca_data(), { # Maybe use directly pknca_data
-      plot_outputs <- get_halflife_plot(slopes_pknca_data())
-      plot_outputs(plot_outputs)
     })
 
     # HACK: workaround to avoid plotly_click not being registered warning
@@ -198,7 +213,7 @@ slope_selector_server <- function( # nolint
         if (is.null(input$search_subject) || length(input$search_subject) == 0) {
           subject_col <- pknca_data()$conc$columns$subject
           unique(
-            slopes_pknca_data()$intervals %>%
+            pknca_data()$intervals %>%
               filter(half.life) %>%
               .[[subject_col]]
           )
@@ -229,7 +244,6 @@ slope_selector_server <- function( # nolint
       # update page number display #
       output$page_number <- renderUI(num_pages)
 
-      print(names(plot_outputs()))
       # Render only the plots requested by the user
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
@@ -327,13 +341,13 @@ slope_selector_server <- function( # nolint
           manual_slopes_version$lst,
           by = names(manual_slopes())
         )
-        
+
         rules_removed <- anti_join(
           manual_slopes_version$lst,
           manual_slopes_version$current,
           by = names(manual_slopes())
         )
-        
+
         slopes_to_update <- bind_rows(rules_added, rules_removed) %>%
           select(any_of(c(group_vars(pknca_data()), "NCA_PROFILE"))) %>%
           distinct()

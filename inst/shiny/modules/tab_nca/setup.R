@@ -80,7 +80,8 @@ setup_server <- function(id, data, adnca_data) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         params = settings()$parameter_selection,
-        should_impute_c0 = settings()$data_imputation$impute_c0
+        should_impute_c0 = settings()$data_imputation$impute_c0,
+        hl_adj_rules = slope_rules$manual_slopes()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -116,35 +117,13 @@ setup_server <- function(id, data, adnca_data) {
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
 
-    # Create version for slope plots
-    # Only parameters required for the slope plots are set in intervals
-    # NCA dynamic changes/filters based on user selections
-    slopes_pknca_data <- reactive({
-      req(adnca_data(), settings(), settings()$profile,
-          settings()$analyte, settings()$pcspec)
-      log_trace("Updating PKNCA::data object for slopes.")
-
-      PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        selected_analytes = settings()$analyte,
-        selected_profile = settings()$profile,
-        selected_pcspec = settings()$pcspec,
-        params = "half.life",
-        # The next parameters should not matter for the calculations
-        # So reactivity should not be involved
-        auc_data = data.frame(
-          start_auc = NA_real_,
-          end_auc = NA_real_
-        ),
-        method = "lin up/log down",
-        # TODO (Gerardo): This would better be FALSE, but start changes...
-        should_impute_c0 = TRUE
-      )
-    })
-
+    # Collect all half life manual adjustments done in the `Slope Selector` section
     slope_rules <- slope_selector_server(
       "slope_selector",
-      slopes_pknca_data,
+      adnca_data,
+      settings()$analyte,
+      settings()$profile,
+      settings()$pcspec,
       manual_slopes_override
     )
 

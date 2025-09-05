@@ -118,7 +118,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Set default settings
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
-  df_conc$REASON <- NA
+  df_conc$REASON <- ""
   df_conc$exclude_half.life <- FALSE
 
   # Create PKNCA conc object
@@ -224,7 +224,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_profile,
   selected_pcspec,
   params,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  hl_adj_rules = NULL
 ) {
 
   data <- adnca_data
@@ -314,6 +315,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
         target_params = params_not_to_impute
       )
     }, all_impute_methods, init = data$intervals)
+  }
+
+  # Update concentration data to indicate points excluded / selected manually for half-life
+  if (!is.null(hl_adj_rules)) {
+    data <- .update_pknca_with_rules(data, hl_adj_rules)
   }
 
   data
@@ -672,19 +678,24 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' @importFrom PKNCA exclude
 #' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
-
   for (param in names(rules)) {
-    if (startsWith(param, "aucpext")) {
-      exc_fun <- exclude_nca_by_param(
+    if (startsWith(param, "AUCPE")) {
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         max_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps(gsub("pext", "inf", param))
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps(
+            translate_terms(gsub("PE", "IF", param), "PPTESTCD", "PKNCA")
+          )
+        )
       )
     } else {
-      exc_fun <- exclude_nca_by_param(
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         min_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps("half.life")
+        )
       )
     }
     res <- PKNCA::exclude(res, FUN = exc_fun)
