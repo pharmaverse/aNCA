@@ -133,12 +133,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           #' Calculate results
           res <- withCallingHandlers({
             processed_pknca_data %>%
-              filter_slopes(
-                slope_rules$manual_slopes(),
-                slope_rules$profiles_per_subject(),
-                slope_rules$slopes_groups(),
-                check_reasons = TRUE
-              ) %>%
               PKNCA_calculate_nca() %>%
               # Add bioavailability results if requested
               add_f_to_pknca_results(settings()$bioavailability) %>%

@@ -1,87 +1,3 @@
-#' Filter dataset based on slope selections and exclusions
-#'
-#' This function filters main dataset based on provided slope selections an exclusions.
-#'
-#' @param data     Data to filter. Must be `PKNCAdata` list, containing the `conc` element with
-#'                 `PKNCAconc` list and appropriate data frame included under data.
-#' @param slopes   A data frame containing slope rules, including `TYPE`, `RANGE`,
-#'        and `REASON` columns. May also have grouping columns (expected to match slope_groups)
-#' @param profiles List with available profiles for each `SUBJECT`.
-#' @param slope_groups List with column names that define the groups.
-#' @param check_reasons Whether to check if all selections have REASONS stated. If this is `TRUE`
-#'                      and not all selections have a reason provided, an error will be thrown.
-#'
-#' @returns Original dataset, with `is.included.hl`, `is.excluded.hl` and `exclude_half.life`
-#'          columns modified in accordance to the provided slope filters.
-#' @importFrom dplyr filter group_by mutate select all_of
-#' @export
-filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = FALSE) {
-  print("filter_slopes")
-  if (is.null(data) || is.null(data$conc) || is.null(data$conc$data))
-    stop("Please provide valid data.")
-
-  # If there is no specification there is nothing to save #
-  if (is.null(slopes) || nrow(slopes) == 0) {
-    return(data)
-  }
-
-  if (check_reasons) {
-    exclusions <- filter(slopes, TYPE == "Exclusion")
-    if (any(exclusions$REASON == "")) {
-      missing_reasons <- filter(exclusions, REASON == "") %>%
-        select(-REASON) %>%
-        apply(1, \(x) paste0(x, collapse = " "))
-
-      stop(
-        "No reason provided for the following exclusions:\n",
-        missing_reasons
-      )
-    }
-  }
-
-  # Reset to 0 all previous (if done) changes #
-  data$conc$data$is.included.hl <- FALSE
-  data$conc$data$is.excluded.hl <- FALSE
-  data$conc$data$exclude_half.life <- FALSE
-  data$conc$data$include_half.life <- NA
-
-  # Eliminate all rows with conflicting or blank values
-  slopes <- slopes %>%
-    semi_join(
-      profiles,
-      by = slope_groups
-    ) %>%
-    filter(all(!is.na(sapply(RANGE, .eval_range))))
-
-  if (nrow(slopes) != 0) {
-    # Go over all rules and check if there is no overlap - if there is, edit accordingly
-    slopes <- purrr::reduce(
-      split(slopes, seq_len(nrow(slopes))),
-      .f = ~ check_slope_rule_overlap(.x, .y, slope_groups, .keep = TRUE)
-    )
-  }
-
-  # Update the exclusion/selection data for Lambda based on the current exc/sel table
-  data <- .update_pknca_with_rules(data, slopes, slope_groups)
-
-  data$conc$data <- data$conc$data %>%
-    group_by(!!!syms(slope_groups)) %>%
-    mutate(exclude_half.life = {
-      if (any(is.included.hl)) {
-        is.excluded.hl | !is.included.hl
-      } else {
-        is.excluded.hl
-      }
-    },
-    include_half.life = case_when(
-      is.included.hl ~ TRUE,
-      TRUE ~ NA
-    )) %>%
-    ungroup()
-
-  data
-}
-
 #' Check overlap between existing and new slope rulesets
 #'
 #' Takes in tables with existing and incoming selections and exclusions, finds any overlap and
@@ -146,7 +62,8 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 #'         and reasons in `data$conc$data`.
 .update_pknca_with_rules <- function(data, slopes) {
   print(".update_pknca_with_rules")
-  #browser()
+browser()
+  # TODO (Gerardo): If we keep RANGE as a time, we don't need NCA_PROFILE
   slope_groups <- c(group_vars(data), "NCA_PROFILE")
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
@@ -155,15 +72,16 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   # Apply each rule action
   for (i in seq_len(nrow(slopes))) {
     # Determine the time range for the points adjusted
-    range <- strsplit(as.character(slopes$RANGE[i]), ":")[[1]]
-    if (length(range) == 1) range <- rep(range, 2)
+    range <- strsplit(as.character(slopes$RANGE[i]), ":")[[1]] %>%
+      as.numeric() %>%
+      range()
 
     # Build the condition dynamically for group columns and time range
     pnt_idx <- which(
       Reduce(`&`, lapply(slope_groups, function(col) {
         data$conc$data[[col]] == slopes[[col]][i]
       })) &
-        between(data$conc$data[[time_col]], as.numeric(range[[1]]), as.numeric(range[[2]]))
+        between(data$conc$data[[time_col]], range[[1]], range[[2]])
     )
 
     if (slopes$TYPE[i] == "Selection") {
