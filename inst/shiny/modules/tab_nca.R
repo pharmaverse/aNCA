@@ -205,7 +205,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           showNotification(w_message, type = "warning", duration = 5)
         })
 
-        updateTabsetPanel(session, "ncapanel", selected = "Results")
+        updateTabsetPanel(session, "nca_navset", selected = "Results")
 
         log_success("NCA results calculated.")
 
