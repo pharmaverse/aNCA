@@ -134,6 +134,10 @@ tab_explore_ui <- function(id) {
         br(),
         helpText("If n<3 at the specified time point then the mean value is not displayed.")
       )
+    ),
+    nav_panel(
+      "QC Plot",
+      qc_plot_ui(ns("qc_plot"))
     )
   )
 }
@@ -400,5 +404,8 @@ tab_explore_server <- function(id, data, grouping_vars) {
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })
+
+    qc_plot_server("qc_plot", data = data, grouping_vars = grouping_vars)
+    
   })
 }
