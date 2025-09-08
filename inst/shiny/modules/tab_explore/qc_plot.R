@@ -69,11 +69,11 @@ qc_plot_server <- function(id, data, grouping_vars) {
         choices = param_choices_usubjid,
         selected = param_choices_usubjid
       )
-      
+
       param_choices_pcspec <- data() %>%
         pull(PCSPEC) %>%
         unique()
-      
+
       updatePickerInput(
         session,
         "pcspec",
@@ -98,7 +98,7 @@ qc_plot_server <- function(id, data, grouping_vars) {
       )
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
-      
+
       updatePickerInput(
         session,
         "show_samples_doses",
@@ -107,7 +107,7 @@ qc_plot_server <- function(id, data, grouping_vars) {
       )
 
     })
-    
+
     processed_data <- reactive({
       req(data())
 
@@ -144,17 +144,17 @@ qc_plot_server <- function(id, data, grouping_vars) {
 
     filtered_data <- reactive({
       req(processed_data(), input$usubjid, input$pcspec)
-      
+
       # Filter the conc and dose data frames
       filtered_conc <- processed_data()$conc %>%
         filter(
           USUBJID %in% input$usubjid,
           PCSPEC %in% input$pcspec
         )
-      
+
       filtered_dose <- processed_data()$dose %>%
         filter(USUBJID %in% input$usubjid)
-      
+
       list(conc = filtered_conc, dose = filtered_dose)
     })
 
@@ -163,8 +163,8 @@ qc_plot_server <- function(id, data, grouping_vars) {
       req(filtered_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)
 
-      show_pk_samples = "PK Samples" %in% input$show_samples_doses
-      show_doses = "Doses" %in% input$show_samples_doses
+      show_pk_samples <- "PK Samples" %in% input$show_samples_doses
+      show_doses <- "Doses" %in% input$show_samples_doses
 
       p <- faceted_qc_plot(
         data_conc = filtered_data()$conc,
@@ -187,4 +187,5 @@ qc_plot_server <- function(id, data, grouping_vars) {
         layout(xaxis = list(rangeslider = list(type = "time")))
     })
   })
+
 }

@@ -408,6 +408,6 @@ tab_explore_server <- function(id, data, grouping_vars) {
     })
 
     qc_plot_server("qc_plot", data = data, grouping_vars = grouping_vars)
-    
+
   })
 }

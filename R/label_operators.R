@@ -115,6 +115,10 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
+  if (nrow(data) == 0) {
+    return(character(0))
+  }
+
   tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
 
   if (length(tooltip_vars) == 0) {
@@ -134,4 +138,5 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
   # Combine the components for each row
   do.call(paste, c(tooltip_components, sep = "<br>"))
+
 }
