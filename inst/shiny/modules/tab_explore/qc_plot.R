@@ -105,32 +105,70 @@ qc_plot_server <- function(id, data, grouping_vars) {
         choices = param_choices_samples_doses,
         selected = param_choices_samples_doses
       )
+
     })
     
-    pknca_data <- reactive({
+    processed_data <- reactive({
       req(data())
-      PKNCA_create_data_object(data())
-    }) |>
-      bindEvent(data())
+
+      data_conc <- NULL
+      data_dose <- NULL
+
+      # If the EVID column is present and there are any doses, use it to define
+      # data_conc and data_dose
+      if ("EVID" %in% names(data())) {
+        if (nrow(data() %>% filter(EVID == 1)) > 0) {
+          data_conc <- data() %>% filter(EVID == 0)
+          data_dose <- data() %>% filter(EVID == 1)
+        }
+      }
+
+      # If the PARAMCD column is present and there are any doses, use it to define
+      # data_conc and data_dose
+      if (is.null(data_dose) && "PARAMCD" %in% names(data())) {
+        if (nrow(data() %>% filter(grepl("dose", tolower(PARAMCD))))) {
+          data_conc <- data() %>% filter(!grepl("dose", tolower(PARAMCD)))
+          data_dose <- data() %>% filter(grepl("dose", tolower(PARAMCD)))
+        }
+      }
+
+      # Temporary solution: create the PKNCA object here
+      if (is.null(data_dose)) {
+        pknca_obj <- PKNCA_create_data_object(data())
+        data_conc <- pknca_obj$conc$data
+        data_dose <- pknca_obj$dose$data
+      }
+
+      list(conc = data_conc, dose = data_dose)
+    })
+
+    filtered_data <- reactive({
+      req(processed_data(), input$usubjid, input$pcspec)
+      
+      # Filter the conc and dose data frames
+      filtered_conc <- processed_data()$conc %>%
+        filter(
+          USUBJID %in% input$usubjid,
+          PCSPEC %in% input$pcspec
+        )
+      
+      filtered_dose <- processed_data()$dose %>%
+        filter(USUBJID %in% input$usubjid)
+      
+      list(conc = filtered_conc, dose = filtered_dose)
+    })
 
     # Render the QC plot
     output$faceted_qc_plot <- renderPlotly({
-      req(pknca_data())
+      req(filtered_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)
 
-      pknca_data_conc_processed <- pknca_data()$conc$data %>%
-        filter(USUBJID %in% input$usubjid,
-               PCSPEC %in% c(input$pcspec))
-      
-      pknca_data_dose_processed <- pknca_data()$dose$data %>%
-        filter(USUBJID %in% input$usubjid)
-      
       show_pk_samples = "PK Samples" %in% input$show_samples_doses
       show_doses = "Doses" %in% input$show_samples_doses
 
       p <- faceted_qc_plot(
-        data_conc = pknca_data_conc_processed,
-        data_dose = pknca_data_dose_processed,
+        data_conc = filtered_data()$conc,
+        data_dose = filtered_data()$dose,
         x_var = "AFRLT",
         y_var = "USUBJID",
         colour_var = input$colour_var,
@@ -139,12 +177,14 @@ qc_plot_server <- function(id, data, grouping_vars) {
         other_tooltip_vars = c("NFRLT", "DRUG"),
         x_var_units = "RRLTU",
         colour_var_units = NULL,
-        title = "Dose/PK Sample QC Plot",
+        title = "Dose and Sample Events",
         show_pk_samples = show_pk_samples,
         show_doses = show_doses,
         as_plotly = TRUE
       )
-      p
+
+      p %>%
+        layout(xaxis = list(rangeslider = list(type = "time")))
     })
   })
 }
