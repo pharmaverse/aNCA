@@ -156,6 +156,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
 
     observeEvent(data(), {
       req(data())
+
       # Update the analyte picker input
       param_choices_analyte <- data() %>%
         pull(PARAM) %>%
@@ -340,6 +341,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
     # Update the cyclesmean select input based on selected analyte
     observeEvent(input$analyte_mean, {
       req(data())
+
       cycle_choices <- data() %>%
         filter(PARAM %in% input$analyte_mean) %>%
         pull(NCA_PROFILE) %>%

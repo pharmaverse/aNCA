@@ -75,13 +75,74 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
   )
 }
 
-#' Generate HTML Tooltip Text
+#' #' Generate HTML Tooltip Text
+#' #'
+#' #' @details
+#' #' Creates a character vector of HTML tooltips for each row of a data frame,
+#' #' suitable for use with `ggplotly`.
+#' #'  The output vector of this function should be added to original plotting data as a column,
+#' #' which then can be used as tooltip argument in the plotting function.
+#' #'
+#' #' @param data A data.frame with the source data.
+#' #' @param labels_df A data.frame used by `get_label()` to find variable labels.
+#' #' @param tooltip_vars A character vector of column names to include in the tooltip.
+#' #' @param type A character string specifying the label type for `get_label()`.
+#' #'
+#' #' @return A character vector of formatted HTML tooltip strings.
+#' #'
+#' #' @importFrom purrr pmap_chr map_chr
+#' #'
+#' #' @examples
+#' #' # Sample data
+#' #' my_data <- data.frame(
+#' #'   USUBJID = c("Subject-01", "Subject-02"),
+#' #'   DOSE = c(100, 200),
+#' #'   RESPONSE = c(5.4, 8.1)
+#' #'   )
+#' #'
+#' #' my_labels <- data.frame(
+#' #'   Dataset = "ADPC",
+#' #'   Variable = "USUBJID",
+#' #'   Label = "Unique Subject ID"
+#' #'   ) # Dummy labels object
+#' #'
+#' #' vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
+#' #'
+#' #' # Generate the tooltip text vector
+#' #' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
+#' #' my_data$tooltip <- tooltips
+#' #'
+#' #' @export
+#' generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
+#' 
+#'   tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
+#' 
+#'   if (length(tooltip_vars) == 0) {
+#'     return(rep("", nrow(data)))
+#'   }
+#' 
+#'   pmap_chr(
+#'     .l = select(data, all_of(tooltip_vars)),
+#'     .f = function(...) {
+#'       row_values <- list(...)
+#' 
+#'       # For each variable, create a formatted line retrieving its label
+#'       lines <- map_chr(tooltip_vars, ~ paste0(
+#'         "<b>", get_label(.x, type, labels_df = labels_df), "</b>: ", row_values[[.x]]
+#'       ))
+#' 
+#'       # Paste all lines together with HTML line breaks
+#'       paste(lines, collapse = "<br>")
+#'     }
+#'   )
+#' }
+
+
+#' Generate HTML Tooltip Text (Optimized Vectorized Version)
 #'
 #' @details
 #' Creates a character vector of HTML tooltips for each row of a data frame,
 #' suitable for use with `ggplotly`.
-#'  The output vector of this function should be added to original plotting data as a column,
-#' which then can be used as tooltip argument in the plotting function.
 #'
 #' @param data A data.frame with the source data.
 #' @param labels_df A data.frame used by `get_label()` to find variable labels.
@@ -90,49 +151,29 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #'
 #' @return A character vector of formatted HTML tooltip strings.
 #'
-#' @importFrom purrr pmap_chr map_chr
-#'
-#' @examples
-#' # Sample data
-#' my_data <- data.frame(
-#'   USUBJID = c("Subject-01", "Subject-02"),
-#'   DOSE = c(100, 200),
-#'   RESPONSE = c(5.4, 8.1)
-#'   )
-#'
-#' my_labels <- data.frame(
-#'   Dataset = "ADPC",
-#'   Variable = "USUBJID",
-#'   Label = "Unique Subject ID"
-#'   ) # Dummy labels object
-#'
-#' vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
-#'
-#' # Generate the tooltip text vector
-#' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
-#' my_data$tooltip <- tooltips
+#' @importFrom purrr map map_chr
 #'
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
-
+  
   tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
-
+  
   if (length(tooltip_vars) == 0) {
     return(rep("", nrow(data)))
   }
-
-  pmap_chr(
-    .l = select(data, all_of(tooltip_vars)),
-    .f = function(...) {
-      row_values <- list(...)
-
-      # For each variable, create a formatted line retrieving its label
-      lines <- map_chr(tooltip_vars, ~ paste0(
-        "<b>", get_label(.x, type, labels_df = labels_df), "</b>: ", row_values[[.x]]
-      ))
-
-      # Paste all lines together with HTML line breaks
-      paste(lines, collapse = "<br>")
-    }
-  )
+  
+  # Step 1: Get all labels ONCE at the beginning.
+  labels <- map_chr(tooltip_vars, ~ get_label(.x, type, labels_df = labels_df))
+  
+  # Step 2: Create a list where each element is a vector of "Label: Value"
+  # strings for an entire column. This is fully vectorized.
+  tooltip_components <- map(seq_along(tooltip_vars), function(i) {
+    var_name <- tooltip_vars[i]
+    label <- labels[i]
+    paste0("<b>", label, "</b>: ", data[[var_name]])
+  })
+  
+  # Step 3: Combine the components for each row using a single, fast call.
+  # do.call is highly efficient for this.
+  do.call(paste, c(tooltip_components, sep = "<br>"))
 }

@@ -54,7 +54,7 @@ qc_plot_ui <- function(id) {
 qc_plot_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Update inputs based on the main data
     observeEvent(data(), {
       req(data())
@@ -106,22 +106,31 @@ qc_plot_server <- function(id, data, grouping_vars) {
         selected = param_choices_samples_doses
       )
     })
+    
+    pknca_data <- reactive({
+      req(data())
+      PKNCA_create_data_object(data())
+    }) |>
+      bindEvent(data())
 
     # Render the QC plot
     output$faceted_qc_plot <- renderPlotly({
-      req(data())
+      req(pknca_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)
-      
-      plot_data <- data() %>%
+
+      pknca_data_conc_processed <- pknca_data()$conc$data %>%
         filter(USUBJID %in% input$usubjid,
-               PCSPEC %in% c(input$pcspec, NA))
+               PCSPEC %in% c(input$pcspec))
+      
+      pknca_data_dose_processed <- pknca_data()$dose$data %>%
+        filter(USUBJID %in% input$usubjid)
       
       show_pk_samples = "PK Samples" %in% input$show_samples_doses
       show_doses = "Doses" %in% input$show_samples_doses
 
       p <- faceted_qc_plot(
-        data_conc = plot_data %>% filter(EVID == 0),
-        data_dose = plot_data %>% filter(EVID == 1),
+        data_conc = pknca_data_conc_processed,
+        data_dose = pknca_data_dose_processed,
         x_var = "AFRLT",
         y_var = "USUBJID",
         colour_var = input$colour_var,

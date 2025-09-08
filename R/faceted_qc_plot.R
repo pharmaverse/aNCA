@@ -165,12 +165,7 @@ faceted_qc_plot <- function(data_conc,
     aes(
       x = !!sym(x_var),
       y = !!sym(y_var),
-      text = generate_tooltip_text(
-        data = processed_data,
-        labels_df = labels_df,
-        tooltip_vars = tooltip_vars,
-        type = "ADPC"
-      ),
+      text = tooltip_text,
       colour = legend_group,
       shape = legend_group
     )
@@ -271,12 +266,9 @@ prepare_plot_data <- function(data_conc,
   # Assign legend groups and facet titles to the data points
   processed_data <- bind_rows(plot_data_list) %>%
     mutate(
-      legend_group = factor(legend_group, levels = all_legend_levels),
-      facet_title = pmap_chr(
-        select(., all_of(grouping_vars)),
-        ~ paste(list(...), collapse = ", ")
-      )
-    )
+      legend_group = factor(legend_group, levels = all_legend_levels)
+    ) %>%
+    unite(facet_title, all_of(grouping_vars), sep = ",", remove = FALSE)
 
   # Return a list containing the processed data and the factor levels
   list(
