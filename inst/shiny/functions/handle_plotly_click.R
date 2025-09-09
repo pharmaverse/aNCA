@@ -34,7 +34,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   excl_hl_col <- pknca_data$conc$columns$exclude_half.life
   incl_hl_col <- pknca_data$conc$columns$include_half.life
   time_col <- pknca_data$conc$columns$time
-
+browser()
   # Depending on the last click decide what half life adjustment rule to apply
   new_rule <- pnt$group
   # If it is the same point, consider the point excluded
@@ -83,7 +83,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
     time <- as.numeric(click_data$x)
     row <- pknca_data$conc$data[idx, ]
     int <- pknca_data$intervals %>%
-      merge(row, by = intersect(names(.), names(row))) %>%
+      merge(row, by = c(group_vars(pknca_data), "NCA_PROFILE")) %>%
       filter(start <= row[[pknca_data$conc$columns$time]] &
                end >= row[[pknca_data$conc$columns$time]]) %>%
       select(any_of(names(pknca_data$intervals)))

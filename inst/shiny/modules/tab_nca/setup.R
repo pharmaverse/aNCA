@@ -118,12 +118,10 @@ setup_server <- function(id, data, adnca_data) {
     units_table_server("units_table", processed_pknca_data)
 
     # Collect all half life manual adjustments done in the `Slope Selector` section
+    # and controls the half life plots that are displayed
     slope_rules <- slope_selector_server(
       "slope_selector",
-      adnca_data,
-      settings()$analyte,
-      settings()$profile,
-      settings()$pcspec,
+      processed_pknca_data,
       manual_slopes_override
     )
 

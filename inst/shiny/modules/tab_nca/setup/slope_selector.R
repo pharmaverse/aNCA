@@ -120,7 +120,7 @@ slope_selector_ui <- function(id) {
 }
 
 slope_selector_server <- function( # nolint
-  id, adnca_data, selected_analytes, selected_profile, selected_pcspec, manual_slopes_override
+  id, processed_pknca_data, manual_slopes_override
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -129,34 +129,29 @@ slope_selector_server <- function( # nolint
     
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
-    observeEvent(list(adnca_data(), selected_analytes, selected_profile, selected_pcspec), {
-      req(adnca_data(), selected_analytes, selected_pcspec, selected_profile)
-
-      browser()
-
+    observeEvent(list(processed_pknca_data()), {
+      req(processed_pknca_data())
+browser()
       # Prepare a standard PKNCA object with only the basic adjustments for the half-life plots
       # and only over the user selected analytes, profiles and specimens
-      pknca_data <- PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        selected_analytes = selected_analytes,
-        selected_profile = selected_profile,
-        selected_pcspec = selected_pcspec,
-        params = "half.life",
-        # The next parameters should not matter for the calculations
-        # So reactivity should not be involved
-        auc_data = data.frame(
-          start_auc = NA_real_,
-          end_auc = NA_real_
-        ),
-        method = "lin up/log down",
-        # TODO (Gerardo): This would better be FALSE, but start changes...
-        should_impute_c0 = TRUE,
-        hl_adj_rules = manual_slopes()
-      )
-      pknca_data(pknca_data)
+      new_pknca_data <- processed_pknca_data()
+      new_pknca_data$intervals <- new_pknca_data$intervals %>%
+        filter(type_interval == "main", half.life) %>%
+        unique()
 
-      # Prepare a default list with the half life plots
-      plot_outputs(get_halflife_plot(pknca_data()))
+      if (!is.null(new_pknca_data$conc$data) && is.null(pknca_data()$conc$data)) {
+        # Prepare a default list with the half life plots
+      plot_outputs(get_halflife_plot(new_pknca_data))
+      } else if (!isTRUE(all.equal(new_pknca_data$conc$data, pknca_data()$conc$data))) {
+        browser()
+        .update_plots_with_rules(new_pknca_data, NULL, plot_outputs)
+      } else if (!isTRUE(all.equal(pknca_data$intervals, pknca_data()$intervals))) {
+        browser()
+        new_intervals <- anti_join(pknca_data$intervals, pknca_data()$intervals)
+      }
+
+      # Update the object
+      pknca_data(new_pknca_data)
     })
 
     # Get grouping columns for plots and tables

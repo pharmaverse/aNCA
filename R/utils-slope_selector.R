@@ -105,7 +105,7 @@ browser()
 .update_plots_with_rules <- function(pknca_data, manual_slopes, plot_outputs, slopes_to_update = NULL) {
   print(".update_plots_with_rules")
   pknca_for_plots <- .update_pknca_with_rules(pknca_data, manual_slopes)
-  #browser()
+  browser()
 
   # If the user does not specify which plots to update, update all plots in the manual slopes table
   if (is.null(slopes_to_update)) {
@@ -123,6 +123,6 @@ browser()
     by = c(group_vars(pknca_for_plots), "NCA_PROFILE")
   )
   updated_plots <- suppressWarnings(get_halflife_plot(pknca_for_plots))
-  plot_outputs[names(plot_outputs) %in% names(updated_plots)] <- updated_plots
+  plot_outputs[names(updated_plots)] <- updated_plots
   plot_outputs
 }
