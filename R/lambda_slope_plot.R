@@ -9,6 +9,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     }
   }
   o_nca$result <- o_nca$result %>%
+    unique() %>%
     mutate(
       PPORRES = ifelse(
         PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last", "tlast"),
@@ -104,7 +105,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     )
     df_fit <- df[is_lz_used, ]
     fit <- lm(as.formula(paste0("log10(", conc_col,") ~ ", time_col)), df_fit)
-    fit_line_data <- data.frame(x = c(lz_time_first + start, tlast + start))
+    fit_line_data <- data.frame(x = c(lz_time_first, tlast))
     colnames(fit_line_data) <- time_col
     fit_line_data$y <- predict(fit, fit_line_data)
   } else {
@@ -223,7 +224,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
       time_span <- lz_time_last - lz_time_first
       span_ratio <- get_res("span.ratio")
       exclude_calc_reason <- group_nca$result$exclude[group_nca$result$PPTESTCD == "half.life"]
-      
+
       if (!is.na(half_life)) {
         is_lz_used <- get_halflife_points2(
           group_nca$data$conc$data,
@@ -235,7 +236,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
         )
         df_fit <- df[is_lz_used, ]
         fit <- lm(as.formula(paste0("log10(", conc_col,") ~ ", time_col)), df_fit)
-        fit_line_data <- data.frame(x = c(lz_time_first + start, tlast + start))
+        fit_line_data <- data.frame(x = c(lz_time_first, tlast))
         colnames(fit_line_data) <- time_col
         fit_line_data$y <- predict(fit, fit_line_data)
       } else {
