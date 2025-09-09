@@ -258,12 +258,12 @@ lambda_slope_plot <- function(
 
 
 get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
-
+# browser()
   # Add a ROWID in the data to track the points later
-  pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data)) 
+  pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data))
   
   # Obtain the results
-  o_nca <- PKNCA::pk.nca(pknca_data)
+  o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
 
   # Ensure result columns are present
   if (!"PPSTRES" %in% names(o_nca$result)) {
@@ -284,6 +284,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
   plots <- vector("list", nrow(groups))
 
   for (i in seq_len(nrow(groups))) {
+
     group <- groups[i, ]
     group_vars <- setdiff(names(group), c("start", "end"))
     # Subset data for this group
@@ -308,11 +309,11 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     df <- df[df[[time_col]] >= group$start & df[[time_col]] <= group$end, ]
     df <- df[order(df[[time_col]]), ]
     df$IX <- seq_len(nrow(df))
-    
+
     # Prepare NCA object for this group
     group_nca <- o_nca
     group_nca$data$conc$data <- df
-    group_nca$result <- merge(group_nca$result, group[, group_vars, drop = FALSE])
+    group_nca$result <- merge(group_nca$result, group)
 
     # Extract NCA results for annotation
     get_res <- function(testcd) group_nca$result$PPSTRES[group_nca$result$PPTESTCD == testcd]
@@ -456,7 +457,8 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
       )
 
     plots[[i]] <- plotly_build(p)
-    names(plots)[i] <- title
+    names(plots)[i] <- paste0(title, ", start: ", group$start, ", end: ", group$end)
   }
+
   return(plots)
 }
