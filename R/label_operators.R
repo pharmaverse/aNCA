@@ -90,8 +90,6 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #'
 #' @return A character vector of formatted HTML tooltip strings.
 #'
-#' @importFrom purrr pmap_chr map_chr
-#'
 #' @examples
 #' # Sample data
 #' my_data <- data.frame(
@@ -126,11 +124,11 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
   }
 
   # Get all labels
-  labels <- map_chr(tooltip_vars, ~ get_label(.x, type, labels_df = labels_df))
+  labels <- purrr::map_chr(tooltip_vars, ~ get_label(.x, type, labels_df = labels_df))
 
   # Create a list where each element is a vector of "Label: Value"
   # strings for an entire column
-  tooltip_components <- map(seq_along(tooltip_vars), function(i) {
+  tooltip_components <- purrr::map(seq_along(tooltip_vars), function(i) {
     var_name <- tooltip_vars[i]
     label <- labels[i]
     paste0("<b>", label, "</b>: ", data[[var_name]])
