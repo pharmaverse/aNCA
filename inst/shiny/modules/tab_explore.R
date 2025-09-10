@@ -135,7 +135,7 @@ tab_explore_ui <- function(id) {
       )
     ),
     nav_panel(
-      "PK Dose QC Plot",
+      "PK/Dose QC Plot",
       pk_dose_qc_plot_ui(ns("pk_dose_qc_plot"))
     )
   )
@@ -318,13 +318,12 @@ tab_explore_server <- function(id, data, grouping_vars) {
         cycle = input$cycles,
         palette = palettes
       ) %>%
-        ggplotly()
+        ggplotly(height = 1000)
 
       # Conditionally add rangeslider only if the plot is not faceted
       if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
         p <- p %>%
           layout(
-            height = 1000,
             xaxis = list(
               rangeslider = list(type = "time")
             )
@@ -397,9 +396,8 @@ tab_explore_server <- function(id, data, grouping_vars) {
         plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
       ) %>%
-        ggplotly() %>%
+        ggplotly(height = 1000) %>%
         layout(
-          height = 1000,
           xaxis = list(
             rangeslider = list(type = "time")
           )

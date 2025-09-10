@@ -167,6 +167,13 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
 
       colour_var_units <- if (input$colour_var == "DOSEA") "DOSEU" else NULL
 
+      # Adjust height based on number of subjects and groups
+      height_adjust <- 200 + 20 * filtered_data()$dose %>%
+        group_by(across(all_of(input$group_var))) %>%
+        summarise(n = n_distinct(USUBJID), .groups = "drop") %>%
+        pull(n) %>%
+        max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
+
       p <- pk_dose_qc_plot(
         data_conc = filtered_data()$conc,
         data_dose = filtered_data()$dose,
@@ -181,17 +188,12 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
         title = "Dose and Sample Events",
         show_pk_samples = show_pk_samples,
         show_doses = show_doses,
-        as_plotly = TRUE
+        as_plotly = TRUE,
+        height = max(c(1000, height_adjust))
       )
-      # Adjust height based on number of subjects and groups
-      height_adjust <- 200 + 20 * filtered_data()$dose %>%
-        group_by(across(all_of(input$group_var))) %>%
-        summarise(n = n_distinct(USUBJID), .groups = "drop") %>%
-        pull(n) %>%
-        max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
+
       p %>%
-        layout(height = max(c(1000, height_adjust)),
-               xaxis = list(rangeslider = list(type = "time")))
+        layout(xaxis = list(rangeslider = list(type = "time")))
     })
   })
 

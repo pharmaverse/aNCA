@@ -19,7 +19,8 @@ pk_dose_qc_plot(
   title = NULL,
   show_pk_samples = TRUE,
   show_doses = TRUE,
-  as_plotly = FALSE
+  as_plotly = FALSE,
+  height = NULL
 )
 }
 \arguments{

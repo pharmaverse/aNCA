@@ -81,7 +81,8 @@ pk_dose_qc_plot <- function(data_conc,
                             title = NULL,
                             show_pk_samples = TRUE,
                             show_doses = TRUE,
-                            as_plotly = FALSE) {
+                            as_plotly = FALSE,
+                            height = NULL) {
 
   # Define boolean flags
   plot_conc_data <- show_pk_samples && !is.null(data_conc)
@@ -188,7 +189,7 @@ pk_dose_qc_plot <- function(data_conc,
     theme_bw()
 
   if (as_plotly) {
-    p <- ggplotly(p, tooltip = "text") %>%
+    p <- ggplotly(p, tooltip = "text", height = height) %>%
       layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
   }
   p
