@@ -1,7 +1,7 @@
 adpc <- FIXTURE_CONC_DATA %>%
   filter(USUBJID %in% unique(USUBJID)[1:3]) %>%
   mutate(USUBJID = as.character(USUBJID),
-         DOSNO = as.character(NCA_PROFILE),
+         DOSNOP = as.character(NCA_PROFILE),
          TRT01A = "Dummy Treatment")
 
 attr(adpc$USUBJID, "label") <- "Subject ID"
@@ -81,7 +81,7 @@ describe("pkcg01", {
       subtitle = "Custom Subtitle",
       footnote = "Custom Footnote",
       plotly = FALSE,
-      color_var = "DOSNO",
+      color_var = "DOSNOP",
       color_var_label  = "Nominal Dose" # discuss this with G.R
     )
     plot_lin_colors <- plots_lin_colors[[2]]
@@ -208,7 +208,7 @@ describe("pkcg02", {
       subtitle = "Custom Subtitle",
       footnote = "Custom Footnote",
       plotly = FALSE,
-      color_var = "DOSNO",
+      color_var = "DOSNOP",
       color_var_label = "Nominal Dose"
     )
 

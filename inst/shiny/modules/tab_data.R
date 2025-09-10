@@ -139,11 +139,11 @@ tab_data_server <- function(id) {
         }
       )
     })
+
     # Update the data table object with the filtered data
     reactable_server(
       "data_processed",
       processed_data,
-      columns = generate_col_defs,
       compact = TRUE,
       style = list(fontSize = "0.75em"),
       height = "50vh",
