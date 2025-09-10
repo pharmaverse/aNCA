@@ -185,7 +185,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         session,
         "generalplot_usubjid",
         choices = param_choices_usubjid,
-        selected = param_choices_usubjid[1]
+        selected = param_choices_usubjid
       )
 
       # Update the colorby and facet by picker inputs
