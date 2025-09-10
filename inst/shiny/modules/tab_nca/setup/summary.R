@@ -77,7 +77,7 @@ summary_server <- function(id, processed_pknca_data) {
     reactable_server(
       "nca_intervals_summary",
       summary_data,
-      height = "98vh"
+      height = "48vh"
     )
   })
 }
