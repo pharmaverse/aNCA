@@ -183,15 +183,14 @@ qc_plot_server <- function(id, data, grouping_vars) {
         show_doses = show_doses,
         as_plotly = TRUE
       )
-      
-      height_adjust <- 200+20*filtered_data()$dose %>%
+      # Adjust height based on number of subjects and groups
+      height_adjust <- 200 + 20 * filtered_data()$dose %>%
         group_by(across(all_of(input$group_var))) %>%
         summarise(n = n_distinct(USUBJID), .groups = "drop") %>%
         pull(n) %>%
-        max(na.rm = TRUE)*length(unique(filtered_data()$dose[,input$group_var]))
-      
+        max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
       p %>%
-        layout(height = max(c(1000, height_adjust)), 
+        layout(height = max(c(1000, height_adjust)),
                xaxis = list(rangeslider = list(type = "time")))
     })
   })
