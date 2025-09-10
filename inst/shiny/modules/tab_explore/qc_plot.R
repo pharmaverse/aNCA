@@ -164,8 +164,8 @@ qc_plot_server <- function(id, data, grouping_vars) {
 
       show_pk_samples <- "PK Samples" %in% input$show_samples_doses
       show_doses <- "Doses" %in% input$show_samples_doses
-      
-      colour_var_units <- if(input$colour_var == "DOSEA") "DOSEU" else NULL
+
+      colour_var_units <- if (input$colour_var == "DOSEA") "DOSEU" else NULL
 
       p <- faceted_qc_plot(
         data_conc = filtered_data()$conc,
