@@ -348,13 +348,13 @@ tab_explore_server <- function(id, data, grouping_vars) {
       )
     })
 
-    # render the mean plot output in plotly
-    output$mean_plot <- renderPlotly({
+    # Compute the meanplot (ggplot object) reactively
+    meanplot <- reactive({
       req(input$studyid_mean)
       req(input$analyte_mean)
       req(input$pcspec_mean)
       req(input$cycles_mean)
-      log_info("Rendering mean plot")
+      log_info("Computing meanplot ggplot object")
 
       validate(
         need(
@@ -399,6 +399,18 @@ tab_explore_server <- function(id, data, grouping_vars) {
         )
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
+    })
+# 
+#     # Save the ggplot object to session$userData$results$exploration$meanplot whenever it changes
+#     observe({
+#       req(meanplot())
+#       session$userData$results$exploration$meanplot <- meanplot_gg()
+#     })
+
+    # Render the mean plot output in plotly
+    output$mean_plot <- renderPlotly({
+      req(meanplot())
+      meanplot()
     })
   })
 }
