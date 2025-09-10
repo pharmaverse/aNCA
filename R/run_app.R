@@ -30,7 +30,6 @@
 run_app <- function(datapath = NULL, ...) {
   # Increase max upload size to 30 MB
   options(shiny.maxRequestSize = 30 * 1024^2)
-  
   if (!is.null(datapath)) {
     opt <- options(aNCA.datapath = datapath)
     on.exit(options(opt), add = TRUE)
