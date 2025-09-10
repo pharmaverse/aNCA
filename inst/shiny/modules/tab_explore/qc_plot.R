@@ -18,7 +18,6 @@ qc_plot_ui <- function(id) {
         label = "Choose the variables to colour by:",
         choices = NULL,
         selected = NULL,
-        multiple = TRUE,
         options = list(`actions-box` = TRUE)
       ),
       pickerInput(
@@ -165,6 +164,8 @@ qc_plot_server <- function(id, data, grouping_vars) {
 
       show_pk_samples <- "PK Samples" %in% input$show_samples_doses
       show_doses <- "Doses" %in% input$show_samples_doses
+      
+      colour_var_units <- if(input$colour_var == "DOSEA") "DOSEU" else NULL
 
       p <- faceted_qc_plot(
         data_conc = filtered_data()$conc,
@@ -176,7 +177,7 @@ qc_plot_server <- function(id, data, grouping_vars) {
         grouping_vars = input$group_var,
         other_tooltip_vars = c("NFRLT", "DRUG"),
         x_var_units = "RRLTU",
-        colour_var_units = NULL,
+        colour_var_units = colour_var_units,
         title = "Dose and Sample Events",
         show_pk_samples = show_pk_samples,
         show_doses = show_doses,
