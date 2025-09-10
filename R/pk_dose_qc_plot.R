@@ -194,7 +194,7 @@ pk_dose_qc_plot <- function(data_conc,
   p
 }
 
-#' Prepare Data for QC Plotting
+#' Prepare Data for PK Dose QC Plotting
 #'
 #' A helper function that validates, processes, and combines
 #' concentration and dose data. It creates the unified legend and faceting

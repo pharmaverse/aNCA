@@ -2,7 +2,7 @@
 % Please edit documentation in R/pk_dose_qc_plot.R
 \name{prepare_plot_data}
 \alias{prepare_plot_data}
-\title{Prepare Data for QC Plotting}
+\title{Prepare Data for PK Dose QC Plotting}
 \usage{
 prepare_plot_data(
   data_conc,

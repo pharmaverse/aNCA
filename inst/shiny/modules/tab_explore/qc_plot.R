@@ -157,7 +157,7 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
       list(conc = filtered_conc, dose = filtered_dose)
     })
 
-    # Render the QC plot
+    # Render the PK Dose QC plot
     output$pk_dose_qc_plot <- renderPlotly({
       req(filtered_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)

@@ -135,7 +135,7 @@ tab_explore_ui <- function(id) {
       )
     ),
     nav_panel(
-      "QC Plot",
+      "PK Dose QC Plot",
       pk_dose_qc_plot_ui(ns("pk_dose_qc_plot"))
     )
   )
