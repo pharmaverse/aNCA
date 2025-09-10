@@ -1,6 +1,6 @@
-#' Create a Faceted Quality Control (QC) Plot
+#' Create a PK Dose Quality Control (QC) Plot
 #'
-#' Generates a faceted QC plot by layering concentration data (as
+#' Generates a PK Dose QC plot by layering concentration data (as
 #' black shapes) and dose data (as colored points). It creates a single, unified
 #' legend for both data types and can return either a static `ggplot` or an
 #' interactive `plotly` object.
@@ -54,7 +54,7 @@
 #' )
 #'
 #' # Generate the plot
-#' faceted_qc_plot(
+#' pk_dose_qc_plot(
 #'   data_conc = conc_data,
 #'   data_dose = dose_data,
 #'   x_var = "ACTUAL_TIME",
@@ -67,7 +67,7 @@
 #'   title = "Sample Dosing and PK Plot"
 #' )
 #' @export
-faceted_qc_plot <- function(data_conc,
+pk_dose_qc_plot <- function(data_conc,
                             data_dose = NULL,
                             x_var,
                             y_var,

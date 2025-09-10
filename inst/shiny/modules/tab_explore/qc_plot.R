@@ -1,4 +1,4 @@
-qc_plot_ui <- function(id) {
+pk_dose_qc_plot_ui <- function(id) {
   ns <- NS(id)
   # The nav_panel function creates the tab
   layout_sidebar(
@@ -45,12 +45,12 @@ qc_plot_ui <- function(id) {
         options = list(`actions-box` = TRUE)
       )
     ),
-    plotlyOutput(ns("faceted_qc_plot"), height = "100%")
+    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%")
   )
 }
 
 # -- Module Server
-qc_plot_server <- function(id, data, grouping_vars) {
+pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -158,7 +158,7 @@ qc_plot_server <- function(id, data, grouping_vars) {
     })
 
     # Render the QC plot
-    output$faceted_qc_plot <- renderPlotly({
+    output$pk_dose_qc_plot <- renderPlotly({
       req(filtered_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)
 
@@ -167,7 +167,7 @@ qc_plot_server <- function(id, data, grouping_vars) {
 
       colour_var_units <- if (input$colour_var == "DOSEA") "DOSEU" else NULL
 
-      p <- faceted_qc_plot(
+      p <- pk_dose_qc_plot(
         data_conc = filtered_data()$conc,
         data_dose = filtered_data()$dose,
         x_var = "AFRLT",
