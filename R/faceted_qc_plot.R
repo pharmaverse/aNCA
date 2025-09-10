@@ -87,9 +87,8 @@ faceted_qc_plot <- function(data_conc,
   plot_conc_data <- show_pk_samples && !is.null(data_conc)
   plot_dose_data <- show_doses && !is.null(data_dose) && nrow(data_dose) > 0
 
-
   # Select variables to include in the plotly tooltips
-  tooltip_vars <- c(y_var, grouping_vars, other_tooltip_vars, x_var, colour_var)
+  tooltip_vars <- c(y_var, other_tooltip_vars, x_var, colour_var)
 
   # Prerocess the data and unpack the results
   prep_results <- prepare_plot_data(
