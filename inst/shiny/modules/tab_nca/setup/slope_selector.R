@@ -131,25 +131,83 @@ slope_selector_server <- function( # nolint
     plot_outputs <- reactiveVal(NULL)
     observeEvent(list(processed_pknca_data()), {
       req(processed_pknca_data())
-browser()
+
       # Prepare a standard PKNCA object with only the basic adjustments for the half-life plots
       # and only over the user selected analytes, profiles and specimens
       new_pknca_data <- processed_pknca_data()
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
         filter(type_interval == "main", half.life) %>%
         unique()
+      excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
+      incl_hl_col <- new_pknca_data$conc$columns$include_half.life
+      is_new_data <- !is.null(new_pknca_data$conc$data) && is.null(pknca_data()$conc$data)
 
-      if (!is.null(new_pknca_data$conc$data) && is.null(pknca_data()$conc$data)) {
+      if (is_new_data) {
         # Prepare a default list with the half life plots
-      plot_outputs(get_halflife_plot(new_pknca_data))
-      } else if (!isTRUE(all.equal(new_pknca_data$conc$data, pknca_data()$conc$data))) {
         browser()
-        .update_plots_with_rules(new_pknca_data, NULL, plot_outputs)
-      } else if (!isTRUE(all.equal(pknca_data$intervals, pknca_data()$intervals))) {
-        browser()
-        new_intervals <- anti_join(pknca_data$intervals, pknca_data()$intervals)
-      }
+        plot_outputs(get_halflife_plot(new_pknca_data))
+      } else {
+        is_change_in_conc_data <- !isTRUE(
+          all.equal(
+            dplyr::select(new_pknca_data$conc$data, -any_of(c(excl_hl_col, incl_hl_col))),
+            dplyr::select(pknca_data()$conc$data, -any_of(c(excl_hl_col, incl_hl_col)))
+          )
+        )
+        is_change_in_hl_adj <- !isTRUE(
+          all.equal(
+            dplyr::select(new_pknca_data$conc$data, any_of(c(excl_hl_col, incl_hl_col))),
+            dplyr::select(pknca_data()$conc$data, any_of(c(excl_hl_col, incl_hl_col)))
+          )
+        )
+        is_change_in_selected_intervals <- !isTRUE(
+          all.equal(new_pknca_data$intervals, pknca_data()$intervals)
+        )
+        
+        if (is_change_in_conc_data) {
+          plot_outputs(get_halflife_plot(new_pknca_data))
+        } else if (is_change_in_hl_adj) {
+          browser()
+          affected_groups <- anti_join(
+            dplyr::select(new_pknca_data$conc$data, any_of(c(group_vars(new_pknca_data()), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
+            dplyr::select(pknca_data()$conc$data, any_of(c(group_vars(pknca_data()), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
+            by = c(group_vars(new_pknca_data()), "NCA_PROFILE")
+          ) %>%
+            select(any_of(c(group_vars(new_pknca_data()), "NCA_PROFILE"))) %>%
+            distinct()
+          .update_plots_with_rules(new_pknca_data, data.frame(), plot_outputs, affected_groups)
+        } else if (is_change_in_selected_intervals) {
+          browser()
+          new_intervals <- anti_join(new_pknca_data$intervals, pknca_data()$intervals)
+          rm_intervals <- anti_join(pknca_data()$intervals, new_pknca_data$intervals)
+          if (nrow(new_intervals) > 0) {
+            affected_groups <- new_intervals %>%
+              select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
+              distinct()
+            new_plots <- .update_plots_with_rules(new_pknca_data, data.frame(), plot_outputs(), affected_groups)
+            plot_outputs(new_plots)
+          }
+          if (nrow(rm_intervals) > 0) {
+            rm_plot_names <- rm_intervals %>%
+              select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
+              # Create a column that is just a pasted character with the name and value of each column in the row
+              distinct() %>%
+              mutate(across(everything(), as.character)) %>%
+              # Create a column that is just a pasted character with the name and value of each column in the row
+              mutate(id = purrr::pmap_chr(
+                ., 
+                function(...) {
+                  vals <- list(...)
+                  paste0(names(vals), ": ", vals, collapse = ", ")
+                }
+              )) %>%
+              pull(id)
 
+            remaining_plots <- plot_outputs()[!names(plot_outputs()) %in% rm_plot_names]
+            plot_outputs(remaining_plots)
+          }
+        }
+      }
+        
       # Update the object
       pknca_data(new_pknca_data)
     })
