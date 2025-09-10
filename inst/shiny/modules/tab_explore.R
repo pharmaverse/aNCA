@@ -124,8 +124,8 @@ tab_explore_ui <- function(id) {
             choices = NULL
           ),
           checkboxInput(ns("log_mean_plot"), label = "Scale y Log"),
-          checkboxInput(ns("sd_mean_plot_max"), label = "+SD"),
-          checkboxInput(ns("sd_mean_plot_min"), label = "-SD"),
+          checkboxInput(ns("sd_mean_plot_max"), label = "+SD", value = TRUE),
+          checkboxInput(ns("sd_mean_plot_min"), label = "-SD", value = TRUE),
           checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
           position = "right",
           open = TRUE
