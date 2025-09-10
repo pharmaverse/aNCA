@@ -285,7 +285,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
         plot_data[, c(group_vars, "ROWID", "IX"), drop = FALSE],
         1,
         function(row) as.list(set_names(row, c(group_vars, "ROWID", "IX")))
-      )
+      ) %>% unname()
       # Update layout
       p_i$x$layout$title <- title
       p_i$x$layout$xaxis$title <- xlab
@@ -293,6 +293,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
       if (add_annotations) {
         p_i$x$layout$annotations[[1]]$text <- subtitle_text
       }
+
       plots[[i]] <- p_i
       names(plots)[i] <- paste0(title, ", start: ", group$start, ", end: ", group$end)
     }
