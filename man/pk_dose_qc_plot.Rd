@@ -59,6 +59,8 @@ It uses metadata_nca_variables as default}
 
 \item{as_plotly}{Logical. If \code{TRUE}, converts the final plot to an interactive
 \code{plotly} object.}
+
+\item{height}{Numeric. Desired height for the plot.}
 }
 \value{
 A \code{ggplot} object or, if \code{as_plotly = TRUE}, a \code{plotly} object.

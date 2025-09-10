@@ -29,6 +29,7 @@
 #' @param show_doses Logical. If `TRUE`, plots the dose data.
 #' @param as_plotly Logical. If `TRUE`, converts the final plot to an interactive
 #'   `plotly` object.
+#' @param height Numeric. Desired height for the plot.
 #'
 #' @return A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
 #'
