@@ -89,7 +89,7 @@ tab_explore_ui <- function(id) {
           ),
           checkboxInput(ns("show_dose"), label = "Show Dose Times"),
         ),
-        plotlyOutput(ns("individualplot"))
+        plotlyOutput(ns("individualplot"), height = "100%")
       )
     ),
     nav_panel("Mean Plots",
@@ -130,8 +130,7 @@ tab_explore_ui <- function(id) {
           position = "right",
           open = TRUE
         ),
-        plotlyOutput(ns("mean_plot")),
-        br(),
+        plotlyOutput(ns("mean_plot"), height = "100%"),
         helpText("If n<3 at the specified time point then the mean value is not displayed.")
       )
     ),
@@ -325,6 +324,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
         p <- p %>%
           layout(
+            height = 1000,
             xaxis = list(
               rangeslider = list(type = "time")
             )
@@ -399,6 +399,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       ) %>%
         ggplotly() %>%
         layout(
+          height = 1000,
           xaxis = list(
             rangeslider = list(type = "time")
           )
