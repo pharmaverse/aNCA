@@ -51,6 +51,7 @@
 #'   \item{is.used}{Logical. TRUE if the variable is meant to be included.}
 #'   \item{Values}{Character. Possible values for the variable (if applicable).}
 #'   \item{is.mapped}{Logical. TRUE if the variable is mapped in ADNCA (App's input).}
+#'   \item{mapping_tooltip}{Character. A descriptive tooltip for the mapping tab.}
 #' }
 #' @source Used for PP and ADPP mapping rules and checks in the export_cdisc function
 "metadata_nca_variables"
