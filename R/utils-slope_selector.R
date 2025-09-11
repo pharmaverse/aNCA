@@ -29,13 +29,19 @@ handle_hl_adj <- function(new_pknca_data, old_pknca_data, plot_outputs) {
 }
 
 handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
-  new_intervals <- anti_join(new_pknca_data$intervals, old_pknca_data$intervals)
-  rm_intervals <- anti_join(old_pknca_data$intervals, new_pknca_data$intervals)
+  new_intervals <- anti_join(
+    new_pknca_data$intervals, old_pknca_data$intervals,
+    by = intersect(names(new_pknca_data$intervals), names(old_pknca_data$intervals))
+  )
+  rm_intervals <- anti_join(
+    old_pknca_data$intervals, new_pknca_data$intervals,
+    by = intersect(names(new_pknca_data$intervals), names(old_pknca_data$intervals))
+  )
   if (nrow(new_intervals) > 0) {
     affected_groups <- new_intervals %>%
       select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
       distinct()
-    .update_plots_with_pknca(new_pknca_data, plot_outputs(), affected_groups)
+    .update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
   }
   if (nrow(rm_intervals) > 0) {
     rm_plot_names <- rm_intervals %>%
@@ -50,7 +56,7 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
         }
       )) %>%
       pull(id)
-    plot_outputs[!names(plot_outputs()) %in% rm_plot_names]
+    plot_outputs[!names(plot_outputs) %in% rm_plot_names]
   }
 }
 
