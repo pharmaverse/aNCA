@@ -7,11 +7,10 @@
 #' @param manual_slopes A reactive Values object storing the manually added slope rules.
 #' @param click_data A list containing the custom data from the plotly click event.
 #' @param pknca_data A PKNCA data object containing concentration data and intervals.
-#' @param plot_outputs A list of current plot outputs to be updated if needed.
 #'
 #' @returns Returns a list with updated `last_click_data` and `manual_slopes`.
 #'
-handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknca_data, plot_outputs) {
+handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknca_data) {
   req(click_data, click_data$customdata)
   print("current click:")
   print(click_data)
@@ -21,8 +20,7 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   if (is.null(last_click_data())) {
     return(list(
       last_click_data = click_data,
-      manual_slopes = manual_slopes(),
-      plot_outputs = plot_outputs
+      manual_slopes = manual_slopes()
     ))
   }
 
@@ -44,7 +42,7 @@ browser()
     new_rule$REASON <- ""
 
   # If it is in the same plot (interval), consider all points in the time range included
-  } else if (all.equal(pnt$int, lstpnt$int)) {
+  } else if (identical(pnt$int, lstpnt$int)) {
     new_rule$TYPE <- "Selection"
     new_rule$RANGE <- paste0(sort(c(pnt$time, lstpnt$time)), collapse = ":")
     new_rule$REASON <- ""
@@ -52,8 +50,7 @@ browser()
     # Do nothing
     return(list(
       last_click_data = click_data,
-      manual_slopes = manual_slopes(),
-      plot_outputs = plot_outputs
+      manual_slopes = manual_slopes()
     ))
   }
 
@@ -63,8 +60,7 @@ browser()
   # Return updated values
   list(
     last_click_data = NULL, # Action was finished and has to be updated
-    manual_slopes = updated_slopes,
-    plot_outputs = plot_outputs # TODO: NOT NEEDED ANYMORE
+    manual_slopes = updated_slopes
   )
 }
 

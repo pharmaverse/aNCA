@@ -1,4 +1,4 @@
-manual_slopes_table_ui <- function(id) {
+handle_slopes_table_ui <- function(id) {
   ns <- NS(id)
 
   fluidRow(
@@ -19,7 +19,7 @@ manual_slopes_table_ui <- function(id) {
 }
 
 
-manual_slopes_table_server <- function(
+handle_slopes_table_server <- function(
     id, mydata, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {

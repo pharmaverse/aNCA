@@ -18,7 +18,7 @@ slope_selector_ui <- function(id) {
 
   div(
     class = "slope-selector-module",
-    manual_slopes_table_ui(ns("manual_slopes")),
+    handle_slopes_table_ui(ns("manual_slopes")),
     # Help widget #
     dropdown(
       div(
@@ -155,8 +155,7 @@ slope_selector_server <- function( # nolint
       id = "page_and_searcher",
       search_subject = search_subject_r,
       plot_outputs = plot_outputs,
-      plots_per_page = plots_per_page_r,
-      ns_parent = ns
+      plots_per_page = plots_per_page_r
     )
 
     # Render only the plots requested by the user (using the subject searcher and pagination)
@@ -168,29 +167,27 @@ slope_selector_server <- function( # nolint
       })
     })
 
-  # Creates an initial version of the manual slope adjustments table with pknca_data
-  # and handles the addition and deletion of rows through the UI
-  slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
-  manual_slopes <- slopes_table$manual_slopes
-  refresh_reactable <- slopes_table$refresh_reactable
+    # Creates an initial version of the manual slope adjustments table with pknca_data
+    # and handles the addition and deletion of rows through the UI
+    slopes_table <- handle_slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
+    manual_slopes <- slopes_table$manual_slopes
+    refresh_reactable <- slopes_table$refresh_reactable
 
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveVal(NULL)
-
     observeEvent(event_data("plotly_click", priority = "event"), {
       log_trace("slope_selector: plotly click detected")
 
-      result <- handle_plotly_click(
+      click_result <- handle_plotly_click(
         last_click_data,
         manual_slopes,
         event_data("plotly_click"),
-        pknca_data(),
-        plot_outputs()
+        pknca_data()
       )
       # Update reactive values in the observer
-      last_click_data(result$last_click_data)
-      plot_outputs(result$plot_outputs)
-      manual_slopes(result$manual_slopes)
+      last_click_data(click_result$last_click_data)
+      manual_slopes(click_result$manual_slopes)
+
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
       refresh_reactable(refresh_reactable() + 1)
@@ -210,7 +207,7 @@ slope_selector_server <- function( # nolint
       )
     })
 
-  # Manual slopes override logic moved to manual_slopes_table_server
+  # Manual slopes override logic moved to handle_slopes_table_server
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
     list(

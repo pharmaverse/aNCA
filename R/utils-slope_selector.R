@@ -175,7 +175,7 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
     # Delegate to .update_plots_with_pknca for actual plot updating
     .update_plots_with_pknca(pknca_for_plots, plot_outputs, intervals_to_update = slopes_to_update)
   }
-  
+
   .update_plots_with_pknca <- function(pknca_data, plot_outputs, intervals_to_update = NULL) {
     print(".update_plots_with_pknca")
     # If the user does not specify which plots to update (NULL), update all plots in the manual slopes table

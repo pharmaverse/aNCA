@@ -37,7 +37,7 @@ page_and_searcher_page_ui <- function(id) {
 #' Handles pagination and subject search logic for displaying plots.
 #' Inputs: current_page (reactive), input$search_subject, plot_outputs (reactive), input$plots_per_page
 #' Outputs: list of reactives: page_start, page_end, is_plot_searched, num_pages
-page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per_page, ns_parent) {
+page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per_page) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
