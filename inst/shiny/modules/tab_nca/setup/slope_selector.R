@@ -178,6 +178,7 @@ slope_selector_server <- function( # nolint
         shinyjs::enable(selector = ".btn-page")
         plot_outputs()[page_search$is_plot_searched()][page_search$page_start():page_search$page_end()]
       })
+      session$userData$results$slope_selector <- plot_outputs()
     })
 
     # Creates an initial version of the manual slope adjustments table with pknca_data
