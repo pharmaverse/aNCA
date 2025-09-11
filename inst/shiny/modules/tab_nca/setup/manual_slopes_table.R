@@ -20,7 +20,7 @@ manual_slopes_table_ui <- function(id) {
 
 
 manual_slopes_table_server <- function(
-    id, mydata
+    id, mydata, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {
 
@@ -162,6 +162,39 @@ manual_slopes_table_server <- function(
         })
       })
     })
+
+    # --- Manual slopes override logic (moved from slope_selector_server) ---
+    if (!is.null(manual_slopes_override)) {
+      observeEvent(manual_slopes_override(), {
+        req(manual_slopes_override())
+
+        if (nrow(manual_slopes_override()) == 0) return(NULL)
+
+        log_debug_list("Manual slopes override:", manual_slopes_override())
+
+        # Use mydata() for validation
+        override_valid <- apply(manual_slopes_override(), 1, function(r) {
+          dplyr::filter(
+            mydata()$conc$data,
+            PCSPEC == r["PCSPEC"],
+            USUBJID == r["USUBJID"],
+            PARAM == r["PARAM"],
+            NCA_PROFILE == r["NCA_PROFILE"],
+            DOSNOA == r["DOSNOA"]
+          ) |>
+            NROW() != 0
+        }) |>
+          all()
+
+        if (!override_valid) {
+          msg <- "Manual slopes not compatible with current data, leaving as default."
+          log_warn(msg)
+          showNotification(msg, type = "warning", duration = 5)
+          return(NULL)
+        }
+        manual_slopes(manual_slopes_override())
+      })
+    }
 
     list(
       manual_slopes = manual_slopes,

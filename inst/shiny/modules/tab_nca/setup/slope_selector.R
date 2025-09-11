@@ -106,14 +106,13 @@ slope_selector_server <- function( # nolint
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
         filter(type_interval == "main", half.life) %>%
         unique()
-
-browser()
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
         new = new_pknca_data,
         excl_hl_col = new_pknca_data$conc$columns$exclude_half.life,
         incl_hl_col = new_pknca_data$conc$columns$include_half.life
       )
+
       # Regenerate plots if a dataset is submitted or it was changed
       # (update of adnca_data in setup.R)
       if (changes$in_data) {
@@ -169,11 +168,11 @@ browser()
       })
     })
 
-    # Creates an initial version of the manual slope adjustments table with pknca_data
-    # and handles the addition and deletion of rows through the UI
-    slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data)
-    manual_slopes <- slopes_table$manual_slopes
-    refresh_reactable <- slopes_table$refresh_reactable
+  # Creates an initial version of the manual slope adjustments table with pknca_data
+  # and handles the addition and deletion of rows through the UI
+  slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
+  manual_slopes <- slopes_table$manual_slopes
+  refresh_reactable <- slopes_table$refresh_reactable
 
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveVal(NULL)
@@ -200,7 +199,6 @@ browser()
     #' Separate event handling updating displayed reactable upon every change (adding and removing
     #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
     #' the table would mean losing focus on text inputs when entering values.
-    manual_slopes_version <- reactiveValues(lst = NULL, current = NULL)
     observeEvent(manual_slopes(), {
       req(manual_slopes())
       print("observeEvent manual_slopes()")
@@ -212,35 +210,7 @@ browser()
       )
     })
 
-    #' If any settings are uploaded by the user, overwrite current rules
-    observeEvent(manual_slopes_override(), {
-      req(manual_slopes_override())
-
-      if (nrow(manual_slopes_override()) == 0) return(NULL)
-
-      log_debug_list("Manual slopes override:", manual_slopes_override())
-
-      override_valid <- apply(manual_slopes_override(), 1, function(r) {
-        dplyr::filter(
-          plot_data()$conc$data,
-          PCSPEC == r["PCSPEC"],
-          USUBJID == r["USUBJID"],
-          PARAM == r["PARAM"],
-          NCA_PROFILE == r["NCA_PROFILE"],
-          DOSNOA == r["DOSNOA"]
-        ) |>
-          NROW() != 0
-      }) |>
-        all()
-
-      if (!override_valid) {
-        msg <- "Manual slopes not compatible with current data, leaving as default."
-        log_warn(msg)
-        showNotification(msg, type = "warning", duration = 5)
-        return(NULL)
-      }
-      manual_slopes(manual_slopes_override())
-    })
+  # Manual slopes override logic moved to manual_slopes_table_server
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
     list(
