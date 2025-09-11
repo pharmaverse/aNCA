@@ -31,7 +31,6 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
   n_groups <- nrow(groups)
   plots <- vector("list", n_groups)
   if (n_groups == 0) {
-    print(difftime(Sys.time() - time0))
     return(plots)
   }
   # Precompute column names and helper functions
@@ -45,13 +44,12 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     exclude_hl_col <- "exclude_half.life"
   }
   
-  include_hl_col <- o_nca$data$conc$columns$exclude_half.life
+  include_hl_col <- o_nca$data$conc$columns$include_half.life
   if (is.null(include_hl_col)) {
     o_nca$data$conc$data[["include_half.life"]] <- FALSE
     exclude_hl_col <- "include_half.life"
   }
-  
-  
+
   # Helper functions for extracting results
   get_res_fun <- function(result_df, testcd) result_df$PPSTRES[result_df$PPTESTCD == testcd]
   get_unit_fun <- function(result_df, testcd) result_df$PPSTRESU[result_df$PPTESTCD == testcd]
@@ -312,7 +310,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
 #' @param exclude_hl_col column name for exclude_half.life
 #' @return logical vector
 get_halflife_points2 <- function(data, include_hl_col, time_col, lz_time_first, lz_time_last, exclude_hl_col) {
-  if (any(data[[include_hl_col]])) {
+  if (any(!is.na(data[[include_hl_col]]) & data[[include_hl_col]])) {
     data[[include_hl_col]]
   } else {
     data[[time_col]] >= lz_time_first & data[[time_col]] <= lz_time_last & !data[[exclude_hl_col]]
