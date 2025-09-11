@@ -36,7 +36,7 @@ page_and_searcher_page_ui <- function(id) {
 #'
 #' Handles pagination and subject search logic for displaying plots.
 #' Inputs: current_page (reactive), input$search_subject, plot_outputs (reactive), input$plots_per_page
-#' Outputs: list of reactives: page_start, page_end, has_plot_subject, num_pages
+#' Outputs: list of reactives: page_start, page_end, is_plot_searched, num_pages
 page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per_page, ns_parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -44,8 +44,8 @@ page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per
     # Internalize current page state
     current_page <- reactiveVal(1)
 
-    # Calculate has_plot_subject
-    has_plot_subject <- reactive({
+    # Calculate is_plot_searched
+    is_plot_searched <- reactive({
       req(plot_outputs())
       search_val <- search_subject()
       if (is.null(search_val) || length(search_val) == 0) {
@@ -58,7 +58,7 @@ page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per
       }
     })
 
-    num_plots <- reactive({ sum(has_plot_subject()) })
+    num_plots <- reactive({ sum(is_plot_searched()) })
     plots_per_page_num <- reactive({ as.numeric(plots_per_page()) })
     num_pages <- reactive({ ceiling(num_plots() / plots_per_page_num()) })
 
@@ -115,9 +115,7 @@ page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per
     list(
       page_start = page_start,
       page_end = page_end,
-      has_plot_subject = has_plot_subject,
-      num_pages = num_pages,
-      current_page = current_page
+      is_plot_searched = is_plot_searched
     )
   })
 }

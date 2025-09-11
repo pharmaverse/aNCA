@@ -11,8 +11,6 @@
 #'
 #' @returns List with reactive expressions:
 #'   * manual_slopes - Data frame containing inclusions / exclusions.
-#'   * profiles_per_subject - Grouping for each subject.
-#'   * slopes_pknca_groups - Grouping for the slopes, in accordance to the settings.
 
 slope_selector_ui <- function(id) {
   ns <- NS(id)
@@ -194,36 +192,17 @@ browser()
       pknca_data(new_pknca_data)
     })
 
-    # Get grouping columns for plots and tables
-    slopes_pknca_groups <- reactive({
-      req(pknca_data())
-
-      pknca_data()$intervals %>%
-        select(any_of(c(group_vars(pknca_data()), "NCA_PROFILE")))
-
-      # relevant_group_cols <- pknca_data()$conc$data %>%
-      #   select(
-      #     any_of(
-      #       c(group_vars(pknca_data()), "NCA_PROFILE")
-      #     )
-      #   ) %>%
-      #   # TODO (Gerardo): Include a better new version of select_minimal_grouping_cols
-      #   # Select columns that have more than 1 unique value
-      #   select(where(~ n_distinct(.) > 1)) %>%
-      #   colnames()
-
-      # pknca_data()$intervals %>%
-      #   select(any_of(relevant_group_cols))
-    })
-
     # HACK: workaround to avoid plotly_click not being registered warning
     session$userData$plotlyShinyEventIDs <- "plotly_click-A"
 
 
-    # --- Pagination and search logic using the new module ---
+    # --- Pagination and search logic ---
     search_subject_r <- reactive({ input$search_subject })
     plots_per_page_r <- reactive({ input$plots_per_page })
 
+    # Call the pagination/searcher module to:
+    # - Providing indices of plots for the selected subject(s)
+    # - Providing indices for which plots to display based on pagination
     page_search <- page_and_searcher_server(
       id = "page_and_searcher",
       search_subject = search_subject_r,
@@ -232,12 +211,12 @@ browser()
       ns_parent = ns
     )
 
-    # Render only the plots requested by the user (using the module's outputs)
+    # Render only the plots requested by the user (using the subject searcher and pagination)
     observe({
       req(plot_outputs())
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs()[page_search$has_plot_subject()][page_search$page_start():page_search$page_end()]
+        plot_outputs()[page_search$is_plot_searched()][page_search$page_start():page_search$page_end()]
       })
     })
 
@@ -282,42 +261,6 @@ browser()
         outputId = "manual_slopes",
         data = manual_slopes()
       )
-# 
-#       # Update slopes version
-#       manual_slopes_version$lst <- manual_slopes_version$current
-#       manual_slopes_version$current <- manual_slopes()
-# 
-#       # Update only the plots affected by the changed rules
-#       req(plot_outputs())
-#       if (!is.null(manual_slopes_version$lst)) {
-#         browser()
-#         print(manual_slopes_version$current)
-#         print(manual_slopes_version$lst)
-#         rules_added <- anti_join(
-#           manual_slopes_version$current,
-#           manual_slopes_version$lst,
-#           by = names(manual_slopes())
-#         )
-# 
-#         rules_removed <- anti_join(
-#           manual_slopes_version$lst,
-#           manual_slopes_version$current,
-#           by = names(manual_slopes())
-#         )
-# 
-#         slopes_to_update <- bind_rows(rules_added, rules_removed) %>%
-#           select(any_of(c(group_vars(pknca_data()), "NCA_PROFILE"))) %>%
-#           distinct()
-#       } else {
-#         # This will do the default udpate (all slopes in the manual slopes table)
-#         slopes_to_update <- NULL
-#       }
-# 
-#       plot_outputs(
-#           .update_plots_with_rules(pknca_data(), manual_slopes(), plot_outputs(), slopes_to_update)
-#         )
-#       print("updated plots")
-#       print(names(plot_outputs()))
     })
 
     #' If any settings are uploaded by the user, overwrite current rules
