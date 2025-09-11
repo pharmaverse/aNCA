@@ -62,13 +62,13 @@
   #'         and reasons in `data$conc$data`.
   .update_pknca_with_rules <- function(data, slopes) {
     print(".update_pknca_with_rules")
-    
+
     # TODO (Gerardo): If we keep RANGE as a time, we don't need NCA_PROFILE
-    slope_groups <- c(group_vars(data), "NCA_PROFILE")
+    slope_groups <- group_vars(data)
     time_col <- data$conc$columns$time
     exclude_hl_col <- data$conc$columns$exclude_half.life
     include_hl_col <- data$conc$columns$include_half.life
-    
+    browser()
     # Apply each rule action
     for (i in seq_len(nrow(slopes))) {
       # Determine the time range for the points adjusted
@@ -91,7 +91,7 @@
       } else {
         stop("Unknown TYPE in slopes: ", slopes$TYPE[i])
       }
-      
+
       data$conc$data$REASON[pnt_idx] <- paste0(
         data$conc$data$REASON[pnt_idx],
         rep(slopes$REASON[i], length(pnt_idx))
@@ -101,7 +101,7 @@
     
     data
   }
-  
+
   # Refactored: .update_plots_with_rules now uses .update_pknca_with_rules and delegates to .update_plots_with_pknca
   .update_plots_with_rules <- function(pknca_data, manual_slopes, plot_outputs, slopes_to_update = NULL) {
     print(".update_plots_with_rules (refactored)")

@@ -83,7 +83,7 @@ browser()
     time <- as.numeric(click_data$x)
     row <- pknca_data$conc$data[idx, ]
     int <- pknca_data$intervals %>%
-      merge(row, by = c(group_vars(pknca_data), "NCA_PROFILE")) %>%
+      merge(row, by = c(group_vars(pknca_data))) %>%
       filter(start <= row[[pknca_data$conc$columns$time]] &
                end >= row[[pknca_data$conc$columns$time]]) %>%
       select(any_of(names(pknca_data$intervals)))
