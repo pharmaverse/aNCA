@@ -141,7 +141,7 @@ slope_selector_server <- function( # nolint
       excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
       incl_hl_col <- new_pknca_data$conc$columns$include_half.life
       is_new_data <- !is.null(new_pknca_data$conc$data) && is.null(pknca_data()$conc$data)
-
+browser()
       if (is_new_data) {
         # Prepare a default list with the half life plots
         browser()
@@ -162,7 +162,7 @@ slope_selector_server <- function( # nolint
         is_change_in_selected_intervals <- !isTRUE(
           all.equal(new_pknca_data$intervals, pknca_data()$intervals)
         )
-        
+
         if (is_change_in_conc_data) {
           plot_outputs(get_halflife_plot(new_pknca_data))
         } else if (is_change_in_hl_adj) {
@@ -195,7 +195,7 @@ slope_selector_server <- function( # nolint
               mutate(across(everything(), as.character)) %>%
               # Create a column that is just a pasted character with the name and value of each column in the row
               mutate(id = purrr::pmap_chr(
-                ., 
+                .,
                 function(...) {
                   vals <- list(...)
                   paste0(names(vals), ": ", vals, collapse = ", ")
@@ -207,6 +207,16 @@ slope_selector_server <- function( # nolint
             plot_outputs(remaining_plots)
           }
         }
+      }
+
+      # Update the search options if the options actually changed
+      if (is_new_data || is_change_in_conc_data || is_change_in_selected_intervals) {
+        updateSelectInput(
+          session = session,
+          inputId = "search_subject",
+          label = "Search Subject",
+          choices = unique(new_pknca_data$intervals$USUBJID)
+        )
       }
 
       # Update the object
@@ -322,20 +332,6 @@ slope_selector_server <- function( # nolint
       # disable buttons if necessary #
       shinyjs::toggleState(id = ns("previous_page"), condition = current_page() == 1)
       shinyjs::toggleState(id = ns("next_page"), condition = current_page() == num_pages)
-    })
-
-    #' Rendering slope plots based on nca data.
-    observeEvent(pknca_data(), {
-      req(pknca_data())
-
-      log_trace("{id}: Rendering plots")
-      # Update the subject search input to make available choices for the user
-      updateSelectInput(
-        session = session,
-        inputId = "search_subject",
-        label = "Search Subject",
-        choices = unique(pknca_data()$intervals$USUBJID)
-      )
     })
 
     # Creates an initial version of the manual slope adjustments table with pknca_data
