@@ -1,16 +1,29 @@
-#' NCA Slope selector module handling slope selection via interactive plots and tables.
+
+#' Slope Selector Module (Server/UI)
 #'
-#' Generates appropriate interface and gathers user input from the table, as well as interactive
-#' plotly plots, with with user can define inclusions and exclusions for the data.
+#' This module manages the interactive selection and exclusion of NCA slope intervals via plots and a table UI.
+#' It coordinates the display and update of plots, the manual slopes table, and the propagation of user changes.
 #'
-#' @param id ID of the module.
-#' @param pknca_data `PKNCAdata` object with data to base the plots on.
-#' @param manual_slopes_override Reactive experssion with override for the manual slopes selection.
-#'                               If changes are detected, current settings will be overwritten with
-#'                               values from that reactive.
+#' --- Reactivity/Data Flow Schema ---
 #'
-#' @returns List with reactive expressions:
-#'   * manual_slopes - Data frame containing inclusions / exclusions.
+#' processed_pknca_data (input, from parent)
+#'   └─> slope_selector_server
+#'        ├──> plot_outputs (reactive, updated by processed_pknca_data changes)
+#'        └──> ├> handle_plotly_click (updates manual_slopes on plot click)
+#'             └> handle_table_edits_server (updates manual_slopes on user actions & setting overrides)
+#'               └─> manual_slopes (output, used by parent to update processed_pknca_data)
+#'
+#'
+#' @param id Character. Shiny module id.
+#' @param processed_pknca_data Reactive. PKNCAdata object for plotting and table context.
+#' @param manual_slopes_override Reactive. Optional custom settings override for the slopes table.
+#' @return manual_slopes (data.frame of user slope inclusions/exclusions)
+#'
+#' @details
+#' - The module's main output is the manual_slopes table, which is updated by user actions in the table UI (handle_table_edits) or by clicking on plots (handle_plotly_click).
+#' - The parent module (setup.R) should use manual_slopes to update processed_pknca_data, which is then fed back into this module to update plots and table context.
+#' - All plot and table reactivity is encapsulated here; parent modules only need to provide processed_pknca_data and consume manual_slopes.
+
 
 slope_selector_ui <- function(id) {
   ns <- NS(id)
@@ -18,7 +31,7 @@ slope_selector_ui <- function(id) {
 
   div(
     class = "slope-selector-module",
-    handle_slopes_table_ui(ns("manual_slopes")),
+    handle_table_edits_ui(ns("manual_slopes")),
     # Help widget #
     dropdown(
       div(
@@ -169,7 +182,7 @@ slope_selector_server <- function( # nolint
 
     # Creates an initial version of the manual slope adjustments table with pknca_data
     # and handles the addition and deletion of rows through the UI
-    slopes_table <- handle_slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
+    slopes_table <- handle_table_edits_server("manual_slopes", pknca_data, manual_slopes_override)
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
 
@@ -184,7 +197,7 @@ slope_selector_server <- function( # nolint
         event_data("plotly_click"),
         pknca_data()
       )
-      # Update reactive values in the observer
+      # Update reactive values: last click & manual slopes table
       last_click_data(click_result$last_click_data)
       manual_slopes(click_result$manual_slopes)
 
@@ -198,7 +211,6 @@ slope_selector_server <- function( # nolint
     #' the table would mean losing focus on text inputs when entering values.
     observeEvent(manual_slopes(), {
       req(manual_slopes())
-      print("observeEvent manual_slopes()")
 
       # Update reactable with rules
       reactable::updateReactable(
@@ -207,7 +219,7 @@ slope_selector_server <- function( # nolint
       )
     })
 
-  # Manual slopes override logic moved to handle_slopes_table_server
+  # Manual slopes override logic moved to handle_table_edits_server
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
     list(
