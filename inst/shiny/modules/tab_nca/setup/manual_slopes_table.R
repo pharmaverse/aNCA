@@ -36,6 +36,7 @@ manual_slopes_table_server <- function(
     manual_slopes <- reactiveVal({NULL})
     observeEvent(mydata(), {
       #browser()
+      req(is.null(manual_slopes()))
       req(slopes_pknca_groups())
       ms_colnames <- c(colnames(slopes_pknca_groups()), c("TYPE", "RANGE", "REASON"))
       initial_manual_slopes <- data.frame(

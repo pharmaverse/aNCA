@@ -168,13 +168,14 @@ slope_selector_server <- function( # nolint
         } else if (is_change_in_hl_adj) {
           browser()
           affected_groups <- anti_join(
-            dplyr::select(new_pknca_data$conc$data, any_of(c(group_vars(new_pknca_data()), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
+            dplyr::select(new_pknca_data$conc$data, any_of(c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
             dplyr::select(pknca_data()$conc$data, any_of(c(group_vars(pknca_data()), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
-            by = c(group_vars(new_pknca_data()), "NCA_PROFILE")
+            by = c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col)
           ) %>%
-            select(any_of(c(group_vars(new_pknca_data()), "NCA_PROFILE"))) %>%
+            select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
             distinct()
-          .update_plots_with_rules(new_pknca_data, data.frame(), plot_outputs, affected_groups)
+          new_plots <- .update_plots_with_pknca(new_pknca_data, plot_outputs(), affected_groups)
+          plot_outputs(new_plots)
         } else if (is_change_in_selected_intervals) {
           browser()
           new_intervals <- anti_join(new_pknca_data$intervals, pknca_data()$intervals)
@@ -183,7 +184,7 @@ slope_selector_server <- function( # nolint
             affected_groups <- new_intervals %>%
               select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
               distinct()
-            new_plots <- .update_plots_with_rules(new_pknca_data, data.frame(), plot_outputs(), affected_groups)
+            new_plots <- .update_plots_with_pknca(new_pknca_data, plot_outputs(), affected_groups)
             plot_outputs(new_plots)
           }
           if (nrow(rm_intervals) > 0) {
@@ -207,7 +208,7 @@ slope_selector_server <- function( # nolint
           }
         }
       }
-        
+
       # Update the object
       pknca_data(new_pknca_data)
     })
@@ -378,42 +379,42 @@ slope_selector_server <- function( # nolint
         outputId = "manual_slopes",
         data = manual_slopes()
       )
-
-      # Update slopes version
-      manual_slopes_version$lst <- manual_slopes_version$current
-      manual_slopes_version$current <- manual_slopes()
-
-      # Update only the plots affected by the changed rules
-      req(plot_outputs())
-      if (!is.null(manual_slopes_version$lst)) {
-        browser()
-        print(manual_slopes_version$current)
-        print(manual_slopes_version$lst)
-        rules_added <- anti_join(
-          manual_slopes_version$current,
-          manual_slopes_version$lst,
-          by = names(manual_slopes())
-        )
-
-        rules_removed <- anti_join(
-          manual_slopes_version$lst,
-          manual_slopes_version$current,
-          by = names(manual_slopes())
-        )
-
-        slopes_to_update <- bind_rows(rules_added, rules_removed) %>%
-          select(any_of(c(group_vars(pknca_data()), "NCA_PROFILE"))) %>%
-          distinct()
-      } else {
-        # This will do the default udpate (all slopes in the manual slopes table)
-        slopes_to_update <- NULL
-      }
-
-      plot_outputs(
-          .update_plots_with_rules(pknca_data(), manual_slopes(), plot_outputs(), slopes_to_update)
-        )
-      print("updated plots")
-      print(names(plot_outputs()))
+# 
+#       # Update slopes version
+#       manual_slopes_version$lst <- manual_slopes_version$current
+#       manual_slopes_version$current <- manual_slopes()
+# 
+#       # Update only the plots affected by the changed rules
+#       req(plot_outputs())
+#       if (!is.null(manual_slopes_version$lst)) {
+#         browser()
+#         print(manual_slopes_version$current)
+#         print(manual_slopes_version$lst)
+#         rules_added <- anti_join(
+#           manual_slopes_version$current,
+#           manual_slopes_version$lst,
+#           by = names(manual_slopes())
+#         )
+# 
+#         rules_removed <- anti_join(
+#           manual_slopes_version$lst,
+#           manual_slopes_version$current,
+#           by = names(manual_slopes())
+#         )
+# 
+#         slopes_to_update <- bind_rows(rules_added, rules_removed) %>%
+#           select(any_of(c(group_vars(pknca_data()), "NCA_PROFILE"))) %>%
+#           distinct()
+#       } else {
+#         # This will do the default udpate (all slopes in the manual slopes table)
+#         slopes_to_update <- NULL
+#       }
+# 
+#       plot_outputs(
+#           .update_plots_with_rules(pknca_data(), manual_slopes(), plot_outputs(), slopes_to_update)
+#         )
+#       print("updated plots")
+#       print(names(plot_outputs()))
     })
 
     #' If any settings are uploaded by the user, overwrite current rules
