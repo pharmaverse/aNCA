@@ -34,7 +34,7 @@ detect_pknca_data_changes <- function(old, new, excl_hl_col, incl_hl_col) {
 #' @param old_pknca_data Previous PKNCA data object
 #' @param plot_outputs Current plot outputs (named list)
 #' @return Updated plot_outputs (named list)
-handle_hl_adj <- function(new_pknca_data, old_pknca_data, plot_outputs) {
+handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
   incl_hl_col <- new_pknca_data$conc$columns$include_half.life
   affected_groups <- anti_join(
@@ -66,9 +66,9 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   )
   if (nrow(new_intervals) > 0) {
     affected_groups <- new_intervals %>%
-      select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
+      select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
       distinct()
-    .update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
+    plot_outputs <- .update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
   }
   if (nrow(rm_intervals) > 0) {
     rm_plot_names <- rm_intervals %>%
@@ -83,8 +83,9 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
         }
       )) %>%
       pull(id)
-    plot_outputs[!names(plot_outputs) %in% rm_plot_names]
+    plot_outputs <- plot_outputs[!names(plot_outputs) %in% rm_plot_names]
   }
+  plot_outputs
 }
 
 
@@ -196,7 +197,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 .update_plots_with_pknca <- function(pknca_data, plot_outputs, intervals_to_update = NULL) {
   if (is.null(intervals_to_update)) {
     intervals_to_update <- pknca_data$intervals %>%
-      select(any_of(c(group_vars(pknca_data), "NCA_PROFILE"))) %>%
+      select(any_of(c(group_vars(pknca_data), "start", "end"))) %>%
       distinct()
   }
   if (nrow(intervals_to_update) == 0) return(plot_outputs)
@@ -204,7 +205,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   pknca_data$intervals <- inner_join(
     intervals_to_update,
     pknca_data$intervals,
-    by = c(group_vars(pknca_data), "NCA_PROFILE")
+    by = c(group_vars(pknca_data), "start", "end")
   )
   updated_plots <- suppressWarnings(get_halflife_plot(pknca_data))
   plot_outputs[names(updated_plots)] <- updated_plots
