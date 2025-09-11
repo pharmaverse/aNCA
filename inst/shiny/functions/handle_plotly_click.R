@@ -57,11 +57,6 @@ browser()
     ))
   }
 
-  # # Update the specific plot (interval) affected
-  # updated_pknca$intervals <- pnt$int
-  # updated_plot <- suppressWarnings(get_halflife_plot(updated_pknca))
-  # plot_outputs[names(plot_outputs) %in% names(updated_plot)] <- updated_plot
-
   # Update manual_slopes without modifying it globally
   updated_slopes <- check_slope_rule_overlap(manual_slopes(), new_rule)
 

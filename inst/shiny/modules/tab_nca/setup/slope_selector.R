@@ -98,88 +98,38 @@ slope_selector_server <- function( # nolint
 
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
-    observeEvent(list(processed_pknca_data()), {
+
+    observeEvent(processed_pknca_data(), {
       req(processed_pknca_data())
 
-      # Prepare a standard PKNCA object with only the basic adjustments for the half-life plots
-      # and only over the user selected analytes, profiles and specimens
       new_pknca_data <- processed_pknca_data()
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
         filter(type_interval == "main", half.life) %>%
         unique()
-      excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
-      incl_hl_col <- new_pknca_data$conc$columns$include_half.life
-      is_new_data <- !is.null(new_pknca_data$conc$data) && is.null(pknca_data()$conc$data)
+
 browser()
-      if (is_new_data) {
-        # Prepare a default list with the half life plots
-        browser()
+      changes <- detect_pknca_data_changes(
+        old = pknca_data(),
+        new = new_pknca_data,
+        excl_hl_col = new_pknca_data$conc$columns$exclude_half.life,
+        incl_hl_col = new_pknca_data$conc$columns$include_half.life
+      )
+      # Regenerate plots if a dataset is submitted or it was changed
+      # (update of adnca_data in setup.R)
+      if (changes$in_data) {
         plot_outputs(get_halflife_plot(new_pknca_data))
-      } else {
-        is_change_in_conc_data <- !isTRUE(
-          all.equal(
-            dplyr::select(new_pknca_data$conc$data, -any_of(c(excl_hl_col, incl_hl_col))),
-            dplyr::select(pknca_data()$conc$data, -any_of(c(excl_hl_col, incl_hl_col)))
-          )
-        )
-        is_change_in_hl_adj <- !isTRUE(
-          all.equal(
-            dplyr::select(new_pknca_data$conc$data, any_of(c(excl_hl_col, incl_hl_col))),
-            dplyr::select(pknca_data()$conc$data, any_of(c(excl_hl_col, incl_hl_col)))
-          )
-        )
-        is_change_in_selected_intervals <- !isTRUE(
-          all.equal(new_pknca_data$intervals, pknca_data()$intervals)
-        )
-
-        if (is_change_in_conc_data) {
-          plot_outputs(get_halflife_plot(new_pknca_data))
-        } else if (is_change_in_hl_adj) {
-          browser()
-          affected_groups <- anti_join(
-            dplyr::select(new_pknca_data$conc$data, any_of(c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
-            dplyr::select(pknca_data()$conc$data, any_of(c(group_vars(pknca_data()), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
-            by = c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col)
-          ) %>%
-            select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
-            distinct()
-          new_plots <- .update_plots_with_pknca(new_pknca_data, plot_outputs(), affected_groups)
-          plot_outputs(new_plots)
-        } else if (is_change_in_selected_intervals) {
-          browser()
-          new_intervals <- anti_join(new_pknca_data$intervals, pknca_data()$intervals)
-          rm_intervals <- anti_join(pknca_data()$intervals, new_pknca_data$intervals)
-          if (nrow(new_intervals) > 0) {
-            affected_groups <- new_intervals %>%
-              select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
-              distinct()
-            new_plots <- .update_plots_with_pknca(new_pknca_data, plot_outputs(), affected_groups)
-            plot_outputs(new_plots)
-          }
-          if (nrow(rm_intervals) > 0) {
-            rm_plot_names <- rm_intervals %>%
-              select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
-              # Create a column that is just a pasted character with the name and value of each column in the row
-              distinct() %>%
-              mutate(across(everything(), as.character)) %>%
-              # Create a column that is just a pasted character with the name and value of each column in the row
-              mutate(id = purrr::pmap_chr(
-                .,
-                function(...) {
-                  vals <- list(...)
-                  paste0(names(vals), ": ", vals, collapse = ", ")
-                }
-              )) %>%
-              pull(id)
-
-            remaining_plots <- plot_outputs()[!names(plot_outputs()) %in% rm_plot_names]
-            plot_outputs(remaining_plots)
-          }
-        }
+      # If relevant, modify plots that had new half-life adjustments
+      # (inclusions/exclusions from manual_slope_table)
+      } else if (changes$in_hl_adj) {
+        plot_outputs(handle_hl_adj(new_pknca_data, pknca_data(), plot_outputs()))
+      # If relevant, modify plots that had interval changes
+      # (analyte, profile, specimen selection from setup.R settings)
+      } else if (changes$in_selected_intervals) {
+        plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
       }
 
-      # Update the search options if the options actually changed
-      if (is_new_data || is_change_in_conc_data || is_change_in_selected_intervals) {
+      # Update the searching widget choices based on the new data
+      if (changes$in_data | changes$in_selected_intervals) {
         updateSelectInput(
           session = session,
           inputId = "search_subject",
@@ -194,7 +144,6 @@ browser()
 
     # HACK: workaround to avoid plotly_click not being registered warning
     session$userData$plotlyShinyEventIDs <- "plotly_click-A"
-
 
     # --- Pagination and search logic ---
     search_subject_r <- reactive({ input$search_subject })
@@ -285,13 +234,11 @@ browser()
         all()
 
       if (!override_valid) {
-
         msg <- "Manual slopes not compatible with current data, leaving as default."
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 5)
         return(NULL)
       }
-
       manual_slopes(manual_slopes_override())
     })
 

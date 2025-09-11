@@ -1,3 +1,59 @@
+## Functions to handle plot generation based on PKNCA data changes
+# --- Helper: Detect changes between old and new PKNCA data ---
+detect_pknca_data_changes <- function(old, new, excl_hl_col, incl_hl_col) {
+  browser()
+  list(
+    in_data = if (is.null(old) & !is.null(new)) TRUE else {
+      !identical(
+        dplyr::select(old$conc$data, -any_of(c(excl_hl_col, incl_hl_col))),
+        dplyr::select(new$conc$data, -any_of(c(excl_hl_col, incl_hl_col)))
+      )
+    },
+    in_hl_adj = !identical(old$conc$data[[excl_hl_col]], new$conc$data[[excl_hl_col]]) |
+      !identical(old$conc$data[[incl_hl_col]], new$conc$data[[incl_hl_col]]),
+    in_selected_intervals = !identical(new$intervals, old$intervals)
+  )
+}
+
+handle_hl_adj <- function(new_pknca_data, old_pknca_data, plot_outputs) {
+  excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
+  incl_hl_col <- new_pknca_data$conc$columns$include_half.life
+  affected_groups <- anti_join(
+    dplyr::select(new_pknca_data$conc$data, any_of(c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
+    dplyr::select(old_pknca_data$conc$data, any_of(c(group_vars(old_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
+    by = c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col)
+  ) %>%
+    select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
+    distinct()
+  .update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
+}
+
+handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
+  new_intervals <- anti_join(new_pknca_data$intervals, old_pknca_data$intervals)
+  rm_intervals <- anti_join(old_pknca_data$intervals, new_pknca_data$intervals)
+  if (nrow(new_intervals) > 0) {
+    affected_groups <- new_intervals %>%
+      select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
+      distinct()
+    .update_plots_with_pknca(new_pknca_data, plot_outputs(), affected_groups)
+  }
+  if (nrow(rm_intervals) > 0) {
+    rm_plot_names <- rm_intervals %>%
+      select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
+      distinct() %>%
+      mutate(across(everything(), as.character)) %>%
+      mutate(id = purrr::pmap_chr(
+        .,
+        function(...) {
+          vals <- list(...)
+          paste0(names(vals), ": ", vals, collapse = ", ")
+        }
+      )) %>%
+      pull(id)
+    plot_outputs[!names(plot_outputs()) %in% rm_plot_names]
+  }
+}
+
   #' Check overlap between existing and new slope rulesets
   #'
   #' Takes in tables with existing and incoming selections and exclusions, finds any overlap and
