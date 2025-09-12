@@ -51,7 +51,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) { #nolint
   include_hl_col <- o_nca$data$conc$columns$include_half.life
   if (is.null(include_hl_col)) {
     o_nca$data$conc$data[["include_half.life"]] <- FALSE
-    exclude_hl_col <- "include_half.life"
+    include_hl_col <- "include_half.life"
   }
 
   # Helper functions for extracting results
