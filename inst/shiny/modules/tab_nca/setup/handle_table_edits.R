@@ -1,7 +1,7 @@
 
 #' Manual Slopes Table UI for Slope Selection
 #'
-#' UI module for displaying and editing the manual slopes table (inclusion/exclusion rules) in the slope selector workflow.
+#' UI module for displaying and editing the manual slopes table (inclusion/exclusion rules).
 #' Provides buttons to add/remove rules and a reactable table for editing.
 #'
 #' @param id Shiny module id
@@ -30,8 +30,8 @@ handle_table_edits_ui <- function(id) {
 
 #' Manual Slopes Table Server for Slope Selection
 #'
-#' Server module for managing the manual slopes table (inclusion/exclusion rules) in the slope selector workflow.
-#' Handles adding/removing/editing rules, table reactivity, and optional override logic.
+#' Server module for managing the manual slopes table (inclusion/exclusion rules).
+#' Handles adding/removing/editing rules, table's reactivity, and optional override logic.
 #'
 #' @param id Shiny module id
 #' @param mydata Reactive providing the current PKNCA data object
@@ -40,7 +40,7 @@ handle_table_edits_ui <- function(id) {
 #'   - manual_slopes: reactiveVal containing the current manual slopes table
 #'   - refresh_reactable: reactiveVal for triggering table re-render
 handle_table_edits_server <- function(
-    id, mydata, manual_slopes_override = NULL
+  id, mydata, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {
 
@@ -53,14 +53,19 @@ handle_table_edits_server <- function(
     })
 
     # manual_slopes: stores the current table of user rules (inclusion/exclusion)
-    manual_slopes <- reactiveVal({NULL})
+    manual_slopes <- reactiveVal(NULL)
     # When mydata() changes, reset the manual_slopes table to empty with correct columns
     observeEvent(mydata(), {
       req(is.null(manual_slopes()))
       req(slopes_pknca_groups())
       ms_colnames <- c(colnames(slopes_pknca_groups()), c("TYPE", "RANGE", "REASON"))
       initial_manual_slopes <- data.frame(
-        matrix(character(), ncol = length(ms_colnames), nrow = 0, dimnames = list(character(), ms_colnames))
+        matrix(
+          character(),
+          ncol = length(ms_colnames),
+          nrow = 0,
+          dimnames = list(character(), ms_colnames)
+        )
       )
       manual_slopes(initial_manual_slopes)
     })
@@ -74,12 +79,18 @@ handle_table_edits_server <- function(
         data.frame(
           TYPE = "Exclusion",
           RANGE = paste0(
-            inner_join(slopes_pknca_groups()[1, ], mydata()$conc$data)[[mydata()$conc$columns$time]][2]
+            inner_join(
+              slopes_pknca_groups()[1, ],
+              mydata()$conc$data
+            )[[mydata()$conc$columns$time]][2]
           ),
           REASON = ""
         )
       )
-      updated_data <- as.data.frame(rbind(manual_slopes(), new_row), stringsAsFactors = FALSE)
+      updated_data <- as.data.frame(
+        rbind(manual_slopes(), new_row),
+        stringsAsFactors = FALSE
+      )
       manual_slopes(updated_data)
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
@@ -146,7 +157,10 @@ handle_table_edits_server <- function(
         defaultExpanded = TRUE,
         borderless = TRUE,
         theme = reactableTheme(
-          rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
+          rowSelectedStyle = list(
+            backgroundColor = "#eee",
+            boxShadow = "inset 2px 0 0 0 #ffa62d"
+          )
         )
       )
     }) %>%

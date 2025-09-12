@@ -5,7 +5,7 @@
 
 #' Detect changes between old and new PKNCA data
 #'
-#' Compares two PKNCA data objects to determine if the underlying data, half-life adjustment columns,
+#' Compares two PKNCA data objects to determine if the underlying data, half-life adjustments,
 #' or selected intervals have changed. Used to decide when to update plots.
 #' @param old Previous PKNCA data object
 #' @param new New PKNCA data object
@@ -14,14 +14,28 @@
 #' @return List with logicals: in_data, in_hl_adj, in_selected_intervals
 detect_pknca_data_changes <- function(old, new, excl_hl_col, incl_hl_col) {
   list(
-    in_data = if (is.null(old) & !is.null(new)) TRUE else {
+    in_data = if (is.null(old) & !is.null(new)) {
+      TRUE
+    } else {
       !identical(
-        dplyr::select(old$conc$data, -any_of(c(excl_hl_col, incl_hl_col))),
-        dplyr::select(new$conc$data, -any_of(c(excl_hl_col, incl_hl_col)))
+        dplyr::select(
+          old$conc$data,
+          -any_of(c(excl_hl_col, incl_hl_col))
+        ),
+        dplyr::select(
+          new$conc$data,
+          -any_of(c(excl_hl_col, incl_hl_col))
+        )
       )
     },
-    in_hl_adj = !identical(old$conc$data[[excl_hl_col]], new$conc$data[[excl_hl_col]]) |
-      !identical(old$conc$data[[incl_hl_col]], new$conc$data[[incl_hl_col]]),
+    in_hl_adj = !identical(
+      old$conc$data[[excl_hl_col]],
+      new$conc$data[[excl_hl_col]]
+    ) |
+      !identical(
+        old$conc$data[[incl_hl_col]],
+        new$conc$data[[incl_hl_col]]
+      ),
     in_selected_intervals = !identical(new$intervals, old$intervals)
   )
 }
@@ -38,8 +52,14 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
   incl_hl_col <- new_pknca_data$conc$columns$include_half.life
   affected_groups <- anti_join(
-    dplyr::select(new_pknca_data$conc$data, any_of(c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
-    dplyr::select(old_pknca_data$conc$data, any_of(c(group_vars(old_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))),
+    dplyr::select(
+      new_pknca_data$conc$data,
+      any_of(c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))
+    ),
+    dplyr::select(
+      old_pknca_data$conc$data,
+      any_of(c(group_vars(old_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))
+    ),
     by = c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col)
   ) %>%
     select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
@@ -57,18 +77,30 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
 #' @return Updated plot_outputs (named list)
 handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   new_intervals <- anti_join(
-    new_pknca_data$intervals, old_pknca_data$intervals,
-    by = intersect(names(new_pknca_data$intervals), names(old_pknca_data$intervals))
+    new_pknca_data$intervals,
+    old_pknca_data$intervals,
+    by = intersect(
+      names(new_pknca_data$intervals),
+      names(old_pknca_data$intervals)
+    )
   )
   rm_intervals <- anti_join(
-    old_pknca_data$intervals, new_pknca_data$intervals,
-    by = intersect(names(new_pknca_data$intervals), names(old_pknca_data$intervals))
+    old_pknca_data$intervals,
+    new_pknca_data$intervals,
+    by = intersect(
+      names(new_pknca_data$intervals),
+      names(old_pknca_data$intervals)
+    )
   )
   if (nrow(new_intervals) > 0) {
     affected_groups <- new_intervals %>%
       select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
       distinct()
-    plot_outputs <- .update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
+    plot_outputs <- .update_plots_with_pknca(
+      new_pknca_data,
+      plot_outputs,
+      affected_groups
+    )
   }
   if (nrow(rm_intervals) > 0) {
     rm_plot_names <- rm_intervals %>%
@@ -88,6 +120,14 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   plot_outputs
 }
 
+
+#' Parse Plot Names to Data Frame
+#'
+#' Converts a named list of plots (with names in the format 'col1: val1, col2: val2, ...')
+#' into a data frame with one row per plot and columns for each key.
+#'
+#' @param named_list A named list or vector, where names are key-value pairs separated by commas.
+#' @return A data frame with columns for each key and a PLOTID column with the original names.
 parse_plot_names_to_df <- function(named_list) {
   plot_names <- names(named_list)
   parsed <- lapply(plot_names, function(x) {
@@ -98,26 +138,28 @@ parse_plot_names_to_df <- function(named_list) {
       vapply(kv, function(y) y[1], character(1))
     )
   })
-  as.data.frame(do.call(rbind, parsed), stringsAsFactors = FALSE) %>%
+  as.data.frame(
+    do.call(rbind, parsed),
+    stringsAsFactors = FALSE
+  ) %>%
     mutate(PLOTID = names(named_list))
 }
 
+
+#' Arrange Plots by Group Columns
+#'
+#' Orders a named list of plots according to specified grouping columns.
+#' Assumes a specific naming format (i.e, 'col1: val1, col2: val2, ...').
+#'
+#' @param named_list A named list of plots, with names in the format 'col1: val1, col2: val2, ...'.
+#' @param group_cols Character vector of column names to sort by.
+#' @return A named list of plots, ordered by the specified group columns.
 arrange_plots_by_groups <- function(named_list, group_cols) {
   plot_df <- parse_plot_names_to_df(named_list)
   arranged_df <- plot_df %>%
     arrange(across(all_of(group_cols)))
   named_list[arranged_df$PLOTID]
 }
-
-# prepare_virtual_select_df <- function(pknca_data) {
-#   pknca_data$intervals %>%
-#     select(any_of(c(group_vars(pknca_data)))) %>%
-#     pivot_longer(cols = group_vars(pknca_data), names_to = "var") %>%
-#     distinct() %>%
-#     mutate(var_and_value = paste0(var, ": ", value)) %>%
-#     distinct()
-# }
-
 
 #' Check overlap between existing and new slope rulesets
 #'
@@ -135,13 +177,18 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   # check if any rule already exists for specific subject and profile
   existing_index <- which(
     existing$TYPE == new$TYPE &
-      Reduce(`&`, lapply(slope_groups, function(col) {
-        existing[[col]] == new[[col]]
-      }))
+      Reduce(
+        `&`,
+        lapply(slope_groups, function(col) {
+          existing[[col]] == new[[col]]
+        })
+      )
   )
   if (length(existing_index) != 1) {
     if (length(existing_index) > 1)
-      warning("More than one range for single subject, profile and rule type detected.")
+      warning(
+        "More than one range for single subject, profile and rule type detected."
+      )
     return(rbind(existing, new))
   }
   existing_range <- .eval_range(existing$RANGE[existing_index])
@@ -157,11 +204,10 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   }
   dplyr::filter(existing, !is.na(RANGE))
 }
-  
 
 #' Apply Slope Rules to Update Data
 #'
-#' Iterates over the given slopes and updates the data$conc$data object by setting inclusion/exclusion flags.
+#' Iterates over the given rules and updates the PKNCA object setting inclusion/exclusion flags.
 #' @param data PKNCA data object
 #' @param slopes Data frame of slope rules (TYPE, RANGE, REASON, group columns)
 #' @return Modified data object with updated flags
@@ -197,24 +243,25 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   data
 }
 
-
 #' Update plots with manual slope rules
 #'
-#' Updates the plot_outputs list by applying manual slopes to the PKNCA data and regenerating affected plots.
+#' Updates the plot_outputs list by applying manual slopes.
 #' @param pknca_data PKNCA data object
 #' @param manual_slopes Data frame of manual slope rules
 #' @param plot_outputs Named list of current plot outputs
-#' @param slopes_to_update Optional: data frame of intervals to update (default: all in manual_slopes)
+#' @param groups_to_update Optional: data frame of intervals to update (default: all)
 #' @return Updated plot_outputs (named list)
-.update_plots_with_rules <- function(pknca_data, manual_slopes, plot_outputs, slopes_to_update = NULL) {
+.update_plots_with_rules <- function(
+  pknca_data, manual_slopes, plot_outputs, groups_to_update = NULL
+) {
   pknca_for_plots <- .update_pknca_with_rules(pknca_data, manual_slopes)
-  if (is.null(slopes_to_update)) {
-    slopes_to_update <- manual_slopes %>%
+  if (is.null(groups_to_update)) {
+    groups_to_update <- manual_slopes %>%
       select(any_of(c(group_vars(pknca_for_plots), "NCA_PROFILE"))) %>%
       distinct()
   }
-  if (nrow(slopes_to_update) == 0) return(plot_outputs)
-  .update_plots_with_pknca(pknca_for_plots, plot_outputs, intervals_to_update = slopes_to_update)
+  if (nrow(groups_to_update) == 0) return(plot_outputs)
+  .update_plots_with_pknca(pknca_for_plots, plot_outputs, intervals_to_update = groups_to_update)
 }
 
 #' Update plots with PKNCA data (for affected intervals)

@@ -1,5 +1,5 @@
 
-get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
+get_halflife_plot <- function(pknca_data, add_annotations = TRUE) { #nolint
   pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data))
   o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
   if (!"PPSTRES" %in% names(o_nca$result)) {
@@ -12,17 +12,21 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     unique() %>%
     mutate(
       PPORRES = ifelse(
-        PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last", "tlast"),
+        PPTESTCD %in% c(
+          "lambda.z.time.first", "lambda.z.time.last", "tlast"
+        ),
         PPORRES + start,
         PPORRES
       ),
       PPSTRES = ifelse(
-        PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last", "tlast"),
+        PPTESTCD %in% c(
+          "lambda.z.time.first", "lambda.z.time.last", "tlast"
+        ),
         PPSTRES + start,
         PPSTRES
       )
     )
-  
+
   groups <- o_nca$result %>%
     select(any_of(c(group_vars(o_nca), "start", "end", "PPTESTCD"))) %>%
     dplyr::filter(PPTESTCD == "lambda.z") %>%
@@ -43,7 +47,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     o_nca$data$conc$data[["exclude_half.life"]] <- FALSE
     exclude_hl_col <- "exclude_half.life"
   }
-  
+
   include_hl_col <- o_nca$data$conc$columns$include_half.life
   if (is.null(include_hl_col)) {
     o_nca$data$conc$data[["include_half.life"]] <- FALSE
@@ -58,16 +62,20 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
   # Create a key for each row in conc data and in groups
   conc_data <- o_nca$data$conc$data
   if (length(group_vars_all) > 0) {
-    conc_data$.__groupkey__ <- apply(conc_data[, group_vars_all, drop = FALSE], 1, function(row) paste(row, collapse = "|"))
-    groups$.__groupkey__ <- apply(groups[, group_vars_all, drop = FALSE], 1, function(row) paste(row, collapse = "|"))
+    conc_data$.__groupkey__ <- apply(
+      conc_data[, group_vars_all, drop = FALSE], 1, function(row) paste(row, collapse = "|")
+    )
+    groups$.__groupkey__ <- apply(
+      groups[, group_vars_all, drop = FALSE], 1, function(row) paste(row, collapse = "|")
+    )
   } else {
     conc_data$.__groupkey__ <- "__all__"
     groups$.__groupkey__ <- "__all__"
   }
   # Pre-split conc_data by group key
   conc_data_split <- split(conc_data, conc_data$.__groupkey__)
-  
-  
+
+
   # 2. Build the first plot fully
   i <- 1
   group <- groups[i, ]
@@ -85,13 +93,13 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
   start <- unique(group_nca$result$start)
   tlast <- get_res("tlast")
   half_life <- get_res("half.life")
-  adj.r.squared <- get_res("adj.r.squared")
+  adj_r2 <- get_res("adj.r.squared")
   lz_time_first <- get_res("lambda.z.time.first")
   lz_time_last <- get_res("lambda.z.time.last")
   time_span <- lz_time_last - lz_time_first
   span_ratio <- get_res("span.ratio")
   exclude_calc_reason <- group_nca$result$exclude[group_nca$result$PPTESTCD == "half.life"]
-  
+
   if (!is.na(half_life)) {
     is_lz_used <- get_halflife_points2(
       group_nca$data$conc$data,
@@ -102,7 +110,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
       exclude_hl_col
     )
     df_fit <- df[is_lz_used, ]
-    fit <- lm(as.formula(paste0("log10(", conc_col,") ~ ", time_col)), df_fit)
+    fit <- lm(as.formula(paste0("log10(", conc_col, ") ~ ", time_col)), df_fit)
     fit_line_data <- data.frame(x = c(lz_time_first, tlast))
     colnames(fit_line_data) <- time_col
     fit_line_data$y <- predict(fit, fit_line_data)
@@ -114,7 +122,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     )
     colnames(fit_line_data)[1] <- time_col
   }
-  
+
   plot_data <- df
   # 4. Vectorize color, symbol, text assignment
   plot_data$color <- ifelse(is.na(is_lz_used), "black",
@@ -128,11 +136,24 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
     signif(plot_data[[conc_col]], 3),
     ")"
   )
-  title <- paste0(paste0(group_vars, ": "), group[, group_vars, drop = FALSE], collapse = ", ")
-  xlab <- if (!is.null(timeu_col)) paste0(time_col, " (", unique(plot_data[[timeu_col]]), ")") else time_col
-  ylab <- if (!is.null(concu_col)) paste0(conc_col, " (", unique(plot_data[[concu_col]]), ")") else conc_col
+  title <- paste0(
+    paste0(group_vars, ": "),
+    group[, group_vars, drop = FALSE],
+    collapse = ", "
+  )
+  xlab <- if (!is.null(timeu_col)) {
+    paste0(time_col, " (", unique(plot_data[[timeu_col]]), ")")
+  } else {
+    time_col
+  }
+  ylab <- if (!is.null(concu_col)) {
+    paste0(conc_col, " (", unique(plot_data[[concu_col]]), ")")
+  } else {
+    conc_col
+  }
   subtitle_text <- paste0(
-    "R<sup>2</sup><sub>adj</sub> = ", signif(adj.r.squared, 2),
+    "R<sup>2</sup><sub>adj</sub> = ",
+    signif(adj_r2, 2),
     "&nbsp;&nbsp;&nbsp;&nbsp;",
     "span ratio = ",
     signif(span_ratio, 2)
@@ -196,7 +217,11 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
       )
     )
   plots[[1]] <- plotly::plotly_build(p)
-  names(plots)[1] <- paste0(title, ", start: ", group$start, ", end: ", group$end)
+  names(plots)[1] <- paste0(
+    title,
+    ", start: ", group$start,
+    ", end: ", group$end
+  )
   # For the rest, update the plotly object
   # Clone the first plot and update data/layout
   p_i <- plots[[1]]
@@ -212,11 +237,11 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
       group_nca <- o_nca
       group_nca$data$conc$data <- df
       group_nca$result <- merge(group_nca$result, group)
-      
+
       start <- unique(group_nca$result$start)
       tlast <- get_res("tlast")
       half_life <- get_res("half.life")
-      adj.r.squared <- get_res("adj.r.squared")
+      adj_r2 <- get_res("adj.r.squared")
       lz_time_first <- get_res("lambda.z.time.first")
       lz_time_last <- get_res("lambda.z.time.last")
       time_span <- lz_time_last - lz_time_first
@@ -233,7 +258,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
           exclude_hl_col
         )
         df_fit <- df[is_lz_used, ]
-        fit <- lm(as.formula(paste0("log10(", conc_col,") ~ ", time_col)), df_fit)
+        fit <- lm(as.formula(paste0("log10(", conc_col, ") ~ ", time_col)), df_fit)
         fit_line_data <- data.frame(x = c(lz_time_first, tlast))
         colnames(fit_line_data) <- time_col
         fit_line_data$y <- predict(fit, fit_line_data)
@@ -258,11 +283,24 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
         signif(plot_data[[conc_col]], 3),
         ")"
       )
-      title <- paste0(paste0(group_vars, ": "), group[, group_vars, drop = FALSE], collapse = ", ")
-      xlab <- if (!is.null(timeu_col)) paste0(time_col, " (", unique(plot_data[[timeu_col]]), ")") else time_col
-      ylab <- if (!is.null(concu_col)) paste0(conc_col, " (", unique(plot_data[[concu_col]]), ")") else conc_col
+      title <- paste0(
+        paste0(group_vars, ": "),
+        group[, group_vars, drop = FALSE],
+        collapse = ", "
+      )
+      xlab <- if (!is.null(timeu_col)) {
+        paste0(time_col, " (", unique(plot_data[[timeu_col]]), ")")
+      } else {
+        time_col
+      }
+      ylab <- if (!is.null(concu_col)) {
+        paste0(conc_col, " (", unique(plot_data[[concu_col]]), ")")
+      } else {
+        conc_col
+      }
       subtitle_text <- paste0(
-        "R<sup>2</sup><sub>adj</sub> = ", signif(adj.r.squared, 2),
+        "R<sup>2</sup><sub>adj</sub> = ",
+        signif(adj_r2, 2),
         "&nbsp;&nbsp;&nbsp;&nbsp;",
         "span ratio = ",
         signif(span_ratio, 2)
@@ -293,13 +331,16 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
       }
 
       plots[[i]] <- p_i
-      names(plots)[i] <- paste0(title, ", start: ", group$start, ", end: ", group$end)
+      names(plots)[i] <- paste0(
+        title,
+        ", start: ", group$start,
+        ", end: ", group$end
+      )
     }
   }
-  
+
   return(plots)
 }
-
 
 #' Custom fast version of get_halflife_points
 #' @param data concentration data.frame
@@ -309,11 +350,12 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) {
 #' @param lz_time_last numeric
 #' @param exclude_hl_col column name for exclude_half.life
 #' @return logical vector
-get_halflife_points2 <- function(data, include_hl_col, time_col, lz_time_first, lz_time_last, exclude_hl_col) {
+get_halflife_points2 <- function(
+  data, include_hl_col, time_col, lz_time_first, lz_time_last, exclude_hl_col
+) {
   if (any(!is.na(data[[include_hl_col]]) & data[[include_hl_col]])) {
     data[[include_hl_col]]
   } else {
     data[[time_col]] >= lz_time_first & data[[time_col]] <= lz_time_last & !data[[exclude_hl_col]]
   }
 }
-

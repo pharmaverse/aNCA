@@ -1,7 +1,7 @@
 #' Page and Searcher UI (pagination controls only)
 #'
-#' This UI module provides the page navigation controls (previous, next, page selector, page number display).
-#' The search_subject input remains outside for now.
+#' This UI module provides the page navigation controls (previous, next, selector, number).
+#' The search_subject input remains outside for now in the parent (slope_selector.R)
 page_and_searcher_page_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
@@ -35,7 +35,6 @@ page_and_searcher_page_ui <- function(id) {
 #' Page and Searcher Server
 #'
 #' Handles pagination and subject search logic for displaying plots.
-#' Inputs: current_page (reactive), input$search_subject, plot_outputs (reactive), input$plots_per_page
 #' Outputs: list of reactives: page_start, page_end, is_plot_searched, num_pages
 page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per_page) {
   moduleServer(id, function(input, output, session) {
@@ -58,9 +57,9 @@ page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per
       }
     })
 
-    num_plots <- reactive({ sum(is_plot_searched()) })
-    plots_per_page_num <- reactive({ as.numeric(plots_per_page()) })
-    num_pages <- reactive({ ceiling(num_plots() / plots_per_page_num()) })
+    num_plots <- reactive(sum(is_plot_searched()))
+    plots_per_page_num <- reactive(as.numeric(plots_per_page()))
+    num_pages <- reactive(ceiling(num_plots() / plots_per_page_num()))
 
     # Navigation events
     observeEvent(input$next_page, {

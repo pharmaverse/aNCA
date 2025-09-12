@@ -1,16 +1,16 @@
 
 #' Slope Selector Module (Server/UI)
 #'
-#' This module manages the interactive selection and exclusion of NCA slope intervals via plots and a table UI.
-#' It coordinates the display and update of plots, the manual slopes table, and the propagation of user changes.
+#' This module manages the half life point selection or exclusion via plots and a table UI.
+#' It coordinates the display and update of plots and the manual slopes table.
 #'
-#' --- Reactivity/Data Flow Schema ---
+#' --- Reactivity Flow Schema ---
 #'
 #' processed_pknca_data (input, from parent)
 #'   └─> slope_selector_server
 #'        ├──> plot_outputs (reactive, updated by processed_pknca_data changes)
 #'        └──> ├> handle_plotly_click (updates manual_slopes on plot click)
-#'             └> handle_table_edits_server (updates manual_slopes on user actions & setting overrides)
+#'             └> handle_table_edits (updates manual_slopes on user edits & setting overrides)
 #'               └─> manual_slopes (output, used by parent to update processed_pknca_data)
 #'
 #'
@@ -20,10 +20,10 @@
 #' @return manual_slopes (data.frame of user slope inclusions/exclusions)
 #'
 #' @details
-#' - The module's main output is the manual_slopes table, which is updated by user actions in the table UI (handle_table_edits) or by clicking on plots (handle_plotly_click).
-#' - The parent module (setup.R) should use manual_slopes to update processed_pknca_data, which is then fed back into this module to update plots and table context.
-#' - All plot and table reactivity is encapsulated here; parent modules only need to provide processed_pknca_data and consume manual_slopes.
-
+#' - The module's main output is the manual_slopes table, which is updated by user
+#'   edits in the table UI (handle_table_edits) or by plot clicking (handle_plotly_click).
+#' - The parent module (setup.R) uses manual_slopes to update processed_pknca_data,
+#'   which is then fed back in this module to update plots.
 
 slope_selector_ui <- function(id) {
   ns <- NS(id)
@@ -89,15 +89,6 @@ slope_selector_ui <- function(id) {
           choices = NULL,
           multiple = TRUE
         ),
-        # shinyWidgets::virtualSelectInput(
-        #   ns("search_group"),
-        #   label = "Search Group",
-        #   choices = NULL,
-        #   multiple = TRUE,
-        #   search = TRUE,
-        #   placeholder = "Select group(s)...",
-        #   noOfDisplayValues = 3
-        # ),
       )
     ),
     fluidRow(
@@ -142,17 +133,14 @@ slope_selector_server <- function( # nolint
         incl_hl_col = new_pknca_data$conc$columns$include_half.life
       )
 
-      # Regenerate plots if a dataset is submitted or it was changed
-      # (update of adnca_data in setup.R)
       if (changes$in_data) {
+        # New data or major changes: regenerate all plots
         plot_outputs(get_halflife_plot(new_pknca_data))
-      # If relevant, modify plots that had new half-life adjustments
-      # (inclusions/exclusions from manual_slope_table)
       } else if (changes$in_hl_adj) {
+        # Modify plots that had new half-life adjustments (inclusions/exclusions)
         plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
-      # If relevant, modify plots that had interval changes
-      # (analyte, profile, specimen selection from setup.R settings)
       } else if (changes$in_selected_intervals) {
+        # Modify plots that had interval changes (analyte, profile, specimen selection from setup.R)
         plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
       }
 
@@ -164,20 +152,6 @@ slope_selector_server <- function( # nolint
           label = "Search Subject",
           choices = unique(new_pknca_data$intervals$USUBJID)
         )
-        #group_options_df <- prepare_virtual_select_df(new_pknca_data)
-        # shinyWidgets::updateVirtualSelect(
-        #   session = session,
-        #   inputId = "search_group",
-        #   label = "Search Group",
-        #   choices = shinyWidgets::prepare_choices(
-        #     group_options_df,
-        #     label = value,
-        #     value = var_and_value,
-        #     alias = value,
-        #     group_by = var
-        #   ),
-        #   selected = group_options_df$var_and_value
-        # )
       }
       if (changes$in_data) {
         updateOrderInput(
@@ -195,8 +169,8 @@ slope_selector_server <- function( # nolint
     session$userData$plotlyShinyEventIDs <- "plotly_click-A"
 
     # --- Pagination and search logic ---
-    search_subject_r <- reactive({ input$search_subject })
-    plots_per_page_r <- reactive({ input$plots_per_page })
+    search_subject_r <- reactive(input$search_subject)
+    plots_per_page_r <- reactive(input$plots_per_page)
 
     # Call the pagination/searcher module to:
     # - Providing indices of plots for the selected subject(s)
@@ -211,11 +185,6 @@ slope_selector_server <- function( # nolint
     # Render only the plots requested by the user
     observe({
       req(plot_outputs())
-      # browser()
-      # prepare_virtual_select_df(pknca_data()) %>%
-      #   filter(var_and_value %in% input$search_group) %>%
-      #   pull()
-      # sapply(input$search_group, \(x) grep(x, names(plot_outputs()), value = TRUE))
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
         plot_outputs() %>%
@@ -267,10 +236,7 @@ slope_selector_server <- function( # nolint
         data = manual_slopes()
       )
     })
-
-  # Manual slopes override logic moved to handle_table_edits_server
-
-    #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
+    #' returns half life adjustments rules to update processed_pknca_data in setup.R
     list(
       manual_slopes = manual_slopes
     )

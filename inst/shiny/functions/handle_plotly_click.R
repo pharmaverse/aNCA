@@ -1,9 +1,9 @@
 
 #' Handle Plotly Click for Slope Selection
 #'
-#' This function processes a plotly click event in the slope selection UI. It determines whether the click
-#' should add a new exclusion or selection rule to the manual slopes table, based on the user's interaction
-#' (same point = exclusion, two points in same plot = selection). It updates the manual_slopes table accordingly.
+#' This function processes a plotly click event in the slope selection UI. It determines whether
+#' the double click should add a new exclusion or selection rule to the manual slopes table
+#' (same point = exclusion, two points in same plot = selection).
 #'
 #' @param last_click_data A reactiveVal storing the last clicked plotly data (or NULL).
 #' @param manual_slopes A reactiveVal storing the current manual slopes table (data.frame).
@@ -39,7 +39,10 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   } else if (identical(pnt$int, lstpnt$int)) {
     # Two points in same interval: add selection rule for the range
     new_rule$TYPE <- "Selection"
-    new_rule$RANGE <- paste0(sort(c(pnt$time, lstpnt$time)), collapse = ":")
+    new_rule$RANGE <- paste0(
+      sort(c(pnt$time, lstpnt$time)),
+      collapse = ":"
+    )
     new_rule$REASON <- ""
   } else {
     # Clicks not in same interval: just update last_click_data, no rule
@@ -78,8 +81,10 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   row <- pknca_data$conc$data[idx, ]
   int <- pknca_data$intervals %>%
     merge(row, by = c(group_vars(pknca_data))) %>%
-    filter(start <= row[[pknca_data$conc$columns$time]] &
-             end >= row[[pknca_data$conc$columns$time]]) %>%
+    filter(
+      start <= row[[pknca_data$conc$columns$time]] &
+        end >= row[[pknca_data$conc$columns$time]]
+    ) %>%
     select(any_of(names(pknca_data$intervals)))
   group <- int %>%
     select(any_of(c(group_vars(pknca_data), "NCA_PROFILE")))
