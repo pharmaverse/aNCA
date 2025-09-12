@@ -338,8 +338,7 @@ get_halflife_plot <- function(pknca_data, add_annotations = TRUE) { #nolint
       )
     }
   }
-
-  return(plots)
+  plots
 }
 
 #' Custom fast version of get_halflife_points
