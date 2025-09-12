@@ -88,7 +88,23 @@ slope_selector_ui <- function(id) {
           label = "Search Subject",
           choices = NULL,
           multiple = TRUE
-        )
+        ),
+        # shinyWidgets::virtualSelectInput(
+        #   ns("search_group"),
+        #   label = "Search Group",
+        #   choices = NULL,
+        #   multiple = TRUE,
+        #   search = TRUE,
+        #   placeholder = "Select group(s)...",
+        #   noOfDisplayValues = 3
+        # ),
+      )
+    ),
+    fluidRow(
+      orderInput(
+        ns("order_groups"),
+        label = "Order plots by:",
+        items = NULL
       )
     ),
     br(),
@@ -148,6 +164,27 @@ slope_selector_server <- function( # nolint
           label = "Search Subject",
           choices = unique(new_pknca_data$intervals$USUBJID)
         )
+        #group_options_df <- prepare_virtual_select_df(new_pknca_data)
+        # shinyWidgets::updateVirtualSelect(
+        #   session = session,
+        #   inputId = "search_group",
+        #   label = "Search Group",
+        #   choices = shinyWidgets::prepare_choices(
+        #     group_options_df,
+        #     label = value,
+        #     value = var_and_value,
+        #     alias = value,
+        #     group_by = var
+        #   ),
+        #   selected = group_options_df$var_and_value
+        # )
+      }
+      if (changes$in_data) {
+        updateOrderInput(
+          session = session,
+          inputId = "order_groups",
+          items = group_vars(new_pknca_data)
+        )
       }
 
       # Update the object
@@ -171,14 +208,25 @@ slope_selector_server <- function( # nolint
       plots_per_page = plots_per_page_r
     )
 
-    # Render only the plots requested by the user (using the subject searcher and pagination)
+    # Render only the plots requested by the user
     observe({
       req(plot_outputs())
+      # browser()
+      # prepare_virtual_select_df(pknca_data()) %>%
+      #   filter(var_and_value %in% input$search_group) %>%
+      #   pull()
+      # sapply(input$search_group, \(x) grep(x, names(plot_outputs()), value = TRUE))
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs()[page_search$is_plot_searched()][page_search$page_start():page_search$page_end()]
+        plot_outputs() %>%
+          # Filter plots based on user search
+          .[page_search$is_plot_searched()] %>%
+          # Arrange plots by the specified group order
+          arrange_plots_by_groups(input$order_groups) %>%
+          # Display only the plots for the current page
+          .[page_search$page_start():page_search$page_end()]
       })
-      session$userData$results$slope_selector <- plot_outputs()
+#      session$userData$results$slope_selector <- plot_outputs()
     })
 
     # Creates an initial version of the manual slope adjustments table with pknca_data

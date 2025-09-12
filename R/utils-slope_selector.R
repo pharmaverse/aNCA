@@ -88,6 +88,36 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   plot_outputs
 }
 
+parse_plot_names_to_df <- function(named_list) {
+  plot_names <- names(named_list)
+  parsed <- lapply(plot_names, function(x) {
+    pairs <- strsplit(x, ",\\s*")[[1]]
+    kv <- strsplit(pairs, ":\\s*")
+    setNames(
+      vapply(kv, function(y) y[2], character(1)),
+      vapply(kv, function(y) y[1], character(1))
+    )
+  })
+  as.data.frame(do.call(rbind, parsed), stringsAsFactors = FALSE) %>%
+    mutate(PLOTID = names(named_list))
+}
+
+arrange_plots_by_groups <- function(named_list, group_cols) {
+  plot_df <- parse_plot_names_to_df(named_list)
+  arranged_df <- plot_df %>%
+    arrange(across(all_of(group_cols)))
+  named_list[arranged_df$PLOTID]
+}
+
+# prepare_virtual_select_df <- function(pknca_data) {
+#   pknca_data$intervals %>%
+#     select(any_of(c(group_vars(pknca_data)))) %>%
+#     pivot_longer(cols = group_vars(pknca_data), names_to = "var") %>%
+#     distinct() %>%
+#     mutate(var_and_value = paste0(var, ": ", value)) %>%
+#     distinct()
+# }
+
 
 #' Check overlap between existing and new slope rulesets
 #'
