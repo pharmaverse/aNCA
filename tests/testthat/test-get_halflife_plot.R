@@ -142,3 +142,78 @@ describe("lambda_slope_plot", {
   })
 
 })
+
+
+test_that("get_halflife_plot returns a list of plotly objects with valid input", {
+  # Use the fixture data as input
+  pknca_data <- FIXTURE_PKNCA_DATA
+  plots <- get_halflife_plot(pknca_data)
+  expect_type(plots, "list")
+  expect_true(length(plots) >= 1)
+  expect_s3_class(plots[[1]], "plotly")
+  expect_true("layout" %in% names(plots[[1]]$x))
+})
+
+test_that("get_halflife_plot warns and returns empty list when no groups present", {
+  # Remove all lambda.z rows from result to simulate no groups
+  pknca_data <- FIXTURE_PKNCA_DATA
+  pknca_data$conc$data <- pknca_data$conc$data[0, ]
+  plots <- get_halflife_plot(pknca_data)
+  expect_type(plots, "list")
+  expect_length(plots, 0)
+})
+
+
+# Marker color/shape tests for get_halflife_plot
+test_that("get_halflife_plot: marker colors and shapes - no exclusion/inclusion", {
+  pknca_data <- FIXTURE_PKNCA_DATA
+  # Remove exclude/include columns if present, or set all to FALSE
+  pknca_data$conc$data$exclude_half.life <- FALSE
+  pknca_data$conc$data$include_half.life <- FALSE
+  plots <- get_halflife_plot(pknca_data)
+  expect_true(length(plots) >= 1)
+  plot_data <- plots[[1]]$x$data[[2]]
+  # All points should be black (no inclusion/exclusion)
+  expect_true(all(plot_data$marker$color == "black"))
+  # All points should be circles (no exclusion)
+  expect_true(all(plot_data$marker$symbol == "circle"))
+})
+
+test_that("get_halflife_plot: marker colors and shapes - exclusion of a lambda.z point", {
+  pknca_data <- FIXTURE_PKNCA_DATA
+  pknca_data$intervals <- pknca_data$intervals[2,]
+
+  # Exclude a point in the lambda.z calculation
+  pknca_data_with_excl <- pknca_data$conc$data
+  pknca_data_with_excl$conc$data <- pknca_data$conc$data %>%
+    mutate(
+      exclude_half.life = ifelse(
+        USUBJID == USUBJID[2] & AFRLT == 2.5,
+        TRUE,
+        FALSE
+      )
+    )
+  plots <- get_halflife_plot(pknca_data)
+  expect_true(length(plots) >= 1)
+  plot_data <- plots[[1]]$x$data[[2]]
+  # At least one point should be red (excluded)
+  expect_true(any(plot_data$marker$color == "red"))
+  # At least one point should be an 'x' (excluded)
+  expect_true(any(plot_data$marker$symbol == "x"))
+})
+
+test_that("get_halflife_plot: marker colors and shapes - inclusion of lambda.z points", {
+  pknca_data <- FIXTURE_PKNCA_DATA
+  # Mark first two points as included in lambda.z
+  pknca_data$conc$data$exclude_half.life <- FALSE
+  pknca_data$conc$data$include_half.life <- FALSE
+  pknca_data$conc$data$include_half.life[1:2] <- TRUE
+  plots <- get_halflife_plot(pknca_data)
+  expect_true(length(plots) >= 1)
+  plot_data <- plots[[1]]$x$data[[2]]
+  # At least two points should be green (included in lambda.z)
+  expect_true(sum(plot_data$marker$color == "green") >= 2)
+  # Included points should be circles
+  expect_true(all(plot_data$marker$symbol[plot_data$marker$color == "green"] == "circle"))
+})
+
