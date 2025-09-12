@@ -128,7 +128,7 @@ parameter_plots_server <- function(id, res_nca) {
       req(input$selected_colorvars_boxplot)
       req(input$selected_filters_boxplot)
       log_info("Rendering boxplot")
-      
+
       boxplot <- flexible_violinboxplot(
         boxplotdata = boxplotdata(),
         parameter = input$selected_param_boxplot,
