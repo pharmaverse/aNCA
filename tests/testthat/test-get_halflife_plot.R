@@ -163,7 +163,6 @@ test_that("get_halflife_plot warns and returns empty list when no groups present
   expect_length(plots, 0)
 })
 
-
 # Marker color/shape tests for get_halflife_plot
 test_that("get_halflife_plot: marker colors and shapes - no exclusion/inclusion", {
   pknca_data <- FIXTURE_PKNCA_DATA
@@ -184,7 +183,7 @@ test_that("get_halflife_plot: marker colors and shapes - exclusion of a lambda.z
   pknca_data$intervals <- pknca_data$intervals[2,]
 
   # Exclude a point in the lambda.z calculation
-  pknca_data_with_excl <- pknca_data$conc$data
+  pknca_data_with_excl <- pknca_data
   pknca_data_with_excl$conc$data <- pknca_data$conc$data %>%
     mutate(
       exclude_half.life = ifelse(
@@ -194,6 +193,24 @@ test_that("get_halflife_plot: marker colors and shapes - exclusion of a lambda.z
       )
     )
   plots <- get_halflife_plot(pknca_data)
+  plots_with_excl <- get_halflife_plot(pknca_data_with_excl)
+
+  plots_details <- plots[[1]]$x$data[[2]]$marker
+  expected_plots_details <- list(
+    color = c("red", "red", "green", "green", "green"),
+    size = 15,
+    symbol = c("circle", "circle", "circle", "circle", "circle"),
+    line = list(color = "rgba(255,127,14,1)")
+  )
+  plots_with_excl_details <- plots_with_excl[[1]]$x$data[[2]]$marker
+  expected_plots_details_with_excl <- list(
+    color = c("red", "black", "green", "green", "green"),
+    size = 15,
+    symbol = c("x", "circle", "circle", "circle", "circle"),
+    line = list(color = "rgba(255,127,14,1)")
+  )
+
+
   expect_true(length(plots) >= 1)
   plot_data <- plots[[1]]$x$data[[2]]
   # At least one point should be red (excluded)
