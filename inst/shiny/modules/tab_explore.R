@@ -279,8 +279,8 @@ tab_explore_server <- function(id, data, grouping_vars) {
       )
     })
 
-    # render the general lineplot output in plotly
-    output$individualplot <- renderPlotly({
+    # Compute the individual plot object
+    individualplot <- reactive({
       req(data())
       req(master_palettes_list())
       req(input$generalplot_analyte)
@@ -325,9 +325,18 @@ tab_explore_server <- function(id, data, grouping_vars) {
             )
           )
       }
-      session$userData$results$exploration$individualplot <- p
       p
     })
+
+    # Save the object for the zip folder whenever it changes
+    observe({
+      req(individualplot())
+      session$userData$results$exploration$individualplot <- individualplot()
+    })
+
+    # Render the inidividual plot in plotly
+    output$individualplot <- renderPlotly(individualplot())
+
 
     # TAB: Mean Plot -----------------------------------------------------------
 
@@ -348,7 +357,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       )
     })
 
-    # Compute the meanplot (ggplot object) reactively
+    # Compute the meanplot object
     meanplot <- reactive({
       req(input$studyid_mean)
       req(input$analyte_mean)
@@ -400,12 +409,12 @@ tab_explore_server <- function(id, data, grouping_vars) {
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })
-# 
-#     # Save the ggplot object to session$userData$results$exploration$meanplot whenever it changes
-#     observe({
-#       req(meanplot())
-#       session$userData$results$exploration$meanplot <- meanplot_gg()
-#     })
+
+    # Save the object for the zip folder whenever it changes
+    observe({
+      req(meanplot())
+      session$userData$results$exploration$meanplot <- meanplot()
+    })
 
     # Render the mean plot output in plotly
     output$mean_plot <- renderPlotly({
