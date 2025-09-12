@@ -251,9 +251,27 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
-      apply_column_mapping(adnca_data(), mapping(),
-                           MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
-                           MAPPING_DESIRED_ORDER)
+
+      mapping_ <- mapping()
+      names(mapping_) <- gsub("select_", "", names(mapping_))
+
+      withCallingHandlers({
+        apply_mapping(
+          adnca_data(),
+          mapping_,
+          MANUAL_UNITS,
+          MAPPING_COLUMN_GROUPS,
+          MAPPING_DESIRED_ORDER
+        )
+      }, warning = function(w) {
+        log_warn(conditionMessage(w))
+        showNotification(conditionMessage(w), type = "warning", duration = 10)
+        invokeRestart("muffleWarning")
+      }, error = function(e) {
+        log_error(conditionMessage(e))
+        showNotification(conditionMessage(e), type = "error", duration = NULL)
+        return(NULL)
+      })
     }) |>
       bindEvent(trigger(), ignoreInit = TRUE)
 

@@ -6,11 +6,17 @@
 #'  updates units for key variables, applies labels,
 #'  and removes detected duplicate concentration records.
 #'
-#' @param dataset A data frame containing the raw input data.
-#' @param input A Shiny input object containing the selected column mappings
-#'  from the user interface. Expected to include input IDs like `select_<column_name>`.
-#' @param manual_units A list with named elements (`concentration`, `dose`, and `time`)
-#'  specifying the manually selectable unit options for relevant columns.
+#' @param dataset A data frame containing the raw data to be transformed.
+#' @param mapping A named list of column mappings.
+#' @param manual_units A named list containing valid unit options for different
+#'                     variable types (e.g., `concentration`, `dose`, `time`).
+#' @param column_groups A named list where names are group categories
+#'                      (e.g., "Group Identifiers", "Sample Variables") and values are vectors
+#'                      of column names belonging to each group.
+#' @param desired_order A character vector specifying the desired column order
+#'                      in the output dataset.
+#' @param silent Boolean, whether to print message with applied mapping.
+#'               Defaults to `FALSE`.
 #'
 #' @returns A transformed data frame with:
 #'   - Renamed columns according to user mappings
@@ -19,22 +25,25 @@
 #'   - Labels applied to columns (via `apply_labels()`)
 #'
 #' @details
-#' - Logs the mapping selections for debugging.
 #' - Validates that all required columns are mapped and no duplicates exist.
 #' - If `ADOSEDUR` is not mapped, it is assigned a value of `0`.
 #' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`,
 #'  and `NCA_PROFILE`.
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
-
-apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, desired_order) {
-
+#' @export
+apply_mapping <- function(
+  dataset, mapping, manual_units, column_groups, desired_order, silent = FALSE
+) {
   selected_cols <- sapply(names(column_groups), function(group) {
     sapply(column_groups[[group]], function(column) {
-      mapping[[paste0("select_", column)]]
+      mapping[[column]]
     })
   }, simplify = FALSE)
 
-  log_debug_list("The following mapping was applied:", purrr::flatten(selected_cols))
+  if (!silent) {
+    .concatenate_list("The following mapping was applied:", purrr::flatten(selected_cols)) |>
+      message()
+  }
 
   if (!.validate_column_mapping(selected_cols)) return(NULL)
 
@@ -50,13 +59,13 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   dataset <- .rename_columns(dataset, selected_cols)
 
   # Handle special case for NCA_PROFILE
-  nca_profile_col <- mapping$select_NCA_PROFILE
+  nca_profile_col <- mapping$NCA_PROFILE
 
   if (!is.null(nca_profile_col) && nca_profile_col != "" && nca_profile_col != "NA") {
     dataset <- dataset %>% mutate(NCA_PROFILE = as.factor(.data[[nca_profile_col]]))
   }
 
-  if (is.null(mapping$select_ADOSEDUR)) dataset$ADOSEDUR <- 0
+  if (is.null(mapping$ADOSEDUR)) dataset$ADOSEDUR <- 0
 
   dataset <- dataset %>%
     .apply_manual_units(mapping, manual_units) %>%
@@ -71,9 +80,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     select(names(dataset))
 
   if (nrow(conc_duplicates) > 0) {
-    log_warn("Duplicate concentration data detected and filtered.")
-    showNotification("Duplicate concentration data detected and removed.
-                     Please check the data", type = "warning", duration = 5)
+    warning("Duplicate concentration data detected and filtered.")
   }
 
   dataset %>% anti_join(conc_duplicates, by = colnames(conc_duplicates))
@@ -85,6 +92,9 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 #' @param selected_cols A named list of vectors representing mapped columns
 #'
 #' @returns A data frame with renamed columns based on the provided mappings.
+#'
+#' @noRd
+#' @keywords internal
 .rename_columns <- function(dataset, selected_cols) {
   colnames(dataset) <- sapply(colnames(dataset), function(col) {
     for (group in names(selected_cols)) {
@@ -104,20 +114,17 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 #'                      grouped by category (e.g., identifiers, dosing, etc.).
 #'
 #' @returns `TRUE` if valid; otherwise triggers notifications and returns `FALSE`.
+#'
+#' @noRd
+#' @keywords internal
 .validate_column_mapping <- function(selected_cols) {
   flat_cols <- unlist(selected_cols)
   if (any(flat_cols == "")) {
-    log_error("Unmapped columns detected.")
-    showNotification("Some required columns are not mapped. Please complete all selections.",
-                     type = "error", duration = 5)
-    return(FALSE)
+    stop("Unmapped columns detected.")
   }
 
   if (any(duplicated(flat_cols))) {
-    log_error("Duplicate column selection detected.")
-    showNotification("Duplicate column selection detected. Please ensure each selection is unique.",
-                     type = "error", duration = 5)
-    return(FALSE)
+    stop("Duplicate column selection detected.")
   }
 
   TRUE
@@ -132,9 +139,12 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
 #' @param manual_units A named list containing valid unit options.
 #'
 #' @returns A modified `dataset` with updated unit columns if applicable.
+#'
+#' @noRd
+#' @keywords internal
 .apply_manual_units <- function(dataset, mapping, manual_units) {
-  if (mapping$select_AVALU %in% manual_units$concentration) dataset$AVALU <- mapping$select_AVALU
-  if (mapping$select_DOSEU %in% manual_units$dose) dataset$DOSEU <- mapping$select_DOSEU
-  if (mapping$select_RRLTU %in% manual_units$time) dataset$RRLTU <- mapping$select_RRLTU
+  if (mapping$AVALU %in% manual_units$concentration) dataset$AVALU <- mapping$AVALU
+  if (mapping$DOSEU %in% manual_units$dose) dataset$DOSEU <- mapping$DOSEU
+  if (mapping$RRLTU %in% manual_units$time) dataset$RRLTU <- mapping$RRLTU
   dataset
 }
