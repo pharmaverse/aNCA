@@ -12,8 +12,6 @@ format_pkncadata_intervals(pknca_conc, pknca_dose, start_from_last_dose = TRUE)
 \item{pknca_dose}{A PKNCAdose object containing the dose data.}
 
 \item{start_from_last_dose}{Logical defining if start is at time of last dose or C1.}
-
-\item{params}{A character vector specifying the pharmacokinetic parameters to include.}
 }
 \value{
 A data frame containing the dose intervals and specified pharmacokinetic parameters.

@@ -4,7 +4,6 @@
 #'
 #' @param pknca_conc A PKNCAdose object containing the concentration data.
 #' @param pknca_dose A PKNCAdose object containing the dose data.
-#' @param params A character vector specifying the pharmacokinetic parameters to include.
 #' @param start_from_last_dose Logical defining if start is at time of last dose or C1.
 #'
 #' @returns A data frame containing the dose intervals and specified pharmacokinetic parameters.
