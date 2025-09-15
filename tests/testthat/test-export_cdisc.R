@@ -146,24 +146,27 @@ describe("export_cdisc", {
     )
   })
 
-  it("derives PPSTINT and PPENINT for partial AUC intervals", {
-    modified_test_pknca_res <- test_pknca_res
-    modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
-      mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", "AUCINT", PPTESTCD))
+  it("derives PPSTINT and PPENINT for interval (INT) parameters", {
+    for (int_param in c("AUCINT", "CAVGINT", "AUCINTD", "AUCINTPD", "RCAMINT")) {
+      modified_test_pknca_res <- test_pknca_res
+      modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
+        mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
+        mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", int_param, PPTESTCD))
 
-    result <- export_cdisc(modified_test_pknca_res)
+      result <- export_cdisc(modified_test_pknca_res)
 
-    # Check that PPSTINT and PPENINT are derived correctly
-    expect_true("PPSTINT" %in% names(result$pp))
-    expect_true("PPENINT" %in% names(result$pp))
-    expect_equal(
-      result$pp$PPSTINT[which(result$pp$PPTESTCD == "AUCINT")],
-      rep(c("PT0H", "PT2H"), times = 3)
-    )
-    expect_equal(
-      result$pp$PPENINT[which(result$pp$PPTESTCD == "AUCINT")],
-      rep(c("PT2H", "PT4H"), times = 3)
-    )
+      # Check that PPSTINT and PPENINT are derived correctly
+      expect_true("PPSTINT" %in% names(result$pp))
+      expect_true("PPENINT" %in% names(result$pp))
+      expect_equal(
+        result$pp$PPSTINT[which(result$pp$PPTESTCD == int_param)],
+        rep(c("PT0H", "PT2H"), times = 3)
+      )
+      expect_equal(
+        result$pp$PPENINT[which(result$pp$PPTESTCD == int_param)],
+        rep(c("PT2H", "PT4H"), times = 3)
+      )
+    }
   })
 
   it("derives PPREASND & PPSTAT correctly in all situations", {
