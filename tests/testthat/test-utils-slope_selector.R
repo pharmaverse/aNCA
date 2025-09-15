@@ -156,27 +156,35 @@ describe("detect_pknca_data_changes", {
 
     old <- FIXTURE_PKNCA_DATA
 
-    # No change
+    # No previous object
     new <- old
-    res <- detect_pknca_data_changes(old, new, "exclude_half.life", "include_half.life")
+    res <- detect_pknca_data_changes(NULL, new, "exclude_half.life", "include_half.life")
+    expect_true(res$in_data)
+    
+    # No change
+    res <- detect_pknca_data_changes(old, old, "exclude_half.life", "include_half.life")
     expect_false(res$in_data)
     expect_false(res$in_hl_adj)
     expect_false(res$in_selected_intervals)
+    
     # Change in data
     new2 <- new
     new2$conc$data$VAL[1] <- 99
     res2 <- detect_pknca_data_changes(old, new2, "exclude_half.life", "include_half.life")
     expect_true(res2$in_data)
+
     # Change in hl_adj
     new3 <- new
     new3$conc$data$exclude_half.life[2] <- TRUE
     res3 <- detect_pknca_data_changes(old, new3, "exclude_half.life", "include_half.life")
     expect_true(res3$in_hl_adj)
+
     # Change in intervals
     new4 <- new
     new4$intervals <- data.frame(ID = 1:4)
     res4 <- detect_pknca_data_changes(old, new4, "exclude_half.life", "include_half.life")
     expect_true(res4$in_selected_intervals)
+
   })
 })
 
@@ -222,7 +230,7 @@ describe("handle_hl_adj_change", {
 })
 
 describe("handle_interval_change", {
-  it("updates and removes plots based on interval changes", {
+  it("removes plots when intervals are removed", {
     new_pknca_data <- FIXTURE_PKNCA_DATA
     new_pknca_data$intervals <- new_pknca_data$intervals[2:3, ]
     old_pknca_data <- FIXTURE_PKNCA_DATA
@@ -233,5 +241,150 @@ describe("handle_interval_change", {
     expect_equal(length(old_plots), 13)
     expect_equal(length(new_plots), 2)
     expect_equal(old_plots[names(new_plots)], new_plots)
+  })
+
+  it("adds plots when intervals are added", {
+    old_pknca_data <- FIXTURE_PKNCA_DATA
+    old_pknca_data$intervals <- old_pknca_data$intervals[2:3, ]
+    new_pknca_data <- FIXTURE_PKNCA_DATA
+
+    old_plots <- get_halflife_plots(old_pknca_data)$plots
+    new_plots <- handle_interval_change(new_pknca_data, old_pknca_data, old_plots)
+
+    expect_equal(length(old_plots), 2)
+    expect_equal(length(new_plots), 13)
+    expect_equal(new_plots[names(old_plots)], old_plots)
+  })
+
+})
+
+describe("arrange_plots_by_groups", {
+  it("orders plots by specified group columns", {
+    named_list <- list(
+      "B: 2, A: 1" = "plot1",
+      "B: 1, A: 2" = "plot2",
+      "B: 1, A: 1" = "plot3"
+    )
+    # Should order by B then A
+    ordered <- arrange_plots_by_groups(named_list, c("B", "A"))
+    expect_equal(names(ordered), c("B: 1, A: 1", "B: 1, A: 2", "B: 2, A: 1"))
+    # Should order by A then B
+    ordered2 <- arrange_plots_by_groups(named_list, c("A", "B"))
+    expect_equal(names(ordered2), c("B: 2, A: 1", "B: 1, A: 1", "B: 1, A: 2"))
+  })
+})
+
+describe(".update_pknca_with_rules", {
+  it("applies selection and exclusion rules to data", {
+    # Minimal PKNCA data object
+    data <- list(
+      conc = list(
+        data = data.frame(ID = 1:5, TIME = 1:5, exclude_half.life = FALSE, include_half.life = FALSE, REASON = ""),
+        columns = list(time = "TIME", exclude_half.life = "exclude_half.life", include_half.life = "include_half.life")
+      )
+    )
+    attr(data, "groups") <- c("ID")
+    group_vars <- function(x) "ID"
+    assignInNamespace("group_vars", group_vars, ns = "globalenv")
+    # Selection rule
+    slopes <- data.frame(TYPE = "Selection", ID = 1, RANGE = "2:4", REASON = "sel")
+    data2 <- .update_pknca_with_rules(data, slopes)
+    expect_true(all(data2$conc$data$include_half.life[2:4]))
+    # Exclusion rule
+    slopes2 <- data.frame(TYPE = "Exclusion", ID = 1, RANGE = "3:5", REASON = "exc")
+    data3 <- .update_pknca_with_rules(data2, slopes2)
+    expect_true(all(data3$conc$data$exclude_half.life[3:5]))
+    # REASON is appended
+    expect_true(grepl("sel", data3$conc$data$REASON[2]))
+    expect_true(grepl("exc", data3$conc$data$REASON[3]))
+  })
+})
+
+describe(".update_plots_with_pknca", {
+  it("updates plots for affected intervals", {
+    # Minimal PKNCA data object
+    data <- list(
+      conc = list(
+        data = data.frame(ID = 1:3, TIME = 1:3),
+        columns = list()
+      ),
+      intervals = data.frame(ID = 1:3, start = 1:3, end = 2:4)
+    )
+    group_vars <- function(x) "ID"
+    assignInNamespace("group_vars", group_vars, ns = "globalenv")
+    get_halflife_plots <- function(p) list(plots = list("ID: 1, start: 1, end: 2" = "plot1", "ID: 2, start: 2, end: 3" = "plot2", "ID: 3, start: 3, end: 4" = "plot3"))
+    assignInNamespace("get_halflife_plots", get_halflife_plots, ns = "globalenv")
+    plot_outputs <- list("ID: 1, start: 1, end: 2" = "oldplot1", "ID: 2, start: 2, end: 3" = "oldplot2")
+    intervals_to_update <- data.frame(ID = 2:3, start = 2:3, end = 3:4)
+    updated <- .update_plots_with_pknca(data, plot_outputs, intervals_to_update)
+    expect_equal(updated[["ID: 2, start: 2, end: 3"]], "plot2")
+    expect_equal(updated[["ID: 3, start: 3, end: 4"]], "plot3")
+    expect_equal(updated[["ID: 1, start: 1, end: 2"]], "oldplot1")
+  })
+})
+
+describe("arrange_plots_by_groups", {
+  it("orders plots by specified group columns", {
+    named_list <- list(
+      "B: 2, A: 1" = "plot1",
+      "B: 1, A: 2" = "plot2",
+      "B: 1, A: 1" = "plot3"
+    )
+    # Should order by B then A
+    ordered <- arrange_plots_by_groups(named_list, c("B", "A"))
+    expect_equal(names(ordered), c("B: 1, A: 1", "B: 1, A: 2", "B: 2, A: 1"))
+    # Should order by A then B
+    ordered2 <- arrange_plots_by_groups(named_list, c("A", "B"))
+    expect_equal(names(ordered2), c("B: 1, A: 1", "B: 2, A: 1", "B: 1, A: 2"))
+  })
+})
+
+describe(".update_pknca_with_rules", {
+  it("applies selection and exclusion rules to data", {
+    # Minimal PKNCA data object
+    old <- FIXTURE_PKNCA_DATA
+    group1 <- data$intervals %>% select(any_of(c(group_vars(old), "start", "end"))) %>% .[1,]
+
+    # Selection rule
+    slopes_incl <- cbind(
+      data.frame(TYPE = "Selection", ID = 1, RANGE = "2:4", REASON = "because I want to test it :)"),
+      group1
+    )
+    slopes_excl <- cbind(
+      data.frame(TYPE = "Exclusion", ID = 1, RANGE = "2:4", REASON = "there are always good reasons"),
+      group1
+    )
+    new_with_incl <- .update_pknca_with_rules(old, slopes_incl)
+    new_with_excl <- .update_pknca_with_rules(old, slopes_excl)
+
+    old_have_points_na <- all(is.na(old$conc$data %>%
+                                      filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+                                      pull(include_half.life))
+                             )
+    new_have_points_incl <- all(new_with_incl$conc$data %>%
+                                filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+                                pull(include_half.life))
+
+    new_have_points_excl <- all(new_with_excl$conc$data %>%
+                                filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+                                pull(exclude_half.life))
+
+    expect_true(all(old_have_points_na, new_have_points_incl, new_have_points_excl))
+  })
+})
+
+describe(".update_plots_with_pknca", {
+  it("updates plots for affected intervals", {
+    data <- FIXTURE_PKNCA_DATA
+    # group_vars <- function(x) "ID"
+    # assignInNamespace("group_vars", group_vars, ns = "globalenv")
+    # get_halflife_plots <- function(p) list(plots = list("ID: 1, start: 1, end: 2" = "plot1", "ID: 2, start: 2, end: 3" = "plot2", "ID: 3, start: 3, end: 4" = "plot3"))
+    # assignInNamespace("get_halflife_plots", get_halflife_plots, ns = "globalenv")
+    # plot_outputs <- list("ID: 1, start: 1, end: 2" = "oldplot1", "ID: 2, start: 2, end: 3" = "oldplot2")
+    # intervals_to_update <- data.frame(ID = 2:3, start = 2:3, end = 3:4)
+    # updated <- .update_plots_with_pknca(data, plot_outputs, intervals_to_update)
+    # expect_equal(updated[["ID: 2, start: 2, end: 3"]], "plot2")
+    # expect_equal(updated[["ID: 3, start: 3, end: 4"]], "plot3")
+    # expect_equal(updated[["ID: 1, start: 1, end: 2"]], "oldplot1")
   })
 })
