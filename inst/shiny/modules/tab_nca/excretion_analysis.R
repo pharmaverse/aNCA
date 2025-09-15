@@ -76,7 +76,7 @@ excretion_server <- function(id, input_pknca_data) {
       updateSelectInput(session, "end_time_col", choices = available_cols,
                         selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
       updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
-                          filter(startsWith(PPTESTCD, "RCA")) %>%
+                          filter(TYPE == "Urine") %>%
                           pull(PKNCA, PPTESTCD),
                         selected = c("ae"))
     })
