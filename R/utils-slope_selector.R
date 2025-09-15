@@ -95,6 +95,8 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   if (nrow(new_intervals) > 0) {
     affected_groups <- new_intervals %>%
       select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
+      merge(unique(PKNCA::getGroups(new_pknca_data$conc)), all.x = TRUE) %>%
+      select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
       distinct()
     plot_outputs <- .update_plots_with_pknca(
       new_pknca_data,
@@ -104,6 +106,8 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   }
   if (nrow(rm_intervals) > 0) {
     rm_plot_names <- rm_intervals %>%
+      select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
+      merge(unique(PKNCA::getGroups(new_pknca_data$conc)), all.x = TRUE) %>%
       select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
       distinct() %>%
       mutate(across(everything(), as.character)) %>%

@@ -232,6 +232,6 @@ describe("handle_interval_change", {
 
     expect_equal(length(old_plots), 13)
     expect_equal(length(new_plots), 2)
-    expect_equal(old_plots[2:3], new_plots)
+    expect_equal(old_plots[names(new_plots)], new_plots)
   })
 })
