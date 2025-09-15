@@ -89,7 +89,7 @@ get_halflife_plots_single <- function(
       customdata = apply(
         plot_data[, c(group_vars, "ROWID"), drop = FALSE],
         1,
-        function(row) as.list(set_names(row, c(group_vars, "ROWID")))
+        function(row) as.list(setNames(row, c(group_vars, "ROWID")))
       )
     ) %>%
     plotly::plotly_build()
