@@ -368,9 +368,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     observeEvent(settings(), {
       runjs(str_glue(
         "buttonTimeout(
-          '.run-nca-btn',
+          '#nca-run_nca',
           {settings_debounce + 250},
-          'Applying<br>settings...',
+          'Applying settings...',
           'Run NCA'
         );"
       ))

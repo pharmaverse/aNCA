@@ -87,6 +87,10 @@ sample_data <- data.frame(
     "extravascular", "extravascular",
     "INTRAVENOUS", "INTRAVENOUS"
   ),
+  ADOSEDUR = c(
+  0, 0,
+  0, 0,
+  2, 2),
   SAMPLE_VOLUME = c(
     NA, 0,
     NA, 0,
@@ -101,7 +105,7 @@ sample_data <- data.frame(
 
 study_summary <- detect_study_types(
   data = sample_data,
-  groups = c("USUBJID, PCSPEC, DRUG"),
+  groups = c("USUBJID", "PCSPEC", "DRUG"),
   drug_column = "DRUG",
   analyte_column = "ANALYTE",
   route_column = "ROUTE",
