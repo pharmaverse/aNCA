@@ -216,7 +216,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 #' @param slopes Data frame of slope rules (TYPE, RANGE, REASON, group columns)
 #' @return Modified data object with updated flags
 .update_pknca_with_rules <- function(data, slopes) {
-  slope_groups <- group_vars(data)
+  slope_groups <- intersect(group_vars(data), names(slopes))
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
   include_hl_col <- data$conc$columns$include_half.life
