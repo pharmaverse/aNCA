@@ -97,24 +97,30 @@ get_halflife_plots_single <- function(
 
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 
+  # If the input has empty concentration or intervals, just return an empty list
+  if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
+    return(list(plots = list(), data = list()))
+  }
+
+  # Identify column names
+  time_col <- pknca_data$conc$columns$time
+  conc_col <- pknca_data$conc$columns$concentration
+  timeu_col <- pknca_data$conc$columns$timeu
+  concu_col <- pknca_data$conc$columns$concu
+  exclude_hl_col <- pknca_data$conc$columns$exclude_half.life
+
+  # Make sure to create a default exclude half life column if it does not exist
+  if (is.null(exclude_hl_col)) {
+    pknca_data$conc$data[["exclude_half.life"]] <- FALSE
+    exclude_hl_col <- "exclude_half.life"
+  }
+
   # Adjust the input to compute half-life & show original row number
   pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data))
   pknca_data$intervals <- pknca_data$intervals %>%
     filter(type_interval == "main", half.life) %>%
-    distinct(!!!syms(group_vars(pknca_data)),  .keep_all = TRUE) %>%
     unique()
   o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
-
-    # Precompute column names and helper functions
-  time_col <- o_nca$data$conc$columns$time
-  conc_col <- o_nca$data$conc$columns$concentration
-  timeu_col <- o_nca$data$conc$columns$timeu
-  concu_col <- o_nca$data$conc$columns$concu
-  exclude_hl_col <- o_nca$data$conc$columns$exclude_half.life
-  if (is.null(exclude_hl_col)) {
-    o_nca$data$conc$data[["exclude_half.life"]] <- FALSE
-    exclude_hl_col <- "exclude_half.life"
-  }
 
   if (!"PPSTRES" %in% names(o_nca$result)) {
     o_nca$result$PPSTRES <- o_nca$result$PPORRES
