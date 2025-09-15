@@ -116,7 +116,7 @@ excretion_server <- function(id, input_pknca_data) {
             !!dose_col := map_dbl(dose_total_unit, drop_units),
             !!doseu := map_chr(dose_total_unit, deparse_unit)
           )
-        
+
         # Update units
         data$units <- PKNCA_build_units_table(data$conc, data$dose)
       }
@@ -164,7 +164,7 @@ excretion_server <- function(id, input_pknca_data) {
       data$units <- data$units  %>%
         mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
                conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
-      
+
       data$options$keep_interval_cols <- c("NCA_PROFILE", "type_interval")
       # Run PKNCA analysis
       suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
