@@ -147,7 +147,7 @@ describe("lambda_slope_plot", {
 test_that("get_halflife_plot returns a list of plotly objects with valid input", {
   # Use the fixture data as input
   pknca_data <- FIXTURE_PKNCA_DATA
-  plots <- get_halflife_plot(pknca_data)
+  plots <- get_halflife_plots(pknca_data)[["plots"]]
   expect_type(plots, "list")
   expect_true(length(plots) >= 1)
   expect_s3_class(plots[[1]], "plotly")
@@ -158,7 +158,7 @@ test_that("get_halflife_plot warns and returns empty list when no groups present
   # Remove all lambda.z rows from result to simulate no groups
   pknca_data <- FIXTURE_PKNCA_DATA
   pknca_data$conc$data <- pknca_data$conc$data[0, ]
-  plots <- get_halflife_plot(pknca_data)
+  plots <- get_halflife_plots(pknca_data)[["plots"]]
   expect_type(plots, "list")
   expect_length(plots, 0)
 })
@@ -169,7 +169,7 @@ test_that("get_halflife_plot: marker colors and shapes - no exclusion/inclusion"
   # Remove exclude/include columns if present, or set all to FALSE
   pknca_data$conc$data$exclude_half.life <- FALSE
   pknca_data$conc$data$include_half.life <- FALSE
-  plots <- get_halflife_plot(pknca_data)
+  plots <- get_halflife_plots(pknca_data)[["plots"]]
   expect_true(length(plots) >= 1)
   plot_data <- plots[[1]]$x$data[[2]]
   # All points should be black (no inclusion/exclusion)
@@ -192,8 +192,8 @@ test_that("get_halflife_plot: marker colors and shapes - exclusion of a lambda.z
         FALSE
       )
     )
-  plots <- get_halflife_plot(pknca_data)
-  plots_with_excl <- get_halflife_plot(pknca_data_with_excl)
+  plots <- get_halflife_plots(pknca_data)[["plots"]]
+  plots_with_excl <- get_halflife_plots(pknca_data_with_excl)
 
   plots_details <- plots[[1]]$x$data[[2]]$marker
   expected_plots_details <- list(
@@ -225,7 +225,7 @@ test_that("get_halflife_plot: marker colors and shapes - inclusion of lambda.z p
   pknca_data$conc$data$exclude_half.life <- FALSE
   pknca_data$conc$data$include_half.life <- FALSE
   pknca_data$conc$data$include_half.life[1:2] <- TRUE
-  plots <- get_halflife_plot(pknca_data)
+  plots <- get_halflife_plots(pknca_data)[["plots"]]
   expect_true(length(plots) >= 1)
   plot_data <- plots[[1]]$x$data[[2]]
   # At least two points should be green (included in lambda.z)

@@ -284,7 +284,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     pknca_data$intervals,
     by = intersect(names(intervals_to_update), names(pknca_data$intervals))
   )
-  updated_plots <- suppressWarnings(get_halflife_plot(pknca_data))
+  updated_plots <- suppressWarnings(get_halflife_plots(pknca_data)[["plots"]])
   plot_outputs[names(updated_plots)] <- updated_plots
   plot_outputs
 }
