@@ -187,7 +187,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 #' @param subtitle_text Subtitle/annotation (HTML allowed)
 #' @param color Vector of colors for points (same length as plot_data)
 #' @param symbol Vector of marker symbols for points (same length as plot_data)
-#' @param group_vars Character vector of grouping variable names (for customdata)
+#' @param group_vars Character vector of grouping variable names (for `customdata`)
 #' @param add_annotations Logical, whether to add the subtitle annotation
 #' @param text Optional vector of hover text for points (same length as plot_data)
 get_halflife_plots_single <- function(

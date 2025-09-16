@@ -41,7 +41,7 @@ get_halflife_plots_single(
 
 \item{symbol}{Vector of marker symbols for points (same length as plot_data)}
 
-\item{group_vars}{Character vector of grouping variable names (for customdata)}
+\item{group_vars}{Character vector of grouping variable names (for \code{customdata})}
 
 \item{add_annotations}{Logical, whether to add the subtitle annotation}
 
