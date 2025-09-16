@@ -160,8 +160,10 @@ slope_selector_server <- function( # nolint
           items = group_vars(new_pknca_data)
         )
       }
+      # Save the plots for the zip download (nca_results.R)
+      session$userData$results$slope_selector <- plot_outputs()
 
-      # Update the object
+      # Update the object for future comparisons
       pknca_data(new_pknca_data)
     })
 
