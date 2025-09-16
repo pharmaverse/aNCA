@@ -371,17 +371,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
     DOSNOA
   )
   
-  # Reshape intervals, filter for TRUE, and then filter the results
-  requested_params <- results$data$intervals %>%
-    pivot_longer(
-      cols = where(is.logical),
-      names_to = "PPTESTCD",
-      values_to = "is_requested"
-    ) %>%
-    filter(is_requested)
-  
   results$result <- results$result %>%
-    semi_join(requested_params) %>%
     inner_join(
       dose_data_to_join,
       by = intersect(names(.), names(dose_data_to_join))
