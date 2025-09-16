@@ -128,9 +128,7 @@ slope_selector_server <- function( # nolint
         unique()
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
-        new = new_pknca_data,
-        excl_hl_col = new_pknca_data$conc$columns$exclude_half.life,
-        incl_hl_col = new_pknca_data$conc$columns$include_half.life
+        new = new_pknca_data
       )
 
       if (changes$in_data) {
