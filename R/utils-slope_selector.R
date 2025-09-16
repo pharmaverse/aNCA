@@ -9,10 +9,10 @@
 #' or selected intervals have changed. Used to decide when to update plots.
 #' @param old Previous PKNCA data object
 #' @param new New PKNCA data object
-#' @param excl_hl_col Name of exclusion column
-#' @param incl_hl_col Name of inclusion column
 #' @return List with logicals: in_data, in_hl_adj, in_selected_intervals
 detect_pknca_data_changes <- function(old, new, excl_hl_col, incl_hl_col) {
+  excl_hl_col <- new$conc$columns$exclude_half.life
+  incl_hl_col <- new$conc$columns$include_half.life
   list(
     in_data = if (is.null(old) & !is.null(new)) {
       TRUE
