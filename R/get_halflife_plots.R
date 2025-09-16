@@ -2,99 +2,13 @@
 #'
 #' Generates a plotly plot for NCA half-life visualization, with a fit line and scatter points.
 #'
-#' @param fit_line_data Data frame for the fit line (must have columns for time and y)
-#' @param plot_data Data frame for the scatter points
-#' @param time_col Name of the time column (string)
-#' @param conc_col Name of the concentration column (string)
-#' @param title Plot title
-#' @param xlab X axis label
-#' @param ylab Y axis label
-#' @param subtitle_text Subtitle/annotation (HTML allowed)
-#' @param color Vector of colors for points (same length as plot_data)
-#' @param symbol Vector of marker symbols for points (same length as plot_data)
-#' @param group_vars Character vector of grouping variable names (for customdata)
+#' @param pknca_data PKNCA data object
 #' @param add_annotations Logical, whether to add the subtitle annotation
-#' @param text Optional vector of hover text for points (same length as plot_data)
-#' @return A plotly object
-get_halflife_plots_single <- function(
-  fit_line_data,
-  plot_data,
-  time_col,
-  conc_col,
-  title,
-  xlab,
-  ylab,
-  subtitle_text,
-  color,
-  symbol,
-  group_vars,
-  add_annotations = TRUE,
-  text = NULL
-) {
-  if (is.null(text)) {
-    text <- paste0(
-      "Data Point: ", seq_len(nrow(plot_data)), "\n(",
-      plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
-    )
-  }
-  plotly::plot_ly() %>%
-    plotly::add_lines(
-      data = fit_line_data,
-      x = ~get(time_col),
-      y = ~10^y,
-      line = list(color = "green", width = 2),
-      name = "Fit",
-      inherit = FALSE,
-      showlegend = TRUE
-    ) %>%
-    plotly::layout(
-      title = title,
-      xaxis = list(
-        title = xlab,
-        linecolor = "black",
-        gridcolor = "white",
-        zeroline = FALSE
-      ),
-      yaxis = list(
-        title = ylab,
-        type = "log",
-        tickformat = "f",
-        linecolor = "black",
-        gridcolor = "white",
-        zeroline = FALSE
-      ),
-      annotations = list(
-        text = subtitle_text,
-        showarrow = FALSE,
-        xref = "paper",
-        yref = "paper",
-        y = 1
-      )
-    ) %>%
-    plotly::add_trace(
-      data = plot_data,
-      x = ~plot_data[[time_col]],
-      y = ~plot_data[[conc_col]],
-      text = text,
-      hoverinfo = "text",
-      showlegend = FALSE,
-      type = "scatter",
-      mode = "markers",
-      marker = list(
-        color = color,
-        size = 15,
-        symbol = symbol,
-        size = 20
-      ),
-      customdata = apply(
-        plot_data[, c(group_vars, "ROWID"), drop = FALSE],
-        1,
-        function(row) as.list(setNames(row, c(group_vars, "ROWID")))
-      )
-    ) %>%
-    plotly::plotly_build()
-}
-
+#' @return A list with plotly objects and data
+#' @importFrom dplyr filter select mutate group_by ungroup group_split %>% any_of
+#' @importFrom stats lm predict as.formula
+#' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
+#' @importFrom PKNCA pk.nca
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 
   # If the input has empty concentration or intervals, just return an empty list
@@ -213,10 +127,10 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     # Create line data
     if (any(!is.na(df$is_halflife_used))) {
       df_fit <- df[df$is_halflife_used, ]
-      fit <- lm(as.formula(paste0("log10(", conc_col, ") ~ ", time_col)), df_fit)
+      fit <- stats::lm(as.formula(paste0("log10(", conc_col, ") ~ ", time_col)), df_fit)
       fit_line_data <- data.frame(x = c(df$lambda.z.time.first[1], max(df[[time_col]])))
       colnames(fit_line_data) <- time_col
-      fit_line_data$y <- predict(fit, fit_line_data)
+      fit_line_data$y <- stats::predict(fit, fit_line_data)
     } else {
       fit_line_data <- data.frame(
         x = c(df$start[1], df$start[1]),
@@ -256,4 +170,99 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     data_list[[plotid]] <- df
   }
   return(list(plots = plot_list, data = data_list))
+}
+
+# Internal helper for plotting a single half-life plot
+#'
+#' @keywords internal
+#' @param fit_line_data Data frame for the fit line (must have columns for time and y)
+#' @param plot_data Data frame for the scatter points
+#' @param time_col Name of the time column (string)
+#' @param conc_col Name of the concentration column (string)
+#' @param title Plot title
+#' @param xlab X axis label
+#' @param ylab Y axis label
+#' @param subtitle_text Subtitle/annotation (HTML allowed)
+#' @param color Vector of colors for points (same length as plot_data)
+#' @param symbol Vector of marker symbols for points (same length as plot_data)
+#' @param group_vars Character vector of grouping variable names (for customdata)
+#' @param add_annotations Logical, whether to add the subtitle annotation
+#' @param text Optional vector of hover text for points (same length as plot_data)
+get_halflife_plots_single <- function(
+  fit_line_data,
+  plot_data,
+  time_col,
+  conc_col,
+  title,
+  xlab,
+  ylab,
+  subtitle_text,
+  color,
+  symbol,
+  group_vars,
+  add_annotations = TRUE,
+  text = NULL
+) {
+  if (is.null(text)) {
+    text <- paste0(
+      "Data Point: ", seq_len(nrow(plot_data)), "\n(",
+      plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
+    )
+  }
+  plotly::plot_ly() %>%
+    plotly::add_lines(
+      data = fit_line_data,
+      x = ~get(time_col),
+      y = ~10^y,
+      line = list(color = "green", width = 2),
+      name = "Fit",
+      inherit = FALSE,
+      showlegend = TRUE
+    ) %>%
+    plotly::layout(
+      title = title,
+      xaxis = list(
+        title = xlab,
+        linecolor = "black",
+        gridcolor = "white",
+        zeroline = FALSE
+      ),
+      yaxis = list(
+        title = ylab,
+        type = "log",
+        tickformat = "f",
+        linecolor = "black",
+        gridcolor = "white",
+        zeroline = FALSE
+      ),
+      annotations = list(
+        text = subtitle_text,
+        showarrow = FALSE,
+        xref = "paper",
+        yref = "paper",
+        y = 1
+      )
+    ) %>%
+    plotly::add_trace(
+      data = plot_data,
+      x = ~plot_data[[time_col]],
+      y = ~plot_data[[conc_col]],
+      text = text,
+      hoverinfo = "text",
+      showlegend = FALSE,
+      type = "scatter",
+      mode = "markers",
+      marker = list(
+        color = color,
+        size = 15,
+        symbol = symbol,
+        size = 20
+      ),
+      customdata = apply(
+        plot_data[, c(group_vars, "ROWID"), drop = FALSE],
+        1,
+        function(row) as.list(setNames(row, c(group_vars, "ROWID")))
+      )
+    ) %>%
+    plotly::plotly_build()
 }
