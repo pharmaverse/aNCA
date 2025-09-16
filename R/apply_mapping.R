@@ -32,119 +32,65 @@
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
 #' @export
 apply_mapping <- function(
-  dataset, mapping, manual_units, column_groups, desired_order, silent = FALSE
+  dataset, mapping,
+  manual_units = NULL, column_groups = NULL, # Not used anymore
+  desired_order, silent = FALSE
 ) {
-  selected_cols <- sapply(names(column_groups), function(group) {
-    sapply(column_groups[[group]], function(column) {
-      mapping[[column]]
-    })
-  }, simplify = FALSE)
 
   if (!silent) {
-    .concatenate_list("The following mapping was applied:", purrr::flatten(selected_cols)) |>
+    paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") |>
       message()
   }
+  if (!.validate_column_mapping(mapping)) return(NULL)
 
-  if (!.validate_column_mapping(selected_cols)) return(NULL)
+  ####### TODO (Gerardo): This would be better to be explicit outside the function
+  # Grouping_Variables should not be renamed
+  mapping <- mapping[names(mapping) != "Grouping_Variables"]   # TODO: Don't include in mapping arg
+  # Special case: If ADOSEDUR is not mapped, we assume is 0
+  if (is.null(mapping$ADOSEDUR)) dataset$ADOSEDUR <- 0         # TODO: Make it default in select Input
+  ################################################################################
 
-  selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-    names(selected_cols[["Group Identifiers"]]) != "NCA_PROFILE"
-  ]
-
-  selected_cols[["Supplemental Variables"]] <- selected_cols[["Supplemental Variables"]][
-    names(selected_cols[["Supplemental Variables"]]) != "Grouping_Variables"
-  ]
-
-  # Rename necessary columns
-  dataset <- .rename_columns(dataset, selected_cols)
-
-  # Handle special case for NCA_PROFILE
-  nca_profile_col <- mapping$NCA_PROFILE
-
-  if (!is.null(nca_profile_col) && nca_profile_col != "" && nca_profile_col != "NA") {
-    dataset <- dataset %>% mutate(NCA_PROFILE = as.factor(.data[[nca_profile_col]]))
+  # If a variable to map is not a column in the data.frame, assume is the value to use for its creation
+  mapping_values <- mapping[!unname(mapping) %in% names(dataset)]
+  for (col in names(mapping_values)) {
+    dataset[[col]] <- mapping_values[[col]]
   }
-
-  if (is.null(mapping$ADOSEDUR)) dataset$ADOSEDUR <- 0
-
+  mapping <- mapping[unname(mapping) %in% names(dataset)]
+  
+  # Apply the changes to the data
   dataset <- dataset %>%
-    .apply_manual_units(mapping, manual_units) %>%
-    relocate(any_of(desired_order)) %>%
-    apply_labels(type = "ADPC")
+    # Rename variables based on mapping instructions
+    dplyr::rename(!!!mapping) %>%
+    # Order the renamed variables based on desired_order
+    select(any_of(desired_order), everything()) %>%
+    # Apply the default ADPC labels
+    apply_labels()
 
+  # Check there are no duplicates
+  # TODO(Gerardo): This perhaps should be apart and outside of the mapping function
   conc_duplicates <- dataset %>%
     group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
     filter(n() > 1) %>%
     slice(1) %>%
     ungroup() %>%
     select(names(dataset))
-
   if (nrow(conc_duplicates) > 0) {
     warning("Duplicate concentration data detected and filtered.")
   }
-
   dataset %>% anti_join(conc_duplicates, by = colnames(conc_duplicates))
-}
-
-#' Internal helper to rename dataset columns based on selected column mappings.
-#'
-#' @param dataset A data frame whose columns are to be renamed.
-#' @param selected_cols A named list of vectors representing mapped columns
-#'
-#' @returns A data frame with renamed columns based on the provided mappings.
-#'
-#' @noRd
-#' @keywords internal
-.rename_columns <- function(dataset, selected_cols) {
-  colnames(dataset) <- sapply(colnames(dataset), function(col) {
-    for (group in names(selected_cols)) {
-      mapped_values <- selected_cols[[group]]
-      if (col %in% mapped_values) {
-        return(names(mapped_values)[which(mapped_values == col)])
-      }
-    }
-    col
-  })
-  dataset
 }
 
 #' Internal helper to check for missing or duplicate column mappings.
 #'
-#' @param selected_cols A named list of vectors representing mapped columns
+#' @param mapping A named list of vectors representing mapped columns
 #'                      grouped by category (e.g., identifiers, dosing, etc.).
 #'
 #' @returns `TRUE` if valid; otherwise triggers notifications and returns `FALSE`.
 #'
 #' @noRd
 #' @keywords internal
-.validate_column_mapping <- function(selected_cols) {
-  flat_cols <- unlist(selected_cols)
-  if (any(flat_cols == "")) {
-    stop("Unmapped columns detected.")
-  }
-
-  if (any(duplicated(flat_cols))) {
-    stop("Duplicate column selection detected.")
-  }
-
+.validate_column_mapping <- function(mapping) {
+  if (any(mapping == "")) stop("Unmapped columns detected.")
+  if (any(duplicated(mapping))) stop("Duplicate column selection detected.")
   TRUE
-}
-
-
-#' Internal helper that adds unit metadata (AVALU, DOSEU, RRLTU) to the dataset
-#' if defined in the `manual_units` list.
-#'
-#' @param dataset A `data.frame` or `tibble` representing the input data.
-#' @param mapping A list of selected values from the UI mapping input.
-#' @param manual_units A named list containing valid unit options.
-#'
-#' @returns A modified `dataset` with updated unit columns if applicable.
-#'
-#' @noRd
-#' @keywords internal
-.apply_manual_units <- function(dataset, mapping, manual_units) {
-  if (mapping$AVALU %in% manual_units$concentration) dataset$AVALU <- mapping$AVALU
-  if (mapping$DOSEU %in% manual_units$dose) dataset$DOSEU <- mapping$DOSEU
-  if (mapping$RRLTU %in% manual_units$time) dataset$RRLTU <- mapping$RRLTU
-  dataset
 }
