@@ -10,7 +10,7 @@
 #' @param old Previous PKNCA data object
 #' @param new New PKNCA data object
 #' @return List with logicals: in_data, in_hl_adj, in_selected_intervals
-detect_pknca_data_changes <- function(old, new, excl_hl_col, incl_hl_col) {
+detect_pknca_data_changes <- function(old, new) {
   excl_hl_col <- new$conc$columns$exclude_half.life
   incl_hl_col <- new$conc$columns$include_half.life
   list(
@@ -64,7 +64,7 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   ) %>%
     select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
     distinct()
-  .update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
+  update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
 }
 
 
@@ -98,7 +98,7 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
       merge(unique(PKNCA::getGroups(new_pknca_data$conc)), all.x = TRUE) %>%
       select(any_of(c(group_vars(new_pknca_data), "start", "end"))) %>%
       distinct()
-    plot_outputs <- .update_plots_with_pknca(
+    plot_outputs <- update_plots_with_pknca(
       new_pknca_data,
       plot_outputs,
       affected_groups
@@ -215,7 +215,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 #' @param data PKNCA data object
 #' @param slopes Data frame of slope rules (TYPE, RANGE, REASON, group columns)
 #' @return Modified data object with updated flags
-.update_pknca_with_rules <- function(data, slopes) {
+update_pknca_with_rules <- function(data, slopes) {
   slope_groups <- intersect(group_vars(data), names(slopes))
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
@@ -254,7 +254,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
 #' @param plot_outputs Named list of current plot outputs
 #' @param intervals_to_update Data frame of intervals to update (default: all in pknca_data)
 #' @return Updated plot_outputs (named list)
-.update_plots_with_pknca <- function(pknca_data, plot_outputs, intervals_to_update = NULL) {
+update_plots_with_pknca <- function(pknca_data, plot_outputs, intervals_to_update = NULL) {
   if (is.null(intervals_to_update)) {
     intervals_to_update <- pknca_data$intervals %>%
       select(any_of(c(group_vars(pknca_data), "start", "end"))) %>%

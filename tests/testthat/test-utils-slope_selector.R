@@ -242,7 +242,7 @@ describe("arrange_plots_by_groups", {
   })
 })
 
-describe(".update_pknca_with_rules", {
+describe("update_pknca_with_rules", {
   old_data <- FIXTURE_PKNCA_DATA
   group1 <- old_data$intervals %>%
     select(any_of(c(group_vars(old_data), "start", "end"))) %>%
@@ -258,8 +258,8 @@ describe(".update_pknca_with_rules", {
       group1
     )
 
-    new_with_incl <- .update_pknca_with_rules(old_data, slopes_incl)
-    new_with_excl <- .update_pknca_with_rules(old_data, slopes_excl)
+    new_with_incl <- update_pknca_with_rules(old_data, slopes_incl)
+    new_with_excl <- update_pknca_with_rules(old_data, slopes_excl)
 
     old_have_points_na <- all(is.na(old_data$conc$data %>%
                                       filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
@@ -280,11 +280,11 @@ describe(".update_pknca_with_rules", {
       data.frame(TYPE = "Invalid", ID = 1, RANGE = "2:4", REASON = "invalid type"),
       group1
     )
-    expect_error(.update_pknca_with_rules(old, slopes_invalid))
+    expect_error(update_pknca_with_rules(old, slopes_invalid))
   })
 })
 
-describe(".update_plots_with_pknca", {
+describe("update_plots_with_pknca", {
   old_data <- FIXTURE_PKNCA_DATA
   old_data$intervals <- old_data$intervals[1:2, ]
   old_plots <- get_halflife_plots(old_data)$plots
@@ -293,12 +293,12 @@ describe(".update_plots_with_pknca", {
   new_data$conc$data$exclude_half.life <- TRUE
 
   it("updates all plots when no intervals are specified", {
-    updated_plots <- .update_plots_with_pknca(new_data, old_plots, NULL)
+    updated_plots <- update_plots_with_pknca(new_data, old_plots, NULL)
     expect_equal(updated_plots[[1]]$x$data[[2]]$marker$symbol, rep("x", 5), ignore_attr = TRUE)
     expect_equal(old_plots[[2]]$x$data[[2]]$marker$symbol, rep("circle", 5), ignore_attr = TRUE)
   })
   it("does not update any plot when the specified intervals are an empty dataframe", {
-    updated_plots <- .update_plots_with_pknca(new_data, old_plots, data.frame())
+    updated_plots <- update_plots_with_pknca(new_data, old_plots, data.frame())
     expect_equal(updated_plots, old_plots)
   })
 })

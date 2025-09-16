@@ -195,6 +195,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' Step 4: Apply filtering based on user selections and partial aucs
 #'
 #' Step 5: Impute start values if requested
+#' 
+#' Step 6: Indicate points excluded / selected manually for half-life
 #'
 #' Note*: The function assumes that the `adnca_data` object has been
 #' created using the `PKNCA_create_data_object()` function.
@@ -207,6 +209,9 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
+#' @param hl_adj_rules A data frame containing half-life adjustment rules. It must
+#' contain group columns and rule specification columns, 
+#' (TYPE: {Inclusion, Exclusion}, RANGE: {start-end}).
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -319,7 +324,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   # Update concentration data to indicate points excluded / selected manually for half-life
   if (!is.null(hl_adj_rules)) {
-    data <- .update_pknca_with_rules(data, hl_adj_rules)
+    data <- update_pknca_with_rules(data, hl_adj_rules)
   }
 
   data
