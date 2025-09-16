@@ -359,10 +359,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'
 #' @export
 PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
-  
+
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
-  
+
   dose_data_to_join <- select(
     pknca_data$dose$data,
     unlist(unname(pknca_data$dose$columns$groups)),
@@ -370,7 +370,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
     pknca_data$dose$columns$dose,
     DOSNOA
   )
-  
+
   results$result <- results$result %>%
     inner_join(
       dose_data_to_join,
@@ -381,14 +381,14 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
-    
+
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
     group_by(across(-c(PPSTRES, PPORRES, exclude))) %>%
     slice_tail(n = 1) %>%
     ungroup()
-  
+
   results
 }
 

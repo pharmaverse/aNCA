@@ -225,7 +225,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         # Filter for requested params based on intervals
         res$result <- res$result %>%
           semi_join(requested_params)
-        
+
         res
       }, error = function(e) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
