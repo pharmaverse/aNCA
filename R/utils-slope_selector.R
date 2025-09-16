@@ -9,7 +9,7 @@
 #' or selected intervals have changed. Used to decide when to update plots.
 #' @param old Previous PKNCA data object
 #' @param new New PKNCA data object
-#' @return List with logicals: in_data, in_hl_adj, in_selected_intervals
+#' @return List with logicals: `in_data`, `in_hl_adj`, `in_selected_intervals`
 detect_pknca_data_changes <- function(old, new) {
   excl_hl_col <- new$conc$columns$exclude_half.life
   incl_hl_col <- new$conc$columns$include_half.life
@@ -131,7 +131,7 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
 #' into a data frame with one row per plot and columns for each key.
 #'
 #' @param named_list A named list or vector, where names are key-value pairs separated by commas.
-#' @return A data frame with columns for each key and a PLOTID column with the original names.
+#' @return A data frame with columns for each key and a `PLOTID` column with the original names.
 parse_plot_names_to_df <- function(named_list) {
   plot_names <- names(named_list)
   parsed <- lapply(plot_names, function(x) {

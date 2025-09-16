@@ -12,7 +12,7 @@ detect_pknca_data_changes(old, new)
 \item{new}{New PKNCA data object}
 }
 \value{
-List with logicals: in_data, in_hl_adj, in_selected_intervals
+List with logicals: \code{in_data}, \code{in_hl_adj}, \code{in_selected_intervals}
 }
 \description{
 These helpers support the slope selection workflow by detecting changes in PKNCA data,

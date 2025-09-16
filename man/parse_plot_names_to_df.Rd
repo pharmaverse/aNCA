@@ -10,7 +10,7 @@ parse_plot_names_to_df(named_list)
 \item{named_list}{A named list or vector, where names are key-value pairs separated by commas.}
 }
 \value{
-A data frame with columns for each key and a PLOTID column with the original names.
+A data frame with columns for each key and a \code{PLOTID} column with the original names.
 }
 \description{
 Converts a named list of plots (with names in the format 'col1: val1, col2: val2, ...')
