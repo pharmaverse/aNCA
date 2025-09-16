@@ -4,16 +4,12 @@
 \alias{detect_pknca_data_changes}
 \title{Slope Selector Utility Functions}
 \usage{
-detect_pknca_data_changes(old, new, excl_hl_col, incl_hl_col)
+detect_pknca_data_changes(old, new)
 }
 \arguments{
 \item{old}{Previous PKNCA data object}
 
 \item{new}{New PKNCA data object}
-
-\item{excl_hl_col}{Name of exclusion column}
-
-\item{incl_hl_col}{Name of inclusion column}
 }
 \value{
 List with logicals: in_data, in_hl_adj, in_selected_intervals
