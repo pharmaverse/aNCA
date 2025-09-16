@@ -247,27 +247,6 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   data
 }
 
-#' Update plots with manual slope rules
-#'
-#' Updates the plot_outputs list by applying manual slopes.
-#' @param pknca_data PKNCA data object
-#' @param manual_slopes Data frame of manual slope rules
-#' @param plot_outputs Named list of current plot outputs
-#' @param groups_to_update Optional: data frame of intervals to update (default: all)
-#' @return Updated plot_outputs (named list)
-.update_plots_with_rules <- function(
-  pknca_data, manual_slopes, plot_outputs, groups_to_update = NULL
-) {
-  pknca_for_plots <- .update_pknca_with_rules(pknca_data, manual_slopes)
-  if (is.null(groups_to_update)) {
-    groups_to_update <- manual_slopes %>%
-      select(any_of(c(group_vars(pknca_for_plots), "NCA_PROFILE"))) %>%
-      distinct()
-  }
-  if (nrow(groups_to_update) == 0) return(plot_outputs)
-  .update_plots_with_pknca(pknca_for_plots, plot_outputs, intervals_to_update = groups_to_update)
-}
-
 #' Update plots with PKNCA data (for affected intervals)
 #'
 #' Regenerates plots for the specified intervals in the plot_outputs list.
