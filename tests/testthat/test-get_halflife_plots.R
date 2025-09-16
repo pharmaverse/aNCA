@@ -31,7 +31,7 @@ describe("get_halflife_plot", {
 
   it("marker colors and shapes - exclusion of a lambda.z point", {
     pknca_excl <- base_pknca
-    pknca_excl$intervals <- pknca_excl$intervals[2,]
+    pknca_excl$intervals <- pknca_excl$intervals[2, ]
     pknca_excl_with_excl <- pknca_excl
     pknca_excl_with_excl$conc$data <- pknca_excl$conc$data %>%
       mutate(
@@ -45,27 +45,27 @@ describe("get_halflife_plot", {
     plots_with_excl <- get_halflife_plots(pknca_excl_with_excl)[["plots"]]
 
     plots_details <- plots[[1]]$x$data[[2]]$marker
-    expected_plots_details <- list(
+    exp_plots_details <- list(
       color = c("red", "red", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
     plots_with_excl_details <- plots_with_excl[[1]]$x$data[[2]]$marker
-    expected_plots_details_with_excl <- list(
+    exp_plots_details_with_excl <- list(
       color = c("red", "red", "red", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "x", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
 
-    expect_equal(plots_details, expected_plots_details, ignore_attr = TRUE)
-    expect_equal(plots_with_excl_details, expected_plots_details_with_excl, ignore_attr = TRUE)
+    expect_equal(plots_details, exp_plots_details, ignore_attr = TRUE)
+    expect_equal(plots_with_excl_details, exp_plots_details_with_excl, ignore_attr = TRUE)
   })
 
   it("marker colors and shapes - inclusion of lambda.z points", {
     pknca_incl <- base_pknca
-    pknca_incl$intervals <- pknca_incl$intervals[3,]
+    pknca_incl$intervals <- pknca_incl$intervals[3, ]
     pknca_incl$conc$data$exclude_half.life <- FALSE
     pknca_incl$conc$data$include_half.life <- NA
     pknca_incl_with_incl <- pknca_incl
@@ -81,39 +81,39 @@ describe("get_halflife_plot", {
     plots_with_incl <- get_halflife_plots(pknca_incl_with_incl)[["plots"]]
 
     plots_details <- plots[[1]]$x$data[[2]]$marker
-    expected_plots_details <- list(
+    exp_plots_details <- list(
       color = c("red", "red", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
     plots_with_incl_details <- plots_with_incl[[1]]$x$data[[2]]$marker
-    expected_plots_details_with_incl <- list(
+    exp_plots_details_with_incl <- list(
       color = c("green", "green", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
 
-    expect_equal(plots_details, expected_plots_details, ignore_attr = TRUE)
-    expect_equal(plots_with_incl_details, expected_plots_details_with_incl, ignore_attr = TRUE)
+    expect_equal(plots_details, exp_plots_details, ignore_attr = TRUE)
+    expect_equal(plots_with_incl_details, exp_plots_details_with_incl, ignore_attr = TRUE)
   })
 
   it("marker colors and shapes - exclusion column missing still works", {
     pknca_no_excl_col <- base_pknca
-    pknca_no_excl_col$intervals <- pknca_no_excl_col$intervals[2,]
+    pknca_no_excl_col$intervals <- pknca_no_excl_col$intervals[2, ]
     pknca_no_excl_col$conc$data$exclude_half.life <- NULL
     pknca_no_excl_col$conc$columns$exclude_half.life <- NULL
     plots <- get_halflife_plots(pknca_no_excl_col)[["plots"]]
 
     plots_details <- plots[[1]]$x$data[[2]]$marker
-    expected_plots_details <- list(
+    exp_plots_details <- list(
       color = c("red", "red", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
-    expect_equal(plots_details, expected_plots_details, ignore_attr = TRUE)
+    expect_equal(plots_details, exp_plots_details, ignore_attr = TRUE)
   })
 
 })

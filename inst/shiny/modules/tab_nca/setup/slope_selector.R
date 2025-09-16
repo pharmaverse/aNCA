@@ -140,7 +140,7 @@ slope_selector_server <- function( # nolint
         # Modify plots with new half-life adjustments (inclusions/exclusions)
         plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
       } else if (changes$in_selected_intervals) {
-        # Add/remove plots based on interval changes (analyte, profile, specimen selection from setup.R)
+        # Add/remove plots based on intervals (analyte, profile, specimen selection from setup.R)
         plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
       }
 
@@ -197,7 +197,6 @@ slope_selector_server <- function( # nolint
           # Display only the plots for the current page
           .[page_search$page_start():page_search$page_end()]
       })
-#      session$userData$results$slope_selector <- plot_outputs()
     })
 
     # Creates an initial version of the manual slope adjustments table with pknca_data
