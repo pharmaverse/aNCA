@@ -432,12 +432,12 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       },
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
+        grepl("INT", PPTESTCD),
         convert_to_iso8601_duration(start - .[[dose_time_col]], .[[conc_timeu_col]]),
         NA_character_
       ),
       PPENINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
+        grepl("INT", PPTESTCD),
         convert_to_iso8601_duration(end - .[[dose_time_col]], .[[conc_timeu_col]]),
         NA_character_
       ),
