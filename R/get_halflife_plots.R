@@ -172,7 +172,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   return(list(plots = plot_list, data = data_list))
 }
 
-# Internal helper for plotting a single half-life plot
+#' Internal helper for plotting a single half-life plot
+#'
+#' Generates a single plotly for NCA half-life visualization, with a fit line and scatter points.
 #'
 #' @keywords internal
 #' @param fit_line_data Data frame for the fit line (must have columns for time and y)
