@@ -1,31 +1,3 @@
-DATA_FIXTURE <- list(
-  conc = list(
-    data = data.frame(
-      STUDYID = 1,
-      PCSPEC = 1,
-      USUBJID = rep(1:4, each = 4),
-      NCA_PROFILE = 1,
-      IX = rep(1:4, times = 4),
-      PARAM = rep("A", 16),
-      is.included.hl = FALSE,
-      is.excluded.hl = FALSE,
-      exclude_half.life = FALSE,
-      REASON = ""
-    )
-  )
-)
-
-DOSNOS_FIXTURE <- data.frame(
-  USUBJID = rep(1:4, each = 1),
-  PARAM = rep("A", 4),
-  PCSPEC = rep(1, 4),
-  NCA_PROFILE = rep(1, 4)
-)
-
-slope_groups <- c("USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE")
-
-
-
 EXISTING_FIXTURE <- data.frame(
   TYPE = "Exclusion",
   USUBJID = 1,
@@ -46,9 +18,9 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "1:3"
     )
-
+    
     expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
-
+    
     # different USUBJID #
     NEW <- data.frame(
       TYPE = "Exclusion",
@@ -58,9 +30,9 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "1:3"
     )
-
+    
     expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
-
+    
     # different NCA_PROFILE #
     NEW <- data.frame(
       TYPE = "Exclusion",
@@ -70,11 +42,11 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "1:3"
     )
-
+    
     expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
-
+    
   })
-
+  
   it("should remove overlapping points if no new points are detected", {
     NEW <- data.frame(
       TYPE = "Exclusion",
@@ -84,9 +56,9 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "4:5"
     )
-
+    
     expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$RANGE, "3,6")
-
+    
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
@@ -95,11 +67,11 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "3:4"
     )
-
+    
     expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$RANGE, "5:6")
-
+    
   })
-
+  
   it("should add new points of partial overlap is detected", {
     NEW <- data.frame(
       TYPE = "Exclusion",
@@ -109,11 +81,11 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "4:9"
     )
-
+    
     expect_equal(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)$RANGE, "3:9")
-
+    
   })
-
+  
   it("should remove full row if full range of rule is removed", {
     NEW <- data.frame(
       TYPE = "Exclusion",
@@ -123,11 +95,11 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "3:6"
     )
-
+    
     expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 0)
-
+    
   })
-
+  
   it("should warn if more than one range for single subject, profile and rule type is detected", {
     EXISTING <- data.frame(
       TYPE = "Exclusion",
@@ -137,12 +109,12 @@ describe("check_slope_rule_overlap", {
       PCSPEC = 1,
       RANGE = "3:6"
     )
-
+    
     DUPLICATE <- EXISTING %>%
       mutate(
         RANGE = "4:7"
       )
-
+    
     expect_warning(
       check_slope_rule_overlap(rbind(EXISTING, DUPLICATE), DUPLICATE),
       "More than one range for single subject, profile and rule type detected."
@@ -151,49 +123,50 @@ describe("check_slope_rule_overlap", {
 })
 
 describe("detect_pknca_data_changes", {
-  it("detects changes in data, hl_adj, and intervals", {
-    # Setup minimal old and new objects
-
-    old <- FIXTURE_PKNCA_DATA
-
-    # No previous object
-    new <- old
-    res <- detect_pknca_data_changes(NULL, new, "exclude_half.life", "include_half.life")
+  
+  old_data <- FIXTURE_PKNCA_DATA
+  
+  it("detects change in data when there is no previous object", {
+    new_data <- old_data
+    res <- detect_pknca_data_changes(NULL, new_data, "exclude_half.life", "include_half.life")
     expect_true(res$in_data)
-    
-    # No change
-    res <- detect_pknca_data_changes(old, old, "exclude_half.life", "include_half.life")
+  })
+  
+  it("detects no change when old and new are identical", {
+    res <- detect_pknca_data_changes(old_data, old_data, "exclude_half.life", "include_half.life")
     expect_false(res$in_data)
     expect_false(res$in_hl_adj)
     expect_false(res$in_selected_intervals)
-    
-    # Change in data
-    new2 <- new
-    new2$conc$data$VAL[1] <- 99
-    res2 <- detect_pknca_data_changes(old, new2, "exclude_half.life", "include_half.life")
-    expect_true(res2$in_data)
-
-    # Change in hl_adj
-    new3 <- new
-    new3$conc$data$exclude_half.life[2] <- TRUE
-    res3 <- detect_pknca_data_changes(old, new3, "exclude_half.life", "include_half.life")
-    expect_true(res3$in_hl_adj)
-
-    # Change in intervals
-    new4 <- new
-    new4$intervals <- data.frame(ID = 1:4)
-    res4 <- detect_pknca_data_changes(old, new4, "exclude_half.life", "include_half.life")
-    expect_true(res4$in_selected_intervals)
-
+  })
+  
+  it("detects change in data", {
+    changed_data <- old_data
+    changed_data$conc$data$VAL[1] <- 99
+    res <- detect_pknca_data_changes(old_data, changed_data, "exclude_half.life", "include_half.life")
+    expect_true(res$in_data)
+  })
+  
+  it("detects change in hl_adj", {
+    changed_hl <- old_data
+    changed_hl$conc$data$exclude_half.life[2] <- TRUE
+    res <- detect_pknca_data_changes(old_data, changed_hl, "exclude_half.life", "include_half.life")
+    expect_true(res$in_hl_adj)
+  })
+  
+  it("detects change in intervals", {
+    changed_intervals <- old_data
+    changed_intervals$intervals <- data.frame(ID = 1:4)
+    res <- detect_pknca_data_changes(old_data, changed_intervals, "exclude_half.life", "include_half.life")
+    expect_true(res$in_selected_intervals)
   })
 })
 
 describe("handle_hl_adj_change", {
   it("updates only affected groups in plot_outputs", {
     # Setup dummy PKNCA data objects and plot_outputs
-    old_pknca_data <- FIXTURE_PKNCA_DATA
-    new_pknca_data <- old_pknca_data
-    new_pknca_data$conc$data <- new_pknca_data$conc$data %>%
+    old_data <- FIXTURE_PKNCA_DATA
+    new_data <- old_data
+    new_data$conc$data <- new_data$conc$data %>%
       mutate(
         exclude_half.life = ifelse(
           USUBJID == unique(USUBJID)[3] & AFRLT == 4.5,
@@ -201,61 +174,58 @@ describe("handle_hl_adj_change", {
           exclude_half.life
         )
       )
-
-    old_plots <- get_halflife_plots(old_pknca_data)$plots
-
-    # Patch .update_plots_with_pknca to just return a marker
-    new_plots <- handle_hl_adj_change(new_pknca_data, old_pknca_data, old_plots)
     
+    # Create plots using the original and updated PKNCA data
+    old_plots <- get_halflife_plots(old_data)$plots
+    new_plots <- handle_hl_adj_change(new_data, old_data, old_plots)
+    
+    # Check that the plots for other groups remain unchanged
     ix_unchanged_plots <- setdiff(seq_len(length(new_plots)), 4)
     expect_equal(new_plots[ix_unchanged_plots], old_plots[ix_unchanged_plots])
     
+    # Define the expected differences in the original and updated plots
     old_plots_exp_details <- list(
       color = c("red", "red", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
-
     new_plots_exp_details <- list(
       color = c("red", "green", "green", "red", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "x", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
-    
+    # Check that the affected plot has been updated correctly
     expect_equal(old_plots[[4]]$x$data[[2]]$marker, old_plots_exp_details, ignore_attr = TRUE)
     expect_equal(new_plots[[4]]$x$data[[2]]$marker, new_plots_exp_details, ignore_attr = TRUE)
   })
 })
 
 describe("handle_interval_change", {
+  old_data <- FIXTURE_PKNCA_DATA
+  old_data$intervals <- old_data$intervals[1:3, ]
+  old_plots <- get_halflife_plots(old_data)$plots
+
   it("removes plots when intervals are removed", {
-    new_pknca_data <- FIXTURE_PKNCA_DATA
-    new_pknca_data$intervals <- new_pknca_data$intervals[2:3, ]
-    old_pknca_data <- FIXTURE_PKNCA_DATA
-
-    old_plots <- get_halflife_plots(old_pknca_data)$plots
-    new_plots <- handle_interval_change(new_pknca_data, old_pknca_data, old_plots)
-
-    expect_equal(length(old_plots), 13)
-    expect_equal(length(new_plots), 2)
+    new_data <- FIXTURE_PKNCA_DATA
+    new_data$intervals <- new_data$intervals[1, ]
+    new_plots <- handle_interval_change(new_data, old_data, old_plots)
+    
+    expect_equal(length(old_plots), 3)
+    expect_equal(length(new_plots), 1)
     expect_equal(old_plots[names(new_plots)], new_plots)
   })
-
+  
   it("adds plots when intervals are added", {
-    old_pknca_data <- FIXTURE_PKNCA_DATA
-    old_pknca_data$intervals <- old_pknca_data$intervals[2:3, ]
-    new_pknca_data <- FIXTURE_PKNCA_DATA
-
-    old_plots <- get_halflife_plots(old_pknca_data)$plots
-    new_plots <- handle_interval_change(new_pknca_data, old_pknca_data, old_plots)
-
-    expect_equal(length(old_plots), 2)
-    expect_equal(length(new_plots), 13)
+    new_data <- FIXTURE_PKNCA_DATA
+    new_data$intervals <- new_data$intervals[1:4, ]
+    new_plots <- handle_interval_change(new_data, old_data, old_plots)
+    
+    expect_equal(length(old_plots), 3)
+    expect_equal(length(new_plots), 4)
     expect_equal(new_plots[names(old_plots)], old_plots)
   })
-
 })
 
 describe("arrange_plots_by_groups", {
@@ -265,21 +235,18 @@ describe("arrange_plots_by_groups", {
       "B: 1, A: 2" = "plot2",
       "B: 1, A: 1" = "plot3"
     )
-    # Should order by B then A
     ordered <- arrange_plots_by_groups(named_list, c("B", "A"))
     expect_equal(names(ordered), c("B: 1, A: 1", "B: 1, A: 2", "B: 2, A: 1"))
-    # Should order by A then B
     ordered2 <- arrange_plots_by_groups(named_list, c("A", "B"))
     expect_equal(names(ordered2), c("B: 1, A: 1", "B: 2, A: 1", "B: 1, A: 2"))
   })
 })
 
 describe(".update_pknca_with_rules", {
-  old <- FIXTURE_PKNCA_DATA
-  group1 <- old$intervals %>% select(any_of(c(group_vars(old), "start", "end"))) %>% .[1,]
+  old_data <- FIXTURE_PKNCA_DATA
+  group1 <- old_data$intervals %>% select(any_of(c(group_vars(old_data), "start", "end"))) %>% .[1,]
 
   it("applies selection and exclusion rules to data", {
-    # Selection rule
     slopes_incl <- cbind(
       data.frame(TYPE = "Selection", ID = 1, RANGE = "2:4", REASON = "because I want to test it :)"),
       group1
@@ -288,25 +255,25 @@ describe(".update_pknca_with_rules", {
       data.frame(TYPE = "Exclusion", ID = 1, RANGE = "2:4", REASON = "there are always good reasons"),
       group1
     )
-    new_with_incl <- .update_pknca_with_rules(old, slopes_incl)
-    new_with_excl <- .update_pknca_with_rules(old, slopes_excl)
-
-    old_have_points_na <- all(is.na(old$conc$data %>%
+    
+    new_with_incl <- .update_pknca_with_rules(old_data, slopes_incl)
+    new_with_excl <- .update_pknca_with_rules(old_data, slopes_excl)
+    
+    old_have_points_na <- all(is.na(old_data$conc$data %>%
                                       filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
                                       pull(include_half.life))
-                             )
+    )
     new_have_points_incl <- all(new_with_incl$conc$data %>%
-                                filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
-                                pull(include_half.life))
-
+                                  filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+                                  pull(include_half.life))
+    
     new_have_points_excl <- all(new_with_excl$conc$data %>%
-                                filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
-                                pull(exclude_half.life))
-
+                                  filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+                                  pull(exclude_half.life))
+    
     expect_true(all(old_have_points_na, new_have_points_incl, new_have_points_excl))
   })
   it("returns an error for invalid rule types", {
-    # Invalid rule will throw an error
     slopes_invalid <- cbind(
       data.frame(TYPE = "Invalid", ID = 1, RANGE = "2:4", REASON = "invalid type"),
       group1
@@ -316,17 +283,20 @@ describe(".update_pknca_with_rules", {
 })
 
 describe(".update_plots_with_pknca", {
-  it("updates plots for affected intervals", {
-    data <- FIXTURE_PKNCA_DATA
-    # group_vars <- function(x) "ID"
-    # assignInNamespace("group_vars", group_vars, ns = "globalenv")
-    # get_halflife_plots <- function(p) list(plots = list("ID: 1, start: 1, end: 2" = "plot1", "ID: 2, start: 2, end: 3" = "plot2", "ID: 3, start: 3, end: 4" = "plot3"))
-    # assignInNamespace("get_halflife_plots", get_halflife_plots, ns = "globalenv")
-    # plot_outputs <- list("ID: 1, start: 1, end: 2" = "oldplot1", "ID: 2, start: 2, end: 3" = "oldplot2")
-    # intervals_to_update <- data.frame(ID = 2:3, start = 2:3, end = 3:4)
-    # updated <- .update_plots_with_pknca(data, plot_outputs, intervals_to_update)
-    # expect_equal(updated[["ID: 2, start: 2, end: 3"]], "plot2")
-    # expect_equal(updated[["ID: 3, start: 3, end: 4"]], "plot3")
-    # expect_equal(updated[["ID: 1, start: 1, end: 2"]], "oldplot1")
+  old_data <- FIXTURE_PKNCA_DATA
+  old_data$intervals <- old_data$intervals[1:2, ]
+  old_plots <- get_halflife_plots(old_data)$plots
+
+  new_data <- old_data
+  new_data$conc$data$exclude_half.life <- TRUE
+
+  it("updates all plots when no intervals are specified", {
+    updated_plots <- .update_plots_with_pknca(new_data, old_plots, NULL)
+    expect_equal(updated_plots[[1]]$x$data[[2]]$marker$symbol, rep("x", 5), ignore_attr = TRUE)
+    expect_equal(old_plots[[2]]$x$data[[2]]$marker$symbol, rep("circle", 5), ignore_attr = TRUE)
+  })
+  it("does not update any plot when the specified intervals are an empty dataframe", {
+    updated_plots <- .update_plots_with_pknca(new_data, old_plots, data.frame())
+    expect_equal(updated_plots, old_plots)
   })
 })
