@@ -15,6 +15,9 @@
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
+
+  tabs <- c("Upload", "Filtering", "Mapping", "Preview")
+
   tagList(
     shinyjs::useShinyjs(),
     div(
@@ -27,21 +30,24 @@ tab_data_ui <- function(id) {
             id = ns("data_navset"),
             nav_panel(
               "Upload",
+              stepper_ui("Upload", tabs),
               data_upload_ui(ns("raw_data"))
             ),
             nav_panel(
               "Filtering",
+              stepper_ui("Filtering", tabs),
               data_filtering_ui(ns("data_filtering"))
             ),
             nav_panel(
               "Mapping",
+              stepper_ui("Mapping", tabs),
               data_mapping_ui(ns("column_mapping"))
             ),
             nav_panel(
               "Preview",
               id = ns("data_navset-review"),
               div(
-                stepper_ui("Preview"),
+                stepper_ui("Preview", tabs),
                 div(
                   uiOutput(ns("processed_data_message")),
                   reactable_ui(ns("data_processed"))
