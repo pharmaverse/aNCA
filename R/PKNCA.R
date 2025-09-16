@@ -195,7 +195,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' Step 4: Apply filtering based on user selections and partial aucs
 #'
 #' Step 5: Impute start values if requested
-#' 
+#'
 #' Step 6: Indicate points excluded / selected manually for half-life
 #'
 #' Note*: The function assumes that the `adnca_data` object has been
@@ -210,7 +210,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
 #' @param hl_adj_rules A data frame containing half-life adjustment rules. It must
-#' contain group columns and rule specification columns, 
+#' contain group columns and rule specification columns,
 #' (TYPE: {Inclusion, Exclusion}, RANGE: {start-end}).
 #'
 #' @returns A fully configured `PKNCAdata` object.
