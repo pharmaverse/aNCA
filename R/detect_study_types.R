@@ -36,7 +36,7 @@
 #'   the route is not extravascular, and ADOSEDUR == 0.
 #'  - If none of these conditions are met, the type is marker as "Unknown".
 #'
-#' @returns A data frame summarizing the detected study types,
+#' @returns A data frame with the unique combinations of study types,
 #' including the grouping columns and the identified type.
 #'
 #' @importFrom dplyr group_by mutate case_when ungroup
