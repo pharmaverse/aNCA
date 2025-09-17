@@ -4,40 +4,29 @@
 \alias{apply_mapping}
 \title{Apply UI-Based Column Mapping to a Dataset}
 \usage{
-apply_mapping(
-  dataset,
-  mapping,
-  manual_units,
-  column_groups,
-  desired_order,
-  silent = FALSE
-)
+apply_mapping(dataset, mapping, desired_order, silent = TRUE)
 }
 \arguments{
 \item{dataset}{A data frame containing the raw data to be transformed.}
 
 \item{mapping}{A named list of column mappings.}
 
-\item{manual_units}{A named list containing valid unit options for different
-variable types (e.g., \code{concentration}, \code{dose}, \code{time}).}
-
-\item{column_groups}{A named list where names are group categories
-(e.g., "Group Identifiers", "Sample Variables") and values are vectors
-of column names belonging to each group.}
-
 \item{desired_order}{A character vector specifying the desired column order
 in the output dataset.}
 
 \item{silent}{Boolean, whether to print message with applied mapping.
-Defaults to \code{FALSE}.}
+Defaults to \code{TRUE}.}
 }
 \value{
 A transformed data frame with:
 \itemize{
 \item Renamed columns according to user mappings
-\item Unit columns updated (if user-specified units are in \code{manual_units})
-\item Concentration duplicates removed
+\item Created columns for mapped non-existent variables (e.g., \code{mg/L} in \code{AVALU})
+\item Created columns for unmapped required variables (e.g., \code{ADOSEDUR})
+\item Ordered columns as specified
 \item Labels applied to columns (via \code{apply_labels()})
+\item Concentration duplicates removed based on key identifiers:
+\code{AFRLT}, \code{STUDYID}, \code{PCSPEC}, \code{DRUG}, \code{USUBJID}, and \code{PARAM}
 }
 }
 \description{
@@ -53,6 +42,5 @@ and removes detected duplicate concentration records.
 \item If \code{ADOSEDUR} is not mapped, it is assigned a value of \code{0}.
 \item Removes concentration data duplicates using all columns except \code{ARRLT}, \code{NRRLT},
 and \code{NCA_PROFILE}.
-\item Uses global objects like \code{MAPPING_COLUMN_GROUPS}, \code{MAPPING_DESIRED_ORDER}, and \code{LABELS}.
 }
 }
