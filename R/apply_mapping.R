@@ -8,55 +8,49 @@
 #'
 #' @param dataset A data frame containing the raw data to be transformed.
 #' @param mapping A named list of column mappings.
-#' @param manual_units A named list containing valid unit options for different
-#'                     variable types (e.g., `concentration`, `dose`, `time`).
-#' @param column_groups A named list where names are group categories
-#'                      (e.g., "Group Identifiers", "Sample Variables") and values are vectors
-#'                      of column names belonging to each group.
 #' @param desired_order A character vector specifying the desired column order
 #'                      in the output dataset.
 #' @param silent Boolean, whether to print message with applied mapping.
-#'               Defaults to `FALSE`.
+#'               Defaults to `TRUE`.
 #'
 #' @returns A transformed data frame with:
 #'   - Renamed columns according to user mappings
-#'   - Unit columns updated (if user-specified units are in `manual_units`)
-#'   - Concentration duplicates removed
+#'   - Created columns for mapped non-existent variables (e.g., `mg/L` in `AVALU`)
+#'   - Created columns for unmapped required variables (e.g., `ADOSEDUR`)
+#'   - Ordered columns as specified
 #'   - Labels applied to columns (via `apply_labels()`)
+#'   - Concentration duplicates removed based on key identifiers:
+#'   `AFRLT`, `STUDYID`, `PCSPEC`, `DRUG`, `USUBJID`, and `PARAM`
 #'
 #' @details
 #' - Validates that all required columns are mapped and no duplicates exist.
 #' - If `ADOSEDUR` is not mapped, it is assigned a value of `0`.
 #' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`,
 #'  and `NCA_PROFILE`.
-#' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
 #' @export
-apply_mapping <- function(
-  dataset, mapping,
-  manual_units = NULL, column_groups = NULL, # Not used anymore
-  desired_order, silent = FALSE
+apply_mapping <- function(dataset, mapping, desired_order, silent = TRUE
 ) {
 
   if (!silent) {
     paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") |>
       message()
   }
-  if (!.validate_column_mapping(mapping)) return(NULL)
+  .validate_column_mapping(mapping)
 
   ####### TODO (Gerardo): This would be better to be explicit outside the function
   # Grouping_Variables should not be renamed
-  mapping <- mapping[names(mapping) != "Grouping_Variables"]   # TODO: Don't include in mapping arg
+  mapping <- mapping[names(mapping) != "Grouping_Variables"] # TODO: Don't include in mapping arg
   # Special case: If ADOSEDUR is not mapped, we assume is 0
-  if (is.null(mapping$ADOSEDUR)) dataset$ADOSEDUR <- 0         # TODO: Make it default in select Input
+  if (is.null(mapping$ADOSEDUR)) dataset$ADOSEDUR <- 0       # TODO: Make it default in select
   ################################################################################
 
-  # If a variable to map is not a column in the data.frame, assume is the value to use for its creation
+  # If a variable to map is not a column in the data, assume is the value to use for its creation
   mapping_values <- mapping[!unname(mapping) %in% names(dataset)]
   for (col in names(mapping_values)) {
     dataset[[col]] <- mapping_values[[col]]
   }
   mapping <- mapping[unname(mapping) %in% names(dataset)]
-  
+
   # Apply the changes to the data
   dataset <- dataset %>%
     # Rename variables based on mapping instructions
@@ -66,18 +60,21 @@ apply_mapping <- function(
     # Apply the default ADPC labels
     apply_labels()
 
+  # Special case: make NCA_PROFILE a factor. TODO: Try make it in the mapping obj
+  if (!is.null(dataset$NCA_PROFILE)) dataset[["NCA_PROFILE"]] <- as.factor(dataset[["NCA_PROFILE"]])
+
   # Check there are no duplicates
-  # TODO(Gerardo): This perhaps should be apart and outside of the mapping function
-  conc_duplicates <- dataset %>%
-    group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
-    filter(n() > 1) %>%
+  # TODO(Gerardo): This perhaps should be apart and outside of the mapping function (PKNCA obj)
+  filt_duplicates_dataset <- dataset %>%
+    group_by(across(any_of(c("AFRLT", "STUDYID", "PCSPEC", "DRUG", "USUBJID", "PARAM")))) %>%
     slice(1) %>%
     ungroup() %>%
-    select(names(dataset))
-  if (nrow(conc_duplicates) > 0) {
+    as.data.frame()
+
+  if (nrow(filt_duplicates_dataset) < nrow(dataset)) {
     warning("Duplicate concentration data detected and filtered.")
   }
-  dataset %>% anti_join(conc_duplicates, by = colnames(conc_duplicates))
+  filt_duplicates_dataset
 }
 
 #' Internal helper to check for missing or duplicate column mappings.
