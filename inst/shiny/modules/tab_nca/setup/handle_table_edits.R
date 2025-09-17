@@ -49,7 +49,7 @@ handle_table_edits_server <- function(
     slopes_pknca_groups <- reactive({
       req(mydata())
       mydata()$conc$data %>%
-        select(any_of(c(group_vars(mydata()), "NCA_PROFILE")))
+        select(any_of(c(group_vars(mydata()))))
     })
 
     # manual_slopes: stores the current table of user rules (inclusion/exclusion)
