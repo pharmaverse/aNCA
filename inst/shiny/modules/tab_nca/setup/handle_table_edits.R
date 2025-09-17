@@ -48,7 +48,7 @@ handle_table_edits_server <- function(
     # Get group columns for the current PKNCA data (for table structure)
     slopes_pknca_groups <- reactive({
       req(mydata())
-      mydata()$conc$data %>%
+      mydata()$intervals %>%
         select(any_of(c(group_vars(mydata()))))
     })
 
