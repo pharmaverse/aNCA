@@ -259,9 +259,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         apply_mapping(
           adnca_data(),
           mapping_,
-          MANUAL_UNITS,
-          MAPPING_COLUMN_GROUPS,
-          MAPPING_DESIRED_ORDER
+          MAPPING_DESIRED_ORDER,
+          silent = FALSE
         )
       }, warning = function(w) {
         log_warn(conditionMessage(w))
@@ -270,7 +269,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       }, error = function(e) {
         log_error(conditionMessage(e))
         showNotification(conditionMessage(e), type = "error", duration = NULL)
-        return(NULL)
+        NULL
       })
     }) |>
       bindEvent(trigger(), ignoreInit = TRUE)
