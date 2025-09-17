@@ -436,3 +436,31 @@ describe("select_level_grouping_cols", {
     expect_equal(result, data["d"])
   })
 })
+
+describe("checks_before_running_nca", {
+  pknca_data <- FIXTURE_PKNCA_DATA
+
+  it("returns the input object if no issues are found", {
+    # Without exclusions for half-life
+    result <- checks_before_running_nca(pknca_data)
+    expect_identical(result, pknca_data)
+
+    # With exclusions for half-life (with REASON values)
+    excl_hl_col <- pknca_data$conc$columns$exclude_half.life
+    pknca_data$conc$data[1, excl_hl_col] <- TRUE
+    pknca_data$conc$data$REASON <- "Test reason"
+    result <- checks_before_running_nca(pknca_data)
+    expect_identical(result, pknca_data)
+  })
+
+  it("throws an error if exclusions for half-life do not include a REASON value", {
+    excl_hl_col <- pknca_data$conc$columns$exclude_half.life
+    pknca_data$conc$data[1, excl_hl_col] <- TRUE
+    pknca_data$conc$data$REASON <- ""
+
+    expect_error(
+      checks_before_running_nca(pknca_data, exclusions_have_reasons = TRUE),
+      "No reason provided for the following half-life exclusions:"
+    )
+  })
+})
