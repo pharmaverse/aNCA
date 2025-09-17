@@ -26,13 +26,15 @@ describe("apply_mapping", {
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df, expected_df)
   })
-  
-  it ("informs of the changes when silent is FALSE", {
+
+  it("informs of the changes when silent is FALSE", {
     test_df <- expected_df
     names(test_df) <- c("id", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
     mapping <- as.list(setNames(names(test_df), names(expected_df)))
     expect_message(
-      apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order, silent = FALSE),
+      apply_mapping(
+        dataset = test_df, mapping = mapping, desired_order = desired_order, silent = FALSE
+      ),
       message(paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n"))
     )
   })
