@@ -9,7 +9,7 @@ checks_before_running_nca(processed_pknca_data, exclusions_have_reasons = TRUE)
 \arguments{
 \item{processed_pknca_data}{A processed PKNCA data object.}
 
-\item{exclusions_have_reasons}{Logical; if TRUE, check that all exclusions have a reason (default: TRUE).}
+\item{exclusions_have_reasons}{Logical; Check that all exclusions have a reason (default: TRUE).}
 }
 \value{
 The processed_pknca_data object (input), if checks are successful.
@@ -24,7 +24,7 @@ and prints the affected rows (group columns and time column).
 }
 \details{
 \itemize{
-\item If any excluded half-life points are missing a reason, an error is thrown listing the affected rows.
+\item If any excluded half-life points are missing a reason, an error is thrown.
 \item If no exclusions or all have reasons, the function returns the input object.
 \item Used to enforce good practice/documentation before NCA calculation.
 }

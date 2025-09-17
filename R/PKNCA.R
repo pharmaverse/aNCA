@@ -717,12 +717,12 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 ##' and prints the affected rows (group columns and time column).
 ##'
 ##' @param processed_pknca_data A processed PKNCA data object.
-##' @param exclusions_have_reasons Logical; if TRUE, check that all exclusions have a reason (default: TRUE).
+##' @param exclusions_have_reasons Logical; Check that all exclusions have a reason (default: TRUE).
 ##'
 ##' @return The processed_pknca_data object (input), if checks are successful.
 ##'
 ##' @details
-##' - If any excluded half-life points are missing a reason, an error is thrown listing the affected rows.
+##' - If any excluded half-life points are missing a reason, an error is thrown.
 ##' - If no exclusions or all have reasons, the function returns the input object.
 ##' - Used to enforce good practice/documentation before NCA calculation.
 ##'
@@ -737,7 +737,7 @@ checks_before_running_nca <- function(processed_pknca_data, exclusions_have_reas
     time_col <- processed_pknca_data$conc$columns$time
     if (!is.null(excl_hl_col)) {
       missing_reasons <- data_conc[[excl_hl_col]] & nchar(data_conc[["REASON"]]) == 0
-      missing_reasons_rows <- data_conc[missing_reasons,] %>%
+      missing_reasons_rows <- data_conc[missing_reasons, ] %>%
         select(any_of(c(conc_groups, time_col)))
 
       if (nrow(missing_reasons_rows) > 0) {
