@@ -96,14 +96,18 @@ setup_server <- function(id, data, adnca_data) {
       base_pknca_data
     })
 
-    parameters_output <- parameter_selection_server("nca_setup_parameter", base_pknca_data, parameters_override)
-    
+    parameters_output <- parameter_selection_server(
+      "nca_setup_parameter",
+      base_pknca_data,
+      parameters_override
+    )
+
     final_settings <- reactive({
       req(settings(), parameters_output$selections())
-      
+
       current_settings <- settings()
       current_settings$parameter_selections <- parameters_output$selections()
-      
+
       current_settings
     })
 
