@@ -213,7 +213,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         # Reshape intervals, filter for TRUE
         requested_params <- res$data$intervals %>%
           pivot_longer(
-            cols = where(is.logical),
+            cols = any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))),
             names_to = "PPTESTCD",
             values_to = "is_requested"
           ) %>%
