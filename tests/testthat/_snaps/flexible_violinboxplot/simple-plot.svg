@@ -44,10 +44,10 @@
 <line x1='455.74' y1='521.37' x2='455.74' y2='521.37' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt;' />
 <polygon points='355.46,521.37 355.46,521.37 556.01,521.37 556.01,521.37 355.46,521.37 ' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter; fill: #FFFFFF;' />
 <line x1='355.46' y1='521.37' x2='556.01' y2='521.37' style='stroke-width: 2.13; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter;' />
-<circle cx='176.98' cy='204.81' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
-<circle cx='203.76' cy='521.37' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
-<circle cx='183.47' cy='46.53' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
-<circle cx='476.22' cy='521.37' r='1.95' style='stroke-width: 0.71; stroke: #BEAED4; fill: #BEAED4;' />
+<circle cx='173.19' cy='204.81' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
+<circle cx='208.90' cy='521.37' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
+<circle cx='181.85' cy='46.53' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
+<circle cx='483.05' cy='521.37' r='1.95' style='stroke-width: 0.71; stroke: #BEAED4; fill: #BEAED4;' />
 <rect x='27.90' y='22.78' width='588.28' height='522.33' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
@@ -72,12 +72,16 @@
 <polyline points='641.25,278.65 641.25,276.06 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
 <rect x='634.77' y='278.65' width='12.96' height='8.64' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter; fill: #FFFFFF;' />
 <polyline points='634.77,282.97 647.73,282.97 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
+<polyline points='641.25,289.89 641.25,289.89 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
+<polyline points='641.25,276.06 641.25,276.06 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
 <circle cx='641.25' cy='282.97' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
 <rect x='632.61' y='291.61' width='17.28' height='17.28' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
 <polyline points='641.25,307.17 641.25,304.57 ' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter;' />
 <polyline points='641.25,295.93 641.25,293.34 ' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter;' />
 <rect x='634.77' y='295.93' width='12.96' height='8.64' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter; fill: #FFFFFF;' />
 <polyline points='634.77,300.25 647.73,300.25 ' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter;' />
+<polyline points='641.25,307.17 641.25,307.17 ' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter;' />
+<polyline points='641.25,293.34 641.25,293.34 ' style='stroke-width: 1.07; stroke: #BEAED4; stroke-linecap: butt; stroke-linejoin: miter;' />
 <circle cx='641.25' cy='300.25' r='1.95' style='stroke-width: 0.71; stroke: #BEAED4; fill: #BEAED4;' />
 <text x='655.37' y='286.00' style='font-size: 8.80px; font-family: sans;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>1</text>
 <text x='655.37' y='303.28' style='font-size: 8.80px; font-family: sans;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>2</text>
