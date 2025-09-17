@@ -1,99 +1,112 @@
-
 expected_df <- data.frame(
   USUBJID = 1:3,
   AVAL = 1:3,
   AVALU = "ng/mL",
   DOSE = 1:3,
-  DOSEU = "mg",
+  ADOSEDUR = 0,
   AFRLT = 1:3,
-  DOSNO = 1
+  NCA_PROFILE = factor(1:3)
+)
+var_labels(expected_df) <- c(
+  "Unique Subject Identifier",
+  "Analysis Value",
+  "Analysis Value Unit",
+  "DOSE",
+  "Actual Duration of Treatment Dose",
+  "Act. Rel. Time from Analyte First Dose",
+  "NCA_PROFILE"
 )
 desired_order <- names(expected_df)
 
-# Define the desired column order
-MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
-  "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR",
-  "VOLUME", "VOLUMEU", "TAU"
-)
-
 describe("apply_mapping", {
-  it("renames columns correctly and informs of the changes", {
-    # Change variable names to simulate user dataset
+  it("renames columns correctly", {
     test_df <- expected_df
-    names(test_df) <- c("id", "CONC", "dose", "TIME")
-
-    # Define the input specifications
-    mapping <- as.list(setNames(names(expected_df), names(test_df)))
-    result <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
-
-    expect
-
-    expect_true(all(c("ID", "AVAL", "DOSEVAR", "RRLT") %in% colnames(result)))
-    expect_equal(result$AVAL, 1:3)
-    expect_equal(result$DOSEVAR, 4:6)
-    expect_equal(result$RRLT, 7:9)
-    expect_equal(result$AVALU[1], "ng/mL")
-    expect_equal(result$DOSEU[1], "mg")
-    expect_equal(result$RRLTU[1], "h")
+    names(test_df) <- c("id", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
+    mapping <- as.list(setNames(names(test_df), names(expected_df)))
+    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    expect_equal(result_df, expected_df)
   })
   
+  it ("informs of the changes when silent is FALSE", {
+    test_df <- expected_df
+    names(test_df) <- c("id", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
+    mapping <- as.list(setNames(names(test_df), names(expected_df)))
+    expect_message(
+      apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order, silent = FALSE),
+      message(paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n"))
+    )
+  })
+
+  it("creates columns when its map reference is not a column name in the dataset", {
+    test_df <- expected_df[, !names(expected_df) %in% c("AVALU")]
+    mapping <- as.list(setNames(names(test_df), names(test_df)))
+    mapping["AVALU"] <- "ng/mL"
+    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    expect_equal(result_df, expected_df)
+  })
+
+  it("orders the columns correctly", {
+    wrong_order_cols <- c("USUBJID", "AFRLT", "NCA_PROFILE", "DOSE", "ADOSEDUR", "AVALU", "AVAL")
+    test_df <- expected_df[, wrong_order_cols]
+    mapping <- as.list(setNames(names(test_df), names(test_df)))
+    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    expect_equal(names(result_df), desired_order)
+  })
+
+  it("apply labels correctly", {
+    test_df <- expected_df
+    names(test_df) <- c("id", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
+    var_labels(test_df) <- rep(NA_character_, length(names(test_df)))
+    mapping <- as.list(setNames(names(test_df), names(expected_df)))
+    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    expect_equal(var_labels(result_df), var_labels(expected_df))
+  })
+
   it("adds ADOSEDUR = 0 if not mapped", {
-    dataset <- data.frame(ID = 1:2, CONC = 1:2, DOSE = 3:4, TIME = 5:6)
-    mapping <- list(ID = "ID", AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME", NCA_PROFILE = NULL, AVALU = "ng/mL", DOSEU = "mg", RRLTU = "h")
-    manual_units <- list(concentration = c("ng/mL"), dose = c("mg"), time = c("h"))
-    column_groups <- list(
-      "Group Identifiers" = c(ID = "ID"),
-      "Sample Variables" = c(AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME"),
-      "Supplemental Variables" = character(0)
-    )
-    desired_order <- c("ID", "AVAL", "DOSEVAR", "RRLT")
-    result <- apply_mapping(dataset, mapping, manual_units, column_groups, desired_order, silent = TRUE)
-    expect_true("ADOSEDUR" %in% colnames(result))
-    expect_true(all(result$ADOSEDUR == 0))
+    test_df <- expected_df[, !names(expected_df) %in% "ADOSEDUR"]
+    mapping <- as.list(setNames(names(test_df), names(test_df)))
+    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    expect_equal(result_df, expected_df)
   })
-  
+
   it("removes concentration duplicates", {
-    dataset <- data.frame(ID = c(1,1,2), CONC = c(10,10,20), DOSE = c(5,5,10), TIME = c(0,0,1))
-    mapping <- list(ID = "ID", AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME", NCA_PROFILE = NULL, AVALU = "ng/mL", DOSEU = "mg", RRLTU = "h")
-    manual_units <- list(concentration = c("ng/mL"), dose = c("mg"), time = c("h"))
-    column_groups <- list(
-      "Group Identifiers" = c(ID = "ID"),
-      "Sample Variables" = c(AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME"),
-      "Supplemental Variables" = character(0)
+    test_df <- rbind(expected_df, expected_df)
+    mapping <- as.list(setNames(names(test_df), names(test_df)))
+    expect_warning(
+      apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
+      "Duplicate concentration data detected and filtered"
     )
-    desired_order <- c("ID", "AVAL", "DOSEVAR", "RRLT")
-    result <- apply_mapping(dataset, mapping, manual_units, column_groups, desired_order, silent = TRUE)
-    expect_equal(nrow(result), 2)
-    expect_true(all(result$ID %in% c(1,2)))
+    result_df <- suppressWarnings(
+      apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    )
+    expect_equal(result_df, expected_df)
   })
-  
-  it("returns NULL if mapping is invalid (missing)", {
-    dataset <- data.frame(ID = 1:2, CONC = 1:2, DOSE = 3:4, TIME = 5:6)
-    mapping <- list(ID = "ID", AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME", NCA_PROFILE = NULL, AVALU = "ng/mL", DOSEU = "mg", RRLTU = "h")
-    manual_units <- list(concentration = c("ng/mL"), dose = c("mg"), time = c("h"))
-    column_groups <- list(
-      "Group Identifiers" = c(ID = "ID"),
-      "Sample Variables" = c(AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME"),
-      "Supplemental Variables" = character(0)
+
+  it("throws error if mapping includes duplicates or empty characters", {
+    test_df <- expected_df
+    mapping <- as.list(setNames(names(test_df), names(test_df)))
+
+    mapping_with_dup <- c(mapping, mapping["AVAL"])
+    expect_error(
+      apply_mapping(dataset = test_df, mapping = mapping_with_dup, desired_order = desired_order),
+      "Duplicate column selection detected."
     )
-    desired_order <- c("ID", "AVAL", "DOSEVAR", "RRLT")
-    mapping$AVAL <- "" # missing
-    expect_error(apply_mapping(dataset, mapping, manual_units, column_groups, desired_order, silent = TRUE), "Unmapped columns detected")
+
+    mapping_with_empty_char <- mapping
+    mapping_with_empty_char["AVAL"] <- ""
+    expect_error(
+      apply_mapping(
+        dataset = test_df, mapping = mapping_with_empty_char, desired_order = desired_order
+      ),
+      "Unmapped columns detected."
+    )
   })
-  
-  it("returns NULL if mapping is invalid (duplicate)", {
-    dataset <- data.frame(ID = 1:2, CONC = 1:2, DOSE = 3:4, TIME = 5:6)
-    mapping <- list(ID = "ID", AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME", NCA_PROFILE = NULL, AVALU = "ng/mL", DOSEU = "mg", RRLTU = "h")
-    manual_units <- list(concentration = c("ng/mL"), dose = c("mg"), time = c("h"))
-    column_groups <- list(
-      "Group Identifiers" = c(ID = "ID"),
-      "Sample Variables" = c(AVAL = "CONC", DOSEVAR = "DOSE", RRLT = "TIME"),
-      "Supplemental Variables" = character(0)
-    )
-    desired_order <- c("ID", "AVAL", "DOSEVAR", "RRLT")
-    mapping$AVAL <- "ID" # duplicate
-    expect_error(apply_mapping(dataset, mapping, manual_units, column_groups, desired_order, silent = TRUE), "Duplicate column selection detected")
+
+  it("makes sure NCA_PROFILE is a factor", {
+    test_df <- expected_df
+    mapping <- as.list(setNames(names(test_df), names(expected_df)))
+    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    expect_true(is.factor(result_df$NCA_PROFILE))
+    expect_equal(result_df, expected_df)
   })
 })
