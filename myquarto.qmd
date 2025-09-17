@@ -1,0 +1,69 @@
+---
+title: "NCA report"
+format: revealjs
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+load("results.rda")
+library(plotly)
+library(knitr)
+```
+
+
+# Important plots
+------------------------------------------------------------------------
+::: columns
+::: column
+#### Plot 1
+
+```{r}
+result[["p1"]]
+```
+:::
+
+::: column
+#### Plot 2
+
+```{r}
+result[["plot2"]]
+```
+:::
+:::
+
+#### Data Table
+
+```{r}
+knitr::kable(iris)
+```
+
+
+# Not so important plots
+------------------------------------------------------------------------
+
+
+::: columns
+
+::: column
+#### Plot 1
+```{r}
+result[['p1']]
+```
+:::
+
+::: column
+#### Plot 2
+```{r}
+result[['p2']]
+```
+:::
+
+:::
+
+#### Data Table
+```{r}
+knitr::kable(iris)
+```

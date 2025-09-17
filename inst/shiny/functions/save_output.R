@@ -62,7 +62,7 @@ format_to_xpt_compatible <- function(data) {
 #' @param df A data.frame to be shown as a table.
 #'
 #' @return Invisibly returns TRUE if the slide was appended.
-append_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
+add_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
   slide_content <- c(
     "\n---",
     "",
@@ -71,14 +71,14 @@ append_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
     "::: column",
     "#### Plot 1",
     "```{r}",
-    "plot1",
+    plot1,
     "```",
     ":::",
     "",
     "::: column",
     "#### Plot 2",
     "```{r}",
-    "plot2",
+    plot2,
     "```",
     ":::",
     "",
@@ -131,3 +131,13 @@ create_quarto_presentation <- function(quarto_path, title = "NCA Report", rds_pa
   invisible(TRUE)
 }
 
+result <- list(
+  p1 = plotly::plotly_build(plot_ly(iris, x = iris$`Sepal.Length`, y = iris$`Sepal.Width`, type = "scatter")),
+  p2 = plotly::plotly_build(plot_ly(iris, y = iris$`Sepal.Length`, x = iris$`Sepal.Width`, type = "scatter", color = "red"))
+)
+saveRDS(result, "result.rds")
+save(list = c("result"), file = "results.rda")
+load("results.rda")
+create_quarto_presentation("myquarto.qmd", "NCA report", rds_path = "result.rds")
+
+add_slide_2plots_table("myquarto.qmd", plot1 = "result[['p1']]", plot2 = "result[['p2']]", "iris")
