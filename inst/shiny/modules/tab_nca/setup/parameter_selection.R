@@ -105,8 +105,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           # Start with the base selection from DEFAULT_PARAMS
           is_selected <- selection_df$PKNCA %in% DEFAULT_PARAMS
           
-          # 2. Apply metadata rules to deselect parameters where appropriate
-          if (st_name == "Excretion") {
+          # Apply metadata rules to deselect parameters where appropriate
+          if (st_name == "Excretion Data") {
             is_selected <- is_selected & selection_df$can_excretion
           } else {
             is_selected <- is_selected & selection_df$can_non_excretion
