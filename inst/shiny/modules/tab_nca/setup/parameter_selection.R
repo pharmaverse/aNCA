@@ -72,7 +72,8 @@ parameter_selection_server <- function(id, processed_pknca_data) {
       "lambda.z",
       "lambda.z.n.points", "r.squared",
       "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred"
+      "aucpext.obs", "aucpext.pred",
+      "ae", "fe"
     )
 
     # ReactiveVal for paramet selection state
@@ -82,7 +83,7 @@ parameter_selection_server <- function(id, processed_pknca_data) {
       req(study_types_df())
 
       params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered") %>%
+        filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
         select(TYPE, PKNCA, PPTESTCD, PPTEST)
 
       study_type_names <- unique(study_types_df()$type)
