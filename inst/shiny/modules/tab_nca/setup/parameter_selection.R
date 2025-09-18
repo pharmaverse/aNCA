@@ -84,7 +84,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       params_data <- metadata_nca_parameters %>%
         filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
-        select(TYPE, PKNCA, PPTESTCD, PPTEST)
+        select(TYPE, PKNCA, PPTESTCD, PPTEST,
+               can_excretion, can_non_excretion, can_single_dose,
+               can_multiple_dose, can_extravascular)
 
       study_type_names <- unique(study_types_df()$type)
 
@@ -98,9 +100,32 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       # Use override if available, otherwise use defaults
       if (is.null(selections_override) || length(selections_override) == 0) {
-        # Default behavior: Use DEFAULT_PARAMS for all detected study types
+        # Default behavior
         for (st_name in study_type_names) {
-          selection_df[[st_name]] <- selection_df$PKNCA %in% DEFAULT_PARAMS
+          # Start with the base selection from DEFAULT_PARAMS
+          is_selected <- selection_df$PKNCA %in% DEFAULT_PARAMS
+          
+          # 2. Apply metadata rules to deselect parameters where appropriate
+          if (st_name == "Excretion") {
+            is_selected <- is_selected & selection_df$can_excretion
+          } else {
+            is_selected <- is_selected & selection_df$can_non_excretion
+          }
+          
+          if (stringr::str_detect(st_name, "Single")) {
+            is_selected <- is_selected & selection_df$can_single_dose
+          }
+          
+          if (stringr::str_detect(st_name, "Multiple")) {
+            is_selected <- is_selected & selection_df$can_multiple_dose
+          }
+          
+          if (stringr::str_detect(st_name, "Extravascular")) {
+            is_selected <- is_selected & selection_df$can_extravascular
+          }
+          
+          # Assign the final logical vector to the new column
+          selection_df[[st_name]] <- is_selected
         }
       } else {
         # Override behavior: Use selections from the override object
@@ -130,8 +155,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       )
       names(study_type_cols) <- study_type_names
 
+      #update the selection df columns
+      parameter_selections <- selection_df %>%
+        select(
+          -any_of(c("can_excretion", "can_non_excretion", "can_single_dose",
+                    "can_multiple_dose", "can_extravascular"))
+        )
       # Set selection state
-      selection_state(selection_df)
+      selection_state(parameter_selections)
 
       # Combine with definitions for parameter info columns
       col_defs <- c(
@@ -144,7 +175,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       )
 
       reactable(
-        selection_df,
+        parameter_selections,
         columns = col_defs,
         groupBy = "TYPE",
         filterable = TRUE,
