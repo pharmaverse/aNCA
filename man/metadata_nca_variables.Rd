@@ -22,6 +22,7 @@ A data frame with 361 rows and 14 variables:
 \item{is.used}{Logical. TRUE if the variable is meant to be included.}
 \item{Values}{Character. Possible values for the variable (if applicable).}
 \item{is.mapped}{Logical. TRUE if the variable is mapped in ADNCA (App's input).}
+\item{mapping_tooltip}{Character. A descriptive tooltip for the mapping tab.}
 }
 }
 \source{
