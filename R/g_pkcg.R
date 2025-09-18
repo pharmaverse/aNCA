@@ -502,17 +502,13 @@ pkcg02 <- function(
       ggplot2::aes(color = !!sym(color_var)) +
       ggplot2::theme(legend.position = "none")
 
-    # Add color legend only when neccessary
-    if (length(unique(adpc[[color_var]])) > 1) {
+    # Make sure the variable is interpreted as a factor
+    adpc[[color_var]] <- as.factor(adpc[[color_var]])
 
-      # Make sure the variable is interpreted as a factor
-      adpc[[color_var]] <- as.factor(adpc[[color_var]])
-
-      # Add to the plot the color_var and color_var_label
-      plot <- plot +
-        ggplot2::labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
-        ggplot2::theme(legend.position = "bottom")
-    }
+    # Add to the plot the color_var and color_var_label
+    plot <- plot +
+      ggplot2::labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
+      ggplot2::theme(legend.position = "bottom")
   }
 
   if (scale == "LOG") {
