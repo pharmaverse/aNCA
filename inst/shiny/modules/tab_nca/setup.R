@@ -62,6 +62,7 @@ setup_server <- function(id, data, adnca_data) {
 
     settings_override <- reactive(imported_settings()$settings)
     manual_slopes_override <- reactive(imported_settings()$slope_rules)
+    parameters_override <- reactive(imported_settings()$settings$parameter_selections)
 
     # Gather all settings from the appropriate module
     settings <- settings_server(
@@ -95,7 +96,20 @@ setup_server <- function(id, data, adnca_data) {
       base_pknca_data
     })
 
-    parameters_output <- parameter_selection_server("nca_setup_parameter", base_pknca_data)
+    parameters_output <- parameter_selection_server(
+      "nca_setup_parameter",
+      base_pknca_data,
+      parameters_override
+    )
+
+    final_settings <- reactive({
+      req(settings(), parameters_output$selections())
+
+      current_settings <- settings()
+      current_settings$parameter_selections <- parameters_output$selections()
+
+      current_settings
+    })
 
     # Update intervals using summary output
     processed_pknca_data <- reactive({
@@ -177,13 +191,13 @@ setup_server <- function(id, data, adnca_data) {
         paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
       },
       content = function(con) {
-        saveRDS(list(settings = settings(), slope_rules = slope_rules$manual_slopes()), con)
+        saveRDS(list(settings = final_settings(), slope_rules = slope_rules$manual_slopes()), con)
       }
     )
 
     list(
       processed_pknca_data = processed_pknca_data,
-      settings = settings,
+      settings = final_settings,
       ratio_table = ratio_table,
       slope_rules = slope_rules
     )

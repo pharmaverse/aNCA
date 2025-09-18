@@ -17,7 +17,7 @@ parameter_selection_ui <- function(id) {
   )
 }
 
-parameter_selection_server <- function(id, processed_pknca_data) {
+parameter_selection_server <- function(id, processed_pknca_data, parameter_override) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -89,8 +89,30 @@ parameter_selection_server <- function(id, processed_pknca_data) {
       study_type_names <- unique(study_types_df()$type)
 
       selection_df <- params_data
-      for (st_name in study_type_names) {
-        selection_df[[st_name]] <- selection_df$PKNCA %in% DEFAULT_PARAMS
+
+      selections_override <- tryCatch({
+        parameter_override()
+      }, error = function(e) {
+        NULL
+      })
+
+      # Use override if available, otherwise use defaults
+      if (is.null(selections_override) || length(selections_override) == 0) {
+        # Default behavior: Use DEFAULT_PARAMS for all detected study types
+        for (st_name in study_type_names) {
+          selection_df[[st_name]] <- selection_df$PKNCA %in% DEFAULT_PARAMS
+        }
+      } else {
+        # Override behavior: Use selections from the override object
+        for (st_name in study_type_names) {
+          override_params <- selections_override[[st_name]]
+          if (!is.null(override_params)) {
+            selection_df[[st_name]] <- selection_df$PKNCA %in% override_params
+          } else {
+            # If a study type is not in the override, default to no selections
+            selection_df[[st_name]] <- FALSE
+          }
+        }
       }
 
       # Dynamically create column definitions for each study type
