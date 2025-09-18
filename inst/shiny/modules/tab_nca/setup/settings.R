@@ -79,17 +79,6 @@ settings_ui <- function(id) {
         )
       ),
       accordion_panel(
-        title = "Parameter Selection",
-        reactableOutput(ns("nca_parameters")),
-        card(
-          full_screen = FALSE,
-          style = "margin-top: 2em;",
-          card_header("Selected NCA Parameters"),
-          card_body(uiOutput(ns("nca_param_display"))
-          )
-        )
-      ),
-      accordion_panel(
         title = "Data Imputation",
         input_switch(
           id = ns("should_impute_c0"),
@@ -181,18 +170,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       if (!is.null(settings$bioavailability))
         updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
-
-      # Parmeter selection #
-      reset_reactable_memory()
-
-      params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered") %>%
-        pull("PKNCA")
-
-      updateReactable(
-        "nca_parameters",
-        selected = which(params_data %in% settings$parameter_selection)
-      )
 
       # Data imputation #
       update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
@@ -297,65 +274,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       )
     })
 
-    DEFAULT_PARAMS <- c(
-      "aucinf.obs", "aucinf.obs.dn",
-      "auclast", "auclast.dn",
-      "cmax", "cmax.dn",
-      "clast.obs", "clast.obs.dn",
-      "tlast", "tmax",
-      "half.life", "cl.obs", "vss.obs", "vz.obs",
-      "mrt.last", "mrt.obs",
-      "lambda.z",
-      "lambda.z.n.points", "r.squared",
-      "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred",
-      "ae", "fe"
-    )
-
-    output$nca_parameters <- renderReactable({
-      #remove parameters that are currently unavailable in PKNCA
-      params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered")
-
-      default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
-
-      reactable(
-        params_data %>%
-          select(TYPE, PPTESTCD, PPTEST, CAT),
-        groupBy = c("TYPE"),
-        pagination = FALSE,
-        filterable = TRUE,
-        compact = TRUE,
-        onClick = "select",
-        height = "49vh",
-        selection = "multiple",
-        defaultSelected = default_row_indices
-      )
-    })
-
-    nca_params <- reactive({
-      selected_rows <- getReactableState("nca_parameters", "selected")
-      if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
-
-      params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered")
-      selected_terms <- params_data[selected_rows, , drop = FALSE]
-
-      # Return PKNCA column names
-      selected_terms$PKNCA
-    })
-
-    output$nca_param_display <- renderUI({
-      req(nca_params())
-
-      div(
-        class = "nca-pill-grid",
-        lapply(nca_params(), function(param) {
-          tags$span(class = "nca-pill", param)
-        })
-      )
-    })
-
     # Reactive value to store the AUC data table
     auc_data <- reactiveVal(
       tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
@@ -414,7 +332,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         pcspec = input$select_pcspec,
         method = input$method,
         bioavailability = input$bioavailability,
-        parameter_selection = nca_params(),
         data_imputation = list(
           impute_c0 = input$should_impute_c0
         ),
