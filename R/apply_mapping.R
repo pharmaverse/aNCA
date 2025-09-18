@@ -27,6 +27,7 @@
 #' - If `ADOSEDUR` is not mapped, it is assigned a value of `0`.
 #' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`,
 #'  and `NCA_PROFILE`.
+#'  @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
 apply_mapping <- function(dataset, mapping, desired_order, silent = TRUE
 ) {
@@ -54,7 +55,7 @@ apply_mapping <- function(dataset, mapping, desired_order, silent = TRUE
   # Apply the changes to the data
   dataset <- dataset %>%
     # Rename variables based on mapping instructions
-    dplyr::rename(!!!mapping) %>%
+    rename(!!!mapping) %>%
     # Order the renamed variables based on desired_order
     select(any_of(desired_order), everything()) %>%
     # Apply the default ADPC labels
