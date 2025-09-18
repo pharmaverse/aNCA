@@ -131,9 +131,8 @@ general_meanplot <- function(data,
   # add ci
   if (plot_ci) {
     p <- p +
-      geom_ribbon(aes(
-        ymin = CI_lower, ymax = CI_upper,
-        fill = id_variable_col),
+      geom_ribbon(
+        aes(ymin = CI_lower, ymax = CI_upper, fill = id_variable_col),
         alpha = 0.3
       ) +
       guides(fill = "none") +
