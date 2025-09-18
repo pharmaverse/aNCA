@@ -37,7 +37,8 @@ result[["plot2"]]
 #### Data Table
 
 ```{r}
-knitr::kable(iris)
+# knitr::kable(iris) %>% kableExtra::kable_paper(font_size = 10)
+head(iris, 3)
 ```
 
 

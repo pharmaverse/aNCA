@@ -70,14 +70,14 @@ add_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
     "",
     "::: column",
     "#### Plot 1",
-    "```{r}",
+    "```{r, echo=FALSE}",
     plot1,
     "```",
     ":::",
     "",
     "::: column",
     "#### Plot 2",
-    "```{r}",
+    "```{r, echo=FALSE}",
     plot2,
     "```",
     ":::",
@@ -85,8 +85,10 @@ add_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
     ":::",
     "",
     "#### Data Table",
-    "```{r}",
-    "knitr::kable(df)",
+    "```{r, echo=FALSE}",
+    "knitr::kable(",
+    df,
+    ") %>% kableExtra::kable_classic(font_size = 12)",
     "```"
   )
   write(slide_content, file = quarto_path, append = TRUE)
@@ -120,7 +122,7 @@ create_quarto_presentation <- function(quarto_path, title = "NCA Report", rds_pa
   )
   load_chunk <- c(
     "```{r setup, include=FALSE}",
-    paste0("all_outputs <- readRDS(\"", rds_path, "\")"),
+    paste0("load(\"", rds_path, "\")"),
     "library(plotly)",
     "library(knitr)",
     "```",
@@ -138,6 +140,6 @@ result <- list(
 saveRDS(result, "result.rds")
 save(list = c("result"), file = "results.rda")
 load("results.rda")
-create_quarto_presentation("myquarto.qmd", "NCA report", rds_path = "result.rds")
 
+create_quarto_presentation("myquarto.qmd", "NCA report", rds_path = "result.rda")
 add_slide_2plots_table("myquarto.qmd", plot1 = "result[['p1']]", plot2 = "result[['p2']]", "iris")
