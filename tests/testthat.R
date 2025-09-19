@@ -10,8 +10,4 @@ library(testthat)
 library(shinytest2)
 library(aNCA)
 
-# Set a seed to prevent randomness effects
-set.seed(1)
-
-# Run the tests
 test_check("aNCA")
