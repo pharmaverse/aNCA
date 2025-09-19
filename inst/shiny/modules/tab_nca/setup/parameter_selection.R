@@ -160,7 +160,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     output$nca_parameters <- renderReactable({
       req(selection_state(), study_types_df())
       
-      parameter_selections <- selection_state()
+      parameter_selections <- isolate(selection_state())
       study_type_names <- unique(study_types_df()$type)
       
       # Dynamically create column definitions for each study type
@@ -223,9 +223,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
         observeEvent(input[[st_name]], {
           info <- input[[st_name]]
-          current_state <- selection_state()
+          # Isolate state read to prevent feedback loops
+          current_state <- isolate(selection_state())
           current_state[[st_name]][info$row] <- info$value
           selection_state(current_state)
+          
+          # Update the reactable UI without a full re-render
+          updateReactable("nca_parameters", data = current_state, session = session)
         })
       })
     })
@@ -246,6 +250,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       }
       
       selection_state(current_state)
+      
+      # Update the reactable UI without a full re-render
+      updateReactable("nca_parameters", data = current_state, session = session)
     }, ignoreNULL = TRUE)
 
     # Transform the TRUE/FALSE data frame into a named list
