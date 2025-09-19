@@ -39,9 +39,9 @@
 <line x1='322.04' y1='363.09' x2='322.04' y2='521.37' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt;' />
 <polygon points='138.20,125.67 138.20,363.09 505.87,363.09 505.87,125.67 138.20,125.67 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter; fill: #FFFFFF;' />
 <line x1='138.20' y1='204.81' x2='505.87' y2='204.81' style='stroke-width: 2.13; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
-<circle cx='294.27' cy='204.81' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
-<circle cx='359.73' cy='521.37' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
-<circle cx='310.14' cy='46.53' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
+<circle cx='322.04' cy='204.81' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
+<circle cx='322.04' cy='521.37' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
+<circle cx='322.04' cy='46.53' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
 <rect x='27.90' y='22.78' width='588.28' height='522.33' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
@@ -64,8 +64,6 @@
 <polyline points='641.25,287.29 641.25,284.70 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
 <rect x='634.77' y='287.29' width='12.96' height='8.64' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter; fill: #FFFFFF;' />
 <polyline points='634.77,291.61 647.73,291.61 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
-<polyline points='641.25,298.53 641.25,298.53 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
-<polyline points='641.25,284.70 641.25,284.70 ' style='stroke-width: 1.07; stroke: #7FC97F; stroke-linecap: butt; stroke-linejoin: miter;' />
 <circle cx='641.25' cy='291.61' r='1.95' style='stroke-width: 0.71; stroke: #7FC97F; fill: #7FC97F;' />
 <text x='655.37' y='294.64' style='font-size: 8.80px; font-family: sans;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>1</text>
 <text x='27.90' y='14.56' style='font-size: 13.20px; font-family: sans;' textLength='106.39px' lengthAdjust='spacingAndGlyphs'>varvalstofilter_plot</text>

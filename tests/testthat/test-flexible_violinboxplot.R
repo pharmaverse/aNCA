@@ -3,8 +3,10 @@ boxplotdata <- FIXTURE_PKNCA_RES$result %>%
   filter(USUBJID %in% 1:7)
 
 describe("flexible_violinboxplot", {
+  # stub the geom_point to avoid the position_jitterdodge whose random number is hard to control
+  mockery::stub(flexible_violinboxplot, "geom_point", ggplot2::geom_point())
+
   it("creates a simple plot with minimal arguments", {
-    withr::local_seed(1)
     simple_plot <- flexible_violinboxplot(
       boxplotdata = boxplotdata,
       parameter = "CMAX",
