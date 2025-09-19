@@ -183,6 +183,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         highlight = TRUE,
         wrap = FALSE,
         resizable = TRUE,
+        selection = "multiple",
         compact = TRUE,
         style = list(fontSize = "0.75em"),
         class = "reactable-table",
@@ -213,6 +214,24 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         })
       })
     })
+    
+    # When a row is selected, check all boxes in that row
+    observeEvent(getReactableState("nca_parameters", "selected"), {
+      selected_rows <- getReactableState("nca_parameters", "selected")
+      req(selected_rows)
+      browser()
+      current_state <- selection_state()
+      study_type_names <- intersect(
+        unique(study_types_df()$type),
+        colnames(current_state)
+      )
+      
+      if (length(study_type_names) > 0) {
+        current_state[selected_rows, study_type_names] <- TRUE
+      }
+      
+      selection_state(current_state)
+    }, ignoreNULL = TRUE)
 
     # Transform the TRUE/FALSE data frame into a named list
     # of parameter vectors
