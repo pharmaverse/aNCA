@@ -33,8 +33,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         purrr::keep(\(col) {
           !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
+      
+      filtered_intervals <- processed_pknca_data()$intervals %>%
+        select(all_of(groups))
+        
+      df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
 
-      detect_study_types(processed_pknca_data()$conc$data,
+      detect_study_types(df,
                          groups,
                          drug_column = "DRUG",
                          analyte_column = processed_pknca_data()$conc$columns$groups$group_analyte,
@@ -187,6 +192,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         parameter_selections,
         columns = col_defs,
         groupBy = "TYPE",
+        defaultExpanded = TRUE,
         filterable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -228,7 +234,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     observeEvent(getReactableState("nca_parameters", "selected"), {
       selected_rows <- getReactableState("nca_parameters", "selected")
       req(selected_rows)
-      browser()
+
       current_state <- selection_state()
       study_type_names <- intersect(
         unique(study_types_df()$type),
