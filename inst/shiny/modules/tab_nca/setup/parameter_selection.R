@@ -79,7 +79,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # ReactiveVal for paramet selection state
     selection_state <- reactiveVal()
     # Render the new, dynamic reactable
-    output$nca_parameters <- renderReactable({
+    observe({
       req(study_types_df())
 
       params_data <- metadata_nca_parameters %>%
@@ -140,6 +140,24 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         }
       }
 
+      #update the selection df columns
+      parameter_selections <- selection_df %>%
+        select(
+          -any_of(c("can_excretion", "can_non_excretion", "can_single_dose",
+                    "can_multiple_dose", "can_extravascular"))
+        )
+      # Set selection state
+      selection_state(parameter_selections)
+      
+    })
+    
+    # Render the reactable based on the current selection_state
+    output$nca_parameters <- renderReactable({
+      req(selection_state(), study_types_df())
+      
+      parameter_selections <- selection_state()
+      study_type_names <- unique(study_types_df()$type)
+      
       # Dynamically create column definitions for each study type
       study_type_cols <- lapply(
         study_type_names,
@@ -154,15 +172,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         }
       )
       names(study_type_cols) <- study_type_names
-
-      #update the selection df columns
-      parameter_selections <- selection_df %>%
-        select(
-          -any_of(c("can_excretion", "can_non_excretion", "can_single_dose",
-                    "can_multiple_dose", "can_extravascular"))
-        )
-      # Set selection state
-      selection_state(parameter_selections)
 
       # Combine with definitions for parameter info columns
       col_defs <- c(
