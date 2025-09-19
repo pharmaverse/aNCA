@@ -265,23 +265,22 @@ describe("pkcg02", {
 
 describe("g_pkcg02_lin", {
   it("generates plot with linear scale", {
-    g_pkcg02_lin <- g_pkcg02_lin(
-      adpc,
-      plotly = FALSE,
-      color = "USUBJID",
-      color_var_label =  attr(adpc$USUBJID, "label"))[[1]]
-    expect_equal(g_pkcg02_lin$labels$y, "Analysis value [ng/mL]")
+    g_pkcg02_lin <- g_pkcg02_lin(adpc,
+                                 plotly = FALSE,
+                                 color = "USUBJID",
+                                 color_var_label =  attr(adpc$USUBJID, "label"))[[1]]
+    expect_equal(g_pkcg02_lin$labels$y, "Analysis value [ng/mL]"
+    )
     vdiffr::expect_doppelganger("g_pkconc_lin_plot", g_pkcg02_lin)
   })
 })
 
 describe("g_pkcg02_log", {
   it("generates plot with log scale", {
-    g_pkcg02_log <- g_pkcg02_log(
-      adpc,
-      plotly = FALSE,
-      color = "USUBJID",
-      color_var_label =  attr(adpc$USUBJID, "label"))[[1]]
+    g_pkcg02_log <- g_pkcg02_log(adpc,
+                                 plotly = FALSE,
+                                 color = "USUBJID",
+                                 color_var_label =  attr(adpc$USUBJID, "label"))[[1]]
     expect_equal(g_pkcg02_log$labels$y, "Analysis value [ng/mL]")
     vdiffr::expect_doppelganger("g_pkconc_log_plot", g_pkcg02_log)
   })
