@@ -5,6 +5,7 @@ boxplotdata <- FIXTURE_PKNCA_RES$result %>%
 describe("flexible_violinboxplot", {
   # stub the geom_point to avoid the position_jitterdodge whose random number is hard to control
   mockery::stub(flexible_violinboxplot, "geom_point", ggplot2::geom_point())
+  withr::local_seed(123)
 
   it("creates a simple plot with minimal arguments", {
     simple_plot <- flexible_violinboxplot(
