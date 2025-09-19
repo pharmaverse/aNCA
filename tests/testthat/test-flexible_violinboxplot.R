@@ -6,9 +6,6 @@ describe("flexible_violinboxplot", {
   # stub the geom_point to avoid the position_jitterdodge whose random number is hard to control
   mockery::stub(flexible_violinboxplot, "geom_point", ggplot2::geom_point())
   withr::local_seed(123)
-  width <- 400
-  height <- 400
-  units <- "px"
 
   it("creates a simple plot with minimal arguments", {
     simple_plot <- flexible_violinboxplot(
@@ -22,16 +19,7 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    expect_snapshot_file(
-      ggplot2::ggsave(
-        filename = withr::local_tempfile(fileext = ".png"),
-        plot = simple_plot,
-        units = units,
-        width = width,
-        height = height,
-      ),
-      "simple_plot.png"
-    )
+    vdiffr::expect_doppelganger("simple_plot", simple_plot)
   })
 
   it("creates a plot with additional xvars", {
