@@ -91,7 +91,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
         select(TYPE, PKNCA, PPTESTCD, PPTEST,
                can_excretion, can_non_excretion, can_single_dose,
-               can_multiple_dose, can_extravascular)
+               can_multiple_dose, can_extravascular, can_metabolite)
 
       study_type_names <- unique(study_types_df()$type)
 
@@ -129,6 +129,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             is_selected <- is_selected & selection_df$can_extravascular
           }
           
+          if (stringr::str_detect(st_name, "Metabolite")) {
+            is_selected <- is_selected & selection_df$can_metabolite
+          }
+          
           # Assign the final logical vector to the new column
           selection_df[[st_name]] <- is_selected
         }
@@ -149,7 +153,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       parameter_selections <- selection_df %>%
         select(
           -any_of(c("can_excretion", "can_non_excretion", "can_single_dose",
-                    "can_multiple_dose", "can_extravascular"))
+                    "can_multiple_dose", "can_extravascular", "can_metabolite"))
         )
       # Set selection state
       selection_state(parameter_selections)
