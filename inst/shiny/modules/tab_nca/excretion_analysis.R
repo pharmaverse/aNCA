@@ -76,7 +76,7 @@ excretion_server <- function(id, input_pknca_data) {
       updateSelectInput(session, "end_time_col", choices = available_cols,
                         selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
       updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
-                          filter(startsWith(PPTESTCD, "RCA")) %>%
+                          filter(TYPE == "Urine") %>%
                           pull(PKNCA, PPTESTCD),
                         selected = c("ae"))
     })
@@ -116,6 +116,9 @@ excretion_server <- function(id, input_pknca_data) {
             !!dose_col := map_dbl(dose_total_unit, drop_units),
             !!doseu := map_chr(dose_total_unit, deparse_unit)
           )
+
+        # Update units
+        data$units <- PKNCA_build_units_table(data$conc, data$dose)
       }
 
       # Update intervals
@@ -157,6 +160,10 @@ excretion_server <- function(id, input_pknca_data) {
       data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
         filter(type_interval %in% input$interval_types) %>%
         arrange(PCSPEC, start, end)
+
+      data$units <- data$units  %>%
+        mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
+               conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
 
       data$options$keep_interval_cols <- c("NCA_PROFILE", "type_interval")
       # Run PKNCA analysis
