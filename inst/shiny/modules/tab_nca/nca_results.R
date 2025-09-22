@@ -109,6 +109,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           # Create an output folder with all plots, tables and listings
           output_tmpdir <- file.path(tempdir(), "output")
           save_output(output = session$userData$results, output_path = output_tmpdir)
+          
+          # Save all R outputs in one file as well
+          results <- session$userData$results
+          save(list = "results", file = paste0(output_tmpdir, "/all_session_results.rda"))
 
           incProgress(0.3)
 
@@ -119,7 +123,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
           files <- list.files(
             output_tmpdir,
-            pattern = ".(csv)|(rds)|(xpt)|(html)$",
+            pattern = ".(csv)|(rds)|(xpt)|(html)|(rda)$",
             recursive = TRUE
           )
           wd <- getwd()
