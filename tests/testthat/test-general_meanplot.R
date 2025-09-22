@@ -149,7 +149,8 @@ describe("general_meanplot functions correctly", {
       "type" %in% names(trace) &&
         trace$type == "scatter"
     }))
-    expect_true(has_ribbon)
+    has_ci_in_legend <- ggplotly(p)$x$layout$legend$title$text == "DOSEA (95% CI)"
+    expect_true(has_ci_in_legend)
   })
 
   it("can plot with logarithmic scale", {
