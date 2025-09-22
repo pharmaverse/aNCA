@@ -97,7 +97,7 @@ general_meanplot <- function(data,
   }
 
   # plot the preprocess data
-  p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean), group = id_variable_col) +
+  p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean)) +
     geom_line(aes(colour = id_variable_col)) +
     geom_point(aes(colour = id_variable_col)) +
     facet_wrap(
@@ -108,8 +108,7 @@ general_meanplot <- function(data,
     labs(
       x = paste0("Nominal Time [", time_unit, "]"),
       y = paste0("Mean concentration [", paste0(conc_unit, collapse = ", "), "]"),
-      color = paste0(id_variable, collapse = ", "),
-      fill = "95% Confidence Interval"
+      color = paste0(id_variable, collapse = ", ")
     ) +
     theme_bw() +
     theme(legend.position = "right",
