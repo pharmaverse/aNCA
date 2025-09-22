@@ -95,6 +95,18 @@ add_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
   invisible(TRUE)
 }
 
+create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rds_path, template, extra_setup){
+  create_quarto_presentation(quarto_path, title, rds_path)
+  for (i in seq_len(length(res_dose_slides))) {
+    add_slide_2plots_table(
+      quarto_path,
+      plot1 = paste0("res_dose_slides[[", i, "]]$linplot"),
+      plot2 = paste0("res_dose_slides[[", i, "]]$meanplot"),
+      df = paste0("res_dose_slides[[", i, "]]$statistics")
+    )
+  }
+}
+
 #' Create a New Quarto Presentation Document for Exporting Plots
 #'
 #' This function creates a new Quarto (.qmd) presentation file from scratch, writing the YAML header,
@@ -152,7 +164,7 @@ linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics) {
       colorby_var = "USUBJID",
       facet_by = NULL,
       time_scale = "Whole",
-      yaxis_scale ="Log",
+      yaxis_scale = "Log",
       show_threshold = FALSE,
       threshold_value = 0,
       show_dose = FALSE,
@@ -173,10 +185,23 @@ linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics) {
       plot_ci = FALSE
     )
     stats_i <- calculate_summary_stats(
-      data = o_res_i,
-      input_groups = group_by_vars
+      data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), "DOSEA")]),
+      input_groups = "DOSEA"
     ) %>%
-      filter(Statistic %in% statistics)
+      filter(
+        Statistic %in% statistics
+      ) %>%
+      select(
+        any_of(
+          c(
+            "DOSEA",
+            "CLSTP[ng/mL]",
+            "VSSO[mL]",
+            "TMAX[h]",
+            "CMAX[ng/mL]"
+          )
+        )
+      )
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,

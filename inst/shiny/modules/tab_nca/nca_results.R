@@ -109,7 +109,26 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           # Create an output folder with all plots, tables and listings
           output_tmpdir <- file.path(tempdir(), "output")
           save_output(output = session$userData$results, output_path = output_tmpdir)
+browser()
+          # Create presentation slides
+          res_nca <- res_nca()
+          res_dose_slides <- linplot_meanplot_stats_by_group(
+            o_nca = res_nca,
+            group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
+            statistics = c("Mean", "Median")
+          )
+          dir.create(presentations_path)
+          save(list = "res_dose_slides", file = paste0(presentations_path, "dose_slides.rda"))
           
+          
+          presentations_path <- paste0(output_tmpdir, "/presentations")
+          create_dose_slides_quarto(
+            res_dose_slides,
+            quarto_path = paste0(presentations_path, "dose_slides.qmd"),
+            title = paste0("Dose Escalation Slides for ", session$userData$project_name()),
+            rds_path = "dose_slides.rda"
+          )
+
           # Save all R outputs in one file as well
           results <- session$userData$results
           save(list = "results", file = paste0(output_tmpdir, "/all_session_results.rda"))
