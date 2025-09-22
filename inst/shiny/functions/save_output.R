@@ -133,6 +133,61 @@ create_quarto_presentation <- function(quarto_path, title = "NCA Report", rds_pa
   invisible(TRUE)
 }
 
+
+linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics) {
+
+  groups <- unique(o_nca$data$conc$data[, group_by_vars])
+  output_list <- list()
+  # Loop over each of the groups
+  for (i in seq_len(nrow(groups))) {
+    group_i <- groups[i, , drop = FALSE]
+    d_conc_i <- merge(o_nca$data$conc$data, group_i)
+    o_res_i <- merge(o_nca$result, group_i)
+    
+    linplot_i <- general_lineplot(
+      data = d_conc_i,
+      selected_analytes = d_conc_i[["ANALYTE"]],
+      selected_pcspec = d_conc_i[["PCSPEC"]],
+      selected_usubjids = d_conc_i[["USUBJID"]],
+      colorby_var = "USUBJID",
+      facet_by = NULL,
+      time_scale = "Whole",
+      yaxis_scale ="Log",
+      show_threshold = FALSE,
+      threshold_value = 0,
+      show_dose = FALSE,
+      cycle = NULL,
+      palette = NULL
+    )
+    meanplot_i <- general_meanplot(
+      data = d_conc_i,
+      selected_studyids = unique(d_conc_i[["STUDYID"]]),
+      selected_analytes = unique(d_conc_i[["ANALYTE"]]),
+      selected_pcspecs = unique(d_conc_i[["PCSPEC"]]),
+      selected_cycles = unique(d_conc_i[["NCA_PROFILE"]]),
+      id_variable = "DOSEA",
+      groupby_var = group_by_vars,
+      plot_ylog = FALSE,
+      plot_sd_min = TRUE,
+      plot_sd_max = TRUE,
+      plot_ci = FALSE
+    )
+    stats_i <- calculate_summary_stats(
+      data = o_res_i,
+      input_groups = group_by_vars
+    ) %>%
+      filter(Statistic %in% statistics)
+    output_list[[paste0("Group_", i)]] <- list(
+      linplot = linplot_i,
+      meanplot = meanplot_i,
+      statistics = stats_i
+    )
+  }
+  output_list
+}
+
+
+
 result <- list(
   p1 = plotly::plotly_build(plot_ly(iris, x = iris$`Sepal.Length`, y = iris$`Sepal.Width`, type = "scatter")),
   p2 = plotly::plotly_build(plot_ly(iris, y = iris$`Sepal.Length`, x = iris$`Sepal.Width`, type = "scatter", color = "red"))
