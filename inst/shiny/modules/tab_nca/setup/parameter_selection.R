@@ -33,10 +33,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         purrr::keep(\(col) {
           !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
-      
+
       filtered_intervals <- processed_pknca_data()$intervals %>%
         select(all_of(groups))
-        
+
       df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
 
       detect_study_types(df,
@@ -103,51 +103,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         NULL
       })
 
-      # Use override if available, otherwise use defaults
-      if (is.null(selections_override) || length(selections_override) == 0) {
-        # Default behavior
-        for (st_name in study_type_names) {
-          # Start with the base selection from DEFAULT_PARAMS
-          is_selected <- selection_df$PKNCA %in% DEFAULT_PARAMS
-          
-          # Apply metadata rules to deselect parameters where appropriate
-          if (st_name == "Excretion Data") {
-            is_selected <- is_selected & selection_df$can_excretion
-          } else {
-            is_selected <- is_selected & selection_df$can_non_excretion
-          }
-          
-          if (stringr::str_detect(st_name, "Single")) {
-            is_selected <- is_selected & selection_df$can_single_dose
-          }
-          
-          if (stringr::str_detect(st_name, "Multiple")) {
-            is_selected <- is_selected & selection_df$can_multiple_dose
-          }
-          
-          if (stringr::str_detect(st_name, "Extravascular")) {
-            is_selected <- is_selected & selection_df$can_extravascular
-          }
-          
-          if (stringr::str_detect(st_name, "Metabolite")) {
-            is_selected <- is_selected & selection_df$can_metabolite
-          }
-          
-          # Assign the final logical vector to the new column
-          selection_df[[st_name]] <- is_selected
-        }
-      } else {
-        # Override behavior: Use selections from the override object
-        for (st_name in study_type_names) {
-          override_params <- selections_override[[st_name]]
-          if (!is.null(override_params)) {
-            selection_df[[st_name]] <- selection_df$PKNCA %in% override_params
-          } else {
-            # If a study type is not in the override, default to no selections
-            selection_df[[st_name]] <- FALSE
-          }
-        }
-      }
+      # Call the function with the override list
+      selection_df <- apply_parameter_selections(
+        selection_df = selection_df,
+        study_type_names = study_type_names,
+        default_params = DEFAULT_PARAMS,
+        selections_override = selections_override
+      )
 
       #update the selection df columns
       parameter_selections <- selection_df %>%
@@ -157,16 +119,16 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         )
       # Set selection state
       selection_state(parameter_selections)
-      
+
     })
-    
+
     # Render the reactable based on the current selection_state
     output$nca_parameters <- renderReactable({
       req(selection_state(), study_types_df())
-      
+
       parameter_selections <- isolate(selection_state())
       study_type_names <- unique(study_types_df()$type)
-      
+
       # Dynamically create column definitions for each study type
       study_type_cols <- lapply(
         study_type_names,
@@ -231,13 +193,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           current_state <- isolate(selection_state())
           current_state[[st_name]][info$row] <- info$value
           selection_state(current_state)
-          
+
           # Update the reactable UI without a full re-render
           updateReactable("nca_parameters", data = current_state, session = session)
         })
       })
     })
-    
+
     # When a row is selected, check all boxes in that row
     observeEvent(getReactableState("nca_parameters", "selected"), {
       selected_rows <- getReactableState("nca_parameters", "selected")
@@ -248,13 +210,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         unique(study_types_df()$type),
         colnames(current_state)
       )
-      
+
       if (length(study_type_names) > 0) {
         current_state[selected_rows, study_type_names] <- TRUE
       }
-      
+
       selection_state(current_state)
-      
+
       # Update the reactable UI without a full re-render
       updateReactable("nca_parameters", data = current_state, session = session)
     }, ignoreNULL = TRUE)
