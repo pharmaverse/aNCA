@@ -26,8 +26,8 @@ describe("Tests for app preview", {
 
     # Wait for settings to be applied and button to be re-enabled
     # The button is disabled for 2750ms after settings change
-    app$wait_for_js("!$('#nca-nca').prop('disabled')", timeout = 5000)
-    app$click("nca-nca")
+    app$wait_for_js("!$('#nca-run_nca').prop('disabled')", timeout = 5000)
+    app$click("nca-run_nca")
 
     app$wait_for_value(output = "nca-nca_results-myresults-table", timeout = 45000)
     table <- app$get_value(output = "nca-nca_results-myresults-table")
