@@ -255,7 +255,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       mapping_ <- mapping()
       names(mapping_) <- gsub("select_", "", names(mapping_))
 
-      withCallingHandlers({
+      tryCatch({
         apply_mapping(
           adnca_data(),
           mapping_,
