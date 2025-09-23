@@ -1,0 +1,80 @@
+describe("Test for initial app load", {
+  skip_on_cran()
+  # NOTE: method app$expect_values cannot be used with output as it crashes due to some output
+
+  it("App ui does not crash and contains inputs", {
+    app <- AppDriver$new(
+      name = "app_start",
+      height = 407,
+      width = 348,
+      variant = NULL
+    )
+    app$wait_for_idle()
+    initial_values <- app$get_values(input = TRUE)
+    expect_true(length(initial_values[["input"]]) > 0)
+  })
+
+  it("App starts without JavaScript errors", {
+    app <- AppDriver$new(
+      name = "app_js_errors",
+      height = 407,
+      width = 348,
+      variant = NULL
+    )
+
+    # Wait for app to fully load
+    app$wait_for_idle()
+
+    # Get browser logs
+    logs <- app$get_logs()
+
+    # Filter for JavaScript errors (SEVERE level)
+    js_errors <- logs |>
+      dplyr::filter(level == "SEVERE")
+
+    # Print any errors found for debugging
+    if (nrow(js_errors) > 0) {
+      message("JavaScript errors found:\n")
+      for (i in seq_len(nrow(js_errors))) {
+        message(js_errors$message[i])
+      }
+    }
+
+    # Assert no severe JavaScript errors
+    expect_equal(
+      nrow(js_errors),
+      0,
+      info = paste("JavaScript errors found:",
+                   paste(js_errors$message, collapse = "\n"))
+    )
+
+    # Additional check: verify the document is in a complete state
+    doc_ready <- app$get_js("document.readyState")
+    expect_equal(doc_ready, "complete",
+                 info = "Document not in complete state")
+
+    # Check that no obvious error elements are visible in the UI
+    error_elements <- app$get_html(".shiny-output-error, .error, .alert-danger")
+    expect_equal(length(error_elements), 0,
+                 info = "Error elements found in UI")
+  })
+
+  it("On start, dummy data is loaded correctly and displayed", {
+    app <- AppDriver$new(
+      name = "app_dummy_data",
+      height = 407,
+      width = 348,
+      variant = NULL
+    )
+
+    app$wait_for_value(output = "data-raw_data-data_display-table", timeout = 4000)
+    default_table <- app$get_value(output = "data-raw_data-data_display-table")
+    expect_true(jsonlite::validate(default_table))
+
+    app$upload_file(`data-raw_data-data_upload` = "dummy_simplified.csv")
+    app$wait_for_value(output = "data-raw_data-data_display-table", timeout = 4000)
+    loaded_table <- app$get_value(output = "data-raw_data-data_display-table")
+
+    expect_true(jsonlite::validate(loaded_table))
+  })
+})

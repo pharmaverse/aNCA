@@ -125,6 +125,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+    session$userData$settings <- settings # This will be saved in the results zip folder
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 

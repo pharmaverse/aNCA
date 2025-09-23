@@ -124,8 +124,8 @@ tab_explore_ui <- function(id) {
             choices = NULL
           ),
           checkboxInput(ns("log_mean_plot"), label = "Scale y Log"),
-          checkboxInput(ns("sd_mean_plot_max"), label = "+SD"),
-          checkboxInput(ns("sd_mean_plot_min"), label = "-SD"),
+          checkboxInput(ns("sd_mean_plot_max"), label = "+SD", value = TRUE),
+          checkboxInput(ns("sd_mean_plot_min"), label = "-SD", value = TRUE),
           checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
           position = "right",
           open = TRUE
@@ -185,7 +185,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         session,
         "generalplot_usubjid",
         choices = param_choices_usubjid,
-        selected = param_choices_usubjid[1]
+        selected = param_choices_usubjid
       )
 
       # Update the colorby and facet by picker inputs

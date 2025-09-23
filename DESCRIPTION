@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9146
+Version: 0.0.0.9152
 Authors@R: c(
     person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -33,7 +33,7 @@ Imports:
     ggplot2,
     magrittr,
     methods,
-    PKNCA (>= 0.12.0),
+    PKNCA (>= 0.12.1),
     plotly,
     purrr,
     rlang,
@@ -71,6 +71,7 @@ Suggests:
     shinycssloaders,
     shinyjs,
     shinyjqui,
+    shinytest2,
     shinyWidgets,
     stringi,
     testthat (>= 3.0.0),
