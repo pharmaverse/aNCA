@@ -107,6 +107,13 @@ create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rds_p
   }
 }
 
+create_dose_slides_presentation <- function(res_dose_slides, path, title, rds_path, template, extra_setup, output_format = "pptx"){
+  quarto_path <- gsub("\\..*", ".qmd", path)
+  create_dose_slides_quarto(res_dose_slides, quarto_path = quarto_path, "tmp file", rds_path = NULL)
+  quarto::quarto_render(input = quarto_path, output_format = output_format)
+  file.remove(quarto_path)
+}
+
 #' Create a New Quarto Presentation Document for Exporting Plots
 #'
 #' This function creates a new Quarto (.qmd) presentation file from scratch, writing the YAML header,
@@ -119,7 +126,7 @@ create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rds_p
 #' @param template (Optional) Path to a Quarto template to use (default: NULL).
 #' @param extra_setup (Optional) Character vector of extra setup lines to include after YAML.
 #' @return Invisibly returns TRUE if the file was created.
-create_quarto_presentation <- function(quarto_path, title = "NCA Report", rds_path, template = NULL, extra_setup = NULL) {
+create_quarto_presentation <- function(quarto_path, title = "NCA Report", rds_path = NULL, template = NULL, extra_setup = NULL) {
   yaml_header <- c(
     "---",
     paste0("title: \"", title, "\""),
@@ -134,7 +141,7 @@ create_quarto_presentation <- function(quarto_path, title = "NCA Report", rds_pa
   )
   load_chunk <- c(
     "```{r setup, include=FALSE}",
-    paste0("load(\"", rds_path, "\")"),
+    if (!is.null(rds_path)) paste0("load(\"", rds_path, "\")") else "",
     "library(plotly)",
     "library(knitr)",
     "```",
