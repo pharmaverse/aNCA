@@ -29,66 +29,89 @@
 #'  and `NCA_PROFILE`.
 #' @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
-apply_mapping <- function(dataset, mapping, desired_order, silent = TRUE
+apply_mapping <- function(
+    dataset, mapping, desired_order, silent = TRUE,
+    req_mappings = c(
+      "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
+      "PCSPEC", "ROUTE", "AVAL", "STUDYID", "NCA_PROFILE",
+      "AVALU", "RRLTU", "DOSEU", "PARAM"
+    )
 ) {
 
   if (!silent) {
     paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") |>
       message()
   }
-  .validate_column_mapping(mapping)
+  .validate_column_mapping(mapping, req_mappings)
+
+  new_dataset <- dataset
 
   ####### TODO (Gerardo): This would be better to be explicit outside the function
   # Grouping_Variables should not be renamed
   mapping <- mapping[names(mapping) != "Grouping_Variables"] # TODO: Don't include in mapping arg
+
   # Special case: If ADOSEDUR is not mapped, we assume is 0
-  if (is.null(mapping$ADOSEDUR)) dataset$ADOSEDUR <- 0       # TODO: Make it default in select
+  warnings <- ""
+  if (is.null(mapping$ADOSEDUR)) {
+    new_dataset$ADOSEDUR <- 0       # TODO: Make it default in select
+    warnings <- "Dose duration is assumed to be 0 (bolus/oral)"
+  }
+  if (mapping$DRUG == "") {
+    new_dataset$DRUG <- dataset[[mapping$PARAM]]
+    warnings <- paste0(c(warnings, "Drug is assumed to be the same as the analyte (PARAM)"), collapse = ". ")
+  }
+  if (warnings != "") {
+    showNotification(warnings, type = "warning", duration = NULL)
+  }
   ################################################################################
 
   # If a variable to map is not a column in the data, assume is the value to use for its creation
-  mapping_values <- mapping[!unname(mapping) %in% names(dataset)]
+  mapping_values <- mapping[!unname(mapping) %in% names(dataset) & mapping != ""]
   for (col in names(mapping_values)) {
-    dataset[[col]] <- mapping_values[[col]]
+    new_dataset[[col]] <- mapping_values[[col]]
   }
   mapping <- mapping[unname(mapping) %in% names(dataset)]
 
   # Apply the changes to the data
-  dataset <- dataset %>%
-    # Rename variables based on mapping instructions
-    rename(!!!mapping) %>%
+  new_dataset <- new_dataset %>%
+    # Rename variables based on mapping instructions (allowing duplicate uses)
+    mutate(!!!lapply(mapping, function(col) dataset[[col]])) %>%
     # Order the renamed variables based on desired_order
     select(any_of(desired_order), everything()) %>%
     # Apply the default ADPC labels
     apply_labels()
 
   # Special case: make NCA_PROFILE a factor. TODO: Try make it in the mapping obj
-  if (!is.null(dataset$NCA_PROFILE)) dataset[["NCA_PROFILE"]] <- as.factor(dataset[["NCA_PROFILE"]])
+  if (!is.null(new_dataset$NCA_PROFILE)) new_dataset[["NCA_PROFILE"]] <- as.factor(new_dataset[["NCA_PROFILE"]])
 
   # Check there are no duplicates
   # TODO(Gerardo): This perhaps should be apart and outside of the mapping function (PKNCA obj)
-  filt_duplicates_dataset <- dataset %>%
+  filt_duplicates_dataset <- new_dataset %>%
     group_by(across(any_of(c("AFRLT", "STUDYID", "PCSPEC", "DRUG", "USUBJID", "PARAM")))) %>%
     slice(1) %>%
     ungroup() %>%
     as.data.frame()
 
-  if (nrow(filt_duplicates_dataset) < nrow(dataset)) {
+  if (nrow(filt_duplicates_dataset) < nrow(new_dataset)) {
     warning("Duplicate concentration data detected and filtered.")
   }
   filt_duplicates_dataset
 }
 
-#' Internal helper to check for missing or duplicate column mappings.
+#' Internal helper to check for missing required columns to map
 #'
 #' @param mapping A named list of vectors representing mapped columns
 #'                      grouped by category (e.g., identifiers, dosing, etc.).
+#' @param req_mappings A character vector indicating the names of the mapping object
+#'                     that needs mandatorily be populated
 #'
-#' @returns `TRUE` if valid; otherwise triggers notifications and returns `FALSE`.
+#' @returns Error if the checking does not pass
 #'
 #' @noRd
 #' @keywords internal
-.validate_column_mapping <- function(mapping) {
-  if (any(mapping == "")) stop("Unmapped columns detected.")
-  if (any(duplicated(mapping))) stop("Duplicate column selection detected.")
-  TRUE
+.validate_column_mapping <- function(mapping, req_mappings) {
+  missing_maps <- names(mapping[mapping == ""])
+  if (any(missing_maps %in% req_mappings)) {
+    stop("Unmapped required columns detected: ", paste0(missing_maps, collapse = ", "))
+  }
 }
