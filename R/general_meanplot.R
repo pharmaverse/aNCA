@@ -24,6 +24,7 @@
 #'
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom plotly ggplotly
 #' @export
 #'
 general_meanplot <- function(data,
