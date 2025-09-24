@@ -199,7 +199,7 @@ excretion_server <- function(id, input_pknca_data) {
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
       style = list(fontSize = "0.75em")
     )
-    
+
     # Save the results in the output folder
     observeEvent(results_output(), {
       session$userData$results$additional_analysis$excretion_results <- results_output()
