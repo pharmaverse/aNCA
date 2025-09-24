@@ -4,7 +4,14 @@
 \alias{apply_mapping}
 \title{Apply UI-Based Column Mapping to a Dataset}
 \usage{
-apply_mapping(dataset, mapping, desired_order, silent = TRUE)
+apply_mapping(
+  dataset,
+  mapping,
+  desired_order,
+  silent = TRUE,
+  req_mappings = c("USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT", "PCSPEC", "ROUTE",
+    "AVAL", "STUDYID", "NCA_PROFILE", "AVALU", "RRLTU", "DOSEU", "PARAM")
+)
 }
 \arguments{
 \item{dataset}{A data frame containing the raw data to be transformed.}
@@ -16,6 +23,9 @@ in the output dataset.}
 
 \item{silent}{Boolean, whether to print message with applied mapping.
 Defaults to \code{TRUE}.}
+
+\item{req_mappings}{A character vector indicating the names of the mapping object
+that must always be populated}
 }
 \value{
 A transformed data frame with:

@@ -10,6 +10,8 @@
 #' @param mapping A named list of column mappings.
 #' @param desired_order A character vector specifying the desired column order
 #'                      in the output dataset.
+#' @param req_mappings A character vector indicating the names of the mapping object
+#'                     that must always be populated
 #' @param silent Boolean, whether to print message with applied mapping.
 #'               Defaults to `TRUE`.
 #'
@@ -30,12 +32,12 @@
 #' @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
 apply_mapping <- function(
-    dataset, mapping, desired_order, silent = TRUE,
-    req_mappings = c(
-      "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
-      "PCSPEC", "ROUTE", "AVAL", "STUDYID", "NCA_PROFILE",
-      "AVALU", "RRLTU", "DOSEU", "PARAM"
-    )
+  dataset, mapping, desired_order, silent = TRUE,
+  req_mappings = c(
+    "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
+    "PCSPEC", "ROUTE", "AVAL", "STUDYID", "NCA_PROFILE",
+    "AVALU", "RRLTU", "DOSEU", "PARAM"
+  )
 ) {
 
   if (!silent) {
@@ -58,7 +60,10 @@ apply_mapping <- function(
   }
   if (mapping$DRUG == "") {
     new_dataset$DRUG <- dataset[[mapping$PARAM]]
-    warnings <- paste0(c(warnings, "Drug is assumed to be the same as the analyte (PARAM)"), collapse = ". ")
+    warnings <- paste0(
+      c(warnings, "Drug is assumed to be the same as the analyte (PARAM)"),
+      collapse = ". "
+    )
   }
   if (warnings != "") {
     showNotification(warnings, type = "warning", duration = NULL)
@@ -82,7 +87,9 @@ apply_mapping <- function(
     apply_labels()
 
   # Special case: make NCA_PROFILE a factor. TODO: Try make it in the mapping obj
-  if (!is.null(new_dataset$NCA_PROFILE)) new_dataset[["NCA_PROFILE"]] <- as.factor(new_dataset[["NCA_PROFILE"]])
+  if (!is.null(new_dataset$NCA_PROFILE)) {
+    new_dataset[["NCA_PROFILE"]] <- as.factor(new_dataset[["NCA_PROFILE"]])
+  }
 
   # Check there are no duplicates
   # TODO(Gerardo): This perhaps should be apart and outside of the mapping function (PKNCA obj)
@@ -103,7 +110,7 @@ apply_mapping <- function(
 #' @param mapping A named list of vectors representing mapped columns
 #'                      grouped by category (e.g., identifiers, dosing, etc.).
 #' @param req_mappings A character vector indicating the names of the mapping object
-#'                     that needs mandatorily be populated
+#'                     that must always be populated
 #'
 #' @returns Error if the checking does not pass
 #'
