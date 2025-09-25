@@ -114,7 +114,7 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
   if (nrow(data) == 0) {
-    return(character(0))
+    return(character())
   }
 
   tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
@@ -124,13 +124,11 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
   }
 
   # Get all labels
-  labels <- purrr::map_chr(tooltip_vars, ~ get_label(.x, type, labels_df = labels_df))
+  labels <- purrr::map_chr(tooltip_vars, \(x) get_label(x, type, labels_df = labels_df))
 
   # Create a list where each element is a vector of "Label: Value"
   # strings for an entire column
-  tooltip_components <- purrr::map(seq_along(tooltip_vars), function(i) {
-    var_name <- tooltip_vars[i]
-    label <- labels[i]
+  tooltip_components <- purrr::map2(tooltip_vars, labels, function(var_name, label) {
     paste0("<b>", label, "</b>: ", data[[var_name]])
   })
 
