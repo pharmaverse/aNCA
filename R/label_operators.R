@@ -114,7 +114,7 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
   if (nrow(data) == 0) {
-    return(character(0))
+    return(character())
   }
 
   tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
