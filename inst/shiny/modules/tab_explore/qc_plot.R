@@ -1,3 +1,14 @@
+#' Module UI for the Dose/PK Sample QC Plot.
+#'
+#' @details
+#' Creates the user interface for the QC plot tab. This includes input
+#' controls for selecting subjects, specimens, grouping variables, and coloring
+#' variables. It also defines the output area for the interactive plot.
+#'
+#' @param id A character string giving the namespace for the module.
+#'
+#' @returns A UI element representing the QC plot tab.
+
 pk_dose_qc_plot_ui <- function(id) {
   ns <- NS(id)
   # The nav_panel function creates the tab
