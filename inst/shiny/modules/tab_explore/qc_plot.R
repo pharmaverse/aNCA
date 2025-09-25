@@ -174,7 +174,7 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
         pull(n) %>%
         max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
 
-      p <- pk_dose_qc_plot(
+      pk_dose_qc_plot(
         data_conc = filtered_data()$conc,
         data_dose = filtered_data()$dose,
         x_var = "AFRLT",
@@ -190,9 +190,7 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
         show_doses = show_doses,
         as_plotly = TRUE,
         height = max(c(1000, height_adjust))
-      )
-
-      p %>%
+      ) %>%
         layout(xaxis = list(rangeslider = list(type = "time")))
     })
   })
