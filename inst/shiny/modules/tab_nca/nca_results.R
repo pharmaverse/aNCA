@@ -105,9 +105,18 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       },
       content = function(fname) {
         shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
+
+          # Create an output folder with all plots, tables and listings
           output_tmpdir <- file.path(tempdir(), "output")
           save_output(output = session$userData$results, output_path = output_tmpdir)
+
           incProgress(0.3)
+
+          # Create a settings folder
+          setts_tmpdir <- file.path(output_tmpdir, "settings")
+          dir.create(setts_tmpdir, recursive = TRUE)
+          saveRDS(session$userData$settings(), paste0(setts_tmpdir, "/settings.rds"))
+
           files <- list.files(
             output_tmpdir,
             pattern = ".(csv)|(rds)|(xpt)|(html)$",
