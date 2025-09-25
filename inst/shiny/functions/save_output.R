@@ -69,14 +69,12 @@ add_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
     "::: columns",
     "",
     "::: column",
-    "#### Plot 1",
     "```{r, echo=FALSE}",
     plot1,
     "```",
     ":::",
     "",
     "::: column",
-    "#### Plot 2",
     "```{r, echo=FALSE}",
     plot2,
     "```",
@@ -84,11 +82,10 @@ add_slide_2plots_table <- function(quarto_path, plot1, plot2, df) {
     "",
     ":::",
     "",
-    "#### Data Table",
     "```{r, echo=FALSE}",
-    "knitr::kable(",
+    "flextable::flextable(",
     df,
-    ") %>% kableExtra::kable_classic(font_size = 12)",
+    ")",
     "```"
   )
   write(slide_content, file = quarto_path, append = TRUE)
@@ -109,7 +106,9 @@ create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rds_p
 
 create_dose_slides_presentation <- function(res_dose_slides, path, title, rds_path, template, extra_setup, output_format = "pptx"){
   quarto_path <- gsub("\\..*", ".qmd", path)
-  create_dose_slides_quarto(res_dose_slides, quarto_path = quarto_path, "tmp file", rds_path = NULL)
+  save(list = as.character(quote(res_dose_slides)), file = "saved_results_for_de.rds")
+  create_dose_slides_quarto(res_dose_slides, quarto_path = quarto_path, "tmp file", rds_path = "saved_results_for_de.rds")
+  output_format <- tools::file_ext(path)
   quarto::quarto_render(input = quarto_path, output_format = output_format)
   file.remove(quarto_path)
 }
@@ -144,6 +143,7 @@ create_quarto_presentation <- function(quarto_path, title = "NCA Report", rds_pa
     if (!is.null(rds_path)) paste0("load(\"", rds_path, "\")") else "",
     "library(plotly)",
     "library(knitr)",
+    "library(kableExtra)",
     "```",
     ""
   )
@@ -208,7 +208,8 @@ linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics) {
             "CMAX[ng/mL]"
           )
         )
-      )
+      ) %>%
+      unique()
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
@@ -217,7 +218,6 @@ linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics) {
   }
   output_list
 }
-
 
 
 result <- list(

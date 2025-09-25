@@ -119,8 +119,7 @@ browser()
           )
           dir.create(presentations_path)
           save(list = "res_dose_slides", file = paste0(presentations_path, "dose_slides.rda"))
-          
-          
+
           presentations_path <- paste0(output_tmpdir, "/presentations")
           create_dose_slides_quarto(
             res_dose_slides,
