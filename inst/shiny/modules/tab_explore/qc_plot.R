@@ -81,6 +81,7 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
       )
 
       param_choices_pcspec <- data() %>%
+        filter(!is.na(PCSPEC)) %>%
         pull(PCSPEC) %>%
         unique()
 
