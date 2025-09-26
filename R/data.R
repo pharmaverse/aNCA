@@ -25,6 +25,8 @@
 #'    Indicates if the parameter can be used in multiple dose analysis}
 #'   \item{can_extravascular}{Logical.
 #'    Indicates if the parameter can be used in extravascular analysis}
+#'    \item{can_metabolite}{Logical.
+#'    Indicates if the parameter can be used in metabolite analysis}
 #' }
 #' @source Generated for use in the `translate_nomenclature` function.
 "metadata_nca_parameters"
