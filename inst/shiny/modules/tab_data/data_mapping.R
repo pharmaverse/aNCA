@@ -263,9 +263,20 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           silent = FALSE
         )
       }, warning = function(w) {
-        log_warn(conditionMessage(w))
-        showNotification(conditionMessage(w), type = "warning", duration = 10)
-        invokeRestart("muffleWarning")
+        withCallingHandlers(
+          {
+            apply_mapping(
+              adnca_data(),
+              mapping_,
+              MAPPING_DESIRED_ORDER,
+              silent = FALSE
+            )
+          },
+          warning = function(w) {
+            log_warn(conditionMessage(w))
+            showNotification(conditionMessage(w), type = "warning", duration = 10)
+          }
+        )
       }, error = function(e) {
         log_error(conditionMessage(e))
         showNotification(conditionMessage(e), type = "error", duration = NULL)

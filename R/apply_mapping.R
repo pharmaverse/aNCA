@@ -53,20 +53,22 @@ apply_mapping <- function(
   mapping <- mapping[names(mapping) != "Grouping_Variables"] # TODO: Don't include in mapping arg
 
   # Special case: If ADOSEDUR is not mapped, we assume is 0
-  warnings <- ""
   if (is.null(mapping$ADOSEDUR)) {
     new_dataset$ADOSEDUR <- 0       # TODO: Make it default in select
-    warnings <- "Dose duration is assumed to be 0 (bolus/oral)"
+    warning("Dose duration is assumed to be 0 (bolus/oral)")
   }
   if (mapping$DRUG == "") {
     new_dataset$DRUG <- dataset[[mapping$PARAM]]
-    warnings <- paste0(
-      c(warnings, "Drug is assumed to be the same as the analyte (PARAM)"),
-      collapse = ". "
-    )
+    warning("Drug is assumed to be the same as the analyte (PARAM)")
   }
-  if (warnings != "") {
-    showNotification(warnings, type = "warning", duration = NULL)
+  conflictive_cols <- names(mapping) %in% names(dataset) & sapply(names(mapping), \(n) !any(n %in% unname(mapping)))
+  if (any(conflictive_cols)) {
+    conflictive_colnames <- names(conflictive_cols)[unname(conflictive_cols)]
+    warning(
+      paste0(
+        "Found conflictive columns in the input dataset that will not be considered after mapping: ",
+        paste0(conflictive_colnames, collapse = ", ")
+    ))
   }
   ################################################################################
 
