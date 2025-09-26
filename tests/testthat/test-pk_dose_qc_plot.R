@@ -22,10 +22,10 @@ DUMMY_LABELS_DF <- data.frame(
   Label = character()
 )
 
-describe("faceted_qc_plot", {
+describe("pk_dose_qc_plot", {
 
   it("returns a ggplot object when as_plotly is FALSE", {
-    p <- faceted_qc_plot(
+    p <- pk_dose_qc_plot(
       data_conc = CONC_DATA, x_var = "ACTUAL_TIME", y_var = "USUBJID",
       colour_var = "DOSE_LEVEL", shape_var = "SAMPLE_TYPE", grouping_vars = "COHORT",
       as_plotly = FALSE
@@ -34,7 +34,7 @@ describe("faceted_qc_plot", {
   })
 
   it("returns a plotly object when as_plotly is TRUE", {
-    p <- faceted_qc_plot(
+    p <- pk_dose_qc_plot(
       data_conc = CONC_DATA, data_dose = DOSE_DATA,
       x_var = "ACTUAL_TIME", y_var = "USUBJID",
       colour_var = "DOSE_LEVEL", shape_var = "SAMPLE_TYPE", grouping_vars = "COHORT",
@@ -44,7 +44,7 @@ describe("faceted_qc_plot", {
   })
 
   it("plots only concentration data when show_doses is FALSE", {
-    p <- faceted_qc_plot(
+    p <- pk_dose_qc_plot(
       data_conc = CONC_DATA, data_dose = DOSE_DATA, show_doses = FALSE,
       x_var = "ACTUAL_TIME", y_var = "USUBJID",
       colour_var = "DOSE_LEVEL", shape_var = "SAMPLE_TYPE", grouping_vars = "COHORT"
@@ -54,7 +54,7 @@ describe("faceted_qc_plot", {
   })
 
   it("plots only dose data when show_pk_samples is FALSE", {
-    p <- faceted_qc_plot(
+    p <- pk_dose_qc_plot(
       data_conc = CONC_DATA, data_dose = DOSE_DATA, show_pk_samples = FALSE,
       x_var = "ACTUAL_TIME", y_var = "USUBJID",
       colour_var = "DOSE_LEVEL", shape_var = "SAMPLE_TYPE", grouping_vars = "COHORT"
@@ -64,14 +64,14 @@ describe("faceted_qc_plot", {
   })
 
   it("returns an empty plot when no data is provided or shown", {
-    p_null <- faceted_qc_plot(
+    p_null <- pk_dose_qc_plot(
       data_conc = NULL, data_dose = NULL,
       x_var = "ACTUAL_TIME", y_var = "USUBJID",
       colour_var = "DOSE_LEVEL", shape_var = "SAMPLE_TYPE", grouping_vars = "COHORT"
     )
     expect_length(p_null$layers, 0)
 
-    p_hidden <- faceted_qc_plot(
+    p_hidden <- pk_dose_qc_plot(
       data_conc = CONC_DATA, data_dose = DOSE_DATA,
       show_pk_samples = FALSE, show_doses = FALSE,
       x_var = "ACTUAL_TIME", y_var = "USUBJID",
@@ -81,7 +81,7 @@ describe("faceted_qc_plot", {
   })
 
   it("appends units to labels correctly when units are unique", {
-    p <- faceted_qc_plot(
+    p <- pk_dose_qc_plot(
       data_conc = CONC_DATA, data_dose = DOSE_DATA,
       x_var = "ACTUAL_TIME", y_var = "USUBJID",
       colour_var = "DOSE_LEVEL", shape_var = "SAMPLE_TYPE", grouping_vars = "COHORT",
@@ -95,7 +95,7 @@ describe("faceted_qc_plot", {
     conc_data_multi_unit <- CONC_DATA
     conc_data_multi_unit$TIME_UNIT <- c("hr", "min", "hr", "min")
 
-    p <- faceted_qc_plot(
+    p <- pk_dose_qc_plot(
       data_conc = conc_data_multi_unit, data_dose = DOSE_DATA,
       x_var = "ACTUAL_TIME", y_var = "USUBJID",
       colour_var = "DOSE_LEVEL", shape_var = "SAMPLE_TYPE", grouping_vars = "COHORT",
