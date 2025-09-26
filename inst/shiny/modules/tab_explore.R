@@ -124,8 +124,8 @@ tab_explore_ui <- function(id) {
             choices = NULL
           ),
           checkboxInput(ns("log_mean_plot"), label = "Scale y Log"),
-          checkboxInput(ns("sd_mean_plot_max"), label = "+SD"),
-          checkboxInput(ns("sd_mean_plot_min"), label = "-SD"),
+          checkboxInput(ns("sd_mean_plot_max"), label = "+SD", value = TRUE),
+          checkboxInput(ns("sd_mean_plot_min"), label = "-SD", value = TRUE),
           checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
           position = "right",
           open = TRUE
@@ -185,7 +185,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         session,
         "generalplot_usubjid",
         choices = param_choices_usubjid,
-        selected = param_choices_usubjid[1]
+        selected = param_choices_usubjid
       )
 
       # Update the colorby and facet by picker inputs
@@ -279,8 +279,8 @@ tab_explore_server <- function(id, data, grouping_vars) {
       )
     })
 
-    # render the general lineplot output in plotly
-    output$individualplot <- renderPlotly({
+    # Compute the individual plot object
+    individualplot <- reactive({
       req(data())
       req(master_palettes_list())
       req(input$generalplot_analyte)
@@ -325,9 +325,18 @@ tab_explore_server <- function(id, data, grouping_vars) {
             )
           )
       }
-      session$userData$results$exploration$individualplot <- p
       p
     })
+
+    # Save the object for the zip folder whenever it changes
+    observe({
+      req(individualplot())
+      session$userData$results$exploration$individualplot <- individualplot()
+    })
+
+    # Render the inidividual plot in plotly
+    output$individualplot <- renderPlotly(individualplot())
+
 
     # TAB: Mean Plot -----------------------------------------------------------
 
@@ -348,13 +357,13 @@ tab_explore_server <- function(id, data, grouping_vars) {
       )
     })
 
-    # render the mean plot output in plotly
-    output$mean_plot <- renderPlotly({
+    # Compute the meanplot object
+    meanplot <- reactive({
       req(input$studyid_mean)
       req(input$analyte_mean)
       req(input$pcspec_mean)
       req(input$cycles_mean)
-      log_info("Rendering mean plot")
+      log_info("Computing meanplot ggplot object")
 
       validate(
         need(
@@ -399,6 +408,18 @@ tab_explore_server <- function(id, data, grouping_vars) {
         )
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
+    })
+
+    # Save the object for the zip folder whenever it changes
+    observe({
+      req(meanplot())
+      session$userData$results$exploration$meanplot <- meanplot()
+    })
+
+    # Render the mean plot output in plotly
+    output$mean_plot <- renderPlotly({
+      req(meanplot())
+      meanplot()
     })
   })
 }
