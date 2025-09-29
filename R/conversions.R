@@ -257,27 +257,32 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' simplify_unit("(mg*L)/(mL)")
 #' @export
 simplify_unit <- function(x, as_character = FALSE) {
-  # NA input returns NA output
+  # Handle NA input
   if (is.na(x)) {
-    if (as_character) return(NA_character_) else return(NA_real_)
+    return(if (as_character) NA_character_ else NA)
   }
-  # Accept either units object or character
-  if (is.character(x)) {
-    x <- units::as_units(x, check_is_valid = FALSE)
-  } else if (!inherits(x, "units")) {
-    stop("Input must be a units object or character string.")
+
+  # handle special case unitless
+  if (is.character(x) && tolower(x) == "unitless") {
+    if (as_character) {
+      return("unitless")
+    } else {
+      return(set_units(1)) # Return the standard unitless object
+    }
   }
-  unit_str <- units::deparse_unit(x)
-  unit_val <- as.numeric(x)
-  unit_parts <- unlist(strsplit(unit_str, split = " "))
-  unit_objs <- lapply(
-    unit_parts,
-    function(part) units::as_units(part, check_is_valid = FALSE)
-  )
-  new_unit <- Reduce(`*`, unit_objs) * unit_val
+
+  # Temporarily set the simplify option to handle prefixes
+  old_opt <- units_options("simplify")
+  on.exit(units_options(simplify = old_opt))
+  units_options(simplify = TRUE)
+
+  # Create the simplified object
+  simplified_obj <- set_units(1, value = x, mode = "standard")
+
+  # Return either the final units object or its character representation
   if (as_character) {
-    unname(units::deparse_unit(new_unit))
+    deparse_unit(simplified_obj)
   } else {
-    new_unit
+    simplified_obj
   }
 }
