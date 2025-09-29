@@ -1,5 +1,7 @@
 expected_df <- data.frame(
   USUBJID = 1:3,
+  PARAM = "A",
+  DRUG = "A",
   AVAL = 1:3,
   AVALU = "ng/mL",
   DOSE = 1:3,
@@ -9,6 +11,8 @@ expected_df <- data.frame(
 )
 var_labels(expected_df) <- c(
   "Unique Subject Identifier",
+  "Parameter",
+  "Medication Name",
   "Analysis Value",
   "Analysis Value Unit",
   "DOSE",
@@ -21,7 +25,7 @@ desired_order <- names(expected_df)
 describe("apply_mapping", {
   it("renames columns correctly", {
     test_df <- expected_df
-    names(test_df) <- c("id", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
+    names(test_df) <- c("id", "analyte", "drug", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
     mapping <- as.list(setNames(names(test_df), names(expected_df)))
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df, expected_df)
