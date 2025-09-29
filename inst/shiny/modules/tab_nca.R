@@ -218,7 +218,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
           # Only select column that are only NA
           select(where(~ all(is.na(.x)))) %>%
           names()
-        
+
         # Filter for requested params based on intervals
         res$result <- res$result %>%
           filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
