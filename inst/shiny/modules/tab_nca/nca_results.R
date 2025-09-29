@@ -109,25 +109,38 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           # Create an output folder with all plots, tables and listings
           output_tmpdir <- file.path(tempdir(), "output")
           save_output(output = session$userData$results, output_path = output_tmpdir)
-browser()
+
           # Create presentation slides
           res_nca <- res_nca()
           res_dose_slides <- linplot_meanplot_stats_by_group(
             o_nca = res_nca,
             group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
-            statistics = c("Mean", "Median")
+            facet_vars = "DOSEA",
+            statistics = c("Mean"),
+            stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP")
           )
-          dir.create(presentations_path)
-          save(list = "res_dose_slides", file = paste0(presentations_path, "dose_slides.rda"))
-
           presentations_path <- paste0(output_tmpdir, "/presentations")
-          create_dose_slides_quarto(
-            res_dose_slides,
-            quarto_path = paste0(presentations_path, "dose_slides.qmd"),
-            title = paste0("Dose Escalation Slides for ", session$userData$project_name()),
-            rds_path = "dose_slides.rda"
+          dir.create(presentations_path)
+          browser()
+          create_dose_slides_presentation(
+            res_dose_slides = res_dose_slides,
+            path = paste0(presentations_path, "/dose_escalation.pptx"),
+            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            template = NULL
           )
-
+          create_dose_slides_presentation(
+            res_dose_slides = res_dose_slides,
+            path = paste0(presentations_path, "/dose_escalation.html"),
+            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            template = NULL
+          )
+          create_dose_slides_presentation(
+            res_dose_slides = res_dose_slides,
+            path = paste0(presentations_path, "/dose_escalation.pdf"),
+            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            template = NULL
+          )
+ 
           # Save all R outputs in one file as well
           results <- session$userData$results
           save(list = "results", file = paste0(output_tmpdir, "/all_session_results.rda"))
@@ -141,7 +154,7 @@ browser()
 
           files <- list.files(
             output_tmpdir,
-            pattern = ".(csv)|(rds)|(xpt)|(html)|(rda)$",
+            pattern = ".(csv)|(rds)|(xpt)|(html)|(rda)|(dose_escalation.html)|(pptx)|(qmd)$",
             recursive = TRUE
           )
           wd <- getwd()
