@@ -262,6 +262,13 @@ simplify_unit <- function(x, as_character = FALSE) {
     return(if (as_character) NA_character_ else NA)
   }
 
+  # Accept either units object or character
+  if (is.character(x)) {
+    x <- units::as_units(x, check_is_valid = FALSE)
+  } else if (!inherits(x, "units")) {
+    stop("Input must be a units object or character string.")
+  }
+
   # handle special case unitless
   if (is.character(x) && tolower(x) == "unitless") {
     if (as_character) {
