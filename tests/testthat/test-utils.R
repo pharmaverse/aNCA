@@ -105,7 +105,7 @@ describe(".concatenate_list", {
   })
 
   it("formats a nested list correctly", {
-    l <- list(main = list(sub1 = 1, sub2 = c(2,3)))
+    l <- list(main = list(sub1 = 1, sub2 = c(2, 3)))
     result <- .concatenate_list("Nested List", l)
     expect_equal(
       result,

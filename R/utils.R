@@ -124,7 +124,7 @@ parse_annotation <- function(data, text) {
 #' @noRd
 #' @keywords internal
 .concatenate_list <- function(title, l) {
-  
+
   # Make a list of rows for data frames
   if (is.data.frame(l))
     l <- split(l, seq_len(nrow(l)))
