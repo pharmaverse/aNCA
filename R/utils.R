@@ -131,7 +131,7 @@ parse_annotation <- function(data, text) {
     sep <- ", "
     if (is.list(v)) {
       v <- imap(v, \(v2, n2) paste0("\t* ", n2, " -> ", paste0(v2, collapse = ", "))) |>
-        paste0(collapse = "\n") |>
+        paste0(collapse = "\n") %>%
         paste0("\n", .)
     } else {
       v <- paste0(v, collapse = ", ")
