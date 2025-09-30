@@ -48,7 +48,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   wide_output$result <- wide_output$result %>%
     filter(
       PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last",
-                      "lambda.z", "adj.r.squared", "span.ratio")
+                      "lambda.z", "adj.r.squared", "span.ratio", "tlast")
     ) %>%
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES")))
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
@@ -96,6 +96,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     mutate(
       lambda.z.time.first = lambda.z.time.first + start,
       lambda.z.time.last = lambda.z.time.last + start,
+      tlast = tlast + start,
       is_halflife_used = .[[time_col]] >= lambda.z.time.first &
         .[[time_col]] <= lambda.z.time.last &
         !.[[exclude_hl_col]]
@@ -108,7 +109,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
         is_halflife_used
       }
     ) %>%
-    ungroup()
+    ungroup() %>%
+    # Disconsider BLQ points at the end (never used for half-life)
+    filter(.[[time_col]] > tlast)
 
   info_per_plot_list <- info_per_plot_list %>%
     mutate(
@@ -123,12 +126,12 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   data_list <- list()
   for (i in seq_len(length(info_per_plot_list))) {
     df <- info_per_plot_list[[i]]
-
+if (df$USUBJID[1] == "XX01-11105") browser()
     # Create line data
     if (any(!is.na(df$is_halflife_used))) {
       df_fit <- df[df$is_halflife_used, ]
       fit <- stats::lm(as.formula(paste0("log10(", conc_col, ") ~ ", time_col)), df_fit)
-      fit_line_data <- data.frame(x = c(df$lambda.z.time.first[1], max(df[[time_col]])))
+      fit_line_data <- data.frame(x = c(df$lambda.z.time.first[1], df$tlast[1]))
       colnames(fit_line_data) <- time_col
       fit_line_data$y <- stats::predict(fit, fit_line_data)
     } else {
