@@ -125,4 +125,12 @@ describe("apply_mapping", {
     expect_true(is.factor(result_df$NCA_PROFILE))
     expect_equal(result_df, expected_df)
   })
+
+  it("warns the user about columns lost after mapping due to column name conflicts", {
+    test_df$DRUG <- "Medication A"
+    expect_warning(
+      apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
+      "Found conflictive columns in the input dataset that will not be considered after mapping: DRUG"
+    )
+  })
 })
