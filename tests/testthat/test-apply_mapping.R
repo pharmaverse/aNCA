@@ -22,19 +22,19 @@ var_labels(expected_df) <- c(
 )
 desired_order <- names(expected_df)
 
+# Create the general test scenario
+test_df <- expected_df
+names(test_df) <- c("id", "analyte", "drug", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
+var_labels(test_df) <- rep(NA_character_, ncol(test_df))
+mapping <- as.list(setNames(names(test_df), names(expected_df)))
+
 describe("apply_mapping", {
   it("renames columns correctly", {
-    test_df <- expected_df
-    names(test_df) <- c("id", "analyte", "drug", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
-    mapping <- as.list(setNames(names(test_df), names(expected_df)))
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df, expected_df)
   })
 
   it("informs of the changes when silent is FALSE", {
-    test_df <- expected_df
-    names(test_df) <- c("id", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
-    mapping <- as.list(setNames(names(test_df), names(expected_df)))
     expect_message(
       apply_mapping(
         dataset = test_df, mapping = mapping, desired_order = desired_order, silent = FALSE
@@ -44,34 +44,57 @@ describe("apply_mapping", {
   })
 
   it("creates columns when its map reference is not a column name in the dataset", {
-    test_df <- expected_df[, !names(expected_df) %in% c("AVALU")]
-    mapping <- as.list(setNames(names(test_df), names(test_df)))
+    test_df <- test_df[, !names(expected_df) %in% c("AVALU")]
     mapping["AVALU"] <- "ng/mL"
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df, expected_df)
   })
 
   it("orders the columns correctly", {
-    wrong_order_cols <- c("USUBJID", "AFRLT", "NCA_PROFILE", "DOSE", "ADOSEDUR", "AVALU", "AVAL")
+    wrong_order_cols <- rev(desired_order)
     test_df <- expected_df[, wrong_order_cols]
     mapping <- as.list(setNames(names(test_df), names(test_df)))
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(names(result_df), desired_order)
   })
+  
+  it("returns an error if any required column is not mapped", {
+    mapping["AVAL"] <- ""
+    expect_error(
+      apply_mapping(
+        dataset = test_df,
+        mapping = mapping,
+        desired_order = desired_order,
+        req_mappings = names(expected_df)
+      ),
+      "Unmapped required columns detected: AVAL"
+    )
+  })
 
-  it("apply labels correctly", {
-    test_df <- expected_df
-    names(test_df) <- c("id", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
+  it("apply labels correctly when missing", {
     var_labels(test_df) <- rep(NA_character_, length(names(test_df)))
     mapping <- as.list(setNames(names(test_df), names(expected_df)))
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(var_labels(result_df), var_labels(expected_df))
   })
 
-  it("adds ADOSEDUR = 0 if not mapped", {
-    test_df <- expected_df[, !names(expected_df) %in% "ADOSEDUR"]
-    mapping <- as.list(setNames(names(test_df), names(test_df)))
-    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+  it("adds ADOSEDUR = 0 if not mapped and warns the user", {
+    test_df <- test_df[, !names(expected_df) == "ADOSEDUR"]
+    mapping["ADOSEDUR"] <- NULL
+    expect_warning(
+      result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
+      "Dose duration is assumed to be 0  for all records \\(ADOSEDUR = 0"
+    )
+    expect_equal(result_df, expected_df)
+  })
+  
+  it("adds DRUG = PARAM if not mapped and warns the user", {
+    mapping["DRUG"] <- ""
+    test_df <- test_df[, !names(expected_df) %in% "DRUG"]
+    expect_warning(
+      result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
+      "Drug is assumed to be the same as the analyte for all records \\(DRUG = PARAM"
+    )
     expect_equal(result_df, expected_df)
   })
 
@@ -88,24 +111,11 @@ describe("apply_mapping", {
     expect_equal(result_df, expected_df)
   })
 
-  it("throws error if mapping includes duplicates or empty characters", {
-    test_df <- expected_df
-    mapping <- as.list(setNames(names(test_df), names(test_df)))
-
-    mapping_with_dup <- c(mapping, mapping["AVAL"])
-    expect_error(
-      apply_mapping(dataset = test_df, mapping = mapping_with_dup, desired_order = desired_order),
-      "Duplicate column selection detected."
-    )
-
-    mapping_with_empty_char <- mapping
-    mapping_with_empty_char["AVAL"] <- ""
-    expect_error(
-      apply_mapping(
-        dataset = test_df, mapping = mapping_with_empty_char, desired_order = desired_order
-      ),
-      "Unmapped columns detected."
-    )
+  it("allows duplicated mappings", {
+    mapping["PARAM"] = mapping["DRUG"]
+    result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
+    expect_equal(result_df[, names(result_df) != "analyte"], expected_df, ignore_attr = TRUE)
+    # NOTE: uDplicated mapped columns will conserve duplicated labels if originally present
   })
 
   it("makes sure NCA_PROFILE is a factor", {
