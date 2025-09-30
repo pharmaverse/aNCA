@@ -26,4 +26,5 @@ simplify_unit(u)
 
 # Using a character string
 simplify_unit("(mg*L)/(mL)")
+
 }

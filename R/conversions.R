@@ -255,7 +255,7 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #'
 #' # Using a character string
 #' simplify_unit("(mg*L)/(mL)")
-#' 
+#'
 #' @importFrom units units_options set_units deparse_unit drop_units
 #' @export
 simplify_unit <- function(x, as_character = FALSE) {

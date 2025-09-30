@@ -277,7 +277,7 @@ describe("simplify_unit", {
     expect_equal(simplify_unit(NA), NA_real_)
     expect_equal(simplify_unit(NA, as_character = TRUE), NA_character_)
   })
-  
+
   it("handles unitless inputs", {
     expect_equal(units::deparse_unit(simplify_unit("unitless")), "unitless")
     expect_equal(simplify_unit("unitless", as_character = TRUE), "unitless")
