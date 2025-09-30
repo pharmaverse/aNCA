@@ -124,20 +124,24 @@ parse_annotation <- function(data, text) {
 #' @noRd
 #' @keywords internal
 .concatenate_list <- function(title, l) {
+  
+  # Make a list of rows for data frames
   if (is.data.frame(l))
     l <- split(l, seq_len(nrow(l)))
 
-  log_msg <- imap(l, \(v, n) {
+  # Construct the log message for each list element
+  log_msg <- imap(l, \(val, nm) {
     sep <- ", "
-    if (is.list(v)) {
-      v <- imap(v, \(v2, n2) paste0("\t* ", n2, " -> ", paste0(v2, collapse = ", "))) |>
+    if (is.list(val)) {
+      val <- imap(val, \(val2, nm2) paste0("\t* ", nm2, " -> ", paste0(val2, collapse = ", "))) |>
         paste0(collapse = "\n") %>%
         paste0("\n", .)
     } else {
-      v <- paste0(v, collapse = ", ")
+      val <- paste0(val, collapse = ", ")
     }
-    paste0("* ", n, " -> ", v, collapse = "\n")
+    paste0("* ", nm, " -> ", val, collapse = "\n")
   })
 
+  # Paste all together in different lines
   paste0(title, "\n", paste0(log_msg, collapse = "\n"))
 }
