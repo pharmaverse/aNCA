@@ -268,7 +268,7 @@ simplify_unit <- function(x, as_character = FALSE) {
     if (as_character) {
       return("unitless")
     } else {
-      return(set_units(1)) # Return the standard unitless object
+      return(set_units(1, "unitless", check_is_valid = FALSE)) # Return unitless object
     }
   }
 
