@@ -14,7 +14,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
       card_body(
         fluidRow(
           column(6,
-                 actionButton(ns("add_pair"), "Add Ratio Pair", icon = icon("plus"))
+                 actionButton(ns("add_pair"), "Add Ratio Pair", icon = icon("plus"), class = "add-pair-btn")
           ),
           column(6,
                  selectInput(
@@ -95,26 +95,25 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       spec2_id <- paste0("spec2_", count)
       remove_id <- paste0("remove_", count)
 
-      ui <- fluidRow(
+      ui <- div(
+        class = "ratio-pair-row",
         id = ns(pair_id),
-        column(5,
-               selectInput(
-                 ns(paste0("spec1_", count)),
-                 "Numerator(s)",
-                 choices = spec_options(),
-                 multiple = TRUE
-               )
+        selectInput(
+          ns(paste0("spec1_", count)),
+           "Numerator(s)",
+           choices = spec_options(),
+           multiple = TRUE
+          ),
+          
+        selectInput(
+         ns(paste0("spec2_", count)),
+         "Denominator(s)",
+         choices = spec_options(),
+         multiple = TRUE
         ),
-        column(5,
-               selectInput(
-                 ns(paste0("spec2_", count)),
-                 "Denominator(s)",
-                 choices = spec_options(),
-                 multiple = TRUE
-               )
-        ),
-        column(2,
-               actionButton(ns(paste0("remove_", count)), "Remove", icon = icon("trash-alt"))
+        div(
+          class = "ratio-remove-btn-wrapper",
+          actionButton(ns(paste0("remove_", count)), "", icon = icon("trash-alt"))
         )
       )
 
