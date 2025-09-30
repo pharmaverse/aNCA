@@ -284,7 +284,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
                                     pcspec_choices,
                                     value = TRUE,
                                     ignore.case = TRUE)
-        
+
         # Assign to current_pcspec if found, otherwise select all
         if (length(plasma_serum_values) > 0) {
           current_pcspec <- plasma_serum_values
