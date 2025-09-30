@@ -55,11 +55,12 @@ apply_mapping <- function(
   # Special case: If ADOSEDUR is not mapped, we assume is 0
   if (is.null(mapping$ADOSEDUR)) {
     new_dataset$ADOSEDUR <- 0       # TODO: Make it default in select
-    warning("Dose duration is assumed to be 0 (bolus/oral)")
+    warning("Dose duration is assumed to be 0  for all records (ADOSEDUR = 0)")
   }
+  # Special case: If DRUG is not mapped, we assume is equal to PARAM
   if (mapping$DRUG == "") {
     new_dataset$DRUG <- dataset[[mapping$PARAM]]
-    warning("Drug is assumed to be the same as the analyte (PARAM)")
+    warning("Drug is assumed to be the same as the analyte for all records (DRUG = PARAM)")
   }
   conflictive_cols <- names(mapping) %in% names(dataset) & sapply(names(mapping), \(n) !any(n %in% unname(mapping)))
   if (any(conflictive_cols)) {
@@ -87,6 +88,10 @@ apply_mapping <- function(
     select(any_of(desired_order), everything()) %>%
     # Apply the default ADPC labels
     apply_labels()
+  
+  # Remove variables that are now redundant due to the renaming
+  redundant_cols <- unname(mapping)[!unname(mapping) %in% names(mapping)]
+  new_dataset <- new_dataset[!names(new_dataset) %in% redundant_cols]
 
   # Special case: make NCA_PROFILE a factor. TODO: Try make it in the mapping obj
   if (!is.null(new_dataset$NCA_PROFILE)) {
