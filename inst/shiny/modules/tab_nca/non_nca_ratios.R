@@ -31,7 +31,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
     ),
     card(
       height = "60vh",
-      card_header(paste0(title, "Results")),
+      card_header(paste0(title, " Results")),
       card_body(
         reactable_ui(ns("results"))
       )
