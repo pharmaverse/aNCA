@@ -62,21 +62,26 @@ apply_mapping <- function(
     new_dataset$DRUG <- dataset[[mapping$PARAM]]
     warning("Drug is assumed to be the same as the analyte for all records (DRUG = PARAM)")
   }
-  conflictive_cols <- names(mapping) %in% names(dataset) & sapply(names(mapping), \(n) !any(n %in% unname(mapping)))
+
+  # Conflictive original columns with the mapping will be removed. Warn the user
+  is_col_rep_in_map_and_df <- names(mapping) %in% names(dataset)
+  is_col_not_used_in_map <- sapply(names(mapping), \(n) !any(n %in% unname(mapping)))
+  conflictive_cols <- is_col_rep_in_map_and_df & is_col_not_used_in_map
   if (any(conflictive_cols)) {
     conflictive_colnames <- names(conflictive_cols)[unname(conflictive_cols)]
     warning(
       paste0(
-        "Found conflictive columns in the input dataset that will not be considered after mapping: ",
+        "Conflictive column names between input and mapping names are removed: ",
         paste0(conflictive_colnames, collapse = ", ")
-    ))
+      )
+    )
   }
   ################################################################################
 
   # If a variable to map is not a column in the data, assume is the value to use for its creation
-  mapping_values <- mapping[!unname(mapping) %in% names(dataset) & mapping != ""]
-  for (col in names(mapping_values)) {
-    new_dataset[[col]] <- mapping_values[[col]]
+  mappings_not_in_data <- mapping[!unname(mapping) %in% names(dataset) & mapping != ""]
+  for (col in names(mappings_not_in_data)) {
+    new_dataset[[col]] <- mappings_not_in_data[[col]]
   }
   mapping <- mapping[unname(mapping) %in% names(dataset)]
 
@@ -88,7 +93,7 @@ apply_mapping <- function(
     select(any_of(desired_order), everything()) %>%
     # Apply the default ADPC labels
     apply_labels()
-  
+
   # Remove variables that are now redundant due to the renaming
   redundant_cols <- unname(mapping)[!unname(mapping) %in% names(mapping)]
   new_dataset <- new_dataset[!names(new_dataset) %in% redundant_cols]

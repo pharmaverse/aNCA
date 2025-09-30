@@ -24,7 +24,10 @@ desired_order <- names(expected_df)
 
 # Create the general test scenario
 test_df <- expected_df
-names(test_df) <- c("id", "analyte", "drug", "CONC", "CONC_unit", "dose", "dosedur", "TIME", "DOSNO")
+names(test_df) <- c(
+  "id", "analyte", "drug", "CONC", "CONC_unit",
+  "dose", "dosedur", "TIME", "DOSNO"
+)
 var_labels(test_df) <- rep(NA_character_, ncol(test_df))
 mapping <- as.list(setNames(names(test_df), names(expected_df)))
 
@@ -57,7 +60,7 @@ describe("apply_mapping", {
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(names(result_df), desired_order)
   })
-  
+
   it("returns an error if any required column is not mapped", {
     mapping["AVAL"] <- ""
     expect_error(
@@ -82,17 +85,25 @@ describe("apply_mapping", {
     test_df <- test_df[, !names(expected_df) == "ADOSEDUR"]
     mapping["ADOSEDUR"] <- NULL
     expect_warning(
-      result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
+      result_df <- apply_mapping(
+        dataset = test_df,
+        mapping = mapping,
+        desired_order = desired_order
+      ),
       "Dose duration is assumed to be 0  for all records \\(ADOSEDUR = 0"
     )
     expect_equal(result_df, expected_df)
   })
-  
+
   it("adds DRUG = PARAM if not mapped and warns the user", {
     mapping["DRUG"] <- ""
     test_df <- test_df[, !names(expected_df) %in% "DRUG"]
     expect_warning(
-      result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
+      result_df <- apply_mapping(
+        dataset = test_df,
+        mapping = mapping,
+        desired_order = desired_order
+      ),
       "Drug is assumed to be the same as the analyte for all records \\(DRUG = PARAM"
     )
     expect_equal(result_df, expected_df)
@@ -112,7 +123,7 @@ describe("apply_mapping", {
   })
 
   it("allows duplicated mappings", {
-    mapping["PARAM"] = mapping["DRUG"]
+    mapping["PARAM"] <- mapping["DRUG"]
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df[, names(result_df) != "analyte"], expected_df, ignore_attr = TRUE)
     # NOTE: uDplicated mapped columns will conserve duplicated labels if originally present
@@ -130,7 +141,7 @@ describe("apply_mapping", {
     test_df$DRUG <- "Medication A"
     expect_warning(
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
-      "Found conflictive columns in the input dataset that will not be considered after mapping: DRUG"
+      "Conflictive column names between input and mapping names are removed: DRUG"
     )
   })
 })
