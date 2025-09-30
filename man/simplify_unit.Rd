@@ -17,7 +17,7 @@ A simplified units object, or a list of units objects if input is a vector.
 }
 \description{
 This function takes a units object or a character string representing a unit expression
-and returns a simplified units object by canceling when possible its convertible terms.
+and returns a simplified units using the units package simplifications.
 }
 \examples{
 # Using a units object

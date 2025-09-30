@@ -242,7 +242,7 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' Simplify compound unit expressions
 #'
 #' This function takes a units object or a character string representing a unit expression
-#' and returns a simplified units object by canceling when possible its convertible terms.
+#' and returns a simplified units using the units package simplifications.
 #'
 #' @param x A units object, character string, or vector of either to be simplified.
 #' @param as_character Logical. TRUE returns the result as a character,
@@ -257,19 +257,13 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' simplify_unit("(mg*L)/(mL)")
 #' @export
 simplify_unit <- function(x, as_character = FALSE) {
+
   # Handle NA input
   if (is.na(x)) {
-    return(if (as_character) NA_character_ else NA)
+    return(if (as_character) NA_character_ else NA_real_)
   }
 
-  # Accept either units object or character
-  if (is.character(x)) {
-    x <- units::as_units(x, check_is_valid = FALSE)
-  } else if (!inherits(x, "units")) {
-    stop("Input must be a units object or character string.")
-  }
-
-  # handle special case unitless
+  # handle special case: unitless
   if (is.character(x) && tolower(x) == "unitless") {
     if (as_character) {
       return("unitless")
@@ -277,16 +271,27 @@ simplify_unit <- function(x, as_character = FALSE) {
       return(set_units(1)) # Return the standard unitless object
     }
   }
+  
+  # If input is a units object, use its value. Otherwise, default to 1.
+  value <- if (inherits(x, "units")) drop_units(x) else 1
+  # If input is a units object, deparse its units.
+  unit_char <- if (inherits(x, "units")) deparse_unit(x) else x
 
-  # Temporarily set the simplify option to handle prefixes
+  # Temporarily set the simplify option to TRUE
   old_opt <- units_options("simplify")
   on.exit(units_options(simplify = old_opt))
   units_options(simplify = TRUE)
 
-  # Create the simplified object
-  simplified_obj <- set_units(1, value = x, mode = "standard")
+  # Create the simplified units object within tryCatch
+  simplified_obj <- tryCatch({
+    # Attempt to parse and simplify the unit
+    set_units(value, unit_char, mode = "standard")
+  }, error = function(e) {
+    # If an error occurs, it's an invalid unit.
+    stop("Input must be a valid units object or character string.")
+  })
 
-  # Return either the final units object or its character representation
+  # Return either the final units object or character string
   if (as_character) {
     deparse_unit(simplified_obj)
   } else {
