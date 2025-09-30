@@ -93,3 +93,37 @@ describe(".plotly_empty_plot", {
     expect_false(plot$x$layoutAttrs[[1]]$yaxis$visible)
   })
 })
+
+describe(".concatenate_list", {
+  it("formats a simple named list correctly", {
+    l <- list(a = 1, b = 2:3)
+    result <- .concatenate_list("Test List", l)
+    expect_true(grepl("Test List", result))
+    expect_true(grepl("* a -> 1", result))
+    expect_true(grepl("* b -> 2, 3", result))
+  })
+
+  it("formats a nested list correctly", {
+    l <- list(main = list(sub1 = 1, sub2 = c(2,3)))
+    result <- .concatenate_list("Nested List", l)
+    expect_true(grepl("Nested List", result))
+    expect_true(grepl("sub1", result))
+    expect_true(grepl("sub2", result))
+    expect_true(grepl("1", result))
+    expect_true(grepl("2, 3", result))
+  })
+
+  it("formats a data.frame as a list of rows", {
+    df <- data.frame(x = 1:2, y = c("A", "B"))
+    result <- .concatenate_list("Data Frame", df)
+    expect_true(grepl("Data Frame", result))
+    expect_true(grepl("* 1 -> 1, A", result))
+    expect_true(grepl("* 2 -> 2, B", result))
+  })
+
+  it("handles empty list", {
+    l <- list()
+    result <- .concatenate_list("Empty List", l)
+    expect_true(grepl("Empty List", result))
+  })
+})
