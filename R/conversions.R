@@ -271,7 +271,7 @@ simplify_unit <- function(x, as_character = FALSE) {
       return(set_units(1)) # Return the standard unitless object
     }
   }
-  
+
   # If input is a units object, use its value. Otherwise, default to 1.
   value <- if (inherits(x, "units")) drop_units(x) else 1
   # If input is a units object, deparse its units.

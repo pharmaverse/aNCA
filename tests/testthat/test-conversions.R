@@ -263,7 +263,8 @@ describe("simplify_unit", {
   })
 
   it("returns an error for invalid inputs", {
-    expect_error(simplify_unit(list(a = 1)), "Input must be a valid units object or character string")
+    expect_error(simplify_unit(list(a = 1)),
+                 "Input must be a valid units object or character string")
   })
 
   it("returns only the unit as character when as_character = TRUE", {
