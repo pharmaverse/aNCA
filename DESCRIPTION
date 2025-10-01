@@ -13,9 +13,9 @@ Authors@R: c(
     person("Mateusz", "Kolomanski", "mateusz.kolomanski@appsilon.com", role = "aut",
            comment = c(ORCID = "0000-0001-7424-3919")),
     person("Valentin", "Legras", "anca.pharmaverse@gmail.com", role = c("aut", "cre")),
-    person("F. Hoffmann-La Roche AG", role = c("cph", "fnd")),
+    person("F. Hoffmann-La Roche AG", role = c("cph", "fnd"))
   )
-Description: A ShinyApp to perform Non-Comparmental Analysis (NCA) on pre-clinical and clinical data.
+Description: A Shiny App to perform Non-Compartmental Analysis (NCA) on pre-clinical and clinical data.
 License: Apache License (>= 2)
 Imports: 
     dplyr,
