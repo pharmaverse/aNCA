@@ -1,4 +1,3 @@
-
 #' Append a Slide with Two Plots and a Table to an Existing Quarto Presentation
 #'
 #' @param quarto_path Path to the Quarto (.qmd) document.
@@ -14,25 +13,48 @@ add_slide_PlotTablePlot <- function(quarto_path, plot1, plot2, df, use_plotly = 
     "::: columns",
     "",
     "::: column",
-    "```{r, echo=FALSE}",
-    paste0(
-      plot1,
-      if (use_plotly) {" |> plotly::ggplotly()"} else {""}
-    ),
-    "flextable(", df, ")",
-    "```",
+    add_quarto_plot(plot1, use_plotly),
+    add_quarto_table(df),
     ":::",
     "",
     "::: column",
-    "```{r, echo=FALSE}",
-    paste0(
-      plot2,
-      if (use_plotly) {" |> plotly::ggplotly()"} else {""}
-    ),
-    "```",
+    add_quarto_plot(plot2, use_plotly),
     ":::",
     "",
     ":::",
+    ""
+  )
+  write(slide_content, file = quarto_path, append = TRUE)
+  invisible(TRUE)
+}
+
+
+add_slide_TablePlot <- function(quarto_path, plot, df, use_plotly = FALSE) {
+  slide_content <- c(
+    "\n---",
+    "",
+    "::: columns",
+    "",
+    "::: column",
+    add_quarto_table(df),
+    ":::",
+    "",
+    "::: column",
+    add_quarto_plot(plot, use_plotly),
+    ":::",
+    "",
+    ":::",
+    ""
+  )
+  write(slide_content, file = quarto_path, append = TRUE)
+  invisible(TRUE)
+}
+
+add_slide_Plot <- function(quarto_path, plot, use_plotly = FALSE) {
+  slide_content <- c(
+    "\n---",
+    "",
+    add_quarto_plot(plot, use_plotly),
     ""
   )
   write(slide_content, file = quarto_path, append = TRUE)
@@ -40,43 +62,13 @@ add_slide_PlotTablePlot <- function(quarto_path, plot1, plot2, df, use_plotly = 
 }
 
 add_slides_TablePlot_Plot <- function(quarto_path, plot1, plot2, df, use_plotly = FALSE) {
-  slide_content <- c(
-    "\n---",
-    "",
-    "::: columns",
-    "",
-    "::: column",
-    "```{r, echo=FALSE}",
-    "flextable(", df, ")",
-    "```",
-    ":::",
-    "",
-    "::: column",
-    "```{r, echo=FALSE}",
-    paste0(
-      plot2,
-      if (use_plotly) {" |> plotly::ggplotly()"} else {""}
-    ),
-    "```",
-    ":::",
-    "",
-    ":::",
-    "",
-    "\n---",
-    "```{r, echo=FALSE}",
-    paste0(
-      plot1,
-      if (use_plotly) {" |> plotly::ggplotly()"} else {""}
-    ),
-    "```",
-    ""
-  )
-  write(slide_content, file = quarto_path, append = TRUE)
-  invisible(TRUE)
+  add_slide_TablePlot(quarto_path, plot = plot1, df = df, use_plotly)
+  add_slide_Plot(quarto_path, plot = plot2, use_plotly)
 }
 
+
 create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rda_path, slide_fun = "add_slide_PlotTablePlot", template, extra_setup, use_plotly = FALSE){
-  create_quarto_presentation(quarto_path, title, rda_path)
+  create_quarto_doc(quarto_path, title, rda_path)
   slide_fun <- get(slide_fun)
   for (i in seq_len(length(res_dose_slides))) {
     slide_fun(
@@ -114,7 +106,7 @@ create_dose_slides_presentation <- function(res_dose_slides, path, title, templa
 #' @param template (Optional) Path to a Quarto template to use (default: NULL).
 #' @param extra_setup (Optional) Character vector of extra setup lines to include after YAML.
 #' @return Invisibly returns TRUE if the file was created.
-create_quarto_presentation <- function(quarto_path, title = "NCA Report", rda_path = NULL, template = NULL, extra_setup = NULL) {
+create_quarto_doc <- function(quarto_path, title = "NCA Report", rda_path = NULL, template = NULL, extra_setup = NULL) {
   yaml_header <- c(
     "---",
     paste0("title: \"", title, "\""),
@@ -199,4 +191,25 @@ linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics = "
     )
   }
   output_list
+}
+
+#' Helper to create a Quarto code chunk for a plot
+add_quarto_plot <- function(plot_expr, use_plotly = FALSE) {
+  c(
+    "```{r, echo=FALSE}",
+    paste0(
+      plot_expr,
+      if (use_plotly) " |> plotly::ggplotly()" else ""
+    ),
+    "```"
+  )
+}
+
+#' Helper to create a Quarto code chunk for a table
+add_quarto_table <- function(table_expr) {
+  c(
+    "```{r, echo=FALSE}",
+    paste0("flextable(", table_expr, ")"),
+    "```"
+  )
 }
