@@ -279,7 +279,18 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         current_profile <- profile_choices[1]
       }
       if (length(current_pcspec) == 0) {
-        current_pcspec <- pcspec_choices
+        # Select plasma/serum if available
+        plasma_serum_values <- grep("^plasma$|^serum$",
+                                    pcspec_choices,
+                                    value = TRUE,
+                                    ignore.case = TRUE)
+
+        # Assign to current_pcspec if found, otherwise select all
+        if (length(plasma_serum_values) > 0) {
+          current_pcspec <- plasma_serum_values
+        } else {
+          current_pcspec <- pcspec_choices
+        }
       }
 
       updatePickerInput(
