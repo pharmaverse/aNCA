@@ -242,7 +242,7 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' Simplify compound unit expressions
 #'
 #' This function takes a units object or a character string representing a unit expression
-#' and returns a simplified units using the units package simplifications.
+#' and returns a simplified units using the sunplifications from `units`package.
 #'
 #' @param x A units object, character string, or vector of either to be simplified.
 #' @param as_character Logical. TRUE returns the result as a character,
@@ -257,6 +257,7 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
 #' simplify_unit("(mg*L)/(mL)")
 #'
 #' @importFrom units units_options set_units deparse_unit drop_units
+#' @importFrom withr local_options
 #' @export
 simplify_unit <- function(x, as_character = FALSE) {
 
@@ -278,11 +279,7 @@ simplify_unit <- function(x, as_character = FALSE) {
   value <- if (inherits(x, "units")) drop_units(x) else 1
   # If input is a units object, deparse its units.
   unit_char <- if (inherits(x, "units")) deparse_unit(x) else x
-
-  # Temporarily set the simplify option to TRUE
-  old_opt <- units_options("simplify")
-  on.exit(units_options(simplify = old_opt))
-  units_options(simplify = TRUE)
+  withr::local_options(units_options(simplify = TRUE))
 
   # Create the simplified units object within tryCatch
   simplified_obj <- tryCatch({
