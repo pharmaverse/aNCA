@@ -210,10 +210,20 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
         log_success("NCA results calculated.")
 
-        # Apply standard CDISC names and return the object
-        res %>%
-          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+        # Reshape intervals, filter
+        params_not_requested <- res$data$intervals %>%
+          select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
+          # For all logical columns, mutate FALSE to NA
+          mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
+          # Only select column that are only NA
+          select(where(~ all(is.na(.x)))) %>%
+          names()
 
+        # Filter for requested params based on intervals
+        res$result <- res$result %>%
+          filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
+
+        res
       }, error = function(e) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
