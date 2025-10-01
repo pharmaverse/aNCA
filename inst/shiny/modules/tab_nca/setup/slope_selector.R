@@ -95,7 +95,8 @@ slope_selector_ui <- function(id) {
       orderInput(
         ns("order_groups"),
         label = "Order plots by:",
-        items = NULL
+        items = NULL,
+        width = "100%"
       )
     ),
     br(),
