@@ -73,6 +73,7 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
+BugReports: https://github.com/pharmaverse/aNCA/issues
 Depends: 
     R (>= 3.5)
 LazyData: true
