@@ -111,7 +111,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     ) %>%
     ungroup() %>%
     # Disconsider BLQ points at the end (never used for half-life)
-    filter(.[[time_col]] > tlast)
+    filter(.[[time_col]] <= tlast)
 
   info_per_plot_list <- info_per_plot_list %>%
     mutate(
@@ -126,7 +126,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   data_list <- list()
   for (i in seq_len(length(info_per_plot_list))) {
     df <- info_per_plot_list[[i]]
-if (df$USUBJID[1] == "XX01-11105") browser()
+
     # Create line data
     if (any(!is.na(df$is_halflife_used))) {
       df_fit <- df[df$is_halflife_used, ]
