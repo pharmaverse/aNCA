@@ -134,7 +134,11 @@ create_quarto_doc <- function(quarto_path, title = "NCA Report", rda_path = NULL
   invisible(TRUE)
 }
 
-linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics = "Mean", facet_vars = "DOSEA", stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP")) {
+linplot_meanplot_stats_by_group <- function(
+    o_nca, group_by_vars, statistics = "Mean",
+    facet_vars = "DOSEA", stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP"),
+    info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
+) {
 
   groups <- unique(o_nca$data$intervals[, group_by_vars])
   output_list <- list()
@@ -184,10 +188,17 @@ linplot_meanplot_stats_by_group <- function(o_nca, group_by_vars, statistics = "
         dplyr::matches(paste0("^(", paste(stats_parameters, collapse = "|"), ")(\\[.*\\])?$"))
       ) %>%
       unique()
+
+    info_i <- merge(o_nca$data$dose$data, group_i) %>%
+      select(any_of(unique(c(group_by_vars, info_vars)))) %>%
+      unique()
+
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
-      statistics = stats_i
+      statistics = stats_i,
+      info = info_i %>%
+        select(any_of(info_vars))
     )
   }
   output_list
