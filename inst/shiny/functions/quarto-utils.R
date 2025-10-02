@@ -73,8 +73,8 @@ create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rda_p
   for (i in seq_len(length(res_dose_slides))) {
     slide_fun(
       quarto_path,
-      plot1 = paste0("res_dose_slides[[", i, "]]$linplot"),
-      plot2 = paste0("res_dose_slides[[", i, "]]$meanplot"),
+      plot1 = paste0("res_dose_slides[[", i, "]]$meanplot"),
+      plot2 = paste0("res_dose_slides[[", i, "]]$linplot"),
       df = paste0("res_dose_slides[[", i, "]]$statistics"),
       use_plotly = use_plotly
     )
@@ -110,10 +110,10 @@ create_quarto_doc <- function(quarto_path, title = "NCA Report", rda_path = NULL
   yaml_header <- c(
     "---",
     paste0("title: \"", title, "\""),
-    "format: revealjs",
-    if (!is.null(template)) paste0("template: ", template) else NULL,
+    "format: pptx",
+    if (!is.null(template)) paste0("reference-doc: ", template) else NULL,
     "execute:",
-    "  echo: true",
+    "  echo: false",
     "  warning: false",
     "  message: false",
     "---",
@@ -197,8 +197,7 @@ linplot_meanplot_stats_by_group <- function(
       linplot = linplot_i,
       meanplot = meanplot_i,
       statistics = stats_i,
-      info = info_i %>%
-        select(any_of(info_vars))
+      info = info_i
     )
   }
   output_list
