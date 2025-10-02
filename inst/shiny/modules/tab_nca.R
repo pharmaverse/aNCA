@@ -217,6 +217,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       }, error = function(e) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
+        removeModal()
         NULL
       })
     }) |>
