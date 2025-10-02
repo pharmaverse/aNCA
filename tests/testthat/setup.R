@@ -342,13 +342,16 @@ base::local({
     )  %>%  mutate(PARAM = "B")
   )
 
-  FIXTURE_PKNCA_DATA <<- PKNCA::PKNCAdata(
-    data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | PCSPEC + USUBJID / PARAM,
+  FIXTURE_PKNCA_DATA <<- suppressWarnings({
+    PKNCA::PKNCAdata(
+      data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | PCSPEC + USUBJID / PARAM,
                                  concu = "AVALU", timeu = "RRLTU"),
-    data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
+      data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
                                  route = "ROUTE", duration = "ADOSEDUR"),
-    units = units_table
-  )
+      units = units_table
+      )
+  })
+  
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
 
   FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("NCA_PROFILE",
@@ -360,7 +363,8 @@ base::local({
     PKNCA::pk.nca(FIXTURE_PKNCA_DATA),
     warning = function(w) {
       # Suppress warnings matching the regex "Too few points for half-life"
-      if (grepl("^Too few points for half-life", conditionMessage(w))) {
+      if (grepl("^Too few points for half-life|^Requesting an AUC range starting",
+                conditionMessage(w))) {
         invokeRestart("muffleWarning")
       }
     }
