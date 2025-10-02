@@ -5,7 +5,6 @@
 #'                     specific to the mean plot. Default is FALSE.
 #'
 #' @return A UI definition for the plot sidebar.
-#' @export
 plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   ns <- NS(id)
   
@@ -97,4 +96,114 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       )
     }
   )
+}
+
+#' Reusable Plot Sidebar Server
+#'
+#' @param id A character string specifying the module ID.
+#' @param data A reactive data frame.
+#' @param grouping_vars A reactive vector of grouping variables.
+#'
+#' @return A list of reactive inputs from the sidebar.
+plot_sidebar_server <- function(id, data, grouping_vars) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+    
+    observeEvent(data(), {
+      req(data())
+      
+      # Update the param picker input
+      param_choices <- data() %>%
+        pull(PARAM) %>%
+        unique()
+      
+      updatePickerInput(
+        session,
+        "param",
+        choices = param_choices,
+        selected = param_choices[1]
+      )
+      
+      # Update pcspec picker input
+      pcspec_choices <- data() %>%
+        pull(PCSPEC) %>%
+        unique()
+      
+      updatePickerInput(
+        session,
+        "pcspec",
+        choices = pcspec_choices,
+        selected = pcspec_choices[1]
+      )
+      
+      # Update the usubjid picker input (if it exists)
+      if ("usubjid" %in% names(input)) {
+        usubjid_choices <- data() %>%
+          pull(USUBJID) %>%
+          unique()
+        
+        updatePickerInput(
+          session,
+          "usubjid",
+          choices = usubjid_choices,
+          selected = usubjid_choices
+        )
+      }
+      
+      # Update the colorby and facet by picker inputs
+      all_cols <- names(data())
+      cols_to_exclude <- c("AVAL", "ARRLT", "AFRLT", "NRRLT", "NFRLT")
+      unit_cols <- all_cols[endsWith(all_cols, "U")]
+      cols_to_exclude <- c(cols_to_exclude, unit_cols)
+      param_choices_cf <- sort(setdiff(all_cols, cols_to_exclude))
+      
+      updatePickerInput(
+        session,
+        "colorby",
+        choices = param_choices_cf,
+        selected = "USUBJID"
+      )
+      
+      updatePickerInput(
+        session,
+        "facetby",
+        choices = param_choices_cf,
+        selected = NULL
+      )
+    })
+    
+    # Render the cycle selection UI
+    output$cycle_select_ui <- renderUI({
+      req(input$param)
+      y <- data() %>%
+        filter(PARAM %in% input$param) %>%
+        pull(NCA_PROFILE) %>%
+        unique()
+      pickerInput(ns("profiles"), "Choose the profile(s):",
+                  choices = sort(y),
+                  multiple = TRUE, selected = y[1], options = list(`actions-box` = TRUE)
+      )
+    })
+    
+    # Return all inputs as a list of reactives
+    return(
+      list(
+        palette_theme = reactive(input$palette_theme),
+        param = reactive(input$param),
+        pcspec = reactive(input$pcspec),
+        usubjid = reactive(input$usubjid),
+        colorby = reactive(input$colorby),
+        facetby = reactive(input$facetby),
+        log = reactive(input$log),
+        timescale = reactive(input$timescale),
+        cycles = reactive(input$cycles),
+        show_threshold = reactive(input$show_threshold),
+        threshold_value = reactive(input$threshold_value),
+        show_dose = reactive(input$show_dose),
+        sd_max = reactive(input$sd_max),
+        sd_min = reactive(input$sd_min),
+        ci = reactive(input$ci)
+      )
+    )
+  })
 }
