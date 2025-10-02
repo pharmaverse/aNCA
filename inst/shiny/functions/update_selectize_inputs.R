@@ -38,10 +38,9 @@ update_selectize_inputs <- function(session, input_ids, column_names, manual_uni
       }
     } else if (column_name == "NCA_PROFILE") {
       # Find which desired grouping columns are present
-      selected_values <- if ("DOSNOP" %in% column_names) {
-        "DOSNOP"
-      } else if ("DOSNO" %in% column_names) {
-        "DOSNO"
+      nca_profile_cols <- c("ATPTREF", "DOSNO", "DOSNOP")
+      selected_values <- if (any(nca_profile_cols %in% column_names)) {
+        nca_profile_cols[nca_profile_cols %in% column_names][1]
       } else {
         NULL
       }

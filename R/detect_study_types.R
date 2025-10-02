@@ -141,5 +141,6 @@ detect_study_types <- function(data, groups, drug_column, analyte_column,
       )
     ) %>%
     select(!!!syms(full_grouping), type) %>%
-    distinct()
+    distinct() %>%
+    arrange(!!!syms(full_grouping))
 }
