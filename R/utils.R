@@ -107,3 +107,41 @@ parse_annotation <- function(data, text) {
     gsub("!(\\w+)", "{attr(data[['\\1']], 'label')}", .) %>%
     str_glue(.na = "ERR", .null = "ERR")
 }
+
+#' Contatenates a list and data frame objects into formatted string for logging.
+#'
+#' @details
+#' Utilitary function for logging a list object (like mapping list or used settings) in
+#' a nice format. Parses a list into nice string and logs at DEBUG level. Can also process
+#' data frames, which will be converted into a list of rows.
+#'
+#' @param title Title for the logs.
+#' @param l     List object to be parsed into log. Can also be a data.frame.
+#' @returns Character string ready for logging.
+#'
+#' @importFrom purrr imap
+#'
+#' @noRd
+#' @keywords internal
+.concatenate_list <- function(title, l) {
+
+  # Make a list of rows for data frames
+  if (is.data.frame(l))
+    l <- split(l, seq_len(nrow(l)))
+
+  # Construct the log message for each list element
+  log_msg <- imap(l, \(val, nm) {
+    sep <- ", "
+    if (is.list(val)) {
+      val <- imap(val, \(val2, nm2) paste0("\t* ", nm2, " -> ", paste0(val2, collapse = ", "))) |>
+        paste0(collapse = "\n") %>%
+        paste0("\n", .)
+    } else {
+      val <- paste0(val, collapse = ", ")
+    }
+    paste0("* ", nm, " -> ", val, collapse = "\n")
+  })
+
+  # Paste all together in different lines
+  paste0(title, "\n", paste0(log_msg, collapse = "\n"))
+}
