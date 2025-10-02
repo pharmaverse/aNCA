@@ -12,7 +12,7 @@ loading_popup <- function(text = "Loading...") {
   showModal(modalDialog(
     modal_body,
     title = span(text, id = "loading-title"),
-    footer = modalButton("Close"),
+    footer = NULL,
     size = "s"
   ))
 }
