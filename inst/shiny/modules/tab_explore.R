@@ -9,130 +9,16 @@ tab_explore_ui <- function(id) {
     header = "Exploratory Analysis",
     id = "visuals",
     nav_panel("Individual Plots",
-      layout_sidebar(
-        sidebar = sidebar(
-          position = "right", open = TRUE,
-          selectInput(
-            ns("palette_theme"),
-            "Select Color Theme:",
-            choices = c(
-              "Default (ggplot2)" = "default",
-              "Viridis" = "viridis",
-              "Spectral" = "spectral"
-            ),
-            selected = "default"
-          ),
-          pickerInput(
-            inputId = ns("generalplot_analyte"),
-            label = "Select Analyte:",
-            choices = NULL,
-            selected = NULL,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE)
-          ),
-          pickerInput(
-            inputId = ns("generalplot_pcspec"),
-            label = "Select Matrix:",
-            choices = NULL,
-            selected = NULL,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE)
-          ),
-          pickerInput(
-            inputId = ns("generalplot_usubjid"),
-            label = "Select Subjects:",
-            choices = NULL,
-            selected = NULL,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE)
-          ),
-          pickerInput(
-            inputId = ns("generalplot_colorby"),
-            label = "Choose the variables to color by",
-            choices = NULL,
-            selected = NULL,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE)
-          ),
-          pickerInput(
-            inputId = ns("generalplot_facetby"),
-            label = "Choose the variables to facet by:",
-            choices = NULL,
-            selected = NULL,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE)
-          ),
-          radioButtons(
-            ns("log"),
-            "Select the Plot type:",
-            choices = c("Lin", "Log")
-          ),
-          radioButtons(
-            ns("timescale"),
-            "Choose the Timescale",
-            choices = c("All Time", "By Dose Profile")
-          ),
-          conditionalPanel(
-            condition = "input.timescale == 'By Dose Profile'",
-            uiOutput(ns("cycle_select")),
-            ns = NS(id)
-          ),
-          checkboxInput(ns("show_threshold"), label = "Show Threshold"),
-          conditionalPanel(
-            condition = "input.show_threshold == true",
-            numericInput(
-              ns("threshold_value"),
-              label = "Threshold Value",
-              value = 0
-            ),
-            ns = NS(id)
-          ),
-          checkboxInput(ns("show_dose"), label = "Show Dose Times"),
-        ),
-        plotlyOutput(ns("individualplot"), height = "100%")
-      )
+              layout_sidebar(
+                sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
+                plotlyOutput(ns("individualplot"), height = "100%")
+              )
     ),
     nav_panel("Mean Plots",
-      layout_sidebar(
-        sidebar = sidebar(
-          selectInput(
-            inputId = ns("analyte_mean"),
-            label = "Select Analyte:",
-            choices = NULL,
-            multiple = TRUE
-          ),
-          selectInput(
-            inputId = ns("pcspec_mean"),
-            label = "Select Specimen:",
-            choices = NULL,
-            multiple = TRUE
-          ),
-          selectInput(
-            inputId = ns("studyid_mean"),
-            label = "Select Study ID:",
-            choices = NULL
-          ),
-          selectInput(
-            inputId = ns("select_id_var"),
-            label = "Choose the variable(s) to group by:",
-            choices = NULL,
-            multiple = TRUE
-          ),
-          selectInput(
-            inputId = ns("cycles_mean"),
-            label = "Choose the cycle:",
-            choices = NULL
-          ),
-          checkboxInput(ns("log_mean_plot"), label = "Scale y Log"),
-          checkboxInput(ns("sd_mean_plot_max"), label = "+SD", value = TRUE),
-          checkboxInput(ns("sd_mean_plot_min"), label = "-SD", value = TRUE),
-          checkboxInput(ns("mean_plot_ci"), label = "Show CI 95%"),
-          position = "right",
-          open = TRUE
-        ),
-        plotlyOutput(ns("mean_plot"), height = "100%"),
-        helpText("If n<3 at the specified time point then the mean value is not displayed.")
-      )
+              layout_sidebar(
+                sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
+                plotlyOutput(ns("mean_plot"), height = "100%")
+              )
     ),
     nav_panel(
       "PK/Dose QC Plot",
@@ -151,183 +37,68 @@ tab_explore_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    ## Plotting Input widgets --------------------------------------------------------
-
-    observeEvent(data(), {
-      req(data())
-
-      # Update the analyte picker input
-      param_choices_analyte <- data() %>%
-        pull(PARAM) %>%
-        unique()
-
-      updatePickerInput(
-        session,
-        "generalplot_analyte",
-        choices = param_choices_analyte,
-        selected = param_choices_analyte[1]
+    # Initiate the sidebar server modules
+    individual_sidebar_inputs <- plot_sidebar_server(
+      "individual_sidebar",
+      data = data,
+      grouping_vars = grouping_vars
       )
-
-      # Update pcspec picker input
-      param_choices_pcspec <- data() %>%
-        pull(PCSPEC) %>%
-        unique()
-
-      updatePickerInput(
-        session,
-        "generalplot_pcspec",
-        choices = param_choices_pcspec,
-        selected = param_choices_pcspec[1]
-      )
-
-      # Update the usubjid picker input
-      param_choices_usubjid <- data() %>%
-        pull(USUBJID) %>%
-        unique()
-
-      updatePickerInput(
-        session,
-        "generalplot_usubjid",
-        choices = param_choices_usubjid,
-        selected = param_choices_usubjid
-      )
-
-      # Update the colorby and facet by picker inputs
-      all_cols <- names(data())
-      cols_to_exclude <- c("AVAL", "ARRLT", "AFRLT", "NRRLT", "NFRLT")
-      unit_cols <- all_cols[endsWith(all_cols, "U")]
-      cols_to_exclude <- c(cols_to_exclude, unit_cols)
-      param_choices <- sort(setdiff(all_cols, cols_to_exclude))
-
-      updatePickerInput(
-        session,
-        "generalplot_colorby",
-        choices = param_choices,
-        selected = "USUBJID"
-      )
-
-      updatePickerInput(
-        session,
-        "generalplot_facetby",
-        choices = param_choices,
-        selected = NULL
-      )
-
-      # Update the analyte mean select input
-      analyte_choices <- data() %>%
-        pull(PARAM) %>%
-        unique()
-
-      updateSelectInput(
-        session,
-        "analyte_mean",
-        choices = sort(analyte_choices),
-        selected = sort(analyte_choices)[1]
-      )
-
-      # Update the studyidmean select input
-      studyid_choices <- data() %>%
-        pull(STUDYID) %>%
-        unique()
-
-      updateSelectInput(
-        session,
-        "studyid_mean",
-        choices = sort(studyid_choices)
-      )
-
-      # Update pcspec mean choices
-      pcspec_choices <- data() %>%
-        pull(PCSPEC) %>%
-        unique()
-
-      updateSelectInput(
-        session,
-        "pcspec_mean",
-        choices = sort(pcspec_choices),
-        selected = sort(pcspec_choices)[1]
-      )
-
-      # Update the selectidvar select input
-      idvar_choices <- c("PARAM", "PCSPEC", "DOSEA", grouping_vars())
-
-      updateSelectInput(
-        session,
-        "select_id_var",
-        choices = idvar_choices,
-        selected = "DOSEA"
-      )
-    })
-
-    # select the dose number/cycle for the general lineplot, if plotting by cycle is chosen
-    output$cycle_select <- renderUI({
-      req(input$generalplot_analyte)
-      y <- data() %>%
-        filter(PARAM %in% input$generalplot_analyte) %>%
-        pull(NCA_PROFILE) %>%
-        unique()
-      selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
-                  multiple = TRUE, selected = y[1])
-    })
+    mean_sidebar_inputs <- plot_sidebar_server(
+      "mean_sidebar",
+      data = data,
+      grouping_vars = grouping_vars)
 
     # TAB: General Lineplot --------------------------------------------------------
 
     master_palettes_list <- reactive({
-      req(input$palette_theme)
-      req(input$generalplot_colorby)
+      req(individual_sidebar_inputs$palette_theme())
+      req(individual_sidebar_inputs$colorby())
 
       get_persistent_palette(
         data(),
-        input$generalplot_colorby,
-        palette_name = input$palette_theme # Use the user's choice
+        individual_sidebar_inputs$colorby(),
+        palette_name = individual_sidebar_inputs$palette_theme()
       )
     })
 
     # Compute the individual plot object
     individualplot <- reactive({
-      req(data())
-      req(master_palettes_list())
-      req(input$generalplot_analyte)
-      req(input$generalplot_pcspec)
-      req(input$generalplot_usubjid)
-      req(input$generalplot_colorby)
-      req(input$timescale)
-      req(input$log)
+      inputs <- individual_sidebar_inputs()
+      req(data(), inputs$param, inputs$pcspec, inputs$usubjid, inputs$colorby, inputs$timescale, inputs$log)
+      if (inputs$timescale == "By Dose Profile") req(inputs$cycles)
       log_info("Rendering individual plots")
-
-
-      palettes <- master_palettes_list()
-
-      plot_data <- data() %>%
-        mutate( #round to prevent floating point precision issues
-          TIME_DOSE = round(AFRLT - ARRLT, 6)
-        )
-
-      p <- general_lineplot(
-        plot_data,
-        input$generalplot_analyte,
-        input$generalplot_pcspec,
-        input$generalplot_usubjid,
-        input$generalplot_colorby,
-        input$generalplot_facetby,
-        input$timescale,
-        input$log,
-        input$show_threshold,
-        input$threshold_value,
-        input$show_dose,
-        cycle = input$cycles,
-        palette = palettes
+      
+      processed_data <- process_data_individual(
+        data(),
+        selected_usubjids = inputs$usubjid,
+        selected_analytes = inputs$param,
+        selected_pcspec = inputs$pcspec,
+        colorby_var = inputs$colorby,
+        time_scale = inputs$timescale,
+        yaxis_scale = inputs$log,
+        cycle = inputs$cycles
+      )
+      
+      validate(need(nrow(processed_data) > 0, "No data available for the selected filters."))
+      
+      p <- g_lineplot(
+        data = processed_data,
+        x_var = "time_var",
+        y_var = "AVAL",
+        group_var = "USUBJID",
+        colorby_var = inputs$colorby,
+        facet_by = inputs$facetby,
+        yaxis_scale = inputs$log,
+        show_threshold = inputs$show_threshold,
+        threshold_value = inputs$threshold_value,
+        show_dose = inputs$show_dose,
+        dose_data = data() %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)),
+        palette = master_palettes_list()
       ) %>%
         ggplotly(height = 1000)
-
-      # Conditionally add rangeslider only if the plot is not faceted
-      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
-        p <- p %>%
-          layout(
-            xaxis = list(
-              rangeslider = list(type = "time")
-            )
-          )
+      
+      if (is.null(inputs$facetby) || length(inputs$facetby) == 0) {
+        p <- p %>% layout(xaxis = list(rangeslider = list(type = "time")))
       }
       p
     })
@@ -344,75 +115,43 @@ tab_explore_server <- function(id, data, grouping_vars) {
 
     # TAB: Mean Plot -----------------------------------------------------------
 
-    # This tabs plots the mean concentration of the input data in a dynamic plot
-
-    # Update the cyclesmean select input based on selected analyte
-    observeEvent(input$analyte_mean, {
-      req(data())
-
-      cycle_choices <- data() %>%
-        filter(PARAM %in% input$analyte_mean) %>%
-        pull(NCA_PROFILE) %>%
-        unique()
-
-      updateSelectInput(
-        session,
-        "cycles_mean",
-        choices = sort(cycle_choices)
-      )
-    })
-
     # Compute the meanplot object
     meanplot <- reactive({
-      req(input$studyid_mean)
-      req(input$analyte_mean)
-      req(input$pcspec_mean)
-      req(input$cycles_mean)
+      inputs <- mean_sidebar_inputs()
+      req(data(), inputs$param, inputs$pcspec, inputs$timescale, inputs$colorby)
+      if (inputs$timescale == "By Dose Profile") req(inputs$cycles)
       log_info("Computing meanplot ggplot object")
-
-      validate(
-        need(
-          data() %>%
-            filter(
-              STUDYID %in% input$studyid_mean,
-              PARAM %in% input$analyte_mean,
-              PCSPEC %in% input$pcspec_mean,
-              NCA_PROFILE %in% input$cycles_mean,
-              if ("EVID" %in% names(data)) EVID == 0 else TRUE,
-              NRRLT > 0
-            ) %>%
-            group_by(!!!syms(input$select_id_var), NRRLT) %>%
-            summarise(N = n()) %>%
-            filter(N >= 3) %>%
-            nrow(.) > 0,
-          message = paste0(
-            "Data issue: No data with more than 3 points to calculate average based on",
-            "nominal time (NRRLT) and selected variable: ",
-            input$select_id_var
-          )
-        )
+      
+      processed_data <- process_data_mean(
+        data(),
+        selected_analytes = inputs$param,
+        selected_pcspec = inputs$pcspec,
+        cycle = inputs$cycles,
+        colorby_var = inputs$colorby,
+        yaxis_scale = inputs$log,
+        time_scale = inputs$timescale
       )
-
-      meanplot <- general_meanplot(
-        data = data(),
-        selected_studyids = input$studyid_mean,
-        selected_analytes = input$analyte_mean,
-        selected_pcspecs = input$pcspec_mean,
-        selected_cycles = input$cycles_mean,
-        id_variable = input$select_id_var,
-        plot_ylog = input$log_mean_plot,
-        plot_sd_min = input$sd_mean_plot_min,
-        plot_sd_max = input$sd_mean_plot_max,
-        plot_ci = input$mean_plot_ci
+      
+      validate(need(nrow(processed_data) > 0, "No data with >= 3 points to calculate mean."))
+      
+      p <- g_lineplot(
+        data = processed_data,
+        x_var = "time_var",
+        y_var = "Mean",
+        group_var = "color_var",
+        colorby_var = inputs$colorby,
+        yaxis_scale = inputs$log,
+        show_sd_min = inputs$sd_min,
+        show_sd_max = inputs$sd_max,
+        show_ci = inputs$ci,
+        facet_by = inputs$facetby,
+        show_threshold = inputs$show_threshold,
+        threshold_value = inputs$threshold_value,
+        show_dose = inputs$show_dose
       ) %>%
         ggplotly(height = 1000) %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
-          )
-        )
-      session$userData$results$exploration$meanplot <- meanplot
-      meanplot
+        layout(xaxis = list(rangeslider = list(type = "time")))
+      p
     })
 
     # Save the object for the zip folder whenever it changes
