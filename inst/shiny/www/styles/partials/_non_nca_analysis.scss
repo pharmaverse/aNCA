@@ -1,0 +1,49 @@
+// Style the 'Add Ratio Pair' button using your primary blue
+.add-pair-btn {
+  background-color: $anca-blue;
+  border-color: $anca-blue;
+  color: $anca-white; // Ensure text is readable
+  
+  &:hover {
+    // Darken the blue slightly on hover
+    background-color: darken($anca-blue, 10%);
+    border-color: darken($anca-blue, 10%);
+  }
+}
+
+// Style the container for each dynamically added pair row
+.ratio-pair-row {
+  background-color: $anca-blue-light;
+  border: 1px solid $grey-4;
+  border-radius: 5px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+  // --- Flexbox styles for layout ---
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;    
+
+  // Style the Shiny inputs within the flex container
+  .form-group.shiny-input-container {
+    flex: 1 1 250px;
+    margin-bottom: 0;
+  }
+  
+  // Target the remove button's wrapper
+  .ratio-remove-btn-wrapper {
+    margin-bottom: 0;
+    
+    .btn {
+      background-color: $grey-2;
+      border-color: $grey-2;
+      color: $anca-black-2;
+      
+      &:hover {
+        background-color: darken($grey-2, 10%);
+        border-color: darken($grey-2, 10%);
+      }
+    }
+  }
+}

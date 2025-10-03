@@ -78,7 +78,7 @@ excretion_server <- function(id, input_pknca_data) {
       updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
                           filter(TYPE == "Urine") %>%
                           pull(PKNCA, PPTESTCD),
-                        selected = c("ae"))
+                        selected = c("ae", "fe"))
     })
 
     # Perform calculations
