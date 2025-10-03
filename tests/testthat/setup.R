@@ -342,15 +342,22 @@ base::local({
     )  %>%  mutate(PARAM = "B")
   )
 
-  FIXTURE_PKNCA_DATA <<- suppressWarnings({
+  FIXTURE_PKNCA_DATA <<- withCallingHandlers(
     PKNCA::PKNCAdata(
       data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | PCSPEC + USUBJID / PARAM,
                                    concu = "AVALU", timeu = "RRLTU"),
       data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
                                    route = "ROUTE", duration = "ADOSEDUR"),
       units = units_table
-    )
-  })
+    ),
+    warning = function(w) {
+      # Suppress warnings matching the regex "Too few points for half-life"
+      if (grepl("No intervals generated likely due to limited concentration data",
+                conditionMessage(w))) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
 
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
 
