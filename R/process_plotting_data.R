@@ -11,6 +11,7 @@
 #' @export
 process_data_individual <- function(data, selected_usubjids, selected_analytes, selected_pcspec,
                                     colorby_var, time_scale, yaxis_scale, cycle) {
+  browser()
   processed <- data %>%
     filter(
       USUBJID %in% selected_usubjids,

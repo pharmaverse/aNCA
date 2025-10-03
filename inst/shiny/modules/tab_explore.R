@@ -38,12 +38,12 @@ tab_explore_server <- function(id, data, grouping_vars) {
     ns <- session$ns
 
     # Initiate the sidebar server modules
-    individual_sidebar_inputs <- plot_sidebar_server(
+    individual_inputs <- plot_sidebar_server(
       "individual_sidebar",
       data = data,
       grouping_vars = grouping_vars
       )
-    mean_sidebar_inputs <- plot_sidebar_server(
+    mean_inputs <- plot_sidebar_server(
       "mean_sidebar",
       data = data,
       grouping_vars = grouping_vars)
@@ -51,32 +51,30 @@ tab_explore_server <- function(id, data, grouping_vars) {
     # TAB: General Lineplot --------------------------------------------------------
 
     master_palettes_list <- reactive({
-      req(individual_sidebar_inputs$palette_theme())
-      req(individual_sidebar_inputs$colorby())
+      req(individual_inputs$palette_theme())
+      req(individual_inputs$colorby())
 
       get_persistent_palette(
         data(),
-        individual_sidebar_inputs$colorby(),
-        palette_name = individual_sidebar_inputs$palette_theme()
+        individual_inputs$colorby(),
+        palette_name = individual_inputs$palette_theme()
       )
     })
 
     # Compute the individual plot object
     individualplot <- reactive({
-      inputs <- individual_sidebar_inputs()
-      req(data(), inputs$param, inputs$pcspec, inputs$usubjid, inputs$colorby, inputs$timescale, inputs$log)
-      if (inputs$timescale == "By Dose Profile") req(inputs$cycles)
+      req(data(), individual_inputs$param, individual_inputs$pcspec, individual_inputs$usubjid, individual_inputs$colorby, individual_inputs$timescale, individual_inputs$log)
       log_info("Rendering individual plots")
       
       processed_data <- process_data_individual(
         data(),
-        selected_usubjids = inputs$usubjid,
-        selected_analytes = inputs$param,
-        selected_pcspec = inputs$pcspec,
-        colorby_var = inputs$colorby,
-        time_scale = inputs$timescale,
-        yaxis_scale = inputs$log,
-        cycle = inputs$cycles
+        selected_usubjids = individual_inputs$usubjid,
+        selected_analytes = individual_inputs$param,
+        selected_pcspec = individual_inputs$pcspec,
+        colorby_var = individual_inputs$colorby,
+        time_scale = individual_inputs$timescale,
+        yaxis_scale = individual_inputs$log,
+        cycle = individual_inputs$profiles
       )
       
       validate(need(nrow(processed_data) > 0, "No data available for the selected filters."))
@@ -86,18 +84,18 @@ tab_explore_server <- function(id, data, grouping_vars) {
         x_var = "time_var",
         y_var = "AVAL",
         group_var = "USUBJID",
-        colorby_var = inputs$colorby,
-        facet_by = inputs$facetby,
-        yaxis_scale = inputs$log,
-        show_threshold = inputs$show_threshold,
-        threshold_value = inputs$threshold_value,
-        show_dose = inputs$show_dose,
+        colorby_var = individual_inputs$colorby,
+        facet_by = individual_inputs$facetby,
+        yaxis_scale = individual_inputs$log,
+        show_threshold = individual_inputs$show_threshold,
+        threshold_value = individual_inputs$threshold_value,
+        show_dose = individual_inputs$show_dose,
         dose_data = data() %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)),
         palette = master_palettes_list()
       ) %>%
         ggplotly(height = 1000)
       
-      if (is.null(inputs$facetby) || length(inputs$facetby) == 0) {
+      if (is.null(individual_inputs$facetby) || length(individual_inputs$facetby) == 0) {
         p <- p %>% layout(xaxis = list(rangeslider = list(type = "time")))
       }
       p
@@ -117,19 +115,17 @@ tab_explore_server <- function(id, data, grouping_vars) {
 
     # Compute the meanplot object
     meanplot <- reactive({
-      inputs <- mean_sidebar_inputs()
-      req(data(), inputs$param, inputs$pcspec, inputs$timescale, inputs$colorby)
-      if (inputs$timescale == "By Dose Profile") req(inputs$cycles)
+      req(data(), mean_inputs$param, mean_inputs$pcspec, mean_inputs$timescale, mean_inputs$colorby)
       log_info("Computing meanplot ggplot object")
       
       processed_data <- process_data_mean(
         data(),
-        selected_analytes = inputs$param,
-        selected_pcspec = inputs$pcspec,
-        cycle = inputs$cycles,
-        colorby_var = inputs$colorby,
-        yaxis_scale = inputs$log,
-        time_scale = inputs$timescale
+        selected_analytes = mean_inputs$param,
+        selected_pcspec = mean_inputs$pcspec,
+        cycle = mean_inputs$profiles,
+        colorby_var = mean_inputs$colorby,
+        yaxis_scale = mean_inputs$log,
+        time_scale = mean_inputs$timescale
       )
       
       validate(need(nrow(processed_data) > 0, "No data with >= 3 points to calculate mean."))
@@ -139,15 +135,15 @@ tab_explore_server <- function(id, data, grouping_vars) {
         x_var = "time_var",
         y_var = "Mean",
         group_var = "color_var",
-        colorby_var = inputs$colorby,
-        yaxis_scale = inputs$log,
-        show_sd_min = inputs$sd_min,
-        show_sd_max = inputs$sd_max,
-        show_ci = inputs$ci,
-        facet_by = inputs$facetby,
-        show_threshold = inputs$show_threshold,
-        threshold_value = inputs$threshold_value,
-        show_dose = inputs$show_dose
+        colorby_var = mean_inputs$colorby,
+        yaxis_scale = mean_inputs$log,
+        show_sd_min = mean_inputs$sd_min,
+        show_sd_max = mean_inputs$sd_max,
+        show_ci = mean_inputs$ci,
+        facet_by = mean_inputs$facetby,
+        show_threshold = mean_inputs$show_threshold,
+        threshold_value = mean_inputs$threshold_value,
+        show_dose = mean_inputs$show_dose
       ) %>%
         ggplotly(height = 1000) %>%
         layout(xaxis = list(rangeslider = list(type = "time")))
