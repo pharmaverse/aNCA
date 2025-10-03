@@ -39,10 +39,8 @@ create_quarto_doc <- function(quarto_path, title = "NCA Report", libraries = c("
 add_quarto_sl_PlotTableTable <- function(quarto_path, df1, df2, plot, use_plotly = FALSE) {
   slide_content <- c(
     "\n---",
-    "",
-    "::: columns",
-    "",
     add_quarto_plot(plot, use_plotly),
+    "::: columns",
     "",
     "::: column",
     add_quarto_table(df1),
@@ -92,7 +90,7 @@ create_dose_slides_presentation <- function(res_dose_slides, path, title) {
   output_format <- tools::file_ext(path)
   quarto_path <- gsub(paste0("\\.", output_format), ".qmd", path)
   use_plotly <- if (output_format == "html") TRUE else FALSE
-  output_format <- if (output_format == "html") "revealjs" else output_format
+  output_format <- if (output_format == "html") "all" else output_format
 
   rda_obj_path <- paste0(dirname(quarto_path), "/all_outputs.rda")
   slide_fun <- if (output_format == "pptx") "add_slides_TablePlot_Plot" else "add_quarto_sl_PlotTablePlot"
