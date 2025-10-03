@@ -263,8 +263,8 @@ describe("simplify_unit", {
   })
 
   it("returns an error for invalid inputs", {
-    expect_error(simplify_unit(123), "Input must be a units object or character string")
-    expect_error(simplify_unit(list(a = 1)), "Input must be a units object or character string")
+    expect_error(simplify_unit(list(a = 1)),
+                 "Input must be a valid units object or character string")
   })
 
   it("returns only the unit as character when as_character = TRUE", {
@@ -276,5 +276,10 @@ describe("simplify_unit", {
   it("returns NA outputs for NA inputs", {
     expect_equal(simplify_unit(NA), NA_real_)
     expect_equal(simplify_unit(NA, as_character = TRUE), NA_character_)
+  })
+
+  it("handles unitless inputs", {
+    expect_equal(units::deparse_unit(simplify_unit("unitless")), "unitless")
+    expect_equal(simplify_unit("unitless", as_character = TRUE), "unitless")
   })
 })
