@@ -7,18 +7,48 @@ library(dplyr)
 library(magrittr)
 library(tidyr)
 
-# Create a new PowerPoint presentation
-ppt <- read_pptx("inst/shiny/template.pptx")
-# Add a title slide
+create_pptx_doc <- function(path, title, template = NULL) {
+  if (is.null(template)) {
+    pptx <- read_pptx("template.pptx")
+  } else {
+    pptx <- read_pptx(template)
+  }
+  pptx <- add_slide(pptx, layout = "Title Slide", master = "Office Theme")
+  pptx <- ph_with(pptx, value = title, location = ph_location_type(type = "ctrTitle"))
+  pptx
+}
 
-ppt <- add_slide(ppt, layout = "Title Slide", master = "Office Theme")
-ppt <- ph_with(ppt, value = "My Presentation", location = ph_location_type(type = "ctrTitle"))
+add_pptx_sl_TableTablePlot <- function(pptx, df1, df2, plot) {
+  pptx <- add_slide(pptx, layout = "Content with Caption")
+  pptx <- ph_with(pptx, value = flextable::flextable(df1, cwidth = 1), location = "Table Placeholder 1")
+  pptx <- ph_with(pptx, value = flextable::flextable(df2, cwidth = 1), location = "Table Placeholder 2")
+  pptx <- ph_with(pptx, value = plot, location = "Content Placeholder 1")
+  pptx
+}
 
-ppt <- add_slide(ppt, layout = "Content with Caption")
-ppt <- ph_with(ppt, value = flextable::flextable(res_dose_slides$Group_1$info), location = "Table Placeholder 1")
-ppt <- ph_with(ppt, value = res_dose_slides$Group_1$statistics, location = "Table Placeholder 2")
-ppt <- ph_with(ppt, value = res_dose_slides$Group_1$meanplot, location = "Content Placeholder 1")
-print(ppt, target = "test_pres_officer.pptx")
+add_pptx_sl_Table <- function(pptx, df) {
+  pptx <- add_slide(pptx, layout = "Title and Content")
+  pptx <- ph_with(pptx, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  pptx
+}
 
+add_pptx_sl_Plot <- function(pptx, plot) {
+  pptx <- add_slide(pptx, layout = "Title and Content")
+  pptx <- ph_with(pptx, value = plot, location = "Content Placeholder 1")
+  pptx
+}
 
-install.packages("officer")
+create_pptx_dose_slides <- function(res_dose_slides, path, title, template = NULL, slide_style = "TableTablePlot") {
+  pptx <- create_pptx_doc(path, title, template)
+  slide_fun <- get(paste0("add_pptx_sl_", slide_style))
+  for (i in seq_len(length(res_dose_slides))) {
+    pptx <- slide_fun(
+      pptx,
+      df1 = res_dose_slides[[i]]$info,
+      df2 = res_dose_slides[[i]]$statistics,
+      plot = res_dose_slides[[i]]$meanplot
+    )
+  }
+  print(pptx, target = path)
+  invisible(TRUE)
+}
