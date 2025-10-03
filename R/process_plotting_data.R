@@ -62,25 +62,17 @@ process_data_mean <- function(data, selected_analytes, selected_pcspec, cycle,
     filter(
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
-      if ("EVID" %in% names(data)) EVID == 0 else TRUE,
-      NRRLT > 0
+      if ("EVID" %in% names(data)) EVID == 0 else TRUE
     )
   
   # Conditionally filter by cycle for "By Dose Profile" timescale
   if (time_scale == "By Dose Profile") {
-    if ("ARRLT" %in% names(processed) && any(processed$ARRLT < 0 & processed$AFRLT > 0)) {
-      processed <- dose_profile_duplicates(
-        processed,
-        groups = c("USUBJID", "PCSPEC", "PARAM", "NCA_PROFILE"),
-        dosno = "NCA_PROFILE"
-      )
-    }
     processed <- processed %>% filter(NCA_PROFILE %in% cycle)
   }
   
   summarised_data <- processed %>%
     mutate(
-      time_var = if (time_scale == "By Dose Profile") ARRLT else AFRLT,
+      time_var = if (time_scale == "By Dose Profile") NRRLT else NFRLT,
       color_var = interaction(!!!syms(colorby_var), sep = ", ", drop = TRUE)) %>%
     group_by(color_var, time_var) %>%
     summarise(
