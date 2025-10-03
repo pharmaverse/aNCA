@@ -117,33 +117,26 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
             facet_vars = "DOSEA",
             statistics = c("Mean"),
-            stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP")
+            stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP", "LAMZHL", "FABS")
           )
           presentations_path <- paste0(output_tmpdir, "/presentations")
           dir.create(presentations_path)
           browser()
           create_dose_slides_presentation(
             res_dose_slides = res_dose_slides,
-            path = paste0(presentations_path, "/dose_escalation.pptx"),
-            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
-            template = NULL
-          )
-          create_dose_slides_presentation(
-            res_dose_slides = res_dose_slides,
             path = paste0(presentations_path, "/dose_escalation.html"),
-            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
-            template = NULL
+            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")")
           )
-          create_dose_slides_presentation(
+          create_pptx_dose_slides(
             res_dose_slides = res_dose_slides,
-            path = paste0(presentations_path, "/dose_escalation.pdf"),
+            path = paste0(presentations_path, "/dose_escalation_officer.pptx"),
             title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
             template = NULL
           )
- 
+
           # Save all R outputs in one file as well
-          results <- session$userData$results
-          save(list = "results", file = paste0(output_tmpdir, "/all_session_results.rda"))
+          # results <- session$userData$results
+          # save(list = "results", file = paste0(output_tmpdir, "/all_session_results.rda"))
 
           incProgress(0.3)
 
