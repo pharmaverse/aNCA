@@ -1,98 +1,3 @@
-#' Append a Slide with Two Plots and a Table to an Existing Quarto Presentation
-#'
-#' @param quarto_path Path to the Quarto (.qmd) document.
-#' @param plot1 A plotly object for the first plot.
-#' @param plot2 A plotly object for the second plot.
-#' @param df A data.frame to be shown as a table.
-#'
-#' @return Invisibly returns TRUE if the slide was appended.
-add_slide_PlotTablePlot <- function(quarto_path, plot1, plot2, df, use_plotly = FALSE) {
-  slide_content <- c(
-    "\n---",
-    "",
-    "::: columns",
-    "",
-    "::: column",
-    add_quarto_plot(plot1, use_plotly),
-    add_quarto_table(df),
-    ":::",
-    "",
-    "::: column",
-    add_quarto_plot(plot2, use_plotly),
-    ":::",
-    "",
-    ":::",
-    ""
-  )
-  write(slide_content, file = quarto_path, append = TRUE)
-  invisible(TRUE)
-}
-
-
-add_slide_TablePlot <- function(quarto_path, plot, df, use_plotly = FALSE) {
-  slide_content <- c(
-    "\n---",
-    "",
-    "::: columns",
-    "",
-    "::: column",
-    add_quarto_table(df),
-    ":::",
-    "",
-    "::: column",
-    add_quarto_plot(plot, use_plotly),
-    ":::",
-    "",
-    ":::",
-    ""
-  )
-  write(slide_content, file = quarto_path, append = TRUE)
-  invisible(TRUE)
-}
-
-add_slide_Plot <- function(quarto_path, plot, use_plotly = FALSE) {
-  slide_content <- c(
-    "\n---",
-    "",
-    add_quarto_plot(plot, use_plotly),
-    ""
-  )
-  write(slide_content, file = quarto_path, append = TRUE)
-  invisible(TRUE)
-}
-
-add_slides_TablePlot_Plot <- function(quarto_path, plot1, plot2, df, use_plotly = FALSE) {
-  add_slide_TablePlot(quarto_path, plot = plot1, df = df, use_plotly)
-  add_slide_Plot(quarto_path, plot = plot2, use_plotly)
-}
-
-
-create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rda_path, slide_fun = "add_slide_PlotTablePlot", template, extra_setup, use_plotly = FALSE){
-  create_quarto_doc(quarto_path, title, rda_path)
-  slide_fun <- get(slide_fun)
-  for (i in seq_len(length(res_dose_slides))) {
-    slide_fun(
-      quarto_path,
-      plot1 = paste0("res_dose_slides[[", i, "]]$meanplot"),
-      plot2 = paste0("res_dose_slides[[", i, "]]$linplot"),
-      df = paste0("res_dose_slides[[", i, "]]$statistics"),
-      use_plotly = use_plotly
-    )
-  }
-}
-# create_dose_slides_presentation(res_dose_slides = res_dose_slides, path = "test_dose_slides.pptx", title = "Dose Escalation Slides (Unnamed project)", template = NULL)
-# create_dose_slides_presentation(res_dose_slides = res_dose_slides, path = "test_dose_slides.html", title = "Dose Escalation Slides (Unnamed project)", template = NULL)
-create_dose_slides_presentation <- function(res_dose_slides, path, title, template, extra_setup){
-  output_format <- tools::file_ext(path)
-  quarto_path <- gsub(paste0("\\.", output_format), ".qmd", path)
-  if (output_format == "html") output_format <- "revealjs"
-  rda_obj_path <- paste0(dirname(quarto_path), "/all_outputs.rda")
-  use_plotly <- if (output_format == "pptx") FALSE else TRUE
-  slide_fun <- if (output_format == "pptx") "add_slides_TablePlot_Plot" else "add_slide_PlotTablePlot"
-  save(list = as.character(quote(res_dose_slides)), file = rda_obj_path)
-  create_dose_slides_quarto(res_dose_slides, quarto_path = quarto_path, title, slide_fun = slide_fun, rda_path = basename(rda_obj_path), use_plotly = use_plotly)
-  quarto::quarto_render(input = quarto_path, output_format = output_format)
-}
 
 #' Create a New Quarto Presentation Document for Exporting Plots
 #'
@@ -106,11 +11,11 @@ create_dose_slides_presentation <- function(res_dose_slides, path, title, templa
 #' @param template (Optional) Path to a Quarto template to use (default: NULL).
 #' @param extra_setup (Optional) Character vector of extra setup lines to include after YAML.
 #' @return Invisibly returns TRUE if the file was created.
-create_quarto_doc <- function(quarto_path, title = "NCA Report", rda_path = NULL, template = NULL, extra_setup = NULL) {
+create_quarto_doc <- function(quarto_path, title = "NCA Report", libraries = c("plotly", "flextable"), rda_path = NULL, template = NULL, extra_setup = NULL) {
   yaml_header <- c(
     "---",
     paste0("title: \"", title, "\""),
-    "format: pptx",
+    "format: revealjs",
     if (!is.null(template)) paste0("reference-doc: ", template) else NULL,
     "execute:",
     "  echo: false",
@@ -122,10 +27,7 @@ create_quarto_doc <- function(quarto_path, title = "NCA Report", rda_path = NULL
   load_chunk <- c(
     "```{r setup, include=FALSE}",
     if (!is.null(rda_path)) paste0("load(\"", rda_path, "\")") else "",
-    "library(plotly)",
-    "library(knitr)",
-    "library(kableExtra)",
-    "library(flextable)",
+    paste0("library(", libraries, ")"),
     "```",
     ""
   )
@@ -134,73 +36,69 @@ create_quarto_doc <- function(quarto_path, title = "NCA Report", rda_path = NULL
   invisible(TRUE)
 }
 
-linplot_meanplot_stats_by_group <- function(
-    o_nca, group_by_vars, statistics = "Mean",
-    facet_vars = "DOSEA", stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP"),
-    info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
-) {
+add_quarto_sl_PlotTableTable <- function(quarto_path, df1, df2, plot, use_plotly = FALSE) {
+  slide_content <- c(
+    "\n---",
+    "",
+    "::: columns",
+    "",
+    add_quarto_plot(plot, use_plotly),
+    "",
+    "::: column",
+    add_quarto_table(df1),
+    ":::",
+    "",
+    "::: column",
+    add_quarto_table(df2),
+    ":::",
+    "",
+    ":::",
+    ""
+  )
+  write(slide_content, file = quarto_path, append = TRUE)
+  invisible(TRUE)
+}
 
-  groups <- unique(o_nca$data$intervals[, group_by_vars])
-  output_list <- list()
-  # Loop over each of the groups
-  for (i in seq_len(nrow(groups))) {
-    group_i <- groups[i, , drop = FALSE]
-    d_conc_i <- merge(o_nca$data$conc$data, group_i)
-    o_res_i <- merge(o_nca$result, group_i)
-    
-    linplot_i <- general_lineplot(
-      data = d_conc_i,
-      selected_analytes = d_conc_i[["ANALYTE"]],
-      selected_pcspec = d_conc_i[["PCSPEC"]],
-      selected_usubjids = d_conc_i[["USUBJID"]],
-      colorby_var = "USUBJID",
-      facet_by = facet_vars,
-      time_scale = "Whole",
-      yaxis_scale = "Log",
-      show_threshold = FALSE,
-      threshold_value = 0,
-      show_dose = FALSE,
-      cycle = NULL,
-      palette = NULL
+add_quarto_sl_Plot <- function(quarto_path, plot, use_plotly = FALSE) {
+  slide_content <- c(
+    "\n---",
+    "",
+    add_quarto_plot(plot, use_plotly),
+    ""
+  )
+  write(slide_content, file = quarto_path, append = TRUE)
+  invisible(TRUE)
+}
+
+create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rda_path, use_plotly = TRUE){
+  create_quarto_doc(quarto_path = quarto_path, title = title, rda_path = rda_path)
+  for (i in seq_len(length(res_dose_slides))) {
+    add_quarto_sl_PlotTableTable(
+      quarto_path = quarto_path,
+      df1 = paste0("res_dose_slides[[", i, "]]$info"),
+      df2 = paste0("res_dose_slides[[", i, "]]$statistics"),
+      plot = paste0("res_dose_slides[[", i, "]]$meanplot"),
+      use_plotly = use_plotly
     )
-    meanplot_i <- general_meanplot(
-      data = d_conc_i,
-      selected_studyids = unique(d_conc_i[["STUDYID"]]),
-      selected_analytes = unique(d_conc_i[["ANALYTE"]]),
-      selected_pcspecs = unique(d_conc_i[["PCSPEC"]]),
-      selected_cycles = unique(d_conc_i[["NCA_PROFILE"]]),
-      id_variable = facet_vars,
-      groupby_var = group_by_vars,
-      plot_ylog = FALSE,
-      plot_sd_min = TRUE,
-      plot_sd_max = TRUE,
-      plot_ci = FALSE
-    )
-    stats_i <- calculate_summary_stats(
-      data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), "DOSEA")]),
-      input_groups = facet_vars
-    ) %>%
-      filter(
-        Statistic %in% statistics
-      ) %>%
-      select(
-        any_of(c(facet_vars, "Statistic")),
-        dplyr::matches(paste0("^(", paste(stats_parameters, collapse = "|"), ")(\\[.*\\])?$"))
-      ) %>%
-      unique()
-
-    info_i <- merge(o_nca$data$dose$data, group_i) %>%
-      select(any_of(unique(c(group_by_vars, info_vars)))) %>%
-      unique()
-
-    output_list[[paste0("Group_", i)]] <- list(
-      linplot = linplot_i,
-      meanplot = meanplot_i,
-      statistics = stats_i,
-      info = info_i
+    add_quarto_sl_Plot(
+      quarto_path = quarto_path,
+      plot = paste0("res_dose_slides[[", i, "]]$linplot"),
+      use_plotly = use_plotly
     )
   }
-  output_list
+}
+
+create_dose_slides_presentation <- function(res_dose_slides, path, title) {
+  output_format <- tools::file_ext(path)
+  quarto_path <- gsub(paste0("\\.", output_format), ".qmd", path)
+  use_plotly <- if (output_format == "html") TRUE else FALSE
+  output_format <- if (output_format == "html") "revealjs" else output_format
+
+  rda_obj_path <- paste0(dirname(quarto_path), "/all_outputs.rda")
+  slide_fun <- if (output_format == "pptx") "add_slides_TablePlot_Plot" else "add_quarto_sl_PlotTablePlot"
+  save(list = as.character(quote(res_dose_slides)), file = rda_obj_path)
+  create_dose_slides_quarto(res_dose_slides, quarto_path = quarto_path, title = title, rda_path = basename(rda_obj_path), use_plotly = use_plotly)
+  quarto::quarto_render(input = quarto_path, output_format = output_format)
 }
 
 #' Helper to create a Quarto code chunk for a plot
