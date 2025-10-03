@@ -186,24 +186,26 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
     })
     
     # Return all inputs as a list of reactives
-    return(
+    inputs <- reactive({
       list(
-        palette_theme = reactive(input$palette_theme),
-        param = reactive(input$param),
-        pcspec = reactive(input$pcspec),
-        usubjid = reactive(input$usubjid),
-        colorby = reactive(input$colorby),
-        facetby = reactive(input$facetby),
-        log = reactive(input$log),
-        timescale = reactive(input$timescale),
-        cycles = reactive(input$cycles),
-        show_threshold = reactive(input$show_threshold),
-        threshold_value = reactive(input$threshold_value),
-        show_dose = reactive(input$show_dose),
-        sd_max = reactive(input$sd_max),
-        sd_min = reactive(input$sd_min),
-        ci = reactive(input$ci)
+        palette_theme = input$palette_theme,
+        param = input$param,
+        pcspec = input$pcspec,
+        usubjid = input$usubjid,
+        colorby = input$colorby,
+        facetby = input$facetby,
+        log = input$log,
+        timescale = input$timescale,
+        profiles = input$profiles,
+        show_threshold = input$show_threshold,
+        threshold_value = input$threshold_value,
+        show_dose = input$show_dose,
+        sd_max = input$sd_max,
+        sd_min = input$sd_min,
+        ci = input$ci
       )
-    )
+    })
+    
+    inputs
   })
 }
