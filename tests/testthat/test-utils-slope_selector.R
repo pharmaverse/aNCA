@@ -176,7 +176,13 @@ describe("handle_hl_adj_change", {
       )
 
     # Create plots using the original and updated PKNCA data
-    old_plots <- get_halflife_plots(old_data)$plots
+    old_plots <- withCallingHandlers(
+      get_halflife_plots(old_data)$plots,
+      # Because of the NA record there will be an expected warning
+      warning = function(w) {
+        if (grepl("Ignoring 1 observations", conditionMessage(w))) invokeRestart("muffleWarning")
+      }
+    )
     new_plots <- handle_hl_adj_change(new_data, old_data, old_plots)
 
     # Check that the plots for other groups remain unchanged
