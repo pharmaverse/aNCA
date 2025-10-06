@@ -72,7 +72,7 @@ describe("check_slope_rule_overlap", {
 
   })
 
-  it("should add new points of partial overlap is detected", {
+  it("should add new points if partial overlap is detected", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
@@ -281,12 +281,13 @@ describe("update_pknca_with_rules", {
 
     expect_true(all(old_have_points_na, new_have_points_incl, new_have_points_excl))
   })
+
   it("returns an error for invalid rule types", {
     slopes_invalid <- cbind(
       data.frame(TYPE = "Invalid", ID = 1, RANGE = "2:4", REASON = "invalid type"),
       group1
     )
-    expect_error(update_pknca_with_rules(old, slopes_invalid))
+    expect_error(update_pknca_with_rules(old_data, slopes_invalid), regexp = "Unknown TYPE in slopes: Invalid")
   })
 })
 
