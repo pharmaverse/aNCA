@@ -3,7 +3,13 @@ base_pknca <- FIXTURE_PKNCA_DATA
 
 describe("get_halflife_plot", {
   it("returns a list of plotly objects with valid input", {
-    plots <- get_halflife_plots(base_pknca)[["plots"]]
+    plots <- withCallingHandlers(
+      get_halflife_plots(base_pknca)[["plots"]],
+      # Ignore the warning associated with the expected missing records
+      warning = function(w) {
+        if (grepl("Ignoring 1 observations", conditionMessage(w))) invokeRestart("muffleWarning")
+      }
+    )
     expect_type(plots, "list")
     expect_true(length(plots) >= 1)
     expect_s3_class(plots[[1]], "plotly")
@@ -22,7 +28,13 @@ describe("get_halflife_plot", {
     pknca_no_excl_incl <- base_pknca
     pknca_no_excl_incl$conc$data$exclude_half.life <- FALSE
     pknca_no_excl_incl$conc$data$include_half.life <- FALSE
-    plots <- get_halflife_plots(pknca_no_excl_incl)[["plots"]]
+    plots <- withCallingHandlers(
+      get_halflife_plots(pknca_no_excl_incl)[["plots"]],
+      # Ignore the warning associated with the expected missing records
+      warning = function(w) {
+        if (grepl("Ignoring 1 observations", conditionMessage(w))) invokeRestart("muffleWarning")
+      }
+    )
     expect_true(length(plots) >= 1)
     plot_data <- plots[[1]]$x$data[[2]]
     expect_true(all(plot_data$marker$color == "black"))
@@ -115,5 +127,4 @@ describe("get_halflife_plot", {
     )
     expect_equal(plots_details, exp_plots_details, ignore_attr = TRUE)
   })
-
 })
