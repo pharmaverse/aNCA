@@ -34,8 +34,8 @@ PKNCA_update_data_object(
 \item{should_impute_c0}{Logical indicating if start values should be imputed}
 
 \item{hl_adj_rules}{A data frame containing half-life adjustment rules. It must
-contain group columns and rule specification columns,
-(TYPE: {Inclusion, Exclusion}, RANGE: {start-end}).}
+contain group columns and rule specification columns;
+TYPE: (Inclusion, Exclusion), RANGE: (start-end).}
 }
 \value{
 A fully configured \code{PKNCAdata} object.

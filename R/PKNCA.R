@@ -210,8 +210,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
 #' @param hl_adj_rules A data frame containing half-life adjustment rules. It must
-#' contain group columns and rule specification columns,
-#' (TYPE: {Inclusion, Exclusion}, RANGE: {start-end}).
+#' contain group columns and rule specification columns;
+#' TYPE: (Inclusion, Exclusion), RANGE: (start-end).
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
