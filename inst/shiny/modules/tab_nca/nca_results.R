@@ -121,7 +121,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           )
           presentations_path <- paste0(output_tmpdir, "/presentations")
           dir.create(presentations_path)
-          browser()
+
           create_dose_slides_presentation(
             res_dose_slides = res_dose_slides,
             path = paste0(presentations_path, "/dose_escalation.html"),
@@ -131,7 +131,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             res_dose_slides = res_dose_slides,
             path = paste0(presentations_path, "/dose_escalation_officer.pptx"),
             title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
-            template = NULL
+            template = "www/templates/template.pptx"
           )
 
           # Save all R outputs in one file as well
