@@ -287,7 +287,10 @@ describe("update_pknca_with_rules", {
       data.frame(TYPE = "Invalid", ID = 1, RANGE = "2:4", REASON = "invalid type"),
       group1
     )
-    expect_error(update_pknca_with_rules(old_data, slopes_invalid), regexp = "Unknown TYPE in slopes: Invalid")
+    expect_error(
+      update_pknca_with_rules(old_data, slopes_invalid),
+      regexp = "Unknown TYPE in slopes: Invalid"
+    )
   })
 })
 
