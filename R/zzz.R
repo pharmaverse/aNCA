@@ -165,6 +165,7 @@
     "start_auc",
     "start_dose",
     "strata_cols_comb",
+    "tlast",
     "tooltip_text",
     "type",
     "type_interval",
