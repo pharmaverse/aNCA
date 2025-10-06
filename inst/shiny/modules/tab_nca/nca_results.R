@@ -112,7 +112,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
           # Create presentation slides
           res_nca <- res_nca()
-          res_dose_slides <- linplot_meanplot_stats_by_group(
+          res_dose_slides <- get_dose_esc_results(
             o_nca = res_nca,
             group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
             facet_vars = "DOSEA",
@@ -122,21 +122,17 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           presentations_path <- paste0(output_tmpdir, "/presentations")
           dir.create(presentations_path)
 
-          create_dose_slides_presentation(
+          create_html_dose_slides(
             res_dose_slides = res_dose_slides,
             path = paste0(presentations_path, "/dose_escalation.html"),
             title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")")
           )
           create_pptx_dose_slides(
             res_dose_slides = res_dose_slides,
-            path = paste0(presentations_path, "/dose_escalation_officer.pptx"),
+            path = paste0(presentations_path, "/dose_escalation.pptx"),
             title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
             template = "www/templates/template.pptx"
           )
-
-          # Save all R outputs in one file as well
-          # results <- session$userData$results
-          # save(list = "results", file = paste0(output_tmpdir, "/all_session_results.rda"))
 
           incProgress(0.3)
 

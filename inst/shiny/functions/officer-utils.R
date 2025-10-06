@@ -7,60 +7,52 @@ library(dplyr)
 library(magrittr)
 library(tidyr)
 
-create_pptx_doc <- function(path, title, template = NULL) {
-  if (is.null(template)) {
-    pptx <- read_pptx("template.pptx")
-  } else {
-    pptx <- read_pptx(template)
-  }
-  add_pptx_sl_Title(pptx, title)
+create_pptx_doc <- function(path, title, template) {
+  pptx <- read_pptx(template)
+  add_pptx_sl_title(pptx, title)
 }
 
-add_pptx_sl_Title <- function(pptx, title) {
+add_pptx_sl_title <- function(pptx, title) {
   pptx <- add_slide(pptx, layout = "Title Slide", master = "Office Theme")
-  pptx <- ph_with(pptx, value = title, location = ph_location_type(type = "ctrTitle"))
-  pptx
+  ph_with(pptx, value = title, location = ph_location_type(type = "ctrTitle"))
 }
 
-add_pptx_sl_PlotTable <- function(pptx, df, plot) {
+add_pptx_sl_plottable <- function(pptx, df, plot) {
   pptx <- add_slide(pptx, layout = "Content with Caption")
   pptx <- ph_with(pptx, value = plot, location = "Content Placeholder 1")
-  pptx <- ph_with(pptx, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
-  pptx
+  ph_with(pptx, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
-add_pptx_sl_Table <- function(pptx, df) {
+add_pptx_sl_table <- function(pptx, df) {
   pptx <- add_slide(pptx, layout = "Title Only")
-  pptx <- ph_with(pptx, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
-  pptx
+  ph_with(pptx, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
-add_pptx_sl_Plot <- function(pptx, plot) {
+add_pptx_sl_plot <- function(pptx, plot) {
   pptx <- add_slide(pptx, layout = "Picture with Caption")
-  pptx <- ph_with(pptx, value = plot, location = "Picture Placeholder 2")
-  pptx
+  ph_with(pptx, value = plot, location = "Picture Placeholder 2")
 }
 
-create_pptx_dose_slides <- function(res_dose_slides, path, title, template = NULL, slide_style = "TableTablePlot") {
+create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   pptx <- create_pptx_doc(path, title, template)
 
   # Prepare main presentation figures
   for (i in seq_len(length(res_dose_slides))) {
-    pptx <- add_pptx_sl_Table(pptx, res_dose_slides[[i]]$info)
-    pptx <- add_pptx_sl_PlotTable(
+    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
+    pptx <- add_pptx_sl_plottable(
       pptx,
       df = res_dose_slides[[i]]$statistics,
       plot = res_dose_slides[[i]]$meanplot
     )
-    pptx <- add_pptx_sl_Plot(pptx, res_dose_slides[[i]]$linplot)
+    pptx <- add_pptx_sl_plot(pptx, res_dose_slides[[i]]$linplot)
   }
 
   # Include extra presentation figures
-  add_pptx_sl_Title(pptx, "Extra Figures")
+  add_pptx_sl_title(pptx, "Extra Figures")
   for (i in seq_len(length(res_dose_slides))) {
-    pptx <- add_pptx_sl_Table(pptx, res_dose_slides[[i]]$info)
+    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
     for (subj in names(res_dose_slides[[i]]$ind_params)) {
-      pptx <- add_pptx_sl_PlotTable(
+      pptx <- add_pptx_sl_plottable(
         pptx,
         df = res_dose_slides[[i]]$ind_params[[subj]],
         plot = res_dose_slides[[i]]$ind_plots[[subj]]

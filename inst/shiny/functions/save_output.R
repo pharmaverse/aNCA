@@ -55,10 +55,12 @@ format_to_xpt_compatible <- function(data) {
 }
 
 
-linplot_meanplot_stats_by_group <- function(
-    o_nca, group_by_vars, statistics = "Mean",
-    facet_vars = "DOSEA", stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
-    info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
+get_dose_esc_results <- function(
+  o_nca, group_by_vars,
+  statistics = "Mean",
+  facet_vars = "DOSEA",
+  stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
 ) {
 
   groups <- unique(o_nca$data$intervals[, group_by_vars])
@@ -130,7 +132,7 @@ linplot_meanplot_stats_by_group <- function(
 
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
-      lapply(function(d_conc_i){
+      lapply(function(d_conc_i) {
         general_lineplot(
           data = d_conc_i,
           selected_analytes = d_conc_i[["ANALYTE"]],
