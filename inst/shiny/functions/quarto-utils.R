@@ -84,6 +84,17 @@ create_dose_slides_quarto <- function(res_dose_slides, quarto_path, title, rda_p
       use_plotly = use_plotly
     )
   }
+  for (i in seq_len(length(res_dose_slides))) {
+    for (subj in names(res_dose_slides[[i]]$ind_params)) {
+      add_quarto_sl_PlotTableTable(
+        quarto_path = quarto_path,
+        df1 = paste0("res_dose_slides[[", i, "]]$info"),
+        df2 = paste0("res_dose_slides[[", i, "]]$ind_params[['", subj, "']]"),
+        plot = paste0("res_dose_slides[[", i, "]]$ind_plots[['", subj, "']]"),
+        use_plotly = use_plotly
+      )
+    }
+  }
 }
 
 create_dose_slides_presentation <- function(res_dose_slides, path, title) {

@@ -13,6 +13,10 @@ create_pptx_doc <- function(path, title, template = NULL) {
   } else {
     pptx <- read_pptx(template)
   }
+  add_pptx_sl_Title(pptx, title)
+}
+
+add_pptx_sl_Title <- function(pptx, title) {
   pptx <- add_slide(pptx, layout = "Title Slide", master = "Office Theme")
   pptx <- ph_with(pptx, value = title, location = ph_location_type(type = "ctrTitle"))
   pptx
@@ -39,6 +43,8 @@ add_pptx_sl_Plot <- function(pptx, plot) {
 
 create_pptx_dose_slides <- function(res_dose_slides, path, title, template = NULL, slide_style = "TableTablePlot") {
   pptx <- create_pptx_doc(path, title, template)
+
+  # Prepare main presentation figures
   for (i in seq_len(length(res_dose_slides))) {
     pptx <- add_pptx_sl_Table(pptx, res_dose_slides[[i]]$info)
     pptx <- add_pptx_sl_PlotTable(
@@ -47,6 +53,19 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template = NUL
       plot = res_dose_slides[[i]]$meanplot
     )
     pptx <- add_pptx_sl_Plot(pptx, res_dose_slides[[i]]$linplot)
+  }
+
+  # Include extra presentation figures
+  add_pptx_sl_Title(pptx, "Extra Figures")
+  for (i in seq_len(length(res_dose_slides))) {
+    pptx <- add_pptx_sl_Table(pptx, res_dose_slides[[i]]$info)
+    for (subj in names(res_dose_slides[[i]]$ind_params)) {
+      pptx <- add_pptx_sl_PlotTable(
+        pptx,
+        df = res_dose_slides[[i]]$ind_params[[subj]],
+        plot = res_dose_slides[[i]]$ind_plots[[subj]]
+      )
+    }
   }
   print(pptx, target = path)
   invisible(TRUE)

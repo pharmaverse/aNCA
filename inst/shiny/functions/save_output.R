@@ -116,11 +116,45 @@ linplot_meanplot_stats_by_group <- function(
       select(any_of(unique(c(group_by_vars, info_vars)))) %>%
       unique()
 
+    ind_params <- merge(o_nca$result, group_i) %>%
+      filter(PPTESTCD %in% stats_parameters) %>%
+      mutate(parameter_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
+      select(any_of(
+        c(
+          o_nca$data$conc$columns$subject,
+          "start", "end", "parameter_unit", "PPSTRES"
+        )
+      )) %>%
+      pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
+      split(.[[o_nca$data$conc$columns$subject]])
+
+    ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
+      split(.[[o_nca$data$conc$columns$subject]]) %>%
+      lapply(function(d_conc_i){
+        general_lineplot(
+          data = d_conc_i,
+          selected_analytes = d_conc_i[["ANALYTE"]],
+          selected_pcspec = d_conc_i[["PCSPEC"]],
+          selected_usubjids = d_conc_i[["USUBJID"]],
+          colorby_var = "USUBJID",
+          facet_by = facet_vars,
+          time_scale = "Whole",
+          yaxis_scale = "Log",
+          show_threshold = FALSE,
+          threshold_value = 0,
+          show_dose = FALSE,
+          cycle = NULL,
+          palette = NULL
+        )
+      })
+
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
       statistics = stats_i,
-      info = info_i
+      info = info_i,
+      ind_params = ind_params,
+      ind_plots = ind_plots
     )
   }
   output_list
