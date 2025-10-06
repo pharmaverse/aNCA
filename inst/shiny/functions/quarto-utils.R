@@ -1,12 +1,12 @@
 
-#' Create a New Quarto Presentation Document for Exporting Plots
+## Create a new Quarto (.qmd) presentation file with YAML header and setup chunk
+#' Create a new Quarto presentation file with YAML header and setup chunk
 #'
-#' This function creates a new Quarto (.qmd) presentation file from scratch, with the
-#' title, format, and an initial code chunk to load an RDS object (containing all plots/data).
-#' Optionally, you can specify a template or add extra setup code.
+#' Used internally to initialize a Quarto document for exporting plots and tables.
 #'
 #' @param quarto_path Path to the Quarto (.qmd) file to create.
 #' @param title Title for the presentation.
+#' @param libraries Character vector of libraries to load in setup chunk.
 #' @param rda_path Path to the RDS file to be loaded in the document.
 #' @param template (Optional) Path to a Quarto template to use (default: NULL).
 #' @param extra_setup (Optional) Character vector of extra setup lines to include after YAML.
@@ -43,6 +43,16 @@ create_qmd_doc <- function(
   invisible(TRUE)
 }
 
+#' Add a slide to the Quarto document with a plot and two tables (side by side)
+#'
+#' Used internally for dose escalation reporting.
+#'
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param df1 Expression for first table (left column).
+#' @param df2 Expression for second table (right column).
+#' @param plot Expression for plot.
+#' @param use_plotly Logical, whether to convert plot to plotly.
+#' @return Invisibly returns TRUE if the slide was added.
 add_qmd_sl_plottabletable <- function(quarto_path, df1, df2, plot, use_plotly = FALSE) {
   slide_content <- c(
     "\n---",
@@ -64,6 +74,14 @@ add_qmd_sl_plottabletable <- function(quarto_path, df1, df2, plot, use_plotly = 
   invisible(TRUE)
 }
 
+#' Add a slide to the Quarto document with a single plot
+#'
+#' Used internally for dose escalation reporting.
+#'
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param plot Expression for plot.
+#' @param use_plotly Logical, whether to convert plot to plotly.
+#' @return Invisibly returns TRUE if the slide was added.
 add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
   slide_content <- c(
     "\n---",
@@ -75,6 +93,15 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
   invisible(TRUE)
 }
 
+#' Create all slides for dose escalation results in a Quarto document
+#'
+#' Used internally to generate main and individual slides for each dose group.
+#'
+#' @param res_dose_slides List of results for each dose group.
+#' @param quarto_path Path to the Quarto (.qmd) file to create.
+#' @param title Title for the presentation.
+#' @param use_plotly Logical, whether to convert plots to plotly.
+#' @return Invisibly returns TRUE if slides were created.
 create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
   # Save an accessible object with all results
   rda_path <- paste0(dirname(quarto_path), "/all_outputs.rda")
@@ -111,6 +138,14 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
   }
 }
 
+#' Render dose escalation results to HTML via Quarto
+#'
+#' Used internally to create and render a .qmd file to HTML.
+#'
+#' @param res_dose_slides List of results for each dose group.
+#' @param path Path to the output HTML file.
+#' @param title Title for the presentation.
+#' @return Invisibly returns TRUE if rendering succeeded.
 create_html_dose_slides <- function(res_dose_slides, path, title) {
   output_format <- tools::file_ext(path)
   quarto_path <- gsub(paste0("\\.", output_format), ".qmd", path)
@@ -127,6 +162,12 @@ create_html_dose_slides <- function(res_dose_slides, path, title) {
 }
 
 #' Helper to create a Quarto code chunk for a plot
+#'
+#' Used internally to format a plot chunk for Quarto documents.
+#'
+#' @param plot_expr Expression for plot.
+#' @param use_plotly Logical, whether to convert plot to plotly.
+#' @return Character vector for Quarto code chunk.
 add_qmd_plot <- function(plot_expr, use_plotly = FALSE) {
   c(
     "```{r, echo=FALSE}",
@@ -139,6 +180,11 @@ add_qmd_plot <- function(plot_expr, use_plotly = FALSE) {
 }
 
 #' Helper to create a Quarto code chunk for a table
+#'
+#' Used internally to format a table chunk for Quarto documents.
+#'
+#' @param table_expr Expression for table.
+#' @return Character vector for Quarto code chunk.
 add_qmd_table <- function(table_expr) {
   c(
     "```{r, echo=FALSE}",

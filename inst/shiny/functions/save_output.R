@@ -54,7 +54,20 @@ format_to_xpt_compatible <- function(data) {
   data
 }
 
-
+#' Generate Dose Escalation Results
+#'
+#' This function processes PKNCA results and concentration data to produce summary statistics,
+#' plots, and individual subject outputs for dose escalation studies.
+#'
+#' @param o_nca NCA analysis object containing results and concentration data.
+#' @param group_by_vars Character vector of column names to group results by.
+#' @param statistics Character vector of summary statistics to include (default: "Mean").
+#' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
+#' @param stats_parameters Character vector of parameter codes to summarize (default: c("CMAX", "TMAX", ...)).
+#' @param info_vars Character vector of additional info columns to include (default: c("SEX", "STRAIN", ...)).
+#'
+#' @return A list containing plots, summary statistics, info tables, and individual subject outputs for each group.
+#' @export
 get_dose_esc_results <- function(
   o_nca, group_by_vars,
   statistics = "Mean",
