@@ -76,7 +76,7 @@ excretion_server <- function(id, input_pknca_data) {
       updateSelectInput(session, "end_time_col", choices = available_cols,
                         selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
       updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
-                          filter(startsWith(PPTESTCD, "RCA")) %>%
+                          filter(TYPE == "Urine") %>%
                           pull(PKNCA, PPTESTCD),
                         selected = c("ae"))
     })
@@ -116,6 +116,9 @@ excretion_server <- function(id, input_pknca_data) {
             !!dose_col := map_dbl(dose_total_unit, drop_units),
             !!doseu := map_chr(dose_total_unit, deparse_unit)
           )
+
+        # Update units
+        data$units <- PKNCA_build_units_table(data$conc, data$dose)
       }
 
       # Update intervals
@@ -158,6 +161,10 @@ excretion_server <- function(id, input_pknca_data) {
         filter(type_interval %in% input$interval_types) %>%
         arrange(PCSPEC, start, end)
 
+      data$units <- data$units  %>%
+        mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
+               conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
+
       data$options$keep_interval_cols <- c("NCA_PROFILE", "type_interval")
       # Run PKNCA analysis
       suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
@@ -192,5 +199,10 @@ excretion_server <- function(id, input_pknca_data) {
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
       style = list(fontSize = "0.75em")
     )
+
+    # Save the results in the output folder
+    observeEvent(results_output(), {
+      session$userData$results$additional_analysis$excretion_results <- results_output()
+    })
   })
 }
