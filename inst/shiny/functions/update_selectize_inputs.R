@@ -34,12 +34,12 @@ update_selectize_inputs <- function(session, input_ids, data_colnames, alternati
     )
 
     # Define the values to select by default (if possible)
-    if (length(potential_mappings) == 0) {
-      selected_vals <- NULL
+    selected_vals <- if (length(potential_mappings) == 0) {
+      NULL
     } else if (input_info$is_multiple_choice) {
-      selected_vals <- potential_mappings
+      potential_mappings
     } else {
-      selected_vals <- potential_mappings[[1]]
+      potential_mappings[[1]]
     }
 
     # Update the input using the defined choices and default selections
