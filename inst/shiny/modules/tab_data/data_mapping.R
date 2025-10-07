@@ -1,9 +1,4 @@
-MAPPING_INFO <- metadata_nca_variables %>%
-  filter(is.mapped, Dataset == "ADPC") %>%
-  select(Variable, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
-  mutate(is_multiple_choice = FALSE)
-
-# Add non-standard mapping columns
+# Add information for non-official CDISC mapping columns
 NON_STD_MAPPING_INFO <- data.frame(
   Variable = c("Grouping_Variables", "TAU"),
   Order = c(100, 24),
@@ -17,8 +12,12 @@ NON_STD_MAPPING_INFO <- data.frame(
   is_multiple_choice = c(TRUE, FALSE)
 )
 
-MAPPING_INFO_LIST <- bind_rows(MAPPING_INFO, NON_STD_MAPPING_INFO) %>%
-  split(.$mapping_section)
+# Make an unique dataset with all the variables for the mapping
+MAPPING_INFO <- metadata_nca_variables %>%
+  filter(is.mapped, Dataset == "ADPC") %>%
+  select(Variable, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
+  mutate(is_multiple_choice = FALSE) %>%
+  bind_rows(NON_STD_MAPPING_INFO)
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
@@ -127,7 +126,8 @@ MAPPING_DESIRED_ORDER <- c(
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 data_mapping_ui <- function(id) {
   ns <- NS(id)
-  
+  MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
+
   div(
     card(
       div(
@@ -138,13 +138,10 @@ data_mapping_ui <- function(id) {
           " Please ensure each of these columns",
           " has been assigned a corresponding column from your dataset"
         ),
-        # Adjusted layout using CSS flexbox
-        .column_mapping_section(ns, MAPPING_INFO_LIST$`Group Identifiers`),
-        .column_mapping_section(ns, MAPPING_INFO_LIST$`Sample Variables`),
-        .column_mapping_section(ns, MAPPING_INFO_LIST$`Dose Variables`),
-        .column_mapping_section(ns, MAPPING_INFO_LIST$`Time Variables`),
-        .column_mapping_section(ns, MAPPING_INFO_LIST$`Unit Variables`),
-        .column_mapping_section(ns, MAPPING_INFO_LIST$`Supplemental Variables`)
+        # Define the input widgets for each variable to map
+        lapply(MAPPING_BY_SECTION, function(mapping_section) {
+          .column_mapping_section(ns, mapping_section)
+        })
       )
     )
   )
@@ -156,8 +153,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
-    input_ids <- paste0("select_", bind_rows(MAPPING_INFO_LIST)[["Variable"]])
-    
+    input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
+
     # Loop through each label and create the renderText outputs
     purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
       output[[paste0("label_", label)]] <- renderText(
@@ -168,7 +165,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     # Populate the static inputs with column names
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
-      update_selectize_inputs(session, input_ids, column_names, bind_rows(MAPPING_INFO_LIST))
+      update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
     })
 
     # Observe submit button click and update processed_data
