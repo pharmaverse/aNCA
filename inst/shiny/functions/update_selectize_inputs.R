@@ -26,10 +26,13 @@ update_selectize_inputs <- function(session, input_ids, data_colnames, alternati
 
     # Define the expected choices for the mapping (columns and/or values)
     potential_mappings <- c(
-      intersect(c(input_colname, strsplit(input_info$mapping_alternatives, ", ")[[1]]), data_colnames),
+      intersect(
+        c(input_colname, strsplit(input_info$mapping_alternatives, ", ")[[1]]),
+        data_colnames
+      ),
       strsplit(input_info$Values, ", ")[[1]]
     )
-    
+
     # Define the values to select by default (if possible)
     if (length(potential_mappings) == 0) {
       selected_vals <- NULL
