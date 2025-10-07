@@ -5,10 +5,13 @@ NON_STD_MAPPING_INFO <- data.frame(
   Values = c("", ""),
   mapping_tooltip = c(
     "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
-    "Numeric column for dose interval. Optional for multiple dose studies and assumed to have same units as RRTLU"
+    "Numeric column for dose interval in multiple dose studies (optional). Must be in RRTLU units"
   ),
   mapping_section = c("Supplemental Variables", "Supplemental Variables"),
-  mapping_alternatives = c("TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP", ""),
+  mapping_alternatives = c(
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE,
+    RACE, SEX, GROUP, NOMDOSE, DOSEP", ""
+  ),
   is_multiple_choice = c(TRUE, FALSE)
 )
 
@@ -18,6 +21,8 @@ MAPPING_INFO <- metadata_nca_variables %>%
   select(Variable, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
   mutate(is_multiple_choice = FALSE) %>%
   bind_rows(NON_STD_MAPPING_INFO)
+
+MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
@@ -73,7 +78,7 @@ MAPPING_DESIRED_ORDER <- c(
   }
   tags$section(
     h5(section_title),
-    lapply(1:nrow(mapping_df), function(i) {
+    lapply(seq_len(nrow(mapping_df)), function(i) {
       row <- mapping_df[i, ]
       .column_mapping_widget(ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice)
     })
@@ -126,7 +131,6 @@ MAPPING_DESIRED_ORDER <- c(
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 data_mapping_ui <- function(id) {
   ns <- NS(id)
-  MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
 
   div(
     card(
@@ -150,7 +154,7 @@ data_mapping_ui <- function(id) {
 data_mapping_server <- function(id, adnca_data, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
@@ -171,7 +175,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     # Observe submit button click and update processed_data
     mapping <- reactive({
       mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
-      supplemental_ids <- paste0("select_", MAPPING_INFO_LIST$`Supplemental Variables`$Variable)
+      supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
 
       # Get the names to keep
       names_to_keep <- names(mapping_list) |>
@@ -220,7 +224,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       })
     }) |>
       bindEvent(trigger(), ignoreInit = TRUE)
-    
+
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
     df_duplicates <- reactive({
@@ -231,28 +235,28 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         ungroup() %>%
         mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
     })
-    
+
     processed_data <- reactive({
       req(mapped_data())
       dataset <- mapped_data()
-      
+
       if (nrow(df_duplicates()) == 0) {
         return(mutate(dataset, DFLAG = FALSE))
       }
-      
+
       # User resolves duplicates, apply DFLAG
       duplicates(df_duplicates())
-      
+
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
         # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
         req(length(selected) > 0)
-        
+
         kept <- df_duplicates()[selected, , drop = FALSE]
         removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
         dataset <- dataset %>%
           mutate(DFLAG = FALSE)
-        
+
         # Set DFLAG to TRUE for the removed rows
         dataset <- dataset %>%
           rows_update(
@@ -261,14 +265,14 @@ data_mapping_server <- function(id, adnca_data, trigger) {
               select(names(dataset)),
             by = intersect(names(dataset), names(removed))
           )
-        
+
         return(dataset)
       }
       # Don't return anything until duplicates are resolved
       return(NULL)
-      
+
     })
-    
+
     observeEvent(duplicates(), {
       showModal(
         modalDialog(
@@ -292,16 +296,16 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         )
       )
     })
-    
+
     observeEvent(input$keep_selected_btn, {
       duplicates(NULL)
       removeModal()
     })
-    
+
     output$duplicate_modal_table <- renderReactable({
       group_ids <- unique(df_duplicates()$.dup_group)
       color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
-      
+
       reactable(
         df_duplicates(),
         columns = list(.dup_group = colDef(show = FALSE)),
