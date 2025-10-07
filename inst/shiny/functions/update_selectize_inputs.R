@@ -8,7 +8,6 @@
 #' @param input_ids A vector of input IDs to be updated.
 #' @param column_names A vector of column names from the dataset.
 #' @param manual_units A list containing manual units for concentration, dose, and time.
-#' @param desired_order A vector of desired column order.
 #' @details
 #' This function updates the selectize inputs in the Shiny session based on the
 #' provided column names and manual units. It handles special cases for
@@ -18,7 +17,7 @@
 #'
 #' @returns None. This function updates the selectize inputs in the Shiny session.
 
-update_selectize_inputs <- function(session, input_ids, column_names, manual_units, desired_order) {
+update_selectize_inputs <- function(session, input_ids, column_names, manual_units) {
 
   # Define the desired columns for Grouping_Variables
   desired_grouping_columns <- c("TRTA", "TRTAN", "ACTARM", "TRT01A",

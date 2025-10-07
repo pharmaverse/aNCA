@@ -189,7 +189,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     # Populate the static inputs with column names
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
-      update_selectize_inputs(session, input_ids, column_names, MANUAL_UNITS, MAPPING_DESIRED_ORDER)
+      update_selectize_inputs(session, input_ids, column_names, MANUAL_UNITS)
     })
 
     # Observe submit button click and update processed_data
