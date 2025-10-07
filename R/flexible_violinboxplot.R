@@ -50,21 +50,25 @@ flexible_violinboxplot <- function(res_nca,
       )
 
   # Variables to use to filter
-  vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
-  vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
-  var_types <- sapply(vars_tofilter, \(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
-
-  filter_text <- paste0(
-    sapply(unique(vars_tofilter), \(varid) {
-      vartype <- class(boxplotdata[[varid]])
-      paste0(
-        varid,
-        " %in% as.",
-        vartype,
-        "(c('", paste0(vals_tofilter[vars_tofilter == varid], collapse = "','"), "'))"
-      )
-    }), collapse = " & "
-  )
+  if (!is.null(varvalstofilter)) {
+    vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
+    vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
+    var_types <- sapply(vars_tofilter, \(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
+    
+    filter_text <- paste0(
+      sapply(unique(vars_tofilter), \(varid) {
+        vartype <- class(boxplotdata[[varid]])
+        paste0(
+          varid,
+          " %in% as.",
+          vartype,
+          "(c('", paste0(vals_tofilter[vars_tofilter == varid], collapse = "','"), "'))"
+        )
+      }), collapse = " & "
+    )
+  } else {
+    filter_text = "TRUE"
+  }
 
   # Filter the data
   box_data <- boxplotdata %>%
