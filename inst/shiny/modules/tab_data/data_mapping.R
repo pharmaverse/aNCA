@@ -1,3 +1,23 @@
+MAPPING_INFO <- metadata_nca_variables %>%
+  filter(is.mapped, Dataset == "ADPC") %>%
+  select(Variable, Values, mapping_tooltip, mapping_section) %>%
+  mutate(is_multiple_choice = FALSE)
+
+# Add non-standard mapping columns
+NON_STD_MAPPING_INFO <- data.frame(
+  Variable = c("Grouping_Variables", "TAU"),
+  Values = c("", ""),
+  mapping_tooltip = c(
+    "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
+    "Numeric column for dose interval. Optional for multiple dose studies and assumed to have same units as RRTLU"
+  ),
+  mapping_section = c("Supplemental Variables", "Supplemental Variables"),
+  is_multiple_choice = c(TRUE, FALSE)
+)
+
+MAPPING_INFO_LIST <- bind_rows(MAPPING_INFO, NON_STD_MAPPING_INFO) %>%
+  split(.$mapping_section)
+
 #' Define the manual units for concentration, dose, and time in a format recognized by PKNCA
 MANUAL_UNITS <- list(
   concentration = c(
@@ -36,13 +56,14 @@ MAPPING_DESIRED_ORDER <- c(
 #' @param ns A namespace function to generate IDs for Shiny inputs.
 #' @param id A string representing the unique identifier for the widget.
 #' @param tooltip_text A string containing the tooltip text to guide users.
+#' @param multiple A logical indicating if multiple selections are allowed (default is FALSE).
 #'
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
 #' column_mapping_widget(ns = NS("example"), id = "STUDYID",
 #' tooltip_text = "Select the study identifier column.")
-.column_mapping_widget <- function(ns, id, tooltip_text) {
+.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
   div(
     class = "column-mapping-row",
     tooltip(
@@ -50,6 +71,7 @@ MAPPING_DESIRED_ORDER <- c(
         ns(paste0("select_", id)),
         "",
         choices = NULL,
+        multiple = multiple,
         options = list(placeholder = "Select Column"),
         width = "40%"
       ),
@@ -63,6 +85,20 @@ MAPPING_DESIRED_ORDER <- c(
       class = "column-mapping-label",
       span(textOutput(ns(paste0("label_", id))))
     )
+  )
+}
+
+.column_mapping_section <- function(ns, mapping_df) {
+  section_title <- unique(mapping_df$mapping_section)
+  if (length(section_title) != 1) {
+    stop("mapping_df must contain exactly one unique mapping_section value.")
+  }
+  tags$section(
+    h5(section_title),
+    lapply(1:nrow(mapping_df), function(i) {
+      row <- mapping_df[i, ]
+      .column_mapping_widget(ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice)
+    })
   )
 }
 
@@ -112,7 +148,7 @@ MAPPING_DESIRED_ORDER <- c(
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 data_mapping_ui <- function(id) {
   ns <- NS(id)
-
+  
   div(
     card(
       div(
@@ -124,81 +160,12 @@ data_mapping_ui <- function(id) {
           " has been assigned a corresponding column from your dataset"
         ),
         # Adjusted layout using CSS flexbox
-        tags$section(
-          h5("Group Identifiers"),
-          .column_mapping_widget(
-            ns, "STUDYID", "Select Corresponding Column, in character format."
-          ),
-          .column_mapping_widget(
-            ns, "USUBJID", "Character or Numeric format"
-          ),
-          .column_mapping_widget(
-            ns,
-            "NCA_PROFILE",
-            "Select the column you want to use for selecting the NCA profiles."
-          ),
-        ),
-        tags$section(
-          h5("Sample Variables"),
-          .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
-          .column_mapping_widget(ns, "PCSPEC", "Character format"),
-          .column_mapping_widget(ns, "AVAL", "Numeric format.")
-        ),
-        tags$section(
-          h5("Dose Variables"),
-          .column_mapping_widget(ns, "DRUG", "Character format."),
-          .column_mapping_widget(
-            ns, "ROUTE",
-            "Character format, stating either 'intravascular' or 'extravascular'."
-          ),
-          .column_mapping_widget(ns, "DOSEA", "Numeric format."),
-        ),
-        tags$section(
-          h5("Time Variables"),
-          .column_mapping_widget(ns, "AFRLT", "Numeric format"),
-          .column_mapping_widget(ns, "ARRLT", "Numeric format"),
-          .column_mapping_widget(ns, "NFRLT", "Numeric format"),
-          .column_mapping_widget(ns, "NRRLT", "Numeric format")
-        ),
-        tags$section(
-          h5("Unit Variables"),
-          .column_mapping_widget(ns, "AVALU", "Character format."),
-          .column_mapping_widget(ns, "DOSEU", "Character format."),
-          .column_mapping_widget(ns, "RRLTU", "Character format.")
-        ),
-        tags$section(
-          h5("Supplemental Variables"),
-          div(
-            class = "column-mapping-row",
-            tooltip(
-              selectizeInput(
-                ns("select_Grouping_Variables"),
-                "",
-                choices = NULL,
-                multiple = TRUE,
-                options = list(placeholder = "Select Column(s)"),
-                width = "40%"
-              ),
-              "Select the additional column(s) that will be used to group the data 
-                      in the outputs. E.g. Treatment Arm, Age, Sex, Race"
-            ),
-            div(
-              class = "column-mapping-output",
-              span("Additional Grouping Variables")
-            )
-          ),
-          .column_mapping_widget(
-            ns, "ADOSEDUR",
-            "Numeric format. Only required for infusion studies."
-          ),
-          .column_mapping_widget(ns, "VOLUME", "Numeric format.
-                                 Only required for urine/excretion studies."),
-          .column_mapping_widget(ns, "VOLUMEU", "Character format.
-                                 Only required for urine/excretion studies."),
-          .column_mapping_widget(ns, "TAU", "Numeric Format. Optional for multiple dose studies.
-                                 Can be actual Tau or planned Tau (TRTINT).
-                                 Assumed to have same units as RRTLU")
-        )
+        .column_mapping_section(ns, MAPPING_INFO_LIST$`Group Identifiers`),
+        .column_mapping_section(ns, MAPPING_INFO_LIST$`Sample Variables`),
+        .column_mapping_section(ns, MAPPING_INFO_LIST$`Dose Variables`),
+        .column_mapping_section(ns, MAPPING_INFO_LIST$`Time Variables`),
+        .column_mapping_section(ns, MAPPING_INFO_LIST$`Unit Variables`),
+        .column_mapping_section(ns, MAPPING_INFO_LIST$`Supplemental Variables`)
       )
     )
   )
@@ -207,19 +174,18 @@ data_mapping_ui <- function(id) {
 data_mapping_server <- function(id, adnca_data, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
-    input_ids <- lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)) |>
-      unlist()
-
+    input_ids <- paste0("select_", bind_rows(MAPPING_INFO_LIST)[["Variable"]])
+    
     # Loop through each label and create the renderText outputs
     purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
       output[[paste0("label_", label)]] <- renderText(
         get_label(label, "ADPC")
       )
     })
-
+    
     # Populate the static inputs with column names
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
@@ -228,13 +194,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
-      all_input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
-      mapping_list <- setNames(lapply(all_input_ids, \(id) input[[id]]), all_input_ids)
-
-      supplemental_ids <- unlist(lapply(
-        MAPPING_COLUMN_GROUPS$`Supplemental Variables`,
-        \(cols) paste0("select_", cols)
-      ))
+      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      supplemental_ids <- paste0("select_", MAPPING_INFO_LIST$`Supplemental Variables`$Variable)
 
       # Get the names to keep
       names_to_keep <- names(mapping_list) |>
@@ -245,7 +206,6 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
       # Subset the list with the final names
       mapping_list[names_to_keep]
-
     })
 
     mapped_data <- reactive({
@@ -284,7 +244,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       })
     }) |>
       bindEvent(trigger(), ignoreInit = TRUE)
-
+    
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
     df_duplicates <- reactive({
@@ -295,28 +255,28 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         ungroup() %>%
         mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
     })
-
+    
     processed_data <- reactive({
       req(mapped_data())
       dataset <- mapped_data()
-
+      
       if (nrow(df_duplicates()) == 0) {
         return(mutate(dataset, DFLAG = FALSE))
       }
-
+      
       # User resolves duplicates, apply DFLAG
       duplicates(df_duplicates())
-
+      
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
         # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
         req(length(selected) > 0)
-
+        
         kept <- df_duplicates()[selected, , drop = FALSE]
         removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
         dataset <- dataset %>%
           mutate(DFLAG = FALSE)
-
+        
         # Set DFLAG to TRUE for the removed rows
         dataset <- dataset %>%
           rows_update(
@@ -325,14 +285,14 @@ data_mapping_server <- function(id, adnca_data, trigger) {
               select(names(dataset)),
             by = intersect(names(dataset), names(removed))
           )
-
+        
         return(dataset)
       }
       # Don't return anything until duplicates are resolved
       return(NULL)
-
+      
     })
-
+    
     observeEvent(duplicates(), {
       showModal(
         modalDialog(
@@ -356,16 +316,16 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         )
       )
     })
-
+    
     observeEvent(input$keep_selected_btn, {
       duplicates(NULL)
       removeModal()
     })
-
+    
     output$duplicate_modal_table <- renderReactable({
       group_ids <- unique(df_duplicates()$.dup_group)
       color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
-
+      
       reactable(
         df_duplicates(),
         columns = list(.dup_group = colDef(show = FALSE)),
