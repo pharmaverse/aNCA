@@ -1,45 +1,24 @@
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADPC") %>%
-  select(Variable, Values, mapping_tooltip, mapping_section) %>%
+  select(Variable, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
   mutate(is_multiple_choice = FALSE)
 
 # Add non-standard mapping columns
 NON_STD_MAPPING_INFO <- data.frame(
   Variable = c("Grouping_Variables", "TAU"),
+  Order = c(100, 24),
   Values = c("", ""),
   mapping_tooltip = c(
     "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
     "Numeric column for dose interval. Optional for multiple dose studies and assumed to have same units as RRTLU"
   ),
   mapping_section = c("Supplemental Variables", "Supplemental Variables"),
+  mapping_alternatives = c("TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP", ""),
   is_multiple_choice = c(TRUE, FALSE)
 )
 
 MAPPING_INFO_LIST <- bind_rows(MAPPING_INFO, NON_STD_MAPPING_INFO) %>%
   split(.$mapping_section)
-
-#' Define the manual units for concentration, dose, and time in a format recognized by PKNCA
-MANUAL_UNITS <- list(
-  concentration = c(
-    "mg/L", "µg/mL", "ng/mL", "pg/mL", "mol/L", "mmol/L", "µmol/L", "nmol/L", "pmol/L", "mg/dL",
-    "µg/dL", "ng/dL"
-  ),
-  dose = c(
-    "mg", "g", "µg", "ng", "pg", "mol", "mmol", "µmol", "nmol", "pmol", "mg/kg", "g/kg", "µg/kg",
-    "ng/kg", "pg/kg", "mol/kg", "mmol/kg", "µmol/kg", "nmol/kg", "pmol/kg"
-  ),
-  time = c("sec", "min", "hr", "day", "week", "month", "year")
-)
-
-# Define the required columns and group them into categories
-MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE"),
-  "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "DOSEA"),
-  "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
-  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU"),
-  "Supplemental Variables" = c("Grouping_Variables", "TAU", "ADOSEDUR", "VOLUME", "VOLUMEU")
-)
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
@@ -185,11 +164,11 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         get_label(label, "ADPC")
       )
     })
-    
+
     # Populate the static inputs with column names
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
-      update_selectize_inputs(session, input_ids, column_names, MANUAL_UNITS)
+      update_selectize_inputs(session, input_ids, column_names, bind_rows(MAPPING_INFO_LIST))
     })
 
     # Observe submit button click and update processed_data
