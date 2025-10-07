@@ -23,7 +23,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @export
-flexible_violinboxplot <- function(boxplotdata,
+flexible_violinboxplot <- function(res_nca,
                                    parameter,
                                    xvars,
                                    colorvars,
@@ -31,6 +31,23 @@ flexible_violinboxplot <- function(boxplotdata,
                                    columns_to_hover,
                                    box = TRUE,
                                    plotly = TRUE) {
+
+  group_columns <- group_vars(res_nca$data$conc)
+  boxplotdata <- left_join(
+        res_nca$result,
+        res_nca$data$conc$data %>%
+          distinct(across(all_of(group_columns)), .keep_all = TRUE),
+        by = group_columns,
+        keep = FALSE
+      ) %>%
+      # Intervals should also be considered as differentiated options each
+      mutate(
+        PPTESTCD = ifelse(
+          startsWith(PPTESTCD, "aucint"),
+          paste0(PPTESTCD, "_", start, "-", end),
+          PPTESTCD
+        )
+      )
 
   # Variables to use to filter
   vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
