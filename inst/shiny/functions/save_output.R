@@ -73,6 +73,7 @@ get_dose_esc_results <- function(
   statistics = "Mean",
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+  boxplot_parameter = "AUCIFO",
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
 ) {
 
@@ -130,6 +131,16 @@ get_dose_esc_results <- function(
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
       select(any_of(unique(c(group_by_vars, info_vars)))) %>%
       unique()
+    
+    boxplot_i <- flexible_violinboxplot(
+      res_nca = o_nca,
+      parameter = boxplot_parameter,
+      xvars = facet_vars,
+      colorvars = "ANALYTE",
+      varvalstofilter = NULL,
+      box = TRUE,
+      plotly = FALSE
+    )
 
     ind_params <- merge(o_nca$result, group_i) %>%
       filter(PPTESTCD %in% stats_parameters) %>%
