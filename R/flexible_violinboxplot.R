@@ -9,7 +9,8 @@
 #                be checked over.
 #' @param xvars               Variables for the x axis.
 #' @param colorvars           Variables for the color aesthetic.
-#' @param varvalstofilter     Variables to filter on.
+#' @param varvalstofilter     Character vector specifying which variable and value to pre-filter
+#'                            as `colname: value`. By default is NULL (no pre-filtering)
 #' @param columns_to_hover    A character vector indicating the column names from result_data that
 #'                            should be used to identify when hovering the plotly outputs
 #' @param box                 A logical value indicating whether to plot a box plot (`TRUE`) or a

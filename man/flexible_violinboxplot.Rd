@@ -9,7 +9,7 @@ flexible_violinboxplot(
   parameter,
   xvars,
   colorvars,
-  varvalstofilter,
+  varvalstofilter = NULL,
   columns_to_hover,
   box = TRUE,
   plotly = TRUE
@@ -24,7 +24,8 @@ flexible_violinboxplot(
 
 \item{colorvars}{Variables for the color aesthetic.}
 
-\item{varvalstofilter}{Variables to filter on.}
+\item{varvalstofilter}{Character vector specifying which variable and value to pre-filter
+as \code{colname: value}. By default is NULL (no pre-filtering)}
 
 \item{columns_to_hover}{A character vector indicating the column names from result_data that
 should be used to identify when hovering the plotly outputs}
