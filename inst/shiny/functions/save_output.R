@@ -63,10 +63,10 @@ format_to_xpt_compatible <- function(data) {
 #' @param group_by_vars Character vector of column names to group results by.
 #' @param statistics Character vector of summary statistics to include (default: "Mean").
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
-#' @param stats_parameters Character vector of parameter codes to summarize (default: c("CMAX", "TMAX", ...)).
-#' @param info_vars Character vector of additional info columns to include (default: c("SEX", "STRAIN", ...)).
+#' @param stats_parameters Character vector of parameter codes to summarize
+#' @param info_vars Character vector of additional info columns to include
 #'
-#' @return A list containing plots, summary statistics, info tables, and individual subject outputs for each group.
+#' @return A list containing dose escalation plots, summary statistics & info tables for each group.
 #' @export
 get_dose_esc_results <- function(
   o_nca, group_by_vars,

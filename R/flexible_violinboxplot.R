@@ -32,20 +32,20 @@ flexible_violinboxplot <- function(res_nca,
 
   group_columns <- group_vars(res_nca$data$conc)
   boxplotdata <- left_join(
-        res_nca$result,
-        res_nca$data$conc$data %>%
-          distinct(across(all_of(group_columns)), .keep_all = TRUE),
-        by = group_columns,
-        keep = FALSE
-      ) %>%
-      # Intervals should also be considered as differentiated options each
-      mutate(
-        PPTESTCD = ifelse(
-          startsWith(PPTESTCD, "aucint"),
-          paste0(PPTESTCD, "_", start, "-", end),
-          PPTESTCD
-        )
+    res_nca$result,
+    res_nca$data$conc$data %>%
+      distinct(across(all_of(group_columns)), .keep_all = TRUE),
+    by = group_columns,
+    keep = FALSE
+  ) %>%
+    # Intervals should also be considered as differentiated options each
+    mutate(
+      PPTESTCD = ifelse(
+        startsWith(PPTESTCD, "aucint"),
+        paste0(PPTESTCD, "_", start, "-", end),
+        PPTESTCD
       )
+    )
 
   # Variables to use to filter
   if (!is.null(varvalstofilter)) {
@@ -65,7 +65,7 @@ flexible_violinboxplot <- function(res_nca,
       }), collapse = " & "
     )
   } else {
-    filter_text = "TRUE"
+    filter_text <- "TRUE"
   }
 
   # Filter the data

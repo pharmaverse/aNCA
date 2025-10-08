@@ -1,5 +1,5 @@
 
-# Utility functions for creating PowerPoint presentations with tables and plots using officer and flextable
+# Utility functions for creating PowerPoint presentations with tables and plots using officer
 
 library(officer)
 library(flextable)
