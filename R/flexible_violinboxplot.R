@@ -25,7 +25,7 @@ flexible_violinboxplot <- function(res_nca,
                                    parameter,
                                    xvars,
                                    colorvars,
-                                   varvalstofilter,
+                                   varvalstofilter = NULL,
                                    columns_to_hover,
                                    box = TRUE,
                                    plotly = TRUE) {
@@ -36,7 +36,8 @@ flexible_violinboxplot <- function(res_nca,
     res_nca$data$conc$data %>%
       distinct(across(all_of(group_columns)), .keep_all = TRUE),
     by = group_columns,
-    keep = FALSE
+    keep = FALSE,
+    suffix = c("", ".concdata")
   ) %>%
     # Intervals should also be considered as differentiated options each
     mutate(
