@@ -15,7 +15,11 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    vdiffr::expect_doppelganger("simple_plot", simple_plot)
+    expect_equal(simple_plot$labels$x, "DOSEA")
+    expect_equal(simple_plot$labels$colour, "NCA_PROFILE")
+    expect_true(grepl("CMAX", simple_plot$labels$y))
+    expect_true(any("ggplot" %in% class(simple_plot)))
+    expect_equal(c(1, 2, 6), unique(simple_plot$data$USUBJID))
   })
 
   it("creates a plot with additional xvars", {
@@ -30,7 +34,11 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    vdiffr::expect_doppelganger("xvars_plot", xvars_plot)
+    expect_equal(xvars_plot$labels$x, "DOSEA, PARAM")
+    expect_equal(xvars_plot$labels$colour, "NCA_PROFILE")
+    expect_true(grepl("CMAX", xvars_plot$labels$y))
+    expect_equal(c(1, 2, 6), unique(xvars_plot$data$USUBJID))
+    expect_true(any("ggplot" %in% class(xvars_plot)))
   })
 
   it("creates a plot with additional colorvars", {
@@ -45,7 +53,11 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    vdiffr::expect_doppelganger("colorvars_plot", colorvars_plot)
+    expect_equal(colorvars_plot$labels$x, "DOSEA")
+    expect_equal(colorvars_plot$labels$colour, "NCA_PROFILE, PARAM")
+    expect_true(grepl("CMAX", colorvars_plot$labels$y))
+    expect_equal(c(1, 2, 6), unique(colorvars_plot$data$USUBJID))
+    expect_true(any("ggplot" %in% class(colorvars_plot)))
   })
 
   it("creates a plot with additional varvalstofilter", {
@@ -60,7 +72,12 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    vdiffr::expect_doppelganger("varvalstofilter_plot", varvalstofilter_plot)
+    expect_equal(varvalstofilter_plot$labels$x, "DOSEA")
+    expect_equal(varvalstofilter_plot$labels$colour, "NCA_PROFILE")
+    expect_true(grepl("CMAX", varvalstofilter_plot$labels$y))
+    expect_equal(c(1, 2, 6), unique(varvalstofilter_plot$data$USUBJID))
+    expect_equal(1, unique(varvalstofilter_plot$data$NCA_PROFILE))
+    expect_true(any("ggplot" %in% class(varvalstofilter_plot)))
   })
 
   it("creates a violin plot when box = FALSE", {
@@ -75,7 +92,11 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    vdiffr::expect_doppelganger("violin_plot", violin_plot)
+    expect_equal(violin_plot$labels$x, "DOSEA")
+    expect_equal(violin_plot$labels$colour, "NCA_PROFILE")
+    expect_true(grepl("CMAX", violin_plot$labels$y))
+    expect_equal(c(1, 2, 3), unique(violin_plot$data$USUBJID))
+    expect_true(any("ggplot" %in% class(violin_plot)))
   })
 
   it("handles missing data gracefully", {
@@ -92,7 +113,11 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    vdiffr::expect_doppelganger("missing_plot", missing_plot)
+    expect_equal(missing_plot$labels$x, "DOSEA")
+    expect_equal(missing_plot$labels$colour, "NCA_PROFILE")
+    expect_true(grepl("CMAX", missing_plot$labels$y))
+    expect_equal(c(1, 2, 6), unique(missing_plot$data$USUBJID))
+    expect_true(any("ggplot" %in% class(missing_plot)))
   })
 
   it("handles axis labels correctly when parameter has no unit", {

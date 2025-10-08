@@ -98,8 +98,8 @@ general_meanplot <- function(data,
 
   # plot the preprocess data
   p <- ggplot(data = summarised_data, aes(x = NRRLT, y = Mean)) +
-    geom_line(aes(colour = id_variable_col)) +
-    geom_point(aes(colour = id_variable_col)) +
+    geom_line(aes(color = id_variable_col)) +
+    geom_point(aes(color = id_variable_col)) +
     facet_wrap(
       ~groups,
       strip.position = "top",
@@ -133,7 +133,12 @@ general_meanplot <- function(data,
   # add ci
   if (plot_ci) {
     p <- p +
-      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, color = id_variable_col), alpha = 0.3)
+      geom_ribbon(
+        aes(ymin = CI_lower, ymax = CI_upper, fill = id_variable_col),
+        alpha = 0.3
+      ) +
+      guides(fill = "none") +
+      labs(color = paste0(paste0(id_variable, collapse = ", "), " (95% CI)"))
   }
 
   # add log scale

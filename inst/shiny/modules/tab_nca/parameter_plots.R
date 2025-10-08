@@ -109,7 +109,7 @@ parameter_plots_server <- function(id, res_nca) {
     })
 
     # compute the box plot
-    output$boxplot <- renderPlotly({
+    boxplot <- reactive({
       req(input$selected_param_boxplot)
       req(input$selected_xvars_boxplot)
       req(input$selected_colorvars_boxplot)
@@ -125,10 +125,17 @@ parameter_plots_server <- function(id, res_nca) {
         columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
         box = input$violinplot_toggle_switch,
       )
-
-      session$userData$results$nca_results$boxplot <- boxplot
-      boxplot
     })
 
+    # Save the boxplot for the zip folder
+    observe({
+      req(boxplot())
+      session$userData$results$nca_results$boxplot <- boxplot()
+    })
+
+    # Render the boxplot
+    output$boxplot <- renderPlotly({
+      boxplot()
+    })
   })
 }
