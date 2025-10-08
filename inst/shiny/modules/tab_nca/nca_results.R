@@ -122,10 +122,11 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           presentations_path <- paste0(output_tmpdir, "/presentations")
           dir.create(presentations_path)
 
-          create_html_dose_slides(
+          create_qmd_dose_slides(
             res_dose_slides = res_dose_slides,
-            path = paste0(presentations_path, "/dose_escalation.html"),
-            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")")
+            quarto_path = paste0(presentations_path, "/dose_escalation.qmd"),
+            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            use_plotly = TRUE
           )
           create_pptx_dose_slides(
             res_dose_slides = res_dose_slides,
@@ -143,7 +144,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
           files <- list.files(
             output_tmpdir,
-            pattern = ".(csv)|(rds)|(xpt)|(html)|(rda)|(dose_escalation.html)|(pptx)|(qmd)$",
+            pattern = ".(csv)|(rds)|(xpt)|(html)|(rda)|(pptx)|(qmd)$",
             recursive = TRUE
           )
           wd <- getwd()
