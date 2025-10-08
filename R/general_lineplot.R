@@ -148,8 +148,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
   if (yaxis_scale == "Log") {
     plt <- plt +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
-                    labels = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
-      labs(y = paste0("Log 10 - ", plt$labels$y))
+                    labels = c(0.001, 0.01, 0.1, 1, 10, 100, 1000))
   }
 
   # Add a horizontal line for the threshold value if specified
