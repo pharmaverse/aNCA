@@ -3,9 +3,7 @@
 #' This function generates a  violin or box plot based on the provided data,
 #' parameter, and dose information.
 #'
-#' @param boxplotdata         A list containing the data to be plotted. It should have a `data`
-#'                            element with dose information and a `formatted` element with the
-#'                            data to be plotted.
+#' @param res_nca            A PKNCA results object containing the results and concentration data.
 #' @param parameter           A string specifying the parameter to be plotted.
 # TODO(mateusz): I have added the following three parameters as they were missing, this needs to
 #                be checked over.
@@ -54,7 +52,7 @@ flexible_violinboxplot <- function(res_nca,
     vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
     vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
     var_types <- sapply(vars_tofilter, \(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
-    
+
     filter_text <- paste0(
       sapply(unique(vars_tofilter), \(varid) {
         vartype <- class(boxplotdata[[varid]])

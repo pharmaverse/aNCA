@@ -5,7 +5,7 @@
 \title{Flexible Violin/Box Plot}
 \usage{
 flexible_violinboxplot(
-  boxplotdata,
+  res_nca,
   parameter,
   xvars,
   colorvars,
@@ -16,9 +16,7 @@ flexible_violinboxplot(
 )
 }
 \arguments{
-\item{boxplotdata}{A list containing the data to be plotted. It should have a \code{data}
-element with dose information and a \code{formatted} element with the
-data to be plotted.}
+\item{res_nca}{A PKNCA results object containing the results and concentration data.}
 
 \item{parameter}{A string specifying the parameter to be plotted.}
 
