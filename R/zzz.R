@@ -155,6 +155,7 @@
     "start_auc",
     "start_dose",
     "strata_cols_comb",
+    "tooltip_text",
     "type_interval",
     "var_name",
     "view",

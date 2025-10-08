@@ -2,31 +2,21 @@ Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
 Version: 0.0.0.9157
 Authors@R: c(
-    person("Ercan", "Suekuer", , "ercan.suekuer@roche.com", role = c("aut", "cre"),
+    person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
-    person("Gerardo Jose", "Rodriguez", , "gerardo.jrac@gmail.com", role = "aut",
+    person("Gerardo Jose", "Rodriguez", email = "gerardo.jrac@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0003-1413-0060")),
-    person("Pascal", "Baertschi", , "paesce.26@gmail.com", role = "aut",
+    person("Pascal", "Baertschi", email = "paesce.26@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0002-6533-0399")),
-    person("Jana", "Spinner", , "spinnerjana@gmail.com", role = "aut",
+    person("Jana", "Spinner", email = "spinnerjana@gmail.com", role = "aut",
            comment = c(ORCID = "0009-0009-2197-9530")),
-    person("Valentin", "Legras", , "val35131@gmail.com", role = "aut"),
+    person("Mateusz", "Kolomanski", email = "mateusz.kolomanski@appsilon.com", role = "aut",
+           comment = c(ORCID = "0000-0001-7424-3919")),
+    person("Valentin", "Legras", email = "anca.pharmaverse@gmail.com", role = c("aut", "cre")),
     person("F. Hoffmann-La Roche AG", role = c("cph", "fnd"))
   )
-Description: This application enables users to upload their datasets and
-    perform Non-Compartment Analysis (NCA) on both pre-clinical and
-    clinical datasets, with the results being easily visualizable. The NCA
-    can be tailored to calculate pharmacokinetic parameters for various
-    dosing regimens and time points, given certain restrictions. It also
-    features manual slope selection, simplifying the process of conducting
-    lambda-z-regression and PK-timepoint exclusions.  Furthermore, the
-    pharmacokinetic parameters can be dynamically visualized through
-    customized graphics such as line and mean plots. The calculated
-    pharmacokinetic parameters can be compiled in a dynamic table,
-    visualized using boxplots, or exported as a comprehensive report.
-    Designed with user-friendliness in mind, this app aims to make NCA
-    accessible and straightforward for all scientists. 
-License: MIT + file LICENSE
+Description: A Shiny App to perform Non-Compartmental Analysis (NCA) on pre-clinical and clinical data.
+License: Apache License (>= 2)
 Imports: 
     dplyr,
     formatters,
@@ -83,6 +73,7 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
+BugReports: https://github.com/pharmaverse/aNCA/issues
 Depends: 
     R (>= 3.5)
 LazyData: true
