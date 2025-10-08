@@ -79,11 +79,13 @@ get_dose_esc_results <- function(
 
   groups <- unique(o_nca$data$intervals[, group_by_vars])
   output_list <- list()
+  o_nca_i <- o_nca
   # Loop over each of the groups
   for (i in seq_len(nrow(groups))) {
     group_i <- groups[i, , drop = FALSE]
     d_conc_i <- merge(o_nca$data$conc$data, group_i)
     o_res_i <- merge(o_nca$result, group_i)
+    o_nca_i$result <- o_res_i
 
     linplot_i <- general_lineplot(
       data = d_conc_i,
@@ -131,9 +133,9 @@ get_dose_esc_results <- function(
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
       select(any_of(unique(c(group_by_vars, info_vars)))) %>%
       unique()
-    
+
     boxplot_i <- flexible_violinboxplot(
-      res_nca = o_nca,
+      res_nca = o_nca_i,
       parameter = boxplot_parameter,
       xvars = facet_vars,
       colorvars = "ANALYTE",
@@ -178,6 +180,7 @@ get_dose_esc_results <- function(
       linplot = linplot_i,
       meanplot = meanplot_i,
       statistics = stats_i,
+      boxplot = boxplot_i,
       info = info_i,
       ind_params = ind_params,
       ind_plots = ind_plots

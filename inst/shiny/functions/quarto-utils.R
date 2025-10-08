@@ -122,6 +122,11 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
       plot = paste0("res_dose_slides[[", i, "]]$linplot"),
       use_plotly = use_plotly
     )
+    add_qmd_sl_plot(
+      quarto_path = quarto_path,
+      plot = paste0("res_dose_slides[[", i, "]]$boxplot"),
+      use_plotly = use_plotly
+    )
   }
 
   # Add the individual information slides

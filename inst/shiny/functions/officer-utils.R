@@ -75,6 +75,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
       plot = res_dose_slides[[i]]$meanplot
     )
     pptx <- add_pptx_sl_plot(pptx, res_dose_slides[[i]]$linplot)
+    pptx <- add_pptx_sl_plot(pptx, res_dose_slides[[i]]$boxplot)
   }
 
   # Include extra presentation figures
