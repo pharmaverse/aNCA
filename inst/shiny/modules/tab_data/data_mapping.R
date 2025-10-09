@@ -23,6 +23,11 @@ MAPPING_INFO <- metadata_nca_variables %>%
   bind_rows(NON_STD_MAPPING_INFO)
 
 MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
+sections_order <- c(
+  "Group Identifiers", "Sample Variables", "Dose Variables",
+  "Time Variables", "Unit Variables", "Supplemental Variables"
+)
+MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
