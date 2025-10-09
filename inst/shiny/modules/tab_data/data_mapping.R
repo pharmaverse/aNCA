@@ -176,6 +176,11 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
+
+      # Exception: If by default VOLUME is not mapped, then neither is VOLUMEU
+      if (is.null(input$select_VOLUME)) {
+        updateSelectizeInput(session, "select_VOLUMEU", selected = NULL)
+      }
     })
 
     # Observe submit button click and update processed_data
