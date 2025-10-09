@@ -63,7 +63,8 @@ MAPPING_DESIRED_ORDER <- c(
         options = list(placeholder = "Select Column"),
         width = "40%"
       ),
-      tooltip_text
+      tooltip_text,
+      placement = "top"
     ),
     div(
       class = "column-mapping-output",
