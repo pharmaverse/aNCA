@@ -151,7 +151,7 @@ data_mapping_ui <- function(id) {
             ns, "ROUTE",
             "Character format, stating either 'intravascular' or 'extravascular'."
           ),
-          .column_mapping_widget(ns, "DOSEA", "Numeric format."),
+          .column_mapping_widget(ns, "DOSE", "Numeric format."),
         ),
         tags$section(
           h5("Time Variables"),
