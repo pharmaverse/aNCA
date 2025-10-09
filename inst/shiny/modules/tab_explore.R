@@ -89,7 +89,7 @@ tab_explore_ui <- function(id) {
           ),
           checkboxInput(ns("show_dose"), label = "Show Dose Times"),
         ),
-        plotlyOutput(ns("individualplot"))
+        plotlyOutput(ns("individualplot"), height = "100%")
       )
     ),
     nav_panel("Mean Plots",
@@ -130,10 +130,13 @@ tab_explore_ui <- function(id) {
           position = "right",
           open = TRUE
         ),
-        plotlyOutput(ns("mean_plot")),
-        br(),
+        plotlyOutput(ns("mean_plot"), height = "100%"),
         helpText("If n<3 at the specified time point then the mean value is not displayed.")
       )
+    ),
+    nav_panel(
+      "PK/Dose QC Plot",
+      pk_dose_qc_plot_ui(ns("pk_dose_qc_plot"))
     )
   )
 }
@@ -152,6 +155,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
 
     observeEvent(data(), {
       req(data())
+
       # Update the analyte picker input
       param_choices_analyte <- data() %>%
         pull(PARAM) %>%
@@ -314,7 +318,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         cycle = input$cycles,
         palette = palettes
       ) %>%
-        ggplotly()
+        ggplotly(height = 1000)
 
       # Conditionally add rangeslider only if the plot is not faceted
       if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
@@ -345,6 +349,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
     # Update the cyclesmean select input based on selected analyte
     observeEvent(input$analyte_mean, {
       req(data())
+
       cycle_choices <- data() %>%
         filter(PARAM %in% input$analyte_mean) %>%
         pull(NCA_PROFILE) %>%
@@ -400,7 +405,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
       ) %>%
-        ggplotly() %>%
+        ggplotly(height = 1000) %>%
         layout(
           xaxis = list(
             rangeslider = list(type = "time")
@@ -421,5 +426,8 @@ tab_explore_server <- function(id, data, grouping_vars) {
       req(meanplot())
       meanplot()
     })
+
+    pk_dose_qc_plot_server("pk_dose_qc_plot", data = data, grouping_vars = grouping_vars)
+
   })
 }
