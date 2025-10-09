@@ -265,7 +265,7 @@ pkcg01 <- function(
             "cm"
           )
         )
-      
+
       plotly_plot <- plotly_plot %>%
         # This because of no spec of parse annotation generates warning is.na()
         ggplotly(
@@ -552,7 +552,7 @@ pkcg02 <- function(
           yes = 1e-3, no = !!sym(yvar)
         )
       )
-    
+
     plot$data <- plot_data
     plot <- plot +
       facet_wrap(~ view, scales = "free_y") +
@@ -572,7 +572,7 @@ pkcg02 <- function(
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
     title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
-    
+
     plot$data <- plot_data
 
     #' magic numbers for footnote position and margin, work in app up to 4 lines
@@ -606,21 +606,21 @@ pkcg02 <- function(
           #' NOTE: might require some fine tuning down the line, looks fine now
           height = 500 + (footnote_y * 25) + title_margin * 50
         ) %>%
-        layout(
-          # title and subtitle #
-          title = list(text = title_text),
-          # footnote #
-          annotations = list(
-            x = 0,
-            y =  -footnote_y,
-            text = footnote,
-            showarrow = FALSE,
-            yref = "paper",
-            xref = "paper",
-            align = "left",
-            parse = TRUE
+          layout(
+            # title and subtitle #
+            title = list(text = title_text),
+            # footnote #
+            annotations = list(
+              x = 0,
+              y =  -footnote_y,
+              text = footnote,
+              showarrow = FALSE,
+              yref = "paper",
+              xref = "paper",
+              align = "left",
+              parse = TRUE
+            )
           )
-        )
 
         if (scale == "LOG") {
           plotly_plot <- plotly_plot %>%
