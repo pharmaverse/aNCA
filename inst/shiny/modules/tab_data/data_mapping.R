@@ -178,8 +178,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
 
       # Exception: If by default VOLUME is not mapped, then neither is VOLUMEU
-      if (is.null(input$select_VOLUME)) {
-        updateSelectizeInput(session, "select_VOLUMEU", selected = NULL)
+      if (input$select_VOLUME == "") {
+        updateSelectizeInput(session, "select_VOLUMEU", selected = "")
       }
     })
 
