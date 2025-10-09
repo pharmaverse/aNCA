@@ -13,3 +13,5 @@
 ^man/figures/*
 _\.new\.png$
 inst/shiny/tests/testthat/_snaps
+^cran-comments\.md$
+^NEWS\.md$
