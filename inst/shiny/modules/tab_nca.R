@@ -217,7 +217,6 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       }, error = function(e) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
-        removeModal()
         NULL
       })
     }) |>
@@ -227,6 +226,16 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     observeEvent(input$results_visible, {
       removeModal()
     })
+    
+    observeEvent(res_nca(), {
+      # Ensure the button has been clicked at least once
+      req(input$run_nca > 0)
+      
+      # Check if the result of the calculation is NULL (error)
+      if (is.null(res_nca())) {
+        removeModal()
+      }
+    }, ignoreNULL = FALSE)
 
     #' Show slopes results
     pivoted_slopes <- reactive({
