@@ -90,8 +90,6 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #'
 #' @return A character vector of formatted HTML tooltip strings.
 #'
-#' @importFrom purrr pmap_chr map_chr
-#'
 #' @examples
 #' # Sample data
 #' my_data <- data.frame(
@@ -115,24 +113,26 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
+  if (nrow(data) == 0) {
+    return(character())
+  }
+
   tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
 
   if (length(tooltip_vars) == 0) {
     return(rep("", nrow(data)))
   }
 
-  pmap_chr(
-    .l = select(data, all_of(tooltip_vars)),
-    .f = function(...) {
-      row_values <- list(...)
+  # Get all labels
+  labels <- purrr::map_chr(tooltip_vars, \(x) get_label(x, type, labels_df = labels_df))
 
-      # For each variable, create a formatted line retrieving its label
-      lines <- map_chr(tooltip_vars, ~ paste0(
-        "<b>", get_label(.x, type, labels_df = labels_df), "</b>: ", row_values[[.x]]
-      ))
+  # Create a list where each element is a vector of "Label: Value"
+  # strings for an entire column
+  tooltip_components <- purrr::map2(tooltip_vars, labels, function(var_name, label) {
+    paste0("<b>", label, "</b>: ", data[[var_name]])
+  })
 
-      # Paste all lines together with HTML line breaks
-      paste(lines, collapse = "<br>")
-    }
-  )
+  # Combine the components for each row
+  do.call(paste, c(tooltip_components, sep = "<br>"))
+
 }
