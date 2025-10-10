@@ -23,8 +23,8 @@ create_pptx_doc <- function(path, title, template) {
 #' @param title Title text
 #' @return rpptx object with title slide added
 add_pptx_sl_title <- function(pptx, title) {
-  pptx <- add_slide(pptx, layout = "Title Slide", master = "Office Theme")
-  ph_with(pptx, value = title, location = ph_location_type(type = "ctrTitle"))
+  add_slide(pptx, layout = "Title Slide", master = "Office Theme") |>
+  ph_with(value = title, location = ph_location_type(type = "ctrTitle"))
 }
 
 #' Add a slide with both a plot and a table
@@ -33,9 +33,9 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @param plot ggplot object to show as plot
 #' @return rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
-  pptx <- add_slide(pptx, layout = "Content with Caption")
-  pptx <- ph_with(pptx, value = plot, location = "Content Placeholder 1")
-  ph_with(pptx, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  add_slide(pptx, layout = "Content with Caption") |>
+    ph_with(value = plot, location = "Content Placeholder 1") |>
+    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
 #' Add a slide with a table only
@@ -43,8 +43,8 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @param df Data frame to show as table
 #' @return rpptx object with slide added
 add_pptx_sl_table <- function(pptx, df) {
-  pptx <- add_slide(pptx, layout = "Title Only")
-  ph_with(pptx, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  add_slide(pptx, layout = "Title Only") |>
+    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
 #' Add a slide with a plot only
@@ -52,8 +52,8 @@ add_pptx_sl_table <- function(pptx, df) {
 #' @param plot ggplot object to show as plot
 #' @return rpptx object with slide added
 add_pptx_sl_plot <- function(pptx, plot) {
-  pptx <- add_slide(pptx, layout = "Picture with Caption")
-  ph_with(pptx, value = plot, location = "Picture Placeholder 2")
+  add_slide(pptx, layout = "Picture with Caption") |>
+    ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
@@ -66,30 +66,71 @@ add_pptx_sl_plot <- function(pptx, plot) {
 create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   pptx <- create_pptx_doc(path, title, template)
 
+#profvis::profvis({
   # Prepare main presentation figures
   for (i in seq_len(length(res_dose_slides))) {
-    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
-    pptx <- add_pptx_sl_plottable(
-      pptx,
-      df = res_dose_slides[[i]]$statistics,
-      plot = res_dose_slides[[i]]$meanplot
-    )
-    pptx <- add_pptx_sl_plot(pptx, res_dose_slides[[i]]$linplot)
-    pptx <- add_pptx_sl_plot(pptx, res_dose_slides[[i]]$boxplot)
+    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info) |>
+      add_pptx_sl_plottable(
+        df = res_dose_slides[[i]]$statistics,
+        plot = res_dose_slides[[i]]$meanplot
+      ) |>
+    add_pptx_sl_plot(res_dose_slides[[i]]$linplot) |>
+    add_pptx_sl_plot(res_dose_slides[[i]]$boxplot)
   }
 
   # Include extra presentation figures
-  add_pptx_sl_title(pptx, "Extra Figures")
-  for (i in seq_len(length(res_dose_slides))) {
-    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
-    for (subj in names(res_dose_slides[[i]]$ind_params)) {
-      pptx <- add_pptx_sl_plottable(
-        pptx,
-        df = res_dose_slides[[i]]$ind_params[[subj]],
-        plot = res_dose_slides[[i]]$ind_plots[[subj]]
+  pptx <- add_pptx_sl_title(pptx, "Extra Figures")
+  # for (i in seq_len(length(res_dose_slides))) {
+  #   pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
+  #   # for (subj in names(res_dose_slides[[i]]$ind_params)) {
+  #   #   pptx <- add_pptx_sl_plottable(
+  #   #     pptx,
+  #   #     df = res_dose_slides[[i]]$ind_params[[subj]],
+  #   #     plot = res_dose_slides[[i]]$ind_plots[[subj]]
+  #   #   )
+  #   # }
+  # 
+  #   # pptx <- Reduce(
+  #   #   function(pptx, subj) add_pptx_sl_plottable(
+  #   #     pptx,
+  #   #     df = res_dose_slides[[i]]$ind_params[[subj]],
+  #   #     plot = res_dose_slides[[i]]$ind_plots[[subj]]
+  #   #   ),
+  #   #   names(res_dose_slides[[i]]$ind_params),
+  #   #   init = pptx
+  #   # )
+  # 
+  #   pptx <- purrr::reduce(
+  #     names(res_dose_slides[[i]]$ind_params),
+  #     function(pptx, subj) add_pptx_sl_plottable(
+  #       pptx,
+  #       df = res_dose_slides[[i]]$ind_params[[subj]],
+  #       plot = res_dose_slides[[i]]$ind_plots[[subj]]
+  #     ),
+  #     .init = pptx
+  #   )
+  # 
+  # }
+  # Include extra presentation figures using two purrr::reduce
+  pptx <- purrr::reduce(
+    seq_len(length(res_dose_slides)),
+    function(pptx, i) {
+      pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
+      pptx <- purrr::reduce(
+        names(res_dose_slides[[i]]$ind_params),
+        function(pptx, subj) add_pptx_sl_plottable(
+          pptx,
+          df = res_dose_slides[[i]]$ind_params[[subj]],
+          plot = res_dose_slides[[i]]$ind_plots[[subj]]
+        ),
+        .init = pptx
       )
-    }
-  }
+      pptx
+    },
+    .init = pptx
+  )
+  
   print(pptx, target = path)
   invisible(TRUE)
+#})
 }
