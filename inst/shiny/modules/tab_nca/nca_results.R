@@ -110,6 +110,31 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           output_tmpdir <- file.path(tempdir(), "output")
           save_output(output = session$userData$results, output_path = output_tmpdir)
 
+          # Create presentation slides
+          res_nca <- res_nca()
+          res_dose_slides <- get_dose_esc_results(
+            o_nca = res_nca,
+            group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
+            facet_vars = "DOSEA",
+            statistics = c("Mean"),
+            stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP", "LAMZHL", "FABS")
+          )
+          presentations_path <- paste0(output_tmpdir, "/presentations")
+          dir.create(presentations_path)
+
+          create_qmd_dose_slides(
+            res_dose_slides = res_dose_slides,
+            quarto_path = paste0(presentations_path, "/dose_escalation.qmd"),
+            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            use_plotly = TRUE
+          )
+          create_pptx_dose_slides(
+            res_dose_slides = res_dose_slides,
+            path = paste0(presentations_path, "/dose_escalation.pptx"),
+            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            template = "www/templates/template.pptx"
+          )
+
           incProgress(0.3)
 
           # Create a settings folder
@@ -119,7 +144,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
           files <- list.files(
             output_tmpdir,
-            pattern = ".(csv)|(rds)|(xpt)|(html)$",
+            pattern = ".(csv)|(rds)|(xpt)|(html)|(rda)|(pptx)|(qmd)$",
             recursive = TRUE
           )
           wd <- getwd()

@@ -11,6 +11,7 @@ general_meanplot(
   selected_pcspecs,
   selected_cycles,
   id_variable = "DOSEA",
+  groupby_var = c("STUDYID", "PARAM", "PCSPEC", "NCA_PROFILE"),
   plot_ylog = FALSE,
   plot_sd_min = FALSE,
   plot_sd_max = FALSE,
@@ -31,6 +32,8 @@ included in the plot.}
 
 \item{id_variable}{A character string specifying the variable by which to color the lines
 in the plot. Default is "DOSEA".}
+
+\item{groupby_var}{A character string specifying the variable by which to group the data.}
 
 \item{plot_ylog}{A logical value indicating whether to use a logarithmic scale for
 the y-axis. Default is FALSE.}
