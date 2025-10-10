@@ -61,9 +61,10 @@ pk_dose_qc_plot_ui <- function(id) {
 }
 
 # -- Module Server
-pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
+pk_dose_qc_plot_server <- function(id, pknca_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    data <- reactive(pknca_data()$conc$data)
 
     # Update inputs based on the main data
     observeEvent(data(), {
@@ -104,8 +105,8 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
       updatePickerInput(
         session,
         "group_var",
-        choices = grouping_vars(),
-        selected = grouping_vars()[1]
+        choices = group_vars(pknca_data()$conc),
+        selected = group_vars(pknca_data()$conc)[1]
       )
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
@@ -119,51 +120,17 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
 
     })
 
-    processed_data <- reactive({
-      req(data())
-
-      data_conc <- NULL
-      data_dose <- NULL
-
-      # If the EVID column is present and there are any doses, use it to define
-      # data_conc and data_dose
-      if ("EVID" %in% names(data())) {
-        if (nrow(data() %>% filter(EVID == 1)) > 0) {
-          data_conc <- data() %>% filter(EVID == 0)
-          data_dose <- data() %>% filter(EVID == 1)
-        }
-      }
-
-      # If the PARAMCD column is present and there are any doses, use it to define
-      # data_conc and data_dose
-      if (is.null(data_dose) && "PARAMCD" %in% names(data())) {
-        if (nrow(data() %>% filter(grepl("dose", tolower(PARAMCD))))) {
-          data_conc <- data() %>% filter(!grepl("dose", tolower(PARAMCD)))
-          data_dose <- data() %>% filter(grepl("dose", tolower(PARAMCD)))
-        }
-      }
-
-      # Temporary solution: create the PKNCA object here
-      if (is.null(data_dose)) {
-        pknca_obj <- PKNCA_create_data_object(data())
-        data_conc <- pknca_obj$conc$data
-        data_dose <- pknca_obj$dose$data
-      }
-
-      list(conc = data_conc, dose = data_dose)
-    })
-
     filtered_data <- reactive({
-      req(processed_data(), input$usubjid, input$pcspec)
+      req(pknca_data(), input$usubjid, input$pcspec)
 
       # Filter the conc and dose data frames
-      filtered_conc <- processed_data()$conc %>%
+      filtered_conc <- pknca_data()$conc$data %>%
         filter(
           USUBJID %in% input$usubjid,
           PCSPEC %in% input$pcspec
         )
 
-      filtered_dose <- processed_data()$dose %>%
+      filtered_dose <- pknca_data()$dose$data %>%
         filter(USUBJID %in% input$usubjid)
 
       list(conc = filtered_conc, dose = filtered_dose)

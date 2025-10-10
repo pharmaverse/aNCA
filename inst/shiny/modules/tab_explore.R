@@ -429,7 +429,7 @@ tab_explore_server <- function(id, pknca_data) {
       meanplot()
     })
 
-    pk_dose_qc_plot_server("pk_dose_qc_plot", data = data, grouping_vars = grouping_vars)
+    pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data)
 
   })
 }
