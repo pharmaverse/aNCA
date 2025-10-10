@@ -156,13 +156,13 @@ tab_data_server <- function(id) {
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
     )
-    
+
     # Use the pre-processed data to create a PKNCA object
     #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
     pknca_data <- reactive({
       req(processed_data())
       log_trace("Creating PKNCA::data object.")
-      
+
       tryCatch({
         #' Create data object
         pknca_object <- PKNCA_create_data_object(processed_data())
@@ -192,12 +192,12 @@ tab_data_server <- function(id) {
           )
         ############################################################################################
         log_success("PKNCA data object created.")
-        
+
         #' Enable related tabs and update the curent view if data is created succesfully.
         purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
           shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
         })
-        
+
         pknca_object
       }, error = function(e) {
         log_error(e$message)
