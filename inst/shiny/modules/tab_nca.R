@@ -62,7 +62,7 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, adnca_data, grouping_vars) {
+tab_nca_server <- function(id, pknca_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -71,54 +71,8 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
 
-    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
-    pknca_data <- reactive({
-      req(adnca_data())
-      log_trace("Creating PKNCA::data object.")
-
-      tryCatch({
-        #' Create data object
-        pknca_object <- PKNCA_create_data_object(adnca_data())
-        ############################################################################################
-        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
-        # this is implemented here via hardcoding in PPSTRESU
-        pknca_object$units <- pknca_object$units %>%
-          mutate(
-            PPSTRESU = {
-              new_ppstresu <- ifelse(
-                PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                  metadata_nca_parameters$unit_type == "volume"
-                ],
-                sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
-                PPSTRESU
-              )
-              # Only accept changes producing simple units
-              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
-            },
-            conversion_factor = ifelse(
-              PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                metadata_nca_parameters$unit_type == "volume"
-              ],
-              get_conversion_factor(PPORRESU, PPSTRESU),
-              conversion_factor
-            )
-          )
-        ############################################################################################
-        log_success("PKNCA data object created.")
-
-        #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
-          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
-        })
-
-        pknca_object
-      }, error = function(e) {
-        log_error(e$message)
-        showNotification(e$message, type = "error", duration = NULL)
-        NULL
-      })
-    }) |>
-      bindEvent(adnca_data())
+    adnca_data <- reactive(pknca_data()$conc$data)
+    grouping_vars <- reactive(group_vars(pknca_data()$conc))
 
     # #' NCA Setup module
     nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)

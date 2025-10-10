@@ -147,11 +147,13 @@ tab_explore_ui <- function(id) {
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
 
-tab_explore_server <- function(id, data, grouping_vars) {
+tab_explore_server <- function(id, pknca_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     ## Plotting Input widgets --------------------------------------------------------
+    data <- reactive(pknca_data()$conc$data)
+    grouping_vars <- reactive(group_vars(pknca_data()$conc))
 
     observeEvent(data(), {
       req(data())
