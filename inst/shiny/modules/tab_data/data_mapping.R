@@ -1,25 +1,33 @@
-#' Define the manual units for concentration, dose, and time in a format recognized by PKNCA
-MANUAL_UNITS <- list(
-  concentration = c(
-    "mg/L", "µg/mL", "ng/mL", "pg/mL", "mol/L", "mmol/L", "µmol/L", "nmol/L", "pmol/L", "mg/dL",
-    "µg/dL", "ng/dL"
+# Add information for non-official CDISC mapping columns
+NON_STD_MAPPING_INFO <- data.frame(
+  Variable = c("Grouping_Variables", "TAU"),
+  Order = c(100, 24),
+  Values = c("", ""),
+  mapping_tooltip = c(
+    "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
+    "Numeric column for dose interval in multiple dose studies (optional). Must be in RRTLU units"
   ),
-  dose = c(
-    "mg", "g", "µg", "ng", "pg", "mol", "mmol", "µmol", "nmol", "pmol", "mg/kg", "g/kg", "µg/kg",
-    "ng/kg", "pg/kg", "mol/kg", "mmol/kg", "µmol/kg", "nmol/kg", "pmol/kg"
+  mapping_section = c("Supplemental Variables", "Supplemental Variables"),
+  mapping_alternatives = c(
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE,
+    RACE, SEX, GROUP, NOMDOSE, DOSEP", ""
   ),
-  time = c("sec", "min", "hr", "day", "week", "month", "year")
+  is_multiple_choice = c(TRUE, FALSE)
 )
 
-# Define the required columns and group them into categories
-MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE"),
-  "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "DOSEA"),
-  "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
-  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU"),
-  "Supplemental Variables" = c("Grouping_Variables", "TAU", "ADOSEDUR", "VOLUME", "VOLUMEU")
+# Make an unique dataset with all the variables for the mapping
+MAPPING_INFO <- metadata_nca_variables %>%
+  filter(is.mapped, Dataset == "ADPC") %>%
+  select(Variable, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
+  mutate(is_multiple_choice = FALSE) %>%
+  bind_rows(NON_STD_MAPPING_INFO)
+
+MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
+sections_order <- c(
+  "Group Identifiers", "Sample Variables", "Dose Variables",
+  "Time Variables", "Unit Variables", "Supplemental Variables"
 )
+MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
@@ -36,13 +44,14 @@ MAPPING_DESIRED_ORDER <- c(
 #' @param ns A namespace function to generate IDs for Shiny inputs.
 #' @param id A string representing the unique identifier for the widget.
 #' @param tooltip_text A string containing the tooltip text to guide users.
+#' @param multiple A logical indicating if multiple selections are allowed (default is FALSE).
 #'
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
 #' column_mapping_widget(ns = NS("example"), id = "STUDYID",
 #' tooltip_text = "Select the study identifier column.")
-.column_mapping_widget <- function(ns, id, tooltip_text) {
+.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
   div(
     class = "column-mapping-row",
     tooltip(
@@ -50,10 +59,12 @@ MAPPING_DESIRED_ORDER <- c(
         ns(paste0("select_", id)),
         "",
         choices = NULL,
+        multiple = multiple,
         options = list(placeholder = "Select Column"),
         width = "40%"
       ),
-      tooltip_text
+      tooltip_text,
+      placement = "top"
     ),
     div(
       class = "column-mapping-output",
@@ -63,6 +74,20 @@ MAPPING_DESIRED_ORDER <- c(
       class = "column-mapping-label",
       span(textOutput(ns(paste0("label_", id))))
     )
+  )
+}
+
+.column_mapping_section <- function(ns, mapping_df) {
+  section_title <- unique(mapping_df$mapping_section)
+  if (length(section_title) != 1) {
+    stop("mapping_df must contain exactly one unique mapping_section value.")
+  }
+  tags$section(
+    h5(section_title),
+    lapply(seq_len(nrow(mapping_df)), function(i) {
+      row <- mapping_df[i, ]
+      .column_mapping_widget(ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice)
+    })
   )
 }
 
@@ -123,82 +148,10 @@ data_mapping_ui <- function(id) {
           " Please ensure each of these columns",
           " has been assigned a corresponding column from your dataset"
         ),
-        # Adjusted layout using CSS flexbox
-        tags$section(
-          h5("Group Identifiers"),
-          .column_mapping_widget(
-            ns, "STUDYID", "Select Corresponding Column, in character format."
-          ),
-          .column_mapping_widget(
-            ns, "USUBJID", "Character or Numeric format"
-          ),
-          .column_mapping_widget(
-            ns,
-            "NCA_PROFILE",
-            "Select the column you want to use for selecting the NCA profiles."
-          ),
-        ),
-        tags$section(
-          h5("Sample Variables"),
-          .column_mapping_widget(ns, "PARAM", "Analyte in character format."),
-          .column_mapping_widget(ns, "PCSPEC", "Character format"),
-          .column_mapping_widget(ns, "AVAL", "Numeric format.")
-        ),
-        tags$section(
-          h5("Dose Variables"),
-          .column_mapping_widget(ns, "DRUG", "Character format."),
-          .column_mapping_widget(
-            ns, "ROUTE",
-            "Character format, stating either 'intravascular' or 'extravascular'."
-          ),
-          .column_mapping_widget(ns, "DOSEA", "Numeric format."),
-        ),
-        tags$section(
-          h5("Time Variables"),
-          .column_mapping_widget(ns, "AFRLT", "Numeric format"),
-          .column_mapping_widget(ns, "ARRLT", "Numeric format"),
-          .column_mapping_widget(ns, "NFRLT", "Numeric format"),
-          .column_mapping_widget(ns, "NRRLT", "Numeric format")
-        ),
-        tags$section(
-          h5("Unit Variables"),
-          .column_mapping_widget(ns, "AVALU", "Character format."),
-          .column_mapping_widget(ns, "DOSEU", "Character format."),
-          .column_mapping_widget(ns, "RRLTU", "Character format.")
-        ),
-        tags$section(
-          h5("Supplemental Variables"),
-          div(
-            class = "column-mapping-row",
-            tooltip(
-              selectizeInput(
-                ns("select_Grouping_Variables"),
-                "",
-                choices = NULL,
-                multiple = TRUE,
-                options = list(placeholder = "Select Column(s)"),
-                width = "40%"
-              ),
-              "Select the additional column(s) that will be used to group the data 
-                      in the outputs. E.g. Treatment Arm, Age, Sex, Race"
-            ),
-            div(
-              class = "column-mapping-output",
-              span("Additional Grouping Variables")
-            )
-          ),
-          .column_mapping_widget(
-            ns, "ADOSEDUR",
-            "Numeric format. Only required for infusion studies."
-          ),
-          .column_mapping_widget(ns, "VOLUME", "Numeric format.
-                                 Only required for urine/excretion studies."),
-          .column_mapping_widget(ns, "VOLUMEU", "Character format.
-                                 Only required for urine/excretion studies."),
-          .column_mapping_widget(ns, "TAU", "Numeric Format. Optional for multiple dose studies.
-                                 Can be actual Tau or planned Tau (TRTINT).
-                                 Assumed to have same units as RRTLU")
-        )
+        # Define the input widgets for each variable to map
+        lapply(MAPPING_BY_SECTION, function(mapping_section) {
+          .column_mapping_section(ns, mapping_section)
+        })
       )
     )
   )
@@ -210,8 +163,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
-    input_ids <- lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)) |>
-      unlist()
+    input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
 
     # Loop through each label and create the renderText outputs
     purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
@@ -223,18 +175,18 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     # Populate the static inputs with column names
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
-      update_selectize_inputs(session, input_ids, column_names, MANUAL_UNITS, MAPPING_DESIRED_ORDER)
+      update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
+
+      # Exception: If by default VOLUME is not mapped, then neither is VOLUMEU
+      if (input$select_VOLUME == "") {
+        updateSelectizeInput(session, "select_VOLUMEU", selected = "")
+      }
     })
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
-      all_input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
-      mapping_list <- setNames(lapply(all_input_ids, \(id) input[[id]]), all_input_ids)
-
-      supplemental_ids <- unlist(lapply(
-        MAPPING_COLUMN_GROUPS$`Supplemental Variables`,
-        \(cols) paste0("select_", cols)
-      ))
+      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
 
       # Get the names to keep
       names_to_keep <- names(mapping_list) |>
@@ -245,7 +197,6 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
       # Subset the list with the final names
       mapping_list[names_to_keep]
-
     })
 
     mapped_data <- reactive({
