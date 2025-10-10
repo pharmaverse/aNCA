@@ -320,15 +320,6 @@ tab_explore_server <- function(id, data, grouping_vars) {
       ) %>%
         ggplotly(height = 1000)
 
-      # Conditionally add rangeslider only if the plot is not faceted
-      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
-        p <- p %>%
-          layout(
-            xaxis = list(
-              rangeslider = list(type = "time")
-            )
-          )
-      }
       p
     })
 
@@ -405,12 +396,8 @@ tab_explore_server <- function(id, data, grouping_vars) {
         plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
       ) %>%
-        ggplotly(height = 1000) %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
-          )
-        )
+        ggplotly(height = 1000)
+
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })
