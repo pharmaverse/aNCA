@@ -18,7 +18,7 @@ var_labels(expected_df) <- c(
   "DOSE",
   "Actual Duration of Treatment Dose",
   "Act. Rel. Time from Analyte First Dose",
-  "NCA sample's profile or cycle"
+  "NCA Profile Identifier"
 )
 desired_order <- names(expected_df)
 
