@@ -139,23 +139,16 @@ server <- function(input, output, session) {
   shinyjs::disable(selector = "#page li a[data-value=tlg]")
 
   # DATA ----
-  data_module <- tab_data_server("data")
-  # Data set for analysis
-  adnca_data <- data_module$data
-  #' Create global data object. This is accessible by all modules, without the need to pass
-  #' data reactive directly.
-
-  # Grouping Variables
-  grouping_vars <- data_module$grouping_variables
+  tab_data_outputs <- tab_data_server("data")
 
   # EXPLORATION ----
-  tab_explore_server("explore", adnca_data, grouping_vars)
+  tab_explore_server("explore", tab_data_outputs$pknca_data)
 
   # NCA ----
-  list_tab_nca <- tab_nca_server("nca", adnca_data, grouping_vars)
+  tab_nca_outputs <- tab_nca_server("nca", tab_data_outputs$pknca_data)
 
   # TLG
-  tab_tlg_server("tlg", list_tab_nca$processed_pknca_data)
+  tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
 }
 
 shiny::shinyApp(ui, server)
