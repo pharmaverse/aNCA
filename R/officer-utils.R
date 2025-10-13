@@ -1,61 +1,67 @@
 
 # Utility functions for creating PowerPoint presentations with tables and plots using officer
 
-library(officer)
-library(flextable)
-library(ggplot2)
-library(dplyr)
-library(magrittr)
-library(tidyr)
-
 #' Create a new PowerPoint document from a template and add a title slide
 #' @param path File path to save the presentation
 #' @param title Title for the presentation
 #' @param template Path to PowerPoint template file
+#' @importFrom officer read_pptx add_slide ph_with ph_location_type
 #' @return rpptx object
 create_pptx_doc <- function(path, title, template) {
-  pptx <- read_pptx(template)
+  pptx <- officer::read_pptx(template)
   add_pptx_sl_title(pptx, title)
 }
 
 #' Add a title slide to the rpptx document
 #' @param pptx rpptx object
 #' @param title Title text
+#' @importFrom officer add_slide ph_with ph_location_type
 #' @return rpptx object with title slide added
+#' @keywords internal
 add_pptx_sl_title <- function(pptx, title) {
-  add_slide(pptx, layout = "Title Slide", master = "Office Theme") |>
-    ph_with(value = title, location = ph_location_type(type = "ctrTitle"))
+  officer::add_slide(pptx, layout = "Title Slide", master = "Office Theme") |>
+    officer::ph_with(
+      value = title,
+      location = officer::ph_location_type(type = "ctrTitle")
+    )
 }
 
 #' Add a slide with both a plot and a table
 #' @param pptx rpptx object
 #' @param df Data frame to show as table
 #' @param plot ggplot object to show as plot
+#' @importFrom officer add_slide ph_with ph_location_type
+#' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
-  add_slide(pptx, layout = "Content with Caption") |>
-    ph_with(value = plot, location = "Content Placeholder 1") |>
-    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  officer::add_slide(pptx, layout = "Content with Caption") |>
+    officer::ph_with(value = plot, location = "Content Placeholder 1") |>
+    officer::ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
 #' Add a slide with a table only
 #' @param pptx rpptx object
 #' @param df Data frame to show as table
+#' @param title Title text for the slide
+#' @param footer Footer text for the slide
+#' @importFrom officer add_slide ph_with
+#' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here for individual results") {
-  add_slide(pptx, layout = "Title Only") |>
-    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
-    ph_with(value = title, location = "Title 1") |>
-    ph_with(value = footer, location = "Footer Placeholder 3")
+  officer::add_slide(pptx, layout = "Title Only") |>
+    officer::ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
+    officer::ph_with(value = title, location = "Title 1") |>
+    officer::ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
 #' Add a slide with a plot only
 #' @param pptx rpptx object
 #' @param plot ggplot object to show as plot
+#' @importFrom officer add_slide ph_with
 #' @return rpptx object with slide added
 add_pptx_sl_plot <- function(pptx, plot) {
-  add_slide(pptx, layout = "Picture with Caption") |>
-    ph_with(value = plot, location = "Picture Placeholder 2")
+  officer::add_slide(pptx, layout = "Picture with Caption") |>
+    officer::ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
@@ -64,7 +70,8 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param path File path to save the presentation
 #' @param title Title for the presentation
 #' @param template Path to PowerPoint template file
-#' @return TRUE (invisible)
+#' @importFrom officer read_pptx add_slide ph_with ph_location_type ph_slidelink move_slide
+#' @return TRUE (invisible). Writes the PowerPoint file to the specified path
 create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   pptx <- create_pptx_doc(path, title, template)
 

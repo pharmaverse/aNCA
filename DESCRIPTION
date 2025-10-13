@@ -51,6 +51,7 @@ Suggests:
     markdown,
     mockery,
     nestcolor,
+    officer,
     openxlsx2,
     pak,
     reactable,
