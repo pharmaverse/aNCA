@@ -128,13 +128,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
             use_plotly = TRUE
           )
+          st <- Sys.time()
           create_pptx_dose_slides(
             res_dose_slides = res_dose_slides,
             path = paste0(presentations_path, "/dose_escalation.pptx"),
             title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
             template = "www/templates/template.pptx"
           )
-
+          print(difftime(Sys.time(), st))
           incProgress(0.3)
 
           # Create a settings folder
@@ -144,9 +145,13 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
           files <- list.files(
             output_tmpdir,
-            pattern = ".(csv)|(rds)|(xpt)|(html)|(rda)|(pptx)|(qmd)$",
+            pattern = paste0(
+              ".(csv)|(rds)|(xpt)|(html)|(rda)",
+              "|(dose_escalation.pptx)|(dose_escalation.qmd)$"
+            ),
             recursive = TRUE
           )
+
           wd <- getwd()
           on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
           setwd(output_tmpdir)

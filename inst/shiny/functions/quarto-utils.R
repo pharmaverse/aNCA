@@ -104,7 +104,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @return Invisibly returns TRUE if slides were created.
 create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
   # Save an accessible object with all results
-  rda_path <- paste0(dirname(quarto_path), "/all_outputs.rda")
+  rda_path <- paste0(dirname(quarto_path), "/dose_escalation_outputs.rda")
   save(list = as.character(quote(res_dose_slides)), file = rda_path)
 
   # Generate the main quarto document

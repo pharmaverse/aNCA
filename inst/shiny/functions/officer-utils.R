@@ -24,7 +24,7 @@ create_pptx_doc <- function(path, title, template) {
 #' @return rpptx object with title slide added
 add_pptx_sl_title <- function(pptx, title) {
   add_slide(pptx, layout = "Title Slide", master = "Office Theme") |>
-  ph_with(value = title, location = ph_location_type(type = "ctrTitle"))
+    ph_with(value = title, location = ph_location_type(type = "ctrTitle"))
 }
 
 #' Add a slide with both a plot and a table
@@ -42,7 +42,7 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @param pptx rpptx object
 #' @param df Data frame to show as table
 #' @return rpptx object with slide added
-add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here to see individual results") {
+add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here for individual results") {
   add_slide(pptx, layout = "Title Only") |>
     ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
     ph_with(value = title, location = "Title 1") |>
@@ -80,11 +80,13 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     )
     pptx <- purrr::reduce(
       names(res_dose_slides[[i]]$ind_params),
-      function(pptx, subj) add_pptx_sl_plottable(
-        pptx,
-        df = res_dose_slides[[i]]$ind_params[[subj]],
-        plot = res_dose_slides[[i]]$ind_plots[[subj]]
-      ),
+      function(pptx, subj) {
+        add_pptx_sl_plottable(
+          pptx,
+          df = res_dose_slides[[i]]$ind_params[[subj]],
+          plot = res_dose_slides[[i]]$ind_plots[[subj]]
+        )
+      },
       .init = pptx
     )
 
