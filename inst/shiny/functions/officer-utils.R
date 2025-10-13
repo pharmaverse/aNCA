@@ -42,9 +42,11 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @param pptx rpptx object
 #' @param df Data frame to show as table
 #' @return rpptx object with slide added
-add_pptx_sl_table <- function(pptx, df) {
+add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here to see individual results") {
   add_slide(pptx, layout = "Title Only") |>
-    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
+    ph_with(value = title, location = "Title 1") |>
+    ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
 #' Add a slide with a plot only
@@ -71,7 +73,11 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   for (i in seq_len(length(res_dose_slides))) {
 
     # Generate the individual figures
-    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
+    pptx <- add_pptx_sl_table(
+      pptx, res_dose_slides[[i]]$info,
+      title = paste0("Group ", i, " (individual)"),
+      footer = ""
+    )
     pptx <- purrr::reduce(
       names(res_dose_slides[[i]]$ind_params),
       function(pptx, subj) add_pptx_sl_plottable(
@@ -83,8 +89,8 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     )
 
     # Generate summary figures and tables
-    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info) |>
-      # ph_slidelink(ph_label = "Table Placeholder 1", slide_index = (lst_group_slide + 1)) |>
+    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " results")) |>
+      ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1)) |>
       add_pptx_sl_plottable(
         df = res_dose_slides[[i]]$statistics,
         plot = res_dose_slides[[i]]$meanplot
@@ -108,5 +114,4 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
 
   print(pptx, target = path)
   invisible(TRUE)
-#})
 }
