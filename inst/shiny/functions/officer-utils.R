@@ -66,70 +66,46 @@ add_pptx_sl_plot <- function(pptx, plot) {
 create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   pptx <- create_pptx_doc(path, title, template)
 
-#profvis::profvis({
-  # Prepare main presentation figures
+  lst_group_slide <- 1
+  group_slides <- numeric()
   for (i in seq_len(length(res_dose_slides))) {
+
+    # Generate the individual figures
+    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
+    pptx <- purrr::reduce(
+      names(res_dose_slides[[i]]$ind_params),
+      function(pptx, subj) add_pptx_sl_plottable(
+        pptx,
+        df = res_dose_slides[[i]]$ind_params[[subj]],
+        plot = res_dose_slides[[i]]$ind_plots[[subj]]
+      ),
+      .init = pptx
+    )
+
+    # Generate summary figures and tables
     pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info) |>
+      # ph_slidelink(ph_label = "Table Placeholder 1", slide_index = (lst_group_slide + 1)) |>
       add_pptx_sl_plottable(
         df = res_dose_slides[[i]]$statistics,
         plot = res_dose_slides[[i]]$meanplot
       ) |>
-    add_pptx_sl_plot(res_dose_slides[[i]]$linplot) |>
-    add_pptx_sl_plot(res_dose_slides[[i]]$boxplot)
+      add_pptx_sl_plot(res_dose_slides[[i]]$linplot) |>
+      add_pptx_sl_plot(res_dose_slides[[i]]$boxplot)
+
+    n_ind <- length(res_dose_slides[[i]]$ind_params)
+    lst_group_slide <- lst_group_slide + 1 + n_ind + 4
+    group_slides <- c(group_slides, (lst_group_slide - 3):(lst_group_slide))
   }
 
-  # Include extra presentation figures
-  pptx <- add_pptx_sl_title(pptx, "Extra Figures")
-  # for (i in seq_len(length(res_dose_slides))) {
-  #   pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
-  #   # for (subj in names(res_dose_slides[[i]]$ind_params)) {
-  #   #   pptx <- add_pptx_sl_plottable(
-  #   #     pptx,
-  #   #     df = res_dose_slides[[i]]$ind_params[[subj]],
-  #   #     plot = res_dose_slides[[i]]$ind_plots[[subj]]
-  #   #   )
-  #   # }
-  # 
-  #   # pptx <- Reduce(
-  #   #   function(pptx, subj) add_pptx_sl_plottable(
-  #   #     pptx,
-  #   #     df = res_dose_slides[[i]]$ind_params[[subj]],
-  #   #     plot = res_dose_slides[[i]]$ind_plots[[subj]]
-  #   #   ),
-  #   #   names(res_dose_slides[[i]]$ind_params),
-  #   #   init = pptx
-  #   # )
-  # 
-  #   pptx <- purrr::reduce(
-  #     names(res_dose_slides[[i]]$ind_params),
-  #     function(pptx, subj) add_pptx_sl_plottable(
-  #       pptx,
-  #       df = res_dose_slides[[i]]$ind_params[[subj]],
-  #       plot = res_dose_slides[[i]]$ind_plots[[subj]]
-  #     ),
-  #     .init = pptx
-  #   )
-  # 
-  # }
-  # Include extra presentation figures using two purrr::reduce
+  group_slides_rev <- rev(group_slides) + (seq_len(length(group_slides)) - 1)
   pptx <- purrr::reduce(
-    seq_len(length(res_dose_slides)),
-    function(pptx, i) {
-      pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info)
-      pptx <- purrr::reduce(
-        names(res_dose_slides[[i]]$ind_params),
-        function(pptx, subj) add_pptx_sl_plottable(
-          pptx,
-          df = res_dose_slides[[i]]$ind_params[[subj]],
-          plot = res_dose_slides[[i]]$ind_plots[[subj]]
-        ),
-        .init = pptx
-      )
-      pptx
-    },
+    group_slides_rev,
+    function(pptx, slide_index) move_slide(pptx, index = slide_index, to = 2),
     .init = pptx
   )
-  
+  pptx <- add_pptx_sl_title(pptx, "Extra Figures")
+  pptx <- move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
+
   print(pptx, target = path)
   invisible(TRUE)
 #})
