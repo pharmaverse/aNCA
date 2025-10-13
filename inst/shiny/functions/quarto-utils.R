@@ -108,7 +108,7 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
   save(list = as.character(quote(res_dose_slides)), file = rda_path)
 
   # Generate the main quarto document
-  create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = rda_path)
+  create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
   for (i in seq_len(length(res_dose_slides))) {
     add_qmd_sl_plottabletable(
       quarto_path = quarto_path,
