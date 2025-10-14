@@ -1,76 +1,92 @@
-#' Update Last Click Data for Slope Selection
+
+#' Handle Plotly Click for Slope Selection
 #'
-#' Checks if the user clicked on a different plot or dataset and updates
-#' `last_click_data` accordingly. If an update is needed, the function exits early.
+#' This function processes a plotly click event in the slope selection UI. It determines whether
+#' the double click should add a new exclusion or selection rule to the manual slopes table
+#' (same point = exclusion, two points in same plot = selection).
 #'
-#' @param last_click_data A reactive Values object storing the last clicked data.
-#' @param manual_slopes A reactive Values object storing the manually added slope rules.
-#' @param slopes_groups A character vector of slope grouping column names.
-#' @param click_data A list containing the custom data from the plotly click event.
+#' @param last_click_data A reactiveVal storing the last clicked plotly data (or NULL).
+#' @param manual_slopes A reactiveVal storing the current manual slopes table (data.frame).
+#' @param click_data The new plotly click event data (list with customdata).
+#' @param pknca_data The current PKNCA data object (for context and group info).
+#' @return List with updated last_click_data and manual_slopes.
 #'
-#' @returns Returns a list with updated `last_click_data` and `manual_slopes`.
-#'
-handle_plotly_click <- function(last_click_data, manual_slopes, slopes_groups, click_data) {
+#' @details
+#' - If the user clicks the same point twice, an exclusion rule is added for that point.
+#' - If the user clicks two points in the same interval, a selection rule is added for the range.
+#' - Otherwise, no rule is added and the click is just stored.
+handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknca_data) {
   req(click_data, click_data$customdata)
-
-  identifiers <- click_data$customdata
-  if (!all(names(identifiers) %in% c(slopes_groups, "IX", "DOSNOA"))) {
-    stop("Error: Missing expected keys in customdata")
+  # If there is no previous click, store this click and do nothing else
+  if (is.null(last_click_data())) {
+    return(list(
+      last_click_data = click_data,
+      manual_slopes = manual_slopes()
+    ))
   }
 
-  # Map identifiers dynamically
-  dynamic_values <- setNames(
-    lapply(slopes_groups, function(col) identifiers[[col]]),
-    slopes_groups
-  )
+  # Extract info for current and last click (group, interval, time, etc.)
+  pnt <- .extract_click_info(click_data, pknca_data)
+  lstpnt <- .extract_click_info(last_click_data(), pknca_data)
 
-  # Extract additional information for idx_pnt
-  idx_pnt <- identifiers$IX
-
-  # Create a copy of last_click_data
-  updated_click_data <- last_click_data
-
-  # Check if the selection has changed
-  updated <- any(
-    sapply(
-      slopes_groups,
-      function(col) dynamic_values[[col]] != updated_click_data[[tolower(col)]]
+  # Decide what rule to add based on click context
+  new_rule <- pnt$group
+  if (pnt$idx == lstpnt$idx) {
+    # Same point clicked twice: add exclusion rule for that point
+    new_rule$TYPE <- "Exclusion"
+    new_rule$RANGE <- paste0(pnt$time)
+    new_rule$REASON <- ""
+  } else if (identical(pnt$int, lstpnt$int)) {
+    # Two points in same interval: add selection rule for the range
+    new_rule$TYPE <- "Selection"
+    new_rule$RANGE <- paste0(
+      sort(c(pnt$time, lstpnt$time)),
+      collapse = ":"
     )
-  )
-
-  if (updated) {
-    for (col in slopes_groups) {
-      updated_click_data[[tolower(col)]] <- dynamic_values[[col]]
-    }
-    updated_click_data$idx_pnt <- idx_pnt
-
-    # Return updated last_click_data, but do not modify global state
-    return(list(last_click_data = updated_click_data, manual_slopes = manual_slopes()))
+    new_rule$REASON <- ""
+  } else {
+    # Clicks not in same interval: just update last_click_data, no rule
+    return(list(
+      last_click_data = click_data,
+      manual_slopes = manual_slopes()
+    ))
   }
 
-  # Create new rule as a local object
-  new_rule <- as.data.frame(
-    lapply(
-      c(
-        dynamic_values,
-        TYPE = if (idx_pnt != updated_click_data$idx_pnt) "Selection" else "Exclusion",
-        RANGE = paste0(updated_click_data$idx_pnt, ":", idx_pnt),
-        REASON = ""
-      ),
-      as.character  # Convert everything to character
-    ),
-    stringsAsFactors = FALSE
+  # Add or update the rule in the manual_slopes table
+  updated_slopes <- check_slope_rule_overlap(manual_slopes(), new_rule)
+
+  # Return updated values (reset last_click_data to NULL to await next click)
+  list(
+    last_click_data = NULL,
+    manual_slopes = updated_slopes
   )
+}
 
-  # Update manual_slopes without modifying it globally
-  updated_slopes <- check_slope_rule_overlap(manual_slopes(), new_rule, slopes_groups)
 
-  # Reset last_click_data dynamically
-  for (col in names(dynamic_values)) {
-    updated_click_data[[tolower(col)]] <- ""
-  }
-  updated_click_data$idx_pnt <- ""
-
-  # Return updated values
-  list(last_click_data = updated_click_data, manual_slopes = updated_slopes)
+#' Extract Click Info for Slope Selection
+#'
+#' Helper for handle_plotly_click. Given plotly click data and PKNCA data, returns a list with:
+#' - idx: row index in conc data
+#' - time: time value of click
+#' - row: full row from conc data
+#' - int: interval(s) in which the point falls
+#' - group: grouping columns for the interval
+#'
+#' @param click_data List from plotly click event
+#' @param pknca_data PKNCA data object
+#' @return List with idx, time, row, int, group
+.extract_click_info <- function(click_data, pknca_data) {
+  idx <- as.numeric(click_data$customdata$ROWID)
+  time <- as.numeric(click_data$x)
+  row <- pknca_data$conc$data[idx, ]
+  int <- pknca_data$intervals %>%
+    merge(row, by = c(group_vars(pknca_data))) %>%
+    filter(
+      start <= row[[pknca_data$conc$columns$time]] &
+        end >= row[[pknca_data$conc$columns$time]]
+    ) %>%
+    select(any_of(names(pknca_data$intervals)))
+  group <- int %>%
+    select(any_of(c(group_vars(pknca_data), "NCA_PROFILE")))
+  list(idx = idx, time = time, row = row, int = int, group = group)
 }
