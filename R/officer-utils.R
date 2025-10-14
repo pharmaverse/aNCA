@@ -8,7 +8,7 @@
 #' @importFrom officer read_pptx add_slide ph_with ph_location_type
 #' @return rpptx object
 create_pptx_doc <- function(path, title, template) {
-  pptx <- officer::read_pptx(template)
+  pptx <- read_pptx(template)
   add_pptx_sl_title(pptx, title)
 }
 
@@ -19,10 +19,10 @@ create_pptx_doc <- function(path, title, template) {
 #' @return rpptx object with title slide added
 #' @keywords internal
 add_pptx_sl_title <- function(pptx, title) {
-  officer::add_slide(pptx, layout = "Title Slide", master = "Office Theme") |>
-    officer::ph_with(
+  add_slide(pptx, layout = "Title Slide", master = "Office Theme") |>
+    ph_with(
       value = title,
-      location = officer::ph_location_type(type = "ctrTitle")
+      location = ph_location_type(type = "ctrTitle")
     )
 }
 
@@ -34,9 +34,9 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
-  officer::add_slide(pptx, layout = "Content with Caption") |>
-    officer::ph_with(value = plot, location = "Content Placeholder 1") |>
-    officer::ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  add_slide(pptx, layout = "Content with Caption") |>
+    ph_with(value = plot, location = "Content Placeholder 1") |>
+    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
 #' Add a slide with a table only
@@ -48,10 +48,10 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here for individual results") {
-  officer::add_slide(pptx, layout = "Title Only") |>
-    officer::ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
-    officer::ph_with(value = title, location = "Title 1") |>
-    officer::ph_with(value = footer, location = "Footer Placeholder 3")
+  add_slide(pptx, layout = "Title Only") |>
+    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
+    ph_with(value = title, location = "Title 1") |>
+    ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
 #' Add a slide with a plot only
@@ -60,8 +60,8 @@ add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here for ind
 #' @importFrom officer add_slide ph_with
 #' @return rpptx object with slide added
 add_pptx_sl_plot <- function(pptx, plot) {
-  officer::add_slide(pptx, layout = "Picture with Caption") |>
-    officer::ph_with(value = plot, location = "Picture Placeholder 2")
+  add_slide(pptx, layout = "Picture with Caption") |>
+    ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
