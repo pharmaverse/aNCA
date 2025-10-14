@@ -117,7 +117,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
             facet_vars = "DOSEA",
             statistics = c("Mean"),
-            stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP", "LAMZHL", "FABS")
+            stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS")
           )
           presentations_path <- paste0(output_tmpdir, "/presentations")
           dir.create(presentations_path)

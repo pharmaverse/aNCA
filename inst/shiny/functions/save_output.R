@@ -72,7 +72,7 @@ get_dose_esc_results <- function(
   o_nca, group_by_vars,
   statistics = "Mean",
   facet_vars = "DOSEA",
-  stats_parameters = c("CMAX", "TMAX", "VSS", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+  stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
   boxplot_parameter = "AUCIFO",
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
 ) {
@@ -126,7 +126,7 @@ get_dose_esc_results <- function(
       ) %>%
       select(
         any_of(c(facet_vars, "Statistic")),
-        dplyr::matches(paste0("^(", paste(stats_parameters, collapse = "|"), ")(\\[.*\\])?$"))
+        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% stats_parameters])
       ) %>%
       unique()
 
