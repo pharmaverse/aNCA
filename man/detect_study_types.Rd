@@ -36,7 +36,7 @@ samples must be written as \code{extravascular}.
 Can be set to \code{volume} if not applicable.}
 }
 \value{
-A data frame summarizing the detected study types,
+A data frame with the unique combinations of study types,
 including the grouping columns and the identified type.
 }
 \description{
