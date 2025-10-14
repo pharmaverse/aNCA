@@ -114,10 +114,10 @@ describe("apply_mapping", {
     filtered_df <- test_df %>%
       filter(!duplicated(paste(USUBJID, AVAL))) %>%
       arrange(USUBJID, AVAL)
-    
+
     # add label attr to NCA profile
     var_labels(filtered_df) <- var_labels(expected_df)
-    
+
     mapping <- as.list(setNames(names(test_df), names(test_df)))
     expect_warning(
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
