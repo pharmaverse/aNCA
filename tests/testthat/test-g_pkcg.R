@@ -1,7 +1,7 @@
 adpc <- FIXTURE_CONC_DATA %>%
   filter(USUBJID %in% unique(USUBJID)[1:3]) %>%
   mutate(USUBJID = as.character(USUBJID),
-         DOSNOP = as.character(NCA_PROFILE),
+         DOSNOP = as.character(AVISIT),
          TRT01A = "Dummy Treatment")
 
 attr(adpc$USUBJID, "label") <- "Subject ID"

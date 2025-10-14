@@ -90,7 +90,7 @@ ratios_table_server <- function(
         ) %>%
         select(
           any_of(
-            c(group_vars(adnca_data()$conc), "ROUTE", "NCA_PROFILE")
+            c(group_vars(adnca_data()$conc), "ROUTE", "AVISIT")
           )
         ) %>%
         # Filter out the columns with one one unique value (no ratio possible!)
@@ -300,7 +300,7 @@ ratios_table_server <- function(
 
 .generate_pptestcd_for_ratios <- function(tbl, adnca_data) {
   analyte_col <- adnca_data$conc$columns$groups$group_analyte
-  profile_col <- "NCA_PROFILE"
+  profile_col <- "AVISIT"
   pcspec_col <- "PCSPEC"
   raw_route_col <- "ROUTE"
   duration_col <- adnca_data$dose$columns$duration

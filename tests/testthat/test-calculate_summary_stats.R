@@ -1,5 +1,5 @@
 test_data <- data.frame(
-  NCA_PROFILE = rep(1:2, each = 8),
+  AVISIT = rep(1:2, each = 8),
   PPTESTCD = rep(c("A", "A", "B", "B", "C", "C", "D", "D"), 2),
   PPSTRES = c(10, 20, 5, 15, NA, 30, 0, 10, 10, 20, 5, 15, NA, 30, 0, 10),
   PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L", "", "",
@@ -33,24 +33,24 @@ describe("calculate_summary_stats", {
 
   it("correctly calculates summary statistics", {
 
-    a_data <- test_data %>% filter(PPTESTCD == "A", NCA_PROFILE == 1) %>% pull(PPSTRES)
+    a_data <- test_data %>% filter(PPTESTCD == "A", AVISIT == 1) %>% pull(PPSTRES)
 
     expected_geomean <- round(exp(mean(log(a_data), na.rm = TRUE)), 3)
     expected_mean <- round(mean(a_data, na.rm = TRUE), 3)
     expected_sd <- round(sd(a_data, na.rm = TRUE), 3)
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "Geomean", NCA_PROFILE == 1) %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "Geomean", AVISIT == 1) %>% pull(`A[mg/L]`)),
       expected_geomean
     )
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "Mean", NCA_PROFILE == 1) %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "Mean", AVISIT == 1) %>% pull(`A[mg/L]`)),
       expected_mean
     )
 
     expect_equal(
-      as.numeric(result %>% filter(Statistic == "SD", NCA_PROFILE == 1) %>% pull(`A[mg/L]`)),
+      as.numeric(result %>% filter(Statistic == "SD", AVISIT == 1) %>% pull(`A[mg/L]`)),
       expected_sd
     )
   })
@@ -77,7 +77,7 @@ describe("calculate_summary_stats", {
 
   it("standardizes units to the mode", {
     test_data_diff_units <- data.frame(
-      NCA_PROFILE = c(1, 1, 1),
+      AVISIT = c(1, 1, 1),
       PPTESTCD = c("A", "A", "A"),
       PPORRES = c(1, 2, 3),
       PPORRESU = c("mg/L", "mg/L", "mg/L"),
@@ -89,7 +89,7 @@ describe("calculate_summary_stats", {
 
     # Define the expected result
     expected_result <- tibble(
-      NCA_PROFILE = rep(1, 9),
+      AVISIT = rep(1, 9),
       Statistic = c(
         "Geomean", "Geocv", "Mean", "SD", "Min",
         "Max", "Median", "Count.missing", "Count.total"
@@ -103,7 +103,7 @@ describe("calculate_summary_stats", {
 
   it("handles NA values in results for unit conversion", {
     test_data_na_conversion <- data.frame(
-      NCA_PROFILE = c(1, 1, 1),
+      AVISIT = c(1, 1, 1),
       PPTESTCD = c("A", "A", "A"),
       PPORRES = c(1, 2, NA),
       PPORRESU = c("mg/L", "mg/L", "mg/L"),
@@ -115,7 +115,7 @@ describe("calculate_summary_stats", {
 
     # Define the expected result
     expected_result <- tibble(
-      NCA_PROFILE = rep(1, 9),
+      AVISIT = rep(1, 9),
       Statistic = "Mean",
       `A[µg/L]` = 1.5
     )

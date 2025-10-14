@@ -8,7 +8,7 @@
 #' - ROUTE: Route of administration.
 #' - DRUG: Drug identifier.
 #' - USUBJID: Unique subject identifier.
-#' - NCA_PROFILE: (Non- standard column). Can be any column, used for filtering the data for NCA
+#' - AVISIT: (Non- standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
@@ -40,7 +40,7 @@
 #' ROUTE = rep("IV", 6),
 #' DRUG = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
-#' NCA_PROFILE = rep(1, 6),
+#' AVISIT = rep(1, 6),
 #' PARAM = rep("AnalyteA", 6),
 #' AVAL = c(0, 5, 10, 7, 3, 1),
 #' AVALU = rep("ng/mL", 6),
@@ -65,7 +65,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DRUG"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
-  dosno_column <- "NCA_PROFILE"
+  dosno_column <- "AVISIT"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
@@ -235,7 +235,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     auc.method = method,
     progress = FALSE,
     keep_interval_cols = c(
-      "NCA_PROFILE", "DOSNOA", "type_interval",
+      "AVISIT", "DOSNOA", "type_interval",
       adnca_data$dose$columns$route, "ROUTE"
     ),
     min.hl.r.squared = 0.01
@@ -261,7 +261,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      NCA_PROFILE %in% selected_profile,
+      AVISIT %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
 
@@ -338,7 +338,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'   ROUTE = rep("IV", 6),
 #'   DRUG = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
-#'   NCA_PROFILE = rep(1, 6),
+#'   AVISIT = rep(1, 6),
 #'   PARAM = rep("AnalyteA", 6),
 #'   AVAL = c(0, 5, 10, 7, 3, 1),
 #'   AVALU = rep("ng/mL", 6),

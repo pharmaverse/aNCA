@@ -30,13 +30,13 @@ test_pknca_res$data$conc$data <- test_pknca_res$data$conc$data %>%
 test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
   mutate(
     PCRFTDTC = case_when(
-      NCA_PROFILE == 1 ~ "2023-01-01T00:00",
-      NCA_PROFILE == 2 ~ "2023-01-02T00:00",
+      AVISIT == 1 ~ "2023-01-01T00:00",
+      AVISIT == 2 ~ "2023-01-02T00:00",
       TRUE ~ NA_character_
     ),
     PCRFTDTM = case_when(
-      NCA_PROFILE == 1 ~ "2023-01-01 00:00",
-      NCA_PROFILE == 2 ~ "2023-01-02 00:00",
+      AVISIT == 1 ~ "2023-01-01 00:00",
+      AVISIT == 2 ~ "2023-01-02 00:00",
       TRUE ~ NA_character_
     )
   )
@@ -235,7 +235,7 @@ describe("export_cdisc", {
     expect_equal(unique(res_nothing$pp$PPRFTDTC), NA_character_)
   })
 
-  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. NCA_PROFILE", {
+  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. AVISIT", {
     test_no_avisit <- test_pknca_res
     test_no_avisit_visit <- test_pknca_res
     test_nothing <- test_pknca_res
@@ -246,14 +246,14 @@ describe("export_cdisc", {
       select(-AVISIT, -VISIT)
     test_nothing$data$conc$data <- test_nothing$data$conc$data %>%
       select(-AVISIT, -VISIT)
-    test_nothing$result <- test_nothing$result %>% select(-NCA_PROFILE)
+    test_nothing$result <- test_nothing$result %>% select(-AVISIT)
 
     res <- export_cdisc(test_pknca_res)
     res_no_avisit <- export_cdisc(test_no_avisit)
     res_no_avisit_visit <- export_cdisc(test_no_avisit_visit)
 
     # Check that PPGRPID is derived correctly
-    conc_group_cols <- c(group_vars(test_pknca_res$data$conc), "NCA_PROFILE")
+    conc_group_cols <- c(group_vars(test_pknca_res$data$conc), "AVISIT")
     group_dose_cols <- group_vars(test_pknca_res$data$dose)
     exp_grpid <- as.data.frame(test_pknca_res) %>%
       left_join(test_pknca_res$data$conc$data %>%
@@ -265,7 +265,7 @@ describe("export_cdisc", {
       mutate(
         GRPID_VISIT = paste0(PARAM, "-", PCSPEC, "-", VISIT),
         GRPID_AVISIT = paste0(PARAM, "-", PCSPEC, "-", AVISIT),
-        GRPID_NCAPROFILE = paste0(PARAM, "-", PCSPEC, "-", NCA_PROFILE)
+        GRPID_NCAPROFILE = paste0(PARAM, "-", PCSPEC, "-", AVISIT)
       ) %>%
       # Arrange in same order as results
       arrange(!!!syms(c(group_dose_cols, "start", "end", "PPTESTCD")))

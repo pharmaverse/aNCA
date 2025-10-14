@@ -27,7 +27,7 @@ Some variables are mandatory (marked with \*), while others are optional. Custom
 |------------------|------------------|-------------------|------------------|
 | **Grouping Identifiers** | STUDYID \*     | Study Identifier                                                   | character         |
 |                          | USUBJID \*     | Unique Subject Identifier                                          | character/numeric |
-|                          | NCA_PROFILE \* | Can be any column, and used to filter data for NCA calculations     | any               |
+|                          | AVISIT \* | Can be any column, and used to filter data for NCA calculations     | any               |
 |                          | TRT01A         | Treatment Group Identifier (Actual)                                | character         |
 |                          | TRT01P         | Treatment Group Identifier (Planned)                               | character         |
 |                          | AGE            | Age of Subject                                                     | numeric           |

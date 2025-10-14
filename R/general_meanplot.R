@@ -43,7 +43,7 @@ general_meanplot <- function(data,
       STUDYID %in% selected_studyids,
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspecs,
-      NCA_PROFILE %in% selected_cycles,
+      AVISIT %in% selected_cycles,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       NRRLT > 0
     )
@@ -55,7 +55,7 @@ general_meanplot <- function(data,
     mutate(id_variable_col = interaction(!!!syms(id_variable), sep = ", ",  drop = TRUE)) %>%
     # Create a groups variables for the labels
     mutate(groups = paste0(
-      paste(STUDYID, PARAM, PCSPEC, NCA_PROFILE, sep = ", "), " [", AVALU, "]"
+      paste(STUDYID, PARAM, PCSPEC, AVISIT, sep = ", "), " [", AVALU, "]"
     )) %>%
     group_by(id_variable_col, NRRLT, groups) %>%
     summarise(

@@ -165,7 +165,7 @@ excretion_server <- function(id, input_pknca_data) {
         mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
                conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
 
-      data$options$keep_interval_cols <- c("NCA_PROFILE", "type_interval")
+      data$options$keep_interval_cols <- c("AVISIT", "type_interval")
       # Run PKNCA analysis
       suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
         # Apply standard CDISC names

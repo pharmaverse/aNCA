@@ -134,7 +134,7 @@ slope_selector_server <- function( # nolint
 
       pknca_data()$conc$columns$groups %>%
         purrr::list_c() %>%
-        append(c("NCA_PROFILE", "DOSNOA")) %>%
+        append(c("AVISIT", "DOSNOA")) %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "DRUG" && length(unique(pknca_data()$conc$data[[col]])) > 1
         })
@@ -190,11 +190,11 @@ slope_selector_server <- function( # nolint
 
       pknca_data()$intervals %>%
         mutate(USUBJID = as.character(USUBJID),
-               NCA_PROFILE = as.character(NCA_PROFILE),
+               AVISIT = as.character(AVISIT),
                DOSNOA = as.character(DOSNOA)) %>%
         group_by(!!!syms(c(unname(unlist(pknca_data()$conc$columns$groups)), "DOSNOA"))) %>%
-        summarise(NCA_PROFILE = unique(NCA_PROFILE), .groups = "drop") %>%
-        unnest(NCA_PROFILE)  # Convert lists into individual rows
+        summarise(AVISIT = unique(AVISIT), .groups = "drop") %>%
+        unnest(AVISIT)  # Convert lists into individual rows
     })
 
     #' Updating plot outputUI, dictating which plots get displayed to the user.
@@ -219,7 +219,7 @@ slope_selector_server <- function( # nolint
       subject_profile_plot_ids <- pknca_data()$intervals %>%
         select(any_of(c(unname(unlist(pknca_data()$dose$columns$groups)),
                         unname(unlist(pknca_data()$conc$columns$groups)),
-                        "NCA_PROFILE", "DOSNOA"))) %>%
+                        "AVISIT", "DOSNOA"))) %>%
         filter(USUBJID %in% search_subject) %>%
         select(slopes_groups(), USUBJID, DOSNOA) %>%
         unique() %>%
@@ -353,7 +353,7 @@ slope_selector_server <- function( # nolint
           PCSPEC == r["PCSPEC"],
           USUBJID == r["USUBJID"],
           PARAM == r["PARAM"],
-          NCA_PROFILE == r["NCA_PROFILE"],
+          AVISIT == r["AVISIT"],
           DOSNOA == r["DOSNOA"]
         ) |>
           NROW() != 0

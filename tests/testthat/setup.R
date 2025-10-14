@@ -24,7 +24,7 @@ base::local({
   # Create Testing Concentration Data
   FIXTURE_CONC_DATA <<- data.frame(
     # Columns that are mapped from the data
-    AVAL = c(                 # USUBJID.NCA_PROFILE
+    AVAL = c(                 # USUBJID.AVISIT
       0:4,                    # 1.1 (Extravascular, linear & sample at dose)
       c(1, 2, 1.5, 1, 0.5),   # 2.1 (Extravascular eq, with max)
       c(1, 2, 1.5, 1, 0.5),   # 2.2 (Extravascular eq, 2nd dose)
@@ -130,7 +130,7 @@ base::local({
       rep(7, 5),
       rep(8, 20)                # 8.1 (A,B), 8.2 (A,B)
     ),
-    NCA_PROFILE = c(
+    AVISIT = c(
       rep(1, 5),
       rep(1:2, each = 5),
       rep(1:2, each = 5),
@@ -161,7 +161,7 @@ base::local({
     # Needed for pivot_wider_pknca_results (dose_profile_duplicates)
     # TODO (Gerardo): Kill this assumption
     mutate(
-      DOSNOA = NCA_PROFILE
+      DOSNOA = AVISIT
     )
 
   # Create Testing Dose Data
@@ -247,7 +247,7 @@ base::local({
       7,
       rep(8, 2)
     ),
-    NCA_PROFILE = c(
+    AVISIT = c(
       1,
       c(1, 2),
       c(1, 2),
@@ -276,11 +276,11 @@ base::local({
     start = c(0, 5),
     end = c(5, 10),
     type_interval = "main",  # Assumption 2: Include type_interval column
-    NCA_PROFILE = c(1, 2)
+    AVISIT = c(1, 2)
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, NCA_PROFILE, DOSNOA) %>%
+        select(USUBJID, AVISIT, DOSNOA) %>%
         unique()
     )
   main_intervals[, all_params] <- FALSE
@@ -296,13 +296,13 @@ base::local({
     start = c(0, 2, 5, 7),
     end = c(2, 4, 7, 9),
     type_interval = "manual",  # Assumption 2: Include type_interval column
-    NCA_PROFILE = c(1, 1, 2, 2)
+    AVISIT = c(1, 1, 2, 2)
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, NCA_PROFILE, DOSNOA) %>%
+        select(USUBJID, AVISIT, DOSNOA) %>%
         unique(),
-      by = "NCA_PROFILE",
+      by = "AVISIT",
       relationship = "many-to-many"
     )
   auc_intervals[, all_params] <- FALSE
@@ -312,19 +312,19 @@ base::local({
     )
   FIXTURE_INTERVALS <<- rbind(main_intervals, auc_intervals) %>%
     mutate(impute = case_when(
-      USUBJID == 1 & NCA_PROFILE == 1 ~ NA_character_,
-      USUBJID == 2 & NCA_PROFILE == 1 ~ "start_conc0",
-      USUBJID == 2 & NCA_PROFILE == 2 ~ "start_predose",
-      USUBJID == 3 & NCA_PROFILE == 1 ~ "start_logslope",
-      USUBJID == 3 & NCA_PROFILE == 2 ~ "start_logslope",
-      USUBJID == 4 & NCA_PROFILE == 1 ~ "start_c1",
-      USUBJID == 4 & NCA_PROFILE == 2 ~ "start_c1",
-      USUBJID == 5 & NCA_PROFILE == 1 ~ "start_conc0",
-      USUBJID == 5 & NCA_PROFILE == 2 ~ "start_conc0",
-      USUBJID == 6 & NCA_PROFILE == 1 ~ "start_conc0",
-      USUBJID == 6 & NCA_PROFILE == 2 ~ "start_conc0",
-      USUBJID == 7 & NCA_PROFILE == 1 ~ "start_conc0",
-      USUBJID == 7 & NCA_PROFILE == 2 ~ "start_conc0",
+      USUBJID == 1 & AVISIT == 1 ~ NA_character_,
+      USUBJID == 2 & AVISIT == 1 ~ "start_conc0",
+      USUBJID == 2 & AVISIT == 2 ~ "start_predose",
+      USUBJID == 3 & AVISIT == 1 ~ "start_logslope",
+      USUBJID == 3 & AVISIT == 2 ~ "start_logslope",
+      USUBJID == 4 & AVISIT == 1 ~ "start_c1",
+      USUBJID == 4 & AVISIT == 2 ~ "start_c1",
+      USUBJID == 5 & AVISIT == 1 ~ "start_conc0",
+      USUBJID == 5 & AVISIT == 2 ~ "start_conc0",
+      USUBJID == 6 & AVISIT == 1 ~ "start_conc0",
+      USUBJID == 6 & AVISIT == 2 ~ "start_conc0",
+      USUBJID == 7 & AVISIT == 1 ~ "start_conc0",
+      USUBJID == 7 & AVISIT == 2 ~ "start_conc0",
       TRUE ~ NA_character_
     ))
 
@@ -351,7 +351,7 @@ base::local({
   )
   FIXTURE_PKNCA_DATA$intervals <<- FIXTURE_INTERVALS
 
-  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("NCA_PROFILE",
+  FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("AVISIT",
                                                              "DOSNOA",
                                                              "type_interval"))
 
@@ -377,8 +377,8 @@ base::local({
       } else {
         ifelse((end - start) == 2, "manual", "main")
       },
-      NCA_PROFILE = if ("NCA_PROFILE" %in% names(.)) {
-        NCA_PROFILE
+      AVISIT = if ("AVISIT" %in% names(.)) {
+        AVISIT
       } else {
         ifelse(
           start < 5,

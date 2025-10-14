@@ -8,7 +8,7 @@ ADNCA <- data.frame(
   AFRLT = rep(seq(0, 9), 2),
   ARRLT = rep(seq(0, 4), 4),
   NFRLT = rep(seq(0, 9), 2),
-  NCA_PROFILE = rep(1, 20),
+  AVISIT = rep(1, 20),
   DOSEA = rep(c(5, 10), each = 10),
   ROUTE = rep(c("intravascular", "extravascular"), each = 10),
   ADOSEDUR = rep(c(0, 0), each = 10),
@@ -54,7 +54,7 @@ describe("format_pkncaconc_data", {
         AFRLT = 0,
         ARRLT = 0,
         NFRLT = 0,
-        NCA_PROFILE = 1,
+        AVISIT = 1,
         DOSEA = 5,
         ROUTE = "intravascular",
         ADOSEDUR = 0,
@@ -230,7 +230,7 @@ describe("format_pkncadata_intervals", {
         data.dose = pknca_dose,
         intervals = result,
         options = list(
-          keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval")
+          keep_interval_cols = c("AVISIT", "DOSNOA", "type_interval")
         ),
         units = PKNCA::pknca_units_table(
           concu = "ng/mL",

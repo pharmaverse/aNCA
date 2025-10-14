@@ -16,7 +16,7 @@ describe("lambda_slope_plot", {
     filter(half.life) %>%
     select(any_of(c(
       unname(unlist(myres$data$conc$columns$groups)),
-      "NCA_PROFILE", "DOSNOA"
+      "AVISIT", "DOSNOA"
     ))) %>%
     filter(USUBJID == 5)
 
@@ -99,7 +99,7 @@ describe("lambda_slope_plot", {
       filter(half.life) %>%
       select(any_of(c(
         unname(unlist(myres$data$conc$columns$groups)),
-        "NCA_PROFILE", "DOSNOA"
+        "AVISIT", "DOSNOA"
       ))) %>%
       filter(USUBJID == 5)
 

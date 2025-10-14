@@ -28,14 +28,14 @@
 #' - Validates that all required columns are mapped and no duplicates exist.
 #' - If `ADOSEDUR` is not mapped, it is assigned a value of `0`.
 #' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`,
-#'  and `NCA_PROFILE`.
+#'  and `AVISIT`.
 #' @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
 apply_mapping <- function(
   dataset, mapping, desired_order, silent = TRUE,
   req_mappings = c(
     "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
-    "PCSPEC", "ROUTE", "AVAL", "STUDYID", "NCA_PROFILE",
+    "PCSPEC", "ROUTE", "AVAL", "STUDYID", "AVISIT",
     "AVALU", "RRLTU", "DOSEU", "PARAM"
   )
 ) {
@@ -98,9 +98,9 @@ apply_mapping <- function(
   redundant_cols <- unname(mapping)[!unname(mapping) %in% names(mapping)]
   new_dataset <- new_dataset[!names(new_dataset) %in% redundant_cols]
 
-  # Special case: make NCA_PROFILE a factor. TODO: Try make it in the mapping obj
-  if (!is.null(new_dataset$NCA_PROFILE)) {
-    new_dataset[["NCA_PROFILE"]] <- as.factor(new_dataset[["NCA_PROFILE"]])
+  # Special case: make AVISIT a factor. TODO: Try make it in the mapping obj
+  if (!is.null(new_dataset$AVISIT)) {
+    new_dataset[["AVISIT"]] <- as.factor(new_dataset[["AVISIT"]])
   }
 
   # Check there are no duplicates

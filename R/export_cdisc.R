@@ -379,7 +379,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
         } else if ("VISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
           paste(!!!syms(c(conc_group_sp_cols, "VISIT")), sep = "-")
         } else if (!is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "NCA_PROFILE")), sep = "-")
+          paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
         } else {
           NA_character_
         }
@@ -458,7 +458,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       AVALU = PPSTRESU,
       PARAMCD = PPTESTCD,
       PARAM = PPTEST,
-      NCA_PROFILE = NCA_PROFILE
+      AVISIT = AVISIT
     )
 }
 

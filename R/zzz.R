@@ -43,7 +43,7 @@
     "ModeConv_factor",
     "ModeUnit",
     "N",
-    "NCA_PROFILE",
+    "AVISIT",
     "NRRLT",
     "Order",
     "PARAM",
