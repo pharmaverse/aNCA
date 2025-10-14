@@ -10,7 +10,7 @@ describe("detect_study_types", {
     DOSNOA = 1,
     ROUTE = "IV",
     VOL = 0,
-    TAU = NA_real_,
+    TRTRINT = NA_real_,
     ADOSEDUR = 0
   )
 
@@ -56,9 +56,9 @@ describe("detect_study_types", {
     expect_equal(result$type, "Multiple IV Bolus")
   })
 
-  it("correctly identifies a 'Multiple Extravascular Dose' study via a non-NA TAU", {
+  it("correctly identifies a 'Multiple Extravascular Dose' study via a non-NA TRTRINT", {
     test_data <- base_data %>%
-      mutate(ROUTE = "extravascular", TAU = 24)
+      mutate(ROUTE = "extravascular", TRTRINT = 24)
     result <- detect_study_types(test_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
 
     expect_equal(nrow(result), 1)
@@ -115,18 +115,18 @@ describe("detect_study_types", {
     expect_equal(result$type, "Excretion Data")
   })
 
-  it("handles data frames without a TAU column correctly", {
-    # Test for single dose without TAU column
-    test_data_single <- base_data %>% select(-TAU)
+  it("handles data frames without a TRTRINT column correctly", {
+    # Test for single dose without TRTRINT column
+    test_data_single <- base_data %>% select(-TRTRINT)
     result_single <- detect_study_types(test_data_single, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
     expect_equal(result_single$type, "Single IV Bolus")
 
-    # Test for multiple doses without TAU column
+    # Test for multiple doses without TRTRINT column
     test_data_multi <- bind_rows(
       base_data,
       base_data %>% mutate(DOSNOA = 2)
     ) %>%
-      select(-TAU)
+      select(-TRTRINT)
     result_multi <- detect_study_types(test_data_multi, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")
     expect_equal(result_multi$type, "Multiple IV Bolus")
   })
@@ -149,8 +149,8 @@ describe("detect_study_types", {
       # USUBJID: Subj-3, Type: Multiple IV (via DOSNOA)
       base_data %>% mutate(USUBJID = "SUBJ03", ADOSEDUR = 2),
       base_data %>% mutate(USUBJID = "SUBJ03", DOSNOA = 2, ADOSEDUR = 2),
-      # USUBJID: Subj-4, Type: Multiple Extravascular (via TAU)
-      base_data %>% mutate(USUBJID = "SUBJ04", ROUTE = "extravascular", TAU = 12)
+      # USUBJID: Subj-4, Type: Multiple Extravascular (via TRTRINT)
+      base_data %>% mutate(USUBJID = "SUBJ04", ROUTE = "extravascular", TRTRINT = 12)
     )
 
     result <- detect_study_types(combined_data, groups, "DRUG", "ANALYTE", "ROUTE", "VOL")

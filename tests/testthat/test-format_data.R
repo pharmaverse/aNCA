@@ -264,7 +264,7 @@ describe("format_pkncadata_intervals", {
 
   it("correctly uses tau if column is available", {
     df_conc_tau <- df_conc %>%
-      mutate(TAU = 5)  # Add a tau column for testing
+      mutate(TRTRINT = 5)  # Add a tau column for testing
 
     pknca_conc_tau <- PKNCA::PKNCAconc(
       df_conc_tau,
@@ -278,12 +278,12 @@ describe("format_pkncadata_intervals", {
     expect_equal(result_tau$end[4], 10)
   })
 
-  it("sets last time to end AFRLT if no TAU available", {
+  it("sets last time to end AFRLT if no TRTRINT available", {
     result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
     expect_equal(result$end[4], 9)
   })
 
-  it("sets end to Inf if no TAU and single dose", {
+  it("sets end to Inf if no TRTRINT and single dose", {
     single_dose_pknca_conc <- pknca_conc
     single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
       filter(DOSNOA == 1)  # Filter to a single dose
@@ -298,15 +298,15 @@ describe("format_pkncadata_intervals", {
     expect_true(all(is.infinite(result_single_dose$end)))
   })
 
-  it("sets end to Inf if TAU= NA and single dose", {
+  it("sets end to Inf if TRTRINT= NA and single dose", {
     single_dose_pknca_conc <- pknca_conc
     single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
-      mutate(TAU = NA) %>%  # Set TAU to NA
+      mutate(TRTRINT = NA) %>%  # Set TRTRINT to NA
       filter(DOSNOA == 1)  # Filter to a single dose
 
     single_dose_pknca_dose <- pknca_dose
     single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
-      mutate(TAU = NA) %>%  # Set TAU to NA
+      mutate(TRTRINT = NA) %>%  # Set TRTRINT to NA
       filter(DOSNOA == 1)  # Filter to a single dose
 
     result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc,
@@ -315,14 +315,14 @@ describe("format_pkncadata_intervals", {
     expect_true(all(is.infinite(result_single_dose$end)))
   })
 
-  it("sets end to last time point if TAU= NA and multiple dose", {
+  it("sets end to last time point if TRTRINT= NA and multiple dose", {
     pknca_conc_na_tau <- pknca_conc
     pknca_conc_na_tau$data <- pknca_conc$data %>%
-      mutate(TAU = NA) # Set TAU to NA
+      mutate(TRTRINT = NA) # Set TRTRINT to NA
 
     pknca_dose_na_tau <- pknca_dose
     pknca_dose_na_tau$data <- pknca_dose$data %>%
-      mutate(TAU = NA)  # Set TAU to NA
+      mutate(TRTRINT = NA)  # Set TRTRINT to NA
 
     result_single_dose <- format_pkncadata_intervals(pknca_conc_na_tau,
                                                      pknca_dose_na_tau,

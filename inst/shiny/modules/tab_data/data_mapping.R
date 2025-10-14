@@ -1,18 +1,16 @@
 # Add information for non-official CDISC mapping columns
 NON_STD_MAPPING_INFO <- data.frame(
-  Variable = c("Grouping_Variables", "TAU"),
-  Order = c(100, 24),
-  Values = c("", ""),
+  Variable = c("Grouping_Variables"),
+  Order = c(100),
+  Values = c(""),
   mapping_tooltip = c(
-    "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
-    "Numeric column for dose interval in multiple dose studies (optional). Must be in RRTLU units"
+    "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')"
   ),
-  mapping_section = c("Supplemental Variables", "Supplemental Variables"),
+  mapping_section = c("Supplemental Variables"),
   mapping_alternatives = c(
-    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE,
-    RACE, SEX, GROUP, NOMDOSE, DOSEP", ""
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP"
   ),
-  is_multiple_choice = c(TRUE, FALSE)
+  is_multiple_choice = c(TRUE)
 )
 
 # Make an unique dataset with all the variables for the mapping
@@ -34,7 +32,7 @@ MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
   "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR",
-  "VOLUME", "VOLUMEU", "TAU"
+  "VOLUME", "VOLUMEU", "TRTRINT"
 )
 
 #' Column Mapping Widget

@@ -48,17 +48,17 @@ based on grouping by \code{STUDYID}, \code{DRUG}, \code{USUBJID}, \code{PCSPEC},
 The study types are determined as follows:
 \itemize{
 \item "Excretion Data": If the volume column for a group is not NA and has values > 0.
-\item "Single Extravascular Dose": If there is only one dose and TAU is not available,
+\item "Single Extravascular Dose": If there is only one dose and TRTRINT is not available,
 and the route is extravascular.
-\item "Single IV Infusion Dose": If there is only one dose and TAU is not present,
+\item "Single IV Infusion Dose": If there is only one dose and TRTRINT is not present,
 and the route is not extravascular.
-\item "Single IV Bolus Dose": If there is only one dose and TAU is not present,
+\item "Single IV Bolus Dose": If there is only one dose and TRTRINT is not present,
 the route is not extravascular, and ADOSEDUR == 0.
-\item "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
+\item "Multiple Extravascular Doses": If there are multiple doses (or TRTRINT is available)
 and the route is extravascular.
-\item "Multiple IV Infusion Doses": If there are multiple doses (or TAU is available)
+\item "Multiple IV Infusion Doses": If there are multiple doses (or TRTRINT is available)
 and the route is not extravascular.
-\item "Multiple IV Bolus Doses": If there are multiple doses or TAU is not present,
+\item "Multiple IV Bolus Doses": If there are multiple doses or TRTRINT is not present,
 the route is not extravascular, and ADOSEDUR == 0.
 \item If none of these conditions are met, the type is marker as "Unknown".
 }
@@ -71,7 +71,7 @@ sample_data <- data.frame(
   USUBJID = c(
     # 1. Single IV Dose subject
     "Subj-01", "Subj-01",
-    # 2. Multiple Extravascular Doses subject (identified by TAU)
+    # 2. Multiple Extravascular Doses subject (identified by TRTRINT)
     "Subj-02", "Subj-02",
     # 3. Excretion Data subject (identified by positive volume)
     "Subj-03", "Subj-03"
@@ -96,9 +96,9 @@ sample_data <- data.frame(
     NA, 0,
     10, 12       # Positive volume indicates excretion
   ),
-  TAU = c(
+  TRTRINT = c(
     NA, NA,
-    24, 24,      # ...but TAU indicates a multiple-dose regimen
+    24, 24,      # ...but TRTRINT indicates a multiple-dose regimen
     NA, NA
   )
 )
