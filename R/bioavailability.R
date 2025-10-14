@@ -58,7 +58,8 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
     names()
 
   # Extract dose information (route and dose)
-  dose_info <- res_nca$data$dose$data
+  dose_info <- res_nca$data$dose$data %>%
+    select(any_of(c(dose_group_cols, route_col, dose_col)))
 
   res_nca$result %>%
 
