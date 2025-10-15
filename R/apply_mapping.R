@@ -60,7 +60,7 @@ apply_mapping <- function(
   # Special case: If TRT is not mapped, we assume is equal to PARAM
   if (mapping$TRT == "") {
     new_dataset$TRT <- dataset[[mapping$PARAM]]
-    warning("Treatment is assumed to be the same as the analyte")
+    warning("Treatment is assumed to be the same as the analyte for all records (TRT = PARAM)")
   }
 
   # Conflictive original columns with the mapping will be removed. Warn the user

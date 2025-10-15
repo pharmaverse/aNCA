@@ -12,13 +12,13 @@ expected_df <- data.frame(
 var_labels(expected_df) <- c(
   "Unique Subject Identifier",
   "Parameter",
-  "Medication Name",
+  "Name of Treatment",
   "Analysis Value",
   "Analysis Value Unit",
   "DOSE",
   "Actual Duration of Treatment Dose",
   "Act. Rel. Time from Analyte First Dose",
-  "NCA Profile Identifier"
+  "Analysis Visit"
 )
 desired_order <- names(expected_df)
 
@@ -104,7 +104,7 @@ describe("apply_mapping", {
         mapping = mapping,
         desired_order = desired_order
       ),
-      "Drug is assumed to be the same as the analyte for all records \\(TRT = PARAM"
+      "Treatment is assumed to be the same as the analyte for all records \\(TRT = PARAM"
     )
     expect_equal(result_df, expected_df)
   })
