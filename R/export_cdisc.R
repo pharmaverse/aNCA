@@ -374,14 +374,10 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("AVISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
-        } else if ("VISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "VISIT")), sep = "-")
-        } else if (!is.null(conc_group_sp_cols)) {
+        if ("AVISIT" %in% names(.)) {
           paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
         } else {
-          NA_character_
+          paste(!!!syms(c(conc_group_sp_cols)), sep = "-")
         }
       },
       # Parameter Category
@@ -457,8 +453,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       AVALC = PPSTRESC,
       AVALU = PPSTRESU,
       PARAMCD = PPTESTCD,
-      PARAM = PPTEST,
-      AVISIT = AVISIT
+      PARAM = PPTEST
     )
 }
 
