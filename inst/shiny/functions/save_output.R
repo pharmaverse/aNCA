@@ -76,6 +76,12 @@ get_dose_esc_results <- function(
   boxplot_parameter = "AUCIFO",
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
 ) {
+  # Define column names
+  studyid_col <- "STUDYID"
+  subj_col <- o_nca$data$conc$columns$subject
+  analyte_col <- o_nca$data$conc$columns$groups$group_analyte
+  pcspec_col <- "PCSPEC"
+  profile_col <- "NCA_PROFILE"
 
   groups <- unique(o_nca$data$intervals[, group_by_vars])
   output_list <- list()
@@ -89,10 +95,10 @@ get_dose_esc_results <- function(
 
     linplot_i <- general_lineplot(
       data = d_conc_i,
-      selected_analytes = d_conc_i[["PARAM"]],
-      selected_pcspec = d_conc_i[["PCSPEC"]],
-      selected_usubjids = d_conc_i[["USUBJID"]],
-      colorby_var = "USUBJID",
+      selected_analytes = d_conc_i[[analyte_col]],
+      selected_pcspec = d_conc_i[[pcspec_col]],
+      selected_usubjids = d_conc_i[[subj_col]],
+      colorby_var = subj_col,
       facet_by = facet_vars,
       time_scale = "Whole",
       yaxis_scale = "Log",
@@ -105,10 +111,10 @@ get_dose_esc_results <- function(
 
     meanplot_i <- general_meanplot(
       data = d_conc_i,
-      selected_studyids = unique(d_conc_i[["STUDYID"]]),
-      selected_analytes = unique(d_conc_i[["PARAM"]]),
-      selected_pcspecs = unique(d_conc_i[["PCSPEC"]]),
-      selected_cycles = unique(d_conc_i[["NCA_PROFILE"]]),
+      selected_studyids = unique(d_conc_i[[studyid_col]]),
+      selected_analytes = unique(d_conc_i[[analyte_col]]),
+      selected_pcspecs = unique(d_conc_i[[pcspec_col]]),
+      selected_cycles = unique(d_conc_i[[profile_col]]),
       id_variable = facet_vars,
       groupby_var = group_by_vars,
       plot_ylog = FALSE,
@@ -118,7 +124,7 @@ get_dose_esc_results <- function(
     )
 
     stats_i <- calculate_summary_stats(
-      data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), "DOSEA")]),
+      data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
     ) %>%
       filter(
@@ -138,7 +144,7 @@ get_dose_esc_results <- function(
       res_nca = o_nca_i,
       parameter = boxplot_parameter,
       xvars = facet_vars,
-      colorvars = "PARAM",
+      colorvars = analyte_col,
       varvalstofilter = NULL,
       box = TRUE,
       plotly = FALSE
@@ -161,10 +167,10 @@ get_dose_esc_results <- function(
       lapply(function(d_conc_i) {
         general_lineplot(
           data = d_conc_i,
-          selected_analytes = d_conc_i[["PARAM"]],
-          selected_pcspec = d_conc_i[["PCSPEC"]],
-          selected_usubjids = d_conc_i[["USUBJID"]],
-          colorby_var = "USUBJID",
+          selected_analytes = d_conc_i[[analyte_col]],
+          selected_pcspec = d_conc_i[[pcspec_col]],
+          selected_usubjids = d_conc_i[[subj_col]],
+          colorby_var = subj_col,
           facet_by = facet_vars,
           time_scale = "Whole",
           yaxis_scale = "Log",
