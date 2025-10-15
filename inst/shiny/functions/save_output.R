@@ -89,7 +89,7 @@ get_dose_esc_results <- function(
 
     linplot_i <- general_lineplot(
       data = d_conc_i,
-      selected_analytes = d_conc_i[["ANALYTE"]],
+      selected_analytes = d_conc_i[["PARAM"]],
       selected_pcspec = d_conc_i[["PCSPEC"]],
       selected_usubjids = d_conc_i[["USUBJID"]],
       colorby_var = "USUBJID",
@@ -106,7 +106,7 @@ get_dose_esc_results <- function(
     meanplot_i <- general_meanplot(
       data = d_conc_i,
       selected_studyids = unique(d_conc_i[["STUDYID"]]),
-      selected_analytes = unique(d_conc_i[["ANALYTE"]]),
+      selected_analytes = unique(d_conc_i[["PARAM"]]),
       selected_pcspecs = unique(d_conc_i[["PCSPEC"]]),
       selected_cycles = unique(d_conc_i[["NCA_PROFILE"]]),
       id_variable = facet_vars,
@@ -138,7 +138,7 @@ get_dose_esc_results <- function(
       res_nca = o_nca_i,
       parameter = boxplot_parameter,
       xvars = facet_vars,
-      colorvars = "ANALYTE",
+      colorvars = "PARAM",
       varvalstofilter = NULL,
       box = TRUE,
       plotly = FALSE
@@ -161,7 +161,7 @@ get_dose_esc_results <- function(
       lapply(function(d_conc_i) {
         general_lineplot(
           data = d_conc_i,
-          selected_analytes = d_conc_i[["ANALYTE"]],
+          selected_analytes = d_conc_i[["PARAM"]],
           selected_pcspec = d_conc_i[["PCSPEC"]],
           selected_usubjids = d_conc_i[["USUBJID"]],
           colorby_var = "USUBJID",
