@@ -158,6 +158,7 @@ base::local({
     RRLTU = "hr",
     STUDYID = "S1"
   ) %>%
+    mutate(METABFL = ifelse(PARAM == "B", "Y", "N")) %>%
     # Needed for pivot_wider_pknca_results (dose_profile_duplicates)
     # TODO (Gerardo): Kill this assumption
     mutate(

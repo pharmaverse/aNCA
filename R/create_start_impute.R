@@ -33,10 +33,11 @@ create_start_impute <- function(pknca_data) {
 
   mydata_with_int <- merge(
     x = pknca_data$conc$data %>%
-      select(any_of(c(conc_group_columns, conc_column, time_column))),
+      select(any_of(c(conc_group_columns, conc_column,
+                      time_column, metabfl_column))),
     y = pknca_data$dose$data %>%
       select(any_of(c(dose_group_columns, route_column,
-                      duration_column, "DOSNOA", metabfl_column)))
+                      duration_column, "DOSNOA")))
   ) %>%
     merge(pknca_data$intervals) %>%
     filter(!!sym(time_column) >= start, !!sym(time_column) <= end) %>%
@@ -49,7 +50,7 @@ create_start_impute <- function(pknca_data) {
     mutate(
       is.first.dose = DOSNOA == 1,
       is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
-      is.metabolite = if (metabfl_column %in% names(.)) !!sym(metabfl_column) == "Y" else "N",
+      is.metabolite = if (metabfl_column %in% names(.)) !!sym(metabfl_column) == "Y" else FALSE,
       is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
                                                   time = !!sym(time_column),
                                                   time.dose = start[1],

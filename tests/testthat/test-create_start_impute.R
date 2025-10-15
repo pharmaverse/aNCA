@@ -3,8 +3,9 @@ describe("create_start_impute", {
   # Notes: This function is enforced to assume that DOSNOA was created separating intervals
   # in order to work properly
   pknca_data <- FIXTURE_PKNCA_DATA
+  pknca_data$conc$data <- pknca_data$conc$data
 
-  it("works without issue", {
+  it("runs without issues", {
     expect_no_error({
       result <- create_start_impute(pknca_data)
     })
@@ -75,29 +76,14 @@ describe("create_start_impute", {
                  "start_conc0")
   })
 
-  it("if drug column is not present, assumes is the same as analyte for imputation", {
+  it("if METABFL column is not present, imputes assuming no metabolite data", {
     # No drug but there is analyte
     mydata_with_analyte <- pknca_data
-    mydata_with_analyte$dose$data$TRT <- NULL
+    mydata_with_analyte$conc$data$METABFL <- NULL
     result_with_analyte <- create_start_impute(mydata_with_analyte)
     result_with_analyte_impute <- result_with_analyte$intervals %>%
       dplyr::filter(USUBJID == 6, DOSNOA == 1) %>%
       dplyr::pull(impute)
     expect_equal(unique(result_with_analyte_impute), "start_logslope")
-
-    # No drug and no analyte
-    ## Note: This works only if the data is not multiple analyte per subject!
-    ## ToDo (Gerardo): Is perhaps a better assumption possible?
-    mydata_no_analyte <- pknca_data
-    mydata_no_analyte$conc <- mydata_no_analyte$conc %>%
-      filter(USUBJID %in% 1:7)
-    mydata_no_analyte$dose$data$TRT <- NULL
-    mydata_no_analyte$conc$data$PARAM <- NULL
-    result_no_analyte <- create_start_impute(mydata_no_analyte)
-    # For last subject now analyte and drug are matching, should be start_logslope
-    result_no_analyte_impute <- result_no_analyte$intervals %>%
-      dplyr::filter(USUBJID == 6, DOSNOA == 1) %>%
-      dplyr::pull(impute)
-    expect_equal(unique(result_no_analyte_impute), "start_logslope")
   })
 })
