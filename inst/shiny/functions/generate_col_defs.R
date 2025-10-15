@@ -7,6 +7,9 @@
 #'
 #' @return A named list of column definitions for the reactable table.
 #'
+#' @importFrom reactable colDef
+#' @importFrom purrr imap
+#' @importFrom htmltools tags
 #' @examples
 #' \dontrun{
 #'   data <- data.frame(
@@ -20,25 +23,23 @@
 #'
 #' @export
 generate_col_defs <- function(data) {
-  # Extract labels from the dataset
-  labels <- sapply(data, function(col) attr(col, "label"))
 
-  # Generate column definitions
-  col_defs <- lapply(names(data), function(col) {
-    label <- labels[[col]]
+  imap(data, ~{
+    label <- unname(attr(.x, "label"))
+    col_name <- .y
+
     if (!is.null(label)) {
-      reactable::colDef(
+      colDef(
         html = TRUE,
-        header = htmltools::tags$span(
-          col,
+        header = tags$span(
+          col_name,
           `data-toggle` = "tooltip",
           `data-placement` = "top",
           title = label
         )
       )
     } else {
-      reactable::colDef(name = col)
+      colDef(name = col_name)
     }
-  }) |>
-    setNames(names(data))
+  })
 }
