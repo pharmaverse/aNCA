@@ -22,7 +22,7 @@
 #'   - Ordered columns as specified
 #'   - Labels applied to columns (via `apply_labels()`)
 #'   - Concentration duplicates removed based on key identifiers:
-#'   `AFRLT`, `STUDYID`, `PCSPEC`, `DRUG`, `USUBJID`, and `PARAM`
+#'   `AFRLT`, `STUDYID`, `PCSPEC`, `TRT`, `USUBJID`, and `PARAM`
 #'
 #' @details
 #' - Validates that all required columns are mapped and no duplicates exist.
@@ -57,10 +57,10 @@ apply_mapping <- function(
     new_dataset$ADOSEDUR <- 0       # TODO: Make it default in select
     warning("Dose duration is assumed to be 0  for all records (ADOSEDUR = 0)")
   }
-  # Special case: If DRUG is not mapped, we assume is equal to PARAM
-  if (mapping$DRUG == "") {
-    new_dataset$DRUG <- dataset[[mapping$PARAM]]
-    warning("Drug is assumed to be the same as the analyte for all records (DRUG = PARAM)")
+  # Special case: If TRT is not mapped, we assume is equal to PARAM
+  if (mapping$TRT == "") {
+    new_dataset$TRT <- dataset[[mapping$PARAM]]
+    warning("Treatment is assumed to be the same as the analyte")
   }
 
   # Conflictive original columns with the mapping will be removed. Warn the user
@@ -106,7 +106,7 @@ apply_mapping <- function(
   # Check there are no duplicates
   # TODO(Gerardo): This perhaps should be apart and outside of the mapping function (PKNCA obj)
   filt_duplicates_dataset <- new_dataset %>%
-    group_by(across(any_of(c("AFRLT", "STUDYID", "PCSPEC", "DRUG", "USUBJID", "PARAM")))) %>%
+    group_by(across(any_of(c("AFRLT", "STUDYID", "PCSPEC", "TRT", "USUBJID", "PARAM")))) %>%
     slice(1) %>%
     ungroup() %>%
     as.data.frame()

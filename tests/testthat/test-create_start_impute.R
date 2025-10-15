@@ -78,7 +78,7 @@ describe("create_start_impute", {
   it("if drug column is not present, assumes is the same as analyte for imputation", {
     # No drug but there is analyte
     mydata_with_analyte <- pknca_data
-    mydata_with_analyte$dose$data$DRUG <- NULL
+    mydata_with_analyte$dose$data$TRT <- NULL
     result_with_analyte <- create_start_impute(mydata_with_analyte)
     result_with_analyte_impute <- result_with_analyte$intervals %>%
       dplyr::filter(USUBJID == 6, DOSNOA == 1) %>%
@@ -91,7 +91,7 @@ describe("create_start_impute", {
     mydata_no_analyte <- pknca_data
     mydata_no_analyte$conc <- mydata_no_analyte$conc %>%
       filter(USUBJID %in% 1:7)
-    mydata_no_analyte$dose$data$DRUG <- NULL
+    mydata_no_analyte$dose$data$TRT <- NULL
     mydata_no_analyte$conc$data$PARAM <- NULL
     result_no_analyte <- create_start_impute(mydata_no_analyte)
     # For last subject now analyte and drug are matching, should be start_logslope

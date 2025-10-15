@@ -156,7 +156,7 @@ describe("pivot_wider_pknca_results", {
     expected_labels <- c(
       PCSPEC = NA, USUBJID = NA, PARAM = NA, start = NA, end = NA, AVISIT = NA,
       DOSNOA = NA, AFRLT = NA, ARRLT = NA, NFRLT = NA, NRRLT = NA, ROUTE = NA,
-      DOSEA = NA, DRUG = NA, ADOSEDUR = NA, DOSEU = NA,
+      DOSEA = NA, TRT = NA, ADOSEDUR = NA, DOSEU = NA,
       `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
       `CMAX[ng/mL]` = "Max Conc",
       `TMAX[hr]` = "Time of CMAX",

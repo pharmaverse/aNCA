@@ -6,10 +6,8 @@
 #' Must contain group columns, the specified route, analyte and drug columns,
 #' and ADOSEDUR.
 #' @param groups the grouping variables for the study type detection.
-#' @param drug_column A character string specifying the
-#'  column name for drug
-#' @param analyte_column A character string specifying the
-#'  column name for analyte
+#' @param metabfl_column A character string specifying the
+#' column name for the metabolite flag, which is coded as "Y" for metabolites
 #' @param route_column A character string specifying the
 #'  column name for the route of administration.
 #' @param volume_column A character string specifying the
@@ -19,7 +17,7 @@
 #'
 #' @details
 #' The function identifies a possible five different types of studies
-#' based on grouping by `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, and the route column.
+#' based on grouping by `STUDYID`, `TRT`, `USUBJID`, `PCSPEC`, and the route column.
 #' The study types are determined as follows:
 #'  - "Excretion Data": If the volume column for a group is not NA and has values > 0.
 #'  - "Single Extravascular Dose": If there is only one dose and TRTRINT is not available,
@@ -45,8 +43,8 @@
 #' @examples
 #' sample_data <- data.frame(
 #'   STUDYID = "STUDY001",
-#'   DRUG = "Drug",
-#'   ANALYTE = "DRUG",
+#'   TRT = "Drug",
+#'   ANALYTE = "TRT",
 #'   USUBJID = c(
 #'     # 1. Single IV Dose subject
 #'     "Subj-01", "Subj-01",
@@ -84,15 +82,15 @@
 #'
 #' study_summary <- detect_study_types(
 #'   data = sample_data,
-#'   groups = c("USUBJID", "PCSPEC", "DRUG"),
-#'   drug_column = "DRUG",
+#'   groups = c("USUBJID", "PCSPEC", "TRT"),
+#'   drug_column = "TRT",
 #'   analyte_column = "ANALYTE",
 #'   route_column = "ROUTE",
 #'   volume_column = "SAMPLE_VOLUME"
 #' )
 #'
 #' @export
-detect_study_types <- function(data, groups, drug_column, analyte_column,
+detect_study_types <- function(data, groups, metabfl_column,
                                route_column, volume_column = "volume") {
 
   full_grouping <- c(groups, route_column)
@@ -114,7 +112,7 @@ detect_study_types <- function(data, groups, drug_column, analyte_column,
            is_extravascular = !!sym(route_column) == "extravascular",
            is_bolus = !is_extravascular & ADOSEDUR == 0,
            is_excretion = (!is.na(!!sym(volume_column)) & !!sym(volume_column) > 0),
-           is_metabolite = !!sym(analyte_column) != !!sym(drug_column)) %>%
+           is_metabolite = !!sym(metabfl_column) == "Y") %>%
     ungroup()
 
   # Identify unique combinations of study types
