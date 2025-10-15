@@ -20,11 +20,11 @@
 #'
 #' @export
 generate_col_defs <- function(data) {
- # browser()
+
   imap(data, ~{
     label <- unname(attr(.x, "label"))
     col_name <- .y
-    
+
     if (!is.null(label)) {
       colDef(
         html = TRUE,
