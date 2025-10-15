@@ -7,6 +7,7 @@ ARRLT
 AUClast
 AVAL
 AVALU
+AVISIT
 Analyte
 CDISC
 Cond
@@ -52,6 +53,7 @@ STUDYID
 TLG
 TLGs
 TRT
+TRTRINT
 Tooltip
 UI
 USUBJID
@@ -96,7 +98,6 @@ rulesets
 signif
 tibble
 tidyverse
-timepoint
 timeu
 tlg
 tooltip

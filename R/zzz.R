@@ -92,6 +92,7 @@
     "Spec2_Value",
     "STUDYID",
     "TIME_DOSE",
+    "TRTRINT",
     "TYPE",
     "Type",
     "type",

@@ -7,8 +7,7 @@
 detect_study_types(
   data,
   groups,
-  drug_column,
-  analyte_column,
+  metabfl_column,
   route_column,
   volume_column = "volume"
 )
@@ -21,11 +20,8 @@ and ADOSEDUR.}
 
 \item{groups}{the grouping variables for the study type detection.}
 
-\item{drug_column}{A character string specifying the
-column name for drug}
-
-\item{analyte_column}{A character string specifying the
-column name for analyte}
+\item{metabfl_column}{A character string specifying the
+column name for the metabolite flag, which is coded as "Y" for metabolites}
 
 \item{route_column}{A character string specifying the
 column name for the route of administration.}
