@@ -7,6 +7,9 @@
 #'
 #' @return A named list of column definitions for the reactable table.
 #'
+#' @importFrom reactable colDef
+#' @importFrom purrr imap
+#' @importFrom htmltools tags
 #' @examples
 #' \dontrun{
 #'   data <- data.frame(
