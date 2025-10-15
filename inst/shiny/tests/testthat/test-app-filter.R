@@ -11,6 +11,8 @@ describe("Test for filter interface", {
     )
     app$click("data-next_step")
     app$wait_for_idle()
+    app$click("data-next_step")
+    app$wait_for_idle()
     input_initial_values <- app$get_values(input = TRUE)
 
     expect_true(length(input_initial_values[["input"]]) > 0)
@@ -23,6 +25,8 @@ describe("Test for filter interface", {
     expect_null(app$get_value(output = "data-data_filtering-filtered_data_display-table"))
     input_initial_values <- app$get_values(input = TRUE)
 
+    app$click("data-next_step")
+    app$wait_for_idle()
     app$click("data-next_step")
     app$wait_for_idle()
 

@@ -123,16 +123,16 @@ tab_data_server <- function(id) {
     )
     #' Reactive value for the processed dataset
     adnca_mapped <- column_mapping$processed_data
-    
+
     observeEvent(adnca_mapped(), {
       req(adnca_mapped())
       data_step("filtering")
       updateTabsetPanel(session, "data_navset", selected = "Filtering")
     })
-    
+
     #' Filter data
     processed_data <- data_filtering_server("data_filtering", adnca_mapped)
-    
+
     #' Global variable to store grouping variables
     grouping_variables <- column_mapping$grouping_variables
     output$processed_data_message <- renderUI({
