@@ -109,6 +109,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           # Create an output folder with all plots, tables and listings
           output_tmpdir <- file.path(tempdir(), "output")
           save_output(output = session$userData$results, output_path = output_tmpdir)
+          incProgress(0.1)
 
           # Create presentation slides
           res_nca <- res_nca()
@@ -127,18 +128,17 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           create_qmd_dose_slides(
             res_dose_slides = res_dose_slides,
             quarto_path = paste0(presentations_path, "/dose_escalation.qmd"),
-            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            title = paste0("NCA Results Slides", " (", session$userData$project_name(), ")"),
             use_plotly = TRUE
           )
-          st <- Sys.time()
+          incProgress(0.3)
           create_pptx_dose_slides(
             res_dose_slides = res_dose_slides,
             path = paste0(presentations_path, "/dose_escalation.pptx"),
-            title = paste0("Dose Escalation Slides", " (", session$userData$project_name(), ")"),
+            title = paste0("NCA Results Slides", " (", session$userData$project_name(), ")"),
             template = "www/templates/template.pptx"
           )
-          print(difftime(Sys.time(), st))
-          incProgress(0.3)
+          incProgress(0.6)
 
           # Create a settings folder
           setts_tmpdir <- file.path(output_tmpdir, "settings")
@@ -157,7 +157,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           wd <- getwd()
           on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
           setwd(output_tmpdir)
-          incProgress(0.6)
+          incProgress(0.9)
           utils::zip(zipfile = fname, files = files)
           incProgress(1)
         })
