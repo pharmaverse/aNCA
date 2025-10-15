@@ -20,25 +20,23 @@
 #'
 #' @export
 generate_col_defs <- function(data) {
-  # Extract labels from the dataset
-  labels <- sapply(data, function(col) attr(col, "label"))
-
-  # Generate column definitions
-  col_defs <- lapply(names(data), function(col) {
-    label <- labels[[col]]
+ # browser()
+  imap(data, ~{
+    label <- unname(attr(.x, "label"))
+    col_name <- .y
+    
     if (!is.null(label)) {
-      reactable::colDef(
+      colDef(
         html = TRUE,
-        header = htmltools::tags$span(
-          col,
+        header = tags$span(
+          col_name,
           `data-toggle` = "tooltip",
           `data-placement` = "top",
           title = label
         )
       )
     } else {
-      reactable::colDef(name = col)
+      colDef(name = col_name)
     }
-  }) |>
-    setNames(names(data))
+  })
 }
