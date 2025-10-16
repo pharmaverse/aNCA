@@ -8,7 +8,6 @@ inst/guidelines
 inst/templates
 inst/shiny/data
 inst/shiny/www/.sass_cache_keys
-!inst/shiny/data/DummyRO_ADNCA.csv
 !inst/shiny/data/adnca_labels.csv
 inst/shiny/log/*
 .Rprofile
