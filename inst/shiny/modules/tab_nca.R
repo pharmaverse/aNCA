@@ -15,7 +15,7 @@
 #'
 #' @param id           ID of the module.
 #' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
-#' @param grouping_vars A character vector with grouping variables for the analysis.
+#' @param extra_group_vars Column name(s) of the additional variable options for input widgets
 #'
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
@@ -62,7 +62,7 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, pknca_data) {
+tab_nca_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -72,7 +72,6 @@ tab_nca_server <- function(id, pknca_data) {
     session$userData$units_table <- reactiveVal(NULL)
 
     adnca_data <- reactive(pknca_data()$conc$data)
-    grouping_vars <- reactive(group_vars(pknca_data()$conc))
 
     # #' NCA Setup module
     nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
@@ -217,14 +216,14 @@ tab_nca_server <- function(id, pknca_data) {
 
     #' Prepares and displays the pivoted NCA results
     nca_results_server(
-      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, grouping_vars
+      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
     )
 
     #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
+    descriptive_statistics_server("descriptive_stats", res_nca, extra_group_vars)
 
     #' Additional analysis module
-    additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
+    additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)

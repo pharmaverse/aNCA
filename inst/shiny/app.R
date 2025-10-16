@@ -142,10 +142,18 @@ server <- function(input, output, session) {
   tab_data_outputs <- tab_data_server("data")
 
   # EXPLORATION ----
-  tab_explore_server("explore", tab_data_outputs$pknca_data)
+  tab_explore_server(
+    "explore",
+    tab_data_outputs$pknca_data,
+    tab_data_outputs$extra_group_vars
+  )
 
   # NCA ----
-  tab_nca_outputs <- tab_nca_server("nca", tab_data_outputs$pknca_data)
+  tab_nca_outputs <- tab_nca_server(
+    "nca",
+    tab_data_outputs$pknca_data,
+    tab_data_outputs$extra_group_vars
+  )
 
   # TLG
   tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)

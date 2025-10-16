@@ -130,7 +130,7 @@ tab_data_server <- function(id) {
       updateTabsetPanel(session, "data_navset", selected = "Preview")
     })
     #' Global variable to store grouping variables
-    grouping_variables <- column_mapping$grouping_variables
+    extra_group_vars <- column_mapping$grouping_variables
     output$processed_data_message <- renderUI({
       tryCatch(
         {
@@ -208,7 +208,8 @@ tab_data_server <- function(id) {
       bindEvent(processed_data())
 
     list(
-      pknca_data = pknca_data
+      pknca_data = pknca_data,
+      extra_group_vars = extra_group_vars
     )
   })
 }
