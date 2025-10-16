@@ -5,7 +5,7 @@ describe("detect_study_types", {
     STUDYID = "STUDY01",
     DOSETRT = "DRUG01",
     ANALYTE = "DRUG01",
-    METABFL = "N",
+    METABFL = "",
     USUBJID = "SUBJ01",
     PCSPEC = "PLASMA",
     DOSNOA = 1,
