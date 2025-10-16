@@ -161,7 +161,8 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         session,
         "colorby",
         choices = param_choices_cf,
-        selected = "USUBJID"
+        # Always select USUBJID if individual, if mean plot, select nothing
+        selected = if ("usubjid" %in% names(input)) "USUBJID" else "DOSEA"
       )
       
       updatePickerInput(

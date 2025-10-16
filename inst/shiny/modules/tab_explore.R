@@ -46,7 +46,8 @@ tab_explore_server <- function(id, data, grouping_vars) {
     mean_inputs <- plot_sidebar_server(
       "mean_sidebar",
       data = data,
-      grouping_vars = grouping_vars)
+      grouping_vars = grouping_vars
+      )
 
     # TAB: General Lineplot --------------------------------------------------------
 
