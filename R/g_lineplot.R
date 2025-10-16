@@ -13,13 +13,13 @@ g_lineplot <- function(data, x_var, y_var, group_var, ...) {
   # Set up plot labels - assumes individual plot unless mean columns are present
   is_mean_plot <- all(c("Mean", "SD", "N") %in% names(data))
   if (is_mean_plot) {
-    x_lab <- "Nominal Time"
-    y_lab <- "Mean Concentration"
-    title <- "Plot of Mean PK Concentration"
+    x_lab <- paste0("Nominal Time [", unique(data$RRLTU), "]")
+    y_lab <- paste0("Mean Concentration [", unique(data$AVALU), "]")
+    title <- "Mean PK Concentration - Time Profile"
   } else {
     x_lab <- paste0("Time [", unique(data$RRLTU), "]")
     y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
-    title <- "Plot of PK Concentration - Time Profile"
+    title <- "PK Concentration - Time Profile"
   }
   
   plt <- ggplot(data, aes(
@@ -45,8 +45,7 @@ g_lineplot <- function(data, x_var, y_var, group_var, ...) {
   
   if (args$yaxis_scale == "log") {
     plt <- plt +
-      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), labels = scales::comma) +
-      labs(y = paste("Log 10 -", y_lab))
+      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), labels = scales::comma)
   }
   
   if (!is.null(args$facet_by) && length(args$facet_by) > 0) {
@@ -57,7 +56,7 @@ g_lineplot <- function(data, x_var, y_var, group_var, ...) {
     plt <- plt + geom_hline(yintercept = args$threshold_value, linetype = "dotted", color = "red")
   }
   
-  if (isTRUE(args$show_dose) && !is_mean_plot) {
+  if (isTRUE(args$show_dose)) {
     dose_info <- args$dose_data %>%
       select(all_of(unique(c(args$facet_by, "TIME_DOSE", "DOSEA")))) %>%
       distinct() %>%

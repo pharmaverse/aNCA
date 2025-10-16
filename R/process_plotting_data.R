@@ -74,7 +74,7 @@ process_data_mean <- function(data, selected_analytes, selected_pcspec, cycle,
     mutate(
       time_var = if (time_scale == "By Dose Profile") NRRLT else NFRLT,
       color_var = interaction(!!!syms(colorby_var), sep = ", ", drop = TRUE)) %>%
-    group_by(color_var, time_var) %>%
+    group_by(color_var, time_var, RRLTU, AVALU) %>%
     summarise(
       Mean = round(mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),

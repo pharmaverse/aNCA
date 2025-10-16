@@ -90,7 +90,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     if (is_mean_plot) {
       tagList(
         checkboxInput(ns("sd_max"), label = "+SD", value = TRUE),
-        checkboxInput(ns("sd_min"), label = "-SD", value = TRUE),
+        checkboxInput(ns("sd_min"), label = "-SD", value = FALSE),
         checkboxInput(ns("ci"), label = "Show 95% CI", value = FALSE),
         helpText("Mean values are not displayed if n < 3 for a time point.")
       )

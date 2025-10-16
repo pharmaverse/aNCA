@@ -6,7 +6,6 @@ tab_explore_ui <- function(id) {
   ns <- NS(id)
 
   navset_card_pill(
-    header = "Exploratory Analysis",
     id = "visuals",
     nav_panel("Individual Plots",
               layout_sidebar(
@@ -96,10 +95,6 @@ tab_explore_server <- function(id, data, grouping_vars) {
         palette = master_palettes_list()
       ) %>%
         ggplotly(height = 1000)
-      
-      if (is.null(individual_inputs()$facetby) || length(individual_inputs()$facetby) == 0) {
-        p <- p %>% layout(xaxis = list(rangeslider = list(type = "time")))
-      }
       p
     })
 
@@ -115,6 +110,17 @@ tab_explore_server <- function(id, data, grouping_vars) {
 
     # TAB: Mean Plot -----------------------------------------------------------
 
+    mean_palettes_list <- reactive({
+      req(mean_inputs()$palette_theme)
+      req(mean_inputs()$colorby)
+
+      get_persistent_palette(
+        data(),
+        mean_inputs()$colorby,
+        palette_name = mean_inputs()$palette_theme
+      )
+    })
+    
     # Compute the meanplot object
     meanplot <- reactive({
       req(data(), mean_inputs()$param, mean_inputs()$pcspec, mean_inputs()$timescale, mean_inputs()$colorby)
@@ -129,7 +135,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         yaxis_scale = mean_inputs()$log,
         time_scale = mean_inputs()$timescale
       )
-      
+
       validate(need(nrow(processed_data) > 0, "No data with >= 3 points to calculate mean."))
       
       p <- g_lineplot(
@@ -145,10 +151,11 @@ tab_explore_server <- function(id, data, grouping_vars) {
         facet_by = mean_inputs()$facetby,
         show_threshold = mean_inputs()$show_threshold,
         threshold_value = mean_inputs()$threshold_value,
-        show_dose = mean_inputs()$show_dose
+        show_dose = mean_inputs()$show_dose,
+        dose_data = data() %>% mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)),
+        palette = mean_palettes_list()
       ) %>%
-        ggplotly(height = 1000) %>%
-        layout(xaxis = list(rangeslider = list(type = "time")))
+        ggplotly(height = 1000)
       p
     })
 
