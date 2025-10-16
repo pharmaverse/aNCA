@@ -32,7 +32,7 @@
 #' \itemize{
 #'   \item Filters the data based on the selected analytes, matrices, and subjects.
 #'   \item Selects relevant columns and removes rows with missing concentration values.
-#'   \item Converts 'USUBJID', 'AVISIT', and 'DOSEA' to factors.
+#'   \item Converts 'USUBJID', 'ATPTREF', and 'DOSEA' to factors.
 #'   \item Filters the data by cycle if `time_scale` is "By Cycle"
 #'          while creating duplicates for predose samples if needed.
 #'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
@@ -50,7 +50,7 @@
 #'                            selected_analytes = c("Analyte1", "Analyte2"),
 #'                            selected_pcspec = c("Spec1", "Spec2"),
 #'                            selected_usubjids = c("Subject1", "Subject2"),
-#'                            colorby_var = "AVISIT",
+#'                            colorby_var = "ATPTREF",
 #'                            time_scale = "By Cycle",
 #'                            yaxis_scale = "Log",
 #'                            cycle = "1",
@@ -216,17 +216,17 @@ preprocess_data_for_plot <- function(
     if ("ARRLT" %in% names(processed) && any(processed$ARRLT < 0 & processed$AFRLT > 0)) {
       processed <- dose_profile_duplicates(
         processed,
-        groups = c("USUBJID", "PCSPEC", "PARAM", "AVISIT"),
-        dosno = "AVISIT"
+        groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
+        dosno = "ATPTREF"
       )
     }
-    processed <- processed %>% filter(AVISIT %in% cycle)
+    processed <- processed %>% filter(ATPTREF %in% cycle)
   }
 
   processed %>%
     mutate(
       USUBJID = factor(USUBJID),
-      AVISIT = factor(AVISIT),
+      ATPTREF = factor(ATPTREF),
       DOSEA = factor(DOSEA),
       color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )

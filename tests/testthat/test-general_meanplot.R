@@ -5,7 +5,7 @@ sample_data <- data.frame(
   SEX = rep(rep(c("M", "F"), each = 12), times = 2),
   PARAM = rep(c("Analyte1", "Analyte 2"), each = 24),
   PCSPEC = rep(c("Spec1", "Spec2"), each = 24),
-  AVISIT = rep(1, 48),
+  ATPTREF = rep(1, 48),
   EVID = rep(0, 48),
   NRRLT = rep(1:6, 8),
   AVAL = rep(c(

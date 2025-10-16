@@ -156,7 +156,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         not_compatible <- append(not_compatible, "Analyte")
       }
 
-      if (all(settings$profile %in% unique(data()$AVISIT))) {
+      if (all(settings$profile %in% unique(data()$ATPTREF))) {
         updatePickerInput(inputId = "select_profile", selected = settings$profile)
       } else {
         not_compatible <- append(not_compatible, "NCA Profile")
@@ -266,9 +266,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       filtered_data <- data() %>%
         filter(PARAM %in% input$select_analyte,
                !is.na(PCSPEC),
-               !is.na(AVISIT)) # Filter together so there's no combinations of NAs
+               !is.na(ATPTREF)) # Filter together so there's no combinations of NAs
 
-      profile_choices <- unique(filtered_data$AVISIT) %>%
+      profile_choices <- unique(filtered_data$ATPTREF) %>%
         sort()
 
       pcspec_choices <- unique(filtered_data$PCSPEC)

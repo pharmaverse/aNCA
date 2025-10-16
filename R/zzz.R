@@ -43,7 +43,7 @@
     "ModeConv_factor",
     "ModeUnit",
     "N",
-    "AVISIT",
+    "ATPTREF",
     "NRRLT",
     "Order",
     "PARAM",

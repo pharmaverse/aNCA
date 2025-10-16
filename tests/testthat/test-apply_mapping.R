@@ -7,7 +7,7 @@ expected_df <- data.frame(
   DOSE = 1:3,
   ADOSEDUR = 0,
   AFRLT = 1:3,
-  AVISIT = factor(1:3)
+  ATPTREF = factor(1:3)
 )
 var_labels(expected_df) <- c(
   "Unique Subject Identifier",
@@ -129,11 +129,11 @@ describe("apply_mapping", {
     # NOTE: uDplicated mapped columns will conserve duplicated labels if originally present
   })
 
-  it("makes sure AVISIT is a factor", {
+  it("makes sure ATPTREF is a factor", {
     test_df <- expected_df
     mapping <- as.list(setNames(names(test_df), names(expected_df)))
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
-    expect_true(is.factor(result_df$AVISIT))
+    expect_true(is.factor(result_df$ATPTREF))
     expect_equal(result_df, expected_df)
   })
 

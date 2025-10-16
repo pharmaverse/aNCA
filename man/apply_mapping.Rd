@@ -10,7 +10,7 @@ apply_mapping(
   desired_order,
   silent = TRUE,
   req_mappings = c("USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT", "PCSPEC", "ROUTE",
-    "AVAL", "STUDYID", "AVISIT", "AVALU", "RRLTU", "DOSEU", "PARAM")
+    "AVAL", "STUDYID", "ATPTREF", "AVALU", "RRLTU", "DOSEU", "PARAM")
 )
 }
 \arguments{
@@ -51,6 +51,6 @@ and removes detected duplicate concentration records.
 \item Validates that all required columns are mapped and no duplicates exist.
 \item If \code{ADOSEDUR} is not mapped, it is assigned a value of \code{0}.
 \item Removes concentration data duplicates using all columns except \code{ARRLT}, \code{NRRLT},
-and \code{AVISIT}.
+and \code{ATPTREF}.
 }
 }

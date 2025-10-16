@@ -56,7 +56,7 @@ lambda_slope_plot <- function(
 ) {
 
   column_names <- names(row_values)
-  grouping_names <- setdiff(column_names, "AVISIT")
+  grouping_names <- setdiff(column_names, "ATPTREF")
   #Create duplicates for predose and last dose points per profile
   conc_pknca_df <- dose_profile_duplicates(conc_pknca_df, grouping_names)
   #Obtain values for slopes selection

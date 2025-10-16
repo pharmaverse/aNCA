@@ -66,12 +66,12 @@ describe("pknca_calculate_f", {
       pknca_res_ind_both_routes$result,
       pknca_res_ind_both_routes$result %>% mutate(
         ROUTE = "intravascular",
-        AVISIT = 2,
+        ATPTREF = 2,
         PPORRES = PPORRES + 1
       ),
       pknca_res_ind_both_routes$result %>% mutate(
         ROUTE = "intravascular",
-        AVISIT = 3,
+        ATPTREF = 3,
         PPORRES = PPORRES - 1
       )
     )

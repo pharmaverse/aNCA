@@ -24,7 +24,7 @@ It requires the following columns in the ADNCA data:
 \item ROUTE: Route of administration.
 \item DOSETRT: Drug identifier.
 \item USUBJID: Unique subject identifier.
-\item AVISIT: (Non- standard column). Can be any column, used for filtering the data for NCA
+\item ATPTREF: (Non- standard column). Can be any column, used for filtering the data for NCA
 \item PARAM: Analyte.
 \item AVAL: Analysis value.
 \item AVALU: AVAL unit.
@@ -54,7 +54,7 @@ PCSPEC = rep("Plasma", 6),
 ROUTE = rep("IV", 6),
 DOSETRT = rep("DrugA", 6),
 USUBJID = rep("SUBJ001", 6),
-AVISIT = rep(1, 6),
+ATPTREF = rep(1, 6),
 PARAM = rep("AnalyteA", 6),
 AVAL = c(0, 5, 10, 7, 3, 1),
 AVALU = rep("ng/mL", 6),
