@@ -211,17 +211,21 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         log_success("NCA results calculated.")
 
         # Reshape intervals, filter
-        params_not_requested <- res$data$intervals %>%
-          select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
-          # For all logical columns, mutate FALSE to NA
-          mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
-          # Only select column that are only NA
-          select(where(~ all(is.na(.x)))) %>%
-          names()
-
+        params_requested <- res$data$intervals %>%
+          # pivot for requested params
+          pivot_longer(
+            cols = (any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))),
+            names_to = "PPTESTCD",
+            values_to = "is_requested"
+            )%>%
+          # Translate terms
+          mutate( PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+          # Only select column that are TRUE
+          filter(is_requested)
+        
         # Filter for requested params based on intervals
         res$result <- res$result %>%
-          filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
+          semi_join(params_requested, by = intersect(names(.), names(params_requested)))
 
         res
       }, error = function(e) {
