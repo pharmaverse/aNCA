@@ -1,6 +1,7 @@
 # Add information for non-official CDISC mapping columns
 NON_STD_MAPPING_INFO <- data.frame(
   Variable = c("Grouping_Variables"),
+  Label = "Variables to group and summarise results",
   Order = c(100),
   Values = c(""),
   mapping_tooltip = c(
@@ -16,7 +17,7 @@ NON_STD_MAPPING_INFO <- data.frame(
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADPC") %>%
-  select(Variable, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
+  select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
   mutate(is_multiple_choice = FALSE) %>%
   bind_rows(NON_STD_MAPPING_INFO)
 
@@ -32,7 +33,7 @@ MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "AVISIT",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
   "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
-  "VOLUME", "VOLUMEU", "TRTRINT"
+  "VOLUME", "VOLUMEU", "TRTRINT", "METABFL"
 )
 
 #' Column Mapping Widget
@@ -164,9 +165,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
 
     # Loop through each label and create the renderText outputs
-    purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
-      output[[paste0("label_", label)]] <- renderText(
-        get_label(label, "ADPC")
+    purrr::walk(MAPPING_INFO$Variable, \(var) {
+      output[[paste0("label_", var)]] <- renderText(
+        MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
       )
     })
 
