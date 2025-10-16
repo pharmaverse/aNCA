@@ -26,7 +26,7 @@ example_data <- data.frame(
   STUDYID = rep("STUDY001", 6),
   PCSPEC = rep("Plasma", 6),
   ROUTE = rep("IV", 6),
-  TRT = rep("DrugA", 6),
+  DOSETRT = rep("DrugA", 6),
   USUBJID = rep("SUBJ001", 6),
   AVISIT = rep(1, 6),
   PARAM = rep("AnalyteA", 6),

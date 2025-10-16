@@ -22,7 +22,7 @@ It requires the following columns in the ADNCA data:
 \item STUDYID: Study identifier.
 \item PCSPEC: Matrix.
 \item ROUTE: Route of administration.
-\item TRT: Drug identifier.
+\item DOSETRT: Drug identifier.
 \item USUBJID: Unique subject identifier.
 \item AVISIT: (Non- standard column). Can be any column, used for filtering the data for NCA
 \item PARAM: Analyte.
@@ -40,9 +40,9 @@ It requires the following columns in the ADNCA data:
 \item Creating pk concentration data using \code{format_pkncaconc_data()}.
 \item Creating dosing data using \code{format_pkncadose_data()}.
 \item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}.
-with formula \code{AVAL ~ AFRLT | STUDYID + PCSPEC + TRT + USUBJID / PARAM}.
+with formula \code{AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM}.
 \item Creating PKNCAdose object using \code{PKNCA::PKNCAdose()}.
-with formula \code{DOSEA ~ AFRLT | STUDYID + TRT + USUBJID}.
+with formula \code{DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID}.
 \item Creating PKNCAdata object using \code{PKNCA::PKNCAdata()}.
 \item Updating units in PKNCAdata object so each analyte has its own unit.
 }
@@ -52,7 +52,7 @@ adnca_data <- data.frame(
 STUDYID = rep("STUDY001", 6),
 PCSPEC = rep("Plasma", 6),
 ROUTE = rep("IV", 6),
-TRT = rep("DrugA", 6),
+DOSETRT = rep("DrugA", 6),
 USUBJID = rep("SUBJ001", 6),
 AVISIT = rep(1, 6),
 PARAM = rep("AnalyteA", 6),

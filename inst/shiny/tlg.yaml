@@ -8,8 +8,8 @@ t_pkct01:
   type: Table
   dataset: ADPC
   pkid: pkct01
-  label: "pkct01 - Summary Conc by TRT (first dose)"
-  description: "Summary Concentration Table by TRT (from first dose)"
+  label: "pkct01 - Summary Conc by DOSETRT (first dose)"
+  description: "Summary Concentration Table by DOSETRT (from first dose)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
   fun: t_pkct01
   condition: null
@@ -30,8 +30,8 @@ t_pkct01_tad:
   type: Table
   dataset: ADPC
   pkid: pkct01
-  label: "pkct01 - Summary Conc by TRT (TAD)"
-  description: "Summary Concentration Table by TRT (from most recent dose)"
+  label: "pkct01 - Summary Conc by DOSETRT (TAD)"
+  description: "Summary Concentration Table by DOSETRT (from most recent dose)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
   fun: t_pkct01_tad
   condition: null
@@ -65,7 +65,7 @@ t_pkpt03_MP_col:
   dataset: ADPP
   pkid: pkpt03
   label: "pkpt03 - Summary M/P Ratios (stats in cols)"
-  description: "Summary of metabolite to parent ratios by TRT [stats in columns]"
+  description: "Summary of metabolite to parent ratios by DOSETRT [stats in columns]"
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
   fun: t_pkpt03_MP_col
   condition: null
@@ -228,7 +228,7 @@ l_pkpl01_mp:
   dataset: ADPP
   pkid: pkpl01
   label: "pkpl01 - M/P Ratio Listing"
-  description: "Individual listings of metabolite to parent ratios vs. TRT, by TRT/dose (Metabolite/Parent Ratio as header names)"
+  description: "Individual listings of metabolite to parent ratios vs. DOSETRT, by DOSETRT/dose (Metabolite/Parent Ratio as header names)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
   fun: l_pkpl01_mp
   condition: null
@@ -239,7 +239,7 @@ l_pkpl04_mp:
   dataset: ADPP
   pkid: pkpl04
   label: "pkpl04 - Treatment Ratio Listing"
-  description: "Individual listing of treatment ratios for selected PK parameters, by TRT"
+  description: "Individual listing of treatment ratios for selected PK parameters, by DOSETRT"
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl04.html
   fun: l_pkpl04_mp
   condition: null
@@ -360,7 +360,7 @@ g_pkcg02_lin:
   dataset: ADPC
   pkid: pkcg02
   label: "pkcg02 - Combined Linear"
-  description: "Combined plot of concentrations vs. time (over laid by cohort/TRT/dose/patient/subject)"
+  description: "Combined plot of concentrations vs. time (over laid by cohort/DOSETRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_lin
   condition: null
@@ -372,7 +372,7 @@ g_pkcg02_log:
   dataset: ADPC
   pkid: pkcg02
   label: "pkcg02 - Combined Log"
-  description: "Combined plot of concentrations vs. time in Log Scale (over laid by cohort/TRT/dose/patient/subject)"
+  description: "Combined plot of concentrations vs. time in Log Scale (over laid by cohort/DOSETRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
   condition: null
@@ -384,7 +384,7 @@ g_pkcg02_sbs:
   dataset: ADPC
   pkid: pkcg02
   label: "pkcg02 - Combined Side-by-Side"
-  description: "Side-by-Side Linear and Log scale plots of concentration vs. time (over laid by cohort/TRT/dose/patient/subject)"
+  description: "Side-by-Side Linear and Log scale plots of concentration vs. time (over laid by cohort/DOSETRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
   condition: null
@@ -532,7 +532,7 @@ p_pkpg06_mp:
   dataset: ADPP
   pkid: pkpg06
   label: "pkpg06 - Boxplot Metabolite/Parent Ratios"
-  description: "Boxplots for Metabolite/Parent ratios by TRT"
+  description: "Boxplots for Metabolite/Parent ratios by DOSETRT"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
   fun: p_pkpg06_mp
   condition: null

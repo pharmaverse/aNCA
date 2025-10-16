@@ -17,7 +17,7 @@
 #'
 #' @details
 #' The function identifies a possible five different types of studies
-#' based on grouping by `STUDYID`, `TRT`, `USUBJID`, `PCSPEC`, and the route column.
+#' based on grouping by `STUDYID`, `DOSETRT`, `USUBJID`, `PCSPEC`, and the route column.
 #' The study types are determined as follows:
 #'  - "Excretion Data": If the volume column for a group is not NA and has values > 0.
 #'  - "Single Extravascular Dose": If there is only one dose and TRTRINT is not available,
@@ -43,8 +43,8 @@
 #' @examples
 #' sample_data <- data.frame(
 #'   STUDYID = "STUDY001",
-#'   TRT = "Drug",
-#'   ANALYTE = "TRT",
+#'   DOSETRT = "Drug",
+#'   ANALYTE = "DOSETRT",
 #'   USUBJID = c(
 #'     # 1. Single IV Dose subject
 #'     "Subj-01", "Subj-01",
@@ -82,8 +82,8 @@
 #'
 #' study_summary <- detect_study_types(
 #'   data = sample_data,
-#'   groups = c("USUBJID", "PCSPEC", "TRT"),
-#'   drug_column = "TRT",
+#'   groups = c("USUBJID", "PCSPEC", "DOSETRT"),
+#'   drug_column = "DOSETRT",
 #'   analyte_column = "ANALYTE",
 #'   route_column = "ROUTE",
 #'   volume_column = "SAMPLE_VOLUME"

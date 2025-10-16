@@ -3,7 +3,7 @@ simple_data <- data.frame(
   STUDYID = rep("STUDY001", 6),
   PCSPEC = rep("Plasma", 6),
   ROUTE = rep("IV", 6),
-  TRT = rep("DrugA", 6),
+  DOSETRT = rep("DrugA", 6),
   USUBJID = rep("SUBJ001", 6),
   AVISIT = rep(1, 6),
   PARAM = rep("AnalyteA", 6),
@@ -23,7 +23,7 @@ multiple_data <- data.frame(
   STUDYID = rep("STUDY002", 12),
   PCSPEC = rep("Plasma", 12),
   ROUTE = rep("IV", 12),
-  TRT = rep("DrugB", 12),
+  DOSETRT = rep("DrugB", 12),
   USUBJID = rep(rep(c("SUBJ002", "SUBJ003"), each = 6)),
   AVISIT = rep(1, 12),
   PARAM = rep(c("AnalyteX", "AnalyteY"), each = 6),
@@ -207,14 +207,14 @@ describe("PKNCA_update_data_object", {
     # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
     auc_intervals <- updated_data$intervals  %>%
       dplyr::filter(type_interval == "manual") %>%
-      dplyr::select(start, end, STUDYID, TRT, USUBJID, PARAM,
+      dplyr::select(start, end, STUDYID, DOSETRT, USUBJID, PARAM,
                     AVISIT, auclast, aucint.last, tmax)
 
     expected_res <- tidyr::tibble(
       start = c(0, 1, 2),
       end = c(1, 2, 3),
       STUDYID = rep("STUDY001", 3),
-      TRT = rep("DrugA", 3),
+      DOSETRT = rep("DrugA", 3),
       USUBJID = rep("SUBJ001", 3),
       PARAM = rep("AnalyteA", 3),
       AVISIT = rep(1, 3),

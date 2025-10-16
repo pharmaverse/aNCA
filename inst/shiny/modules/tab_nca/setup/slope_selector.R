@@ -136,7 +136,7 @@ slope_selector_server <- function( # nolint
         purrr::list_c() %>%
         append(c("AVISIT", "DOSNOA")) %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "TRT" && length(unique(pknca_data()$conc$data[[col]])) > 1
+          !is.null(col) && col != "DOSETRT" && length(unique(pknca_data()$conc$data[[col]])) > 1
         })
     })
 

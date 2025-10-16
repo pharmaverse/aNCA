@@ -40,7 +40,7 @@ This function detects the type of study based on the provided data.
 }
 \details{
 The function identifies a possible five different types of studies
-based on grouping by \code{STUDYID}, \code{TRT}, \code{USUBJID}, \code{PCSPEC}, and the route column.
+based on grouping by \code{STUDYID}, \code{DOSETRT}, \code{USUBJID}, \code{PCSPEC}, and the route column.
 The study types are determined as follows:
 \itemize{
 \item "Excretion Data": If the volume column for a group is not NA and has values > 0.
@@ -62,8 +62,8 @@ the route is not extravascular, and ADOSEDUR == 0.
 \examples{
 sample_data <- data.frame(
   STUDYID = "STUDY001",
-  TRT = "Drug",
-  ANALYTE = "TRT",
+  DOSETRT = "Drug",
+  ANALYTE = "DOSETRT",
   USUBJID = c(
     # 1. Single IV Dose subject
     "Subj-01", "Subj-01",
@@ -101,8 +101,8 @@ sample_data <- data.frame(
 
 study_summary <- detect_study_types(
   data = sample_data,
-  groups = c("USUBJID", "PCSPEC", "TRT"),
-  drug_column = "TRT",
+  groups = c("USUBJID", "PCSPEC", "DOSETRT"),
+  drug_column = "DOSETRT",
   analyte_column = "ANALYTE",
   route_column = "ROUTE",
   volume_column = "SAMPLE_VOLUME"

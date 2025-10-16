@@ -3,7 +3,7 @@ describe("detect_study_types", {
   # Create a base data frame.
   base_data <- data.frame(
     STUDYID = "STUDY01",
-    TRT = "DRUG01",
+    DOSETRT = "DRUG01",
     ANALYTE = "DRUG01",
     METABFL = "N",
     USUBJID = "SUBJ01",
@@ -15,7 +15,7 @@ describe("detect_study_types", {
     ADOSEDUR = 0
   )
 
-  groups <- c("TRT", "ANALYTE", "USUBJID", "PCSPEC")
+  groups <- c("DOSETRT", "ANALYTE", "USUBJID", "PCSPEC")
   # --- Test each study type classification ---
 
   it("correctly identifies a 'Single IV Bolus Dose' study", {

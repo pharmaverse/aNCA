@@ -1,7 +1,7 @@
 expected_df <- data.frame(
   USUBJID = 1:3,
   PARAM = "A",
-  TRT = "A",
+  DOSETRT = "A",
   AVAL = 1:3,
   AVALU = "ng/mL",
   DOSE = 1:3,
@@ -95,16 +95,16 @@ describe("apply_mapping", {
     expect_equal(result_df, expected_df)
   })
 
-  it("adds TRT = PARAM if not mapped and warns the user", {
-    mapping["TRT"] <- ""
-    test_df <- test_df[, !names(expected_df) %in% "TRT"]
+  it("adds DOSETRT = PARAM if not mapped and warns the user", {
+    mapping["DOSETRT"] <- ""
+    test_df <- test_df[, !names(expected_df) %in% "DOSETRT"]
     expect_warning(
       result_df <- apply_mapping(
         dataset = test_df,
         mapping = mapping,
         desired_order = desired_order
       ),
-      "Treatment is assumed to be the same as the analyte for all records \\(TRT = PARAM"
+      "Treatment is assumed to be the same as the analyte for all records \\(DOSETRT = PARAM"
     )
     expect_equal(result_df, expected_df)
   })
@@ -123,7 +123,7 @@ describe("apply_mapping", {
   })
 
   it("allows duplicated mappings", {
-    mapping["PARAM"] <- mapping["TRT"]
+    mapping["PARAM"] <- mapping["DOSETRT"]
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df[, names(result_df) != "analyte"], expected_df, ignore_attr = TRUE)
     # NOTE: uDplicated mapped columns will conserve duplicated labels if originally present
@@ -138,10 +138,10 @@ describe("apply_mapping", {
   })
 
   it("warns the user about columns lost after mapping due to column name conflicts", {
-    test_df$TRT <- "Medication A"
+    test_df$DOSETRT <- "Medication A"
     expect_warning(
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
-      "Conflictive column names between input and mapping names are removed: TRT"
+      "Conflictive column names between input and mapping names are removed: DOSETRT"
     )
   })
 })

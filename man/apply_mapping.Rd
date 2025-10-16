@@ -36,7 +36,7 @@ A transformed data frame with:
 \item Ordered columns as specified
 \item Labels applied to columns (via \code{apply_labels()})
 \item Concentration duplicates removed based on key identifiers:
-\code{AFRLT}, \code{STUDYID}, \code{PCSPEC}, \code{TRT}, \code{USUBJID}, and \code{PARAM}
+\code{AFRLT}, \code{STUDYID}, \code{PCSPEC}, \code{DOSETRT}, \code{USUBJID}, and \code{PARAM}
 }
 }
 \description{

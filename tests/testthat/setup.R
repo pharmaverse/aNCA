@@ -229,7 +229,7 @@ base::local({
       10,             # 8.1 (A,B)
       5               # 8.2 (A,B)
     ),
-    TRT = "A",
+    DOSETRT = "A",
     ADOSEDUR = c(
       rep(0, 6),
       1,            # 5.1 (Infusion)

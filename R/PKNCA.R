@@ -6,7 +6,7 @@
 #' - STUDYID: Study identifier.
 #' - PCSPEC: Matrix.
 #' - ROUTE: Route of administration.
-#' - TRT: Drug identifier.
+#' - DOSETRT: Drug identifier.
 #' - USUBJID: Unique subject identifier.
 #' - AVISIT: (Non- standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
@@ -23,9 +23,9 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + TRT + USUBJID / PARAM`.
+#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ AFRLT | STUDYID + TRT + USUBJID`.
+#' with formula `DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
@@ -38,7 +38,7 @@
 #' STUDYID = rep("STUDY001", 6),
 #' PCSPEC = rep("Plasma", 6),
 #' ROUTE = rep("IV", 6),
-#' TRT = rep("DrugA", 6),
+#' DOSETRT = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
 #' AVISIT = rep(1, 6),
 #' PARAM = rep("AnalyteA", 6),
@@ -62,7 +62,7 @@
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
-  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "TRT"))
+  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
   dosno_column <- "AVISIT"
@@ -73,7 +73,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   volume_column <- "VOLUME"
   conc_column <- "AVAL"
   studyid_column <- "STUDYID"
-  drug_column <- "TRT"
+  drug_column <- "DOSETRT"
 
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
@@ -336,7 +336,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'   STUDYID = rep("STUDY001", 6),
 #'   PCSPEC = rep("Plasma", 6),
 #'   ROUTE = rep("IV", 6),
-#'   TRT = rep("DrugA", 6),
+#'   DOSETRT = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
 #'   AVISIT = rep(1, 6),
 #'   PARAM = rep("AnalyteA", 6),

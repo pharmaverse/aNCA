@@ -31,7 +31,7 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "AVISIT",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "TRT", "DOSEA", "DOSEU", "ADOSEDUR",
+  "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
   "VOLUME", "VOLUMEU", "TRTRINT"
 )
 
@@ -239,10 +239,10 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     df_duplicates <- reactive({
       req(mapped_data)
       mapped_data() %>%
-        group_by(AFRLT, STUDYID, PCSPEC, TRT, USUBJID, PARAM) %>%
+        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
         filter(n() > 1) %>%
         ungroup() %>%
-        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, TRT, USUBJID, PARAM, sep = "_"))
+        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM, sep = "_"))
     })
 
     processed_data <- reactive({
@@ -289,7 +289,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           class = "modal-duplicates",
           tagList(
             p("The following rows are duplicates based on TIME, STUDYID,
-              PCSPEC, TRT, USUBJID, PARAM."),
+              PCSPEC, DOSETRT, USUBJID, PARAM."),
             p("Please select the rows you would like to KEEP.
               Rows not selected will be flagged and filtered."),
             p("Alternatively, click 'Cancel' to discard the changes,
