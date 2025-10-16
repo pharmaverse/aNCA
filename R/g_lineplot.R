@@ -72,7 +72,10 @@ g_lineplot <- function(data, x_var, y_var, group_var, ...) {
       plt <- plt + geom_errorbar(aes(ymin = ymin_val, ymax = ymax_val), width = 0.4)
     }
     if (isTRUE(args$show_ci)) {
-      plt <- plt + geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3)
+      plt <- plt +
+        geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3) +
+        guides(fill = "none") +
+        labs(color = paste0(paste(args$colorby_var, collapse = ", "), " (95% CI)"))
     }
   }
   

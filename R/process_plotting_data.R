@@ -25,7 +25,6 @@ process_data_individual <- function(data, selected_usubjids, selected_analytes, 
   }
   
   if (time_scale == "By Dose Profile") {
-    browser()
     if ("ARRLT" %in% names(processed) && any(processed$ARRLT < 0 & processed$AFRLT > 0)) {
       processed <- dose_profile_duplicates(
         processed,
