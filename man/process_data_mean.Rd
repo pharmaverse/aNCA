@@ -10,6 +10,7 @@ process_data_mean(
   selected_pcspec,
   cycle,
   colorby_var,
+  facetby_var = NULL,
   yaxis_scale,
   time_scale
 )
@@ -20,6 +21,8 @@ process_data_mean(
 \item{selected_analytes, selected_pcspec, cycle}{Inputs for filtering.}
 
 \item{colorby_var}{The variable(s) to group and color by.}
+
+\item{facetby_var}{The variable(s) to facet by.}
 
 \item{yaxis_scale}{String, either "log" or "lin".}
 

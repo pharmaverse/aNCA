@@ -132,6 +132,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         selected_pcspec = mean_inputs()$pcspec,
         cycle = mean_inputs()$profiles,
         colorby_var = mean_inputs()$colorby,
+        facetby_var = mean_inputs()$facetby,
         yaxis_scale = mean_inputs()$log,
         time_scale = mean_inputs()$timescale
       )

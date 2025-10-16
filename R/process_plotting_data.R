@@ -50,12 +50,14 @@ process_data_individual <- function(data, selected_usubjids, selected_analytes, 
 #' @param data Raw data frame.
 #' @param selected_analytes,selected_pcspec,cycle Inputs for filtering.
 #' @param colorby_var The variable(s) to group and color by.
+#' @param facetby_var The variable(s) to facet by.
 #' @param yaxis_scale String, either "log" or "lin".
 #' @param time_scale String, either "All Time" or "By Dose Profile"
 #' @returns A summarized data.frame with mean, SD, and CI values.
 #' @export
 process_data_mean <- function(data, selected_analytes, selected_pcspec, cycle,
-                              colorby_var, yaxis_scale, time_scale) {
+                              colorby_var, facetby_var =  NULL, yaxis_scale, time_scale) {
+
   # Pre-filter the data
   processed <- data %>%
     filter(
@@ -73,7 +75,8 @@ process_data_mean <- function(data, selected_analytes, selected_pcspec, cycle,
     mutate(
       time_var = if (time_scale == "By Dose Profile") NRRLT else NFRLT,
       color_var = interaction(!!!syms(colorby_var), sep = ", ", drop = TRUE)) %>%
-    group_by(color_var, time_var, RRLTU, AVALU) %>%
+    # gruop by facetby_vars if not null
+    group_by(color_var, time_var, !!!syms(facetby_var), RRLTU, AVALU) %>%
     summarise(
       Mean = round(mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),
