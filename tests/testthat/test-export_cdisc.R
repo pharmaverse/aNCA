@@ -235,26 +235,26 @@ describe("export_cdisc", {
   })
 
   it("derives PPGRPID correctly, using ATPTREF and/or PARAM, PCSPEC.", {
-    test_no_ATPTREF <- test_pknca_res
+    test_no_atptref <- test_pknca_res
     test_no_param_pcspec <- test_pknca_res
 
-    test_no_ATPTREF$data$conc$data <- test_no_ATPTREF$data$conc$data %>%
+    test_no_atptref$data$conc$data <- test_no_atptref$data$conc$data %>%
       select(-any_of("ATPTREF"))
-    test_no_ATPTREF$data$dose$data <- test_no_ATPTREF$data$dose$data %>%
+    test_no_atptref$data$dose$data <- test_no_atptref$data$dose$data %>%
       select(-any_of("ATPTREF"))
-    test_no_ATPTREF$result <- test_no_ATPTREF$result %>%
+    test_no_atptref$result <- test_no_atptref$result %>%
       select(-any_of("ATPTREF"))
 
     test_no_param_pcspec$data$conc$data <- test_no_param_pcspec$data$conc$data %>%
       select(-any_of(c("PCSPEC")))
     test_no_param_pcspec$data$dose$data <- test_no_param_pcspec$data$dose$data %>%
       select(-any_of(c("PCSPEC")))
-    test_no_param_pcspec$result <- test_no_ATPTREF$result %>%
+    test_no_param_pcspec$result <- test_no_atptref$result %>%
       select(-any_of(c("PCSPEC")))
     test_no_param_pcspec$data$conc$columns$groups$group_vars <- "USUBJID"
 
     res <- export_cdisc(test_pknca_res)
-    res_no_ATPTREF <- export_cdisc(test_no_ATPTREF)
+    res_no_atptref <- export_cdisc(test_no_atptref)
     res_no_param_pcspec <- export_cdisc(test_no_param_pcspec)
 
     # Check that PPGRPID is derived correctly
@@ -275,7 +275,7 @@ describe("export_cdisc", {
       arrange(!!!syms(c(group_dose_cols, "start", "end", "PPTESTCD")))
 
     expect_equal(res$pp$PPGRPID, exp_grpid$GRPID_REGULAR, ignore_attr = TRUE)
-    expect_equal(res_no_ATPTREF$pp$PPGRPID, exp_grpid$GRPID_NO_ATPTREF, ignore_attr = TRUE)
+    expect_equal(res_no_atptref$pp$PPGRPID, exp_grpid$GRPID_NO_ATPTREF, ignore_attr = TRUE)
   })
 
   it("does not derive SUBJID if not present with USUBJID, STUDYID", {

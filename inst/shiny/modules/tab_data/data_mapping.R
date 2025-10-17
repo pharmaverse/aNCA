@@ -180,7 +180,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
-      
+
       # Exception: If by default VOLUME is not mapped, then neither is VOLUMEU
       if (input$select_VOLUME == "") {
         updateSelectizeInput(session, "select_VOLUMEU", selected = "")
@@ -192,7 +192,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
       selected_metab <- if ("METABFL" %in% names(adnca_data())) {
-        unique(adnca_data()[adnca_data()$METABFL == "Y",][[param_col]])
+        unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
       } else {
         NULL
       }
@@ -226,23 +226,23 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       names(mapping_) <- gsub("select_", "", names(mapping_))
 
       tryCatch({
-        apply_mapping(
-          adnca_data(),
-          mapping_,
-          MAPPING_DESIRED_ORDER,
-          silent = FALSE
-        ) %>%
-        create_metabfl(input$select_Metabolites)
+        adnca_data() %>%
+          apply_mapping(
+            mapping_,
+            MAPPING_DESIRED_ORDER,
+            silent = FALSE
+          ) %>%
+          create_metabfl(input$select_Metabolites)
       }, warning = function(w) {
         withCallingHandlers(
           {
-            apply_mapping(
-              adnca_data(),
-              mapping_,
-              MAPPING_DESIRED_ORDER,
-              silent = FALSE
-            ) %>%
-            create_metabfl(input$select_Metabolites)
+            adnca_data() %>%
+              apply_mapping(
+                mapping_,
+                MAPPING_DESIRED_ORDER,
+                silent = FALSE
+              ) %>%
+              create_metabfl(input$select_Metabolites)
           },
           warning = function(w) {
             log_warn(conditionMessage(w))

@@ -136,13 +136,11 @@ apply_mapping <- function(
 }
 
 #' Create METABFL Column Based on Selected Metabolites
-#' @param dataset A data frame containing the raw data to be transformed.
-#' @param Pmetabolites A character vector of parameter names representing metabolites.
+#' @param dataset A data frame containing a dataset with a PARAM (parameter) column.
+#' @param metabolites A character vector of parameter names representing metabolites.
+#' @importFrom dplyr mutate
 #' @returns The input dataset with an additional METABFL column indicating metabolite records ("Y")
 #' or non-metabolite records ("").
 create_metabfl <- function(dataset, metabolites) {
-  dataset %>%
-  mutate(
-    METABFL = ifelse(PARAM %in% metabolites, "Y", "")
-  )
+  mutate(dataset, METABFL = ifelse(PARAM %in% metabolites, "Y", ""))
 }
