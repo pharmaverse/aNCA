@@ -24,7 +24,8 @@ MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADPC") %>%
   select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
   mutate(is_multiple_choice = FALSE) %>%
-  bind_rows(NON_STD_MAPPING_INFO)
+  bind_rows(NON_STD_MAPPING_INFO) %>%
+  arrange(Order)
 
 MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
 sections_order <- c(
