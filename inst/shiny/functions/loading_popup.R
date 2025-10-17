@@ -13,6 +13,6 @@ loading_popup <- function(text = "Loading...") {
     modal_body,
     title = span(text, id = "loading-title"),
     footer = NULL,
-    size = "m"
+    size = "s"
   ))
 }
