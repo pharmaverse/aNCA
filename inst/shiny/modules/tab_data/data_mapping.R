@@ -1,17 +1,22 @@
 # Add information for non-official CDISC mapping columns
 NON_STD_MAPPING_INFO <- data.frame(
-  Variable = c("Grouping_Variables"),
-  Label = "Variables to group and summarise results",
-  Order = c(100),
-  Values = c(""),
+  Variable = c("Grouping_Variables", "Metabolites"),
+  Label = c("Variables to group and summarise results", "PARAM values to flag as metabolites"),
+  Order = c(100, 16),
+  Values = c("", ""),
   mapping_tooltip = c(
-    "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')"
+    "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
+    paste0(
+      "Choose the PARAM values to flag as metabolites of the drug parent (METABFL = 'Y'). ",
+      "If empty is assumed that all PARAM correspond to the parent drug (METABFL = 'N')"
+    )
   ),
-  mapping_section = c("Supplemental Variables"),
+  mapping_section = c("Supplemental Variables", "Sample Variables"),
   mapping_alternatives = c(
-    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP"
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP",
+    ""
   ),
-  is_multiple_choice = c(TRUE)
+  is_multiple_choice = c(TRUE, TRUE)
 )
 
 # Make an unique dataset with all the variables for the mapping
@@ -175,11 +180,26 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
-
+      
       # Exception: If by default VOLUME is not mapped, then neither is VOLUMEU
       if (input$select_VOLUME == "") {
         updateSelectizeInput(session, "select_VOLUMEU", selected = "")
       }
+    })
+    # Populate the dynamic input Metabolites
+    observe({
+      req(input$select_PARAM != "")
+      param_col <- input$select_PARAM
+      choices_metab <- unique(adnca_data()[[param_col]])
+      selected_metab <- if ("METABFL" %in% names(adnca_data())) {
+        unique(adnca_data()[adnca_data()$METABFL == "Y",][[param_col]])
+      } else {
+        NULL
+      }
+      updateSelectizeInput(
+        session, "select_Metabolites",
+        choices = choices_metab, selected = selected_metab
+      )
     })
 
     # Observe submit button click and update processed_data
@@ -211,7 +231,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           mapping_,
           MAPPING_DESIRED_ORDER,
           silent = FALSE
-        )
+        ) %>%
+        create_metabfl(input$select_Metabolites)
       }, warning = function(w) {
         withCallingHandlers(
           {
@@ -220,7 +241,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
               mapping_,
               MAPPING_DESIRED_ORDER,
               silent = FALSE
-            )
+            ) %>%
+            create_metabfl(input$select_Metabolites)
           },
           warning = function(w) {
             log_warn(conditionMessage(w))
@@ -280,7 +302,6 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       }
       # Don't return anything until duplicates are resolved
       return(NULL)
-
     })
 
     observeEvent(duplicates(), {

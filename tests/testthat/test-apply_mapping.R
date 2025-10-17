@@ -18,7 +18,7 @@ var_labels(expected_df) <- c(
   "DOSE",
   "Actual Duration of Treatment Dose",
   "Act. Rel. Time from Analyte First Dose",
-  "Analysis Visit"
+  "Analysis Timepoint Reference"
 )
 desired_order <- names(expected_df)
 
@@ -143,5 +143,34 @@ describe("apply_mapping", {
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
       "Conflictive column names between input and mapping names are removed: DOSETRT"
     )
+  })
+})
+
+describe("create_metabflag", {
+  it("creates the METABFL if indicates the metabolites", {
+    test_df <- data.frame(
+      USUBJID = 1:6,
+      PARAM = c("A", "B", "M1", "M2", "C", "M1"),
+      AVAL = c(10, 20, 5, 3, 15, 7)
+    )
+    expected_df <- test_df %>%
+      mutate(METABFL = c("", "", "Y", "Y", "", "Y"))
+    result_df <- create_metabfl(test_df, c("M1", "M2"))
+    expect_equal(result_df, expected_df)
+  })
+  it("creates an empty METABFL if no metabolites are indicated", {
+    test_df <- data.frame(
+      USUBJID = 1:3,
+      PARAM = c("A", "B", "C"),
+      AVAL = c(10, 20, 15)
+    )
+    expected_df <- test_df %>%
+      mutate(METABFL = c("", "", ""))
+    result_df <- create_metabfl(test_df, character(0))
+    result_df2 <- create_metabfl(test_df, "")
+    result_df3 <- create_metabfl(test_df, NULL)
+    expect_equal(result_df, expected_df)
+    expect_equal(result_df2, expected_df)
+    expect_equal(result_df3, expected_df)
   })
 })

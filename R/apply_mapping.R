@@ -50,7 +50,7 @@ apply_mapping <- function(
 
   ####### TODO (Gerardo): This would be better to be explicit outside the function
   # Grouping_Variables should not be renamed
-  mapping <- mapping[names(mapping) != "Grouping_Variables"] # TODO: Don't include in mapping arg
+  mapping <- mapping[!names(mapping) %in% c("Grouping_Variables", "Metabolites")]
 
   # Special case: If ADOSEDUR is not mapped, we assume is 0
   if (is.null(mapping$ADOSEDUR)) {
@@ -133,4 +133,16 @@ apply_mapping <- function(
   if (any(missing_maps %in% req_mappings)) {
     stop("Unmapped required columns detected: ", paste0(missing_maps, collapse = ", "))
   }
+}
+
+#' Create METABFL Column Based on Selected Metabolites
+#' @param dataset A data frame containing the raw data to be transformed.
+#' @param Pmetabolites A character vector of parameter names representing metabolites.
+#' @returns The input dataset with an additional METABFL column indicating metabolite records ("Y")
+#' or non-metabolite records ("").
+create_metabfl <- function(dataset, metabolites) {
+  dataset %>%
+  mutate(
+    METABFL = ifelse(PARAM %in% metabolites, "Y", "")
+  )
 }
