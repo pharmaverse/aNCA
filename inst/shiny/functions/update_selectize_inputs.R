@@ -11,7 +11,7 @@
 #' @details
 #' This function updates the selectize inputs in the Shiny session based on the
 #' provided column names and manual units. It handles special cases for
-#' `Grouping_Variables`, `NCA_PROFILE`, and units columns. It also
+#' `Grouping_Variables`, `ATPTREF`, and units columns. It also
 #' ensures that the selectize inputs are populated with the correct choices and
 #' selected values based on the current dataset.
 #'
