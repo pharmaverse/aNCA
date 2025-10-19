@@ -1,7 +1,7 @@
 adpc <- FIXTURE_CONC_DATA %>%
   filter(USUBJID %in% unique(USUBJID)[1:3]) %>%
   mutate(USUBJID = as.character(USUBJID),
-         DOSNO = as.character(NCA_PROFILE),
+         DOSNOP = as.character(NCA_PROFILE),
          TRT01A = "Dummy Treatment")
 
 attr(adpc$USUBJID, "label") <- "Subject ID"
@@ -81,7 +81,7 @@ describe("pkcg01", {
       subtitle = "Custom Subtitle",
       footnote = "Custom Footnote",
       plotly = FALSE,
-      color_var = "DOSNO",
+      color_var = "DOSNOP",
       color_var_label  = "Nominal Dose" # discuss this with G.R
     )
     plot_lin_colors <- plots_lin_colors[[2]]
@@ -138,7 +138,13 @@ describe("g_pkcg01_log", {
 
 describe("pkcg02", {
   it("generates valid ggplots with LIN scale", {
-    combined_plots_lin <- pkcg02(adpc, scale = "LIN", plotly = FALSE)
+    combined_plots_lin <- pkcg02(
+      adpc,
+      scale = "LIN",
+      plotly = FALSE,
+      color = "USUBJID",
+      color_var_label =  attr(adpc$USUBJID, "label")
+    )
     expect_equal(length(combined_plots_lin), 2)
     vdiffr::expect_doppelganger("combined_lin_plot1", combined_plots_lin[[1]])
     vdiffr::expect_doppelganger("combined_lin_plot2", combined_plots_lin[[2]])
@@ -153,7 +159,13 @@ describe("pkcg02", {
   })
 
   it("generates valid ggplots with LOG scale", {
-    combined_plots_log <- pkcg02(adpc, scale = "LOG", plotly = FALSE)
+    combined_plots_log <- pkcg02(
+      adpc,
+      scale = "LOG",
+      plotly = FALSE,
+      color = "USUBJID",
+      color_var_label =  attr(adpc$USUBJID, "label")
+    )
     expect_equal(length(combined_plots_log), 2)
     vdiffr::expect_doppelganger("combined_log_plot1", combined_plots_log[[1]])
     vdiffr::expect_doppelganger("combined_log_plot2", combined_plots_log[[2]])
@@ -208,7 +220,7 @@ describe("pkcg02", {
       subtitle = "Custom Subtitle",
       footnote = "Custom Footnote",
       plotly = FALSE,
-      color_var = "DOSNO",
+      color_var = "DOSNOP",
       color_var_label = "Nominal Dose"
     )
 
@@ -253,15 +265,22 @@ describe("pkcg02", {
 
 describe("g_pkcg02_lin", {
   it("generates plot with linear scale", {
-    g_pkcg02_lin <- g_pkcg02_lin(adpc, plotly = FALSE)[[1]]
-    expect_equal(g_pkcg02_lin$labels$y, "Analysis value [ng/mL]")
+    g_pkcg02_lin <- g_pkcg02_lin(adpc,
+                                 plotly = FALSE,
+                                 color = "USUBJID",
+                                 color_var_label =  attr(adpc$USUBJID, "label"))[[1]]
+    expect_equal(g_pkcg02_lin$labels$y, "Analysis value [ng/mL]"
+    )
     vdiffr::expect_doppelganger("g_pkconc_lin_plot", g_pkcg02_lin)
   })
 })
 
 describe("g_pkcg02_log", {
   it("generates plot with log scale", {
-    g_pkcg02_log <- g_pkcg02_log(adpc, plotly = FALSE)[[1]]
+    g_pkcg02_log <- g_pkcg02_log(adpc,
+                                 plotly = FALSE,
+                                 color = "USUBJID",
+                                 color_var_label =  attr(adpc$USUBJID, "label"))[[1]]
     expect_equal(g_pkcg02_log$labels$y, "Analysis value [ng/mL]")
     vdiffr::expect_doppelganger("g_pkconc_log_plot", g_pkcg02_log)
   })

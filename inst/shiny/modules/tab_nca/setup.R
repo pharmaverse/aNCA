@@ -40,7 +40,14 @@ setup_ui <- function(id) {
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
-      settings_ui(ns("nca_settings"))
+      settings_ui(ns("nca_settings")),
+      accordion(
+        accordion_panel(
+          title = "Ratio Calculations",
+          ratios_table_ui(ns("ratio_calculations_table"))
+        ),
+        open = c("General Settings", "Parameter Selection")
+      )
     ),
     nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
     nav_panel("Summary", summary_ui(ns("nca_setup_summary")))
@@ -49,11 +56,19 @@ setup_ui <- function(id) {
 
 setup_server <- function(id, data, adnca_data) {
   moduleServer(id, function(input, output, session) {
+
+    imported_settings <- reactive({
+      req(input$settings_upload)
+      readRDS(input$settings_upload$datapath)
+    })
+
+    settings_override <- reactive(imported_settings()$settings)
+    manual_slopes_override <- reactive(imported_settings()$slope_rules)
+
     # Gather all settings from the appropriate module
     settings <- settings_server("nca_settings", data, adnca_data, settings_override)
 
     # Create processed data object with applied settings.
-
     processed_pknca_data <- reactive({
       req(adnca_data(), settings())
       log_trace("Updating PKNCA::data object.")
@@ -86,6 +101,18 @@ setup_server <- function(id, data, adnca_data) {
       }
 
       processed_pknca_data
+    })
+
+    # Keep the post processing ratio calculations requested by the user
+    ratio_table <- ratios_table_server(
+      id = "ratio_calculations_table",
+      adnca_data = processed_pknca_data
+    )
+
+    # Automatically update the units table when settings are uploaded.
+    observeEvent(settings_override(), {
+      req(settings_override()$units)
+      session$userData$units_table(settings_override()$units)
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
@@ -123,23 +150,18 @@ setup_server <- function(id, data, adnca_data) {
 
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
-      filename = paste0("aNCA_settings_", Sys.Date(), ".rds"),
+      filename = function() {
+        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
+      },
       content = function(con) {
         saveRDS(list(settings = settings(), slope_rules = slope_rules$manual_slopes()), con)
       }
     )
 
-    imported_settings <- reactive({
-      req(input$settings_upload)
-      readRDS(input$settings_upload$datapath)
-    })
-
-    settings_override <- reactive(imported_settings()$settings)
-    manual_slopes_override <- reactive(imported_settings()$slope_rules)
-
     list(
       processed_pknca_data = processed_pknca_data,
       settings = settings,
+      ratio_table = ratio_table,
       slope_rules = slope_rules
     )
   })

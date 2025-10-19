@@ -64,9 +64,11 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
 
     # Standardize units to the most frequent one within the groups (or first otherwise)
     mutate(
-      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE, useNA = "ifany"))[1],
-      ModeConv_factor = as.numeric(names(sort(table(conv_factor),
-                                              decreasing = TRUE, useNA = "ifany"))[1]),
+      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE, useNA = "ifany")[1])[1]
+    ) %>%
+    ungroup() %>%
+    mutate(
+      ModeConv_factor = get_conversion_factor(PPORRESU, ModeUnit),
       PPSTRES = PPORRES * ModeConv_factor,
       PPTESTCD = ifelse(
         ModeUnit == "",
@@ -75,6 +77,9 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
       ),
       PPSTRES_log = log(ifelse(PPSTRES > 0, PPSTRES, NA_real_)),
     ) %>%
+
+    # Group by the input groups and the parameter test codes
+    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
 
     # Calculate summary statistics
     summarise(

@@ -154,8 +154,8 @@ describe("pivot_wider_pknca_results", {
   it("adds appropriate labels to columns (CDISC PPTEST)", {
     labels <- formatters::var_labels(pivoted_res)
     expected_labels <- c(
-      USUBJID = NA, PARAM = NA, start = NA, end = NA, NCA_PROFILE = NA, DOSNOA = NA,
-      AFRLT = NA, ARRLT = NA, NFRLT = NA, NRRLT = NA, ROUTE = NA,
+      PCSPEC = NA, USUBJID = NA, PARAM = NA, start = NA, end = NA, NCA_PROFILE = NA,
+      DOSNOA = NA, AFRLT = NA, ARRLT = NA, NFRLT = NA, NRRLT = NA, ROUTE = NA,
       DOSEA = NA, DRUG = NA, ADOSEDUR = NA, DOSEU = NA,
       `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
       `CMAX[ng/mL]` = "Max Conc",
@@ -166,6 +166,7 @@ describe("pivot_wider_pknca_results", {
       `R2` = "R Squared",
       `R2ADJ` = "R Squared Adjusted",
       `LAMZLL[hr]` = "Lambda z Lower Limit",
+      `LAMZUL[hr]` = "Lambda z Upper Limit",
       `LAMZNPT[count]` = "Number of Points for Lambda z",
       `CLSTP[ng/mL]` = "Clast pred",
       `LAMZHL[hr]` = "Half-Life Lambda z",
@@ -196,5 +197,14 @@ describe("pivot_wider_pknca_results", {
     # Check that rows without exclude values have NA in the Exclude column
     exclude_values_na <- result %>% filter(USUBJID == 2 & NCA_PROFILE == 2) %>% pull(Exclude)
     expect_true(all(is.na(exclude_values_na)))
+  })
+  it("excludes the presence of the column PPANMETH", {
+    res_with_ppanmeth <- pknca_res
+    res_with_ppanmeth$PPANMETH <- "Analysis Method 1"
+
+    # Apply pivot_wider_pknca_results
+    result <- pivot_wider_pknca_results(res_with_ppanmeth)
+
+    expect_false("PPANMETH" %in% result)
   })
 })

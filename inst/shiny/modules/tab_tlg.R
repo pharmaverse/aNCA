@@ -39,6 +39,15 @@
     setNames(names(defs))
 }
 
+js_close_button <- tags$button(
+  type = "button",
+  onclick = "$(this).closest('.modal').modal('hide');",
+  `aria-label` = "Close",
+  # Style updated for color and size
+  style = "color: white; border: none; background: transparent; font-size: 1.2em; padding: 0;",
+  icon("times")
+)
+
 tab_tlg_ui <- function(id) {
   ns <- NS(id)
 
@@ -54,14 +63,7 @@ tab_tlg_ui <- function(id) {
           actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
         )
       ),
-      card(
-        DTOutput(ns("selected_tlg_table"))
-      ),
-      card(
-        div(
-          actionButton(ns("submit_tlg_order_alt"), "Submit Order Details", class = "btn-primary")
-        )
-      )
+      card(reactable_ui(ns("selected_tlg_table"))),
     ),
     nav_panel("Tables", "To be added"),
     nav_panel("Listings", uiOutput(ns("listings"), class = "tlg-module"), value = "Listings"),
@@ -82,12 +84,18 @@ tab_tlg_server <- function(id, data) {
       purrr::map_dfr(.TLG_DEFINITIONS, ~ dplyr::tibble(
         Selection = .x$is_default,
         Type = .x$type,
-        Dataset = .x$dataset,
-        PKid = paste0("<a href='", .x$link, "' target='_blank'>", .x$pkid, "</a>"),
+        Dataset = case_when(
+          .x$dataset == "ADPC" ~ "PK Concentrations",
+          .x$dataset == "ADPP" ~ "PK Parameters",
+          TRUE ~ .x$dataset
+        ),
+        PKid = .x$pkid,
+        Output = paste0("<a href='", .x$link, "' target='_blank'>", .x$description, "</a>"),
+        Label = .x$label,
         Description = .x$description,
+        Condition = .x$condition,
         Footnote = NA_character_,
         Stratification = NA_character_,
-        Condition = NA_character_,
         Comment = NA_character_
       )) %>%
         dplyr::mutate(id = dplyr::row_number(), .before = dplyr::everything())
@@ -96,90 +104,61 @@ tab_tlg_server <- function(id, data) {
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
     observeEvent(list(tlg_order(), data()), {
       req(data())
-      column_of_conditions <- gsub("([=<>!].*)", "", tlg_order()$Condition)
 
-      new_tlg_order <- tlg_order() %>%
-        mutate(
-          Selection = case_when(
-            Condition == "" | is.na(Condition) ~ Selection,
-            !column_of_conditions %in% names(data()) ~ FALSE,
-            sum(eval(parse(text = Condition), envir = data())) > 0 ~ TRUE,
-            TRUE ~ FALSE
+      # Unparsable conditions will be ignored
+      new_tlg_order <- tryCatch({
+        tlg_order() %>%
+          mutate(
+            Selection = case_when(
+              Condition == "" | is.na(Condition) | is.null(Condition) ~ Selection,
+              any(unique(toupper(data()$conc$data$PCSPEC)) %in% Condition) ~ TRUE,
+              TRUE ~ Selection
+            )
           )
-        )
+      }, error = function(e) {
+        tlg_order()
+      })
 
       tlg_order(new_tlg_order)
     })
 
-    # Render the TLG list for the user's inspection
-    output$selected_tlg_table <- DT::renderDT({
-      log_trace("Rendering TLG table.")
-      datatable(
-        class = "table table-striped table-bordered",
-        data = dplyr::filter(tlg_order(), Selection),
-        editable = list(
-          target = "cell",
-          disable = list(
-            columns = which(!names(tlg_order()) %in% c("Footnote", "Stratification", "Comment"))
-          )
-        ),
-        rownames = TRUE,
-        escape = FALSE,
-        selection = list(
-          mode = "multiple"
-        ),
-        extensions = c("RowGroup"),
-        options = list(
-          paging = FALSE,
-          searching = TRUE,
-          autoWidth = TRUE,
-          dom = "ft",
-          columnDefs = list(
-            list(width = "150px", targets = "_all"),
-            list(className = "dt-center", targets = "_all"),
-            list(
-              visible = FALSE,
-              targets = c(
-                0,
-                which(!names(tlg_order()) %in% c(
-                  "Type", "Dataset", "PKid", "Label", "Footnote", "Stratification", "Comment"
-                ))
-              )
-            )
-          ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset")))
-        )
-      ) %>%
-        formatStyle(
-          columns = colnames(tlg_order()),
-          fontSize = "14px",
-          fontFamily = "Arial"
-        )
-    }, server = FALSE)
+    displayed_order <- reactive({
+      dplyr::filter(tlg_order(), Selection) %>%
+        dplyr::select(-id, -Selection)
+    }) |>
+      bindEvent(data(), input$confirm_add_tlg, input$remove_tlg)
 
-    # Save table changes from the UI into the server
-    observeEvent(input$selected_tlg_table_cell_edit, {
-      info <- input$selected_tlg_table_cell_edit
+    selected_tlg_state <- reactable_server(
+      "selected_tlg_table",
+      displayed_order,
+      download_buttons = c("csv", "xlsx"),
+      groupBy = c("Type", "Dataset"),
+      defaultExpanded = TRUE,
+      wrap = TRUE,
+      selection = "multiple",
+      editable = c("Footnote", "Stratification", "Condition", "Comment"),
+      columns = list(
+        Output = colDef(html = TRUE)
+      )
+    )
+
+    observeEvent(selected_tlg_state()$edit(), {
+      info <- selected_tlg_state()$edit()
 
       new_tlg_order <- tlg_order()
-      new_tlg_order[new_tlg_order$Selection, ][info$row, info$col] <- info$value
+      new_tlg_order[new_tlg_order$Selection, ][info$row, info$column] <- info$value
       tlg_order(new_tlg_order)
     })
 
     # Show modal when the add_tlg button is pressed
     observeEvent(input$add_tlg, {
       showModal(modalDialog(
-        title = tagList(
-          span("Add TLGs to Order"),
-          tags$button(
-            type = "button",
-            class = "close",
-            `data-dismiss` = "modal",
-            `aria-label` = "Close",
-            span(`aria-hidden` = "true", HTML("&times;"))
-          )
+        title = div(
+          "Add TLGs to Order",
+          js_close_button,
+          style = "position: relative;"
         ),
-        DTOutput(session$ns("modal_tlg_table")),
+        reactable_ui(session$ns("modal_tlg_table")),
         footer = tagList(
           modalButton("Close"),
           actionButton(session$ns("confirm_add_tlg"), "Add TLGs to Order")
@@ -188,40 +167,26 @@ tab_tlg_server <- function(id, data) {
       ))
     })
 
-    # Render the DT table in the modal
-    output$modal_tlg_table <- DT::renderDT({
-      datatable(
-        data = dplyr::filter(tlg_order(), !Selection),
-        selection = list(mode = "multiple"),
-        escape = FALSE,
-        editable = FALSE,
-        class = "table table-striped table-bordered",
-        extensions = c("RowGroup", "Select"),
-        options = list(
-          paging = FALSE,
-          searching = TRUE,
-          autoWidth = TRUE,
-          dom = "ft",
-          columnDefs = list(
-            list(
-              visible = FALSE,
-              targets = which(!names(tlg_order()) %in% c("Type", "Dataset", "PKid", "Label"))
-            ),
-            list(targets = 0, orderable = FALSE, className = "select-checkbox")
-          ),
-          select = list(
-            style = "multiple",
-            selector = "td:first-child",
-            server = FALSE
-          ),
-          rowGroup = list(dataSrc = which(names(tlg_order()) %in% c("Type", "Dataset")))
-        )
+    modal_tlg_state <- reactable_server(
+      "modal_tlg_table",
+      reactive({
+        dplyr::filter(tlg_order(), !Selection) %>%
+          dplyr::select(-id, -Selection, -Footnote, -Stratification, -Condition, -Comment)
+      }),
+      download_buttons = c("csv", "xlsx"),
+      groupBy = c("Type", "Dataset"),
+      wrap = TRUE,
+      selection = "multiple",
+      defaultExpanded = TRUE,
+      width = "775px", # fit to the modal width
+      columns = list(
+        PKid = colDef(html = TRUE)
       )
-    })
+    )
 
     # Update the Selection column when the confirm_add_tlg button is pressed
     observeEvent(input$confirm_add_tlg, {
-      selected_rows <- input$modal_tlg_table_rows_selected
+      selected_rows <- modal_tlg_state()$selected
       if (length(selected_rows) > 0) {
         tlg_order_data <- tlg_order()
         tlg_order_data$Selection[!tlg_order_data$Selection][selected_rows] <- TRUE
@@ -232,7 +197,7 @@ tab_tlg_server <- function(id, data) {
 
     # Update the Selection column when the remove_tlg button is pressed
     observeEvent(input$remove_tlg, {
-      selected_rows <- input$selected_tlg_table_rows_selected
+      selected_rows <- selected_tlg_state()$selected
       if (length(selected_rows) > 0) {
         tlg_order_data <- tlg_order()
         tlg_order_data$Selection[tlg_order_data$Selection][selected_rows] <- FALSE
@@ -242,14 +207,14 @@ tab_tlg_server <- function(id, data) {
 
     # Toggle submit button depending on whether the data is available #
     observeEvent(data(), ignoreInit = FALSE, ignoreNULL = FALSE, {
-      shinyjs::toggleState("submit_tlg_order", !is.null(data()))
-      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()))
+      shinyjs::toggleState("submit_tlg_order", !is.null(data()$conc$data))
+      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()$conc$data))
     })
 
     #' change tab to first populated tab
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
-    observeEvent(list(input$submit_tlg_order, input$submit_tlg_order_alt), ignoreInit = TRUE, {
+    observeEvent(list(input$submit_tlg_order), ignoreInit = TRUE, {
       tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) |> paste0("s")
       shinyjs::runjs(
         paste0("
@@ -267,12 +232,13 @@ tab_tlg_server <- function(id, data) {
     # Submit the TLG order, filter selected TLGs
     tlg_order_filtered <- reactive({
       req(data())
+      print(tlg_order())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
       tlg_order_filt
     }) |>
-      bindEvent(c(input$submit_tlg_order, input$submit_tlg_order_alt))
+      bindEvent(c(input$submit_tlg_order))
 
     # Create and render Graph interface and modules
     output$graphs <- renderUI({

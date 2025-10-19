@@ -48,7 +48,7 @@ descriptive_statistics_ui <- function(id) {
       )
     ),
     card(
-      reactableOutput(ns("descriptive_stats"))
+      reactable_ui(ns("descriptive_stats"))
     ),
     card(
       downloadButton(ns("download_summary"), "Download the NCA Summary Data")
@@ -104,11 +104,14 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     summary_stats_filtered <- reactive({
       summary_stats() %>%
         select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
-        filter(Statistic %in% input$select_display_statistic)
+        filter(Statistic %in% input$select_display_statistic) %>%
+        apply_labels()
     })
 
     observeEvent(summary_stats(), {
       req(summary_stats())
+
+      session$userData$results$nca_results$descriptive_statistics <- summary_stats()
 
       # Update the select display parameters picker input
       updatePickerInput(
@@ -128,30 +131,24 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     })
 
     # Render the reactive summary table in a data table
-    output$descriptive_stats <- renderReactable({
-      req(summary_stats_filtered())
-      log_trace("Rendering descriptive statistics table")
-
-      reactable(
-        summary_stats_filtered(),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE
-      )
-    })
+    reactable_server(
+      "descriptive_stats",
+      summary_stats_filtered,
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered()))),
+      defaultPageSize = 10,
+      striped = TRUE,
+      bordered = TRUE,
+      compact = TRUE,
+      style = list(fontSize = "0.75em")
+    )
 
     # Download summary statistics as CSV
     output$download_summary <- downloadHandler(
       filename = function() {
         paste0(
-          format(Sys.time(), "%Y-%m-%d"), "_",
-          summary_stats_filtered()$STUDYID[1],
-          "_NCA_summary.csv"
+          session$userData$project_name(), "-",
+          "NCA_summary_",
+          format(Sys.time(), "%Y-%m-%d"), ".csv"
         )
       },
       content = function(file) {

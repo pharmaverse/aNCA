@@ -8,48 +8,76 @@
 #'
 summary_ui <- function(id) {
   ns <- NS(id)
-  reactableOutput(ns("nca_intervals_summary"))
+  tagList(
+    p("The following study types were detected in the data:"),
+    reactable_ui(ns("study_types")),
+    reactable_ui(ns("nca_intervals_summary"))
+  )
 }
 
 summary_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
-    output$nca_intervals_summary <- renderReactable({
+    summary_data <- reactive({
       req(processed_pknca_data())
 
+      conc_group_columns <- group_vars(processed_pknca_data()$conc)
+      dose_group_columns <- group_vars(processed_pknca_data()$dose)
+
       data <- processed_pknca_data()$intervals %>%
-        apply_labels(LABELS, "ADPC") %>%
-        select(where(~!is.logical(.) | any(. == TRUE)))
-
-      route_column <- "ROUTE"
-      std_route_column <- "std_route"
-      col_groups <- unname(unlist(processed_pknca_data()$dose$columns$groups))
-
-      data <- data %>%
-        left_join(
-          processed_pknca_data()$dose$data %>%
-            select(all_of(c(
-              col_groups, route_column, std_route_column, "TIME_DOSE", "NCA_PROFILE", "DOSNOA"
-            ))),
-          by = c(col_groups, "TIME_DOSE", "NCA_PROFILE", "DOSNOA")
-        ) %>%
-        group_by(across(all_of(unname(unlist(processed_pknca_data()$dose$columns$groups))))) %>%
-        arrange(!!!syms(unname(unlist(processed_pknca_data()$conc$columns$groups))), TIME_DOSE) %>%
-        mutate(start = start - TIME_DOSE, end = end - TIME_DOSE) %>%
-        select(!!!syms(colnames(data)), all_of(c(route_column, std_route_column)))
-
-      reactable(
-        data,
-        columns = generate_col_defs(data),
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = TRUE,
-        resizable = TRUE,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "98vh"
-      )
+        apply_labels(type = "ADPC") %>%
+        select(where(~!is.logical(.) | any(. == TRUE))) %>%
+        arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
     })
+
+    study_types_df <- reactive({
+      req(processed_pknca_data())
+
+      conc_group_columns <- group_vars(processed_pknca_data()$conc)
+      dose_group_columns <- group_vars(processed_pknca_data()$dose)
+      group_columns <- unique(c(conc_group_columns, dose_group_columns))
+
+      groups <- group_columns %>%
+        purrr::keep(\(col) {
+          !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
+        })
+
+      detect_study_types(processed_pknca_data()$conc$data,
+                         groups,
+                         drug_column = "DRUG",
+                         analyte_column = processed_pknca_data()$conc$columns$groups$group_analyte,
+                         route_column = processed_pknca_data()$dose$columns$route,
+                         volume_column = processed_pknca_data()$conc$columns$volume)
+    })
+
+    study_types_summary <- reactive({
+      req(study_types_df())
+
+      conc_group_columns <- group_vars(processed_pknca_data()$conc)
+      dose_group_columns <- group_vars(processed_pknca_data()$dose)
+      group_columns <- unique(c(conc_group_columns, dose_group_columns))
+
+      groups <- group_columns %>%
+        purrr::keep(\(col) {
+          !is.null(col) && col != "USUBJID" &&
+            length(unique(processed_pknca_data()$conc$data[[col]])) > 1
+        })
+
+      study_types_df()  %>%
+        #summarise each unique type and group with number of USUBJID
+        group_by(!!!syms(groups), type) %>%
+        summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
+    })
+
+    reactable_server(
+      "study_types",
+      study_types_summary,
+      height = "28vh"
+    )
+
+    reactable_server(
+      "nca_intervals_summary",
+      summary_data,
+      height = "48vh"
+    )
   })
 }

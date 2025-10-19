@@ -13,18 +13,20 @@ MANUAL_UNITS <- list(
 
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE", "Grouping_Variables"),
+  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
-  "Dose Variables" = c("DRUG", "DOSEA", "ADOSEDUR"),
+  "Dose Variables" = c("DRUG", "DOSEA"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
-  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU")
+  "Unit Variables" = c("AVALU", "DOSEU", "RRLTU"),
+  "Supplemental Variables" = c("Grouping_Variables", "TAU", "ADOSEDUR", "VOLUME", "VOLUMEU")
 )
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR"
+  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR",
+  "VOLUME", "VOLUMEU", "TAU"
 )
 
 #' Column Mapping Widget
@@ -112,7 +114,6 @@ data_mapping_ui <- function(id) {
   ns <- NS(id)
 
   div(
-    stepper_ui("Mapping"),
     card(
       div(
         class = "data-mapping-container",
@@ -136,25 +137,6 @@ data_mapping_ui <- function(id) {
             "NCA_PROFILE",
             "Select the column you want to use for selecting the NCA profiles."
           ),
-          div(
-            class = "column-mapping-row",
-            tooltip(
-              selectizeInput(
-                ns("select_Grouping_Variables"),
-                "",
-                choices = NULL,
-                multiple = TRUE,
-                options = list(placeholder = "Select Column(s)"),
-                width = "40%"
-              ),
-              "Select the additional column(s) that will be used to group the data 
-              in the outputs. E.g. Treatment Arm, Age, Sex, Race"
-            ),
-            div(
-              class = "column-mapping-output",
-              span("Additional Grouping Variables")
-            )
-          )
         ),
         tags$section(
           h5("Sample Variables"),
@@ -170,11 +152,6 @@ data_mapping_ui <- function(id) {
             "Character format, stating either 'intravascular' or 'extravascular'."
           ),
           .column_mapping_widget(ns, "DOSEA", "Numeric format."),
-          .column_mapping_widget(
-            ns, "ADOSEDUR",
-            "Numeric format. Only required for infusion studies,
-            otherwise select NA"
-          )
         ),
         tags$section(
           h5("Time Variables"),
@@ -189,13 +166,45 @@ data_mapping_ui <- function(id) {
           .column_mapping_widget(ns, "DOSEU", "Character format."),
           .column_mapping_widget(ns, "RRLTU", "Character format.")
         ),
-        input_task_button(ns("submit_columns"), "Submit Mapping")
+        tags$section(
+          h5("Supplemental Variables"),
+          div(
+            class = "column-mapping-row",
+            tooltip(
+              selectizeInput(
+                ns("select_Grouping_Variables"),
+                "",
+                choices = NULL,
+                multiple = TRUE,
+                options = list(placeholder = "Select Column(s)"),
+                width = "40%"
+              ),
+              "Select the additional column(s) that will be used to group the data 
+                      in the outputs. E.g. Treatment Arm, Age, Sex, Race"
+            ),
+            div(
+              class = "column-mapping-output",
+              span("Additional Grouping Variables")
+            )
+          ),
+          .column_mapping_widget(
+            ns, "ADOSEDUR",
+            "Numeric format. Only required for infusion studies."
+          ),
+          .column_mapping_widget(ns, "VOLUME", "Numeric format.
+                                 Only required for urine/excretion studies."),
+          .column_mapping_widget(ns, "VOLUMEU", "Character format.
+                                 Only required for urine/excretion studies."),
+          .column_mapping_widget(ns, "TAU", "Numeric Format. Optional for multiple dose studies.
+                                 Can be actual Tau or planned Tau (TRTINT).
+                                 Assumed to have same units as RRTLU")
+        )
       )
     )
   )
 }
 
-data_mapping_server <- function(id, adnca_data) {
+data_mapping_server <- function(id, adnca_data, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -206,7 +215,9 @@ data_mapping_server <- function(id, adnca_data) {
 
     # Loop through each label and create the renderText outputs
     purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
-      output[[paste0("label_", label)]] <- renderText(get_label(LABELS, label, "ADPC"))
+      output[[paste0("label_", label)]] <- renderText(
+        get_label(label, "ADPC")
+      )
     })
 
     # Populate the static inputs with column names
@@ -217,20 +228,62 @@ data_mapping_server <- function(id, adnca_data) {
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
-      input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
-      input_ids <- c(input_ids, "select_Grouping_Variables") # Include manually added input
-      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
-      mapping_list
+      all_input_ids <- unlist(lapply(MAPPING_COLUMN_GROUPS, \(cols) paste0("select_", cols)))
+      mapping_list <- setNames(lapply(all_input_ids, \(id) input[[id]]), all_input_ids)
+
+      supplemental_ids <- unlist(lapply(
+        MAPPING_COLUMN_GROUPS$`Supplemental Variables`,
+        \(cols) paste0("select_", cols)
+      ))
+
+      # Get the names to keep
+      names_to_keep <- names(mapping_list) |>
+        keep(\(name) {
+          # The logical condition with the any() fix
+          !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
+        })
+
+      # Subset the list with the final names
+      mapping_list[names_to_keep]
+
     })
 
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
-      apply_column_mapping(adnca_data(), mapping(),
-                           MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
-                           MAPPING_DESIRED_ORDER)
+
+      mapping_ <- mapping()
+      names(mapping_) <- gsub("select_", "", names(mapping_))
+
+      tryCatch({
+        apply_mapping(
+          adnca_data(),
+          mapping_,
+          MAPPING_DESIRED_ORDER,
+          silent = FALSE
+        )
+      }, warning = function(w) {
+        withCallingHandlers(
+          {
+            apply_mapping(
+              adnca_data(),
+              mapping_,
+              MAPPING_DESIRED_ORDER,
+              silent = FALSE
+            )
+          },
+          warning = function(w) {
+            log_warn(conditionMessage(w))
+            showNotification(conditionMessage(w), type = "warning", duration = 10)
+          }
+        )
+      }, error = function(e) {
+        log_error(conditionMessage(e))
+        showNotification(conditionMessage(e), type = "error", duration = NULL)
+        NULL
+      })
     }) |>
-      bindEvent(input$submit_columns)
+      bindEvent(trigger(), ignoreInit = TRUE)
 
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
@@ -324,10 +377,13 @@ data_mapping_server <- function(id, adnca_data) {
         onClick = "select",
         compact = TRUE,
         wrap = FALSE,
-        resizable = TRUE
+        resizable = TRUE,
+        showPageSizeOptions = TRUE,
+        pageSizeOptions = c(10, 25, 50, 100, nrow(df_duplicates())),
+        defaultPageSize = 10,
+        style = list(fontSize = "0.75em")
       )
     })
-
     list(
       processed_data = processed_data,
       grouping_variables = reactive(input$select_Grouping_Variables)

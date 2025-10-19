@@ -23,9 +23,9 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
+#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ TIME | STUDYID + DRUG + USUBJID`.
+#' with formula `DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
@@ -54,6 +54,11 @@
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
+#' @importFrom dplyr filter select arrange across
+#' @importFrom purrr pmap_chr
+#' @importFrom units set_units deparse_unit
+#' @importFrom stats as.formula
+#'
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
@@ -65,7 +70,22 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
+  volume_column <- "VOLUME"
+  conc_column <- "AVAL"
+  studyid_column <- "STUDYID"
+  drug_column <- "DRUG"
+
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
+
+  conc_formula <-
+    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" |> # nolint
+    glue::glue() |>
+    as.formula()
+
+  dose_formula <-
+        "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" |> # nolint
+    glue::glue() |>
+    as.formula()
 
   #Filter out flagged duplicates if DFLAG column available
   if ("DFLAG" %in% colnames(adnca_data)) {
@@ -95,32 +115,43 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     )
   }
 
-  # Create dosing data
-  df_dose <- format_pkncadose_data(
-    pkncaconc_data = df_conc,
-    group_columns = c(group_columns, usubjid_column)
-  )
-
   # Set default settings
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- NA
   df_conc$exclude_half.life <- FALSE
 
-  # Create PKNCA objects
-  pknca_conc <- PKNCA::PKNCAconc(
-    df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+  # Create PKNCA conc object
+
+  # ensure units are correct for excretion calculations
+  df_conc <- convert_volume_units(df_conc)
+
+  args_list <- list(
+    data = df_conc,
+    formula = conc_formula,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
     concu = "AVALU",
-    timeu = "RRLTU"
+    timeu = "RRLTU",
+    amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL
+  )
+
+  if ("VOLUME" %in% colnames(df_conc)) {
+    args_list$volume <- volume_column
+  }
+
+  pknca_conc <- do.call(PKNCA::PKNCAconc, args_list)
+
+  # Create dosing data
+  df_dose <- format_pkncadose_data(
+    pkncaconc_data = df_conc,
+    group_columns = c(group_columns, usubjid_column)
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
+    formula = dose_formula,
     route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR",
@@ -212,7 +243,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     auc.method = method,
     conc.blq = blq_imputation_rule,
     progress = FALSE,
-    keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval"),
+    keep_interval_cols = c(
+      "NCA_PROFILE", "DOSNOA", "type_interval",
+      adnca_data$dose$columns$route, "ROUTE"
+    ),
     min.hl.r.squared = 0.01
   )
 
@@ -222,7 +256,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     pknca_dose = data$dose,
     params = params,
     start_from_last_dose = should_impute_c0
-  )
+  ) %>%
+    # Join route information
+    left_join(
+      select(
+        adnca_data$dose$data,
+        any_of(c(group_vars(adnca_data$dose), adnca_data$dose$columns$route, "ROUTE"))
+      ) %>% unique(),
+      by = group_vars(adnca_data$dose)
+    )
 
   # Apply filtering
   data$intervals <- data$intervals %>%
@@ -262,11 +304,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     data <- create_start_impute(data)
 
     # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- pknca_cdisc_terms %>%
+    params_auc_dep <- metadata_nca_parameters %>%
       filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
       pull(PKNCA)
 
-    params_not_to_impute <- pknca_cdisc_terms %>%
+    params_not_to_impute <- metadata_nca_parameters %>%
       filter(!grepl("auc|aumc", PKNCA),
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
       pull(PKNCA) |>
@@ -348,20 +390,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
-    # Use standard CDISC unit names
-    # TODO (Gerardo): When PKNCA changes these unit names, remove this part
-    mutate(
-      PPORRESU = case_when(
-        PPORRESU == "unitless" ~ "",
-        PPORRESU == "fraction" ~ "fraction of 1",
-        TRUE ~ PPORRESU
-      ),
-      PPSTRESU = case_when(
-        PPSTRESU == "unitless" ~ "",
-        PPSTRESU == "fraction" ~ "fraction of 1",
-        TRUE ~ PPSTRESU
-      )
-    ) %>%
+
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
@@ -650,21 +679,26 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' For any parameter that is not aucpext.obs or aucpext.pred it applies a minimum threshold,
 #' and for aucpext.obs and aucpext.pred it applies a maximum threshold.
 #' @importFrom PKNCA exclude
-
+#' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
-
   for (param in names(rules)) {
-    if (startsWith(param, "aucpext")) {
-      exc_fun <- exclude_nca_by_param(
+    if (startsWith(param, "AUCPE")) {
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         max_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps(
+            translate_terms(gsub("PE", "IF", param), "PPTESTCD", "PKNCA")
+          )
+        )
       )
     } else {
-      exc_fun <- exclude_nca_by_param(
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         min_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps("half.life")
+        )
       )
     }
     res <- PKNCA::exclude(res, FUN = exc_fun)

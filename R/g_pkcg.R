@@ -116,10 +116,10 @@ pkcg01 <- function(
   }
 
   # save col labels, as further adpc tranformations cause them to be lost #
-
   adpc_grouped <- adpc %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
+    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars))) %>%
+    filter(!is.na(id_plot))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
   old_labels <- c(formatters::var_labels(adpc), id_plot = NA)
@@ -197,7 +197,6 @@ pkcg01 <- function(
     }
   }
 
-
   if (scale == "SBS") {
     if (!requireNamespace("ggh4x", quietly = FALSE))
       stop(
@@ -222,7 +221,8 @@ pkcg01 <- function(
         )
       )
 
-    plot <- plot %+% dplyr::filter(adpc_grouped, id_plot == unique(id_plot)[1]) +
+    plot$data <- plot_data
+    plot <- plot +
       facet_wrap(~ view, scales = "free_y") +
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
@@ -241,6 +241,8 @@ pkcg01 <- function(
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
     title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
 
+    plot$data <- plot_data
+
     #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
       if (is.null(footnote)) {
@@ -251,8 +253,8 @@ pkcg01 <- function(
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
-      plotly_plot <- plot %+%
-        plot_data %+%
+
+      plotly_plot <- plot +
         theme(
           # add margin to make space for subtitle and footnote #
           plot.margin = margin(
@@ -262,7 +264,9 @@ pkcg01 <- function(
             0,
             "cm"
           )
-        ) %>%
+        )
+
+      plotly_plot <- plotly_plot %>%
         # This because of no spec of parse annotation generates warning is.na()
         ggplotly(
           tooltip = c("x", "y"),
@@ -297,8 +301,7 @@ pkcg01 <- function(
 
       plotly_plot
     } else {
-      plot %+%
-        plot_data +
+      plot +
         labs(
           title = title,
           subtitle = subtitle,
@@ -502,17 +505,13 @@ pkcg02 <- function(
       ggplot2::aes(color = !!sym(color_var)) +
       ggplot2::theme(legend.position = "none")
 
-    # Add color legend only when neccessary
-    if (length(unique(adpc[[color_var]])) > 1) {
+    # Make sure the variable is interpreted as a factor
+    adpc[[color_var]] <- as.factor(adpc[[color_var]])
 
-      # Make sure the variable is interpreted as a factor
-      adpc[[color_var]] <- as.factor(adpc[[color_var]])
-
-      # Add to the plot the color_var and color_var_label
-      plot <- plot +
-        ggplot2::labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
-        ggplot2::theme(legend.position = "bottom")
-    }
+    # Add to the plot the color_var and color_var_label
+    plot <- plot +
+      ggplot2::labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
+      ggplot2::theme(legend.position = "bottom")
   }
 
   if (scale == "LOG") {
@@ -554,7 +553,8 @@ pkcg02 <- function(
         )
       )
 
-    plot <- plot %+% dplyr::filter(adpc_grouped, id_plot == unique(id_plot)[1]) +
+    plot$data <- plot_data
+    plot <- plot +
       facet_wrap(~ view, scales = "free_y") +
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
@@ -573,6 +573,8 @@ pkcg02 <- function(
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
     title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
 
+    plot$data <- plot_data
+
     #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
       if (is.null(footnote)) {
@@ -584,8 +586,7 @@ pkcg02 <- function(
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
       suppressWarnings({
-        plotly_plot <- plot %+%
-          plot_data %+%
+        plotly_plot <- plot +
           theme(
             # add margin to make space for subtitle and footnote #
             plot.margin = margin(
@@ -595,14 +596,16 @@ pkcg02 <- function(
               0,
               "cm"
             )
-          ) %>%
-          # This because of no spec of parse annotation generates warning is.na()
-          ggplotly(
-            tooltip = c("x", "y"),
-            dynamicTicks = if (scale != "SBS") TRUE else FALSE,
-            #' NOTE: might require some fine tuning down the line, looks fine now
-            height = 500 + (footnote_y * 25) + title_margin * 50
-          ) %>%
+          )
+
+        # This because of no spec of parse annotation generates warning is.na()
+        plotly_plot <- ggplotly(
+          plotly_plot,
+          tooltip = c("x", "y"),
+          dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+          #' NOTE: might require some fine tuning down the line, looks fine now
+          height = 500 + (footnote_y * 25) + title_margin * 50
+        ) %>%
           layout(
             # title and subtitle #
             title = list(text = title_text),
@@ -631,8 +634,7 @@ pkcg02 <- function(
         plotly_plot
       })
     } else {
-      plot %+%
-        plot_data +
+      plot +
         labs(
           title = title,
           subtitle = subtitle,

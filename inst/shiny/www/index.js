@@ -3,6 +3,9 @@
  */
 $(document).ready(() => {
   $('[data-toggle="tooltip"]').tooltip();
+
+  const results_table = document.getElementById('nca-nca_results-myresults-table');
+  observe_visible(results_table, "nca-results_visible");
 });
 
 /**
@@ -22,7 +25,27 @@ const buttonTimeout = function(selector, debounce, placeholder, ready) {
   disable_button_timeouts[selector] = setTimeout(() => {
     $(selector).html(ready).prop("disabled", false);
   }, debounce)
-}
+};
+
+/**
+ * Shows overlay div by ID
+ */
+Shiny.addCustomMessageHandler("showOverlay", function(message) {
+  const el = document.getElementById(message.id);
+  if (el) {
+    el.style.display = 'block';
+  }
+});
+
+/**
+ * Hides overlay div by ID
+ */
+Shiny.addCustomMessageHandler("hideOverlay", function(message) {
+  const el = document.getElementById(message.id);
+  if (el) {
+    el.style.display = 'none';
+  }
+});
 
 /**
  * Enable drag-and-drop file upload on a custom container (e.g., a div wrapping a file input).
@@ -60,4 +83,25 @@ const enableDragAndDropUpload = function(element_id) {
 }
 document.addEventListener('DOMContentLoaded', function () {
   enableDragAndDropUpload('data-raw_data-upload_container');
+
 });
+
+/**
+ * Creates a custom observer that checks if particular element is visible in the viewport.
+ * If it is, it sets a Shiny input value to a random number (to trigger reactivity).
+ * @param {Array} elements List of observed elements.
+ * @param {String} inputid Name of the Shiny input to set when element is visible.
+ */
+observe_visible = function(element, input_id) {
+  const observer = new IntersectionObserver(function(els) {
+    els.forEach(function(el) {
+      if (el.isIntersecting) {
+        Shiny.setInputValue(input_id, Math.random(), {priority: "event"});
+      }
+    });
+  }, {
+    threshold: 0.1
+  });
+
+  observer.observe(element);
+}

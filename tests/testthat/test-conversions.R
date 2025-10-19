@@ -124,3 +124,162 @@ describe("convert_to_iso8601_duration", {
   })
 })
 
+describe("convert_volume_units()", {
+
+  it("should convert L to mL when AVALU has denominator mL", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      AVALU = c("ug/mL"),
+      VOLUME = c(1),
+      VOLUMEU = c("L"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result$VOLUME, 1000)
+    expect_equal(result$VOLUMEU, "mL")
+    expect_equal(result$AMOUNTU, "ug")
+  })
+
+  it("should apply fallback conversion when direct conversion is not possible", {
+    df <- data.frame(
+      PCSPEC = c("feces"),
+      AVAL = c(5),
+      AVALU = c("mg/g"),
+      VOLUME = c(2),
+      VOLUMEU = c("mL"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result$VOLUMEU, "g")
+    expect_equal(result$AMOUNTU, "mg")
+  })
+
+  it("should skip rows with NA values", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(1),
+      AVALU = c("ng/mL"),
+      VOLUME = c(NA),
+      VOLUMEU = c(NA),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_true(is.na(result$AMOUNTU))
+  })
+
+  it("should handle invalid AVALU formats", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      AVALU = c("ug"),  # invalid format
+      VOLUME = c(1),
+      VOLUMEU = c("L"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_true(result$AMOUNTU[1] == "L ug")
+  })
+
+  it("should handle multiple rows correctly", {
+    df <- data.frame(
+      PCSPEC = c("urine", "feces", "plasma"),
+      AVAL = c(100, 10, 50),
+      AVALU = c("ug/mL", "mg/g", "ng/mL"),
+      VOLUME = c(1, 0.5, 1),
+      VOLUMEU = c("L", "mL", "mL"),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result$VOLUMEU[1], "mL")  # Converted from L to mL
+    expect_equal(result$VOLUMEU[2], "g")   # Fallback conversion
+    expect_equal(result$VOLUMEU[3], "mL")  # Unchanged
+  })
+
+  it("should return original dataframe if required columns are missing", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      stringsAsFactors = FALSE
+    )
+    result <- convert_volume_units(df)
+    expect_equal(result, df)  # No conversion applied
+  })
+
+  it("returns NA if conversion is not possible", {
+    df <- data.frame(
+      PCSPEC = c("urine"),
+      AVAL = c(100),
+      AVALU = c("ug/mL"),
+      VOLUME = c(1),
+      VOLUMEU = c("unknown_unit"),  # Invalid unit
+      stringsAsFactors = FALSE
+    )
+
+    expect_warning(
+      result <- convert_volume_units(df),
+      "Row 1: Failed to convert 1 unknown_unit to mL"
+    )
+    expect_true(is.na(result$AMOUNTU))
+
+  })
+})
+
+describe("simplify_unit", {
+  it("simplifies a compound unit expression correctly", {
+    u <- units::set_units(1, "L*g/mg", mode = "standard")
+    result <- simplify_unit(u)
+    expect_true(inherits(result, "units"))
+    expect_equal(units::deparse_unit(result), "L")
+    expect_equal(as.numeric(result), 1000)
+  })
+
+  it("preserves the numeric value of the units object", {
+    u <- units::set_units(5, "mg*L/(mg*L/mL)", mode = "standard")
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "mL")
+    expect_equal(as.numeric(result), 5)
+  })
+
+  it("handles simple units", {
+    u <- units::set_units(2, "mg", mode = "standard")
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "mg")
+    expect_equal(as.numeric(result), 2)
+  })
+
+  it("handles units with powers", {
+    u <- units::set_units(1, "(dg^2*L)/g^3", mode = "standard")
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "L g-1")
+    expect_equal(as.numeric(result), 0.01)
+  })
+
+  it("handles character inputs", {
+    u <- "(mg*L)/(mL)"
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "mg")
+    expect_equal(as.numeric(result), 1000)
+  })
+
+  it("returns an error for invalid inputs", {
+    expect_error(simplify_unit(list(a = 1)),
+                 "Input must be a valid units object or character string")
+  })
+
+  it("returns only the unit as character when as_character = TRUE", {
+    u <- units::set_units(2, "mg", mode = "standard")
+    result <- simplify_unit(u, as_character = TRUE)
+    expect_equal(result, "mg")
+  })
+
+  it("returns NA outputs for NA inputs", {
+    expect_equal(simplify_unit(NA), NA_real_)
+    expect_equal(simplify_unit(NA, as_character = TRUE), NA_character_)
+  })
+
+  it("handles unitless inputs", {
+    expect_equal(units::deparse_unit(simplify_unit("unitless")), "unitless")
+    expect_equal(simplify_unit("unitless", as_character = TRUE), "unitless")
+  })
+})

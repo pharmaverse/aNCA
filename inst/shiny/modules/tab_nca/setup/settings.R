@@ -22,31 +22,31 @@ settings_ui <- function(id) {
         title = "General Settings",
         # Selection of analyte, dose number and specimen
         fluidRow(
-          column(
-            4,
-            selectInput(
+          column(4,
+            pickerInput(
               ns("select_analyte"),
               "Choose the Analyte:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           ),
-          column(
-            4,
-            selectInput(
+          column(4,
+            pickerInput(
               ns("select_profile"),
               "Choose the NCA Profile:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           ),
-          column(
-            4,
-            selectInput(
+          column(4,
+            pickerInput(
               ns("select_pcspec"),
               "Choose the Specimen:",
               multiple = TRUE,
-              choices = NULL
+              choices = NULL,
+              options = list(`actions-box` = TRUE)
             )
           )
         ),
@@ -69,7 +69,7 @@ settings_ui <- function(id) {
                 pickerInput(
                   ns("bioavailability"),
                   "Calculate Bioavailability:",
-                  choices = pknca_cdisc_terms %>%
+                  choices = metadata_nca_parameters %>%
                     filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
                     pull(PKNCA, PPTESTCD),
                   multiple = TRUE,
@@ -93,6 +93,7 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Data Imputation",
+
         # Moved input_switch for should_impute_c0 into the data_imputation module
         data_imputation_ui(ns("data_imputation"))
       ),
@@ -103,12 +104,23 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Flag Rule Sets",
-        .rule_input(ns("adj.r.squared"), "RSQADJ:", 0.7, 0.05, 0, 1),
-        .rule_input(ns("aucpext.obs"), "AUCPEO (% ext.observed):", 20, 1, 0, 100),
-        .rule_input(ns("aucpext.pred"), "AUCPEP (% ext.predicted):", 20, 5, 0, 100),
-        .rule_input(ns("span.ratio"), "SPAN:", 2, 1, 0)
+        .rule_input(
+          ns("R2ADJ"), "R2ADJ >=", 0.7, 0.05, 0, 1,
+          tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
+        ),
+        .rule_input(
+          ns("AUCPEO"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (observed) for AUC related parameters"
+        ),
+        .rule_input(
+          ns("AUCPEP"), "AUCPEP (% ext.predicted) <=", 20, 5, 0, 100,
+          tooltip = "Maximum allowed percent extrapolated (predicted) for AUC related parameters"
+        ),
+        .rule_input(
+          ns("LAMZSPN"), "LAMZSPN >=", 2, 1, 0,
+          tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
+        )
       ),
-      id = "acc",
       open = c("General Settings", "Parameter Selection")
     )
   )
@@ -133,19 +145,19 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       # General #
       if (all(settings$analyte %in% unique(data()$PARAM))) {
-        updateSelectInput(inputId = "select_analyte", selected = settings$analyte)
+        updatePickerInput(inputId = "select_analyte", selected = settings$analyte)
       } else {
         not_compatible <- append(not_compatible, "Analyte")
       }
 
       if (all(settings$profile %in% unique(data()$NCA_PROFILE))) {
-        updateSelectInput(inputId = "select_profile", selected = settings$profile)
+        updatePickerInput(inputId = "select_profile", selected = settings$profile)
       } else {
         not_compatible <- append(not_compatible, "NCA Profile")
       }
 
       if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
-        updateSelectInput(inputId = "select_pcspec", selected = settings$pcspec)
+        updatePickerInput(inputId = "select_pcspec", selected = settings$pcspec)
       } else {
         not_compatible <- append(not_compatible, "Dose Specimen")
       }
@@ -167,7 +179,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       # Parmeter selection #
       reset_reactable_memory()
 
-      params_data <- pknca_cdisc_terms %>%
+      params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered") %>%
         pull("PKNCA")
 
@@ -186,65 +198,107 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       # Flags #
       .update_rule_input(
         session,
-        "adj.r.squared",
-        settings$flags$adj.r.squared$is.checked,
-        settings$flags$adj.r.squared$threshold
+        "R2ADJ",
+        settings$flags$R2ADJ$is.checked,
+        settings$flags$R2ADJ$threshold
       )
 
       .update_rule_input(
         session,
-        "aucpext.obs",
-        settings$flags$aucpext.obs$is.checked,
-        settings$flags$aucpext.obs$threshold
+        "AUCPEO",
+        settings$flags$AUCPEO$is.checked,
+        settings$flags$AUCPEO$threshold
       )
 
       .update_rule_input(
         session,
-        "aucpext.pred",
-        settings$flags$aucpext.pred$is.checked,
-        settings$flags$aucpext.pred$threshold
+        "AUCPEP",
+        settings$flags$AUCPEP$is.checked,
+        settings$flags$AUCPEP$threshold
       )
 
       .update_rule_input(
         session,
-        "span.ratio",
-        settings$flags$span.ratio$is.checked,
-        settings$flags$span.ratio$threshold
+        "LAMZSPN",
+        settings$flags$LAMZSPN$is.checked,
+        settings$flags$LAMZSPN$threshold
       )
     })
 
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
-    limit_input_value(input, session, "adj.r.squared_threshold", max = 1, min = 0, lab = "RSQADJ")
-    limit_input_value(input, session, "aucpext.obs_threshold", max = 100, min = 0, lab = "AUCPEO")
-    limit_input_value(input, session, "aucpext.pred_threshold", max = 100, min = 0, lab = "AUCPEP")
-    limit_input_value(input, session, "span.ratio_threshold", min = 0, lab = "SPAN")
+    limit_input_value(input, session, "R2ADJ_threshold", max = 1, min = 0, lab = "RSQADJ")
+    limit_input_value(input, session, "AUCPEO_threshold", max = 100, min = 0, lab = "AUCPEO")
+    limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
+    limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
 
 
-    # Choose dosenumbers to be analyzed
-    observeEvent(data()$DOSNO, priority = -1, {
+    # Choose data to be analyzed
+    observeEvent(data(), priority = -1, {
       req(data())
 
-      updateSelectInput(
-        session,
-        inputId = "select_profile",
-        choices = unique(data()$NCA_PROFILE),
-        selected = unique(data()$NCA_PROFILE)[1]
-      )
+      choices <- unique(data()$PARAM) %>%
+        na.omit()
 
-      updateSelectInput(
+      updatePickerInput(
         session,
         inputId = "select_analyte",
-        choices = unique(data()$PARAM),
-        selected = unique(data()$PARAM)[1]
+        choices = choices,
+        selected = choices
       )
 
-      updateSelectInput(
+    })
+
+    observeEvent(input$select_analyte, {
+      req(data())
+
+      # Isolate current selections to prevent reactive loops
+      current_profile <- isolate(input$select_profile)
+      current_pcspec <- isolate(input$select_pcspec)
+
+      filtered_data <- data() %>%
+        filter(PARAM %in% input$select_analyte,
+               !is.na(PCSPEC),
+               !is.na(NCA_PROFILE)) # Filter together so there's no combinations of NAs
+
+      profile_choices <- unique(filtered_data$NCA_PROFILE) %>%
+        sort()
+
+      pcspec_choices <- unique(filtered_data$PCSPEC)
+
+
+      # Fallback if the current selection is empty
+      if (length(current_profile) == 0) {
+        current_profile <- profile_choices[1]
+      }
+      if (length(current_pcspec) == 0) {
+        # Select plasma/serum if available
+        plasma_serum_values <- grep("^plasma$|^serum$",
+                                    pcspec_choices,
+                                    value = TRUE,
+                                    ignore.case = TRUE)
+
+        # Assign to current_pcspec if found, otherwise select all
+        if (length(plasma_serum_values) > 0) {
+          current_pcspec <- plasma_serum_values
+        } else {
+          current_pcspec <- pcspec_choices
+        }
+      }
+
+      updatePickerInput(
+        session,
+        inputId = "select_profile",
+        choices = profile_choices,
+        selected = current_profile
+      )
+
+      updatePickerInput(
         session,
         inputId = "select_pcspec",
-        choices = unique(data()$PCSPEC),
-        selected = unique(data()$PCSPEC)[1]
+        choices = pcspec_choices,
+        selected = current_pcspec
       )
     })
 
@@ -259,12 +313,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       "lambda.z",
       "lambda.z.n.points", "r.squared",
       "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred"
+      "aucpext.obs", "aucpext.pred",
+      "ae", "fe"
     )
 
     output$nca_parameters <- renderReactable({
       #remove parameters that are currently unavailable in PKNCA
-      params_data <- pknca_cdisc_terms %>%
+      params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered")
 
       default_row_indices <- which(params_data$PKNCA %in% DEFAULT_PARAMS)
@@ -287,7 +342,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       selected_rows <- getReactableState("nca_parameters", "selected")
       if (is.null(selected_rows) || length(selected_rows) == 0) return(NULL)
 
-      params_data <- pknca_cdisc_terms %>%
+      params_data <- metadata_nca_parameters %>%
         filter(TYPE != "PKNCA-not-covered")
       selected_terms <- params_data[selected_rows, , drop = FALSE]
 
@@ -357,6 +412,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     settings <- reactive({
       req(input$select_analyte) # Wait on general settings UI to be loaded
+
       list(
         analyte = input$select_analyte,
         profile = input$select_profile,
@@ -370,23 +426,24 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         ),
         partial_aucs = auc_data(),
         flags = list(
-          adj.r.squared = list(
-            is.checked = input$adj.r.squared_rule,
-            threshold = input$adj.r.squared_threshold
+          R2ADJ = list(
+            is.checked = input$R2ADJ_rule,
+            threshold = input$R2ADJ_threshold
           ),
-          aucpext.obs = list(
-            is.checked = input$aucpext.obs_rule,
-            threshold = input$aucpext.obs_threshold
+          AUCPEO = list(
+            is.checked = input$AUCPEO_rule,
+            threshold = input$AUCPEO_threshold
           ),
-          aucpext.pred = list(
-            is.checked = input$aucpext.pred_rule,
-            threshold = input$aucpext.pred_threshold
+          AUCPEP = list(
+            is.checked = input$AUCPEP_rule,
+            threshold = input$AUCPEP_threshold
           ),
-          span.ratio = list(
-            is.checked = input$span.ratio_rule,
-            threshold = input$span.ratio_threshold
+          LAMZSPN = list(
+            is.checked = input$LAMZSPN_rule,
+            threshold = input$LAMZSPN_threshold
           )
-        )
+        ),
+        units = session$userData$units_table()
       )
     })
 
@@ -399,9 +456,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     observeEvent(settings(), {
       runjs(str_glue(
         "buttonTimeout(
-          '.run-nca-btn',
+          '#nca-run_nca',
           {settings_debounce + 250},
-          'Applying<br>settings...',
+          'Applying settings...',
           'Run NCA'
         );"
       ))
@@ -419,8 +476,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 #' @param step    Step for the `shiny::numericInput` widget.
 #' @param min     Min value for the `shiny::numericInput` widget.
 #' @param max     Max value for the `shiny::numericInput` widget.
+#' @param tooltip Optional tooltip function to add a tooltip to the label.
 #' @returns `shiny::fluidRow` containing html elements of the widget.
-.rule_input <- function(id, label, default, step, min, max = NULL) {
+.rule_input <- function(id, label, tooltip = NULL, default, step, min, max = NULL) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
   numeric_args <- list(
@@ -436,10 +494,16 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     numeric_args$max <- max
   }
 
+  label_tag <- if (!is.null(tooltip)) {
+    tooltip(tags$span(label), tooltip)
+  } else {
+    id
+  }
+
   fluidRow(
     column(
       width = 6,
-      checkboxInput(rule_id, label, value = TRUE)
+      checkboxInput(rule_id, label_tag, value = TRUE)
     ),
     column(
       width = 6,
