@@ -60,7 +60,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
     if: >

@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   R-CMD-check:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: "ghcr.io/pharmaverse/admiralci-${{ matrix.r_version }}:latest"
     name: (${{ matrix.r_version }})

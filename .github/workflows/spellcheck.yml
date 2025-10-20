@@ -40,7 +40,7 @@ concurrency:
 jobs:
   spellcheck:
     name: Spellcheck
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
     env:

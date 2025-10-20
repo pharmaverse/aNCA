@@ -31,7 +31,7 @@ env:
 jobs:
   get_r_version:
     name: Get R version
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     outputs:
       r-version: ${{ steps.get_r_version.outputs.R_VERSION }}
     steps:
