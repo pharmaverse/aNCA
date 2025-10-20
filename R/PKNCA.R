@@ -241,7 +241,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   data$options <- list(
     auc.method = method,
-    conc.blq = blq_imputation_rule,
     progress = FALSE,
     keep_interval_cols = c(
       "NCA_PROFILE", "DOSNOA", "type_interval",
@@ -297,33 +296,44 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   ) %>%
     unique()
 
-  data$impute <- NA
+  data$impute <- ""
 
   # Impute start values if requested
   if (should_impute_c0) {
     data <- create_start_impute(data)
-
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
-      intersect(names(PKNCA::get.interval.cols()))
-
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
   }
+browser()
+  # Define a BLQ imputation method for PKNCA
+  PKNCA_impute_method_blq <- function(conc, time) {
+    PKNCA::clean.conc.blq(conc = conc, time = time, conc.blq = blq_imputation_rule)
+  }
+  data$intervals$impute <- ""
+  data$intervals$impute <- add_impute_method(
+    impute_vals = data$intervals$impute,
+    target_impute = "blq",
+    after = 0
+  )
+
+  # Don't impute parameters that are not AUC dependent
+  params_auc_dep <- metadata_nca_parameters %>%
+    filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
+    pull(PKNCA)
+  
+  params_not_to_impute <- metadata_nca_parameters %>%
+    filter(!grepl("auc|aumc", PKNCA),
+           !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
+    pull(PKNCA) |>
+    intersect(names(PKNCA::get.interval.cols()))
+
+  all_impute_methods <- na.omit(unique(data$intervals$impute))
+  
+  data$intervals <- Reduce(function(d, ti_arg) {
+    interval_remove_impute(
+      d,
+      target_impute = ti_arg,
+      target_params = params_not_to_impute
+    )
+  }, all_impute_methods, init = data$intervals)
 
   data
 }
