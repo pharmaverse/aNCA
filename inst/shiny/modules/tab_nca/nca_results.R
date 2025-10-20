@@ -63,7 +63,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           grouping_vars(),
           unname(unlist(res_nca()$data$conc$columns$groups)),
           "DOSEA",
-          "NCA_PROFILE",
+          "ATPTREF",
           "ROUTE"
         )))
 

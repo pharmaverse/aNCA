@@ -1,26 +1,31 @@
 # Add information for non-official CDISC mapping columns
 NON_STD_MAPPING_INFO <- data.frame(
-  Variable = c("Grouping_Variables", "TAU"),
-  Order = c(100, 24),
+  Variable = c("Grouping_Variables", "Metabolites"),
+  Label = c("Variables to group and summarise results", "PARAM values to flag as metabolites"),
+  Order = c(100, 16),
   Values = c("", ""),
   mapping_tooltip = c(
     "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
-    "Numeric column for dose interval in multiple dose studies (optional). Must be in RRTLU units"
+    paste0(
+      "Choose the PARAM values to flag as metabolites of the drug parent (METABFL = 'Y'). ",
+      "If empty is assumed that all PARAM correspond to the parent drug (METABFL = '')"
+    )
   ),
-  mapping_section = c("Supplemental Variables", "Supplemental Variables"),
+  mapping_section = c("Supplemental Variables", "Sample Variables"),
   mapping_alternatives = c(
-    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE,
-    RACE, SEX, GROUP, NOMDOSE, DOSEP", ""
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP",
+    ""
   ),
-  is_multiple_choice = c(TRUE, FALSE)
+  is_multiple_choice = c(TRUE, TRUE)
 )
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADPC") %>%
-  select(Variable, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
+  select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
   mutate(is_multiple_choice = FALSE) %>%
-  bind_rows(NON_STD_MAPPING_INFO)
+  bind_rows(NON_STD_MAPPING_INFO) %>%
+  arrange(Order)
 
 MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
 sections_order <- c(
@@ -31,10 +36,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR",
-  "VOLUME", "VOLUMEU", "TAU"
+  "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
+  "VOLUME", "VOLUMEU", "TRTRINT", "METABFL"
 )
 
 #' Column Mapping Widget
@@ -166,9 +171,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
 
     # Loop through each label and create the renderText outputs
-    purrr::walk(MAPPING_DESIRED_ORDER, \(label) {
-      output[[paste0("label_", label)]] <- renderText(
-        get_label(label, "ADPC")
+    purrr::walk(MAPPING_INFO$Variable, \(var) {
+      output[[paste0("label_", var)]] <- renderText(
+        MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
       )
     })
 
@@ -181,6 +186,21 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       if (input$select_VOLUME == "") {
         updateSelectizeInput(session, "select_VOLUMEU", selected = "")
       }
+    })
+    # Populate the dynamic input Metabolites
+    observe({
+      req(input$select_PARAM != "")
+      param_col <- input$select_PARAM
+      choices_metab <- unique(adnca_data()[[param_col]])
+      selected_metab <- if ("METABFL" %in% names(adnca_data())) {
+        unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
+      } else {
+        NULL
+      }
+      updateSelectizeInput(
+        session, "select_Metabolites",
+        choices = choices_metab, selected = selected_metab
+      )
     })
 
     # Observe submit button click and update processed_data
@@ -207,21 +227,23 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       names(mapping_) <- gsub("select_", "", names(mapping_))
 
       tryCatch({
-        apply_mapping(
-          adnca_data(),
-          mapping_,
-          MAPPING_DESIRED_ORDER,
-          silent = FALSE
-        )
+        adnca_data() %>%
+          apply_mapping(
+            mapping_,
+            MAPPING_DESIRED_ORDER,
+            silent = FALSE
+          ) %>%
+          create_metabfl(input$select_Metabolites)
       }, warning = function(w) {
         withCallingHandlers(
           {
-            apply_mapping(
-              adnca_data(),
-              mapping_,
-              MAPPING_DESIRED_ORDER,
-              silent = FALSE
-            )
+            adnca_data() %>%
+              apply_mapping(
+                mapping_,
+                MAPPING_DESIRED_ORDER,
+                silent = FALSE
+              ) %>%
+              create_metabfl(input$select_Metabolites)
           },
           warning = function(w) {
             log_warn(conditionMessage(w))
@@ -241,10 +263,10 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     df_duplicates <- reactive({
       req(mapped_data)
       mapped_data() %>%
-        group_by(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM) %>%
+        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
         filter(n() > 1) %>%
         ungroup() %>%
-        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DRUG, USUBJID, PARAM, sep = "_"))
+        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM, sep = "_"))
     })
 
     processed_data <- reactive({
@@ -281,7 +303,6 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       }
       # Don't return anything until duplicates are resolved
       return(NULL)
-
     })
 
     observeEvent(duplicates(), {
@@ -291,7 +312,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           class = "modal-duplicates",
           tagList(
             p("The following rows are duplicates based on TIME, STUDYID,
-              PCSPEC, DRUG, USUBJID, PARAM."),
+              PCSPEC, DOSETRT, USUBJID, PARAM."),
             p("Please select the rows you would like to KEEP.
               Rows not selected will be flagged and filtered."),
             p("Alternatively, click 'Cancel' to discard the changes,

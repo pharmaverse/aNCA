@@ -21,22 +21,21 @@ test_pknca_res$data$conc$data <- test_pknca_res$data$conc$data %>%
     PCTPT = "Post-dose",
     PCTPTNUM = 1,
     PCTPTREF = "Most Recent Dose",
-    AVISIT = paste0("VISIT ", as.integer(NFRLT %% 24)),
-    VISIT = AVISIT,
-    AVISITN = as.integer(NFRLT %% 24),
-    VISITNUM = AVISITN,
+    VISIT = paste0("VISIT ", ATPTREF),
+    ATPTREFN = as.integer(factor(ATPTREF)),
+    VISITNUM = ATPTREFN,
     EPOCH = "OBSERVATION"
   )
 test_pknca_res$data$dose$data <- test_pknca_res$data$dose$data %>%
   mutate(
     PCRFTDTC = case_when(
-      NCA_PROFILE == 1 ~ "2023-01-01T00:00",
-      NCA_PROFILE == 2 ~ "2023-01-02T00:00",
+      ATPTREF == 1 ~ "2023-01-01T00:00",
+      ATPTREF == 2 ~ "2023-01-02T00:00",
       TRUE ~ NA_character_
     ),
     PCRFTDTM = case_when(
-      NCA_PROFILE == 1 ~ "2023-01-01 00:00",
-      NCA_PROFILE == 2 ~ "2023-01-02 00:00",
+      ATPTREF == 1 ~ "2023-01-01 00:00",
+      ATPTREF == 2 ~ "2023-01-02 00:00",
       TRUE ~ NA_character_
     )
   )
@@ -235,44 +234,48 @@ describe("export_cdisc", {
     expect_equal(unique(res_nothing$pp$PPRFTDTC), NA_character_)
   })
 
-  it("derives PPGRPID correctly, using AVISIT, VISIT and/or PARAM, PCSPEC. NCA_PROFILE", {
-    test_no_avisit <- test_pknca_res
-    test_no_avisit_visit <- test_pknca_res
-    test_nothing <- test_pknca_res
+  it("derives PPGRPID correctly, using ATPTREF and/or PARAM, PCSPEC.", {
+    test_no_atptref <- test_pknca_res
+    test_no_param_pcspec <- test_pknca_res
 
-    test_no_avisit$data$conc$data <- test_no_avisit$data$conc$data %>%
-      select(-AVISIT)
-    test_no_avisit_visit$data$conc$data <- test_no_avisit_visit$data$conc$data %>%
-      select(-AVISIT, -VISIT)
-    test_nothing$data$conc$data <- test_nothing$data$conc$data %>%
-      select(-AVISIT, -VISIT)
-    test_nothing$result <- test_nothing$result %>% select(-NCA_PROFILE)
+    test_no_atptref$data$conc$data <- test_no_atptref$data$conc$data %>%
+      select(-any_of("ATPTREF"))
+    test_no_atptref$data$dose$data <- test_no_atptref$data$dose$data %>%
+      select(-any_of("ATPTREF"))
+    test_no_atptref$result <- test_no_atptref$result %>%
+      select(-any_of("ATPTREF"))
+
+    test_no_param_pcspec$data$conc$data <- test_no_param_pcspec$data$conc$data %>%
+      select(-any_of(c("PCSPEC")))
+    test_no_param_pcspec$data$dose$data <- test_no_param_pcspec$data$dose$data %>%
+      select(-any_of(c("PCSPEC")))
+    test_no_param_pcspec$result <- test_no_atptref$result %>%
+      select(-any_of(c("PCSPEC")))
+    test_no_param_pcspec$data$conc$columns$groups$group_vars <- "USUBJID"
 
     res <- export_cdisc(test_pknca_res)
-    res_no_avisit <- export_cdisc(test_no_avisit)
-    res_no_avisit_visit <- export_cdisc(test_no_avisit_visit)
+    res_no_atptref <- export_cdisc(test_no_atptref)
+    res_no_param_pcspec <- export_cdisc(test_no_param_pcspec)
 
     # Check that PPGRPID is derived correctly
-    conc_group_cols <- c(group_vars(test_pknca_res$data$conc), "NCA_PROFILE")
+    conc_group_cols <- c(group_vars(test_pknca_res$data$conc), "ATPTREF")
     group_dose_cols <- group_vars(test_pknca_res$data$dose)
     exp_grpid <- as.data.frame(test_pknca_res) %>%
       left_join(test_pknca_res$data$conc$data %>%
-                  select(all_of(c(conc_group_cols, "AVISIT", "VISIT"))) %>%
+                  select(all_of(c(conc_group_cols, "ATPTREF", "VISIT"))) %>%
                   group_by(!!!syms(conc_group_cols)) %>%
                   slice(1),
                 by = conc_group_cols) %>%
       # Expected derivations
       mutate(
-        GRPID_VISIT = paste0(PARAM, "-", PCSPEC, "-", VISIT),
-        GRPID_AVISIT = paste0(PARAM, "-", PCSPEC, "-", AVISIT),
-        GRPID_NCAPROFILE = paste0(PARAM, "-", PCSPEC, "-", NCA_PROFILE)
+        GRPID_REGULAR = paste0(PARAM, "-", PCSPEC, "-", ATPTREF),
+        GRPID_NO_ATPTREF = paste0(PARAM, "-", PCSPEC)
       ) %>%
       # Arrange in same order as results
       arrange(!!!syms(c(group_dose_cols, "start", "end", "PPTESTCD")))
 
-    expect_equal(res$pp$PPGRPID, exp_grpid$GRPID_AVISIT, ignore_attr = TRUE)
-    expect_equal(res_no_avisit$pp$PPGRPID, exp_grpid$GRPID_VISIT, ignore_attr = TRUE)
-    expect_equal(res_no_avisit_visit$pp$PPGRPID, exp_grpid$GRPID_NCAPROFILE, ignore_attr = TRUE)
+    expect_equal(res$pp$PPGRPID, exp_grpid$GRPID_REGULAR, ignore_attr = TRUE)
+    expect_equal(res_no_atptref$pp$PPGRPID, exp_grpid$GRPID_NO_ATPTREF, ignore_attr = TRUE)
   })
 
   it("does not derive SUBJID if not present with USUBJID, STUDYID", {

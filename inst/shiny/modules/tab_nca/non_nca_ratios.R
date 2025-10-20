@@ -58,7 +58,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       req(data())
       data()$conc$columns$groups %>%
         purrr::list_c() %>%
-        append("NCA_PROFILE") %>%
+        append("ATPTREF") %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "PCSPEC" && length(unique(data()$conc$data[[col]])) > 1
         })
