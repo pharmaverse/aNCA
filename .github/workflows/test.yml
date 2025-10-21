@@ -48,13 +48,6 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
-
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.staged.dependencies
-          key: staged-deps
           
       - name: Install system dependencies (Chrome)
         if: |

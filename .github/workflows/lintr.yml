@@ -99,16 +99,6 @@ jobs:
             ${{ inputs.install-package == 'true' && 'local::.' || '' }}
             ${{ inputs.latest-lintr == 'true' && 'cran::lintr' || '' }}
 
-      - name: Install latest release of lintr
-        run: |
-          install.packages("lintr", repos = "https://packagemanager.posit.co/cran/latest/")
-        shell: Rscript {0}
-        if: ${{ inputs.latest-lintr == 'true' }}
-
-      - name: Install package
-        run: renv::install(".", dependencies = "no-deps")
-        shell: Rscript {0}
-        if: ${{ inputs.install-package == 'true' }}
       ##################### END boilerplate steps #####################
 
       - name: Changed files
