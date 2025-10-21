@@ -20,16 +20,6 @@ on:
         default: "false"
         required: false
         type: string
-      latest-lintr:
-        description: "Latest lintr CRAN release"
-        default: "false"
-        required: false
-        type: string
-      install-package:
-        description: "Install package locally."
-        default: "false"
-        required: false
-        type: string
   workflow_call:
     inputs:
       r-version:
@@ -39,16 +29,6 @@ on:
         type: string
       lint-all-files:
         description: "Lint all files every time"
-        default: "false"
-        required: false
-        type: string
-      latest-lintr:
-        description: "Latest lintr CRAN release"
-        default: "false"
-        required: false
-        type: string
-      install-package:
-        description: "Install package locally."
         default: "false"
         required: false
         type: string
@@ -91,22 +71,14 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Install R Dependencies (Extras)
+      - name: Install R Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
-        if: inputs.install-package == 'true' || inputs.latest-lintr == 'true'
         with:
           needs: Suggests
           extra-packages: |
-            ${{ inputs.install-package == 'true' && 'local::.' || '' }}
-            ${{ inputs.latest-lintr == 'true' && 'cran::lintr' || '' }}
-            any::cyclocomp
-
-      - name: Install R Dependencies (Suggests Only)
-        uses: r-lib/actions/setup-r-dependencies@v2
-        if: inputs.install-package == 'false' && inputs.latest-lintr == 'false'
-        with:
-          needs: Suggests
-          extra-packages: any::cyclocomp
+                  local::.
+                  cran::lintr
+                  any::cyclocomp
 
       ##################### END boilerplate steps #####################
 
