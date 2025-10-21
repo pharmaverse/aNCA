@@ -81,14 +81,6 @@ jobs:
           needs: tests
           extra-packages: local::.
 
-      - name: Install dependencies from DESCRIPTION
-        run: |
-          remotes::install_local(force = TRUE, dependencies = TRUE)
-        shell: Rscript {0}
-        env:
-          R_REMOTES_STANDALONE: "true"
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Run tests
         shell: Rscript {0}
         env:
