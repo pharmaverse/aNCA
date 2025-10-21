@@ -48,7 +48,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
-          
+
       - name: Install system dependencies (Chrome)
         if: |
           (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
