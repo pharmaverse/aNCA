@@ -99,12 +99,14 @@ jobs:
           extra-packages: |
             ${{ inputs.install-package == 'true' && 'local::.' || '' }}
             ${{ inputs.latest-lintr == 'true' && 'cran::lintr' || '' }}
+            any::cyclocomp
 
       - name: Install R Dependencies (Suggests Only)
         uses: r-lib/actions/setup-r-dependencies@v2
         if: inputs.install-package == 'false' && inputs.latest-lintr == 'false'
         with:
           needs: Suggests
+          extra-packages: any::cyclocomp
 
       ##################### END boilerplate steps #####################
 
