@@ -224,3 +224,62 @@ describe("convert_volume_units()", {
 
   })
 })
+
+describe("simplify_unit", {
+  it("simplifies a compound unit expression correctly", {
+    u <- units::set_units(1, "L*g/mg", mode = "standard")
+    result <- simplify_unit(u)
+    expect_true(inherits(result, "units"))
+    expect_equal(units::deparse_unit(result), "L")
+    expect_equal(as.numeric(result), 1000)
+  })
+
+  it("preserves the numeric value of the units object", {
+    u <- units::set_units(5, "mg*L/(mg*L/mL)", mode = "standard")
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "mL")
+    expect_equal(as.numeric(result), 5)
+  })
+
+  it("handles simple units", {
+    u <- units::set_units(2, "mg", mode = "standard")
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "mg")
+    expect_equal(as.numeric(result), 2)
+  })
+
+  it("handles units with powers", {
+    u <- units::set_units(1, "(dg^2*L)/g^3", mode = "standard")
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "L g-1")
+    expect_equal(as.numeric(result), 0.01)
+  })
+
+  it("handles character inputs", {
+    u <- "(mg*L)/(mL)"
+    result <- simplify_unit(u)
+    expect_equal(units::deparse_unit(result), "mg")
+    expect_equal(as.numeric(result), 1000)
+  })
+
+  it("returns an error for invalid inputs", {
+    expect_error(simplify_unit(list(a = 1)),
+                 "Input must be a valid units object or character string")
+  })
+
+  it("returns only the unit as character when as_character = TRUE", {
+    u <- units::set_units(2, "mg", mode = "standard")
+    result <- simplify_unit(u, as_character = TRUE)
+    expect_equal(result, "mg")
+  })
+
+  it("returns NA outputs for NA inputs", {
+    expect_equal(simplify_unit(NA), NA_real_)
+    expect_equal(simplify_unit(NA, as_character = TRUE), NA_character_)
+  })
+
+  it("handles unitless inputs", {
+    expect_equal(units::deparse_unit(simplify_unit("unitless")), "unitless")
+    expect_equal(simplify_unit("unitless", as_character = TRUE), "unitless")
+  })
+})

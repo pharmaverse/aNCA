@@ -12,7 +12,6 @@ data_upload_ui <- function(id) {
   ns <- NS(id)
 
   div(
-    stepper_ui("Upload"),
     div(
       class = "upload-container",
       id = ns("upload_container"),
@@ -35,7 +34,7 @@ data_upload_server <- function(id) {
 
     #' Dummy data is automatically loaded on startup if no data path is provided
     DUMMY_DATA <- read.csv(
-      system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
+      system.file("shiny/data/Dummy_data.csv", package = "aNCA"),
       na.strings = c("", "NA")
     )
 

@@ -114,7 +114,6 @@ data_mapping_ui <- function(id) {
   ns <- NS(id)
 
   div(
-    stepper_ui("Mapping"),
     card(
       div(
         class = "data-mapping-container",
@@ -255,9 +254,37 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
-      apply_column_mapping(adnca_data(), mapping(),
-                           MANUAL_UNITS, MAPPING_COLUMN_GROUPS,
-                           MAPPING_DESIRED_ORDER)
+
+      mapping_ <- mapping()
+      names(mapping_) <- gsub("select_", "", names(mapping_))
+
+      tryCatch({
+        apply_mapping(
+          adnca_data(),
+          mapping_,
+          MAPPING_DESIRED_ORDER,
+          silent = FALSE
+        )
+      }, warning = function(w) {
+        withCallingHandlers(
+          {
+            apply_mapping(
+              adnca_data(),
+              mapping_,
+              MAPPING_DESIRED_ORDER,
+              silent = FALSE
+            )
+          },
+          warning = function(w) {
+            log_warn(conditionMessage(w))
+            showNotification(conditionMessage(w), type = "warning", duration = 10)
+          }
+        )
+      }, error = function(e) {
+        log_error(conditionMessage(e))
+        showNotification(conditionMessage(e), type = "error", duration = NULL)
+        NULL
+      })
     }) |>
       bindEvent(trigger(), ignoreInit = TRUE)
 

@@ -14,7 +14,6 @@ data_filtering_ui <- function(id) {
   ns <- NS(id)
 
   div(
-    stepper_ui("Filtering"),
     div(
       p(
         # TODO (Gerardo): We will need to think how to really tell the user more about this

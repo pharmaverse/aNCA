@@ -12,7 +12,7 @@ name: Code Coverage
 jobs:
   coverage:
     name: Test Coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
       image: "ghcr.io/pharmaverse/admiralci-release:latest"
     env:
@@ -146,7 +146,7 @@ jobs:
   badge:
     name: Generate badge for coverage
     needs: [coverage]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout the badges branch in repo
         uses: actions/checkout@v4.2.2

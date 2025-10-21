@@ -238,3 +238,65 @@ log_conversion <- function(row, vol, volu, u_vol_new, denom_unit, concu, verbose
   )
   message(msg)
 }
+
+#' Simplify compound unit expressions
+#'
+#' This function takes a units object or a character string representing a unit expression
+#' and returns a simplified units using the units package simplifications.
+#'
+#' @param x A units object, character string, or vector of either to be simplified.
+#' @param as_character Logical. TRUE returns the result as a character,
+#' FALSE (default) as a unit object.
+#' @returns A simplified units object, or a list of units objects if input is a vector.
+#' @examples
+#' # Using a units object
+#' u <- units::set_units(1, "L*g/mg", mode = "standard")
+#' simplify_unit(u)
+#'
+#' # Using a character string
+#' simplify_unit("(mg*L)/(mL)")
+#'
+#' @importFrom units units_options set_units deparse_unit drop_units
+#' @export
+simplify_unit <- function(x, as_character = FALSE) {
+
+  # Handle NA input
+  if (is.na(x)) {
+    return(if (as_character) NA_character_ else NA_real_)
+  }
+
+  # handle special case: unitless
+  if (is.character(x) && tolower(x) == "unitless") {
+    if (as_character) {
+      return("unitless")
+    } else {
+      return(set_units(1, "unitless", check_is_valid = FALSE)) # Return unitless object
+    }
+  }
+
+  # If input is a units object, use its value. Otherwise, default to 1.
+  value <- if (inherits(x, "units")) drop_units(x) else 1
+  # If input is a units object, deparse its units.
+  unit_char <- if (inherits(x, "units")) deparse_unit(x) else x
+
+  # Temporarily set the simplify option to TRUE
+  old_opt <- units_options("simplify")
+  on.exit(units_options(simplify = old_opt))
+  units_options(simplify = TRUE)
+
+  # Create the simplified units object within tryCatch
+  simplified_obj <- tryCatch({
+    # Attempt to parse and simplify the unit
+    set_units(value, unit_char, mode = "standard")
+  }, error = function(e) {
+    # If an error occurs, it's an invalid unit.
+    stop("Input must be a valid units object or character string.")
+  })
+
+  # Return either the final units object or character string
+  if (as_character) {
+    deparse_unit(simplified_obj)
+  } else {
+    simplified_obj
+  }
+}

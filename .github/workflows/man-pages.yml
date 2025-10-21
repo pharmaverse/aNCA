@@ -30,7 +30,7 @@ concurrency:
 jobs:
   lint:
     name: Roxygen
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
       image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
     if: >
@@ -62,6 +62,14 @@ jobs:
           path: |
             ~/.staged.dependencies
           key: staged-deps
+
+      - name: Install system dependencies
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
+        run: |
+          apt update -y
+          apt install -y chromium-bsu cmake libudunits2-dev
 
       - name: Run Staged dependencies
         uses: insightsengineering/staged-dependencies-action@v1
