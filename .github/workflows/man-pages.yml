@@ -68,7 +68,9 @@ jobs:
           matrix.r_version != 'devel'
         with:
           needs: Suggests
-          extra-packages: local::.
+          extra-packages: |
+            local::.
+            any::roxygen2
 
       ##################### END boilerplate steps #####################
 

@@ -72,7 +72,9 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           needs: tests
-          extra-packages: local::.
+          extra-packages: |
+            local::.
+            any::devtools
 
       - name: Run tests
         shell: Rscript {0}
