@@ -43,7 +43,7 @@ and removes detected duplicate concentration records.
 \item Validates that all required columns are mapped and no duplicates exist.
 \item If \code{ADOSEDUR} is not mapped, it is assigned a value of \code{0}.
 \item Removes concentration data duplicates using all columns except \code{ARRLT}, \code{NRRLT},
-and \code{NCA_PROFILE}.
+and \code{ATPTREF}.
 \item Uses global objects like \code{MAPPING_COLUMN_GROUPS}, \code{MAPPING_DESIRED_ORDER}, and \code{LABELS}.
 }
 }

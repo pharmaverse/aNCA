@@ -33,7 +33,7 @@ MANUAL_UNITS <- list(
 
 # Define the required columns and group them into categories
 MAPPING_COLUMN_GROUPS <- list(
-  "Group Identifiers" = c("STUDYID", "USUBJID", "NCA_PROFILE"),
+  "Group Identifiers" = c("STUDYID", "USUBJID", "ATPTREF"),
   "Sample Variables" = c("PARAM", "PCSPEC", "ROUTE", "AVAL"),
   "Dose Variables" = c("DRUG", "DOSEA"),
   "Time Variables" = c("AFRLT", "ARRLT", "NFRLT", "NRRLT"),
@@ -43,7 +43,7 @@ MAPPING_COLUMN_GROUPS <- list(
 
 # Define the desired column order
 MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE",
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
   "RRLTU", "ROUTE", "DRUG", "DOSEA", "DOSEU", "ADOSEDUR",
   "VOLUME", "VOLUMEU", "TAU"

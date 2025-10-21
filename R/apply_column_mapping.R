@@ -23,7 +23,7 @@
 #' - Validates that all required columns are mapped and no duplicates exist.
 #' - If `ADOSEDUR` is not mapped, it is assigned a value of `0`.
 #' - Removes concentration data duplicates using all columns except `ARRLT`, `NRRLT`,
-#'  and `NCA_PROFILE`.
+#'  and `ATPTREF`.
 #' - Uses global objects like `MAPPING_COLUMN_GROUPS`, `MAPPING_DESIRED_ORDER`, and `LABELS`.
 #' @export
 apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, desired_order) {
@@ -39,7 +39,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   if (!.validate_column_mapping(selected_cols)) return(NULL)
 
   selected_cols[["Group Identifiers"]] <- selected_cols[["Group Identifiers"]][
-    names(selected_cols[["Group Identifiers"]]) != "NCA_PROFILE"
+    names(selected_cols[["Group Identifiers"]]) != "ATPTREF"
   ]
 
   selected_cols[["Supplemental Variables"]] <- selected_cols[["Supplemental Variables"]][
@@ -49,11 +49,11 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
   # Rename necessary columns
   dataset <- .rename_columns(dataset, selected_cols)
 
-  # Handle special case for NCA_PROFILE
-  nca_profile_col <- mapping$select_NCA_PROFILE
+  # Handle special case for ATPTREF
+  ATPTREF_col <- mapping$select_ATPTREF
 
-  if (!is.null(nca_profile_col) && nca_profile_col != "" && nca_profile_col != "NA") {
-    dataset <- dataset %>% mutate(NCA_PROFILE = as.factor(.data[[nca_profile_col]]))
+  if (!is.null(ATPTREF_col) && ATPTREF_col != "" && ATPTREF_col != "NA") {
+    dataset <- dataset %>% mutate(ATPTREF = as.factor(.data[[ATPTREF_col]]))
   }
 
   if (is.null(mapping$select_ADOSEDUR)) dataset$ADOSEDUR <- 0
@@ -64,7 +64,7 @@ apply_column_mapping <- function(dataset, mapping, manual_units, column_groups, 
     apply_labels(type = "ADPC")
 
   conc_duplicates <- dataset %>%
-    group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
+    group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "ATPTREF"))))) %>%
     filter(n() > 1) %>%
     slice(1) %>%
     ungroup() %>%
