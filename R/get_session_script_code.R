@@ -97,4 +97,4 @@ clean_deparse <- function(obj, indent = 0) {
 }
 
 ## Example usage:
-get_session_script_code(template_path = "inst/shiny/script_template.R", session, output_path = "output_script.R")
+# get_session_script_code(template_path = "inst/shiny/script_template.R", session, output_path = "output_script.R")

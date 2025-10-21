@@ -1,10 +1,4 @@
-#' !!! WARNING !!!
-#' This script is not meant for stand-alone running.
-#' It requires parsing against a Shiny session with userData containing reactive expressions.
-#' It is used for generating the data pre-processing code for download in the app.
-session <- readRDS("LASESSION.rds")
-
-# Proper script description goes here.
+# Load the package (https://github.com/pharmaverse/aNCA) #
 library(aNCA)
 
 # Load raw data #
@@ -18,7 +12,7 @@ applied_filters <- session$userData$applied_filters
 
 preprocessed_adnca <- adnca_data %>%
 
-  # Apply filters
+  # Filter the data
   apply_filters(applied_filters) %>%
 
   # Map columns to their standards
