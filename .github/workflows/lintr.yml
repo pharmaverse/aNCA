@@ -91,13 +91,20 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Install R Dependencies
+      - name: Install R Dependencies (Extras)
         uses: r-lib/actions/setup-r-dependencies@v2
+        if: inputs.install-package == 'true' || inputs.latest-lintr == 'true'
         with:
           needs: Suggests
           extra-packages: |
-            ${{ inputs.install-package == 'true' && 'local::.' || '~' }}
-            ${{ inputs.latest-lintr == 'true' && 'cran::lintr' || '~' }}
+            ${{ inputs.install-package == 'true' && 'local::.' || '' }}
+            ${{ inputs.latest-lintr == 'true' && 'cran::lintr' || '' }}
+
+      - name: Install R Dependencies (Suggests Only)
+        uses: r-lib/actions/setup-r-dependencies@v2
+        if: inputs.install-package == 'false' && inputs.latest-lintr == 'false'
+        with:
+          needs: Suggests
 
       ##################### END boilerplate steps #####################
 
