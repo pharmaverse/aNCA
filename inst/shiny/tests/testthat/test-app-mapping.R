@@ -8,8 +8,6 @@ describe("Test for mapping interface", {
     )
     app$click("data-next_step")
     app$wait_for_idle()
-    app$click("data-next_step")
-    app$wait_for_idle()
     app$expect_values(input = "data-column_mapping-select_STUDYID", screenshot_args = FALSE)
   })
 
@@ -23,7 +21,6 @@ describe("Test for mapping interface", {
 
     app$click("data-next_step")
     app$wait_for_idle()
-    app$click("data-next_step")
 
     input_mapping_values <- app$get_values(input = TRUE)
     mapping_inputs_set <-
