@@ -61,7 +61,7 @@ pk_dose_qc_plot_ui <- function(id) {
 }
 
 # -- Module Server
-pk_dose_qc_plot_server <- function(id, pknca_data) {
+pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     data <- reactive(pknca_data()$conc$data)
@@ -100,7 +100,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data) {
         selected = param_choices_colour[1]
       )
 
-      param_choices_group <- group_vars(pknca_data()$conc)
+      param_choices_group <- grouping_vars()
       updatePickerInput(
         session,
         "group_var",
