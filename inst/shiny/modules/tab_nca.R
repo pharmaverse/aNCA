@@ -217,18 +217,18 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
             cols = (any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))),
             names_to = "PPTESTCD",
             values_to = "is_requested"
-            )%>%
+          ) %>%
           # Translate terms
-          mutate( PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
           # Group by all identifying cols EXCEPT the impute column and the value column
-          group_by(across(c(-impute, -is_requested))) %>% 
+          group_by(across(c(-impute, -is_requested))) %>%
           # If all are FALSE, any(is_requested) will be FALSE.
           summarise(
-            is_requested = any(is_requested), 
-            .groups = "drop" 
+            is_requested = any(is_requested),
+            .groups = "drop"
           ) %>%
           filter(!is_requested)
-        
+
         # Filter for requested params based on intervals
         res$result <- res$result %>%
           anti_join(params__not_requested, by = intersect(names(.), names(params__not_requested)))
