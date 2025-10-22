@@ -50,7 +50,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
       PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last",
                       "lambda.z", "adj.r.squared", "span.ratio", "tlast")
     ) %>%
-    select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES")))
+    select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
+    mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
+
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()
 
@@ -208,6 +210,7 @@ get_halflife_plots_single <- function(
   add_annotations = TRUE,
   text = NULL
 ) {
+  # if (is.na(subtitle_text == "New text")) browser()
   if (is.null(text)) {
     text <- paste0(
       "Data Point: ", seq_len(nrow(plot_data)), "\n(",
