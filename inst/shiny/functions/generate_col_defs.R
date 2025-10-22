@@ -7,7 +7,6 @@
 #'
 #' @return A named list of column definitions for the reactable table.
 #'
-#' @importFrom reactable colDef
 #' @importFrom purrr imap
 #' @importFrom htmltools tags
 #' @examples
@@ -29,7 +28,7 @@ generate_col_defs <- function(data) {
     col_name <- .y
 
     if (!is.null(label)) {
-      colDef(
+      reactable::colDef(
         html = TRUE,
         header = tags$span(
           col_name,
@@ -39,7 +38,7 @@ generate_col_defs <- function(data) {
         )
       )
     } else {
-      colDef(name = col_name)
+      reactable::colDef(name = col_name)
     }
   })
 }
