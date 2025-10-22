@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9159
+Version: 0.0.0.9164
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -37,7 +37,7 @@ Imports:
     utils
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Suggests:
     arrow,
     ggh4x,
