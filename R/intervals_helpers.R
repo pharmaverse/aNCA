@@ -386,3 +386,38 @@ assert_subset <- function(a, b) {
     )
   }
 }
+
+
+interval_remove_all_imputes <- function(data, target_params) {
+  browser()
+  # Validate inputs
+  if (missing(data) || missing(target_params)) {
+    stop("Both 'data' and 'target_params' must be provided.")
+  }
+
+  # Ensure the impute column exists and is a character column
+  if (!"impute" %in% colnames(data)) {
+    warning("No default impute column identified. No impute methods to remove")
+    return(data)
+  } else if (!is.character(data$impute)) {
+    stop("The 'impute' column in the intervals data.frame must be a character column.")
+  }
+
+  # Get all parameter column names in the data frame
+  all_param_options <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
+  param_cols <- intersect(names(data), all_param_options)
+  
+  # Handle target_params
+  assert_subset(target_params, all_param_options)
+
+  # Identify the interval rows that need to be changed
+  target_rows <- which(rowSums(replace(data[, target_params, drop = FALSE],
+                                       is.na(data[, target_params, drop = FALSE]), FALSE)) > 0)
+  new_rows <- data[target_rows, ]
+  new_rows[, setdiff(param_cols, target_params)] <- FALSE
+  new_rows$impute <- ""
+browser()
+  data[target_rows, target_params] <- FALSE
+  bind_rows(data, new_rows)
+
+}

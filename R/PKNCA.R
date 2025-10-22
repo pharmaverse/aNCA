@@ -296,29 +296,29 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   ) %>%
     unique()
 
-  data$impute <- ""
+  data$intervals$impute <- ""
 
   # Impute start values if requested
   if (should_impute_c0) {
     data <- create_start_impute(data)
   }
-browser()
+
   # Define a BLQ imputation method for PKNCA
+  data$intervals$impute <- ifelse(
+    data$intervals$impute != "",
+    paste("blq", data$intervals$impute, sep = ","),
+    "blq"
+  )
   PKNCA_impute_method_blq <- function(conc, time) {
     PKNCA::clean.conc.blq(conc = conc, time = time, conc.blq = blq_imputation_rule)
   }
-  data$intervals$impute <- ""
-  data$intervals$impute <- add_impute_method(
-    impute_vals = data$intervals$impute,
-    target_impute = "blq",
-    after = 0
-  )
 
   # Don't impute parameters that are not AUC dependent
   params_auc_dep <- metadata_nca_parameters %>%
-    filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
+    filter((grepl("auc|aumc", PKNCA) | grepl("auc", Depends)),
+           TYPE == "PKNCA-not-covered") %>%
     pull(PKNCA)
-  
+
   params_not_to_impute <- metadata_nca_parameters %>%
     filter(!grepl("auc|aumc", PKNCA),
            !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
@@ -326,14 +326,16 @@ browser()
     intersect(names(PKNCA::get.interval.cols()))
 
   all_impute_methods <- na.omit(unique(data$intervals$impute))
-  
+browser()
+  interval_remove_all_imputes(data = data$intervals, target_params = params_not_to_impute) %>% select(start, end, USUBJID, PARAM, cmax, auclast, vss.obs, impute) %>% View()
+
   data$intervals <- Reduce(function(d, ti_arg) {
     interval_remove_impute(
       d,
       target_impute = ti_arg,
       target_params = params_not_to_impute
     )
-  }, all_impute_methods, init = data$intervals)
+  }, sort(all_impute_methods), init = data$intervals)
 
   data
 }
