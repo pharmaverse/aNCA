@@ -126,12 +126,12 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       # Filter the conc and dose data frames
       filtered_conc <- pknca_data()$conc$data %>%
         filter(
-          .[[subj_col]] %in% input$usubjid,
-          .[[pcspec_col]] %in% input$pcspec
+          !!sym(subj_col) %in% input$usubjid,
+          !!sym(pcspec_col) %in% input$pcspec
         )
 
       filtered_dose <- pknca_data()$dose$data %>%
-        filter(.[[subj_col]] %in% input$usubjid)
+        filter(!!sym(subj_col) %in% input$usubjid)
 
       list(conc = filtered_conc, dose = filtered_dose)
     })
@@ -153,7 +153,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       # Adjust height based on number of subjects and groups
       height_adjust <- 200 + 20 * filtered_data()$dose %>%
         group_by(across(all_of(input$group_var))) %>%
-        summarise(n = n_distinct(.[[subj_col]]), .groups = "drop") %>%
+        summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop") %>%
         pull(n) %>%
         max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
 
