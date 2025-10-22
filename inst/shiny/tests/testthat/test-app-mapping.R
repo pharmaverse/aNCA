@@ -20,6 +20,7 @@ describe("Test for mapping interface", {
     input_initial_values <- app$get_values(input = TRUE)
 
     app$click("data-next_step")
+    app$wait_for_idle()
 
     input_mapping_values <- app$get_values(input = TRUE)
     mapping_inputs_set <-
