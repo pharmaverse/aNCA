@@ -135,8 +135,8 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
 parse_plot_names_to_df <- function(named_list) {
   plot_names <- names(named_list)
   parsed <- lapply(plot_names, function(x) {
-    pairs <- strsplit(x, ",\\s*")[[1]]
-    kv <- strsplit(pairs, ":\\s*")
+    pairs <- strsplit(x, "_\\s*")[[1]]
+    kv <- strsplit(pairs, "=\\s*")
     setNames(
       vapply(kv, function(y) y[2], character(1)),
       vapply(kv, function(y) y[1], character(1))
