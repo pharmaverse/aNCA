@@ -235,6 +235,9 @@ slope_selector_server <- function( # nolint
         outputId = "manual_slopes",
         data = manual_slopes()
       )
+
+      # Load it to the session objects
+      session$userData$slope_rules <- manual_slopes()
     })
     #' returns half life adjustments rules to update processed_pknca_data in setup.R
     list(
