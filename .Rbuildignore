@@ -13,3 +13,6 @@
 ^man/figures/*
 _\.new\.png$
 inst/shiny/tests/testthat/_snaps
+^cran-comments\.md$
+^NEWS\.md$
+inst/shiny/data/Dummy_data_multiple_routes.csv
