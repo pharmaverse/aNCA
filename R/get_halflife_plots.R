@@ -210,7 +210,6 @@ get_halflife_plots_single <- function(
   add_annotations = TRUE,
   text = NULL
 ) {
-  # if (is.na(subtitle_text == "New text")) browser()
   if (is.null(text)) {
     text <- paste0(
       "Data Point: ", seq_len(nrow(plot_data)), "\n(",
