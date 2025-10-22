@@ -51,7 +51,7 @@ page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per
         rep(TRUE, length(names(plot_outputs())))
       } else {
         grepl(
-          paste0("USUBJID: (", paste0(search_val, collapse = ")|("), ")"),
+          paste0("USUBJID=(", paste0(search_val, collapse = ")|("), ")"),
           names(plot_outputs())
         )
       }

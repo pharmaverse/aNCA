@@ -146,8 +146,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     plotid_vars <- c(group_vars(pknca_data), "start", "end")
     plotid <- paste0(
       paste0(
-        plotid_vars, ": ", df[1, plotid_vars, drop = FALSE],
-        collapse = ", "
+        plotid_vars, "=", df[1, plotid_vars, drop = FALSE],
+        collapse = "_"
       )
     )
 
