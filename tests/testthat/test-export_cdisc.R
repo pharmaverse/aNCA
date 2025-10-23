@@ -20,7 +20,7 @@ test_pknca_res$data$conc$data <- test_pknca_res$data$conc$data %>%
     ATPTN = 1,
     PCTPT = "Post-dose",
     PCTPTNUM = 1,
-    PCTPTREF = "Most Recent Dose",
+    PCTPTREF = as.character(ATPTREF),
     VISIT = paste0("VISIT ", ATPTREF),
     ATPTREFN = as.integer(factor(ATPTREF)),
     VISITNUM = ATPTREFN,
@@ -125,10 +125,10 @@ describe("export_cdisc", {
       unique(test_pknca_res_no_atpt$data$conc$data$PCTPTREF)
     )
 
-    # Check is NA when PCTPT, PCTPTNUM, PCTPTREF are not present
+    # Check is NA when not defined and PCTPTREF is not present
     test_pknca_res_no_pctpt <- test_pknca_res_no_atpt
     test_pknca_res_no_pctpt$data$conc$data <- test_pknca_res_no_atpt$data$conc$data %>%
-      select(-PCTPT, -PCTPTNUM, -PCTPTREF)
+      select(-PCTPT, -PCTPTNUM, -PCTPTREF, -ATPTREF)
     res_no_atpt_pctpt_vars <- export_cdisc(test_pknca_res_no_pctpt)
 
     expect_equal(
@@ -138,10 +138,6 @@ describe("export_cdisc", {
     expect_equal(
       unique(res_no_atpt_pctpt_vars$adpc$ATPTN),
       NA
-    )
-    expect_equal(
-      unique(res_no_atpt_pctpt_vars$adpc$ATPTREF),
-      NA_character_
     )
   })
 
