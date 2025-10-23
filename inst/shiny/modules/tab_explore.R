@@ -303,7 +303,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
           TIME_DOSE = round(AFRLT - ARRLT, 6)
         )
 
-      p <- general_lineplot(
+      lineplot <- general_lineplot(
         plot_data,
         input$generalplot_analyte,
         input$generalplot_pcspec,
@@ -317,25 +317,9 @@ tab_explore_server <- function(id, data, grouping_vars) {
         input$show_dose,
         cycle = input$cycles,
         palette = palettes
-      ) %>%
-        ggplotly(height = 1000)
-
-      # Conditionally add rangeslider only if the plot is not faceted
-      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
-        p <- p %>%
-          layout(
-            xaxis = list(
-              rangeslider = list(type = "time")
-            )
-          )
-      }
-      p
-    })
-
-    # Save the object for the zip folder whenever it changes
-    observe({
-      req(individualplot())
-      session$userData$results$exploration$individualplot <- individualplot()
+      )
+      session$userData$results$exploration$individualplot <- lineplot
+      lineplot
     })
 
     # Render the inidividual plot in plotly
@@ -404,13 +388,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         plot_sd_min = input$sd_mean_plot_min,
         plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
-      ) %>%
-        ggplotly(height = 1000) %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
-          )
-        )
+      )
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })

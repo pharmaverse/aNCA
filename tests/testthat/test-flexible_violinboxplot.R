@@ -1,11 +1,11 @@
 # Create a sample boxplotdata
-boxplotdata <- FIXTURE_PKNCA_RES$result %>%
+boxplotdata <- FIXTURE_PKNCA_RES %>%
   filter(USUBJID %in% 1:7)
 
 describe("flexible_violinboxplot", {
   it("creates a simple plot with minimal arguments", {
     simple_plot <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
+      res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = "NCA_PROFILE",
@@ -24,7 +24,7 @@ describe("flexible_violinboxplot", {
 
   it("creates a plot with additional xvars", {
     xvars_plot <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
+      res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = c("DOSEA", "PARAM"),
       colorvars = "NCA_PROFILE",
@@ -43,7 +43,7 @@ describe("flexible_violinboxplot", {
 
   it("creates a plot with additional colorvars", {
     colorvars_plot <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
+      res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = c("NCA_PROFILE", "PARAM"),
@@ -60,9 +60,9 @@ describe("flexible_violinboxplot", {
     expect_true(any("ggplot" %in% class(colorvars_plot)))
   })
 
-  it("creates a plot with additional varvalstofilter", {
+  it("creates a plot with additional varvalstofilter if specified", {
     varvalstofilter_plot <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
+      res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = "NCA_PROFILE",
@@ -80,9 +80,26 @@ describe("flexible_violinboxplot", {
     expect_true(any("ggplot" %in% class(varvalstofilter_plot)))
   })
 
+  it("creates a plot with all variables if varvalstofilter is unspecified", {
+    all_data_plot <- flexible_violinboxplot(
+      res_nca = boxplotdata,
+      parameter = "CMAX",
+      xvars = "DOSEA",
+      colorvars = "NCA_PROFILE",
+      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      box = TRUE,
+      plotly = FALSE
+    )
+    expect_equal(all_data_plot$labels$x, "DOSEA")
+    expect_equal(all_data_plot$labels$colour, "NCA_PROFILE")
+    expect_true(grepl("CMAX", all_data_plot$labels$y))
+    expect_equal(c(1, 2, 3, 4, 5, 6, 7), unique(all_data_plot$data$USUBJID))
+    expect_true(any("ggplot" %in% class(all_data_plot)))
+  })
+
   it("creates a violin plot when box = FALSE", {
     violin_plot <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
+      res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = "NCA_PROFILE",
@@ -103,7 +120,7 @@ describe("flexible_violinboxplot", {
     boxplotdata_missing <- boxplotdata %>%
       mutate(PPSTRES = NA)
     missing_plot <- flexible_violinboxplot(
-      boxplotdata = boxplotdata_missing,
+      res_nca = boxplotdata_missing,
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = "NCA_PROFILE",
@@ -122,7 +139,7 @@ describe("flexible_violinboxplot", {
 
   it("handles axis labels correctly when parameter has no unit", {
     plot_with_param_unit <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
+      res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = "NCA_PROFILE",
@@ -134,7 +151,7 @@ describe("flexible_violinboxplot", {
     expect_true(grepl("\\[ ng/mL", plot_with_param_unit$x$layout$yaxis$title$text))
 
     plot_wo_param_unit <- flexible_violinboxplot(
-      boxplotdata = boxplotdata %>% mutate(PPSTRESU = ""),
+      res_nca = boxplotdata %>% mutate(PPSTRESU = ""),
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = "NCA_PROFILE",
@@ -148,7 +165,7 @@ describe("flexible_violinboxplot", {
 
   it("creates a plotly object correctly", {
     simple_plotly <- flexible_violinboxplot(
-      boxplotdata = boxplotdata,
+      res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
       colorvars = "NCA_PROFILE",
