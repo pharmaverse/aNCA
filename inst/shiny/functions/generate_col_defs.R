@@ -7,7 +7,6 @@
 #'
 #' @return A named list of column definitions for the reactable table.
 #'
-#' @importFrom purrr imap
 #' @importFrom htmltools tags
 #' @examples
 #' \dontrun{
@@ -23,7 +22,7 @@
 #' @export
 generate_col_defs <- function(data) {
 
-  imap(data, ~{
+  purrr::imap(data, ~{
     label <- unname(attr(.x, "label"))
     col_name <- .y
 
