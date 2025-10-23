@@ -115,7 +115,7 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
         .,
         function(...) {
           vals <- list(...)
-          paste0(names(vals), ": ", vals, collapse = ", ")
+          paste0(names(vals), "=", vals, collapse = "_")
         }
       )) %>%
       pull(id)
