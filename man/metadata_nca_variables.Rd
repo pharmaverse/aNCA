@@ -20,8 +20,11 @@ A data frame with 361 rows and 14 variables:
 \item{Length}{Numeric. The maximum length of the variable.}
 \item{Controlled_Terms}{Character. Reference to controlled terminology (e.g., C85839, C66731).}
 \item{is.used}{Logical. TRUE if the variable is meant to be included.}
-\item{Values}{Character. Possible values for the variable (if applicable).}
+\item{Values}{Character. Possible values (if applicable) for the variable separated by ', '.}
 \item{is.mapped}{Logical. TRUE if the variable is mapped in ADNCA (App's input).}
+\item{mapping_tooltip}{Character. Tooltip text for mapping guidance in the App.}
+\item{mapping_section}{Character. Mapping section where the variable is classified in the App.}
+\item{mapping_alternatives}{Character. Alternative column names for the variable.}
 }
 }
 \source{
