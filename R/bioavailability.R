@@ -58,7 +58,8 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
     names()
 
   # Extract dose information (route and dose)
-  dose_info <- res_nca$data$dose$data
+  dose_info <- res_nca$data$dose$data %>%
+    select(any_of(c(dose_group_cols, route_col, dose_col)))
 
   res_nca$result %>%
 
@@ -77,14 +78,17 @@ pknca_calculate_f <- function(res_nca, f_aucs) {
       PPORRESU = ifelse(!is.na(conv_factor), PPORRESU[1], PPORRESU)
     ) %>%
     ungroup() %>%
-
+    # Copy route column so its not lost in pivot
+    mutate(
+      route_names = !!sym(route_col)
+    ) %>%
     # Pivot and calculate by group mean AUC and dose values
     rename(
       aucs = PPORRES,
       dose = any_of(dose_col)
     ) %>%
     pivot_wider(
-      names_from = any_of(route_col),
+      names_from = route_names,
       values_from = c(aucs, dose)
     ) %>%
 

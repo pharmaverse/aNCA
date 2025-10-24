@@ -74,7 +74,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           flagged = "NOT DONE"
         )
 
-      # Add flaging column in the pivoted results
+      # Add flagging column in the pivoted results
       applied_flags <- purrr::keep(settings()$flags, \(x) x$is.checked)
       flag_params <- names(settings()$flags)
       flag_thr <- sapply(settings()$flags, FUN =  \(x) x$threshold)
@@ -84,14 +84,15 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
       if (length(flag_params) > 0) {
         final_results <- final_results %>%
+          rowwise() %>%
           mutate(
             flagged = case_when(
-              rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
               is.na(Exclude) ~ "ACCEPTED",
               any(sapply(flag_rule_msgs, \(msg) str_detect(Exclude, fixed(msg)))) ~ "FLAGGED",
-              TRUE ~ "ACCEPTED"
+              TRUE ~ "MISSING"
             )
-          )
+          ) %>%
+          ungroup()
       }
       final_results
     })
