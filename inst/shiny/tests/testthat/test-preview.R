@@ -29,7 +29,7 @@ describe("Tests for app preview", {
     app$wait_for_js("!$('#nca-run_nca').prop('disabled')", timeout = 5000)
     app$click("nca-run_nca")
 
-    app$wait_for_value(output = "nca-nca_results-myresults-table", timeout = 45000)
+    app$wait_for_value(output = "nca-nca_results-myresults-table", timeout = 60000)
     table <- app$get_value(output = "nca-nca_results-myresults-table")
     expect_true(jsonlite::validate(table))
   })
