@@ -211,7 +211,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         log_success("NCA results calculated.")
 
         # Reshape intervals, filter
-        params_requested <- res$data$intervals %>%
+        params_not_requested <- res$data$intervals %>%
           # add bioavailability if requested %>%
           mutate(!!!rlang::set_names(TRUE, settings()$bioavailability)) %>%
           # pivot for requested params
@@ -220,16 +220,21 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
                            settings()$bioavailability))),
             names_to = "PPTESTCD",
             values_to = "is_requested"
-            )%>%
+          ) %>%
           # Translate terms
-          mutate( PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
-          # Only select column that are TRUE
-          filter(is_requested)
-          
-        
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+          # Group by all identifying cols EXCEPT the impute column and the value column
+          group_by(across(c(-impute, -is_requested))) %>%
+          # If all are FALSE, any(is_requested) will be FALSE.
+          summarise(
+            is_requested = any(is_requested),
+            .groups = "drop"
+          ) %>%
+          filter(!is_requested)
+
         # Filter for requested params based on intervals
         res$result <- res$result %>%
-          semi_join(params_requested, by = intersect(names(.), names(params_requested)))
+          anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
 
         res
       }, error = function(e) {
