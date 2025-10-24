@@ -92,6 +92,7 @@ tab_data_server <- function(id) {
       session$reload()
     })
     observeEvent(input$next_step, {
+      shinyjs::disable("next_step") # Disable button on click
       current_step <- isolate(data_step())
       if (current_step %in% c("upload", "filtering")) {
         idx <- match(current_step, steps)
@@ -100,10 +101,16 @@ tab_data_server <- function(id) {
       } else if (current_step == "mapping") {
         trigger_mapping_submit(trigger_mapping_submit() + 1)
       } else if (current_step == "preview") {
-        shinyjs::runjs("document.querySelector(`a[data-value='exploration']`).click();"
-        )
+        shinyjs::runjs("document.querySelector(`a[data-value='exploration']`).click();")
       }
     })
+
+    # enable next step after progression
+    observe({
+      data_step()
+      shinyjs::enable("next_step")
+    })
+
     observeEvent(input$prev_step, {
       current <- data_step()
       idx <- match(current, steps)
