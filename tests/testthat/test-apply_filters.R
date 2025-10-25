@@ -111,11 +111,11 @@ describe("apply_filters works correctly", {
         column = "mpg",
         condition = "min-max",
         value = c("15", "20")
-       ) 
-     )
+      )
+    )
 
     expect_equal(nrow(apply_filters(mtcars, filter)), 13)
-    })
+  })
 
   test_that("apply_filters fails with min-max argument NA", {
     filter <- list(
@@ -123,14 +123,10 @@ describe("apply_filters works correctly", {
         column = "mpg",
         condition = "min-max",
         value = c("15", NA)
-        )
-     ) 
-
+      )
+    )
     expect_warning(apply_filters(mtcars, filter))
-#    expect_equal(nrow(apply_filters(mtcars, filter)), 13)
-    })
-        
-      
+  })
 
   test_that("apply_filters skips NULL filters", {
     filters_with_null <- list(
