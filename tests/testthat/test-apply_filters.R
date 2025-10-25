@@ -113,7 +113,6 @@ describe("apply_filters works correctly", {
         value = c("15", "20")
       )
     )
-
     expect_equal(nrow(apply_filters(mtcars, filter)), 13)
   })
 
