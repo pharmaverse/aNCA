@@ -151,6 +151,27 @@ calculate_ratios.data.frame <- function(
   ref_cols <- colnames(ref_groups[, !names(ref_groups) %in% match_cols, drop = FALSE])
 
   # Join test and denominator by their matching columns
+  df_merged <- merge(df_test, df_ref, by = c(match_cols), suffixes = c("", "_ref"))
+
+  # Early exit if df_merge is empty
+  if (nrow(df_merged) == 0) {
+
+    # Create an empty data frame based on df_test
+    out_df <- df_test %>%
+      slice(0) %>%
+      mutate(
+        # PPANMETH would have been in the resulting dataset
+        PPANMETH = character(0),
+
+        # Ensure PPORRESU and PSSTRESU have the right type
+        PPORRESU = if ("PPORRESU" %in% names(.)) character(0) else NULL,
+        PPSTRESU = if ("PPSTRESU" %in% names(.)) character(0) else NULL
+      ) %>%
+      select(any_of(c(names(df_test), "PPANMETH")))
+
+    return(out_df)
+  }
+
   merge(df_test, df_ref, by = c(match_cols), suffixes = c("", "_ref")) %>%
     # If possible compute conversion factors for the units of test and denominator
     mutate(
