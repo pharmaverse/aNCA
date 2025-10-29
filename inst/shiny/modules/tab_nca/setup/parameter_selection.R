@@ -17,7 +17,7 @@ parameter_selection_ui <- function(id) {
   )
 }
 
-parameter_selection_server <- function(id, processed_pknca_data) {
+parameter_selection_server <- function(id, processed_pknca_data, parameter_override) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -34,7 +34,12 @@ parameter_selection_server <- function(id, processed_pknca_data) {
           !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
-      detect_study_types(processed_pknca_data()$conc$data,
+      filtered_intervals <- processed_pknca_data()$intervals %>%
+        select(all_of(groups))
+
+      df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
+
+      detect_study_types(df,
                          groups,
                          drug_column = "DRUG",
                          analyte_column = processed_pknca_data()$conc$columns$groups$group_analyte,
@@ -72,25 +77,57 @@ parameter_selection_server <- function(id, processed_pknca_data) {
       "lambda.z",
       "lambda.z.n.points", "r.squared",
       "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred"
+      "aucpext.obs", "aucpext.pred",
+      "ae", "fe"
     )
 
     # ReactiveVal for paramet selection state
     selection_state <- reactiveVal()
     # Render the new, dynamic reactable
-    output$nca_parameters <- renderReactable({
+    observe({
       req(study_types_df())
 
       params_data <- metadata_nca_parameters %>%
-        filter(TYPE != "PKNCA-not-covered") %>%
-        select(TYPE, PKNCA, PPTESTCD, PPTEST)
+        filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
+        select(TYPE, PKNCA, PPTESTCD, PPTEST,
+               can_excretion, can_non_excretion, can_single_dose,
+               can_multiple_dose, can_extravascular, can_metabolite)
 
       study_type_names <- unique(study_types_df()$type)
 
       selection_df <- params_data
-      for (st_name in study_type_names) {
-        selection_df[[st_name]] <- selection_df$PKNCA %in% DEFAULT_PARAMS
-      }
+
+      selections_override <- tryCatch({
+        parameter_override()
+      }, error = function(e) {
+        NULL
+      })
+
+      # Call the function with the override list
+      selection_df <- apply_parameter_selections(
+        selection_df = selection_df,
+        study_type_names = study_type_names,
+        default_params = DEFAULT_PARAMS,
+        selections_override = selections_override
+      )
+
+      #update the selection df columns
+      parameter_selections <- selection_df %>%
+        select(
+          -any_of(c("can_excretion", "can_non_excretion", "can_single_dose",
+                    "can_multiple_dose", "can_extravascular", "can_metabolite"))
+        )
+      # Set selection state
+      selection_state(parameter_selections)
+
+    })
+
+    # Render the reactable based on the current selection_state
+    output$nca_parameters <- renderReactable({
+      req(selection_state(), study_types_df())
+
+      parameter_selections <- isolate(selection_state())
+      study_type_names <- unique(study_types_df()$type)
 
       # Dynamically create column definitions for each study type
       study_type_cols <- lapply(
@@ -107,9 +144,6 @@ parameter_selection_server <- function(id, processed_pknca_data) {
       )
       names(study_type_cols) <- study_type_names
 
-      # Set selection state
-      selection_state(selection_df)
-
       # Combine with definitions for parameter info columns
       col_defs <- c(
         list(
@@ -121,14 +155,16 @@ parameter_selection_server <- function(id, processed_pknca_data) {
       )
 
       reactable(
-        selection_df,
+        parameter_selections,
         columns = col_defs,
         groupBy = "TYPE",
+        defaultExpanded = TRUE,
         filterable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
         wrap = FALSE,
         resizable = TRUE,
+        selection = "multiple",
         compact = TRUE,
         style = list(fontSize = "0.75em"),
         class = "reactable-table",
@@ -153,12 +189,37 @@ parameter_selection_server <- function(id, processed_pknca_data) {
 
         observeEvent(input[[st_name]], {
           info <- input[[st_name]]
-          current_state <- selection_state()
+          # Isolate state read to prevent feedback loops
+          current_state <- isolate(selection_state())
           current_state[[st_name]][info$row] <- info$value
           selection_state(current_state)
+
+          # Update the reactable UI without a full re-render
+          updateReactable("nca_parameters", data = current_state, session = session)
         })
       })
     })
+
+    # When a row is selected, check all boxes in that row
+    observeEvent(getReactableState("nca_parameters", "selected"), {
+      selected_rows <- getReactableState("nca_parameters", "selected")
+      req(selected_rows)
+
+      current_state <- selection_state()
+      study_type_names <- intersect(
+        unique(study_types_df()$type),
+        colnames(current_state)
+      )
+
+      if (length(study_type_names) > 0) {
+        current_state[selected_rows, study_type_names] <- TRUE
+      }
+
+      selection_state(current_state)
+
+      # Update the reactable UI without a full re-render
+      updateReactable("nca_parameters", data = current_state, session = session)
+    }, ignoreNULL = TRUE)
 
     # Transform the TRUE/FALSE data frame into a named list
     # of parameter vectors

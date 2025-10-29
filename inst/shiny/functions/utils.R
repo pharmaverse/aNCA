@@ -37,23 +37,8 @@ setup_logger <- function() {
 #' @param title Title for the logs.
 #' @param l     List object to be parsed into log. Can also be a data.frame.
 log_debug_list <- function(title, l) {
-  if (is.data.frame(l))
-    l <- split(l, seq_len(nrow(l)))
-
-  log_msg <- purrr::imap(l, \(v, n) {
-    sep <- ", "
-    if (is.list(v)) {
-      v <- purrr::imap(v, \(v2, n2) paste0("\t* ", n2, " -> ", paste0(v2, collapse = ", "))) %>%
-        paste0(collapse = "\n") %>%
-        paste0("\n", .)
-    } else {
-      v <- paste0(v, collapse = ", ")
-    }
-    paste0("* ", n, " -> ", v, collapse = "\n")
-  })
-  log_debug(paste0(title, "\n", paste0(log_msg, collapse = "\n")))
+  log_debug(aNCA:::.concatenate_list(title, l))
 }
-
 
 #' Needed to properly reset reactable.extras widgets
 #'
