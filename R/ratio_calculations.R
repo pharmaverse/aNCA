@@ -236,6 +236,12 @@ calculate_ratios.data.frame <- function(
         ifelse(n > 1, paste0("RA", test_parameter, " (mean)"), paste0("RA", test_parameter))
       }
     ) %>%
+    # Make sure all basic columns are still character (even when empty)
+    mutate(
+      PPORRESU = as.character(PPORRESU),
+      PPSTRESU = as.character(PPSTRESU),
+      PPANMETH = as.character(PPANMETH)
+    ) %>%
     # Keep same format as the input (PKNCAresults)
     select(any_of(c(names(df_test), "PPANMETH"))) %>%
     unique()
