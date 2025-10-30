@@ -116,7 +116,7 @@ describe("apply_filters works correctly", {
     expect_equal(nrow(apply_filters(mtcars, filter)), 13)
   })
 
-  test_that("apply_filters fails with min-max argument NA", {
+  test_that("apply_filters warns with min-max argument NA", {
     filter <- list(
       filter2  <- list(
         column = "mpg",
