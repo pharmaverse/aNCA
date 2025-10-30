@@ -137,7 +137,7 @@ tab_data_server <- function(id) {
       updateTabsetPanel(session, "data_navset", selected = "Preview")
     })
     #' Global variable to store grouping variables
-    grouping_variables <- column_mapping$grouping_variables
+    extra_group_vars <- column_mapping$grouping_variables
     output$processed_data_message <- renderUI({
       tryCatch(
         {
@@ -163,9 +163,60 @@ tab_data_server <- function(id) {
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
     )
+
+    # Use the pre-processed data to create a PKNCA object
+    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
+    pknca_data <- reactive({
+      req(processed_data())
+      log_trace("Creating PKNCA::data object.")
+
+      tryCatch({
+        #' Create data object
+        pknca_object <- PKNCA_create_data_object(processed_data())
+        ############################################################################################
+        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
+        # this is implemented here via hardcoding in PPSTRESU
+        pknca_object$units <- pknca_object$units %>%
+          mutate(
+            PPSTRESU = {
+              new_ppstresu <- ifelse(
+                PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                  metadata_nca_parameters$unit_type == "volume"
+                ],
+                sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
+                PPSTRESU
+              )
+              # Only accept changes producing simple units
+              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
+            },
+            conversion_factor = ifelse(
+              PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                metadata_nca_parameters$unit_type == "volume"
+              ],
+              get_conversion_factor(PPORRESU, PPSTRESU),
+              conversion_factor
+            )
+          )
+        ############################################################################################
+        log_success("PKNCA data object created.")
+
+        #' Enable related tabs and update the curent view if data is created succesfully.
+        purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
+          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+        })
+
+        pknca_object
+      }, error = function(e) {
+        log_error(e$message)
+        showNotification(e$message, type = "error", duration = NULL)
+        NULL
+      })
+    }) |>
+      bindEvent(processed_data())
+
     list(
-      data = processed_data,
-      grouping_variables = grouping_variables
+      pknca_data = pknca_data,
+      extra_group_vars = extra_group_vars
     )
   })
 }
