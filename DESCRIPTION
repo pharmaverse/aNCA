@@ -41,9 +41,11 @@ RoxygenNote: 7.3.3
 Suggests:
     arrow,
     covr,
+    DT,
     ggh4x,
     glue,
     haven,
+    htmltools,
     htmlwidgets,
     jsonlite,
     knitr,
