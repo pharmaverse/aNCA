@@ -106,6 +106,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       loading_popup("Calculating NCA results...")
 
       log_info("Calculating NCA results...")
+
       tryCatch({
         # Create env for storing PKNCA run warnings, so that warning messages can be appended
         # from within warning handler without bleeding to global env.
@@ -181,14 +182,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
         NULL
+      }, finally = {
+        # Delay the removal of loading modal to give it enough time to render
+        later::later(~shiny::removeModal(session = session), delay = 0.5)
       })
     }) |>
       bindEvent(input$run_nca)
-
-    #' Remove loading modal when results are ready and visible
-    observeEvent(input$results_visible, {
-      removeModal()
-    })
 
     #' Show slopes results
     pivoted_slopes <- reactive({
