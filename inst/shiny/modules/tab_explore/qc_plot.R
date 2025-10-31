@@ -61,18 +61,22 @@ pk_dose_qc_plot_ui <- function(id) {
 }
 
 # -- Module Server
-pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
+pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    data <- reactive(pknca_data()$conc$data)
 
     # Update inputs based on the main data
-    observeEvent(data(), {
-      req(data())
+    observeEvent(pknca_data(), {
+      req(pknca_data())
 
-      param_choices_usubjid <- data() %>%
-        pull(USUBJID) %>%
-        unique()
+      conc_data <- pknca_data()$conc
+      subj_col <- conc_data$columns$subject
+      pcspec_col <- "PCSPEC"
+      dose_col <- pknca_data()$dose$columns$dose
+      route_col <- pknca_data()$dose$columns$route
 
+      param_choices_usubjid <- unique(conc_data$data[[subj_col]])
       updatePickerInput(
         session,
         "usubjid",
@@ -80,11 +84,7 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
         selected = param_choices_usubjid
       )
 
-      param_choices_pcspec <- data() %>%
-        filter(!is.na(PCSPEC)) %>%
-        pull(PCSPEC) %>%
-        unique()
-
+      param_choices_pcspec <- unique(na.omit(conc_data$data[[pcspec_col]]))
       updatePickerInput(
         session,
         "pcspec",
@@ -92,8 +92,7 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
         selected = param_choices_pcspec
       )
 
-      param_choices_colour <- c("DOSEA", "ROUTE")
-
+      param_choices_colour <- c(dose_col, route_col)
       updatePickerInput(
         session,
         "colour_var",
@@ -101,70 +100,38 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
         selected = param_choices_colour[1]
       )
 
+      param_choices_group <- grouping_vars()
       updatePickerInput(
         session,
         "group_var",
-        choices = grouping_vars(),
-        selected = grouping_vars()[1]
+        choices = param_choices_group,
+        selected = param_choices_group[1]
       )
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
-
       updatePickerInput(
         session,
         "show_samples_doses",
         choices = param_choices_samples_doses,
         selected = param_choices_samples_doses
       )
-
-    })
-
-    processed_data <- reactive({
-      req(data())
-
-      data_conc <- NULL
-      data_dose <- NULL
-
-      # If the EVID column is present and there are any doses, use it to define
-      # data_conc and data_dose
-      if ("EVID" %in% names(data())) {
-        if (nrow(data() %>% filter(EVID == 1)) > 0) {
-          data_conc <- data() %>% filter(EVID == 0)
-          data_dose <- data() %>% filter(EVID == 1)
-        }
-      }
-
-      # If the PARAMCD column is present and there are any doses, use it to define
-      # data_conc and data_dose
-      if (is.null(data_dose) && "PARAMCD" %in% names(data())) {
-        if (nrow(data() %>% filter(grepl("dose", tolower(PARAMCD))))) {
-          data_conc <- data() %>% filter(!grepl("dose", tolower(PARAMCD)))
-          data_dose <- data() %>% filter(grepl("dose", tolower(PARAMCD)))
-        }
-      }
-
-      # Temporary solution: create the PKNCA object here
-      if (is.null(data_dose)) {
-        pknca_obj <- PKNCA_create_data_object(data())
-        data_conc <- pknca_obj$conc$data
-        data_dose <- pknca_obj$dose$data
-      }
-
-      list(conc = data_conc, dose = data_dose)
     })
 
     filtered_data <- reactive({
-      req(processed_data(), input$usubjid, input$pcspec)
+      req(pknca_data(), input$usubjid, input$pcspec)
+
+      subj_col <- pknca_data()$conc$columns$subject
+      pcspec_col <- "PCSPEC"
 
       # Filter the conc and dose data frames
-      filtered_conc <- processed_data()$conc %>%
+      filtered_conc <- pknca_data()$conc$data %>%
         filter(
-          USUBJID %in% input$usubjid,
-          PCSPEC %in% input$pcspec
+          !!sym(subj_col) %in% input$usubjid,
+          !!sym(pcspec_col) %in% input$pcspec
         )
 
-      filtered_dose <- processed_data()$dose %>%
-        filter(USUBJID %in% input$usubjid)
+      filtered_dose <- pknca_data()$dose$data %>%
+        filter(!!sym(subj_col) %in% input$usubjid)
 
       list(conc = filtered_conc, dose = filtered_dose)
     })
@@ -174,28 +141,32 @@ pk_dose_qc_plot_server <- function(id, data, grouping_vars) {
       req(filtered_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)
 
+      subj_col <- pknca_data()$conc$columns$subject
+      dose_col <- pknca_data()$dose$columns$dose
+      doseu_col <- pknca_data()$dose$columns$doseu
+
       show_pk_samples <- "PK Samples" %in% input$show_samples_doses
       show_doses <- "Doses" %in% input$show_samples_doses
 
-      colour_var_units <- if (input$colour_var == "DOSEA") "DOSEU" else NULL
+      colour_var_units <- if (input$colour_var == dose_col) doseu_col else NULL
 
       # Adjust height based on number of subjects and groups
       height_adjust <- 200 + 20 * filtered_data()$dose %>%
         group_by(across(all_of(input$group_var))) %>%
-        summarise(n = n_distinct(USUBJID), .groups = "drop") %>%
+        summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop") %>%
         pull(n) %>%
         max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
 
       pk_dose_qc_plot(
         data_conc = filtered_data()$conc,
         data_dose = filtered_data()$dose,
-        x_var = "AFRLT",
-        y_var = "USUBJID",
+        x_var = pknca_data()$conc$columns$time,
+        y_var = pknca_data()$conc$columns$subject,
         colour_var = input$colour_var,
         shape_var = "PCSPEC",
         grouping_vars = input$group_var,
         other_tooltip_vars = c("NFRLT", "DOSETRT"),
-        x_var_units = "RRLTU",
+        x_var_units = pknca_data()$conc$columns$timeu,
         colour_var_units = colour_var_units,
         title = "Dose and Sample Events",
         show_pk_samples = show_pk_samples,

@@ -106,7 +106,7 @@ apply_mapping <- function(
   # Check there are no duplicates
   # TODO(Gerardo): This perhaps should be apart and outside of the mapping function (PKNCA obj)
   filt_duplicates_dataset <- new_dataset %>%
-    group_by(across(any_of(c("AFRLT", "STUDYID", "PCSPEC", "DOSETRT", "USUBJID", "PARAM")))) %>%
+    group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "NCA_PROFILE"))))) %>%
     slice(1) %>%
     ungroup() %>%
     as.data.frame()
