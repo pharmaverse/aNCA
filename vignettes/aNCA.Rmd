@@ -27,7 +27,7 @@ Some variables are mandatory (marked with \*), while others are optional. Custom
 |------------------|------------------|-------------------|------------------|
 | **Grouping Identifiers** | STUDYID \*     | Study Identifier                                                   | character         |
 |                          | USUBJID \*     | Unique Subject Identifier                                          | character/numeric |
-|                          | NCA_PROFILE \* | Can be any column, and used to filter data for NCA calculations     | any               |
+|                          | ATPTREF \* | Can be any column, and used to filter data for NCA calculations     | any               |
 |                          | TRT01A         | Treatment Group Identifier (Actual)                                | character         |
 |                          | TRT01P         | Treatment Group Identifier (Planned)                               | character         |
 |                          | AGE            | Age of Subject                                                     | numeric           |
@@ -38,7 +38,7 @@ Some variables are mandatory (marked with \*), while others are optional. Custom
 |                          | PCSPEC \*      | Specimen Material Type                                             | character         |
 |                          | AVAL \*        | Analysis Value                                                     | numeric           |
 |                          |                |                                                                    |                   |
-| **Dose Variables**       | DRUG \*        | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
+| **Dose Variables**       | DOSETRT \*        | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
 |                          | ROUTE \*       | Route of Administration, either {intravascular} or {extravascular} | character         |
 |                          | DOSEA \*       | Actual Treatment Dose                                              | numeric           |
 |                          | ADOSEDUR       | Actual Treatment Dose                                              | numeric           |

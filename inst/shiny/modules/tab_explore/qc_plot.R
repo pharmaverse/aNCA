@@ -165,7 +165,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         colour_var = input$colour_var,
         shape_var = "PCSPEC",
         grouping_vars = input$group_var,
-        other_tooltip_vars = c("NFRLT", "DRUG"),
+        other_tooltip_vars = c("NFRLT", "DOSETRT"),
         x_var_units = pknca_data()$conc$columns$timeu,
         colour_var_units = colour_var_units,
         title = "Dose and Sample Events",

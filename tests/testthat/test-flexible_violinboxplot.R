@@ -8,15 +8,15 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
+      colorvars = "ATPTREF",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
 
     expect_equal(simple_plot$labels$x, "DOSEA")
-    expect_equal(simple_plot$labels$colour, "NCA_PROFILE")
+    expect_equal(simple_plot$labels$colour, "ATPTREF")
     expect_true(grepl("CMAX", simple_plot$labels$y))
     expect_true(any("ggplot" %in% class(simple_plot)))
     expect_equal(c(1, 2, 6), unique(simple_plot$data$USUBJID))
@@ -27,15 +27,15 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = c("DOSEA", "PARAM"),
-      colorvars = "NCA_PROFILE",
+      colorvars = "ATPTREF",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
 
     expect_equal(xvars_plot$labels$x, "DOSEA, PARAM")
-    expect_equal(xvars_plot$labels$colour, "NCA_PROFILE")
+    expect_equal(xvars_plot$labels$colour, "ATPTREF")
     expect_true(grepl("CMAX", xvars_plot$labels$y))
     expect_equal(c(1, 2, 6), unique(xvars_plot$data$USUBJID))
     expect_true(any("ggplot" %in% class(xvars_plot)))
@@ -46,15 +46,15 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = c("NCA_PROFILE", "PARAM"),
+      colorvars = c("ATPTREF", "PARAM"),
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
 
     expect_equal(colorvars_plot$labels$x, "DOSEA")
-    expect_equal(colorvars_plot$labels$colour, "NCA_PROFILE, PARAM")
+    expect_equal(colorvars_plot$labels$colour, "ATPTREF, PARAM")
     expect_true(grepl("CMAX", colorvars_plot$labels$y))
     expect_equal(c(1, 2, 6), unique(colorvars_plot$data$USUBJID))
     expect_true(any("ggplot" %in% class(colorvars_plot)))
@@ -65,18 +65,18 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
-      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6", "NCA_PROFILE: 1"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      colorvars = "ATPTREF",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6", "ATPTREF: 1"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
 
     expect_equal(varvalstofilter_plot$labels$x, "DOSEA")
-    expect_equal(varvalstofilter_plot$labels$colour, "NCA_PROFILE")
+    expect_equal(varvalstofilter_plot$labels$colour, "ATPTREF")
     expect_true(grepl("CMAX", varvalstofilter_plot$labels$y))
     expect_equal(c(1, 2, 6), unique(varvalstofilter_plot$data$USUBJID))
-    expect_equal(1, unique(varvalstofilter_plot$data$NCA_PROFILE))
+    expect_equal(1, unique(varvalstofilter_plot$data$ATPTREF))
     expect_true(any("ggplot" %in% class(varvalstofilter_plot)))
   })
 
@@ -85,15 +85,15 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
+      colorvars = "ATPTREF",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 3"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = FALSE,
       plotly = FALSE
     )
 
     expect_equal(violin_plot$labels$x, "DOSEA")
-    expect_equal(violin_plot$labels$colour, "NCA_PROFILE")
+    expect_equal(violin_plot$labels$colour, "ATPTREF")
     expect_true(grepl("CMAX", violin_plot$labels$y))
     expect_equal(c(1, 2, 3), unique(violin_plot$data$USUBJID))
     expect_true(any("ggplot" %in% class(violin_plot)))
@@ -106,15 +106,15 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata_missing,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
+      colorvars = "ATPTREF",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
 
     expect_equal(missing_plot$labels$x, "DOSEA")
-    expect_equal(missing_plot$labels$colour, "NCA_PROFILE")
+    expect_equal(missing_plot$labels$colour, "ATPTREF")
     expect_true(grepl("CMAX", missing_plot$labels$y))
     expect_equal(c(1, 2, 6), unique(missing_plot$data$USUBJID))
     expect_true(any("ggplot" %in% class(missing_plot)))
@@ -125,9 +125,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
+      colorvars = "ATPTREF",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -137,9 +137,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata %>% mutate(PPSTRESU = ""),
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
+      colorvars = "ATPTREF",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
@@ -151,9 +151,9 @@ describe("flexible_violinboxplot", {
       boxplotdata = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
+      colorvars = "ATPTREF",
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = TRUE
     )
