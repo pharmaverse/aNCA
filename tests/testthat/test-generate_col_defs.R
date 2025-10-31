@@ -1,5 +1,3 @@
-source(system.file("shiny/functions/generate_col_defs.R", package = "aNCA"))
-
 describe("generate_col_defs", {
   it("generates a list of column definitions with labels", {
     data <- data.frame(
@@ -13,5 +11,4 @@ describe("generate_col_defs", {
     expect_equal(col_defs$USUBJID$header$attribs$title, "Unique Subject Identifier")
     expect_equal(col_defs$AVAL$header$attribs$title, "Analysis Value")
   })
-
 })
