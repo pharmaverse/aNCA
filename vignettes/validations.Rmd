@@ -1,0 +1,21 @@
+---
+title: "Validations"
+author: "pharmaverse aNCA"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Validations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Validations
+
+The current validation methods for aNCA are listed here:
+
+- Code coverage >90%. You can check this either with our [GitHub README badge](https://github.com/pharmaverse/aNCA) or by running yourself `covr::package_coverage()` in our cloned repo
+- CI/CD workflow passing. Testing package installation on Ubuntu () & Windows (), unit function tests and general documentation aspects (completeness, spelling...)
+- CDISC outputs have been P21 tested. Here you can see the successful reports for our dummy data example ().
+- Internal company validations. So far, we obtained tested and succesfully validated the package for Roche; see the [report]() and the [validation details](https://pharmar.org/posts/case-studies/roche-case-study/)
+- Parameter calculations are coming from PKNCA package. This package has already been used for FDA submission, for more details about it click [here](https://github.com/humanpred/pknca).
+
+If you feel something is missing or have ideas on how to improve the validation process, We’d love to hear your feedback, check [this issue](https://github.com/pharmaverse/aNCA/issues/539)!
