@@ -173,9 +173,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         show_doses = show_doses,
         as_plotly = TRUE,
         height = max(c(1000, height_adjust))
-      ) %>%
-        layout(xaxis = list(rangeslider = list(type = "time")))
+      )
     })
   })
-
 }
