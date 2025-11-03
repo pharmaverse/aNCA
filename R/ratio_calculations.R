@@ -236,7 +236,7 @@ calculate_ratios.data.frame <- function(
         ifelse(n > 1, paste0("RA", test_parameter, " (mean)"), paste0("RA", test_parameter))
       }
     ) %>%
-    # Make sure all basic columns are still character (even when empty)
+    # Make sure all basic columns are still character (even when empty #730)
     mutate(
       PPORRESU = as.character(PPORRESU),
       PPSTRESU = as.character(PPSTRESU),
