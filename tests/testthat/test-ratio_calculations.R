@@ -245,7 +245,7 @@ describe("calculate_ratios", {
     expect_true(all(grepl("RACMAX", ratios_df$PPTESTCD)))
   })
 
-  it("handles early exit with no matches (data.frame) and returns correct structure", {
+  it("handles no test and reference matches (data.frame) and returns correct structure", {
     # Use test_groups that don't exist in the data to force an empty df_test
     test_groups_no_match <- data.frame(PARAM = "Z")
 
