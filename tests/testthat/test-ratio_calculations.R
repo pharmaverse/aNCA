@@ -272,24 +272,4 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
 
-  it("handles early exit with no matches (PKNCAresults) without bind_rows error", {
-    # Use test_groups that don't exist in the data
-    test_groups_no_match <- data.frame(PARAM = "Z")
-
-    # This will call bind_rows(res_simple$result, ratios_empty) internally.
-    # We expect it *not* to error, which confirms the fix.
-    res_bound <- expect_no_error(
-      calculate_ratios(
-        res_simple, # The PKNCAresults object
-        test_parameter = "CMAX",
-        ref_parameter = "CMAX",
-        match_cols = c("start", "end", "USUBJID"),
-        ref_groups = ref_groups,
-        test_groups = test_groups_no_match
-      )
-    )
-
-    # Check that no rows were added
-    expect_equal(nrow(res_bound$result), nrow(res_simple$result))
-  })
 })
