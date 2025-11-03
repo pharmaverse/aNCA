@@ -81,9 +81,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       "ae", "fe"
     )
 
-    # ReactiveVal for paramet selection state
+    # ReactiveVal for parameter selection state
     selection_state <- reactiveVal()
-    # Render the new, dynamic reactable
+    
+    #  observe to update selection_state when study types or overrides change
     observe({
       req(study_types_df())
 
@@ -122,13 +123,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
     })
 
-    # Render the reactable based on the current selection_state
+    # Render the reactable
     output$nca_parameters <- renderReactable({
-      req(selection_state(), study_types_df())
+      req(study_types_df())
 
       parameter_selections <- isolate(selection_state())
+      req(parameter_selections)
       study_type_names <- unique(study_types_df()$type)
-
+      
       # Dynamically create column definitions for each study type
       study_type_cols <- lapply(
         study_type_names,
@@ -164,7 +166,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         highlight = TRUE,
         wrap = FALSE,
         resizable = TRUE,
-        selection = "multiple",
         compact = TRUE,
         style = list(fontSize = "0.75em"),
         class = "reactable-table",
@@ -181,6 +182,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       height = "28vh"
     )
 
+    # Observe individual checkbox changes and update selection_state accordingly
     observe({
       study_type_names <- unique(study_types_df()$type)
       req(study_type_names)
@@ -193,33 +195,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           current_state <- isolate(selection_state())
           current_state[[st_name]][info$row] <- info$value
           selection_state(current_state)
-
-          # Update the reactable UI without a full re-render
-          updateReactable("nca_parameters", data = current_state, session = session)
-        })
+          
+          }, ignoreNULL = TRUE, ignoreInit = TRUE)
       })
     })
 
-    # When a row is selected, check all boxes in that row
-    observeEvent(getReactableState("nca_parameters", "selected"), {
-      selected_rows <- getReactableState("nca_parameters", "selected")
-      req(selected_rows)
-
-      current_state <- selection_state()
-      study_type_names <- intersect(
-        unique(study_types_df()$type),
-        colnames(current_state)
-      )
-
-      if (length(study_type_names) > 0) {
-        current_state[selected_rows, study_type_names] <- TRUE
-      }
-
-      selection_state(current_state)
-
-      # Update the reactable UI without a full re-render
-      updateReactable("nca_parameters", data = current_state, session = session)
-    }, ignoreNULL = TRUE)
 
     # Transform the TRUE/FALSE data frame into a named list
     # of parameter vectors
@@ -243,18 +223,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         purrr::map(~ .x$PKNCA)
     })
 
-    # Debounce the trigger, so the data is not updated too often.
-    parameter_debounce <- 2500
-    parameters_debounced <- debounce(parameter_lists_by_type, parameter_debounce)
-
     # On all changes, disable NCA button for given period of time to prevent the user from running
     # the NCA before settings are applied.
     observeEvent(parameter_lists_by_type(), {
       runjs(str_glue(
         "buttonTimeout(
-          '.run-nca-btn',
-          {parameter_debounce + 250},
-          'Applying<br>settings...',
+          '#nca-run_nca',
+          {1000},
+          'Applying settings...',
           'Run NCA'
         );"
       ))
@@ -262,7 +238,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
     # Return list
     list(
-      selections = parameters_debounced,
+      selections = parameter_lists_by_type,
       types_df = study_types_df
     )
   })
