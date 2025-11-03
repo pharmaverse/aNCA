@@ -16,7 +16,7 @@
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
-  tabs <- c("Upload", "Filtering", "Mapping", "Preview")
+  tabs <- c("Upload", "Mapping", "Filtering", "Preview")
 
   tagList(
     shinyjs::useShinyjs(),
@@ -34,14 +34,14 @@ tab_data_ui <- function(id) {
               data_upload_ui(ns("raw_data"))
             ),
             nav_panel(
-              "Filtering",
-              stepper_ui("Filtering", tabs),
-              data_filtering_ui(ns("data_filtering"))
-            ),
-            nav_panel(
               "Mapping",
               stepper_ui("Mapping", tabs),
               data_mapping_ui(ns("column_mapping"))
+            ),
+            nav_panel(
+              "Filtering",
+              stepper_ui("Filtering", tabs),
+              data_filtering_ui(ns("data_filtering"))
             ),
             nav_panel(
               "Preview",
@@ -76,8 +76,8 @@ tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     trigger_mapping_submit <- reactiveVal(0)
-    steps <- c("upload", "filtering", "mapping", "preview")
-    step_labels <- c("Upload", "Filtering", "Mapping", "Preview")
+    steps <- c("upload", "mapping", "filtering", "preview")
+    step_labels <- c("Upload", "Mapping", "Filtering", "Preview")
     data_step <- reactiveVal("upload")
     observe({
       current <- data_step()
@@ -121,21 +121,25 @@ tab_data_server <- function(id) {
     })
     #' Load raw ADNCA data
     adnca_raw <- data_upload_server("raw_data")
-    #' Filter data
-    adnca_filtered <- data_filtering_server("data_filtering", adnca_raw)
+
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
-      adnca_data = adnca_filtered,
+      adnca_data = adnca_raw,
       trigger = trigger_mapping_submit
     )
     #' Reactive value for the processed dataset
-    processed_data <- column_mapping$processed_data
-    observeEvent(processed_data(), {
-      req(processed_data())
-      data_step("preview")
-      updateTabsetPanel(session, "data_navset", selected = "Preview")
+    adnca_mapped <- column_mapping$processed_data
+
+    observeEvent(adnca_mapped(), {
+      req(adnca_mapped())
+      data_step("filtering")
+      updateTabsetPanel(session, "data_navset", selected = "Filtering")
     })
+
+    #' Filter data
+    processed_data <- data_filtering_server("data_filtering", adnca_mapped)
+
     #' Global variable to store grouping variables
     extra_group_vars <- column_mapping$grouping_variables
     output$processed_data_message <- renderUI({
