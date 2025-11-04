@@ -20,13 +20,13 @@ The current validation methods for aNCA are listed here:
 
 If you feel something is missing or have ideas on how to improve the validation process, We’d love to hear your feedback, check [this issue](https://github.com/pharmaverse/aNCA/issues/539) and comment!
 
-## Additional validations planned for 2026
+## Potential new validations
 
-Among our new plans will be
+Among our plans will be to:
 
 -   **Automate CI/CD CDISC standard testings** in the outputs
 -   **Polish our end-to-end Shiny App tests** (there is an ongoing draft)
 -   **Consider other testing types**: fuzzing, chaos, sensibility...
--   **OS risk assessment evaluation** metrics based on popular packages created for this
+-   **Assess risk in our CI/CD using OS tools** with metrics based on popular packages created for this
 -   **Join CRAN** to increase the number of users testing the App
 -   **Improve App documentation** (i.e, tutorials) so new users can test all the App options

@@ -3,7 +3,7 @@ template:
   light-switch: true
 navbar:
   structure:
-    right: [search, github, lightswitch]
+    right: [search, github, validations, lightswitch]
   components:
     articles:
       text: Contributing
@@ -12,4 +12,8 @@ navbar:
           href: articles/contributing.html
         - text: Adding TLGs
           href: articles/adding_tlg.html
+    validations:
+      icon: fa-check-circle
+      href: articles/validations.html
+      aria-label: Validations
 url: "https://pharmaverse.github.io/aNCA/"
