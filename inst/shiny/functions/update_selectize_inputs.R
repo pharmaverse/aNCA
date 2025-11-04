@@ -49,7 +49,7 @@ update_selectize_inputs <- function(session, input_ids, data_colnames, alternati
       choices = list(
         "Select Column" = "",
         "Mapping Columns" = data_colnames,
-        "Mapping Values" =  strsplit(alternative_choices_list[[input_colname]]$Values, ", ")[[1]]
+        "Mapping Values" = strsplit(alternative_choices_list[[input_colname]]$Values, ", ")[[1]]
       ),
       selected = selected_vals
     )
