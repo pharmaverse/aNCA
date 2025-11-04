@@ -16,7 +16,7 @@
 #'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 #'   (dosing data- not CDISC standard)
 #'   - Creates `DOSNOA` variable, sequential numbers based on time of dose
-#'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
+#'   - Creates a 'std_route' column with PKNCA values "intravascular" or "extravascular" based on route_column (ROUTE, CDISC: C66729).
 #'   - Arranges the data by group_columns.
 #'
 #' @examples
@@ -63,9 +63,9 @@ format_pkncaconc_data <- function(ADNCA,
   ADNCA %>%
     mutate( #round to prevent floating point precision issues
       dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
-      std_route = ifelse(
-        grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
-              gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
+      std_route =  ifelse(
+        grepl("(INFUS|DRIP|IV|INTRAVEN|IVADMIN|BOLUS|INTRAVASCULAR|INTRA-?ARTERIAL|INTRACARDIAC|INTRACORONARY)",
+              gsub("[^[:alnum:]]", "", toupper(routes))),
         "intravascular",
         "extravascular"
       )
