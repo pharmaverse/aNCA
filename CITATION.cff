@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Suekuer
+    given-names: Ercan
+    email: ercan.suekuer@roche.com
+    orcid: "https://orcid.org/0009-0001-1626-1526"
+  - family-names: Rodriguez
+    given-names: Gerardo Jose
+    email: gerardo.jrac@gmail.com
+    orcid: "https://orcid.org/0000-0003-1413-0060"
+  - family-names: Baertschi
+    given-names: Pascal
+    email: paesce.26@gmail.com
+    orcid: "https://orcid.org/0000-0002-6533-0399"
+  - family-names: Spinner
+    given-names: Jana
+    email: spinnerjana@gmail.com
+    orcid: "https://orcid.org/0009-0009-2197-9530"
+  - family-names: Kolomanski
+    given-names: Mateusz
+    email: mateusz.kolomanski@appsilon.com
+    orcid: "https://orcid.org/0000-0001-7424-3919"
+  - family-names: Legras
+    given-names: Valentin
+    email: anca.pharmaverse@gmail.com
+  - name: F. Hoffmann-La Roche AG
+    type: organization
+    roles: ["sponsor"]
+title: aNCA: A Dynamic Shiny App to perform NCA
+version: 0.0.0.9176
+date-released: 3-11-2025
+repository-code: "https://github.com/pharmaverse/aNCA"
+license: Apache-2.0
