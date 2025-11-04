@@ -186,56 +186,25 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       )
     })
     
-    # Listen for changes to *any* input
+    # This observer watches for checkbox clicks and updates the state.
     observe({
       # Get all inputs from this module
       all_module_inputs <- reactiveValuesToList(input)
+      current_selections <- isolate(selection_state())
       
-      # Filter for just dynamically-created checkboxes
-      chk_input_names <- names(all_module_inputs)[
-        startsWith(names(all_module_inputs), "chk_")
-      ]
-      
-      if (length(chk_input_names) == 0) {
-        return() # No checkboxes rendered yet
-      }
-      
-      # Get the current state without creating a reactive dependency
-      current_state <- isolate(selection_state())
-      if (is.null(current_state)) {
+      if (is.null(current_selections)) {
         return() # State not initialized yet
       }
       
-      is_dirty <- FALSE # Flag to track if we need to update state
-      
-      # Loop over all checkbox inputs
-      for (chk_name in chk_input_names) {
-        # Parse the chk_id
-        parts <- stringr::str_split(chk_name, "_", n = 3)[[1]]
-        param_name <- parts[2]
-        study_type <- parts[3]
-        
-        # Get the new value from the UI
-        new_value <- all_module_inputs[[chk_name]]
-        
-        # Find the row/column in our state data frame
-        row_idx <- which(current_state$PKNCA == param_name)
-        
-        if (length(row_idx) > 0 && (study_type %in% names(current_state))) {
-          # Get the old value from the state
-          old_value <- current_state[row_idx, study_type]
-          
-          # If UI value is different from state value, update the state
-          if (!is.null(new_value) && !is.null(old_value) && new_value != old_value) {
-            current_state[row_idx, study_type] <- new_value
-            is_dirty <- TRUE
-          }
-        }
-      }
+      # Call the helper to process UI changes
+      update_result <- update_parameter_selections(
+        current_selections = current_selections,
+        module_inputs = all_module_inputs
+      )
       
       # If any values changed, update the reactiveVal
-      if (is_dirty) {
-        selection_state(current_state)
+      if (update_result$has_changes) {
+        selection_state(update_result$new_selections)
       }
     })
 
