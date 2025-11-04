@@ -13,7 +13,10 @@ parameter_selection_ui <- function(id) {
   tagList(
     p("The following study types were detected in the data:"),
     reactable_ui(ns("study_types")),
-    reactableOutput(ns("nca_parameters"))
+    
+    h3("Parameter Selection"),
+    p("Select the parameters to calculate for each study type. Selections can be overridden by uploading a settings file."),
+    reactableOutput(ns("parameter_table"))
   )
 }
 
@@ -123,44 +126,54 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
     })
 
-    # Render the reactable
-    output$nca_parameters <- renderReactable({
+    output$parameter_table <- renderReactable({
+      req(selection_state())
       req(study_types_df())
-
-      parameter_selections <- isolate(selection_state())
-      req(parameter_selections)
+      
+      df <- selection_state()
       study_type_names <- unique(study_types_df()$type)
       
-      # Dynamically create column definitions for each study type
-      study_type_cols <- lapply(
-        study_type_names,
-        function(st_name) {
-          colDef(
-            name = st_name,
-            cell = checkbox_extra(ns(st_name), class = "table-check"),
-            html = TRUE,
-            align = "center",
-            width = 150
-          )
-        }
+      # Define base columns
+      col_defs <- list(
+        # Freeze parameter info columns to the left
+        PKNCA = colDef(show = FALSE),
+        PPTESTCD = colDef(sticky = "left", minWidth = 100, name = "Code"),
+        PPTEST = colDef(sticky = "left", minWidth = 200, name = "Label")
       )
+      
+      # Dynamically create checkbox columns for each study type
+      study_type_cols <- purrr::map(study_type_names, ~ {
+        colDef(
+          name = .x, # Column header is the study type name
+          align = "center",
+          # Custom cell renderer function
+          cell = function(value, index, name) {
+            param_name <- df$PKNCA[index]
+            # Create a unique ID for the checkbox
+            chk_id <- ns(paste("chk", param_name, name, sep = "_"))
+            
+            shiny::checkboxInput(
+              inputId = chk_id,
+              label = NULL,
+              value = value, # Set checked state from data
+              width = "100%"
+            )
+          }
+        )
+      })
+      
+      # Name the list of colDefs so reactable can match them
       names(study_type_cols) <- study_type_names
-
-      # Combine with definitions for parameter info columns
-      col_defs <- c(
-        list(
-          PKNCA = colDef(show = FALSE),
-          PPTESTCD = colDef(name = "Code", sticky = "left", minWidth = 120),
-          PPTEST = colDef(name = "Label", minWidth = 200)
-        ),
-        study_type_cols
-      )
-
+      
+      # Combine all column definitions
+      all_col_defs <- c(col_defs, study_type_cols)
+      
       reactable(
-        parameter_selections,
-        columns = col_defs,
+        df,
+        columns = all_col_defs,
         groupBy = "TYPE",
         defaultExpanded = TRUE,
+        striped = TRUE,
         filterable = TRUE,
         sortable = TRUE,
         highlight = TRUE,
@@ -172,33 +185,68 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         height = "49vh"
       )
     })
+    
+    # Listen for changes to *any* input
+    observe({
+      # Get all inputs from this module
+      all_module_inputs <- reactiveValuesToList(input)
+      
+      # Filter for just dynamically-created checkboxes
+      chk_input_names <- names(all_module_inputs)[
+        startsWith(names(all_module_inputs), "chk_")
+      ]
+      
+      if (length(chk_input_names) == 0) {
+        return() # No checkboxes rendered yet
+      }
+      
+      # Get the current state without creating a reactive dependency
+      current_state <- isolate(selection_state())
+      if (is.null(current_state)) {
+        return() # State not initialized yet
+      }
+      
+      is_dirty <- FALSE # Flag to track if we need to update state
+      
+      # Loop over all checkbox inputs
+      for (chk_name in chk_input_names) {
+        # Parse the chk_id
+        parts <- stringr::str_split(chk_name, "_", n = 3)[[1]]
+        param_name <- parts[2]
+        study_type <- parts[3]
+        
+        # Get the new value from the UI
+        new_value <- all_module_inputs[[chk_name]]
+        
+        # Find the row/column in our state data frame
+        row_idx <- which(current_state$PKNCA == param_name)
+        
+        if (length(row_idx) > 0 && (study_type %in% names(current_state))) {
+          # Get the old value from the state
+          old_value <- current_state[row_idx, study_type]
+          
+          # If UI value is different from state value, update the state
+          if (!is.null(new_value) && !is.null(old_value) && new_value != old_value) {
+            current_state[row_idx, study_type] <- new_value
+            is_dirty <- TRUE
+          }
+        }
+      }
+      
+      # If any values changed, update the reactiveVal
+      if (is_dirty) {
+        selection_state(current_state)
+      }
+    })
 
     # Ensure module is called when hidden (e.g., in a tab)
-    outputOptions(output, "nca_parameters", suspendWhenHidden = FALSE)
+    outputOptions(output, "parameter_table", suspendWhenHidden = FALSE)
 
     reactable_server(
       "study_types",
       study_types_summary,
       height = "28vh"
     )
-
-    # Observe individual checkbox changes and update selection_state accordingly
-    observe({
-      study_type_names <- unique(study_types_df()$type)
-      req(study_type_names)
-
-      lapply(study_type_names, function(st_name) {
-
-        observeEvent(input[[st_name]], {
-          info <- input[[st_name]]
-          # Isolate state read to prevent feedback loops
-          current_state <- isolate(selection_state())
-          current_state[[st_name]][info$row] <- info$value
-          selection_state(current_state)
-          
-          }, ignoreNULL = TRUE, ignoreInit = TRUE)
-      })
-    })
 
 
     # Transform the TRUE/FALSE data frame into a named list
