@@ -7,7 +7,7 @@ In terms of "Governance models" (Gardler and Hanganu) the aNCA project is a baza
 Unless there is any justified reason, all code changes accepted for the main branch are expected to be made via pull requests, pass all CI/CD checks and have no conflicts with the main branch.
 
 ## Priority and decission making
-The GitHub dashboard is used to track issues and tasks related to the project. Each issue is assigned a priority level based on its importance and urgency, following the MSCW method:
+The GitHub dashboard is used to track issues and tasks related to the project. Each issue is assigned a priority level based on its importance and urgency, following the [MSCW method](https://en.wikipedia.org/wiki/MoSCoW_method):
 
 - **MUST** - task of highest priority, must be implemented for the application to be usable and useful.
 - **SHOULD** - task that we should include in the ready product, but it will not be breaking if it is not implemented.
@@ -21,3 +21,9 @@ All main authors listed in the DESCRIPTION, compromise themselves to:
 - Have a 2FA enabled GitHub account, to ensure the security of the repository and its contents. Preferably, not using SMS as a 2FA method.
 - Decide an issue's priority taking into consideration (although not uniquely) the roadmap goals for the project and popular opinions from the community.
 - Try to review and approve code changes in a timely manner, ensuring that the project maintains its momentum and continues to evolve effectively.
+
+## See also
+- [roadmap.md](./roadmap.md) - Project roadmap and goals
+- [validation.md](./validation.md) - Validation plan and coverage
+- [design.md](./design.md) - Design and architecture details
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
