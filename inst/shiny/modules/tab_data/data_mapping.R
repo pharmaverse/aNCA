@@ -7,8 +7,8 @@ NON_STD_MAPPING_INFO <- data.frame(
   mapping_tooltip = c(
     "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
     paste0(
-      "Choose the PARAM values to flag as metabolites of the drug parent (METABFL = 'Y'). ",
-      "If empty is assumed that all PARAM correspond to the parent drug (METABFL = '')"
+      "Choose the PARAM values to flag as metabolites of the parent drug (METABFL = 'Y'). ",
+      "If empty, it is assumed that all PARAM values correspond to the parent drug (METABFL = '')"
     )
   ),
   mapping_section = c("Supplemental Variables", "Sample Variables"),
