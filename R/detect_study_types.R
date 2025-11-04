@@ -77,14 +77,18 @@
 #'     NA, NA,
 #'     24, 24,      # ...but TRTRINT indicates a multiple-dose regimen
 #'     NA, NA
+#'   ),
+#'   METABFL = c(
+#'     "N", "N",
+#'     "N", "N",
+#'     "Y", "Y"    # mark last subject as metabolite
 #'   )
 #' )
 #'
 #' study_summary <- detect_study_types(
 #'   data = sample_data,
 #'   groups = c("USUBJID", "PCSPEC", "DOSETRT"),
-#'   drug_column = "DOSETRT",
-#'   analyte_column = "ANALYTE",
+#'   metabfl_column = "METABFL",
 #'   route_column = "ROUTE",
 #'   volume_column = "SAMPLE_VOLUME"
 #' )
