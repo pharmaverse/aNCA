@@ -10,7 +10,7 @@
 #' @param rda_path Path to the RDS file to be loaded in the document.
 #' @param template (Optional) Path to a Quarto template to use (default: NULL).
 #' @param extra_setup (Optional) Character vector of extra setup lines to include after YAML.
-#' @return Invisibly returns TRUE if the file was created.
+#' @returns Invisibly returns TRUE if the file was created.
 create_qmd_doc <- function(
   quarto_path,
   title = "NCA Report",
@@ -52,7 +52,7 @@ create_qmd_doc <- function(
 #' @param df2 Expression for second table (right column).
 #' @param plot Expression for plot.
 #' @param use_plotly Logical, whether to convert plot to plotly.
-#' @return Invisibly returns TRUE if the slide was added.
+#' @returns Invisibly returns TRUE if the slide was added.
 add_qmd_sl_plottabletable <- function(quarto_path, df1, df2, plot, use_plotly = FALSE) {
   slide_content <- c(
     "\n---",
@@ -81,7 +81,7 @@ add_qmd_sl_plottabletable <- function(quarto_path, df1, df2, plot, use_plotly = 
 #' @param quarto_path Path to the Quarto (.qmd) file to append to.
 #' @param plot Expression for plot.
 #' @param use_plotly Logical, whether to convert plot to plotly.
-#' @return Invisibly returns TRUE if the slide was added.
+#' @returns Invisibly returns TRUE if the slide was added.
 add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
   slide_content <- c(
     "\n---",
@@ -101,7 +101,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param quarto_path Path to the Quarto (.qmd) file to create.
 #' @param title Title for the presentation.
 #' @param use_plotly Logical, whether to convert plots to plotly.
-#' @return Invisibly returns TRUE if slides were created.
+#' @returns Invisibly returns TRUE if slides were created.
 create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
   # Save an accessible object with all results
   rda_path <- paste0(dirname(quarto_path), "/dose_escalation_outputs.rda")
@@ -150,7 +150,7 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
 #' @param res_dose_slides List of results for each dose group.
 #' @param path Path to the output HTML file.
 #' @param title Title for the presentation.
-#' @return Invisibly returns TRUE if rendering succeeded.
+#' @returns Invisibly returns TRUE if rendering succeeded.
 create_html_dose_slides <- function(res_dose_slides, path, title) {
   output_format <- tools::file_ext(path)
   quarto_path <- gsub(paste0("\\.", output_format), ".qmd", path)
@@ -178,7 +178,7 @@ create_html_dose_slides <- function(res_dose_slides, path, title) {
 #'
 #' @param plot_expr Expression for plot.
 #' @param use_plotly Logical, whether to convert plot to plotly.
-#' @return Character vector for Quarto code chunk.
+#' @returns Character vector for Quarto code chunk.
 add_qmd_plot <- function(plot_expr, use_plotly = FALSE) {
   c(
     "```{r, echo=FALSE}",
@@ -195,7 +195,7 @@ add_qmd_plot <- function(plot_expr, use_plotly = FALSE) {
 #' Used internally to format a table chunk for Quarto documents.
 #'
 #' @param table_expr Expression for table.
-#' @return Character vector for Quarto code chunk.
+#' @returns Character vector for Quarto code chunk.
 add_qmd_table <- function(table_expr) {
   c(
     "```{r, echo=FALSE}",
