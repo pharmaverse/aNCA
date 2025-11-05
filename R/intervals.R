@@ -57,7 +57,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "ARRLT", "NCA_PROFILE", "DOSNOA", "TRTRINT", "VOLUME")))
+    select(any_of(c(conc_groups, "ARRLT", "ATPTREF", "DOSNOA", "TRTRINT", "VOLUME")))
 
   has_trtrint <- "TRTRINT" %in% names(sub_pknca_conc)
 
@@ -107,7 +107,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     ) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups,
-                    "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
+                    "ATPTREF", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(params)), params)) %>%

@@ -14,7 +14,9 @@ parameter_selection_ui <- function(id) {
     p("The following study types were detected in the data:"),
     reactable_ui(ns("study_types")),
 
+    br(),
     h5("Parameter Selection"),
+    br(),
     p("Select the parameters to calculate for each study type.
       Selections can be overridden by uploading a settings file."),
     reactableOutput(ns("parameter_table"))
@@ -45,7 +47,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       detect_study_types(df,
                          groups,
-                         drug_column = "DRUG",
                          metabfl_column = "METABFL",
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
@@ -195,8 +196,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       reactable(
         df,
+        groupBy = "TYPE",
         columns = all_col_defs,
-        defaultSorted = c("TYPE"),
         defaultExpanded = TRUE,
         striped = TRUE,
         filterable = TRUE,
