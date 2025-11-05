@@ -1,0 +1,90 @@
+---
+title: "aNCA — Design & Architecture"
+description: >
+    This document captures the high-level architecture, data flow, and key design decisions for the aNCA package and its embedded Shiny application.
+
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{aNCA — Design & Architecture}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+## 1. Goals and constraints
+
+- R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets
+- Primary users / stakeholders (e.g., pharmacometricians, data reviewers).
+- Non-functional requirements: performance, security, portability, reproducibility.
+- Constraints (R versions, CRAN policy, corporate network, data privacy).
+
+Example:
+
+> The aNCA package provides a reusable toolkit and Shiny UI for performing non-compartmental analysis on PK datasets. Primary users are pharmacometricians and clinical pharmacology teams who need a guided UI for mapping, running NCA, and exporting results. Non-functional requirements include reproducibility of exported scripts, privacy of uploaded datasets, and moderate responsiveness for typical clinical datasets (hundreds to a few thousand rows).
+
+## 2. System overview
+
+This diagram represents the high-level architecture and data flow within the aNCA package and Shiny application.
+
+aNCA Shiny App Architecture
+├── Main Components and Responsibilities
+│   ├── R package Functions (`R/`)
+│   │   ├── Core NCA helpers
+│   │   └── Mapping and validation logic (`apply_mapping.R`)
+│   │
+│   ├── Shiny App (`inst/shiny/`)
+│   │   ├── `app.R` (Main entry point for the app)
+│   │   ├── UI Modules and Server Logic
+│   │   │   ├── Module Files: `inst/shiny/modules/{tab_data, tab_explore, tab_nca, tab_tlg}.R/`
+│   │   │   ├── Tab Data Subodules: `inst/shiny/modules/tab_data/`
+│   │   │   ├── Tab Explore Submodules: `inst/shiny/modules/tab_explore/`
+│   │   │   ├── Tab NCA Submodules: `inst/shiny/modules/tab_nca/`
+│   │   │   └── Tab TLG Submodules: `inst/shiny/modules/tab_tlg/`
+|   |   |
+│   │   ├── Shiny end-to-end tests: `inst/shiny/tests/`
+|   │   |
+│   │   └── Session wiring: Connection logic for tabs and modules
+│   │
+│   ├── Documentation (`documentation/`)
+│   │   ├── User Guide (website): `vignettes/`
+│   │   ├── Static Documentation Site: `pkgdown/` configuration + `docs/`
+│   │   ├── System Validation Files: `documentation/`
+│   │   └── General Architecture Descriptions: `documentation/`
+│   │
+│   └──  Testing (`tests/`)
+│       └── Unit Tests for `R/`: `tests/testthat/`
+│
+└── --- End of Architecture ---
+
+
+## 3. Data model & flow
+
+Answer these:
+- DataTab: Data upload (CSV, RDS, XPT, parquet) & preprocessing. Creation of PKNCAdata object (`pknca_data`)
+- NCATab: Modification of PKNCAdata object to apply all NCA settings (`processed_pknca_data`) and run calculations to obtain PKNCAresults object (`res_nca`)
+- TLG Tab: Generation of tables, listings, and graphs from `processed_pknca_data` (and at some point `res_nca`). Its standard Shiny input settings are specified in `inst/shiny/tlg.yaml`
+- Transformations applied (filters, mapping, unit handling, imputation rules, PKNCA object creation).
+- Where intermediate state is stored (typically `session$userData` in Shiny).
+
+```mermaid
+graph LR
+  U[User] -->|upload| DataTab[tab_data_server]
+  DataTab -->|pknca_data| ExploreTab[tab_explore_server]
+  DataTab -->|pknca_data| NcaTab[tab_nca_server]
+  NcaTab -->|processed_pknca_data| TlgTab[tab_tlg_server]
+  DataTab -->|session$userData(mapping/settings)| ScriptExport[get_session_script_code()]
+```
+
+For better details on the server lower level processing actions (functions in `\R`), check directly the [`.../R_script_template.R`]()
+
+## 4. Session & state management
+
+- In `session$userData$results` we store all objects that are intended for the ZIP folder output (mappings, settings, units_table, ratios_table, etc.).
+- In `session$userData` we also store intermediate objects (e.g., `pknca_data`, `processed_data`, etc.) that are used across tabs.
+
+
+## 5. See also...
+
+- [Roadmap with the next year goals](./roadmap.md) - Indicating the objectives planned to be achieved. 
+- [Validation Plan and Coverage](../vignettes/validations.Rmd) - Describing the validation strategy implemented and the ideas for the future.
+- [governance.md](./governance.md) - Describing the project's management style. 
+

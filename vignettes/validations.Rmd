@@ -3,7 +3,7 @@ title: "Validation Plan"
 author: "aNCA authors"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Validations}
+  %\VignetteIndexEntry{Validation Plan}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
