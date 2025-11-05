@@ -94,7 +94,8 @@
 <li><p>Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 (dosing data- not CDISC standard)</p></li>
 <li><p>Creates <code>DOSNOA</code> variable, sequential numbers based on time of dose</p></li>
-<li><p>Adds a 'std_route' column taking values "intravascular" or "extravascular".</p></li>
+<li><p>Creates a 'std_route' column with PKNCA values "intravascular" or "extravascular"
+based on route_column (ROUTE, CDISC: C66729).</p></li>
 <li><p>Arranges the data by group_columns.</p></li>
 </ul></div>
 

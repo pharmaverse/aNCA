@@ -89,12 +89,12 @@
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function performs the following steps:</p><ul><li><p>Creates a vector with all pharmacokinetic parameters.</p></li>
 <li><p>Based on dose times, creates a data frame with start and end times.</p></li>
-<li><p>If TAU column is present in data, sets last dose end time to start + TAU,
-or if TAU is NA then either Inf if only one dose present, or max end time if not.</p></li>
-<li><p>If no TAU column in data, sets last dose end time to the time of last sample
+<li><p>If TRTRINT column is present in data, sets last dose end time to start + TRTRINT,
+or if TRTRINT is NA then either Inf if only one dose present, or max end time if not.</p></li>
+<li><p>If no TRTRINT column in data, sets last dose end time to the time of last sample
 or Inf if single dose data.</p></li>
 <li><p>Adds logical columns for each specified parameter.</p></li>
-</ul><p>Assumes that multiple dose data will have a TAU column
+</ul><p>Assumes that multiple dose data will have a TRTRINT column
 or contain multiple doses in dataset</p>
     </div>
 
