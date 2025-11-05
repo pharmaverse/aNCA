@@ -13,9 +13,10 @@ parameter_selection_ui <- function(id) {
   tagList(
     p("The following study types were detected in the data:"),
     reactable_ui(ns("study_types")),
-    
+
     h3("Parameter Selection"),
-    p("Select the parameters to calculate for each study type. Selections can be overridden by uploading a settings file."),
+    p("Select the parameters to calculate for each study type.
+      Selections can be overridden by uploading a settings file."),
     reactableOutput(ns("parameter_table"))
   )
 }
@@ -86,7 +87,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
     # ReactiveVal for parameter selection state
     selection_state <- reactiveVal()
-    
+
     #  observe to update selection_state when study types or overrides change
     observe({
       req(study_types_df())
@@ -129,10 +130,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     output$parameter_table <- renderReactable({
       req(selection_state())
       req(study_types_df())
-      
+
       df <- selection_state()
       study_type_names <- unique(study_types_df()$type)
-      
+
       # Define base columns
       col_defs <- list(
         # Freeze parameter info columns to the left
@@ -140,7 +141,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         PPTESTCD = colDef(sticky = "left", minWidth = 100, name = "Code"),
         PPTEST = colDef(sticky = "left", minWidth = 200, name = "Label")
       )
-      
+
       # Dynamically create checkbox columns for each study type
       study_type_cols <- purrr::map(study_type_names, ~ {
         colDef(
@@ -151,7 +152,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             param_name <- df$PKNCA[index]
             # Create a unique ID for the checkbox
             chk_id <- ns(paste("chk", param_name, name, sep = "_"))
-            
+
             shiny::checkboxInput(
               inputId = chk_id,
               label = NULL,
@@ -161,13 +162,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           }
         )
       })
-      
+
       # Name the list of colDefs so reactable can match them
       names(study_type_cols) <- study_type_names
-      
+
       # Combine all column definitions
       all_col_defs <- c(col_defs, study_type_cols)
-      
+
       reactable(
         df,
         columns = all_col_defs,
@@ -185,23 +186,23 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         height = "49vh"
       )
     })
-    
+
     # This observer watches for checkbox clicks and updates the state.
     observe({
       # Get all inputs from this module
       all_module_inputs <- reactiveValuesToList(input)
       current_selections <- isolate(selection_state())
-      
+
       if (is.null(current_selections)) {
         return() # State not initialized yet
       }
-      
+
       # Call the helper to process UI changes
       update_result <- update_parameter_selections(
         current_selections = current_selections,
         module_inputs = all_module_inputs
       )
-      
+
       # If any values changed, update the reactiveVal
       if (update_result$has_changes) {
         selection_state(update_result$new_selections)
@@ -216,7 +217,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       study_types_summary,
       height = "28vh"
     )
-
 
     # Transform the TRUE/FALSE data frame into a named list
     # of parameter vectors
