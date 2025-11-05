@@ -12,6 +12,7 @@
 #'                          included in the plot.
 #' @param id_variable       A character string specifying the variable by which to color the lines
 #'                          in the plot. Default is "DOSEA".
+#' @param groupby_var       A character string specifying the variable by which to group the data.
 #' @param plot_ylog         A logical value indicating whether to use a logarithmic scale for
 #'                          the y-axis. Default is FALSE.
 #' @param plot_sd_min       A logical value to add a SD error bar below the mean. Default is FALSE.
@@ -32,6 +33,7 @@ general_meanplot <- function(data,
                              selected_pcspecs,
                              selected_cycles,
                              id_variable = "DOSEA",
+                             groupby_var = c("STUDYID", "PARAM", "PCSPEC", "ATPTREF"),
                              plot_ylog = FALSE,
                              plot_sd_min = FALSE,
                              plot_sd_max = FALSE,
@@ -55,7 +57,7 @@ general_meanplot <- function(data,
     mutate(id_variable_col = interaction(!!!syms(id_variable), sep = ", ",  drop = TRUE)) %>%
     # Create a groups variables for the labels
     mutate(groups = paste0(
-      paste(STUDYID, PARAM, PCSPEC, ATPTREF, sep = ", "), " [", AVALU, "]"
+      paste(!!!syms(groupby_var), sep = ", "), " [", AVALU, "]"
     )) %>%
     group_by(id_variable_col, NRRLT, groups) %>%
     summarise(
@@ -143,8 +145,7 @@ general_meanplot <- function(data,
   if (plot_ylog) {
     p <- p +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
-                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
-      labs(y = paste0("Log 10 - ", p$labels$y))
+                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000))
   }
 
   # Convert ggplot to plotly
