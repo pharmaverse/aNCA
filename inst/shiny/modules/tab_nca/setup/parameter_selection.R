@@ -14,7 +14,7 @@ parameter_selection_ui <- function(id) {
     p("The following study types were detected in the data:"),
     reactable_ui(ns("study_types")),
 
-    h3("Parameter Selection"),
+    h5("Parameter Selection"),
     p("Select the parameters to calculate for each study type.
       Selections can be overridden by uploading a settings file."),
     reactableOutput(ns("parameter_table"))
@@ -196,7 +196,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       reactable(
         df,
         columns = all_col_defs,
-        groupBy = "TYPE",
+        defaultSorted = c("TYPE"),
         defaultExpanded = TRUE,
         striped = TRUE,
         filterable = TRUE,
