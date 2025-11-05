@@ -11,7 +11,7 @@ general_meanplot(
   selected_pcspecs,
   selected_cycles,
   id_variable = "DOSEA",
-  groupby_var = c("STUDYID", "PARAM", "PCSPEC", "NCA_PROFILE"),
+  groupby_var = c("STUDYID", "PARAM", "PCSPEC", "ATPTREF"),
   plot_ylog = FALSE,
   plot_sd_min = FALSE,
   plot_sd_max = FALSE,
