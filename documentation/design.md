@@ -75,9 +75,9 @@ For better details on the server lower level processing actions (functions in `\
 - In `session$userData` we also store intermediate objects (e.g., `pknca_data`, `processed_data`, etc.) that are used across tabs.
 
 
-## 5. Other useful information
+## 5. See also...
 
-- [Roadmap with goals for 2026]()
-- [Validation Plan and Coverage]()
-- [Mantainer's role]()
+- [Roadmap with the next year goals](./roadmap.md) - Indicating the objectives planned to be achieved. 
+- [Validation Plan and Coverage](../vignettes/validations.Rmd) - Describing the validation strategy implemented and the ideas for the future.
+- [governance.md](./governance.md) - Describing the project's management style. 
 
