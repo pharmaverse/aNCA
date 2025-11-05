@@ -1,24 +1,24 @@
 expected_df <- data.frame(
   USUBJID = 1:3,
   PARAM = "A",
-  DRUG = "A",
+  DOSETRT = "A",
   AVAL = 1:3,
   AVALU = "ng/mL",
   DOSE = 1:3,
   ADOSEDUR = 0,
   AFRLT = 1:3,
-  NCA_PROFILE = factor(1:3)
+  ATPTREF = factor(1:3)
 )
 var_labels(expected_df) <- c(
   "Unique Subject Identifier",
   "Parameter",
-  "Medication Name",
+  "Name of Treatment",
   "Analysis Value",
   "Analysis Value Unit",
   "DOSE",
   "Actual Duration of Treatment Dose",
   "Act. Rel. Time from Analyte First Dose",
-  "NCA_PROFILE"
+  "Analysis Timepoint Reference"
 )
 desired_order <- names(expected_df)
 
@@ -95,22 +95,29 @@ describe("apply_mapping", {
     expect_equal(result_df, expected_df)
   })
 
-  it("adds DRUG = PARAM if not mapped and warns the user", {
-    mapping["DRUG"] <- ""
-    test_df <- test_df[, !names(expected_df) %in% "DRUG"]
+  it("adds DOSETRT = PARAM if not mapped and warns the user", {
+    mapping["DOSETRT"] <- ""
+    test_df <- test_df[, !names(expected_df) %in% "DOSETRT"]
     expect_warning(
       result_df <- apply_mapping(
         dataset = test_df,
         mapping = mapping,
         desired_order = desired_order
       ),
-      "Drug is assumed to be the same as the analyte for all records \\(DRUG = PARAM"
+      "Treatment is assumed to be the same as the analyte for all records \\(DOSETRT = PARAM"
     )
     expect_equal(result_df, expected_df)
   })
 
-  it("removes concentration duplicates", {
-    test_df <- rbind(expected_df, expected_df)
+  it("removes concentration duplicates only if exact", {
+    test_df <- rbind(expected_df, expected_df %>% mutate(AVAL = 1))
+    filtered_df <- test_df %>%
+      filter(!duplicated(paste(USUBJID, AVAL))) %>%
+      arrange(USUBJID, AVAL)
+
+    # add label attr to NCA profile
+    var_labels(filtered_df) <- var_labels(expected_df)
+
     mapping <- as.list(setNames(names(test_df), names(test_df)))
     expect_warning(
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
@@ -119,29 +126,58 @@ describe("apply_mapping", {
     result_df <- suppressWarnings(
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     )
-    expect_equal(result_df, expected_df)
+    expect_equal(result_df, filtered_df)
   })
 
   it("allows duplicated mappings", {
-    mapping["PARAM"] <- mapping["DRUG"]
+    mapping["PARAM"] <- mapping["DOSETRT"]
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df[, names(result_df) != "analyte"], expected_df, ignore_attr = TRUE)
     # NOTE: uDplicated mapped columns will conserve duplicated labels if originally present
   })
 
-  it("makes sure NCA_PROFILE is a factor", {
+  it("makes sure ATPTREF is a factor", {
     test_df <- expected_df
     mapping <- as.list(setNames(names(test_df), names(expected_df)))
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
-    expect_true(is.factor(result_df$NCA_PROFILE))
+    expect_true(is.factor(result_df$ATPTREF))
     expect_equal(result_df, expected_df)
   })
 
   it("warns the user about columns lost after mapping due to column name conflicts", {
-    test_df$DRUG <- "Medication A"
+    test_df$DOSETRT <- "Medication A"
     expect_warning(
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
-      "Conflictive column names between input and mapping names are removed: DRUG"
+      "Conflictive column names between input and mapping names are removed: DOSETRT"
     )
+  })
+})
+
+describe("create_metabflag", {
+  it("creates the METABFL if indicates the metabolites", {
+    test_df <- data.frame(
+      USUBJID = 1:6,
+      PARAM = c("A", "B", "M1", "M2", "C", "M1"),
+      AVAL = c(10, 20, 5, 3, 15, 7)
+    )
+    expected_df <- test_df %>%
+      mutate(METABFL = c("", "", "Y", "Y", "", "Y"))
+    result_df <- create_metabfl(test_df, c("M1", "M2"))
+    expect_equal(result_df, expected_df)
+  })
+  it("creates an empty METABFL if no metabolites are indicated", {
+    test_df <- data.frame(
+      USUBJID = 1:3,
+      PARAM = c("A", "B", "C"),
+      AVAL = c(10, 20, 15)
+    )
+    expected_df <- test_df %>%
+      mutate(METABFL = c("", "", ""))
+    result_df <- create_metabfl(test_df, character(0))
+    result_df2 <- create_metabfl(test_df, "")
+    result_df3 <- create_metabfl(test_df, NULL)
+    expect_equal(result_df, expected_df)
+    expect_equal(result_df2, expected_df)
+    expect_equal(result_df3, expected_df)
   })
 })

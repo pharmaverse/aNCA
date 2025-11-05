@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.0.0.9171
+Version: 0.0.0.9182
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -20,9 +20,11 @@ License: Apache License (>= 2)
 Imports: 
     dplyr,
     formatters,
+    flextable,
     ggplot2,
     magrittr,
     methods,
+    officer,
     PKNCA (>= 0.12.1),
     plotly,
     purrr,
@@ -40,9 +42,12 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Suggests:
     arrow,
+    covr,
+    DT,
     ggh4x,
     glue,
     haven,
+    htmltools,
     htmlwidgets,
     jsonlite,
     knitr,
@@ -66,6 +71,7 @@ Suggests:
     stringi,
     testthat (>= 3.0.0),
     tools,
+    quarto,
     vdiffr,
     withr,
     yaml
