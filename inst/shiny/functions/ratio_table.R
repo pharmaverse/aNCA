@@ -24,7 +24,7 @@ calculate_ratio_app <- function(
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
 
   ########### This is very App specific ###############
-  if ("NCA_PROFILE" %in% reference_colname) {
+  if ("ATPTREF" %in% reference_colname) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
   if ("ROUTE" %in% reference_colname && aggregate_subject == "no") {

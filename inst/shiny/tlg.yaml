@@ -143,7 +143,7 @@ l_pkcl01:
       type: select
       choices: .colnames
       multiple: true
-      default: ["TRT01A", "USUBJID", "AVISIT"]
+      default: ["TRT01A", "USUBJID", "ATPTREF"]
     displaying_vars:
       label: "Displayed variables"
       type: select
@@ -182,11 +182,11 @@ l_pkcl01:
           choices: ["", "0", "1", "2", "3", "4"]
       default_rows:
         - ["USUBJID", "Unique Subject Identifier",                       "NA", "0", "center", "$NA",   "$NA"]
-        - ["AVISIT",  "Analysis Visit",                                  "NA", "0", "center", "$NA",   "$NA"]
+        - ["ATPTREF",  "Analysis Timepoint Reference",                   "NA", "0", "center", "$NA",   "$NA"]
         - ["TRT01A",  "Actual Treatment for Period 01",                  "NA", "0", "center", "$NA",   "$NA"]
         - ["AFRLT",   "Act. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
         - ["NFRLT",   "Nom. Rel. Time from Analyte First Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
-        
+
 l_pkcl01_tad:
   is_default: false
   type: Listing

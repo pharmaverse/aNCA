@@ -3,12 +3,12 @@ ADNCA <- data.frame(
   STUDYID = rep(1, 20),
   USUBJID = rep(1:2, each = 10),
   PCSPEC = rep("Plasma", 20),
-  DRUG = rep("DrugA", 20),
+  DOSETRT = rep("DrugA", 20),
   PARAM = rep("Analyte1", 20),
   AFRLT = rep(seq(0, 9), 2),
   ARRLT = rep(seq(0, 4), 4),
   NFRLT = rep(seq(0, 9), 2),
-  NCA_PROFILE = rep(1, 20),
+  ATPTREF = rep(1, 20),
   DOSEA = rep(c(5, 10), each = 10),
   ROUTE = rep(c("intravascular", "extravascular"), each = 10),
   ADOSEDUR = rep(c(0, 0), each = 10),
@@ -19,23 +19,23 @@ describe("format_pkncadata_intervals", {
   multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Metabolite1"), each = 10))
   df_conc <- format_pkncaconc_data(multi_analyte_adnca,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DRUG", "PARAM"),
+                                                     "DOSETRT", "PARAM"),
                                    time_column = "AFRLT")
 
   df_dose <- format_pkncadose_data(df_conc,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DRUG"))
+                                                     "DOSETRT"))
 
   pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+    formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID
+    formula = DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID
   )
 
   it("handles multiple analytes with metabolites", {
@@ -61,13 +61,13 @@ describe("format_pkncadata_intervals", {
 
   it("handles missing columns", {
     missing_col_pknca_dose <- pknca_dose
-    missing_col_pknca_dose$data <- select(missing_col_pknca_dose$data, -DRUG)
+    missing_col_pknca_dose$data <- select(missing_col_pknca_dose$data, -DOSETRT)
     expect_error(
       format_pkncadata_intervals(
         pknca_conc,
         missing_col_pknca_dose
       ),
-      regexp = "Missing required columns: DRUG"
+      regexp = "Missing required columns: DOSETRT"
     )
   })
 
@@ -77,7 +77,7 @@ describe("format_pkncadata_intervals", {
 
     pknca_conc_tau <- PKNCA::PKNCAconc(
       df_conc_tau,
-      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
       exclude_half.life = "exclude_half.life",
       time.nominal = "NFRLT"
     )
@@ -109,12 +109,12 @@ describe("format_pkncadata_intervals", {
   it("sets end to Inf if TAU= NA and single dose", {
     single_dose_pknca_conc <- pknca_conc
     single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
-      mutate(TAU = NA) %>%  # Set TAU to NA
+      mutate(TRTRINT = NA) %>%  # Set TAU to NA
       filter(DOSNOA == 1)  # Filter to a single dose
 
     single_dose_pknca_dose <- pknca_dose
     single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
-      mutate(TAU = NA) %>%  # Set TAU to NA
+      mutate(TRTRINT = NA) %>%  # Set TAU to NA
       filter(DOSNOA == 1)  # Filter to a single dose
 
     result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc,
@@ -125,11 +125,11 @@ describe("format_pkncadata_intervals", {
   it("sets end to last time point if TAU= NA and multiple dose", {
     pknca_conc_na_tau <- pknca_conc
     pknca_conc_na_tau$data <- pknca_conc$data %>%
-      mutate(TAU = NA) # Set TAU to NA
+      mutate(TRTRINT = NA) # Set TAU to NA
 
     pknca_dose_na_tau <- pknca_dose
     pknca_dose_na_tau$data <- pknca_dose$data %>%
-      mutate(TAU = NA)  # Set TAU to NA
+      mutate(TRTRINT = NA)  # Set TAU to NA
 
     result_single_dose <- format_pkncadata_intervals(pknca_conc_na_tau,
                                                      pknca_dose_na_tau)
@@ -162,7 +162,7 @@ describe("update_main_intervals", {
 
   #create study types df
   study_types_df <- tribble(
-    ~STUDYID, ~DRUG, ~USUBJID, ~PCSPEC, ~ROUTE,         ~type,
+    ~STUDYID, ~DOSETRT, ~USUBJID, ~PCSPEC, ~ROUTE,         ~type,
     "S1",      "A",           1, "SERUM",  "extravascular", "Single Extravascular Dose",
     "S1",      "A",           2, "SERUM",  "extravascular", "Multiple Extravascular Doses",
     "S1",      "A",           3, "SERUM",  "intravascular", "Multiple IV Doses",

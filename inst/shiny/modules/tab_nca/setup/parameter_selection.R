@@ -46,7 +46,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       detect_study_types(df,
                          groups,
                          drug_column = "DRUG",
-                         analyte_column = processed_pknca_data()$conc$columns$groups$group_analyte,
+                         metabfl_column = "METABFL",
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })

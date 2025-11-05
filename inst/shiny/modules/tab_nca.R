@@ -204,7 +204,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
-          any_of(c("USUBJID", "NCA_PROFILE", "PARAM", "PCSPEC")),
+          any_of(c("USUBJID", "ATPTREF", "PARAM", "PCSPEC")),
           starts_with("LAMZ"),
           starts_with("lambda.z"),
           starts_with("R2ADJ"),
