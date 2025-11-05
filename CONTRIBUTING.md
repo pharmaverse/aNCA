@@ -31,14 +31,17 @@ You can keep track and participate of other issues and discussions using the Git
 If you plan to contribute code, tests, or documentation, please follow these developer-focused instructions.
 
 - Join the project by asking anca.pharmaverse@gmail.com and request collaborator access if you need push rights; otherwise, fork and open a PR.
-- Always open an issue describing the change before implementing it so the work can be coordinated.
-- Branch naming: use a branch per issue and follow the examples in this file (e.g. `bug/...`, `enhancement/...`).
-- Code style: follow the tidyverse style; ensure lintr passes and add unit tests for new behavior.
-- Commit messages: prefer Conventional Commits for clarity.
-- Pull requests: fill the PR template, list the issue number, description, testing steps, and include a Developers checklist (lintr, tests, docs, version bump).
+- You can find in our [project dashboard](https://github.com/orgs/pharmaverse/projects/30) our issues and their priority.
+- Preferably, work on issues with higher priority (`MUST` > `SHOULD` > `COULD` > `WISH`). Please, before selecting MUST issues, make sure you will have enough time to complete them in a quick timeframe. If you are a first time contributor, consider selecting issues with the `good first issue` label.
+- Branch naming: use a branch per issue if possible with a standard naming (e.g. `<issue number>-<bug/feat/documentation><issue name>`). For examples, see the [Branches](#branches) section below.
+- Code style: follow the [tidyverse style](https://style.tidyverse.org/files.html); ensure lintr passes and add unit tests for new behavior.
+- Commit messages: try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), although we are flexible about it (development is always challenging and messy!).
+- Pull requests: Once you are done with your implementation; fill the PR template, list the issue number, description, testing steps, and make sure you pass the Developers checklist (lintr, tests, docs, version bump). Add at least two reviewers from the core team (authors listed in the [DESCRIPTION file](../DESCRIPTION)).
+- Review feedback: Reviewers will provide feedback on your PR. Please address their comments, make necessary changes, and engage in discussions to ensure the quality of the contribution. 
+- Review accepted: Congratulations! Once your PR is approved by at least two core reviewers, If your code is not simply a documentation or test change, you need to bump the package version. This simply consists in updating  the version number of your DESCRIPTION file in comparison with the [DESCRIPTION from the main branch](../DESCRIPTION).
+- Merge: Someone from the core team will merge your PR once everything is set. Thanks in advance for the changes!
 
 Helpful links for Developers:
-- See the `Branch` and `Pull requests` sections below for full guidance.
 - Check the [design.md](./design.md) to understand better how the Shiny App is structured.
 - If you need more context on what is Non Comparmental Analysis, we also recommend you to check [background.md](./background.md)
 
@@ -59,7 +62,7 @@ Helpful links for NCA reviewers:
 ## Code reviewers :mag:
 This role is responsible for reviewing PRs, enforcing quality, and approving merges.
 
-- Focus reviews on tests, correctness, and maintainability. Ensure new code has unit tests and passes linters.
+- Focus reviews on code quality, correctness, and maintainability. Ensure new code included in `\R` has logical unit tests.
 - Use the PR template and the Developers checklist before approving; request changes when standards are not met.
 - Make sure the package version is bumped for changes that affect behavior or dependencies.
 
