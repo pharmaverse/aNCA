@@ -4,10 +4,10 @@ Thank you for your interest in the aNCA application! We strive to provide open-s
 
 This CONTRIBUTING guide is organized by common contributor roles. Start at the role that best fits you and follow the short pointers below; each role links to more detailed guidance in the rest of this file.
 
-- [User](#users) — quick feedback and issue reporter: open issues when you find bugs or UX problems, and follow the simple reproduction checklist.
+- [User](#users-computer_mouse) — quick feedback and issue reporter: open issues when you find bugs or UX problems, and follow the simple reproduction checklist.
 - [Developer](#developers-computer) — contributes code and features: follow branching rules, code style, tests and PR guidance.
-- [NCA‑reviewer](#nca-reviewers) — domain reviewer of outputs and validations: focus on data/mapping/validation sections and how to reproduce runs via exported scripts.
-- [Code‑reviewer](#code-reviewers) — reviews PRs and enforces quality: focus on tests, linters, and the reviewers checklist.
+- [NCA‑reviewer](#nca-reviewers-book) — domain reviewer of outputs and validations: focus on data/mapping/validation sections and how to reproduce runs via exported scripts.
+- [Code‑reviewer](#code-reviewers-mag) — reviews PRs and enforces quality: focus on tests, linters, and the reviewers checklist.
 
 ---
 
@@ -16,7 +16,7 @@ Discussions regarding the project are handled using GitHub issues. If you wish t
 
 In general, any posted issue should contain a brief description of the problem, steps to reproduce, and your expected outcome. We design this application with user-friendliness in mind and appreciate clear, actionable feedback.
 
-## Users 🖱️
+## Users :computer_mouse:
 This short section is for people who primarily use the app and want to report bugs, request features, or get help reproducing results.
 
 - You find something is not intuitive or you don't know if something can or not be done? Check in [discussions](https://github.com/pharmaverse/aNCA/discussions) or in our [FAQs](). If you still cannot answer your question, open a [Q&A dicussion](https://github.com/pharmaverse/aNCA/discussions/new?category=q-a) and the community will help you!
@@ -44,7 +44,7 @@ Helpful links for Developers:
 
 ---
 
-## NCA reviewers 📖
+## NCA reviewers :book:
 This role focuses on validating calculations, outputs, and the scientific correctness of NCA results.
 
 - Make sure all `Definition of Done` items in the Pull Request (PR) are met.
@@ -56,7 +56,7 @@ Helpful links for NCA reviewers:
 
 ---
 
-## Code reviewers 🔍
+## Code reviewers :mag:
 This role is responsible for reviewing PRs, enforcing quality, and approving merges.
 
 - Focus reviews on tests, correctness, and maintainability. Ensure new code has unit tests and passes linters.
