@@ -20,6 +20,14 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_impute_method.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_optional_layers.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_plot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_plottable.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_table.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_title.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_plot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_sl_plot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_sl_plottabletable.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_table.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_filters.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_labels.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_mapping.html</loc></url>
@@ -29,6 +37,11 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_to_iso8601_duration.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_volume_units.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/create_html_dose_slides.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/create_pptx_doc.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/create_pptx_dose_slides.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/create_qmd_doc.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/create_qmd_dose_slides.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_start_impute.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/detect_study_types.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dose_profile_duplicates.html</loc></url>

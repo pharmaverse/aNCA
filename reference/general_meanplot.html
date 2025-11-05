@@ -11,7 +11,7 @@ logarithmic scale and can optionally include standard deviation error bars."></h
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9177</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9178</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,6 +64,7 @@ logarithmic scale and can optionally include standard deviation error bars.</p>
 <span>  <span class="va">selected_pcspecs</span>,</span>
 <span>  <span class="va">selected_cycles</span>,</span>
 <span>  id_variable <span class="op">=</span> <span class="st">"DOSEA"</span>,</span>
+<span>  groupby_var <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STUDYID"</span>, <span class="st">"PARAM"</span>, <span class="st">"PCSPEC"</span>, <span class="st">"NCA_PROFILE"</span><span class="op">)</span>,</span>
 <span>  plot_ylog <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot_sd_min <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot_sd_max <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -99,6 +100,10 @@ included in the plot.</p></dd>
 <dt id="arg-id-variable">id_variable<a class="anchor" aria-label="anchor" href="#arg-id-variable"></a></dt>
 <dd><p>A character string specifying the variable by which to color the lines
 in the plot. Default is "DOSEA".</p></dd>
+
+
+<dt id="arg-groupby-var">groupby_var<a class="anchor" aria-label="anchor" href="#arg-groupby-var"></a></dt>
+<dd><p>A character string specifying the variable by which to group the data.</p></dd>
 
 
 <dt id="arg-plot-ylog">plot_ylog<a class="anchor" aria-label="anchor" href="#arg-plot-ylog"></a></dt>

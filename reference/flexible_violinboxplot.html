@@ -9,7 +9,7 @@ parameter, and dose information."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9177</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9178</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,11 +55,11 @@ parameter, and dose information.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">flexible_violinboxplot</span><span class="op">(</span></span>
-<span>  <span class="va">boxplotdata</span>,</span>
+<span>  <span class="va">res_nca</span>,</span>
 <span>  <span class="va">parameter</span>,</span>
 <span>  <span class="va">xvars</span>,</span>
 <span>  <span class="va">colorvars</span>,</span>
-<span>  <span class="va">varvalstofilter</span>,</span>
+<span>  varvalstofilter <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">columns_to_hover</span>,</span>
 <span>  box <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  plotly <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -70,10 +70,8 @@ parameter, and dose information.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-boxplotdata">boxplotdata<a class="anchor" aria-label="anchor" href="#arg-boxplotdata"></a></dt>
-<dd><p>A list containing the data to be plotted. It should have a <code>data</code>
-element with dose information and a <code>formatted</code> element with the
-data to be plotted.</p></dd>
+<dl><dt id="arg-res-nca">res_nca<a class="anchor" aria-label="anchor" href="#arg-res-nca"></a></dt>
+<dd><p>A PKNCA results object containing the results and concentration data.</p></dd>
 
 
 <dt id="arg-parameter">parameter<a class="anchor" aria-label="anchor" href="#arg-parameter"></a></dt>
@@ -89,7 +87,8 @@ data to be plotted.</p></dd>
 
 
 <dt id="arg-varvalstofilter">varvalstofilter<a class="anchor" aria-label="anchor" href="#arg-varvalstofilter"></a></dt>
-<dd><p>Variables to filter on.</p></dd>
+<dd><p>Character vector specifying which variable and value to pre-filter
+as <code>colname: value</code>. By default is NULL (no pre-filtering)</p></dd>
 
 
 <dt id="arg-columns-to-hover">columns_to_hover<a class="anchor" aria-label="anchor" href="#arg-columns-to-hover"></a></dt>
