@@ -76,6 +76,10 @@ Despite its simplicity, NCA workflows often become a bottleneck in drug developm
 - Errors introduced during manual data handling lead to reproducibility challenges and delays.
 
 This is why we created **aNCA**:
-- To simplify and unify the entire NCA process, from data preparation and parameter selection to generating CDISC-compliant outputs.
+- To simplify and unify the entire NCA process, from data preparation to generating CDISC-compliant outputs.
 - To empower analysts, even those without extensive programming experience, by offering a **user-friendly interface** built on **PKNCA**, an open-source R package for NCA in pharmacokinetics.
 - To increase automation and reduce errors, ensuring a faster and reproducible workflow.
+
+## Wanna know more?
+Here is a list of recommended links to deepen your understanding of NCA and related concepts:
+- [R Pharma aNCA video]() - Here you can find a video explaining NCA main concepts and how aNCA works.
