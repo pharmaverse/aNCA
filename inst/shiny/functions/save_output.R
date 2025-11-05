@@ -80,7 +80,7 @@ get_dose_esc_results <- function(
   subj_col <- o_nca$data$conc$columns$subject
   analyte_col <- o_nca$data$conc$columns$groups$group_analyte
   pcspec_col <- "PCSPEC"
-  profile_col <- "NCA_PROFILE"
+  profile_col <- "ATPTREF"
 
   groups <- unique(o_nca$data$intervals[, group_by_vars])
   output_list <- list()

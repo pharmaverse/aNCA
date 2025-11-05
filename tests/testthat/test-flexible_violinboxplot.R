@@ -85,13 +85,13 @@ describe("flexible_violinboxplot", {
       res_nca = boxplotdata,
       parameter = "CMAX",
       xvars = "DOSEA",
-      colorvars = "NCA_PROFILE",
-      columns_to_hover = c("DOSEA", "USUBJID", "NCA_PROFILE", "PARAM"),
+      colorvars = "ATPTREF",
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
       plotly = FALSE
     )
     expect_equal(all_data_plot$labels$x, "DOSEA")
-    expect_equal(all_data_plot$labels$colour, "NCA_PROFILE")
+    expect_equal(all_data_plot$labels$colour, "ATPTREF")
     expect_true(grepl("CMAX", all_data_plot$labels$y))
     expect_equal(c(1, 2, 3, 4, 5, 6, 7), unique(all_data_plot$data$USUBJID))
     expect_true(any("ggplot" %in% class(all_data_plot)))
