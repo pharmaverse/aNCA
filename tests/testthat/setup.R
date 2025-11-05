@@ -141,6 +141,7 @@ base::local({
       rep(1, 10),               # 8.1 (A,B)
       rep(2, 10)                # 8.2 (A,B)
     ),
+    DOSETRT = "A",
     # Included by aNCA internally
     is.excluded.hl = FALSE,
     is.included.hl = FALSE,
@@ -281,7 +282,7 @@ base::local({
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, ATPTREF, DOSNOA) %>%
+        select(USUBJID, ATPTREF, DOSNOA, DOSETRT, ROUTE) %>%
         unique()
     )
   main_intervals[, all_params] <- FALSE
@@ -301,7 +302,7 @@ base::local({
   ) %>%
     left_join(
       FIXTURE_DOSE_DATA %>%
-        select(USUBJID, ATPTREF, DOSNOA) %>%
+        select(USUBJID, ATPTREF, DOSNOA, DOSETRT, ROUTE) %>%
         unique(),
       by = "ATPTREF",
       relationship = "many-to-many"
