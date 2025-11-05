@@ -265,7 +265,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(input$generalplot_analyte)
       y <- data() %>%
         filter(PARAM %in% input$generalplot_analyte) %>%
-        pull(NCA_PROFILE) %>%
+        pull(ATPTREF) %>%
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
                   multiple = TRUE, selected = y[1])
@@ -337,7 +337,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       cycle_choices <- data() %>%
         filter(PARAM %in% input$analyte_mean) %>%
-        pull(NCA_PROFILE) %>%
+        pull(ATPTREF) %>%
         unique()
 
       updateSelectInput(
@@ -362,7 +362,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
               STUDYID %in% input$studyid_mean,
               PARAM %in% input$analyte_mean,
               PCSPEC %in% input$pcspec_mean,
-              NCA_PROFILE %in% input$cycles_mean,
+              ATPTREF %in% input$cycles_mean,
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
             ) %>%

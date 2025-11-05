@@ -3,12 +3,12 @@ ADNCA <- data.frame(
   STUDYID = rep(1, 20),
   USUBJID = rep(1:2, each = 10),
   PCSPEC = rep("Plasma", 20),
-  DRUG = rep("DrugA", 20),
+  DOSETRT = rep("DrugA", 20),
   PARAM = rep("Analyte1", 20),
   AFRLT = rep(seq(0, 9), 2),
   ARRLT = rep(seq(0, 4), 4),
   NFRLT = rep(seq(0, 9), 2),
-  NCA_PROFILE = rep(1, 20),
+  ATPTREF = rep(1, 20),
   DOSEA = rep(c(5, 10), each = 10),
   ROUTE = rep(c("intravascular", "extravascular"), each = 10),
   ADOSEDUR = rep(c(0, 0), each = 10),
@@ -19,7 +19,7 @@ describe("format_pkncaconc_data", {
   it("generates a valid dataset with required columns", {
     df_conc <- format_pkncaconc_data(ADNCA,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "PARAM"),
+                                                       "DOSETRT", "PARAM"),
                                      time_column = "AFRLT",
                                      rrlt_column = "ARRLT")
 
@@ -31,7 +31,7 @@ describe("format_pkncaconc_data", {
     expect_no_error(
       PKNCA::PKNCAconc(
         df_conc,
-        formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+        formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
         exclude_half.life = "exclude_half.life",
         time.nominal = "NFRLT"
       )
@@ -49,12 +49,12 @@ describe("format_pkncaconc_data", {
       mutate(
         USUBJID = 1,
         PCSPEC = "Plasma",
-        DRUG = "DrugA",
+        DOSETRT = "DrugA",
         PARAM = "Analyte1",
         AFRLT = 0,
         ARRLT = 0,
         NFRLT = 0,
-        NCA_PROFILE = 1,
+        ATPTREF = 1,
         DOSEA = 5,
         ROUTE = "intravascular",
         ADOSEDUR = 0,
@@ -66,7 +66,7 @@ describe("format_pkncaconc_data", {
     ADNCA <- bind_rows(ADNCA, dosing_rows)
     df_conc <- format_pkncaconc_data(ADNCA,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "PARAM"),
+                                                       "DOSETRT", "PARAM"),
                                      time_column = "AFRLT",
                                      rrlt_column = "ARRLT")
 
@@ -79,7 +79,7 @@ describe("format_pkncaconc_data", {
 
     result <- format_pkncaconc_data(
       data_with_paramcd,
-      group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "PARAM"),
+      group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT", "PARAM"),
       time_column = "AFRLT"
     )
     expect_true(all(!grepl("DOSE", result$PARAMCD, ignore.case = TRUE)))
@@ -89,7 +89,7 @@ describe("format_pkncaconc_data", {
     empty_adnca <- data.frame()
     expect_error(format_pkncaconc_data(empty_adnca,
                                        group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                         "DRUG", "PARAM"),
+                                                         "DOSETRT", "PARAM"),
                                        time_column = "AFRLT"),
                  regexp = "Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   })
@@ -99,7 +99,7 @@ describe("format_pkncaconc_data", {
     expect_error(
       format_pkncaconc_data(
         incomplete_adnca,
-        group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG", "PARAM"),
+        group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT", "PARAM"),
         time_column = "AFRLT"
       ),
       regexp = "Missing required columns: PARAM"
@@ -110,7 +110,7 @@ describe("format_pkncaconc_data", {
     multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Analyte2"), each = 10))
     df_conc <- format_pkncaconc_data(multi_analyte_adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "PARAM"),
+                                                       "DOSETRT", "PARAM"),
                                      time_column = "AFRLT")
     expect_equal(nrow(df_conc), 20)
     expect_equal(length(unique(df_conc$PARAM)), 2)
@@ -120,12 +120,12 @@ describe("format_pkncaconc_data", {
 describe("format_pkncadose_data", {
   df_conc <- format_pkncaconc_data(ADNCA,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DRUG", "PARAM"))
+                                                     "DOSETRT", "PARAM"))
 
   it("generates with no errors", {
     df_dose <- format_pkncadose_data(df_conc,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "PARAM"))
+                                                       "DOSETRT", "PARAM"))
 
     expect_s3_class(df_dose, "data.frame")
     expect_setequal(
@@ -137,7 +137,7 @@ describe("format_pkncadose_data", {
     expect_no_error(
       PKNCA::PKNCAdose(
         data = df_dose,
-        formula = DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID,
+        formula = DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID,
         route = "ROUTE",
         time.nominal = "NFRLT",
         duration = "ADOSEDUR"
@@ -152,20 +152,20 @@ describe("format_pkncadose_data", {
     expect_error(
       format_pkncadose_data(
         empty_df_conc,
-        group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DRUG")
+        group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT")
       ),
       regexp = "Input dataframe is empty. Please provide a valid concentration dataframe."
     )
   })
 
   it("handles missing columns", {
-    missing_col_df_conc <- df_conc %>% ungroup() %>% select(-DRUG)
+    missing_col_df_conc <- df_conc %>% ungroup() %>% select(-DOSETRT)
     expect_error(
       format_pkncadose_data(
         missing_col_df_conc,
-        group_columns = c("STUDYID", "USUBJID", "DRUG")
+        group_columns = c("STUDYID", "USUBJID", "DOSETRT")
       ),
-      regexp = "Missing required columns: DRUG"
+      regexp = "Missing required columns: DOSETRT"
     )
   })
 
@@ -180,11 +180,11 @@ describe("format_pkncadose_data", {
       )
     df_conc <- format_pkncaconc_data(negative_time_adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "PARAM"),
+                                                       "DOSETRT", "PARAM"),
                                      time_column = "AFRLT")
     df_dose <- format_pkncadose_data(df_conc,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                       "DRUG", "PARAM"))
+                                                       "DOSETRT", "PARAM"))
     expect_true(all(df_dose$AFRLT >= 0))
   })
 })
@@ -193,23 +193,23 @@ describe("format_pkncadata_intervals", {
   multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Metabolite1"), each = 10))
   df_conc <- format_pkncaconc_data(multi_analyte_adnca,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DRUG", "PARAM"),
+                                                     "DOSETRT", "PARAM"),
                                    time_column = "AFRLT")
 
   df_dose <- format_pkncadose_data(df_conc,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DRUG"))
+                                                     "DOSETRT"))
 
   pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
-    formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+    formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
     exclude_half.life = "exclude_half.life",
     time.nominal = "NFRLT"
   )
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID
+    formula = DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID
   )
 
   params <- c("cmax", "tmax", "half.life", "cl.obs")
@@ -230,7 +230,7 @@ describe("format_pkncadata_intervals", {
         data.dose = pknca_dose,
         intervals = result,
         options = list(
-          keep_interval_cols = c("NCA_PROFILE", "DOSNOA", "type_interval")
+          keep_interval_cols = c("ATPTREF", "DOSNOA", "type_interval")
         ),
         units = PKNCA::pknca_units_table(
           concu = "ng/mL",
@@ -252,23 +252,23 @@ describe("format_pkncadata_intervals", {
 
   it("handles missing columns", {
     missing_col_pknca_dose <- pknca_dose
-    missing_col_pknca_dose$data <- select(missing_col_pknca_dose$data, -DRUG)
+    missing_col_pknca_dose$data <- select(missing_col_pknca_dose$data, -DOSETRT)
     expect_error(
       format_pkncadata_intervals(
         pknca_conc,
         missing_col_pknca_dose
       ),
-      regexp = "Missing required columns: DRUG"
+      regexp = "Missing required columns: DOSETRT"
     )
   })
 
   it("correctly uses tau if column is available", {
     df_conc_tau <- df_conc %>%
-      mutate(TAU = 5)  # Add a tau column for testing
+      mutate(TRTRINT = 5)  # Add a tau column for testing
 
     pknca_conc_tau <- PKNCA::PKNCAconc(
       df_conc_tau,
-      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
       exclude_half.life = "exclude_half.life",
       time.nominal = "NFRLT"
     )
@@ -278,12 +278,12 @@ describe("format_pkncadata_intervals", {
     expect_equal(result_tau$end[4], 10)
   })
 
-  it("sets last time to end AFRLT if no TAU available", {
+  it("sets last time to end AFRLT if no TRTRINT available", {
     result <- format_pkncadata_intervals(pknca_conc, pknca_dose, params = params)
     expect_equal(result$end[4], 9)
   })
 
-  it("sets end to Inf if no TAU and single dose", {
+  it("sets end to Inf if no TRTRINT and single dose", {
     single_dose_pknca_conc <- pknca_conc
     single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
       filter(DOSNOA == 1)  # Filter to a single dose
@@ -298,15 +298,15 @@ describe("format_pkncadata_intervals", {
     expect_true(all(is.infinite(result_single_dose$end)))
   })
 
-  it("sets end to Inf if TAU= NA and single dose", {
+  it("sets end to Inf if TRTRINT= NA and single dose", {
     single_dose_pknca_conc <- pknca_conc
     single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
-      mutate(TAU = NA) %>%  # Set TAU to NA
+      mutate(TRTRINT = NA) %>%  # Set TRTRINT to NA
       filter(DOSNOA == 1)  # Filter to a single dose
 
     single_dose_pknca_dose <- pknca_dose
     single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
-      mutate(TAU = NA) %>%  # Set TAU to NA
+      mutate(TRTRINT = NA) %>%  # Set TRTRINT to NA
       filter(DOSNOA == 1)  # Filter to a single dose
 
     result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc,
@@ -315,14 +315,14 @@ describe("format_pkncadata_intervals", {
     expect_true(all(is.infinite(result_single_dose$end)))
   })
 
-  it("sets end to last time point if TAU= NA and multiple dose", {
+  it("sets end to last time point if TRTRINT= NA and multiple dose", {
     pknca_conc_na_tau <- pknca_conc
     pknca_conc_na_tau$data <- pknca_conc$data %>%
-      mutate(TAU = NA) # Set TAU to NA
+      mutate(TRTRINT = NA) # Set TRTRINT to NA
 
     pknca_dose_na_tau <- pknca_dose
     pknca_dose_na_tau$data <- pknca_dose$data %>%
-      mutate(TAU = NA)  # Set TAU to NA
+      mutate(TRTRINT = NA)  # Set TRTRINT to NA
 
     result_single_dose <- format_pkncadata_intervals(pknca_conc_na_tau,
                                                      pknca_dose_na_tau,
@@ -345,7 +345,7 @@ describe("format_pkncadata_intervals", {
   it("sets correct parameters if VOLUME not present", {
     pknca_conc_no_volume <- PKNCA::PKNCAconc(
       df_conc,
-      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
       exclude_half.life = "exclude_half.life",
       time.nominal = "NFRLT"
     )
