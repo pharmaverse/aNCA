@@ -95,13 +95,14 @@ The tasks are prioritized based on a variant of the [MSCW method](https://en.wik
 - **WISH** - ideas that are not valid for the time being, but are nevertheless cool and could become useful as the development progresses.
 
 ## Branches
-Each change should be implemented on a separate branch. Branches should have related issues opened and be named after the issue topic. Branch name should include change type (bug/enhancement/documentation etc.) and name of the solved issue. Examples:
+Each change should be implemented on a separate branch. Branches should have related issues opened and be named after the issue topic. Ideally branch names should include the issue number, change type (bug/feat/documentation etc.) and name of the solved issue. Examples:
 
 | Issue                                   | Branch                                 |
 |-----------------------------------------|----------------------------------------|
-| Documentation: add CONTRIBUTING.md file | documentation/add-contributing-md-file |
-| Bug: help widget not working            | bug/help-widget-not-working            |
-|                                         |                                        |
+| `#110` Documentation: add CONTRIBUTING.md file | 110-documentation/add-contributing-md-file |
+| `#111` Bug: help widget not working            | 111-bug/help-widget-not-working            |
+| `#112` Feature: Boxplot in Exploration Tab     | 112-feat/boxplot-in-exploration            |
+|                                        |                                        |
 
 ## Code guidelines
 The codebase follows the general [tidyverse](https://style.tidyverse.org/files.html) guidelines, but with lenient implementation. Please do make an effort to make your code clean, readable and easily understandable for the reviewer. In general, as long as your code passes all the `lintr` tests, you are good.
