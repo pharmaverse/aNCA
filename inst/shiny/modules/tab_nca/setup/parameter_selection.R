@@ -89,7 +89,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     selection_state <- reactiveVal()
 
     #  observe to update selection_state when study types or overrides change
-    observe({
+    parameter_selections <- reactive({
       req(study_types_df())
 
       params_data <- metadata_nca_parameters %>%
@@ -122,18 +122,23 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           -any_of(c("can_excretion", "can_non_excretion", "can_single_dose",
                     "can_multiple_dose", "can_extravascular", "can_metabolite"))
         )
-      # Set selection state
-      selection_state(parameter_selections)
+      # return the selected parameters
+      parameter_selections
 
+    })
+    
+    # sync the base data (from override) to the live state
+    observe({
+      selection_state(parameter_selections())
     })
 
     output$parameter_table <- renderReactable({
-      #req(selection_state())
+      req(parameter_selections())
       req(study_types_df())
 
       study_type_names <- unique(study_types_df()$type)
 
-      df <- selection_state()
+      df <- parameter_selections()
 
       # Define base columns
       col_defs <- list(
@@ -208,9 +213,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     
     # This observer watches for checkbox clicks and updates the state.
     observeEvent(input$checkbox_clicked, {
-      
-      # This message will tell you if the event is firing at all
-      message("--- Checkbox Click Observer Fired ---")
       
       click_data <- input$checkbox_clicked # Get the payload
       current_selections <- isolate(selection_state())
