@@ -128,11 +128,12 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     })
 
     output$parameter_table <- renderReactable({
-      req(selection_state())
+      #req(selection_state())
       req(study_types_df())
 
-      df <- selection_state()
       study_type_names <- unique(study_types_df()$type)
+
+      df <- selection_state()
 
       # Define base columns
       col_defs <- list(
@@ -144,20 +145,38 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       # Dynamically create checkbox columns for each study type
       study_type_cols <- purrr::map(study_type_names, ~ {
+        col_name <- .x # Capture the study type name
+        
         colDef(
-          name = .x, # Column header is the study type name
+          name = col_name,
           align = "center",
           # Custom cell renderer function
-          cell = function(value, index, name) {
+          cell = function(value, index) {
             param_name <- df$PKNCA[index]
-            # Create a unique ID for the checkbox
-            chk_id <- ns(paste("chk", param_name, name, sep = "_"))
+            
+            # 1. Define the Shiny input ID we will send data to
+            shiny_input_id <- ns("checkbox_clicked")
 
-            shiny::checkboxInput(
-              inputId = chk_id,
-              label = NULL,
-              value = value, # Set checked state from data
-              width = "100%"
+            # 2. Create the JavaScript payload
+            js_payload <- sprintf(
+              "{ param: %s, type: %s, value: this.checked }",
+              jsonlite::toJSON(param_name, auto_unbox = TRUE),
+              jsonlite::toJSON(col_name, auto_unbox = TRUE)
+            )
+            
+            # 3. Create the onchange JavaScript call
+            js_call <- sprintf(
+              "Shiny.setInputValue('%s', %s, { priority: 'event' })",
+              shiny_input_id,
+              js_payload
+            )
+            
+            # 4. Create the raw HTML checkbox tag
+            htmltools::tags$input(
+              type = "checkbox",
+              onchange = js_call,
+              # Use `checked` attribute if value is TRUE
+              checked = if (isTRUE(value)) NA else NULL
             )
           }
         )
@@ -186,26 +205,38 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         height = "49vh"
       )
     })
-
+    
     # This observer watches for checkbox clicks and updates the state.
-    observe({
-      # Get all inputs from this module
-      all_module_inputs <- reactiveValuesToList(input)
+    observeEvent(input$checkbox_clicked, {
+      
+      # This message will tell you if the event is firing at all
+      message("--- Checkbox Click Observer Fired ---")
+      
+      click_data <- input$checkbox_clicked # Get the payload
       current_selections <- isolate(selection_state())
 
       if (is.null(current_selections)) {
         return() # State not initialized yet
       }
 
-      # Call the helper to process UI changes
-      update_result <- update_parameter_selections(
-        current_selections = current_selections,
-        module_inputs = all_module_inputs
-      )
-
-      # If any values changed, update the reactiveVal
-      if (update_result$has_changes) {
-        selection_state(update_result$new_selections)
+      # Find the row and column to update
+      row_idx <- which(current_selections$PKNCA == click_data$param)
+      col_name <- click_data$type
+      new_value <- click_data$value
+      
+      # Check if this is a valid cell
+      if (length(row_idx) > 0 && (col_name %in% names(current_selections))) {
+        
+        old_value <- current_selections[row_idx, col_name]
+        
+        # Only update if the value has actually changed
+        if (!is.null(old_value) && old_value != new_value) {
+          
+          current_selections[row_idx, col_name] <- new_value
+          
+          # Set the new state
+          selection_state(current_selections)
+        }
       }
     })
 
