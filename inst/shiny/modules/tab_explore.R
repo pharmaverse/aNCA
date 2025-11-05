@@ -147,11 +147,12 @@ tab_explore_ui <- function(id) {
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
 
-tab_explore_server <- function(id, data, grouping_vars) {
+tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     ## Plotting Input widgets --------------------------------------------------------
+    data <- reactive(pknca_data()$conc$data)
 
     observeEvent(data(), {
       req(data())
@@ -249,7 +250,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       )
 
       # Update the selectidvar select input
-      idvar_choices <- c("PARAM", "PCSPEC", "DOSEA", grouping_vars())
+      idvar_choices <- c("PARAM", "PCSPEC", "DOSEA", extra_group_vars)
 
       updateSelectInput(
         session,
@@ -405,7 +406,6 @@ tab_explore_server <- function(id, data, grouping_vars) {
       meanplot()
     })
 
-    pk_dose_qc_plot_server("pk_dose_qc_plot", data = data, grouping_vars = grouping_vars)
-
+    pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data, extra_group_vars)
   })
 }
