@@ -67,7 +67,6 @@ format_to_xpt_compatible <- function(data) {
 #' @param info_vars Character vector of additional info columns to include
 #'
 #' @return A list containing dose escalation plots, summary statistics & info tables for each group.
-#' @export
 get_dose_esc_results <- function(
   o_nca, group_by_vars,
   statistics = "Mean",
