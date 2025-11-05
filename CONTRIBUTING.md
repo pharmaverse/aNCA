@@ -4,19 +4,10 @@ Thank you for your interest in the aNCA application! We strive to provide open-s
 
 This CONTRIBUTING guide is organized by common contributor roles. Start at the role that best fits you and follow the short pointers below; each role links to more detailed guidance in the rest of this file.
 
-- User — quick feedback and issue reporter: open issues when you find bugs or UX problems, and follow the simple reproduction checklist. (See: #users)
-- Developer — contributes code and features: follow branching rules, code style, tests and PR guidance. (See: #developers)
-- NCA‑reviewer — domain reviewer of outputs and validations: focus on data/mapping/validation sections and how to reproduce runs via exported scripts. (See: #nca-reviewers)
-- Code‑reviewer — reviews PRs and enforces quality: focus on tests, linters, and the reviewers checklist. (See: #code-reviewers)
-
-Scroll to the role that matches your contribution and use the links there for the relevant sections.
-
-## Quick links
-
-- Users: jump to <a name="users"></a>Users
-- Developers: jump to <a name="developers"></a>Developers
-- NCA reviewers: jump to <a name="nca-reviewers"></a>NCA reviewers
-- Code reviewers: jump to <a name="code-reviewers"></a>Code reviewers
+- [User](#users) — quick feedback and issue reporter: open issues when you find bugs or UX problems, and follow the simple reproduction checklist.
+- [Developer](#developers-computer) — contributes code and features: follow branching rules, code style, tests and PR guidance.
+- [NCA‑reviewer](#nca-reviewers) — domain reviewer of outputs and validations: focus on data/mapping/validation sections and how to reproduce runs via exported scripts.
+- [Code‑reviewer](#code-reviewers) — reviews PRs and enforces quality: focus on tests, linters, and the reviewers checklist.
 
 ---
 
@@ -25,9 +16,10 @@ Discussions regarding the project are handled using GitHub issues. If you wish t
 
 In general, any posted issue should contain a brief description of the problem, steps to reproduce, and your expected outcome. We design this application with user-friendliness in mind and appreciate clear, actionable feedback.
 
-## Users
+## Users 🖱️
 This short section is for people who primarily use the app and want to report bugs, request features, or get help reproducing results.
 
+- You find something is not intuitive or you don't know if something can or not be done? Check in [discussions](https://github.com/pharmaverse/aNCA/discussions) or in our [FAQs](). If you still cannot answer your question, open a [Q&A dicussion](https://github.com/pharmaverse/aNCA/discussions/new?category=q-a) and the community will help you!
 - If you find a bug: open an [bug issue](https://github.com/pharmaverse/aNCA/issues) (if it does not already exist) and include a minimal reproduction (explain the steps you followed), the app version (see the footer in the UI) and screenshots or console logs if helpful. Please, make sure to not provide any sensitive or confidential data.
 - If you want a new feature or improvement: open a [discussion for ideas](https://github.com/pharmaverse/aNCA/discussions/new?category=ideas) (if it does not already exist)  titled  `Feature request: ...`. Explain your use case and desired outcome, with as much detail as possible.
 
@@ -38,7 +30,7 @@ You can keep track and participate of other issues and discussions using the Git
 ## Developers :computer:
 If you plan to contribute code, tests, or documentation, please follow these developer-focused instructions.
 
-- Join the project and request collaborator access if you need push rights; otherwise, fork and open a PR.
+- Join the project by asking anca.pharmaverse@gmail.com and request collaborator access if you need push rights; otherwise, fork and open a PR.
 - Always open an issue describing the change before implementing it so the work can be coordinated.
 - Branch naming: use a branch per issue and follow the examples in this file (e.g. `bug/...`, `enhancement/...`).
 - Code style: follow the tidyverse style; ensure lintr passes and add unit tests for new behavior.
@@ -52,7 +44,7 @@ Helpful links for Developers:
 
 ---
 
-## NCA reviewers
+## NCA reviewers 📖
 This role focuses on validating calculations, outputs, and the scientific correctness of NCA results.
 
 - Make sure all `Definition of Done` items in the Pull Request (PR) are met.
@@ -64,7 +56,7 @@ Helpful links for NCA reviewers:
 
 ---
 
-## Code reviewers
+## Code reviewers 🔍
 This role is responsible for reviewing PRs, enforcing quality, and approving merges.
 
 - Focus reviews on tests, correctness, and maintainability. Ensure new code has unit tests and passes linters.
@@ -108,7 +100,7 @@ Each change should be implemented on a separate branch. Branches should have rel
 The codebase follows the general [tidyverse](https://style.tidyverse.org/files.html) guidelines, but with lenient implementation. Please do make an effort to make your code clean, readable and easily understandable for the reviewer. In general, as long as your code passes all the `lintr` tests, you are good.
 
 ## Commit messages
-Do try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) convention whenever possible. That said, software development is messy and if you feel like this standard does not suit the situation, feel free to deviate from it, but do keep the commit messages short and meaningful at the very least.
+Try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) convention whenever possible. That said, software development is messy and if you feel like this standard does not suit the situation, feel free to deviate from it, but do keep the commit messages short and meaningful at the very least.
 
 ## Pull requests
 [Pull request template](.github/PULL_REQUEST_TEMPLATE.md) is available to make documenting PRs more consistent and streamlined. Each PR description should include:
