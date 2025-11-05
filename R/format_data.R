@@ -65,7 +65,7 @@ format_pkncaconc_data <- function(ADNCA,
       dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
       std_route =  ifelse(
         grepl("(INFUS|DRIP|IV|INTRAVEN|IVADMIN|BOLUS|INTRAVASCULAR|INTRA-?ARTERIAL|INTRACARDIAC|INTRACORONARY)",
-              gsub("[^[:alnum:]]", "", toupper(routes))),
+              gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
         "intravascular",
         "extravascular"
       )
