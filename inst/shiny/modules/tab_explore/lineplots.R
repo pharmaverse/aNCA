@@ -178,7 +178,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
       req(input$param)
       y <- data() %>%
         filter(PARAM %in% input$param) %>%
-        pull(NCA_PROFILE) %>%
+        pull(ATPTREF) %>%
         unique()
       pickerInput(ns("profiles"), "Choose the profile(s):",
                   choices = sort(y),

@@ -36,7 +36,8 @@ The function performs the following steps:
 \item Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 (dosing data- not CDISC standard)
 \item Creates \code{DOSNOA} variable, sequential numbers based on time of dose
-\item Adds a 'std_route' column taking values "intravascular" or "extravascular".
+\item Creates a 'std_route' column with PKNCA values "intravascular" or "extravascular"
+based on route_column (ROUTE, CDISC: C66729).
 \item Arranges the data by group_columns.
 }
 }

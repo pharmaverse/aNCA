@@ -244,4 +244,32 @@ describe("calculate_ratios", {
     expect_equal(ratios_df$PPSTRES, rep(c(2 / 3), 4))
     expect_true(all(grepl("RACMAX", ratios_df$PPTESTCD)))
   })
+
+  it("handles no test and reference matches (data.frame) and returns correct structure", {
+    # Use test_groups that don't exist in the data to force an empty df_test
+    test_groups_no_match <- data.frame(PARAM = "Z")
+
+    ratios_empty <- calculate_ratios.data.frame(
+      res_simple$result,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = ref_groups,
+      test_groups = test_groups_no_match
+    )
+
+    # Check that it returned an empty data frame
+    expect_equal(nrow(ratios_empty), 0)
+
+    # Check that the critical columns exist
+    expect_true("PPANMETH" %in% names(ratios_empty))
+    expect_true("PPORRESU" %in% names(ratios_empty))
+    expect_true("PPSTRESU" %in% names(ratios_empty))
+
+    # Check that the columns have the correct (character) type
+    expect_true(is.character(ratios_empty$PPANMETH))
+    expect_true(is.character(ratios_empty$PPORRESU))
+    expect_true(is.character(ratios_empty$PPSTRESU))
+  })
+
 })

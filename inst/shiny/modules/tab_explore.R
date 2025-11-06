@@ -32,9 +32,11 @@ tab_explore_ui <- function(id) {
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
 
-tab_explore_server <- function(id, data, grouping_vars) {
+tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    data <- reactive(pknca_data()$conc$data)
 
     # Initiate the sidebar server modules
     individual_inputs <- plot_sidebar_server(
@@ -42,11 +44,13 @@ tab_explore_server <- function(id, data, grouping_vars) {
       data = data,
       grouping_vars = grouping_vars
       )
+    
     mean_inputs <- plot_sidebar_server(
       "mean_sidebar",
       data = data,
       grouping_vars = grouping_vars
       )
+
 
     # TAB: General Lineplot --------------------------------------------------------
 
@@ -80,7 +84,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       
       validate(need(nrow(processed_data) > 0, "No data available for the selected filters."))
       
-      p <- g_lineplot(
+      lineplot <- g_lineplot(
         data = processed_data,
         x_var = "time_var",
         y_var = "AVAL",
@@ -95,7 +99,9 @@ tab_explore_server <- function(id, data, grouping_vars) {
         palette = master_palettes_list()
       ) %>%
         ggplotly(height = 1000)
-      p
+      
+      session$userData$results$exploration$individualplot <- lineplot
+      lineplot
     })
 
     # Save the object for the zip folder whenever it changes
@@ -104,7 +110,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       session$userData$results$exploration$individualplot <- individualplot()
     })
 
-    # Render the inidividual plot in plotly
+    # Render the individual plot in plotly
     output$individualplot <- renderPlotly(individualplot())
 
 
@@ -139,7 +145,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
 
       validate(need(nrow(processed_data) > 0, "No data with >= 3 points to calculate mean."))
       
-      p <- g_lineplot(
+      meanplot <- g_lineplot(
         data = processed_data,
         x_var = "time_var",
         y_var = "Mean",
@@ -157,13 +163,10 @@ tab_explore_server <- function(id, data, grouping_vars) {
         palette = mean_palettes_list()
       ) %>%
         ggplotly(height = 1000)
-      p
-    })
+      
+      session$userData$results$exploration$meanplot <- meanplot
+      meanplot
 
-    # Save the object for the zip folder whenever it changes
-    observe({
-      req(meanplot())
-      session$userData$results$exploration$meanplot <- meanplot()
     })
 
     # Render the mean plot output in plotly
@@ -172,7 +175,6 @@ tab_explore_server <- function(id, data, grouping_vars) {
       meanplot()
     })
 
-    pk_dose_qc_plot_server("pk_dose_qc_plot", data = data, grouping_vars = grouping_vars)
-
+    pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data, extra_group_vars)
   })
 }

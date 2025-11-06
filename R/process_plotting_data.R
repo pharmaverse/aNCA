@@ -28,11 +28,11 @@ process_data_individual <- function(data, selected_usubjids, selected_analytes, 
     if ("ARRLT" %in% names(processed) && any(processed$ARRLT < 0 & processed$AFRLT > 0)) {
       processed <- dose_profile_duplicates(
         processed,
-        groups = c("USUBJID", "PCSPEC", "PARAM", "NCA_PROFILE"),
-        dosno = "NCA_PROFILE"
+        groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
+        dosno = "ATPTREF"
       )
     }
-    processed <- processed %>% filter(NCA_PROFILE %in% cycle)
+    processed <- processed %>% filter(ATPTREF %in% cycle)
   }
   
   processed %>%
@@ -63,12 +63,13 @@ process_data_mean <- function(data, selected_analytes, selected_pcspec, cycle,
     filter(
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
-      if ("EVID" %in% names(data)) EVID == 0 else TRUE
+      if ("EVID" %in% names(data)) EVID == 0 else TRUE,
+      !is.na(AVAL)
     )
   
   # Conditionally filter by cycle for "By Dose Profile" timescale
   if (time_scale == "By Dose Profile") {
-    processed <- processed %>% filter(NCA_PROFILE %in% cycle)
+    processed <- processed %>% filter(ATPTREF %in% cycle)
   }
   
   summarised_data <- processed %>%

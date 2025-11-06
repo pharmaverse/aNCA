@@ -63,7 +63,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           grouping_vars(),
           unname(unlist(res_nca()$data$conc$columns$groups)),
           "DOSEA",
-          "NCA_PROFILE",
+          "ATPTREF",
           "ROUTE"
         )))
 
@@ -109,8 +109,36 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           # Create an output folder with all plots, tables and listings
           output_tmpdir <- file.path(tempdir(), "output")
           save_output(output = session$userData$results, output_path = output_tmpdir)
+          incProgress(0.1)
 
+          # Create presentation slides
+          res_nca <- res_nca()
+          res_dose_slides <- get_dose_esc_results(
+            o_nca = res_nca,
+            group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
+            facet_vars = "DOSEA",
+            statistics = c("Mean"),
+            stats_parameters = c(
+              "CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"
+            )
+          )
+          presentations_path <- paste0(output_tmpdir, "/presentations")
+          dir.create(presentations_path)
+
+          create_qmd_dose_slides(
+            res_dose_slides = res_dose_slides,
+            quarto_path = paste0(presentations_path, "/dose_escalation.qmd"),
+            title = paste0("NCA Results Slides", " (", session$userData$project_name(), ")"),
+            use_plotly = TRUE
+          )
           incProgress(0.3)
+          create_pptx_dose_slides(
+            res_dose_slides = res_dose_slides,
+            path = paste0(presentations_path, "/dose_escalation.pptx"),
+            title = paste0("NCA Results Slides", " (", session$userData$project_name(), ")"),
+            template = "www/templates/template.pptx"
+          )
+          incProgress(0.6)
 
           # Create a settings folder
           setts_tmpdir <- file.path(output_tmpdir, "settings")
@@ -119,13 +147,17 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
           files <- list.files(
             output_tmpdir,
-            pattern = ".(csv)|(rds)|(xpt)|(html)$",
+            pattern = paste0(
+              ".(csv)|(rds)|(xpt)|(html)|(rda)",
+              "|(dose_escalation.pptx)|(dose_escalation.qmd)$"
+            ),
             recursive = TRUE
           )
+
           wd <- getwd()
           on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
           setwd(output_tmpdir)
-          incProgress(0.6)
+          incProgress(0.9)
           utils::zip(zipfile = fname, files = files)
           incProgress(1)
         })
