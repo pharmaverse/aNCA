@@ -79,7 +79,7 @@ g_lineplot <- function(data,
     y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
     title <- "PK Concentration - Time Profile"
   }
-  
+
   plt <- ggplot(data, aes(
     x = .data[[x_var]],
     y = .data[[y_var]],
@@ -103,8 +103,7 @@ g_lineplot <- function(data,
   
   if (yaxis_scale == "log") {
     plt <- plt +
-      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
-                    label = c(0.001, 0.01, 0.1, 1, 10, 100, 1000))
+      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), labels = scales::comma)
   }
   
   if (!is.null(facet_by) && length(facet_by) > 0) {
@@ -126,9 +125,13 @@ g_lineplot <- function(data,
   # Mean plot specific layers
   if (is_mean_plot) {
     if (isTRUE(show_sd_min) || isTRUE(show_sd_max)) {
-      ymin_val <- if (isTRUE(show_sd_min)) data$SD_min else data$Mean
-      ymax_val <- if (isTRUE(show_sd_max)) data$SD_max else data$Mean
-      plt <- plt + geom_errorbar(aes(ymin = ymin_val, ymax = ymax_val), width = 0.4)
+      plt <- plt + geom_errorbar(
+        aes(
+          ymin = if (isTRUE(show_sd_min)) .data$SD_min else .data$Mean,
+          ymax = if (isTRUE(show_sd_max)) .data$SD_max else .data$Mean
+        ),
+        width = 0.4
+        )
     }
     if (isTRUE(show_ci)) {
       plt <- plt +

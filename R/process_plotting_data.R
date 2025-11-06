@@ -71,7 +71,7 @@ process_data_mean <- function(data, selected_analytes, selected_pcspec, cycle,
   if (time_scale == "By Dose Profile") {
     processed <- processed %>% filter(ATPTREF %in% cycle)
   }
-  
+
   summarised_data <- processed %>%
     mutate(
       time_var = if (time_scale == "By Dose Profile") NRRLT else NFRLT,
@@ -94,18 +94,9 @@ process_data_mean <- function(data, selected_analytes, selected_pcspec, cycle,
     )
   
   if (yaxis_scale == "log") {
+
     summarised_data <- summarised_data %>%
-      filter(Mean > 0) %>%
-      mutate(
-        log10_Mean = log10(Mean),
-        log10_SD = SD / (Mean * log(10)),
-        SD_min = 10^(log10_Mean - log10_SD),
-        SD_max = 10^(log10_Mean + log10_SD),
-        log10_SE = SE / (Mean * log(10)),
-        log10_CI = 1.96 * log10_SE,
-        CI_lower = 10^(log10_Mean - log10_CI),
-        CI_upper = 10^(log10_Mean + log10_CI)
-      )
+      filter(Mean > 0)
   }
   
   return(summarised_data)

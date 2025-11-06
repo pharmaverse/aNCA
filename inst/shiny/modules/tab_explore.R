@@ -42,13 +42,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     individual_inputs <- plot_sidebar_server(
       "individual_sidebar",
       data = data,
-      grouping_vars = grouping_vars
+      grouping_vars = extra_group_vars
       )
     
     mean_inputs <- plot_sidebar_server(
       "mean_sidebar",
       data = data,
-      grouping_vars = grouping_vars
+      grouping_vars = extra_group_vars
       )
 
 
