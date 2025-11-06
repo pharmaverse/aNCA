@@ -10,18 +10,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## 1. Goals and constraints
+The design of the R package provides high-level functions based on the PKNCA package, allowing to convert a standard CDISC ADNCA file into a PKNCAdata object. Within this package, we use a Shiny environment, that simplifies for our non-programmer users this process by providing a user interface for every programatic decission. Additionally, the App simplifies the exporation of outputs and the investigation of the data (Quality control, exclusion of records, filtering...).
 
--   R Shiny application for performing Non-Compartmental Analysis (NCA) on clinical and non-clinical datasets
--   Primary users / stakeholders (e.g., pharmacometricians, data reviewers).
--   Non-functional requirements: performance, security, portability, reproducibility.
--   Constraints (R versions, CRAN policy, corporate network, data privacy).
-
-Example:
-
-> The aNCA package provides a reusable toolkit and Shiny UI for performing non-compartmental analysis on PK datasets. Primary users are pharmacometricians and clinical pharmacology teams who need a guided UI for mapping, running NCA, and exporting results. Non-functional requirements include reproducibility of exported scripts, privacy of uploaded datasets, and moderate responsiveness for typical clinical datasets (hundreds to a few thousand rows).
-
-## 2. System overview
+## 1. Folder structure
 
 This diagram represents the high-level architecture and data flow within the aNCA package and Shiny application.
 
@@ -57,7 +48,7 @@ aNCA Shiny App Architecture
 └── --- End of Architecture ---
 ```
 
-## 3. Data model & flow
+## 2. Data flow
 
 Answer these: - DataTab: Data upload (CSV, RDS, XPT, parquet) & preprocessing. Creation of PKNCAdata object (`pknca_data`) - NCATab: Modification of PKNCAdata object to apply all NCA settings (`processed_pknca_data`) and run calculations to obtain PKNCAresults object (`res_nca`) - TLG Tab: Generation of tables, listings, and graphs from `processed_pknca_data` (and at some point `res_nca`). Its standard Shiny input settings are specified in `inst/shiny/tlg.yaml` - Transformations applied (filters, mapping, unit handling, imputation rules, PKNCA object creation). - Where intermediate state is stored (typically `session$userData` in Shiny).
 
@@ -69,12 +60,12 @@ The high level picture of the App, which is shown in [App.R](../inst/shiny/app.R
 
 For better details on the server lower level processing actions (order of functions in `\R`), check directly the [`.../R_script_template.R`]()
 
-## 4. Session & state management
+## 3. Session & state management
 
 -   In `session$userData$results` we store all objects that are intended for the ZIP folder output (mappings, settings, units_table, ratios_table, etc.).
 -   In `session$userData` we also store intermediate objects (e.g., `pknca_data`, `processed_data`, etc.) that are used across tabs.
 
-## 5. See also...
+## 4. See also...
 
 -   [Roadmap with the next year goals](./roadmap.md) - Indicating the objectives planned to be achieved.
 -   [Validation Plan and Coverage](../vignettes/validations.Rmd) - Describing the validation strategy implemented and the ideas for the future.
