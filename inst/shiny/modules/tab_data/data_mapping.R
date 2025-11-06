@@ -260,52 +260,47 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
-    df_duplicates <- reactive({
-      req(mapped_data)
-      mapped_data() %>%
-        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-        filter(n() > 1) %>%
-        ungroup() %>%
-        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM, sep = "_"))
-    })
 
+    df_duplicates <- reactiveVal(NULL)
     processed_data <- reactive({
       req(mapped_data())
-      dataset <- mapped_data()
+browser()
+      dataset <- mapped_data() %>%
+        # Annotate exact duplicate records
+        group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+        mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
+        # Annotate duplicate time records
+        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+        mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
+        mutate(.dup_group = cur_group_id()) %>%
+        ungroup() %>%
+        mutate(ROWID = row_number())
 
-      if (nrow(df_duplicates()) == 0) {
-        return(mutate(dataset, DFLAG = FALSE))
+      if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
+        df_duplicates(dataset)
       }
 
-      # User resolves duplicates, apply DFLAG
-      duplicates(df_duplicates())
-
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
+        browser()
         # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
-        req(length(selected) > 0)
-
-        kept <- df_duplicates()[selected, , drop = FALSE]
-        removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
-        dataset <- dataset %>%
-          mutate(DFLAG = FALSE)
-
-        # Set DFLAG to TRUE for the removed rows
-        dataset <- dataset %>%
-          rows_update(
-            removed %>%
-              mutate(DFLAG = TRUE) %>%
-              select(names(dataset)),
-            by = intersect(names(dataset), names(removed))
-          )
-
+        dataset <- df_duplicates() %>%
+          group_by(is.time.duplicate) %>%
+          mutate(
+            DTYPE = ifelse(
+              is.time.duplicate & row_number() %in% selected,
+              "TIME DUPLICATE",
+              DTYPE
+          )) %>%
+          ungroup()
         return(dataset)
       }
       # Don't return anything until duplicates are resolved
       return(NULL)
     })
 
-    observeEvent(duplicates(), {
+    observeEvent(df_duplicates(), {
+      browser()
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -330,20 +325,23 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     })
 
     observeEvent(input$keep_selected_btn, {
+      browser()
       duplicates(NULL)
       removeModal()
     })
 
     output$duplicate_modal_table <- renderReactable({
-      group_ids <- unique(df_duplicates()$.dup_group)
-      color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
-
+      browser()
       reactable(
-        df_duplicates(),
+        df_duplicates() %>%
+          filter(is.time.duplicate),
         columns = list(.dup_group = colDef(show = FALSE)),
         rowStyle = function(index) {
-          group <- df_duplicates()$.dup_group[index]
-          list(background = color_map[[group]])
+          if (df_duplicates()[index, ".dup_group"] %% 2 == 0) {
+            list(background = "white")
+          } else {
+            list(background = "#e6f2ff")
+          }
         },
         selection = "multiple",
         onClick = "select",
