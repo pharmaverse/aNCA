@@ -17,46 +17,101 @@ This guide will provide users with information on how to get started with the aN
 
 Click **Upload File** and select the dataset you would like to use. The data can be in `.csv`, `sas7bdat`, `.xslx`, `.parquet` or `.rds` format. The best input for the app is data that follows the ADNCA format according to CDISC guidelines. Other formats of data will also work. Alternatively, for exploring the app, Users can use the Dummy dataset that is already uploaded.
 
-<img src="images/get_started/GIFs/UploadaDataset.gif" alt="Data upload"/ width="100%">
+<img src="images/get_started/GIFs/UploadaDatasetLoop.gif" alt="Data upload"/ width="100%">
 
 ### Data format
 
 Some variables are mandatory (marked with \*), while others are optional. Custom variable names are supported as long as they are correctly mapped during the [Data Mapping](###%20Data%20mapping) step.
 
-|                          | **Variable**   | **Description**                                                    | **Format**        |
-|------------------|------------------|-------------------|------------------|
-| **Grouping Identifiers** | STUDYID \*     | Study Identifier                                                   | character         |
-|                          | USUBJID \*     | Unique Subject Identifier                                          | character/numeric |
-|                          | NCA_PROFILE \* | Can be any column, and used to filter data for NCA calculations     | any               |
-|                          | TRT01A         | Treatment Group Identifier (Actual)                                | character         |
-|                          | TRT01P         | Treatment Group Identifier (Planned)                               | character         |
-|                          | AGE            | Age of Subject                                                     | numeric           |
-|                          | RACE           | Race of Subject                                                    | character         |
-|                          | SEX            | Sex of Subject                                                     | character         |
-|                          |                |                                                                    |                   |
-| **Sample variables**     | PARAM \*       | Analyte studied in the sample                                      | character         |
-|                          | PCSPEC \*      | Specimen Material Type                                             | character         |
-|                          | AVAL \*        | Analysis Value                                                     | numeric           |
-|                          |                |                                                                    |                   |
-| **Dose Variables**       | DRUG \*        | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
-|                          | ROUTE \*       | Route of Administration, either {intravascular} or {extravascular} | character         |
-|                          | DOSEA \*       | Actual Treatment Dose                                              | numeric           |
-|                          | ADOSEDUR       | Actual Treatment Dose                                              | numeric           |
-|                          |                |                                                                    |                   |
-| **Time Variables**       | AFRLT \*       | Actual Relative Time from Analyte First Dose                       | numeric           |
-|                          | ARRLT \*       | Actual Relative Time from Reference Dose                           | numeric           |
-|                          | NFRLT \*       | Nominal Relative Time from Analyte First Dose                      | numeric           |
-|                          | NRRLT \*       | Nominal Relative Time from Reference Dose                          | numeric           |
-|                          |                |                                                                    |                   |
-| **Time Variables**       | AVALU          | Analysis Value Unit                                                | character         |
-|                          | DOSEU          | Treatment Dose Units                                               | character         |
-|                          | RRLTU          | Relative Time from Reference Dose Unit                             | character         |
+```{r setup, include=FALSE}
+library(DT)
+
+# Making categories for the datatable
+category <- c("Grouping Identifiers"," "," "," "," "," "," "," ",
+              "Sample Variables"," "," ",
+              "Dose Variables"," "," "," ",
+              "Time Variables"," "," "," ",
+              "Time Variables"," "," ") # Add more as needed based on the full image
+
+variable <- c("STUDYID *", "USUBJID *", "NCA_PROFILE *", "TRT01A", "TRT01P",
+              "AGE", "RACE", "SEX", "PARAM *", "PCSPEC *", "AVAL *",
+              "DRUG *", "ROUTE *", "DOSEA *", "ADOSEDUR", "AFRLT *", "ARRLT *", "NFRLT *", "NRRLT *", 
+              "AVALU", "DOSEU", "RRLTU")
+
+description <- c("Study Identifier", 
+                 "Unique Subject Identifier",
+                 "Can be any column, and used to filter data for NCA calculations",
+                 "Treatment Group Identifier (Actual)", 
+                 "Treatment Group Identifier (Planned)",
+                 "Age of Subject", "Race of Subject", 
+                 "Sex of Subject",
+                 "Analyte studied in the sample", 
+                 "Specimen Material Type",
+                 "Analysis Value", 
+                 "Drug/Treatment compound. When relevant, should match with PARAM",
+                 "Route of Administration, either {intravascular} or {extravascular}",
+                 "Actual Treatment Dose", 
+                 "Actual Treatment Dose",
+                 "Actual Relative Time from Analyte First Dose", 
+                 "Actual Relative Time from Reference Dose",
+                 "Nominal Relative Time from Analyte First Dose",
+                 "Nominal Relative Time from Reference Dose",
+                 "Analysis Value Unit",
+                 "Treatment Dose Units",
+                 "Relative Time from Reference Dose Unit")
+
+format <- c("character", "character/numeric", "any", "character",
+            "character", "numeric", "character", "character", "character",
+            "character", "numeric", "character", "character", "numeric",
+            "numeric", "numeric", "numeric", "numeric", "numeric", "character", "character", "character")
+
+# Combine the vectors into a single data frame
+dataformat <- data.frame(
+  Category = category,
+  Variable = variable,
+  Description = description,
+  Format = format
+)
+```
+
+<details>
+<summary style="font-weight: bold; font-size:large;">
+Click here to view a table describing each variable
+</summary>
+```{r table-chunk, echo=FALSE}
+# This chunk generates the table 
+# Using DT::datatable as an example
+datatable <- DT::datatable(dataformat, rownames=FALSE, 
+                           colnames = c("", "Variable", "Description", "Format"),
+                           options = list(
+                             paging=FALSE,
+                             columnDefs = list(
+                               list(targets = 0, width = "25%"),
+                               list(targets = 1, width = "25%"),
+                               list(targets = 2, width = "25%"),
+                               list(targets = 3, width = "25%")
+                             )
+                           )) %>%
+  formatStyle(columns = 1, 
+              fontWeight = styleEqual(c("Grouping Identifiers", "Sample Variables",
+                                      "Dose Variables", "Time Variables"),
+                                    rep("bold",4)))
+datatable
+
+```
+</details>
+
+
 
 ### Adding Filters
 
-Once your data is uploaded, examine it and then click "Next". If you want to change the data by adding filters, click the *Add Filter* button.
+Once your data is uploaded, examine it and then click the "Next" button on the bottom right. 
 
-<img src="images/get_started/GIFs/AddingFilters.gif" alt="Adding filters"/width="100%">
+<img src="images/get_started/GIFs/ExamineDataNextLoop.gif" alt="Mapping"/ /width="100%"> 
+
+If you want to change the data by adding filters, click the *Add Filter* button.
+
+<img src="images/get_started/GIFs/AddingFiltersLoop.gif" alt="Adding filters"/width="100%">
 
 <blockquote class="important">
 
@@ -74,7 +129,7 @@ Click **Next** to get to the *Mapping* section.
 
 -   Click **Next** to get to the *Preview* section where you can review your dataset.
 
-<img src="images/get_started/GIFs/DataMapping.gif" alt="Mapping"/ /width="100%"> 
+<img src="images/get_started/GIFs/DataMappingLoop.gif" alt="Mapping"/ /width="100%"> 
 
 ### Preview
 
@@ -82,9 +137,17 @@ Review the data to ensure that the columns have been mapped correctly, and that 
 
 # Step 2: Exploratory Analysis
 
-In the *Exploration* tab, you will find the different visualization options, including individual plots and mean plots. Here, you can check out your data to see if the profiles and subjects look good, and use the selection boxes on the right to toggle the formatting and other aspects of them. Once you've made your choices you can download, save and inspect the visualizations in the top right corner of the plot.
+In the *Exploration* tab, you will find the different visualization options, including individual plots and mean plots. 
 
-<img src="images/get_started/GIFs/ExplorationOptions.gif" alt="Mapping"/ /width="100%">
+<img src="images/get_started/GIFs/ExploratoryPlotTypesLoop.gif" alt="Mapping"/ /width="100%">
+
+Here, you can check out your data to see if the profiles and subjects look good, and use the selection boxes on the right to toggle the formatting and other aspects of the plots. These include changing the scale (linear/log) of the plots and adding/removing standard deviation error bars and confidence intervals on the mean plots.
+
+<img src="images/get_started/GIFs/ExploratoryGraphTogglesLoop.gif" alt="Mapping"/ /width="100%">
+
+Once you've made your choices you can download, save and inspect the visualizations in the top right corner of the plot.
+
+<img src="images/get_started/GIFs/ExplorationOptionsLoop.gif" alt="Mapping"/ /width="100%">
 
 # Step 3: Run NCA
 
@@ -94,7 +157,7 @@ Click on the *NCA* tab in the menu bar to switch to the next section.
 
 1.  *Settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s) you would like to run the NCA on, the extrapolation method and the NCA parameters to calculate. Select additional options including partial AUCs, units, or rule sets to flag the data at the bottom of this tab.  You can also download the settings you have created, and upload them again the next time you use the app, which will implement the saved setup. Note, only settings downloaded from the app can be uploaded here.
 
-<img src="images/get_started/GIFs/DownloadSettingsNCA.gif" alt="NCA settings"/ width="100%">
+<img src="images/get_started/GIFs/DownloadSettingsNCALoop.gif" alt="NCA settings"/ width="100%">
 
 *Slope Selector*: To add exclusions or manual slope selections, go to the *Slope Selector* tab in the *Setup* page. There are two different ways to add exclusions/selections to the slopes.
 
@@ -103,13 +166,13 @@ Click on the *NCA* tab in the menu bar to switch to the next section.
 1.  For selection and exclusion, click **+ Exclusion/Selection** and input the corresponding information. RANGE refers to the data point number in the slope, which can be seen by hovering over the points in the plots below.
 2.  To remove, select the sample row and click **- Remove selected rows**.
 
-<img src="images/get_started/GIFs/SlopeSelectorExclusionRemove.gif" alt="NCA settings"/ width="100%">
+<img src="images/get_started/GIFs/SlopeSelectorExclusionRemoveLoop.gif" alt="NCA settings"/ width="100%">
 
 #### Via the Plots
 
 For in-app guidance, you can click the [?]{.help-button} button.
 
-<img src="images/get_started/GIFs/NCASetupSlopeSelector.gif" alt="NCA settings"/ width="100%">
+<img src="images/get_started/GIFs/NCASetupSlopeSelectorLoop.gif" alt="NCA settings"/ width="100%">
 
 1.  For selection, click the first point and then the last point you want included in the slope. The plot should then update and a row should be added to the table. There you can add your reason for selection.
 2.  For exclusion, double click the point you want to exclude. The plot should update along with the table.
@@ -119,7 +182,7 @@ For in-app guidance, you can click the [?]{.help-button} button.
 
 2.  Click **Run NCA** at the top of the page and check that the data is as expected. You will automatically be redirected to the *Results* tab.
 
-<img src="images/get_started/GIFs/RunNCAButton.gif" alt="NCA settings"/ width="100%">
+<img src="images/get_started/GIFs/RunNCAButtonLoop.gif" alt="NCA settings"/ width="100%">
 
 # Step 4: NCA Results
 
@@ -127,7 +190,7 @@ For in-app guidance, you can click the [?]{.help-button} button.
 
 The *NCA Results* tab shows the individual results of the NCA. You can select which parameters you would like to view. Results in red have been flagged as "FALSE" for the rule sets selected, results in purple are flagged as "MISSING", and results in white are not flagged. Here, you have the option to download all of the results and just the NCA data, this is found at the bottom of the page.
 
-<img src="images/get_started/GIFs/NCAResultsDownload.gif" alt="NCA settings"/ width="100%">
+<img src="images/get_started/GIFs/NCAResultsDownloadLoop.gif" alt="NCA settings"/ width="100%">
 
 ## Slopes Information - Exclusions and Manual Slopes after NCA
 
@@ -145,13 +208,13 @@ Back in the *Results* tab, click on the *Slopes Information* tab to view more de
 
 The *Descriptive Statistics* tab allows you to see the statistical data calculated by the NCA. This includes mean, SD, min, max and others, you can choose which statistics and parameters you wish to display in your summary table. You can also choose which variables you want to group by. After you have selected your preferences, you can scroll down and press *Download NCA Summary Data* to download this summary table.
 
-<img src="images/get_started/GIFs/DescriptiveStatistics.gif" alt="NCA settings"/ width="100%">
+<img src="images/get_started/GIFs/DescriptiveStatisticsLoop.gif" alt="NCA settings"/ width="100%">
 
 ### Parameter Datasets
 
 In the Parameter Datasets tab you can see and export the ADPP, ADPC, and PP datasets.
 
-<img src="images/get_started/GIFs/ParameterDatasets.gif" alt="Parameter Datasets"/ width="100%">
+<img src="images/get_started/GIFs/ParameterDatasetsLoop.gif" alt="Parameter Datasets"/ width="100%">
 
 
 ## Additional Analysis
@@ -160,7 +223,7 @@ In the *Additional Analysis* tab, you can calculate tissue-matrix ratios and per
 
 *Concentration Ratios*: You can calculate tissue-matrix ratios in this tab. Input which specimen you would like as the numerator and denominator, and you can choose what variable you would like to summarize this data by. This will generate a matrix ratios results table which you can download.
 
-<img src="images/get_started/GIFs/MatrixRatios.gif" alt="Parameter Datasets"/ width="100%">
+<img src="images/get_started/GIFs/MatrixRatiosLoop.gif" alt="Parameter Datasets"/ width="100%">
 
 # Step 5: TLGs
 
@@ -174,11 +237,15 @@ After performing the analysis, you can prepare reports regarding the analysis, i
 
 ### Order Details
 
-Firstly, you will need to prepare an order for TLGs. The table in the *Order details* tab will display some default TLGs with their metadata. You can add additional reports by clicking the **Add TLG** button. This will bring up a list of available, defined TLGs. Select the ones you are interested in and click the **Add TLGs to Order** button. You can also remove unwanted entries by selecting them and clicking **Remove TLG**.
+Firstly, you will need to prepare an order for TLGs. The table in the *Order details* tab will display some default TLGs with their metadata. You can add additional reports by clicking the **Add TLG** button. This will bring up a list of available, defined TLGs. Select the ones you are interested in and click the **Add TLGs to Order** button. 
+
+<img src="images/get_started/GIFs/TLGSelectionAddLoop.gif" alt="Default TLG table"/ width="100%">
+
+You can also remove unwanted entries by selecting them and clicking **Remove TLG**.
+
+<img src="images/get_started/GIFs/TLGSelectionRemoveLoop.gif" alt="Default TLG table"/ width="100%">
 
 When you are happy with the selection, click **Submit Order Details**.
-
-<img src="images/get_started/GIFs/TLGSelection.gif" alt="Default TLG table"/ width="100%">
 
 ### Navigating the TLGs
 
@@ -186,15 +253,15 @@ The application provides three separate tabs for differentiating **Tables**, **L
 
 Each tab will show a sidebar on the left of the screen. This will let you navigate each specific entry.
 
-<img src="images/get_started/GIFs/TLGsSidebar.gif" alt="TLG navigation"/ width="100%">
+<img src="images/get_started/GIFs/TLGsSidebarLoop.gif" alt="TLG navigation"/ width="100%">
 
 Also, in each tab using the widgets at the top you can specify the number of entries per page and change the pages.
 
-<img src="images/get_started/GIFs/TLGsWidgetsatTop.gif" alt="TLG pages"/ width="100%">
+<img src="images/get_started/GIFs/TLGsWidgetsatTopLoop.gif" alt="TLG pages"/ width="100%">
 
 Lastly, the widgets on the right are used for customizing the resulting reports.
 
-<img src="images/get_started/GIFs/TLGsCustomisingReports.gif" alt="TLG customization"/ width="100%">
+<img src="images/get_started/GIFs/TLGsCustomisingReportsLoop.gif" alt="TLG customization"/ width="100%">
 
 ### Customizing the TLGs
 
