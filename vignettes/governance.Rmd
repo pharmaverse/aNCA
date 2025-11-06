@@ -1,4 +1,15 @@
-# Governance
+---
+title: "Governance model"
+description: >
+    This document outlines the governance model for the aNCA project, detailing roles, responsibilities, and decision-making processes to ensure effective management and collaboration within the project.
+
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Governance model}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
 This document outlines the governance model for the aNCA project, detailing roles, responsibilities, and decision-making processes to ensure effective management and collaboration within the project.
 
 ## Overall
