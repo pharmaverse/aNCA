@@ -156,7 +156,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         not_compatible <- append(not_compatible, "Analyte")
       }
 
-      if (all(settings$profile %in% unique(data()$NCA_PROFILE))) {
+      if (all(settings$profile %in% unique(data()$ATPTREF))) {
         updatePickerInput(inputId = "select_profile", selected = settings$profile)
       } else {
         not_compatible <- append(not_compatible, "NCA Profile")
@@ -266,9 +266,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       filtered_data <- data() %>%
         filter(PARAM %in% input$select_analyte,
                !is.na(PCSPEC),
-               !is.na(NCA_PROFILE)) # Filter together so there's no combinations of NAs
+               !is.na(ATPTREF)) # Filter together so there's no combinations of NAs
 
-      profile_choices <- unique(filtered_data$NCA_PROFILE) %>%
+      profile_choices <- unique(filtered_data$ATPTREF) %>%
         sort()
 
       pcspec_choices <- unique(filtered_data$PCSPEC)
@@ -279,7 +279,18 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         current_profile <- profile_choices[1]
       }
       if (length(current_pcspec) == 0) {
-        current_pcspec <- pcspec_choices
+        # Select plasma/serum if available
+        plasma_serum_values <- grep("^plasma$|^serum$",
+                                    pcspec_choices,
+                                    value = TRUE,
+                                    ignore.case = TRUE)
+
+        # Assign to current_pcspec if found, otherwise select all
+        if (length(plasma_serum_values) > 0) {
+          current_pcspec <- plasma_serum_values
+        } else {
+          current_pcspec <- pcspec_choices
+        }
       }
 
       updatePickerInput(

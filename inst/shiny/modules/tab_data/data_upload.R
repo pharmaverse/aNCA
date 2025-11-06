@@ -34,7 +34,7 @@ data_upload_server <- function(id) {
 
     #' Dummy data is automatically loaded on startup if no data path is provided
     DUMMY_DATA <- read.csv(
-      system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"),
+      system.file("shiny/data/Dummy_data.csv", package = "aNCA"),
       na.strings = c("", "NA")
     )
 

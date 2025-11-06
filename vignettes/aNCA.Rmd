@@ -33,9 +33,9 @@ category <- c("Grouping Identifiers"," "," "," "," "," "," "," ",
               "Time Variables"," "," "," ",
               "Time Variables"," "," ") # Add more as needed based on the full image
 
-variable <- c("STUDYID *", "USUBJID *", "NCA_PROFILE *", "TRT01A", "TRT01P",
+variable <- c("STUDYID *", "USUBJID *", "ATPTREF *", "TRT01A", "TRT01P",
               "AGE", "RACE", "SEX", "PARAM *", "PCSPEC *", "AVAL *",
-              "DRUG *", "ROUTE *", "DOSEA *", "ADOSEDUR", "AFRLT *", "ARRLT *", "NFRLT *", "NRRLT *", 
+              "DOSETRT *", "ROUTE *", "DOSEA *", "ADOSEDUR", "AFRLT *", "ARRLT *", "NFRLT *", "NRRLT *", 
               "AVALU", "DOSEU", "RRLTU")
 
 description <- c("Study Identifier", 
@@ -100,7 +100,6 @@ datatable
 
 ```
 </details>
-
 
 
 ### Adding Filters
