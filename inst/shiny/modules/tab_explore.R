@@ -265,7 +265,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(input$generalplot_analyte)
       y <- data() %>%
         filter(PARAM %in% input$generalplot_analyte) %>%
-        pull(NCA_PROFILE) %>%
+        pull(ATPTREF) %>%
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
                   multiple = TRUE, selected = y[1])
@@ -304,7 +304,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           TIME_DOSE = round(AFRLT - ARRLT, 6)
         )
 
-      p <- general_lineplot(
+      lineplot <- general_lineplot(
         plot_data,
         input$generalplot_analyte,
         input$generalplot_pcspec,
@@ -318,25 +318,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         input$show_dose,
         cycle = input$cycles,
         palette = palettes
-      ) %>%
-        ggplotly(height = 1000)
-
-      # Conditionally add rangeslider only if the plot is not faceted
-      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
-        p <- p %>%
-          layout(
-            xaxis = list(
-              rangeslider = list(type = "time")
-            )
-          )
-      }
-      p
-    })
-
-    # Save the object for the zip folder whenever it changes
-    observe({
-      req(individualplot())
-      session$userData$results$exploration$individualplot <- individualplot()
+      )
+      session$userData$results$exploration$individualplot <- lineplot
+      lineplot
     })
 
     # Render the inidividual plot in plotly
@@ -353,7 +337,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       cycle_choices <- data() %>%
         filter(PARAM %in% input$analyte_mean) %>%
-        pull(NCA_PROFILE) %>%
+        pull(ATPTREF) %>%
         unique()
 
       updateSelectInput(
@@ -378,7 +362,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
               STUDYID %in% input$studyid_mean,
               PARAM %in% input$analyte_mean,
               PCSPEC %in% input$pcspec_mean,
-              NCA_PROFILE %in% input$cycles_mean,
+              ATPTREF %in% input$cycles_mean,
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
             ) %>%
@@ -405,13 +389,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         plot_sd_min = input$sd_mean_plot_min,
         plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
-      ) %>%
-        ggplotly(height = 1000) %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
-          )
-        )
+      )
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })

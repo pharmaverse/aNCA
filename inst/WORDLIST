@@ -5,6 +5,7 @@ ADPP
 AFRLT
 ARRLT
 AUCinf
+ATPTREF
 AUClast
 AVAL
 AVALU
@@ -14,6 +15,7 @@ CDISC
 Cmax
 Cond
 DOSEA
+DOSETRT
 DOSEU
 DOSNOA
 DataTab
@@ -26,6 +28,7 @@ LAMZ
 LAMZLL
 LAMZNPT
 Lineplot
+METABFL
 MSCW
 NCA
 NCATab
@@ -64,6 +67,7 @@ TLG
 TLGs
 TRT
 Tmax
+TRTRINT
 Tooltip
 UI
 USUBJID
@@ -71,6 +75,7 @@ USUBJIDs
 UX
 VOLUMEU
 XPT
+YAML
 amountu
 analysing
 analyte
@@ -118,6 +123,8 @@ predose
 reproducibility
 reupload
 roadmap
+qmd
+rpptx
 ruleset
 rulesets
 signif
