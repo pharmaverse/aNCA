@@ -127,7 +127,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       parameter_selections
 
     })
-    
+
     # sync the base data (from override) to the live state
     observe({
       selection_state(parameter_selections())
@@ -152,14 +152,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       # Dynamically create checkbox columns for each study type
       study_type_cols <- purrr::map(study_type_names, ~ {
         col_name <- .x # Capture the study type name
-        
+
         colDef(
           name = col_name,
           align = "center",
           # Custom cell renderer function
           cell = function(value, index) {
             param_name <- df$PKNCA[index]
-            
+
             # 1. Define the Shiny input ID we will send data to
             shiny_input_id <- ns("checkbox_clicked")
 
@@ -169,14 +169,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
               jsonlite::toJSON(param_name, auto_unbox = TRUE),
               jsonlite::toJSON(col_name, auto_unbox = TRUE)
             )
-            
+
             # 3. Create the onchange JavaScript call
             js_call <- sprintf(
               "Shiny.setInputValue('%s', %s, { priority: 'event' })",
               shiny_input_id,
               js_payload
             )
-            
+
             # 4. Create the raw HTML checkbox tag
             htmltools::tags$input(
               type = "checkbox",
@@ -211,10 +211,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         height = "49vh"
       )
     })
-    
+
     # This observer watches for checkbox clicks and updates the state.
     observeEvent(input$checkbox_clicked, {
-      
+
       click_data <- input$checkbox_clicked # Get the payload
       current_selections <- isolate(selection_state())
 
@@ -226,17 +226,17 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       row_idx <- which(current_selections$PKNCA == click_data$param)
       col_name <- click_data$type
       new_value <- click_data$value
-      
+
       # Check if this is a valid cell
       if (length(row_idx) > 0 && (col_name %in% names(current_selections))) {
-        
+
         old_value <- current_selections[row_idx, col_name]
-        
+
         # Only update if the value has actually changed
         if (!is.null(old_value) && old_value != new_value) {
-          
+
           current_selections[row_idx, col_name] <- new_value
-          
+
           # Set the new state
           selection_state(current_selections)
         }
