@@ -3,9 +3,9 @@ simple_data <- data.frame(
   STUDYID = rep("STUDY001", 6),
   PCSPEC = rep("Plasma", 6),
   ROUTE = rep("IV", 6),
-  DRUG = rep("DrugA", 6),
+  DOSETRT = rep("DrugA", 6),
   USUBJID = rep("SUBJ001", 6),
-  NCA_PROFILE = rep(1, 6),
+  ATPTREF = rep(1, 6),
   PARAM = rep("AnalyteA", 6),
   AVAL = c(0, 5, 10, 7, 3, 1),
   AVALU = rep(c("ng/mL"), 6),
@@ -23,9 +23,9 @@ multiple_data <- data.frame(
   STUDYID = rep("STUDY002", 12),
   PCSPEC = rep("Plasma", 12),
   ROUTE = rep("IV", 12),
-  DRUG = rep("DrugB", 12),
+  DOSETRT = rep("DrugB", 12),
   USUBJID = rep(rep(c("SUBJ002", "SUBJ003"), each = 6)),
-  NCA_PROFILE = rep(1, 12),
+  ATPTREF = rep(1, 12),
   PARAM = rep(c("AnalyteX", "AnalyteY"), each = 6),
   AVAL = c(0, 2, 8, 6, 4, 1, 0, 10, 20, 18, 8, 3),
   AVALU = rep(c("ng/mL", "mg/mL"), each = 6),
@@ -118,7 +118,7 @@ describe("PKNCA_update_data_object", {
   method <- "lin up log down"
   params <- c("cmax", "tmax", "auclast", "aucinf.obs")
   analytes <- unique(simple_data$PARAM)
-  dosnos <- unique(simple_data$NCA_PROFILE)
+  dosnos <- unique(simple_data$ATPTREF)
   pcspecs <- unique(simple_data$PCSPEC)
   auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
 
@@ -151,7 +151,7 @@ describe("PKNCA_update_data_object", {
     )
     intervals <- updated_data$intervals
     expect_true(all(intervals$PARAM == "AnalyteX"))
-    expect_true(all(intervals$NCA_PROFILE == 1))
+    expect_true(all(intervals$ATPTREF == 1))
     expect_true(all(intervals$PCSPEC == "Plasma"))
   })
 
@@ -168,7 +168,7 @@ describe("PKNCA_update_data_object", {
     )
     expect_equal(updated_data$options$auc.method, "lin up log down")
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
-    expect_true("NCA_PROFILE" %in% updated_data$options$keep_interval_cols)
+    expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
   })
 
   it("does not impute C0 when not requested", {
@@ -207,17 +207,17 @@ describe("PKNCA_update_data_object", {
     # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
     auc_intervals <- updated_data$intervals  %>%
       dplyr::filter(type_interval == "manual") %>%
-      dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM,
-                    NCA_PROFILE, auclast, aucint.last, tmax)
+      dplyr::select(start, end, STUDYID, DOSETRT, USUBJID, PARAM,
+                    ATPTREF, auclast, aucint.last, tmax)
 
     expected_res <- tidyr::tibble(
       start = c(0, 1, 2),
       end = c(1, 2, 3),
       STUDYID = rep("STUDY001", 3),
-      DRUG = rep("DrugA", 3),
+      DOSETRT = rep("DrugA", 3),
       USUBJID = rep("SUBJ001", 3),
       PARAM = rep("AnalyteA", 3),
-      NCA_PROFILE = rep(1, 3),
+      ATPTREF = rep(1, 3),
       auclast = rep(FALSE, 3),
       aucint.last = rep(TRUE, 3),
       tmax = rep(FALSE, 3)
