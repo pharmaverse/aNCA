@@ -10,7 +10,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The design of the R package provides high-level functions based on the PKNCA package, allowing to convert a standard CDISC ADNCA file into a PKNCAdata object. Within this package, we use a Shiny environment, that simplifies for our non-programmer users this process by providing a user interface for every programatic decission. Additionally, the App simplifies the exporation of outputs and the investigation of the data (Quality control, exclusion of records, filtering...).
+The design of the R package provides high-level functions based on the PKNCA package, allowing to convert a standard CDISC ADNCA file into a PKNCAdata object. Within this package, we use a Shiny environment, that simplifies for our non-programmer users this process by providing a user interface for every programmatic decision. Additionally, the App simplifies the exploration of outputs and the investigation of the data (Quality control, exclusion of records, filtering...).
 
 ## 1. Folder structure
 

@@ -45,7 +45,7 @@ If you plan to contribute code, tests, or documentation, please follow these dev
 
 Helpful links for Developers:
 - Check the [design.md](./design.md) to understand better how the Shiny App is structured.
-- If you need more context on what is Non Comparmental Analysis, we also recommend you to check [background.md](./background.md)
+- If you need more context on what is Non Compartmental Analysis, we also recommend you to check [background.md](./background.md)
 
 ---
 
