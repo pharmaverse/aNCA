@@ -74,11 +74,11 @@ check_app_dependencies <- function() {
   missing_packages <- purrr::keep(deps, \(dep) !requireNamespace(dep, quietly = TRUE))
 
   if (length(missing_packages) != 0) {
-  stop(paste0(
-    "Some packages required for Shiny application are missing. ",
-    "You can install them by running `install.packages(c(",
-    paste0("'", missing_packages, "'", collapse = ", "),
-    "))`"
-  ))
+    stop(paste0(
+      "Some packages required for Shiny application are missing. ",
+      "You can install them by running `install.packages(c(",
+      paste0("'", missing_packages, "'", collapse = ", "),
+      "))`"
+    ))
   }
 }
