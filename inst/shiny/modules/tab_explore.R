@@ -71,34 +71,21 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           individual_inputs()$colorby, individual_inputs()$timescale, individual_inputs()$log)
       log_info("Rendering individual plots")
       
-      processed_data <- process_data_individual(
-        data(),
+      lineplot <- create_indplot(
+        data = data(),
         selected_usubjids = individual_inputs()$usubjid,
         selected_analytes = individual_inputs()$param,
         selected_pcspec = individual_inputs()$pcspec,
         colorby_var = individual_inputs()$colorby,
         time_scale = individual_inputs()$timescale,
         yaxis_scale = individual_inputs()$log,
-        cycle = individual_inputs()$profiles
-      )
-      
-      validate(need(nrow(processed_data) > 0, "No data available for the selected filters."))
-      
-      lineplot <- g_lineplot(
-        data = processed_data,
-        x_var = "time_var",
-        y_var = "AVAL",
-        group_var = "USUBJID",
-        colorby_var = individual_inputs()$colorby,
+        cycle = individual_inputs()$profiles,
         facet_by = individual_inputs()$facetby,
-        yaxis_scale = individual_inputs()$log,
         show_threshold = individual_inputs()$show_threshold,
         threshold_value = individual_inputs()$threshold_value,
         show_dose = individual_inputs()$show_dose,
-        dose_data = data() %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)),
         palette = master_palettes_list()
-      ) %>%
-        ggplotly(height = 1000)
+      )
       
       session$userData$results$exploration$individualplot <- lineplot
       lineplot
@@ -111,7 +98,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     })
 
     # Render the individual plot in plotly
-    output$individualplot <- renderPlotly(individualplot())
+    output$individualplot <- renderPlotly({
+      req(individualplot())
+      individualplot()
+      })
 
 
     # TAB: Mean Plot -----------------------------------------------------------
@@ -132,37 +122,23 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(data(), mean_inputs()$param, mean_inputs()$pcspec, mean_inputs()$timescale, mean_inputs()$colorby)
       log_info("Computing meanplot ggplot object")
       
-      processed_data <- process_data_mean(
-        data(),
+      meanplot <- create_meanplot(
+        data = data(),
         selected_analytes = mean_inputs()$param,
         selected_pcspec = mean_inputs()$pcspec,
         cycle = mean_inputs()$profiles,
         colorby_var = mean_inputs()$colorby,
-        facetby_var = mean_inputs()$facetby,
+        facet_by = mean_inputs()$facetby,
         yaxis_scale = mean_inputs()$log,
-        time_scale = mean_inputs()$timescale
-      )
-
-      validate(need(nrow(processed_data) > 0, "No data with >= 3 points to calculate mean."))
-      
-      meanplot <- g_lineplot(
-        data = processed_data,
-        x_var = "time_var",
-        y_var = "Mean",
-        group_var = "color_var",
-        colorby_var = mean_inputs()$colorby,
-        yaxis_scale = mean_inputs()$log,
+        time_scale = mean_inputs()$timescale,
         show_sd_min = mean_inputs()$sd_min,
         show_sd_max = mean_inputs()$sd_max,
         show_ci = mean_inputs()$ci,
-        facet_by = mean_inputs()$facetby,
         show_threshold = mean_inputs()$show_threshold,
         threshold_value = mean_inputs()$threshold_value,
         show_dose = mean_inputs()$show_dose,
-        dose_data = data() %>% mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)),
         palette = mean_palettes_list()
-      ) %>%
-        ggplotly(height = 1000)
+      )
       
       session$userData$results$exploration$meanplot <- meanplot
       meanplot

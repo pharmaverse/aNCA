@@ -92,7 +92,7 @@ get_dose_esc_results <- function(
     o_res_i <- merge(o_nca$result, group_i)
     o_nca_i$result <- o_res_i
 
-    linplot_i <- general_lineplot(
+    linplot_i <- create_indplot(
       data = d_conc_i,
       selected_analytes = d_conc_i[[analyte_col]],
       selected_pcspec = d_conc_i[[pcspec_col]],
@@ -101,25 +101,20 @@ get_dose_esc_results <- function(
       facet_by = facet_vars,
       time_scale = "Whole",
       yaxis_scale = "Log",
-      show_threshold = FALSE,
-      threshold_value = 0,
-      show_dose = FALSE,
-      cycle = NULL,
-      palette = NULL
+      cycle = NULL
     )
 
-    meanplot_i <- general_meanplot(
+
+    meanplot_i <- create_meanplot(
       data = d_conc_i,
-      selected_studyids = unique(d_conc_i[[studyid_col]]),
       selected_analytes = unique(d_conc_i[[analyte_col]]),
-      selected_pcspecs = unique(d_conc_i[[pcspec_col]]),
-      selected_cycles = unique(d_conc_i[[profile_col]]),
-      id_variable = facet_vars,
-      groupby_var = group_by_vars,
-      plot_ylog = FALSE,
-      plot_sd_min = TRUE,
-      plot_sd_max = TRUE,
-      plot_ci = FALSE
+      selected_pcspec = unique(d_conc_i[[pcspec_col]]),
+      cycle = unique(d_conc_i[[profile_col]]),
+      facet_by = facet_vars,
+      colorby_var = group_by_vars,
+      time_scale = "By Dose Profile",
+      yaxis_scale = "Log",
+      show_sd_max = TRUE
     )
 
     stats_i <- calculate_summary_stats(
@@ -164,7 +159,7 @@ get_dose_esc_results <- function(
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
       lapply(function(d_conc_i) {
-        general_lineplot(
+        create_indplot(
           data = d_conc_i,
           selected_analytes = d_conc_i[[analyte_col]],
           selected_pcspec = d_conc_i[[pcspec_col]],
@@ -172,12 +167,7 @@ get_dose_esc_results <- function(
           colorby_var = subj_col,
           facet_by = facet_vars,
           time_scale = "Whole",
-          yaxis_scale = "Log",
-          show_threshold = FALSE,
-          threshold_value = 0,
-          show_dose = FALSE,
-          cycle = NULL,
-          palette = NULL
+          yaxis_scale = "Log"
         )
       })
 
