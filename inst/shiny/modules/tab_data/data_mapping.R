@@ -264,7 +264,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     df_duplicates <- reactiveVal(NULL)
     processed_data <- reactive({
       req(mapped_data())
-browser()
+
       dataset <- mapped_data() %>%
         # Annotate exact duplicate records
         group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
@@ -281,7 +281,7 @@ browser()
       }
 
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
-        browser()
+
         # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
         dataset <- df_duplicates() %>%
@@ -300,7 +300,7 @@ browser()
     })
 
     observeEvent(df_duplicates(), {
-      browser()
+
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -325,13 +325,11 @@ browser()
     })
 
     observeEvent(input$keep_selected_btn, {
-      browser()
       duplicates(NULL)
       removeModal()
     })
 
     output$duplicate_modal_table <- renderReactable({
-      browser()
       reactable(
         df_duplicates() %>%
           filter(is.time.duplicate),

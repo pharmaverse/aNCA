@@ -36,7 +36,8 @@ format_pkncaconc_data <- function(ADNCA,
                                   group_columns,
                                   time_column = "AFRLT",
                                   rrlt_column = "ARRLT",
-                                  route_column = "ROUTE") {
+                                  route_column = "ROUTE",
+                                  nca_exclude_reason_columns = NULL) {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -56,6 +57,27 @@ format_pkncaconc_data <- function(ADNCA,
   if ("PARAMCD" %in% colnames(ADNCA)) {
     ADNCA <- ADNCA %>%
       filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
+  }
+
+  if (!is.null(nca_exclude_reason_columns)) {
+    ADNCA <- ADNCA %>%
+      # Merge all reason columns into one
+      mutate(
+        nca_exclude = apply(
+          select(., any_of(nca_exclude_reason_columns)),
+          1,
+          function(row) {
+            reasons <- row[!is.na(row) & row != ""]
+            if (length(reasons) > 0) {
+              paste(reasons, collapse = "; ")
+            } else {
+              ""
+            }
+          }
+        )
+      )
+  } else {
+    ADNCA$nca_exclude <- ""
   }
 
   #set a tolerance for the arranging to avoid floating point precision issues
