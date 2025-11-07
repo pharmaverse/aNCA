@@ -9,7 +9,15 @@
 #' @return rpptx object
 create_pptx_doc <- function(path, title, template) {
   pptx <- read_pptx(template)
-  add_pptx_sl_title(pptx, title)
+  # If the title contains a project name in parentheses, format the first slide as:
+  # "NCA Results\nProjectName" per user request. Otherwise use the passed title.
+  if (grepl("\\(", title)) {
+    proj <- sub(".*\\((.*)\\).*", "\\1", title)
+    slide_title <- paste0("NCA Results\n", proj)
+  } else {
+    slide_title <- title
+  }
+  add_pptx_sl_title(pptx, slide_title)
 }
 
 #' Add a title slide to the rpptx document
@@ -33,10 +41,21 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @importFrom officer add_slide ph_with ph_location_type
 #' @importFrom flextable flextable
 #' @return rpptx object with slide added
-add_pptx_sl_plottable <- function(pptx, df, plot) {
-  add_slide(pptx, layout = "Content with Caption") |>
-    ph_with(value = plot, location = "Content Placeholder 1") |>
-    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+add_pptx_sl_plottable <- function(pptx, df, plot, plot_title = NULL, table_title = "") {
+  # Add a slide containing a plot and a table. Optionally include a title for the plot/table.
+  slide <- add_slide(pptx, layout = "Content with Caption")
+  if (!is.null(plot_title) && nzchar(plot_title)) {
+    slide <- ph_with(slide, value = plot_title, location = ph_location_type(type = "title"))
+  }
+  slide <- ph_with(slide, value = plot, location = "Content Placeholder 1")
+  # If a table title is provided, use it for the Title placeholder instead of empty
+  if (nzchar(table_title)) {
+    slide <- ph_with(slide, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
+      ph_with(value = table_title, location = "Title 1")
+  } else {
+    slide <- ph_with(slide, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  }
+  slide
 }
 
 #' Add a slide with a table only
@@ -59,9 +78,13 @@ add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here for ind
 #' @param plot ggplot object to show as plot
 #' @importFrom officer add_slide ph_with
 #' @return rpptx object with slide added
-add_pptx_sl_plot <- function(pptx, plot) {
-  add_slide(pptx, layout = "Picture with Caption") |>
-    ph_with(value = plot, location = "Picture Placeholder 2")
+add_pptx_sl_plot <- function(pptx, plot, title = NULL) {
+  # Add a slide with an optional title plus a plot
+  slide <- add_slide(pptx, layout = "Picture with Caption")
+  if (!is.null(title) && nzchar(title)) {
+    slide <- ph_with(slide, value = title, location = ph_location_type(type = "title"))
+  }
+  ph_with(slide, value = plot, location = "Picture Placeholder 2")
 }
 
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
@@ -80,9 +103,10 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   for (i in seq_len(length(res_dose_slides))) {
 
     # Generate the individual figures
+    # For the individual table slide, keep existing behaviour but keep title consistent with new naming
     pptx <- add_pptx_sl_table(
       pptx, res_dose_slides[[i]]$info,
-      title = paste0("Group ", i, " (individual)"),
+      title = paste0("Group, ", i, " (individual)"),
       footer = ""
     )
     pptx <- purrr::reduce(
@@ -98,14 +122,30 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     )
 
     # Generate summary figures and tables
-    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " results")) |>
+    # Prepare info table: remove STUDYID, PCSPEC, DRUG, PARAM from the table and build a title
+    info_df <- res_dose_slides[[i]]$info
+    cols_to_remove <- intersect(c("STUDYID", "PCSPEC", "DRUG", "PARAM"), names(info_df))
+    title_values <- ""
+    if (length(cols_to_remove) > 0) {
+      val_list <- vapply(cols_to_remove, function(col) {
+        paste(unique(na.omit(info_df[[col]])), collapse = ",")
+      }, FUN.VALUE = "")
+      title_values <- paste(val_list[val_list != ""], collapse = ",")
+    }
+    # Table title will include the group id and the concatenated values
+    table_title <- if (nzchar(title_values)) paste0("Group, ", i, " — ", title_values) else paste0("Group, ", i)
+    # Remove the identified columns from the table shown
+    info_table_df <- if (length(cols_to_remove) > 0) select(info_df, -any_of(cols_to_remove)) else info_df
+
+    pptx <- add_pptx_sl_table(pptx, info_table_df, table_title) |>
       ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1)) |>
       add_pptx_sl_plottable(
         df = res_dose_slides[[i]]$statistics,
-        plot = res_dose_slides[[i]]$meanplot
+        plot = res_dose_slides[[i]]$meanplot,
+        plot_title = paste0("Mean plot — Group, ", i)
       ) |>
-      add_pptx_sl_plot(res_dose_slides[[i]]$linplot) |>
-      add_pptx_sl_plot(res_dose_slides[[i]]$boxplot)
+      add_pptx_sl_plot(res_dose_slides[[i]]$linplot, title = paste0("PK parameter plot — Group, ", i)) |>
+      add_pptx_sl_plot(res_dose_slides[[i]]$boxplot, title = paste0("PK parameter boxplot — Group, ", i))
 
     n_ind <- length(res_dose_slides[[i]]$ind_params)
     lst_group_slide <- lst_group_slide + 1 + n_ind + 4

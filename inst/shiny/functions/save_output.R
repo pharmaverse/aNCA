@@ -139,6 +139,21 @@ get_dose_esc_results <- function(
       select(any_of(unique(c(group_by_vars, info_vars)))) %>%
       unique()
 
+    # Add grouping columns, TRT01A and N (number of subjects) to the statistics table
+    if (nrow(stats_i) > 0) {
+      # Prepend the grouping values (group_i is a single-row tibble of the group-by values)
+      stats_i <- cbind(group_i[rep(1, nrow(stats_i)), , drop = FALSE], stats_i)
+      # TRT01A: collect unique values from the concentration data for this group
+      trt_vals <- unique(merge(o_nca$data$conc$data, group_i)[["TRT01A"]])
+      trt_val <- if (length(trt_vals) > 0) paste(na.omit(trt_vals), collapse = ",") else NA_character_
+      stats_i$TRT01A <- trt_val
+      # N: number of unique subjects in this group
+      subj_col <- o_nca$data$conc$columns$subject
+      N_val <- length(unique(d_conc_i[[subj_col]]))
+      stats_i$N <- N_val
+      # Ensure grouping columns are present (they were prepended above)
+    }
+
     boxplot_i <- flexible_violinboxplot(
       res_nca = o_nca_i,
       parameter = boxplot_parameter,
