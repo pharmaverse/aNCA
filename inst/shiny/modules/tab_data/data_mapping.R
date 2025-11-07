@@ -276,10 +276,6 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         ungroup() %>%
         mutate(ROWID = row_number())
 
-      if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
-        df_duplicates(dataset)
-      }
-
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
 
         # Get selected rows from the reactable
@@ -292,15 +288,27 @@ data_mapping_server <- function(id, adnca_data, trigger) {
               "TIME DUPLICATE",
               DTYPE
           )) %>%
+          group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+          mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
           ungroup()
-        return(dataset)
+        if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
+          showNotification("There are still duplicate time records. Please resolve them before proceeding.", type = "error", duration = NULL)
+          return(NULL)
+        } else {
+          removeModal()
+          return(dataset)
+        }
       }
-      # Don't return anything until duplicates are resolved
-      return(NULL)
+
+      if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
+        df_duplicates(dataset)
+        return(NULL)
+      } else {
+        dataset
+      }
     })
 
     observeEvent(df_duplicates(), {
-
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -322,11 +330,6 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           size = "l"
         )
       )
-    })
-
-    observeEvent(input$keep_selected_btn, {
-      duplicates(NULL)
-      removeModal()
     })
 
     output$duplicate_modal_table <- renderReactable({
