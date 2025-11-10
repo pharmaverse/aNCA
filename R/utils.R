@@ -133,7 +133,7 @@ parse_annotation <- function(data, text) {
   log_msg <- imap(l, \(val, nm) {
     sep <- ", "
     if (is.list(val)) {
-      val <- imap(val, \(val2, nm2) paste0("\t* ", nm2, " -> ", paste0(val2, collapse = ", "))) |>
+      val <- imap(val, \(val2, nm2) paste0("\t* ", nm2, " -> ", paste0(val2, collapse = ", "))) %>%
         paste0(collapse = "\n") %>%
         paste0("\n", .)
     } else {

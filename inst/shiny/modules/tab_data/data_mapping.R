@@ -209,7 +209,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
 
       # Get the names to keep
-      names_to_keep <- names(mapping_list) |>
+      names_to_keep <- names(mapping_list) %>%
         keep(\(name) {
           # The logical condition with the any() fix
           !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
@@ -255,7 +255,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         showNotification(conditionMessage(e), type = "error", duration = NULL)
         NULL
       })
-    }) |>
+    }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 
     #Check for blocking duplicates

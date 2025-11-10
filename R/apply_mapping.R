@@ -41,7 +41,7 @@ apply_mapping <- function(
 ) {
 
   if (!silent) {
-    paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") |>
+    paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") %>%
       message()
   }
   .validate_column_mapping(mapping, req_mappings)

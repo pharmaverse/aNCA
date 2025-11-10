@@ -309,7 +309,7 @@ pkcg01 <- function(
         )
     }
   })
-  plots |>
+  plots %>%
     setNames(unique(adpc[["id_plot"]]))
 }
 
@@ -642,7 +642,7 @@ pkcg02 <- function(
         )
     }
   })
-  plots |>
+  plots %>%
     setNames(unique(adpc[["id_plot"]]))
 
 }

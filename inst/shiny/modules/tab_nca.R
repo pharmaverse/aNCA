@@ -138,8 +138,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
             ) %>%
             # Apply flag rules to mark results in the `exclude` column
             PKNCA_hl_rules_exclusion(
-              rules = isolate(settings()$flags) |>
-                purrr::keep(\(x) x$is.checked) |>
+              rules = isolate(settings()$flags) %>%
+                purrr::keep(\(x) x$is.checked) %>%
                 purrr::map(\(x) x$threshold)
             ) %>%
             # Add parameter ratio calculations
@@ -186,7 +186,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
         # Delay the removal of loading modal to give it enough time to render
         later::later(~shiny::removeModal(session = session), delay = 0.5)
       })
-    }) |>
+    }) %>%
       bindEvent(input$run_nca)
 
     #' Show slopes results

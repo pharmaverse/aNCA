@@ -215,7 +215,7 @@ tab_data_server <- function(id) {
         showNotification(e$message, type = "error", duration = NULL)
         NULL
       })
-    }) |>
+    }) %>%
       bindEvent(processed_data())
 
     list(

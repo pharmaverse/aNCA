@@ -64,7 +64,7 @@ reactable_server <- function(
     table_edit_debounced <- reactive({
       req(table_edit())
       table_edit()
-    }) |>
+    }) %>%
       debounce(edit_debounce)
 
     output$table <- renderReactable({
@@ -85,7 +85,7 @@ reactable_server <- function(
           col_def$cell <- text_extra(id = session$ns(paste0("edit_", col)))
 
           do.call(colDef, col_def)
-        }) |>
+        }) %>%
           setNames(editable)
 
         if (is.null(opts$columns)) {
@@ -116,7 +116,7 @@ reactable_server <- function(
         selected = getReactableState("table", "selected"),
         edit = table_edit_debounced
       )
-    ) |>
+    ) %>%
       invisible()
   })
 }

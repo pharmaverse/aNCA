@@ -57,8 +57,8 @@ data_filtering_server <- function(id, raw_adnca_data) {
         } else {
           list(type = "text", choices = sort(unique(raw_adnca_data()[[col]])))
         }
-      }) |>
-        setNames(colnames(raw_adnca_data())) |>
+      }) %>%
+        setNames(colnames(raw_adnca_data())) %>%
         purrr::keep(~ .x$type == "numeric" || length(.x$choices) > 1)
     })
 
@@ -82,7 +82,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
     #' When filters change, show notification reminding the user about submitting
     filter_reminder_notification <- reactiveVal(NULL)
     observe({
-      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) |>
+      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
       if (length(applied_filters) == 0) {
         removeNotification(filter_reminder_notification())
@@ -93,7 +93,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
           duration = 0,
           closeButton = FALSE,
           type = "message"
-        ) |> filter_reminder_notification()
+        ) %>% filter_reminder_notification()
       }
     })
 
@@ -101,13 +101,13 @@ data_filtering_server <- function(id, raw_adnca_data) {
       removeNotification(filter_reminder_notification())
 
       # Extract filters from reactive values
-      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) |>
+      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
 
       if (length(applied_filters) == 0) return(raw_adnca_data())
 
-      applied_filters |>
-        sapply(\(filt) str_glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) |> # nolint
+      applied_filters %>%
+        sapply(\(filt) str_glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) %>% # nolint
         paste0(collapse = "\n") %>%
         paste0("Submitting the following filters:\n", .) %>%
         log_info()
@@ -124,7 +124,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
         )
         invokeRestart("muffleWarning")
       })
-    }) |>
+    }) %>%
       bindEvent(input$submit_filters, raw_adnca_data())
 
     reactable_server(

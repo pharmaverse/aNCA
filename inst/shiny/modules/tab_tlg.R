@@ -35,7 +35,7 @@
     }
 
     opt_def
-  }) |>
+  }) %>%
     setNames(names(defs))
 }
 
@@ -125,7 +125,7 @@ tab_tlg_server <- function(id, data) {
     displayed_order <- reactive({
       dplyr::filter(tlg_order(), Selection) %>%
         dplyr::select(-id, -Selection)
-    }) |>
+    }) %>%
       bindEvent(data(), input$confirm_add_tlg, input$remove_tlg)
 
     selected_tlg_state <- reactable_server(
@@ -215,7 +215,7 @@ tab_tlg_server <- function(id, data) {
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
     observeEvent(list(input$submit_tlg_order), ignoreInit = TRUE, {
-      tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) |> paste0("s")
+      tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) %>% paste0("s")
       shinyjs::runjs(
         paste0("
           // change the tab to graphs //
@@ -237,7 +237,7 @@ tab_tlg_server <- function(id, data) {
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
       tlg_order_filt
-    }) |>
+    }) %>%
       bindEvent(c(input$submit_tlg_order))
 
     # Create and render Graph interface and modules

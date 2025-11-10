@@ -20,7 +20,7 @@ read_pk <- function(path) {
   if (!format %in% names(readers))
     stop("Invalid file type. Accepted formats are ", paste(names(readers), collapse = ", "))
 
-  readers[[format]](path) |>
+  readers[[format]](path) %>%
     validate_pk()
 }
 
