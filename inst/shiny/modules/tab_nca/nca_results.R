@@ -88,7 +88,9 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             flagged = case_when(
               rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
               is.na(Exclude) ~ "ACCEPTED",
-              any(sapply(flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg)))) ~ "FLAGGED",
+              any(sapply(
+                flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
+              )) ~ "FLAGGED",
               TRUE ~ "ACCEPTED"
             )
           )

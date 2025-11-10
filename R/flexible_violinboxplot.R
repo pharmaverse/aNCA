@@ -53,7 +53,10 @@ flexible_violinboxplot <- function(res_nca,
   if (!is.null(varvalstofilter)) {
     vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
     vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
-    var_types <- sapply(vars_tofilter, function(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
+    var_types <- sapply(
+      vars_tofilter,
+      function(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE
+    )
 
     filter_text <- paste0(
       sapply(unique(vars_tofilter), function(varid) {

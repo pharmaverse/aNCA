@@ -157,7 +157,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
     #' keeps list of plots to render, with options gathered from the UI and applied
     tlg_list <- reactive({
-      list_options <- purrr::imap(reactiveValuesToList(options_values), function(value, name) value())
+      list_options <- purrr::imap(
+        reactiveValuesToList(options_values), function(value, name) value()
+      )
 
       if (any(sapply(list_options, is.null))) return(NULL)
 

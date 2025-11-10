@@ -76,7 +76,10 @@ describe("l_pkcl01", {
                                                                   adpc$USUBJID)))
 
     # All in correct format (list) and each internal element internally inherits listing_df
-    purrr::walk(list(listings_1l, listings_2l, listings_4l), function(x) expect_true(class(x) == "list"))
+    purrr::walk(
+      list(listings_1l, listings_2l, listings_4l),
+      function(x) expect_true(class(x) == "list")
+    )
 
     expect_true(all(sapply(listings_1l, inherits, "listing_df")) &&
                   all(sapply(listings_2l, inherits, "listing_df")) &&
