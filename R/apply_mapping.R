@@ -141,6 +141,7 @@ apply_mapping <- function(
 #' @importFrom dplyr mutate
 #' @returns The input dataset with an additional METABFL column indicating metabolite records ("Y")
 #' or non-metabolite records ("").
+#' @export
 create_metabfl <- function(dataset, metabolites) {
   mutate(dataset, METABFL = ifelse(PARAM %in% metabolites, "Y", ""))
 }
