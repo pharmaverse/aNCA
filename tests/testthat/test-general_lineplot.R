@@ -1,3 +1,4 @@
+skip()
 # Sample data for testing
 sample_data <- data.frame(
   STUDYID = rep("Study1", 24),

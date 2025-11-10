@@ -30,7 +30,7 @@ create_indplot <- function(data,
                            dose_data = NULL,
                            palette = NULL) {
   
-  # --- Start: Logic from process_data_individual ---
+
   processed_data <- data %>%
     filter(
       USUBJID %in% selected_usubjids,
@@ -60,11 +60,11 @@ create_indplot <- function(data,
       time_var = if (time_scale == "By Dose Profile") ARRLT else AFRLT,
       color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
-  # --- End: Logic from process_data_individual ---
+
   
   validate(need(nrow(processed_data) > 0, "No data available for the selected filters."))
   
-  # --- Start: Logic from individualplot reactive ---
+
   lineplot <- g_lineplot(
     data = processed_data,
     x_var = "time_var",
@@ -118,7 +118,7 @@ create_meanplot <- function(data,
                             show_sd_max = TRUE,
                             show_ci =  FALSE) {
   
-  # --- Start: Logic from process_data_mean ---
+
   processed <- data %>%
     filter(
       PARAM %in% selected_analytes,
@@ -156,11 +156,11 @@ create_meanplot <- function(data,
     summarised_data <- summarised_data %>%
       filter(Mean > 0)
   }
-  # --- End: Logic from process_data_mean ---
+
   
   validate(need(nrow(summarised_data) > 0, "No data with >= 3 points to calculate mean."))
   
-  # --- Start: Logic from meanplot reactive ---
+
   meanplot <- g_lineplot(
     data = summarised_data,
     x_var = "time_var",

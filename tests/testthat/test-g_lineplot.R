@@ -1,0 +1,340 @@
+
+# --- Setup: Sample Data ---
+
+# 1. Sample data for INDIVIDUAL plot mode
+ind_data <- expand.grid(
+  time_var = c(0, 1, 2, 4, 8, 12),
+  USUBJID = c("Subject1", "Subject2")
+) %>%
+  mutate(
+    AVAL = ifelse(USUBJID == "Subject1", 50, 80) * exp(-0.5 * time_var) + rnorm(n(), 0, 1),
+    PARAM = "Analyte1",
+    DOSEA = "Dose 1",
+    color_var = interaction(USUBJID, DOSEA, sep = ", "),
+    RRLTU = "hours",
+    AVALU = "ng/mL"
+  ) %>%
+  # Add non-positive value for log test
+  bind_rows(data.frame(
+    time_var = 24, USUBJID = "Subject1", AVAL = 0, PARAM = "Analyte1",
+    DOSEA = "Dose 1", color_var = "Subject1, Dose 1",
+    RRLTU = "hours", AVALU = "ng/mL"
+  ))
+
+# 2. Sample data for MEAN plot mode
+mean_data <- expand.grid(
+  time_var = c(0, 2, 4, 8),
+  color_var = c("GroupA", "GroupB")
+) %>%
+  mutate(
+    Mean = ifelse(color_var == "GroupA", 100, 80) * exp(-0.3 * time_var),
+    SD = Mean * 0.2, # 20% CV
+    N = 4,
+    SE = SD / sqrt(N),
+    SD_min = Mean - SD,
+    SD_max = Mean + SD,
+    CI_lower = Mean - 1.96 * SE,
+    CI_upper = Mean + 1.96 * SE,
+    PARAM = "Analyte1",
+    RRLTU = "hours",
+    AVALU = "ng/mL"
+  ) %>%
+  # Add non-positive value for log test
+  bind_rows(data.frame(
+    time_var = 12, color_var = "GroupA", Mean = 0, SD = 0, N = 4, SE = 0,
+    SD_min = 0, SD_max = 0, CI_lower = 0, CI_upper = 0,
+    PARAM = "Analyte1", RRLTU = "hours", AVALU = "ng/mL"
+  ))
+
+# 3. Sample data for dose lines
+dose_data <- data.frame(
+  TIME_DOSE = c(0, 168),
+  PARAM = c("Analyte1", "Analyte1"),
+  DOSEA = c("Dose 1", "Dose 1")
+)
+
+# --- Tests ---
+
+describe("g_lineplot: Individual Plot Mode", {
+  it("returns a ggplot object with individual labels", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_equal(p$labels$title, "PK Concentration - Time Profile")
+    expect_equal(p$labels$y, "Concentration [ng/mL]")
+    expect_equal(p$labels$x, "Time [hours]")
+    expect_equal(p$labels$color, "USUBJID")
+  })
+  
+  it("applies faceting", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID",
+      facet_by = "PARAM"
+    )
+    expect_s3_class(p$facet, "FacetWrap")
+  })
+  
+  it("applies log scale and filters non-positive AVAL", {
+    p <- g_lineplot(
+      data = ind_data, # Contains an AVAL = 0 record
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID",
+      yaxis_scale = "log"
+    )
+    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
+    expect_true(is_log_scale)
+    # Check that the data used for plotting (after log scale filtering) is correct
+    p_build <- ggplot_build(p)
+    expect_true(all(p_build$data[[1]]$y > 0)) # y-axis is log-transformed
+    expect_true(nrow(p_build$data[[1]]) < nrow(ind_data)) # Confirms filtering
+  })
+  
+  it("shows threshold line", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID",
+      show_threshold = TRUE,
+      threshold_value = 10
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomHline" %in% layer_classes)
+  })
+  
+  it("shows dose lines and respects facets", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID",
+      facet_by = c("PARAM", "DOSEA"),
+      show_dose = TRUE,
+      dose_data = dose_data
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomVline" %in% layer_classes)
+    
+    vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
+    # Check vline data contains facet variables
+    expect_true(all(c("PARAM", "DOSEA") %in% names(vline_layer$data)))
+  })
+  
+  it("applies a custom palette", {
+    test_palette <- c("Subject1, Dose 1" = "#FF0000", "Subject2, Dose 1" = "#0000FF")
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "color_var",
+      palette = test_palette
+    )
+    p_build <- ggplot_build(p)
+    plot_colors <- unique(p_build$data[[1]]$colour)
+    expect_true(all(plot_colors %in% test_palette))
+  })
+  
+  it("ignores mean-plot-only arguments (sd, ci)", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID",
+      show_sd_min = TRUE, # Should be ignored
+      show_sd_max = TRUE, # Should be ignored
+      show_ci = TRUE      # Should be ignored
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_false("GeomErrorbar" %in% layer_classes)
+    expect_false("GeomRibbon" %in% layer_classes)
+    # Legend label should not have (95% CI)
+    expect_equal(p$labels$color, "USUBJID")
+  })
+  
+  it("handles multiple colorby_var labels", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = c("USUBJID", "DOSEA")
+    )
+    expect_equal(p$labels$color, "USUBJID, DOSEA")
+  })
+})
+
+
+describe("g_lineplot: Mean Plot Mode", {
+  it("returns a ggplot object with mean labels", {
+    p <- g_lineplot(
+      data = mean_data,
+      x_var = "time_var",
+      y_var = "Mean",
+      group_var = "color_var",
+      colorby_var = "color_var"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_equal(p$labels$title, "Mean PK Concentration - Time Profile")
+    expect_equal(p$labels$y, "Mean Concentration [ng/mL]")
+    expect_equal(p$labels$x, "Nominal Time [hours]")
+    expect_equal(p$labels$color, "color_var")
+  })
+  
+  it("applies log scale and filters non-positive Mean", {
+    p <- g_lineplot(
+      data = mean_data, # Contains a Mean = 0 record
+      x_var = "time_var",
+      y_var = "Mean",
+      group_var = "color_var",
+      colorby_var = "color_var",
+      yaxis_scale = "log"
+    )
+    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
+    expect_true(is_log_scale)
+    
+    p_build <- ggplot_build(p)
+    # Data for geom_line
+    expect_true(all(p_build$data[[1]]$y > 0))
+    expect_true(nrow(p_build$data[[1]]) < (nrow(mean_data) - 1)) # -1 for row, but 2 groups
+  })
+  
+  it("shows SD error bars (min, max, and both)", {
+    # Both min and max
+    p_both <- g_lineplot(
+      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
+      colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = TRUE
+    )
+    p_both_build <- ggplot_build(p_both)
+    err_data_both <- p_both_build$data[[3]] # Layer 3 is geom_errorbar
+    expect_true(all(err_data_both$ymin < err_data_both$y))
+    expect_true(all(err_data_both$ymax > err_data_both$y))
+    
+    # Only min
+    p_min <- g_lineplot(
+      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
+      colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = FALSE
+    )
+    p_min_build <- ggplot_build(p_min)
+    err_data_min <- p_min_build$data[[3]]
+    expect_true(all(err_data_min$ymin < err_data_min$y))
+    expect_true(all(err_data_min$ymax == err_data_min$y)) # ymax is Mean
+    
+    # Only max
+    p_max <- g_lineplot(
+      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
+      colorby_var = "color_var", show_sd_min = FALSE, show_sd_max = TRUE
+    )
+    p_max_build <- ggplot_build(p_max)
+    err_data_max <- p_max_build$data[[3]]
+    expect_true(all(err_data_max$ymin == err_data_max$y)) # ymin is Mean
+    expect_true(all(err_data_max$ymax > err_data_max$y))
+  })
+  
+  it("shows CI ribbon and updates legend", {
+    p <- g_lineplot(
+      data = mean_data,
+      x_var = "time_var",
+      y_var = "Mean",
+      group_var = "color_var",
+      colorby_var = "color_var",
+      show_ci = TRUE
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomRibbon" %in% layer_classes)
+    # Check for legend title update
+    expect_true(grepl("(95% CI)", p$labels$color))
+  })
+  
+  it("can show both SD bars and CI ribbon", {
+    p <- g_lineplot(
+      data = mean_data,
+      x_var = "time_var",
+      y_var = "Mean",
+      group_var = "color_var",
+      colorby_var = "color_var",
+      show_sd_min = TRUE,
+      show_sd_max = TRUE,
+      show_ci = TRUE
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomErrorbar" %in% layer_classes)
+    expect_true("GeomRibbon" %in% layer_classes)
+  })
+})
+
+describe("g_lineplot: Graceful Handling", {
+  it("handles empty data.frame", {
+    # Create an empty df with the same columns
+    empty_ind_data <- ind_data[0, ]
+    p <- g_lineplot(
+      data = empty_ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID"
+    )
+    expect_s3_class(p, "ggplot")
+    # ggplot() on empty data has 0 layers
+    expect_equal(length(p$layers), 0)
+    # Labels are still applied
+    expect_equal(p$labels$title, "PK Concentration - Time Profile")
+  })
+  
+  it("handles missing aesthetic columns", {
+    expect_error(
+      g_lineplot(
+        data = ind_data,
+        x_var = "MISSING_COLUMN", # This column doesn't exist
+        y_var = "AVAL",
+        group_var = "USUBJID",
+        colorby_var = "USUBJID"
+      ),
+      "object 'MISSING_COLUMN' not found"
+    )
+  })
+  
+  it("handles missing mean-plot columns", {
+    # Data has Mean/SD/N (so is_mean_plot=T) but not CI_lower
+    mean_data_missing_ci <- mean_data %>% select(-CI_lower)
+    expect_error(
+      g_lineplot(
+        data = mean_data_missing_ci,
+        x_var = "time_var",
+        y_var = "Mean",
+        group_var = "color_var",
+        colorby_var = "color_var",
+        show_ci = TRUE # This will fail
+      ),
+      "object 'CI_lower' not found"
+    )
+    
+    # Data has Mean/SD/N (so is_mean_plot=T) but not SD_min
+    mean_data_missing_sd <- mean_data %>% select(-SD_min)
+    expect_error(
+      g_lineplot(
+        data = mean_data_missing_sd,
+        x_var = "time_var",
+        y_var = "Mean",
+        group_var = "color_var",
+        colorby_var = "color_var",
+        show_sd_min = TRUE # This will fail
+      ),
+      "object 'SD_min' not found"
+    )
+  })
+})

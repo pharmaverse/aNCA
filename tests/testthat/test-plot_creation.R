@@ -255,3 +255,195 @@ describe("create_indplot functions correctly", {
     expect_true(all(plot_colors %in% test_palette))
   })
 })
+
+
+# test-create_meanplot.R
+library(testthat)
+library(ggplot2)
+library(dplyr)
+
+# --- Setup: Use the same comprehensive sample data ---
+# (Assuming create_test_data() and sample_data are available
+# from the 'test-create_indplot.R' setup or a shared helper)
+# If running standalone, re-paste the create_test_data() function here.
+if (!exists("sample_data")) {
+  # (Paste create_test_data() function here)
+  # sample_data <- create_test_data()
+}
+
+
+describe("create_meanplot functions correctly", {
+  
+  # Mock Shiny's validate/need to throw a standard error
+  mockery::stub(create_meanplot, 'validate', function(x) { if (!x$condition) stop(x$message) })
+  mockery::stub(create_meanplot, 'need', function(expr, message) { list(condition = expr, message = message) })
+  
+  it("returns a ggplot object with default settings", {
+    p <- create_meanplot(
+      data = sample_data,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      colorby_var = "DOSEA"
+    )
+    expect_s3_class(p, "ggplot")
+    # Default time_scale is "All Time", which uses NFRLT for mean plot
+    nfrlt_vals <- unique(sample_data$NFRLT)
+    expect_true(all(p$data$time_var %in% nfrlt_vals))
+    # Default y_var is Mean
+    expect_true(all(p$data[[p$labels$y]] == p$data$Mean))
+    # Default group_var is color_var
+    expect_true("color_var" %in% names(p$data))
+    # Default is to show SD_max, but not SD_min
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomErrorbar" %in% layer_classes)
+  })
+  
+  it("handles empty/filtered data gracefully (N < 3)", {
+    # Filter data to only 2 subjects. This will result in N=2 for
+    # all groups, which should be filtered out by `filter(N >= 3)`.
+    small_data <- sample_data %>%
+      filter(USUBJID %in% c("Subject1", "Subject2"))
+    
+    expect_error(
+      create_meanplot(
+        data = small_data,
+        selected_analytes = "Analyte1",
+        selected_pcspec = "Spec1",
+        colorby_var = "DOSEA"
+      ),
+      "No data with >= 3 points to calculate mean."
+    )
+  })
+  
+  it("handles missing columns gracefully", {
+    incomplete_data <- sample_data %>% select(-AVAL)
+    expect_error(
+      create_meanplot(
+        data = incomplete_data,
+        selected_analytes = "Analyte1",
+        selected_pcspec = "Spec1",
+        colorby_var = "DOSEA"
+      ),
+      "object 'AVAL' not found"
+    )
+  })
+  
+  it("supports 'By Dose Profile' time_scale", {
+    p <- create_meanplot(
+      data = sample_data,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      colorby_var = "DOSEA",
+      time_scale = "By Dose Profile",
+      cycle = 1
+    )
+    expect_s3_class(p, "ggplot")
+    # 'By Dose Profile' uses NRRLT
+    nrlt_vals <- unique(sample_data$NRRLT)
+    expect_true(all(p$data$time_var %in% nrlt_vals))
+    # Check that data is filtered to the selected cycle
+    expect_true(max(p$data$time_var) <= 5)
+  })
+  
+  it("supports multiple colorby_var and facet_by", {
+    p <- create_meanplot(
+      data = sample_data,
+      selected_analytes = c("Analyte1", "Analyte2"),
+      selected_pcspec = "Spec1",
+      colorby_var = c("DOSEA", "SEX"),
+      facet_by = "PARAM"
+    )
+    expect_s3_class(p, "ggplot")
+    # Check facet
+    expect_s3_class(p$facet, "FacetWrap")
+    # Check legend
+    expect_equal(p$labels$colour, "DOSEA, SEX")
+  })
+  
+  it("supports log scale and filters non-positive Mean", {
+    # sample_data (Analyte2, Spec2, Cycle 1, NRRLT=0) has AVAL=0 for all 4 subjects
+    # This will result in Mean = 0, which should be filtered.
+    p <- create_meanplot(
+      data = sample_data,
+      selected_analytes = "Analyte2",
+      selected_pcspec = "Spec2",
+      colorby_var = "DOSEA",
+      time_scale = "By Dose Profile",
+      cycle = 1,
+      yaxis_scale = "log"
+    )
+    expect_s3_class(p, "ggplot")
+    # Check that non-positive Mean values were filtered
+    expect_true(all(p$data$Mean > 0))
+    # Check that log-transform was added
+    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
+    expect_true(is_log_scale)
+  })
+  
+  it("shows SD error bars (min, max, and both)", {
+    # Both min and max
+    p_both <- create_meanplot(
+      data = sample_data, selected_analytes = "Analyte1", selected_pcspec = "Spec1",
+      colorby_var = "DOSEA", show_sd_min = TRUE, show_sd_max = TRUE
+    )
+    p_both_build <- ggplot_build(p_both)
+    err_data_both <- p_both_build$data[[3]] # Layer 3 is geom_errorbar
+    expect_true(all(err_data_both$ymin < err_data_both$y))
+    expect_true(all(err_data_both$ymax > err_data_both$y))
+    
+    # Only min
+    p_min <- create_meanplot(
+      data = sample_data, selected_analytes = "Analyte1", selected_pcspec = "Spec1",
+      colorby_var = "DOSEA", show_sd_min = TRUE, show_sd_max = FALSE
+    )
+    p_min_build <- ggplot_build(p_min)
+    err_data_min <- p_min_build$data[[3]]
+    expect_true(all(err_data_min$ymin < err_data_min$y))
+    expect_true(all(err_data_min$ymax == err_data_min$y)) # ymax is Mean
+    
+    # Only max (default)
+    p_max <- create_meanplot(
+      data = sample_data, selected_analytes = "Analyte1", selected_pcspec = "Spec1",
+      colorby_var = "DOSEA", show_sd_min = FALSE, show_sd_max = TRUE
+    )
+    p_max_build <- ggplot_build(p_max)
+    err_data_max <- p_max_build$data[[3]]
+    expect_true(all(err_data_max$ymin == err_data_max$y)) # ymin is Mean
+    expect_true(all(err_data_max$ymax > err_data_max$y))
+  })
+  
+  it("shows CI ribbon", {
+    p <- create_meanplot(
+      data = sample_data,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      colorby_var = "DOSEA",
+      show_ci = TRUE
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomRibbon" %in% layer_classes)
+    # Check for legend title update
+    expect_true(grepl("(95% CI)", p$labels$colour))
+  })
+  
+  it("shows dose lines and uses correct time calculation", {
+    p <- create_meanplot(
+      data = sample_data,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      colorby_var = "DOSEA",
+      show_dose = TRUE,
+      time_scale = "All Time" # Default
+    )
+    
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomVline" %in% layer_classes)
+    
+    vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
+    
+    # Check that TIME_DOSE was calculated correctly (NFRLT - NRRLT for mean)
+    expect_true("TIME_DOSE" %in% names(vline_layer$data))
+    expected_dose_times <- unique(round(sample_data$NFRLT - sample_data$NRRLT, 6))
+    expect_true(all(vline_layer$data$TIME_DOSE %in% expected_dose_times))
+  })
+})
