@@ -53,7 +53,7 @@ aNCA Shiny App Architecture
 Answer these: - DataTab: Data upload (CSV, RDS, XPT, parquet) & preprocessing. Creation of PKNCAdata object (`pknca_data`) - NCATab: Modification of PKNCAdata object to apply all NCA settings (`processed_pknca_data`) and run calculations to obtain PKNCAresults object (`res_nca`) - TLG Tab: Generation of tables, listings, and graphs from `processed_pknca_data` (and at some point `res_nca`). Its standard Shiny input settings are specified in `inst/shiny/tlg.yaml` - Transformations applied (filters, mapping, unit handling, imputation rules, PKNCA object creation). - Where intermediate state is stored (typically `session$userData` in Shiny).
 
 
-The high level picture of the App, which is shown in [App.R](../inst/shiny/app.R), can be summarized on a diagram where:
+The high level picture of the App, which is shown in [App.R](aNCA/inst/shiny/app.R), can be summarized on a diagram where:
 
 <img src="images/design/diagram_server.png" alt="Diagram of the App server"/>
 
