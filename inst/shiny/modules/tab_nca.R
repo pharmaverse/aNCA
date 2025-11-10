@@ -154,7 +154,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
         })
 
         # Display unique warnings thrown by PKNCA run.
-        purrr::walk(unique(pknca_warn_env$warnings), \(w) {
+        purrr::walk(unique(pknca_warn_env$warnings), function(w) {
           w_message <- paste0("PKNCA run produced a warning: ", w)
           log_warn(w_message)
           showNotification(w_message, type = "warning", duration = 5)
@@ -206,7 +206,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       "slope_results",
       pivoted_slopes,
       download_buttons = c("csv", "xlsx"),
-      file_name = \() paste0("NCA_Slope_Results_", Sys.Date()),
+      file_name = function() paste0("NCA_Slope_Results_", Sys.Date()),
       defaultPageSize = 10,
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 50, nrow(pivoted_slopes()))),

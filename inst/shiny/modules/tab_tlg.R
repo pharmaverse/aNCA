@@ -15,7 +15,7 @@
 .TLG_DEFINITIONS <- {
   defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
 
-  defs <- purrr::imap(defs, \(opt_def, opt_id) {
+  defs <- purrr::imap(defs, function(opt_def, opt_id) {
     if ("template" %in% names(opt_def)) {
       template_def <- defs[[opt_def$template]]
 

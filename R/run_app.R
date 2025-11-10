@@ -71,7 +71,7 @@ check_app_dependencies <- function() {
     "yaml"
   )
 
-  missing_packages <- purrr::keep(deps, \(dep) !requireNamespace(dep, quietly = TRUE))
+  missing_packages <- purrr::keep(deps, function(dep) !requireNamespace(dep, quietly = TRUE))
 
   if (length(missing_packages) != 0) {
     stop(paste0(

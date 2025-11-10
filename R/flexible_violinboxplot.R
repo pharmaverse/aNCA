@@ -53,10 +53,10 @@ flexible_violinboxplot <- function(res_nca,
   if (!is.null(varvalstofilter)) {
     vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
     vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
-    var_types <- sapply(vars_tofilter, \(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
+    var_types <- sapply(vars_tofilter, function(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
 
     filter_text <- paste0(
-      sapply(unique(vars_tofilter), \(varid) {
+      sapply(unique(vars_tofilter), function(varid) {
         vartype <- class(boxplotdata[[varid]])
         paste0(
           varid,
@@ -79,7 +79,7 @@ flexible_violinboxplot <- function(res_nca,
 
   # Hover text to identify each point
   hover_text <- apply(box_data[columns_to_hover] %>%
-                        mutate(across(where(is.numeric), \(x) round(x, digits = 2))),
+                        mutate(across(where(is.numeric), function(x) round(x, digits = 2))),
                       MARGIN = 1,
                       function(row) {
                         paste(names(row), row, sep = ": ", collapse = "<br>")

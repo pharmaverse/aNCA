@@ -65,7 +65,7 @@ apply_mapping <- function(
 
   # Conflictive original columns with the mapping will be removed. Warn the user
   is_col_rep_in_map_and_df <- names(mapping) %in% names(dataset)
-  is_col_not_used_in_map <- sapply(names(mapping), \(n) !any(n %in% unname(mapping)))
+  is_col_not_used_in_map <- sapply(names(mapping), function(n) !any(n %in% unname(mapping)))
   conflictive_cols <- is_col_rep_in_map_and_df & is_col_not_used_in_map
   if (any(conflictive_cols)) {
     conflictive_colnames <- names(conflictive_cols)[unname(conflictive_cols)]

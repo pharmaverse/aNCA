@@ -94,7 +94,7 @@ calculate_summary_stats <- function(data, input_groups = "ATPTREF") {
       Count.total = n(),
       .groups = "drop"
     ) %>%
-    mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>%
 
     # Pivot the data to return groups/statistics as rows & parameters as columns
     pivot_longer(

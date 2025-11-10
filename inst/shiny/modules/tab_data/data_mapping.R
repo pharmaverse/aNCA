@@ -171,7 +171,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
 
     # Loop through each label and create the renderText outputs
-    purrr::walk(MAPPING_INFO$Variable, \(var) {
+    purrr::walk(MAPPING_INFO$Variable, function(var) {
       output[[paste0("label_", var)]] <- renderText(
         MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
       )
@@ -205,7 +205,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
-      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      mapping_list <- setNames(lapply(input_ids, function(id) input[[id]]), input_ids)
       supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
 
       # Get the names to keep

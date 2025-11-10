@@ -50,9 +50,9 @@ validate_pk <- function(pk_data) {
 #' @noRd
 #' @keywords internal
 readers <- list(
-  csv = \(path) read.csv(path, na = c("", "NA")),
-  rds = \(path) readRDS(path),
-  xlsx = \(path) {
+  csv = function(path) read.csv(path, na = c("", "NA")),
+  rds = function(path) readRDS(path),
+  xlsx = function(path) {
     if (!requireNamespace("openxlsx2", silently = TRUE))
       stop(
         "Handling .xlsx files requires `openxlsx2` package, please install it with ",
@@ -60,7 +60,7 @@ readers <- list(
       )
     openxlsx2::read_xlsx(path)
   },
-  sas7bdat = \(path) {
+  sas7bdat = function(path) {
     if (!requireNamespace("haven", silently = TRUE))
       stop(
         "Handling .sas7bdat files requires `haven` package, please install it with ",
@@ -68,7 +68,7 @@ readers <- list(
       )
     haven::read_sas(path)
   },
-  xpt = \(path) {
+  xpt = function(path) {
     if (!requireNamespace("haven", silently = TRUE))
       stop(
         "Handling .xpt files requires `haven` package, please install it with ",
@@ -76,7 +76,7 @@ readers <- list(
       )
     haven::read_xpt(path)
   },
-  parquet = \(path) {
+  parquet = function(path) {
     if (!requireNamespace("arrow", silently = TRUE))
       stop(
         "Handling .parquet files requires `arrow` package, please install it with ",

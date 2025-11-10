@@ -82,7 +82,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
     #' When filters change, show notification reminding the user about submitting
     filter_reminder_notification <- reactiveVal(NULL)
     observe({
-      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) %>%
+      applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
       if (length(applied_filters) == 0) {
         removeNotification(filter_reminder_notification())
@@ -101,7 +101,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       removeNotification(filter_reminder_notification())
 
       # Extract filters from reactive values
-      applied_filters <- lapply(reactiveValuesToList(filters), \(x) x()) %>%
+      applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
 
       if (length(applied_filters) == 0) return(raw_adnca_data())

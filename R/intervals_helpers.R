@@ -360,7 +360,7 @@ identify_target_rows <- function(data, target_impute, target_params, target_grou
 
   ## 3. The target impute method is not present and correctly positioned (if after is provided)
   if (!is.null(after)) {
-    after_vals <- sapply(strsplit(data$impute, "[ ,]+"), \(x) {
+    after_vals <- sapply(strsplit(data$impute, "[ ,]+"), function(x) {
       after_x <- which(x == target_impute)
       if (length(after_x) == 0) return(TRUE)
       if (after_x == length(x)) Inf else after_x
