@@ -20,7 +20,7 @@ In general, any posted issue should contain a brief description of the problem, 
 ## Users :computer_mouse:
 This short section is for people who primarily use the app and want to report bugs, request features, or get help reproducing results.
 
-- You find something is not intuitive or you don't know if something can or not be done? Check in [discussions](https://github.com/pharmaverse/aNCA/discussions) or in our [FAQs](). If you still cannot answer your question, open a [Q&A dicussion](https://github.com/pharmaverse/aNCA/discussions/new?category=q-a) and the community will help you!
+- You find something is not intuitive or you don't know if something can or not be done? Check in [discussions](https://github.com/pharmaverse/aNCA/discussions). If you still cannot answer your question, open a [Q&A dicussion](https://github.com/pharmaverse/aNCA/discussions/new?category=q-a) and the community will help you!
 - If you find a bug: open an [bug issue](https://github.com/pharmaverse/aNCA/issues) (if it does not already exist) and include a minimal reproduction (explain the steps you followed), the app version (see the footer in the UI) and screenshots or console logs if helpful. Please, make sure to not provide any sensitive or confidential data.
 - If you want a new feature or improvement: open a [discussion for ideas](https://github.com/pharmaverse/aNCA/discussions/new?category=ideas) (if it does not already exist)  titled  `Feature request: ...`. Explain your use case and desired outcome, with as much detail as possible.
 
