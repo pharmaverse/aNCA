@@ -160,7 +160,7 @@ pkcg01 <- function(
         min_cm_distance = xbreaks_mindist,
         plot = plot
       ),
-      labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+      labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
     )
 
   # Add color when specified
@@ -192,7 +192,7 @@ pkcg01 <- function(
       plot <- plot +
         scale_y_continuous(
           transform = "log10",
-          labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
         )
     }
   }
@@ -227,12 +227,12 @@ pkcg01 <- function(
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
         trans  = "log10",
-        labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+        labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
       )
   }
 
   # Create the list of plots for each unique group
-  plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
+  plots <- lapply(unique(adpc_grouped[["id_plot"]]), function(id_val) {
     plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
 
     title <- generate_title(plot_data, title, scale, studyid)
@@ -309,7 +309,7 @@ pkcg01 <- function(
         )
     }
   })
-  plots |>
+  plots %>%
     setNames(unique(adpc[["id_plot"]]))
 }
 
@@ -496,7 +496,7 @@ pkcg02 <- function(
       min_cm_distance = xbreaks_mindist,
       plot = plot
     ),
-    labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+    labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
   )
 
   # Add color when specified
@@ -524,7 +524,7 @@ pkcg02 <- function(
       plot <- plot +
         scale_y_continuous(
           transform = "log10",
-          labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
         )
     }
   }
@@ -559,12 +559,12 @@ pkcg02 <- function(
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
         trans  = "log10",
-        labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+        labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
       )
   }
 
   # Create the list of plots for each unique group
-  plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
+  plots <- lapply(unique(adpc_grouped[["id_plot"]]), function(id_val) {
     plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
 
     title <- generate_title(plot_data, title, scale, studyid)
@@ -642,7 +642,7 @@ pkcg02 <- function(
         )
     }
   })
-  plots |>
+  plots %>%
     setNames(unique(adpc[["id_plot"]]))
 
 }
