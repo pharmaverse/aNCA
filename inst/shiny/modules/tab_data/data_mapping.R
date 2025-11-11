@@ -171,7 +171,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
 
     # Loop through each label and create the renderText outputs
-    purrr::walk(MAPPING_INFO$Variable, \(var) {
+    purrr::walk(MAPPING_INFO$Variable, function(var) {
       output[[paste0("label_", var)]] <- renderText(
         MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
       )
@@ -205,11 +205,11 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
-      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      mapping_list <- setNames(lapply(input_ids, function(id) input[[id]]), input_ids)
       supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
 
       # Get the names to keep
-      names_to_keep <- names(mapping_list) |>
+      names_to_keep <- names(mapping_list) %>%
         keep(\(name) {
           # The logical condition with the any() fix
           !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
@@ -255,7 +255,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         showNotification(conditionMessage(e), type = "error", duration = NULL)
         NULL
       })
-    }) |>
+    }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 
     #Check for blocking duplicates

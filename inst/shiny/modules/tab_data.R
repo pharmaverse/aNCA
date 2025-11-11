@@ -190,7 +190,7 @@ tab_data_server <- function(id) {
                 PPTESTCD %in% metadata_nca_parameters$PKNCA[
                   metadata_nca_parameters$unit_type == "volume"
                 ],
-                sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
+                sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
                 PPSTRESU
               )
               # Only accept changes producing simple units
@@ -208,7 +208,7 @@ tab_data_server <- function(id) {
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
+        purrr::walk(c("nca", "exploration", "tlg"), function(tab) {
           shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
         })
 
@@ -218,7 +218,7 @@ tab_data_server <- function(id) {
         showNotification(e$message, type = "error", duration = NULL)
         NULL
       })
-    }) |>
+    }) %>%
       bindEvent(processed_data())
 
     list(

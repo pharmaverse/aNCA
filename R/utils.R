@@ -43,7 +43,7 @@
     cumsum() %>%
     split(range_vector, .)
 
-  subranges <- sapply(grouped_range, \(group) {
+  subranges <- sapply(grouped_range, function(group) {
     if (length(group) > 1) paste0(group[1], ":", group[length(group)]) else as.character(group)
   })
 
@@ -130,10 +130,12 @@ parse_annotation <- function(data, text) {
     l <- split(l, seq_len(nrow(l)))
 
   # Construct the log message for each list element
-  log_msg <- imap(l, \(val, nm) {
+  log_msg <- imap(l, function(val, nm) {
     sep <- ", "
     if (is.list(val)) {
-      val <- imap(val, \(val2, nm2) paste0("\t* ", nm2, " -> ", paste0(val2, collapse = ", "))) |>
+      val <- imap(val, function(val2, nm2) {
+        paste0("\t* ", nm2, " -> ", paste0(val2, collapse = ", "))
+      }) %>%
         paste0(collapse = "\n") %>%
         paste0("\n", .)
     } else {

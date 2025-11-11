@@ -191,7 +191,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       "results",
       full_output,
       download_buttons = c("csv", "xlsx"),
-      file_name = \() paste0("Ratios_result_", Sys.Date()),
+      file_name = function() paste0("Ratios_result_", Sys.Date()),
       defaultPageSize = 10,
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 50, nrow(full_output()))),

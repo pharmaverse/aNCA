@@ -18,7 +18,7 @@ In general, any posted issue should contain a brief description of the problem, 
 
 # Submit changes
 ## Joining the project
-In order to gain privileges to commit changes to the codebase, you will need to be added as a collaborator. To do so, please contact one of the contributors. You can find the list with contact info in the [DESCRIPTION](/DESCRIPTION) file.
+In order to gain privileges to commit changes to the codebase, you will need to be added as a collaborator. To do so, please contact one of the contributors. You can find the list with contact info in the [DESCRIPTION](aNCA/DESCRIPTION) file.
 
 ## Issues
 Before creating any changes, please make sure an appropriate issue thread is opened. This is the place to discuss the topic at hand, agree on the approach for solving the problem and keep the tasks organized across the whole project.
@@ -51,7 +51,7 @@ The codebase follows the general [tidyverse](https://style.tidyverse.org/files.h
 Do try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) convention whenever possible. That said, software development is messy and if you feel like this standard does not suit the situation, feel free to deviate from it, but do keep the commit messages short and meaningful at the very least.
 
 ## Pull requests
-[Pull request template](.github/PULL_REQUEST_TEMPLATE.md) is available to make documenting PRs more consistent and streamlined. Each PR description should include:
+[Pull request template](aNCA/.github/PULL_REQUEST_TEMPLATE.md) is available to make documenting PRs more consistent and streamlined. Each PR description should include:
 
 #### Issue
 Number of the appropriate issue the pull request closes or references.

@@ -185,7 +185,7 @@ manual_slopes_table_server <- function(
     observe({
       req(slope_selector_columns())
       # Dynamically attach observers for each column
-      purrr::walk(slope_selector_columns(), \(colname) {
+      purrr::walk(slope_selector_columns(), function(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
           edit <- input[[paste0("edit_", colname)]]
           edited_slopes <- manual_slopes()

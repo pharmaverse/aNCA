@@ -29,7 +29,7 @@ describe("Test for initial app load", {
     logs <- app$get_logs()
 
     # Filter for JavaScript errors (SEVERE level)
-    js_errors <- logs |>
+    js_errors <- logs %>%
       dplyr::filter(level == "SEVERE")
 
     # Print any errors found for debugging

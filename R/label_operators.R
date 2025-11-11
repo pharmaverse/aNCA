@@ -124,7 +124,7 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
   }
 
   # Get all labels
-  labels <- purrr::map_chr(tooltip_vars, \(x) get_label(x, type, labels_df = labels_df))
+  labels <- purrr::map_chr(tooltip_vars, function(x) get_label(x, type, labels_df = labels_df))
 
   # Create a list where each element is a vector of "Label: Value"
   # strings for an entire column

@@ -30,7 +30,8 @@
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
 #' @param adnca_data Data table containing ADNCA data.
-#' @param nca_exclude_reason_columns Optional character vector of column names. Excluding records from the NCA
+#' @param nca_exclude_reason_columns Optional character vector of column names.
+#' Excluding records from the NCA
 #' must be indicated by populating any of these columns with a non-empty character value.
 #'
 #' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
@@ -80,13 +81,13 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
   conc_formula <-
-    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" |> # nolint
-    glue::glue() |>
+    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" %>% # nolint
+    glue::glue() %>%
     as.formula()
 
   dose_formula <-
-    "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" |> # nolint
-    glue::glue() |>
+    "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
+    glue::glue() %>%
     as.formula()
 
   # Create concentration data
@@ -299,7 +300,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     params_not_to_impute <- metadata_nca_parameters %>%
       filter(!grepl("auc|aumc", PKNCA),
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
+      pull(PKNCA) %>%
       intersect(names(PKNCA::get.interval.cols()))
 
     all_impute_methods <- na.omit(unique(data$intervals$impute))
@@ -649,7 +650,7 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
     all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
     for (comb in all_candidate_combs) {
       comb_vals <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
-      if (all(tapply(strata_vals, comb_vals, FUN = \(x) length(unique(x)) == 1))) {
+      if (all(tapply(strata_vals, comb_vals, FUN = function(x) length(unique(x)) == 1))) {
         return(df[c(comb, strata_cols)])
       }
     }
