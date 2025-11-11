@@ -22,6 +22,8 @@ navbar:
           href: articles/background.html
         - text: Governance
           href: articles/governance.html
+        - text: Roadmap
+          href: articles/roadmap.html
     validations:
       text: "Validation Plan"
       icon: fa-check-circle
