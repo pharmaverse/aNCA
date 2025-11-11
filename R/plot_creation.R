@@ -21,9 +21,9 @@ create_indplot <- function(data,
                            selected_pcspec,
                            colorby_var = "USUBJID",
                            time_scale = "All Time",
+                           yaxis_scale = "lin",
                            cycle = NULL,
                            facet_by = NULL,
-                           yaxis_scale = "Lin",
                            show_threshold = FALSE,
                            threshold_value = 0,
                            show_dose = FALSE,
@@ -93,22 +93,22 @@ create_indplot <- function(data,
 #' @param facet_by The variable(s) to facet by.
 #' @param yaxis_scale String, either "log" or "lin".
 #' @param time_scale String, either "All Time" or "By Dose Profile".
-#' @param show_sd_min,show_sd_max,show_ci Logicals for error bars.
 #' @param show_threshold Logical, whether to show threshold line.
 #' @param threshold_value Numeric, value for the threshold line.
 #' @param show_dose Logical, whether to show dosing indicators.
+#'  @param palette A named color palette.
 #' @param dose_data The raw data frame (or a derivative) for calculating dose times.
-#' @param palette A named color palette.
+#' @param show_sd_min,show_sd_max,show_ci Logicals for error bars.
 #' @returns A `ggplot` object.
 #'
 create_meanplot <- function(data,
                             selected_analytes,
                             selected_pcspec,
-                            colorby_var,
-                            time_scale = "All Time",
                             cycle = NULL,
+                            colorby_var,
                             facet_by = NULL,
-                            yaxis_scale = "Lin",
+                            yaxis_scale = "lin",
+                            time_scale = "All Time",
                             show_threshold = FALSE,
                             threshold_value = 0,
                             show_dose = FALSE,

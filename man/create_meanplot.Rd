@@ -8,18 +8,19 @@ create_meanplot(
   data,
   selected_analytes,
   selected_pcspec,
-  cycle,
+  cycle = NULL,
   colorby_var,
-  facet_by,
-  yaxis_scale,
-  time_scale,
-  show_sd_min,
-  show_sd_max,
-  show_ci,
-  show_threshold,
-  threshold_value,
-  show_dose,
-  palette
+  facet_by = NULL,
+  yaxis_scale = "lin",
+  time_scale = "All Time",
+  show_threshold = FALSE,
+  threshold_value = 0,
+  show_dose = FALSE,
+  palette = NULL,
+  dose_data = NULL,
+  show_sd_min = FALSE,
+  show_sd_max = TRUE,
+  show_ci = FALSE
 )
 }
 \arguments{
@@ -35,20 +36,19 @@ create_meanplot(
 
 \item{time_scale}{String, either "All Time" or "By Dose Profile".}
 
-\item{show_sd_min, show_sd_max, show_ci}{Logicals for error bars.}
-
 \item{show_threshold}{Logical, whether to show threshold line.}
 
 \item{threshold_value}{Numeric, value for the threshold line.}
 
-\item{show_dose}{Logical, whether to show dosing indicators.}
-
-\item{palette}{A named color palette.}
+\item{show_dose}{Logical, whether to show dosing indicators.
+@param palette A named color palette.}
 
 \item{dose_data}{The raw data frame (or a derivative) for calculating dose times.}
+
+\item{show_sd_min, show_sd_max, show_ci}{Logicals for error bars.}
 }
 \value{
-A \code{plotly} object.
+A \code{ggplot} object.
 }
 \description{
 Combines data processing and plotting for mean concentration-time profiles.

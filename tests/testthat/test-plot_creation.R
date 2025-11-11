@@ -257,21 +257,6 @@ describe("create_indplot functions correctly", {
 })
 
 
-# test-create_meanplot.R
-library(testthat)
-library(ggplot2)
-library(dplyr)
-
-# --- Setup: Use the same comprehensive sample data ---
-# (Assuming create_test_data() and sample_data are available
-# from the 'test-create_indplot.R' setup or a shared helper)
-# If running standalone, re-paste the create_test_data() function here.
-if (!exists("sample_data")) {
-  # (Paste create_test_data() function here)
-  # sample_data <- create_test_data()
-}
-
-
 describe("create_meanplot functions correctly", {
   
   # Mock Shiny's validate/need to throw a standard error

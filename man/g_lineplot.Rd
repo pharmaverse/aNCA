@@ -11,7 +11,7 @@ g_lineplot(
   group_var,
   colorby_var,
   facet_by = NULL,
-  yaxis_scale = "Lin",
+  yaxis_scale = "lin",
   show_threshold = FALSE,
   threshold_value = 0,
   show_dose = FALSE,

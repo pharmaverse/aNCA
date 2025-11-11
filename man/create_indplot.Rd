@@ -9,15 +9,16 @@ create_indplot(
   selected_usubjids,
   selected_analytes,
   selected_pcspec,
-  colorby_var,
-  time_scale,
-  yaxis_scale,
-  cycle,
-  facet_by,
-  show_threshold,
-  threshold_value,
-  show_dose,
-  palette
+  colorby_var = "USUBJID",
+  time_scale = "All Time",
+  yaxis_scale = "lin",
+  cycle = NULL,
+  facet_by = NULL,
+  show_threshold = FALSE,
+  threshold_value = 0,
+  show_dose = FALSE,
+  dose_data = NULL,
+  palette = NULL
 )
 }
 \arguments{
@@ -39,12 +40,12 @@ create_indplot(
 
 \item{show_dose}{Logical, whether to show dosing indicators.}
 
-\item{palette}{A named color palette.}
-
 \item{dose_data}{The raw data frame (or a derivative) for calculating dose times.}
+
+\item{palette}{A named color palette.}
 }
 \value{
-A \code{plotly} object.
+A \code{ggplot} object.
 }
 \description{
 Combines data processing and plotting for individual concentration-time profiles.
