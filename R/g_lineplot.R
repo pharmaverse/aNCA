@@ -7,24 +7,26 @@
 #' and threshold lines.
 #'
 #' @section Plot Types:
-#' The function's behavior changes based on the arguments provided, accommodating two main plot types:
+#' The function's behavior changes based on the arguments provided, for two main plot types:
 #' \itemize{
-#'   \item \strong{Individual Plots}: Set `x_var = "time_var"`, `y_var = "AVAL"`, and `group_var = "USUBJID"`.
+#'   \item \strong{Individual Plots}:
+#'     Set `x_var = "time_var"`, `y_var = "AVAL"` and `group_var = "USUBJID"`.
 #'     The input `data` should be from `process_data_individual`.
-#'   \item \strong{Mean Plots}: Set `x_var = "time_var"`, `y_var = "Mean"`, and `group_var = "color_var"`.
+#'   \item \strong{Mean Plots}:
+#'     Set `x_var = "time_var"`, `y_var = "Mean"`, and `group_var = "color_var"`.
 #'     The input `data` should be from `process_data_mean`. The arguments `show_sd_min`,
 #'     `show_sd_max`, and `show_ci` are only applicable to this plot type.
 #' }
 #'
 #' @param data A data.frame containing the data to be plotted. This should be
 #'   pre-processed by either `process_data_individual` or `process_data_mean`.
-#' @param x_var A character string specifying the column name for the x-axis. See the "Plot Types" section for examples.
-#' @param y_var A character string specifying the column name for the y-axis. See the "Plot Types" section for examples.
+#' @param x_var A character string specifying the column name for the x-axis.
+#' @param y_var A character string specifying the column name for the y-axis.
 #' @param group_var A character string specifying the column name used to group
-#'   the lines, ensuring `geom_line` connects the correct points. See the "Plot Types" section for examples.
+#'   the lines, ensuring `geom_line` connects the correct points.
 #' @param colorby_var A character vector specifying the column(s) from the original
 #'   dataset that are used to determine the color of the lines and points.
-#' @param facet_by A character vector of column names to facet the plot by (e.g., `c("PARAM", "DOSEA")`).
+#' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
 #' @param yaxis_scale A character string, either `"Lin"` (default) or `"Log"`, to set the
 #'   y-axis scale.
@@ -67,9 +69,17 @@ g_lineplot <- function(data,
                        show_sd_min = FALSE,
                        show_sd_max = FALSE,
                        show_ci = FALSE) {
-  
+
   # Set up plot labels - assumes individual plot unless mean columns are present
   is_mean_plot <- all(c("Mean", "SD", "N") %in% names(data))
+
+  # Defensively set mean-plot flags to FALSE if it's not a mean plot
+  if (!is_mean_plot) {
+    show_sd_min <- FALSE
+    show_sd_max <- FALSE
+    show_ci     <- FALSE
+  }
+
   if (is_mean_plot) {
     x_lab <- paste0("Nominal Time [", unique(data$RRLTU), "]")
     y_lab <- paste0("Mean Concentration [", unique(data$AVALU), "]")
@@ -95,51 +105,106 @@ g_lineplot <- function(data,
       color = paste(colorby_var, collapse = ", ")
     ) +
     theme_bw()
-  
+
   # Add optional layers
-  if (!is.null(palette)) {
-    plt <- plt + scale_color_manual(values = palette)
+  optional_layers <- list(
+    .add_palette(palette),
+    .add_y_scale(yaxis_scale),
+    .add_faceting(facet_by),
+    .add_threshold(show_threshold, threshold_value),
+    .add_dose_lines(show_dose, dose_data, facet_by),
+    .add_mean_layers(
+      is_mean_plot,
+      show_sd_min,
+      show_sd_max,
+      show_ci,
+      colorby_var,
+      y_var
+    )
+  )
+
+  return(plt + optional_layers)
+}
+
+# --- Helper Functions (Internal) ---
+# These functions contain the optional layers logic
+
+#' @noRd
+.add_palette <- function(palette) {
+  if (is.null(palette)) {
+    return(NULL)
   }
-  
-  if (yaxis_scale == "log") {
-    plt <- plt +
-      scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), labels = scales::comma)
+  scale_color_manual(values = palette)
+}
+
+#' @noRd
+.add_y_scale <- function(yaxis_scale) {
+  if (yaxis_scale != "log") {
+    return(NULL)
   }
-  
-  if (!is.null(facet_by) && length(facet_by) > 0) {
-    plt <- plt + facet_wrap(vars(!!!syms(facet_by)), scales = "free")
+  scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), labels = scales::comma)
+}
+
+#' @noRd
+.add_faceting <- function(facet_by) {
+  if (is.null(facet_by) || length(facet_by) == 0) {
+    return(NULL)
   }
-  
-  if (isTRUE(show_threshold)) {
-    plt <- plt + geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  facet_wrap(vars(!!!syms(facet_by)), scales = "free")
+}
+
+#' @noRd
+.add_threshold <- function(show_threshold, threshold_value) {
+  if (!isTRUE(show_threshold)) {
+    return(NULL)
   }
-  
-  if (isTRUE(show_dose)) {
-    dose_info <- dose_data %>%
-      select(all_of(unique(c(facet_by, "TIME_DOSE", "DOSEA")))) %>%
-      distinct() %>%
-      filter(!is.na(TIME_DOSE))
-    plt <- plt + geom_vline(data = dose_info, aes(xintercept = TIME_DOSE), linetype = "dotted", color = "grey")
+  geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+}
+
+#' @noRd
+.add_dose_lines <- function(show_dose, dose_data, facet_by) {
+  if (!isTRUE(show_dose)) {
+    return(NULL)
   }
-  
-  # Mean plot specific layers
-  if (is_mean_plot) {
-    if (isTRUE(show_sd_min) || isTRUE(show_sd_max)) {
-      plt <- plt + geom_errorbar(
-        aes(
-          ymin = if (isTRUE(show_sd_min)) .data$SD_min else .data$Mean,
-          ymax = if (isTRUE(show_sd_max)) .data$SD_max else .data$Mean
-        ),
-        width = 0.4
-        )
-    }
-    if (isTRUE(show_ci)) {
-      plt <- plt +
-        geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3) +
-        guides(fill = "none") +
-        labs(color = paste0(paste(colorby_var, collapse = ", "), " (95% CI)"))
-    }
+
+  dose_info <- dose_data %>%
+    select(all_of(unique(c(facet_by, "TIME_DOSE", "DOSEA")))) %>%
+    distinct() %>%
+    filter(!is.na(TIME_DOSE))
+
+  geom_vline(data = dose_info, aes(xintercept = TIME_DOSE), linetype = "dotted", color = "grey")
+}
+
+#' @noRd
+.add_mean_layers <- function(is_mean_plot, show_sd_min, show_sd_max, show_ci, colorby_var, y_var) {
+  if (!is_mean_plot) {
+    return(NULL)
   }
-  
-  return(plt)
+
+  # 1. Error bars
+  error_bar_layer <- if (isTRUE(show_sd_min) || isTRUE(show_sd_max)) {
+    ymin_val <- if (isTRUE(show_sd_min)) sym("SD_min") else sym(y_var)
+    ymax_val <- if (isTRUE(show_sd_max)) sym("SD_max") else sym(y_var)
+
+    geom_errorbar(
+      aes(ymin = !!ymin_val, ymax = !!ymax_val),
+      width = 0.4
+    )
+  } else {
+    NULL
+  }
+
+  # 2. CI Ribbon
+  ci_ribbon_layer <- if (isTRUE(show_ci)) {
+    list(
+      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
+      guides(fill = "none"),
+      labs(color = paste0(paste(colorby_var, collapse = ", "), " (95% CI)"))
+    )
+  } else {
+    NULL
+  }
+
+  # Return a list of all layers
+  list(error_bar_layer, ci_ribbon_layer)
 }

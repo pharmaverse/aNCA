@@ -32,12 +32,14 @@ test_data <- base_df %>%
 
 # 1. EVID=1 record (should be filtered out)
 evid_rec <- test_data %>%
-  dplyr::filter(USUBJID == "Subject1", PARAM == "Analyte1", PCSPEC == "Spec1", ATPTREF == 1, NRRLT == 1) %>%
+  dplyr::filter(USUBJID == "Subject1", PARAM == "Analyte1",
+                PCSPEC == "Spec1", ATPTREF == 1, NRRLT == 1) %>%
   dplyr::mutate(EVID = 1, AVAL = NA)
 
 # 2. NA AVAL record (should be filtered out)
 na_aval_rec <- test_data %>%
-  dplyr::filter(USUBJID == "Subject1", PARAM == "Analyte1", PCSPEC == "Spec1", ATPTREF == 1, NRRLT == 2) %>%
+  dplyr::filter(USUBJID == "Subject1", PARAM == "Analyte1",
+                PCSPEC == "Spec1", ATPTREF == 1, NRRLT == 2) %>%
   dplyr::mutate(AVAL = NA)
 
 # 3. Zero/Negative AVAL records (for log scale test)
@@ -46,7 +48,8 @@ zero_aval_recs <- test_data %>%
   dplyr::mutate(AVAL = 0) # All 4 subjects get 0
 
 neg_aval_rec <- test_data %>%
-  dplyr::filter(USUBJID == "Subject1", PARAM == "Analyte2", PCSPEC == "Spec2", ATPTREF == 1, NRRLT == 1) %>%
+  dplyr::filter(USUBJID == "Subject1", PARAM == "Analyte2",
+                PCSPEC == "Spec2", ATPTREF == 1, NRRLT == 1) %>%
   dplyr::mutate(AVAL = -10)
 
 sample_data <- dplyr::bind_rows(
@@ -58,11 +61,17 @@ sample_data <- dplyr::bind_rows(
 
 
 describe("create_indplot functions correctly", {
-  
+
   # Mock Shiny's validate/need to throw a standard error
-  mockery::stub(create_indplot, 'validate', function(x) { if (!x$condition) stop(x$message) })
-  mockery::stub(create_indplot, 'need', function(expr, message) { list(condition = expr, message = message) })
-  
+  mockery::stub(create_indplot, "validate",
+                function(x) {
+                  if (!x$condition) stop(x$message)
+                })
+  mockery::stub(create_indplot, "need",
+                function(expr, message) {
+                  list(condition = expr, message = message)
+                })
+
   it("returns a ggplot object with default settings", {
     p <- create_indplot(
       data = sample_data,
@@ -79,7 +88,7 @@ describe("create_indplot functions correctly", {
     # Default group_var is USUBJID
     expect_true("USUBJID" %in% names(p$data))
   })
-  
+
   it("handles empty/filtered data gracefully", {
     expect_error(
       create_indplot(
@@ -91,7 +100,7 @@ describe("create_indplot functions correctly", {
       "No data available for the selected filters."
     )
   })
-  
+
   it("handles missing columns gracefully", {
     incomplete_data <- sample_data %>% select(-AVAL)
     expect_error(
@@ -104,7 +113,7 @@ describe("create_indplot functions correctly", {
       "object 'AVAL' not found"
     )
   })
-  
+
   it("filters out EVID != 0 and NA AVAL", {
     p <- create_indplot(
       data = sample_data, # sample_data contains EVID=1 and NA AVAL
@@ -116,7 +125,7 @@ describe("create_indplot functions correctly", {
     expect_true(all(p$data$EVID == 0))
     expect_true(all(!is.na(p$data$AVAL)))
   })
-  
+
   it("supports 'By Dose Profile' time_scale", {
     p <- create_indplot(
       data = sample_data,
@@ -133,7 +142,7 @@ describe("create_indplot functions correctly", {
     # Check that data is filtered to the selected cycle
     expect_true(all(p$data$ATPTREF == 1))
   })
-  
+
   it("handles predose duplication for 'By Dose Profile'", {
 
     p <- create_indplot(
@@ -142,16 +151,16 @@ describe("create_indplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
       time_scale = "By Dose Profile",
-      cycle = 1 
+      cycle = 1
     )
-    
+
     predose_record_in_plot <- p$data %>%
       filter(NFRLT == 168)
-    
+
     expect_true(nrow(predose_record_in_plot) == 1)
     expect_true(predose_record_in_plot$ATPTREF == 1)
   })
-  
+
   it("supports multiple colorby_var", {
     p <- create_indplot(
       data = sample_data,
@@ -164,9 +173,9 @@ describe("create_indplot functions correctly", {
     # Check that the color variable was created by interacting two columns
     expect_true(all(p$data$color_var %in% c("35, M", "35, F")))
     # Check that the legend label is correct
-    expect_equal(p$labels$colour, c('DOSEA, SEX'))
+    expect_equal(p$labels$colour, c("DOSEA, SEX"))
   })
-  
+
   it("supports log scale and filters non-positive AVAL", {
     p <- create_indplot(
       data = sample_data, # sample_data has AVAL=0 and AVAL=-10
@@ -184,7 +193,7 @@ describe("create_indplot functions correctly", {
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
   })
-  
+
   it("correctly applies faceting", {
     p <- create_indplot(
       data = sample_data,
@@ -196,7 +205,7 @@ describe("create_indplot functions correctly", {
     expect_s3_class(p$facet, "FacetWrap")
     expect_equal(length(p$facet$params$facets), 2)
   })
-  
+
   it("shows threshold line when requested", {
     p <- create_indplot(
       data = sample_data,
@@ -211,7 +220,7 @@ describe("create_indplot functions correctly", {
     hline_layer <- p$layers[[which(layer_classes == "GeomHline")]]
     expect_equal(hline_layer$data$yintercept, 10)
   })
-  
+
   it("shows dose lines and respects facets", {
     p <- create_indplot(
       data = sample_data,
@@ -221,24 +230,24 @@ describe("create_indplot functions correctly", {
       show_dose = TRUE,
       facet_by = "PARAM"
     )
-    
+
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
-    
+
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
-    
+
     # Check that TIME_DOSE was calculated correctly (AFRLT - ARRLT)
     expect_true("TIME_DOSE" %in% names(vline_layer$data))
     expected_dose_times <- unique(round(sample_data$AFRLT - sample_data$ARRLT, 6))
     expect_true(all(vline_layer$data$TIME_DOSE %in% expected_dose_times))
-    
+
     # Check that the faceting variable is in the vline data
     expect_true("PARAM" %in% names(vline_layer$data))
   })
-  
+
   it("correctly applies a persistent color palette", {
     test_palette <- c("Subject1" = "#FF0000", "Subject2" = "#0000FF")
-    
+
     p <- create_indplot(
       data = sample_data,
       selected_usubjids = c("Subject1", "Subject2"),
@@ -247,22 +256,27 @@ describe("create_indplot functions correctly", {
       colorby_var = "USUBJID",
       palette = test_palette
     )
-    
+
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
-    
+
     # Check that the colors actually used in the plot match our palette
     expect_true(all(plot_colors %in% test_palette))
   })
 })
 
-
 describe("create_meanplot functions correctly", {
-  
+
   # Mock Shiny's validate/need to throw a standard error
-  mockery::stub(create_meanplot, 'validate', function(x) { if (!x$condition) stop(x$message) })
-  mockery::stub(create_meanplot, 'need', function(expr, message) { list(condition = expr, message = message) })
-  
+  mockery::stub(create_meanplot, "validate",
+                function(x) {
+                  if (!x$condition) stop(x$message)
+                })
+  mockery::stub(create_meanplot, "need",
+                function(expr, message) {
+                  list(condition = expr, message = message)
+                })
+
   it("returns a ggplot object with default settings", {
     p <- create_meanplot(
       data = sample_data,
@@ -282,13 +296,13 @@ describe("create_meanplot functions correctly", {
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomErrorbar" %in% layer_classes)
   })
-  
+
   it("handles empty/filtered data gracefully (N < 3)", {
     # Filter data to only 2 subjects. This will result in N=2 for
     # all groups, which should be filtered out by `filter(N >= 3)`.
     small_data <- sample_data %>%
       filter(USUBJID %in% c("Subject1", "Subject2"))
-    
+
     expect_error(
       create_meanplot(
         data = small_data,
@@ -299,7 +313,7 @@ describe("create_meanplot functions correctly", {
       "No data with >= 3 points to calculate mean."
     )
   })
-  
+
   it("handles missing columns gracefully", {
     incomplete_data <- sample_data %>% select(-AVAL)
     expect_error(
@@ -312,7 +326,7 @@ describe("create_meanplot functions correctly", {
       "object 'AVAL' not found"
     )
   })
-  
+
   it("supports 'By Dose Profile' time_scale", {
     p <- create_meanplot(
       data = sample_data,
@@ -329,7 +343,7 @@ describe("create_meanplot functions correctly", {
     # Check that data is filtered to the selected cycle
     expect_true(max(p$data$time_var) <= 5)
   })
-  
+
   it("supports multiple colorby_var and facet_by", {
     p <- create_meanplot(
       data = sample_data,
@@ -344,7 +358,7 @@ describe("create_meanplot functions correctly", {
     # Check legend
     expect_equal(p$labels$colour, "DOSEA, SEX")
   })
-  
+
   it("supports log scale and filters non-positive Mean", {
     # sample_data (Analyte2, Spec2, Cycle 1, NRRLT=0) has AVAL=0 for all 4 subjects
     # This will result in Mean = 0, which should be filtered.
@@ -364,7 +378,7 @@ describe("create_meanplot functions correctly", {
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
   })
-  
+
   it("shows SD error bars (min, max, and both)", {
     # Both min and max
     p_both <- create_meanplot(
@@ -375,7 +389,7 @@ describe("create_meanplot functions correctly", {
     err_data_both <- p_both_build$data[[3]] # Layer 3 is geom_errorbar
     expect_true(all(err_data_both$ymin < err_data_both$y))
     expect_true(all(err_data_both$ymax > err_data_both$y))
-    
+
     # Only min
     p_min <- create_meanplot(
       data = sample_data, selected_analytes = "Analyte1", selected_pcspec = "Spec1",
@@ -385,7 +399,7 @@ describe("create_meanplot functions correctly", {
     err_data_min <- p_min_build$data[[3]]
     expect_true(all(err_data_min$ymin < err_data_min$y))
     expect_true(all(err_data_min$ymax == err_data_min$y)) # ymax is Mean
-    
+
     # Only max (default)
     p_max <- create_meanplot(
       data = sample_data, selected_analytes = "Analyte1", selected_pcspec = "Spec1",
@@ -396,7 +410,7 @@ describe("create_meanplot functions correctly", {
     expect_true(all(err_data_max$ymin == err_data_max$y)) # ymin is Mean
     expect_true(all(err_data_max$ymax > err_data_max$y))
   })
-  
+
   it("shows CI ribbon", {
     p <- create_meanplot(
       data = sample_data,
@@ -410,7 +424,7 @@ describe("create_meanplot functions correctly", {
     # Check for legend title update
     expect_true(grepl("(95% CI)", p$labels$colour))
   })
-  
+
   it("shows dose lines and uses correct time calculation", {
     p <- create_meanplot(
       data = sample_data,
@@ -420,12 +434,12 @@ describe("create_meanplot functions correctly", {
       show_dose = TRUE,
       time_scale = "All Time" # Default
     )
-    
+
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
-    
+
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
-    
+
     # Check that TIME_DOSE was calculated correctly (NFRLT - NRRLT for mean)
     expect_true("TIME_DOSE" %in% names(vline_layer$data))
     expected_dose_times <- unique(round(sample_data$NFRLT - sample_data$NRRLT, 6))

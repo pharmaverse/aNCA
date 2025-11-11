@@ -26,12 +26,12 @@ g_lineplot(
 \item{data}{A data.frame containing the data to be plotted. This should be
 pre-processed by either \code{process_data_individual} or \code{process_data_mean}.}
 
-\item{x_var}{A character string specifying the column name for the x-axis. See the "Plot Types" section for examples.}
+\item{x_var}{A character string specifying the column name for the x-axis.}
 
-\item{y_var}{A character string specifying the column name for the y-axis. See the "Plot Types" section for examples.}
+\item{y_var}{A character string specifying the column name for the y-axis.}
 
 \item{group_var}{A character string specifying the column name used to group
-the lines, ensuring \code{geom_line} connects the correct points. See the "Plot Types" section for examples.}
+the lines, ensuring \code{geom_line} connects the correct points.}
 
 \item{colorby_var}{A character vector specifying the column(s) from the original
 dataset that are used to determine the color of the lines and points.}
@@ -80,9 +80,9 @@ and threshold lines.
 }
 \section{Plot Types}{
 
-The function's behavior changes based on the arguments provided, accommodating two main plot types:
+The function's behavior changes based on the arguments provided, for two main plot types:
 \itemize{
-\item \strong{Individual Plots}: Set \code{x_var = "time_var"}, \code{y_var = "AVAL"}, and \code{group_var = "USUBJID"}.
+\item \strong{Individual Plots}: Set \code{x_var = "time_var"}, \code{y_var = "AVAL"} and \code{group_var = "USUBJID"}.
 The input \code{data} should be from \code{process_data_individual}.
 \item \strong{Mean Plots}: Set \code{x_var = "time_var"}, \code{y_var = "Mean"}, and \code{group_var = "color_var"}.
 The input \code{data} should be from \code{process_data_mean}. The arguments \code{show_sd_min},

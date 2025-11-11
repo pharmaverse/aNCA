@@ -70,7 +70,7 @@ describe("g_lineplot: Individual Plot Mode", {
     expect_equal(p$labels$x, "Time [hours]")
     expect_equal(p$labels$colour, "USUBJID")
   })
-  
+
   it("applies faceting", {
     p <- g_lineplot(
       data = ind_data,
@@ -82,7 +82,7 @@ describe("g_lineplot: Individual Plot Mode", {
     )
     expect_s3_class(p$facet, "FacetWrap")
   })
-  
+
   it("applies log scale", {
     p <- g_lineplot(
       data = ind_data, # Contains an AVAL = 0 record
@@ -96,7 +96,7 @@ describe("g_lineplot: Individual Plot Mode", {
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
   })
-  
+
   it("shows threshold line", {
     p <- g_lineplot(
       data = ind_data,
@@ -110,7 +110,7 @@ describe("g_lineplot: Individual Plot Mode", {
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomHline" %in% layer_classes)
   })
-  
+
   it("shows dose lines and respects facets", {
     p <- g_lineplot(
       data = ind_data,
@@ -124,12 +124,12 @@ describe("g_lineplot: Individual Plot Mode", {
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
-    
+
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
     # Check vline data contains facet variables
     expect_true(all(c("PARAM", "DOSEA") %in% names(vline_layer$data)))
   })
-  
+
   it("applies a custom palette", {
     test_palette <- c("Subject1, Dose 1" = "#FF0000", "Subject2, Dose 1" = "#0000FF")
     p <- g_lineplot(
@@ -144,7 +144,7 @@ describe("g_lineplot: Individual Plot Mode", {
     plot_colors <- unique(p_build$data[[1]]$colour)
     expect_true(all(plot_colors %in% test_palette))
   })
-  
+
   it("ignores mean-plot-only arguments (sd, ci)", {
     p <- g_lineplot(
       data = ind_data,
@@ -162,7 +162,7 @@ describe("g_lineplot: Individual Plot Mode", {
     # Legend label should not have (95% CI)
     expect_equal(p$labels$colour, "USUBJID")
   })
-  
+
   it("handles multiple colorby_var labels", {
     p <- g_lineplot(
       data = ind_data,
@@ -174,7 +174,6 @@ describe("g_lineplot: Individual Plot Mode", {
     expect_equal(p$labels$colour, "USUBJID, DOSEA")
   })
 })
-
 
 describe("g_lineplot: Mean Plot Mode", {
   it("returns a ggplot object with mean labels", {
@@ -191,7 +190,7 @@ describe("g_lineplot: Mean Plot Mode", {
     expect_equal(p$labels$x, "Nominal Time [hours]")
     expect_equal(p$labels$colour, "color_var")
   })
-  
+
   it("applies log scale", {
     p <- g_lineplot(
       data = mean_data, # Contains a Mean = 0 record
@@ -205,7 +204,7 @@ describe("g_lineplot: Mean Plot Mode", {
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
   })
-  
+
   it("shows SD error bars (min, max, and both)", {
     # Both min and max
     p_both <- g_lineplot(
@@ -216,7 +215,7 @@ describe("g_lineplot: Mean Plot Mode", {
     err_data_both <- p_both_build$data[[3]] %>% filter(y > 0) # Filter out 0
     expect_true(all(err_data_both$ymin < err_data_both$y))
     expect_true(all(err_data_both$ymax > err_data_both$y))
-    
+
     # Only min
     p_min <- g_lineplot(
       data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
@@ -226,7 +225,7 @@ describe("g_lineplot: Mean Plot Mode", {
     err_data_min <- p_min_build$data[[3]] %>% filter(y > 0) # Filter out 0
     expect_true(all(err_data_min$ymin < err_data_min$y))
     expect_true(all(err_data_min$ymax == err_data_min$y)) # ymax is Mean
-    
+
     # Only max
     p_max <- g_lineplot(
       data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
@@ -237,7 +236,7 @@ describe("g_lineplot: Mean Plot Mode", {
     expect_true(all(err_data_max$ymin == err_data_max$y)) # ymin is Mean
     expect_true(all(err_data_max$ymax > err_data_max$y))
   })
-  
+
   it("shows CI ribbon and updates legend", {
     p <- g_lineplot(
       data = mean_data,
@@ -252,7 +251,7 @@ describe("g_lineplot: Mean Plot Mode", {
     # Check for legend title update
     expect_true(grepl("(95% CI)", p$labels$colour))
   })
-  
+
   it("can show both SD bars and CI ribbon", {
     p <- g_lineplot(
       data = mean_data,
@@ -284,7 +283,7 @@ describe("g_lineplot: Graceful Handling", {
     # g_lineplot *always* adds geom_line and geom_point
     expect_equal(length(p$layers), 2)
   })
-  
+
   it("handles missing aesthetic columns", {
     expect_error(
       print(
@@ -300,7 +299,7 @@ describe("g_lineplot: Graceful Handling", {
       regexp = "Column `MISSING_COLUMN` not found"
     )
   })
-  
+
   it("handles missing mean-plot columns", {
     mean_data_missing_ci <- mean_data %>% select(-CI_lower)
     # Test for missing CI column
@@ -317,7 +316,7 @@ describe("g_lineplot: Graceful Handling", {
       ),
       regexp = "object 'CI_lower' not found"
     )
-    
+
     mean_data_missing_sd <- mean_data %>% select(-SD_min)
     # Test for missing SD column
     expect_error(

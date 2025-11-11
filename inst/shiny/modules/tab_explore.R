@@ -8,16 +8,16 @@ tab_explore_ui <- function(id) {
   navset_card_pill(
     id = "visuals",
     nav_panel("Individual Plots",
-              layout_sidebar(
-                sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
-                plotlyOutput(ns("individualplot"), height = "100%")
-              )
+      layout_sidebar(
+        sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
+        plotlyOutput(ns("individualplot"), height = "100%")
+      )
     ),
     nav_panel("Mean Plots",
-              layout_sidebar(
-                sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
-                plotlyOutput(ns("mean_plot"), height = "100%")
-              )
+      layout_sidebar(
+        sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
+        plotlyOutput(ns("mean_plot"), height = "100%")
+      )
     ),
     nav_panel(
       "PK/Dose QC Plot",
@@ -43,13 +43,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       "individual_sidebar",
       data = data,
       grouping_vars = extra_group_vars
-      )
-    
+    )
+
     mean_inputs <- plot_sidebar_server(
       "mean_sidebar",
       data = data,
       grouping_vars = extra_group_vars
-      )
+    )
 
 
     # TAB: General Lineplot --------------------------------------------------------
@@ -67,10 +67,14 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # Compute the individual plot object
     individualplot <- reactive({
-      req(data(), individual_inputs()$param, individual_inputs()$pcspec, individual_inputs()$usubjid,
-          individual_inputs()$colorby, individual_inputs()$timescale, individual_inputs()$log)
+      req(data(), individual_inputs()$param,
+          individual_inputs()$pcspec,
+          individual_inputs()$usubjid,
+          individual_inputs()$colorby,
+          individual_inputs()$timescale,
+          individual_inputs()$log)
       log_info("Rendering individual plots")
-      
+
       lineplot <- create_indplot(
         data = data(),
         selected_usubjids = individual_inputs()$usubjid,
@@ -86,7 +90,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         show_dose = individual_inputs()$show_dose,
         palette = master_palettes_list()
       )
-      
+
       session$userData$results$exploration$individualplot <- lineplot
       lineplot
     })
@@ -101,8 +105,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     output$individualplot <- renderPlotly({
       req(individualplot())
       individualplot()
-      })
-
+    })
 
     # TAB: Mean Plot -----------------------------------------------------------
 
@@ -116,12 +119,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         palette_name = mean_inputs()$palette_theme
       )
     })
-    
+
     # Compute the meanplot object
     meanplot <- reactive({
-      req(data(), mean_inputs()$param, mean_inputs()$pcspec, mean_inputs()$timescale, mean_inputs()$colorby)
+      req(data(), mean_inputs()$param, mean_inputs()$pcspec,
+          mean_inputs()$timescale, mean_inputs()$colorby)
       log_info("Computing meanplot ggplot object")
-      
+
       meanplot <- create_meanplot(
         data = data(),
         selected_analytes = mean_inputs()$param,
@@ -139,7 +143,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         show_dose = mean_inputs()$show_dose,
         palette = mean_palettes_list()
       )
-      
+
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
 

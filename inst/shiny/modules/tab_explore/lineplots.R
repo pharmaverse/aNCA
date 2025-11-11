@@ -7,7 +7,7 @@
 #' @return A UI definition for the plot sidebar.
 plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   ns <- NS(id)
-  
+
   sidebar(
     position = "right",
     open = TRUE,
@@ -108,40 +108,40 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
 plot_sidebar_server <- function(id, data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     observeEvent(data(), {
       req(data())
-      
+
       # Update the param picker input
       param_choices <- data() %>%
         pull(PARAM) %>%
         unique()
-      
+
       updatePickerInput(
         session,
         "param",
         choices = param_choices,
         selected = param_choices[1]
       )
-      
+
       # Update pcspec picker input
       pcspec_choices <- data() %>%
         pull(PCSPEC) %>%
         unique()
-      
+
       updatePickerInput(
         session,
         "pcspec",
         choices = pcspec_choices,
         selected = pcspec_choices[1]
       )
-      
+
       # Update the usubjid picker input (if it exists)
       if ("usubjid" %in% names(input)) {
         usubjid_choices <- data() %>%
           pull(USUBJID) %>%
           unique()
-        
+
         updatePickerInput(
           session,
           "usubjid",
@@ -149,14 +149,14 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
           selected = usubjid_choices
         )
       }
-      
+
       # Update the colorby and facet by picker inputs
       all_cols <- names(data())
       cols_to_exclude <- c("AVAL", "ARRLT", "AFRLT", "NRRLT", "NFRLT")
       unit_cols <- all_cols[endsWith(all_cols, "U")]
       cols_to_exclude <- c(cols_to_exclude, unit_cols)
       param_choices_cf <- sort(setdiff(all_cols, cols_to_exclude))
-      
+
       updatePickerInput(
         session,
         "colorby",
@@ -164,7 +164,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         # Always select USUBJID if individual, if mean plot, select nothing
         selected = if ("usubjid" %in% names(input)) "USUBJID" else "DOSEA"
       )
-      
+
       updatePickerInput(
         session,
         "facetby",
@@ -172,7 +172,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         selected = NULL
       )
     })
-    
+
     # Render the cycle selection UI
     output$cycle_select_ui <- renderUI({
       req(input$param)
@@ -180,12 +180,14 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         filter(PARAM %in% input$param) %>%
         pull(ATPTREF) %>%
         unique()
-      pickerInput(ns("profiles"), "Choose the profile(s):",
-                  choices = sort(y),
-                  multiple = TRUE, selected = y[1], options = list(`actions-box` = TRUE)
+      pickerInput(
+        ns("profiles"),
+        "Choose the profile(s):",
+        choices = sort(y),
+        multiple = TRUE, selected = y[1], options = list(`actions-box` = TRUE)
       )
     })
-    
+
     # Return all inputs as a list of reactives
     inputs <- reactive({
       list(
@@ -206,7 +208,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         ci = input$ci
       )
     })
-    
+
     inputs
   })
 }

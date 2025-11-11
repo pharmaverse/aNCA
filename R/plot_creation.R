@@ -29,7 +29,6 @@ create_indplot <- function(data,
                            show_dose = FALSE,
                            dose_data = NULL,
                            palette = NULL) {
-  
 
   processed_data <- data %>%
     filter(
@@ -39,13 +38,14 @@ create_indplot <- function(data,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       !is.na(AVAL)
     )
-  
+
   if (yaxis_scale == "log") {
     processed_data <- processed_data %>% filter(AVAL > 0)
   }
-  
+
   if (time_scale == "By Dose Profile") {
-    if ("ARRLT" %in% names(processed_data) && any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
+    if ("ARRLT" %in% names(processed_data) &&
+          any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
       processed_data <- dose_profile_duplicates(
         processed_data,
         groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
@@ -54,16 +54,14 @@ create_indplot <- function(data,
     }
     processed_data <- processed_data %>% filter(ATPTREF %in% cycle)
   }
-  
+
   processed_data <- processed_data %>%
     mutate(
       time_var = if (time_scale == "By Dose Profile") ARRLT else AFRLT,
       color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
 
-  
   validate(need(nrow(processed_data) > 0, "No data available for the selected filters."))
-  
 
   lineplot <- g_lineplot(
     data = processed_data,
@@ -79,7 +77,7 @@ create_indplot <- function(data,
     dose_data = data %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)),
     palette = palette
   )
-  
+
   return(lineplot)
 }
 
@@ -117,7 +115,6 @@ create_meanplot <- function(data,
                             show_sd_min = FALSE,
                             show_sd_max = TRUE,
                             show_ci =  FALSE) {
-  
 
   processed <- data %>%
     filter(
@@ -126,11 +123,11 @@ create_meanplot <- function(data,
       if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       !is.na(AVAL)
     )
-  
+
   if (time_scale == "By Dose Profile") {
     processed <- processed %>% filter(ATPTREF %in% cycle)
   }
-  
+
   summarised_data <- processed %>%
     mutate(
       time_var = if (time_scale == "By Dose Profile") NRRLT else NFRLT,
@@ -151,15 +148,13 @@ create_meanplot <- function(data,
       CI_lower = Mean - 1.96 * SE,
       CI_upper = Mean + 1.96 * SE
     )
-  
+
   if (yaxis_scale == "log") {
     summarised_data <- summarised_data %>%
       filter(Mean > 0)
   }
 
-  
   validate(need(nrow(summarised_data) > 0, "No data with >= 3 points to calculate mean."))
-  
 
   meanplot <- g_lineplot(
     data = summarised_data,
@@ -178,6 +173,6 @@ create_meanplot <- function(data,
     dose_data = data %>% mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)),
     palette = palette
   )
-  
+
   return(meanplot)
 }
