@@ -53,7 +53,7 @@ neg_aval_rec <- test_data %>%
   dplyr::mutate(AVAL = -10)
 
 sample_data <- dplyr::bind_rows(
-  test_data, predose_rec, evid_rec, na_aval_rec, zero_aval_recs, neg_aval_rec
+  test_data, evid_rec, na_aval_rec, zero_aval_recs, neg_aval_rec
 ) %>%
   # Ensure no duplicates from the bind_rows
   dplyr::distinct(USUBJID, PARAM, PCSPEC, ATPTREF, NRRLT, EVID, .keep_all = TRUE)

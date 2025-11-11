@@ -330,7 +330,7 @@ describe("g_lineplot: Graceful Handling", {
           show_sd_min = TRUE # This will fail
         )
       ),
-      regexp = "Column `SD_min` not found"
+      regexp = "object 'SD_min' not found"
     )
   })
 })
