@@ -82,7 +82,7 @@ If you need to clean the data outside the app, export the dataset, fix duplicate
 <details>
 <summary><strong>How is the project validated and what about CDISC outputs?</strong></summary>
 
-You can see our current validations and future plan in the [validations page]()
+You can see our current validations and future plan in the [validations page](https://pharmaverse.github.io/aNCA/articles/validations.html)
 </details>
 
 <details>

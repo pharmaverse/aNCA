@@ -25,7 +25,7 @@ The GitHub dashboard is used to track issues and tasks related to the project. E
 - **COULD** - things that would be nice to have and useful, but not instrumental to the whole package.
 - **WISH** - ideas that are not valid for the time being, but are nevertheless cool and could become useful as the development progresses.
 
-Decisions regarding an issue's priority are made by authors and in first place the maintainer(s) of the project. However, input from the community is welcomed and encouraged, especially for issues that may impact a broader user base. External opinions can be gathered through comments on issues or discussions in the GitHub repository. The priority level should also be determined by the pre-defined roadmap goals for the project, as outlined in the [roadmap document]().
+Decisions regarding an issue's priority are made by authors and in first place the maintainer(s) of the project. However, input from the community is welcomed and encouraged, especially for issues that may impact a broader user base. External opinions can be gathered through comments on issues or discussions in the GitHub repository. The priority level should also be determined by the pre-defined roadmap goals for the project, as outlined in the [roadmap document](https://pharmaverse.github.io/aNCA/articles/roadmap.html).
 
 ## Governance compromises
 All main authors listed in the DESCRIPTION, compromise themselves to:

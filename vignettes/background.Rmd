@@ -12,7 +12,7 @@ vignette: >
 
 # Background: Understanding Non-Compartmental Analysis (NCA) and the Role of aNCA
 
-This document will help you understand the fundamentals of Non-Compartmental Analysis (NCA) in pharmacokinetics (PK) and the challenges analysts face when performing NCA. It also explains why the aNCA application was developed and how it aims to streamline and enhance the NCA workflow. For a video-content referring all these concepts you can also visit the [R Pharma aNCA video]().
+This document will help you understand the fundamentals of Non-Compartmental Analysis (NCA) in pharmacokinetics (PK) and the challenges analysts face when performing NCA. It also explains why the aNCA application was developed and how it aims to streamline and enhance the NCA workflow. For a video-content referring all these concepts you can also visit the [R Pharma aNCA video (yet not available)](#).
 
 ## What is Pharmacokinetics and Why Does NCA Matter?
 
@@ -94,4 +94,4 @@ This is why we created **aNCA**:
 
 ## Wanna know more?
 Here is a list of recommended links to deepen your understanding of NCA and related concepts:
-- [R Pharma aNCA video]() - Here you can find a video explaining NCA main concepts and how aNCA works.
+- [R Pharma aNCA video - yet not available](#) - Here you can find a video explaining NCA main concepts and how aNCA works.

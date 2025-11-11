@@ -58,7 +58,7 @@ The high level picture of the App, which is shown in [App.R](aNCA/inst/shiny/app
 <img src="images/design/diagram_server.png" alt="Diagram of the App server"/>
 
 
-For better details on the server lower level processing actions (order of functions in `\R`), check directly the [`.../R_script_template.R`]()
+For better details on the server lower level processing actions (order of functions in `\R`), check directly the [`.../R_script_template.R - yet not available`](#)
 
 ## 3. Session & state management
 
