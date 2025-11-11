@@ -25,7 +25,8 @@ user-friendliness in mind, we wish to hear your opinion!
 In order to gain privileges to commit changes to the codebase, you will
 need to be added as a collaborator. To do so, please contact one of the
 contributors. You can find the list with contact info in the
-[DESCRIPTION](https://pharmaverse.github.io/DESCRIPTION) file.
+[DESCRIPTION](https://pharmaverse.github.io/aNCA/articles/aNCA/DESCRIPTION)
+file.
 
 ### Issues
 
@@ -95,7 +96,7 @@ the very least.
 ### Pull requests
 
 [Pull request
-template](https://pharmaverse.github.io/aNCA/articles/PULL_REQUEST_TEMPLATE.md)
+template](https://pharmaverse.github.io/aNCA/articles/aNCA/PULL_REQUEST_TEMPLATE.md)
 is available to make documenting PRs more consistent and streamlined.
 Each PR description should include:
 

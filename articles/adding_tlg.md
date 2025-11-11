@@ -8,17 +8,17 @@ guide](https://pharmaverse.github.io/aNCA/CONTRIBUTING.html)
 
 In order to add new TLGs, two things are needed: - a TLG definition
 specified in the
-[tlg.yaml](https://pharmaverse.github.io/inst/shiny/tlg.yaml) file - an
-implementation function that is responsible for generating an entry
-(table, list, graph).
+[tlg.yaml](https://pharmaverse.github.io/aNCA/articles/aNCA/inst/shiny/tlg.yaml)
+file - an implementation function that is responsible for generating an
+entry (table, list, graph).
 
 ### TLG definition
 
 Specified in
-[tlg.yaml](https://pharmaverse.github.io/inst/shiny/tlg.yaml) file.
-Entry in that file is responsible for providing some metadata regarding
-the TLG (like name, descriptions, links), a function reference for
-creating the resulting TLG and options, taken as arguments by the
+[tlg.yaml](https://pharmaverse.github.io/aNCA/articles/aNCA/inst/shiny/tlg.yaml)
+file. Entry in that file is responsible for providing some metadata
+regarding the TLG (like name, descriptions, links), a function reference
+for creating the resulting TLG and options, taken as arguments by the
 generating function, that allow for quick and easy definition of widgets
 to be rendered in the application interface. This then allows the user
 to customize plots in accordance to their needs.
@@ -170,7 +170,7 @@ entry.
 #### Examples
 
 For examples of TLG definition implementations, please see
-[tlg.yaml](https://pharmaverse.github.io/aNCA/articles/inst/shiny/tlg.yaml)
+[tlg.yaml](https://pharmaverse.github.io/aNCA/articles/aNCA/inst/shiny/tlg.yaml)
 file in the repository.
 
 ### Implementation function

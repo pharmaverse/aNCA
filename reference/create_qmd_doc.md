@@ -9,7 +9,7 @@ tables.
 create_qmd_doc(
   quarto_path,
   title = "NCA Report",
-  libraries = c("plotly", "flextable"),
+  libraries = c("plotly", "flextable", "dplyr"),
   rda_path = NULL,
   template = NULL,
   extra_setup = NULL
