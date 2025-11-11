@@ -304,7 +304,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         df_duplicates(dataset)
         return(NULL)
       } else {
-        dataset
+        dataset %>%
+          select(any_of(c(names(mapped_data), "DTYPE")))
       }
     }) %>%
       bindEvent(list(mapped_data(), input$keep_selected_btn), ignoreInit = FALSE)
