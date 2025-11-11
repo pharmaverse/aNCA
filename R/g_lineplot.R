@@ -3,7 +3,7 @@
 #' This function creates a ggplot2 line plot for pharmacokinetic (PK) data.
 #' It is designed to be flexible and can generate plots for both individual
 #' concentration-time profiles and mean concentration-time profiles. The function
-#' supports various customizations including log scales, faceting, error bars (for mean plots),
+#' supports various customisations including log scales, faceting, error bars (for mean plots),
 #' and threshold lines.
 #'
 #' @section Plot Types:

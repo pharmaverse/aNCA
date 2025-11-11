@@ -36,7 +36,7 @@ the lines, ensuring \code{geom_line} connects the correct points.}
 \item{colorby_var}{A character vector specifying the column(s) from the original
 dataset that are used to determine the color of the lines and points.}
 
-\item{facet_by}{A character vector of column names to facet the plot by (e.g., \code{c("PARAM", "DOSEA")}).
+\item{facet_by}{A character vector of column names to facet the plot by.
 Default is \code{NULL} for no faceting.}
 
 \item{yaxis_scale}{A character string, either \code{"Lin"} (default) or \code{"Log"}, to set the
@@ -75,16 +75,18 @@ A \code{ggplot} object representing the line plot.
 This function creates a ggplot2 line plot for pharmacokinetic (PK) data.
 It is designed to be flexible and can generate plots for both individual
 concentration-time profiles and mean concentration-time profiles. The function
-supports various customizations including log scales, faceting, error bars (for mean plots),
+supports various customisations including log scales, faceting, error bars (for mean plots),
 and threshold lines.
 }
 \section{Plot Types}{
 
 The function's behavior changes based on the arguments provided, for two main plot types:
 \itemize{
-\item \strong{Individual Plots}: Set \code{x_var = "time_var"}, \code{y_var = "AVAL"} and \code{group_var = "USUBJID"}.
+\item \strong{Individual Plots}:
+Set \code{x_var = "time_var"}, \code{y_var = "AVAL"} and \code{group_var = "USUBJID"}.
 The input \code{data} should be from \code{process_data_individual}.
-\item \strong{Mean Plots}: Set \code{x_var = "time_var"}, \code{y_var = "Mean"}, and \code{group_var = "color_var"}.
+\item \strong{Mean Plots}:
+Set \code{x_var = "time_var"}, \code{y_var = "Mean"}, and \code{group_var = "color_var"}.
 The input \code{data} should be from \code{process_data_mean}. The arguments \code{show_sd_min},
 \code{show_sd_max}, and \code{show_ci} are only applicable to this plot type.
 }
