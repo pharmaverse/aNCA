@@ -19,7 +19,8 @@ describe("read_pk", {
   })
 
   it("reads excel data correctly", {
-    if (!requireNamespace("openxlsx2", quietly = TRUE)) skip("openxlsx2 package not installed")
+    skip_if_not_installed("openxlsx2")
+    skip_on_cran()
 
     tmp_xlsx <- withr::local_tempfile(fileext = ".xlsx")
     openxlsx2::write_xlsx(data_dummy, tmp_xlsx)
@@ -31,7 +32,8 @@ describe("read_pk", {
   })
 
   it("reads sas data correctly", {
-    if (!requireNamespace("haven", quietly = TRUE)) skip("haven package not installed")
+    skip_if_not_installed("haven")
+    skip_on_cran()
 
     tmp_sas <- withr::local_tempfile(fileext = ".sas7bdat")
     suppressWarnings(haven::write_sas(data_dummy, tmp_sas))
@@ -43,7 +45,8 @@ describe("read_pk", {
   })
 
   it("reads xpt files correctly", {
-    if (!requireNamespace("haven", quietly = TRUE)) skip("haven package not installed")
+    skip_if_not_installed("haven")
+    skip_on_cran()
 
     tmp_xpt <- withr::local_tempfile(fileext = ".xpt")
     haven::write_xpt(data_dummy, tmp_xpt)
@@ -55,7 +58,8 @@ describe("read_pk", {
   })
 
   it("reads parquet files correctly", {
-    if (!requireNamespace("arrow", quietly = TRUE)) skip("arrow package not installed")
+    skip_if_not_installed("arrow")
+    skip_on_cran()
 
     tmp_parquet <- withr::local_tempfile(fileext = ".parquet")
     arrow::write_parquet(data_dummy, tmp_parquet)
