@@ -94,7 +94,7 @@ create_indplot <- function(data,
 #' @param show_threshold Logical, whether to show threshold line.
 #' @param threshold_value Numeric, value for the threshold line.
 #' @param show_dose Logical, whether to show dosing indicators.
-#'  @param palette A named color palette.
+#' @param palette A named color palette.
 #' @param dose_data The raw data frame (or a derivative) for calculating dose times.
 #' @param show_sd_min,show_sd_max,show_ci Logicals for error bars.
 #' @returns A `ggplot` object.

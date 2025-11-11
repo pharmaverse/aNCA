@@ -40,8 +40,9 @@ create_meanplot(
 
 \item{threshold_value}{Numeric, value for the threshold line.}
 
-\item{show_dose}{Logical, whether to show dosing indicators.
-@param palette A named color palette.}
+\item{show_dose}{Logical, whether to show dosing indicators.}
+
+\item{palette}{A named color palette.}
 
 \item{dose_data}{The raw data frame (or a derivative) for calculating dose times.}
 
