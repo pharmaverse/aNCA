@@ -306,7 +306,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       } else {
         dataset
       }
-    })
+    }) %>%
+      bindEvent(list(mapped_data(), input$keep_selected_btn), ignoreInit = FALSE)
 
     observeEvent(df_duplicates(), {
       showModal(
