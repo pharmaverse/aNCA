@@ -3,7 +3,7 @@ template:
   light-switch: true
 navbar:
   structure:
-    left: [home, reference, articles, validations, news]
+    left: [home, reference, articles, validations, news, faqs]
     right: [search, github, lightswitch]
   components:
     home:
@@ -33,4 +33,7 @@ navbar:
     news:
       text: "News & Releases"
       href: news/index.html
+    faqs:
+      text: "FAQs"
+      href: articles/FAQs.html
 url: "https://pharmaverse.github.io/aNCA/"
