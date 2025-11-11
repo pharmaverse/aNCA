@@ -18,7 +18,7 @@ This page collects common questions our users and contributors ask and short, ac
 - [What are duplicates and how to resolve them?](#what-are-duplicates-and-how-to-resolve-them)
 - [How does the exported reproducible script work?](#how-does-the-exported-reproducible-script-work)
 - [Validation and CDISC outputs](#validation-and-cdisc-outputs)
-- [Building the pkgdown site locally](#building-the-pkgdown-site-locally)
+- [Building the website locally](#building-the-pkgdown-site-locally)
 - [Reporting bugs & requesting features](#reporting-bugs--requesting-features)
 
 ---
@@ -28,7 +28,7 @@ This page collects common questions our users and contributors ask and short, ac
 <details>
 <summary><strong>Which file types can I upload and what format should my data follow?</strong></summary>
 
-The app accepts common formats: CSV, RDS, XPT (SAS transport), parquet and Excel. The preferred layout is the ADNCA/ADaM-like table used throughout the package (see the user guide). Key points:
+The app accepts common formats: CSV, RDS, XPT (SAS transport), parquet and Excel. The preferred layout is the ADNCA-like table used throughout the package (see the user guide). Key points:
 
 - Provide one row per sample measurement (concentration/time) with columns for subject, analyte (PARAM), time (AFRLT/ARRLT), and dose identifiers.
 - Include units where possible or map units in the Mapping step.
@@ -56,7 +56,7 @@ Currently, no. The App calculates partial AUC t1-t2 using whichever time column 
 
 Practical workarounds:
 
-- Precompute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| &lt; threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
+- Pre-compute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| &lt; threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
 - Export the session script after mapping and modify the partial AUC calculation to use your chosen time variable or conditional logic offline.
 
 If you'd like this feature built into the app (an option to choose nominal/actual/conditional), I can add a small enhancement proposal and a TODO entry so we can implement it later.
@@ -67,11 +67,10 @@ If you'd like this feature built into the app (an option to choose nominal/actua
 <details>
 <summary><strong>The app says I have duplicate time records — what does that mean and how do I fix it?</strong></summary>
 
-Duplicates are rows with the same subject/param/time and can break slope selection and NCA calculations. The Mapping UI detects potentially blocking duplicates and opens a modal allowing you to select which rows to KEEP. Recommended workflow:
+Duplicates are rows with the same subject, analyte and time and can break slope selection and NCA calculations. The Mapping UI detects potentially blocking duplicates and opens a modal allowing you to select which rows to KEEP. Recommended workflow:
 
 1. Inspect the rows in the modal — the table shows each duplicate group.
 2. Select the single row you want to keep for each duplicate group and click **Keep Selected**.
-3. If you prefer deterministic rules (keep first, last, non-missing), let us know — we can add an auto-resolve option.
 
 If you need to clean the data outside the app, export the dataset, fix duplicates, and re-upload.
 </details>
@@ -92,7 +91,7 @@ Currently, no. The App calculates partial AUC t1-t2 using whichever time column 
 
 Practical workarounds:
 
-- Precompute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| < threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
+- Pre-compute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| < threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
 - Export the session script after mapping and modify the partial AUC calculation to use your chosen time variable or conditional logic offline.
 
 If you'd like this feature built into the app (an option to choose nominal/actual/conditional), I can add a small enhancement proposal and a TODO entry so we can implement it later.
@@ -122,7 +121,7 @@ Currently, no. The App calculates partial AUC t1-t2 using whichever time column 
 
 Practical workarounds:
 
-- Precompute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| < threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
+- Pre-compute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| < threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
 - Export the session script after mapping and modify the partial AUC calculation to use your chosen time variable or conditional logic offline.
 
 If you'd like this feature built into the app (an option to choose nominal/actual/conditional), I can add a small enhancement proposal and a TODO entry so we can implement it later.
