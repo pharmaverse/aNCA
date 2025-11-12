@@ -96,7 +96,7 @@ Started](https://pharmaverse.github.io/aNCA/articles/aNCA.html) page.
 
 To ensure a clean codebase and smooth cooperation, please adhere to the
 [contributing
-guidelines](https://pharmaverse.github.io/aNCA/CONTRIBUTING.md).
+guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 
 ### As user
 

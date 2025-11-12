@@ -96,7 +96,7 @@ the very least.
 ### Pull requests
 
 [Pull request
-template](https://pharmaverse.github.io/aNCA/articles/aNCA/PULL_REQUEST_TEMPLATE.md)
+template](https://github.com/pharmaverse/aNCA/blob/main/.github/PULL_REQUEST_TEMPLATE.md)
 is available to make documenting PRs more consistent and streamlined.
 Each PR description should include:
 
