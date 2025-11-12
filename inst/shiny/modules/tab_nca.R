@@ -266,7 +266,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
 
     #' Additional analysis module
-    additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
+    additional_analysis_server("non_nca", pknca_data, grouping_vars)
 
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
