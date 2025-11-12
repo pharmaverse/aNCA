@@ -9,7 +9,8 @@ format_pkncaconc_data(
   group_columns,
   time_column = "AFRLT",
   rrlt_column = "ARRLT",
-  route_column = "ROUTE"
+  route_column = "ROUTE",
+  nca_exclude_reason_columns = NULL
 )
 }
 \arguments{
