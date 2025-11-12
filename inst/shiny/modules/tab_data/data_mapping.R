@@ -287,12 +287,16 @@ data_mapping_server <- function(id, adnca_data, trigger) {
               is.time.duplicate & row_number() %in% selected,
               "TIME DUPLICATE",
               DTYPE
-          )) %>%
+            )
+          ) %>%
           group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
           mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
           ungroup()
         if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
-          showNotification("There are still duplicate time records. Please resolve them before proceeding.", type = "error", duration = NULL)
+          showNotification(
+            "There are still duplicate time records. Please resolve them before proceeding.",
+            type = "error", duration = NULL
+          )
           return(NULL)
         } else {
           removeModal()

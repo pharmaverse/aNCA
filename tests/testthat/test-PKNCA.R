@@ -98,7 +98,7 @@ describe("PKNCA_create_data_object", {
     expect_true("VOLUMEU" %in% names(pknca_volume_data$conc$data))
     expect_true("AMOUNTU" %in% names(pknca_volume_data$conc$data))
   })
-  
+
   it("handles exclusions indicated through nca_exclude_reason_columns", {
     subjs <- unique(multiple_data$USUBJID)
     adnca_excl_cols <- multiple_data %>%
@@ -109,7 +109,9 @@ describe("PKNCA_create_data_object", {
     pknca_excl_subj1 <- PKNCA_create_data_object(adnca_excl_cols, "NCA1XRS")
     pknca_excl_all <- PKNCA_create_data_object(adnca_excl_cols, c("NCA1XRS", "NCA2XRS"))
     excl_col <- pknca_excl_subj1$conc$columns$exclude
-    expect_true(all(suppressWarnings(PKNCA::pk.nca(pknca_excl_subj1))[["result"]][["USUBJID"]] == subjs[2]))
+    expect_true(all(
+      suppressWarnings(PKNCA::pk.nca(pknca_excl_subj1))[["result"]][["USUBJID"]] == subjs[2]
+    ))
     expect_false(any(pknca_excl_all$conc$data[[excl_col]] %in% c("", NA_character_)))
   })
 })
