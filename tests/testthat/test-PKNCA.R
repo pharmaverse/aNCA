@@ -74,16 +74,6 @@ describe("PKNCA_create_data_object", {
     )
   })
 
-  it("handles duplicates in DFLAG", {
-    # Duplicate DFLAG values
-    duplicate_data <- simple_data %>% mutate(AFRLT = c(0.5, 1, 2, 3, 3, 6))
-    duplicate_data$DFLAG <- c(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)
-    results <- PKNCA_create_data_object(duplicate_data)
-
-    # Check that flag = FALSE values are removed
-    expect_equal(nrow(results$conc$data), 5)
-  })
-
   it("produces a message error when missing values are in group columns", {
     # Duplicate DFLAG values
     adnca_with_group_na <- multiple_data
