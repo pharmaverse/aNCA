@@ -7,6 +7,8 @@
 #' @param time_column A character string specifying the time column.
 #' @param rrlt_column A character string specifying the time since last dose column.
 #' @param route_column A character string specifying the route column.
+#' @param nca_exclude_reason_columns A character vector specifying the columns
+#' to indicate reasons for excluding records from NCA analysis.
 #'
 #' @returns A data frame containing the filtered and processed concentration data.
 #'
