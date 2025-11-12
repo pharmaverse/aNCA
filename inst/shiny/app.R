@@ -29,8 +29,6 @@ lapply(list.files("modules", pattern = "\\.R$", full.names = TRUE, recursive = T
 lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 
 assets <- system.file("shiny/www", package = "aNCA")
-source("data-raw/metadata_nca_parameters.R")
-source("data-raw/metadata_nca_variables.R")
 
 sass(
   sass_file(file.path(assets, "styles/main.scss")),
