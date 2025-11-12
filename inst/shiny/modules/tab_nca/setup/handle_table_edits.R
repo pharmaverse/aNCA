@@ -191,7 +191,7 @@ handle_table_edits_server <- function(
             PCSPEC == r["PCSPEC"],
             USUBJID == r["USUBJID"],
             PARAM == r["PARAM"],
-            NCA_PROFILE == r["NCA_PROFILE"],
+            ATPTREF == r["ATPTREF"],
             DOSNOA == r["DOSNOA"]
           ) |>
             NROW() != 0

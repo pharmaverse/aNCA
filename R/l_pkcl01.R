@@ -76,7 +76,7 @@
 l_pkcl01 <- function(
   data,
   listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-  grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+  grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
   formatting_vars_table = NULL,
   title = paste0("Listing of PK Concentration by Treatment Group,",
@@ -189,7 +189,7 @@ l_pkcl01 <- function(
                                      var_labels(data_grouped))
 
   # Split the lists based on the listgroup_vars
-  lapply(unique(data_grouped[["id_list"]]), \(id_val) {
+  lapply(unique(data_grouped[["id_list"]]), function(id_val) {
 
     list_data <- data_grouped %>% dplyr::filter(id_list ==  id_val)
 

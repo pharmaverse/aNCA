@@ -6,9 +6,9 @@
 #' - STUDYID: Study identifier.
 #' - PCSPEC: Matrix.
 #' - ROUTE: Route of administration.
-#' - DRUG: Drug identifier.
+#' - DOSETRT: Drug identifier.
 #' - USUBJID: Unique subject identifier.
-#' - NCA_PROFILE: (Non- standard column). Can be any column, used for filtering the data for NCA
+#' - ATPTREF: (Non- standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
@@ -23,9 +23,9 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
+#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ AFRLT | STUDYID + DRUG + USUBJID`.
+#' with formula `DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
@@ -38,9 +38,9 @@
 #' STUDYID = rep("STUDY001", 6),
 #' PCSPEC = rep("Plasma", 6),
 #' ROUTE = rep("IV", 6),
-#' DRUG = rep("DrugA", 6),
+#' DOSETRT = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
-#' NCA_PROFILE = rep(1, 6),
+#' ATPTREF = rep(1, 6),
 #' PARAM = rep("AnalyteA", 6),
 #' AVAL = c(0, 5, 10, 7, 3, 1),
 #' AVALU = rep("ng/mL", 6),
@@ -62,10 +62,10 @@
 #' @export
 PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
-  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DRUG"))
+  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
-  dosno_column <- "NCA_PROFILE"
+  dosno_column <- "ATPTREF"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
@@ -73,18 +73,18 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
   volume_column <- "VOLUME"
   conc_column <- "AVAL"
   studyid_column <- "STUDYID"
-  drug_column <- "DRUG"
+  drug_column <- "DOSETRT"
 
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
   conc_formula <-
-    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" |> # nolint
-    glue::glue() |>
+    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" %>% # nolint
+    glue::glue() %>%
     as.formula()
 
   dose_formula <-
-        "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" |> # nolint
-    glue::glue() |>
+        "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
+    glue::glue() %>%
     as.formula()
 
   #Filter out flagged duplicates if DFLAG column available
@@ -241,7 +241,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     auc.method = method,
     progress = FALSE,
     keep_interval_cols = c(
-      "NCA_PROFILE", "DOSNOA", "type_interval",
+      "ATPTREF", "DOSNOA", "type_interval",
       adnca_data$dose$columns$route, "ROUTE"
     ),
     min.hl.r.squared = 0.01
@@ -267,7 +267,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      NCA_PROFILE %in% selected_profile,
+      ATPTREF %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
 
@@ -308,7 +308,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     params_not_to_impute <- metadata_nca_parameters %>%
       filter(!grepl("auc|aumc", PKNCA),
              !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
+      pull(PKNCA) %>%
       intersect(names(PKNCA::get.interval.cols()))
 
     all_impute_methods <- na.omit(unique(data$intervals$impute))
@@ -347,9 +347,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'   STUDYID = rep("STUDY001", 6),
 #'   PCSPEC = rep("Plasma", 6),
 #'   ROUTE = rep("IV", 6),
-#'   DRUG = rep("DrugA", 6),
+#'   DOSETRT = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
-#'   NCA_PROFILE = rep(1, 6),
+#'   ATPTREF = rep(1, 6),
 #'   PARAM = rep("AnalyteA", 6),
 #'   AVAL = c(0, 5, 10, 7, 3, 1),
 #'   AVALU = rep("ng/mL", 6),
@@ -663,7 +663,7 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
     all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
     for (comb in all_candidate_combs) {
       comb_vals <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
-      if (all(tapply(strata_vals, comb_vals, FUN = \(x) length(unique(x)) == 1))) {
+      if (all(tapply(strata_vals, comb_vals, FUN = function(x) length(unique(x)) == 1))) {
         return(df[c(comb, strata_cols)])
       }
     }

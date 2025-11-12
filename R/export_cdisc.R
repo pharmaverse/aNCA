@@ -63,7 +63,7 @@ export_cdisc <- function(res_nca) {
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "ATPTREF", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
@@ -75,7 +75,7 @@ export_cdisc <- function(res_nca) {
       any_of(c(
         to_match_res_cols, conc_timeu_col, conc_time_col,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "ATPTREF", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
@@ -374,14 +374,10 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("AVISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
-        } else if ("VISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "VISIT")), sep = "-")
-        } else if (!is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "NCA_PROFILE")), sep = "-")
+        if ("ATPTREF" %in% names(.)) {
+          paste(!!!syms(c(conc_group_sp_cols, "ATPTREF")), sep = "-")
         } else {
-          NA_character_
+          paste(!!!syms(c(conc_group_sp_cols)), sep = "-")
         }
       },
       # Parameter Category
@@ -457,8 +453,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       AVALC = PPSTRESC,
       AVALU = PPSTRESU,
       PARAMCD = PPTESTCD,
-      PARAM = PPTEST,
-      NCA_PROFILE = NCA_PROFILE
+      PARAM = PPTEST
     )
 }
 
@@ -472,7 +467,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   ) %>%
     lapply(\(format) strptime(dt, format = format))
 
-  dtc_vectors_nas <- sapply(dtc_vectors, \(x) sum(is.na(x)))
+  dtc_vectors_nas <- sapply(dtc_vectors, function(x) sum(is.na(x)))
   dtc_vectors[[which.min(dtc_vectors_nas)]] %>%
     format("%Y-%m-%dT%H:%M:%S")
 }

@@ -1,7 +1,7 @@
 EXISTING_FIXTURE <- data.frame(
   TYPE = "Exclusion",
   USUBJID = 1,
-  NCA_PROFILE = 1,
+  ATPTREF = 1,
   PARAM = "A",
   PCSPEC = 1,
   RANGE = "3:6"
@@ -13,7 +13,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Selection",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
@@ -25,7 +25,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 2,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
@@ -33,11 +33,11 @@ describe("check_slope_rule_overlap", {
 
     expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 2)
 
-    # different NCA_PROFILE #
+    # different ATPTREF #
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 2,
+      ATPTREF = 2,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
@@ -51,7 +51,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "4:5"
@@ -62,7 +62,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:4"
@@ -76,7 +76,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "4:9"
@@ -90,7 +90,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:6"
@@ -104,7 +104,7 @@ describe("check_slope_rule_overlap", {
     EXISTING <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:6"

@@ -106,6 +106,7 @@ setup_server <- function(id, data, adnca_data) {
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data
     )
+    session$userData$ratio_table <- reactive(ratio_table())
 
     # Automatically update the units table when settings are uploaded.
     observeEvent(settings_override(), {

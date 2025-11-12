@@ -87,6 +87,6 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
     ) %>%
     select(any_of(names(pknca_data$intervals)))
   group <- int %>%
-    select(any_of(c(group_vars(pknca_data), "NCA_PROFILE")))
+    select(any_of(c(group_vars(pknca_data), "ATPTREF")))
   list(idx = idx, time = time, row = row, int = int, group = group)
 }

@@ -5,7 +5,7 @@ adpc <- data.frame(
   ROUTE = c("Oral", "Oral", "IV", "IV"),
   TRT01A = c("Treatment1", "Treatment1", "Treatment2", "Treatment2"),
   USUBJID = c("1", "2", "3", "4"),
-  AVISIT = c("Visit1", "Visit1", "Visit2", "Visit2"),
+  ATPTREF = c("Visit1", "Visit1", "Visit2", "Visit2"),
   NFRLT = c(0, 1, 0, 1),
   AFRLT = c(0, 1.12, 0, 1.055),
   AVAL = c(0, 20.12, 30.55, NA),
@@ -22,20 +22,20 @@ attr(adpc[["TRT01A"]], "label") <- "Actual treatment"
 attr(adpc[["PCSPEC"]], "label") <- "Specimen"
 attr(adpc[["ROUTE"]], "label") <- "Administration"
 attr(adpc[["USUBJID"]], "label") <- "Unique Subject ID"
-attr(adpc[["AVISIT"]], "label") <- "Actual visit"
+attr(adpc[["ATPTREF"]], "label") <- "Actual visit"
 
 describe("l_pkcl01", {
   it("creates listings for each unique combination of grouping variables", {
     # For 1 case
     listings_1l <- l_pkcl01(adpc, listgroup_vars = c("PCSPEC"),
-                            grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                            grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
     expect_length(listings_1l, length(unique(adpc$PCSPEC)))
     expect_named(listings_1l, expected = as.character(unique(adpc$PCSPEC)))
 
     # For 2 case
     listings_2l <- l_pkcl01(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                            grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                            grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
     expect_length(listings_2l, length(unique(interaction(adpc$PARAM, adpc$PCSPEC, adpc$ROUTE))))
     expect_named(listings_2l, expected = as.character(
@@ -47,7 +47,7 @@ describe("l_pkcl01", {
 
     # For 3 case
     listings_3l <- l_pkcl01(adpc[1:3, ], listgroup_vars = c("PARAM", "PCSPEC", "ROUTE", "USUBJID"),
-                            grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                            grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
 
     expect_length(listings_3l, length(unique(interaction(adpc[1:3, ]$PARAM,
@@ -62,7 +62,7 @@ describe("l_pkcl01", {
 
     # For 4 case
     listings_4l <- l_pkcl01(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE", "USUBJID"),
-                            grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                            grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
 
     # Include lengths and names expected
@@ -76,7 +76,10 @@ describe("l_pkcl01", {
                                                                   adpc$USUBJID)))
 
     # All in correct format (list) and each internal element internally inherits listing_df
-    purrr::walk(list(listings_1l, listings_2l, listings_4l), \(x) expect_true(class(x) == "list"))
+    purrr::walk(
+      list(listings_1l, listings_2l, listings_4l),
+      function(x) expect_true(class(x) == "list")
+    )
 
     expect_true(all(sapply(listings_1l, inherits, "listing_df")) &&
                   all(sapply(listings_2l, inherits, "listing_df")) &&
@@ -86,7 +89,7 @@ describe("l_pkcl01", {
   it("handles missing formatting_vars_table and uses a default built:", {
     listings <- l_pkcl01(adpc,
                          listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                         grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
                          formatting_vars_table = NULL)
 
@@ -94,7 +97,7 @@ describe("l_pkcl01", {
 
     label_strings_with_aval_units <- c(TRT01A = attr(adpc$TRT01A, "label"),
                                        USUBJID = attr(adpc$USUBJID, "label"),
-                                       AVISIT = attr(adpc$AVISIT, "label"),
+                                       ATPTREF = attr(adpc$ATPTREF, "label"),
                                        PARAM = attr(adpc$PARAM, "label"),
                                        PCSPEC = attr(adpc$PCSPEC, "label"),
                                        ROUTE = attr(adpc$ROUTE, "label"),
@@ -112,7 +115,7 @@ describe("l_pkcl01", {
 
   it("handles missing subtitle and creates a default", {
     listings <- l_pkcl01(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                         grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
                          subtitle = NULL)
 
@@ -124,7 +127,7 @@ describe("l_pkcl01", {
 
   it("handles missing footnote (no footnote)", {
     listings <- l_pkcl01(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                         grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
                          footnote = NULL)
     expect_equal(attr(listings[[1]], "main_footer"), expected =  character())
@@ -137,7 +140,7 @@ describe("l_pkcl01", {
 
     # Run the empty input and store the output
     empty_res <- l_pkcl01(empty_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                          grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                          grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                           displaying_vars = c("NFRLT", "AFRLT", "AVAL"))
 
     # Define the expected output (empty object)
@@ -152,7 +155,7 @@ describe("l_pkcl01", {
   it("handles missing required columns", {
     incomplete_adpc <- adpc %>% select(-AFRLT)
     expect_error(l_pkcl01(incomplete_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                          grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                          grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                           displaying_vars = c("NFRLT", "AFRLT", "AVAL")),
                  "Missing required columns: AFRLT")
   })
@@ -161,14 +164,14 @@ describe("l_pkcl01", {
     non_unique_units_adpc <- adpc
     non_unique_units_adpc$AVALU <- c("ng/mL", "ng/mL", "ng/L", "g/L")
     expect_warning(l_pkcl01(non_unique_units_adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                            grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                            grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                             displaying_vars = c("NFRLT", "AFRLT", "AVAL")),
                    "pkcl01, but not unique label in B.Plasma.IV for AVAL. Make sure when")
   })
 
   it("handles custom formatting_vars_table", {
     custom_formatting_vars_table <- data.frame(
-      var_name = c("TRT01A", "USUBJID", "AVISIT", "NFRLT", "AFRLT", "AVAL"),
+      var_name = c("TRT01A", "USUBJID", "ATPTREF", "NFRLT", "AFRLT", "AVAL"),
       Label = c("Treatment", "Subject ID", "Visit", "Nominal Time", "Actual Time",
                 "Value ($AVALU)"),
       na_str = c("missing", "missing", "missing", "missing", "missing", "missing"),
@@ -180,7 +183,7 @@ describe("l_pkcl01", {
     )
 
     listings <- l_pkcl01(adpc, listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-                         grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
                          displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
                          formatting_vars_table = custom_formatting_vars_table)
 
@@ -212,7 +215,7 @@ describe("l_pkcl01", {
     # Check the attributes of the columns
     expect_equal(attr(listings$`A.Plasma.Oral`$TRT01A, "label"), "Treatment")
     expect_equal(attr(listings$`A.Plasma.Oral`$USUBJID, "label"), "Subject ID")
-    expect_equal(attr(listings$`A.Plasma.Oral`$AVISIT, "label"), "Visit")
+    expect_equal(attr(listings$`A.Plasma.Oral`$ATPTREF, "label"), "Visit")
     expect_equal(attr(listings$`A.Plasma.Oral`$NFRLT, "label"), "Nominal Time")
     expect_equal(attr(listings$`A.Plasma.Oral`$AFRLT, "label"), "Actual Time")
     expect_equal(attr(listings$`A.Plasma.Oral`$AVAL, "label"), "Value (mg/L)")
@@ -220,7 +223,7 @@ describe("l_pkcl01", {
 
     expect_equal(attr(listings$`B.Plasma.IV`$TRT01A, "label"), "Treatment")
     expect_equal(attr(listings$`B.Plasma.IV`$USUBJID, "label"), "Subject ID")
-    expect_equal(attr(listings$`B.Plasma.IV`$AVISIT, "label"), "Visit")
+    expect_equal(attr(listings$`B.Plasma.IV`$ATPTREF, "label"), "Visit")
     expect_equal(attr(listings$`B.Plasma.IV`$NFRLT, "label"), "Nominal Time")
     expect_equal(attr(listings$`B.Plasma.IV`$AFRLT, "label"), "Actual Time")
     expect_equal(attr(listings$`B.Plasma.IV`$AVAL, "label"), "Value (mg/L)")

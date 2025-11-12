@@ -54,15 +54,15 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   affected_groups <- anti_join(
     dplyr::select(
       new_pknca_data$conc$data,
-      any_of(c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))
+      any_of(c(group_vars(new_pknca_data), "ATPTREF", excl_hl_col, incl_hl_col))
     ),
     dplyr::select(
       old_pknca_data$conc$data,
-      any_of(c(group_vars(old_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col))
+      any_of(c(group_vars(old_pknca_data), "ATPTREF", excl_hl_col, incl_hl_col))
     ),
-    by = c(group_vars(new_pknca_data), "NCA_PROFILE", excl_hl_col, incl_hl_col)
+    by = c(group_vars(new_pknca_data), "ATPTREF", excl_hl_col, incl_hl_col)
   ) %>%
-    select(any_of(c(group_vars(new_pknca_data), "NCA_PROFILE"))) %>%
+    select(any_of(c(group_vars(new_pknca_data), "ATPTREF"))) %>%
     distinct()
   update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
 }
