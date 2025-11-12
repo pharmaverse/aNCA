@@ -14,7 +14,7 @@
 create_qmd_doc <- function(
   quarto_path,
   title = "NCA Report",
-  libraries = c("plotly", "flextable"),
+  libraries = c("plotly", "flextable", "dplyr"),
   rda_path = NULL,
   template = NULL,
   extra_setup = NULL
@@ -184,7 +184,7 @@ add_qmd_plot <- function(plot_expr, use_plotly = FALSE) {
     "```{r, echo=FALSE}",
     paste0(
       plot_expr,
-      if (use_plotly) " |> plotly::ggplotly()" else ""
+      if (use_plotly) " %>% plotly::ggplotly()" else ""
     ),
     "```"
   )

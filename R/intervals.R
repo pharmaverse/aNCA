@@ -214,12 +214,11 @@ handle_imputation <- function(data) {
   params_not_to_impute <- metadata_nca_parameters %>%
     filter(!grepl("auc|aumc", PKNCA),
            !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-    pull(PKNCA) |>
+    pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
   all_impute_methods <- na.omit(unique(data$intervals$impute))
 
-  # Iteratively remove imputation for non-AUC-dependent parameters
   data$intervals <- Reduce(function(d, ti_arg) {
     interval_remove_impute(
       d,

@@ -52,11 +52,11 @@ reactable_server <- function(
     )
 
     # Show requested download  buttons
-    purrr::walk(download_buttons, \(x) shinyjs::show(paste0("download_", x)))
+    purrr::walk(download_buttons, function(x) shinyjs::show(paste0("download_", x)))
 
     # Attach observers for editable columns
     table_edit <- reactiveVal(NULL)
-    purrr::walk(editable, \(col) {
+    purrr::walk(editable, function(col) {
       observe({
         table_edit(input[[paste0("edit_", col)]])
       })
@@ -64,7 +64,7 @@ reactable_server <- function(
     table_edit_debounced <- reactive({
       req(table_edit())
       table_edit()
-    }) |>
+    }) %>%
       debounce(edit_debounce)
 
     output$table <- renderReactable({
@@ -81,17 +81,17 @@ reactable_server <- function(
 
       if (!is.null(editable)) {
         col_defs <- lapply(editable, function(col) {
-          col_def <- lapply(opts$columns[[col]], \(x) x) # unpack other existing colDef-s
+          col_def <- lapply(opts$columns[[col]], function(x) x) # unpack other existing colDef-s
           col_def$cell <- text_extra(id = session$ns(paste0("edit_", col)))
 
           do.call(colDef, col_def)
-        }) |>
+        }) %>%
           setNames(editable)
 
         if (is.null(opts$columns)) {
           opts$columns <- col_defs
         } else {
-          purrr::iwalk(col_defs, \(val, name) {
+          purrr::iwalk(col_defs, function(val, name) {
             opts$columns[[name]] <<- val
           })
         }
@@ -103,12 +103,12 @@ reactable_server <- function(
 
     output$download_csv <- downloadHandler(
       filename = .reactable_file_name(file_name, "csv", id),
-      content = \(con) write.csv(data(), con, row.names = FALSE)
+      content = function(con) write.csv(data(), con, row.names = FALSE)
     )
 
     output$download_xlsx <- downloadHandler(
       filename = .reactable_file_name(file_name, "xlsx", id),
-      content = \(con) openxlsx2::write_xlsx(data(), con)
+      content = function(con) openxlsx2::write_xlsx(data(), con)
     )
 
     reactive(
@@ -116,7 +116,7 @@ reactable_server <- function(
         selected = getReactableState("table", "selected"),
         edit = table_edit_debounced
       )
-    ) |>
+    ) %>%
       invisible()
   })
 }
