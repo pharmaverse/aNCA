@@ -34,7 +34,7 @@ create_start_impute <- function(pknca_data) {
 
   mydata_with_int <- merge(
     x = pknca_data$conc$data %>%
-      filter(!!sym(nca_excl_column) == "") %>%
+      filter(!!sym(nca_excl_column) %in% c("", NA_character_)) %>%
       select(any_of(c(conc_group_columns, conc_column,
                       time_column, metabfl_column))),
     y = pknca_data$dose$data %>%
