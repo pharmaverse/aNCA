@@ -277,14 +277,13 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         mutate(ROWID = row_number())
 
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
-
         # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
         dataset <- df_duplicates() %>%
           group_by(is.time.duplicate) %>%
           mutate(
             DTYPE = ifelse(
-              is.time.duplicate & row_number() %in% selected,
+              is.time.duplicate & !row_number() %in% selected,
               "TIME DUPLICATE",
               DTYPE
             )
@@ -300,7 +299,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           return(NULL)
         } else {
           removeModal()
-          return(dataset)
+          select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
         }
       }
 
@@ -308,8 +307,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         df_duplicates(dataset)
         return(NULL)
       } else {
-        dataset %>%
-          select(any_of(c(names(mapped_data), "DTYPE")))
+        select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
       }
     }) %>%
       bindEvent(list(mapped_data(), input$keep_selected_btn), ignoreInit = FALSE)
