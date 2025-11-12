@@ -138,7 +138,7 @@ In order to group options widgets visually, you can specify `group_label`s in be
 ```
 
 ### Examples
-For examples of TLG definition implementations, please see [tlg.yaml](aNCA/inst/shiny/tlg.yaml) file in the repository.
+For examples of TLG definition implementations, please see [tlg.yaml](https://github.com/pharmaverse/aNCA/blob/main/inst/shiny/tlg.yaml) file in the repository.
 
 ## Implementation function
 Function should be defined within `aNCA` package and meet the following criteria:

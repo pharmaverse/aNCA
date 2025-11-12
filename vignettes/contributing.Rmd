@@ -18,7 +18,7 @@ In general, any posted issue should contain a brief description of the problem, 
 
 # Submit changes
 ## Joining the project
-In order to gain privileges to commit changes to the codebase, you will need to be added as a collaborator. To do so, please contact one of the contributors. You can find the list with contact info in the [DESCRIPTION](aNCA/DESCRIPTION) file.
+In order to gain privileges to commit changes to the codebase, you will need to be added as a collaborator. To do so, please contact one of the contributors. You can find the list with contact info in the [DESCRIPTION](https://github.com/pharmaverse/aNCA/blob/main/DESCRIPTION) file.
 
 ## Issues
 Before creating any changes, please make sure an appropriate issue thread is opened. This is the place to discuss the topic at hand, agree on the approach for solving the problem and keep the tasks organized across the whole project.
