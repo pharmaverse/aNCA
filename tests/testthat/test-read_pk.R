@@ -1,5 +1,5 @@
 describe("read_pk", {
-  # load dummy testing data avaialable in csv format, used to simulate other formats #
+  # load dummy testing data available in csv format, used to simulate other formats #
   data_dummy <- read.csv("data/test-multispec-ADNCA.csv")
 
   it("reads csv data correctly", {
