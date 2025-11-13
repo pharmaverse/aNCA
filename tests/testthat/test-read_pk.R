@@ -1,9 +1,9 @@
 describe("read_pk", {
   # load dummy testing data avaialable in csv format, used to simulate other formats #
-  data_dummy <- read.csv("data/adnca_dummy_sm_dataset.csv")
+  data_dummy <- read.csv("data/test-multispec-ADNCA.csv")
 
   it("reads csv data correctly", {
-    df <- read_pk("data/adnca_dummy_sm_dataset.csv")
+    df <- read_pk("data/test-multispec-ADNCA.csv")
     expect_s3_class(df, "data.frame")
     expect_equal(nrow(df), 131)
   })
