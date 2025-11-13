@@ -124,8 +124,8 @@ pkcg01 <- function(
   # reapply col labels to grouped data and make sure all variables are labeled #
   old_labels <- c(formatters::var_labels(adnca), id_plot = NA)
   formatters::var_labels(adnca_grouped) <- ifelse(!is.na(old_labels),
-                                                 old_labels,
-                                                 names(adnca_grouped))
+                                                  old_labels,
+                                                  names(adnca_grouped))
 
   # Construct the reference ggplot object
   plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
@@ -405,7 +405,7 @@ g_pkcg02_log <- function(data, ...) {
 #'
 #'   plots <- pkcg02(adnca)
 #'   plots_log <- pkcg02(adnca, scale = "LOG")
-#'   plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study XYZ")
+#'   plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
 #'   plotly::plotly_build(plots[[1]]) # View the first plot
 #' }
 #'
@@ -461,8 +461,8 @@ pkcg02 <- function(
   # reapply col labels to grouped data and make sure all variables are labeled #
   old_labels <- c(formatters::var_labels(adnca), id_plot = NA)
   formatters::var_labels(adnca_grouped) <- ifelse(!is.na(old_labels),
-                                                 old_labels,
-                                                 names(adnca_grouped))
+                                                  old_labels,
+                                                  names(adnca_grouped))
 
   # Construct the reference ggplot object
   plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
