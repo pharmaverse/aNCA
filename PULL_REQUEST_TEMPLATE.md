@@ -26,6 +26,8 @@ New logic covered by unit tests
 
 New logic is documented
 
+App or package changes are reflected in NEWS
+
 Package version is incremented
 
 ## Notes to reviewer
