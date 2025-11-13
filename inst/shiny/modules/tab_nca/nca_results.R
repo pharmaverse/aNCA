@@ -18,6 +18,7 @@ nca_results_ui <- function(id) {
   div(
     class = "results-legend",
     style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
+    div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Flag Rules:"),
     div(style = "display:flex; align-items:center; gap:6px;",
       div(style = "width:14px; height:14px; background:#f5b4b4; border:1px solid #ddd;"),
       span("FLAGGED", style = "font-size:0.9em;")),
