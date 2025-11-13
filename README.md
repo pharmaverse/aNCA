@@ -79,7 +79,7 @@ For more detailed instructions, check out the [Get Started](https://pharmaverse.
 
 ### As developer
 
-To ensure a clean codebase and smooth cooperation, please adhere to the [contributing guidelines](CONTRIBUTING.md).
+To ensure a clean codebase and smooth cooperation, please adhere to the [contributing guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 
 ### As user
 
