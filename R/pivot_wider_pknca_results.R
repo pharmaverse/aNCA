@@ -53,7 +53,7 @@ pivot_wider_pknca_results <- function(myres) {
       group_by(!!!syms(conc_groups), DOSNOA) %>%
       # Derive LAMZMTD: was lambda.z manually customized?
       mutate(LAMZMTD = ifelse(
-        any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
+        any(exclude_half.life) | any(include_half.life), "Manual", "Best slope"
       )) %>%
       filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
       filter(!!sym(time_col) >= (LAMZLL + start) | is.na(LAMZLL)) %>%

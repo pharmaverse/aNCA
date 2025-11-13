@@ -12,7 +12,8 @@ PKNCA_update_data_object(
   selected_profile,
   selected_pcspec,
   params,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  hl_adj_rules = NULL
 )
 }
 \arguments{
@@ -31,6 +32,10 @@ PKNCA_update_data_object(
 \item{params}{A list of parameters for NCA calculation}
 
 \item{should_impute_c0}{Logical indicating if start values should be imputed}
+
+\item{hl_adj_rules}{A data frame containing half-life adjustment rules. It must
+contain group columns and rule specification columns;
+TYPE: (Inclusion, Exclusion), RANGE: (start-end).}
 }
 \value{
 A fully configured \code{PKNCAdata} object.
@@ -50,6 +55,8 @@ Step 3: Format intervals using \code{format_pkncadata_intervals()}
 Step 4: Apply filtering based on user selections and partial aucs
 
 Step 5: Impute start values if requested
+
+Step 6: Indicate points excluded / selected manually for half-life
 
 Note*: The function assumes that the \code{adnca_data} object has been
 created using the \code{PKNCA_create_data_object()} function.
