@@ -35,7 +35,6 @@ create_indplot <- function(data,
       USUBJID %in% selected_usubjids,
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
-      if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       !is.na(AVAL)
     )
 
