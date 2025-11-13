@@ -25,6 +25,6 @@ Currently supported file formats include:
 \item \code{parquet}}
 }
 \examples{
-df <- read_pk(system.file("shiny/data/example_ADNCA.csv", package = "aNCA"))
+df <- read_pk(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 
 }
