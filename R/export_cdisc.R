@@ -216,7 +216,7 @@ export_cdisc <- function(res_nca) {
       )
     )
 
-  adpc <- res_nca$data$conc$data %>%
+  adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
               by = intersect(names(res_nca$data$conc$data), names(dose_info)),
               suffix = c("", ".y")) %>%
@@ -273,9 +273,9 @@ export_cdisc <- function(res_nca) {
     adjust_class_and_length(metadata_nca_variables)
 
   # Add variable labels for ADNCA
-  var_labels(adpc) <- labels_map[names(adpc)]
+  var_labels(adnca) <- labels_map[names(adnca)]
 
-  list(pp = pp, adpp = adpp, adpc = adpc)
+  list(pp = pp, adpp = adpp, adnca = adnca)
 }
 
 #' Function to identify the common prefix in a character vector.

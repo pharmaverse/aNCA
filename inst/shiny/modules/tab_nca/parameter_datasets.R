@@ -3,7 +3,7 @@ parameter_datasets_ui <- function(id) {
   navset_pill(
     nav_panel("PP",   reactable_ui(ns("pp_dataset"))),
     nav_panel("ADPP", reactable_ui(ns("adpp_dataset"))),
-    nav_panel("ADNCA", reactable_ui(ns("adpc_dataset")))
+    nav_panel("ADNCA", reactable_ui(ns("adnca_dataset")))
   )
 }
 
@@ -48,17 +48,17 @@ parameter_datasets_server <- function(id, res_nca) {
       height = "68vh"
     )
     reactable_server(
-      "adpc_dataset",
-      reactive(CDISC()$adpc),
+      "adnca_dataset",
+      reactive(CDISC()$adnca),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_adpc"),
+      file_name = function() paste0(session$userData$project_name(), "_adnca"),
       style = list(fontSize = "0.75em"),
       height = "68vh"
     )
 
     # Save the results in the output folder
     observeEvent(CDISC(), {
-      session$userData$results$CDISC <- CDISC()[c("pp", "adpp", "adpc")]
+      session$userData$results$CDISC <- CDISC()[c("pp", "adpp", "adnca")]
     })
   })
 }
