@@ -3,7 +3,7 @@ parameter_datasets_ui <- function(id) {
   navset_pill(
     nav_panel("PP",   reactable_ui(ns("pp_dataset"))),
     nav_panel("ADPP", reactable_ui(ns("adpp_dataset"))),
-    nav_panel("ADPC", reactable_ui(ns("adpc_dataset")))
+    nav_panel("ADNCA", reactable_ui(ns("adpc_dataset")))
   )
 }
 

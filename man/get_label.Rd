@@ -4,7 +4,7 @@
 \alias{get_label}
 \title{Get the Label of a Heading}
 \usage{
-get_label(variable, type = "ADPC", labels_df = metadata_nca_variables)
+get_label(variable, type = "ADNCA", labels_df = metadata_nca_variables)
 }
 \arguments{
 \item{variable}{The variable for which the label is to be retrieved.}
@@ -26,17 +26,17 @@ This function retrieves the label of a heading from a labels file.
  LABELS <- data.frame(
    Variable = c("USUBJID", "AVAL"),
    Label = c("Unique Subject Identifier", "Analysis Value"),
-   Dataset = c("ADPC", "ADPC")
+   Dataset = c("ADNCA", "ADNCA")
  )
- get_label("USUBJID", "ADPC", LABELS)  # Returns "Unique Subject Identifier"
- get_label("AGE", "ADPC", LABELS)  # Returns "AGE"
+ get_label("USUBJID", "ADNCA", LABELS)  # Returns "Unique Subject Identifier"
+ get_label("AGE", "ADNCA", LABELS)  # Returns "AGE"
  # Using a custom mapping column:
  LABELS2 <- data.frame(
    ColName = c("USUBJID", "AVAL"),
    Label = c("Unique Subject Identifier", "Analysis Value"),
-   Dataset = c("ADPC", "ADPC")
+   Dataset = c("ADNCA", "ADNCA")
  )
- get_label("USUBJID", "ADPC", LABELS2)
+ get_label("USUBJID", "ADNCA", LABELS2)
  # Returns "Unique Subject Identifier"
 }
 
