@@ -107,7 +107,7 @@ You can see our current validations and future plan in the [validations page](ht
 <details>
 <summary><strong>Where should I open issues or request features?</strong></summary>
 
-The user section in [CONTRIBUTING.md](aNCA/CONTRIBUTING.md) specifies how to act in each of these cases.
+The user section in [CONTRIBUTING.md](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md) specifies how to act in each of these cases.
 
 Use GitHub Issues for bugs and feature requests. For questions and brainstorming use Discussions. When opening an issue, please include:
 

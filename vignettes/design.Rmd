@@ -67,6 +67,6 @@ For better details on the server lower level processing actions (order of functi
 
 ## 4. See also...
 
--   [Roadmap with the next year goals](./roadmap.md) - Indicating the objectives planned to be achieved.
--   [Validation Plan and Coverage](../vignettes/validations.Rmd) - Describing the validation strategy implemented and the ideas for the future.
--   [governance.md](./governance.md) - Describing the project's management style.
+-   [Roadmap with the next year goals](https://pharmaverse.github.io/aNCA/articles/roadmap.html) - Indicating the objectives planned to be achieved.
+-   [Validation Plan and Coverage](https://pharmaverse.github.io/aNCA/articles/validations.html) - Describing the validation strategy implemented and the ideas for the future.
+-   [governance.md](https://pharmaverse.github.io/aNCA/articles/governance.html) - Describing the project's management style.

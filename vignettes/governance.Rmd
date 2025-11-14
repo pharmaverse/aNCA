@@ -34,7 +34,7 @@ All main authors listed in the DESCRIPTION, are expected to:
 - Try to review and approve code changes in a timely manner, ensuring that the project maintains its momentum and continues to evolve effectively.
 
 ## See also
-- [roadmap.md](./roadmap.md) - Project roadmap and goals
-- [validation.md](./validation.md) - Validation plan and coverage
-- [design.md](./design.md) - Design and architecture details
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
+- [roadmap](https://pharmaverse.github.io/aNCA/articles/roadmap.html) - Project roadmap and goals
+- [validations](https://pharmaverse.github.io/aNCA/articles/validations.html) - Validation plan and coverage
+- [design](https://pharmaverse.github.io/aNCA/articles/design.html) - Design and architecture details
+- [CONTRIBUTING](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md) - Contribution guidelines

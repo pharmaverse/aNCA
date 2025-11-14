@@ -9,7 +9,7 @@ This CONTRIBUTING guide is organized by common contributor roles. Start at the r
 - [NCA‑reviewer](#nca-reviewers-book) — domain reviewer of outputs and validations: focus on data/mapping/validation sections and how to reproduce runs via exported scripts.
 - [Code‑reviewer](#code-reviewers-mag) — reviews PRs and enforces quality: focus on tests, linters, and the reviewers checklist.
 
-Please, consider that all contributors should follow the general principles of respect and collaboration indicated in the [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+Please, consider that all contributors should follow the general principles of respect and collaboration indicated in the [CODE_OF_CONDUCT.md](https://github.com/pharmaverse/aNCA/blob/main/.github/CODE_OF_CONDUCT.md).
 ---
 
 ## Report bugs and suggest enhancements
@@ -44,8 +44,8 @@ If you plan to contribute code, tests, or documentation, please follow these dev
 - Merge: Someone from the core team will merge your PR once everything is set. Thanks in advance for the changes!
 
 Helpful links for Developers:
-- Check the [design.md](./design.md) to understand better how the Shiny App is structured.
-- If you need more context on what is Non Compartmental Analysis, we also recommend you to check [background.md](./background.md)
+- Check the [design.md](https://pharmaverse.github.io/aNCA/articles/design.html) to understand better how the Shiny App is structured.
+- If you need more context on what is Non Compartmental Analysis, we also recommend you to check [background.md](https://pharmaverse.github.io/aNCA/articles/background.html)
 
 ---
 
