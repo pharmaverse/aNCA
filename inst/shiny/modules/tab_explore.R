@@ -39,7 +39,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     data <- reactive({
       req(pknca_data())
       pknca_data()$conc$data
-      })
+    })
 
     # Initiate the sidebar server modules
     individual_inputs <- plot_sidebar_server(
