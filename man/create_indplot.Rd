@@ -10,9 +10,8 @@ create_indplot(
   selected_analytes,
   selected_pcspec,
   colorby_var = "USUBJID",
-  time_scale = "All Time",
-  yaxis_scale = "lin",
-  cycle = NULL,
+  ylog_scale = FALSE,
+  profiles_selected = NULL,
   facet_by = NULL,
   show_threshold = FALSE,
   threshold_value = 0,
@@ -24,13 +23,11 @@ create_indplot(
 \arguments{
 \item{data}{Raw data frame.}
 
-\item{selected_usubjids, selected_analytes, selected_pcspec, cycle}{Inputs for filtering.}
+\item{selected_usubjids, selected_analytes, selected_pcspec, profiles_selected}{Inputs for filtering.}
 
 \item{colorby_var}{The variable(s) to be used for coloring.}
 
-\item{time_scale}{String, either "All Time" or "By Dose Profile".}
-
-\item{yaxis_scale}{String, either "log" or "lin".}
+\item{ylog_scale}{Logical, whether to use a logarithmic scale for the y-axis.}
 
 \item{facet_by}{Character vector of column names to facet by.}
 

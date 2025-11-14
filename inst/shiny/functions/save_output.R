@@ -99,9 +99,8 @@ get_dose_esc_results <- function(
       selected_usubjids = d_conc_i[[subj_col]],
       colorby_var = subj_col,
       facet_by = facet_vars,
-      time_scale = "Whole",
-      yaxis_scale = "Log",
-      cycle = NULL
+      ylog_scale = TRUE,
+      profiles_selected = NULL
     )
 
 
@@ -109,11 +108,10 @@ get_dose_esc_results <- function(
       data = d_conc_i,
       selected_analytes = unique(d_conc_i[[analyte_col]]),
       selected_pcspec = unique(d_conc_i[[pcspec_col]]),
-      cycle = unique(d_conc_i[[profile_col]]),
+      profiles_selected = unique(d_conc_i[[profile_col]]),
       facet_by = facet_vars,
       colorby_var = group_by_vars,
-      time_scale = "By Dose Profile",
-      yaxis_scale = "Log",
+      ylog_scale = TRUE,
       show_sd_max = TRUE
     )
 
@@ -166,8 +164,7 @@ get_dose_esc_results <- function(
           selected_usubjids = d_conc_i[[subj_col]],
           colorby_var = subj_col,
           facet_by = facet_vars,
-          time_scale = "Whole",
-          yaxis_scale = "Log"
+          ylog_scale = TRUE
         )
       })
 

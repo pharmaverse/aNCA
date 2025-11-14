@@ -63,11 +63,9 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    radioButtons(
+    checkboxInput(
       ns("log"),
-      "Select the Y-axis scale:",
-      choices = c("Linear" = "lin", "Logarithmic" = "log"),
-      selected = "lin"
+      "Use Logarithmic Y-Axis"
     ),
     radioButtons(
       ns("timescale"),
@@ -208,7 +206,6 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         ci = input$ci
       )
     })
-
     inputs
   })
 }

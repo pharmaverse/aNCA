@@ -8,11 +8,10 @@ create_meanplot(
   data,
   selected_analytes,
   selected_pcspec,
-  cycle = NULL,
+  profiles_selected = NULL,
   colorby_var,
   facet_by = NULL,
-  yaxis_scale = "lin",
-  time_scale = "All Time",
+  ylog_scale = FALSE,
   show_threshold = FALSE,
   threshold_value = 0,
   show_dose = FALSE,
@@ -26,15 +25,13 @@ create_meanplot(
 \arguments{
 \item{data}{Raw data frame.}
 
-\item{selected_analytes, selected_pcspec, cycle}{Inputs for filtering.}
+\item{selected_analytes, selected_pcspec, profiles_selected}{Inputs for filtering.}
 
 \item{colorby_var}{The variable(s) to group and color by.}
 
 \item{facet_by}{The variable(s) to facet by.}
 
-\item{yaxis_scale}{String, either "log" or "lin".}
-
-\item{time_scale}{String, either "All Time" or "By Dose Profile".}
+\item{ylog_scale}{Logical, whether to use a logarithmic scale for the y-axis.}
 
 \item{show_threshold}{Logical, whether to show threshold line.}
 

@@ -126,14 +126,13 @@ describe("create_indplot functions correctly", {
     expect_true(all(!is.na(p$data$AVAL)))
   })
 
-  it("supports 'By Dose Profile' time_scale", {
+  it("changes time scale if selected profiles is not null", {
     p <- create_indplot(
       data = sample_data,
       selected_usubjids = "Subject1",
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
-      time_scale = "By Dose Profile",
-      cycle = 1
+      profiles_selected = 1
     )
     expect_s3_class(p, "ggplot")
     # 'By Dose Profile' uses ARRLT
@@ -150,8 +149,7 @@ describe("create_indplot functions correctly", {
       selected_usubjids = "Subject1",
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
-      time_scale = "By Dose Profile",
-      cycle = 1
+      profiles_selected = 1
     )
 
     predose_record_in_plot <- p$data %>%
@@ -182,9 +180,8 @@ describe("create_indplot functions correctly", {
       selected_usubjids = "Subject1",
       selected_analytes = "Analyte2",
       selected_pcspec = "Spec2",
-      time_scale = "By Dose Profile",
-      cycle = 1,
-      yaxis_scale = "log"
+      profiles_selected = 1,
+      ylog_scale = TRUE
     )
     expect_s3_class(p, "ggplot")
     # Check that non-positive values were filtered
@@ -327,14 +324,13 @@ describe("create_meanplot functions correctly", {
     )
   })
 
-  it("supports 'By Dose Profile' time_scale", {
+  it("changes time scale if selected profiles is not null", {
     p <- create_meanplot(
       data = sample_data,
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
       colorby_var = "DOSEA",
-      time_scale = "By Dose Profile",
-      cycle = 1
+      profiles_selected = 1
     )
     expect_s3_class(p, "ggplot")
     # 'By Dose Profile' uses NRRLT
@@ -367,9 +363,8 @@ describe("create_meanplot functions correctly", {
       selected_analytes = "Analyte2",
       selected_pcspec = "Spec2",
       colorby_var = "DOSEA",
-      time_scale = "By Dose Profile",
-      cycle = 1,
-      yaxis_scale = "log"
+      profiles_selected = 1,
+      ylog_scale = TRUE
     )
     expect_s3_class(p, "ggplot")
     # Check that non-positive Mean values were filtered
@@ -431,8 +426,7 @@ describe("create_meanplot functions correctly", {
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
       colorby_var = "DOSEA",
-      show_dose = TRUE,
-      time_scale = "All Time" # Default
+      show_dose = TRUE
     )
 
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])

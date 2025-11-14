@@ -90,7 +90,7 @@ describe("g_lineplot: Individual Plot Mode", {
       y_var = "AVAL",
       group_var = "USUBJID",
       colorby_var = "USUBJID",
-      yaxis_scale = "log"
+      ylog_scale = TRUE
     )
     # Test: Check that the log scale was *added* to the plot
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
@@ -198,7 +198,7 @@ describe("g_lineplot: Mean Plot Mode", {
       y_var = "Mean",
       group_var = "color_var",
       colorby_var = "color_var",
-      yaxis_scale = "log"
+      ylog_scale = TRUE
     )
     # Test: Check that the log scale was *added* to the plot
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)

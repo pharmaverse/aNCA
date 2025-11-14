@@ -28,8 +28,8 @@
 #'   dataset that are used to determine the color of the lines and points.
 #' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
-#' @param yaxis_scale A character string, either `"Lin"` (default) or `"Log"`, to set the
-#'   y-axis scale.
+#' @param ylog_scale A logical value (`TRUE` or `FALSE`) indicating whether to use
+#'  a logarithmic scale for the y-axis.
 #' @param show_threshold A logical value (`TRUE` or `FALSE`) indicating whether to
 #'   display a horizontal threshold line.
 #' @param threshold_value A numeric value for the y-intercept of the threshold line.
@@ -60,7 +60,7 @@ g_lineplot <- function(data,
                        group_var,
                        colorby_var,
                        facet_by = NULL,
-                       yaxis_scale = "lin",
+                       ylog_scale = FALSE,
                        show_threshold = FALSE,
                        threshold_value = 0,
                        show_dose = FALSE,
@@ -109,7 +109,7 @@ g_lineplot <- function(data,
   # Add optional layers
   optional_layers <- list(
     .add_palette(palette),
-    .add_y_scale(yaxis_scale),
+    .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_threshold(show_threshold, threshold_value),
     .add_dose_lines(show_dose, dose_data, facet_by),
@@ -138,8 +138,8 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_y_scale <- function(yaxis_scale) {
-  if (yaxis_scale != "log") {
+.add_y_scale <- function(ylog_scale) {
+  if (ylog_scale == FALSE) {
     return(NULL)
   }
   scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), labels = scales::comma)

@@ -36,7 +36,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    data <- reactive(pknca_data()$conc$data)
+    data <- reactive({
+      req(pknca_data())
+      pknca_data()$conc$data
+      })
 
     # Initiate the sidebar server modules
     individual_inputs <- plot_sidebar_server(
@@ -70,9 +73,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(data(), individual_inputs()$param,
           individual_inputs()$pcspec,
           individual_inputs()$usubjid,
-          individual_inputs()$colorby,
-          individual_inputs()$timescale,
-          individual_inputs()$log)
+          individual_inputs()$colorby)
       log_info("Rendering individual plots")
 
       lineplot <- create_indplot(
@@ -81,9 +82,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         selected_analytes = individual_inputs()$param,
         selected_pcspec = individual_inputs()$pcspec,
         colorby_var = individual_inputs()$colorby,
-        time_scale = individual_inputs()$timescale,
-        yaxis_scale = individual_inputs()$log,
-        cycle = individual_inputs()$profiles,
+        ylog_scale = individual_inputs()$log,
+        profiles_selected = individual_inputs()$profiles,
         facet_by = individual_inputs()$facetby,
         show_threshold = individual_inputs()$show_threshold,
         threshold_value = individual_inputs()$threshold_value,
@@ -123,18 +123,17 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Compute the meanplot object
     meanplot <- reactive({
       req(data(), mean_inputs()$param, mean_inputs()$pcspec,
-          mean_inputs()$timescale, mean_inputs()$colorby)
+          mean_inputs()$colorby)
       log_info("Computing meanplot ggplot object")
 
       meanplot <- create_meanplot(
         data = data(),
         selected_analytes = mean_inputs()$param,
         selected_pcspec = mean_inputs()$pcspec,
-        cycle = mean_inputs()$profiles,
+        profiles_selected = mean_inputs()$profiles,
         colorby_var = mean_inputs()$colorby,
         facet_by = mean_inputs()$facetby,
-        yaxis_scale = mean_inputs()$log,
-        time_scale = mean_inputs()$timescale,
+        ylog_scale = mean_inputs()$log,
         show_sd_min = mean_inputs()$sd_min,
         show_sd_max = mean_inputs()$sd_max,
         show_ci = mean_inputs()$ci,

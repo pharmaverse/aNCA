@@ -11,7 +11,7 @@ g_lineplot(
   group_var,
   colorby_var,
   facet_by = NULL,
-  yaxis_scale = "lin",
+  ylog_scale = FALSE,
   show_threshold = FALSE,
   threshold_value = 0,
   show_dose = FALSE,
@@ -39,8 +39,8 @@ dataset that are used to determine the color of the lines and points.}
 \item{facet_by}{A character vector of column names to facet the plot by.
 Default is \code{NULL} for no faceting.}
 
-\item{yaxis_scale}{A character string, either \code{"Lin"} (default) or \code{"Log"}, to set the
-y-axis scale.}
+\item{ylog_scale}{A logical value (\code{TRUE} or \code{FALSE}) indicating whether to use
+a logarithmic scale for the y-axis.}
 
 \item{show_threshold}{A logical value (\code{TRUE} or \code{FALSE}) indicating whether to
 display a horizontal threshold line.}

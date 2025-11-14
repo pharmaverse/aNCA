@@ -3,10 +3,9 @@
 #' Combines data processing and plotting for individual concentration-time profiles.
 #'
 #' @param data Raw data frame.
-#' @param selected_usubjids,selected_analytes,selected_pcspec,cycle Inputs for filtering.
+#' @param selected_usubjids,selected_analytes,selected_pcspec,profiles_selected Inputs for filtering.
 #' @param colorby_var The variable(s) to be used for coloring.
-#' @param time_scale String, either "All Time" or "By Dose Profile".
-#' @param yaxis_scale String, either "log" or "lin".
+#' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @param facet_by Character vector of column names to facet by.
 #' @param show_threshold Logical, whether to show threshold line.
 #' @param threshold_value Numeric, value for the threshold line.
@@ -20,9 +19,8 @@ create_indplot <- function(data,
                            selected_analytes,
                            selected_pcspec,
                            colorby_var = "USUBJID",
-                           time_scale = "All Time",
-                           yaxis_scale = "lin",
-                           cycle = NULL,
+                           ylog_scale = FALSE,
+                           profiles_selected = NULL,
                            facet_by = NULL,
                            show_threshold = FALSE,
                            threshold_value = 0,
@@ -38,11 +36,11 @@ create_indplot <- function(data,
       !is.na(AVAL)
     )
 
-  if (yaxis_scale == "log") {
+  if (ylog_scale == TRUE) {
     processed_data <- processed_data %>% filter(AVAL > 0)
   }
 
-  if (time_scale == "By Dose Profile") {
+  if (!is.null(profiles_selected)) {
     if ("ARRLT" %in% names(processed_data) &&
           any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
       processed_data <- dose_profile_duplicates(
@@ -51,12 +49,12 @@ create_indplot <- function(data,
         dosno = "ATPTREF"
       )
     }
-    processed_data <- processed_data %>% filter(ATPTREF %in% cycle)
+    processed_data <- processed_data %>% filter(ATPTREF %in% profiles_selected)
   }
 
   processed_data <- processed_data %>%
     mutate(
-      time_var = if (time_scale == "By Dose Profile") ARRLT else AFRLT,
+      time_var = if (!is.null(profiles_selected)) ARRLT else AFRLT,
       color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
 
@@ -69,7 +67,7 @@ create_indplot <- function(data,
     group_var = "USUBJID",
     colorby_var = colorby_var,
     facet_by = facet_by,
-    yaxis_scale = yaxis_scale,
+    ylog_scale = ylog_scale,
     show_threshold = show_threshold,
     threshold_value = threshold_value,
     show_dose = show_dose,
@@ -85,11 +83,10 @@ create_indplot <- function(data,
 #' Combines data processing and plotting for mean concentration-time profiles.
 #'
 #' @param data Raw data frame.
-#' @param selected_analytes,selected_pcspec,cycle Inputs for filtering.
+#' @param selected_analytes,selected_pcspec,profiles_selected Inputs for filtering.
 #' @param colorby_var The variable(s) to group and color by.
 #' @param facet_by The variable(s) to facet by.
-#' @param yaxis_scale String, either "log" or "lin".
-#' @param time_scale String, either "All Time" or "By Dose Profile".
+#' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @param show_threshold Logical, whether to show threshold line.
 #' @param threshold_value Numeric, value for the threshold line.
 #' @param show_dose Logical, whether to show dosing indicators.
@@ -101,11 +98,10 @@ create_indplot <- function(data,
 create_meanplot <- function(data,
                             selected_analytes,
                             selected_pcspec,
-                            cycle = NULL,
+                            profiles_selected = NULL,
                             colorby_var,
                             facet_by = NULL,
-                            yaxis_scale = "lin",
-                            time_scale = "All Time",
+                            ylog_scale = FALSE,
                             show_threshold = FALSE,
                             threshold_value = 0,
                             show_dose = FALSE,
@@ -119,17 +115,16 @@ create_meanplot <- function(data,
     filter(
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
-      if ("EVID" %in% names(data)) EVID == 0 else TRUE,
       !is.na(AVAL)
     )
 
-  if (time_scale == "By Dose Profile") {
-    processed <- processed %>% filter(ATPTREF %in% cycle)
+  if (!is.null(profiles_selected)) {
+    processed <- processed %>% filter(ATPTREF %in% profiles_selected)
   }
 
   summarised_data <- processed %>%
     mutate(
-      time_var = if (time_scale == "By Dose Profile") NRRLT else NFRLT,
+      time_var = if (!is.null(profiles_selected)) NRRLT else NFRLT,
       color_var = interaction(!!!syms(colorby_var), sep = ", ", drop = TRUE)
     ) %>%
     group_by(color_var, time_var, !!!syms(facet_by), RRLTU, AVALU) %>%
@@ -148,7 +143,7 @@ create_meanplot <- function(data,
       CI_upper = Mean + 1.96 * SE
     )
 
-  if (yaxis_scale == "log") {
+  if (ylog_scale == TRUE) {
     summarised_data <- summarised_data %>%
       filter(Mean > 0)
   }
@@ -161,7 +156,7 @@ create_meanplot <- function(data,
     y_var = "Mean",
     group_var = "color_var",
     colorby_var = colorby_var,
-    yaxis_scale = yaxis_scale,
+    ylog_scale = ylog_scale,
     show_sd_min = show_sd_min,
     show_sd_max = show_sd_max,
     show_ci = show_ci,
