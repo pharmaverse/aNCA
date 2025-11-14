@@ -19,7 +19,7 @@ create_pptx_doc <- function(path, title, template) {
 #' @return rpptx object with title slide added
 #' @keywords internal
 add_pptx_sl_title <- function(pptx, title) {
-  add_slide(pptx, layout = "Title Slide", master = "Office Theme") |>
+  add_slide(pptx, layout = "Title Slide", master = "Office Theme") %>%
     ph_with(
       value = title,
       location = ph_location_type(type = "ctrTitle")
@@ -34,8 +34,8 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
-  add_slide(pptx, layout = "Content with Caption") |>
-    ph_with(value = plot, location = "Content Placeholder 1") |>
+  add_slide(pptx, layout = "Content with Caption") %>%
+    ph_with(value = plot, location = "Content Placeholder 1") %>%
     ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
@@ -48,9 +48,9 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here for individual results") {
-  add_slide(pptx, layout = "Title Only") |>
-    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") |>
-    ph_with(value = title, location = "Title 1") |>
+  add_slide(pptx, layout = "Title Only") %>%
+    ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") %>%
+    ph_with(value = title, location = "Title 1") %>%
     ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
@@ -60,7 +60,7 @@ add_pptx_sl_table <- function(pptx, df, title = "", footer = "Click here for ind
 #' @importFrom officer add_slide ph_with
 #' @return rpptx object with slide added
 add_pptx_sl_plot <- function(pptx, plot) {
-  add_slide(pptx, layout = "Picture with Caption") |>
+  add_slide(pptx, layout = "Picture with Caption") %>%
     ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
@@ -98,13 +98,13 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     )
 
     # Generate summary figures and tables
-    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " results")) |>
-      ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1)) |>
+    pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " results")) %>%
+      ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1)) %>%
       add_pptx_sl_plottable(
         df = res_dose_slides[[i]]$statistics,
         plot = res_dose_slides[[i]]$meanplot
-      ) |>
-      add_pptx_sl_plot(res_dose_slides[[i]]$linplot) |>
+      ) %>%
+      add_pptx_sl_plot(res_dose_slides[[i]]$linplot) %>%
       add_pptx_sl_plot(res_dose_slides[[i]]$boxplot)
 
     n_ind <- length(res_dose_slides[[i]]$ind_params)

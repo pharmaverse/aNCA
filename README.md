@@ -4,7 +4,7 @@
 <!-- badges: start -->
 
 [![Pharmaverse](https://pharmaverse.org/shields/aNCA.svg)](https://pharmaverse.org)
-[![License](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://github.com/pharmaverse/aNCA?tab=Apache-2.0-1-ov-file)
 [![CRAN status](https://www.r-pkg.org/badges/version/aNCA)](https://CRAN.R-project.org/package=aNCA)
 [![R build status](https://github.com/pharmaverse/aNCA/actions/workflows/main.yml/badge.svg)](https://github.com/pharmaverse/aNCA/actions)
 ![Code coverage](https://raw.githubusercontent.com/pharmaverse/aNCA/badges/main/test-coverage.svg)
@@ -77,7 +77,8 @@ For more detailed instructions, check out the [Get Started](https://pharmaverse.
 
 ## Contributing
 
-Check our [contributing guidelines](CONTRIBUTING.md).
+Check our [contributing guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
+
 
 ## Documentation and references
 
