@@ -139,7 +139,7 @@ g_lineplot <- function(data,
 
 #' @noRd
 .add_y_scale <- function(ylog_scale) {
-  if (ylog_scale == FALSE) {
+  if (!ylog_scale) {
     return(NULL)
   }
   scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), labels = scales::comma)

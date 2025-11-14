@@ -36,7 +36,7 @@ create_indplot <- function(data,
       !is.na(AVAL)
     )
 
-  if (ylog_scale == TRUE) {
+  if (isTRUE(ylog_scale)) {
     processed_data <- processed_data %>% filter(AVAL > 0)
   }
 
@@ -143,7 +143,7 @@ create_meanplot <- function(data,
       CI_upper = Mean + 1.96 * SE
     )
 
-  if (ylog_scale == TRUE) {
+  if (isTRUE(ylog_scale)) {
     summarised_data <- summarised_data %>%
       filter(Mean > 0)
   }

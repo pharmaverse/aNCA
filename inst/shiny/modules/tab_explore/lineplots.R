@@ -65,7 +65,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     ),
     checkboxInput(
       ns("log"),
-      "Use Logarithmic Y-Axis"
+      "Semi-log scale"
     ),
     radioButtons(
       ns("timescale"),
