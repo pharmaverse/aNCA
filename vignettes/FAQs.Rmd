@@ -50,19 +50,6 @@ Use the Mapping tab to assign your dataset columns to the required roles (PARAM,
 If you expect to re-run the same mapping later, export the settings from the Setup page and re-import them next time.
 </details>
 
-<details>
-<summary><strong>Derivation of partial AUC t1-t2: can the App use nominal or actual times conditionally?</strong></summary>
-
-Currently, no. The App calculates partial AUC t1-t2 using whichever time column you indicated during column mapping (typically `AFRLT` for actual relative time). There is not yet a built-in option to switch between nominal and actual times conditionally based on the deviation between them.
-
-Practical workarounds:
-
-- Pre-compute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| &lt; threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
-- Export the session script after mapping and modify the partial AUC calculation to use your chosen time variable or conditional logic offline.
-
-If you'd like this feature built into the app (an option to choose nominal/actual/conditional), I can add a small enhancement proposal and a TODO entry so we can implement it later.
-</details>
-
 ### What are duplicates and how to resolve them? {#what-are-duplicates-and-how-to-resolve-them}
 
 <details>
