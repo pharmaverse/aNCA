@@ -9,6 +9,7 @@ bibentry(
     person(given = "Pascal", family = "Baertschi", email = "paesce.26@gmail.com"),
     person(given = "Jana", family = "Spinner", email = "spinnerjana@gmail.com"),
     person(given = "Mateusz", family = "Kolomanski", email = "mateusz.kolomanski@appsilon.com"),
+    person(given = "Lucy", family = "Aspridis", email = "lucy.aspridis@gmail.com"),
     person(given = "Valentin", family = "Legras", email = "anca.pharmaverse@gmail.com")
   ),
   year = "2025",

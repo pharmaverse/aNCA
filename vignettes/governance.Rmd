@@ -13,7 +13,7 @@ vignette: >
 This document outlines the governance model for the aNCA project, detailing roles, responsibilities, and decision-making processes to ensure effective management and collaboration within the project.
 
 ## Overall
-In terms of "Governance models" the aNCA project is a bazaar - contributions are welcomed from anyone. Two approvals are required for any code change to be merged into the main branch. They have to come from the core team in order to allow merge (authors listed in the [DESCRIPTION file](../DESCRIPTION) and/or contributors provided with review rights). Optimally, one approval should be from someone with a technical/coding background, and the other from someone with domain expertise (NCA/PK). This ensures that both the technical integrity and the domain relevance of the contributions are maintained.
+The aNCA project follows a "bazaar" Governance model - contributions are welcomed from anyone. Two approvals are required for any code change to be merged into the main branch. They have to come from the core team in order to allow merge (authors listed in the [DESCRIPTION file](../DESCRIPTION) and/or contributors provided with review rights). Optimally, one approval should be from someone with a technical/coding background, and the other from someone with domain expertise (NCA/PK). This ensures that both the technical integrity and the domain relevance of the contributions are maintained.
 
 Unless there is any justified reason, all code changes accepted for the main branch are expected to be made via pull requests, pass all CI/CD checks and have no conflicts with the main branch.
 

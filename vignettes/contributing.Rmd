@@ -45,7 +45,7 @@ If you plan to contribute code, tests, or documentation, please follow these dev
 - Join the project by asking anca.pharmaverse@gmail.com and request collaborator access if you need push rights; otherwise, fork and open a PR.
 - You can find in our [project dashboard](https://github.com/orgs/pharmaverse/projects/30) our issues and their priority.
 - Preferably, work on issues with higher priority (`MUST` > `SHOULD` > `COULD` > `WISH`). Please, before selecting MUST issues, make sure you will have enough time to complete them in a quick timeframe. If you are a first time contributor, consider selecting issues with the `good first issue` label.
-- Branch naming: use a branch per issue if possible with a standard naming (e.g. `<issue number>-<bug/feat/documentation><issue name>`). For examples, see the [Branches](#branches) section below.
+- Branch naming: use a branch per issue if possible with a standard naming (e.g. `<issue number>-<bug/feat/documentation>/<issue name>`). For example, for issue 123 about a bug in the data upload, you could name your branch `123-bug/data-upload-fails-with-XPT`.
 - Code style: follow the [tidyverse style](https://style.tidyverse.org/files.html); ensure lintr passes and add unit tests for new behavior.
 - Commit messages: try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), although we are flexible about it (just make your best to name your changes intuitively for others!).
 - Write a Pull Request (PR): Once you are done with your implementation, complete the default template that will be provided when opening a PR. Always include at least the number of the issue you intend to solve, a brief description of the changes made, and a checklist of testing steps to validate the changes.

@@ -20,7 +20,7 @@ In general, any posted issue should contain a brief description of the problem, 
 ## Users :computer_mouse:
 This short section is for people who primarily use the app and want to report bugs, request features, or get help reproducing results.
 
-- You find something is not intuitive or you don't know if something can or not be done? Check in [discussions](https://github.com/pharmaverse/aNCA/discussions). If you still cannot answer your question, open a [Q&A dicussion](https://github.com/pharmaverse/aNCA/discussions/new?category=q-a) and the community will help you!
+- You find something is not intuitive or you don't know if something can or not be done? Check in [discussions](https://github.com/pharmaverse/aNCA/discussions). If you still cannot answer your question, open a [Q&A discussion](https://github.com/pharmaverse/aNCA/discussions/new?category=q-a) and the community will help you!
 - If you find a bug: open an [bug issue](https://github.com/pharmaverse/aNCA/issues) (if it does not already exist) and include a minimal reproduction (explain the steps you followed), the app version (see the footer in the UI) and screenshots or console logs if helpful. Please, make sure to not provide any sensitive or confidential data.
 - If you want a new feature or improvement: open a [discussion for ideas](https://github.com/pharmaverse/aNCA/discussions/new?category=ideas) (if it does not already exist)  titled  `Feature request: ...`. Explain your use case and desired outcome, with as much detail as possible.
 
@@ -34,7 +34,7 @@ If you plan to contribute code, tests, or documentation, please follow these dev
 - Join the project by asking anca.pharmaverse@gmail.com and request collaborator access if you need push rights; otherwise, fork and open a PR.
 - You can find in our [project dashboard](https://github.com/orgs/pharmaverse/projects/30) our issues and their priority.
 - Preferably, work on issues with higher priority (`MUST` > `SHOULD` > `COULD` > `WISH`). Please, before selecting MUST issues, make sure you will have enough time to complete them in a quick timeframe. If you are a first time contributor, consider selecting issues with the `good first issue` label.
-- Branch naming: use a branch per issue if possible with a standard naming (e.g. `<issue number>-<bug/feat/documentation><issue name>`). For examples, see the [Branches](#branches) section below.
+- Branch naming: use a branch per issue if possible with a standard naming (e.g. `<issue number>-<bug/feat/documentation>/<issue name>`). For example, for issue 123 about a bug in the data upload, you could name your branch `123-bug/data-upload-fails-with-XPT`.
 - Code style: follow the [tidyverse style](https://style.tidyverse.org/files.html); ensure lintr passes and add unit tests for new behavior.
 - Commit messages: try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), although we are flexible about it (just make your best to name your changes intuitively for others!).
 - Write a Pull Request (PR): Once you are done with your implementation, complete the default template that will be provided when opening a PR. Always include at least the number of the issue you intend to solve, a brief description of the changes made, and a checklist of testing steps to validate the changes.
@@ -81,6 +81,6 @@ Helpful links for Code reviewers:
 - For development purposes, you can specify a log level using `aNCA_LOG_LEVEL` environment variable. As a default, this is set to **INFO**. We recommend setting the log level to **TRACE**, e.g. in your `.Renviron` file (`aNCA_LOG_LEVEL="TRACE"`).
 
 # In-depth guides
-Here are some useful links with in-depth documentation regarding specific parts of the pacakage and how to utilise in-build tools to extend the capabilities of the application:
+Here are some useful links with in-depth documentation regarding specific parts of the package and how to utilise in-build tools to extend the capabilities of the application:
 
 - [Adding TLGs](https://pharmaverse.github.io/aNCA/articles/adding_tlg.html)
