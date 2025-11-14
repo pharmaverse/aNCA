@@ -95,7 +95,7 @@ This function generates a list of plotly objects PK concentration-time profiles 
 
   plots <- pkcg02(adnca)
   plots_log <- pkcg02(adnca, scale = "LOG")
-  plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study XYZ")
+  plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
   plotly::plotly_build(plots[[1]]) # View the first plot
 }
 
