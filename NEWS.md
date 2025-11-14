@@ -4,7 +4,7 @@
 
 ## Features added
 
-* Renamed all ADPC to ADNCA for standardization with CDISC.
+* Rename all "ADPC" label mentions in the App to "ADNCA", which is the CDISC standard the App promotes (#778)
 
 ## Bugs fixed
 
