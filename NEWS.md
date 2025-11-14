@@ -2,9 +2,11 @@
 
 # aNCA 0.2.0
 
-* Features added
+## Features added
 
-* Bugs fixed
+* Renamed all ADPC to ADNCA for standardization with CDISC.
+
+## Bugs fixed
 
 # aNCA 0.1.0
 
