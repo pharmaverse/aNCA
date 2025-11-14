@@ -14,21 +14,27 @@ nca_results_ui <- function(id) {
     ),
     units_table_ui(ns("units_table")),
     reactable_ui(ns("myresults")),
-  ## Color legend for the results table
-  div(
-    class = "results-legend",
-    style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
-    div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Flag Rules:"),
-    div(style = "display:flex; align-items:center; gap:6px;",
-      div(style = "width:14px; height:14px; background:#f5b4b4; border:1px solid #ddd;"),
-      span("FLAGGED", style = "font-size:0.9em;")),
-    div(style = "display:flex; align-items:center; gap:6px;",
-      div(style = "width:14px; height:14px; background:#cbaddd; border:1px solid #ddd;"),
-      span("MISSING", style = "font-size:0.9em;")),
-    div(style = "display:flex; align-items:center; gap:6px;",
-      div(style = "width:14px; height:14px; background:#ffffff; border:1px solid #ddd;"),
-      span("ACCEPTED", style = "font-size:0.9em;"))
-  ),
+
+    # Color legend for the results table
+    div(
+      class = "results-legend",
+      style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
+      div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Flag Rules:"),
+      div(style = "display:flex; align-items:center; gap:6px;",
+        div(style = "width:14px; height:14px; background:#f5b4b4; border:1px solid #ddd;"),
+        span("FLAGGED", style = "font-size:0.9em;")
+      ),
+      div(style = "display:flex; align-items:center; gap:6px;",
+        div(style = "width:14px; height:14px; background:#cbaddd; border:1px solid #ddd;"),
+        span("MISSING", style = "font-size:0.9em;")
+      ),
+      div(style = "display:flex; align-items:center; gap:6px;",
+        div(style = "width:14px; height:14px; background:#ffffff; border:1px solid #ddd;"),
+        span("ACCEPTED", style = "font-size:0.9em;")
+      )
+    ),
+
+    # Download buttons
     downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data"),
     downloadButton(ns("download_zip"), "Download All Results as ZIP")
   )
