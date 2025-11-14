@@ -17,7 +17,7 @@ In terms of "Governance models" the aNCA project is a bazaar - contributions are
 
 Unless there is any justified reason, all code changes accepted for the main branch are expected to be made via pull requests, pass all CI/CD checks and have no conflicts with the main branch.
 
-## Priority and decission making
+## Priority and decision making
 The GitHub dashboard is used to track issues and tasks related to the project. Each issue is assigned a priority level based on its importance and urgency, following the [MSCW method](https://en.wikipedia.org/wiki/MoSCoW_method):
 
 - **MUST** - task of highest priority, must be implemented for the application to be usable and useful.
@@ -28,7 +28,7 @@ The GitHub dashboard is used to track issues and tasks related to the project. E
 Decisions regarding an issue's priority are made by authors and in first place the maintainer(s) of the project. However, input from the community is welcomed and encouraged, especially for issues that may impact a broader user base. External opinions can be gathered through comments on issues or discussions in the GitHub repository. The priority level should also be determined by the pre-defined roadmap goals for the project, as outlined in the [roadmap document](https://pharmaverse.github.io/aNCA/articles/roadmap.html).
 
 ## Governance compromises
-All main authors listed in the DESCRIPTION, compromise themselves to:
+All main authors listed in the DESCRIPTION, are expected to:
 - Have a 2FA enabled GitHub account, to ensure the security of the repository and its contents. Preferably, not using SMS as a 2FA method.
 - Decide an issue's priority taking into consideration (although not uniquely) the roadmap goals for the project and popular opinions from the community.
 - Try to review and approve code changes in a timely manner, ensuring that the project maintains its momentum and continues to evolve effectively.

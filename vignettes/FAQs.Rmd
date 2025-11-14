@@ -120,5 +120,5 @@ If the issue involves private data, provide a redacted/synthetic example or reac
 
 ---
 
-We still did not answered your questions? Check at our [GitHub discussions](https://github.com/pharmaverse/aNCA/discussions) and if it is still not there feel free to open a Q&A topic! 
+We still haven't answered your questions? Check at our [GitHub discussions](https://github.com/pharmaverse/aNCA/discussions) and if it is still not there feel free to open a Q&A topic! 
 
