@@ -7,7 +7,7 @@ profiles.
 
 ``` r
 pkcg01(
-  adpc = data(),
+  adnca = data(),
   xvar = "AFRLT",
   yvar = "AVAL",
   xvar_unit = "RRLTU",
@@ -37,7 +37,7 @@ pkcg01(
 
 ## Arguments
 
-- adpc:
+- adnca:
 
   A data frame containing the data.
 
@@ -147,14 +147,14 @@ looks fine now
 
 ``` r
 if (FALSE) { # \dontrun{
-  adpc <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
-  attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
-  attr(adpc[["AVAL"]], "label") <- "Analysis val"
+  adnca <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
+  attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
+  attr(adnca[["AVAL"]], "label") <- "Analysis val"
 
-  plots_lin <- pckg01(adpc = adpc, xmax = 1)
-  plots_log <- pckg01(adpc = adpc, color_var = "USUBJID", scale = "LOG")
+  plots_lin <- pckg01(adnca = adnca, xmax = 1)
+  plots_log <- pckg01(adnca = adnca, color_var = "USUBJID", scale = "LOG")
   plots_sbs <- pckg01(
-    adpc = adpc,
+    adnca = adnca,
     color_var = "USUBJID",
     xbreaks_var = "NFRLT",
     xmin = 100,

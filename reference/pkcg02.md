@@ -7,7 +7,7 @@ profiles by group
 
 ``` r
 pkcg02(
-  adpc = data(),
+  adnca = data(),
   xvar = "AFRLT",
   yvar = "AVAL",
   xvar_unit = "RRLTU",
@@ -37,7 +37,7 @@ pkcg02(
 
 ## Arguments
 
-- adpc:
+- adnca:
 
   A data frame containing the data.
 
@@ -147,13 +147,13 @@ fine now
 
 ``` r
 if (FALSE) { # \dontrun{
-  adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
-  attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
-  attr(adpc[["AVAL"]], "label") <- "Analysis value"
+  adnca <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
+  attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
+  attr(adnca[["AVAL"]], "label") <- "Analysis value"
 
-  plots <- pkcg02(adpc)
-  plots_log <- pkcg02(adpc, scale = "LOG")
-  plots_custom <- pkcg02(adpc, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study XYZ")
+  plots <- pkcg02(adnca)
+  plots_log <- pkcg02(adnca, scale = "LOG")
+  plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
   plotly::plotly_build(plots[[1]]) # View the first plot
 } # }
 ```

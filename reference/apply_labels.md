@@ -5,7 +5,7 @@ This function adds "label" attributes to all columns in a dataset
 ## Usage
 
 ``` r
-apply_labels(data, labels_df = metadata_nca_variables, type = "ADPC")
+apply_labels(data, labels_df = metadata_nca_variables, type = "ADNCA")
 ```
 
 ## Arguments
@@ -37,9 +37,9 @@ preserved.
  labels <- data.frame(
    Variable = c("USUBJID", "AVAL"),
    Label = c("Unique Subject Identifier", "Analysis Value"),
-   Dataset = c("ADPC", "ADPC")
+   Dataset = c("ADNCA", "ADNCA")
  )
- data <- apply_labels(data, labels, "ADPC")
+ data <- apply_labels(data, labels, "ADNCA")
  print(attr(data$USUBJID, "label")) # "Unique Subject Identifier"
 #> [1] "Unique Subject Identifier"
  print(attr(data$AVAL, "label"))    # "Analysis Value"

@@ -168,8 +168,8 @@ page, on the *Manual Adjustments* tab.
 
 #### Parameter Datasets
 
-In the Parameter Datasets tab you can see and export the ADPP, ADPC, and
-PP datasets.
+In the Parameter Datasets tab you can see and export the ADPP, ADNCA,
+and PP datasets.
 
 ![Parameter Datasets](images/get_started/12.png)
 

@@ -14,7 +14,7 @@ A data frame with 361 rows and 14 variables:
 
 - Dataset:
 
-  Character. Indicates the dataset the variable belongs to (PP, ADPC,
+  Character. Indicates the dataset the variable belongs to (PP, ADNCA,
   ADPP).
 
 - Order:
