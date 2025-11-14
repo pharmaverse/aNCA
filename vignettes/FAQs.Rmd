@@ -13,8 +13,9 @@ This page collects common questions our users and contributors ask and short, ac
 
 ## Quick navigation
 
+In which section do you have questions?
+
 - [Uploading & supported data formats](#uploading--supported-data-formats)
-- [Column mapping gotchas](#column-mapping-gotchas)
 - [What are duplicates and how to resolve them?](#what-are-duplicates-and-how-to-resolve-them)
 - [How does the exported reproducible script work?](#how-does-the-exported-reproducible-script-work)
 - [Validation and CDISC outputs](#validation-and-cdisc-outputs)
@@ -76,13 +77,7 @@ If you need to clean the data outside the app, export the dataset, fix duplicate
 </details>
 
 
-### Validation and CDISC outputs {#validation-and-cdisc-outputs}
-
-<details>
-<summary><strong>How is the project validated and what about CDISC outputs?</strong></summary>
-
-You can see our current validations and future plan in the [validations page](https://pharmaverse.github.io/aNCA/articles/validations.html)
-</details>
+### NCA settings and all available options
 
 <details>
 <summary><strong>Derivation of partial AUC t1-t2: can the App use nominal or actual times conditionally?</strong></summary>
@@ -95,6 +90,15 @@ Practical workarounds:
 - Export the session script after mapping and modify the partial AUC calculation to use your chosen time variable or conditional logic offline.
 
 If you'd like this feature built into the app (an option to choose nominal/actual/conditional), I can add a small enhancement proposal and a TODO entry so we can implement it later.
+</details>
+
+
+### Validation and CDISC outputs {#validation-and-cdisc-outputs}
+
+<details>
+<summary><strong>How is the project validated and what about CDISC outputs?</strong></summary>
+
+You can see our current validations and future plan in the [validations page](https://pharmaverse.github.io/aNCA/articles/validations.html)
 </details>
 
 
@@ -112,19 +116,6 @@ Use GitHub Issues for bugs and feature requests. For questions and brainstorming
 - App version (shown in the UI footer), screenshots, and console logs if helpful.
 
 If the issue involves private data, provide a redacted/synthetic example or reach out to the maintainers for secure alternatives. Here is a link for [Bug Reports].
-</details>
-
-<details>
-<summary><strong>Derivation of partial AUC t1-t2: can the App use nominal or actual times conditionally?</strong></summary>
-
-Currently, no. The App calculates partial AUC t1-t2 using whichever time column you indicated during column mapping (typically `AFRLT` for actual relative time). There is not yet a built-in option to switch between nominal and actual times conditionally based on the deviation between them.
-
-Practical workarounds:
-
-- Pre-compute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| < threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
-- Export the session script after mapping and modify the partial AUC calculation to use your chosen time variable or conditional logic offline.
-
-If you'd like this feature built into the app (an option to choose nominal/actual/conditional), I can add a small enhancement proposal and a TODO entry so we can implement it later.
 </details>
 
 ---
