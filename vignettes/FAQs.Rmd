@@ -115,10 +115,10 @@ Use GitHub Issues for bugs and feature requests. For questions and brainstorming
 - Steps to reproduce (minimal reproducible example if possible).
 - App version (shown in the UI footer), screenshots, and console logs if helpful.
 
-If the issue involves private data, provide a redacted/synthetic example or reach out to the maintainers for secure alternatives. Here is a link for [Bug Reports].
+If the issue involves private data, provide a redacted/synthetic example or reach out to the maintainers for secure alternatives. Here is a link for [Bug Reports](https://github.com/pharmaverse/aNCA/issues).
 </details>
 
 ---
 
-We still haven't answered your questions? Check at our [GitHub discussions](https://github.com/pharmaverse/aNCA/discussions) and if it is still not there feel free to open a Q&A topic! 
+Still have questions? Check at our [GitHub discussions](https://github.com/pharmaverse/aNCA/discussions) and if your question is still not there, feel free to open a Q&A topic! 
 
