@@ -25,7 +25,7 @@ describe("format_pkncaconc_data", {
 
     expect_s3_class(df_conc, "data.frame")
     expect_setequal(
-      c(names(ADNCA), "std_route", "DOSNOA"),
+      c(names(ADNCA), "std_route", "DOSNOA", "nca_exclude"),
       colnames(df_conc)
     )
     expect_no_error(
@@ -129,7 +129,7 @@ describe("format_pkncadose_data", {
 
     expect_s3_class(df_dose, "data.frame")
     expect_setequal(
-      c(names(ADNCA), "std_route", "DOSNOA"),
+      c(names(ADNCA), "std_route", "DOSNOA", "nca_exclude"),
       colnames(df_dose)
     )
 
