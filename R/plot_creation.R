@@ -3,7 +3,7 @@
 #' Combines data processing and plotting for individual concentration-time profiles.
 #'
 #' @param data Raw data frame.
-#' @param selected_usubjids,selected_analytes,selected_pcspec,profiles_selected Inputs for filtering.
+#' @param selected_usubjids,selected_analytes,selected_pcspec,profiles_selected Inputs for filters.
 #' @param colorby_var The variable(s) to be used for coloring.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @param facet_by Character vector of column names to facet by.
