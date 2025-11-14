@@ -23,7 +23,7 @@ create_indplot(
 \arguments{
 \item{data}{Raw data frame.}
 
-\item{selected_usubjids, selected_analytes, selected_pcspec, profiles_selected}{Inputs for filtering.}
+\item{selected_usubjids, selected_analytes, selected_pcspec, profiles_selected}{Inputs for filters.}
 
 \item{colorby_var}{The variable(s) to be used for coloring.}
 
