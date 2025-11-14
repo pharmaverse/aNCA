@@ -21,11 +21,15 @@ nca_results_ui <- function(id) {
       style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
       div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Flag Rules:"),
       div(style = "display:flex; align-items:center; gap:6px;",
-        div(style = paste0("width:14px; height:14px; background:", FLAG_COLOR_FLAGGED, "; border:1px solid #ddd;")),
+        div(style = paste0(
+          "width:14px; height:14px; background:", FLAG_COLOR_FLAGGED, "; border:1px solid #ddd;"
+        )),
         span("FLAGGED", style = "font-size:0.9em;")
       ),
       div(style = "display:flex; align-items:center; gap:6px;",
-        div(style = paste0("width:14px; height:14px; background:", FLAG_COLOR_MISSING,"; border:1px solid #ddd;")),
+        div(style = paste0(
+          "width:14px; height:14px; background:", FLAG_COLOR_MISSING, "; border:1px solid #ddd;"
+        )),
         span("MISSING", style = "font-size:0.9em;")
       ),
       div(style = "display:flex; align-items:center; gap:6px;",
