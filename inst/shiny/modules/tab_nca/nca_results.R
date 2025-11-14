@@ -21,11 +21,11 @@ nca_results_ui <- function(id) {
       style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
       div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Flag Rules:"),
       div(style = "display:flex; align-items:center; gap:6px;",
-        div(style = "width:14px; height:14px; background:#f5b4b4; border:1px solid #ddd;"),
+        div(style = paste0("width:14px; height:14px; background:", FLAG_COLOR_FLAGGED, "; border:1px solid #ddd;")),
         span("FLAGGED", style = "font-size:0.9em;")
       ),
       div(style = "display:flex; align-items:center; gap:6px;",
-        div(style = "width:14px; height:14px; background:#cbaddd; border:1px solid #ddd;"),
+        div(style = paste0("width:14px; height:14px; background:", FLAG_COLOR_MISSING,"; border:1px solid #ddd;")),
         span("MISSING", style = "font-size:0.9em;")
       ),
       div(style = "display:flex; align-items:center; gap:6px;",
@@ -240,9 +240,9 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         function(index) {
           flagged_value <- x$flagged[index]
           if (flagged_value == "FLAGGED") {
-            list(backgroundColor = "#f5b4b4")
+            list(backgroundColor = FLAG_COLOR_FLAGGED)
           } else if (flagged_value == "MISSING") {
-            list(backgroundColor = "#cbaddd")
+            list(backgroundColor = FLAG_COLOR_MISSING)
           } else {
             NULL
           }
@@ -260,3 +260,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
     )
   })
 }
+
+# Color constants for flagged results
+FLAG_COLOR_FLAGGED <- "#f5b4b4"
+FLAG_COLOR_MISSING <- "#cbaddd"
