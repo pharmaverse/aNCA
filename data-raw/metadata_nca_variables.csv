@@ -1,262 +1,262 @@
 "Dataset","Order","Variable","Label","Type","Role","Core","company_specific","is.core","Length","Controlled_Terms","is.used","Values","is.mapped","mapping_tooltip","mapping_section","mapping_alternatives","mapping_order"
-"ADPC",1,"STUDYID","Study Identifier","text","Identifier","Req",FALSE,TRUE,8,"",TRUE,"",TRUE,"Character column to identify the study","Group Identifiers","",1
-"ADPC",2,"USUBJID","Unique Subject Identifier","text","Identifier","Req",FALSE,TRUE,50,"",TRUE,"",TRUE,"Character column to identify a subject across studies","Group Identifiers","",2
-"ADPC",2.5,"SUBJID","Subject Identifier for the Study","text","Identifier","Perm",FALSE,TRUE,50,"",TRUE,"",FALSE,"","","",NA
-"ADPC",2.54,"SITEID","Study Site Identifier","text","Identifier","Perm",FALSE,TRUE,20,"",TRUE,"",FALSE,"","","",NA
-"ADPC",3,"PCGRPID","Group ID","text","Identifier","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",4,"PCREFID","Reference ID","text","Identifier","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",5,"PCSEQ","Sequence Number","integer","Identifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",6,"PCSPID","Sponsor-Defined Identifier","text","Identifier","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",9,"AGE","Age","integer","Topic","Req",FALSE,TRUE,12,"",TRUE,"",FALSE,"","","",NA
-"ADPC",28,"ARRLT","Actual Rel. Time from Ref. Dose","integer","Topic","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating actual time of sample collection since last dose","Time Variables","",9
-"ADPC",11,"DOSEA","Actual Treatment Dose","float","Topic","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for actual dose amount given in the last administration","Dose Variables","DOSEP",14
-"ADPC",12,"DOSEAU","Actual Treatment Dose Units","text","Topic","Req",FALSE,FALSE,40,"C71620",FALSE,"mg, g, ug, ng, pg, mol, mmol, umol, nmol, pmol, mg/kg, g/kg, ug/kg, ng/kg, pg/kg, mol/kg, mmol/kg, umol/kg, nmol/kg, pmol/kg",FALSE,"Character column for unit of DOSEA (C71620). Instead of a column name, a unique value can be mapped for all records (i.e, ""mg/L"")","Dose Variables","",NA
-"ADPC",13,"DOSEP","Planned Treatment Dose","float","Topic","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",14,"DOSEPU","Planned Treatment Dose Units","text","Topic","Req",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",28,"NRRLT","Nominal Rel. Time from Ref. Dose","float","Topic","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating planned time of sample collection since last dose","Time Variables","",10
-"ADPC",16,"PARAM","Parameter","text","Topic","Req",FALSE,FALSE,100,"",FALSE,"",TRUE,"Character column indicating the name of the measured analyte","Sample Variables","",3
-"ADPC",17,"PARAMCD","Parameter Code","text","Topic","Req",FALSE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
-"ADPC",18,"RACE","Race","text","Topic","Req",FALSE,FALSE,200,"C74457",FALSE,"",FALSE,"","","",NA
-"ADPC",19,"SEX","Sex","text","Topic","Req",FALSE,FALSE,2,"C66731",FALSE,"",FALSE,"","","",NA
-"ADPC",20,"AAGBL","Alpha-1 Acid Glycoprotein at Baseline","float","Topic","Perm",TRUE,FALSE,12,"C66742",FALSE,"",FALSE,"","","",NA
-"ADPC",21,"AAGE","Analysis Age","integer","Topic","Perm",FALSE,TRUE,12,"",TRUE,"",FALSE,"","","",NA
-"ADPC",22,"ACYCLE","Analysis Cycle","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",23,"ACYCLEC","Analysis Cycle (C)","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",24,"ADA","Treatment Emergent ADA status","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",25,"AEFRLT","Act. Rel. End Time from First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",26,"AERRLT","Actual Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",27,"AERRLT","Actual Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",28,"AFRLT","Act. Rel. Time from Analyte First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating actual time of sample collection since first dose","Time Variables","",8
-"ADPC",29,"ALKPHBL","Alkaline Phosphatase at Baseline","float","Topic","Perm",TRUE,FALSE,12,"C66742",FALSE,"",FALSE,"","","",NA
-"ADPC",30,"ASEQ","Analysis Sequence Number","integer","Topic","Perm",FALSE,TRUE,12,"",TRUE,"",FALSE,"","","",NA
-"ADPC",31,"BMIBL","BMI at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",32,"BSABL","BSA at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",33,"BUNBL","Blood Urea Nitrogen at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",34,"CALCBL","Calcium at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",35,"CLBL","Chloride at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",36,"CRCLBL","CrCL at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",37,"DBPBL","Diastolic BP at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",38,"DOSEDURU","Duration of Treatment Dose Units","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",39,"EOSBL","Eosinophils at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",40,"ETHNIC","Ethnicity","text","Topic","Perm",FALSE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
-"ADPC",41,"FRMUL","Treatment Formulation","text","Topic","Perm",TRUE,FALSE,20,"",FALSE,"",FALSE,"","","",NA
-"ADPC",42,"GGTBL","GGT at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",43,"GLUCBL","Glucose at Baseline","integer","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",44,"HCTBL","Hematocrit at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",45,"HGBBL","Hemoglobin at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",46,"HRBLU","Heart Rate at Baseline (Unit)","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",47,"HTBL","Height at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",48,"IBWBL","Ideal Body Weight (IBW) at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",49,"KBL","Potassium at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",50,"LBMBL","Lean Body Mass (LBM) at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",51,"LYMBL","Lymphocytes at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",52,"MERRLT","Modified Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",53,"MERRLT","Modified Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",54,"MRRLT","Modified Rel. Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",55,"NABL","Sodium at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",56,"NCAXFN","PK NCA Exclusion Flag (N)","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",57,"NCAwXRS","Reason w for PK NCA Exclusion","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",58,"NCAwXRSN","Reason for PK NCA Exclusion of w (N)","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",59,"NEFRLT","Nom. Rel. End Time from First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",60,"NERRLT","Nominal Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",61,"NERRLT","Nominal Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",62,"NEUBL","Neutrophils at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",63,"NFRLT","Nom. Rel. Time from Analyte First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating planned time of sample collection since first dose","Time Variables","",NA
-"ADPC",64,"PCAINTP","Assay Interpretation","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",65,"PCCAT","Test Category","text","Topic","Perm",FALSE,FALSE,100,"",FALSE,"",FALSE,"","","",NA
-"ADPC",66,"PCFAST","Fasting Status","text","Topic","Perm",FALSE,FALSE,2,"",FALSE,"",FALSE,"","","",NA
-"ADPC",67,"PCMETHOD","Method of Test or Examination","text","Topic","Perm",FALSE,FALSE,100,"",FALSE,"",FALSE,"","","",NA
-"ADPC",68,"PCREASND","Reason Test Not Done","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",69,"PCSCAT","Test Subcategory","text","Topic","Perm",FALSE,FALSE,100,"",FALSE,"",FALSE,"","","",NA
-"ADPC",70,"PCSMPLID","Alternate Sample Identifier","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",71,"PCSPCCND","Specimen Condition","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",72,"PCSPEC","Specimen Material Type","text","Topic","Perm",FALSE,FALSE,40,"C78734",FALSE,"PLASMA, SERUM, URINE, BLOOD, BONE, BILE, MUCUS, SALIVA, SKIN TISSUE, TISSUE, SPUTUM, SEMEN",TRUE,"Character column for sample's type of specimen or matrix (C78734). Instead of a column name, a unique value can be mapped for all records  (i.e, ""PLASMA"", ""SERUM"" or ""URINE"")","Sample Variables","",4
-"ADPC",73,"PCTEST","Pharmacokinetic Test Name","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",74,"PCTESTCD","Pharmacokinetic Test Short Name","text","Topic","Perm",FALSE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
-"ADPC",75,"PHBL","Phosphate at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",76,"PKSUMXF","PK Summary Exclusion Flag","text","Topic","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",77,"PKSUMXFN","PK Summary Exclusion Flag (N)","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",78,"PLATEBL","Platelet Count at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",79,"PRBL","PR Duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",80,"PULSBL","Pulse rate at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",81,"QRSBL","QRS Duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",82,"QTBL","QT duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",83,"QTCBBL","QTcB at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",84,"QTCFBLU","QTcF at Baseline (Unit)","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",85,"RBCBL","RBC Count at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",86,"REGIME","Regimen of Medication","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",87,"REGION1","Geographic Region 1","text","Topic","Perm",TRUE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
-"ADPC",88,"ROUTE","Route of Administration","text","Topic","Perm",FALSE,FALSE,40,"C66729",FALSE,"INTRAVASCULAR, ORAL, AURICULAR (OTIC), BUCCAL, CONJUNCTIVAL, CUTANEOUS, DENTAL, DIETARY, ELECTRO-OSMOSIS, ENDOCERVICAL, ENDOSINUSIAL, ENDOTRACHEAL, ENTERAL, EPIDURAL, EXTRA-AMNIOTIC, EXTRACORPOREAL, GASTROJEJUNAL, HEMODIALYSIS, IMMERSION, INFILTRATION, INTERSTITIAL, INTRA-ABDOMINAL, INTRA-AMNIOTIC, INTRA-ARTERIAL, INTRA-ARTICULAR, INTRABILIARY, INTRABRONCHIAL, INTRABURSAL, INTRACAMERAL, INTRACARDIAC, INTRACARTILAGINOUS, INTRACAUDAL, INTRACAVERNOUS, INTRACAVITARY, INTRACEREBRAL, INTRACISTERNAL, INTRACOCHLEAR, INTRACORNEAL, INTRACORONAL, DENTAL, INTRACORONARY, INTRACORPORUS CAVERNOSUM, INTRADERMAL, INTRADISCAL, INTRADUCTAL, INTRADUODENAL, INTRADURAL, INTRAEPIDERMAL, INTRAESOPHAGEAL, INTRAGASTRIC, INTRAGINGIVAL, INTRAHEPATIC, INTRAILEAL, INTRAJEJUNAL, INTRALESIONAL, INTRALUMINAL, INTRALYMPHATIC, INTRAMAMMARY, INTRAMANDIBULAR, INTRAMEDULLARY, INTRAMENINGEAL, INTRAMUSCULAR, INTRANODAL, INTRAOCULAR, INTRAOSSEOUS, INTRAOVARIAN, INTRAPALATAL, INTRAPARENCHYMAL, INTRAPERICARDIAL, INTRAPERITONEAL, INTRAPLEURAL, INTRAPROSTATIC, INTRAPULMONARY, INTRARUMINAL, INTRASINAL, INTRASPINAL, INTRASTOMAL, INTRASURGICAL SITE, INTRASYNOVIAL, INTRATENDINOUS, INTRATESTICULAR, INTRATHALAMIC, INTRATHECAL, INTRATHORACIC, INTRATUBULAR, INTRATUMOR, INTRATYMPANIC, INTRAUTERINE, INTRAVAGINAL, INTRAVENOUS, INTRAVENOUS BOLUS, INTRAVENOUS DRIP, INTRAVENTRICULAR, INTRAVESICAL, INTRAVITREAL, IONTOPHORESIS, IRRIGATION, LARYNGEAL, MICRODIALYSIS, NASAL, NASODUODENAL, NASOJEJUNAL, NOT APPLICABLE, OCCLUSIVE DRESSING TECHNIQUE, OPHTHALMIC, ORAL GAVAGE, OROGASTRIC, OROMUCOSAL, OROPHARYNGEAL, PARENTERAL, PERCUTANEOUS, PERIARTICULAR, PERIDURAL, PERINEURAL, PERIODONTAL, PERIVENOUS, PHARYNGEAL, RECTAL, RESPIRATORY (INHALATION), RETROBULBAR, SOFT TISSUE, SUBARACHNOID, SUBCONJUNCTIVAL, SUBCUTANEOUS, SUBDURAL, SUBLINGUAL, SUBMUCOSAL, SUBRETINAL, SUBTENON, SUPRACHOROIDAL, TOPICAL, TRANSDERMAL, TRANSMAMMARY, TRANSMUCOSAL, TRANSPLACENTAL, TRANSTRACHEAL, TRANSTYMPANIC, UNASSIGNED, UNKNOWN, URETERAL, URETHRAL, VAGINAL
+"ADNCA",1,"STUDYID","Study Identifier","text","Identifier","Req",FALSE,TRUE,8,"",TRUE,"",TRUE,"Character column to identify the study","Group Identifiers","",1
+"ADNCA",2,"USUBJID","Unique Subject Identifier","text","Identifier","Req",FALSE,TRUE,50,"",TRUE,"",TRUE,"Character column to identify a subject across studies","Group Identifiers","",2
+"ADNCA",2.5,"SUBJID","Subject Identifier for the Study","text","Identifier","Perm",FALSE,TRUE,50,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",2.54,"SITEID","Study Site Identifier","text","Identifier","Perm",FALSE,TRUE,20,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",3,"PCGRPID","Group ID","text","Identifier","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",4,"PCREFID","Reference ID","text","Identifier","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",5,"PCSEQ","Sequence Number","integer","Identifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",6,"PCSPID","Sponsor-Defined Identifier","text","Identifier","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",9,"AGE","Age","integer","Topic","Req",FALSE,TRUE,12,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",28,"ARRLT","Actual Rel. Time from Ref. Dose","integer","Topic","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating actual time of sample collection since last dose","Time Variables","",9
+"ADNCA",11,"DOSEA","Actual Treatment Dose","float","Topic","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for actual dose amount given in the last administration","Dose Variables","DOSEP",14
+"ADNCA",12,"DOSEAU","Actual Treatment Dose Units","text","Topic","Req",FALSE,FALSE,40,"C71620",FALSE,"mg, g, ug, ng, pg, mol, mmol, umol, nmol, pmol, mg/kg, g/kg, ug/kg, ng/kg, pg/kg, mol/kg, mmol/kg, umol/kg, nmol/kg, pmol/kg",FALSE,"Character column for unit of DOSEA (C71620). Instead of a column name, a unique value can be mapped for all records (i.e, ""mg/L"")","Dose Variables","",NA
+"ADNCA",13,"DOSEP","Planned Treatment Dose","float","Topic","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",14,"DOSEPU","Planned Treatment Dose Units","text","Topic","Req",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",28,"NRRLT","Nominal Rel. Time from Ref. Dose","float","Topic","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating planned time of sample collection since last dose","Time Variables","",10
+"ADNCA",16,"PARAM","Parameter","text","Topic","Req",FALSE,FALSE,100,"",FALSE,"",TRUE,"Character column indicating the name of the measured analyte","Sample Variables","",3
+"ADNCA",17,"PARAMCD","Parameter Code","text","Topic","Req",FALSE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",18,"RACE","Race","text","Topic","Req",FALSE,FALSE,200,"C74457",FALSE,"",FALSE,"","","",NA
+"ADNCA",19,"SEX","Sex","text","Topic","Req",FALSE,FALSE,2,"C66731",FALSE,"",FALSE,"","","",NA
+"ADNCA",20,"AAGBL","Alpha-1 Acid Glycoprotein at Baseline","float","Topic","Perm",TRUE,FALSE,12,"C66742",FALSE,"",FALSE,"","","",NA
+"ADNCA",21,"AAGE","Analysis Age","integer","Topic","Perm",FALSE,TRUE,12,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",22,"ACYCLE","Analysis Cycle","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",23,"ACYCLEC","Analysis Cycle (C)","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",24,"ADA","Treatment Emergent ADA status","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",25,"AEFRLT","Act. Rel. End Time from First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",26,"AERRLT","Actual Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",27,"AERRLT","Actual Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",28,"AFRLT","Act. Rel. Time from Analyte First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating actual time of sample collection since first dose","Time Variables","",8
+"ADNCA",29,"ALKPHBL","Alkaline Phosphatase at Baseline","float","Topic","Perm",TRUE,FALSE,12,"C66742",FALSE,"",FALSE,"","","",NA
+"ADNCA",30,"ASEQ","Analysis Sequence Number","integer","Topic","Perm",FALSE,TRUE,12,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",31,"BMIBL","BMI at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",32,"BSABL","BSA at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",33,"BUNBL","Blood Urea Nitrogen at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",34,"CALCBL","Calcium at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",35,"CLBL","Chloride at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",36,"CRCLBL","CrCL at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",37,"DBPBL","Diastolic BP at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",38,"DOSEDURU","Duration of Treatment Dose Units","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",39,"EOSBL","Eosinophils at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",40,"ETHNIC","Ethnicity","text","Topic","Perm",FALSE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",41,"FRMUL","Treatment Formulation","text","Topic","Perm",TRUE,FALSE,20,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",42,"GGTBL","GGT at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",43,"GLUCBL","Glucose at Baseline","integer","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",44,"HCTBL","Hematocrit at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",45,"HGBBL","Hemoglobin at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",46,"HRBLU","Heart Rate at Baseline (Unit)","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",47,"HTBL","Height at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",48,"IBWBL","Ideal Body Weight (IBW) at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",49,"KBL","Potassium at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",50,"LBMBL","Lean Body Mass (LBM) at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",51,"LYMBL","Lymphocytes at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",52,"MERRLT","Modified Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",53,"MERRLT","Modified Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",54,"MRRLT","Modified Rel. Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",55,"NABL","Sodium at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",56,"NCAXFN","PK NCA Exclusion Flag (N)","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",57,"NCAwXRS","Reason w for PK NCA Exclusion","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",58,"NCAwXRSN","Reason for PK NCA Exclusion of w (N)","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",59,"NEFRLT","Nom. Rel. End Time from First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",60,"NERRLT","Nominal Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",61,"NERRLT","Nominal Rel. End Time from Ref. Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",62,"NEUBL","Neutrophils at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",63,"NFRLT","Nom. Rel. Time from Analyte First Dose","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column indicating planned time of sample collection since first dose","Time Variables","",NA
+"ADNCA",64,"PCAINTP","Assay Interpretation","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",65,"PCCAT","Test Category","text","Topic","Perm",FALSE,FALSE,100,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",66,"PCFAST","Fasting Status","text","Topic","Perm",FALSE,FALSE,2,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",67,"PCMETHOD","Method of Test or Examination","text","Topic","Perm",FALSE,FALSE,100,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",68,"PCREASND","Reason Test Not Done","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",69,"PCSCAT","Test Subcategory","text","Topic","Perm",FALSE,FALSE,100,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",70,"PCSMPLID","Alternate Sample Identifier","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",71,"PCSPCCND","Specimen Condition","text","Topic","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",72,"PCSPEC","Specimen Material Type","text","Topic","Perm",FALSE,FALSE,40,"C78734",FALSE,"PLASMA, SERUM, URINE, BLOOD, BONE, BILE, MUCUS, SALIVA, SKIN TISSUE, TISSUE, SPUTUM, SEMEN",TRUE,"Character column for sample's type of specimen or matrix (C78734). Instead of a column name, a unique value can be mapped for all records  (i.e, ""PLASMA"", ""SERUM"" or ""URINE"")","Sample Variables","",4
+"ADNCA",73,"PCTEST","Pharmacokinetic Test Name","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",74,"PCTESTCD","Pharmacokinetic Test Short Name","text","Topic","Perm",FALSE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",75,"PHBL","Phosphate at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",76,"PKSUMXF","PK Summary Exclusion Flag","text","Topic","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",77,"PKSUMXFN","PK Summary Exclusion Flag (N)","integer","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",78,"PLATEBL","Platelet Count at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",79,"PRBL","PR Duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",80,"PULSBL","Pulse rate at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",81,"QRSBL","QRS Duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",82,"QTBL","QT duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",83,"QTCBBL","QTcB at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",84,"QTCFBLU","QTcF at Baseline (Unit)","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",85,"RBCBL","RBC Count at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",86,"REGIME","Regimen of Medication","text","Topic","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",87,"REGION1","Geographic Region 1","text","Topic","Perm",TRUE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",88,"ROUTE","Route of Administration","text","Topic","Perm",FALSE,FALSE,40,"C66729",FALSE,"INTRAVASCULAR, ORAL, AURICULAR (OTIC), BUCCAL, CONJUNCTIVAL, CUTANEOUS, DENTAL, DIETARY, ELECTRO-OSMOSIS, ENDOCERVICAL, ENDOSINUSIAL, ENDOTRACHEAL, ENTERAL, EPIDURAL, EXTRA-AMNIOTIC, EXTRACORPOREAL, GASTROJEJUNAL, HEMODIALYSIS, IMMERSION, INFILTRATION, INTERSTITIAL, INTRA-ABDOMINAL, INTRA-AMNIOTIC, INTRA-ARTERIAL, INTRA-ARTICULAR, INTRABILIARY, INTRABRONCHIAL, INTRABURSAL, INTRACAMERAL, INTRACARDIAC, INTRACARTILAGINOUS, INTRACAUDAL, INTRACAVERNOUS, INTRACAVITARY, INTRACEREBRAL, INTRACISTERNAL, INTRACOCHLEAR, INTRACORNEAL, INTRACORONAL, DENTAL, INTRACORONARY, INTRACORPORUS CAVERNOSUM, INTRADERMAL, INTRADISCAL, INTRADUCTAL, INTRADUODENAL, INTRADURAL, INTRAEPIDERMAL, INTRAESOPHAGEAL, INTRAGASTRIC, INTRAGINGIVAL, INTRAHEPATIC, INTRAILEAL, INTRAJEJUNAL, INTRALESIONAL, INTRALUMINAL, INTRALYMPHATIC, INTRAMAMMARY, INTRAMANDIBULAR, INTRAMEDULLARY, INTRAMENINGEAL, INTRAMUSCULAR, INTRANODAL, INTRAOCULAR, INTRAOSSEOUS, INTRAOVARIAN, INTRAPALATAL, INTRAPARENCHYMAL, INTRAPERICARDIAL, INTRAPERITONEAL, INTRAPLEURAL, INTRAPROSTATIC, INTRAPULMONARY, INTRARUMINAL, INTRASINAL, INTRASPINAL, INTRASTOMAL, INTRASURGICAL SITE, INTRASYNOVIAL, INTRATENDINOUS, INTRATESTICULAR, INTRATHALAMIC, INTRATHECAL, INTRATHORACIC, INTRATUBULAR, INTRATUMOR, INTRATYMPANIC, INTRAUTERINE, INTRAVAGINAL, INTRAVENOUS, INTRAVENOUS BOLUS, INTRAVENOUS DRIP, INTRAVENTRICULAR, INTRAVESICAL, INTRAVITREAL, IONTOPHORESIS, IRRIGATION, LARYNGEAL, MICRODIALYSIS, NASAL, NASODUODENAL, NASOJEJUNAL, NOT APPLICABLE, OCCLUSIVE DRESSING TECHNIQUE, OPHTHALMIC, ORAL GAVAGE, OROGASTRIC, OROMUCOSAL, OROPHARYNGEAL, PARENTERAL, PERCUTANEOUS, PERIARTICULAR, PERIDURAL, PERINEURAL, PERIODONTAL, PERIVENOUS, PHARYNGEAL, RECTAL, RESPIRATORY (INHALATION), RETROBULBAR, SOFT TISSUE, SUBARACHNOID, SUBCONJUNCTIVAL, SUBCUTANEOUS, SUBDURAL, SUBLINGUAL, SUBMUCOSAL, SUBRETINAL, SUBTENON, SUPRACHOROIDAL, TOPICAL, TRANSDERMAL, TRANSMAMMARY, TRANSMUCOSAL, TRANSPLACENTAL, TRANSTRACHEAL, TRANSTYMPANIC, UNASSIGNED, UNKNOWN, URETERAL, URETHRAL, VAGINAL
 ",TRUE,"Character column for dose administration (C66729 or 'intravascular' / 'extravascular'). Instead of a column name, a unique value can be mapped for all records (i.e, 'INTRAVASCULAR', 'ORAL')","Dose Variables","EXROUTE",12
-"ADPC",89,"RRBL","RR Duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",90,"SBPBL","Systolic BP at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",91,"SGOTBL","SGOT-AST at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",92,"SGPTBL","SGPT-ALT at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",93,"TBILIBL","Bilirubin at Baseline (BLOOD)","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",94,"TEMPBL","Temperature at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",95,"TOBBL","Smoking Status at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",96,"TPROTBL","Total Protein at Baseline (BLOOD)","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",97,"TRTRINT","Planned Treatment Interval","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for planned time between 2 consecutive doses in multiple dose studies (optional, sometimes referred to as TAU). Must be in RRTLU units","Supplemental Variables","TAU",19
-"ADPC",98,"TRTRINTU","Planned Treatment Interval Units","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",99,"WTBL","Weight at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",100,"ADOSEDUR","Actual Duration of Treatment Dose","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for dose administration duration. Only required when the data contains dose infusions. If not mapped, all values are set to 0.","Supplemental Variables","",16
-"ADPC",101,"DOSEFRQ","Dose Frequency","text","Topic","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",102,"DOSPCTDF","Percent Diff. Nominal vs. Actual Dose","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",104,"NDOSEDUR","Nominal duration of Treatment Dose","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",105,"PCLLOQ","Lower Limit of Quantitation","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",106,"SPWEIGHT","Specimen Weight Value","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",107,"SPWEIGHU","Specimen Weight Value Unit","text","Topic","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",108,"TRTxxA","Actual Treatment for Period xx","text","Topic","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",109,"TRTxxP","Planned Treatment for Period xx","text","Topic","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",110,"AGEU","Age Units","text","Synonym Qualifier","Req",FALSE,TRUE,6,"",TRUE,"",FALSE,"","","",NA
-"ADPC",111,"RRLTU","Rel. Time from Ref. Dose Unit","text","Synonym Qualifier","Req",FALSE,FALSE,8,"",FALSE,"hr, day, week, month, year, sec, min",TRUE,"Character column for unit of all time variables (ARRLT, NRRLT, AFRLT, NFRLT). Instead of a column name, a unique value can be mapped for all records (i.e, ""hr"")","Unit Variables","",11
-"ADPC",112,"AAGBLU","AAG at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",113,"AAGEU","Analysis Age Unit","text","Synonym Qualifier","Perm",FALSE,TRUE,6,"",TRUE,"",FALSE,"","","",NA
-"ADPC",114,"ALBUBL","Albumin at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",115,"ALBUBLU","Albumin at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",116,"ALCOBL","Alcohol at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",117,"ALKPHBLU","Alkaline Phosphatase at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",118,"BMIBLU","BMI at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",119,"BSABLU","BSA at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",120,"BUNBLU","Blood Urea Nitrogen at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",121,"CALCBLU","Calcium at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",122,"CLBLU","Chloride at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",123,"COUNTRY","Country","text","Synonym Qualifier","Perm",FALSE,TRUE,3,"",TRUE,"",FALSE,"","","",NA
-"ADPC",124,"CRCLBLU","CrCL at baseline (BLOOD)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",125,"CREATBL","Creatinine at Baseline (BLOOD)","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",126,"CREATBLU","Creat at baseline (BLOOD)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",127,"DBPBLU","Diastolic BP at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",128,"EOSBLU","Eosinophils at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",129,"FRLTU","Rel. Time from First Dose Unit","text","Synonym Qualifier","Perm",FALSE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
-"ADPC",130,"GGTBLU","GGT at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",131,"GLUBLU","Glucose at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",132,"HCTBLU","HCT at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",133,"HGBBLU","HGB at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",134,"HRBL","Heart Rate at Baseline","text","Synonym Qualifier","Perm",TRUE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
-"ADPC",135,"HTBLU","Height at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",136,"IBWBLU","IBW at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",137,"KBLU","Potassium at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",138,"LBWBLU","LBM at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",139,"LYMBLU","Lymphocytes at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",140,"MONOBL","Monocytes at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",141,"MONOBLU","Monocytes at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",142,"NABLU","Sodium at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",143,"NEUBLU","Neutrophils at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",144,"PHBLU","Phosphate at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",145,"PLATEBLU","Platelet Count at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",146,"PRBLU","PR Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",147,"PULSBLU","Pulse rate at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",148,"QRSBLU","QRS Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",149,"QTBLU","QT Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",150,"QTCBBLU","QTcB at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",151,"QTCFBL","QTcF at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",152,"RBCBLU","RBC Count at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",153,"RRBLU","RR Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",154,"SBPBLU","Systolic BP at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",155,"SGOTBLU","SGOT-AST at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",156,"SGPTBLU","SGPT-ALT at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",157,"TBILIBLU","Bilirubin at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",158,"TOBBLU","Smoking Status at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",159,"TPROTBLU","Total Protein at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",160,"WBCBL","WBC Count at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",161,"WBCBLU","WBC Count at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",162,"WTBLU","Weight at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",163,"VOLUME","Volume Value","float","Synonym Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for collected sample's volume. Only required for excretion studies.","Supplemental Variables","",17
-"ADPC",164,"VOLUMEU","Volume Value Unit","text","Synonym Qualifier","Cond",FALSE,FALSE,40,"",FALSE,"mL, L, uL, dL, cL",TRUE,"Character column for unit of VOLUME (C71620). Instead of a column name, a unique value can be mapped for all records (i.e, ""mL""). Only relevant when VOLUME is mapped.","Supplemental Variables","",18
-"ADPC",166,"AVISIT","Analysis Visit","text","Grouping Qualifier","Req",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",168,"AVISITN","Analysis Visit (N)","integer","Grouping Qualifier","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",169,"TRT01P","Planned Treatment for Period 01","text","Grouping Qualifier","Req",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",170,"VISIT","Visit Name","text","Grouping Qualifier","Req",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",171,"VISITDY","Planned Study Day of Visit","integer","Grouping Qualifier","Req",FALSE,FALSE,12,"1",FALSE,"",FALSE,"","","",NA
-"ADPC",172,"VISITNUM","Visit Number","integer","Grouping Qualifier","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",173,"AGEGR1","Pooled Age Group 1","text","Grouping Qualifier","Perm",TRUE,TRUE,10,"",TRUE,"",FALSE,"","","",NA
-"ADPC",174,"AGEGR2","Pooled Age Group 2","text","Grouping Qualifier","Perm",TRUE,TRUE,10,"",TRUE,"",FALSE,"","","",NA
-"ADPC",175,"AGEGR3","Pooled Age Group 3","text","Grouping Qualifier","Perm",TRUE,TRUE,10,"",TRUE,"",FALSE,"","","",NA
-"ADPC",176,"COHORT","Subject Cohort","text","Grouping Qualifier","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",177,"COHORTN","Subject Cohort (N)","integer","Grouping Qualifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",178,"PARCAT1","Parameter Category 1","text","Grouping Qualifier","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",179,"STRATwD","Description of Stratification Factor w","text","Grouping Qualifier","Perm",FALSE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
-"ADPC",180,"STRATwR","Strat Factor w Value Used for Rand","text","Grouping Qualifier","Perm",FALSE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
-"ADPC",181,"STRATwV","Verified Value of Stratum w","text","Grouping Qualifier","Perm",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",182,"APERIOD","Period","integer","Grouping Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",183,"APERIODC","Period (C)","text","Grouping Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",184,"TRT01A","Actual Treatment for Period 01","text","Grouping Qualifier","Cond",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",185,"TRTSEQA","Actual Sequence of Treatments","text","Grouping Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",186,"TRTSEQP","Planned Sequence of Treatments","text","Grouping Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",187,"NCA_PROFILE","NCA Profile Identifier","integer","Record Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"Numeric column to indicate the NCA profile. Usually indicating dose number or cycle.","Group Identifiers","ATPTREF, DOSNO, DOSNOP",5
-"ADPC",188,"DOSNOP","Planned Dose Number","integer","Record Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",189,"FEDSTATE","Fasted / Fed Status","text","Record Qualifier","Perm",TRUE,FALSE,10,"",FALSE,"",FALSE,"","","",NA
-"ADPC",190,"NCAXFL","PK NCA Exclusion Flag","text","Record Qualifier","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",191,"PCSTAT","Completion Status","text","Record Qualifier","Perm",FALSE,FALSE,8,"C66789",FALSE,"",FALSE,"","","",NA
-"ADPC",192,"ABLFL","Baseline Record Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",193,"ANL01FL","Analysis Flag 01","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",194,"ANL02FL","Analysis Flag 02","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",195,"CRIT1FL","Criterion 1 Evaluation Result Flag","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",196,"CRIT1FL","Criterion 1 Evaluation Result Flag","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",197,"ITTFL","Intent-To-Treat Population Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",198,"METABFL","Metabolite Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"Y, ",FALSE,"Character column (""Y"", """") indicating if PARAM is a metabolite. Only required when the data contains multi-analyte assays. If not mapped, is assumed there are no metabolites (METABFL="""")","Supplemental Variables","",NA
-"ADPC",199,"PPROTFL","Per-Protocol Population Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"L11230",FALSE,"",FALSE,"","","",NA
-"ADPC",200,"SAFFL","Safety Population Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"L11229",FALSE,"",FALSE,"","","",NA
-"ADPC",201,"SPARSFL","Sparse Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",202,"AVAL","Analysis Value","float","Result Qualifier","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for analyte concentration. BLQ values, if not already imputed, are assumed to be 0.","Sample Variables","PCSTRES, PCORRES",6
-"ADPC",203,"AVALCAT1","Analysis Value Category 1","text","Result Qualifier","Req",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",204,"AVALU","Analysis Value Unit","text","Result Qualifier","Req",FALSE,FALSE,40,"",FALSE,"mg/L, ug/mL, ng/mL, pg/mL, mol/L, mmol/L, umol/L, nmol/L, pmol/L, mg/dL, ug/dL, ng/dL",TRUE,"Character column for unit of AVAL","Unit Variables","PCSTRESU, PCORRESU",7
-"ADPC",206,"CHG","Change from Baseline","float","Result Qualifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",207,"CRIT1","Analysis Criterion 1","text","Result Qualifier","Perm",TRUE,FALSE,70,"",FALSE,"",FALSE,"","","",NA
-"ADPC",208,"PCSTRESN","Numeric Result/Finding in Standard Units","float","Result Qualifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",209,"ALLOQ","Analysis Lower Limit of Quantitation","float","Result Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",210,"ANL03FL","Analysis Flag 03","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",211,"ANL04FL","Analysis Flag 04","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",212,"ANL05FL","Analysis Flag 05","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",213,"BASE","Baseline Value","float","Result Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",214,"BASETYPE","Baseline Type","text","Result Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",215,"PCSTRESC","Character Result/Finding in Std Format","text","Result Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",216,"PCSTRESU","Standard Units","text","Result Qualifier","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",217,"PCDTC","Date/Time of Specimen Collection","dateTime","Timing","Req",FALSE,FALSE,25,"",FALSE,"",FALSE,"","","",NA
-"ADPC",218,"PCRFTDT","Reference Date of Dose for Analyte","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",219,"PCRFTDTM","Reference Datetime of Dose for Analyte","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",220,"PCRFTTM","Reference Time of Dose for Analyte","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",221,"PCTPT","Planned Time Point Name","text","Timing","Req",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",222,"PCTPTNUM","Planned Time Point Number","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",223,"AENDT","Analysis End Date","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",224,"AENDTM","Analysis End Date/Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",225,"AENTM","Analysis End Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",226,"ASTDT","Analysis Start Date","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",227,"ASTDTM","Analysis Start Date/Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",228,"ASTTM","Analysis Start Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",229,"ATPTREF","Analysis Timepoint Reference","text","Timing","Perm",FALSE,FALSE,200,"",FALSE,"",TRUE,"Character column to indicate the time point reference, profile or analysis visit. Observed visit names, time window names, conceptual descriptions or any producer defined value may be used. Merely used for filtering and arranging purposes.","Group Identifiers","AVISIT, DOSNO, DOSNOA, DOSNOP, NCA_PROFILE",NA
-"ADPC",230,"DCUTDT","Date of Data Cut","integer","Timing","Perm",TRUE,FALSE,12,"C66742",FALSE,"",FALSE,"","","",NA
-"ADPC",231,"EPOCH","Epoch","text","Timing","Perm",FALSE,FALSE,40,"C99079",FALSE,"",FALSE,"","","",NA
-"ADPC",232,"FANLDT","First Date of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",233,"FANLDTM","First Datetime of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",234,"FANLDTMF","First Time of Dose Time Imputation Flag","text","Timing","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",235,"FANLEDT","First End Date of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",236,"FANLEDTF","First End of Dose Time Imputation Flag","text","Timing","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",237,"FANLEDTM","First End Datetime of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",238,"FANLETM","First End Time of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",239,"FANLTM","First Time of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",240,"PCDY","Actual Study Day of Specimen Collection","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",241,"TMPCTDF","Percent Diff. Nominal vs. Actual Time","float","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",242,"ADT","Analysis Date","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",243,"ADTF","Analysis Date Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",244,"ADTM","Analysis Datetime","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",245,"ADY","Analysis Relative Day","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",246,"AENDTF","Analysis End Date Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",247,"AENTMF","Analysis End Time Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",248,"ASTDTF","Analysis Start Date Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",249,"ASTTMF","Analysis Start Time Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",250,"ATM","Analysis Time","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",251,"ATMF","Analysis Time Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
-"ADPC",252,"ATPT","Analysis Timepoint","text","Timing","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
-"ADPC",254,"ATPTN","Analysis Timepoint (N)","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",256,"DTYPE","Derivation Type","text","Timing","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
-"ADPC",257,"PCRFEDT","Reference End Date of Dose for Analyte","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",258,"PCRFEDTM","Ref. End Datetime of Dose for Analyte","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",259,"PCRFETM","Reference End Time of Dose for Analyte","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
-"ADPC",260,"TRTEDT","Date of Last Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"C85492",FALSE,"",FALSE,"","","",NA
-"ADPC",261,"TRTEDTM","Datetime of Last Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"C78733",FALSE,"",FALSE,"","","",NA
-"ADPC",262,"TRTSDT","Date of First Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"C78734",FALSE,"",FALSE,"","","",NA
-"ADPC",263,"TRTSDTM","Datetime of First Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",89,"RRBL","RR Duration at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",90,"SBPBL","Systolic BP at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",91,"SGOTBL","SGOT-AST at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",92,"SGPTBL","SGPT-ALT at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",93,"TBILIBL","Bilirubin at Baseline (BLOOD)","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",94,"TEMPBL","Temperature at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",95,"TOBBL","Smoking Status at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",96,"TPROTBL","Total Protein at Baseline (BLOOD)","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",97,"TRTRINT","Planned Treatment Interval","float","Topic","Perm",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for planned time between 2 consecutive doses in multiple dose studies (optional, sometimes referred to as TAU). Must be in RRTLU units","Supplemental Variables","TAU",19
+"ADNCA",98,"TRTRINTU","Planned Treatment Interval Units","text","Topic","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",99,"WTBL","Weight at Baseline","float","Topic","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",100,"ADOSEDUR","Actual Duration of Treatment Dose","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for dose administration duration. Only required when the data contains dose infusions. If not mapped, all values are set to 0.","Supplemental Variables","",16
+"ADNCA",101,"DOSEFRQ","Dose Frequency","text","Topic","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",102,"DOSPCTDF","Percent Diff. Nominal vs. Actual Dose","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",104,"NDOSEDUR","Nominal duration of Treatment Dose","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",105,"PCLLOQ","Lower Limit of Quantitation","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",106,"SPWEIGHT","Specimen Weight Value","float","Topic","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",107,"SPWEIGHU","Specimen Weight Value Unit","text","Topic","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",108,"TRTxxA","Actual Treatment for Period xx","text","Topic","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",109,"TRTxxP","Planned Treatment for Period xx","text","Topic","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",110,"AGEU","Age Units","text","Synonym Qualifier","Req",FALSE,TRUE,6,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",111,"RRLTU","Rel. Time from Ref. Dose Unit","text","Synonym Qualifier","Req",FALSE,FALSE,8,"",FALSE,"hr, day, week, month, year, sec, min",TRUE,"Character column for unit of all time variables (ARRLT, NRRLT, AFRLT, NFRLT). Instead of a column name, a unique value can be mapped for all records (i.e, ""hr"")","Unit Variables","",11
+"ADNCA",112,"AAGBLU","AAG at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",113,"AAGEU","Analysis Age Unit","text","Synonym Qualifier","Perm",FALSE,TRUE,6,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",114,"ALBUBL","Albumin at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",115,"ALBUBLU","Albumin at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",116,"ALCOBL","Alcohol at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",117,"ALKPHBLU","Alkaline Phosphatase at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",118,"BMIBLU","BMI at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",119,"BSABLU","BSA at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",120,"BUNBLU","Blood Urea Nitrogen at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",121,"CALCBLU","Calcium at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",122,"CLBLU","Chloride at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",123,"COUNTRY","Country","text","Synonym Qualifier","Perm",FALSE,TRUE,3,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",124,"CRCLBLU","CrCL at baseline (BLOOD)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",125,"CREATBL","Creatinine at Baseline (BLOOD)","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",126,"CREATBLU","Creat at baseline (BLOOD)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",127,"DBPBLU","Diastolic BP at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",128,"EOSBLU","Eosinophils at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",129,"FRLTU","Rel. Time from First Dose Unit","text","Synonym Qualifier","Perm",FALSE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",130,"GGTBLU","GGT at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",131,"GLUBLU","Glucose at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",132,"HCTBLU","HCT at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",133,"HGBBLU","HGB at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",134,"HRBL","Heart Rate at Baseline","text","Synonym Qualifier","Perm",TRUE,FALSE,8,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",135,"HTBLU","Height at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",136,"IBWBLU","IBW at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",137,"KBLU","Potassium at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",138,"LBWBLU","LBM at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",139,"LYMBLU","Lymphocytes at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",140,"MONOBL","Monocytes at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",141,"MONOBLU","Monocytes at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",142,"NABLU","Sodium at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",143,"NEUBLU","Neutrophils at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",144,"PHBLU","Phosphate at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",145,"PLATEBLU","Platelet Count at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",146,"PRBLU","PR Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",147,"PULSBLU","Pulse rate at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",148,"QRSBLU","QRS Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",149,"QTBLU","QT Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",150,"QTCBBLU","QTcB at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",151,"QTCFBL","QTcF at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",152,"RBCBLU","RBC Count at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",153,"RRBLU","RR Duration at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",154,"SBPBLU","Systolic BP at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",155,"SGOTBLU","SGOT-AST at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",156,"SGPTBLU","SGPT-ALT at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",157,"TBILIBLU","Bilirubin at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",158,"TOBBLU","Smoking Status at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",159,"TPROTBLU","Total Protein at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",160,"WBCBL","WBC Count at Baseline","float","Synonym Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",161,"WBCBLU","WBC Count at baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",162,"WTBLU","Weight at Baseline (Unit)","text","Synonym Qualifier","Perm",TRUE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",163,"VOLUME","Volume Value","float","Synonym Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for collected sample's volume. Only required for excretion studies.","Supplemental Variables","",17
+"ADNCA",164,"VOLUMEU","Volume Value Unit","text","Synonym Qualifier","Cond",FALSE,FALSE,40,"",FALSE,"mL, L, uL, dL, cL",TRUE,"Character column for unit of VOLUME (C71620). Instead of a column name, a unique value can be mapped for all records (i.e, ""mL""). Only relevant when VOLUME is mapped.","Supplemental Variables","",18
+"ADNCA",166,"AVISIT","Analysis Visit","text","Grouping Qualifier","Req",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",168,"AVISITN","Analysis Visit (N)","integer","Grouping Qualifier","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",169,"TRT01P","Planned Treatment for Period 01","text","Grouping Qualifier","Req",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",170,"VISIT","Visit Name","text","Grouping Qualifier","Req",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",171,"VISITDY","Planned Study Day of Visit","integer","Grouping Qualifier","Req",FALSE,FALSE,12,"1",FALSE,"",FALSE,"","","",NA
+"ADNCA",172,"VISITNUM","Visit Number","integer","Grouping Qualifier","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",173,"AGEGR1","Pooled Age Group 1","text","Grouping Qualifier","Perm",TRUE,TRUE,10,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",174,"AGEGR2","Pooled Age Group 2","text","Grouping Qualifier","Perm",TRUE,TRUE,10,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",175,"AGEGR3","Pooled Age Group 3","text","Grouping Qualifier","Perm",TRUE,TRUE,10,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",176,"COHORT","Subject Cohort","text","Grouping Qualifier","Perm",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",177,"COHORTN","Subject Cohort (N)","integer","Grouping Qualifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",178,"PARCAT1","Parameter Category 1","text","Grouping Qualifier","Perm",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",179,"STRATwD","Description of Stratification Factor w","text","Grouping Qualifier","Perm",FALSE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",180,"STRATwR","Strat Factor w Value Used for Rand","text","Grouping Qualifier","Perm",FALSE,TRUE,200,"",TRUE,"",FALSE,"","","",NA
+"ADNCA",181,"STRATwV","Verified Value of Stratum w","text","Grouping Qualifier","Perm",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",182,"APERIOD","Period","integer","Grouping Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",183,"APERIODC","Period (C)","text","Grouping Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",184,"TRT01A","Actual Treatment for Period 01","text","Grouping Qualifier","Cond",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",185,"TRTSEQA","Actual Sequence of Treatments","text","Grouping Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",186,"TRTSEQP","Planned Sequence of Treatments","text","Grouping Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",187,"NCA_PROFILE","NCA Profile Identifier","integer","Record Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"Numeric column to indicate the NCA profile. Usually indicating dose number or cycle.","Group Identifiers","ATPTREF, DOSNO, DOSNOP",5
+"ADNCA",188,"DOSNOP","Planned Dose Number","integer","Record Qualifier","Perm",TRUE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",189,"FEDSTATE","Fasted / Fed Status","text","Record Qualifier","Perm",TRUE,FALSE,10,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",190,"NCAXFL","PK NCA Exclusion Flag","text","Record Qualifier","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",191,"PCSTAT","Completion Status","text","Record Qualifier","Perm",FALSE,FALSE,8,"C66789",FALSE,"",FALSE,"","","",NA
+"ADNCA",192,"ABLFL","Baseline Record Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",193,"ANL01FL","Analysis Flag 01","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",194,"ANL02FL","Analysis Flag 02","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",195,"CRIT1FL","Criterion 1 Evaluation Result Flag","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",196,"CRIT1FL","Criterion 1 Evaluation Result Flag","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",197,"ITTFL","Intent-To-Treat Population Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",198,"METABFL","Metabolite Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"Y, ",FALSE,"Character column (""Y"", """") indicating if PARAM is a metabolite. Only required when the data contains multi-analyte assays. If not mapped, is assumed there are no metabolites (METABFL="""")","Supplemental Variables","",NA
+"ADNCA",199,"PPROTFL","Per-Protocol Population Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"L11230",FALSE,"",FALSE,"","","",NA
+"ADNCA",200,"SAFFL","Safety Population Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"L11229",FALSE,"",FALSE,"","","",NA
+"ADNCA",201,"SPARSFL","Sparse Flag","text","Record Qualifier","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",202,"AVAL","Analysis Value","float","Result Qualifier","Req",FALSE,FALSE,12,"",FALSE,"",TRUE,"Numeric column for analyte concentration. BLQ values, if not already imputed, are assumed to be 0.","Sample Variables","PCSTRES, PCORRES",6
+"ADNCA",203,"AVALCAT1","Analysis Value Category 1","text","Result Qualifier","Req",TRUE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",204,"AVALU","Analysis Value Unit","text","Result Qualifier","Req",FALSE,FALSE,40,"",FALSE,"mg/L, ug/mL, ng/mL, pg/mL, mol/L, mmol/L, umol/L, nmol/L, pmol/L, mg/dL, ug/dL, ng/dL",TRUE,"Character column for unit of AVAL","Unit Variables","PCSTRESU, PCORRESU",7
+"ADNCA",206,"CHG","Change from Baseline","float","Result Qualifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",207,"CRIT1","Analysis Criterion 1","text","Result Qualifier","Perm",TRUE,FALSE,70,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",208,"PCSTRESN","Numeric Result/Finding in Standard Units","float","Result Qualifier","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",209,"ALLOQ","Analysis Lower Limit of Quantitation","float","Result Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",210,"ANL03FL","Analysis Flag 03","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",211,"ANL04FL","Analysis Flag 04","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",212,"ANL05FL","Analysis Flag 05","text","Record Qualifier","Cond",TRUE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",213,"BASE","Baseline Value","float","Result Qualifier","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",214,"BASETYPE","Baseline Type","text","Result Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",215,"PCSTRESC","Character Result/Finding in Std Format","text","Result Qualifier","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",216,"PCSTRESU","Standard Units","text","Result Qualifier","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",217,"PCDTC","Date/Time of Specimen Collection","dateTime","Timing","Req",FALSE,FALSE,25,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",218,"PCRFTDT","Reference Date of Dose for Analyte","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",219,"PCRFTDTM","Reference Datetime of Dose for Analyte","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",220,"PCRFTTM","Reference Time of Dose for Analyte","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",221,"PCTPT","Planned Time Point Name","text","Timing","Req",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",222,"PCTPTNUM","Planned Time Point Number","integer","Timing","Req",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",223,"AENDT","Analysis End Date","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",224,"AENDTM","Analysis End Date/Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",225,"AENTM","Analysis End Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",226,"ASTDT","Analysis Start Date","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",227,"ASTDTM","Analysis Start Date/Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",228,"ASTTM","Analysis Start Time","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",229,"ATPTREF","Analysis Timepoint Reference","text","Timing","Perm",FALSE,FALSE,200,"",FALSE,"",TRUE,"Character column to indicate the time point reference, profile or analysis visit. Observed visit names, time window names, conceptual descriptions or any producer defined value may be used. Merely used for filtering and arranging purposes.","Group Identifiers","AVISIT, DOSNO, DOSNOA, DOSNOP, NCA_PROFILE",NA
+"ADNCA",230,"DCUTDT","Date of Data Cut","integer","Timing","Perm",TRUE,FALSE,12,"C66742",FALSE,"",FALSE,"","","",NA
+"ADNCA",231,"EPOCH","Epoch","text","Timing","Perm",FALSE,FALSE,40,"C99079",FALSE,"",FALSE,"","","",NA
+"ADNCA",232,"FANLDT","First Date of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",233,"FANLDTM","First Datetime of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",234,"FANLDTMF","First Time of Dose Time Imputation Flag","text","Timing","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",235,"FANLEDT","First End Date of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",236,"FANLEDTF","First End of Dose Time Imputation Flag","text","Timing","Perm",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",237,"FANLEDTM","First End Datetime of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",238,"FANLETM","First End Time of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",239,"FANLTM","First Time of Dose for Analyte","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",240,"PCDY","Actual Study Day of Specimen Collection","integer","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",241,"TMPCTDF","Percent Diff. Nominal vs. Actual Time","float","Timing","Perm",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",242,"ADT","Analysis Date","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",243,"ADTF","Analysis Date Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",244,"ADTM","Analysis Datetime","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",245,"ADY","Analysis Relative Day","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",246,"AENDTF","Analysis End Date Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",247,"AENTMF","Analysis End Time Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",248,"ASTDTF","Analysis Start Date Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",249,"ASTTMF","Analysis Start Time Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",250,"ATM","Analysis Time","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",251,"ATMF","Analysis Time Imputation Flag","text","Timing","Cond",FALSE,FALSE,1,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",252,"ATPT","Analysis Timepoint","text","Timing","Cond",FALSE,FALSE,40,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",254,"ATPTN","Analysis Timepoint (N)","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",256,"DTYPE","Derivation Type","text","Timing","Cond",FALSE,FALSE,200,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",257,"PCRFEDT","Reference End Date of Dose for Analyte","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",258,"PCRFEDTM","Ref. End Datetime of Dose for Analyte","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",259,"PCRFETM","Reference End Time of Dose for Analyte","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
+"ADNCA",260,"TRTEDT","Date of Last Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"C85492",FALSE,"",FALSE,"","","",NA
+"ADNCA",261,"TRTEDTM","Datetime of Last Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"C78733",FALSE,"",FALSE,"","","",NA
+"ADNCA",262,"TRTSDT","Date of First Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"C78734",FALSE,"",FALSE,"","","",NA
+"ADNCA",263,"TRTSDTM","Datetime of First Exposure to Treatment","integer","Timing","Cond",FALSE,FALSE,12,"",FALSE,"",FALSE,"","","",NA
 "ADPP",1,"STUDYID","Study Identifier","text","Identifier","Req",FALSE,TRUE,8,"",TRUE,"",TRUE,"","","",NA
 "ADPP",1.5,"DOMAIN","Domain Abbreviation","Char","Identifier","Req",FALSE,FALSE,2,"",TRUE,"",FALSE,"","","",NA
 "ADPP",2,"USUBJID","Unique Subject Identifier","text","Identifier","Req",FALSE,TRUE,50,"",TRUE,"",TRUE,"","","",NA
@@ -355,5 +355,5 @@
 "PP",24,"PPRFTDTC","Date/Time of Reference Point","Char","Timing","Exp",FALSE,TRUE,25,"",TRUE,"",FALSE,"","","",NA
 "PP",25,"PPSTINT","Planned Start of Assessment Interval","Char","Timing","Perm",FALSE,TRUE,25,"",TRUE,"",FALSE,"","","",NA
 "PP",26,"PPENINT","Planned End of Assessment Interval","Char","Timing","Perm",FALSE,TRUE,25,"",TRUE,"",FALSE,"","","",NA
-"ADPC",12,"DOSEU","Actual Treatment Dose Units","text","Topic","Req",FALSE,FALSE,40,"C71620",FALSE,"mg, g, ug, ng, pg, mol, mmol, umol, nmol, pmol, mg/kg, g/kg, ug/kg, ng/kg, pg/kg, mol/kg, mmol/kg, umol/kg, nmol/kg, pmol/kg",TRUE,"Character column for unit of DOSEA (C71620). Instead of a column name, a unique value can be mapped for all records (i.e, ""mg/L"")","Unit Variables","DOSEAU, DOSEPU",15
-"ADPC",13,"DOSETRT","Name of Treatment","Char","Topic","Req",FALSE,TRUE,40,"",FALSE,"",TRUE,"Character column of the protocol-specified study treatment given during the dosing period","Dose Variables","TRTA, TRTP, EXTRT, ECTRT, DRUG",13
+"ADNCA",12,"DOSEU","Actual Treatment Dose Units","text","Topic","Req",FALSE,FALSE,40,"C71620",FALSE,"mg, g, ug, ng, pg, mol, mmol, umol, nmol, pmol, mg/kg, g/kg, ug/kg, ng/kg, pg/kg, mol/kg, mmol/kg, umol/kg, nmol/kg, pmol/kg",TRUE,"Character column for unit of DOSEA (C71620). Instead of a column name, a unique value can be mapped for all records (i.e, ""mg/L"")","Unit Variables","DOSEAU, DOSEPU",15
+"ADNCA",13,"DOSETRT","Name of Treatment","Char","Topic","Req",FALSE,TRUE,40,"",FALSE,"",TRUE,"Character column of the protocol-specified study treatment given during the dosing period","Dose Variables","TRTA, TRTP, EXTRT, ECTRT, DRUG",13
