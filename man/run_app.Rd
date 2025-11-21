@@ -31,7 +31,7 @@ data, and a file must be uploaded manually within the app.
 \donttest{
   adnca_path <- system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA")
 
- # Run the app with pre-loaded data
+  # Run the app with pre-loaded data
   run_app(datapath = adnca_path)
   # Run the app without pre-loading data (standard usage)
   run_app()

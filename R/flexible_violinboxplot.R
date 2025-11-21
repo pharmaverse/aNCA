@@ -17,7 +17,8 @@
 #'                            violin plot (`FALSE`). Default is `TRUE`.
 #' @param plotly              A logical value defining if the output is plotly (TRUE, default)
 #'                            or ggplot otherwise (FALSE)
-#' @param seed                An integer value to set the seed for reproducibility of jittering. Default (NULL) will use the current R seed.
+#' @param seed                An integer value to set the seed for reproducibility of jittering.
+#' Default (NULL) will use the current R seed.
 #'
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
