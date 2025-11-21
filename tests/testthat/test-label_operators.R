@@ -1,7 +1,7 @@
 ADNCA_LABELS_FIXTURE <- data.frame(
   Variable = c("USUBJID", "AVAL", "RACE"),
   Label =  c("Unique Subject Identifier", "Analysis Value", "Race"),
-  Dataset = c("ADPC", "ADPC", "ADPC")
+  Dataset = c("ADNCA", "ADNCA", "ADNCA")
 )
 
 data <- data.frame(
@@ -43,7 +43,7 @@ describe("apply_labels", {
 
 describe("get_label", {
   it("returns label of a heading if it exists in the label file", {
-    expect_equal(get_label("USUBJID", "ADPC", ADNCA_LABELS_FIXTURE), "Unique Subject Identifier")
+    expect_equal(get_label("USUBJID", "ADNCA", ADNCA_LABELS_FIXTURE), "Unique Subject Identifier")
   })
 
   it("returns the variable name if the label does not exist", {
@@ -63,7 +63,7 @@ describe("generate_tooltip_text", {
   TEST_VARS <- c("USUBJID", "AVAL", "RACE")
 
   it("generates correct tooltip string for multiple rows and data types", {
-    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADPC")
+    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADNCA")
     expected_output <- c(
       "<b>Unique Subject Identifier</b>: S1-1<br><b>Analysis Value</b>: 10.5<br><b>Race</b>: WHITE",
       "<b>Unique Subject Identifier</b>: S1-2<br><b>Analysis Value</b>: NA<br><b>Race</b>: ASIAN"
@@ -72,13 +72,13 @@ describe("generate_tooltip_text", {
   })
 
   it("returns an empty string for each row if tooltip_vars is empty", {
-    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, character(0), "ADPC")
+    tooltips <- generate_tooltip_text(TEST_DATA, ADNCA_LABELS_FIXTURE, character(0), "ADNCA")
     expect_equal(tooltips, c("", ""))
   })
 
   it("returns an empty vector for data with zero rows", {
     empty_data <- TEST_DATA[0, ]
-    tooltips <- generate_tooltip_text(empty_data, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADPC")
+    tooltips <- generate_tooltip_text(empty_data, ADNCA_LABELS_FIXTURE, TEST_VARS, "ADNCA")
     expect_equal(tooltips, character(0))
   })
 
@@ -90,7 +90,7 @@ describe("generate_tooltip_text", {
       "<b>Unique Subject Identifier</b>: S1-2<br><b>AGE</b>: 52"
     )
     tooltips <- generate_tooltip_text(data_with_unlabeled_var, ADNCA_LABELS_FIXTURE,
-                                      vars_with_unlabeled, "ADPC")
+                                      vars_with_unlabeled, "ADNCA")
     expect_equal(tooltips, expected_output)
   })
 })

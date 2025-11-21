@@ -15,16 +15,16 @@
 #'  labels <- data.frame(
 #'    Variable = c("USUBJID", "AVAL"),
 #'    Label = c("Unique Subject Identifier", "Analysis Value"),
-#'    Dataset = c("ADPC", "ADPC")
+#'    Dataset = c("ADNCA", "ADNCA")
 #'  )
-#'  data <- apply_labels(data, labels, "ADPC")
+#'  data <- apply_labels(data, labels, "ADNCA")
 #'  print(attr(data$USUBJID, "label")) # "Unique Subject Identifier"
 #'  print(attr(data$AVAL, "label"))    # "Analysis Value"
 #'
 #' @importFrom formatters var_labels
 #'
 #' @export
-apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC") {
+apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADNCA") {
   formatters::var_labels(data) <- ifelse(
     is.na(formatters::var_labels(data)),
     get_label(names(data), type = type, labels_df = labels_df),
@@ -51,22 +51,22 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADPC"
 #'  LABELS <- data.frame(
 #'    Variable = c("USUBJID", "AVAL"),
 #'    Label = c("Unique Subject Identifier", "Analysis Value"),
-#'    Dataset = c("ADPC", "ADPC")
+#'    Dataset = c("ADNCA", "ADNCA")
 #'  )
-#'  get_label("USUBJID", "ADPC", LABELS)  # Returns "Unique Subject Identifier"
-#'  get_label("AGE", "ADPC", LABELS)  # Returns "AGE"
+#'  get_label("USUBJID", "ADNCA", LABELS)  # Returns "Unique Subject Identifier"
+#'  get_label("AGE", "ADNCA", LABELS)  # Returns "AGE"
 #'  # Using a custom mapping column:
 #'  LABELS2 <- data.frame(
 #'    ColName = c("USUBJID", "AVAL"),
 #'    Label = c("Unique Subject Identifier", "Analysis Value"),
-#'    Dataset = c("ADPC", "ADPC")
+#'    Dataset = c("ADNCA", "ADNCA")
 #'  )
-#'  get_label("USUBJID", "ADPC", LABELS2)
+#'  get_label("USUBJID", "ADNCA", LABELS2)
 #'  # Returns "Unique Subject Identifier"
 #' }
 #'
 #' @export
-get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variables) {
+get_label <- function(variable, type = "ADNCA", labels_df = metadata_nca_variables) {
   translate_terms(
     variable,
     "Variable",
@@ -99,7 +99,7 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #'   )
 #'
 #' my_labels <- data.frame(
-#'   Dataset = "ADPC",
+#'   Dataset = "ADNCA",
 #'   Variable = "USUBJID",
 #'   Label = "Unique Subject ID"
 #'   ) # Dummy labels object
@@ -107,7 +107,7 @@ get_label <- function(variable, type = "ADPC", labels_df = metadata_nca_variable
 #' vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
 #'
 #' # Generate the tooltip text vector
-#' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
+#' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADNCA")
 #' my_data$tooltip <- tooltips
 #'
 #' @export

@@ -7,7 +7,7 @@
 \format{
 A data frame with 361 rows and 14 variables:
 \describe{
-\item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADPC, ADPP).}
+\item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADNCA, ADPP).}
 \item{Order}{Numeric. Variable order within its domain, based on Role, Core and Variable}
 \item{Variable}{Character. The short name of the variable.}
 \item{Label}{Character. A descriptive label for the variable.}

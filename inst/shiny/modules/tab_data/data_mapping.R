@@ -21,7 +21,7 @@ NON_STD_MAPPING_INFO <- data.frame(
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
-  filter(is.mapped, Dataset == "ADPC") %>%
+  filter(is.mapped, Dataset == "ADNCA") %>%
   select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
   mutate(is_multiple_choice = FALSE) %>%
   bind_rows(NON_STD_MAPPING_INFO) %>%
