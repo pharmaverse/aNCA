@@ -11,6 +11,9 @@ run_app(datapath = NULL, ...)
 
 \item{...}{Arguments passed to \code{shiny::runApp()}}
 }
+\value{
+No return value, called for side effects to launch the Shiny application.
+}
 \description{
 Run the Shiny app
 }

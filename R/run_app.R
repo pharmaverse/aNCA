@@ -2,6 +2,7 @@
 #' @param datapath Full path to a single `.csv` or `.rds` data file.
 #' @param ... Arguments passed to `shiny::runApp()`
 #'
+#' @returns No return value, called for side effects to launch the Shiny application.
 #' @details
 #' If a `datapath` is provided, the app will attempt to automatically load the
 #' specified dataset on startup. This is achieved by setting an internal option
