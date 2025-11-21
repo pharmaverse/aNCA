@@ -17,7 +17,13 @@ Authors@R: c(
     person("Valentin", "Legras", email = "anca.pharmaverse@gmail.com", role = c("aut", "cre")),
     person("F. Hoffmann-La Roche AG", role = c("cph", "fnd"))
   )
-Description: A Shiny App to perform Non-Compartmental Analysis (NCA) on pre-clinical and clinical data.
+Description: An interactive 'Shiny' application for performing non-compartmental analysis (NCA) on
+ pre-clinical and clinical pharmacokinetic data. The package builds on 'PKNCA' for core estimators and provides interactive visualizations, CDISC
+ outputs ('ADNCA', 'PP', 'ADPP'), configurable TLGs (tables, listings, and graphs), and
+ generation of draft slide decks. Typical use cases include exploratory
+ analysis, validation-friendly reporting, and teaching/demonstration of NCA methods. Methods and core
+ estimators are described in Denney, Duvvuri, and Buckeridge (2015) "Simple, Automatic
+Noncompartmental Analysis: The PKNCA R Package" <doi:10.1007/s10928-015-9432-2>.
 License: Apache License (>= 2)
 Imports: 
     dplyr,
