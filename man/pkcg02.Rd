@@ -89,7 +89,7 @@ This function generates a list of plotly objects PK concentration-time profiles 
 }
 \examples{
 \donttest{
-  adnca <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
+  adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
   attr(adnca[["AVAL"]], "label") <- "Analysis value"
 

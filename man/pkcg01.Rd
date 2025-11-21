@@ -89,7 +89,7 @@ This function generates a list of ggplots for PK concentration-time profiles.
 }
 \examples{
 \donttest{
-  adnca <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
+  adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
   attr(adnca[["AVAL"]], "label") <- "Analysis val"
 

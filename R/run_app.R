@@ -15,7 +15,7 @@
 #'
 #' @examples
 #' \donttest{
-#'   adnca_path <- system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA")
+#'   adnca_path <- system.file("shiny/data/Dummy_data.csv", package = "aNCA")
 #'
 #'   # Run the app with pre-loaded data
 #'   run_app(datapath = adnca_path)
