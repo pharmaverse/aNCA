@@ -38,7 +38,6 @@ The resulting summary statistics are rounded to three decimal places.
 If units are different, they are standardized to the group's most frequent first unit.
 }
 \examples{
-\dontrun{
 data <- data.frame(
 ATPTREF = c(1, 1, 1, 1, 1, 1),
 PPTESTCD = c("A", "A", "B", "B", "C", "C"),
@@ -46,5 +45,4 @@ PPSTRES = c(10, 20, 5, 15, NA, 30),
 PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 )
 calculate_summary_stats(data)
-}
 }

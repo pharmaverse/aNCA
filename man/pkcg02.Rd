@@ -88,7 +88,7 @@ A list of ggplot or plotly objects for each unique group.
 This function generates a list of plotly objects PK concentration-time profiles by group
 }
 \examples{
-\dontrun{
+\donttest{
   adnca <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
   attr(adnca[["AVAL"]], "label") <- "Analysis value"

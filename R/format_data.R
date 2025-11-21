@@ -21,10 +21,10 @@
 #'   - Arranges the data by group_columns.
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   conc_data <- format_pkncaconc_data(ADNCA,
-#'                                      group_columns,
+#' \donttest{
+#'   adnca <- read.csv(system.file("shiny/inst/data/DummyRO_ADNCA.csv", package = "aNCA"))
+#'   conc_data <- format_pkncaconc_data(adnca,
+#'                                      group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
 #'                                      "AFRLT",
 #'                                      "ROUTE")
 #' }

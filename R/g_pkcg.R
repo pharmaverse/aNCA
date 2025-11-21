@@ -51,7 +51,7 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom stats setNames
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   adnca <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
 #'   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #'   attr(adnca[["AVAL"]], "label") <- "Analysis val"
@@ -398,7 +398,7 @@ g_pkcg02_log <- function(data, ...) {
 #' @importFrom stats setNames
 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   adnca <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
 #'   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #'   attr(adnca[["AVAL"]], "label") <- "Analysis value"

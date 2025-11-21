@@ -28,15 +28,11 @@ If \code{datapath} is \code{NULL} (default), the app will launch without pre-loa
 data, and a file must be uploaded manually within the app.
 }
 \examples{
-\dontrun{
-  # Create a dummy data file
-  temp_data_path <- tempfile(fileext = ".csv")
-  write.csv(data.frame(USUBJID = 1, AFRLT = 0:4, AVAL = c(0, 10, 8, 4, 1)),
-            file = temp_data_path, row.names = FALSE)
+\donttest{
+  adnca_path <- system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA")
 
-  # Run the app, automatically loading the dummy data
-  run_app(datapath = temp_data_path)
-
+ # Run the app with pre-loaded data
+  run_app(datapath = adnca_path)
   # Run the app without pre-loading data (standard usage)
   run_app()
 }
