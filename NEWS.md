@@ -5,6 +5,7 @@
 ## Features added
 
 * Rename all "ADPC" label mentions in the App to "ADNCA", which is the CDISC standard the App promotes (#778)
+* Interface includes now a color legend next to the pivoted NCA results to indicate missing and flagged parameters (#779)
 
 ## Bugs fixed
 
