@@ -28,12 +28,12 @@ Source:
 
 Suekuer E, Rodriguez G, Baertschi P, Spinner J, Kolomanski M, Aspridis
 L, Legras V (2025). *aNCA: (Pre-)Clinical NCA in a Dynamic Shiny App*. R
-package version 0.1.0.9001, <https://pharmaverse.github.io/aNCA/>.
+package version 0.1.0.9002, <https://pharmaverse.github.io/aNCA/>.
 
     @Manual{,
       title = {aNCA: (Pre-)Clinical NCA in a Dynamic Shiny App},
       author = {Ercan Suekuer and Gerardo Jose Rodriguez and Pascal Baertschi and Jana Spinner and Mateusz Kolomanski and Lucy Aspridis and Valentin Legras},
       year = {2025},
-      note = {R package version 0.1.0.9001},
+      note = {R package version 0.1.0.9002},
       url = {https://pharmaverse.github.io/aNCA/},
     }

@@ -9,6 +9,9 @@
 - Rename all “ADPC” label mentions in the App to “ADNCA”, which is the
   CDISC standard the App promotes
   ([\#778](https://github.com/pharmaverse/aNCA/issues/778))
+- Interface includes now a color legend next to the pivoted NCA results
+  to indicate missing and flagged parameters
+  ([\#779](https://github.com/pharmaverse/aNCA/issues/779))
 
 ### Bugs fixed
 
