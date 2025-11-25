@@ -109,8 +109,6 @@ g_lineplot <- function(data,
       if (length(valid_vars) > 0) {
         parts <- lapply(valid_vars, function(v) paste0(v, ": ", data[[v]]))
         data$tooltip_text <- do.call(paste, c(parts, sep = "<br>"))
-      } else {
-        data$tooltip_text <- rep(NA_character_, nrow(data))
       }
     }
   } else {
