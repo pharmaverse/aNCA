@@ -33,14 +33,12 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   plot <- lambda_slope_plot(conc_pknca_df = mydata$conc$data,
+#'   adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#'   plot <- lambda_slope_plot(conc_pknca_df = adnca,
 #'                             row_values = list(USUBJID = "001", STUDYID = "A", DOSENO = 1),
 #'                             myres = res_nca,
 #'                             r2adj_threshold = 0.7)
 #'   plot
-#' }
 #'
 #' @import dplyr
 #' @import ggplot2

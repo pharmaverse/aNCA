@@ -51,22 +51,20 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom stats setNames
 #'
 #' @examples
-#' \donttest{
-#'   adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
-#'   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
-#'   attr(adnca[["AVAL"]], "label") <- "Analysis val"
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
+#' attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'
-#'   plots_lin <- pckg01(adnca = adnca, xmax = 1)
-#'   plots_log <- pckg01(adnca = adnca, color_var = "USUBJID", scale = "LOG")
-#'   plots_sbs <- pckg01(
-#'     adnca = adnca,
-#'     color_var = "USUBJID",
-#'     xbreaks_var = "NFRLT",
-#'     xmin = 100,
-#'     xmax = 1000,
-#'     scale = "SBS"
-#'   )
-#' }
+#' plots_lin <- pckg01(adnca = adnca, xmax = 1)
+#' plots_log <- pckg01(adnca = adnca, color_var = "USUBJID", scale = "LOG")
+#' plots_sbs <- pckg01(
+#'   adnca = adnca,
+#'   color_var = "USUBJID",
+#'   xbreaks_var = "NFRLT",
+#'   xmin = 100,
+#'   xmax = 1000,
+#'   scale = "SBS"
+#' )
 #'
 #' @export
 #' @author Gerardo Rodriguez
@@ -398,16 +396,14 @@ g_pkcg02_log <- function(data, ...) {
 #' @importFrom stats setNames
 
 #' @examples
-#' \donttest{
-#'   adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
-#'   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
-#'   attr(adnca[["AVAL"]], "label") <- "Analysis value"
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
+#' attr(adnca[["AVAL"]], "label") <- "Analysis value"
 #'
-#'   plots <- pkcg02(adnca)
-#'   plots_log <- pkcg02(adnca, scale = "LOG")
-#'   plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
-#'   plotly::plotly_build(plots[[1]]) # View the first plot
-#' }
+#' plots <- pkcg02(adnca)
+#' plots_log <- pkcg02(adnca, scale = "LOG")
+#' plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
+#' plotly::plotly_build(plots[[1]]) # View the first plot
 #'
 #' @export
 #' @author Kezia Kobana
