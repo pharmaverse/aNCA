@@ -52,11 +52,46 @@ linear regression line, and annotations.
 }
 }
 \examples{
+\donttest{
+if (interactive()) {
+  # Load a small packaged example dataset
   adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
-  plot <- lambda_slope_plot(conc_pknca_df = adnca,
-                            row_values = list(USUBJID = "001", STUDYID = "A", DOSENO = 1),
-                            myres = res_nca,
-                            r2adj_threshold = 0.7)
-  plot
 
+  # Subset to a single subject to keep the example fast
+  subj1 <- unique(adnca$USUBJID)[1]
+  adnca_sub <- adnca[adnca$USUBJID == subj1, ]
+
+  # Analysis details (minimal example)
+  method <- "lin up/log down"
+  params <- c("cmax", "tmax", "auclast", "aucinf.obs")
+  analytes <- unique(adnca_sub$PARAM)
+  dosnos <- unique(adnca_sub$ATPTREF)
+  pcspecs <- unique(adnca_sub$PCSPEC)
+  auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
+
+  # Build a minimal PKNCA data object and run NCA (kept in \donttest for CRAN safety)
+  pknca_data <- PKNCA_create_data_object(adnca_sub)
+  pknca_data <- create_start_impute(pknca_data)
+  pknca_data <- PKNCA_update_data_object(
+    pknca_data,
+    auc_data = auc_data,
+    method = method,
+    params = params,
+    selected_analytes = analytes,
+    selected_profile = dosnos,
+    selected_pcspec = pcspecs
+  )
+
+  pknca_res <- PKNCA_calculate_nca(pknca_data)
+
+  # Create the lambda slope plot for the example subject
+  plot <- lambda_slope_plot(
+    conc_pknca_df = pknca_data$conc$data,
+    row_values = list(USUBJID = subj1, STUDYID = unique(adnca_sub$STUDYID)[1], DOSNOA = 1),
+    myres = pknca_res,
+    r2adj_threshold = 0.7
+  )
+  print(plot)
+}
+}
 }
