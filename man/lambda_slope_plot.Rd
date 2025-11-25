@@ -58,8 +58,9 @@ if (interactive()) {
   adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
 
   # Subset to a single subject to keep the example fast
-  subj1 <- unique(adnca$USUBJID)[1]
-  adnca_sub <- adnca[adnca$USUBJID == subj1, ]
+  subj1 <- unique(adnca$USUBJID)[3]
+  dose1 <- unique(adnca$DOSNOP)[1]
+  adnca_sub <- adnca[adnca$USUBJID == subj1 & adnca$DOSNOP == dose1, ]
 
   # Analysis details (minimal example)
   method <- "lin up/log down"
