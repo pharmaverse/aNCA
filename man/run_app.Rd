@@ -29,12 +29,13 @@ data, and a file must be uploaded manually within the app.
 }
 \examples{
 \donttest{
+  # Show the packaged example path (safe non-interactive snippet)
   adnca_path <- system.file("shiny/data/Dummy_data.csv", package = "aNCA")
+  adnca_path
 
-  # Run the app with pre-loaded data
-  run_app(datapath = adnca_path)
-  # Run the app without pre-loading data (standard usage)
-  run_app()
+  # To actually launch the app, run interactively:
+  if (interactive()) {
+    run_app(datapath = adnca_path)
+  }
 }
-
 }

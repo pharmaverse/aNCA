@@ -43,9 +43,9 @@ based on route_column (ROUTE, CDISC: C66729).
 }
 \examples{
 adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
-conc_data <- format_pkncaconc_data(adnca,
+conc_data <- format_pkncaconc_data(ADNCA = adnca,
                                    group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
-                                   "AFRLT",
-                                   "ROUTE")
-
+                                   time_column = "AFRLT",
+                                   rrlt_column = "ARRLT",
+                                   route_column = "ROUTE")
 }

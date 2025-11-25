@@ -79,19 +79,17 @@ and the number of subjects is less than 5.
 }
 }
 \examples{
-\dontrun{
-  # Example usage:
-  plot <- general_lineplot(data = adnca_data,
-                           selected_analytes = c("Analyte1", "Analyte2"),
-                           selected_pcspec = c("Spec1", "Spec2"),
-                           selected_usubjids = c("Subject1", "Subject2"),
-                           colorby_var = "ATPTREF",
-                           time_scale = "By Cycle",
-                           yaxis_scale = "Log",
-                           cycle = "1",
-                           show_threshold = TRUE,
-                           threshold_value = 1)
-  print(plot)
-}
+adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+plot <- general_lineplot(data = adnca_data,
+                         selected_analytes = c("Analyte1", "Analyte2"),
+                         selected_pcspec = c("Spec1", "Spec2"),
+                         selected_usubjids = c("Subject1", "Subject2"),
+                         colorby_var = "ATPTREF",
+                         time_scale = "By Cycle",
+                         yaxis_scale = "Log",
+                         cycle = "1",
+                         show_threshold = TRUE,
+                         threshold_value = 1)
+print(plot)
 
 }
