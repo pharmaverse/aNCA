@@ -45,7 +45,7 @@
 #'
 #' @examples
 #' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
-#' plot <- general_lineplot(data = adnca_data,
+#' plot <- general_lineplot(data = adnca,
 #'                          selected_analytes = c("Analyte1", "Analyte2"),
 #'                          selected_pcspec = c("Spec1", "Spec2"),
 #'                          selected_usubjids = c("Subject1", "Subject2"),
