@@ -89,19 +89,11 @@ This function generates a list of ggplots for PK concentration-time profiles.
 }
 \examples{
 adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+adnca <- subset(adnca, adnca$USUBJID \%in\% unique(adnca$USUBJID)[c(1, 2)])
 attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 attr(adnca[["AVAL"]], "label") <- "Analysis val"
 
 plots_lin <- pkcg01(adnca = adnca, xmax = 1)
-plots_log <- pkcg01(adnca = adnca, color_var = "USUBJID", scale = "LOG")
-plots_sbs <- pkcg01(
-  adnca = adnca,
-  color_var = "USUBJID",
-  xbreaks_var = "NFRLT",
-  xmin = 100,
-  xmax = 1000,
-  scale = "SBS"
-)
 
 }
 \author{
