@@ -46,9 +46,9 @@
 #' @examples
 #' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
 #' # Use actual values from the dummy data for the example
-#' selected_analytes <- head(unique(adnca$ANALYTE), 2)
-#' selected_pcspec <- head(unique(adnca$PCSPEC), 2)
-#' selected_usubjids <- head(unique(adnca$USUBJID), 2)
+#' selected_analytes <- head(unique(adnca$ANALYTE), 1)
+#' selected_pcspec <- head(unique(adnca$PCSPEC), 1)
+#' selected_usubjids <- head(unique(adnca$USUBJID), 1)
 #' plot <- general_lineplot(
 #'   data = adnca,
 #'   selected_analytes = selected_analytes,
