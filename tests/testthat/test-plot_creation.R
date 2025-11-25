@@ -124,7 +124,7 @@ describe("create_indplot functions correctly", {
     expect_true(all(p$data$EVID == 0))
     expect_true(all(!is.na(p$data$AVAL)))
   })
-  
+
   it("generates correct tooltip text", {
     p <- create_indplot(
       data = sample_data,
@@ -133,10 +133,10 @@ describe("create_indplot functions correctly", {
       selected_pcspec = "Spec1",
       labels_df = metadata_nca_variables
     )
-    
+
     # Check that tooltip_text exists
     expect_true("tooltip_text" %in% names(p$data))
-    
+
     # Check content: Should include AVAL, Time, Dose, and Grouping
     expect_true(any(grepl("<b>Analysis Value</b>", p$data$tooltip_text)))
   })
@@ -366,7 +366,7 @@ describe("create_meanplot functions correctly", {
     # Check legend
     expect_equal(p$labels$colour, "DOSEA, SEX")
   })
-  
+
   it("generates correct tooltip text for means", {
     p <- create_meanplot(
       data = sample_data,
@@ -375,7 +375,7 @@ describe("create_meanplot functions correctly", {
       colorby_var = "DOSEA",
       labels_df = metadata_nca_variables
     )
-    
+
     # Check that tooltip_text exists
     expect_true("tooltip_text" %in% names(p$data))
     expect_true(any(grepl("<b>Mean</b>", p$data$tooltip_text)))

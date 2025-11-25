@@ -95,10 +95,10 @@ g_lineplot <- function(data,
   }
 
   # --- Tooltip Construction ---
-  if(nrow(data) == 0){
+  if (nrow(data) == 0) {
     data$tooltip_text <- character(0)
   }
-  
+
   if (!is.null(tooltip_vars)) {
     if (!is.null(labels_df)) {
       # Generate tooltip if labels_df available

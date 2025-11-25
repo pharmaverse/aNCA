@@ -204,7 +204,7 @@ describe("g_lineplot: Mean Plot Mode", {
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
   })
-  
+
   it("shows SD error bars (min, max, and both)", {
     # Both min and max
     p_both <- g_lineplot(
@@ -212,12 +212,12 @@ describe("g_lineplot: Mean Plot Mode", {
       colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = TRUE
     )
     p_both_build <- ggplot_build(p_both)
-    
+
     # Layer 3 is geom_errorbar
     err_data_both <- p_both_build$data[[3]] %>% filter(ymax > 0)
-    
+
     expect_true(all(err_data_both$ymin < err_data_both$ymax))
-    
+
     # Only min
     p_min <- g_lineplot(
       data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
@@ -227,7 +227,7 @@ describe("g_lineplot: Mean Plot Mode", {
     err_data_min <- p_min_build$data[[3]] %>% filter(ymax > 0)
 
     expect_true(all(err_data_min$ymin < err_data_min$ymax))
-    
+
     # Only max
     p_max <- g_lineplot(
       data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
@@ -245,14 +245,14 @@ describe("g_lineplot: Mean Plot Mode", {
       data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
       colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = TRUE
     )
-    
+
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     idx <- which(layer_classes == "GeomErrorbar")
     errorbar_layer <- p$layers[[idx]]
-    
+
     # Verify inherit.aes is FALSE
     expect_false(errorbar_layer$inherit.aes)
-    
+
     # Verify 'text' is NOT in the mapping for errorbars
     expect_null(errorbar_layer$mapping$text)
     expect_true(!is.null(errorbar_layer$mapping$ymin))
@@ -303,7 +303,7 @@ describe("g_lineplot: Tooltips", {
     # Check that tooltip_text column was created in the plot data
     expect_true("tooltip_text" %in% names(p$data))
   })
-  
+
   it("uses generate_tooltip_text when labels_df is provided", {
     p <- g_lineplot(
       data = ind_data,
@@ -318,7 +318,7 @@ describe("g_lineplot: Tooltips", {
     expect_true(any(grepl("<b>Unique Subject Identifier</b>", p$data$tooltip_text)))
     expect_true(any(grepl("<b>Analysis Value</b>", p$data$tooltip_text)))
   })
-  
+
   it("falls back to simple paste if labels_df is missing but vars provided", {
     p <- g_lineplot(
       data = ind_data,
