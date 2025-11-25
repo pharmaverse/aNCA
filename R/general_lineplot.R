@@ -45,16 +45,22 @@
 #'
 #' @examples
 #' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
-#' plot <- general_lineplot(data = adnca,
-#'                          selected_analytes = c("Analyte1", "Analyte2"),
-#'                          selected_pcspec = c("Spec1", "Spec2"),
-#'                          selected_usubjids = c("Subject1", "Subject2"),
-#'                          colorby_var = "ATPTREF",
-#'                          time_scale = "By Cycle",
-#'                          yaxis_scale = "Log",
-#'                          cycle = "1",
-#'                          show_threshold = TRUE,
-#'                          threshold_value = 1)
+#' # Use actual values from the dummy data for the example
+#' selected_analytes <- head(unique(adnca$ANALYTE), 2)
+#' selected_pcspec <- head(unique(adnca$PCSPEC), 2)
+#' selected_usubjids <- head(unique(adnca$USUBJID), 2)
+#' plot <- general_lineplot(
+#'   data = adnca,
+#'   selected_analytes = selected_analytes,
+#'   selected_pcspec = selected_pcspec,
+#'   selected_usubjids = selected_usubjids,
+#'   colorby_var = "ATPTREF",
+#'   time_scale = "By Cycle",
+#'   yaxis_scale = "Log",
+#'   cycle = "1",
+#'   show_threshold = TRUE,
+#'   threshold_value = 1
+#' )
 #' print(plot)
 #'
 #' @import dplyr
