@@ -93,9 +93,9 @@ This function generates a list of ggplots for PK concentration-time profiles.
   attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
   attr(adpc[["AVAL"]], "label") <- "Analysis val"
 
-  plots_lin <- pckg01(adpc = adpc, xmax = 1)
-  plots_log <- pckg01(adpc = adpc, color_var = "USUBJID", scale = "LOG")
-  plots_sbs <- pckg01(
+  plots_lin <- pkcg01(adpc = adpc, xmax = 1)
+  plots_log <- pkcg01(adpc = adpc, color_var = "USUBJID", scale = "LOG")
+  plots_sbs <- pkcg01(
     adpc = adpc,
     color_var = "USUBJID",
     xbreaks_var = "NFRLT",
