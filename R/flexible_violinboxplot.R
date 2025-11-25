@@ -79,6 +79,14 @@ flexible_violinboxplot <- function(res_nca,
       eval(parse(text = filter_text)),
       PPTESTCD == parameter
     )
+  
+  # Verify that PPSTRES exists and is not NA, otherwise return empty plot
+  if (!"PPSTRES" %in% colnames(box_data) ||
+      all(is.na(box_data$PPSTRES))) {
+    return(ggplot() + 
+             labs(title = paste("No data available for parameter:", parameter)) +
+             theme_minimal())
+  }
 
   # Hover text to identify each point
   hover_text <- apply(box_data[columns_to_hover] %>%
@@ -99,7 +107,7 @@ flexible_violinboxplot <- function(res_nca,
       paste(parameter, " [", box_data$PPSTRESU[1], "]")
     }
   }
-
+  
   # Make the plot
   p <- ggplot(
     data = box_data %>% arrange(!!!syms(colorvars)),

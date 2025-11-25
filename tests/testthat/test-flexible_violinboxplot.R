@@ -130,11 +130,8 @@ describe("flexible_violinboxplot", {
       plotly = FALSE
     )
 
-    expect_equal(missing_plot$labels$x, "DOSEA")
-    expect_equal(missing_plot$labels$colour, "ATPTREF")
-    expect_true(grepl("CMAX", missing_plot$labels$y))
-    expect_equal(c(1, 2, 6), unique(missing_plot$data$USUBJID))
-    expect_true(any("ggplot" %in% class(missing_plot)))
+    expect_s3_class(missing_plot, "ggplot")
+    expect_true(length(missing_plot$layers) == 0)
   })
 
   it("handles axis labels correctly when parameter has no unit", {
