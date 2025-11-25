@@ -55,9 +55,9 @@ g_pkcg01_log <- function(data, ...) {
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'
-#' plots_lin <- pckg01(adnca = adnca, xmax = 1)
-#' plots_log <- pckg01(adnca = adnca, color_var = "USUBJID", scale = "LOG")
-#' plots_sbs <- pckg01(
+#' plots_lin <- pkcg01(adnca = adnca, xmax = 1)
+#' plots_log <- pkcg01(adnca = adnca, color_var = "USUBJID", scale = "LOG")
+#' plots_sbs <- pkcg01(
 #'   adnca = adnca,
 #'   color_var = "USUBJID",
 #'   xbreaks_var = "NFRLT",
