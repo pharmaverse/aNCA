@@ -48,7 +48,9 @@
 #'   standard deviation error bars. (Only for mean plots).
 #' @param show_ci A logical value (`TRUE` or `FALSE`). If `TRUE`, plots a 95%
 #'   confidence interval ribbon. (Only for mean plots).
-#'
+#' @param tooltip_vars Character vector of column names to include in the tooltip.
+#' @param labels_df A data.frame for variable label lookups.
+#' 
 #' @returns A `ggplot` object representing the line plot.
 #'
 #' @import ggplot2
@@ -68,7 +70,9 @@ g_lineplot <- function(data,
                        palette = NULL,
                        show_sd_min = FALSE,
                        show_sd_max = FALSE,
-                       show_ci = FALSE) {
+                       show_ci = FALSE,
+                       tooltip_vars = NULL,
+                       labels_df = NULL) {
 
   # Set up plot labels - assumes individual plot unless mean columns are present
   is_mean_plot <- all(c("Mean", "SD", "N") %in% names(data))
@@ -89,12 +93,33 @@ g_lineplot <- function(data,
     y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
     title <- "PK Concentration - Time Profile"
   }
+  
+  # --- Tooltip Construction ---
+  if (!is.null(tooltip_vars)) {
+    if (!is.null(labels_df)) {
+      # Generate tooltip if labels_df available
+      data$tooltip_text <- generate_tooltip_text(data, labels_df, tooltip_vars, "ADNCA")
+    } else {
+      # Fallback to simple paste if labels_df is missing
+      valid_vars <- intersect(tooltip_vars, names(data))
+      if (length(valid_vars) > 0) {
+        parts <- lapply(valid_vars, function(v) paste0(v, ": ", data[[v]]))
+        data$tooltip_text <- do.call(paste, c(parts, sep = "<br>"))
+      } else {
+        data$tooltip_text <- NA_character_
+      }
+    }
+  } else {
+    # Default fallback
+    data$tooltip_text <- paste(x_var, ": ", data[[x_var]], "<br>", y_var, ": ", data[[y_var]])
+  }
 
   plt <- ggplot(data, aes(
     x = .data[[x_var]],
     y = .data[[y_var]],
     color = color_var,
-    group = .data[[group_var]]
+    group = .data[[group_var]],
+    text = tooltip_text
   )) +
     geom_line() +
     geom_point() +
@@ -119,7 +144,9 @@ g_lineplot <- function(data,
       show_sd_max,
       show_ci,
       colorby_var,
-      y_var
+      y_var,
+      x_var,
+      group_var
     )
   )
 
@@ -176,7 +203,8 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_mean_layers <- function(is_mean_plot, show_sd_min, show_sd_max, show_ci, colorby_var, y_var) {
+.add_mean_layers <- function(is_mean_plot, show_sd_min, show_sd_max,
+                             show_ci, colorby_var, y_var, x_var, group_var) {
   if (!is_mean_plot) {
     return(NULL)
   }
@@ -187,7 +215,14 @@ g_lineplot <- function(data,
     ymax_val <- if (isTRUE(show_sd_max)) sym("SD_max") else sym(y_var)
 
     geom_errorbar(
-      aes(ymin = !!ymin_val, ymax = !!ymax_val),
+      aes(
+        x = .data[[x_var]],
+        ymin = !!ymin_val,
+        ymax = !!ymax_val,
+        color = color_var,
+        group = .data[[group_var]]
+      ),
+      inherit.aes = FALSE,
       width = 0.4
     )
   } else {

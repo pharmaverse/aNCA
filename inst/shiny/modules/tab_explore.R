@@ -104,7 +104,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Render the individual plot in plotly
     output$individualplot <- renderPlotly({
       req(individualplot())
-      individualplot()
+      ggplotly(individualplot(), tooltip = "text")
     })
 
     # TAB: Mean Plot -----------------------------------------------------------
@@ -151,7 +151,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Render the mean plot output in plotly
     output$mean_plot <- renderPlotly({
       req(meanplot())
-      meanplot()
+      ggplotly(meanplot(), tooltip = "text")
     })
 
     pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data, extra_group_vars)
