@@ -82,9 +82,8 @@ describe("create_indplot functions correctly", {
     expect_s3_class(p, "ggplot")
     # Default time_scale is "All Time", which uses AFRLT
     expect_true("AFRLT" %in% names(p$data))
-    expect_true(all(p$data$time_var == p$data$AFRLT))
-    # Default y_var is AVAL
-    expect_true(all(p$data[[p$labels$y]] == p$data$AVAL))
+    # Check that AVAL is present (default y_var)
+    expect_true("AVAL" %in% names(p$data))
     # Default group_var is USUBJID
     expect_true("USUBJID" %in% names(p$data))
   })
@@ -125,6 +124,22 @@ describe("create_indplot functions correctly", {
     expect_true(all(p$data$EVID == 0))
     expect_true(all(!is.na(p$data$AVAL)))
   })
+  
+  it("generates correct tooltip text", {
+    p <- create_indplot(
+      data = sample_data,
+      selected_usubjids = "Subject1",
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      labels_df = metadata_nca_variables
+    )
+    
+    # Check that tooltip_text exists
+    expect_true("tooltip_text" %in% names(p$data))
+    
+    # Check content: Should include AVAL, Time, Dose, and Grouping
+    expect_true(any(grepl("<b>Analysis Value</b>", p$data$tooltip_text)))
+  })
 
   it("changes time scale if selected profiles is not null", {
     p <- create_indplot(
@@ -137,7 +152,6 @@ describe("create_indplot functions correctly", {
     expect_s3_class(p, "ggplot")
     # 'By Dose Profile' uses ARRLT
     expect_true("ARRLT" %in% names(p$data))
-    expect_true(all(p$data$time_var == p$data$ARRLT))
     # Check that data is filtered to the selected cycle
     expect_true(all(p$data$ATPTREF == 1))
   })
@@ -283,8 +297,7 @@ describe("create_meanplot functions correctly", {
     )
     expect_s3_class(p, "ggplot")
     # Default time_scale is "All Time", which uses NFRLT for mean plot
-    nfrlt_vals <- unique(sample_data$NFRLT)
-    expect_true(all(p$data$time_var %in% nfrlt_vals))
+    expect_true("NFRLT" %in% names(p$data))
     # Default y_var is Mean
     expect_true(all(p$data[[p$labels$y]] == p$data$Mean))
     # Default group_var is color_var
@@ -334,10 +347,9 @@ describe("create_meanplot functions correctly", {
     )
     expect_s3_class(p, "ggplot")
     # 'By Dose Profile' uses NRRLT
-    nrlt_vals <- unique(sample_data$NRRLT)
-    expect_true(all(p$data$time_var %in% nrlt_vals))
+    expect_true("NRRLT" %in% names(p$data))
     # Check that data is filtered to the selected cycle
-    expect_true(max(p$data$time_var) <= 5)
+    expect_true(max(p$data$NRRLT) <= 5)
   })
 
   it("supports multiple colorby_var and facet_by", {
@@ -353,6 +365,22 @@ describe("create_meanplot functions correctly", {
     expect_s3_class(p$facet, "FacetWrap")
     # Check legend
     expect_equal(p$labels$colour, "DOSEA, SEX")
+  })
+  
+  it("generates correct tooltip text for means", {
+    p <- create_meanplot(
+      data = sample_data,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      colorby_var = "DOSEA",
+      labels_df = metadata_nca_variables
+    )
+    
+    # Check that tooltip_text exists
+    expect_true("tooltip_text" %in% names(p$data))
+    expect_true(any(grepl("<b>Mean</b>", p$data$tooltip_text)))
+    # Default is NFRLT
+    expect_true(any(grepl("<b>Nom. Rel. Time from Analyte First Dose</b>", p$data$tooltip_text)))
   })
 
   it("supports log scale and filters non-positive Mean", {

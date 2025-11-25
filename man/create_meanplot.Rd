@@ -19,7 +19,8 @@ create_meanplot(
   dose_data = NULL,
   show_sd_min = FALSE,
   show_sd_max = TRUE,
-  show_ci = FALSE
+  show_ci = FALSE,
+  labels_df = metadata_nca_variables
 )
 }
 \arguments{
@@ -44,10 +45,13 @@ create_meanplot(
 \item{dose_data}{The raw data frame (or a derivative) for calculating dose times.}
 
 \item{show_sd_min, show_sd_max, show_ci}{Logicals for error bars.}
+
+\item{labels_df}{A data.frame used for label lookups in tooltips.
+Defaults to metadata_nca_variables.}
 }
 \value{
 A \code{ggplot} object.
 }
 \description{
-Combines data processing and plotting for mean concentration-time profiles.
+Create a Mean PK Line Plot
 }

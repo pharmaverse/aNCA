@@ -50,7 +50,7 @@
 #'   confidence interval ribbon. (Only for mean plots).
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
 #' @param labels_df A data.frame for variable label lookups.
-#' 
+#'
 #' @returns A `ggplot` object representing the line plot.
 #'
 #' @import ggplot2
@@ -93,8 +93,12 @@ g_lineplot <- function(data,
     y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
     title <- "PK Concentration - Time Profile"
   }
-  
+
   # --- Tooltip Construction ---
+  if(nrow(data) == 0){
+    data$tooltip_text <- character(0)
+  }
+  
   if (!is.null(tooltip_vars)) {
     if (!is.null(labels_df)) {
       # Generate tooltip if labels_df available
@@ -106,12 +110,11 @@ g_lineplot <- function(data,
         parts <- lapply(valid_vars, function(v) paste0(v, ": ", data[[v]]))
         data$tooltip_text <- do.call(paste, c(parts, sep = "<br>"))
       } else {
-        data$tooltip_text <- NA_character_
+        data$tooltip_text <- rep(NA_character_, nrow(data))
       }
     }
   } else {
-    # Default fallback
-    data$tooltip_text <- paste(x_var, ": ", data[[x_var]], "<br>", y_var, ": ", data[[y_var]])
+    data$tooltip_text <- rep(NA_character_, nrow(data))
   }
 
   plt <- ggplot(data, aes(

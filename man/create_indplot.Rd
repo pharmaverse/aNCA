@@ -17,7 +17,8 @@ create_indplot(
   threshold_value = 0,
   show_dose = FALSE,
   dose_data = NULL,
-  palette = NULL
+  palette = NULL,
+  labels_df = metadata_nca_variables
 )
 }
 \arguments{
@@ -40,10 +41,13 @@ create_indplot(
 \item{dose_data}{The raw data frame (or a derivative) for calculating dose times.}
 
 \item{palette}{A named color palette.}
+
+\item{labels_df}{A data.frame used for label lookups in tooltips.
+Defaults to metadata_nca_variables.}
 }
 \value{
 A \code{ggplot} object.
 }
 \description{
-Combines data processing and plotting for individual concentration-time profiles.
+Create an Individual PK Line Plot
 }

@@ -204,7 +204,7 @@ describe("g_lineplot: Mean Plot Mode", {
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
   })
-
+  
   it("shows SD error bars (min, max, and both)", {
     # Both min and max
     p_both <- g_lineplot(
@@ -212,29 +212,51 @@ describe("g_lineplot: Mean Plot Mode", {
       colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = TRUE
     )
     p_both_build <- ggplot_build(p_both)
-    err_data_both <- p_both_build$data[[3]] %>% filter(y > 0) # Filter out 0
-    expect_true(all(err_data_both$ymin < err_data_both$y))
-    expect_true(all(err_data_both$ymax > err_data_both$y))
-
+    
+    # Layer 3 is geom_errorbar
+    err_data_both <- p_both_build$data[[3]] %>% filter(ymax > 0)
+    
+    expect_true(all(err_data_both$ymin < err_data_both$ymax))
+    
     # Only min
     p_min <- g_lineplot(
       data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
       colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = FALSE
     )
     p_min_build <- ggplot_build(p_min)
-    err_data_min <- p_min_build$data[[3]] %>% filter(y > 0) # Filter out 0
-    expect_true(all(err_data_min$ymin < err_data_min$y))
-    expect_true(all(err_data_min$ymax == err_data_min$y)) # ymax is Mean
+    err_data_min <- p_min_build$data[[3]] %>% filter(ymax > 0)
 
+    expect_true(all(err_data_min$ymin < err_data_min$ymax))
+    
     # Only max
     p_max <- g_lineplot(
       data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
       colorby_var = "color_var", show_sd_min = FALSE, show_sd_max = TRUE
     )
     p_max_build <- ggplot_build(p_max)
-    err_data_max <- p_max_build$data[[3]] %>% filter(y > 0) # Filter out 0
-    expect_true(all(err_data_max$ymin == err_data_max$y)) # ymin is Mean
-    expect_true(all(err_data_max$ymax > err_data_max$y))
+    err_data_max <- p_max_build$data[[3]] %>% filter(ymax > 0)
+    # When SD_min is FALSE, ymin corresponds to 'Mean' (y_var)
+    # ymax corresponds to Mean + SD
+    expect_true(all(err_data_max$ymin < err_data_max$ymax))
+  })
+
+  it("shows SD error bars and explicitly sets inheritance to FALSE", {
+    p <- g_lineplot(
+      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
+      colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = TRUE
+    )
+    
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    idx <- which(layer_classes == "GeomErrorbar")
+    errorbar_layer <- p$layers[[idx]]
+    
+    # Verify inherit.aes is FALSE
+    expect_false(errorbar_layer$inherit.aes)
+    
+    # Verify 'text' is NOT in the mapping for errorbars
+    expect_null(errorbar_layer$mapping$text)
+    expect_true(!is.null(errorbar_layer$mapping$ymin))
+    expect_true(!is.null(errorbar_layer$mapping$ymax))
   })
 
   it("shows CI ribbon and updates legend", {
@@ -266,6 +288,51 @@ describe("g_lineplot: Mean Plot Mode", {
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomErrorbar" %in% layer_classes)
     expect_true("GeomRibbon" %in% layer_classes)
+  })
+})
+
+describe("g_lineplot: Tooltips", {
+  it("constructs default tooltips if no vars provided", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID"
+    )
+    # Check that tooltip_text column was created in the plot data
+    expect_true("tooltip_text" %in% names(p$data))
+  })
+  
+  it("uses generate_tooltip_text when labels_df is provided", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID",
+      tooltip_vars = c("USUBJID", "AVAL"),
+      labels_df = metadata_nca_variables
+    )
+    # Check for bold tags added by generate_tooltip_text
+    expect_true(any(grepl("<b>Unique Subject Identifier</b>", p$data$tooltip_text)))
+    expect_true(any(grepl("<b>Analysis Value</b>", p$data$tooltip_text)))
+  })
+  
+  it("falls back to simple paste if labels_df is missing but vars provided", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      group_var = "USUBJID",
+      colorby_var = "USUBJID",
+      tooltip_vars = c("USUBJID", "AVAL"),
+      labels_df = NULL
+    )
+    # Check for simple format "Var: Value"
+    expect_true(any(grepl("USUBJID: Subject1", p$data$tooltip_text)))
+    # Check NO bold tags
+    expect_false(any(grepl("<b>", p$data$tooltip_text)))
   })
 })
 

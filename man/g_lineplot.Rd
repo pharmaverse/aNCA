@@ -19,7 +19,9 @@ g_lineplot(
   palette = NULL,
   show_sd_min = FALSE,
   show_sd_max = FALSE,
-  show_ci = FALSE
+  show_ci = FALSE,
+  tooltip_vars = NULL,
+  labels_df = NULL
 )
 }
 \arguments{
@@ -67,6 +69,10 @@ standard deviation error bars. (Only for mean plots).}
 
 \item{show_ci}{A logical value (\code{TRUE} or \code{FALSE}). If \code{TRUE}, plots a 95\%
 confidence interval ribbon. (Only for mean plots).}
+
+\item{tooltip_vars}{Character vector of column names to include in the tooltip.}
+
+\item{labels_df}{A data.frame for variable label lookups.}
 }
 \value{
 A \code{ggplot} object representing the line plot.

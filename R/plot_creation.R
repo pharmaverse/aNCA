@@ -10,7 +10,7 @@
 #' @param show_dose Logical, whether to show dosing indicators.
 #' @param dose_data The raw data frame (or a derivative) for calculating dose times.
 #' @param palette A named color palette.
-#' @param labels_df A data.frame used for label lookups in tooltips. 
+#' @param labels_df A data.frame used for label lookups in tooltips.
 #' Defaults to metadata_nca_variables.
 #' @returns A `ggplot` object.
 #'
@@ -28,7 +28,7 @@ create_indplot <- function(data,
                            dose_data = NULL,
                            palette = NULL,
                            labels_df = metadata_nca_variables) {
-  
+
   processed_data <- data %>%
     filter(
       USUBJID %in% selected_usubjids,
@@ -36,16 +36,16 @@ create_indplot <- function(data,
       PCSPEC %in% selected_pcspec,
       !is.na(AVAL)
     )
-  
+
   if (isTRUE(ylog_scale)) {
     processed_data <- processed_data %>% filter(AVAL > 0)
   }
-  
+
   time_col <- if (!is.null(profiles_selected)) "ARRLT" else "AFRLT"
-  
+
   if (!is.null(profiles_selected)) {
     if ("ARRLT" %in% names(processed_data) &&
-        any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
+          any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
       processed_data <- dose_profile_duplicates(
         processed_data,
         groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
@@ -54,16 +54,16 @@ create_indplot <- function(data,
     }
     processed_data <- processed_data %>% filter(ATPTREF %in% profiles_selected)
   }
-  
+
   processed_data <- processed_data %>%
     mutate(
       color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )
-  
+
   validate(need(nrow(processed_data) > 0, "No data available for the selected filters."))
-  
+
   tt_vars <- unique(c("AVAL", time_col, "USUBJID", colorby_var))
-  
+
   lineplot <- g_lineplot(
     data = processed_data,
     x_var = time_col,
@@ -80,7 +80,7 @@ create_indplot <- function(data,
     tooltip_vars = tt_vars,
     labels_df = labels_df
   )
-  
+
   return(lineplot)
 }
 
@@ -97,7 +97,7 @@ create_indplot <- function(data,
 #' @param palette A named color palette.
 #' @param dose_data The raw data frame (or a derivative) for calculating dose times.
 #' @param show_sd_min,show_sd_max,show_ci Logicals for error bars.
-#' @param labels_df A data.frame used for label lookups in tooltips. 
+#' @param labels_df A data.frame used for label lookups in tooltips.
 #' Defaults to metadata_nca_variables.
 #' @returns A `ggplot` object.
 #'
@@ -117,20 +117,20 @@ create_meanplot <- function(data,
                             show_sd_max = TRUE,
                             show_ci =  FALSE,
                             labels_df = metadata_nca_variables) {
-  
+
   processed <- data %>%
     filter(
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
       !is.na(AVAL)
     )
-  
+
   if (!is.null(profiles_selected)) {
     processed <- processed %>% filter(ATPTREF %in% profiles_selected)
   }
-  
+
   time_col <- if (!is.null(profiles_selected)) "NRRLT" else "NFRLT"
-  
+
   summarised_data <- processed %>%
     mutate(
       color_var = interaction(!!!syms(colorby_var), sep = ", ", drop = TRUE)
@@ -150,16 +150,16 @@ create_meanplot <- function(data,
       CI_lower = Mean - 1.96 * SE,
       CI_upper = Mean + 1.96 * SE
     )
-  
+
   if (isTRUE(ylog_scale)) {
     summarised_data <- summarised_data %>%
       filter(Mean > 0)
   }
-  
+
   validate(need(nrow(summarised_data) > 0, "No data with >= 3 points to calculate mean."))
-  
+
   tt_vars <- unique(c("Mean", time_col, colorby_var))
-  
+
   meanplot <- g_lineplot(
     data = summarised_data,
     x_var = time_col,
@@ -179,6 +179,6 @@ create_meanplot <- function(data,
     tooltip_vars = tt_vars,
     labels_df = labels_df
   )
-  
+
   return(meanplot)
 }
