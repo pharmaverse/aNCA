@@ -17,7 +17,7 @@ Authors@R: c(
     person("Valentin", "Legras", email = "anca.pharmaverse@gmail.com", role = c("aut", "cre")),
     person("F. Hoffmann-La Roche AG", role = c("cph", "fnd"))
   )
-Description: An interactive 'Shiny' application for performing non-compartmental analysis (NCA) on
+Description: An interactive 'shiny' application for performing non-compartmental analysis (NCA) on
   pre-clinical and clinical pharmacokinetic data. The package builds on 'PKNCA' for core estimators and provides interactive visualizations, CDISC
   outputs ('ADNCA', 'PP', 'ADPP'), configurable TLGs (tables, listings, and graphs) and
   draft slide decks. Typical use cases include exploratory
