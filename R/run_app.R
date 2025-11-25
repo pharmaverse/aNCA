@@ -15,14 +15,15 @@
 #'
 #' @examples
 #' \donttest{
+#'   # Show the packaged example path (safe non-interactive snippet)
 #'   adnca_path <- system.file("shiny/data/Dummy_data.csv", package = "aNCA")
+#'   adnca_path
 #'
-#'   # Run the app with pre-loaded data
-#'   run_app(datapath = adnca_path)
-#'   # Run the app without pre-loading data (standard usage)
-#'   run_app()
+#'   # To actually launch the app, run interactively:
+#'   if (interactive()) {
+#'     run_app(datapath = adnca_path)
+#'   }
 #' }
-#'
 #' @export
 run_app <- function(datapath = NULL, ...) {
   # Increase max upload size to 30 MB
