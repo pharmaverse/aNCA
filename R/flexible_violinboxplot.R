@@ -11,8 +11,10 @@
 #' @param colorvars           Variables for the color aesthetic.
 #' @param varvalstofilter     Character vector specifying which variable and value to pre-filter
 #'                            as `colname: value`. By default is NULL (no pre-filtering)
-#' @param columns_to_hover    A character vector indicating the column names from result_data that
-#'                            should be used to identify when hovering the plotly outputs
+#' @param tooltip_vars        A character vector indicating the column names from result_data that
+#'                            should be used to identify when hovering the plotly outputs.
+#' @param labels_df           A data.frame used for label lookups in tooltips.
+#'                            Defaults to metadata_nca_variables.
 #' @param box                 A logical value indicating whether to plot a box plot (`TRUE`) or a
 #'                            violin plot (`FALSE`). Default is `TRUE`.
 #' @param plotly              A logical value defining if the output is plotly (TRUE, default)
@@ -27,7 +29,8 @@ flexible_violinboxplot <- function(res_nca,
                                    xvars,
                                    colorvars,
                                    varvalstofilter = NULL,
-                                   columns_to_hover,
+                                   tooltip_vars,
+                                   labels_df = metadata_nca_variables,
                                    box = TRUE,
                                    plotly = TRUE) {
 
@@ -66,15 +69,36 @@ flexible_violinboxplot <- function(res_nca,
              theme_minimal())
   }
 
-  # Hover text to identify each point
-  hover_text <- apply(box_data[columns_to_hover] %>%
-                        mutate(across(where(is.numeric), function(x) round(x, digits = 2))),
-                      MARGIN = 1,
-                      function(row) {
-                        paste(names(row), row, sep = ": ", collapse = "<br>")
-                      })
-  
-  box_data$hover_text <- hover_text
+  # --- Tooltip Construction ---
+  if (nrow(box_data) > 0) {
+    # 1. Round numeric tooltip variables for cleaner display
+    numeric_tt_vars <- intersect(tooltip_vars, names(box_data)[sapply(box_data, is.numeric)])
+    if (length(numeric_tt_vars) > 0) {
+      box_data <- box_data %>%
+        mutate(across(all_of(numeric_tt_vars), ~ round(., digits = 2)))
+    }
+    
+    # 2. Generate Tooltip Text
+    if (!is.null(tooltip_vars)) {
+      if (!is.null(labels_df)) {
+        # Use the shared helper function if available and labels provided
+        box_data$tooltip_text <- generate_tooltip_text(box_data, labels_df, tooltip_vars, "ADNCA")
+      } else {
+        # Fallback: Create simple "Var: Value" string
+        valid_vars <- intersect(tooltip_vars, names(box_data))
+        if (length(valid_vars) > 0) {
+          parts <- lapply(valid_vars, function(v) paste0(v, ": ", box_data[[v]]))
+          box_data$tooltip_text <- do.call(paste, c(parts, sep = "<br>"))
+        } else {
+          box_data$tooltip_text <- NA_character_
+        }
+      }
+    } else {
+      box_data$tooltip_text <- NA_character_
+    }
+  } else {
+    box_data$tooltip_text <- character(0)
+  }
 
   # ylabel of violin/boxplot
   ylabel <- {
@@ -94,21 +118,37 @@ flexible_violinboxplot <- function(res_nca,
     aes(
       x = interaction(!!!syms(xvars), sep = "\n"),
       y = PPSTRES,
-      color = interaction(!!!syms(colorvars))
+      color = interaction(!!!syms(colorvars)),
+      text = tooltip_text
     )
   )
 
   #  Make boxplot or violin
   if (box) {
-    p <- p + geom_boxplot()
+    p <- p + geom_boxplot(
+      aes(
+        x = interaction(!!!syms(xvars), sep = "\n"),
+        y = PPSTRES,
+        color = interaction(!!!syms(colorvars))
+      ),
+      inherit.aes = FALSE
+    )
   } else {
-    p <- p + geom_violin(drop = FALSE)
+
+    p <- p + geom_violin(
+      aes(
+        x = interaction(!!!syms(xvars), sep = "\n"),
+        y = PPSTRES,
+        color = interaction(!!!syms(colorvars))
+      ),
+      inherit.aes = FALSE,
+      drop = FALSE
+    )
   }
 
   # Include points, labels and theme
   p <- p +
-    geom_point(aes(text = hover_text),
-               position = position_jitterdodge(seed = 123)) +
+    geom_point(position = position_jitterdodge(seed = 123)) +
     labs(
       x = paste(xvars, collapse = ", "),
       y = ylabel,

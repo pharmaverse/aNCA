@@ -122,7 +122,7 @@ parameter_plots_server <- function(id, res_nca) {
         xvars = input$selected_xvars_boxplot,
         colorvars = input$selected_colorvars_boxplot,
         varvalstofilter = input$selected_filters_boxplot,
-        columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
+        tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
         box = input$violinplot_toggle_switch,
       )
     })
