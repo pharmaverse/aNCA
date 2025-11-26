@@ -9,15 +9,14 @@
 #'
 #' @importFrom htmltools tags
 #' @examples
-#' \dontrun{
-#'   data <- data.frame(
-#'     USUBJID = c(1, 2, 3),
-#'     AVAL = c(4, 5, 6)
-#'   )
-#'   attr(data$USUBJID, "label") <- "Unique Subject Identifier"
-#'   attr(data$AVAL, "label") <- "Analysis Value"
-#'   col_defs <- generate_col_defs(data)
-#' }
+#' data <- data.frame(
+#'   USUBJID = c(1, 2, 3),
+#'   AVAL = c(4, 5, 6)
+#' )
+#' attr(data$USUBJID, "label") <- "Unique Subject Identifier"
+#' attr(data$AVAL, "label") <- "Analysis Value"
+#' col_defs <- generate_col_defs(data)
+#'
 #'
 #' @export
 generate_col_defs <- function(data) {

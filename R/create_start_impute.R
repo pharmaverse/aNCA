@@ -10,9 +10,10 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' pknca_data <- PKNCA_create_data_object(adnca)
 #' pknca_data <- create_start_impute(pknca_data)
-#' }
+#'
 create_start_impute <- function(pknca_data) {
 
   if (nrow(pknca_data$intervals) == 0) {
