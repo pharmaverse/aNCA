@@ -29,7 +29,7 @@ flexible_violinboxplot <- function(res_nca,
                                    varvalstofilter = NULL,
                                    columns_to_hover,
                                    box = TRUE,
-                                   plotly = FALSE) {
+                                   plotly = TRUE) {
 
   group_columns <- group_vars(res_nca$data$conc)
   boxplotdata <- left_join(
@@ -106,7 +106,6 @@ flexible_violinboxplot <- function(res_nca,
   # Include points, labels and theme
   p <- p +
     geom_point(position = position_jitterdodge(seed = 123)) +
-    # facet_wrap(~STUDYID) +
     labs(
       x = paste(xvars, collapse = ", "),
       y = ylabel,
