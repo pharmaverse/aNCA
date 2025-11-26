@@ -29,9 +29,8 @@ flexible_violinboxplot <- function(res_nca,
                                    varvalstofilter = NULL,
                                    columns_to_hover,
                                    box = TRUE,
-                                   plotly = FALSE) {
+                                   plotly = TRUE) {
 
-  browser()
   group_columns <- group_vars(res_nca$data$conc)
   boxplotdata <- left_join(
     res_nca$result,
@@ -103,14 +102,13 @@ flexible_violinboxplot <- function(res_nca,
   if (box) {
     p <- p + geom_boxplot()
   } else {
-    p <- p + geom_violin()
+    p <- p + geom_violin(drop = FALSE)
   }
 
   # Include points, labels and theme
   p <- p +
     geom_point(aes(text = hover_text),
                position = position_jitterdodge(seed = 123)) +
-    # facet_wrap(~STUDYID) +
     labs(
       x = paste(xvars, collapse = ", "),
       y = ylabel,

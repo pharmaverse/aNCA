@@ -173,4 +173,18 @@ describe("flexible_violinboxplot", {
     )
     expect_s3_class(simple_plotly, "plotly")
   })
+  
+  it("creates a violin plotly object correctly", {
+    simple_plotly <- flexible_violinboxplot(
+      res_nca = boxplotdata,
+      parameter = "CMAX",
+      xvars = "DOSEA",
+      colorvars = "ATPTREF",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
+      box = FALSE,
+      plotly = TRUE
+    )
+    expect_s3_class(simple_plotly, "plotly")
+  })
 })
