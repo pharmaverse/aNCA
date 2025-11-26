@@ -62,7 +62,8 @@ parameter, and dose information.</p>
 <span>  varvalstofilter <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">columns_to_hover</span>,</span>
 <span>  box <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  plotly <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  plotly <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -104,6 +105,11 @@ violin plot (<code>FALSE</code>). Default is <code>TRUE</code>.</p></dd>
 <dt id="arg-plotly">plotly<a class="anchor" aria-label="anchor" href="#arg-plotly"></a></dt>
 <dd><p>A logical value defining if the output is plotly (TRUE, default)
 or ggplot otherwise (FALSE)</p></dd>
+
+
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>An integer value to set the seed for reproducibility of jittering.
+Default (NULL) will use the current R seed.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -31,22 +31,13 @@ variable name.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
- # Example usage:
  LABELS <- data.frame(
    Variable = c("USUBJID", "AVAL"),
    Label = c("Unique Subject Identifier", "Analysis Value"),
    Dataset = c("ADNCA", "ADNCA")
  )
  get_label("USUBJID", "ADNCA", LABELS)  # Returns "Unique Subject Identifier"
+#> [1] "Unique Subject Identifier"
  get_label("AGE", "ADNCA", LABELS)  # Returns "AGE"
- # Using a custom mapping column:
- LABELS2 <- data.frame(
-   ColName = c("USUBJID", "AVAL"),
-   Label = c("Unique Subject Identifier", "Analysis Value"),
-   Dataset = c("ADNCA", "ADNCA")
- )
- get_label("USUBJID", "ADNCA", LABELS2)
- # Returns "Unique Subject Identifier"
-} # }
+#> [1] "AGE"
 ```

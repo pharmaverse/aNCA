@@ -60,11 +60,10 @@ The function performs the following steps:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-  # Example usage:
-  conc_data <- format_pkncaconc_data(ADNCA,
-                                     group_columns,
-                                     "AFRLT",
-                                     "ROUTE")
-} # }
+adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+conc_data <- format_pkncaconc_data(ADNCA = adnca,
+                                   group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
+                                   time_column = "AFRLT",
+                                   rrlt_column = "ARRLT",
+                                   route_column = "ROUTE")
 ```

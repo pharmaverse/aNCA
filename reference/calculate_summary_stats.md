@@ -55,13 +55,25 @@ first unit.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 data <- data.frame(
-ATPTREF = c(1, 1, 1, 1, 1, 1),
-PPTESTCD = c("A", "A", "B", "B", "C", "C"),
-PPSTRES = c(10, 20, 5, 15, NA, 30),
-PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
+  ATPTREF = c(1, 1, 1, 1, 1, 1),
+  PPTESTCD = c("A", "A", "B", "B", "C", "C"),
+  PPORRES = c(10, 20, 5, 15, NA, 30),
+  PPSTRES = c(10, 20, 5, 15, NA, 30),
+  PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L"),
+  PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 )
 calculate_summary_stats(data)
-} # }
+#> # A tibble: 9 × 5
+#>   ATPTREF Statistic     `A[mg/L]` `B[ng/mL]` `C[µg/L]`
+#>     <dbl> <chr>             <dbl>      <dbl>     <dbl>
+#> 1       1 Geomean           14.1        8.66        30
+#> 2       1 Geocv             50         81.6         NA
+#> 3       1 Mean              15         10           30
+#> 4       1 SD                 7.07       7.07        NA
+#> 5       1 Min               10          5           30
+#> 6       1 Max               20         15           30
+#> 7       1 Median            15         10           30
+#> 8       1 Count.missing      0          0            1
+#> 9       1 Count.total        2          2            2
 ```

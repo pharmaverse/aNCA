@@ -33,13 +33,11 @@ and `!=`.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-  # Example usage:
-  data <- mtcars
-  filters <- list(
-    list(column = "mpg", condition = ">", value = "20"),
-    list(column = "cyl", condition = "==", value = "6")
-  )
-  filtered_data <- apply_filters(data, filters)
-} # }
+# Example usage:
+data <- mtcars
+filters <- list(
+  list(column = "mpg", condition = ">", value = "20"),
+  list(column = "cyl", condition = "==", value = "6")
+)
+filtered_data <- apply_filters(data, filters)
 ```

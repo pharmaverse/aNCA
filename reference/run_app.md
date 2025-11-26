@@ -19,6 +19,11 @@ run_app(datapath = NULL, ...)
   Arguments passed to
   [`shiny::runApp()`](https://rdrr.io/pkg/shiny/man/runApp.html)
 
+## Value
+
+No return value, called for side effects to launch the Shiny
+application.
+
 ## Details
 
 If a `datapath` is provided, the app will attempt to automatically load
@@ -35,16 +40,15 @@ app.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-  # Create a dummy data file
-  temp_data_path <- tempfile(fileext = ".csv")
-  write.csv(data.frame(USUBJID = 1, AFRLT = 0:4, AVAL = c(0, 10, 8, 4, 1)),
-            file = temp_data_path, row.names = FALSE)
+# \donttest{
+  # Show the packaged example path (safe non-interactive snippet)
+  adnca_path <- system.file("shiny/data/Dummy_data.csv", package = "aNCA")
+  adnca_path
+#> [1] "/home/runner/work/_temp/Library/aNCA/shiny/data/Dummy_data.csv"
 
-  # Run the app, automatically loading the dummy data
-  run_app(datapath = temp_data_path)
-
-  # Run the app without pre-loading data (standard usage)
-  run_app()
-} # }
+  # To actually launch the app, run interactively:
+  if (interactive()) {
+    run_app(datapath = adnca_path)
+  }
+# }
 ```

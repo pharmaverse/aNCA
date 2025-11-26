@@ -158,20 +158,25 @@ and the number of subjects is less than 5.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span>  <span class="co"># Example usage:</span></span></span>
-<span class="r-in"><span>  <span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu">general_lineplot</span><span class="op">(</span>data <span class="op">=</span> <span class="va">adnca_data</span>,</span></span>
-<span class="r-in"><span>                           selected_analytes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Analyte1"</span>, <span class="st">"Analyte2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                           selected_pcspec <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Spec1"</span>, <span class="st">"Spec2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                           selected_usubjids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Subject1"</span>, <span class="st">"Subject2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                           colorby_var <span class="op">=</span> <span class="st">"ATPTREF"</span>,</span></span>
-<span class="r-in"><span>                           time_scale <span class="op">=</span> <span class="st">"By Cycle"</span>,</span></span>
-<span class="r-in"><span>                           yaxis_scale <span class="op">=</span> <span class="st">"Log"</span>,</span></span>
-<span class="r-in"><span>                           cycle <span class="op">=</span> <span class="st">"1"</span>,</span></span>
-<span class="r-in"><span>                           show_threshold <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>                           threshold_value <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">adnca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shiny/data/Dummy_data.csv"</span>, package <span class="op">=</span> <span class="st">"aNCA"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Use actual values from the dummy data for the example</span></span></span>
+<span class="r-in"><span><span class="va">selected_analytes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">adnca</span><span class="op">$</span><span class="va">ANALYTE</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">selected_pcspec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">adnca</span><span class="op">$</span><span class="va">PCSPEC</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">selected_usubjids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">adnca</span><span class="op">$</span><span class="va">USUBJID</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu">general_lineplot</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">adnca</span>,</span></span>
+<span class="r-in"><span>  selected_analytes <span class="op">=</span> <span class="va">selected_analytes</span>,</span></span>
+<span class="r-in"><span>  selected_pcspec <span class="op">=</span> <span class="va">selected_pcspec</span>,</span></span>
+<span class="r-in"><span>  selected_usubjids <span class="op">=</span> <span class="va">selected_usubjids</span>,</span></span>
+<span class="r-in"><span>  colorby_var <span class="op">=</span> <span class="st">"ATPTREF"</span>,</span></span>
+<span class="r-in"><span>  time_scale <span class="op">=</span> <span class="st">"By Cycle"</span>,</span></span>
+<span class="r-in"><span>  yaxis_scale <span class="op">=</span> <span class="st">"Log"</span>,</span></span>
+<span class="r-in"><span>  cycle <span class="op">=</span> <span class="st">"1"</span>,</span></span>
+<span class="r-in"><span>  show_threshold <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  threshold_value <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="general_lineplot-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

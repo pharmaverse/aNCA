@@ -14,7 +14,8 @@ flexible_violinboxplot(
   varvalstofilter = NULL,
   columns_to_hover,
   box = TRUE,
-  plotly = TRUE
+  plotly = TRUE,
+  seed = NULL
 )
 ```
 
@@ -55,6 +56,11 @@ flexible_violinboxplot(
 
   A logical value defining if the output is plotly (TRUE, default) or
   ggplot otherwise (FALSE)
+
+- seed:
+
+  An integer value to set the seed for reproducibility of jittering.
+  Default (NULL) will use the current R seed.
 
 ## Value
 

@@ -100,10 +100,12 @@ or contain multiple doses in dataset</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span>  <span class="co"># Example usage:</span></span></span>
-<span class="r-in"><span>  <span class="va">dose_intervals</span> <span class="op">&lt;-</span> <span class="fu">format_pkncadata_intervals</span><span class="op">(</span><span class="va">pknca_conc</span>, <span class="va">pknca_dose</span>, <span class="va">params</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">adnca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shiny/data/Dummy_data.csv"</span>, package <span class="op">=</span> <span class="st">"aNCA"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pknca_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="PKNCA_create_data_object.html">PKNCA_create_data_object</a></span><span class="op">(</span><span class="va">adnca</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pknca_conc</span> <span class="op">&lt;-</span> <span class="va">pknca_data</span><span class="op">$</span><span class="va">conc</span></span></span>
+<span class="r-in"><span><span class="va">pknca_dose</span> <span class="op">&lt;-</span> <span class="va">pknca_data</span><span class="op">$</span><span class="va">dose</span></span></span>
+<span class="r-in"><span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"aucinf.obs"</span>, <span class="st">"cmax"</span>, <span class="st">"half.life"</span>, <span class="st">"tmax"</span>, <span class="st">"lambda.z"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dose_intervals</span> <span class="op">&lt;-</span> <span class="fu">format_pkncadata_intervals</span><span class="op">(</span><span class="va">pknca_conc</span>, <span class="va">pknca_dose</span>, <span class="va">params</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
