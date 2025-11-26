@@ -12,7 +12,7 @@ flexible_violinboxplot(
   varvalstofilter = NULL,
   columns_to_hover,
   box = TRUE,
-  plotly = FALSE
+  plotly = TRUE
 )
 }
 \arguments{
