@@ -29,7 +29,7 @@ flexible_violinboxplot <- function(res_nca,
                                    varvalstofilter = NULL,
                                    columns_to_hover,
                                    box = TRUE,
-                                   plotly = TRUE) {
+                                   plotly = FALSE) {
 
   browser()
   group_columns <- group_vars(res_nca$data$conc)
@@ -50,29 +50,8 @@ flexible_violinboxplot <- function(res_nca,
       )
     )
 
-  # Variables to use to filter
-  if (!is.null(varvalstofilter)) {
-    vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
-    vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
-    var_types <- sapply(
-      vars_tofilter,
-      function(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE
-    )
-
-    filter_text <- paste0(
-      sapply(unique(vars_tofilter), function(varid) {
-        vartype <- class(boxplotdata[[varid]])
-        paste0(
-          varid,
-          " %in% as.",
-          vartype,
-          "(c('", paste0(vals_tofilter[vars_tofilter == varid], collapse = "','"), "'))"
-        )
-      }), collapse = " & "
-    )
-  } else {
-    filter_text <- "TRUE"
-  }
+  # Create filter text
+  filter_text <- create_filter_text(boxplotdata, varvalstofilter)
 
   # Filter the data
   box_data <- boxplotdata %>%
@@ -80,6 +59,13 @@ flexible_violinboxplot <- function(res_nca,
       eval(parse(text = filter_text)),
       PPTESTCD == parameter
     )
+
+  # Verify that PPSTRES exists and is not NA, otherwise return empty plot
+  if (!is_data_valid(box_data)) {
+    return(ggplot() +
+             labs(title = paste("No data available for parameter:", parameter)) +
+             theme_minimal())
+  }
 
   # Hover text to identify each point
   hover_text <- apply(box_data[columns_to_hover] %>%
@@ -136,11 +122,49 @@ flexible_violinboxplot <- function(res_nca,
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
 
-
   # Make plotly with hover features
   if (plotly) {
     ggplotly(p, tooltip = "text")
   } else {
     p
   }
+}
+
+
+#' Helper function create filter text
+#' @param boxplotdata Data frame to be filtered
+#' @param varvalstofilter Character vector specifying which variable and value to pre-filter
+#' as `colname: value`. By default is NULL (no pre-filtering)
+#' @returns A string representing the filter expression
+create_filter_text <- function(boxplotdata, varvalstofilter) {
+  # Variables to use to filter
+  if (!is.null(varvalstofilter)) {
+    vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
+    vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
+    var_types <- sapply(
+      vars_tofilter,
+      function(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE
+    )
+
+    filter_text <- paste0(
+      sapply(unique(vars_tofilter), function(varid) {
+        vartype <- class(boxplotdata[[varid]])
+        paste0(
+          varid,
+          " %in% as.",
+          vartype,
+          "(c('", paste0(vals_tofilter[vars_tofilter == varid], collapse = "','"), "'))"
+        )
+      }), collapse = " & "
+    )
+  } else {
+    filter_text <- "TRUE"
+  }
+
+  filter_text
+}
+
+# Check if data is valid
+is_data_valid <- function(box_data) {
+  "PPSTRES" %in% colnames(box_data) && !all(is.na(box_data$PPSTRES))
 }
