@@ -70,35 +70,7 @@ flexible_violinboxplot <- function(res_nca,
   }
 
   # --- Tooltip Construction ---
-  if (nrow(box_data) > 0) {
-    # 1. Round numeric tooltip variables for cleaner display
-    numeric_tt_vars <- intersect(tooltip_vars, names(box_data)[sapply(box_data, is.numeric)])
-    if (length(numeric_tt_vars) > 0) {
-      box_data <- box_data %>%
-        mutate(across(all_of(numeric_tt_vars), ~ round(., digits = 2)))
-    }
-    
-    # 2. Generate Tooltip Text
-    if (!is.null(tooltip_vars)) {
-      if (!is.null(labels_df)) {
-        # Use the shared helper function if available and labels provided
-        box_data$tooltip_text <- generate_tooltip_text(box_data, labels_df, tooltip_vars, "ADNCA")
-      } else {
-        # Fallback: Create simple "Var: Value" string
-        valid_vars <- intersect(tooltip_vars, names(box_data))
-        if (length(valid_vars) > 0) {
-          parts <- lapply(valid_vars, function(v) paste0(v, ": ", box_data[[v]]))
-          box_data$tooltip_text <- do.call(paste, c(parts, sep = "<br>"))
-        } else {
-          box_data$tooltip_text <- NA_character_
-        }
-      }
-    } else {
-      box_data$tooltip_text <- NA_character_
-    }
-  } else {
-    box_data$tooltip_text <- character(0)
-  }
+  box_data <- handle_tooltips(box_data, tooltip_vars, labels_df)
 
   # ylabel of violin/boxplot
   ylabel <- {
@@ -205,4 +177,42 @@ create_filter_text <- function(boxplotdata, varvalstofilter) {
 # Check if data is valid
 is_data_valid <- function(box_data) {
   "PPSTRES" %in% colnames(box_data) && !all(is.na(box_data$PPSTRES))
+}
+
+#' Tooltip construction helper
+#' @param box_data the boxplot dataframe
+#' @param tooltip_vars character vector of tooltip variables to extract
+#' @param labels_df data.frame used for label lookups in tooltips
+#' @returns box_data with added tooltip_text column
+handle_tooltips <- function(box_data, tooltip_vars, labels_df) {
+  if (nrow(box_data) > 0) {
+    # 1. Round numeric tooltip variables for cleaner display
+    numeric_tt_vars <- intersect(tooltip_vars, names(box_data)[sapply(box_data, is.numeric)])
+    if (length(numeric_tt_vars) > 0) {
+      box_data <- box_data %>%
+        mutate(across(all_of(numeric_tt_vars), ~ round(., digits = 2)))
+    }
+
+    # 2. Generate Tooltip Text
+    if (!is.null(tooltip_vars)) {
+      if (!is.null(labels_df)) {
+        # Use the shared helper function if available and labels provided
+        box_data$tooltip_text <- generate_tooltip_text(box_data, labels_df, tooltip_vars, "ADNCA")
+      } else {
+        # Fallback: Create simple "Var: Value" string
+        valid_vars <- intersect(tooltip_vars, names(box_data))
+        if (length(valid_vars) > 0) {
+          parts <- lapply(valid_vars, function(v) paste0(v, ": ", box_data[[v]]))
+          box_data$tooltip_text <- do.call(paste, c(parts, sep = "<br>"))
+        } else {
+          box_data$tooltip_text <- NA_character_
+        }
+      }
+    } else {
+      box_data$tooltip_text <- NA_character_
+    }
+  } else {
+    box_data$tooltip_text <- character(0)
+  }
+  box_data
 }
