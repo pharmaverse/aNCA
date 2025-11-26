@@ -9,12 +9,15 @@ AUClast
 AVAL
 AVALU
 Analyte
+Buckeridge
 CDISC
 Cond
 DOSEA
 DOSETRT
 DOSEU
 DOSNOA
+Denney
+Duvvuri
 EVID
 Extravascular
 Kezia
@@ -29,6 +32,7 @@ NCA
 NFRLT
 NNN
 NRRLT
+Noncompartmental
 Num
 PARAM
 PARAMCD
@@ -78,6 +82,7 @@ customizable
 dateTime
 devtools
 df
+doi
 extravascular
 ggplot
 ggplots
@@ -96,6 +101,7 @@ pre
 pred
 predose
 qmd
+reproducibility
 reupload
 rpptx
 ruleset
