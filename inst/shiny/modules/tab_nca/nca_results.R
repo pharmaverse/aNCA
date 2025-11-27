@@ -172,11 +172,27 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           dir.create(setts_tmpdir, recursive = TRUE)
           saveRDS(session$userData$settings(), paste0(setts_tmpdir, "/settings.rds"))
 
+          # Save a code R script template for the session
+          script_tmpdir <- file.path(output_tmpdir, "code")
+          dir.create(script_tmpdir, recursive = TRUE)
+          browser()
+          # saveRDS(session, paste0(script_tmpdir, "/session.rds"))
+          # session2 <- readRDS(paste0(script_tmpdir, "/session.rds"))
+          
+          script_template_path <- "www/templates/script_template.R"
+          get_session_script_code(
+            template_path = script_template_path,
+            session = session,
+            output_path = paste0(script_tmpdir, "/session_code.R")
+          )
+
+          # Zip all files in the output folder
           files <- list.files(
             output_tmpdir,
             pattern = paste0(
               ".(csv)|(rds)|(xpt)|(html)|(rda)",
-              "|(dose_escalation.pptx)|(dose_escalation.qmd)$"
+              "|(dose_escalation.pptx)|(dose_escalation.qmd)$",
+              "|(session_code.R)"
             ),
             recursive = TRUE
           )
