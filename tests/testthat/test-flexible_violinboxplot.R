@@ -193,7 +193,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = NULL,
       tooltip_vars = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = FALSE,
-      plotly = TRUE
+      plotly = TRUE,
+      seed = 123
     )
     expect_s3_class(simple_plotly, "plotly")
   })
@@ -211,6 +212,7 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
       tooltip_vars = c("USUBJID", "DOSEA"),
       box = TRUE,
       plotly = FALSE,
+      seed = 123,
       labels_df = metadata_nca_variables
     )
 
@@ -235,7 +237,8 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
       tooltip_vars = c("DOSEA"),
       box = TRUE,
       plotly = FALSE,
-      labels_df = metadata_nca_variables
+      labels_df = metadata_nca_variables,
+      seed = 123
     )
     print(p$data$tooltip_text)
     # Check that tooltip text contains rounded value (100.12)
@@ -254,7 +257,8 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
       tooltip_vars = c("USUBJID", "DOSEA"),
       box = TRUE,
       plotly = FALSE,
-      labels_df = NULL # NO LABELS
+      labels_df = NULL, # NO LABELS
+      seed = 123
     )
 
     # Expect simple "Var: Value" without bold tags
@@ -270,7 +274,8 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
       colorvars = "ATPTREF",
       tooltip_vars = c("USUBJID"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     # Find Boxplot Layer
@@ -298,7 +303,8 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
       colorvars = "ATPTREF",
       tooltip_vars = c("USUBJID"),
       box = FALSE, # Violin
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     # Find Violin Layer
@@ -328,7 +334,8 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
       colorvars = "ATPTREF",
       tooltip_vars = c("USUBJID"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     # If the plot has data, it means mutation and filtering worked
