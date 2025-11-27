@@ -2,7 +2,7 @@
 library(aNCA)
 
 # Load raw data #
-data_path <- "inst/shiny/data/DummyRO_ADNCA.csv"
+data_path <- session$userData$data_path
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data ########################################
@@ -32,24 +32,24 @@ preprocessed_adnca <- adnca_data %>%
 
 
 ## Setup NCA settings in the PKNCA object ########################
-auc_data <- session$userData$settings$partial_aucs
-units_table <- session$userData$units_table
+auc_data <- session$userData$settings()$partial_aucs
+units_table <- session$userData$units_table()
 
 pknca_obj <- preprocessed_adnca %>%
   
   # Create from ADNCA the PKNCA object
   PKNCA_create_data_object() %>%
-  
+
   # Setup basic settings
   PKNCA_update_data_object(
     auc_data = auc_data,
-    method = session$userData$settings$method,
-    selected_analytes = session$userData$settings$analyte,
-    selected_profile = session$userData$settings$profile,
-    selected_pcspec = session$userData$settings$pcspec,
-    params = session$userData$settings$parameter_selection,
+    method = session$userData$settings()$method,
+    selected_analytes = session$userData$settings()$analyte,
+    selected_profile = session$userData$settings()$profile,
+    selected_pcspec = session$userData$settings()$pcspec,
+    params = session$userData$settings()$parameter_selection,
     # hl_adj_rules = RULES
-    should_impute_c0 = session$userData$settings$data_imputation$impute_c0
+    should_impute_c0 = session$userData$settings()$data_imputation$impute_c0
   ) %>% 
   
   # Define the desired units for the parameters (PPSTRESU)
@@ -61,14 +61,14 @@ pknca_obj <- preprocessed_adnca %>%
 
 ## Run NCA calculations ########################################
 #ratios_table <- session$userData$ratios_table
-flag_rules <- session$userData$settings$flags
+flag_rules <- session$userData$settings()$flags
 
 pknca_res <- pknca_obj %>%
   # Run pk.nca and join subject and dose information to the results
   PKNCA_calculate_nca()  %>%
-  
+
   # Add bioavailability results if requested
-  add_f_to_pknca_results(session$userData$settings$bioavailability) %>%
+  add_f_to_pknca_results(session$userData$settings()$bioavailability) %>%
   
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
