@@ -59,7 +59,7 @@ pknca_obj <- preprocessed_adnca %>%
   }
 
 ## Run NCA calculations ########################################
-#ratios_table <- session$userData$ratios_table
+ratio_table <- session$userData$ratio_table()
 flag_rules <- session$userData$settings()$flags
 
 pknca_res <- pknca_obj %>%
@@ -72,15 +72,15 @@ pknca_res <- pknca_obj %>%
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
   
-  # Derive secondary parameters (ratio parameters)
-  #calculate_table_ratios_app() %>%
-  
   # Flag relevant parameters based on AUCPEO, AUCPEP & lambda span
   PKNCA_hl_rules_exclusion(
     rules = flag_rules |>
       purrr::keep(\(x) x$is.checked) |>
       purrr::map(\(x) x$threshold)
-  )
+  ) %>%
+
+  # Derive secondary parameters (ratio parameters)
+  calculate_table_ratios_app(ratio_table)
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- export_cdisc(pknca_res)
