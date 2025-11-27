@@ -23,7 +23,7 @@
 export_cdisc <- function(res_nca) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
-    filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
+    filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
     arrange(Order) %>%
     split(.[["Dataset"]])
 
@@ -156,7 +156,7 @@ export_cdisc <- function(res_nca) {
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select only columns needed for PP, ADPP, ADPC
+    # Select only columns needed for PP, ADPP, ADNCA
     select(any_of(metadata_nca_variables[["Variable"]])) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
@@ -216,7 +216,7 @@ export_cdisc <- function(res_nca) {
       )
     )
 
-  adpc <- res_nca$data$conc$data %>%
+  adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
               by = intersect(names(res_nca$data$conc$data), names(dose_info)),
               suffix = c("", ".y")) %>%
@@ -268,14 +268,14 @@ export_cdisc <- function(res_nca) {
       }
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC$Variable)) %>%
+    select(any_of(CDISC_COLS$ADNCA$Variable)) %>%
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
-  # Add variable labels for ADPC
-  var_labels(adpc) <- labels_map[names(adpc)]
+  # Add variable labels for ADNCA
+  var_labels(adnca) <- labels_map[names(adnca)]
 
-  list(pp = pp, adpp = adpp, adpc = adpc)
+  list(pp = pp, adpp = adpp, adnca = adnca)
 }
 
 #' Function to identify the common prefix in a character vector.
