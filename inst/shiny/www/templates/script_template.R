@@ -30,10 +30,9 @@ preprocessed_adnca <- adnca_data %>%
   # Derive METABFL column using PARAM metabolites
   create_metabfl(mapping$select_Metabolites)
 
-
 ## Setup NCA settings in the PKNCA object ########################
 auc_data <- session$userData$settings()$partial_aucs
-units_table <- session$userData$units_table()
+units_table <- session$userData$final_units
 
 pknca_obj <- preprocessed_adnca %>%
   
@@ -78,7 +77,7 @@ pknca_res <- pknca_obj %>%
   
   # Flag relevant parameters based on AUCPEO, AUCPEP & lambda span
   PKNCA_hl_rules_exclusion(
-    rules = isolate(flag_rules) |>
+    rules = flag_rules |>
       purrr::keep(\(x) x$is.checked) |>
       purrr::map(\(x) x$threshold)
   )
