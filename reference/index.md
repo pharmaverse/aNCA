@@ -83,6 +83,9 @@
 - [`convert_volume_units()`](https://pharmaverse.github.io/aNCA/reference/convert_volume_units.md)
   : Convert Volume Units to Match Concentration Denominator Units
 
+- [`create_filter_expr()`](https://pharmaverse.github.io/aNCA/reference/create_filter_expr.md)
+  : Helper function create text used to filter data frame
+
 - [`create_html_dose_slides()`](https://pharmaverse.github.io/aNCA/reference/create_html_dose_slides.md)
   : Render dose escalation results to HTML via Quarto
 

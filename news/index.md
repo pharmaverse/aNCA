@@ -15,6 +15,9 @@
 
 ### Bugs fixed
 
+- Bug fix for box/violin plots that were crashing when PPSTRES is NA
+  ([\#785](https://github.com/pharmaverse/aNCA/issues/785))
+
 - Exact duplicate records (DTYPE = “COPY”) and time duplicates (DTYPE =
   “TIME DUPLICATE”) are not removed from the data, but just excluded
   from the analysis
