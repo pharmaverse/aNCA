@@ -155,14 +155,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           create_qmd_dose_slides(
             res_dose_slides = res_dose_slides,
             quarto_path = paste0(presentations_path, "/dose_escalation.qmd"),
-            title = paste0("NCA Results Slides", " (", session$userData$project_name(), ")"),
+            title = paste0("NCA Results", "\n", session$userData$project_name()),
             use_plotly = TRUE
           )
           incProgress(0.3)
           create_pptx_dose_slides(
             res_dose_slides = res_dose_slides,
             path = paste0(presentations_path, "/dose_escalation.pptx"),
-            title = paste0("NCA Results Slides", " (", session$userData$project_name(), ")"),
+            title = paste0("NCA Results", "\n", session$userData$project_name()),
             template = "www/templates/template.pptx"
           )
           incProgress(0.6)
