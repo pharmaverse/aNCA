@@ -1,0 +1,41 @@
+# Validation Plan
+
+## Validations
+
+The current validation methods for aNCA are listed here:
+
+- **Code coverage \>90%.** You can check this either in our [GitHub
+  README badge](https://github.com/pharmaverse/aNCA) or by running
+  yourself
+  [`covr::package_coverage()`](http://covr.r-lib.org/reference/package_coverage.md)
+  in our repository (after cloning)
+- **CI/CD workflow passing.** Testing package installation on Ubuntu
+  (22.04) & Windows (latest), unit function tests and general
+  documentation aspects (completeness, spelling…)
+- **Internal company validations.** So far, we obtained a successfully
+  validated report from Roche; see the
+  [report](https://github.com/pharmaverse/aNCA/raw/main/inst/extras/validation-Roche.pdf)
+  and the [validation
+  details](https://pharmar.org/posts/case-studies/roche-case-study/),
+  also
+  [here](https://static.sched.com/hosted_files/userconf2024/10/useR%21%202024%20Presentation.pdf?_gl=1*f3341l*_gcl_au*MTkxODk3NTU2OC4xNzYyMjQwNjMz*FPAU*MTkxODk3NTU2OC4xNzYyMjQwNjMz)
+- **Parameter calculations done using the PKNCA.** This R package has
+  already been used for FDA submission, for more details about it click
+  [here](https://github.com/humanpred/pknca).
+
+If you feel something is missing or have ideas on how to improve the
+validation process, we’d love to hear your feedback, check [this
+issue](https://github.com/pharmaverse/aNCA/issues/539) and comment!
+
+## Potential new validations
+
+Among our plans will be to:
+
+- **Automate CI/CD CDISC standard testings** in the outputs
+- **Polish our end-to-end Shiny App tests** (there is an ongoing draft)
+- **Consider other testing types**: fuzzing, chaos, sensibility…
+- **Assess risk in our CI/CD using OS tools** with metrics based on
+  popular packages created for this
+- **Join CRAN** to increase the number of users testing the App
+- **Improve App documentation** (i.e, tutorials) so new users can test
+  all the App options

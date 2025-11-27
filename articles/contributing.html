@@ -34,16 +34,22 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/aNCA.html">Get started</a></li>
-<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/aNCA.html">Get Started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Functions manual</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-contributing" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Contributing</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-contributing">
 <li><a class="dropdown-item" href="../articles/contributing.html">Contributing</a></li>
     <li><a class="dropdown-item" href="../articles/adding_tlg.html">Adding TLGs</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Design &amp; Architecture</a></li>
+    <li><a class="dropdown-item" href="../articles/background.html">NCA Concepts</a></li>
+    <li><a class="dropdown-item" href="../articles/governance.html">Governance</a></li>
+    <li><a class="dropdown-item" href="../articles/roadmap.html">Roadmap</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/validations.html" aria-label="Validations"><span class="fa fa-check-circle"></span> Validation Plan</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">News &amp; Releases</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/FAQs.html">FAQs</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -81,227 +87,182 @@
     
     
 <p>Thank you for your interest in the aNCA application! We strive to
-provide open-sourced for performing Non-Compartment Analysis for both
-pre-clinical and clinical datasets, aiming to make NCA straightforward
-and approachable to all scientists.</p>
-<div class="section level2">
-<h2 id="report-bugs-and-suggest-enhancements">Report bugs and suggest enhancements<a class="anchor" aria-label="anchor" href="#report-bugs-and-suggest-enhancements"></a>
-</h2>
-<p>Discussions regarding the project are handled using issues system
-directly on GitHub. If you wish to create a bug report, suggest changes
-and additions, or just ask questions regarding the project feel free to
-open a new issue. Templates for specific topic are available, so please
-try to select the appropriate one and follow the guidelines as close as
-applicable.</p>
+provide open-source tooling for performing Non-Compartmental Analysis
+for both pre-clinical and clinical datasets, aiming to make NCA
+straightforward and approachable to all scientists.</p>
+<div class="section level3">
+<h3 id="who-this-document-is-for-roles-at-a-glance">Who this document is for — roles at a glance<a class="anchor" aria-label="anchor" href="#who-this-document-is-for-roles-at-a-glance"></a>
+</h3>
+<p>This CONTRIBUTING guide is organized by common contributor roles.
+Start at the role that best fits you and follow the short pointers
+below; each role links to more detailed guidance in the rest of this
+file.</p>
+<ul>
+<li>
+<a href="#users-computer_mouse">User</a> — quick feedback and issue
+reporter: open issues when you find bugs or UX problems, and follow the
+simple reproduction checklist.</li>
+<li>
+<a href="#developers-computer">Developer</a> — contributes code and
+features: follow branching rules, code style, tests and PR
+guidance.</li>
+<li>
+<a href="#nca-reviewers-book">NCA‑reviewer</a> — domain reviewer of
+outputs and validations: focus on data/mapping/validation sections and
+how to reproduce runs via exported scripts.</li>
+<li>
+<a href="#code-reviewers-mag">Code‑reviewer</a> — reviews PRs and
+enforces quality: focus on tests, linters, and the reviewers
+checklist.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="please-take-into-consideration-that-all-contributors-should-follow-the-general-principles-of-respect-and-collaboration-indicated-in-the-code_of_conduct-md-">Please, take into consideration that all contributors should follow
+the general principles of respect and collaboration indicated in the <a href="https://github.com/pharmaverse/aNCA/blob/main/.github/CODE_OF_CONDUCT.md" class="external-link">CODE_OF_CONDUCT.md</a>.<a class="anchor" aria-label="anchor" href="#please-take-into-consideration-that-all-contributors-should-follow-the-general-principles-of-respect-and-collaboration-indicated-in-the-code_of_conduct-md-"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="report-bugs-and-suggest-enhancements">Report bugs and suggest enhancements<a class="anchor" aria-label="anchor" href="#report-bugs-and-suggest-enhancements"></a>
+</h3>
+<p>Discussions regarding the project are handled using GitHub issues. If
+you wish to create a bug report, suggest changes and additions, or just
+ask questions regarding the project, please open a new issue. Templates
+for specific topics are available — try to select the appropriate one
+and follow its guidance.</p>
 <p>In general, any posted issue should contain a brief description of
-the problem, as well as your expectations - we design this application
-with user-friendliness in mind, we wish to hear your opinion!</p>
-</div>
-<div class="section level2">
-<h2 id="submit-changes">Submit changes<a class="anchor" aria-label="anchor" href="#submit-changes"></a>
-</h2>
-<div class="section level3">
-<h3 id="joining-the-project">Joining the project<a class="anchor" aria-label="anchor" href="#joining-the-project"></a>
-</h3>
-<p>In order to gain privileges to commit changes to the codebase, you
-will need to be added as a collaborator. To do so, please contact one of
-the contributors. You can find the list with contact info in the <a href="aNCA/DESCRIPTION">DESCRIPTION</a> file.</p>
+the problem, steps to reproduce, and your expected outcome. We design
+this application with user-friendliness in mind and appreciate clear,
+actionable feedback.</p>
 </div>
 <div class="section level3">
-<h3 id="issues">Issues<a class="anchor" aria-label="anchor" href="#issues"></a>
+<h3 id="users-computer_mouse">Users :computer_mouse:<a class="anchor" aria-label="anchor" href="#users-computer_mouse"></a>
 </h3>
-<p>Before creating any changes, please make sure an appropriate issue
-thread is opened. This is the place to discuss the topic at hand, agree
-on the approach for solving the problem and keep the tasks organized
-across the whole project.</p>
-<p>To keep things organized, <a href="https://github.com/orgs/pharmaverse/projects/30/views/1" class="external-link">GitHub
-Project board</a> is used.</p>
-<div class="section level5">
-<h5 id="status">Status<a class="anchor" aria-label="anchor" href="#status"></a>
-</h5>
-<p>Each new issue should go to <strong>Backlog</strong>. Feel free to
-add not only any bugs and feature requests, but also loose ideas - this
-is also a space for discussing proposals and validity of implementing
-them. When committed to implementing a change, the issue is moved to
-<code>Todo</code> status, and subsequently to <code>In progress</code>
-when a feature branch is created and work has begun. When the change is
-ready and the pull request is open, issues should be moved to
-<code>Needs review</code> where it will be picked up by a reviewer and
-moved to <code>In review</code>. After the change is merged and issue is
-closed, it will be moved to <code>Done</code>.</p>
-</div>
-<div class="section level5">
-<h5 id="priority">Priority<a class="anchor" aria-label="anchor" href="#priority"></a>
-</h5>
-<p>The tasks are prioritized based on a variant of the <a href="https://en.wikipedia.org/wiki/MoSCoW_method" class="external-link">MSCW method</a>. It
-gives a verbose descriptions for each level of priority: -
-<strong>MUST</strong> - task of highest priority, must be implemented
-for the application to be usable and useful. - <strong>SHOULD</strong> -
-task that we should include in the ready product, but it will not be
-breaking if it is not implemented. - <strong>COULD</strong> - things
-that would be nice to have and useful, but not instrumental to the whole
-package. - <strong>WISH</strong> - ideas that are not valid for the time
-being, but are nevertheless cool and could become useful as the
-development progresses.</p>
-</div>
+<p>This short section is for people who primarily use the app and want
+to report bugs, request features, or get help reproducing results.</p>
+<ul>
+<li>You find something is not intuitive or you don’t know if something
+can or not be done? Check in <a href="https://github.com/pharmaverse/aNCA/discussions" class="external-link">discussions</a>.
+If you still cannot answer your question, open a <a href="https://github.com/pharmaverse/aNCA/discussions/new?category=q-a" class="external-link">Q&amp;A
+discussion</a> and the community will help you!</li>
+<li>If you find a bug: open an <a href="https://github.com/pharmaverse/aNCA/issues" class="external-link">bug issue</a> (if it
+does not already exist) and include a minimal reproduction (explain the
+steps you followed), the app version (see the footer in the UI) and
+screenshots or console logs if helpful. Please make sure to not provide
+any sensitive or confidential data.</li>
+<li>If you want a new feature or improvement: open a <a href="https://github.com/pharmaverse/aNCA/discussions/new?category=ideas" class="external-link">discussion
+for ideas</a> (if it does not already exist) titled
+<code>Feature request: ...</code>. Explain your use case and desired
+outcome, with as much detail as possible.</li>
+</ul>
+<p>You can keep track and participate of other issues and discussions
+using the GitHub interface.</p>
+<hr>
 </div>
 <div class="section level3">
-<h3 id="branches">Branches<a class="anchor" aria-label="anchor" href="#branches"></a>
+<h3 id="developers-computer">Developers :computer:<a class="anchor" aria-label="anchor" href="#developers-computer"></a>
 </h3>
-<p>Each change should be implemented on a separate branch. Branches
-should have related issues opened and be named after the issue topic.
-Branch name should include change type (bug/enhancement/documentation
-etc.) and name of the solved issue. Examples:</p>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="49%">
-</colgroup>
-<thead><tr class="header">
-<th>Issue</th>
-<th>Branch</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Documentation: add CONTRIBUTING.md file</td>
-<td>documentation/add-contributing-md-file</td>
-</tr>
-<tr class="even">
-<td>Bug: help widget not working</td>
-<td>bug/help-widget-not-working</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+<p>If you plan to contribute code, tests, or documentation, please
+follow these developer-focused instructions.</p>
+<ul>
+<li>Join the project by asking <a href="mailto:anca.pharmaverse@gmail.com" class="email">anca.pharmaverse@gmail.com</a> and request collaborator
+access if you need push rights; otherwise, fork and open a PR.</li>
+<li>You can find in our <a href="https://github.com/orgs/pharmaverse/projects/30" class="external-link">project
+dashboard</a> our issues and their priority.</li>
+<li>Preferably, work on issues with higher priority (<code>MUST</code>
+&gt; <code>SHOULD</code> &gt; <code>COULD</code> &gt;
+<code>WISH</code>). Please, before selecting MUST issues, make sure you
+will have enough time to complete them in a quick timeframe. If you are
+a first time contributor, consider selecting issues with the
+<code>good first issue</code> label.</li>
+<li>Branch naming: use a branch per issue if possible with a standard
+naming
+(e.g. <code>&lt;issue number&gt;-&lt;bug/feat/documentation&gt;/&lt;issue name&gt;</code>).
+For example, for issue 123 about a bug in the data upload, you could
+name your branch <code>123-bug/data-upload-fails-with-XPT</code>.</li>
+<li>Code style: follow the <a href="https://style.tidyverse.org/files.html" class="external-link">tidyverse style</a>;
+ensure lintr passes and add unit tests for new behavior.</li>
+<li>Commit messages: try to follow the <a href="https://www.conventionalcommits.org/en/v1.0.0/" class="external-link">conventional
+commits</a>, although we are flexible about it (just do your best to
+name your changes intuitively for others!).</li>
+<li>Write a Pull Request (PR): Once you are done with your
+implementation, complete the default template that will be provided when
+opening a PR. Always include at least the number of the issue you intend
+to solve, a brief description of the changes made, and a checklist of
+testing steps to validate the changes.</li>
+<li>Pull requests: Make sure you pass all the Developers checklist
+(lintr, tests, docs, version bump). Add at least two reviewers from the
+core team (authors listed in the <a href="https://github.com/pharmaverse/aNCA/blob/main/DESCRIPTION" class="external-link">DESCRIPTION
+file</a>). If you need help, just ask in the issue thread and tag any of
+the core team.</li>
+<li>Review feedback: Reviewers will provide feedback on your PR. Please
+address their comments, make necessary changes, and engage in
+discussions to ensure the quality of the contribution.</li>
+<li>Review accepted: Congratulations! Once your PR is approved by at
+least two core reviewers, if your code is not simply a documentation or
+test change, you need to bump the package version. This simply consists
+of updating the version number of your DESCRIPTION file in comparison
+with the <a href="./DESCRIPTION">DESCRIPTION from the main branch</a>.
+This is called <a href="https://semver.org/" class="external-link">semantic
+versioning</a>
+</li>
+<li>Merge: Someone from the core team will merge your PR once everything
+is set. Thanks in advance for the changes!</li>
+</ul>
+<p>Helpful links for Developers: - Check the <a href="https://pharmaverse.github.io/aNCA/articles/design.html">design.md</a>
+to understand better how the Shiny App is structured. - If you need more
+context on what is Non Compartmental Analysis, we also recommend you to
+check <a href="https://pharmaverse.github.io/aNCA/articles/background.html">background.md</a></p>
+<hr>
 </div>
 <div class="section level3">
-<h3 id="code-guidelines">Code guidelines<a class="anchor" aria-label="anchor" href="#code-guidelines"></a>
+<h3 id="nca-reviewers-book">NCA reviewers :book:<a class="anchor" aria-label="anchor" href="#nca-reviewers-book"></a>
 </h3>
-<p>The codebase follows the general <a href="https://style.tidyverse.org/files.html" class="external-link">tidyverse</a> guidelines,
-but with lenient implementation. Please do make an effort to make your
-code clean, readable and easily understandable for the reviewer. In
-general, as long as your code passes all the <code>lintr</code> tests,
-you are good.</p>
-</div>
-<div class="section level3">
-<h3 id="commit-messages">Commit messages<a class="anchor" aria-label="anchor" href="#commit-messages"></a>
-</h3>
-<p>Do try to follow the <a href="https://www.conventionalcommits.org/en/v1.0.0/" class="external-link">conventional
-commits</a> convention whenever possible. That said, software
-development is messy and if you feel like this standard does not suit
-the situation, feel free to deviate from it, but do keep the commit
-messages short and meaningful at the very least.</p>
-</div>
-<div class="section level3">
-<h3 id="pull-requests">Pull requests<a class="anchor" aria-label="anchor" href="#pull-requests"></a>
-</h3>
-<p><a href="https://github.com/pharmaverse/aNCA/blob/main/.github/PULL_REQUEST_TEMPLATE.md" class="external-link">Pull
-request template</a> is available to make documenting PRs more
-consistent and streamlined. Each PR description should include:</p>
-<div class="section level5">
-<h5 id="issue">Issue<a class="anchor" aria-label="anchor" href="#issue"></a>
-</h5>
-<p>Number of the appropriate issue the pull request closes or
-references.</p>
-</div>
-<div class="section level5">
-<h5 id="description">Description<a class="anchor" aria-label="anchor" href="#description"></a>
-</h5>
-<p>Brief description of implemented changes, what they do and what is
-the reasoning behind the changes.</p>
-</div>
-<div class="section level5">
-<h5 id="definition-of-done">Definition of Done<a class="anchor" aria-label="anchor" href="#definition-of-done"></a>
-</h5>
-<p>Checklist with minimal requirements to consider the feature or bug
-fix complete. Preferably the list supplied with the appropriate issue.
-Requirements might change and the scope might grow or shrink during
-development, so feel free to make changes to the list if relevant, but
-make sure any deviations are documented.</p>
-</div>
-<div class="section level5">
-<h5 id="how-to-test">How to test<a class="anchor" aria-label="anchor" href="#how-to-test"></a>
-</h5>
-<p>Instructions on how to test the new feature manually (go to…, click
-on…). Might include code snippets. It is especially important to include
-such instructions if submitted code is not fully covered by unit tests.
-If full suite of unit tests is supplied alongside logic, this part might
-not be required or relevant in terms of miscellaneous changes
-(documentation, dependencies etc.).</p>
-</div>
-<div class="section level5">
-<h5 id="developers-checklist">Developers checklist<a class="anchor" aria-label="anchor" href="#developers-checklist"></a>
-</h5>
-<p>This part is here as a reminder to perform basic tasks and checks
-before the code is submitted, to ensure compliance with the guidelines.
-Before opening a PR for review, please make sure that: - Code passes
-lintr checks - Code passes all unit tests - New logic covered is by unit
-tests - New logic is documented - Package version is bumped</p>
-<p>The above rules will help keep our work organized, as well as allow
-for quick information flow between related issues, branches and pull
-requests.</p>
-</div>
-<div class="section level5">
-<h5 id="notes-to-reviewer">Notes to reviewer<a class="anchor" aria-label="anchor" href="#notes-to-reviewer"></a>
-</h5>
-<p>If there is anything that the reviewer should know before tackling
-the pull request, please provide it here. This could include things like
-pointing to specific parts of the code that require special attention,
-explaining decisions behind unusual implementations or providing logic
-behind changing the scope of the task.</p>
-</div>
-<div class="section level4">
-<h4 id="bumping-package-version">Bumping package version<a class="anchor" aria-label="anchor" href="#bumping-package-version"></a>
-</h4>
-<p>Package versioning must use the semantic versioning schema, with
-development extension: <strong>X.Y.Z.9NNN</strong></p>
-<div class="section level5">
-<h5 id="development-version">Development version<a class="anchor" aria-label="anchor" href="#development-version"></a>
-</h5>
-<p>In each PR that introduces changes to the code, dependencies or the
-function documentation, it is required that the development package
-version is incremented by 1 (this is the .9NNN number, the last part of
-the versioning schema). As the current feature branch might be outdated,
-before merging please cross-check with the <strong>main</strong> branch
-that the version you are submitting is correct.</p>
-</div>
-<div class="section level5">
-<h5 id="semantic-versioning">Semantic versioning<a class="anchor" aria-label="anchor" href="#semantic-versioning"></a>
-</h5>
-<p>The versioning schema for major / minor / patch releases must adhere
-to <a href="https://semver.org/" class="external-link">semantic versioning</a> guidelines.</p>
-</div>
-</div>
-</div>
-<div class="section level3">
-<h3 id="code-review">Code review<a class="anchor" aria-label="anchor" href="#code-review"></a>
-</h3>
-<p>Each pull request must be accepted by at least two reviewers before
-it can be merged to the main branch.</p>
-<div class="section level5">
-<h5 id="for-developer">For developer<a class="anchor" aria-label="anchor" href="#for-developer"></a>
-</h5>
-<p>When the change is done, pull request is open and the description is
-filled, please move your issue from <strong>In Progress</strong> to
-<strong>Needs review</strong> status, so it can be picked up by a
-reviewer. From this point it is up to the contributor and the person
-validating the change to work out any kinks and lead to merging the
-changes.</p>
-</div>
-<div class="section level5">
-<h5 id="for-reviewers">For reviewers<a class="anchor" aria-label="anchor" href="#for-reviewers"></a>
-</h5>
-<p>When reviewing a pull request, please do try to follow the <a href="https://conventionalcomments.org/" class="external-link">conventional comments</a>
+<p>This role focuses on validating calculations, outputs, and the
+scientific correctness of NCA results.</p>
+<ul>
+<li>Copy the branch associated with the Pull Request (PR), pull it
+locally, and run <code>devtools::load_all(); aNCA::run_app()</code> to
+test the changes in the App.</li>
+<li>Make sure all <code>Definition of Done</code> items in the Pull
+Request (PR) are met for the Application.</li>
+<li>If there are any calculations or outputs, inspect them for full
+scientific correctness (accurate calculations, correct CDISC
+standards…)</li>
+<li>When relevant, provide feedback on how intuitive the new
+feature/enhancement is</li>
+</ul>
+<p>Helpful links for NCA reviewers: - When reviewing a pull request,
+please do try to follow the <a href="https://conventionalcomments.org/" class="external-link">conventional comments</a>
 guidelines. Ideas and labels described in that convention can be very
 helpful in getting your thoughts across and facilitate meaningful
 cooperation. That said, they are not applicable in every circumstance
 and you are free to do whatever you feel is suitable, as long as it aims
 to provide valid discussion.</p>
+<hr>
 </div>
-</div>
+<div class="section level3">
+<h3 id="code-reviewers-mag">Code reviewers :mag:<a class="anchor" aria-label="anchor" href="#code-reviewers-mag"></a>
+</h3>
+<p>This role is responsible for reviewing PRs, enforcing quality, and
+approving merges.</p>
+<ul>
+<li>Copy the branch associated with the Pull Request (PR), pull it
+locally, and run <code>devtools::load_all(); aNCA::run_app()</code> to
+test the changes in the App.</li>
+<li>Focus reviews on code quality, correctness, and maintainability.
+Ensure new code included in <code>\R</code> has logical unit tests.</li>
+<li>Use the PR template and the Developers checklist before approving;
+request changes when standards are not met.</li>
+<li>Make sure the package version is bumped for changes that affect
+behavior or dependencies.</li>
+</ul>
+<p>Helpful links for Code reviewers: - When reviewing a pull request,
+please do try to follow the <a href="https://conventionalcomments.org/" class="external-link">conventional comments</a>
+guidelines. Ideas and labels described in that convention can be very
+helpful in getting your thoughts across and facilitate meaningful
+cooperation. That said, they are not applicable in every circumstance
+and you are free to do whatever you feel is suitable, as long as it aims
+to provide valid discussion.</p>
 </div>
 <div class="section level2">
 <h2 id="beware">Beware<a class="anchor" aria-label="anchor" href="#beware"></a>

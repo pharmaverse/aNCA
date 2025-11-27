@@ -24,16 +24,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/pharmaverse/aNCA/blob/main/DESCRIPTION)
+[`inst/CITATION`](https://github.com/pharmaverse/aNCA/blob/main/inst/CITATION)
 
 Suekuer E, Rodriguez G, Baertschi P, Spinner J, Kolomanski M, Aspridis
-L, Legras V (2025). *aNCA: (Pre-)Clinical NCA in a Dynamic Shiny App*. R
-package version 0.1.0.9002, <https://pharmaverse.github.io/aNCA/>.
+L, Legras V (2025). “aNCA: A Dynamic Shiny App to perform NCA.” Version
+0.1.0.9002; License: Apache-2.0, <https://github.com/pharmaverse/aNCA>.
 
-    @Manual{,
-      title = {aNCA: (Pre-)Clinical NCA in a Dynamic Shiny App},
+    @Unpublished{,
+      title = {aNCA: A Dynamic Shiny App to perform NCA},
       author = {Ercan Suekuer and Gerardo Jose Rodriguez and Pascal Baertschi and Jana Spinner and Mateusz Kolomanski and Lucy Aspridis and Valentin Legras},
       year = {2025},
-      note = {R package version 0.1.0.9002},
-      url = {https://pharmaverse.github.io/aNCA/},
+      note = {Version 0.1.0.9002; License: Apache-2.0},
+      url = {https://github.com/pharmaverse/aNCA},
     }

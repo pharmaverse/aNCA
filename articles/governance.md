@@ -1,0 +1,69 @@
+# Governance model
+
+This document outlines the governance model for the aNCA project,
+detailing roles, responsibilities, and decision-making processes to
+ensure effective management and collaboration within the project.
+
+## Overall
+
+The aNCA project follows a “bazaar” Governance model - contributions are
+welcomed from anyone. Two approvals are required for any code change to
+be merged into the main branch. They have to come from the core team in
+order to allow merge (authors listed in the [DESCRIPTION
+file](https://github.com/pharmaverse/aNCA/blob/main/DESCRIPTION) and/or
+contributors provided with review rights). Optimally, one approval
+should be from someone with a technical/coding background, and the other
+from someone with domain expertise (NCA/PK). This ensures that both the
+technical integrity and the domain relevance of the contributions are
+maintained.
+
+Unless there is any justified reason, all code changes accepted for the
+main branch are expected to be made via pull requests, pass all CI/CD
+checks and have no conflicts with the main branch.
+
+## Priority and decision making
+
+The GitHub dashboard is used to track issues and tasks related to the
+project. Each issue is assigned a priority level based on its importance
+and urgency, following the [MSCW
+method](https://en.wikipedia.org/wiki/MoSCoW_method):
+
+- **MUST** - task of highest priority, must be implemented for the
+  application to be usable and useful.
+- **SHOULD** - task that we should include in the ready product, but it
+  will not be breaking if it is not implemented.
+- **COULD** - things that would be nice to have and useful, but not
+  instrumental to the whole package.
+- **WISH** - ideas that are not valid for the time being, but are
+  nevertheless cool and could become useful as the development
+  progresses.
+
+Decisions regarding an issue’s priority are made by authors and in first
+place the maintainer(s) of the project. However, input from the
+community is welcomed and encouraged, especially for issues that may
+impact a broader user base. External opinions can be gathered through
+comments on issues or discussions in the GitHub repository. The priority
+level should also be determined by the pre-defined roadmap goals for the
+project, as outlined in the [roadmap
+document](https://pharmaverse.github.io/aNCA/articles/roadmap.html).
+
+## Governance commitments
+
+All main authors listed in the DESCRIPTION, are expected to: - Have a
+2FA enabled GitHub account, to ensure the security of the repository and
+its contents. Preferably, not using SMS as a 2FA method. - Decide an
+issue’s priority taking into consideration (although not uniquely) the
+roadmap goals for the project and popular opinions from the community. -
+Try to review and approve code changes in a timely manner, ensuring that
+the project maintains its momentum and continues to evolve effectively.
+
+## See also
+
+- [roadmap](https://pharmaverse.github.io/aNCA/articles/roadmap.html) -
+  Project roadmap and goals
+- [validations](https://pharmaverse.github.io/aNCA/articles/validations.html) -
+  Validation plan and coverage
+- [design](https://pharmaverse.github.io/aNCA/articles/design.html) -
+  Design and architecture details
+- [CONTRIBUTING](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md) -
+  Contribution guidelines
