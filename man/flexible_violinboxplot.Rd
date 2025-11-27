@@ -13,7 +13,8 @@ flexible_violinboxplot(
   tooltip_vars,
   labels_df = metadata_nca_variables,
   box = TRUE,
-  plotly = TRUE
+  plotly = TRUE,
+  seed = NULL
 )
 }
 \arguments{
@@ -39,6 +40,9 @@ violin plot (\code{FALSE}). Default is \code{TRUE}.}
 
 \item{plotly}{A logical value defining if the output is plotly (TRUE, default)
 or ggplot otherwise (FALSE)}
+
+\item{seed}{An integer value to set the seed for reproducibility of jittering.
+Default (NULL) will use the current R seed.}
 }
 \value{
 A plotly object representing the violin or box plot.
