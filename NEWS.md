@@ -10,6 +10,9 @@
 ## Bugs fixed
 * Bug fix for box/violin plots that were crashing when PPSTRES is NA (#785)
 
+* Exact duplicate records (DTYPE = "COPY") and time duplicates (DTYPE = "TIME DUPLICATE") are not removed from the data, but just excluded from the analysis (#765) 
+
+
 # aNCA 0.1.0
 
 * Initial CRAN submission.
