@@ -55,7 +55,7 @@ If you plan to contribute code, tests, or documentation, please follow these dev
 - Merge: Someone from the core team will merge your PR once everything is set. Thanks in advance for the changes!
 
 Helpful links for Developers:
-- Check the [design.md](hhttps://pharmaverse.github.io/aNCA/articles/design.html) to understand better how the Shiny App is structured.
+- Check the [design.md](https://pharmaverse.github.io/aNCA/articles/design.html) to understand better how the Shiny App is structured.
 - If you need more context on what is Non Compartmental Analysis, we also recommend you to check [background.md](https://pharmaverse.github.io/aNCA/articles/background.html)
 
 ---
