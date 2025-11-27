@@ -134,7 +134,8 @@ flexible_violinboxplot <- function(res_nca,
 #' @param boxplotdata Data frame to be filtered
 #' @param varvalstofilter Character vector specifying which variable and value to pre-filter
 #' as `colname: value`. By default is NULL (no pre-filtering)
-#' @importFrom rlang expr sym
+#' @importFrom rlang expr sym 
+#' @importFrom purrr reduce
 #' @returns  The filter expression
 create_filter_expr <- function(boxplotdata, varvalstofilter) {
   if (is.null(varvalstofilter)) return(expr(TRUE))
