@@ -21,14 +21,12 @@
 #'   - Arranges the data by group_columns.
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   conc_data <- format_pkncaconc_data(ADNCA,
-#'                                      group_columns,
-#'                                      "AFRLT",
-#'                                      "ROUTE")
-#' }
-#'
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' conc_data <- format_pkncaconc_data(ADNCA = adnca,
+#'                                    group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
+#'                                    time_column = "AFRLT",
+#'                                    rrlt_column = "ARRLT",
+#'                                    route_column = "ROUTE")
 #' @import dplyr
 #' @export
 
@@ -162,10 +160,12 @@ format_pkncadose_data <- function(pkncaconc_data,
 #'  or contain multiple doses in dataset
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
-#' }
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' pknca_data <- PKNCA_create_data_object(adnca)
+#' pknca_conc <- pknca_data$conc
+#' pknca_dose <- pknca_data$dose
+#' params <- c("aucinf.obs", "cmax", "half.life", "tmax", "lambda.z")
+#' dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
 #'
 #' @import dplyr
 #' @importFrom stats setNames
