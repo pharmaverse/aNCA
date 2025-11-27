@@ -8,6 +8,7 @@
 * Interface includes now a color legend next to the pivoted NCA results to indicate missing and flagged parameters (#779)
 
 ## Bugs fixed
+* Bug fix for box/violin plots that were crashing when PPSTRES is NA (#785)
 
 # aNCA 0.1.0
 
