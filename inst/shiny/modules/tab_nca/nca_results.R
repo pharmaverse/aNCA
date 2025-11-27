@@ -175,10 +175,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           # Save a code R script template for the session
           script_tmpdir <- file.path(output_tmpdir, "code")
           dir.create(script_tmpdir, recursive = TRUE)
-          browser()
-          # saveRDS(session, paste0(script_tmpdir, "/session.rds"))
-          # session2 <- readRDS(paste0(script_tmpdir, "/session.rds"))
-          
+         
           script_template_path <- "www/templates/script_template.R"
           get_session_script_code(
             template_path = script_template_path,

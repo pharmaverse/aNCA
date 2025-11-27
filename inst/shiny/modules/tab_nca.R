@@ -189,6 +189,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     }) %>%
       bindEvent(input$run_nca)
 
+    observe({
+      req(res_nca())
+      session$userData$final_units <- res_nca()$data$units
+    })
+
     #' Show slopes results
     pivoted_slopes <- reactive({
       req(res_nca())
