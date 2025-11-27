@@ -11,22 +11,29 @@ get_session_script_code <- function(template_path, session, output_path) {
     parts <- strsplit(path, "\\$")[[1]]
     obj <- session$userData
     for (p in parts) {
-      if (is.null(obj[[p]])) return(NULL)
-      obj <- obj[[p]]
+      if (endsWith(p, "()")) {
+        p_sub <- substr(p, start = 0, stop = (nchar(p) - 2))
+        obj <- obj[[p_sub]]()
+      } else if (is.null(obj[[p]])){
+        return(NULL)
+      } else {
+        obj <- obj[[p]]
+      }
     }
+    print(path)
     obj
   }
 
   # Read template
   script <- readLines(template_path, warn = FALSE) |>
     paste(collapse="\n")
-  
+
   # Find all session$userData$... or session$userData[[...]] or session$userData$...$...
   # Regex for session$userData$foo or session$userData$foo$bar or session$userData[["foo"]]
-  pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\$[a-zA-Z0-9_]+)*)"
+  pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl=TRUE)[[1]]
   if (matches[1] == -1) return(script_lines)
-  
+
   # Replace each match with deparsed value
   for (i in rev(seq_along(matches))) {
     start <- matches[i]
@@ -35,6 +42,7 @@ get_session_script_code <- function(template_path, session, output_path) {
     # Extract the path after session$userData$
     path <- sub("^session\\$userData\\$", "", matched)
     value <- get_session_value(path)
+
     deparsed <- clean_deparse(value)
     script <- paste0(
       substr(script, 1, start-1),
@@ -48,7 +56,6 @@ get_session_script_code <- function(template_path, session, output_path) {
   writeLines(script_lines, output_path)
   invisible(output_path)
 }
-
 
 # Helper to cleanly deparse an object (data.frame, list, etc.)
 clean_deparse <- function(obj, indent = 0) {
