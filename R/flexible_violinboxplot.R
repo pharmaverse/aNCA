@@ -135,7 +135,7 @@ flexible_violinboxplot <- function(res_nca,
 #' @param varvalstofilter Character vector specifying which variable and value to pre-filter
 #' as `colname: value`. By default is NULL (no pre-filtering)
 #' @importFrom rlang expr sym
-#' @returns A string representing the filter expression
+#' @returns  The filter expression
 create_filter_expr <- function(boxplotdata, varvalstofilter) {
   if (is.null(varvalstofilter)) return(expr(TRUE))
 

@@ -13,7 +13,7 @@ create_filter_expr(boxplotdata, varvalstofilter)
 as \code{colname: value}. By default is NULL (no pre-filtering)}
 }
 \value{
-A string representing the filter expression
+The filter expression
 }
 \description{
 Helper function create text used to filter data frame
