@@ -27,7 +27,7 @@ The GitHub dashboard is used to track issues and tasks related to the project. E
 
 Decisions regarding an issue's priority are made by authors and in first place the maintainer(s) of the project. However, input from the community is welcomed and encouraged, especially for issues that may impact a broader user base. External opinions can be gathered through comments on issues or discussions in the GitHub repository. The priority level should also be determined by the pre-defined roadmap goals for the project, as outlined in the [roadmap document](https://pharmaverse.github.io/aNCA/articles/roadmap.html).
 
-## Governance compromises
+## Governance commitments
 All main authors listed in the DESCRIPTION, are expected to:
 - Have a 2FA enabled GitHub account, to ensure the security of the repository and its contents. Preferably, not using SMS as a 2FA method.
 - Decide an issue's priority taking into consideration (although not uniquely) the roadmap goals for the project and popular opinions from the community.
