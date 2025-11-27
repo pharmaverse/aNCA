@@ -9,7 +9,8 @@ format_pkncaconc_data(
   group_columns,
   time_column = "AFRLT",
   rrlt_column = "ARRLT",
-  route_column = "ROUTE"
+  route_column = "ROUTE",
+  nca_exclude_reason_columns = NULL
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ format_pkncaconc_data(
 \item{rrlt_column}{A character string specifying the time since last dose column.}
 
 \item{route_column}{A character string specifying the route column.}
+
+\item{nca_exclude_reason_columns}{A character vector specifying the columns
+to indicate reasons for excluding records from NCA analysis.}
 }
 \value{
 A data frame containing the filtered and processed concentration data.

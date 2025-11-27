@@ -4,10 +4,14 @@
 \alias{PKNCA_create_data_object}
 \title{Creates a \code{PKNCA::PKNCAdata} object.}
 \usage{
-PKNCA_create_data_object(adnca_data)
+PKNCA_create_data_object(adnca_data, nca_exclude_reason_columns = NULL)
 }
 \arguments{
 \item{adnca_data}{Data table containing ADNCA data.}
+
+\item{nca_exclude_reason_columns}{Optional character vector of column names.
+Excluding records from the NCA
+must be indicated by populating any of these columns with a non-empty character value.}
 }
 \value{
 \code{PKNCAdata} object with concentration, doses, and units based on ADNCA data.
