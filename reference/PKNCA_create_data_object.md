@@ -7,7 +7,7 @@ object.
 ## Usage
 
 ``` r
-PKNCA_create_data_object(adnca_data)
+PKNCA_create_data_object(adnca_data, nca_exclude_reason_columns = NULL)
 ```
 
 ## Arguments
@@ -15,6 +15,12 @@ PKNCA_create_data_object(adnca_data)
 - adnca_data:
 
   Data table containing ADNCA data.
+
+- nca_exclude_reason_columns:
+
+  Optional character vector of column names. Excluding records from the
+  NCA must be indicated by populating any of these columns with a
+  non-empty character value.
 
 ## Value
 
@@ -103,7 +109,7 @@ RRLTU = rep("hour", 6)
 PKNCA_create_data_object(adnca_data)
 #> Formula for concentration:
 #>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM
-#> <environment: 0x555aab28cd20>
+#> <environment: 0x55b3797558a0>
 #> Data are dense PK.
 #> With 1 subjects defined in the 'USUBJID' column.
 #> Nominal time column is: NFRLT
@@ -116,20 +122,20 @@ PKNCA_create_data_object(adnca_data)
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    7 ng/mL   100    mg
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    3 ng/mL   100    mg
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    1 ng/mL   100    mg
-#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU     std_route DOSNOA is.excluded.hl
-#>      0     0     0      0.5  hour intravascular      1          FALSE
-#>      1     1     1      0.5  hour intravascular      1          FALSE
-#>      2     2     2      0.5  hour intravascular      1          FALSE
-#>      3     3     3      0.5  hour intravascular      1          FALSE
-#>      4     4     4      0.5  hour intravascular      1          FALSE
-#>      6     6     6      0.5  hour intravascular      1          FALSE
-#>  is.included.hl REASON exclude_half.life exclude volume duration
-#>           FALSE     NA             FALSE    <NA>     NA        0
-#>           FALSE     NA             FALSE    <NA>     NA        0
-#>           FALSE     NA             FALSE    <NA>     NA        0
-#>           FALSE     NA             FALSE    <NA>     NA        0
-#>           FALSE     NA             FALSE    <NA>     NA        0
-#>           FALSE     NA             FALSE    <NA>     NA        0
+#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU nca_exclude     std_route DOSNOA
+#>      0     0     0      0.5  hour             intravascular      1
+#>      1     1     1      0.5  hour             intravascular      1
+#>      2     2     2      0.5  hour             intravascular      1
+#>      3     3     3      0.5  hour             intravascular      1
+#>      4     4     4      0.5  hour             intravascular      1
+#>      6     6     6      0.5  hour             intravascular      1
+#>  is.excluded.hl is.included.hl REASON exclude_half.life volume duration
+#>           FALSE          FALSE     NA             FALSE     NA        0
+#>           FALSE          FALSE     NA             FALSE     NA        0
+#>           FALSE          FALSE     NA             FALSE     NA        0
+#>           FALSE          FALSE     NA             FALSE     NA        0
+#>           FALSE          FALSE     NA             FALSE     NA        0
+#>           FALSE          FALSE     NA             FALSE     NA        0
 #>  include_half.life
 #>                 NA
 #>                 NA
@@ -144,10 +150,10 @@ PKNCA_create_data_object(adnca_data)
 #> Data for dosing:
 #>   STUDYID PCSPEC ROUTE DOSETRT USUBJID ATPTREF    PARAM AVAL AVALU DOSEA DOSEU
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    0 ng/mL   100    mg
-#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU     std_route DOSNOA is.excluded.hl
-#>      0     0     0      0.5  hour intravascular      1          FALSE
-#>  is.included.hl REASON exclude_half.life exclude
-#>           FALSE     NA             FALSE    <NA>
+#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU nca_exclude     std_route DOSNOA
+#>      0     0     0      0.5  hour             intravascular      1
+#>  is.excluded.hl is.included.hl REASON exclude_half.life exclude
+#>           FALSE          FALSE     NA             FALSE    <NA>
 #> 
 #> With 1 rows of interval specifications.
 #> With units
