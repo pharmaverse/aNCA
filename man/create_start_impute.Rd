@@ -16,7 +16,8 @@ A PKNCAdata object with updated intervals table including start imputation strat
 Defines an impute column in the intervals of the PKNCAdata object based on data
 }
 \examples{
-\dontrun{
+adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+pknca_data <- PKNCA_create_data_object(adnca)
 pknca_data <- create_start_impute(pknca_data)
-}
+
 }

@@ -84,4 +84,4 @@ Check our [contributing guidelines](https://github.com/pharmaverse/aNCA/blob/mai
 
 - Go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app**.
 - The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/humanpred/pknca)
-- aNCA counts with different system validations, you can consult them [here](https://pharmaverse.github.io/aNCA/articles/validations.html)
+- aNCA has different system validations, you can consult them [here](https://pharmaverse.github.io/aNCA/articles/validations.html)

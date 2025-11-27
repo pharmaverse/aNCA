@@ -12,7 +12,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     expect_equal(simple_plot$labels$x, "DOSEA")
@@ -31,7 +32,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     expect_equal(xvars_plot$labels$x, "DOSEA, PARAM")
@@ -50,7 +52,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     expect_equal(colorvars_plot$labels$x, "DOSEA")
@@ -69,7 +72,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6", "ATPTREF: 1"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     expect_equal(varvalstofilter_plot$labels$x, "DOSEA")
@@ -88,7 +92,8 @@ describe("flexible_violinboxplot", {
       colorvars = "ATPTREF",
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
     expect_equal(all_data_plot$labels$x, "DOSEA")
     expect_equal(all_data_plot$labels$colour, "ATPTREF")
@@ -106,7 +111,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 3"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = FALSE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     expect_equal(violin_plot$labels$x, "DOSEA")
@@ -127,7 +133,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = FALSE
+      plotly = FALSE,
+      seed = 123
     )
 
     expect_equal(missing_plot$labels$x, "DOSEA")
@@ -146,7 +153,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = TRUE
+      plotly = TRUE,
+      seed = 123
     )
     expect_true(grepl("\\[ ng/mL", plot_with_param_unit$x$layout$yaxis$title$text))
 
@@ -158,7 +166,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = TRUE
+      plotly = TRUE,
+      seed = 123
     )
     expect_false(grepl("\\[", plot_wo_param_unit$x$layout$yaxis$title$text))
   })
@@ -172,7 +181,8 @@ describe("flexible_violinboxplot", {
       varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
       columns_to_hover = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
       box = TRUE,
-      plotly = TRUE
+      plotly = TRUE,
+      seed = 123
     )
     expect_s3_class(simple_plotly, "plotly")
   })

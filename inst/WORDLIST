@@ -11,6 +11,7 @@ AVAL
 AVALU
 Analyte
 BLQ
+Buckeridge
 CDISC
 Cmax
 Cond
@@ -20,6 +21,8 @@ DOSEU
 DOSNOA
 DataTab
 EMA
+Denney
+Duvvuri
 EVID
 Extravascular
 Kezia
@@ -34,6 +37,7 @@ NCA
 NCATab
 NFRLT
 NRRLT
+Noncompartmental
 Num
 PARAM
 PARAMCD
@@ -93,6 +97,7 @@ customizable
 dateTime
 devtools
 df
+doi
 extravascular
 ggplot
 ggplots
