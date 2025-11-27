@@ -51,7 +51,7 @@ The codebase follows the general [tidyverse](https://style.tidyverse.org/files.h
 Do try to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) convention whenever possible. That said, software development is messy and if you feel like this standard does not suit the situation, feel free to deviate from it, but do keep the commit messages short and meaningful at the very least.
 
 ## Pull requests
-[Pull request template](aNCA/.github/PULL_REQUEST_TEMPLATE.md) is available to make documenting PRs more consistent and streamlined. Each PR description should include:
+[Pull request template](https://github.com/pharmaverse/aNCA/blob/main/.github/PULL_REQUEST_TEMPLATE.md) is available to make documenting PRs more consistent and streamlined. Each PR description should include:
 
 #### Issue
 Number of the appropriate issue the pull request closes or references.

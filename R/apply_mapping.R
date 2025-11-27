@@ -91,7 +91,7 @@ apply_mapping <- function(
     mutate(!!!lapply(mapping, function(col) dataset[[col]])) %>%
     # Order the renamed variables based on desired_order
     select(any_of(desired_order), everything()) %>%
-    # Apply the default ADPC labels
+    # Apply the default ADNCA labels
     apply_labels()
 
   # Remove variables that are now redundant due to the renaming

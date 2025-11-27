@@ -85,7 +85,7 @@ tab_tlg_server <- function(id, data) {
         Selection = .x$is_default,
         Type = .x$type,
         Dataset = case_when(
-          .x$dataset == "ADPC" ~ "PK Concentrations",
+          .x$dataset == "ADNCA" ~ "PK Concentrations",
           .x$dataset == "ADPP" ~ "PK Parameters",
           TRUE ~ .x$dataset
         ),

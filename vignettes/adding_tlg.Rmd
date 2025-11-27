@@ -12,11 +12,11 @@ This is an in-depth guide on contributing to the package. In order to get starte
 
 # Adding new Tables, Listing and Graphs
 In order to add new TLGs, two things are needed:
-- a TLG definition specified in the [tlg.yaml](aNCA/inst/shiny/tlg.yaml) file
+- a TLG definition specified in the [tlg.yaml](https://github.com/pharmaverse/aNCA/blob/main/inst/shiny/tlg.yaml) file
 - an implementation function that is responsible for generating an entry (table, list, graph).
 
 ## TLG definition
-Specified in [tlg.yaml](aNCA/inst/shiny/tlg.yaml) file. Entry in that file is responsible for providing some metadata regarding the TLG (like name, descriptions, links), a function reference for creating the resulting TLG and options, taken as arguments by the generating function, that allow for quick and easy definition of widgets to be rendered in the application interface. This then allows the user to customize plots in accordance to their needs.
+Specified in [tlg.yaml](https://github.com/pharmaverse/aNCA/blob/main/inst/shiny/tlg.yaml) file. Entry in that file is responsible for providing some metadata regarding the TLG (like name, descriptions, links), a function reference for creating the resulting TLG and options, taken as arguments by the generating function, that allow for quick and easy definition of widgets to be rendered in the application interface. This then allows the user to customize plots in accordance to their needs.
 
 ### General format
 The entry should have the following format. Identifying keys (wrapped in `<>`) should be provided by the creator and be unique within their scope (indentation level).

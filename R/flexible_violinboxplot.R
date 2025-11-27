@@ -17,6 +17,8 @@
 #'                            violin plot (`FALSE`). Default is `TRUE`.
 #' @param plotly              A logical value defining if the output is plotly (TRUE, default)
 #'                            or ggplot otherwise (FALSE)
+#' @param seed                An integer value to set the seed for reproducibility of jittering.
+#' Default (NULL) will use the current R seed.
 #'
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
@@ -29,7 +31,8 @@ flexible_violinboxplot <- function(res_nca,
                                    varvalstofilter = NULL,
                                    columns_to_hover,
                                    box = TRUE,
-                                   plotly = TRUE) {
+                                   plotly = TRUE,
+                                   seed = NULL) {
 
   group_columns <- group_vars(res_nca$data$conc)
   boxplotdata <- left_join(
@@ -119,7 +122,7 @@ flexible_violinboxplot <- function(res_nca,
 
   # Include points, labels and theme
   p <- p +
-    geom_point(position = position_jitterdodge(seed = 123)) +
+    geom_point(position = position_jitterdodge(seed = seed)) +
     # facet_wrap(~STUDYID) +
     labs(
       x = paste(xvars, collapse = ", "),
