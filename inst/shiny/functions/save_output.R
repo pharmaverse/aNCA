@@ -136,8 +136,16 @@ get_dose_esc_results <- function(
       unique()
 
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
-      select(any_of(unique(c(group_by_vars, info_vars)))) %>%
-      unique()
+      # Group by DOSEA and which cols from info vars that are in the data
+      group_by(DOSEA, across(any_of(info_vars))) %>%
+      summarise(n = n())
+    
+    # # Create character string of Group
+    # group <- merge(o_nca$data$conc$data, group_i) %>%
+    #   mutate(group = apply(select(., any_of(group_by_vars)),
+    #       1, function(row) paste(row, collapse = ", "))) %>%
+    #   pull(group) %>%
+    #   unique()
 
     boxplot_i <- flexible_violinboxplot(
       res_nca = o_nca_i,
@@ -188,7 +196,8 @@ get_dose_esc_results <- function(
       boxplot = boxplot_i,
       info = info_i,
       ind_params = ind_params,
-      ind_plots = ind_plots
+      ind_plots = ind_plots,
+      #group = group
     )
   }
   output_list
