@@ -1,10 +1,9 @@
-
-#' Generate a session script with session$ substitutions
+#' Generates a session script to replicate the App outputs
 #'
-##' @param template_path Path to the R script template (e.g., script_template.R)
-##' @param session The session object containing userData, etc.
-##' @param output_path Path to write the resulting script file (e.g., "output_script.R")
-##' @return The output_path (invisibly)
+#' @param template_path Path to the R script template (e.g., script_template.R)
+#' @param session The session object containing userData, etc.
+#' @param output_path Path to write the resulting script file (e.g., "output_script.R")
+#' @return The output_path (invisibly)
 get_session_script_code <- function(template_path, session, output_path) {
   # Helper to get value from session$userData by path (e.g., 'settings$method')
   get_session_value <- function(path) {
@@ -29,7 +28,18 @@ get_session_script_code <- function(template_path, session, output_path) {
   # Regex for session$userData$foo or session$userData$foo$bar or session$userData[["foo"]]
   pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
-  if (matches[1] == -1) return(script_lines)
+  
+  # Just write the original template if there are no substitutions needed
+  # with a warning message
+  if (matches[1] == -1) {
+    script_lines <- strsplit(script, "\n")[[1]]
+    writeLines(script_lines, output_path)
+    warning(
+      "Please, the script template should have session$userData calls in order to work. ",
+      "Did you accidentally modify the original template?"
+    )
+    return(invisible(output_path))
+  }
 
   # Replace all matches with deparsed values in one pass
   match_positions <- gregexpr(pattern, script, perl = TRUE)[[1]]
