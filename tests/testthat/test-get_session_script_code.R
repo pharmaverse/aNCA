@@ -33,4 +33,15 @@ describe("clean_deparse()", {
     )
     expect_equal(clean_deparse(df), exp_df)
   })
+
+  it("renders a NULL object correctly", {
+    expect_equal(clean_deparse(NULL), "NULL")
+  })
+
+  it("renders empty classes correctly", {
+    expect_equal(clean_deparse(list()), "list()")
+    expect_equal(clean_deparse(data.frame()), "data.frame()")
+    expect_equal(clean_deparse(character(0)), "character()")
+    expect_equal(clean_deparse(numeric(0)), "numeric()")
+  })
 })
