@@ -28,7 +28,12 @@ get_session_script_code <- function(template_path, session, output_path) {
   # Regex for session$userData$foo or session$userData$foo$bar or session$userData[["foo"]]
   pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
-  if (matches[1] == -1) return(script_lines)
+  if (matches[1] == -1) {
+    stop(
+      "Template has no placeholders *(session$userData...) to substitute.",
+      "Did you accidentally modify it?"
+    )
+  }
 
   # Replace each match with deparsed value
   for (i in rev(seq_along(matches))) {
