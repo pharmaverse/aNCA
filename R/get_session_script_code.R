@@ -11,16 +11,13 @@ get_session_script_code <- function(template_path, session, output_path) {
     parts <- strsplit(path, "\\$")[[1]]
     obj <- session$userData
     for (p in parts) {
-      if (endsWith(p, "()")) {
-        p_sub <- substr(p, start = 0, stop = (nchar(p) - 2))
-        obj <- obj[[p_sub]]()
-      } else if (is.null(obj[[p]])){
-        return(NULL)
+      if (inherits(obj[[p]], "reactive")) {
+        obj <- obj[[p]]()
       } else {
         obj <- obj[[p]]
       }
+      if (is.null(obj)) return(NULL)
     }
-    print(path)
     obj
   }
 
