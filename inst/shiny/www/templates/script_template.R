@@ -31,7 +31,7 @@ preprocessed_adnca <- adnca_data %>%
   create_metabfl(mapping$select_Metabolites)
 
 ## Setup NCA settings in the PKNCA object ########################
-auc_data <- session$userData$settings()$partial_aucs
+auc_data <- session$userData$settings$partial_aucs
 units_table <- session$userData$final_units
 
 pknca_obj <- preprocessed_adnca %>%
@@ -42,13 +42,13 @@ pknca_obj <- preprocessed_adnca %>%
   # Setup basic settings
   PKNCA_update_data_object(
     auc_data = auc_data,
-    method = session$userData$settings()$method,
-    selected_analytes = session$userData$settings()$analyte,
-    selected_profile = session$userData$settings()$profile,
-    selected_pcspec = session$userData$settings()$pcspec,
-    params = session$userData$settings()$parameter_selection,
+    method = session$userData$settings$method,
+    selected_analytes = session$userData$settings$analyte,
+    selected_profile = session$userData$settings$profile,
+    selected_pcspec = session$userData$settings$pcspec,
+    params = session$userData$settings$parameter_selection,
     # hl_adj_rules = RULES
-    should_impute_c0 = session$userData$settings()$data_imputation$impute_c0
+    should_impute_c0 = session$userData$settings$data_imputation$impute_c0
   ) %>% 
   
   # Define the desired units for the parameters (PPSTRESU)
@@ -59,15 +59,29 @@ pknca_obj <- preprocessed_adnca %>%
   }
 
 ## Run NCA calculations ########################################
-ratio_table <- session$userData$ratio_table()
-flag_rules <- session$userData$settings()$flags
+slope_rules <- list(
+  manual_slopes = session$userData$slope_rules$manual_slopes,
+  profiles_per_subject = session$userData$slope_rules$profiles_per_subject,
+  slopes_groups = session$userData$slope_rules$slopes_groups
+)
+flag_rules <- session$userData$settings$flags
+ratio_table <- session$userData$ratio_table
 
 pknca_res <- pknca_obj %>%
+  
+  # Apply half-life adjustments
+  filter_slopes(
+    slope_rules$manual_slopes,
+    slope_rules$profiles_per_subject,
+    slope_rules$slopes_groups,
+    check_reasons = TRUE
+  ) %>%
+  
   # Run pk.nca and join subject and dose information to the results
   PKNCA_calculate_nca()  %>%
 
   # Add bioavailability results if requested
-  add_f_to_pknca_results(session$userData$settings()$bioavailability) %>%
+  add_f_to_pknca_results(session$userData$settings$bioavailability) %>%
   
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
