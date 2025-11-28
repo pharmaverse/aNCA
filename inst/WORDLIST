@@ -8,6 +8,8 @@ ATPTREF
 AUClast
 AVAL
 AVALU
+AdjustingFactor
+AggregateSubject
 Analyte
 Buckeridge
 CDISC
@@ -41,6 +43,7 @@ PKNCA
 PKNCAconc
 PKNCAdata
 PKNCAdose
+PKNCAresult
 PKNCAresults
 PPORRES
 PPSTRES
@@ -54,12 +57,14 @@ Plotly
 Pre
 RRLTU
 RStudio
+RefParameter
 Req
 STUDYID
 TLG
 TLGs
 TRT
 TRTRINT
+TestParameter
 Tooltip
 UI
 USUBJID
@@ -115,6 +120,7 @@ tooltip
 tooltips
 ug
 unmapped
+userData
 utilise
 visualizable
 yaml
