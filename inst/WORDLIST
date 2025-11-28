@@ -57,6 +57,7 @@ Plotly
 Pre
 RRLTU
 RStudio
+RefGroups
 RefParameter
 Req
 STUDYID
@@ -64,6 +65,7 @@ TLG
 TLGs
 TRT
 TRTRINT
+TestGroups
 TestParameter
 Tooltip
 UI
@@ -111,6 +113,7 @@ reupload
 rpptx
 ruleset
 rulesets
+runnable
 signif
 tibble
 tidyverse
