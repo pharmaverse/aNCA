@@ -9,7 +9,7 @@ describe("clean_deparse()", {
     expect_equal(clean_deparse(1.23), "1.23")
     expect_equal(clean_deparse(c(1, 2)), "c(1, 2)")
     expect_equal(clean_deparse(as.integer(3)), "3")
-    expect_equal(clean_deparse(as.integer(c(4L,5L))), "c(4, 5)")
+    expect_equal(clean_deparse(as.integer(c(4L, 5L))), "c(4, 5)")
   })
 
   it("formats logical values correctly", {
@@ -24,7 +24,7 @@ describe("clean_deparse()", {
   })
 
   it("renders data.frame as data.frame(...) with per-column vectors", {
-    df <- data.frame(x = c(1,2), y = c("a", "b"), stringsAsFactors = FALSE)
+    df <- data.frame(x = c(1, 2), y = c("a", "b"), stringsAsFactors = FALSE)
     exp_df <- paste0(
       "data.frame(\n",
       "  x = c(1, 2),\n",
