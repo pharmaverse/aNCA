@@ -1,4 +1,4 @@
-#' Generates a session script to replicate the App outputs
+#' Generate a session script code in R that can replicate the App outputs
 #'
 #' @param template_path Path to the R script template (e.g., script_template.R)
 #' @param session The session object containing userData, etc.
@@ -28,28 +28,25 @@ get_session_script_code <- function(template_path, session, output_path) {
   # Regex for session$userData$foo or session$userData$foo$bar or session$userData[["foo"]]
   pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
-  
-  # Just write the original template if there are no substitutions needed
-  # with a warning message
-  if (matches[1] == -1) {
-    script_lines <- strsplit(script, "\n")[[1]]
-    writeLines(script_lines, output_path)
-    warning(
-      "Please, the script template should have session$userData calls in order to work. ",
-      "Did you accidentally modify the original template?"
-    )
-    return(invisible(output_path))
-  }
+  if (matches[1] == -1) return(script_lines)
 
-  # Replace all matches with deparsed values in one pass
-  match_positions <- gregexpr(pattern, script, perl = TRUE)[[1]]
-  match_strings <- regmatches(script, list(match_positions))
-  replacements <- lapply(match_strings, function(matched) {
+  # Replace each match with deparsed value
+  for (i in rev(seq_along(matches))) {
+    start <- matches[i]
+    len <- attr(matches, "match.length")[i]
+    matched <- substr(script, start, start + len - 1)
+    # Extract the path after session$userData$
     path <- sub("^session\\$userData\\$", "", matched)
     value <- get_session_value(path)
-    clean_deparse(value)
-  })
-  regmatches(script, list(match_positions)) <- replacements
+
+    deparsed <- clean_deparse(value)
+    script <- paste0(
+      substr(script, 1, start - 1),
+      deparsed,
+      substr(script, start + len, nchar(script))
+    )
+  }
+
   # Split back into lines
   script_lines <- strsplit(script, "\n")[[1]]
   writeLines(script_lines, output_path)
