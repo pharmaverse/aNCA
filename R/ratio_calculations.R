@@ -281,7 +281,7 @@ calculate_ratios.PKNCAresults <- function(
 calculate_table_ratios_app <- function(res, ratio_table) {
   # Make a list to save all results
   ratio_results <- vector("list", nrow(ratio_table))
-  
+
   # Loop through each row of the ratio_table
   for (i in seq_len(nrow(ratio_table))) {
     ratio_results[[i]] <- calculate_ratio_app(
@@ -294,7 +294,7 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
       custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
     )
-    
+
     if (nrow(ratio_results[[i]]) == 0) {
       warning(
         "Ratio ", ratio_table$PPTESTCD[i], " not computed.",
@@ -308,7 +308,7 @@ calculate_table_ratios_app <- function(res, ratio_table) {
   if (!"PPANMETH" %in% names(res$result)) {
     res$result$PPANMETH <- ""
   }
-  
+
   # Combine all results into the original PKNCAresult object
   res$result <- do.call(rbind, c(list(res$result), ratio_results))
   res

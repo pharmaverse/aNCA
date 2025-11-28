@@ -11,10 +11,10 @@ names(mapping) <- gsub("select_", "", names(mapping))
 applied_filters <- session$userData$applied_filters
 
 preprocessed_adnca <- adnca_data %>%
-  
+
   # Filter the data
   apply_filters(applied_filters) %>%
-  
+
   # Map columns to their standards
   apply_mapping(
     mapping = mapping,
@@ -26,7 +26,7 @@ preprocessed_adnca <- adnca_data %>%
     ),
     silent = FALSE
   ) %>%
-  
+
   # Derive METABFL column using PARAM metabolites
   create_metabfl(mapping$select_Metabolites)
 
@@ -35,7 +35,7 @@ auc_data <- session$userData$settings$partial_aucs
 units_table <- session$userData$final_units
 
 pknca_obj <- preprocessed_adnca %>%
-  
+
   # Create from ADNCA the PKNCA object
   PKNCA_create_data_object() %>%
 
@@ -47,10 +47,9 @@ pknca_obj <- preprocessed_adnca %>%
     selected_profile = session$userData$settings$profile,
     selected_pcspec = session$userData$settings$pcspec,
     params = session$userData$settings$parameter_selection,
-    # hl_adj_rules = RULES
     should_impute_c0 = session$userData$settings$data_imputation$impute_c0
-  ) %>% 
-  
+  ) %>%
+
   # Define the desired units for the parameters (PPSTRESU)
   {
     pknca_obj <- .
@@ -68,7 +67,7 @@ flag_rules <- session$userData$settings$flags
 ratio_table <- session$userData$ratio_table
 
 pknca_res <- pknca_obj %>%
-  
+
   # Apply half-life adjustments
   filter_slopes(
     slope_rules$manual_slopes,
@@ -76,16 +75,16 @@ pknca_res <- pknca_obj %>%
     slope_rules$slopes_groups,
     check_reasons = TRUE
   ) %>%
-  
+
   # Run pk.nca and join subject and dose information to the results
   PKNCA_calculate_nca()  %>%
 
   # Add bioavailability results if requested
   add_f_to_pknca_results(session$userData$settings$bioavailability) %>%
-  
+
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
-  
+
   # Flag relevant parameters based on AUCPEO, AUCPEP & lambda span
   PKNCA_hl_rules_exclusion(
     rules = flag_rules |>

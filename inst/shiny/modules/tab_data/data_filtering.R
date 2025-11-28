@@ -103,7 +103,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
-      
+
       if (length(applied_filters) == 0) return(raw_adnca_data())
 
       applied_filters %>%
@@ -111,7 +111,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
         paste0(collapse = "\n") %>%
         paste0("Submitting the following filters:\n", .) %>%
         log_info()
-      
+
       # Save the filters object
       session$userData$applied_filters <- applied_filters
 
