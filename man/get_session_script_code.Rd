@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_session_script_code.R
 \name{get_session_script_code}
 \alias{get_session_script_code}
-\title{Generate a session script with session$ substitutions}
+\title{Generate a session script code in R that can replicate the App outputs}
 \usage{
 get_session_script_code(template_path, session, output_path)
 }
@@ -17,5 +17,5 @@ get_session_script_code(template_path, session, output_path)
 The output_path (invisibly)
 }
 \description{
-Generate a session script with session$ substitutions
+Generate a session script code in R that can replicate the App outputs
 }

@@ -271,7 +271,7 @@ calculate_ratios.PKNCAresults <- function(
 
 #' Apply Ratio Calculations to PKNCAresult Object
 #'
-#' This function takes a PKNCAresult object and a data.frame specifying ratio calculations, and applies each ratio calculation to the results.
+#' This function takes a PKNCAresult object and a data.frame specifying ratio calculations.
 #'
 #' @param res A PKNCAresult object.
 #' @param ratio_table Data.frame with columns:
