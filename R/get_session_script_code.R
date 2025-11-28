@@ -59,13 +59,21 @@ clean_deparse <- function(obj, indent = 0) {
   if (is.data.frame(obj)) {
     # Multi-line, indented, no trailing comma on last column
     cols <- lapply(obj, function(col) {
-      d <- paste(deparse(col, width.cutoff = 500), collapse = "")
-      if (grepl("^c\\(", d)) d else paste0("c(", d, ")")
+      d <- col |>
+        deparse(width.cutoff = 500) |>
+        paste(collapse = "")
+        
+      if (!grepl("^c\\(", d)) {
+        d <- paste0("c(", d, ")")
+      }
+      
+      d
     })
     col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
     # Add comma to all but last
     if (length(col_strs) > 1) {
-      col_strs[1:(length(col_strs) - 1)] <- paste0(col_strs[1:(length(col_strs) - 1)], ",")
+      not_last <- 1:(length(col_strs) - 1)
+      col_strs[not_last] <- paste0(col_strs[not_last], ",")
     }
     paste0(
       "data.frame(\n",
@@ -82,7 +90,8 @@ clean_deparse <- function(obj, indent = 0) {
     )
     # Add comma to all but last
     if (length(items) > 1) {
-      items[1:(length(items) - 1)] <- paste0(items[1:(length(items) - 1)], ",")
+      not_last <- 1:(length(items) - 1)
+      items[not_last] <- paste0(items[not_last], ",")
     }
     item_strs <- paste0(ind, "  ", items)
     paste0(
