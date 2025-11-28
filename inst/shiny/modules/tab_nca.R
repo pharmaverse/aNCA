@@ -78,9 +78,13 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
-    session$userData$settings <- settings # This will be saved in the results zip folder
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
+
+    # This will be saved in the results zip folder
+    session$userData$settings <- settings
+    session$userData$ratio_table <- ratio_table
+    session$userData$slope_rules <- slope_rules
 
     reactable_server("manual_slopes", slope_rules$manual_slopes)
 
@@ -188,6 +192,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       })
     }) %>%
       bindEvent(input$run_nca)
+
+    observe({
+      req(res_nca())
+      session$userData$final_units <- res_nca()$data$units
+    })
 
     #' Show slopes results
     pivoted_slopes <- reactive({

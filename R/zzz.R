@@ -104,6 +104,7 @@
     "aucs",
     "aucs_extravascular",
     "aucs_intravascular",
+    "calculate_ratio_app",
     "color_var",
     "combn",
     "conv_factor",

@@ -9,6 +9,8 @@ ATPTREF
 AUClast
 AVAL
 AVALU
+AdjustingFactor
+AggregateSubject
 Analyte
 BLQ
 Buckeridge
@@ -47,6 +49,7 @@ PKNCA
 PKNCAconc
 PKNCAdata
 PKNCAdose
+PKNCAresult
 PKNCAresults
 PPORRES
 PPSTRES
@@ -63,6 +66,8 @@ Pre
 README
 RRLTU
 RStudio
+RefGroups
+RefParameter
 Req
 Roadmap
 SDTM
@@ -73,6 +78,8 @@ TLGs
 TRT
 Tmax
 TRTRINT
+TestGroups
+TestParameter
 Tooltip
 UI
 USUBJID
@@ -132,6 +139,7 @@ roadmap
 rpptx
 ruleset
 rulesets
+runnable
 signif
 tibble
 tidyverse
@@ -142,6 +150,7 @@ tooltip
 tooltips
 ug
 unmapped
+userData
 utilise
 visualizable
 yaml
