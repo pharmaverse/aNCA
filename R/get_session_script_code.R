@@ -56,59 +56,68 @@ get_session_script_code <- function(template_path, session, output_path) {
 # Helper to cleanly deparse an object (data.frame, list, etc.)
 clean_deparse <- function(obj, indent = 0) {
   ind <- paste(rep("  ", indent), collapse = "")
-  if (is.data.frame(obj)) {
-    # Multi-line, indented, no trailing comma on last column
-    cols <- lapply(obj, function(col) {
-      d <- col |>
-        deparse(width.cutoff = 500) |>
-        paste(collapse = "")
-        
-      if (!grepl("^c\\(", d)) {
-        d <- paste0("c(", d, ")")
+  obj_class <- class(obj)[1]
+
+  switch(
+    obj_class,
+    data.frame = {
+      # Multi-line, indented representation of a data.frame
+      cols <- lapply(obj, function(col) {
+        d <- col |>
+          deparse(width.cutoff = 500) |>
+          paste(collapse = "")
+        if (!grepl("^c\\(", d)) {
+          d <- paste0("c(", d, ")")
+        }
+        d
+      })
+      col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
+      if (length(col_strs) > 1) {
+        not_last <- 1:(length(col_strs) - 1)
+        col_strs[not_last] <- paste0(col_strs[not_last], ",")
       }
-      
-      d
-    })
-    col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
-    # Add comma to all but last
-    if (length(col_strs) > 1) {
-      not_last <- 1:(length(col_strs) - 1)
-      col_strs[not_last] <- paste0(col_strs[not_last], ",")
-    }
-    paste0(
-      "data.frame(\n",
-      paste(col_strs, collapse = "\n"),
-      "\n", ind, ")"
-    )
-  } else if (is.list(obj)) {
-    # Deparse as list(a = ..., ...)
-    items <- lapply(
-      names(obj),
-      function(nm) {
-        paste0(nm, " = ", clean_deparse(obj[[nm]], indent + 1))
+      paste0("data.frame(\n", paste(col_strs, collapse = "\n"), "\n", ind, ")")
+    },
+
+    list = {
+      # Deparse as list(a = ..., ...) and handle unnamed elements by position
+      n <- length(obj)
+      nms <- names(obj)
+      items <- vapply(seq_len(n), FUN.VALUE = "", function(i) {
+        name <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("V", i)
+        val <- obj[[i]]
+        paste0(name, " = ", clean_deparse(val, indent + 1))
+      })
+      if (length(items) > 1) {
+        not_last <- seq_len(length(items) - 1)
+        items[not_last] <- paste0(items[not_last], ",")
       }
-    )
-    # Add comma to all but last
-    if (length(items) > 1) {
-      not_last <- 1:(length(items) - 1)
-      items[not_last] <- paste0(items[not_last], ",")
+      item_strs <- paste0(ind, "  ", items)
+      paste0("list(\n", paste(item_strs, collapse = "\n"), "\n", ind, ")")
+    },
+
+    character = {
+      if (length(obj) == 1) paste0('"', obj, '"')
+      else paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
+    },
+
+    numeric = {
+      if (length(obj) == 1) as.character(obj)
+      else paste0("c(", paste(obj, collapse = ", "), ")")
+    },
+    integer = {
+      if (length(obj) == 1) as.character(obj)
+      else paste0("c(", paste(obj, collapse = ", "), ")")
+    },
+
+    logical = {
+      if (length(obj) == 1) if (obj) "TRUE" else "FALSE"
+      else paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
+    },
+
+    {
+      # default: fallback to deparse
+      paste(deparse(obj, width.cutoff = 500), collapse = "")
     }
-    item_strs <- paste0(ind, "  ", items)
-    paste0(
-      "list(\n",
-      paste(item_strs, collapse = "\n"),
-      "\n", ind, ")"
-    )
-  } else if (is.character(obj)) {
-    if (length(obj) == 1) paste0('"', obj, '"')
-    else paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
-  } else if (is.numeric(obj) || is.integer(obj)) {
-    if (length(obj) == 1) as.character(obj)
-    else paste0("c(", paste(obj, collapse = ", "), ")")
-  } else if (is.logical(obj)) {
-    if (length(obj) == 1) if (obj) "TRUE" else "FALSE"
-    else paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
-  } else {
-    paste(deparse(obj, width.cutoff = 500), collapse = "")
-  }
+  )
 }
