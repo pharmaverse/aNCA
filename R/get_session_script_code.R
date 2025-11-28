@@ -60,79 +60,76 @@ get_session_script_code <- function(template_path, session, output_path) {
 }
 
 # Helper to cleanly deparse an object (data.frame, list, etc.)
+#' @noRd
 clean_deparse <- function(obj, indent = 0) {
-  ind <- paste(rep("  ", indent), collapse = "")
-  obj_class <- class(obj)[1]
+  # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {
-    return(paste0(obj_class, "()"))
+    return(paste0(class(obj)[1], "()"))
   }
+  # For single-element atomic numeric/integer/logical return bare representation
+  if (length(obj) == 1 && class(obj)[1] %in% c("integer", "numeric", "logical")) {
+    return(as.character(obj))
+  }
+  UseMethod("clean_deparse")
+}
 
-  switch(
-    obj_class,
-    "tbl_df" = ,
-    data.frame = {
+#' @noRd
+clean_deparse.default <- function(obj, indent = 0) {
+  paste(deparse(obj, width.cutoff = 500), collapse = "")
+}
 
-      # If the data.frame has zero rows, return an empty constructor string
-      if (nrow(obj) == 0) return("data.frame()")
+#' @noRd
+clean_deparse.data.frame <- function(obj, indent = 0) {
+  ind <- paste(rep("  ", indent), collapse = "")
+  if (nrow(obj) == 0) return("data.frame()")
 
-      # Multi-line, indented representation of a data.frame
-      cols <- lapply(obj, function(col) {
-        d <- col |>
-          deparse(width.cutoff = 500) |>
-          paste(collapse = "")
-        # Only wrap in c(...) if length > 1
-        if (length(col) > 1 && !grepl("^c\\(", d)) {
-          d <- paste0("c(", d, ")")
-        }
-        d
-      })
-      col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
-      if (length(col_strs) > 1) {
-        not_last <- 1:(length(col_strs) - 1)
-        col_strs[not_last] <- paste0(col_strs[not_last], ",")
-      }
-      paste0("data.frame(\n", paste(col_strs, collapse = "\n"), "\n", ind, ")")
-    },
+  cols <- lapply(obj, function(col) {
+    d <- deparse(col, width.cutoff = 500) |> paste(collapse = "")
+    if (length(col) > 1 && !grepl("^c\\(", d)) d <- paste0("c(", d, ")")
+    d
+  })
+  col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
+  if (length(col_strs) > 1) {
+    not_last <- seq_len(length(col_strs) - 1)
+    col_strs[not_last] <- paste0(col_strs[not_last], ",")
+  }
+  paste0("data.frame(\n", paste(col_strs, collapse = "\n"), "\n", ind, ")")
+}
 
-    list = {
-      # Deparse as list(a = ..., ...) and handle unnamed elements by position
-      n <- length(obj)
-      nms <- names(obj)
-      items <- vapply(seq_len(n), FUN.VALUE = "", function(i) {
-        name <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("V", i)
-        val <- obj[[i]]
-        paste0(name, " = ", clean_deparse(val, indent + 1))
-      })
-      if (length(items) > 1) {
-        not_last <- seq_len(length(items) - 1)
-        items[not_last] <- paste0(items[not_last], ",")
-      }
-      item_strs <- paste0(ind, "  ", items)
-      paste0("list(\n", paste(item_strs, collapse = "\n"), "\n", ind, ")")
-    },
+#' @noRd
+clean_deparse.list <- function(obj, indent = 0) {
+  ind <- paste(rep("  ", indent), collapse = "")
+  n <- length(obj)
+  if (n == 0) return("list()")
+  nms <- names(obj)
+  items <- vapply(seq_len(n), FUN.VALUE = "", function(i) {
+    name <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("V", i)
+    val <- obj[[i]]
+    paste0(name, " = ", clean_deparse(val, indent + 1))
+  })
+  if (length(items) > 1) {
+    not_last <- seq_len(length(items) - 1)
+    items[not_last] <- paste0(items[not_last], ",")
+  }
+  item_strs <- paste0(ind, "  ", items)
+  paste0("list(\n", paste(item_strs, collapse = "\n"), "\n", ind, ")")
+}
 
-    character = {
-      if (length(obj) == 1) paste0('"', obj, '"')
-      else paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
-    },
+#' @noRd
+clean_deparse.character <- function(obj, indent = 0) {
+  if (length(obj) == 1) return(sprintf('"%s"', obj))
+  paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
+}
 
-    numeric = {
-      if (length(obj) == 1) as.character(obj)
-      else paste0("c(", paste(obj, collapse = ", "), ")")
-    },
-    integer = {
-      if (length(obj) == 1) as.character(obj)
-      else paste0("c(", paste(obj, collapse = ", "), ")")
-    },
+#' @noRd
+clean_deparse.numeric <- function(obj, indent = 0) {
+  paste0("c(", paste(obj, collapse = ", "), ")")
+}
 
-    logical = {
-      if (length(obj) == 1) if (obj) "TRUE" else "FALSE"
-      else paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
-    },
+#' @noRd
+clean_deparse.integer <- clean_deparse.numeric
 
-    {
-      # default: fallback to deparse
-      paste(deparse(obj, width.cutoff = 500), collapse = "")
-    }
-  )
+#' @noRd
+clean_deparse.logical <- function(obj, indent = 0) {
+  paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
 }
