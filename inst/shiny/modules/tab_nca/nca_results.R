@@ -188,8 +188,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             output_tmpdir,
             pattern = paste0(
               ".(csv)|(rds)|(xpt)|(html)|(rda)",
-              "|(dose_escalation.pptx)|(dose_escalation.qmd)$",
-              "|(session_code.R)"
+              "|(dose_escalation.pptx)|(dose_escalation.qmd)",
+              "|(session_code.R)$"
             ),
             recursive = TRUE
           )

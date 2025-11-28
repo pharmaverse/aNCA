@@ -4,6 +4,7 @@
 #' @param session The session object containing userData, etc.
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R")
 #' @return The output_path (invisibly)
+#' @export
 get_session_script_code <- function(template_path, session, output_path) {
   # Helper to get value from session$userData by path (e.g., 'settings$method')
   get_session_value <- function(path) {
@@ -30,7 +31,7 @@ get_session_script_code <- function(template_path, session, output_path) {
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
   if (matches[1] == -1) {
     stop(
-      "Template has no placeholders *(session$userData...) to substitute.",
+      "Template has no placeholders (session$userData...) to substitute.",
       "Did you accidentally modify it?"
     )
   }
@@ -71,7 +72,8 @@ clean_deparse <- function(obj, indent = 0) {
         d <- col |>
           deparse(width.cutoff = 500) |>
           paste(collapse = "")
-        if (!grepl("^c\\(", d)) {
+        # Only wrap in c(...) if length > 1
+        if (length(col) > 1 && !grepl("^c\\(", d)) {
           d <- paste0("c(", d, ")")
         }
         d
