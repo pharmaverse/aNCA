@@ -63,13 +63,18 @@ get_session_script_code <- function(template_path, session, output_path) {
 clean_deparse <- function(obj, indent = 0) {
   ind <- paste(rep("  ", indent), collapse = "")
   obj_class <- class(obj)[1]
-  if (length(obj) == 0) {
+  if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(obj_class, "()"))
   }
 
   switch(
     obj_class,
+    "tbl_df" = ,
     data.frame = {
+
+      # If the data.frame has zero rows, return an empty constructor string
+      if (nrow(obj) == 0) return("data.frame()")
+
       # Multi-line, indented representation of a data.frame
       cols <- lapply(obj, function(col) {
         d <- col |>

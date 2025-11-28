@@ -34,6 +34,17 @@ describe("clean_deparse()", {
     expect_equal(clean_deparse(df), exp_df)
   })
 
+  it("renders tbl_df as data.frame(...)", {
+    df <- dplyr::tibble(x = c(1, 2), y = c("a", "b"))
+    exp_df <- paste0(
+      "data.frame(\n",
+      "  x = c(1, 2),\n",
+      "  y = c(\"a\", \"b\")\n",
+      ")"
+    )
+    expect_equal(clean_deparse(df), exp_df)
+  })
+
   it("renders a NULL object correctly", {
     expect_equal(clean_deparse(NULL), "NULL")
   })
