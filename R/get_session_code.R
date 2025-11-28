@@ -5,7 +5,7 @@
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R")
 #' @return The output_path (invisibly)
 #' @export
-get_session_script_code <- function(template_path, session, output_path) {
+get_session_code <- function(template_path, session, output_path) {
 
   # Helper to get value from session$userData by path (e.g., 'settings$method')
   get_session_value <- function(path) {
@@ -26,14 +26,14 @@ get_session_script_code <- function(template_path, session, output_path) {
   script <- readLines(template_path, warn = FALSE) |>
     paste(collapse = "\n")
 
-  # Find all session$userData$... or session$userData[[...]] or session$userData$...$...
-  # Regex for session$userData$foo or session$userData$foo$bar or session$userData[["foo"]]
+  # Find all session$userData$...
   pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
   if (matches[1] == -1) {
     stop(
       "Template has no placeholders (session$userData...) to substitute.",
-      "Did you accidentally modify it?"
+      "This may be due to an incorrect file path, a missing template, ",
+      "or a modified template without placeholders."
     )
   }
 

@@ -177,7 +177,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           dir.create(script_tmpdir, recursive = TRUE)
 
           script_template_path <- "www/templates/script_template.R"
-          get_session_script_code(
+          get_session_code(
             template_path = script_template_path,
             session = session,
             output_path = paste0(script_tmpdir, "/session_code.R")
