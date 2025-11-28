@@ -23,12 +23,10 @@ parameter_selection_ui <- function(id) {
     reactable_ui(ns("study_types")),
 
     br(),
-    h5("Selected Parameters"),
+    p("The following parameters are currently selected:"),
     br(),
-    reactableOutput(ns("selected_parameters_table")),
+    reactable_ui(ns("selected_parameters_table")), 
 
-    br(),
-    h5("Parameter Selection"),
     br(),
     p("Select the parameters to calculate for each study type.
       Selections can be overridden by uploading a settings file."),
@@ -268,85 +266,76 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       
       selections_list <- parameter_lists_by_type()
       
-      # 1. Get all unique parameters selected across *any* study
+      # 1. Get all unique parameters selected across all study types
       all_params <- unique(unlist(selections_list))
       if (length(all_params) == 0) {
         return(data.frame(Message = "No parameters are selected."))
       }
       
       # 2. Get all study types
-      all_studies <- names(selections_list)
-      if (length(all_studies) == 0) {
+      all_study_types <- names(selections_list)
+      if (length(all_study_types) == 0) {
         return(data.frame(Message = "No study types found."))
       }
       
       # 3. Create a wide data frame (Parameter | Study A | Study B)
       #    with TRUE/FALSE for selection
-      wide_df <- map_dfc(all_studies, ~ {
+      wide_df <- map_dfc(all_study_types, ~ {
         setNames(data.frame(all_params %in% selections_list[[.x]]), .x)
       })
       wide_df$PKNCA <- all_params
       
-      # 5. Check if the resulting data frame is empty (it shouldn't be if all_params > 0)
+      # 4. Check if the resulting data frame is empty (it shouldn't be if all_params > 0)
       if (nrow(wide_df) == 0) {
         return(data.frame(Message = "No parameters are selected."))
       }
       
-      # 6. Join with metadata to get labels
+      # 5. Join with metadata to get labels
       metadata_df <- metadata_nca_parameters %>% 
         select(PKNCA, PPTESTCD, PPTEST) %>%
         distinct(PKNCA, .keep_all = TRUE)
-      
+
       wide_df %>%
         left_join(metadata_df, by = "PKNCA") %>%
         # Reorder columns to put labels first
-        select(PPTESTCD, PPTEST, PKNCA, all_of(all_studies))
+        select(PPTESTCD, PPTEST, PKNCA, all_of(all_study_types))
     })
     
     # Render the reactable
-    output$selected_parameters_table <- renderReactable({
-      
-      df <- selected_parameters_df()
-      req(df)
-      
-      # If the message column exists, just show a simple table
-      if ("Message" %in% names(df)) {
-        return(reactable(df, columns = list(Message = colDef(name = ""))))
-      }
-      
-      # Get study types list
-      study_list <- study_types_list()
-      
-      # Build dynamic colDefs for study types
-      study_type_cols <- map(study_list, ~ {
-        colDef(
-          name = .x,
-          align = "center",
-          # Render TRUE as a checkmark
-          cell = function(value) {
-            if (isTRUE(value)) "✔" else ""
-          },
-          minWidth = 150 # Ensure columns have reasonable width
+    reactable_server(
+      "selected_parameters_table",
+      selected_parameters_df,
+      height = "35vh",
+      columns = function(data) {
+
+        # Handle empty table
+        if ("Message" %in% names(data)) {
+          return(list(Message = colDef(name = "")))
+        }
+
+        # Define Fixed Sticky Columns
+        fixed_cols <- list(
+          PPTESTCD = colDef(sticky = "left", minWidth = 100),
+          PPTEST = colDef(sticky = "left", minWidth = 200),
+          PKNCA = colDef(show = FALSE)
         )
+
+        # Define Dynamic Columns for Study Types
+        study_type_cols <- setdiff(names(data), names(fixed_cols))
+        
+        dynamic_cols <- purrr::map(study_type_cols, function(col_name) {
+          colDef(
+            name = col_name,
+            align = "center",
+            cell = function(value) if (isTRUE(value)) "✔" else "",
+            minWidth = 150
+          )
+        })
+        names(dynamic_cols) <- study_type_cols
+        
+        # Combine
+        c(fixed_cols, dynamic_cols)
       })
-      names(study_type_cols) <- study_list
-      
-      # Build base colDefs
-      col_defs <- list(
-        PPTESTCD = colDef(sticky = "left", minWidth = 100, name = "Code"),
-        PPTEST = colDef(sticky = "left", minWidth = 200, name = "Label"),
-        PKNCA = colDef(show = FALSE)
-      )
-      
-      reactable(
-        df,
-        columns = c(col_defs, study_type_cols),
-        wrap = FALSE,
-        filterable = TRUE,
-        compact = TRUE,
-        striped = TRUE
-      )
-    })
     
     # On all changes, disable NCA button for given period of time to prevent the
     # user from running the NCA before settings are applied
