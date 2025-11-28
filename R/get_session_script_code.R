@@ -31,23 +31,15 @@ get_session_script_code <- function(template_path, session, output_path) {
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
   if (matches[1] == -1) return(script_lines)
 
-  # Replace each match with deparsed value
-  for (i in rev(seq_along(matches))) {
-    start <- matches[i]
-    len <- attr(matches, "match.length")[i]
-    matched <- substr(script, start, start + len - 1)
-    # Extract the path after session$userData$
+  # Replace all matches with deparsed values in one pass
+  match_positions <- gregexpr(pattern, script, perl = TRUE)[[1]]
+  match_strings <- regmatches(script, list(match_positions))
+  replacements <- lapply(match_strings, function(matched) {
     path <- sub("^session\\$userData\\$", "", matched)
     value <- get_session_value(path)
-
-    deparsed <- clean_deparse(value)
-    script <- paste0(
-      substr(script, 1, start - 1),
-      deparsed,
-      substr(script, start + len, nchar(script))
-    )
-  }
-
+    clean_deparse(value)
+  })
+  regmatches(script, list(match_positions)) <- replacements
   # Split back into lines
   script_lines <- strsplit(script, "\n")[[1]]
   writeLines(script_lines, output_path)

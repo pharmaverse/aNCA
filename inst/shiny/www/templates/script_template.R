@@ -28,7 +28,7 @@ preprocessed_adnca <- adnca_data %>%
   ) %>%
 
   # Derive METABFL column using PARAM metabolites
-  create_metabfl(mapping$select_Metabolites)
+  create_metabfl(mapping$Metabolites)
 
 ## Setup NCA settings in the PKNCA object ########################
 auc_data <- session$userData$settings$partial_aucs
