@@ -10,7 +10,8 @@ calculate_table_ratios_app(res, ratio_table)
 \item{res}{A PKNCAresult object.}
 
 \item{ratio_table}{Data.frame with columns:
-TestParameter, RefParameter, Reference, Test, AggregateSubject, AdjustingFactor.}
+TestParameter, RefParameter, Reference, Test, AggregateSubject,
+AdjustingFactor, TestGroups, RefGroups, PPTESTCD.}
 }
 \value{
 The updated PKNCAresult object with added rows in the \code{result} data.frame.

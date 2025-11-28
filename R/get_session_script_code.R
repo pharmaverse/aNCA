@@ -6,6 +6,7 @@
 #' @return The output_path (invisibly)
 #' @export
 get_session_script_code <- function(template_path, session, output_path) {
+
   # Helper to get value from session$userData by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
@@ -59,8 +60,18 @@ get_session_script_code <- function(template_path, session, output_path) {
   invisible(output_path)
 }
 
-# Helper to cleanly deparse an object (data.frame, list, etc.)
-#' @noRd
+#' Convert R objects into reproducible R code strings (internal)
+#'
+#' This internal S3 generic converts common R objects (data frames, lists,
+#' atomic vectors, etc.) into character strings containing R code that will
+#' reconstruct the object. It is used by the app script generator to
+#' serialize `session$userData` values into a runnable R script.
+#'
+#' @param obj An R object to convert to a string of R code.
+#' @param indent Integer indentation level for multi-line outputs.
+#' @return A single string containing R code that, when evaluated, will
+#'   reconstruct `obj` (or a close approximation for complex types).
+#' @keywords internal
 clean_deparse <- function(obj, indent = 0) {
   # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {

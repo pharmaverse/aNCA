@@ -275,7 +275,8 @@ calculate_ratios.PKNCAresults <- function(
 #'
 #' @param res A PKNCAresult object.
 #' @param ratio_table Data.frame with columns:
-#' TestParameter, RefParameter, Reference, Test, AggregateSubject, AdjustingFactor, TestGroups, RefGroups, PPTESTCD.
+#' TestParameter, RefParameter, Reference, Test, AggregateSubject,
+#' AdjustingFactor, TestGroups, RefGroups, PPTESTCD.
 #' @returns The updated PKNCAresult object with added rows in the `result` data.frame.
 #' @export
 calculate_table_ratios_app <- function(res, ratio_table) {
