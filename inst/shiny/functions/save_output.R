@@ -144,7 +144,7 @@ get_dose_esc_results <- function(
     # Where group_by_vars are concatenated with ": " between var name and value
 
     group_string <- merge(o_nca$data$conc$data, group_i) %>%
-      mutate(group = apply(select(., any_of(group_by_vars, profile_col)), 1, function(x) {
+      mutate(group = apply(select(., any_of(c(group_by_vars, profile_col))), 1, function(x) {
         paste(names(x), x, sep = ": ", collapse = ", ")
       })) %>%
       pull(group) %>%
