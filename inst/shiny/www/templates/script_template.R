@@ -77,7 +77,7 @@ pknca_res <- pknca_obj %>%
   ) %>%
 
   # Run pk.nca and join subject and dose information to the results
-  PKNCA_calculate_nca()  %>%
+  PKNCA_calculate_nca() %>%
 
   # Add bioavailability results if requested
   add_f_to_pknca_results(session$userData$settings$bioavailability) %>%
