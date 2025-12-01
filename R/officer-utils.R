@@ -48,7 +48,9 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @importFrom officer add_slide ph_with fpar ftext fp_par fp_text
 #' @importFrom flextable flextable
 #' @return rpptx object with slide added
-add_pptx_sl_table <- function(pptx, df, title = "", subtitle = "", footer = "Click here for individual results") {
+add_pptx_sl_table <- function(pptx, df, title = "",
+                              subtitle = "",
+                              footer = "Click here for individual results") {
 
   a_par <- fpar(
     ftext(title),
@@ -56,7 +58,7 @@ add_pptx_sl_table <- function(pptx, df, title = "", subtitle = "", footer = "Cli
     ftext(subtitle, prop = fp_text(font.size = 14)),
     fp_p = fp_par(text.align = "center", padding = 5)
   )
-  
+
   add_slide(pptx, layout = "Title Only") %>%
     ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1") %>%
     ph_with(value = a_par, location = "Title 1") %>%
@@ -109,7 +111,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
 
     # Generate summary figures and tables
     pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " Summary"),
-                              subtitle = paste(res_dose_slides[[i]]$group),) %>%
+                              subtitle = paste(res_dose_slides[[i]]$group)) %>%
       ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1)) %>%
       add_pptx_sl_plottable(
         df = res_dose_slides[[i]]$statistics,
