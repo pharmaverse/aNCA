@@ -45,15 +45,15 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @param title Title text for the slide
 #' @param subtitle Subtitle text for the slide
 #' @param footer Footer text for the slide
-#' @importFrom officer add_slide ph_with fpar ftext fp_par
+#' @importFrom officer add_slide ph_with fpar ftext fp_par fp_text
 #' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_table <- function(pptx, df, title = "", subtitle = "", footer = "Click here for individual results") {
-  #browser()
+
   a_par <- fpar(
     ftext(title),
     "\n",
-    ftext(subtitle),
+    ftext(subtitle, prop = fp_text(font.size = 16)),
     fp_p = fp_par(text.align = "center", padding = 5)
   )
   

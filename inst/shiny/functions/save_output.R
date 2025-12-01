@@ -141,9 +141,12 @@ get_dose_esc_results <- function(
       summarise(n = n())
 
     # Create character string of Group
+    # Where group_by_vars are concatenated with ": " between var name and value
+
     group <- merge(o_nca$data$conc$data, group_i) %>%
-      mutate(group = apply(select(., any_of(group_by_vars)),
-          1, function(row) paste(row, collapse = ", "))) %>%
+      mutate(group = apply(select(., any_of(group_by_vars)), 1, function(x) {
+        paste(names(x), x, sep = ": ", collapse = ", ")
+      })) %>%
       pull(group) %>%
       unique()
 
