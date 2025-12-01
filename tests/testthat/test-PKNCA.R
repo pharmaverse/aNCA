@@ -3,9 +3,9 @@ simple_data <- data.frame(
   STUDYID = rep("STUDY001", 6),
   PCSPEC = rep("Plasma", 6),
   ROUTE = rep("IV", 6),
-  DRUG = rep("DrugA", 6),
+  DOSETRT = rep("DrugA", 6),
   USUBJID = rep("SUBJ001", 6),
-  NCA_PROFILE = rep(1, 6),
+  ATPTREF = rep(1, 6),
   PARAM = rep("AnalyteA", 6),
   AVAL = c(0, 5, 10, 7, 3, 1),
   AVALU = rep(c("ng/mL"), 6),
@@ -23,9 +23,9 @@ multiple_data <- data.frame(
   STUDYID = rep("STUDY002", 12),
   PCSPEC = rep("Plasma", 12),
   ROUTE = rep("IV", 12),
-  DRUG = rep("DrugB", 12),
+  DOSETRT = rep("DrugB", 12),
   USUBJID = rep(rep(c("SUBJ002", "SUBJ003"), each = 6)),
-  NCA_PROFILE = rep(1, 12),
+  ATPTREF = rep(1, 12),
   PARAM = rep(c("AnalyteX", "AnalyteY"), each = 6),
   AVAL = c(0, 2, 8, 6, 4, 1, 0, 10, 20, 18, 8, 3),
   AVALU = rep(c("ng/mL", "mg/mL"), each = 6),
@@ -74,18 +74,8 @@ describe("PKNCA_create_data_object", {
     )
   })
 
-  it("handles duplicates in DFLAG", {
-    # Duplicate DFLAG values
-    duplicate_data <- simple_data %>% mutate(AFRLT = c(0.5, 1, 2, 3, 3, 6))
-    duplicate_data$DFLAG <- c(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)
-    results <- PKNCA_create_data_object(duplicate_data)
-
-    # Check that flag = FALSE values are removed
-    expect_equal(nrow(results$conc$data), 5)
-  })
-
   it("produces a message error when missing values are in group columns", {
-    # Duplicate DFLAG values
+    # Add missing values in a grouping column (e.g, PCSPEC)
     adnca_with_group_na <- multiple_data
     adnca_with_group_na$PCSPEC[1] <- NA_character_
     expect_error(
@@ -108,9 +98,23 @@ describe("PKNCA_create_data_object", {
     expect_true("VOLUMEU" %in% names(pknca_volume_data$conc$data))
     expect_true("AMOUNTU" %in% names(pknca_volume_data$conc$data))
   })
+
+  it("handles exclusions indicated through nca_exclude_reason_columns", {
+    subjs <- unique(multiple_data$USUBJID)
+    adnca_excl_cols <- multiple_data %>%
+      mutate(
+        NCA1XRS = ifelse(USUBJID == subjs[1], "Patient Disconsidered", ""),
+        NCA2XRS = ifelse(USUBJID == subjs[2], "Patient Vomiting", "")
+      )
+    pknca_excl_subj1 <- PKNCA_create_data_object(adnca_excl_cols, "NCA1XRS")
+    pknca_excl_all <- PKNCA_create_data_object(adnca_excl_cols, c("NCA1XRS", "NCA2XRS"))
+    excl_col <- pknca_excl_subj1$conc$columns$exclude
+    expect_true(all(
+      suppressWarnings(PKNCA::pk.nca(pknca_excl_subj1))[["result"]][["USUBJID"]] == subjs[2]
+    ))
+    expect_false(any(pknca_excl_all$conc$data[[excl_col]] %in% c("", NA_character_)))
+  })
 })
-
-
 
 # Test PKNCA_update_data_object
 describe("PKNCA_update_data_object", {
@@ -118,7 +122,7 @@ describe("PKNCA_update_data_object", {
   method <- "lin up log down"
   params <- c("cmax", "tmax", "auclast", "aucinf.obs")
   analytes <- unique(simple_data$PARAM)
-  dosnos <- unique(simple_data$NCA_PROFILE)
+  dosnos <- unique(simple_data$ATPTREF)
   pcspecs <- unique(simple_data$PCSPEC)
   auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
 
@@ -151,7 +155,7 @@ describe("PKNCA_update_data_object", {
     )
     intervals <- updated_data$intervals
     expect_true(all(intervals$PARAM == "AnalyteX"))
-    expect_true(all(intervals$NCA_PROFILE == 1))
+    expect_true(all(intervals$ATPTREF == 1))
     expect_true(all(intervals$PCSPEC == "Plasma"))
   })
 
@@ -168,7 +172,7 @@ describe("PKNCA_update_data_object", {
     )
     expect_equal(updated_data$options$auc.method, "lin up log down")
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
-    expect_true("NCA_PROFILE" %in% updated_data$options$keep_interval_cols)
+    expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
   })
 
   it("does not impute C0 when not requested", {
@@ -207,17 +211,17 @@ describe("PKNCA_update_data_object", {
     # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
     auc_intervals <- updated_data$intervals  %>%
       dplyr::filter(type_interval == "manual") %>%
-      dplyr::select(start, end, STUDYID, DRUG, USUBJID, PARAM,
-                    NCA_PROFILE, auclast, aucint.last, tmax)
+      dplyr::select(start, end, STUDYID, DOSETRT, USUBJID, PARAM,
+                    ATPTREF, auclast, aucint.last, tmax)
 
     expected_res <- tidyr::tibble(
       start = c(0, 1, 2),
       end = c(1, 2, 3),
       STUDYID = rep("STUDY001", 3),
-      DRUG = rep("DrugA", 3),
+      DOSETRT = rep("DrugA", 3),
       USUBJID = rep("SUBJ001", 3),
       PARAM = rep("AnalyteA", 3),
-      NCA_PROFILE = rep(1, 3),
+      ATPTREF = rep(1, 3),
       auclast = rep(FALSE, 3),
       aucint.last = rep(TRUE, 3),
       tmax = rep(FALSE, 3)

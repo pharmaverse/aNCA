@@ -24,7 +24,7 @@ summary_server <- function(id, processed_pknca_data) {
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
 
       data <- processed_pknca_data()$intervals %>%
-        apply_labels(type = "ADPC") %>%
+        apply_labels(type = "ADNCA") %>%
         select(where(~!is.logical(.) | any(. == TRUE))) %>%
         arrange(!!!syms(c(conc_group_columns, "type_interval", "start", "end")))
     })
@@ -43,8 +43,7 @@ summary_server <- function(id, processed_pknca_data) {
 
       detect_study_types(processed_pknca_data()$conc$data,
                          groups,
-                         drug_column = "DRUG",
-                         analyte_column = processed_pknca_data()$conc$columns$groups$group_analyte,
+                         metabfl_column = "METABFL",
                          route_column = processed_pknca_data()$dose$columns$route,
                          volume_column = processed_pknca_data()$conc$columns$volume)
     })

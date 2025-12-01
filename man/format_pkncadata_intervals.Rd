@@ -33,20 +33,22 @@ The function performs the following steps:
 \itemize{
 \item Creates a vector with all pharmacokinetic parameters.
 \item Based on dose times, creates a data frame with start and end times.
-\item If TAU column is present in data, sets last dose end time to start + TAU,
-or if TAU is NA then either Inf if only one dose present, or max end time if not.
-\item If no TAU column in data, sets last dose end time to the time of last sample
+\item If TRTRINT column is present in data, sets last dose end time to start + TRTRINT,
+or if TRTRINT is NA then either Inf if only one dose present, or max end time if not.
+\item If no TRTRINT column in data, sets last dose end time to the time of last sample
 or Inf if single dose data.
 \item Adds logical columns for each specified parameter.
 }
 
-Assumes that multiple dose data will have a TAU column
+Assumes that multiple dose data will have a TRTRINT column
 or contain multiple doses in dataset
 }
 \examples{
-\dontrun{
-  # Example usage:
-  dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
-}
+adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+pknca_data <- PKNCA_create_data_object(adnca)
+pknca_conc <- pknca_data$conc
+pknca_dose <- pknca_data$dose
+params <- c("aucinf.obs", "cmax", "half.life", "tmax", "lambda.z")
+dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
 
 }

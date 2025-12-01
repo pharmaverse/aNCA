@@ -24,14 +24,12 @@ The function iterates over the list of filters and applies each filter to the da
 The supported conditions are \code{==}, \code{>}, \code{<}, \code{>=}, \code{<=} and \code{!=}.
 }
 \examples{
-\dontrun{
-  # Example usage:
-  data <- mtcars
-  filters <- list(
-    list(column = "mpg", condition = ">", value = "20"),
-    list(column = "cyl", condition = "==", value = "6")
-  )
-  filtered_data <- apply_filters(data, filters)
-}
+# Example usage:
+data <- mtcars
+filters <- list(
+  list(column = "mpg", condition = ">", value = "20"),
+  list(column = "cyl", condition = "==", value = "6")
+)
+filtered_data <- apply_filters(data, filters)
 
 }

@@ -216,6 +216,9 @@ PKNCA::PKNCA.set.summary(
   spread=PKNCA::business.range
 )
 
+
+
+
 ###########################################################################################################
 
 #' Calculate the total urine volume
@@ -240,5 +243,19 @@ PKNCA::PKNCA.set.summary(
   description = "geometric mean and geometric coefficient of variation",
   point = PKNCA::business.geomean,
   spread = PKNCA::business.geocv
+)
+
+###########################################################################################################
+
+
+# Define column interval for fraction excreted (aNCA: #669, PKNCA: #473)
+PKNCA::add.interval.col(
+  "fe",
+  FUN = "pk.calc.fe",
+  unit_type = "amount_dose",
+  pretty_name = "Fraction excreted",
+  values = c(FALSE, TRUE),
+  depends = "ae",
+  desc = "The fraction of the dose excreted"
 )
 

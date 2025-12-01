@@ -23,7 +23,7 @@
 export_cdisc <- function(res_nca) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
-    filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
+    filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
     arrange(Order) %>%
     split(.[["Dataset"]])
 
@@ -63,7 +63,7 @@ export_cdisc <- function(res_nca) {
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "ATPTREF", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
@@ -75,7 +75,7 @@ export_cdisc <- function(res_nca) {
       any_of(c(
         to_match_res_cols, conc_timeu_col, conc_time_col,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "ATPTREF", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
@@ -156,7 +156,7 @@ export_cdisc <- function(res_nca) {
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select only columns needed for PP, ADPP, ADPC
+    # Select only columns needed for PP, ADPP, ADNCA
     select(any_of(metadata_nca_variables[["Variable"]])) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
@@ -216,7 +216,7 @@ export_cdisc <- function(res_nca) {
       )
     )
 
-  adpc <- res_nca$data$conc$data %>%
+  adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
               by = intersect(names(res_nca$data$conc$data), names(dose_info)),
               suffix = c("", ".y")) %>%
@@ -268,14 +268,14 @@ export_cdisc <- function(res_nca) {
       }
     ) %>%
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC$Variable)) %>%
+    select(any_of(CDISC_COLS$ADNCA$Variable)) %>%
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
-  # Add variable labels for ADPC
-  var_labels(adpc) <- labels_map[names(adpc)]
+  # Add variable labels for ADNCA
+  var_labels(adnca) <- labels_map[names(adnca)]
 
-  list(pp = pp, adpp = adpp, adpc = adpc)
+  list(pp = pp, adpp = adpp, adnca = adnca)
 }
 
 #' Function to identify the common prefix in a character vector.
@@ -374,14 +374,10 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("AVISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
-        } else if ("VISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "VISIT")), sep = "-")
-        } else if (!is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "NCA_PROFILE")), sep = "-")
+        if ("ATPTREF" %in% names(.)) {
+          paste(!!!syms(c(conc_group_sp_cols, "ATPTREF")), sep = "-")
         } else {
-          NA_character_
+          paste(!!!syms(c(conc_group_sp_cols)), sep = "-")
         }
       },
       # Parameter Category
@@ -457,8 +453,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       AVALC = PPSTRESC,
       AVALU = PPSTRESU,
       PARAMCD = PPTESTCD,
-      PARAM = PPTEST,
-      NCA_PROFILE = NCA_PROFILE
+      PARAM = PPTEST
     )
 }
 
@@ -472,7 +467,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   ) %>%
     lapply(\(format) strptime(dt, format = format))
 
-  dtc_vectors_nas <- sapply(dtc_vectors, \(x) sum(is.na(x)))
+  dtc_vectors_nas <- sapply(dtc_vectors, function(x) sum(is.na(x)))
   dtc_vectors[[which.min(dtc_vectors_nas)]] %>%
     format("%Y-%m-%dT%H:%M:%S")
 }

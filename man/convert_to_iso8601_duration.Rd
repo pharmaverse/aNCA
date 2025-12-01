@@ -22,8 +22,4 @@ It is a sensitive function that assumes that a valid time unit is given by the u
 That means that if other units starting with 'y', 'm', 'w', 'd', 'h', or 's' are provided,
 it will make a naive guess that it refers to a time unit as year, month, week, day, hour, sec...
 }
-\examples{
-aNCA:::convert_to_iso8601_duration(200, "h") # Returns "PT200H"
-aNCA:::convert_to_iso8601_duration(5, "d")  # Returns "P5D"
-}
 \keyword{internal}

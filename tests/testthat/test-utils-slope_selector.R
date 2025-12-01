@@ -4,7 +4,7 @@ DATA_FIXTURE <- list(
       STUDYID = 1,
       PCSPEC = 1,
       USUBJID = rep(1:4, each = 4),
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       IX = rep(1:4, times = 4),
       PARAM = rep("A", 16),
       is.included.hl = FALSE,
@@ -19,17 +19,17 @@ DOSNOS_FIXTURE <- data.frame(
   USUBJID = rep(1:4, each = 1),
   PARAM = rep("A", 4),
   PCSPEC = rep(1, 4),
-  NCA_PROFILE = rep(1, 4)
+  ATPTREF = rep(1, 4)
 )
 
-slope_groups <- c("USUBJID", "PARAM", "PCSPEC", "NCA_PROFILE")
+slope_groups <- c("USUBJID", "PARAM", "PCSPEC", "ATPTREF")
 
 describe(".filter_slopes", {
   it("should handle slope selection", {
     selection <- data.frame(
       TYPE = rep("Selection", 2),
       USUBJID = c(1, 3),
-      NCA_PROFILE = c(1, 1),
+      ATPTREF = c(1, 1),
       PARAM = c("A", "A"),
       PCSPEC = c(1, 1),
       RANGE = c("1:3", "2:4"),
@@ -46,7 +46,7 @@ describe(".filter_slopes", {
     exclusion <- data.frame(
       TYPE = rep("Exclusion", 2),
       USUBJID = c(2, 4),
-      NCA_PROFILE = c(1, 1),
+      ATPTREF = c(1, 1),
       PARAM = c("A", "A"),
       PCSPEC = c(1, 1),
       RANGE = c("1:2", "2:3"),
@@ -75,7 +75,7 @@ describe(".filter_slopes", {
     selection <- data.frame(
       TYPE = rep("Exclusion", 2),
       USUBJID = c(1, 3),
-      NCA_PROFILE = c(1, 1),
+      ATPTREF = c(1, 1),
       PARAM = c("A", "A"),
       PCSPEC = c(1, 1),
       RANGE = c("1:3", "2:4"),
@@ -99,7 +99,7 @@ describe(".filter_slopes", {
 EXISTING_FIXTURE <- data.frame(
   TYPE = "Exclusion",
   USUBJID = 1,
-  NCA_PROFILE = 1,
+  ATPTREF = 1,
   PARAM = "A",
   PCSPEC = 1,
   RANGE = "3:6"
@@ -111,7 +111,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Selection",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
@@ -123,7 +123,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 2,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
@@ -131,11 +131,11 @@ describe("check_slope_rule_overlap", {
 
     expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW, slope_groups)), 2)
 
-    # different NCA_PROFILE #
+    # different ATPTREF #
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 2,
+      ATPTREF = 2,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "1:3"
@@ -149,7 +149,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "4:5"
@@ -160,7 +160,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:4"
@@ -174,7 +174,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "4:9"
@@ -188,7 +188,7 @@ describe("check_slope_rule_overlap", {
     NEW <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:6"
@@ -202,7 +202,7 @@ describe("check_slope_rule_overlap", {
     EXISTING <- data.frame(
       TYPE = "Exclusion",
       USUBJID = 1,
-      NCA_PROFILE = 1,
+      ATPTREF = 1,
       PARAM = "A",
       PCSPEC = 1,
       RANGE = "3:6"

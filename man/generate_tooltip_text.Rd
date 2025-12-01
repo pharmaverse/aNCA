@@ -36,7 +36,7 @@ my_data <- data.frame(
   )
 
 my_labels <- data.frame(
-  Dataset = "ADPC",
+  Dataset = "ADNCA",
   Variable = "USUBJID",
   Label = "Unique Subject ID"
   ) # Dummy labels object
@@ -44,7 +44,7 @@ my_labels <- data.frame(
 vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
 
 # Generate the tooltip text vector
-tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
+tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADNCA")
 my_data$tooltip <- tooltips
 
 }

@@ -7,6 +7,8 @@
 #' @param time_column A character string specifying the time column.
 #' @param rrlt_column A character string specifying the time since last dose column.
 #' @param route_column A character string specifying the route column.
+#' @param nca_exclude_reason_columns A character vector specifying the columns
+#' to indicate reasons for excluding records from NCA analysis.
 #'
 #' @returns A data frame containing the filtered and processed concentration data.
 #'
@@ -16,18 +18,17 @@
 #'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 #'   (dosing data- not CDISC standard)
 #'   - Creates `DOSNOA` variable, sequential numbers based on time of dose
-#'   - Adds a 'std_route' column taking values "intravascular" or "extravascular".
+#'   - Creates a 'std_route' column with PKNCA values "intravascular" or "extravascular"
+#'   based on route_column (ROUTE, CDISC: C66729).
 #'   - Arranges the data by group_columns.
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   conc_data <- format_pkncaconc_data(ADNCA,
-#'                                      group_columns,
-#'                                      "AFRLT",
-#'                                      "ROUTE")
-#' }
-#'
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' conc_data <- format_pkncaconc_data(ADNCA = adnca,
+#'                                    group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
+#'                                    time_column = "AFRLT",
+#'                                    rrlt_column = "ARRLT",
+#'                                    route_column = "ROUTE")
 #' @import dplyr
 #' @export
 
@@ -35,7 +36,8 @@ format_pkncaconc_data <- function(ADNCA,
                                   group_columns,
                                   time_column = "AFRLT",
                                   rrlt_column = "ARRLT",
-                                  route_column = "ROUTE") {
+                                  route_column = "ROUTE",
+                                  nca_exclude_reason_columns = NULL) {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -57,15 +59,40 @@ format_pkncaconc_data <- function(ADNCA,
       filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
   }
 
+  if (!is.null(nca_exclude_reason_columns)) {
+    ADNCA <- ADNCA %>%
+      # Merge all reason columns into one
+      mutate(
+        nca_exclude = apply(
+          select(., any_of(nca_exclude_reason_columns)),
+          1,
+          function(row) {
+            reasons <- row[!is.na(row) & row != ""]
+            if (length(reasons) > 0) {
+              paste(reasons, collapse = "; ")
+            } else {
+              ""
+            }
+          }
+        )
+      )
+  } else {
+    ADNCA$nca_exclude <- ""
+  }
+
   #set a tolerance for the arranging to avoid floating point precision issues
   tol <- 0.02
 
+  # Make a pattern to derive PKNCA route from CDISC ROUTE
+  intravascular_pattern <- paste0(
+    "(INFUS|DRIP|IV|INTRAVEN|IVADMIN|BOLUS|INTRAVASCULAR|INTRA-?ARTERIAL|",
+    "INTRACARDIAC|INTRACORONARY)"
+  )
   ADNCA %>%
     mutate( #round to prevent floating point precision issues
       dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
-      std_route = ifelse(
-        grepl("(INFUS|DRIP|IV|INTRAVEN.*|IVADMIN|BOLUS|INTRAVASCULAR)",
-              gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
+      std_route =  ifelse(
+        grepl(intravascular_pattern, gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
         "intravascular",
         "extravascular"
       )
@@ -147,20 +174,22 @@ format_pkncadose_data <- function(pkncaconc_data,
 #' The function performs the following steps:
 #'   - Creates a vector with all pharmacokinetic parameters.
 #'   - Based on dose times, creates a data frame with start and end times.
-#'   - If TAU column is present in data, sets last dose end time to start + TAU,
-#'   or if TAU is NA then either Inf if only one dose present, or max end time if not.
-#'   - If no TAU column in data, sets last dose end time to the time of last sample
+#'   - If TRTRINT column is present in data, sets last dose end time to start + TRTRINT,
+#'   or if TRTRINT is NA then either Inf if only one dose present, or max end time if not.
+#'   - If no TRTRINT column in data, sets last dose end time to the time of last sample
 #'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
 #'
-#'  Assumes that multiple dose data will have a TAU column
+#'  Assumes that multiple dose data will have a TRTRINT column
 #'  or contain multiple doses in dataset
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
-#' }
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' pknca_data <- PKNCA_create_data_object(adnca)
+#' pknca_conc <- pknca_data$conc
+#' pknca_dose <- pknca_data$dose
+#' params <- c("aucinf.obs", "cmax", "half.life", "tmax", "lambda.z")
+#' dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
 #'
 #' @import dplyr
 #' @importFrom stats setNames
@@ -198,9 +227,9 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "ARRLT", "NCA_PROFILE", "DOSNOA", "TAU", "VOLUME")))
+    select(any_of(c(conc_groups, "ARRLT", "ATPTREF", "DOSNOA", "TRTRINT", "VOLUME")))
 
-  has_tau <- "TAU" %in% names(sub_pknca_conc)
+  has_tau <- "TRTRINT" %in% names(sub_pknca_conc)
 
   # Select dose data and use its time column as a time of last dose reference
   sub_pknca_dose <- pknca_dose$data %>%
@@ -234,9 +263,9 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(end = if (has_tau) {
       case_when(
         !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
-        is.na(TAU) & is_one_dose ~ Inf,
-        is.na(TAU) ~ start + max_end,
-        TRUE ~ start + TAU
+        is.na(TRTRINT) & is_one_dose ~ Inf,
+        is.na(TRTRINT) ~ start + max_end,
+        TRUE ~ start + TRTRINT
       )
     } else {
       case_when(
@@ -248,7 +277,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     ) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups,
-                    "NCA_PROFILE", "DOSNOA", "VOLUME"))) %>%
+                    "ATPTREF", "DOSNOA", "VOLUME"))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%

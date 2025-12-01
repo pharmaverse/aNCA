@@ -9,7 +9,8 @@ format_pkncaconc_data(
   group_columns,
   time_column = "AFRLT",
   rrlt_column = "ARRLT",
-  route_column = "ROUTE"
+  route_column = "ROUTE",
+  nca_exclude_reason_columns = NULL
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ format_pkncaconc_data(
 \item{rrlt_column}{A character string specifying the time since last dose column.}
 
 \item{route_column}{A character string specifying the route column.}
+
+\item{nca_exclude_reason_columns}{A character vector specifying the columns
+to indicate reasons for excluding records from NCA analysis.}
 }
 \value{
 A data frame containing the filtered and processed concentration data.
@@ -36,17 +40,16 @@ The function performs the following steps:
 \item Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
 (dosing data- not CDISC standard)
 \item Creates \code{DOSNOA} variable, sequential numbers based on time of dose
-\item Adds a 'std_route' column taking values "intravascular" or "extravascular".
+\item Creates a 'std_route' column with PKNCA values "intravascular" or "extravascular"
+based on route_column (ROUTE, CDISC: C66729).
 \item Arranges the data by group_columns.
 }
 }
 \examples{
-\dontrun{
-  # Example usage:
-  conc_data <- format_pkncaconc_data(ADNCA,
-                                     group_columns,
-                                     "AFRLT",
-                                     "ROUTE")
-}
-
+adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+conc_data <- format_pkncaconc_data(ADNCA = adnca,
+                                   group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
+                                   time_column = "AFRLT",
+                                   rrlt_column = "ARRLT",
+                                   route_column = "ROUTE")
 }
