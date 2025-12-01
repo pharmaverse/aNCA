@@ -147,7 +147,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             statistics = c("Mean"),
             stats_parameters = c(
               "CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"
-            )
+            ),
+            info_vars = grouping_vars()
           )
           presentations_path <- paste0(output_tmpdir, "/presentations")
           dir.create(presentations_path)

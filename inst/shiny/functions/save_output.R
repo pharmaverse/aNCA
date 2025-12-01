@@ -82,7 +82,7 @@ get_dose_esc_results <- function(
   pcspec_col <- "PCSPEC"
   profile_col <- "ATPTREF"
 
-  groups <- unique(o_nca$data$intervals[, group_by_vars])
+  groups <- unique(o_nca$data$intervals[, c(group_by_vars, profile_col)])
   output_list <- list()
   o_nca_i <- o_nca
   # Loop over each of the groups
@@ -136,15 +136,15 @@ get_dose_esc_results <- function(
       unique()
 
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
-      # Group by DOSEA and which cols from info vars that are in the data
-      group_by(DOSEA, across(any_of(info_vars))) %>%
+      # Group by cols from info vars that are in the data
+      group_by(across(any_of(info_vars))) %>%
       summarise(n = n())
 
     # Create character string of Group
     # Where group_by_vars are concatenated with ": " between var name and value
 
-    group <- merge(o_nca$data$conc$data, group_i) %>%
-      mutate(group = apply(select(., any_of(group_by_vars)), 1, function(x) {
+    group_string <- merge(o_nca$data$conc$data, group_i) %>%
+      mutate(group = apply(select(., any_of(group_by_vars, profile_col)), 1, function(x) {
         paste(names(x), x, sep = ": ", collapse = ", ")
       })) %>%
       pull(group) %>%
@@ -200,7 +200,7 @@ get_dose_esc_results <- function(
       info = info_i,
       ind_params = ind_params,
       ind_plots = ind_plots,
-      group = group
+      group = group_string
     )
   }
   output_list

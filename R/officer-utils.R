@@ -53,7 +53,7 @@ add_pptx_sl_table <- function(pptx, df, title = "", subtitle = "", footer = "Cli
   a_par <- fpar(
     ftext(title),
     "\n",
-    ftext(subtitle, prop = fp_text(font.size = 16)),
+    ftext(subtitle, prop = fp_text(font.size = 14)),
     fp_p = fp_par(text.align = "center", padding = 5)
   )
   
