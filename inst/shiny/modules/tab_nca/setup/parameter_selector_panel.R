@@ -1,13 +1,18 @@
-#' Parameter Selector Panel module
-#'
-#' This module generates a Virtual Shiny Widget to allow parameter selection for
-#' a given study type.
+#' This module renders a Virtual Shiny Widget (`virtualSelectInput`) to allow 
+#' parameter selection for a specific study type. It handles two-way binding:
+#' broadcasting user changes to the parent module and updating the UI if the
+#' parent module pushes a new state (e.g., via file upload).
 #'
 #' @param id A unique namespace ID for the module.
-#' @param all_params_grouped A list containing named lists of grouped parameters.
-#' @param initial_selections 
+#' @param all_params_grouped A list of data frames, split by parameter group (TYPE). 
+#'   Each data frame must contain `PPTESTCD`, `PKNCA`, and `PPTEST` columns 
+#'   used to generate labels, values, and descriptions.
+#' @param current_selection A `reactive` expression returning a character vector
+#'   of currently selected PKNCA parameter codes for this study type.
 #'
-#' @returns 
+#' @returns A `reactive` expression returning a character vector of the 
+#'   user's selected PKNCA parameter codes (flat vector). Returns `NULL` 
+#'   or `character(0)` if nothing is selected.
 study_type_param_selector_ui <- function(id) {
   ns <- NS(id)
   tagList(

@@ -2,7 +2,8 @@
 #'
 #' This module dynamically generates `accordion_panel`s for each study type
 #' detected in the data. It manages the master state of all parameter
-#' selections and handles default values and file overrides.
+#' selections, handles default values, file overrides, and ensures synchronization
+#' between the UI and the internal state.
 #'
 #' @param id A unique namespace ID for the module.
 #' @param processed_pknca_data A `reactive` expression returning a
@@ -14,7 +15,7 @@
 #'   \item{selections}{A `reactive` list where names are study types and
 #'     values are vectors of selected PKNCA parameters, e.g.,
 #'     `list("Study Type A" = c("p1", "p2"))`.}
-#'   \item{types_df}{A `reactive` data frame from `study_types_df()`.}
+#'   \item{types_df}{A `reactive` data frame contaning the study type detection results.}
 
 parameter_selection_ui <- function(id) {
   ns <- NS(id)
