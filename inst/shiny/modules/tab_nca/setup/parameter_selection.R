@@ -214,6 +214,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           # Get the selected names from the module
           selected_params <- selection_single_type_grouped()
 
+          # If the input is NULL (empty selection), treat it as an empty character vector
+          if (is.null(selected_params)) {
+            selected_params <- character(0)
+          }
+
           # We compare the current state to the new state to avoid infinite loops
           current_col <- selections_df[[study_type]]
           new_col <- selections_df$PKNCA %in% selected_params
@@ -222,7 +227,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             selections_df[[study_type]] <- new_col
             selections_state(selections_df)
           }
-        })
+        }, ignoreNULL = FALSE, ignoreInit = TRUE)
       })
     })
     
@@ -241,7 +246,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       df <- selections_state()
       study_type_names <- unique(study_types_df()$type)
 
-      # Convert from wide to long, filter for selected (TRUE) rows,
+      # Convert from wide to long, filter for selected rows,
       # and then split the result into a list by study_type.
       df %>%
         tidyr::pivot_longer(
@@ -254,38 +259,37 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         split(.$study_type) %>%
         purrr::map(~ .x$PKNCA)
     })
-    
+
+    # Generate dataset of unique parameters across study types
     selected_parameters_df <- reactive({
       req(parameter_lists_by_type())
 
       selections_list <- parameter_lists_by_type()
       
-      # 1. Get all unique parameters selected across all study types
-      #TODO: check the name makes sense
+      # Get all unique parameters selected across all study types
       all_params_selected <- unique(unlist(selections_list))
       if (length(all_params_selected) == 0) {
         return(data.frame(Message = "No parameters are selected."))
       }
       
-      # 2. Get all study types
+      # Get all study types
       all_study_types <- names(selections_list)
       if (length(all_study_types) == 0) {
         return(data.frame(Message = "No study types found."))
       }
 
-      # 3. Create a wide data frame (Parameter | Study A | Study B)
-      #    with TRUE/FALSE for selection
+      # Create a wide data frame with TRUE/FALSE for selection
       wide_df <- map_dfc(all_study_types, ~ {
         setNames(data.frame(all_params_selected %in% selections_list[[.x]]), .x)
       })
       wide_df$PKNCA <- all_params_selected
 
-      # 4. Check if the resulting data frame is empty
+      # Check if the resulting data frame is empty
       if (nrow(wide_df) == 0) {
         return(data.frame(Message = "No parameters are selected."))
       }
 
-      # 5. Join with metadata to get labels
+      # Join with metadata to get labels
       metadata_df <- all_params %>% 
         select(PKNCA, PPTESTCD, PPTEST, sort_order) %>%
         distinct(PKNCA, .keep_all = TRUE)
