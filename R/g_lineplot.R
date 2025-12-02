@@ -152,7 +152,7 @@ g_lineplot <- function(data,
     )
   )
 
-  return(plt + optional_layers)
+  plt + optional_layers
 }
 
 # --- Helper Functions (Internal) ---
