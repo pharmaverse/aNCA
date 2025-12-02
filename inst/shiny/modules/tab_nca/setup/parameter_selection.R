@@ -39,6 +39,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Retrieve study types
     study_types_df <- reactive({
       req(processed_pknca_data())
 
@@ -65,6 +66,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       )
     })
 
+    # Create summary of study types
     study_types_summary <- reactive({
       req(study_types_df())
 
@@ -99,80 +101,92 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       "ae", "fe"
     )
 
-    # TODO
-    # This reactive defines the *structure* of the inner accordion
-    ALL_PARAMS_GROUPED <- reactive({
-      metadata_nca_parameters %>%
+    # List of parameter data frames by type
+    all_params <- metadata_nca_parameters %>%
         filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
-        select(TYPE, PKNCA, PPTESTCD, PPTEST) %>%
-        # Split the data frame into a list of data frames, one per TYPE
-        split(.$TYPE)
-    })
-
-    # TODO
-    # This defines the empty state for a new study type
-    EMPTY_STATE_FOR_ONE_STUDY <- reactive({
-      req(ALL_PARAMS_GROUPED())
-      # Creates a named list: list("Standard" = NULL, "Urine" = NULL, ...)
-      setNames(map(ALL_PARAMS_GROUPED(), ~ NULL), names(ALL_PARAMS_GROUPED()))
-    })
+        select(
+          TYPE, PKNCA, PPTESTCD, PPTEST,
+          can_excretion, can_non_excretion, can_single_dose,
+          can_multiple_dose, can_extravascular, can_metabolite
+        )
 
     # ReactiveVal for parameter selection state
     selections_state <- reactiveVal()
 
     # Build the base state from data or overrides
     base_selections <- reactive({
-      req(study_types_df(), EMPTY_STATE_FOR_ONE_STUDY())
+      req(study_types_df())
 
       study_type_names <- unique(study_types_df()$type)
-
-      # List of all selected parameters
-      master_selection_list <- setNames(
-        # Create a list of empty states, one for each study type
-        map(study_type_names, ~ EMPTY_STATE_FOR_ONE_STUDY()),
-        study_type_names
-      )
       
+      # # Define empty state for a study type
+      # empty_state <- setNames(
+      #   map(all_params_grouped, ~ NULL),
+      #   names(all_params_grouped)
+      # )
+
+      # # List of all selected parameters
+      # master_selection_list <- setNames(
+      #   # Create a list of empty states, one for each study type
+      #   map(study_type_names, ~ empty_state),
+      #   study_type_names
+      # )
+
       # Get override file
       selections_override <- tryCatch({
         parameter_override()
       }, error = function(e) { NULL })
       
-      # Apply defaults OR overrides
-      if (is.null(selections_override)) {
-        # Loop over each study type and apply default parameters
-        for (study_type in study_type_names) {
-          # Find which default parameters are in which groups
-          for (group in names(EMPTY_STATE_FOR_ONE_STUDY())) {
-            group_params <- ALL_PARAMS_GROUPED()[[group]]$PKNCA
-            defaults_in_this_group <- intersect(DEFAULT_PARAMS, group_params)
-            
-            if (length(defaults_in_this_group) > 0) {
-              master_selection_list[[study_type]][[group]] <- defaults_in_this_group
-            }
-          }
-        }
-      } else {
-        # Re-structure overrides to fit the new state
-        for (study_type in names(selections_override)) {
-          if (study_type %in% names(master_selection_list)) {
-
-            override_params <- selections_override[[study_type]]
-
-            # Figure out which group each override param belongs to
-            for (group in names(EMPTY_STATE_FOR_ONE_STUDY())) {
-              group_params <- ALL_PARAMS_GROUPED()[[group]]$PKNCA
-              params_in_this_group <- intersect(override_params, group_params)
-
-              if (length(params_in_this_group) > 0) {
-                master_selection_list[[study_type]][[group]] <- params_in_this_group
-              }
-            }
-          }
-        }
-      }
+      # Call the function with the override list
+      apply_parameter_selections(
+        selection_df = all_params,
+        study_type_names = study_type_names,
+        default_params = DEFAULT_PARAMS,
+        selections_override = selections_override
+      ) %>%
+        # Remove unneeded columns
+        select(
+          -any_of(
+            c("can_excretion", "can_non_excretion", "can_single_dose",
+              "can_multiple_dose", "can_extravascular", "can_metabolite")
+          )
+        )
       
-      master_selection_list
+      # # Apply defaults OR overrides
+      # if (is.null(selections_override)) {
+      #   # Loop over each study type and apply default parameters
+      #   for (study_type in study_type_names) {
+      #     # Find which default parameters are in which groups
+      #     for (group in names(EMPTY_STATE_FOR_ONE_STUDY())) {
+      #       group_params <- ALL_PARAMS_GROUPED()[[group]]$PKNCA
+      #       defaults_in_this_group <- intersect(DEFAULT_PARAMS, group_params)
+      #       
+      #       if (length(defaults_in_this_group) > 0) {
+      #         master_selection_list[[study_type]][[group]] <- defaults_in_this_group
+      #       }
+      #     }
+      #   }
+      # } else {
+      #   # Re-structure overrides to fit the new state
+      #   for (study_type in names(selections_override)) {
+      #     if (study_type %in% names(master_selection_list)) {
+      # 
+      #       override_params <- selections_override[[study_type]]
+      # 
+      #       # Figure out which group each override param belongs to
+      #       for (group in names(EMPTY_STATE_FOR_ONE_STUDY())) {
+      #         group_params <- ALL_PARAMS_GROUPED()[[group]]$PKNCA
+      #         params_in_this_group <- intersect(override_params, group_params)
+      # 
+      #         if (length(params_in_this_group) > 0) {
+      #           master_selection_list[[study_type]][[group]] <- params_in_this_group
+      #         }
+      #       }
+      #     }
+      #   }
+      # }
+      # 
+      # master_selection_list
     })
     
     # Sync the base state to the live state
@@ -209,12 +223,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     })
     
     observeEvent(study_types_list(), {
-      req(selections_state(), ALL_PARAMS_GROUPED())
+      req(selections_state())
 
       current_types <- study_types_list()
 
       # Get the master list of all parameters for the sub-module
-      all_params <- ALL_PARAMS_GROUPED()
+      all_params_grouped <- all_params %>%
+        # Split the data frame into a list of data frames, one per TYPE
+        split(.$TYPE)
 
       # Loop and create servers
       map(current_types, ~{
@@ -222,12 +238,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
 
         # Get the state for this specific module
+        #TODO: maybe not necessary
         module_state <- isolate(selections_state())[[study_type]]
         
         # Call the sub-module server
         module_return_grouped <- study_type_param_selector_server(
           module_id,
-          all_params_grouped = all_params,
+          all_params_grouped = all_params_grouped,
           initial_selections = module_state
         )
         
@@ -252,13 +269,27 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       study_types_summary,
       height = "28vh"
     )
-    
-    # Transform back the nested state list into the list expected as a 
-    # return value
+
+    # Transform the TRUE/FALSE data frame into a named list
+    # of parameter vectors
     parameter_lists_by_type <- reactive({
       req(selections_state())
+      # Get base data frame
+      df <- selections_state()
+      study_type_names <- unique(study_types_df()$type)
 
-      map(selections_state(), ~ unlist(.x, use.names = FALSE))
+      # Convert from wide to long, filter for selected (TRUE) rows,
+      # and then split the result into a list by study_type.
+      df %>%
+        tidyr::pivot_longer(
+          cols = all_of(study_type_names),
+          names_to = "study_type",
+          values_to = "selected"
+        ) %>%
+        filter(selected == TRUE) %>%
+        select(study_type, PKNCA) %>%
+        split(.$study_type) %>%
+        purrr::map(~ .x$PKNCA)
     })
     
     selected_parameters_df <- reactive({
@@ -267,8 +298,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       selections_list <- parameter_lists_by_type()
       
       # 1. Get all unique parameters selected across all study types
-      all_params <- unique(unlist(selections_list))
-      if (length(all_params) == 0) {
+      #TODO: check the name makes sense
+      all_params_selected <- unique(unlist(selections_list))
+      if (length(all_params_selected) == 0) {
         return(data.frame(Message = "No parameters are selected."))
       }
       
@@ -281,11 +313,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       # 3. Create a wide data frame (Parameter | Study A | Study B)
       #    with TRUE/FALSE for selection
       wide_df <- map_dfc(all_study_types, ~ {
-        setNames(data.frame(all_params %in% selections_list[[.x]]), .x)
+        setNames(data.frame(all_params_selected %in% selections_list[[.x]]), .x)
       })
-      wide_df$PKNCA <- all_params
+      wide_df$PKNCA <- all_params_selected
       
-      # 4. Check if the resulting data frame is empty (it shouldn't be if all_params > 0)
+      # 4. Check if the resulting data frame is empty (it shouldn't be if all_params_selected > 0)
       if (nrow(wide_df) == 0) {
         return(data.frame(Message = "No parameters are selected."))
       }

@@ -21,6 +21,7 @@ apply_parameter_selections <- function(selection_df,
                                        study_type_names,
                                        default_params,
                                        selections_override = NULL) {
+
   # Use override if available, otherwise use defaults
   if (is.null(selections_override) || length(selections_override) == 0) {
     # Default behavior
