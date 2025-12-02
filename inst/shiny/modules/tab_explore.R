@@ -140,11 +140,24 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           mean_inputs()$colorby)
       log_info("Computing meanplot ggplot object")
 
-      meanplot <- create_meanplot(
+      mean_output <- process_data_mean(
         data = data(),
         selected_analytes = mean_inputs()$param,
         selected_pcspec = mean_inputs()$pcspec,
         profiles_selected = mean_inputs()$profiles,
+        ylog_scale = mean_inputs()$log,
+        colorby_var = mean_inputs()$colorby,
+        facet_by = mean_inputs()$facetby
+      )
+      
+      validate(need(nrow(mean_output$summarised_data) > 0, "No data with >= 3 points to calculate mean."))
+      
+      tt_vars <- unique(c("Mean", mean_output$time_col, mean_inputs()$colorby))
+      
+      meanplot <- g_lineplot(
+        data = mean_output$summarised_data,
+        x_var = mean_output$time_col,
+        y_var = "Mean",
         colorby_var = mean_inputs()$colorby,
         facet_by = mean_inputs()$facetby,
         ylog_scale = mean_inputs()$log,
@@ -154,7 +167,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         show_threshold = mean_inputs()$show_threshold,
         threshold_value = mean_inputs()$threshold_value,
         show_dose = mean_inputs()$show_dose,
-        palette = mean_palettes_list()
+        dose_data = data() %>% mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)),
+        palette = mean_palettes_list(),
+        tooltip_vars = tt_vars,
+        labels_df = metadata_nca_variables
       )
 
       session$userData$results$exploration$meanplot <- meanplot

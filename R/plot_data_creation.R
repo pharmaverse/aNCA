@@ -51,35 +51,17 @@ process_data_individual <- function(data,
 #'
 #' @param data Raw data frame.
 #' @param selected_analytes,selected_pcspec,profiles_selected Inputs for filtering.
-#' @param colorby_var The variable(s) to group and color by.
-#' @param facet_by The variable(s) to facet by.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
-#' @param show_threshold Logical, whether to show threshold line.
-#' @param threshold_value Numeric, value for the threshold line.
-#' @param show_dose Logical, whether to show dosing indicators.
-#' @param palette A named color palette.
-#' @param dose_data The raw data frame (or a derivative) for calculating dose times.
-#' @param show_sd_min,show_sd_max,show_ci Logicals for error bars.
-#' @param labels_df A data.frame used for label lookups in tooltips.
-#' Defaults to metadata_nca_variables.
-#' @returns A `ggplot` object.
+#' @param colorby_var,facet_by Optional grouping variables.
+#' @returns A list with summarised_data and time_col.
 #'
-create_meanplot <- function(data,
+process_data_mean <- function(data,
                             selected_analytes,
                             selected_pcspec,
                             profiles_selected = NULL,
-                            colorby_var,
-                            facet_by = NULL,
                             ylog_scale = FALSE,
-                            show_threshold = FALSE,
-                            threshold_value = 0,
-                            show_dose = FALSE,
-                            palette = NULL,
-                            dose_data = NULL,
-                            show_sd_min = FALSE,
-                            show_sd_max = TRUE,
-                            show_ci =  FALSE,
-                            labels_df = metadata_nca_variables) {
+                            colorby_var = NULL,
+                            facet_by = NULL){
 
   processed <- data %>%
     filter(
@@ -116,28 +98,10 @@ create_meanplot <- function(data,
       filter(Mean > 0)
   }
 
-  validate(need(nrow(summarised_data) > 0, "No data with >= 3 points to calculate mean."))
 
-  tt_vars <- unique(c("Mean", time_col, colorby_var))
-
-  meanplot <- g_lineplot(
-    data = summarised_data,
-    x_var = time_col,
-    y_var = "Mean",
-    colorby_var = colorby_var,
-    ylog_scale = ylog_scale,
-    show_sd_min = show_sd_min,
-    show_sd_max = show_sd_max,
-    show_ci = show_ci,
-    facet_by = facet_by,
-    show_threshold = show_threshold,
-    threshold_value = threshold_value,
-    show_dose = show_dose,
-    dose_data = data %>% mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)),
-    palette = palette,
-    tooltip_vars = tt_vars,
-    labels_df = labels_df
+  return(list(
+    summarised_data = summarised_data,
+    time_col = time_col
   )
-
-  return(meanplot)
+  )
 }
