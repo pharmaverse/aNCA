@@ -80,7 +80,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     checkboxInput(ns("show_threshold"), label = "Show Threshold"),
     conditionalPanel(
       condition = "input.show_threshold == true",
-      numericInput(ns("threshold_value"), label = "Threshold Value", value = 0),
+      numericInput(ns("threshold_value"), label = "Threshold Value", value = NULL),
       ns = ns
     ),
     checkboxInput(ns("show_dose"), label = "Show Dose Times"),
@@ -198,7 +198,6 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         log = input$log,
         timescale = input$timescale,
         profiles = input$profiles,
-        show_threshold = input$show_threshold,
         threshold_value = input$threshold_value,
         show_dose = input$show_dose,
         sd_max = input$sd_max,

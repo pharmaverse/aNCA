@@ -22,9 +22,7 @@
 #'   pre-processed by either `process_data_individual` or `process_data_mean`.
 #' @param x_var A character string specifying the column name for the x-axis.
 #' @param y_var A character string specifying the column name for the y-axis.
-#' @param group_var A character string specifying the column name used to group
-#'   the lines, ensuring `geom_line` connects the correct points.
-#' @param colorby_var A character vector specifying the column(s) from the original
+#' @param color_by A character vector specifying the column(s) from the original
 #'   dataset that are used to determine the color of the lines and points.
 #' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
@@ -59,11 +57,10 @@
 g_lineplot <- function(data,
                        x_var,
                        y_var,
-                       colorby_var,
+                       color_by,
                        facet_by = NULL,
                        ylog_scale = FALSE,
-                       show_threshold = FALSE,
-                       threshold_value = 0,
+                       threshold_value = NULL,
                        show_dose = FALSE,
                        dose_data = NULL,
                        palette = NULL,
@@ -83,22 +80,19 @@ g_lineplot <- function(data,
     show_ci     <- FALSE
   }
 
+  x_lab <- paste0("Time [", unique(data$RRLTU), "]")
+  y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
+  title <- "PK Concentration - Time Profile"
+  group_var <- "USUBJID"
+  
   if (is_mean_plot) {
-    x_lab <- paste0("Nominal Time [", unique(data$RRLTU), "]")
-    y_lab <- paste0("Mean Concentration [", unique(data$AVALU), "]")
-    title <- "Mean PK Concentration - Time Profile"
+    x_lab <- paste("Nominal", x_lab)
+    y_lab <- paste("Mean", y_lab)
+    title <- paste("Mean", title)
     group_var <- "color_var"
-  } else {
-    x_lab <- paste0("Time [", unique(data$RRLTU), "]")
-    y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
-    title <- "PK Concentration - Time Profile"
-    group_var <- "USUBJID"
   }
 
   # --- Tooltip Construction ---
-  if (nrow(data) == 0) {
-    data$tooltip_text <- character(0)
-  }
 
   if (!is.null(tooltip_vars)) {
     if (!is.null(labels_df)) {
@@ -108,8 +102,8 @@ g_lineplot <- function(data,
       # Fallback to simple paste if labels_df is missing
       valid_vars <- intersect(tooltip_vars, names(data))
       if (length(valid_vars) > 0) {
-        parts <- lapply(valid_vars, function(v) paste0(v, ": ", data[[v]]))
-        data$tooltip_text <- do.call(paste, c(parts, sep = "<br>"))
+        parts <- lapply(valid_vars, \(v) paste0(v, ": ", data[[v]]))
+        data$tooltip_text <- paste(parts, collapse = "<br>")
       }
     }
   } else {
@@ -119,7 +113,7 @@ g_lineplot <- function(data,
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
-      color_var = interaction(!!!syms(colorby_var), sep = ", ")
+      color_var = interaction(!!!syms(color_by), sep = ", ")
     )
 
   plt <- ggplot(plot_data, aes(
@@ -135,7 +129,7 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = paste(colorby_var, collapse = ", ")
+      color = paste(color_by, collapse = ", ")
     ) +
     theme_bw()
 
@@ -144,14 +138,14 @@ g_lineplot <- function(data,
     .add_palette(palette),
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
-    .add_threshold(show_threshold, threshold_value),
+    .add_threshold(threshold_value),
     .add_dose_lines(show_dose, dose_data, facet_by),
     .add_mean_layers(
       is_mean_plot,
       show_sd_min,
       show_sd_max,
       show_ci,
-      colorby_var,
+      color_by,
       y_var,
       x_var,
       group_var
@@ -189,8 +183,8 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_threshold <- function(show_threshold, threshold_value) {
-  if (!isTRUE(show_threshold)) {
+.add_threshold <- function(threshold_value) {
+  if (is.null(threshold_value)) {
     return(NULL)
   }
   geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
@@ -212,7 +206,7 @@ g_lineplot <- function(data,
 
 #' @noRd
 .add_mean_layers <- function(is_mean_plot, show_sd_min, show_sd_max,
-                             show_ci, colorby_var, y_var, x_var, group_var) {
+                             show_ci, color_by, y_var, x_var, group_var) {
   if (!is_mean_plot) {
     return(NULL)
   }
@@ -242,7 +236,7 @@ g_lineplot <- function(data,
     list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
       guides(fill = "none"),
-      labs(color = paste0(paste(colorby_var, collapse = ", "), " (95% CI)"))
+      labs(color = paste0(paste(color_by, collapse = ", "), " (95% CI)"))
     )
   } else {
     NULL
