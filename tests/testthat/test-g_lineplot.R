@@ -61,8 +61,7 @@ describe("g_lineplot: Individual Plot Mode", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID"
+      color_by = "USUBJID"
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "PK Concentration - Time Profile")
@@ -76,8 +75,7 @@ describe("g_lineplot: Individual Plot Mode", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID",
+      color_by = "USUBJID",
       facet_by = "PARAM"
     )
     expect_s3_class(p$facet, "FacetWrap")
@@ -88,8 +86,7 @@ describe("g_lineplot: Individual Plot Mode", {
       data = ind_data, # Contains an AVAL = 0 record
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID",
+      color_by = "USUBJID",
       ylog_scale = TRUE
     )
     # Test: Check that the log scale was *added* to the plot
@@ -102,9 +99,7 @@ describe("g_lineplot: Individual Plot Mode", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID",
-      show_threshold = TRUE,
+      color_by = "USUBJID",
       threshold_value = 10
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
@@ -116,8 +111,7 @@ describe("g_lineplot: Individual Plot Mode", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID",
+      color_by = "USUBJID",
       facet_by = c("PARAM", "DOSEA"),
       show_dose = TRUE,
       dose_data = dose_data
@@ -136,8 +130,7 @@ describe("g_lineplot: Individual Plot Mode", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "color_var",
+      color_by = "color_var",
       palette = test_palette
     )
     p_build <- ggplot_build(p)
@@ -150,11 +143,10 @@ describe("g_lineplot: Individual Plot Mode", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID",
-      show_sd_min = TRUE, # Should be ignored
-      show_sd_max = TRUE, # Should be ignored
-      show_ci = TRUE      # Should be ignored
+      color_by = "USUBJID",
+      sd_min = TRUE, # Should be ignored
+      sd_max = TRUE, # Should be ignored
+      ci = TRUE      # Should be ignored
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_false("GeomErrorbar" %in% layer_classes)
@@ -163,13 +155,12 @@ describe("g_lineplot: Individual Plot Mode", {
     expect_equal(p$labels$colour, "USUBJID")
   })
 
-  it("handles multiple colorby_var labels", {
+  it("handles multiple color_by labels", {
     p <- g_lineplot(
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = c("USUBJID", "DOSEA")
+      color_by = c("USUBJID", "DOSEA")
     )
     expect_equal(p$labels$colour, "USUBJID, DOSEA")
   })
@@ -181,8 +172,7 @@ describe("g_lineplot: Mean Plot Mode", {
       data = mean_data,
       x_var = "time_var",
       y_var = "Mean",
-      group_var = "color_var",
-      colorby_var = "color_var"
+      color_by = "color_var"
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "Mean PK Concentration - Time Profile")
@@ -196,8 +186,7 @@ describe("g_lineplot: Mean Plot Mode", {
       data = mean_data, # Contains a Mean = 0 record
       x_var = "time_var",
       y_var = "Mean",
-      group_var = "color_var",
-      colorby_var = "color_var",
+      color_by = "color_var",
       ylog_scale = TRUE
     )
     # Test: Check that the log scale was *added* to the plot
@@ -208,8 +197,8 @@ describe("g_lineplot: Mean Plot Mode", {
   it("shows SD error bars (min, max, and both)", {
     # Both min and max
     p_both <- g_lineplot(
-      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
-      colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = TRUE
+      data = mean_data, x_var = "time_var", y_var = "Mean",
+      color_by = "color_var", sd_min = TRUE, sd_max = TRUE
     )
     p_both_build <- ggplot_build(p_both)
 
@@ -220,8 +209,8 @@ describe("g_lineplot: Mean Plot Mode", {
 
     # Only min
     p_min <- g_lineplot(
-      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
-      colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = FALSE
+      data = mean_data, x_var = "time_var", y_var = "Mean",
+      color_by = "color_var", sd_min = TRUE, sd_max = FALSE
     )
     p_min_build <- ggplot_build(p_min)
     err_data_min <- p_min_build$data[[3]] %>% filter(ymax > 0)
@@ -230,8 +219,8 @@ describe("g_lineplot: Mean Plot Mode", {
 
     # Only max
     p_max <- g_lineplot(
-      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
-      colorby_var = "color_var", show_sd_min = FALSE, show_sd_max = TRUE
+      data = mean_data, x_var = "time_var", y_var = "Mean",
+      color_by = "color_var", sd_min = FALSE, sd_max = TRUE
     )
     p_max_build <- ggplot_build(p_max)
     err_data_max <- p_max_build$data[[3]] %>% filter(ymax > 0)
@@ -242,8 +231,8 @@ describe("g_lineplot: Mean Plot Mode", {
 
   it("shows SD error bars and explicitly sets inheritance to FALSE", {
     p <- g_lineplot(
-      data = mean_data, x_var = "time_var", y_var = "Mean", group_var = "color_var",
-      colorby_var = "color_var", show_sd_min = TRUE, show_sd_max = TRUE
+      data = mean_data, x_var = "time_var", y_var = "Mean",
+      color_by = "color_var", sd_min = TRUE, sd_max = TRUE
     )
 
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
@@ -264,9 +253,8 @@ describe("g_lineplot: Mean Plot Mode", {
       data = mean_data,
       x_var = "time_var",
       y_var = "Mean",
-      group_var = "color_var",
-      colorby_var = "color_var",
-      show_ci = TRUE
+      color_by = "color_var",
+      ci = TRUE
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomRibbon" %in% layer_classes)
@@ -279,11 +267,10 @@ describe("g_lineplot: Mean Plot Mode", {
       data = mean_data,
       x_var = "time_var",
       y_var = "Mean",
-      group_var = "color_var",
-      colorby_var = "color_var",
-      show_sd_min = TRUE,
-      show_sd_max = TRUE,
-      show_ci = TRUE
+      color_by = "color_var",
+      sd_min = TRUE,
+      sd_max = TRUE,
+      ci = TRUE
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomErrorbar" %in% layer_classes)
@@ -297,8 +284,7 @@ describe("g_lineplot: Tooltips", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID"
+      color_by = "USUBJID"
     )
     # Check that tooltip_text column was created in the plot data
     expect_true("tooltip_text" %in% names(p$data))
@@ -309,8 +295,7 @@ describe("g_lineplot: Tooltips", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID",
+      color_by = "USUBJID",
       tooltip_vars = c("USUBJID", "AVAL"),
       labels_df = metadata_nca_variables
     )
@@ -324,8 +309,7 @@ describe("g_lineplot: Tooltips", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID",
+      color_by = "USUBJID",
       tooltip_vars = c("USUBJID", "AVAL"),
       labels_df = NULL
     )
@@ -343,8 +327,7 @@ describe("g_lineplot: Graceful Handling", {
       data = empty_ind_data,
       x_var = "time_var",
       y_var = "AVAL",
-      group_var = "USUBJID",
-      colorby_var = "USUBJID"
+      color_by = "USUBJID"
     )
     expect_s3_class(p, "ggplot")
     # g_lineplot *always* adds geom_line and geom_point
@@ -358,8 +341,7 @@ describe("g_lineplot: Graceful Handling", {
           data = ind_data,
           x_var = "MISSING_COLUMN", # This column doesn't exist
           y_var = "AVAL",
-          group_var = "USUBJID",
-          colorby_var = "USUBJID"
+          color_by = "USUBJID"
         )
       ),
       # use 'regexp' to catch this specific error message
@@ -376,9 +358,8 @@ describe("g_lineplot: Graceful Handling", {
           data = mean_data_missing_ci,
           x_var = "time_var",
           y_var = "Mean",
-          group_var = "color_var",
-          colorby_var = "color_var",
-          show_ci = TRUE # This will fail
+          color_by = "color_var",
+          ci = TRUE # This will fail
         )
       ),
       regexp = "object 'CI_lower' not found"
@@ -392,9 +373,8 @@ describe("g_lineplot: Graceful Handling", {
           data = mean_data_missing_sd,
           x_var = "time_var",
           y_var = "Mean",
-          group_var = "color_var",
-          colorby_var = "color_var",
-          show_sd_min = TRUE # This will fail
+          color_by = "color_var",
+          sd_min = TRUE # This will fail
         )
       ),
       regexp = "object 'SD_min' not found"
