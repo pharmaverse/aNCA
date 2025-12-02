@@ -59,7 +59,6 @@
 g_lineplot <- function(data,
                        x_var,
                        y_var,
-                       group_var,
                        colorby_var,
                        facet_by = NULL,
                        ylog_scale = FALSE,
@@ -88,10 +87,12 @@ g_lineplot <- function(data,
     x_lab <- paste0("Nominal Time [", unique(data$RRLTU), "]")
     y_lab <- paste0("Mean Concentration [", unique(data$AVALU), "]")
     title <- "Mean PK Concentration - Time Profile"
+    group_var <- "color_var"
   } else {
     x_lab <- paste0("Time [", unique(data$RRLTU), "]")
     y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
     title <- "PK Concentration - Time Profile"
+    group_var <- "USUBJID"
   }
 
   # --- Tooltip Construction ---
@@ -114,8 +115,14 @@ g_lineplot <- function(data,
   } else {
     data$tooltip_text <- rep(NA_character_, nrow(data))
   }
+  
+  # Create color var for aesthetic mapping
+  plot_data <- data %>%
+    mutate(
+      color_var = interaction(!!!syms(colorby_var), sep = ", ")
+    )
 
-  plt <- ggplot(data, aes(
+  plt <- ggplot(plot_data, aes(
     x = .data[[x_var]],
     y = .data[[y_var]],
     color = color_var,

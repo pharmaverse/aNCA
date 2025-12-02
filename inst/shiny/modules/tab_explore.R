@@ -76,19 +76,33 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           individual_inputs()$colorby)
       log_info("Rendering individual plots")
 
-      lineplot <- create_indplot(
+      individual_output <- process_data_individual(
         data = data(),
         selected_usubjids = individual_inputs()$usubjid,
         selected_analytes = individual_inputs()$param,
         selected_pcspec = individual_inputs()$pcspec,
-        colorby_var = individual_inputs()$colorby,
-        ylog_scale = individual_inputs()$log,
         profiles_selected = individual_inputs()$profiles,
+        ylog_scale = individual_inputs()$log
+      )
+      
+      validate(need(nrow(individual_output$processed_data) > 0, "No data available for the selected filters."))
+      
+      tt_vars <- unique(c("AVAL", individual_output$time_col, "USUBJID", individual_inputs()$colorby))
+      
+      lineplot <- g_lineplot(
+        data = individual_output$processed_data,
+        x_var = individual_output$time_col,
+        y_var = "AVAL",
+        colorby_var = individual_inputs()$colorby,
         facet_by = individual_inputs()$facetby,
+        ylog_scale = individual_inputs()$log,
         show_threshold = individual_inputs()$show_threshold,
         threshold_value = individual_inputs()$threshold_value,
         show_dose = individual_inputs()$show_dose,
-        palette = master_palettes_list()
+        dose_data = data() %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)),
+        palette = master_palettes_list(),
+        tooltip_vars = tt_vars,
+        labels_df = metadata_nca_variables
       )
 
       session$userData$results$exploration$individualplot <- lineplot

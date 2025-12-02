@@ -8,7 +8,6 @@ g_lineplot(
   data,
   x_var,
   y_var,
-  group_var,
   colorby_var,
   facet_by = NULL,
   ylog_scale = FALSE,
@@ -31,9 +30,6 @@ pre-processed by either \code{process_data_individual} or \code{process_data_mea
 \item{x_var}{A character string specifying the column name for the x-axis.}
 
 \item{y_var}{A character string specifying the column name for the y-axis.}
-
-\item{group_var}{A character string specifying the column name used to group
-the lines, ensuring \code{geom_line} connects the correct points.}
 
 \item{colorby_var}{A character vector specifying the column(s) from the original
 dataset that are used to determine the color of the lines and points.}
@@ -73,6 +69,9 @@ confidence interval ribbon. (Only for mean plots).}
 \item{tooltip_vars}{Character vector of column names to include in the tooltip.}
 
 \item{labels_df}{A data.frame for variable label lookups.}
+
+\item{group_var}{A character string specifying the column name used to group
+the lines, ensuring \code{geom_line} connects the correct points.}
 }
 \value{
 A \code{ggplot} object representing the line plot.
