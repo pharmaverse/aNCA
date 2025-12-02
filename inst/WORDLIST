@@ -4,8 +4,8 @@ ADPC
 ADPP
 AFRLT
 ARRLT
-AUCinf
 ATPTREF
+AUCinf
 AUClast
 AVAL
 AVALU
@@ -20,10 +20,9 @@ DOSETRT
 DOSEU
 DOSNOA
 DTYPE
-DataTab
-EMA
 Denney
 Duvvuri
+EMA
 EVID
 Extravascular
 Kezia
@@ -35,7 +34,6 @@ Lineplot
 METABFL
 MSCW
 NCA
-NCATab
 NFRLT
 NRRLT
 Noncompartmental
@@ -71,8 +69,8 @@ STUDYID
 TLG
 TLGs
 TRT
-Tmax
 TRTRINT
+Tmax
 Tooltip
 UI
 USUBJID
@@ -91,7 +89,6 @@ bioavailability
 bioequivalence
 cdisc
 cmax
-codebase
 colour
 concu
 customizable
@@ -102,8 +99,6 @@ doi
 extravascular
 ggplot
 ggplots
-github
-https
 intravascular
 linters
 lintr
@@ -112,12 +107,10 @@ macroparameters
 md
 nca
 oligo
-orgs
 pak
 pharmacodynamics
 pharmacokinetic
 pharmacokinetics
-pharmaverse
 pkcg
 pknca
 plotly
