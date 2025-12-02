@@ -207,7 +207,7 @@ describe("process_data_mean functions correctly", {
     expect_true("DOSEA" %in% names(p$summarised_data))
     expect_true("SEX" %in% names(p$summarised_data))
     expect_true("PARAM" %in% names(p$summarised_data))
-    
+
   })
 
 

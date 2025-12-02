@@ -1,14 +1,14 @@
 #' Process data for individual lineplot
-#' 
+#'
 #' Creates a filtered data frame for individual spaghetti plots.
 #'
 #' @param data Raw data frame.
 #' @param selected_usubjids,selected_analytes,selected_pcspec Inputs for filters.
 #' @param profiles_selected Optional profiles to filter on. If not null, uses ARRLT as time_col.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
-#' @returns A list with processed_data filtered for the spaghetti plots and time_col, 
+#' @returns A list with processed_data filtered for the spaghetti plots and time_col,
 #' either AFRLT or ARRLT depending on if profiles_selected is null or not.
-#' 
+#'
 #' @import dplyr
 #' @import rlang
 #' @seealso dose_profile_duplicates
@@ -22,7 +22,7 @@
 #' )
 #' set.seed(123)
 #' base_df$AVAL <- rnorm(nrow(base_df), mean = 50, sd = 10)
-#' 
+#'
 #' result <- process_data_individual(
 #' data = base_df,
 #' selected_usubjids = c("Subject1", "Subject2"),
@@ -33,11 +33,11 @@
 #' )
 #' @export
 process_data_individual <- function(data,
-                           selected_usubjids,
-                           selected_analytes,
-                           selected_pcspec,
-                           profiles_selected = NULL,
-                           ylog_scale = FALSE) {
+                                    selected_usubjids,
+                                    selected_analytes,
+                                    selected_pcspec,
+                                    profiles_selected = NULL,
+                                    ylog_scale = FALSE) {
 
   processed_data <- data %>%
     filter(
@@ -65,9 +65,10 @@ process_data_individual <- function(data,
     processed_data <- processed_data %>% filter(ATPTREF %in% profiles_selected)
   }
 
-  return(list(
-    processed_data = processed_data,
-    time_col = time_col
+  return(
+    list(
+      processed_data = processed_data,
+      time_col = time_col
     )
   )
 }
@@ -80,14 +81,37 @@ process_data_individual <- function(data,
 #' @param color_by,facet_by Optional grouping variables to be included in summary.
 #' @returns A list with summarised_data with Mean, SD, and CIs for the profiles selected,
 #' and time_col- either NFRLT or NRRLT depending on if profiles selected is null.
+#' @import dplyr
+#' @import rlang
+#'
+#' @examples
+#' base_df <- expand.grid(
+#' USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
+#' PARAM = c("Analyte1"),
+#' PCSPEC = c("Spec1"),
+#' ATPTREF = 1,
+#' NFRLT = 0:5,
+#' AVALU = "ug/ml",
+#' RRLTU = "hr"
+#' )
+#' set.seed(123)
+#' base_df$AVAL <- rnorm(nrow(base_df), mean = 50, sd = 10)
+#'
+#' result <- process_data_mean(
+#' data = base_df,
+#' selected_analytes = c("Analyte1"),
+#' selected_pcspec = c("Spec1"),
+#' profiles_selected = NULL,
+#' ylog_scale = FALSE
+#' )
 #' @export
 process_data_mean <- function(data,
-                            selected_analytes,
-                            selected_pcspec,
-                            profiles_selected = NULL,
-                            ylog_scale = FALSE,
-                            color_by = NULL,
-                            facet_by = NULL){
+                              selected_analytes,
+                              selected_pcspec,
+                              profiles_selected = NULL,
+                              ylog_scale = FALSE,
+                              color_by = NULL,
+                              facet_by = NULL) {
 
   processed <- data %>%
     filter(

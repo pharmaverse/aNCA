@@ -84,11 +84,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         profiles_selected = individual_inputs()$profiles,
         ylog_scale = individual_inputs()$ylog_scale
       )
-      
-      validate(need(nrow(individual_output$processed_data) > 0, "No data available for the selected filters."))
-      
-      tt_vars <- unique(c("AVAL", individual_output$time_col, "USUBJID", individual_inputs()$color_by))
-      
+
+      validate(need(nrow(individual_output$processed_data) > 0,
+                    "No data available for the selected filters."))
+
+      tt_vars <- unique(c("AVAL", individual_output$time_col,
+                          "USUBJID", individual_inputs()$color_by))
+
       lineplot <- g_lineplot(
         data = individual_output$processed_data,
         x_var = individual_output$time_col,
@@ -148,11 +150,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         color_by = mean_inputs()$color_by,
         facet_by = mean_inputs()$facet_by
       )
-      
-      validate(need(nrow(mean_output$summarised_data) > 0, "No data with >= 3 points to calculate mean."))
-      
+
+      validate(need(nrow(mean_output$summarised_data) > 0,
+                    "No data with >= 3 points to calculate mean."))
+
       tt_vars <- unique(c("Mean", mean_output$time_col, mean_inputs()$colorby))
-      
+
       meanplot <- g_lineplot(
         data = mean_output$summarised_data,
         x_var = mean_output$time_col,

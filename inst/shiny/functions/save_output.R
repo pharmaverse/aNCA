@@ -119,7 +119,7 @@ get_dose_esc_results <- function(
       facet_by = facet_vars,
       color_by = group_by_vars
     )
-    
+
     meanplot_i <- g_lineplot(
       data = meanplot_data_i$summarised_data,
       x_var = meanplot_data_i$time_col,
@@ -179,7 +179,7 @@ get_dose_esc_results <- function(
           selected_usubjids = d_conc_i[[subj_col]],
           ylog_scale = TRUE
         )
-        
+
         g_lineplot(
           data = linplot_data_i$processed_data,
           x_var = linplot_data_i$time_col,

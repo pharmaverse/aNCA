@@ -63,7 +63,7 @@
 #'     RRLTU = "hours",
 #'     AVALU = "ng/mL"
 #'   )
-#' 
+#'
 #'  p <- g_lineplot(
 #'    data = ind_data,
 #'    x_var = "time_var",
@@ -102,7 +102,7 @@ g_lineplot <- function(data,
   y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
   title <- "PK Concentration - Time Profile"
   group_var <- "USUBJID"
-  
+
   if (is_mean_plot) {
     x_lab <- paste("Nominal", x_lab)
     y_lab <- paste("Mean", y_lab)
@@ -127,7 +127,7 @@ g_lineplot <- function(data,
   } else {
     data$tooltip_text <- rep(NA_character_, nrow(data))
   }
-  
+
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
