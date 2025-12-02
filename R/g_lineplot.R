@@ -64,9 +64,9 @@ g_lineplot <- function(data,
                        show_dose = FALSE,
                        dose_data = NULL,
                        palette = NULL,
-                       show_sd_min = FALSE,
-                       show_sd_max = FALSE,
-                       show_ci = FALSE,
+                       sd_min = FALSE,
+                       sd_max = FALSE,
+                       ci = FALSE,
                        tooltip_vars = NULL,
                        labels_df = NULL) {
 
@@ -75,9 +75,9 @@ g_lineplot <- function(data,
 
   # Defensively set mean-plot flags to FALSE if it's not a mean plot
   if (!is_mean_plot) {
-    show_sd_min <- FALSE
-    show_sd_max <- FALSE
-    show_ci     <- FALSE
+    sd_min <- FALSE
+    sd_max <- FALSE
+    ci     <- FALSE
   }
 
   x_lab <- paste0("Time [", unique(data$RRLTU), "]")
@@ -142,9 +142,9 @@ g_lineplot <- function(data,
     .add_dose_lines(show_dose, dose_data, facet_by),
     .add_mean_layers(
       is_mean_plot,
-      show_sd_min,
-      show_sd_max,
-      show_ci,
+      sd_min,
+      sd_max,
+      ci,
       color_by,
       y_var,
       x_var,
@@ -205,17 +205,17 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_mean_layers <- function(is_mean_plot, show_sd_min, show_sd_max,
-                             show_ci, color_by, y_var, x_var, group_var) {
+.add_mean_layers <- function(is_mean_plot, sd_min, sd_max,
+                             ci, color_by, y_var, x_var, group_var) {
   if (!is_mean_plot) {
     return(NULL)
   }
 
   # 1. Error bars
   error_bar_layer <- NULL
-  if (isTRUE(show_sd_min) || isTRUE(show_sd_max)) {
-    ymin_val <- if (isTRUE(show_sd_min)) sym("SD_min") else sym(y_var)
-    ymax_val <- if (isTRUE(show_sd_max)) sym("SD_max") else sym(y_var)
+  if (isTRUE(sd_min) || isTRUE(sd_max)) {
+    ymin_val <- if (isTRUE(sd_min)) sym("SD_min") else sym(y_var)
+    ymax_val <- if (isTRUE(sd_max)) sym("SD_max") else sym(y_var)
     error_bar_layer <- geom_errorbar(
       aes(
         x = .data[[x_var]],
@@ -231,7 +231,7 @@ g_lineplot <- function(data,
 
   # 2. CI Ribbon
   ci_ribbon_layer <- NULL
-  if (isTRUE(show_ci)) {
+  if (isTRUE(ci)) {
     ci_ribbon_layer <- list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
       guides(fill = "none"),

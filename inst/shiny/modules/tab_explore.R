@@ -59,11 +59,11 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     master_palettes_list <- reactive({
       req(individual_inputs()$palette_theme)
-      req(individual_inputs()$colorby)
+      req(individual_inputs()$color_by)
 
       get_persistent_palette(
         data(),
-        individual_inputs()$colorby,
+        individual_inputs()$color_by,
         palette_name = individual_inputs()$palette_theme
       )
     })
@@ -73,7 +73,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(data(), individual_inputs()$param,
           individual_inputs()$pcspec,
           individual_inputs()$usubjid,
-          individual_inputs()$colorby)
+          individual_inputs()$color_by)
       log_info("Rendering individual plots")
 
       individual_output <- process_data_individual(
@@ -82,20 +82,20 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         selected_analytes = individual_inputs()$param,
         selected_pcspec = individual_inputs()$pcspec,
         profiles_selected = individual_inputs()$profiles,
-        ylog_scale = individual_inputs()$log
+        ylog_scale = individual_inputs()$ylog_scale
       )
       
       validate(need(nrow(individual_output$processed_data) > 0, "No data available for the selected filters."))
       
-      tt_vars <- unique(c("AVAL", individual_output$time_col, "USUBJID", individual_inputs()$colorby))
+      tt_vars <- unique(c("AVAL", individual_output$time_col, "USUBJID", individual_inputs()$color_by))
       
       lineplot <- g_lineplot(
         data = individual_output$processed_data,
         x_var = individual_output$time_col,
         y_var = "AVAL",
-        color_by = individual_inputs()$colorby,
-        facet_by = individual_inputs()$facetby,
-        ylog_scale = individual_inputs()$log,
+        color_by = individual_inputs()$color_by,
+        facet_by = individual_inputs()$facet_by,
+        ylog_scale = individual_inputs()$ylog_scale,
         threshold_value = individual_inputs()$threshold_value,
         show_dose = individual_inputs()$show_dose,
         dose_data = data() %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)),
@@ -124,11 +124,11 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     mean_palettes_list <- reactive({
       req(mean_inputs()$palette_theme)
-      req(mean_inputs()$colorby)
+      req(mean_inputs()$color_by)
 
       get_persistent_palette(
         data(),
-        mean_inputs()$colorby,
+        mean_inputs()$color_by,
         palette_name = mean_inputs()$palette_theme
       )
     })
@@ -136,7 +136,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Compute the meanplot object
     meanplot <- reactive({
       req(data(), mean_inputs()$param, mean_inputs()$pcspec,
-          mean_inputs()$colorby)
+          mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
 
       mean_output <- process_data_mean(
@@ -144,9 +144,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         selected_analytes = mean_inputs()$param,
         selected_pcspec = mean_inputs()$pcspec,
         profiles_selected = mean_inputs()$profiles,
-        ylog_scale = mean_inputs()$log,
-        color_by = mean_inputs()$colorby,
-        facet_by = mean_inputs()$facetby
+        ylog_scale = mean_inputs()$ylog_scale,
+        color_by = mean_inputs()$color_by,
+        facet_by = mean_inputs()$facet_by
       )
       
       validate(need(nrow(mean_output$summarised_data) > 0, "No data with >= 3 points to calculate mean."))
@@ -157,12 +157,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         data = mean_output$summarised_data,
         x_var = mean_output$time_col,
         y_var = "Mean",
-        color_by = mean_inputs()$colorby,
-        facet_by = mean_inputs()$facetby,
-        ylog_scale = mean_inputs()$log,
-        show_sd_min = mean_inputs()$sd_min,
-        show_sd_max = mean_inputs()$sd_max,
-        show_ci = mean_inputs()$ci,
+        color_by = mean_inputs()$color_by,
+        facet_by = mean_inputs()$facet_by,
+        ylog_scale = mean_inputs()$ylog_scale,
+        sd_min = mean_inputs()$sd_min,
+        sd_max = mean_inputs()$sd_max,
+        ci = mean_inputs()$ci,
         threshold_value = mean_inputs()$threshold_value,
         show_dose = mean_inputs()$show_dose,
         dose_data = data() %>% mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)),
