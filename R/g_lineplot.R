@@ -212,11 +212,11 @@ g_lineplot <- function(data,
   }
 
   # 1. Error bars
-  error_bar_layer <- if (isTRUE(show_sd_min) || isTRUE(show_sd_max)) {
+  error_bar_layer <- NULL
+  if (isTRUE(show_sd_min) || isTRUE(show_sd_max)) {
     ymin_val <- if (isTRUE(show_sd_min)) sym("SD_min") else sym(y_var)
     ymax_val <- if (isTRUE(show_sd_max)) sym("SD_max") else sym(y_var)
-
-    geom_errorbar(
+    error_bar_layer <- geom_errorbar(
       aes(
         x = .data[[x_var]],
         ymin = !!ymin_val,
@@ -227,19 +227,16 @@ g_lineplot <- function(data,
       inherit.aes = FALSE,
       width = 0.4
     )
-  } else {
-    NULL
   }
 
   # 2. CI Ribbon
-  ci_ribbon_layer <- if (isTRUE(show_ci)) {
-    list(
+  ci_ribbon_layer <- NULL
+  if (isTRUE(show_ci)) {
+    ci_ribbon_layer <- list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
       guides(fill = "none"),
       labs(color = paste0(paste(color_by, collapse = ", "), " (95% CI)"))
     )
-  } else {
-    NULL
   }
 
   # Return a list of all layers
