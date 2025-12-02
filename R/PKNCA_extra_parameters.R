@@ -15,7 +15,7 @@ pk.calc.ertlst <- function(conc, volume, time, duration.conc, check = TRUE) {
                                            name_b = "volumes")
 
   if (all(is.na(conc))) {
-    ret <- NA_real_
+    ret <- NA
   } else if (all(conc %in% c(0, NA))) {
     ret <- 0
   } else {
