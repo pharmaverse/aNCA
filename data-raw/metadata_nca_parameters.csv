@@ -70,7 +70,7 @@ ctrough,CTROUGH,Conc Trough,CTROUGH: Conc Trough,pk.calc.ctrough,The trough (end
 ctrough.dn,CTROUGHD,Conc Trough by Dose,CTROUGHD: Conc Trough by Dose,pk.calc.dn,Dose normalized ctrough,TRUE,conc_dosenorm,Standard,Concentration,ctrough,TRUE,TRUE,TRUE,TRUE,TRUE
 deg.fluc,DEGFLUC,Degree of fluctuation,DEGFLUC: Degree of fluctuation,pk.calc.deg.fluc,Degree of fluctuation,FALSE,%,Standard,Dynamics,"cmax, cmin, cav",FALSE,TRUE,FALSE,TRUE,TRUE
 ertmax,ERTMAX,Midpoint of Interval of Maximum ER,"ERTMAX: Midpoint of Interval of Maximum ER	",pk.calc.ertmax,"Midpoint of Interval of Maximum ER	",TRUE,time,Urine,Elimination,,TRUE,FALSE,TRUE,TRUE,TRUE
-ertlst,ERTLST,Midpoint of Interval of Last Nonzero ER,"ERTLST: Midpoint of Interval of Last Nonzero ER	",pk.calc.ertlst,Midpoint of Interval of Last Nonzero ER,TRUE,amount_time,Urine,Elimination,,TRUE,FALSE,TRUE,TRUE,TRUE
+ertlst,ERTLST,Midpoint of Interval of Last Nonzero ER,"ERTLST: Midpoint of Interval of Last Nonzero ER	",pk.calc.ertlst,Midpoint of Interval of Last Nonzero ER,TRUE,time,Urine,Elimination,,TRUE,FALSE,TRUE,TRUE,TRUE
 f,FAB,Absolute Bioavailability,FAB: Absolute Bioavailability,pk.calc.f,Bioavailability,TRUE,fraction,PKNCA-not-covered,Dynamics,,FALSE,TRUE,TRUE,TRUE,TRUE
 frel,FREL,Relative Bioavailability,FREL: Relative Bioavailability,,relative bioavailability,TRUE,fraction,PKNCA-not-covered,Dynamics,,FALSE,TRUE,TRUE,TRUE,TRUE
 fe,FREXINT,Fract Excr from T1 to T2,FREXINT: Fract Excr from T1 to T2,pk.calc.fe,The fraction of the dose excreted,TRUE,fraction,Urine,Dynamics,,TRUE,FALSE,TRUE,TRUE,TRUE
