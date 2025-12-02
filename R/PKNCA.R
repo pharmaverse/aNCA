@@ -257,7 +257,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       ATPTREF %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
-  
+
   data
 }
 

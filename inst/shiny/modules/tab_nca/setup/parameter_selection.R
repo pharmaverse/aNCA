@@ -26,7 +26,7 @@ parameter_selection_ui <- function(id) {
     br(),
     p("The following parameters are currently selected:"),
     br(),
-    reactable_ui(ns("selected_parameters_table")), 
+    reactable_ui(ns("selected_parameters_table")),
 
     br(),
     p("Select the parameters to calculate for each study type.
@@ -74,13 +74,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
       group_columns <- unique(c(conc_group_columns, dose_group_columns))
-      
+
       groups <- group_columns %>%
         purrr::keep(\(col) {
           !is.null(col) && col != "USUBJID" &&
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
-      
+
       study_types_df() %>%
         # summarise each unique type and group with number of USUBJID
         group_by(!!!syms(groups), type) %>%
@@ -104,12 +104,12 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
     # List of parameter data frames by type
     all_params <- metadata_nca_parameters %>%
-        filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
-        select(
-          TYPE, PKNCA, PPTESTCD, PPTEST,
-          can_excretion, can_non_excretion, can_single_dose,
-          can_multiple_dose, can_extravascular, can_metabolite
-        ) %>%
+      filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
+      select(
+        TYPE, PKNCA, PPTESTCD, PPTEST,
+        can_excretion, can_non_excretion, can_single_dose,
+        can_multiple_dose, can_extravascular, can_metabolite
+      ) %>%
       mutate(sort_order = row_number())
 
     # ReactiveVal for parameter selection state
@@ -124,8 +124,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       # Get override file
       selections_override <- tryCatch({
         parameter_override()
-      }, error = function(e) { NULL })
-      
+      }, error = function(e) {
+        NULL
+      })
+
       # Update parameter selection using override and considering study types
       selection_df <- apply_parameter_selections(
         selection_df = all_params,
@@ -143,7 +145,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       selection_df
     })
-    
+
     # Sync the base state to the live state
     observeEvent(base_selections(), {
       selections_state(base_selections())
@@ -165,7 +167,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         bslib::accordion_panel(
           title = study_type,
           # Call the sub-module UI
-          study_type_param_selector_ui(ns(module_id))
+          param_selector_panel_ui(ns(module_id))
         )
       })
 
@@ -176,7 +178,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         open = FALSE
       )
     })
-    
+
     observeEvent(study_types_list(), {
       req(selections_state())
 
@@ -201,7 +203,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         })
 
         # Call the parameter selector panel server
-        selection_single_type_grouped <- study_type_param_selector_server(
+        selection_single_type_grouped <- param_selector_panel_server(
           module_id,
           all_params_grouped = all_params_grouped,
           current_selection = current_type_selections
@@ -231,7 +233,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         }, ignoreNULL = FALSE, ignoreInit = TRUE)
       })
     })
-    
+
     # Reactable for summary of study types
     reactable_server(
       "study_types",
@@ -266,13 +268,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       req(parameter_lists_by_type())
 
       selections_list <- parameter_lists_by_type()
-      
+
       # Get all unique parameters selected across all study types
       all_params_selected <- unique(unlist(selections_list))
       if (length(all_params_selected) == 0) {
         return(data.frame(Message = "No parameters are selected."))
       }
-      
+
       # Get all study types
       all_study_types <- names(selections_list)
       if (length(all_study_types) == 0) {
@@ -285,13 +287,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       })
       wide_df$PKNCA <- all_params_selected
 
-      # Check if the resulting data frame is empty
-      if (nrow(wide_df) == 0) {
-        return(data.frame(Message = "No parameters are selected."))
-      }
-
       # Join with metadata to get labels
-      metadata_df <- all_params %>% 
+      metadata_df <- all_params %>%
         select(PKNCA, PPTESTCD, PPTEST, sort_order) %>%
         distinct(PKNCA, .keep_all = TRUE)
 
@@ -304,14 +301,13 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         select(PPTESTCD, PPTEST, PKNCA, any_of(accordion_order))
 
     })
-    
+
     # Render the reactable
     reactable_server(
       "selected_parameters_table",
       selected_parameters_df,
       height = "35vh",
       columns = function(data) {
-
         # Handle empty table
         if ("Message" %in% names(data)) {
           return(list(Message = colDef(name = "")))
@@ -326,7 +322,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
         # Define Dynamic Columns for Study Types
         study_type_cols <- setdiff(names(data), names(fixed_cols))
-        
+
         dynamic_cols <- purrr::map(study_type_cols, function(col_name) {
           colDef(
             name = col_name,
@@ -335,12 +331,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             minWidth = 150
           )
         })
+
         names(dynamic_cols) <- study_type_cols
-        
+
         # Combine
         c(fixed_cols, dynamic_cols)
-      })
-    
+      }
+    )
+
     # On all changes, disable NCA button for given period of time to prevent the
     # user from running the NCA before settings are applied
     observeEvent(parameter_lists_by_type(), {
