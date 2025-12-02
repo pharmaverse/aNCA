@@ -8,4 +8,4 @@ linters:
     object_usage_linter = NULL
   )
 encoding: "UTF-8"
-exclusions: "R/PKNCA_extra_parameters.R"
+exclusions: list("R/PKNCA_extra_parameters.R", "tests/testthat/test-PKNCA_extra_parameters.R")
