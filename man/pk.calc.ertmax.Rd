@@ -26,6 +26,8 @@ pk.calc.ertmax(
 \item{check}{Should the concentration and time data be checked?}
 
 \item{first.tmax}{If TRUE, return the first time of maximum excretion rate; otherwise, return the last}
+
+\item{options}{List of PKNCA global options set}
 }
 \value{
 The midpoint collection time of the maximum excretion rate, or NA if not available

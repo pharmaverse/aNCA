@@ -1,5 +1,4 @@
 test_that("pk.calc.ertlst", {
-billdenney marked this conversation as resolved.
   # All NA
   expect_equal(
     pk.calc.ertlst(conc = c(NA, NA), volume = c(1, 1), time = c(0, 1), duration.conc = c(1, 1)),

@@ -83,6 +83,7 @@ pk.calc.ermax <- function(conc, volume, time, duration.conc, check = TRUE) {
 #' @param duration.conc The duration of the collection interval
 #' @param check Should the concentration and time data be checked?
 #' @param first.tmax If TRUE, return the first time of maximum excretion rate; otherwise, return the last
+#' @param options List of PKNCA global options set
 #' @return The midpoint collection time of the maximum excretion rate, or NA if not available
 #' @export
 pk.calc.ertmax <- function( #nolint
