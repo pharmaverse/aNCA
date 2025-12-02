@@ -46,8 +46,6 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADNCA
 #' otherwise the variable name.
 #'
 #' @examples
-#' \dontrun{
-#'  # Example usage:
 #'  LABELS <- data.frame(
 #'    Variable = c("USUBJID", "AVAL"),
 #'    Label = c("Unique Subject Identifier", "Analysis Value"),
@@ -55,15 +53,6 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADNCA
 #'  )
 #'  get_label("USUBJID", "ADNCA", LABELS)  # Returns "Unique Subject Identifier"
 #'  get_label("AGE", "ADNCA", LABELS)  # Returns "AGE"
-#'  # Using a custom mapping column:
-#'  LABELS2 <- data.frame(
-#'    ColName = c("USUBJID", "AVAL"),
-#'    Label = c("Unique Subject Identifier", "Analysis Value"),
-#'    Dataset = c("ADNCA", "ADNCA")
-#'  )
-#'  get_label("USUBJID", "ADNCA", LABELS2)
-#'  # Returns "Unique Subject Identifier"
-#' }
 #'
 #' @export
 get_label <- function(variable, type = "ADNCA", labels_df = metadata_nca_variables) {

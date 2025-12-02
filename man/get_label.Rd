@@ -21,8 +21,6 @@ otherwise the variable name.
 This function retrieves the label of a heading from a labels file.
 }
 \examples{
-\dontrun{
- # Example usage:
  LABELS <- data.frame(
    Variable = c("USUBJID", "AVAL"),
    Label = c("Unique Subject Identifier", "Analysis Value"),
@@ -30,14 +28,5 @@ This function retrieves the label of a heading from a labels file.
  )
  get_label("USUBJID", "ADNCA", LABELS)  # Returns "Unique Subject Identifier"
  get_label("AGE", "ADNCA", LABELS)  # Returns "AGE"
- # Using a custom mapping column:
- LABELS2 <- data.frame(
-   ColName = c("USUBJID", "AVAL"),
-   Label = c("Unique Subject Identifier", "Analysis Value"),
-   Dataset = c("ADNCA", "ADNCA")
- )
- get_label("USUBJID", "ADNCA", LABELS2)
- # Returns "Unique Subject Identifier"
-}
 
 }

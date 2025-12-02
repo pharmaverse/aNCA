@@ -7,6 +7,8 @@
 #' @param time_column A character string specifying the time column.
 #' @param rrlt_column A character string specifying the time since last dose column.
 #' @param route_column A character string specifying the route column.
+#' @param nca_exclude_reason_columns A character vector specifying the columns
+#' to indicate reasons for excluding records from NCA analysis.
 #'
 #' @returns A data frame containing the filtered and processed concentration data.
 #'
@@ -21,14 +23,12 @@
 #'   - Arranges the data by group_columns.
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   conc_data <- format_pkncaconc_data(ADNCA,
-#'                                      group_columns,
-#'                                      "AFRLT",
-#'                                      "ROUTE")
-#' }
-#'
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' conc_data <- format_pkncaconc_data(ADNCA = adnca,
+#'                                    group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
+#'                                    time_column = "AFRLT",
+#'                                    rrlt_column = "ARRLT",
+#'                                    route_column = "ROUTE")
 #' @import dplyr
 #' @export
 
@@ -36,7 +36,8 @@ format_pkncaconc_data <- function(ADNCA,
                                   group_columns,
                                   time_column = "AFRLT",
                                   rrlt_column = "ARRLT",
-                                  route_column = "ROUTE") {
+                                  route_column = "ROUTE",
+                                  nca_exclude_reason_columns = NULL) {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -56,6 +57,27 @@ format_pkncaconc_data <- function(ADNCA,
   if ("PARAMCD" %in% colnames(ADNCA)) {
     ADNCA <- ADNCA %>%
       filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
+  }
+
+  if (!is.null(nca_exclude_reason_columns)) {
+    ADNCA <- ADNCA %>%
+      # Merge all reason columns into one
+      mutate(
+        nca_exclude = apply(
+          select(., any_of(nca_exclude_reason_columns)),
+          1,
+          function(row) {
+            reasons <- row[!is.na(row) & row != ""]
+            if (length(reasons) > 0) {
+              paste(reasons, collapse = "; ")
+            } else {
+              ""
+            }
+          }
+        )
+      )
+  } else {
+    ADNCA$nca_exclude <- ""
   }
 
   #set a tolerance for the arranging to avoid floating point precision issues
@@ -162,10 +184,12 @@ format_pkncadose_data <- function(pkncaconc_data,
 #'  or contain multiple doses in dataset
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
-#' }
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' pknca_data <- PKNCA_create_data_object(adnca)
+#' pknca_conc <- pknca_data$conc
+#' pknca_dose <- pknca_data$dose
+#' params <- c("aucinf.obs", "cmax", "half.life", "tmax", "lambda.z")
+#' dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
 #'
 #' @import dplyr
 #' @importFrom stats setNames

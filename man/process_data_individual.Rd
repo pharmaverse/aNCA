@@ -9,13 +9,18 @@ process_data_individual(
   selected_usubjids,
   selected_analytes,
   selected_pcspec,
-  profiles_selected = NULL
+  profiles_selected = NULL,
+  ylog_scale = FALSE
 )
 }
 \arguments{
 \item{data}{Raw data frame.}
 
-\item{selected_usubjids, selected_analytes, selected_pcspec, profiles_selected}{Inputs for filters.
+\item{selected_usubjids, selected_analytes, selected_pcspec}{Inputs for filters.}
+
+\item{profiles_selected}{Optional profiles to filter on. If not null, uses ARRLT as time_col.}
+
+\item{ylog_scale}{Logical, whether to use a logarithmic scale for the y-axis.
 Defaults to metadata_nca_variables.}
 }
 \value{
