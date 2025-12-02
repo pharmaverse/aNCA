@@ -187,7 +187,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
     })
 
     # Return all inputs as a list of reactives
-    inputs <- reactive({
+    reactive({
       list(
         palette_theme = input$palette_theme,
         param = input$param,
@@ -205,6 +205,5 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         ci = input$ci
       )
     })
-    inputs
   })
 }
