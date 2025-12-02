@@ -20,7 +20,6 @@ pk.calc.ertlst <- function(conc, volume, time, duration.conc, check = TRUE) {
     ret <- 0
   } else {
     midtime <- time + duration.conc / 2
-    midtime <- time + duration.conc / 2
     ret <- max(midtime[!(conc %in% c(NA, 0))])
   }
 
@@ -62,7 +61,7 @@ pk.calc.ermax <- function(conc, volume, time, duration.conc, check = TRUE) {
                                            name_b = "volumes")
   
   if (length(conc) == 0 || all(is.na(conc))) {
-    ret <- NA
+    ret <- NA_real_
   } else {
     er <- conc * volume / duration.conc
     ret <- max(er, na.rm=TRUE)
@@ -96,7 +95,7 @@ pk.calc.ertmax <- function( #nolint
                                            name_b = "volumes")
 
   if (length(conc) == 0 || all(conc %in% c(NA, 0))) {
-    ret <- NA
+    ret <- NA_real_
   } else {
     er <- conc * volume / duration.conc
     ermax <- pk.calc.ermax(conc, volume, time, duration.conc, check = FALSE)
