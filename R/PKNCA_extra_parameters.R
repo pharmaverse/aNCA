@@ -1,105 +1,3 @@
-
-
-### Include Excretion Rate Parameters in the App
-add.interval.col <- function(name,  #nolint
-                             FUN,
-                             values = c(FALSE, TRUE),
-                             unit_type,
-                             pretty_name,
-                             depends = NULL,
-                             desc = "",
-                             sparse = FALSE,
-                             formalsmap = list(),
-                             datatype = c(
-                               "interval",
-                               "individual",
-                               "population"
-                             )) {
-  # Check inputs
-  if (!is.character(name)) {
-    stop("name must be a character string")
-  } else if (length(name) != 1) {
-    stop("name must have length == 1")
-  }
-  if (length(FUN) != 1) {
-    stop("FUN must have length == 1")
-  } else if (!(is.character(FUN) | is.na(FUN))) {
-    stop("FUN must be a character string or NA")
-  }
-  if (!is.null(depends)) {
-    if (!is.character(depends)) {
-      stop("'depends' must be NULL or a character vector")
-    }
-  }
-  checkmate::assert_logical(sparse, any.missing = FALSE, len = 1)
-  unit_type <-
-    match.arg(
-      unit_type,
-      choices = c(
-        "unitless", "fraction", "%", "count",
-        "time", "inverse_time",
-        "amount", "amount_dose", "amount_time",
-        "conc", "conc_dosenorm",
-        "dose",
-        "volume",
-        "auc", "aumc",
-        "auc_dosenorm", "aumc_dosenorm",
-        "clearance", "renal_clearance"
-      )
-    )
-  stopifnot("pretty_name must be a scalar" = length(pretty_name) == 1)
-  stopifnot("pretty_name must be a character" = is.character(pretty_name))
-  stopifnot("pretty_name must not be an empty string" = nchar(pretty_name) > 0)
-  datatype <- match.arg(datatype)
-  if (!(datatype %in% "interval")) {
-    stop("Only the 'interval' datatype is currently supported.")
-  }
-  if (length(desc) != 1) {
-    stop("desc must have length == 1")
-  } else if (!is.character(desc)) {
-    stop("desc must be a character string")
-  }
-  if (!is.list(formalsmap)) {
-    stop("formalsmap must be a list")
-  } else if (length(formalsmap) > 0 & is.null(names(formalsmap))) {
-    stop("formalsmap must be a named list")
-  } else if (length(formalsmap) > 0 & is.na(FUN)) {
-    stop("formalsmap may not be given when FUN is NA.")
-  } else if (!all(nchar(names(formalsmap)) > 0)) {
-    stop("All formalsmap elements must be named")
-  }
-  # Ensure that the function exists
-  if (!is.na(FUN) &&
-      length(utils::getAnywhere(FUN)$objs) == 0) {
-    stop(
-      "The function named '", FUN,
-      "' is not defined. Please define the function before calling add.interval.col."
-    )
-  }
-  if (!is.na(FUN) & length(formalsmap) > 0) {
-    # Ensure that the formalsmap parameters are all in the list of
-    # formal arguments to the function.
-    if (!all(names(formalsmap) %in% names(formals(utils::getAnywhere(FUN)$objs[[1]])))) {
-      stop("All names for the formalsmap list must be arguments to the function.")
-    }
-  }
-  current <- get("interval.cols", envir=PKNCA:::.PKNCAEnv)
-  current[[name]] <-
-    list(
-      FUN=FUN,
-      values=values,
-      unit_type=unit_type,
-      pretty_name=pretty_name,
-      desc=desc,
-      sparse=sparse,
-      formalsmap=formalsmap,
-      depends=depends,
-      datatype=datatype
-    )
-  assign("interval.cols", current, envir=PKNCA:::.PKNCAEnv)
-}
-
-
 #' Calculate the midpoint collection time of the last measurable excretion rate
 #'
 #' @param conc The concentration in the excreta (e.g., urine or feces)
@@ -134,17 +32,17 @@ pk.calc.ertlst <- function(conc, volume, time, duration.conc, check = TRUE) {
 }
 
 # Add the column to the interval specification
-add.interval.col("ertlst",
+PKNCA::add.interval.col("ertlst",
                  FUN="pk.calc.ertlst",
                  unit_type="time",
                  pretty_name="Tlast excretion rate",
                  desc="The midpoint collection time of the last measurable excretion rate (typically in urine or feces)")
 
-PKNCA.set.summary(
+PKNCA::PKNCA.set.summary(
   name="ertlst",
   description="median and range",
-  point=business.median,
-  spread=business.range
+  point = PKNCA::business.median,
+  spread = PKNCA::business.range
 )
 
 #' Calculate the maximum excretion rate
@@ -157,38 +55,25 @@ PKNCA.set.summary(
 #' @return The maximum excretion rate, or NA if not available
 #' @export
 pk.calc.ermax <- function(conc, volume, time, duration.conc, check = TRUE) {
-
+  
   # Generate messages about missing concentrations/volumes
   message_all <- generate_missing_messages(conc, volume,
                                            name_a = "concentrations",
                                            name_b = "volumes")
-
+  
   if (length(conc) == 0 || all(is.na(conc))) {
     ret <- NA
   } else {
     er <- conc * volume / duration.conc
     ret <- max(er, na.rm=TRUE)
   }
-
+  
   if (length(message_all) != 0) {
     message <- paste(message_all, collapse = "; ")
     ret <- structure(ret, exclude = message)
   }
   ret
 }
-
-add.interval.col("ermax",
-                 FUN="pk.calc.ermax",
-                 unit_type="amount_time",
-                 pretty_name="Maximum excretion rate",
-                 desc="The maximum excretion rate (typically in urine or feces)")
-
-PKNCA.set.summary(
-  name="ermax",
-  description="geometric mean and geometric coefficient of variation",
-  point=business.geomean,
-  spread=business.geocv
-)
 
 #' Calculate the midpoint collection time of the maximum excretion rate
 #'
@@ -201,7 +86,7 @@ PKNCA.set.summary(
 #' @return The midpoint collection time of the maximum excretion rate, or NA if not available
 #' @export
 pk.calc.ertmax <- function( #nolint
-    conc, volume, time, duration.conc, check = TRUE, first.tmax = NULL #nolint
+    conc, volume, time, duration.conc, check = TRUE, first.tmax = NULL, options = list() #nolint
 ) {
 
   # Generate messages about missing concentrations/volumes
@@ -216,7 +101,8 @@ pk.calc.ertmax <- function( #nolint
     ermax <- pk.calc.ermax(conc, volume, time, duration.conc, check = FALSE)
     midtime <- time + duration.conc / 2
     ret <- midtime[er %in% ermax]
-
+    
+    first.tmax <- PKNCA::PKNCA.choose.option(name="first.tmax", value = first.tmax, options = options)
     if (first.tmax) {
       ret <- ret[1]
     } else {
@@ -231,7 +117,7 @@ pk.calc.ertmax <- function( #nolint
   ret
 }
 
-add.interval.col(
+PKNCA::add.interval.col(
   "ertmax",
   FUN = "pk.calc.ertmax",
   unit_type = "time",
@@ -239,11 +125,11 @@ add.interval.col(
   desc = "The midpoint collection time of the maximum excretion rate (typically in urine or feces)"
 )
 
-PKNCA.set.summary(
+PKNCA::PKNCA.set.summary(
   name = "ertmax",
   description = "median and range",
-  point = business.median,
-  spread = business.range
+  point = PKNCA::business.median,
+  spread = PKNCA::business.range
 )
 
 
@@ -303,7 +189,7 @@ pk.calc.volpk <- function(volume) { #nolint
   if (length(volume) == 0) return(NA_real_)
   sum(volume)
 }
-add.interval.col(
+PKNCA::add.interval.col(
   "volpk",
   FUN = "pk.calc.volpk",
   values = c(FALSE, TRUE),
