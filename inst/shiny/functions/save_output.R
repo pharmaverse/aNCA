@@ -92,27 +92,42 @@ get_dose_esc_results <- function(
     o_res_i <- merge(o_nca$result, group_i)
     o_nca_i$result <- o_res_i
 
-    linplot_i <- create_indplot(
+    linplot_data_i <- process_data_individual(
       data = d_conc_i,
       selected_analytes = d_conc_i[[analyte_col]],
       selected_pcspec = d_conc_i[[pcspec_col]],
       selected_usubjids = d_conc_i[[subj_col]],
-      colorby_var = subj_col,
-      facet_by = facet_vars,
-      ylog_scale = TRUE,
-      profiles_selected = NULL
+      profiles_selected = unique(d_conc_i[[profile_col]]),
+      ylog_scale = TRUE
     )
 
+    linplot_i <- g_lineplot(
+      data = linplot_data_i$processed_data,
+      x_var = linplot_data_i$time_col,
+      y_var = "AVAL",
+      color_by = subj_col,
+      facet_by = facet_vars,
+      ylog_scale = TRUE
+    )
 
-    meanplot_i <- create_meanplot(
+    meanplot_data_i <- process_data_mean(
       data = d_conc_i,
       selected_analytes = unique(d_conc_i[[analyte_col]]),
       selected_pcspec = unique(d_conc_i[[pcspec_col]]),
       profiles_selected = unique(d_conc_i[[profile_col]]),
-      facet_by = facet_vars,
-      colorby_var = group_by_vars,
       ylog_scale = TRUE,
-      show_sd_max = TRUE
+      facet_by = facet_vars,
+      color_by = group_by_vars
+    )
+    
+    meanplot_i <- g_lineplot(
+      data = meanplot_data_i$summarised_data,
+      x_var = meanplot_data_i$time_col,
+      y_var = "Mean",
+      facet_by = facet_vars,
+      color_by = group_by_vars,
+      ylog_scale = TRUE,
+      sd_max = TRUE
     )
 
     stats_i <- calculate_summary_stats(
@@ -157,12 +172,19 @@ get_dose_esc_results <- function(
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
       lapply(function(d_conc_i) {
-        create_indplot(
+        d_conc_processed_i <- process_data_individual(
           data = d_conc_i,
           selected_analytes = d_conc_i[[analyte_col]],
           selected_pcspec = d_conc_i[[pcspec_col]],
           selected_usubjids = d_conc_i[[subj_col]],
-          colorby_var = subj_col,
+          ylog_scale = TRUE
+        )
+        
+        g_lineplot(
+          data = linplot_data_i$processed_data,
+          x_var = linplot_data_i$time_col,
+          y_var = "AVAL",
+          color_by = subj_col,
           facet_by = facet_vars,
           ylog_scale = TRUE
         )
