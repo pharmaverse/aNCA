@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_data_creation.R
 \name{process_data_individual}
 \alias{process_data_individual}
-\title{Process data for individual lineplot}
+\title{Process data for individual line plot}
 \usage{
 process_data_individual(
   data,
@@ -18,12 +18,12 @@ process_data_individual(
 
 \item{selected_usubjids, selected_analytes, selected_pcspec}{Inputs for filters.}
 
-\item{profiles_selected}{Optional profiles to filter on. If not null, uses ARRLT as time_col.}
+\item{profiles_selected}{Optional profiles to filter on. If not null, uses ARRLT as \code{time_col}.}
 
 \item{ylog_scale}{Logical, whether to use a logarithmic scale for the y-axis.}
 }
 \value{
-A list with processed_data filtered for the spaghetti plots and time_col,
+A list with \code{processed_data} filtered for the spaghetti plots and \code{time_col},
 either AFRLT or ARRLT depending on if profiles_selected is null or not.
 }
 \description{

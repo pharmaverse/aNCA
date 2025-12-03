@@ -1,12 +1,12 @@
-#' Process data for individual lineplot
+#' Process data for individual line plot
 #'
 #' Creates a filtered data frame for individual spaghetti plots.
 #'
 #' @param data Raw data frame.
 #' @param selected_usubjids,selected_analytes,selected_pcspec Inputs for filters.
-#' @param profiles_selected Optional profiles to filter on. If not null, uses ARRLT as time_col.
+#' @param profiles_selected Optional profiles to filter on. If not null, uses ARRLT as `time_col`.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
-#' @returns A list with processed_data filtered for the spaghetti plots and time_col,
+#' @returns A list with `processed_data` filtered for the spaghetti plots and `time_col`,
 #' either AFRLT or ARRLT depending on if profiles_selected is null or not.
 #'
 #' @import dplyr
@@ -79,8 +79,8 @@ process_data_individual <- function(data,
 #' @param selected_analytes,selected_pcspec,profiles_selected Inputs for filtering.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @param color_by,facet_by Optional grouping variables to be included in summary.
-#' @returns A list with summarised_data with Mean, SD, and CIs for the profiles selected,
-#' and time_col- either NFRLT or NRRLT depending on if profiles selected is null.
+#' @returns A list with `summarised_data` with Mean, SD, and CIs for the profiles selected,
+#' and `time_col`- either NFRLT or NRRLT depending on if profiles selected is null.
 #' @import dplyr
 #' @import rlang
 #'

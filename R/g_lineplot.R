@@ -52,6 +52,7 @@
 #' @import ggplot2
 #' @import dplyr
 #' @examples
+#' library(dplyr)
 #' ind_data <- expand.grid(
 #'   time_var = c(0, 1, 2, 4, 8, 12),
 #'   USUBJID = c("Subject1", "Subject2")
