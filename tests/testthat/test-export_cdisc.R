@@ -372,6 +372,66 @@ describe("export_cdisc", {
     expect_true(all(is.na(res_no_paramcd_pctestcd$adnca$PARAMCD)))
   })
 
+  it("derives labelled NCA exclusion columns (NCAXFL, NCAXFN, NCAwXRS, NCAwXRSN) when exclusions are present", {
+    test_with_excl <- test_pknca_res
+    excl_col <- test_with_excl$data$conc$columns$exclude
+
+    test_with_excl$data$conc$data <- test_with_excl$data$conc$data %>%
+      mutate(
+        !!excl_col := case_when(
+          USUBJID == unique(USUBJID)[1] ~ "Vomiting",
+          USUBJID == unique(USUBJID)[2] ~ "Samples contaminated",
+          USUBJID == unique(USUBJID)[3] ~ "Vomiting; Samples contaminated",
+          TRUE ~ NA_character_
+        )
+      )
+    conc_data <- test_with_excl$data$conc$data
+
+    res_with_excl <- export_cdisc(test_with_excl)
+    adnca_with_excl <- res_with_excl$adnca
+
+    expected_ncaxfl <- ifelse(is.na(conc_data[[excl_col]]), "", "Y")
+    attr(expected_ncaxfl, "label") <- "PK NCA Exclusion Flag"
+    expect_equal(adnca_with_excl$NCAXFL, expected_ncaxfl)
+
+    expected_ncaxfn <- ifelse(is.na(conc_data[[excl_col]]), NA_integer_, 1)
+    attr(expected_ncaxfn, "label") <- "PK NCA Exclusion Flag (N)"
+    expect_equal(adnca_with_excl$NCAXFN, expected_ncaxfn)
+    
+    expected_nca1xrs <- ifelse(
+      conc_data[[excl_col]] %in% c("Vomiting", "Vomiting; Samples contaminated"),
+      "Vomiting",
+      ""
+    )
+    attr(expected_nca1xrs, "label") <- "Reason 1 for PK NCA Exclusion"
+    expect_equal(adnca_with_excl$NCA1XRS, expected_nca1xrs)
+
+    expected_nca1xrsn <- ifelse(
+      conc_data[[excl_col]] %in% c("Vomiting", "Vomiting; Samples contaminated"),
+      1,
+      NA_integer_
+    )
+    attr(expected_nca1xrsn, "label") <- "Reason for PK NCA Exclusion of 1 (N)"
+    expect_equal(adnca_with_excl$NCA1XRSN, expected_nca1xrsn)
+
+
+    expected_nca2xrs <- ifelse(
+      conc_data[[excl_col]] %in% c("Samples contaminated", "Vomiting; Samples contaminated"),
+      "Samples contaminated",
+      ""
+    )
+    attr(expected_nca2xrs, "label") <- "Reason 2 for PK NCA Exclusion"
+    expect_equal(adnca_with_excl$NCA2XRS, expected_nca2xrs)
+    
+    expected_nca2xrsn <- ifelse(
+      conc_data[[excl_col]] %in% c("Samples contaminated", "Vomiting; Samples contaminated"),
+      1,
+      NA_integer_
+    )
+    attr(expected_nca2xrsn, "label") <- "Reason for PK NCA Exclusion of 2 (N)"
+    expect_equal(adnca_with_excl$NCA2XRSN, expected_nca2xrsn)
+  })
+
   # Performs correctly the one-to-many mappings between PKNCA and PPTESTCD
   it("differentiates cl.xxx for extravascular (bioavailability, F) and intravascular", {
     test_cl_data <- FIXTURE_PKNCA_DATA
