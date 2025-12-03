@@ -45,7 +45,8 @@ export_cdisc <- function(res_nca) {
       )
     ) %>%
     unique()
-
+  
+  conc_nca_excl_col <- res_nca$data$conc$columns$exclude
   conc_timeu_col <- res_nca$data$conc$columns$timeu[[1]]
   conc_time_col <- res_nca$data$conc$columns$time[[1]]
   dose_time_col <- res_nca$data$dose$columns$time[[1]]
@@ -267,8 +268,13 @@ export_cdisc <- function(res_nca) {
         NA
       }
     ) %>%
+
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADNCA$Variable)) %>%
+    select(any_of(c(CDISC_COLS$ADNCA$Variable, conc_nca_excl_col))) %>%
+    
+    # Create NCA exclusion flags using the PKNCA exclude column
+    create_nca_excl_columns(conc_nca_excl_col) %>%
+    
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
@@ -470,4 +476,29 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   dtc_vectors_nas <- sapply(dtc_vectors, function(x) sum(is.na(x)))
   dtc_vectors[[which.min(dtc_vectors_nas)]] %>%
     format("%Y-%m-%dT%H:%M:%S")
+}
+
+create_nca_excl_columns <- function(data, nca_excl_colname) {
+
+  # Split the elements based on `;` and store them in a list
+  split_reasons <- strsplit(data[[nca_excl_colname]], ";")
+  reasons <- unique(unlist(split_reasons))
+
+  # Create new columns NCAnXR for the range 1:max_elements
+  for (i in seq_along(reasons)) {
+    fl_col <- paste0("NCA", i, "XRS")
+    fln_col <- paste0("NCA", i, "XRSN")
+    
+    data[[fl_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, reasons[i], ""))
+    data[[fln_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, 1, NA_integer_))
+  }
+
+  # Create NCAXFL, NCAXFN columns based on whether there is any exclusion reason
+  is_included <- is.na(data[[nca_excl_colname]]) | data[[nca_excl_colname]] == ""
+  data$NCAXFL <- ifelse(is_included, "", "Y")
+  data$NCAXFN <- ifelse(is_included, NA_integer_, 1)
+
+  # Remove the original exclusion column and return the output
+  data %>%
+    select(-!!sym(nca_excl_colname))
 }
