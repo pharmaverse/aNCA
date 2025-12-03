@@ -45,7 +45,7 @@ export_cdisc <- function(res_nca) {
       )
     ) %>%
     unique()
-  
+
   conc_nca_excl_col <- res_nca$data$conc$columns$exclude
   conc_timeu_col <- res_nca$data$conc$columns$timeu[[1]]
   conc_time_col <- res_nca$data$conc$columns$time[[1]]
@@ -271,10 +271,10 @@ export_cdisc <- function(res_nca) {
 
     # Order columns using a standard, and then put the rest of the columns
     select(any_of(c(CDISC_COLS$ADNCA$Variable, conc_nca_excl_col))) %>%
-    
+
     # Create NCA exclusion flags using the PKNCA exclude column
-    create_nca_excl_columns(conc_nca_excl_col) %>%
-    
+    .create_nca_excl_columns(conc_nca_excl_col) %>%
+
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
@@ -478,7 +478,22 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     format("%Y-%m-%dT%H:%M:%S")
 }
 
-create_nca_excl_columns <- function(data, nca_excl_colname) {
+##' Create NCA exclusion flag columns from a semicolon-separated reason column
+##'
+##' This internal helper parses a character column that may contain one or more
+##' semicolon-separated exclusion reasons and expands it into CDISC-style
+##' `NCA<n>XRS` (reason text) and `NCA<n>XRSN` (numeric flag) columns. It also
+##' creates `NCAXFL`/`NCAXFN` summary flags and removes the original exclusion
+##' column.
+##'
+##' @param data A data.frame containing the exclusion column.
+##' @param nca_excl_colname Character name of the column in `data` that holds
+##'   semicolon-separated exclusion reasons.
+##' @return The input `data` with new `NCA<n>XRS`, `NCA<n>XRSN`, `NCAXFL`, and
+##'   `NCAXFN` columns added; the original exclusion column is removed.
+##' @noRd
+##' @keywords internal
+.create_nca_excl_columns <- function(data, nca_excl_colname) {
 
   # Split the elements based on `;` and store them in a list
   split_reasons <- strsplit(data[[nca_excl_colname]], ";")
@@ -488,7 +503,7 @@ create_nca_excl_columns <- function(data, nca_excl_colname) {
   for (i in seq_along(reasons)) {
     fl_col <- paste0("NCA", i, "XRS")
     fln_col <- paste0("NCA", i, "XRSN")
-    
+
     data[[fl_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, reasons[i], ""))
     data[[fln_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, 1, NA_integer_))
   }
