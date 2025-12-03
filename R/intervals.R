@@ -26,8 +26,7 @@
 #' pknca_data <- PKNCA_create_data_object(adnca)
 #' pknca_conc <- pknca_data$conc
 #' pknca_dose <- pknca_data$dose
-#' params <- c("aucinf.obs", "cmax", "half.life", "tmax", "lambda.z")
-#' dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
+#' dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose)
 #'
 #' @import dplyr
 #' @importFrom stats setNames
