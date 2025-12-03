@@ -496,14 +496,14 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 .create_nca_excl_columns <- function(data, nca_excl_colname) {
 
   # Split the elements based on `;` and store them in a list
-  split_reasons <- strsplit(data[[nca_excl_colname]], ";")
+  split_reasons <- strsplit(data[[nca_excl_colname]], "; ")
   reasons <- unique(na.omit(unlist(split_reasons)))
 
   # Create new columns NCAnXR for the range 1:max_elements
   for (i in seq_along(reasons)) {
     fl_col <- paste0("NCA", i, "XRS")
     data[[fl_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, reasons[i], ""))
-    attr(data[[fl_col]], "label") <- paste0("Reason ", i, " for PK NCA Exclusion")
+    attr(data[[fl_col]], "label") <- paste0("Reason ", i," for PK NCA Exclusion")
 
     fln_col <- paste0("NCA", i, "XRSN")
     data[[fln_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, 1, NA_integer_))
@@ -514,9 +514,9 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   is_included <- is.na(data[[nca_excl_colname]]) | data[[nca_excl_colname]] == ""
   if (any(!is_included)) {
     data$NCAXFL <- ifelse(is_included, "", "Y")
-    attr(data$NCAXFL, "label") <- "PK NCA Exclusion Flag"
+    attr(data$NCAXFL, "label") <- "NCA Exclusion Flag"
     data$NCAXFN <- ifelse(is_included, NA_integer_, 1)
-    attr(data$NCAXFN, "label") <- "PK NCA Exclusion Flag (N)" 
+    attr(data$NCAXFN, "label") <- "NCA Exclusion Number"
   }
 
   # Remove the original exclusion column and return the output
