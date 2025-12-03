@@ -372,7 +372,9 @@ describe("export_cdisc", {
     expect_true(all(is.na(res_no_paramcd_pctestcd$adnca$PARAMCD)))
   })
 
-  it("derives labelled NCA exclusion columns (NCAXFL, NCAXFN, NCAwXRS, NCAwXRSN) when exclusions are present", {
+  it("derives labelled NCA exclusion columns (NCAXFL, NCAXFN, NCAwXRS, NCAwXRSN) when needed", {
+
+    # Include a example with exclusions
     test_with_excl <- test_pknca_res
     excl_col <- test_with_excl$data$conc$columns$exclude
 
@@ -387,9 +389,11 @@ describe("export_cdisc", {
       )
     conc_data <- test_with_excl$data$conc$data
 
+    # Run the example
     res_with_excl <- export_cdisc(test_with_excl)
     adnca_with_excl <- res_with_excl$adnca
 
+    # Test labels and outputs expected
     expected_ncaxfl <- ifelse(is.na(conc_data[[excl_col]]), "", "Y")
     attr(expected_ncaxfl, "label") <- "PK NCA Exclusion Flag"
     expect_equal(adnca_with_excl$NCAXFL, expected_ncaxfl)
@@ -397,7 +401,7 @@ describe("export_cdisc", {
     expected_ncaxfn <- ifelse(is.na(conc_data[[excl_col]]), NA_integer_, 1)
     attr(expected_ncaxfn, "label") <- "PK NCA Exclusion Flag (N)"
     expect_equal(adnca_with_excl$NCAXFN, expected_ncaxfn)
-    
+
     expected_nca1xrs <- ifelse(
       conc_data[[excl_col]] %in% c("Vomiting", "Vomiting; Samples contaminated"),
       "Vomiting",
@@ -422,7 +426,7 @@ describe("export_cdisc", {
     )
     attr(expected_nca2xrs, "label") <- "Reason 2 for PK NCA Exclusion"
     expect_equal(adnca_with_excl$NCA2XRS, expected_nca2xrs)
-    
+
     expected_nca2xrsn <- ifelse(
       conc_data[[excl_col]] %in% c("Samples contaminated", "Vomiting; Samples contaminated"),
       1,

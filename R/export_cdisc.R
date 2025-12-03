@@ -503,7 +503,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   for (i in seq_along(reasons)) {
     fl_col <- paste0("NCA", i, "XRS")
     data[[fl_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, reasons[i], ""))
-    attr(data[[fl_col]], "label") <- paste0("Reason ", i," for PK NCA Exclusion")
+    attr(data[[fl_col]], "label") <- paste0("Reason ", i, " for PK NCA Exclusion")
 
     fln_col <- paste0("NCA", i, "XRSN")
     data[[fln_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, 1, NA_integer_))
