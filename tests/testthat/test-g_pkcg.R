@@ -98,7 +98,7 @@ describe("pkcg01", {
         )
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
-        if (pkg == "ggh4x") return(FALSE) else TRUE
+        if (pkg == "ggh4x") FALSE else TRUE
       },
       .package = "base"
     )
@@ -113,7 +113,7 @@ describe("pkcg01", {
         )
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
-        if (pkg == "scales") return(FALSE) else TRUE
+        if (pkg == "scales") FALSE else TRUE
       },
       .package = "base"
     )
@@ -240,7 +240,7 @@ describe("pkcg02", {
         )
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
-        if (pkg == "ggh4x") return(FALSE) else TRUE
+        if (pkg == "ggh4x") FALSE else TRUE
       },
       .package = "base"
     )
@@ -256,7 +256,7 @@ describe("pkcg02", {
         )
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
-        if (pkg == "scales") return(FALSE) else TRUE
+        if (pkg == "scales") FALSE else TRUE
       },
       .package = "base"
     )
