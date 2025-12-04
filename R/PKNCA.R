@@ -340,18 +340,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   }
 
   # Don't impute parameters that are not AUC dependent
-  params_auc_dep <- metadata_nca_parameters %>%
+  params_to_impute <- metadata_nca_parameters %>%
     filter((grepl("auc|aumc", PKNCA) | grepl("auc", Depends)),
-           TYPE == "PKNCA-not-covered") %>%
+           TYPE != "PKNCA-not-covered") %>%
     pull(PKNCA)
-
-  params_not_to_impute <- metadata_nca_parameters %>%
-    filter(!grepl("auc|aumc", PKNCA),
-           !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-    pull(PKNCA) |>
-    intersect(names(PKNCA::get.interval.cols()))
-
-  params_to_impute <- setdiff(names(PKNCA::get.interval.cols()), c(params_not_to_impute, "start", "end"))
 
   data$intervals <- data$intervals %>%
     mutate(
