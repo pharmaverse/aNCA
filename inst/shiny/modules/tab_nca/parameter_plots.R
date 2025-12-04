@@ -74,7 +74,8 @@ parameter_plots_server <- function(id, res_nca) {
         session,
         "selected_xvars_boxplot",
         choices = conc_dose_cols,
-        selected = res_nca()$data$dose$columns$dose
+        selected = c(res_nca()$data$dose$columns$dose,
+                     res_nca()$data$conc$columns$groups$group_analyte)
       )
 
       updatePickerInput(
