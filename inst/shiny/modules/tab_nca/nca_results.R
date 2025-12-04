@@ -186,7 +186,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
           setwd(output_tmpdir)
           incProgress(0.9)
-          utils::zip(zipfile = fname, files = files)
+          zip::zipr(zipfile = fname, files = files, mode = "mirror")
           incProgress(1)
         })
       }
