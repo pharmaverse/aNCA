@@ -157,11 +157,13 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
     #' keeps list of plots to render, with options gathered from the UI and applied
     tlg_list <- reactive({
-      list_options <- purrr::imap(reactiveValuesToList(options_values), \(value, name) value())
+      list_options <- purrr::imap(
+        reactiveValuesToList(options_values), function(value, name) value()
+      )
 
       if (any(sapply(list_options, is.null))) return(NULL)
 
-      list_options <- purrr::keep(list_options, \(value) all(!value %in% c(NULL, "", 0, NA)))
+      list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
         do.call(render_list, purrr::list_modify(list(data = data()$conc$data), !!!list_options))
@@ -186,7 +188,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       unname(tlg_list()[page_start:page_end])
     })
 
-    options_values <- lapply(names(options), \(option) {
+    options_values <- lapply(names(options), function(option) {
       if (is.character(options[[option]])) return(NULL)
       fn <- get(str_glue("tlg_option_{options[[option]]$type}_server"))
       fn(option, options[[option]], data, reactive(input$reset_widgets))
@@ -197,7 +199,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
-      purrr::imap(options, \(def, id) .tlg_module_edit_widget(session$ns(id), def, data))
+      purrr::imap(options, function(def, id) .tlg_module_edit_widget(session$ns(id), def, data))
     })
   })
 }

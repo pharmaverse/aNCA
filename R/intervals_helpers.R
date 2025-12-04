@@ -302,9 +302,9 @@ add_impute_method <- function(impute_vals, target_impute, after) {
 
   # Remove the impute from the other methods in each value
   impute_vals <- ifelse(is.na(impute_vals), "", impute_vals)
-  strsplit(impute_vals, split = "[ ,]+") |>
-    lapply(FUN = setdiff, target_impute) |>
-    lapply(FUN = append, values = target_impute, after = after) |>
+  strsplit(impute_vals, split = "[ ,]+") %>%
+    lapply(FUN = setdiff, target_impute) %>%
+    lapply(FUN = append, values = target_impute, after = after) %>%
     vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
 }
 
@@ -323,8 +323,8 @@ remove_impute_method <- function(impute_vals, target_impute) {
 
   # Remove the impute from the other methods in each value
   impute_vals <- ifelse(is.na(impute_vals), "", impute_vals)
-  impute_vals <- strsplit(impute_vals, split = "[ ,]+") |>
-    lapply(FUN = setdiff, target_impute) |>
+  impute_vals <- strsplit(impute_vals, split = "[ ,]+") %>%
+    lapply(FUN = setdiff, target_impute) %>%
     vapply(FUN = paste, collapse = ",", FUN.VALUE = "")
 
   # Replace empty strings with NA_character_
@@ -360,7 +360,7 @@ identify_target_rows <- function(data, target_impute, target_params, target_grou
 
   ## 3. The target impute method is not present and correctly positioned (if after is provided)
   if (!is.null(after)) {
-    after_vals <- sapply(strsplit(data$impute, "[ ,]+"), \(x) {
+    after_vals <- sapply(strsplit(data$impute, "[ ,]+"), function(x) {
       after_x <- which(x == target_impute)
       if (length(after_x) == 0) return(TRUE)
       if (after_x == length(x)) Inf else after_x

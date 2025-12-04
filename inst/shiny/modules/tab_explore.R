@@ -147,11 +147,12 @@ tab_explore_ui <- function(id) {
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
 
-tab_explore_server <- function(id, data, grouping_vars) {
+tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     ## Plotting Input widgets --------------------------------------------------------
+    data <- reactive(pknca_data()$conc$data)
 
     observeEvent(data(), {
       req(data())
@@ -249,7 +250,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       )
 
       # Update the selectidvar select input
-      idvar_choices <- c("PARAM", "PCSPEC", "DOSEA", grouping_vars())
+      idvar_choices <- c("PARAM", "PCSPEC", "DOSEA", extra_group_vars)
 
       updateSelectInput(
         session,
@@ -264,7 +265,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
       req(input$generalplot_analyte)
       y <- data() %>%
         filter(PARAM %in% input$generalplot_analyte) %>%
-        pull(NCA_PROFILE) %>%
+        pull(ATPTREF) %>%
         unique()
       selectInput(ns("cycles"), "Choose the cycle :", choices = sort(y),
                   multiple = TRUE, selected = y[1])
@@ -303,7 +304,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
           TIME_DOSE = round(AFRLT - ARRLT, 6)
         )
 
-      p <- general_lineplot(
+      lineplot <- general_lineplot(
         plot_data,
         input$generalplot_analyte,
         input$generalplot_pcspec,
@@ -317,25 +318,9 @@ tab_explore_server <- function(id, data, grouping_vars) {
         input$show_dose,
         cycle = input$cycles,
         palette = palettes
-      ) %>%
-        ggplotly(height = 1000)
-
-      # Conditionally add rangeslider only if the plot is not faceted
-      if (is.null(input$generalplot_facetby) || length(input$generalplot_facetby) == 0) {
-        p <- p %>%
-          layout(
-            xaxis = list(
-              rangeslider = list(type = "time")
-            )
-          )
-      }
-      p
-    })
-
-    # Save the object for the zip folder whenever it changes
-    observe({
-      req(individualplot())
-      session$userData$results$exploration$individualplot <- individualplot()
+      )
+      session$userData$results$exploration$individualplot <- lineplot
+      lineplot
     })
 
     # Render the inidividual plot in plotly
@@ -352,7 +337,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
 
       cycle_choices <- data() %>%
         filter(PARAM %in% input$analyte_mean) %>%
-        pull(NCA_PROFILE) %>%
+        pull(ATPTREF) %>%
         unique()
 
       updateSelectInput(
@@ -377,7 +362,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
               STUDYID %in% input$studyid_mean,
               PARAM %in% input$analyte_mean,
               PCSPEC %in% input$pcspec_mean,
-              NCA_PROFILE %in% input$cycles_mean,
+              ATPTREF %in% input$cycles_mean,
               if ("EVID" %in% names(data)) EVID == 0 else TRUE,
               NRRLT > 0
             ) %>%
@@ -404,13 +389,7 @@ tab_explore_server <- function(id, data, grouping_vars) {
         plot_sd_min = input$sd_mean_plot_min,
         plot_sd_max = input$sd_mean_plot_max,
         plot_ci = input$mean_plot_ci
-      ) %>%
-        ggplotly(height = 1000) %>%
-        layout(
-          xaxis = list(
-            rangeslider = list(type = "time")
-          )
-        )
+      )
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })
@@ -427,7 +406,6 @@ tab_explore_server <- function(id, data, grouping_vars) {
       meanplot()
     })
 
-    pk_dose_qc_plot_server("pk_dose_qc_plot", data = data, grouping_vars = grouping_vars)
-
+    pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data, extra_group_vars)
   })
 }

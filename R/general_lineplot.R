@@ -32,7 +32,7 @@
 #' \itemize{
 #'   \item Filters the data based on the selected analytes, matrices, and subjects.
 #'   \item Selects relevant columns and removes rows with missing concentration values.
-#'   \item Converts 'USUBJID', 'NCA_PROFILE', and 'DOSEA' to factors.
+#'   \item Converts 'USUBJID', 'ATPTREF', and 'DOSEA' to factors.
 #'   \item Filters the data by cycle if `time_scale` is "By Cycle"
 #'          while creating duplicates for predose samples if needed.
 #'   \item Adjusts concentration values for logarithmic scale if `yaxis_scale` is "Log".
@@ -44,20 +44,24 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   plot <- general_lineplot(data = adnca_data,
-#'                            selected_analytes = c("Analyte1", "Analyte2"),
-#'                            selected_pcspec = c("Spec1", "Spec2"),
-#'                            selected_usubjids = c("Subject1", "Subject2"),
-#'                            colorby_var = "NCA_PROFILE",
-#'                            time_scale = "By Cycle",
-#'                            yaxis_scale = "Log",
-#'                            cycle = "1",
-#'                            show_threshold = TRUE,
-#'                            threshold_value = 1)
-#'   print(plot)
-#' }
+#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' # Use actual values from the dummy data for the example
+#' selected_analytes <- head(unique(adnca$ANALYTE), 1)
+#' selected_pcspec <- head(unique(adnca$PCSPEC), 1)
+#' selected_usubjids <- head(unique(adnca$USUBJID), 1)
+#' plot <- general_lineplot(
+#'   data = adnca,
+#'   selected_analytes = selected_analytes,
+#'   selected_pcspec = selected_pcspec,
+#'   selected_usubjids = selected_usubjids,
+#'   colorby_var = "ATPTREF",
+#'   time_scale = "By Cycle",
+#'   yaxis_scale = "Log",
+#'   cycle = "1",
+#'   show_threshold = TRUE,
+#'   threshold_value = 1
+#' )
+#' print(plot)
 #'
 #' @import dplyr
 #' @import ggplot2
@@ -148,8 +152,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
   if (yaxis_scale == "Log") {
     plt <- plt +
       scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
-                    labels = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)) +
-      labs(y = paste0("Log 10 - ", plt$labels$y))
+                    labels = c(0.001, 0.01, 0.1, 1, 10, 100, 1000))
   }
 
   # Add a horizontal line for the threshold value if specified
@@ -216,17 +219,17 @@ preprocess_data_for_plot <- function(
     if ("ARRLT" %in% names(processed) && any(processed$ARRLT < 0 & processed$AFRLT > 0)) {
       processed <- dose_profile_duplicates(
         processed,
-        groups = c("USUBJID", "PCSPEC", "PARAM", "NCA_PROFILE"),
-        dosno = "NCA_PROFILE"
+        groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
+        dosno = "ATPTREF"
       )
     }
-    processed <- processed %>% filter(NCA_PROFILE %in% cycle)
+    processed <- processed %>% filter(ATPTREF %in% cycle)
   }
 
   processed %>%
     mutate(
       USUBJID = factor(USUBJID),
-      NCA_PROFILE = factor(NCA_PROFILE),
+      ATPTREF = factor(ATPTREF),
       DOSEA = factor(DOSEA),
       color_var = interaction(!!!syms(colorby_var), sep = ", ")
     )

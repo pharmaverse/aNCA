@@ -78,7 +78,7 @@ data_upload_server <- function(id) {
             DUMMY_DATA
           }
         }
-      }) |>
+      }) %>%
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
 

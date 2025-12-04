@@ -10,7 +10,7 @@ apply_mapping(
   desired_order,
   silent = TRUE,
   req_mappings = c("USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT", "PCSPEC", "ROUTE",
-    "AVAL", "STUDYID", "NCA_PROFILE", "AVALU", "RRLTU", "DOSEU", "PARAM")
+    "AVAL", "STUDYID", "ATPTREF", "AVALU", "RRLTU", "DOSEU", "PARAM")
 )
 }
 \arguments{
@@ -36,7 +36,7 @@ A transformed data frame with:
 \item Ordered columns as specified
 \item Labels applied to columns (via \code{apply_labels()})
 \item Concentration duplicates removed based on key identifiers:
-\code{AFRLT}, \code{STUDYID}, \code{PCSPEC}, \code{DRUG}, \code{USUBJID}, and \code{PARAM}
+\code{AFRLT}, \code{STUDYID}, \code{PCSPEC}, \code{DOSETRT}, \code{USUBJID}, and \code{PARAM}
 }
 }
 \description{
@@ -51,6 +51,6 @@ and removes detected duplicate concentration records.
 \item Validates that all required columns are mapped and no duplicates exist.
 \item If \code{ADOSEDUR} is not mapped, it is assigned a value of \code{0}.
 \item Removes concentration data duplicates using all columns except \code{ARRLT}, \code{NRRLT},
-and \code{NCA_PROFILE}.
+and \code{ATPTREF}.
 }
 }
