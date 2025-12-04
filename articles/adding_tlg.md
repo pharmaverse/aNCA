@@ -170,7 +170,7 @@ entry.
 #### Examples
 
 For examples of TLG definition implementations, please see
-[tlg.yaml](https://pharmaverse.github.io/aNCA/articles/aNCA/inst/shiny/tlg.yaml)
+[tlg.yaml](https://github.com/pharmaverse/aNCA/blob/main/inst/shiny/tlg.yaml)
 file in the repository.
 
 ### Implementation function
