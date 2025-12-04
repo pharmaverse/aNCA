@@ -312,6 +312,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       intersect(names(PKNCA::get.interval.cols()))
 
     all_impute_methods <- na.omit(unique(data$intervals$impute))
+    all_impute_methods <- all_impute_methods[all_impute_methods != ""]
 
     data$intervals <- Reduce(function(d, ti_arg) {
       interval_remove_impute(
@@ -319,9 +320,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
         target_impute = ti_arg,
         target_params = params_not_to_impute
       )
-    }, all_impute_methods, init = data$intervals)
+    }, all_impute_methods, init = data$intervals) %>%
+      mutate(impute = ifelse(is.na(impute), "", impute))
   }
-  all_impute_methods <- na.omit(unique(data$intervals$impute))
 
   data$intervals <- Reduce(function(d, ti_arg) {
     interval_remove_impute(
@@ -357,13 +358,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       param_to_impute_is_not_na = rowSums(!is.na(select(., all_of(params_to_impute)))) > 0,
       param_to_impute_is_not_false = rowSums(select(., all_of(params_to_impute)) != FALSE, na.rm = TRUE) > 0,
       has_param_to_impute = param_to_impute_is_not_na & param_to_impute_is_not_false,
+      impute = ifelse(is.na(impute), "", impute),
       impute = ifelse(
         has_param_to_impute,
-        ifelse(is.na(impute) | impute == "", "blq", paste0("blq", impute, sep = ",")),
+        ifelse(impute == "", "blq", paste0("blq, ", impute)),
         impute
       )
-    )
-
+    ) %>%
+    select(any_of(names(data$intervals)))
+browser()
   data
 }
 
