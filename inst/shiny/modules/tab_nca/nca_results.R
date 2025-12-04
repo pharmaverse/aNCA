@@ -191,11 +191,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           incProgress(1)
         })
         }, error = function(e) {
-          # This prints the error to the RStudio Console
-          message("-------------------------")
-          message("DOWNLOAD HANDLER ERROR:")
+          message("Download Error:")
           message(e$message)
-          message("-------------------------")
           stop(e)
         })
       }
