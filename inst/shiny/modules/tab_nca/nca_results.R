@@ -131,6 +131,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
+        tryCatch({
         shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
 
           # Create an output folder with all plots, tables and listings
@@ -188,6 +189,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           incProgress(0.9)
           zip::zipr(zipfile = fname, files = files, mode = "mirror")
           incProgress(1)
+        })
+        }, error = function(e) {
+          # This prints the error to the RStudio Console
+          message("-------------------------")
+          message("DOWNLOAD HANDLER ERROR:")
+          message(e$message)
+          message("-------------------------")
+          stop(e)
         })
       }
     )
