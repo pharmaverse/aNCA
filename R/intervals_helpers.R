@@ -389,7 +389,6 @@ assert_subset <- function(a, b) {
 
 
 interval_remove_all_imputes <- function(data, target_params) {
-  browser()
   # Validate inputs
   if (missing(data) || missing(target_params)) {
     stop("Both 'data' and 'target_params' must be provided.")
@@ -416,7 +415,7 @@ interval_remove_all_imputes <- function(data, target_params) {
   new_rows <- data[target_rows, ]
   new_rows[, setdiff(param_cols, target_params)] <- FALSE
   new_rows$impute <- ""
-browser()
+
   data[target_rows, target_params] <- FALSE
   bind_rows(data, new_rows)
 

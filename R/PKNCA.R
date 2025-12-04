@@ -321,13 +321,19 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       )
     }, all_impute_methods, init = data$intervals)
   }
+  all_impute_methods <- na.omit(unique(data$intervals$impute))
+
+  data$intervals <- Reduce(function(d, ti_arg) {
+    interval_remove_impute(
+      d,
+      target_impute = ti_arg,
+      target_params = params_not_to_impute
+    )
+  }, sort(all_impute_methods), init = data$intervals)
 
   # Define a BLQ imputation method for PKNCA
-  data$intervals$impute <- ifelse(
-    data$intervals$impute != "",
-    paste("blq", data$intervals$impute, sep = ","),
-    "blq"
-  )
+  # and apply it only for non-observational parameters
+  
   PKNCA_impute_method_blq <- function(conc, time) {
     PKNCA::clean.conc.blq(conc = conc, time = time, conc.blq = blq_imputation_rule)
   }
@@ -344,17 +350,19 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     pull(PKNCA) |>
     intersect(names(PKNCA::get.interval.cols()))
 
-  all_impute_methods <- na.omit(unique(data$intervals$impute))
-browser()
-  interval_remove_all_imputes(data = data$intervals, target_params = params_not_to_impute) %>% select(start, end, USUBJID, PARAM, cmax, auclast, vss.obs, impute) %>% View()
+  params_to_impute <- setdiff(names(PKNCA::get.interval.cols()), c(params_not_to_impute, "start", "end"))
 
-  data$intervals <- Reduce(function(d, ti_arg) {
-    interval_remove_impute(
-      d,
-      target_impute = ti_arg,
-      target_params = params_not_to_impute
+  data$intervals <- data$intervals %>%
+    mutate(
+      param_to_impute_is_not_na = rowSums(!is.na(select(., all_of(params_to_impute)))) > 0,
+      param_to_impute_is_not_false = rowSums(select(., all_of(params_to_impute)) != FALSE, na.rm = TRUE) > 0,
+      has_param_to_impute = param_to_impute_is_not_na & param_to_impute_is_not_false,
+      impute = ifelse(
+        has_param_to_impute,
+        ifelse(is.na(impute) | impute == "", "blq", paste0("blq", impute, sep = ",")),
+        impute
+      )
     )
-  }, sort(all_impute_methods), init = data$intervals)
 
   data
 }
