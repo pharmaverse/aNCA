@@ -9,20 +9,21 @@ save_output <- function(output, output_path) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
 
   for (name in names(output)) {
-    if (!dir.exists(paste0(output_path, "/", name))) {
-      dir.create(paste0(output_path, "/", name), recursive = TRUE)
+    file_name <- paste0(output_path, "/", name)
+
+    if (!dir.exists(file_name)) {
+      dir.create(file_name, recursive = TRUE)
     }
 
     if (inherits(output[[name]], "list")) {
 
-      save_output(output = output[[name]], output_path = paste0(output_path, "/", name))
+      save_output(output = output[[name]], output_path = file_name)
 
     } else if (inherits(output[[name]], "ggplot")) {
       file_name <- paste0(output_path, "/", name, ".png")
       ggsave(file_name, plot = output[[name]], width = 10, height = 6)
 
     } else if (inherits(output[[name]], "data.frame")) {
-      file_name <- paste0(output_path, "/", name)
       write.csv(output[[name]], file = paste0(file_name, ".csv"), row.names = FALSE)
       saveRDS(output[[name]], file = paste0(file_name, ".rds"))
       tryCatch(
@@ -34,7 +35,7 @@ save_output <- function(output, output_path) {
     } else if (inherits(output[[name]], "plotly")) {
       htmlwidgets::saveWidget(
         output[[name]],
-        file = paste0(output_path, "/", name, ".html")
+        file = paste0(file_name, ".html")
       )
     } else {
       stop(

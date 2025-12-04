@@ -319,7 +319,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         cycle = input$cycles,
         palette = palettes
       )
-      session$userData$results$exploration$individualplot <- lineplot
       lineplot
     })
 
@@ -394,10 +393,17 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       meanplot
     })
 
-    # Save the object for the zip folder whenever it changes
+
+    # Save the objects for the ZIP folder whenever they cahnge
     observe({
       req(meanplot())
+      # Individual plots
+      session$userData$results$exploration$individualplot <- individualplot()
+      session$userData$results$exploration$individualplot_plotly <- ggplotly(individualplot())
+
+      # Mean plots
       session$userData$results$exploration$meanplot <- meanplot()
+      session$userData$results$exploration$meanplot_plotly <- ggplotly(meanplot())
     })
 
     # Render the mean plot output in plotly
