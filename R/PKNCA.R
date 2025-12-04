@@ -646,7 +646,7 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
   candidate_cols <- candidate_cols[candidate_n_levels > 1]
 
   # 3. Check combinations of columns to find minimal key combination to level group strata_cols
-  for (n in seq_len(length(candidate_cols))) {
+  for (n in seq_along(candidate_cols))) {
     all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
     for (comb in all_candidate_combs) {
       comb_vals <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")

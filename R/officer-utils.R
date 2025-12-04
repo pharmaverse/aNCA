@@ -77,7 +77,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
 
   lst_group_slide <- 1
   group_slides <- numeric()
-  for (i in seq_len(length(res_dose_slides))) {
+  for (i in seq_along(res_dose_slides))) {
 
     # Generate the individual figures
     pptx <- add_pptx_sl_table(
@@ -112,7 +112,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     group_slides <- c(group_slides, (lst_group_slide - 3):(lst_group_slide))
   }
 
-  group_slides_rev <- rev(group_slides) + (seq_len(length(group_slides)) - 1)
+  group_slides_rev <- rev(group_slides) + (seq_along(group_slides)) - 1)
   pptx <- purrr::reduce(
     group_slides_rev,
     function(pptx, slide_index) move_slide(pptx, index = slide_index, to = 2),
