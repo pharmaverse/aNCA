@@ -5,7 +5,10 @@ linters:
     object_name_linter = object_name_linter(
         styles = c("snake_case", "SNAKE_CASE")
     ),
-    object_usage_linter = NULL
+    object_usage_linter = NULL,
+    pipe_consistency_linter = pipe_consistency_linter("%>%"),
+    return_linter = return_linter(return_style = "implicit"),
+    seq_linter = seq_linter()
   )
 encoding: "UTF-8"
 exclusions: list("R/PKNCA_extra_parameters.R", "tests/testthat/test-PKNCA_extra_parameters.R")
