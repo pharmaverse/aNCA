@@ -165,7 +165,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
         log_success("NCA results calculated.")
 
         # Reshape intervals, filter
-        params__not_requested <- res$data$intervals %>%
+        params_not_requested <- res$data$intervals %>%
           # pivot for requested params
           pivot_longer(
             cols = (any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))),
@@ -185,7 +185,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
         # Filter for requested params based on intervals
         res$result <- res$result %>%
-          anti_join(params__not_requested, by = intersect(names(.), names(params__not_requested)))
+          anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
 
         res
       }, error = function(e) {
