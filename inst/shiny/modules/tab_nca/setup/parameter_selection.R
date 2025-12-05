@@ -15,7 +15,7 @@
 #'   \item{selections}{A `reactive` list where names are study types and
 #'     values are vectors of selected PKNCA parameters, e.g.,
 #'     `list("Study Type A" = c("p1", "p2"))`.}
-#'   \item{types_df}{A `reactive` data frame contaning the study type detection results.}
+#'   \item{types_df}{A `reactive` data frame containing the study type detection results.}
 
 parameter_selection_ui <- function(id) {
   ns <- NS(id)
