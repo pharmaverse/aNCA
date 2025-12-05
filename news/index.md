@@ -23,6 +23,9 @@
   from the analysis
   ([\#765](https://github.com/pharmaverse/aNCA/issues/765))
 
+- Updated TMAX label from Time of CMAX to Time of CMAX Observation
+  ([\#787](https://github.com/pharmaverse/aNCA/issues/787))
+
 ## aNCA 0.1.0
 
 - Initial CRAN submission.
