@@ -76,7 +76,7 @@ The function performs the following steps:
 # \donttest{
 if (interactive()) {
   # Load a small packaged example dataset
-  adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+  adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 
   # Subset to a single subject to keep the example fast
   subj1 <- unique(adnca$USUBJID)[3]

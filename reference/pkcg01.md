@@ -146,7 +146,7 @@ looks fine now
 ## Examples
 
 ``` r
-adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 adnca <- subset(adnca, adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)])
 attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 attr(adnca[["AVAL"]], "label") <- "Analysis val"

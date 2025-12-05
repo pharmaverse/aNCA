@@ -42,9 +42,9 @@ app.
 ``` r
 # \donttest{
   # Show the packaged example path (safe non-interactive snippet)
-  adnca_path <- system.file("shiny/data/Dummy_data.csv", package = "aNCA")
+  adnca_path <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
   adnca_path
-#> [1] "/home/runner/work/_temp/Library/aNCA/shiny/data/Dummy_data.csv"
+#> [1] "/home/runner/work/_temp/Library/aNCA/shiny/data/example-ADNCA.csv"
 
   # To actually launch the app, run interactively:
   if (interactive()) {

@@ -35,5 +35,5 @@ Currently supported file formats include:
 ## Examples
 
 ``` r
-df <- read_pk(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+df <- read_pk(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 ```
