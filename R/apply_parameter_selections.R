@@ -61,5 +61,5 @@ apply_parameter_selections <- function(selection_df,
       }
     }
   }
-  return(selection_df)
+  selection_df
 }
