@@ -77,15 +77,11 @@ For more detailed instructions, check out the [Get Started](https://pharmaverse.
 
 ## Contributing
 
-### As developer
+Check our [contributing guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 
-To ensure a clean codebase and smooth cooperation, please adhere to the [contributing guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
-
-### As user
-
-Feel free to open identified [issues](https://github.com/pharmaverse/aNCA/issues/new/choose), to reach out to us for questions or report in our [google sheet](https://forms.gle/c9ULTTv1s75yRaLj7) for feedback.
 
 ## Documentation and references
 
-- Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app** (still in development).
+- Go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app**.
 - The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/humanpred/pknca)
+- aNCA has different system validations, you can consult them [here](https://pharmaverse.github.io/aNCA/articles/validations.html)

@@ -10,9 +10,10 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' pknca_data <- PKNCA_create_data_object(adnca)
 #' pknca_data <- create_start_impute(pknca_data)
-#' }
+#'
 create_start_impute <- function(pknca_data) {
 
   if (nrow(pknca_data$intervals) == 0) {
@@ -30,9 +31,11 @@ create_start_impute <- function(pknca_data) {
   conc_group_columns <- unname(unlist(pknca_data$conc$columns$groups))
   dose_group_columns <- unname(unlist(pknca_data$dose$columns$groups))
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
+  nca_excl_column <- pknca_data$conc$columns$exclude
 
   mydata_with_int <- merge(
     x = pknca_data$conc$data %>%
+      filter(!!sym(nca_excl_column) %in% c("", NA_character_)) %>%
       select(any_of(c(conc_group_columns, conc_column,
                       time_column, metabfl_column))),
     y = pknca_data$dose$data %>%

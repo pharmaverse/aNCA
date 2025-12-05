@@ -91,7 +91,7 @@ apply_mapping <- function(
     mutate(!!!lapply(mapping, function(col) dataset[[col]])) %>%
     # Order the renamed variables based on desired_order
     select(any_of(desired_order), everything()) %>%
-    # Apply the default ADPC labels
+    # Apply the default ADNCA labels
     apply_labels()
 
   # Remove variables that are now redundant due to the renaming
@@ -103,18 +103,7 @@ apply_mapping <- function(
     new_dataset[["ATPTREF"]] <- as.factor(new_dataset[["ATPTREF"]])
   }
 
-  # Check there are no duplicates
-  # TODO(Gerardo): This perhaps should be apart and outside of the mapping function (PKNCA obj)
-  filt_duplicates_dataset <- new_dataset %>%
-    group_by(across(any_of(setdiff(desired_order, c("ARRLT", "NRRLT", "ATPTREF"))))) %>%
-    slice(1) %>%
-    ungroup() %>%
-    as.data.frame()
-
-  if (nrow(filt_duplicates_dataset) < nrow(new_dataset)) {
-    warning("Duplicate concentration data detected and filtered.")
-  }
-  filt_duplicates_dataset
+  new_dataset
 }
 
 #' Internal helper to check for missing required columns to map

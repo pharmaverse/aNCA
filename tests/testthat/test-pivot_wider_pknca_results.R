@@ -159,7 +159,7 @@ describe("pivot_wider_pknca_results", {
       DOSEA = NA, DOSETRT = NA, ADOSEDUR = NA, DOSEU = NA,
       `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
       `CMAX[ng/mL]` = "Max Conc",
-      `TMAX[hr]` = "Time of CMAX",
+      `TMAX[hr]` = "Time of CMAX Observation",
       `TLST[hr]` = "Time of Last Nonzero Conc",
       `CLST[ng/mL]` = "Last Nonzero Conc",
       `LAMZ[1/hr]` = "Lambda z",

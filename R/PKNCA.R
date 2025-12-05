@@ -30,6 +30,9 @@
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
 #' @param adnca_data Data table containing ADNCA data.
+#' @param nca_exclude_reason_columns Optional character vector of column names.
+#' Excluding records from the NCA
+#' must be indicated by populating any of these columns with a non-empty character value.
 #'
 #' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
 #'
@@ -60,7 +63,7 @@
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
+PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NULL) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
@@ -83,16 +86,9 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     as.formula()
 
   dose_formula <-
-        "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
+    "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
     glue::glue() %>%
     as.formula()
-
-  #Filter out flagged duplicates if DFLAG column available
-  if ("DFLAG" %in% colnames(adnca_data)) {
-    adnca_data <- adnca_data %>%
-      filter(!DFLAG) %>%
-      select(-DFLAG)
-  }
 
   # Create concentration data
   df_conc <- format_pkncaconc_data(
@@ -100,7 +96,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     group_columns = all_group_columns,
     time_column = time_column,
     rrlt_column = "ARRLT",
-    route_column = route_column
+    route_column = route_column,
+    nca_exclude_reason_columns = nca_exclude_reason_columns
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
 
@@ -134,7 +131,8 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
     time.nominal = "NFRLT",
     concu = "AVALU",
     timeu = "RRLTU",
-    amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL
+    amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL,
+    exclude = "nca_exclude"
   )
 
   if ("VOLUME" %in% colnames(df_conc)) {
@@ -659,7 +657,7 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
   candidate_cols <- candidate_cols[candidate_n_levels > 1]
 
   # 3. Check combinations of columns to find minimal key combination to level group strata_cols
-  for (n in seq_len(length(candidate_cols))) {
+  for (n in seq_along(candidate_cols)) {
     all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
     for (comb in all_candidate_combs) {
       comb_vals <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
