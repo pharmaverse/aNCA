@@ -68,8 +68,8 @@ create_start_impute <- function(pknca_data) {
     rowwise() %>%
     mutate(
       impute = case_when(
-        # Start concentration already present: No imputation (NA)
-        !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ NA,
+        # Start concentration already present: No imputation
+        !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ "",
 
         # 1st dose with not IV bolus or metabolite : Start concentration is 0
         is.first.dose & (!is.ivbolus | is.metabolite) ~ "start_conc0",

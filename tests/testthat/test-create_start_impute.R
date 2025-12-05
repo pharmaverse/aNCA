@@ -20,11 +20,11 @@ describe("create_start_impute", {
     expect_warning(create_start_impute(mydata_noints), "No intervals provided. No modification")
   })
 
-  it("does not add impute (NA) when start is in PKNCAconc", {
+  it("does not add impute ('') when start is in PKNCAconc", {
     not_imputed <- result$intervals %>%
       dplyr::filter(USUBJID == 1, DOSNOA == 1, type_interval == "main") %>%
       dplyr::pull(impute)
-    expect_equal(not_imputed, NA_character_)
+    expect_equal(not_imputed, "")
   })
 
   it("sets conc0 when route is extravascular (first dose)", {
