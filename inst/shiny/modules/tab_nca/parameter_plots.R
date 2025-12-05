@@ -74,7 +74,8 @@ parameter_plots_server <- function(id, res_nca) {
         session,
         "selected_xvars_boxplot",
         choices = conc_dose_cols,
-        selected = res_nca()$data$dose$columns$dose
+        selected = c(res_nca()$data$dose$columns$dose,
+                     res_nca()$data$conc$columns$groups$group_analyte)
       )
 
       updatePickerInput(
@@ -122,7 +123,7 @@ parameter_plots_server <- function(id, res_nca) {
         xvars = input$selected_xvars_boxplot,
         colorvars = input$selected_colorvars_boxplot,
         varvalstofilter = input$selected_filters_boxplot,
-        columns_to_hover = unname(unlist(res_nca()$data$conc$columns$groups)),
+        tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
         box = input$violinplot_toggle_switch,
       )
     })
