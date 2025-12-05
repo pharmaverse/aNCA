@@ -85,6 +85,5 @@ describe("create_start_impute", {
       dplyr::filter(USUBJID == 6, DOSNOA == 1) %>%
       dplyr::pull(impute)
     expect_equal(unique(result_with_analyte_impute), "start_logslope")
-
   })
 })
