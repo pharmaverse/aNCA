@@ -13,6 +13,7 @@ Analyte
 BLQ
 Buckeridge
 CDISC
+CMAX
 Cmax
 Cond
 DOSEA
@@ -68,6 +69,7 @@ SMS
 STUDYID
 TLG
 TLGs
+TMAX
 TRT
 TRTRINT
 Tmax
