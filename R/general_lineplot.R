@@ -130,7 +130,7 @@ general_lineplot <- function(
     facet_by = facet_by
   )
 
-  return(plt)
+  plt
 }
 
 #' Helper function to handle optional layers
@@ -185,7 +185,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
     plt <- plt + facet_wrap(vars(!!!syms(facet_by)), axes = "all", scales = "free")
   }
 
-  return(plt)
+  plt
 }
 
 #' Prepare Data for PK Lineplot

@@ -78,5 +78,5 @@ filter_breaks <- function(breaks = NA,
       filt_breaks <- c(filt_breaks, breaks[i])
     }
   }
-  return(filt_breaks)
+  filt_breaks
 }
