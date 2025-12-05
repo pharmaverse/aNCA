@@ -14,7 +14,7 @@
 #'   study types and values are character vectors of PKNCA parameters to select.
 #'   If NULL, default logic is applied.
 #'
-#' @return The 'selection_df' data frame with added boolean columns for each
+#' @returns The 'selection_df' data frame with added boolean columns for each
 #'   study type.
 #'
 apply_parameter_selections <- function(selection_df,
