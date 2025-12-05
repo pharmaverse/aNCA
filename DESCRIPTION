@@ -44,8 +44,7 @@ Imports:
     tern,
     tidyr,
     units,
-    utils,
-    zip
+    utils
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -83,7 +82,8 @@ Suggests:
     quarto,
     vdiffr,
     withr,
-    yaml
+    yaml,
+    zip
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
