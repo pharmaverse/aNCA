@@ -13,7 +13,7 @@ NON_STD_MAPPING_INFO <- data.frame(
   ),
   mapping_section = c("Supplemental Variables", "Sample Variables"),
   mapping_alternatives = c(
-    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP",
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, STRAIN, DOSFRM, NOMDOSE, DOSEP",
     ""
   ),
   is_multiple_choice = c(TRUE, TRUE)

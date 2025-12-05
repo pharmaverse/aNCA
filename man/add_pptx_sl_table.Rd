@@ -8,6 +8,7 @@ add_pptx_sl_table(
   pptx,
   df,
   title = "",
+  subtitle = "",
   footer = "Click here for individual results"
 )
 }
@@ -17,6 +18,8 @@ add_pptx_sl_table(
 \item{df}{Data frame to show as table}
 
 \item{title}{Title text for the slide}
+
+\item{subtitle}{Subtitle text for the slide}
 
 \item{footer}{Footer text for the slide}
 }
