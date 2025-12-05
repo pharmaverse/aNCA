@@ -6,6 +6,8 @@ linters:
         styles = c("snake_case", "SNAKE_CASE")
     ),
     object_usage_linter = NULL,
-    pipe_consistency_linter = pipe_consistency_linter("%>%")
+    pipe_consistency_linter = pipe_consistency_linter("%>%"),
+    return_linter = return_linter(return_style = "implicit"),
+    seq_linter = seq_linter()
   )
 encoding: "UTF-8"
