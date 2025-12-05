@@ -178,7 +178,7 @@ tab_data_server <- function(id) {
         #' Create data object
         pknca_object <- PKNCA_create_data_object(
           adnca_data = processed_data(),
-          nca_exclude_reason_columns = "DTYPE"
+          nca_exclude_reason_columns = c("DTYPE", column_mapping$nca_exclusion_flags())
         )
         ############################################################################################
         # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
