@@ -51,7 +51,7 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom stats setNames
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' adnca <- subset(adnca, adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)])
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis val"
@@ -388,7 +388,7 @@ g_pkcg02_log <- function(data, ...) {
 #' @importFrom stats setNames
 
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis value"
 #'
