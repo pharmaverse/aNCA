@@ -245,6 +245,32 @@ describe("calculate_ratios", {
     expect_true(all(grepl("RACMAX", ratios_df$PPTESTCD)))
   })
 
+  it("it returns warning in simple case but test_parameter is FAKE ", {
+
+    expect_warning(
+      calculate_ratios(
+        res_simple$result,
+        test_parameter = "FAKE",
+        ref_parameter = "CMAX",
+        match_cols = c("start", "end", "USUBJID"),
+        ref_groups = ref_groups,
+        test_groups = test_groups
+      ), "No test_parameter")
+  })
+
+  it("it returns warning in simple case but ref_parameter is FAKE ", {
+
+    expect_warning(
+      calculate_ratios(
+        res_simple$result,
+        test_parameter = "CMAX",
+        ref_parameter = "FAKE",
+        match_cols = c("start", "end", "USUBJID"),
+        ref_groups = ref_groups,
+        test_groups = test_groups
+      ), "No ref_parameter")
+  }) 
+  
   it("handles no test and reference matches (data.frame) and returns correct structure", {
     # Use test_groups that don't exist in the data to force an empty df_test
     test_groups_no_match <- data.frame(PARAM = "Z")
