@@ -164,14 +164,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         # Unique ID for each module
         module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
 
-        bslib::accordion_panel(
+        accordion_panel(
           title = study_type,
           # Call the sub-module UI
           param_selector_panel_ui(ns(module_id))
         )
       })
 
-      bslib::accordion(
+      accordion(
         !!!all_main_panels,
         id = ns("main_study_accordion"),
         multiple = TRUE, # Allow multiple studies open
