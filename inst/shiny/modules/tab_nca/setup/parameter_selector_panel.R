@@ -1,3 +1,5 @@
+#' Parameter Selector Panel module
+#'
 #' This module renders a Virtual Shiny Widget (`virtualSelectInput`) to allow
 #' parameter selection for a specific study type. It handles two-way binding:
 #' broadcasting user changes to the parent module and updating the UI if the
