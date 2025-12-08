@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' pknca_data <- PKNCA_create_data_object(adnca)
 #' pknca_data <- create_start_impute(pknca_data)
 #'
