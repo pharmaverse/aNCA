@@ -35,7 +35,7 @@ Assumes that multiple dose data will have a TRTRINT column
 or contain multiple doses in dataset
 }
 \examples{
-adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 pknca_data <- PKNCA_create_data_object(adnca)
 pknca_conc <- pknca_data$conc
 pknca_dose <- pknca_data$dose

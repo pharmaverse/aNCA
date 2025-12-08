@@ -23,7 +23,7 @@
 #'   - Arranges the data by group_columns.
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' conc_data <- format_pkncaconc_data(ADNCA = adnca,
 #'                                    group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
 #'                                    time_column = "AFRLT",
