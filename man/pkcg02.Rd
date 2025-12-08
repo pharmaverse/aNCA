@@ -88,10 +88,13 @@ A list of ggplot or plotly objects for each unique group.
 This function generates a list of plotly objects PK concentration-time profiles by group
 }
 \examples{
-adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+# Make an example small dataset
+adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+adnca <- adnca[adnca$USUBJID \%in\% unique(adnca$USUBJID)[c(1, 2)],]
 attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 attr(adnca[["AVAL"]], "label") <- "Analysis value"
 
+# Run the function
 plots <- pkcg02(adnca)
 plots_log <- pkcg02(adnca, scale = "LOG")
 plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
