@@ -65,11 +65,9 @@ process_data_individual <- function(data,
     processed_data <- processed_data %>% filter(ATPTREF %in% profiles_selected)
   }
 
-  return(
-    list(
-      processed_data = processed_data,
-      time_col = time_col
-    )
+  list(
+    processed_data = processed_data,
+    time_col = time_col
   )
 }
 
@@ -149,9 +147,8 @@ process_data_mean <- function(data,
   }
 
 
-  return(list(
+  list(
     summarised_data = summarised_data,
     time_col = time_col
-  )
   )
 }
