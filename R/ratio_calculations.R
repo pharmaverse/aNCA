@@ -238,7 +238,6 @@ calculate_ratios.PKNCAresults <- function(
   adjusting_factor = 1,
   custom_pptestcd = NULL
 ) {
-
   # Check if match_cols and ref_groups are valid group columns
   # Make checks on the input formats
   cols_used_for_ratios <- c(match_cols, names(ref_groups), names(test_groups))

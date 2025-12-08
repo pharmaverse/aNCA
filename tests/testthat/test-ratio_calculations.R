@@ -68,7 +68,6 @@ describe("multiple_matrix_ratios", {
 })
 
 describe("calculate_ratios", {
-
   res <- FIXTURE_PKNCA_RES
   res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
   test_groups <- data.frame(PARAM = "B")
@@ -85,7 +84,6 @@ describe("calculate_ratios", {
     )
 
   it("computes correct ratios for simple case (data.frame)", {
-
     ratios <- calculate_ratios(
       res_simple$result,
       test_parameter = "CMAX",
@@ -100,7 +98,6 @@ describe("calculate_ratios", {
   })
 
   it("computes correct ratios for simple case (PKNCAresults)", {
-
     pknca_res_with_ratios <- calculate_ratios(
       res_simple,
       test_parameter = "CMAX",
@@ -118,7 +115,6 @@ describe("calculate_ratios", {
   })
 
   it("handles adjusting_factor", {
-
     ratios <- calculate_ratios(
       res_simple$result,
       test_parameter = "CMAX",
@@ -181,7 +177,6 @@ describe("calculate_ratios", {
   })
 
   it("returns error when a non-group column is used for match_cols or ref_groups", {
-
     expect_error(
       calculate_ratios(
         res,
@@ -208,7 +203,6 @@ describe("calculate_ratios", {
   })
 
   it("allows custom PPTESTCD", {
-
     ratios <- calculate_ratios(
       res_simple,
       test_parameter = "CMAX",
@@ -246,7 +240,6 @@ describe("calculate_ratios", {
   })
 
   it("it returns warning in simple case but test_parameter is FAKE ", {
-
     expect_warning(
       calculate_ratios(
         res_simple$result,
@@ -255,11 +248,11 @@ describe("calculate_ratios", {
         match_cols = c("start", "end", "USUBJID"),
         ref_groups = ref_groups,
         test_groups = test_groups
-      ), "No test_parameter")
+      ), "No test_parameter"
+    )
   })
 
   it("it returns warning in simple case but ref_parameter is FAKE ", {
-
     expect_warning(
       calculate_ratios(
         res_simple$result,
@@ -268,9 +261,10 @@ describe("calculate_ratios", {
         match_cols = c("start", "end", "USUBJID"),
         ref_groups = ref_groups,
         test_groups = test_groups
-      ), "No ref_parameter")
-  }) 
-  
+      ), "No ref_parameter"
+    )
+  })
+
   it("handles no test and reference matches (data.frame) and returns correct structure", {
     # Use test_groups that don't exist in the data to force an empty df_test
     test_groups_no_match <- data.frame(PARAM = "Z")
@@ -297,5 +291,4 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPORRESU))
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
-
 })
