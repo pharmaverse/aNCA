@@ -253,7 +253,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       # and then split the result into a list by study_type.
       df %>%
         tidyr::pivot_longer(
-          cols = all_of(study_type_names),
+          cols = any_of(study_type_names),
           names_to = "study_type",
           values_to = "selected"
         ) %>%
