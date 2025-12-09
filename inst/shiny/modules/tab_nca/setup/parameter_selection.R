@@ -25,7 +25,6 @@ parameter_selection_ui <- function(id) {
 
     br(),
     p("The following parameters are currently selected:"),
-    br(),
     reactable_ui(ns("selected_parameters_table")),
 
     br(),
