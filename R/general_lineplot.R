@@ -44,7 +44,7 @@
 #' }
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' # Use actual values from the dummy data for the example
 #' selected_analytes <- head(unique(adnca$ANALYTE), 1)
 #' selected_pcspec <- head(unique(adnca$PCSPEC), 1)
@@ -130,7 +130,7 @@ general_lineplot <- function(
     facet_by = facet_by
   )
 
-  return(plt)
+  plt
 }
 
 #' Helper function to handle optional layers
@@ -185,7 +185,7 @@ add_optional_layers <- function(plt, yaxis_scale, show_threshold,
     plt <- plt + facet_wrap(vars(!!!syms(facet_by)), axes = "all", scales = "free")
   }
 
-  return(plt)
+  plt
 }
 
 #' Prepare Data for PK Lineplot

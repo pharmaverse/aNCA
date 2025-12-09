@@ -12,6 +12,8 @@
 
 * Exact duplicate records (DTYPE = "COPY") and time duplicates (DTYPE = "TIME DUPLICATE") are not removed from the data, but just excluded from the analysis (#765) 
 
+* Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
+
 
 # aNCA 0.1.0
 
