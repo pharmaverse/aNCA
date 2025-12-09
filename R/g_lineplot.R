@@ -133,7 +133,7 @@ g_lineplot <- function(data,
   plot_data <- data %>%
     mutate(
       color_var = interaction(!!!syms(color_by), sep = ", ")
-   ) %>%
+    ) %>%
     arrange(.data[[x_var]])
 
   plt <- ggplot(plot_data, aes(
