@@ -289,7 +289,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       # Join with metadata to get labels
       metadata_df <- all_params %>%
-        select(PKNCA, PPTESTCD, PPTEST, sort_order) %>%
+        select(TYPE, PKNCA, PPTESTCD, PPTEST, sort_order) %>%
         distinct(PKNCA, .keep_all = TRUE)
 
       accordion_order <- study_types_list()
@@ -298,7 +298,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         left_join(metadata_df, by = "PKNCA") %>%
         arrange(sort_order) %>%
         # Reorder columns to put labels first
-        select(PPTESTCD, PPTEST, PKNCA, any_of(accordion_order))
+        select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(accordion_order))
 
     })
 
@@ -315,6 +315,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
         # Define Fixed Sticky Columns
         fixed_cols <- list(
+          TYPE = colDef(sticky = "left", minWidth = 100),
           PPTESTCD = colDef(sticky = "left", minWidth = 100),
           PPTEST = colDef(sticky = "left", minWidth = 200),
           PKNCA = colDef(show = FALSE)
