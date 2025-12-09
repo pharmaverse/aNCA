@@ -10,7 +10,7 @@
 #' either AFRLT or ARRLT depending on if profiles_selected is null or not.
 #'
 #' @import dplyr
-#' @import rlang
+#' @importFrom rlang sym syms
 #' @seealso dose_profile_duplicates
 #' @examples
 #' base_df <- expand.grid(
@@ -80,7 +80,7 @@ process_data_individual <- function(data,
 #' @returns A list with `summarised_data` with Mean, SD, and CIs for the profiles selected,
 #' and `time_col`- either NFRLT or NRRLT depending on if profiles selected is null.
 #' @import dplyr
-#' @import rlang
+#' @importFrom rlang sym syms
 #'
 #' @examples
 #' base_df <- expand.grid(
