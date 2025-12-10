@@ -31,24 +31,6 @@ additional_analysis_ui <- function(id) {
           excretion_ui(ns("excretion"))
         )
       )
-    ),
-    nav_panel(
-      title = "AUC Ratios",
-      value = "auc_analysis",
-      card(
-        p("To be added")
-      ),
-    ),
-    nav_panel(
-      title = "Metabolite-Parent Ratios",
-      value = "metabolite_analysis",
-      card(
-        card_header("Metabolite-Parent Ratios"),
-        card_body(
-
-          p("To be added")
-        )
-      )
     )
   )
 }

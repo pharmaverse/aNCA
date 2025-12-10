@@ -762,3 +762,46 @@ div[data-value="Settings"] > div.row a {
 h4.modal-title:has(#loading-title) {
   width: 100%;
 }
+
+.add-pair-btn {
+  background-color: #007bc2;
+  border-color: #007bc2;
+  color: #ffffff;
+}
+
+.add-pair-btn:hover {
+  background-color: #005b8f;
+  border-color: #005b8f;
+}
+
+.ratio-pair-row {
+  background-color: #E7ECFA;
+  border: 1px solid #cdcdcd;
+  border-radius: 5px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.ratio-pair-row .form-group.shiny-input-container {
+  flex: 1 1 250px;
+  margin-bottom: 0;
+}
+
+.ratio-pair-row .ratio-remove-btn-wrapper {
+  margin-bottom: 0;
+}
+
+.ratio-pair-row .ratio-remove-btn-wrapper .btn {
+  background-color: #b4b4b4;
+  border-color: #b4b4b4;
+  color: #21201f;
+}
+
+.ratio-pair-row .ratio-remove-btn-wrapper .btn:hover {
+  background-color: #9b9b9b;
+  border-color: #9b9b9b;
+}

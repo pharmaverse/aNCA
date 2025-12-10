@@ -4,15 +4,13 @@ describe("Test for mapping interface", {
   it("mapping interface appears without errors", {
     app <- AppDriver$new(
       name = "app_mapping",
-      height = 407,
-      width = 348,
       variant = NULL
     )
     app$click("data-next_step")
     app$wait_for_idle()
     app$click("data-next_step")
     app$wait_for_idle()
-    app$expect_values(input = "data-column_mapping-select_STUDYID")
+    app$expect_values(input = "data-column_mapping-select_STUDYID", screenshot_args = FALSE)
   })
 
 

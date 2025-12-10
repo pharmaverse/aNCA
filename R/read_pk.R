@@ -8,7 +8,7 @@
 #' @returns A data.frame object with loaded data.
 #'
 #' @examples
-#' df <- read_pk(system.file("shiny/data/Dummy_complex_data.csv", package = "aNCA"))
+#' df <- read_pk(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
 #'
 #' @importFrom tools file_ext
 #' @importFrom utils read.csv

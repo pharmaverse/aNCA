@@ -76,7 +76,7 @@
 l_pkcl01 <- function(
   data,
   listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
-  grouping_vars = c("TRT01A", "USUBJID", "AVISIT"),
+  grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
   displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
   formatting_vars_table = NULL,
   title = paste0("Listing of PK Concentration by Treatment Group,",

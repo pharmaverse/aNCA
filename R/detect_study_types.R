@@ -6,10 +6,8 @@
 #' Must contain group columns, the specified route, analyte and drug columns,
 #' and ADOSEDUR.
 #' @param groups the grouping variables for the study type detection.
-#' @param drug_column A character string specifying the
-#'  column name for drug
-#' @param analyte_column A character string specifying the
-#'  column name for analyte
+#' @param metabfl_column A character string specifying the
+#' column name for the metabolite flag, which is coded as "Y" for metabolites
 #' @param route_column A character string specifying the
 #'  column name for the route of administration.
 #' @param volume_column A character string specifying the
@@ -19,20 +17,20 @@
 #'
 #' @details
 #' The function identifies a possible five different types of studies
-#' based on grouping by `STUDYID`, `DRUG`, `USUBJID`, `PCSPEC`, and the route column.
+#' based on grouping by `STUDYID`, `DOSETRT`, `USUBJID`, `PCSPEC`, and the route column.
 #' The study types are determined as follows:
 #'  - "Excretion Data": If the volume column for a group is not NA and has values > 0.
-#'  - "Single Extravascular Dose": If there is only one dose and TAU is not available,
+#'  - "Single Extravascular Dose": If there is only one dose and TRTRINT is not available,
 #'   and the route is extravascular.
-#'  - "Single IV Infusion Dose": If there is only one dose and TAU is not present,
+#'  - "Single IV Infusion Dose": If there is only one dose and TRTRINT is not present,
 #'   and the route is not extravascular.
-#'  - "Single IV Bolus Dose": If there is only one dose and TAU is not present,
+#'  - "Single IV Bolus Dose": If there is only one dose and TRTRINT is not present,
 #'   the route is not extravascular, and ADOSEDUR == 0.
-#'  - "Multiple Extravascular Doses": If there are multiple doses (or TAU is available)
+#'  - "Multiple Extravascular Doses": If there are multiple doses (or TRTRINT is available)
 #'   and the route is extravascular.
-#'  - "Multiple IV Infusion Doses": If there are multiple doses (or TAU is available)
+#'  - "Multiple IV Infusion Doses": If there are multiple doses (or TRTRINT is available)
 #'   and the route is not extravascular.
-#'  - "Multiple IV Bolus Doses": If there are multiple doses or TAU is not present,
+#'  - "Multiple IV Bolus Doses": If there are multiple doses or TRTRINT is not present,
 #'   the route is not extravascular, and ADOSEDUR == 0.
 #'  - If none of these conditions are met, the type is marker as "Unknown".
 #'
@@ -45,12 +43,12 @@
 #' @examples
 #' sample_data <- data.frame(
 #'   STUDYID = "STUDY001",
-#'   DRUG = "Drug",
-#'   ANALYTE = "DRUG",
+#'   DOSETRT = "Drug",
+#'   ANALYTE = "DOSETRT",
 #'   USUBJID = c(
 #'     # 1. Single IV Dose subject
 #'     "Subj-01", "Subj-01",
-#'     # 2. Multiple Extravascular Doses subject (identified by TAU)
+#'     # 2. Multiple Extravascular Doses subject (identified by TRTRINT)
 #'     "Subj-02", "Subj-02",
 #'     # 3. Excretion Data subject (identified by positive volume)
 #'     "Subj-03", "Subj-03"
@@ -75,29 +73,33 @@
 #'     NA, 0,
 #'     10, 12       # Positive volume indicates excretion
 #'   ),
-#'   TAU = c(
+#'   TRTRINT = c(
 #'     NA, NA,
-#'     24, 24,      # ...but TAU indicates a multiple-dose regimen
+#'     24, 24,      # ...but TRTRINT indicates a multiple-dose regimen
 #'     NA, NA
+#'   ),
+#'   METABFL = c(
+#'     "N", "N",
+#'     "N", "N",
+#'     "Y", "Y"    # mark last subject as metabolite
 #'   )
 #' )
 #'
 #' study_summary <- detect_study_types(
 #'   data = sample_data,
-#'   groups = c("USUBJID", "PCSPEC", "DRUG"),
-#'   drug_column = "DRUG",
-#'   analyte_column = "ANALYTE",
+#'   groups = c("USUBJID", "PCSPEC", "DOSETRT"),
+#'   metabfl_column = "METABFL",
 #'   route_column = "ROUTE",
 #'   volume_column = "SAMPLE_VOLUME"
 #' )
 #'
 #' @export
-detect_study_types <- function(data, groups, drug_column, analyte_column,
+detect_study_types <- function(data, groups, metabfl_column,
                                route_column, volume_column = "volume") {
 
   full_grouping <- c(groups, route_column)
 
-  has_tau <- "TAU" %in% names(data)
+  has_tau <- "TRTRINT" %in% names(data)
 
   # If volume column is not provided, create volume_column and set to NA
   if (missing(volume_column)) {
@@ -109,12 +111,12 @@ detect_study_types <- function(data, groups, drug_column, analyte_column,
     group_by(!!!syms(full_grouping)) %>%
     # determine study types based on dosnoa, tau, route and volumes
     mutate(single_dose_present = isTRUE(unique(DOSNOA) == 1),
-           missing_tau = !has_tau || all(is.na(get("TAU"))),
+           missing_tau = !has_tau || all(is.na(get("TRTRINT"))),
            is_one_dose = single_dose_present & missing_tau,
            is_extravascular = !!sym(route_column) == "extravascular",
            is_bolus = !is_extravascular & ADOSEDUR == 0,
            is_excretion = (!is.na(!!sym(volume_column)) & !!sym(volume_column) > 0),
-           is_metabolite = !!sym(analyte_column) != !!sym(drug_column)) %>%
+           is_metabolite = !!sym(metabfl_column) == "Y") %>%
     ungroup()
 
   # Identify unique combinations of study types

@@ -5,20 +5,18 @@
 \title{Flexible Violin/Box Plot}
 \usage{
 flexible_violinboxplot(
-  boxplotdata,
+  res_nca,
   parameter,
   xvars,
   colorvars,
-  varvalstofilter,
+  varvalstofilter = NULL,
   columns_to_hover,
   box = TRUE,
   plotly = TRUE
 )
 }
 \arguments{
-\item{boxplotdata}{A list containing the data to be plotted. It should have a \code{data}
-element with dose information and a \code{formatted} element with the
-data to be plotted.}
+\item{res_nca}{A PKNCA results object containing the results and concentration data.}
 
 \item{parameter}{A string specifying the parameter to be plotted.}
 
@@ -26,7 +24,8 @@ data to be plotted.}
 
 \item{colorvars}{Variables for the color aesthetic.}
 
-\item{varvalstofilter}{Variables to filter on.}
+\item{varvalstofilter}{Character vector specifying which variable and value to pre-filter
+as \code{colname: value}. By default is NULL (no pre-filtering)}
 
 \item{columns_to_hover}{A character vector indicating the column names from result_data that
 should be used to identify when hovering the plotly outputs}

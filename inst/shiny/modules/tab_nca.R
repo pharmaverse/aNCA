@@ -15,7 +15,7 @@
 #'
 #' @param id           ID of the module.
 #' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
-#' @param grouping_vars A character vector with grouping variables for the analysis.
+#' @param extra_group_vars Column name(s) of the additional variable options for input widgets
 #'
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
@@ -62,7 +62,7 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, adnca_data, grouping_vars) {
+tab_nca_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -71,54 +71,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
 
-    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
-    pknca_data <- reactive({
-      req(adnca_data())
-      log_trace("Creating PKNCA::data object.")
-
-      tryCatch({
-        #' Create data object
-        pknca_object <- PKNCA_create_data_object(adnca_data())
-        ############################################################################################
-        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
-        # this is implemented here via hardcoding in PPSTRESU
-        pknca_object$units <- pknca_object$units %>%
-          mutate(
-            PPSTRESU = {
-              new_ppstresu <- ifelse(
-                PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                  metadata_nca_parameters$unit_type == "volume"
-                ],
-                sapply(PPSTRESU, \(x) simplify_unit(x, as_character = TRUE)),
-                PPSTRESU
-              )
-              # Only accept changes producing simple units
-              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
-            },
-            conversion_factor = ifelse(
-              PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                metadata_nca_parameters$unit_type == "volume"
-              ],
-              get_conversion_factor(PPORRESU, PPSTRESU),
-              conversion_factor
-            )
-          )
-        ############################################################################################
-        log_success("PKNCA data object created.")
-
-        #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "exploration", "tlg"), \(tab) {
-          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
-        })
-
-        pknca_object
-      }, error = function(e) {
-        log_error(e$message)
-        showNotification(e$message, type = "error", duration = NULL)
-        NULL
-      })
-    }) |>
-      bindEvent(adnca_data())
+    adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
     nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
@@ -153,6 +106,7 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
       loading_popup("Calculating NCA results...")
 
       log_info("Calculating NCA results...")
+
       tryCatch({
         # Create env for storing PKNCA run warnings, so that warning messages can be appended
         # from within warning handler without bleeding to global env.
@@ -210,29 +164,37 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
         log_success("NCA results calculated.")
 
-        # Apply standard CDISC names and return the object
-        res %>%
-          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+        # Reshape intervals, filter
+        params_not_requested <- res$data$intervals %>%
+          select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
+          # For all logical columns, mutate FALSE to NA
+          mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
+          # Only select column that are only NA
+          select(where(~ all(is.na(.x)))) %>%
+          names()
 
+        # Filter for requested params based on intervals
+        res$result <- res$result %>%
+          filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
+
+        res
       }, error = function(e) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
         NULL
+      }, finally = {
+        # Delay the removal of loading modal to give it enough time to render
+        later::later(~shiny::removeModal(session = session), delay = 0.5)
       })
     }) |>
       bindEvent(input$run_nca)
-
-    #' Remove loading modal when results are ready and visible
-    observeEvent(input$results_visible, {
-      removeModal()
-    })
 
     #' Show slopes results
     pivoted_slopes <- reactive({
       req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
-          any_of(c("USUBJID", "NCA_PROFILE", "PARAM", "PCSPEC")),
+          any_of(c("USUBJID", "ATPTREF", "PARAM", "PCSPEC")),
           starts_with("LAMZ"),
           starts_with("lambda.z"),
           starts_with("R2ADJ"),
@@ -253,14 +215,14 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
 
     #' Prepares and displays the pivoted NCA results
     nca_results_server(
-      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, grouping_vars
+      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
     )
 
     #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
+    descriptive_statistics_server("descriptive_stats", res_nca, extra_group_vars)
 
     #' Additional analysis module
-    additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
+    additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)

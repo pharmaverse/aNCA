@@ -1,6 +1,6 @@
-#' Create a Faceted Quality Control (QC) Plot
+#' Create a PK Dose Quality Control (QC) Plot
 #'
-#' Generates a faceted QC plot by layering concentration data (as
+#' Generates a PK Dose QC plot by layering concentration data (as
 #' black shapes) and dose data (as colored points). It creates a single, unified
 #' legend for both data types and can return either a static `ggplot` or an
 #' interactive `plotly` object.
@@ -29,6 +29,7 @@
 #' @param show_doses Logical. If `TRUE`, plots the dose data.
 #' @param as_plotly Logical. If `TRUE`, converts the final plot to an interactive
 #'   `plotly` object.
+#' @param height Numeric. Desired height for the plot.
 #'
 #' @return A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
 #'
@@ -54,7 +55,7 @@
 #' )
 #'
 #' # Generate the plot
-#' faceted_qc_plot(
+#' pk_dose_qc_plot(
 #'   data_conc = conc_data,
 #'   data_dose = dose_data,
 #'   x_var = "ACTUAL_TIME",
@@ -67,7 +68,7 @@
 #'   title = "Sample Dosing and PK Plot"
 #' )
 #' @export
-faceted_qc_plot <- function(data_conc,
+pk_dose_qc_plot <- function(data_conc,
                             data_dose = NULL,
                             x_var,
                             y_var,
@@ -81,15 +82,15 @@ faceted_qc_plot <- function(data_conc,
                             title = NULL,
                             show_pk_samples = TRUE,
                             show_doses = TRUE,
-                            as_plotly = FALSE) {
+                            as_plotly = FALSE,
+                            height = NULL) {
 
   # Define boolean flags
   plot_conc_data <- show_pk_samples && !is.null(data_conc)
   plot_dose_data <- show_doses && !is.null(data_dose) && nrow(data_dose) > 0
 
-
   # Select variables to include in the plotly tooltips
-  tooltip_vars <- c(y_var, grouping_vars, other_tooltip_vars, x_var, colour_var)
+  tooltip_vars <- c(y_var, other_tooltip_vars, x_var, colour_var)
 
   # Prerocess the data and unpack the results
   prep_results <- prepare_plot_data(
@@ -165,12 +166,7 @@ faceted_qc_plot <- function(data_conc,
     aes(
       x = !!sym(x_var),
       y = !!sym(y_var),
-      text = generate_tooltip_text(
-        data = processed_data,
-        labels_df = labels_df,
-        tooltip_vars = tooltip_vars,
-        type = "ADPC"
-      ),
+      text = tooltip_text,
       colour = legend_group,
       shape = legend_group
     )
@@ -194,13 +190,13 @@ faceted_qc_plot <- function(data_conc,
     theme_bw()
 
   if (as_plotly) {
-    p <- ggplotly(p, tooltip = "text") %>%
+    p <- ggplotly(p, tooltip = "text", height = height) %>%
       layout(title = list(text = p$labels$title), legend = list(traceorder = "normal"))
   }
   p
 }
 
-#' Prepare Data for QC Plotting
+#' Prepare Data for PK Dose QC Plotting
 #'
 #' A helper function that validates, processes, and combines
 #' concentration and dose data. It creates the unified legend and faceting
@@ -271,12 +267,9 @@ prepare_plot_data <- function(data_conc,
   # Assign legend groups and facet titles to the data points
   processed_data <- bind_rows(plot_data_list) %>%
     mutate(
-      legend_group = factor(legend_group, levels = all_legend_levels),
-      facet_title = pmap_chr(
-        select(., all_of(grouping_vars)),
-        ~ paste(list(...), collapse = ", ")
-      )
-    )
+      legend_group = factor(legend_group, levels = all_legend_levels)
+    ) %>%
+    unite(facet_title, all_of(grouping_vars), sep = ",", remove = FALSE)
 
   # Return a list containing the processed data and the factor levels
   list(

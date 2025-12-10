@@ -1,6 +1,6 @@
 # Source: https://github.com/pharmaverse/admiralci
 # Stripped down version of admiralci checks. Good for
-# the developement process. When package is ready to
+# the development process. When package is ready to
 # be published, revisit and add release-related
 # workflows.
 # Due to the need of some customization, instead of
