@@ -163,7 +163,7 @@ update_main_intervals <- function(data, parameter_selections,
   data$intervals <- updated_intervals %>%
     select(-type)
 
-  # # Add partial AUCs if any
+  # Add partial AUCs if any
   auc_ranges <- auc_data %>%
     filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
 
@@ -189,13 +189,13 @@ update_main_intervals <- function(data, parameter_selections,
 
   # Impute start values if requested
   if (impute) {
-    data <- handle_imputation(data)
+    data <- apply_imputation(data)
   }
 
   data
 }
 
-#' Handle Imputation for PKNCA Data
+#' Apply Imputation for PKNCA Data
 #'
 #' Applies imputation rules to a PKNCAdata object, imputing start values and then
 #' selectively removing imputation for parameters that are not dependent on AUC.
@@ -204,7 +204,7 @@ update_main_intervals <- function(data, parameter_selections,
 #' @returns A PKNCAdata object with imputation rules applied.
 #' @import dplyr
 #'
-handle_imputation <- function(data) {
+apply_imputation <- function(data) {
   data <- create_start_impute(data)
 
   # Don't impute parameters that are not AUC dependent
