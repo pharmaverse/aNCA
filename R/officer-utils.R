@@ -52,7 +52,7 @@ add_pptx_sl_table <- function(pptx, df, title = "",
                               subtitle = "",
                               footer = "Click here for individual results") {
 
-  a_par <- fpar(
+  title_formatted <- fpar(
     ftext(title),
     "\n",
     ftext(subtitle, prop = fp_text(font.size = 12)),
@@ -61,12 +61,11 @@ add_pptx_sl_table <- function(pptx, df, title = "",
 
   # Set flextable to autofit and center for better appearance
   ft <- flextable::flextable(df) %>%
-    flextable::autofit() %>%
-    flextable::set_table_properties(align = "center")
+    flextable::autofit()
 
   add_slide(pptx, layout = "Title Only") %>%
     ph_with(value = ft, location = "Table Placeholder 1") %>%
-    ph_with(value = a_par, location = "Title 1") %>%
+    ph_with(value = title_formatted, location = "Title 1") %>%
     ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
