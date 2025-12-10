@@ -44,7 +44,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_to_iso8601_duration.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_volume_units.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/create_filter_expr.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_html_dose_slides.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_metabfl.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_pptx_doc.html</loc></url>
@@ -56,7 +55,9 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dose_profile_duplicates.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-apply_slope_rules.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-compress_range.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/dot-create_filter_expr.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-eval_range.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/dot-handle_tooltips.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-plotly_empty_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/ensure_column_unit_exists.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/export_cdisc.html</loc></url>

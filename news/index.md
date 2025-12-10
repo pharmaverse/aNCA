@@ -26,6 +26,9 @@
 - Updated TMAX label from Time of CMAX to Time of CMAX Observation
   ([\#787](https://github.com/pharmaverse/aNCA/issues/787))
 
+- Bug fix for box/violin plots that were crashing when violin option
+  selected ([\#786](https://github.com/pharmaverse/aNCA/issues/786))
+
 ## aNCA 0.1.0
 
 - Initial CRAN submission.

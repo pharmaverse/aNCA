@@ -9,7 +9,7 @@ parameter, and dose information."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9008</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9009</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,8 @@ parameter, and dose information.</p>
 <span>  <span class="va">xvars</span>,</span>
 <span>  <span class="va">colorvars</span>,</span>
 <span>  varvalstofilter <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">columns_to_hover</span>,</span>
+<span>  <span class="va">tooltip_vars</span>,</span>
+<span>  labels_df <span class="op">=</span> <span class="va">metadata_nca_variables</span>,</span>
 <span>  box <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  plotly <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -98,9 +99,14 @@ parameter, and dose information.</p>
 as <code>colname: value</code>. By default is NULL (no pre-filtering)</p></dd>
 
 
-<dt id="arg-columns-to-hover">columns_to_hover<a class="anchor" aria-label="anchor" href="#arg-columns-to-hover"></a></dt>
+<dt id="arg-tooltip-vars">tooltip_vars<a class="anchor" aria-label="anchor" href="#arg-tooltip-vars"></a></dt>
 <dd><p>A character vector indicating the column names from result_data that
-should be used to identify when hovering the plotly outputs</p></dd>
+should be used to identify when hovering the plotly outputs.</p></dd>
+
+
+<dt id="arg-labels-df">labels_df<a class="anchor" aria-label="anchor" href="#arg-labels-df"></a></dt>
+<dd><p>A data.frame used for label lookups in tooltips.
+Defaults to metadata_nca_variables.</p></dd>
 
 
 <dt id="arg-box">box<a class="anchor" aria-label="anchor" href="#arg-box"></a></dt>

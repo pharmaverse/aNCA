@@ -12,7 +12,8 @@ flexible_violinboxplot(
   xvars,
   colorvars,
   varvalstofilter = NULL,
-  columns_to_hover,
+  tooltip_vars,
+  labels_df = metadata_nca_variables,
   box = TRUE,
   plotly = TRUE,
   seed = NULL
@@ -42,10 +43,15 @@ flexible_violinboxplot(
   Character vector specifying which variable and value to pre-filter as
   `colname: value`. By default is NULL (no pre-filtering)
 
-- columns_to_hover:
+- tooltip_vars:
 
   A character vector indicating the column names from result_data that
-  should be used to identify when hovering the plotly outputs
+  should be used to identify when hovering the plotly outputs.
+
+- labels_df:
+
+  A data.frame used for label lookups in tooltips. Defaults to
+  metadata_nca_variables.
 
 - box:
 

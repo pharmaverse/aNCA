@@ -189,9 +189,6 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 - [`convert_volume_units()`](https://pharmaverse.github.io/aNCA/reference/convert_volume_units.md)
   : Convert Volume Units to Match Concentration Denominator Units
 
-- [`create_filter_expr()`](https://pharmaverse.github.io/aNCA/reference/create_filter_expr.md)
-  : Helper function create text used to filter data frame
-
 - [`create_html_dose_slides()`](https://pharmaverse.github.io/aNCA/reference/create_html_dose_slides.md)
   : Render dose escalation results to HTML via Quarto
 
@@ -231,9 +228,15 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
   : Compresses a numeric vector into the simplest possible character
   string that, when evaluated, will create the same numeric vector.
 
+- [`.create_filter_expr()`](https://pharmaverse.github.io/aNCA/reference/dot-create_filter_expr.md)
+  : Helper function create text used to filter data frame
+
 - [`.eval_range()`](https://pharmaverse.github.io/aNCA/reference/dot-eval_range.md)
   : Evaluates range notation. If provided notation is invalid, returns
   NA.
+
+- [`.handle_tooltips()`](https://pharmaverse.github.io/aNCA/reference/dot-handle_tooltips.md)
+  : Tooltip construction helper
 
 - [`.plotly_empty_plot()`](https://pharmaverse.github.io/aNCA/reference/dot-plotly_empty_plot.md)
   : Generate an Empty Plotly Object
