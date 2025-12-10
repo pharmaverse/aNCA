@@ -151,9 +151,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     output$dynamic_study_accordion <- renderUI({
       req(study_types_list())
 
-      all_main_panels <- map(study_types_list(), ~{
-        study_type <- .x
-
+      all_main_panels <- map(study_types_list(), function(study_type) {
         # Unique ID for each module
         module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
 
@@ -183,8 +181,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         split(.$TYPE)
 
       # Loop and create servers
-      map(current_types, ~{
-        study_type <- .x
+      map(current_types, function(study_type) {
         # Make module ID safe for use
         module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
 
