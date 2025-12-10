@@ -26,7 +26,7 @@
 #' @importFrom purrr pmap_chr
 #' @export
 #'
-pivot_wider_pknca_results <- function(myres) {
+pivot_wider_pknca_results <- function(myres, flag_rules = NULL) {
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
@@ -153,7 +153,10 @@ pivot_wider_pknca_results <- function(myres) {
     ungroup()
 
   # Add "label" attribute to columns
-  add_label_attribute(pivoted_res, myres)
+  pivoted_res <- add_label_attribute(pivoted_res, myres)
+
+  # Add flagging columns for each rule and a general "flagged" column 
+  .create_flags_for_profiles(final_results = pivoted_res, myres = myres, flag_rules = flag_rules)
 }
 
 #' Helper function to extract exclude values
@@ -200,3 +203,53 @@ add_label_attribute <- function(df, myres) {
   }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
   df
 }
+
+.add_units_to_colnames <- function(final_results, myres) {
+  mapping_vr <- myres$result %>%
+    mutate(
+      PPTESTCD_unit = case_when(
+        type_interval == "manual" ~ paste0(
+          PPTESTCD, "_", start, "-", end,
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
+        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
+        TRUE ~ PPTESTCD
+      ),
+      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
+    ) %>%
+    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
+    distinct() %>%
+    pull(PPTESTCD_unit, PPTESTCD_cdisc)
+
+  mapping_cols <- intersect(names(final_results), names(mapping_vr))
+  new_colnames <- unname(mapping_vr[mapping_cols])
+  names(final_results)[match(mapping_cols, names(final_results))] <- new_colnames
+  final_results
+}
+
+.create_flags_for_profiles <- function(final_results, myres, flag_rules) {
+
+  # Add flaging columns in the pivoted results
+  applied_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
+  flag_params <- names(flag_rules)
+  flag_thr <- sapply(flag_rules, FUN =  function(x) x$threshold)
+  flag_rule_msgs <- paste0(flag_params, c(" < ", " > ", " > ", " < "), flag_thr)
+  flag_cols <- names(final_results)[formatters::var_labels(final_results)
+                                    %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
+
+  if (length(flag_params) > 0) {
+    final_results <- final_results %>%
+      mutate(
+        flagged = case_when(
+          rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
+          is.na(Exclude) ~ "ACCEPTED",
+          any(sapply(
+            flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
+          )) ~ "FLAGGED",
+          TRUE ~ "ACCEPTED"
+        )
+      )
+  }
+  final_results
+}
+
