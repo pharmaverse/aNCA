@@ -64,7 +64,10 @@ format_to_xpt_compatible <- function(data) {
 #' @param statistics Character vector of summary statistics to include (default: "Mean").
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
+#' @param boxplot_parameter Character string of the parameter to use for boxplot.
 #' @param info_vars Character vector of additional info columns to include
+#' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
+#' 
 #'
 #' @return A list containing dose escalation plots, summary statistics & info tables for each group.
 get_dose_esc_results <- function(
@@ -73,7 +76,8 @@ get_dose_esc_results <- function(
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
   boxplot_parameter = "AUCIFO",
-  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
+  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  labels_df = metadata_nca_variables
 ) {
   # Define column names
   studyid_col <- "STUDYID"
@@ -141,11 +145,11 @@ get_dose_esc_results <- function(
       summarise(n = n())
 
     # Create character string of Group
-    # Where group_by_vars are concatenated with ": " between var name and value
-
+    # Where group_by_vars are concatenated with ": " between label and value
     group_string <- merge(o_nca$data$conc$data, group_i) %>%
       mutate(group = apply(select(., any_of(c(group_by_vars, profile_col))), 1, function(x) {
-        paste(names(x), x, sep = ": ", collapse = ", ")
+        lbls <- sapply(names(x), function(v) get_label(v, type = "ADNCA", labels_df = labels_df))
+        paste(lbls, x, sep = ": ", collapse = "\n")
       })) %>%
       pull(group) %>%
       unique()
