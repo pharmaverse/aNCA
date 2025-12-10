@@ -153,7 +153,7 @@ update_main_intervals <- function(data, parameter_selections,
         updated_intervals <- updated_intervals %>%
           mutate(across(
             .cols = all_of(params_for_type),
-            .fns = ~ if_else(type == study_type, TRUE, .)
+            .fns = \(x) if_else(type == study_type, TRUE, x)
           ))
       }
     }
