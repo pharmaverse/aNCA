@@ -16,3 +16,4 @@ inst/shiny/log/*
 .DS_Store
 # {shinytest2}: Ignore new debug snapshots for `$expect_values()`
 *_.new.png
+desktop.ini
