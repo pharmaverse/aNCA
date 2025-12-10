@@ -67,7 +67,6 @@ format_to_xpt_compatible <- function(data) {
 #' @param boxplot_parameter Character string of the parameter to use for boxplot.
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
-#' 
 #'
 #' @return A list containing dose escalation plots, summary statistics & info tables for each group.
 get_dose_esc_results <- function(

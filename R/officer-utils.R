@@ -58,9 +58,9 @@ add_pptx_sl_table <- function(pptx, df, title = "",
     ftext(subtitle, prop = fp_text(font.size = 12)),
     fp_p = fp_par(text.align = "center", line_spacing = 1)
   )
-  
+
   # Set flextable to autofit and center for better appearance
-  ft <- flextable::flextable(df) %>% 
+  ft <- flextable::flextable(df) %>%
     flextable::autofit() %>%
     flextable::set_table_properties(align = "center")
 
