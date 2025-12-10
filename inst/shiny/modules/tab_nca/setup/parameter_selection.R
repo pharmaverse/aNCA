@@ -39,6 +39,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    initialised_modules <- new.env()
+
     # Define parameters to be selected by default
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
@@ -182,8 +184,16 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       # Loop and create servers
       map(current_types, function(study_type) {
-        # Make module ID safe for use
+        # Define module ID
         module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
+
+        if (exists(module_id, envir = initialised_modules)) {
+          # If it exists, exit this iteration
+          return()
+        }
+
+        # If not, mark it as initialized
+        assign(module_id, TRUE, envir = initialised_modules)
 
         current_type_selections <- reactive({
           state <- selections_state()
