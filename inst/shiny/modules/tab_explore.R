@@ -394,9 +394,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     })
 
 
-    # Save the objects for the ZIP folder whenever they cahnge
+    # Save the objects for the ZIP folder whenever they change
     observe({
-      req(meanplot())
+      req(individualplot(), meanplot())
+
       # Individual plots
       session$userData$results$exploration$individualplot <- individualplot()
       session$userData$results$exploration$individualplot_plotly <- ggplotly(individualplot())
