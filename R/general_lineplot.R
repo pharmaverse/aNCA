@@ -44,7 +44,7 @@
 #' }
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' # Use actual values from the dummy data for the example
 #' selected_analytes <- head(unique(adnca$ANALYTE), 1)
 #' selected_pcspec <- head(unique(adnca$PCSPEC), 1)
