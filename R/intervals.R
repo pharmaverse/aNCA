@@ -201,18 +201,19 @@ update_main_intervals <- function(data, parameter_selections,
 #' selectively removing imputation for parameters that are not dependent on AUC.
 #'
 #' @param data A PKNCAdata object.
+#' @param nca_parameters A dataset containing the mapping between PKNCA terms and CDISC terms.
 #' @returns A PKNCAdata object with imputation rules applied.
 #' @import dplyr
 #'
-apply_imputation <- function(data) {
+apply_imputation <- function(data, nca_parameters = metadata_nca_parameters) {
   data <- create_start_impute(data)
 
   # Don't impute parameters that are not AUC dependent
-  params_auc_dep <- metadata_nca_parameters %>%
+  params_auc_dep <- nca_parameters %>%
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
-  params_not_to_impute <- metadata_nca_parameters %>%
+  params_not_to_impute <- nca_parameters %>%
     filter(!grepl("auc|aumc", PKNCA),
            !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
     pull(PKNCA) %>%

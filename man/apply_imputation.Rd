@@ -4,10 +4,12 @@
 \alias{apply_imputation}
 \title{Apply Imputation for PKNCA Data}
 \usage{
-apply_imputation(data)
+apply_imputation(data, nca_parameters = metadata_nca_parameters)
 }
 \arguments{
 \item{data}{A PKNCAdata object.}
+
+\item{nca_parameters}{A dataset containing the mapping between PKNCA terms and CDISC terms.}
 }
 \value{
 A PKNCAdata object with imputation rules applied.
