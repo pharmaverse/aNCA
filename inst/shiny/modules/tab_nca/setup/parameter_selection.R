@@ -129,21 +129,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       })
 
       # Update parameter selection using override and considering study types
-      selection_df <- apply_parameter_selections(
+      apply_parameter_selections(
         selection_df = all_params,
         study_type_names = study_type_names,
         default_params = DEFAULT_PARAMS,
         selections_override = selections_override
       ) %>%
         # Remove unneeded columns
-        select(
-          -any_of(
-            c("can_excretion", "can_non_excretion", "can_single_dose",
-              "can_multiple_dose", "can_extravascular", "can_metabolite")
-          )
-        )
-
-      selection_df
+        select(-starts_with("can_"))
     })
 
     # Sync the base state to the live state
