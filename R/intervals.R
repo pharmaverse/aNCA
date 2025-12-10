@@ -140,11 +140,11 @@ update_main_intervals <- function(data, parameter_selections,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
-  # 1. Add the 'type' column to the intervals data
+  # Add the 'type' column to the intervals data
   intervals_with_types <- data$intervals %>%
     left_join(study_types_df, by = grouping_cols)
 
-  # 3. Iterate over selections to set new flags to TRUE
+  # Iterate over selections to set new flags to TRUE
   updated_intervals <- intervals_with_types
   if (length(parameter_selections) > 0) {
     for (study_type in names(parameter_selections)) {
