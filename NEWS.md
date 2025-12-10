@@ -14,6 +14,8 @@
 
 * ZIP folder with results will include now the exploration tab outputs: individual plots, mean plots (#794)
 
+* Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
+
 
 # aNCA 0.1.0
 

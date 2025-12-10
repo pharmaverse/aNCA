@@ -30,7 +30,7 @@ data, and a file must be uploaded manually within the app.
 \examples{
 \donttest{
   # Show the packaged example path (safe non-interactive snippet)
-  adnca_path <- system.file("shiny/data/Dummy_data.csv", package = "aNCA")
+  adnca_path <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
   adnca_path
 
   # To actually launch the app, run interactively:
