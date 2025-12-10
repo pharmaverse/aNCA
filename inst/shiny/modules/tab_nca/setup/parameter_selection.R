@@ -39,6 +39,22 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Define parameters to be selected by default
+    DEFAULT_PARAMS <- c(
+      "aucinf.obs", "aucinf.obs.dn",
+      "auclast", "auclast.dn",
+      "cmax", "cmax.dn",
+      "clast.obs", "clast.obs.dn",
+      "tlast", "tmax",
+      "half.life", "cl.obs", "vss.obs", "vz.obs",
+      "mrt.last", "mrt.obs",
+      "lambda.z",
+      "lambda.z.n.points", "r.squared",
+      "adj.r.squared", "lambda.z.time.first",
+      "aucpext.obs", "aucpext.pred",
+      "ae", "fe"
+    )
+
     # Retrieve study types
     study_types_df <- reactive({
       req(processed_pknca_data())
@@ -85,21 +101,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         group_by(!!!syms(groups), type) %>%
         summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
     })
-
-    DEFAULT_PARAMS <- c(
-      "aucinf.obs", "aucinf.obs.dn",
-      "auclast", "auclast.dn",
-      "cmax", "cmax.dn",
-      "clast.obs", "clast.obs.dn",
-      "tlast", "tmax",
-      "half.life", "cl.obs", "vss.obs", "vz.obs",
-      "mrt.last", "mrt.obs",
-      "lambda.z",
-      "lambda.z.n.points", "r.squared",
-      "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred",
-      "ae", "fe"
-    )
 
     # List of parameter data frames by type
     all_params <- metadata_nca_parameters %>%
