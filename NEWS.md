@@ -6,6 +6,7 @@
 
 * Rename all "ADPC" label mentions in the App to "ADNCA", which is the CDISC standard the App promotes (#778)
 * Interface includes now a color legend next to the pivoted NCA results to indicate missing and flagged parameters (#779)
+* Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 
 ## Bugs fixed
 * Bug fix for box/violin plots that were crashing when PPSTRES is NA (#785)
