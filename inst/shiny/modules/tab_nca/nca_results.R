@@ -156,14 +156,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
             create_qmd_dose_slides(
               res_dose_slides = res_dose_slides,
-              quarto_path = paste0(presentations_path, "/dose_escalation.qmd"),
+              quarto_path = paste0(presentations_path, "/results_slides.qmd"),
               title = paste0("NCA Results", "\n", session$userData$project_name()),
               use_plotly = TRUE
             )
             incProgress(0.3)
             create_pptx_dose_slides(
               res_dose_slides = res_dose_slides,
-              path = paste0(presentations_path, "/dose_escalation.pptx"),
+              path = paste0(presentations_path, "/results_slides.pptx"),
               title = paste0("NCA Results", "\n", session$userData$project_name()),
               template = "www/templates/template.pptx"
             )
@@ -177,8 +177,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             files <- list.files(
               output_tmpdir,
               pattern = paste0(
-                ".(csv)|(rds)|(xpt)|(html)|(rda)",
-                "|(dose_escalation.pptx)|(dose_escalation.qmd)$"
+                "(\\.csv)|(\\.rds)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
+                "|(results_slides\\.pptx)|(results_slides\\.qmd)$"
               ),
               recursive = TRUE
             )

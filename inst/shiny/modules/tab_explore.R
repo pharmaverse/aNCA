@@ -107,8 +107,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         tooltip_vars = tt_vars,
         labels_df = metadata_nca_variables
       )
-
-      session$userData$results$exploration$individualplot <- lineplot
       lineplot
     })
 
@@ -181,6 +179,18 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
 
+
+    # Save the objects for the ZIP folder whenever they change
+    observe({
+      req(individualplot(), meanplot())
+
+      # Individual plots
+      session$userData$results$exploration$individualplot <- individualplot()
+      session$userData$results$exploration$individualplot_plotly <- ggplotly(individualplot())
+
+      # Mean plots
+      session$userData$results$exploration$meanplot <- meanplot()
+      session$userData$results$exploration$meanplot_plotly <- ggplotly(meanplot())
     })
 
     # Render the mean plot output in plotly
