@@ -177,8 +177,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             files <- list.files(
               output_tmpdir,
               pattern = paste0(
-                ".(csv)|(rds)|(xpt)|(html)|(rda)",
-                "|(dose_escalation.pptx)|(dose_escalation.qmd)$"
+                "(\\.csv)|(\\.rds)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
+                "|(dose_escalation\\.pptx)|(dose_escalation\\.qmd)$"
               ),
               recursive = TRUE
             )
