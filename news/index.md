@@ -12,6 +12,9 @@
 - Interface includes now a color legend next to the pivoted NCA results
   to indicate missing and flagged parameters
   ([\#779](https://github.com/pharmaverse/aNCA/issues/779))
+- Enhancements to the slides outputs including grouping by PKNCA groups,
+  dose profile, and additional grouping variables
+  ([\#791](https://github.com/pharmaverse/aNCA/issues/791))
 - Option to include and apply NCA flag rules with reasons (NCAwXRS) as
   defined by ADNCA standards. Any record populated within these columns
   will be excluded for the NCA

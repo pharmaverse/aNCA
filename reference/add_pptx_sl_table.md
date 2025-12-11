@@ -9,6 +9,7 @@ add_pptx_sl_table(
   pptx,
   df,
   title = "",
+  subtitle = "",
   footer = "Click here for individual results"
 )
 ```
@@ -26,6 +27,10 @@ add_pptx_sl_table(
 - title:
 
   Title text for the slide
+
+- subtitle:
+
+  Subtitle text for the slide
 
 - footer:
 
