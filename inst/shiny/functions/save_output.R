@@ -9,20 +9,21 @@ save_output <- function(output, output_path) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
 
   for (name in names(output)) {
-    if (!dir.exists(paste0(output_path, "/", name))) {
-      dir.create(paste0(output_path, "/", name), recursive = TRUE)
+    file_name <- paste0(output_path, "/", name)
+
+    if (!dir.exists(file_name)) {
+      dir.create(file_name, recursive = TRUE)
     }
 
     if (inherits(output[[name]], "list")) {
 
-      save_output(output = output[[name]], output_path = paste0(output_path, "/", name))
+      save_output(output = output[[name]], output_path = file_name)
 
     } else if (inherits(output[[name]], "ggplot")) {
       file_name <- paste0(output_path, "/", name, ".png")
       ggsave(file_name, plot = output[[name]], width = 10, height = 6)
 
     } else if (inherits(output[[name]], "data.frame")) {
-      file_name <- paste0(output_path, "/", name)
       write.csv(output[[name]], file = paste0(file_name, ".csv"), row.names = FALSE)
       saveRDS(output[[name]], file = paste0(file_name, ".rds"))
       tryCatch(
@@ -34,7 +35,7 @@ save_output <- function(output, output_path) {
     } else if (inherits(output[[name]], "plotly")) {
       htmlwidgets::saveWidget(
         output[[name]],
-        file = paste0(output_path, "/", name, ".html")
+        file = paste0(file_name, ".html")
       )
     } else {
       stop(
@@ -64,7 +65,9 @@ format_to_xpt_compatible <- function(data) {
 #' @param statistics Character vector of summary statistics to include (default: "Mean").
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
+#' @param boxplot_parameter Character string of the parameter to use for boxplot.
 #' @param info_vars Character vector of additional info columns to include
+#' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
 #'
 #' @return A list containing dose escalation plots, summary statistics & info tables for each group.
 get_dose_esc_results <- function(
@@ -73,7 +76,8 @@ get_dose_esc_results <- function(
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
   boxplot_parameter = "AUCIFO",
-  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM")
+  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  labels_df = metadata_nca_variables
 ) {
   # Define column names
   studyid_col <- "STUDYID"
@@ -82,7 +86,7 @@ get_dose_esc_results <- function(
   pcspec_col <- "PCSPEC"
   profile_col <- "ATPTREF"
 
-  groups <- unique(o_nca$data$intervals[, group_by_vars])
+  groups <- unique(o_nca$data$intervals[, c(group_by_vars, profile_col)])
   output_list <- list()
   o_nca_i <- o_nca
   # Loop over each of the groups
@@ -136,7 +140,18 @@ get_dose_esc_results <- function(
       unique()
 
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
-      select(any_of(unique(c(group_by_vars, info_vars)))) %>%
+      # Group by cols from info vars that are in the data
+      group_by(across(any_of(info_vars))) %>%
+      summarise(n = n())
+
+    # Create character string of Group
+    # Where group_by_vars are concatenated with ": " between label and value
+    group_string <- merge(o_nca$data$conc$data, group_i) %>%
+      mutate(group = apply(select(., any_of(c(group_by_vars, profile_col))), 1, function(x) {
+        lbls <- sapply(names(x), function(v) get_label(v, type = "ADNCA", labels_df = labels_df))
+        paste(lbls, x, sep = ": ", collapse = "\n")
+      })) %>%
+      pull(group) %>%
       unique()
 
     boxplot_i <- flexible_violinboxplot(
@@ -146,6 +161,7 @@ get_dose_esc_results <- function(
       colorvars = analyte_col,
       varvalstofilter = NULL,
       box = TRUE,
+      tooltip_vars = NULL,
       plotly = FALSE
     )
 
@@ -188,7 +204,8 @@ get_dose_esc_results <- function(
       boxplot = boxplot_i,
       info = info_i,
       ind_params = ind_params,
-      ind_plots = ind_plots
+      ind_plots = ind_plots,
+      group = group_string
     )
   }
   output_list
