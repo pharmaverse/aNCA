@@ -6,6 +6,7 @@
 
 * Rename all "ADPC" label mentions in the App to "ADNCA", which is the CDISC standard the App promotes (#778)
 * Interface includes now a color legend next to the pivoted NCA results to indicate missing and flagged parameters (#779)
+* Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 
 ## Bugs fixed
