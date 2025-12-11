@@ -11,9 +11,13 @@
 ## Bugs fixed
 * Bug fix for box/violin plots that were crashing when PPSTRES is NA (#785)
 
-* Exact duplicate records (DTYPE = "COPY") and time duplicates (DTYPE = "TIME DUPLICATE") are not removed from the data, but just excluded from the analysis (#765) 
+* Exact duplicate records (DTYPE = "COPY") and time duplicates (DTYPE = "TIME DUPLICATE") are not removed from the data, but just excluded from the analysis (#765)
+
+* ZIP folder with results will include now the exploration tab outputs: individual plots, mean plots (#794)
 
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
+
+* Bug fix for box/violin plots that were crashing when violin option selected (#786)
 
 
 # aNCA 0.1.0
