@@ -161,6 +161,7 @@ get_dose_esc_results <- function(
       colorvars = analyte_col,
       varvalstofilter = NULL,
       box = TRUE,
+      tooltip_vars = NULL,
       plotly = FALSE
     )
 
