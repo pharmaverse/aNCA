@@ -91,6 +91,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       tt_vars <- unique(c("AVAL", individual_output$time_col,
                           "USUBJID", individual_inputs()$color_by))
 
+      dose_data = if (individual_inputs()$show_dose) data() %>%
+        mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)) else NULL
+
       lineplot <- g_lineplot(
         data = individual_output$processed_data,
         x_var = individual_output$time_col,
@@ -99,8 +102,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         facet_by = individual_inputs()$facet_by,
         ylog_scale = individual_inputs()$ylog_scale,
         threshold_value = individual_inputs()$threshold_value,
-        show_dose = individual_inputs()$show_dose,
-        dose_data = data() %>% mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)),
+        dose_data = dose_data,
         palette = master_palettes_list(),
         tooltip_vars = tt_vars,
         labels_df = metadata_nca_variables
@@ -156,6 +158,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       tt_vars <- unique(c("Mean", mean_output$time_col, mean_inputs()$colorby))
 
+      dose_data = if (mean_inputs()$show_dose) data() %>%
+        mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)) else NULL
+
       meanplot <- g_lineplot(
         data = mean_output$summarised_data,
         x_var = mean_output$time_col,
@@ -167,8 +172,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         sd_max = mean_inputs()$sd_max,
         ci = mean_inputs()$ci,
         threshold_value = mean_inputs()$threshold_value,
-        show_dose = mean_inputs()$show_dose,
-        dose_data = data() %>% mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)),
+        dose_data = dose_data,
         palette = mean_palettes_list(),
         tooltip_vars = tt_vars,
         labels_df = metadata_nca_variables

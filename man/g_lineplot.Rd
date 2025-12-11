@@ -12,7 +12,6 @@ g_lineplot(
   facet_by = NULL,
   ylog_scale = FALSE,
   threshold_value = NULL,
-  show_dose = FALSE,
   dose_data = NULL,
   palette = NULL,
   sd_min = FALSE,
@@ -42,11 +41,9 @@ a logarithmic scale for the y-axis.}
 \item{threshold_value}{A numeric value for the y-intercept of the threshold line.
 Only used if \code{show_threshold} is \code{TRUE}.}
 
-\item{show_dose}{A logical value (\code{TRUE} or \code{FALSE}) indicating whether to show
-vertical lines at dosing times.}
-
 \item{dose_data}{An optional data.frame containing dosing information.
-It is required if \code{show_dose} is \code{TRUE}. The data frame must contain the faceting variables
+If not \code{NULL}, dose lines will be added.
+Default is \code{NULL}. The data frame must contain the faceting variables
 (if any are used) and a \code{TIME_DOSE} column for the x-intercepts.}
 
 \item{palette}{An optional named character vector of colors for the plot. The names should

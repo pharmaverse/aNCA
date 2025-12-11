@@ -30,10 +30,9 @@
 #'  a logarithmic scale for the y-axis.
 #' @param threshold_value A numeric value for the y-intercept of the threshold line.
 #'   Only used if `show_threshold` is `TRUE`.
-#' @param show_dose A logical value (`TRUE` or `FALSE`) indicating whether to show
-#'   vertical lines at dosing times.
 #' @param dose_data An optional data.frame containing dosing information.
-#'   It is required if `show_dose` is `TRUE`. The data frame must contain the faceting variables
+#'   If not `NULL`, dose lines will be added.
+#'   Default is `NULL`. The data frame must contain the faceting variables
 #'   (if any are used) and a `TIME_DOSE` column for the x-intercepts.
 #' @param palette An optional named character vector of colors for the plot. The names should
 #'   correspond to the levels of the `color_var` in the `data`. This is typically
@@ -80,7 +79,6 @@ g_lineplot <- function(data,
                        facet_by = NULL,
                        ylog_scale = FALSE,
                        threshold_value = NULL,
-                       show_dose = FALSE,
                        dose_data = NULL,
                        palette = NULL,
                        sd_min = FALSE,
@@ -159,7 +157,7 @@ g_lineplot <- function(data,
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_threshold(threshold_value),
-    .add_dose_lines(show_dose, dose_data, facet_by),
+    .add_dose_lines(dose_data, facet_by),
     .add_mean_layers(
       is_mean_plot,
       sd_min,
@@ -211,8 +209,8 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_dose_lines <- function(show_dose, dose_data, facet_by) {
-  if (!isTRUE(show_dose)) {
+.add_dose_lines <- function(dose_data, facet_by) {
+  if (is.null(dose_data)) {
     return(NULL)
   }
 

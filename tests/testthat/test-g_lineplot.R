@@ -113,7 +113,6 @@ describe("g_lineplot: Individual Plot Mode", {
       y_var = "AVAL",
       color_by = "USUBJID",
       facet_by = c("PARAM", "DOSEA"),
-      show_dose = TRUE,
       dose_data = dose_data
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
