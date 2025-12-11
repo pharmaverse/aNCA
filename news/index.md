@@ -12,6 +12,10 @@
 - Interface includes now a color legend next to the pivoted NCA results
   to indicate missing and flagged parameters
   ([\#779](https://github.com/pharmaverse/aNCA/issues/779))
+- Option to include and apply NCA flag rules with reasons (NCAwXRS) as
+  defined by ADNCA standards. Any record populated within these columns
+  will be excluded for the NCA
+  ([\#752](https://github.com/pharmaverse/aNCA/issues/752))
 
 ### Bugs fixed
 
