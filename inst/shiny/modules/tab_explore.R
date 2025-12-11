@@ -91,8 +91,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       tt_vars <- unique(c("AVAL", individual_output$time_col,
                           "USUBJID", individual_inputs()$color_by))
 
-      dose_data = if (individual_inputs()$show_dose) data() %>%
-        mutate(TIME_DOSE = round(AFRLT - ARRLT, 6)) else NULL
+      dose_data = if (individual_inputs()$show_dose) {
+        data() %>%
+          mutate(TIME_DOSE = round(AFRLT - ARRLT, 6))
+      } else {
+        NULL
+      }
 
       lineplot <- g_lineplot(
         data = individual_output$processed_data,
@@ -158,8 +162,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       tt_vars <- unique(c("Mean", mean_output$time_col, mean_inputs()$colorby))
 
-      dose_data = if (mean_inputs()$show_dose) data() %>%
-        mutate(TIME_DOSE = round(NFRLT - NRRLT, 6)) else NULL
+      dose_data = if (mean_inputs()$show_dose) {
+        data() %>%
+          mutate(TIME_DOSE = round(NFRLT - NRRLT, 6))
+      } else {
+        NULL
+      }
 
       meanplot <- g_lineplot(
         data = mean_output$summarised_data,
