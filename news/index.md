@@ -23,6 +23,10 @@
   from the analysis
   ([\#765](https://github.com/pharmaverse/aNCA/issues/765))
 
+- ZIP folder with results will include now the exploration tab outputs:
+  individual plots, mean plots
+  ([\#794](https://github.com/pharmaverse/aNCA/issues/794))
+
 - Updated TMAX label from Time of CMAX to Time of CMAX Observation
   ([\#787](https://github.com/pharmaverse/aNCA/issues/787))
 
