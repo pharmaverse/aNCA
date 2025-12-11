@@ -186,7 +186,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       session$userData$results$exploration$meanplot <- meanplot
       meanplot
-
+    })
 
     # Save the objects for the ZIP folder whenever they change
     observe({
