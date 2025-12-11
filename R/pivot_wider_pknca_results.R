@@ -15,6 +15,11 @@
 #'   of the dose, relative to the last reference dose.
 #'   5) Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
 #'   "LAMZLL", "LAMZ" Used to derive `LAMZNPT` and `LAMZMTD`.
+#' @param flag_rules A named list of flagging rules to be applied to the results. Each rule
+#' should be a list with two elements: `is.checked` (logical) indicating whether the rule
+#' should be applied, and `threshold` (numeric) specifying the threshold value for flagging.
+#' The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
+#' (e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
@@ -24,8 +29,10 @@
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
 #' @importFrom purrr pmap_chr
+#' @importFrom stringr str_detect fixed
 #' @export
 #'
+
 pivot_wider_pknca_results <- function(myres, flag_rules = NULL) {
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
@@ -155,7 +162,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL) {
   # Add "label" attribute to columns
   pivoted_res <- add_label_attribute(pivoted_res, myres)
 
-  # Add flagging columns for each rule and a general "flagged" column 
+  # Add flagging columns for each rule and a general "flagged" column
   .create_flags_for_profiles(final_results = pivoted_res, myres = myres, flag_rules = flag_rules)
 }
 
@@ -204,29 +211,6 @@ add_label_attribute <- function(df, myres) {
   df
 }
 
-.add_units_to_colnames <- function(final_results, myres) {
-  mapping_vr <- myres$result %>%
-    mutate(
-      PPTESTCD_unit = case_when(
-        type_interval == "manual" ~ paste0(
-          PPTESTCD, "_", start, "-", end,
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        ),
-        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
-        TRUE ~ PPTESTCD
-      ),
-      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
-    ) %>%
-    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
-    distinct() %>%
-    pull(PPTESTCD_unit, PPTESTCD_cdisc)
-
-  mapping_cols <- intersect(names(final_results), names(mapping_vr))
-  new_colnames <- unname(mapping_vr[mapping_cols])
-  names(final_results)[match(mapping_cols, names(final_results))] <- new_colnames
-  final_results
-}
-
 .create_flags_for_profiles <- function(final_results, myres, flag_rules) {
 
   # Add flaging columns in the pivoted results
@@ -252,4 +236,3 @@ add_label_attribute <- function(df, myres) {
   }
   final_results
 }
-
