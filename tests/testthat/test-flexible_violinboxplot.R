@@ -246,9 +246,9 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
     # Ensure raw long decimal isn't there
     expect_false(any(grepl("100.123456", p$data$tooltip_text)))
   })
-  
+
   it("handles no tooltip_vars gracefully", {
-    
+
     # expect no error when tooltip_vars is NUL
     expect_no_error({
       p <- flexible_violinboxplot(
@@ -264,7 +264,6 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
         seed = 123
       )
     })
-    
   })
 
   it("handles missing labels_df by falling back to simple text", {
