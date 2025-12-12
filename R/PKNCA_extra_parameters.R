@@ -13,14 +13,14 @@ pk.calc.ertlst <- function(conc, volume, time, duration.conc, check = TRUE) {
   message_all <- generate_missing_messages(conc, volume,
                                            name_a = "concentrations",
                                            name_b = "volumes")
-
-  if (all(is.na(conc))) {
+  er <- conc * volume / duration.conc
+  if (all(is.na(er))) {
     ret <- NA
   } else if (all(conc %in% c(0, NA))) {
     ret <- 0
   } else {
     midtime <- time + duration.conc / 2
-    ret <- max(midtime[!(conc %in% c(NA, 0))])
+    ret <- max(midtime[!(er %in% c(NA, 0))])
   }
 
   if (length(message_all) != 0) {
