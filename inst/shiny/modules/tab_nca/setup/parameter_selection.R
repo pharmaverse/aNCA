@@ -57,6 +57,16 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       "ae", "fe"
     )
 
+    # List of parameter data frames by type
+    all_params <- metadata_nca_parameters %>%
+      filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
+      select(
+        TYPE, PKNCA, PPTESTCD, PPTEST,
+        can_excretion, can_non_excretion, can_single_dose,
+        can_multiple_dose, can_extravascular, can_metabolite
+      ) %>%
+      mutate(sort_order = row_number())
+
     # Retrieve study types
     study_types_df <- reactive({
       req(processed_pknca_data())
@@ -103,16 +113,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         group_by(!!!syms(groups), type) %>%
         summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
     })
-
-    # List of parameter data frames by type
-    all_params <- metadata_nca_parameters %>%
-      filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
-      select(
-        TYPE, PKNCA, PPTESTCD, PPTEST,
-        can_excretion, can_non_excretion, can_single_dose,
-        can_multiple_dose, can_extravascular, can_metabolite
-      ) %>%
-      mutate(sort_order = row_number())
 
     # ReactiveVal for parameter selection state
     selections_state <- reactiveVal()
@@ -267,39 +267,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     selected_parameters_df <- reactive({
       req(parameter_lists_by_type())
 
-      selections_list <- parameter_lists_by_type()
-
-      # Get all unique parameters selected across all study types
-      all_params_selected <- unique(unlist(selections_list))
-      if (length(all_params_selected) == 0) {
-        return(data.frame(Message = "No parameters are selected."))
-      }
-
-      # Get all study types
-      all_study_types <- names(selections_list)
-      if (length(all_study_types) == 0) {
-        return(data.frame(Message = "No study types found."))
-      }
-
-      # Create a wide data frame with TRUE/FALSE for selection
-      wide_df <- map_dfc(all_study_types, ~ {
-        setNames(data.frame(all_params_selected %in% selections_list[[.x]]), .x)
-      })
-      wide_df$PKNCA <- all_params_selected
-
-      # Join with metadata to get labels
-      metadata_df <- all_params %>%
-        select(TYPE, PKNCA, PPTESTCD, PPTEST, sort_order) %>%
-        distinct(PKNCA, .keep_all = TRUE)
-
-      accordion_order <- study_types_list()
-
-      wide_df %>%
-        left_join(metadata_df, by = "PKNCA") %>%
-        arrange(sort_order) %>%
-        # Reorder columns to put labels first
-        select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(accordion_order))
-
+      .prepare_selection_table(
+        selections_llist = parameter_lists_by_type(),
+        all_params = all_params,
+        study_types_list = study_types_list()
+      )
     })
 
     # Render the reactable
@@ -359,4 +331,48 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       types_df = study_types_df
     )
   })
+}
+
+
+#' Helper: Transforms the selection list into a formatted, sorted, wide dataframe
+#' for the Reactable display.
+#'
+#' @param selections_list List of selected parameters by study type
+#' @param all_params Metadata dataframe for parameters
+#' @param study_types_list Vector of study type names
+#' @return A formatted dataframe or a dataframe with a "Message" column
+.prepare_selection_table <- function(selections_list, all_params, study_types_list) {
+
+  # Get all unique parameters selected
+  all_params_selected <- unique(unlist(selections_list))
+
+  # Guard clauses for empty states
+  if (length(all_params_selected) == 0) {
+    return(data.frame(Message = "No parameters are selected."))
+  }
+  if (length(study_types_list) == 0) {
+    return(data.frame(Message = "No study types found."))
+  }
+
+  # Create wide data frame (True/False columns)
+  wide_df <- map_dfc(study_types_list, ~ {
+    setNames(data.frame(all_params_selected %in% selections_list[[.x]]), .x)
+  })
+  wide_df$PKNCA <- all_params_selected
+
+  if (nrow(wide_df) == 0) {
+    return(data.frame(Message = "No parameters are selected."))
+  }
+
+  # Join metadata and sort
+  metadata_df <- all_params %>%
+    select(TYPE, PKNCA, PPTESTCD, PPTEST, sort_order) %>%
+    distinct(PKNCA, .keep_all = TRUE)
+
+  wide_df %>%
+    left_join(metadata_df, by = "PKNCA") %>%
+    arrange(sort_order) %>%
+    # Reorder columns
+    select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(study_types_list))
+
 }
