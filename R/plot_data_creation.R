@@ -126,7 +126,7 @@ process_data_mean <- function(data,
 
   # Retrieve unique grouping variables
   grp_cols <- unique(c(color_by, time_col, facet_by, "RRLTU", "AVALU"))
-  
+
   summarised_data <- processed %>%
     group_by(!!!syms(grp_cols)) %>%
     summarise(
