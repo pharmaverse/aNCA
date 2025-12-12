@@ -97,8 +97,12 @@ g_lineplot <- function(data,
     ci     <- FALSE
   }
 
-  x_lab <- paste0("Time [", unique(data$RRLTU), "]")
-  y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
+  # Concatenate unique units, sep by ","
+  x_unit <- paste0(unique(data$RRLTU), collapse = ", ")
+  y_unit <- paste0(unique(data$AVALU), collapse = ", ")
+  
+  x_lab <- paste0("Time [", x_unit, "]")
+  y_lab <- paste0("Concentration [", y_unit, "]")
   title <- "PK Concentration - Time Profile"
   group_var <- "USUBJID"
 
