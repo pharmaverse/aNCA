@@ -1,5 +1,6 @@
 # Load the package (https://github.com/pharmaverse/aNCA) #
 library(aNCA)
+library(dplyr)
 
 # Load raw data #
 data_path <- session$userData$data_path
@@ -87,8 +88,8 @@ pknca_res <- pknca_obj %>%
 
   # Flag relevant parameters based on AUCPEO, AUCPEP & lambda span
   PKNCA_hl_rules_exclusion(
-    rules = flag_rules |>
-      purrr::keep(\(x) x$is.checked) |>
+    rules = flag_rules %>%
+      purrr::keep(\(x) x$is.checked) %>%
       purrr::map(\(x) x$threshold)
   ) %>%
 
@@ -97,4 +98,4 @@ pknca_res <- pknca_obj %>%
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- export_cdisc(pknca_res)
-pivoted_results <- pivot_wider_pknca_results(pknca_res)
+pivoted_results <- pivot_wider_pknca_results(pknca_res, flag_rules)
