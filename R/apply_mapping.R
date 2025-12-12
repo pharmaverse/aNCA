@@ -50,7 +50,7 @@ apply_mapping <- function(
 
   ####### TODO (Gerardo): This would be better to be explicit outside the function
   # Grouping_Variables should not be renamed
-  mapping <- mapping[!names(mapping) %in% c("Grouping_Variables", "Metabolites")]
+  mapping <- mapping[!names(mapping) %in% c("Grouping_Variables", "Metabolites", "NCAwXRS")]
 
   # Special case: If ADOSEDUR is not mapped, we assume is 0
   if (is.null(mapping$ADOSEDUR)) {

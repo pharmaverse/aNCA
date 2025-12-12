@@ -55,7 +55,7 @@ ADNCA,53,MERRLT,Modified Rel. End Time from Ref. Dose,float,Topic,Perm,FALSE,FAL
 ADNCA,54,MRRLT,Modified Rel. Time from Ref. Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,55,NABL,Sodium at Baseline,float,Topic,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,56,NCAXFN,PK NCA Exclusion Flag (N),integer,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
-ADNCA,57,NCAwXRS,Reason w for PK NCA Exclusion,text,Topic,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA
+ADNCA,57,NCAwXRS,Reason w for PK NCA Exclusion,Character,Topic,Perm,FALSE,FALSE,200,,FALSE,,TRUE,"Character column(s) used to explain why the record must not be included in the PK NCA. Only populated for records to exclude, for the rest should be empty ("""").",Supplemental Variables,"NCA1XRS, NCA2XRS, NCA3XRS, NCA4XRS, NCA5XRS, NCA6XRS, NCA7XRS, NCA8XRS, NCA9XRS, NCA10XRS, NCA11XRS, NCA12XRS, NCA13XRS, NCA14XRS, NCA15XRS, NCA16XRS, NCA17XRS, NCA18XRS, NCA19XRS, NCA20XRS, NCA21XRS, NCA22XRS, NCA23XRS, NCA24XRS, NCA25XRS, NCA26XRS, NCA27XRS, NCA28XRS, NCA29XRS, NCA30XRS",19
 ADNCA,58,NCAwXRSN,Reason for PK NCA Exclusion of w (N),integer,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,59,NEFRLT,Nom. Rel. End Time from First Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,60,NERRLT,Nominal Rel. End Time from Ref. Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA

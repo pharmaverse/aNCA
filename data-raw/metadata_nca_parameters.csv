@@ -110,7 +110,7 @@ thalf.eff.pred,EFFPHL,"Effective half-life (based on MRT,pred)","EFFPHL: Effecti
 time_above,TAT,Time Above Threshold,TAT: Time Above Threshold,pk.calc.time_above,Time above a given concentration,TRUE,time,Standard,Time,,TRUE,TRUE,TRUE,TRUE,TRUE
 tlag,TLAG,Time Until First Nonzero Conc,TLAG: Time Until First Nonzero Conc,pk.calc.tlag,Lag time,TRUE,time,Standard,Time,,TRUE,TRUE,TRUE,TRUE,TRUE
 tlast,TLST,Time of Last Nonzero Conc,TLST: Time of Last Nonzero Conc,pk.calc.tlast,Time of the last concentration observed above the limit of quantification,TRUE,time,Standard,Time,,TRUE,TRUE,TRUE,TRUE,TRUE
-tmax,TMAX,Time of CMAX,TMAX: Time of CMAX,pk.calc.tmax,Time of the maximum observed concentration,TRUE,time,Standard,Time,,TRUE,TRUE,TRUE,TRUE,TRUE
+tmax,TMAX,Time of CMAX Observation,TMAX: Time of CMAX Observation,pk.calc.tmax,Time of the maximum observed concentration,TRUE,time,Standard,Time,,TRUE,TRUE,TRUE,TRUE,TRUE
 totdose,TDOSE,Total dose administered,TDOSE: Total dose administered,pk.calc.totdose,Total dose administered during an interval,FALSE,dose,IV,Volume-Distribution,,FALSE,TRUE,FALSE,TRUE,FALSE
 volpk,VOLPK,Sum of Urine Vol,VOLPK: Sum of Urine Vol,pk.calc.volpk,The sum of urine volumes for the interval,TRUE,volume,Urine,Excretion,,TRUE,FALSE,FALSE,FALSE,FALSE
 vss.iv.last,VSSIVLST,"Vss (for IV dosing, based on AUClast)","VSSIVLST: Vss (for IV dosing, based on AUClast)",pk.calc.vss,The steady-state volume of distribution with intravenous infusion calculating through Tlast,FALSE,volume,IV,Volume-Distribution,"cl.last, mrt.iv.last",FALSE,TRUE,FALSE,TRUE,FALSE
