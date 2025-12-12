@@ -20,6 +20,7 @@ data_upload_ui <- function(id) {
         ns("data_upload"),
         width = "50%",
         label = NULL,
+        multiple = TRUE,
         placeholder = paste(names(aNCA:::readers), collapse = ", "),
         buttonLabel = list(icon("folder"), "Upload File...")
       ),
@@ -40,6 +41,7 @@ data_upload_server <- function(id) {
 
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
+    
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
         p("")
@@ -52,35 +54,84 @@ data_upload_server <- function(id) {
 
     raw_data <- (
       reactive({
+        # Reset errors at the start of the reactive
+        file_loading_error(NULL)
+        
         #' If no data is provided by the user, load dummy data
         if (is.null(input$data_upload$datapath) & is.null(datapath)) {
+          return(DUMMY_DATA)
+        }
+        
+        
+        if (is.null(input$data_upload$datapath)) {
+          log_info("Data upload module initialized with datapath: ", datapath)
+          paths <- datapath
+          filenames <- basename(datapath)
+        } else {
+          paths <- input$data_upload$datapath
+          filenames <- input$data_upload$name
+        }
+        
+        # Iterate over files: Read and classify
+        read_results <- purrr::map2(paths, filenames, function(path, name) {
+          tryCatch({
+            # Attempt to read
+            data <- read_pk(path)
+            list(status = "success", data = data, name = name, type = "data")
+          }, error = function(e) {
+            # If read_pk fails
+            # TODO: @Jana, check if settings file is loaded and then create settings override (719)
+            list(status = "error", message = e$message, name = name)
+          })
+        })
+        
+        # Process results
+        successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
+        errors <- purrr::keep(read_results, ~ .x$status == "error")
+
+        # Handle Errors
+        if (length(successful_loads) == 0) {
+          error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
+          file_loading_error(paste(error_msgs, collapse = "<br>"))
+          log_error("Errors loading files: ", paste(error_msgs, collapse = "; "))
           DUMMY_DATA
         } else {
-          if (is.null(input$data_upload$datapath)) {
-            log_info("Data upload module initialized with datapath: ", datapath)
-            final_datapath <- datapath
-          } else {
-            final_datapath <- input$data_upload$datapath
-          }
-
-          df <- tryCatch({
-            file_loading_error(NULL)
-            read_pk(final_datapath)
+          # Case: At least some files were read, attempt to bind them
+          tryCatch({
+            combined_df <- successful_loads %>%
+              purrr::map("data") %>%
+              dplyr::bind_rows()
+            
+            # If there were partial failures (some read, some didn't), warn the user
+            if (length(errors) > 0) {
+              error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg))
+              file_loading_error(paste(error_msgs, collapse = "<br>"))
+              log_warning("Some files failed to load: ", paste(error_msgs, collapse = "; "))
+            } else {
+              log_success("All user data loaded successfully.")
+            }
+            
+            combined_df
           }, error = function(e) {
-            file_loading_error(e$message)
-          })
-
-          if (is.null(file_loading_error())) {
-            log_success("User data loaded successfully.")
-            df
-          } else {
-            log_error("Error loading user data: ", file_loading_error())
+            # Case: Binding failed (e.g. column mismatch)
+            # Combine read errors with the bind error
+            bind_error <- paste0("Error combining files: ", e$message)
+            
+            if (length(errors) > 0) {
+              read_errors <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg))
+              file_loading_error(paste(c(read_errors, bind_error), collapse = "<br>"))
+            } else {
+              file_loading_error(bind_error)
+            }
+            
+            log_error("Error binding user data: ", e$message)
             DUMMY_DATA
-          }
+          })
         }
-      }) %>%
+        
+        }) %>%
         bindEvent(input$data_upload, ignoreNULL = FALSE)
-    )
+      )
 
     reactable_server(
       "data_display",
