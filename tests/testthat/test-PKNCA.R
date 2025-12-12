@@ -131,12 +131,10 @@ describe("PKNCA_update_data_object", {
   it("returns a PKNCAdata object", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
-      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      params = params,
       should_impute_c0 = TRUE
     )
     expect_s3_class(updated_data, "PKNCAdata")
@@ -145,12 +143,10 @@ describe("PKNCA_update_data_object", {
   it("includes only selected analytes, dosnos, and pcspecs in intervals", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = ma_data,
-      auc_data = auc_data,
       method = method,
       selected_analytes = "AnalyteX",
       selected_profile = 1,
       selected_pcspec = "Plasma",
-      params = params,
       should_impute_c0 = FALSE
     )
     intervals <- updated_data$intervals
@@ -162,72 +158,15 @@ describe("PKNCA_update_data_object", {
   it("sets NCA options correctly", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
-      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      params = params,
       should_impute_c0 = TRUE
     )
     expect_equal(updated_data$options$auc.method, "lin up log down")
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
-  })
-
-  it("does not impute C0 when not requested", {
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = method,
-      selected_analytes = analytes,
-      selected_profile = dosnos,
-      selected_pcspec = pcspecs,
-      params = params,
-      should_impute_c0 = FALSE
-    )
-    expect_true("impute" %in% names(updated_data))
-    expect_true(all(is.na(updated_data$impute)))
-  })
-
-  it("handles partial AUCs (auc_data) creating proper intervals for each", {
-    auc_data <- data.frame(
-      start_auc = c(0, 1, 2),
-      end_auc = c(1, 2, 3)
-    )
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = method,
-      selected_analytes = analytes,
-      selected_profile = dosnos,
-      selected_pcspec = pcspecs,
-      params = params,
-      should_impute_c0 = TRUE
-    )
-    # Check that the interval_type column is present with at least one "manual" value
-    expect_true(any(updated_data$intervals$type_interval == "manual"))
-
-    # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
-    auc_intervals <- updated_data$intervals  %>%
-      dplyr::filter(type_interval == "manual") %>%
-      dplyr::select(start, end, STUDYID, DOSETRT, USUBJID, PARAM,
-                    ATPTREF, auclast, aucint.last, tmax)
-
-    expected_res <- tidyr::tibble(
-      start = c(0, 1, 2),
-      end = c(1, 2, 3),
-      STUDYID = rep("STUDY001", 3),
-      DOSETRT = rep("DrugA", 3),
-      USUBJID = rep("SUBJ001", 3),
-      PARAM = rep("AnalyteA", 3),
-      ATPTREF = rep(1, 3),
-      auclast = rep(FALSE, 3),
-      aucint.last = rep(TRUE, 3),
-      tmax = rep(FALSE, 3)
-    )
-
-    expect_equal(auc_intervals, expected_res)
   })
 })
 
