@@ -8,8 +8,7 @@
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 
 ## Bugs fixed
-
-* ZIP folder with results will include now the exploration tab outputs: individual plots, mean plots (#794)
+* ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 
