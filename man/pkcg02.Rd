@@ -5,7 +5,7 @@
 \title{Generate Combined PK Concentration-Time Profile Plot by Cohort}
 \usage{
 pkcg02(
-  adpc = data(),
+  adnca = data(),
   xvar = "AFRLT",
   yvar = "AVAL",
   xvar_unit = "RRLTU",
@@ -33,7 +33,7 @@ pkcg02(
 )
 }
 \arguments{
-\item{adpc}{A data frame containing the data.}
+\item{adnca}{A data frame containing the data.}
 
 \item{xvar}{A character string of the variable name for the x-axis.}
 
@@ -88,16 +88,17 @@ A list of ggplot or plotly objects for each unique group.
 This function generates a list of plotly objects PK concentration-time profiles by group
 }
 \examples{
-\dontrun{
-  adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
-  attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
-  attr(adpc[["AVAL"]], "label") <- "Analysis value"
+# Make an example small dataset
+adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+adnca <- adnca[adnca$USUBJID \%in\% unique(adnca$USUBJID)[c(1, 2)],]
+attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
+attr(adnca[["AVAL"]], "label") <- "Analysis value"
 
-  plots <- pkcg02(adpc)
-  plots_log <- pkcg02(adpc, scale = "LOG")
-  plots_custom <- pkcg02(adpc, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study XYZ")
-  plotly::plotly_build(plots[[1]]) # View the first plot
-}
+# Run the function
+plots <- pkcg02(adnca)
+plots_log <- pkcg02(adnca, scale = "LOG")
+plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
+plotly::plotly_build(plots[[1]]) # View the first plot
 
 }
 \author{

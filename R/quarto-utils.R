@@ -14,7 +14,7 @@
 create_qmd_doc <- function(
   quarto_path,
   title = "NCA Report",
-  libraries = c("plotly", "flextable"),
+  libraries = c("plotly", "flextable", "dplyr"),
   rda_path = NULL,
   template = NULL,
   extra_setup = NULL
@@ -109,7 +109,7 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
 
   # Generate the main quarto document
   create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
-  for (i in seq_len(length(res_dose_slides))) {
+  for (i in seq_along(res_dose_slides)) {
     add_qmd_sl_plottabletable(
       quarto_path = quarto_path,
       df1 = paste0("res_dose_slides[[", i, "]]$info"),
@@ -130,7 +130,7 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
   }
 
   # Add the individual information slides
-  for (i in seq_len(length(res_dose_slides))) {
+  for (i in seq_along(res_dose_slides)) {
     for (subj in names(res_dose_slides[[i]]$ind_params)) {
       add_qmd_sl_plottabletable(
         quarto_path = quarto_path,
@@ -184,7 +184,7 @@ add_qmd_plot <- function(plot_expr, use_plotly = FALSE) {
     "```{r, echo=FALSE}",
     paste0(
       plot_expr,
-      if (use_plotly) " |> plotly::ggplotly()" else ""
+      if (use_plotly) " %>% plotly::ggplotly()" else ""
     ),
     "```"
   )

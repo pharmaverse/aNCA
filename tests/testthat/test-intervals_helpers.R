@@ -122,17 +122,17 @@ describe("interval_add_impute", {
       impute = c("start_conc0,start_predose,new_impute",
                  "start_predose,new_impute",
                  "start_conc0,new_impute")
-    ) |>
+    ) %>%
       `rownames<-`(NULL)
     expected_result_cmax <- o_data$intervals[o_data$intervals$cmax,
-                                             c("param", "cmax", "impute")] |>
+                                             c("param", "cmax", "impute")] %>%
       `rownames<-`(NULL)
     result <- interval_add_impute(o_data, target_impute = "new_impute", target_params = "half.life")
     expect_equal(result$intervals[result$intervals$half.life & !is.na(result$intervals$half.life),
-                                  c("param", "half.life", "impute")] |>
+                                  c("param", "half.life", "impute")] %>%
                    `rownames<-`(NULL), expected_result_half_life)
     expect_equal(result$intervals[result$intervals$cmax & !is.na(result$intervals$cmax),
-                                  c("param", "cmax", "impute")] |>
+                                  c("param", "cmax", "impute")] %>%
                    `rownames<-`(NULL), expected_result_cmax)
   })
 
@@ -143,15 +143,15 @@ describe("interval_add_impute", {
                                            impute = c("start_conc0,start_predose,new_impute",
                                                       "start_conc0,new_impute"))
     expected_result_analyte2 <- o_data$intervals[o_data$intervals$param == "Analyte2",
-                                                 c("param", "half.life", "cmax", "impute")] |>
+                                                 c("param", "half.life", "cmax", "impute")] %>%
       `rownames<-`(NULL)
     result <- interval_add_impute(o_data, target_impute = "new_impute",
                                   target_groups = data.frame(param = "Analyte1"))
     expect_equal(result$intervals[result$intervals$param == "Analyte1",
-                                  c("param", "half.life", "cmax", "impute")] |>
+                                  c("param", "half.life", "cmax", "impute")] %>%
                    `rownames<-`(NULL), expected_result_analyte1)
     expect_equal(result$intervals[result$intervals$param == "Analyte2",
-                                  c("param", "half.life", "cmax", "impute")] |>
+                                  c("param", "half.life", "cmax", "impute")] %>%
                    `rownames<-`(NULL), expected_result_analyte2)
   })
 
@@ -214,7 +214,7 @@ describe("interval_add_impute", {
                  "start_conc0")
     )
     expect_equal(
-      result$intervals[, c("param", "half.life", "cmax", "impute")] |>
+      result$intervals[, c("param", "half.life", "cmax", "impute")] %>%
         `rownames<-`(NULL),
       expected_result
     )
@@ -235,7 +235,7 @@ describe("interval_add_impute", {
                  "start_conc0,new_impute")
     )
     expect_equal(
-      result$intervals[, c("param", "half.life", "cmax", "impute")] |>
+      result$intervals[, c("param", "half.life", "cmax", "impute")] %>%
         `rownames<-`(NULL),
       expected_result
     )
@@ -382,7 +382,7 @@ describe("interval_remove_impute", {
                                   impute = c("start_predose", "start_predose", NA_character_))
     result <- interval_remove_impute(o_data, target_impute = "start_conc0")
     expect_equal(
-      result$intervals[, c("param", "half.life", "cmax", "impute")] |>
+      result$intervals[, c("param", "half.life", "cmax", "impute")] %>%
         `rownames<-`(NULL),
       expected_result
     )
@@ -393,19 +393,19 @@ describe("interval_remove_impute", {
       param = c("Analyte1", "Analyte2", "Analyte1"),
       half.life = c(TRUE, TRUE, TRUE),
       impute = c("start_predose", "start_predose", NA_character_)
-    ) |>
+    ) %>%
       `rownames<-`(NULL)
     expected_result_cmax <- o_data$intervals[o_data$intervals$cmax,
-                                             c("param", "cmax", "impute")] |>
+                                             c("param", "cmax", "impute")] %>%
       `rownames<-`(NULL)
     result <- interval_remove_impute(o_data,
                                      target_impute = "start_conc0",
                                      target_params = "half.life")
     expect_equal(result$intervals[result$intervals$half.life & !is.na(result$intervals$half.life),
-                                  c("param", "half.life", "impute")] |>
+                                  c("param", "half.life", "impute")] %>%
                    `rownames<-`(NULL), expected_result_half_life)
     expect_equal(result$intervals[result$intervals$cmax & !is.na(result$intervals$cmax),
-                                  c("param", "cmax", "impute")] |>
+                                  c("param", "cmax", "impute")] %>%
                    `rownames<-`(NULL), expected_result_cmax)
   })
 
@@ -415,22 +415,22 @@ describe("interval_remove_impute", {
       half.life = c(TRUE, TRUE),
       cmax = c(TRUE, TRUE),
       impute = c("start_predose", NA_character_)
-    ) |>
+    ) %>%
       `rownames<-`(NULL)
 
     expected_result_analyte2 <- o_data$intervals[o_data$intervals$param == "Analyte2",
-                                                 c("param", "half.life", "cmax", "impute")] |>
+                                                 c("param", "half.life", "cmax", "impute")] %>%
       `rownames<-`(NULL)
 
     result <- interval_remove_impute(o_data, target_impute = "start_conc0",
                                      target_groups = data.frame(param = "Analyte1"))
 
     result_analyte1 <- result$intervals[result$intervals$param == "Analyte1",
-                                        c("param", "half.life", "cmax", "impute")] |>
+                                        c("param", "half.life", "cmax", "impute")] %>%
       `rownames<-`(NULL)
 
     result_analyte2 <- result$intervals[result$intervals$param == "Analyte2",
-                                        c("param", "half.life", "cmax", "impute")] |>
+                                        c("param", "half.life", "cmax", "impute")] %>%
       `rownames<-`(NULL)
 
     expect_equal(result_analyte1, expected_result_analyte1)
@@ -444,7 +444,7 @@ describe("interval_remove_impute", {
       half.life = c(TRUE, TRUE, TRUE),
       cmax = c(TRUE, TRUE, TRUE),
       impute = c("start_predose", "start_predose", NA_character_)
-    ) |>
+    ) %>%
       `rownames<-`(NULL)
 
     result <- interval_remove_impute(
@@ -453,7 +453,7 @@ describe("interval_remove_impute", {
       target_params = c("half.life", "cmax")
     )
 
-    result_clean <- result$intervals[, c("param", "half.life", "cmax", "impute")] |>
+    result_clean <- result$intervals[, c("param", "half.life", "cmax", "impute")] %>%
       `rownames<-`(NULL)
 
     expect_equal(result_clean, expected_result)
@@ -509,7 +509,7 @@ describe("interval_remove_impute", {
       target_params = c("half.life", "cmax")
     )
     expect_equal(
-      result$intervals[, c("param", "half.life", "cmax", "impute")] |>
+      result$intervals[, c("param", "half.life", "cmax", "impute")] %>%
         `rownames<-`(NULL),
       expected_result
     )
@@ -525,7 +525,7 @@ describe("interval_remove_impute", {
       cmax = c(TRUE, TRUE, TRUE),
       impute = c("start_predose", "start_predose", "start_predose")
     )
-    expect_equal(result$intervals[, c("param", "half.life", "cmax", "impute")] |>
+    expect_equal(result$intervals[, c("param", "half.life", "cmax", "impute")] %>%
                    `rownames<-`(NULL),
                  expected_result)
   })
@@ -543,7 +543,7 @@ describe("interval_remove_impute", {
                  NA_character_)
     )
     expect_equal(
-      result$intervals[, c("param", "half.life", "cmax", "impute")] |>
+      result$intervals[, c("param", "half.life", "cmax", "impute")] %>%
         `rownames<-`(NULL),
       expected_result
     )

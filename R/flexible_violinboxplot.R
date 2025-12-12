@@ -17,6 +17,8 @@
 #'                            violin plot (`FALSE`). Default is `TRUE`.
 #' @param plotly              A logical value defining if the output is plotly (TRUE, default)
 #'                            or ggplot otherwise (FALSE)
+#' @param seed                An integer value to set the seed for reproducibility of jittering.
+#' Default (NULL) will use the current R seed.
 #'
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
@@ -29,7 +31,8 @@ flexible_violinboxplot <- function(res_nca,
                                    varvalstofilter = NULL,
                                    columns_to_hover,
                                    box = TRUE,
-                                   plotly = TRUE) {
+                                   plotly = TRUE,
+                                   seed = NULL) {
 
   group_columns <- group_vars(res_nca$data$conc)
   boxplotdata <- left_join(
@@ -49,37 +52,26 @@ flexible_violinboxplot <- function(res_nca,
       )
     )
 
-  # Variables to use to filter
-  if (!is.null(varvalstofilter)) {
-    vals_tofilter <- gsub(".*: (.*)", "\\1", varvalstofilter)
-    vars_tofilter <-  gsub("(.*): .*", "\\1", varvalstofilter)
-    var_types <- sapply(vars_tofilter, \(col_id) class(boxplotdata[[col_id]]), USE.NAMES = FALSE)
+  # Create filter expression
+  filter_expr <- create_filter_expr(boxplotdata, varvalstofilter)
 
-    filter_text <- paste0(
-      sapply(unique(vars_tofilter), \(varid) {
-        vartype <- class(boxplotdata[[varid]])
-        paste0(
-          varid,
-          " %in% as.",
-          vartype,
-          "(c('", paste0(vals_tofilter[vars_tofilter == varid], collapse = "','"), "'))"
-        )
-      }), collapse = " & "
-    )
-  } else {
-    filter_text <- "TRUE"
-  }
-
-  # Filter the data
+  # Filter data
   box_data <- boxplotdata %>%
     filter(
-      eval(parse(text = filter_text)),
+      !!filter_expr,
       PPTESTCD == parameter
     )
 
+  # Verify that PPSTRES exists and is not NA, otherwise return empty plot
+  if (!is_PPSTRES_valid(box_data)) {
+    return(ggplot() +
+             labs(title = paste("No data available for parameter:", parameter)) +
+             theme_minimal())
+  }
+
   # Hover text to identify each point
   hover_text <- apply(box_data[columns_to_hover] %>%
-                        mutate(across(where(is.numeric), \(x) round(x, digits = 2))),
+                        mutate(across(where(is.numeric), function(x) round(x, digits = 2))),
                       MARGIN = 1,
                       function(row) {
                         paste(names(row), row, sep = ": ", collapse = "<br>")
@@ -116,7 +108,7 @@ flexible_violinboxplot <- function(res_nca,
 
   # Include points, labels and theme
   p <- p +
-    geom_point(position = position_jitterdodge(seed = 123)) +
+    geom_point(position = position_jitterdodge(seed = seed)) +
     # facet_wrap(~STUDYID) +
     labs(
       x = paste(xvars, collapse = ", "),
@@ -129,11 +121,49 @@ flexible_violinboxplot <- function(res_nca,
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
 
-
   # Make plotly with hover features
   if (plotly) {
     ggplotly(p + aes(text = hover_text), tooltip = "text")
   } else {
     p
   }
+}
+
+
+#' Helper function create text used to filter data frame
+#' @param boxplotdata Data frame to be filtered
+#' @param varvalstofilter Character vector specifying which variable and value to pre-filter
+#' as `colname: value`. By default is NULL (no pre-filtering)
+#' @importFrom rlang expr sym
+#' @importFrom purrr reduce
+#' @returns  The filter expression
+create_filter_expr <- function(boxplotdata, varvalstofilter) {
+  if (is.null(varvalstofilter)) return(expr(TRUE))
+
+  # 1. Parse inputs
+  vars <- gsub(": .*", "", varvalstofilter)
+  vals <- gsub(".*: ", "", varvalstofilter)
+
+  # 2. Build expressions for each unique variable
+  cond_list <- lapply(unique(vars), function(v) {
+    # Get values for this specific variable
+    current_vals <- vals[vars == v]
+
+    # Dynamic type casting based on the target column
+    # (Performs the cast immediately so the expression contains the correct types)
+    col_class <- class(boxplotdata[[v]])[1]
+    cast_fn <- match.fun(paste0("as.", col_class))
+    clean_vals <- cast_fn(current_vals)
+
+    # Create expression: var %in% c(val1, val2...)
+    expr(!!sym(v) %in% !!clean_vals)
+  })
+
+  # 3. Combine all conditions with '&'
+  reduce(cond_list, ~ expr(!!.x & !!.y))
+}
+
+# Check if data is valid
+is_PPSTRES_valid <- function(box_data) { #nolint
+  "PPSTRES" %in% colnames(box_data) && !all(is.na(box_data$PPSTRES))
 }

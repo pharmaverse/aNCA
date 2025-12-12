@@ -1,9 +1,9 @@
 describe("read_pk", {
-  # load dummy testing data avaialable in csv format, used to simulate other formats #
-  data_dummy <- read.csv("data/adnca_dummy_sm_dataset.csv")
+  # load dummy testing data available in csv format, used to simulate other formats #
+  data_dummy <- read.csv("data/test-multispec-ADNCA.csv")
 
   it("reads csv data correctly", {
-    df <- read_pk("data/adnca_dummy_sm_dataset.csv")
+    df <- read_pk("data/test-multispec-ADNCA.csv")
     expect_s3_class(df, "data.frame")
     expect_equal(nrow(df), 131)
   })
@@ -19,6 +19,9 @@ describe("read_pk", {
   })
 
   it("reads excel data correctly", {
+    skip_if_not_installed("openxlsx2")
+    skip_on_cran()
+
     tmp_xlsx <- withr::local_tempfile(fileext = ".xlsx")
     openxlsx2::write_xlsx(data_dummy, tmp_xlsx)
 
@@ -29,6 +32,9 @@ describe("read_pk", {
   })
 
   it("reads sas data correctly", {
+    skip_if_not_installed("haven")
+    skip_on_cran()
+
     tmp_sas <- withr::local_tempfile(fileext = ".sas7bdat")
     suppressWarnings(haven::write_sas(data_dummy, tmp_sas))
 
@@ -39,6 +45,9 @@ describe("read_pk", {
   })
 
   it("reads xpt files correctly", {
+    skip_if_not_installed("haven")
+    skip_on_cran()
+
     tmp_xpt <- withr::local_tempfile(fileext = ".xpt")
     haven::write_xpt(data_dummy, tmp_xpt)
 
@@ -49,6 +58,9 @@ describe("read_pk", {
   })
 
   it("reads parquet files correctly", {
+    skip_if_not_installed("arrow")
+    skip_on_cran()
+
     tmp_parquet <- withr::local_tempfile(fileext = ".parquet")
     arrow::write_parquet(data_dummy, tmp_parquet)
 

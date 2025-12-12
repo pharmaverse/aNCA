@@ -14,13 +14,14 @@
 #'   study types and values are character vectors of PKNCA parameters to select.
 #'   If NULL, default logic is applied.
 #'
-#' @return The 'selection_df' data frame with added boolean columns for each
+#' @returns The 'selection_df' data frame with added boolean columns for each
 #'   study type.
 #'
 apply_parameter_selections <- function(selection_df,
                                        study_type_names,
                                        default_params,
                                        selections_override = NULL) {
+
   # Use override if available, otherwise use defaults
   if (is.null(selections_override) || length(selections_override) == 0) {
     # Default behavior
@@ -60,5 +61,5 @@ apply_parameter_selections <- function(selection_df,
       }
     }
   }
-  return(selection_df)
+  selection_df
 }

@@ -324,7 +324,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     observe({
       req(auc_data())
       # Dynamically attach observers for each column
-      purrr::walk(c("start_auc", "end_auc"), \(colname) {
+      purrr::walk(c("start_auc", "end_auc"), function(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
           edit <- input[[paste0("edit_", colname)]]
           partial_aucs <- auc_data()
