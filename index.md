@@ -29,7 +29,17 @@ possess, the App can:
 
 ## Installation
 
-### Via pak (recommended)
+### From CRAN
+
+The stable version of the package can be easily downloaded:
+
+``` r
+install.packages("aNCA")
+```
+
+------------------------------------------------------------------------
+
+### From GitHub
 
 We recommend using [pak](https://github.com/r-lib/pak) for package
 installation, along with all system dependencies. If you do not have
@@ -47,6 +57,8 @@ pak::pak("pharmaverse/aNCA")
 ```
 
 in your R console.
+
+------------------------------------------------------------------------
 
 ### Via cloning the repository (for contributors)
 

@@ -101,23 +101,32 @@
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="section level3">
-<h3 id="via-pak-recommended">Via pak (recommended)<a class="anchor" aria-label="anchor" href="#via-pak-recommended"></a>
+<h3 id="from-cran">From CRAN<a class="anchor" aria-label="anchor" href="#from-cran"></a>
+</h3>
+<p>The stable version of the package can be easily downloaded:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"aNCA"</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="from-github">From GitHub<a class="anchor" aria-label="anchor" href="#from-github"></a>
 </h3>
 <p>We recommend using <a href="https://github.com/r-lib/pak" class="external-link">pak</a> for package installation, along with all system dependencies. If you do not have <code>pak</code> available, you will need to set it up first:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span></span></code></pre></div>
 <p>then you can install <a href=".">aNCA</a> by running:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"pharmaverse/aNCA"</span><span class="op">)</span></span></code></pre></div>
 <p>in your R console.</p>
+<hr>
 </div>
 <div class="section level3">
 <h3 id="via-cloning-the-repository-for-contributors">Via cloning the repository (for contributors)<a class="anchor" aria-label="anchor" href="#via-cloning-the-repository-for-contributors"></a>
 </h3>
 <p>Alternatively, you can set up the package by cloning the repository through your terminal/shell:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/pharmaverse/aNCA.git</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/pharmaverse/aNCA.git</span></code></pre></div>
 <p>and then loading it directly using <a href="https://github.com/r-lib/devtools" class="external-link">devtools</a> in your IDE (e.g. RStudio) console:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
@@ -125,7 +134,7 @@
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <p>To run the application, simply invoke:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">aNCA</span><span class="fu">::</span><span class="fu"><a href="reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>The testing data will be automatically loaded upon application startup. You can provide your own dataset in the <strong>data</strong> tab. Here you can also specify pre-processing filters.</p>
 <p>In the <strong>NCA</strong> tab, start off by loading the pre-processed data using <em>Submit</em> button. You will also need to choose dose number in the <em>Settings</em>. Then, you will be able to run the NCA analysis. From there, you can also specify different analysis options, like applying flag rule sets and selecting slopes.</p>
