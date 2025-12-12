@@ -41,7 +41,7 @@ data_upload_server <- function(id) {
 
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
-    
+
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
         p("")
@@ -56,13 +56,12 @@ data_upload_server <- function(id) {
       reactive({
         # Reset errors at the start of the reactive
         file_loading_error(NULL)
-        
+
         #' If no data is provided by the user, load dummy data
         if (is.null(input$data_upload$datapath) & is.null(datapath)) {
           return(DUMMY_DATA)
         }
-        
-        
+
         if (is.null(input$data_upload$datapath)) {
           log_info("Data upload module initialized with datapath: ", datapath)
           paths <- datapath
@@ -71,7 +70,7 @@ data_upload_server <- function(id) {
           paths <- input$data_upload$datapath
           filenames <- input$data_upload$name
         }
-        
+
         # Iterate over files: Read and classify
         read_results <- purrr::map2(paths, filenames, function(path, name) {
           tryCatch({
@@ -84,7 +83,7 @@ data_upload_server <- function(id) {
             list(status = "error", message = e$message, name = name)
           })
         })
-        
+
         # Process results
         successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
         errors <- purrr::keep(read_results, ~ .x$status == "error")
@@ -101,7 +100,7 @@ data_upload_server <- function(id) {
             combined_df <- successful_loads %>%
               purrr::map("data") %>%
               dplyr::bind_rows()
-            
+
             # If there were partial failures (some read, some didn't), warn the user
             if (length(errors) > 0) {
               error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg))
@@ -110,28 +109,28 @@ data_upload_server <- function(id) {
             } else {
               log_success("All user data loaded successfully.")
             }
-            
+
             combined_df
           }, error = function(e) {
             # Case: Binding failed (e.g. column mismatch)
             # Combine read errors with the bind error
             bind_error <- paste0("Error combining files: ", e$message)
-            
+
             if (length(errors) > 0) {
               read_errors <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg))
               file_loading_error(paste(c(read_errors, bind_error), collapse = "<br>"))
             } else {
               file_loading_error(bind_error)
             }
-            
+
             log_error("Error binding user data: ", e$message)
             DUMMY_DATA
           })
         }
-        
-        }) %>%
+
+      }) %>%
         bindEvent(input$data_upload, ignoreNULL = FALSE)
-      )
+    )
 
     reactable_server(
       "data_display",
