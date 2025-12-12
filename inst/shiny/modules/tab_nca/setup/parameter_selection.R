@@ -50,8 +50,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       "tlast", "tmax",
       "half.life", "cl.obs", "vss.obs", "vz.obs",
       "mrt.last", "mrt.obs",
-      "lambda.z",
-      "lambda.z.n.points", "r.squared",
+      "lambda.z", "lambda.z.n.points",
+      "r.squared", "span.ratio",
       "adj.r.squared", "lambda.z.time.first",
       "aucpext.obs", "aucpext.pred",
       "ae", "fe"
