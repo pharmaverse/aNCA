@@ -268,7 +268,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       req(parameter_lists_by_type())
 
       .prepare_selection_table(
-        selections_llist = parameter_lists_by_type(),
+        selections_list = parameter_lists_by_type(),
         all_params = all_params,
         study_types_list = study_types_list()
       )
