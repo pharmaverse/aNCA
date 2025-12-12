@@ -236,7 +236,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
         observeEvent(selection_debounce(), {
           params <- selection_debounce()
-          n_params <- if(is.null(params)) 0 else length(params)
+          n_params <- if (is.null(params)) 0 else length(params)
 
           log_info("Parameter selection for '{study_type}': {n_params} parameters selected.")
         }, ignoreNULL = FALSE, ignoreInit = TRUE)
