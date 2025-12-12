@@ -124,8 +124,11 @@ process_data_mean <- function(data,
 
   time_col <- if (!is.null(profiles_selected)) "NRRLT" else "NFRLT"
 
+  # Retrieve unique grouping variables
+  grp_cols <- unique(c(color_by, time_col, facet_by, "RRLTU", "AVALU"))
+  
   summarised_data <- processed %>%
-    group_by(!!!syms(color_by), !!sym(time_col), !!!syms(facet_by), RRLTU, AVALU) %>%
+    group_by(!!!syms(grp_cols)) %>%
     summarise(
       Mean = round(mean(AVAL, na.rm = TRUE), 3),
       SD = sd(AVAL, na.rm = TRUE),
