@@ -60,6 +60,7 @@ format_pkncaconc_data <- function(ADNCA,
   }
 
   if (!is.null(nca_exclude_reason_columns)) {
+
     ADNCA <- ADNCA %>%
       # Merge all reason columns into one
       mutate(
