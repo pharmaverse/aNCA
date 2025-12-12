@@ -103,15 +103,21 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
 #' @param grouping_vars A reactive vector of grouping variables.
 #'
 #' @return A list of reactive inputs from the sidebar.
-plot_sidebar_server <- function(id, data, grouping_vars) {
+plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    observeEvent(data(), {
-      req(data())
+    observeEvent(pknca_data(), {
+      req(pknca_data())
 
+      data <- pknca_data()$conc$data
+      conc_groups <- group_vars(pknca_data()$conc)
+      dose_groups <- group_vars(pknca_data()$dose)
+      dose_col <- pknca_data()$dose$columns$dose
+      subject_col <- pknca_data()$conc$columns$subject
+      
       # Update the param picker input
-      param_choices <- data() %>%
+      param_choices <- data %>%
         pull(PARAM) %>%
         unique()
 
@@ -123,7 +129,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
       )
 
       # Update pcspec picker input
-      pcspec_choices <- data() %>%
+      pcspec_choices <- data %>%
         pull(PCSPEC) %>%
         unique()
 
@@ -136,7 +142,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
 
       # Update the usubjid picker input (if it exists)
       if ("usubjid" %in% names(input)) {
-        usubjid_choices <- data() %>%
+        usubjid_choices <- data %>%
           pull(USUBJID) %>%
           unique()
 
@@ -148,25 +154,20 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
         )
       }
 
-      # Update the colorby and facet by picker inputs
-      all_cols <- names(data())
-      cols_to_exclude <- c("AVAL", "ARRLT", "AFRLT", "NRRLT", "NFRLT")
-      unit_cols <- all_cols[endsWith(all_cols, "U")]
-      cols_to_exclude <- c(cols_to_exclude, unit_cols)
-      param_choices_cf <- sort(setdiff(all_cols, cols_to_exclude))
+      full_grouping_vars <- unique(c(conc_groups, dose_groups, dose_col, grouping_vars()))
 
       updatePickerInput(
         session,
         "colorby",
-        choices = param_choices_cf,
+        choices = full_grouping_vars,
         # Always select USUBJID if individual, if mean plot, select nothing
-        selected = if ("usubjid" %in% names(input)) "USUBJID" else "DOSEA"
+        selected = if ("usubjid" %in% names(input)) subject_col else dose_col
       )
 
       updatePickerInput(
         session,
         "facetby",
-        choices = param_choices_cf,
+        choices = full_grouping_vars,
         selected = NULL
       )
     })
@@ -174,7 +175,7 @@ plot_sidebar_server <- function(id, data, grouping_vars) {
     # Render the cycle selection UI
     output$cycle_select_ui <- renderUI({
       req(input$param)
-      y <- data() %>%
+      y <- pknca_data()$conc$data %>%
         filter(PARAM %in% input$param) %>%
         pull(ATPTREF) %>%
         unique()

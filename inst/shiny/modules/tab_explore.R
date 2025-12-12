@@ -44,13 +44,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Initiate the sidebar server modules
     individual_inputs <- plot_sidebar_server(
       "individual_sidebar",
-      data = data,
+      pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
 
     mean_inputs <- plot_sidebar_server(
       "mean_sidebar",
-      data = data,
+      pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
 
