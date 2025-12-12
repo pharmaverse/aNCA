@@ -109,16 +109,17 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
       if (length(flag_params) > 0) {
         final_results <- final_results %>%
+          rowwise() %>%
           mutate(
             flagged = case_when(
-              rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
               is.na(Exclude) ~ "ACCEPTED",
               any(sapply(
                 flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
               )) ~ "FLAGGED",
-              TRUE ~ "ACCEPTED"
+              TRUE ~ "MISSING"
             )
-          )
+          ) %>%
+          ungroup()
       }
       final_results
     })
