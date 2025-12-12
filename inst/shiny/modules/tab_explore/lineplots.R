@@ -99,7 +99,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
 #' Reusable Plot Sidebar Server
 #'
 #' @param id A character string specifying the module ID.
-#' @param data A reactive data frame.
+#' @param pknca_data A PKNCA data object.
 #' @param grouping_vars A reactive vector of grouping variables.
 #'
 #' @return A list of reactive inputs from the sidebar.
@@ -110,12 +110,13 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
     observeEvent(pknca_data(), {
       req(pknca_data())
 
+      # Get the concentration data and grouping variables
       data <- pknca_data()$conc$data
       conc_groups <- group_vars(pknca_data()$conc)
       dose_groups <- group_vars(pknca_data()$dose)
       dose_col <- pknca_data()$dose$columns$dose
       subject_col <- pknca_data()$conc$columns$subject
-      
+
       # Update the param picker input
       param_choices <- data %>%
         pull(PARAM) %>%
