@@ -23,7 +23,7 @@ ADNCA,21,AAGE,Analysis Age,integer,Topic,Perm,FALSE,TRUE,12,,TRUE,,FALSE,,,,NA
 ADNCA,22,ACYCLE,Analysis Cycle,integer,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,23,ACYCLEC,Analysis Cycle (C),text,Topic,Perm,FALSE,FALSE,40,,FALSE,,FALSE,,,,NA
 ADNCA,24,ADA,Treatment Emergent ADA status,text,Topic,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA
-ADNCA,25,AEFRLT,Act. Rel. End Time from First Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
+ADNCA,25,AEFRLT,Act. Rel. End Time from First Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,TRUE,Numeric column indicating the actual end time of sample collection since first dose. Typically used for feces or urine samples,Supplemental Variables,AFRLT,9
 ADNCA,26,AERRLT,Actual Rel. End Time from Ref. Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,27,AERRLT,Actual Rel. End Time from Ref. Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,28,AFRLT,Act. Rel. Time from Analyte First Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,TRUE,Numeric column indicating actual time of sample collection since first dose,Time Variables,,8

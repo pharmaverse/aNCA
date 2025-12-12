@@ -11,3 +11,4 @@ linters:
     seq_linter = seq_linter()
   )
 encoding: "UTF-8"
+exclusions: list("R/PKNCA_extra_parameters.R", "tests/testthat/test-PKNCA_extra_parameters.R")
