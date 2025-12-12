@@ -1,4 +1,5 @@
 # Load the package (https://github.com/pharmaverse/aNCA) #
+if (!require("aNCA")) install.packages("aNCA")
 library(aNCA)
 library(dplyr)
 
