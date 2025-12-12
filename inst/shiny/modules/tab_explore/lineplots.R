@@ -155,7 +155,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         )
       }
 
-      full_grouping_vars <- unique(c(conc_groups, dose_groups, dose_col, grouping_vars()))
+      full_grouping_vars <- unique(c(conc_groups, dose_groups, dose_col, grouping_vars(), "ATPTREF"))
 
       updatePickerInput(
         session,
