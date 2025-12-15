@@ -41,7 +41,8 @@ data_upload_server <- function(id) {
 
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
-
+    settings_override <- reactiveVal(NULL) # Store loaded settings
+    
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
         p("")
@@ -71,22 +72,59 @@ data_upload_server <- function(id) {
           filenames <- input$data_upload$name
         }
 
-        # Iterate over files: Read and classify
+        # Iterate over files: Try reading as Data, then as Settings
         read_results <- purrr::map2(paths, filenames, function(path, name) {
           tryCatch({
             # Attempt to read
             data <- read_pk(path)
             list(status = "success", data = data, name = name, type = "data")
-          }, error = function(e) {
+          }, error = function(e_pk) {
             # If read_pk fails
-            # TODO: @Jana, check if settings file is loaded and then create settings override (719)
-            list(status = "error", message = e$message, name = name)
+            # check if settings file is loaded and then create settings override
+            tryCatch({
+              obj <- readRDS(path)
+
+              # Check for settings
+              is_settings <- is.list(obj) && "settings" %in% names(obj)
+              
+              final_settings <- if (is_settings) obj else NULL
+              
+              if (!is.null(final_settings)) {
+                list(status = "success", type = "settings", content = final_settings, name = name)
+              } else {
+                # Not a settings file either, return original PK error
+                stop(e_pk$message)
+              }
+            }, error = function(e_rds) {
+              # Return the original read_pk error to the user
+              list(status = "error", msg = e_pk$message, name = name)
+            })
           })
         })
 
         # Process results
         successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
         errors <- purrr::keep(read_results, ~ .x$status == "error")
+        
+        # Extract and apply settings if any found
+        found_settings <- purrr::keep(successful_loads, ~ .x$type == "settings")
+        
+        if (length(found_settings) > 1) {
+          # Error: Too many settings files
+          msg <- "Error: Multiple settings files detected. Please upload only one settings file."
+          prev_msgs <- if (length(errors) > 0) paste(purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg)), collapse = "<br>") else ""
+          file_loading_error(paste(c(prev_msgs, msg), collapse = "<br>"))
+          
+          # Do not apply any settings if ambiguous
+          settings_override(NULL)
+          
+        } else if (length(found_settings) == 1) {
+          # Success: Single settings file
+          latest <- found_settings[[1]]
+          settings_override(latest$content)
+          log_success("Settings successfully loaded from ", latest$name)
+          showNotification(paste("Settings successfully loaded."), type = "message")
+        }
 
         # Handle Errors
         if (length(successful_loads) == 0) {
@@ -105,7 +143,7 @@ data_upload_server <- function(id) {
             if (length(errors) > 0) {
               error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg))
               file_loading_error(paste(error_msgs, collapse = "<br>"))
-              log_warning("Some files failed to load: ", paste(error_msgs, collapse = "; "))
+              log_warn("Some files failed to load: ", paste(error_msgs, collapse = "; "))
             } else {
               log_success("All user data loaded successfully.")
             }
@@ -141,6 +179,9 @@ data_upload_server <- function(id) {
       style = list(fontSize = "0.75em")
     )
 
-    raw_data
+    list(
+      adnca_raw = raw_data,
+      settings_override = settings_override
+    )
   })
 }

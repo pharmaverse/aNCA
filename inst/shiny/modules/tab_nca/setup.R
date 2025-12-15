@@ -52,7 +52,7 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data) {
+setup_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive({
