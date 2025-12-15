@@ -99,6 +99,8 @@ data_upload_server <- function(id) {
           tryCatch({
             combined_df <- successful_loads %>%
               purrr::map("data") %>%
+              #mutate all to character to prevent errors
+              purrr::map(~ mutate_all(.x, as.character)) %>%
               dplyr::bind_rows()
 
             # If there were partial failures (some read, some didn't), warn the user
