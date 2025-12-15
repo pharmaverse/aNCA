@@ -249,7 +249,7 @@ describe("pivot_wider_pknca_results", {
     # All requested extra_vars should be present in the output (if present in conc data)
     present_vars <- intersect(extra_vars, names(pknca_res$data$conc$data))
 
-     # Check all extra_vars present are added in the pivoted result
+    # Check all extra_vars present are added in the pivoted result
     expect_true(all(present_vars %in% names(pivoted_res)))
   })
 })

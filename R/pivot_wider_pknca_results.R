@@ -20,7 +20,8 @@
 #' should be applied, and `threshold` (numeric) specifying the threshold value for flagging.
 #' The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
 #' (e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").
-#' @param extra_vars_to_keep Optional character vector of variable names to join from the concentration data to the output. Default is NULL.
+#' @param extra_vars_to_keep Optional character vector of variable names to join from the
+#' concentration data to the output. Default is NULL.
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
@@ -164,7 +165,11 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   pivoted_res <- add_label_attribute(pivoted_res, myres)
 
   # Add flagging columns for each rule and a general "flagged" column
-  out <- .create_flags_for_profiles(final_results = pivoted_res, myres = myres, flag_rules = flag_rules)
+  out <- .create_flags_for_profiles(
+    final_results = pivoted_res,
+    myres = myres,
+    flag_rules = flag_rules
+  )
 
   # If extra_vars_to_keep is provided, join these variables from the conc data
   if (!is.null(extra_vars_to_keep) && length(extra_vars_to_keep) > 0) {

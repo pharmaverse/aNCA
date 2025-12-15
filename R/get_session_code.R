@@ -23,7 +23,7 @@ get_session_code <- function(template_path, session, output_path) {
   }
 
   # Read template
-  script <- readLines(template_path, warn = FALSE) |>
+  script <- readLines(template_path, warn = FALSE) %>%
     paste(collapse = "\n")
 
   # Find all session$userData$...
@@ -95,7 +95,7 @@ clean_deparse.data.frame <- function(obj, indent = 0) {
   if (nrow(obj) == 0) return("data.frame()")
 
   cols <- lapply(obj, function(col) {
-    d <- deparse(col, width.cutoff = 500) |> paste(collapse = "")
+    d <- deparse(col, width.cutoff = 500) %>% paste(collapse = "")
     if (length(col) > 1 && !grepl("^c\\(", d)) d <- paste0("c(", d, ")")
     d
   })

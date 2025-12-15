@@ -328,18 +328,18 @@ calculate_table_ratios_app <- function(res, ratio_table) {
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
 #' @returns A data.frame with the calculated ratios for the specified settings.
 calculate_ratio_app <- function(
-    res,
-    test_parameter,
-    ref_parameter = test_parameter,
-    test_group = "(all other levels)",
-    ref_group = "PARAM: Analyte01",
-    aggregate_subject = "no",
-    adjusting_factor = 1,
-    custom_pptestcd = NULL
+  res,
+  test_parameter,
+  ref_parameter = test_parameter,
+  test_group = "(all other levels)",
+  ref_group = "PARAM: Analyte01",
+  aggregate_subject = "no",
+  adjusting_factor = 1,
+  custom_pptestcd = NULL
 ) {
   reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
-  
+
   ########### This is very App specific ###############
   if ("ATPTREF" %in% reference_colname) {
     match_cols <- setdiff(match_cols, c("start", "end"))
@@ -348,7 +348,7 @@ calculate_ratio_app <- function(
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
   #####################################################
-  
+
   if (aggregate_subject == "yes") {
     match_cols <- list(setdiff(match_cols, "USUBJID"))
   } else if (aggregate_subject == "no") {
@@ -362,7 +362,7 @@ calculate_ratio_app <- function(
       match_cols <- list(match_cols, setdiff(match_cols, "USUBJID"))
     }
   }
-  
+
   if (test_group == "(all other levels)") {
     test_groups <- NULL
   } else {
@@ -377,7 +377,7 @@ calculate_ratio_app <- function(
       )
     )
   }
-  
+
   reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
   reference_value <- gsub("(.*): (.*)", "\\2", ref_group)
   ref_groups <- data.frame(
@@ -388,10 +388,10 @@ calculate_ratio_app <- function(
       dimnames = list(NULL, reference_colname)
     )
   )
-  
-  
+
+
   all_ratios <- data.frame()
-  
+
   for (ix in seq_along(match_cols)) {
     ratio_calculations <- calculate_ratios(
       data = res$result,
@@ -405,7 +405,7 @@ calculate_ratio_app <- function(
     )
     all_ratios <- bind_rows(all_ratios, ratio_calculations)
   }
-  
+
   # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
   # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed
   all_ratios %>%
