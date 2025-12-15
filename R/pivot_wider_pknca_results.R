@@ -20,6 +20,7 @@
 #' should be applied, and `threshold` (numeric) specifying the threshold value for flagging.
 #' The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
 #' (e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").
+#' @param extra_vars_to_keep Optional character vector of variable names to join from the concentration data to the output. Default is NULL.
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
@@ -33,7 +34,7 @@
 #' @export
 #'
 
-pivot_wider_pknca_results <- function(myres, flag_rules = NULL) {
+pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_keep = NULL) {
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
@@ -163,7 +164,24 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL) {
   pivoted_res <- add_label_attribute(pivoted_res, myres)
 
   # Add flagging columns for each rule and a general "flagged" column
-  .create_flags_for_profiles(final_results = pivoted_res, myres = myres, flag_rules = flag_rules)
+  out <- .create_flags_for_profiles(final_results = pivoted_res, myres = myres, flag_rules = flag_rules)
+
+  # If extra_vars_to_keep is provided, join these variables from the conc data
+  if (!is.null(extra_vars_to_keep) && length(extra_vars_to_keep) > 0) {
+    conc_data <- myres$data$conc$data
+    # Only keep columns that exist in conc_data
+    vars_to_join <- intersect(extra_vars_to_keep, names(conc_data))
+    if (length(vars_to_join) > 0) {
+      out <- out %>%
+        dplyr::inner_join(
+          dplyr::select(conc_data, dplyr::any_of(vars_to_join)),
+          by = intersect(names(out), vars_to_join)
+        ) %>%
+        dplyr::distinct()
+    }
+  }
+
+  out
 }
 
 #' Helper function to extract exclude values
