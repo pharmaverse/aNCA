@@ -240,4 +240,16 @@ describe("pivot_wider_pknca_results", {
       filter(R2 >= flag_rules$R2$threshold & R2ADJ >= flag_rules$R2ADJ$threshold)
     expect_equal(unique(accepted_result$flagged), "ACCEPTED")
   })
+
+  it("includes extra_vars_to_keep columns when provided", {
+    pknca_res <- FIXTURE_PKNCA_RES
+    extra_vars <- c("ROUTE", "DOSEA", "ATPTREF")
+    pivoted_res <- pivot_wider_pknca_results(pknca_res, extra_vars_to_keep = extra_vars)
+
+    # All requested extra_vars should be present in the output (if present in conc data)
+    present_vars <- intersect(extra_vars, names(pknca_res$data$conc$data))
+
+     # Check all extra_vars present are added in the pivoted result
+    expect_true(all(present_vars %in% names(pivoted_res)))
+  })
 })
