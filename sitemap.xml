@@ -26,7 +26,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_update_data_object.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_impute_method.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/add_optional_layers.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_plottable.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_table.html</loc></url>
@@ -68,12 +67,11 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncadata_intervals.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncadose_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_unit_string.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/g_lineplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg01_lin.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg01_log.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg02_lin.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/g_pkcg02_log.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/general_lineplot.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/general_meanplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/generate_tooltip_text.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_conversion_factor.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_label.html</loc></url>
@@ -95,7 +93,8 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg02.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/preprocess_data_for_plot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/process_data_individual.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/process_data_mean.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>

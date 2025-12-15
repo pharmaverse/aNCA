@@ -34,9 +34,6 @@
 - [`add_f_to_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.md)
   : Add bioavailability results to PKNCA results
 
-- [`add_optional_layers()`](https://pharmaverse.github.io/aNCA/reference/add_optional_layers.md)
-  : Helper function to handle optional layers
-
 - [`add_pptx_sl_plot()`](https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_plot.md)
   : Add a slide with a plot only
 
@@ -162,6 +159,9 @@
 - [`format_unit_string()`](https://pharmaverse.github.io/aNCA/reference/format_unit_string.md)
   : Formats a unit string if a unique unit exists
 
+- [`g_lineplot()`](https://pharmaverse.github.io/aNCA/reference/g_lineplot.md)
+  : Generate a Unified Line Plot for PK Data
+
 - [`g_pkcg01_lin()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg01_lin.md)
   :
 
@@ -185,12 +185,6 @@
 
   Wrapper around aNCA::pkcg02() function. Calls the function with `LOG`
   scale argument.
-
-- [`general_lineplot()`](https://pharmaverse.github.io/aNCA/reference/general_lineplot.md)
-  : Generate a General Line Plot for ADNCA Dataset
-
-- [`general_meanplot()`](https://pharmaverse.github.io/aNCA/reference/general_meanplot.md)
-  : Generate a Mean Concentration Plot for ADNCA Dataset
 
 - [`generate_tooltip_text()`](https://pharmaverse.github.io/aNCA/reference/generate_tooltip_text.md)
   : Generate HTML Tooltip Text
@@ -253,8 +247,11 @@
 - [`prepare_plot_data()`](https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.md)
   : Prepare Data for PK Dose QC Plotting
 
-- [`preprocess_data_for_plot()`](https://pharmaverse.github.io/aNCA/reference/preprocess_data_for_plot.md)
-  : Prepare Data for PK Lineplot
+- [`process_data_individual()`](https://pharmaverse.github.io/aNCA/reference/process_data_individual.md)
+  : Process data for individual line plot
+
+- [`process_data_mean()`](https://pharmaverse.github.io/aNCA/reference/process_data_mean.md)
+  : Create a Mean PK Line Plot
 
 - [`read_pk()`](https://pharmaverse.github.io/aNCA/reference/read_pk.md)
   : Reads PK datasets from various file formats.
