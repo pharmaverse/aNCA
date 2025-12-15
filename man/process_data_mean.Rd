@@ -24,8 +24,7 @@ process_data_mean(
 \item{color_by, facet_by}{Optional grouping variables to be included in summary.}
 }
 \value{
-A list with \code{summarised_data} with Mean, SD, and CIs for the profiles selected,
-and \code{time_col}- either NFRLT or NRRLT depending on if profiles selected is null.
+\code{summarised_data} with Mean, SD, and CIs for the profiles selected.
 }
 \description{
 Create a Mean PK Line Plot
