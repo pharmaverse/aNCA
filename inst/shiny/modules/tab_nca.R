@@ -84,7 +84,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     session$userData$settings <- list(
       settings =  settings,
       slope_rules = slope_rules$manual_slopes
-      ) # This will be saved in the results zip folder
+    ) # This will be saved in the results zip folder
 
     reactable_server("manual_slopes", slope_rules$manual_slopes)
 
