@@ -80,10 +80,13 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       results <- res_nca()
 
       # Transform results
+      extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
+      session$userData$extra_vars_to_keep <- extra_vars_to_keep
+
       final_results <- pivot_wider_pknca_results(
         results,
         flag_rules = settings()$flags,
-        extra_vars_to_keep = c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
+        extra_vars_to_keep = extra_vars_to_keep
       )
 
       final_results

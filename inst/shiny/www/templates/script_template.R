@@ -69,6 +69,7 @@ slope_rules <- list(
 )
 flag_rules <- session$userData$settings$flags
 ratio_table <- session$userData$ratio_table
+extra_vars_to_keep <-  session$userData$extra_vars_to_keep
 
 pknca_res <- pknca_obj %>%
 
@@ -101,4 +102,8 @@ pknca_res <- pknca_obj %>%
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- export_cdisc(pknca_res)
-pivoted_results <- pivot_wider_pknca_results(pknca_res, flag_rules)
+pivoted_results <- pivot_wider_pknca_results(
+  myres = pknca_res,
+  flag_rules = flag_rules,
+  extra_vars_to_keep = extra_vars_to_keep
+)
