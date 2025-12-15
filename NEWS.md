@@ -8,6 +8,7 @@
 * Interface includes now a color legend next to the pivoted NCA results to indicate missing and flagged parameters (#779)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
+* Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (#712)
 
 ## Bugs fixed
 * Bug fix for box/violin plots that were crashing when PPSTRES is NA (#785)
