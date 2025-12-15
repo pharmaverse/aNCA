@@ -4,7 +4,7 @@
 \alias{pivot_wider_pknca_results}
 \title{Reshape PKNCA Results}
 \usage{
-pivot_wider_pknca_results(myres, flag_rules = NULL)
+pivot_wider_pknca_results(myres, flag_rules = NULL, extra_vars_to_keep = NULL)
 }
 \arguments{
 \item{myres}{The output of PKNCA::pk.nca. It makes some additional assumptions:
@@ -24,6 +24,8 @@ should be a list with two elements: \code{is.checked} (logical) indicating wheth
 should be applied, and \code{threshold} (numeric) specifying the threshold value for flagging.
 The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
 (e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").}
+
+\item{extra_vars_to_keep}{Optional character vector of variable names to join from the concentration data to the output. Default is NULL.}
 }
 \value{
 A data frame which provides an easy overview on the results from the NCA
