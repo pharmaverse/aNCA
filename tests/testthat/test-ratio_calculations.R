@@ -292,6 +292,46 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
  # jr 
+ it ("EXPERIMENTAL    ", { 
   
-  # jr
+ test <- tribble(
+   ~USUBJID,~NFRLT,~PPTESTCD,~PPORRES,~PPORRESU,
+"A",0,"CMAX",10,"ng/mL",
+"A",1,"CMAX",20,"ng/mL",
+"A",2,"CMAX",15,"ng/mL",
+"A",0,"AUCINF",25,"ng*h/mL",
+"A",1,"AUCINF",30,"ng*h/mL",
+"A",2,"AUCINF",40,"ng*h/mL",
+"A",0,"CMAX",5,"ng/mL",
+"A",1,"CMAX",10,"ng/mL",
+"A",2,"CMAX",8,"ng/mL",
+"A",0,"AUCINF",12,"ng*h/mL",
+"A",1,"AUCINF",18,"ng*h/mL",
+"A",2,"AUCINF",16,"ng*h/mL"
+)
+ test_parameter <- "AUCINF"
+  res <- FIXTURE_PKNCA_RES
+  test_parameter = "AUCINF"
+  
+  
+  
+  #test_groups <- data.frame(PARAM = "B")
+  test_groups <- NULL
+  ref_groups = data.frame(USUBJID = c("A"), NFRLT = c(0))
+  #ref_groups = data.frame(USUBJID = c("A"))
+  #ref_groups <- data.frame(PARAM = "A")
+  
+  # We must define a value for ref_groups to satisfy the function requirements.
+  # The content of ref_groups is irrelevant for making test_groups NULL,
+  # but it must exist to prevent a "missing argument" error.
+  
+  ratios <- calculate_ratios(
+      test,
+      test_parameter = test_parameter,
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
+    )
+  
 })
