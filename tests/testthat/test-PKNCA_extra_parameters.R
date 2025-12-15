@@ -23,8 +23,8 @@ test_that("pk.calc.ertlst", {
 test_that("pk.calc.ermax", {
   # All NA
   expect_equal(
-    pk.calc.ermax(conc = c(NA, NA), volume = c(1, 1), time = c(0, 1), duration.conc = c(1, 1)),
-    structure(NA, exclude = "All concentrations are missing")
+    pk.calc.ermax(conc = c(NA_real_, NA_real_), volume = c(1, 1), time = c(0, 1), duration.conc = c(1, 1)),
+    structure(NA_real_, exclude = "All concentrations are missing")
   )
   # Normal case
   expect_equal(
@@ -36,8 +36,8 @@ test_that("pk.calc.ermax", {
 test_that("pk.calc.ertmax", {
   # All NA or 0
   expect_equal(
-    pk.calc.ertmax(conc = c(NA, 0), volume = c(1, 1), time = c(0, 1), duration.conc = c(1, 1)),
-    structure(NA, exclude = "1 of 2 concentrations are missing")
+    pk.calc.ertmax(conc = c(NA_real_, 0), volume = c(1, 1), time = c(0, 1), duration.conc = c(1, 1)),
+    structure(NA_real_, exclude = "1 of 2 concentrations are missing")
   )
   # Normal case, last tmax
   expect_equal(

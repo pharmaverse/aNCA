@@ -15,12 +15,12 @@ pk.calc.ertlst <- function(conc, volume, time, duration.conc, check = TRUE) {
                                            name_b = "volumes")
   er <- conc * volume / duration.conc
   if (all(is.na(er))) {
-    ret <- NA
-  } else if (all(conc %in% c(0, NA))) {
+    ret <- NA_real_
+  } else if (all(conc %in% c(0, NA_real_))) {
     ret <- 0
   } else {
     midtime <- time + duration.conc / 2
-    ret <- max(midtime[!(er %in% c(NA, 0))])
+    ret <- max(midtime[!(er %in% c(NA_real_, 0))])
   }
 
   if (length(message_all) != 0) {
