@@ -103,9 +103,9 @@ data_upload_server <- function(id) {
 
             # If there were partial failures (some read, some didn't), warn the user
             if (length(errors) > 0) {
-              error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg))
+              error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
               file_loading_error(paste(error_msgs, collapse = "<br>"))
-              log_warning("Some files failed to load: ", paste(error_msgs, collapse = "; "))
+              log_warn("Some files failed to load: ", paste(error_msgs, collapse = "; "))
             } else {
               log_success("All user data loaded successfully.")
             }
@@ -117,7 +117,7 @@ data_upload_server <- function(id) {
             bind_error <- paste0("Error combining files: ", e$message)
 
             if (length(errors) > 0) {
-              read_errors <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg))
+              read_errors <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
               file_loading_error(paste(c(read_errors, bind_error), collapse = "<br>"))
             } else {
               file_loading_error(bind_error)
