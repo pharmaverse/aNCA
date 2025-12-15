@@ -277,7 +277,7 @@ export_cdisc <- function(res_nca) {
 
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables) %>%
-    
+
     # Add the missing labels
     apply_labels()
 
