@@ -53,7 +53,7 @@ data_upload_server <- function(id) {
       if (!is.null(input$data_upload$datapath)) {
         session$userData$data_path <- input$data_upload$datapath
       } else {
-        session$userData$data_path <- system.file("shiny/data/Dummy_data.csv", package = "aNCA")
+        session$userData$data_path <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
       }
     })
 
