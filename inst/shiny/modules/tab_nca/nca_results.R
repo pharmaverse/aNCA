@@ -172,7 +172,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             # Create a settings folder
             setts_tmpdir <- file.path(output_tmpdir, "settings")
             dir.create(setts_tmpdir, recursive = TRUE)
-            saveRDS(session$userData$settings(), paste0(setts_tmpdir, "/settings.rds"))
+            saveRDS(session$userData$settings, paste0(setts_tmpdir, "/settings.rds"))
 
             files <- list.files(
               output_tmpdir,
