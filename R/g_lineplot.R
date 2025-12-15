@@ -138,7 +138,7 @@ g_lineplot <- function(data,
     x = !!sym(x_var),
     y = !!sym(y_var),
     color = color_var,
-    group =!!sym(group_var),
+    group = !!sym(group_var),
     text = tooltip_text
   )) +
     geom_line() +

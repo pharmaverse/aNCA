@@ -62,7 +62,7 @@ sample_data <- dplyr::bind_rows(
 
 describe("process_data_individual functions correctly", {
 
-  it("returns a list with default settings", {
+  it("returns a dataframe with default settings", {
     res <- process_data_individual(
       data = sample_data,
       selected_usubjids = "Subject1",
@@ -70,8 +70,8 @@ describe("process_data_individual functions correctly", {
       selected_pcspec = "Spec1"
     )
 
-    # Default time_scale is "All Time", which uses AFRLT
-    expect_true("AFRLT" == res$time_col)
+    # expect data frame output
+    expect_true(is.data.frame(res))
   })
 
 
@@ -96,12 +96,12 @@ describe("process_data_individual functions correctly", {
       selected_pcspec = "Spec1"
     )
     # Check that the records were removed by the internal filter
-    expect_true(all(p$data$EVID == 0))
-    expect_true(all(!is.na(p$data$AVAL)))
+    expect_true(all(p$EVID == 0))
+    expect_true(all(!is.na(p$AVAL)))
   })
 
 
-  it("changes time scale if selected profiles is not null", {
+  it("filters data if selected profiles is not null", {
     p <- process_data_individual(
       data = sample_data,
       selected_usubjids = "Subject1",
@@ -109,13 +109,12 @@ describe("process_data_individual functions correctly", {
       selected_pcspec = "Spec1",
       profiles_selected = 1
     )
-    # 'By Dose Profile' uses ARRLT
-    expect_true("ARRLT" == p$time_col)
+
     # Check that data is filtered to the selected cycle
-    expect_true(all(p$processed_data$ATPTREF == 1))
+    expect_true(all(p$ATPTREF == 1))
   })
 
-  it("handles predose duplication for 'By Dose Profile'", {
+  it("handles predose duplication if selected profiles is not null", {
 
     p <- process_data_individual(
       data = sample_data,
@@ -125,7 +124,7 @@ describe("process_data_individual functions correctly", {
       profiles_selected = 1
     )
 
-    predose_record_in_plot <- p$processed_data %>%
+    predose_record_in_plot <- p %>%
       filter(NFRLT == 168)
 
     expect_true(nrow(predose_record_in_plot) == 1)
@@ -143,14 +142,14 @@ describe("process_data_individual functions correctly", {
     )
 
     # Check that non-positive values were filtered
-    expect_true(all(p$processed_data$AVAL > 0))
+    expect_true(all(p$AVAL > 0))
   })
 })
 
 describe("process_data_mean functions correctly", {
 
 
-  it("returns a list object with default settings", {
+  it("returns a dataframe with default settings", {
     p <- process_data_mean(
       data = sample_data,
       selected_analytes = "Analyte1",
@@ -158,12 +157,10 @@ describe("process_data_mean functions correctly", {
       color_by = "DOSEA"
     )
 
-    # Default time_scale is "All Time", which uses NFRLT for mean plot
-    expect_true("NFRLT" == p$time_col)
     # Calculates mean
-    expect_true("Mean" %in% names(p$summarised_data))
+    expect_true("Mean" %in% names(p))
     # Groups by color by vars
-    expect_true("DOSEA" %in% names(p$summarised_data))
+    expect_true("DOSEA" %in% names(p))
   })
 
   it("handles missing columns gracefully", {
@@ -179,7 +176,7 @@ describe("process_data_mean functions correctly", {
     )
   })
 
-  it("changes time scale if selected profiles is not null", {
+  it("filters data if selected profiles is not null", {
     p <- process_data_mean(
       data = sample_data,
       selected_analytes = "Analyte1",
@@ -187,11 +184,9 @@ describe("process_data_mean functions correctly", {
       color_by = "DOSEA",
       profiles_selected = 1
     )
-
-    # 'By Dose Profile' uses NRRLT
-    expect_true("NRRLT" == p$time_col)
+    
     # Check that data is filtered to the selected cycle
-    expect_true(max(p$summarised_data$NRRLT) <= 5)
+    expect_true(max(p$NRRLT) <= 5)
   })
 
   it("supports multiple color_by and facet_by", {
@@ -204,9 +199,9 @@ describe("process_data_mean functions correctly", {
     )
 
     # Check variables exist in summary_data
-    expect_true("DOSEA" %in% names(p$summarised_data))
-    expect_true("SEX" %in% names(p$summarised_data))
-    expect_true("PARAM" %in% names(p$summarised_data))
+    expect_true("DOSEA" %in% names(p))
+    expect_true("SEX" %in% names(p))
+    expect_true("PARAM" %in% names(p))
 
   })
 
@@ -224,7 +219,7 @@ describe("process_data_mean functions correctly", {
     )
 
     # Check that non-positive Mean values were filtered
-    expect_true(all(p$summarised_data$Mean > 0))
+    expect_true(all(p$Mean > 0))
   })
 
 })

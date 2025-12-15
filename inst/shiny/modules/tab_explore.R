@@ -87,7 +87,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       validate(need(nrow(individual_output) > 0,
                     "No data available for the selected filters."))
-      
+
       time_col <- if (!is.null(individual_inputs()$profiles)) "ARRLT" else "AFRLT"
 
       tt_vars <- unique(c("AVAL", time_col,
@@ -99,7 +99,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       } else {
         NULL
       }
-      
+
       lineplot <- g_lineplot(
         data = individual_output,
         x_var = time_col,
@@ -159,7 +159,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       validate(need(nrow(mean_output) > 0,
                     "No data with >= 3 points to calculate mean."))
-      
+
       time_col <- if (!is.null(mean_inputs()$profiles)) "NRRLT" else "NFRLT"
 
       tt_vars <- unique(c("Mean", time_col, mean_inputs()$colorby))
