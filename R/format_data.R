@@ -23,7 +23,7 @@
 #'   - Arranges the data by group_columns.
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' conc_data <- format_pkncaconc_data(ADNCA = adnca,
 #'                                    group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
 #'                                    time_column = "AFRLT",
@@ -60,6 +60,7 @@ format_pkncaconc_data <- function(ADNCA,
   }
 
   if (!is.null(nca_exclude_reason_columns)) {
+
     ADNCA <- ADNCA %>%
       # Merge all reason columns into one
       mutate(
@@ -184,7 +185,7 @@ format_pkncadose_data <- function(pkncaconc_data,
 #'  or contain multiple doses in dataset
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' pknca_data <- PKNCA_create_data_object(adnca)
 #' pknca_conc <- pknca_data$conc
 #' pknca_dose <- pknca_data$dose
