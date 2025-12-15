@@ -25,7 +25,8 @@ should be applied, and \code{threshold} (numeric) specifying the threshold value
 The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
 (e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").}
 
-\item{extra_vars_to_keep}{Optional character vector of variable names to join from the concentration data to the output. Default is NULL.}
+\item{extra_vars_to_keep}{Optional character vector of variable names to join from the
+concentration data to the output. Default is NULL.}
 }
 \value{
 A data frame which provides an easy overview on the results from the NCA
