@@ -415,4 +415,3 @@ calculate_ratio_app <- function(
     ),
     .keep_all = TRUE)
 }
-

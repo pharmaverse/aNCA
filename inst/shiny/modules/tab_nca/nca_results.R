@@ -139,7 +139,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             setts_tmpdir <- file.path(output_tmpdir, "settings")
             dir.create(setts_tmpdir, recursive = TRUE)
             saveRDS(session$userData$settings(), paste0(setts_tmpdir, "/settings.rds"))
-            
+
             # Save a code R script template for the session
             script_tmpdir <- file.path(output_tmpdir, "code")
             dir.create(script_tmpdir, recursive = TRUE)

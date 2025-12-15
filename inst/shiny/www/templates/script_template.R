@@ -55,7 +55,9 @@ pknca_obj <- preprocessed_adnca %>%
   # Define the desired units for the parameters (PPSTRESU)
   {
     pknca_obj <- .
-    pknca_obj[["units"]] <- units_table
+    if (!is.null(units_table)) {
+      pknca_obj[["units"]] <- units_table
+    }
     pknca_obj
   }
 
