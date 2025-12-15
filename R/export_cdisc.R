@@ -276,10 +276,10 @@ export_cdisc <- function(res_nca) {
     .create_nca_excl_columns(conc_nca_excl_col) %>%
 
     # Adjust class and length to the standards
-    adjust_class_and_length(metadata_nca_variables)
-
-  # Add variable labels for ADNCA
-  var_labels(adnca) <- labels_map[names(adnca)]
+    adjust_class_and_length(metadata_nca_variables) %>%
+    
+    # Add the missing labels
+    apply_labels()
 
   list(pp = pp, adpp = adpp, adnca = adnca)
 }
