@@ -239,7 +239,7 @@ describe("calculate_ratios", {
     expect_true(all(grepl("RACMAX", ratios_df$PPTESTCD)))
   })
 
-  it("it returns warning in simple case but test_parameter does not exist", {
+  it("it returns warning in simple case but test_parameter is FAKE ", {
     expect_warning(
       calculate_ratios(
         res_simple$result,
@@ -291,4 +291,7 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPORRESU))
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
+ # jr 
+  
+  # jr
 })
