@@ -74,7 +74,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     ),
     conditionalPanel(
       condition = "input.timescale == 'By Dose Profile'",
-      uiOutput(ns("cycle_select_ui")),
+      uiOutput(ns("profile_selection")),
       ns = ns
     ),
     checkboxInput(ns("show_threshold"), label = "Show Threshold"),
@@ -175,7 +175,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
     })
 
     # Render the cycle selection UI
-    output$cycle_select_ui <- renderUI({
+    output$profile_selection <- renderUI({
       req(input$param)
       y <- pknca_data()$conc$data %>%
         filter(PARAM %in% input$param) %>%

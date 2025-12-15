@@ -333,7 +333,6 @@ describe("g_lineplot: Graceful Handling", {
     expect_equal(length(p$layers), 2)
   })
 
-
   it("handles missing mean-plot columns", {
     mean_data_missing_ci <- mean_data %>% select(-CI_lower)
     # Test for missing CI column

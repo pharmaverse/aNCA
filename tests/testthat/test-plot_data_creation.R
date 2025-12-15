@@ -184,7 +184,7 @@ describe("process_data_mean functions correctly", {
       color_by = "DOSEA",
       profiles_selected = 1
     )
-    
+
     # Check that data is filtered to the selected cycle
     expect_true(max(p$NRRLT) <= 5)
   })
