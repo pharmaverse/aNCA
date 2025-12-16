@@ -281,10 +281,10 @@ calculate_ratios.PKNCAresults <- function(
 #' @export
 calculate_table_ratios_app <- function(res, ratio_table) {
   # Make a list to save all results
-  ratio_results <- vector("list", nrow(ratio_table))
+  ratio_results <- vector("list", nrow(as.data.frame(ratio_table)))
 
   # Loop through each row of the ratio_table
-  for (i in seq_len(nrow(ratio_table))) {
+  for (i in seq_len(nrow(as.data.frame(ratio_table)))) {
     ratio_results[[i]] <- calculate_ratio_app(
       res = res,
       test_parameter = ratio_table$TestParameter[i],
