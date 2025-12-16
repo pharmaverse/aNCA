@@ -326,4 +326,23 @@ describe("calculate_ratios", {
     expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
 
   })
+ it("returns only PPORRESU when PPSTRESU is not defined in the input", {
+    res_no_units <- res_simple
+    res_no_units$result <- res_simple$result %>%
+      select(-PPSTRESU, -PPSTRES)
+
+    ratios <- calculate_ratios(
+      res_no_units,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
+    )
+    ratios_df <- ratios$result %>%
+      filter(PPTESTCD == "RACMAX")
+
+    expect_equal(ratios_df$PPORRESU, rep("fraction", 2))
+    expect_false("PPSTRESU" %in% names(ratios_df))
+  })
 })
