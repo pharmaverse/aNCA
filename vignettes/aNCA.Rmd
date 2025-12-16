@@ -211,7 +211,7 @@ The *Descriptive Statistics* tab allows you to see the statistical data calculat
 
 ### Parameter Datasets
 
-In the Parameter Datasets tab you can see and export the ADPP, ADPC, and PP datasets.
+In the Parameter Datasets tab you can see and export the ADPP, ADNCA, and PP datasets.
 
 <image src="images/get_started/parameter_datasets.gif" alt="Parameter Datasets"/ width="100%">
 

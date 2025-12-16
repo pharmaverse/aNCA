@@ -13,7 +13,7 @@ NON_STD_MAPPING_INFO <- data.frame(
   ),
   mapping_section = c("Supplemental Variables", "Sample Variables"),
   mapping_alternatives = c(
-    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP",
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, STRAIN, DOSFRM, NOMDOSE, DOSEP",
     ""
   ),
   is_multiple_choice = c(TRUE, TRUE)
@@ -21,9 +21,11 @@ NON_STD_MAPPING_INFO <- data.frame(
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
-  filter(is.mapped, Dataset == "ADPC") %>%
+  filter(is.mapped, Dataset == "ADNCA") %>%
   select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
-  mutate(is_multiple_choice = FALSE) %>%
+  mutate(
+    is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
+  ) %>%
   bind_rows(NON_STD_MAPPING_INFO) %>%
   arrange(Order)
 
@@ -171,7 +173,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
 
     # Loop through each label and create the renderText outputs
-    purrr::walk(MAPPING_INFO$Variable, \(var) {
+    purrr::walk(MAPPING_INFO$Variable, function(var) {
       output[[paste0("label_", var)]] <- renderText(
         MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
       )
@@ -205,11 +207,11 @@ data_mapping_server <- function(id, adnca_data, trigger) {
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
-      mapping_list <- setNames(lapply(input_ids, \(id) input[[id]]), input_ids)
+      mapping_list <- setNames(lapply(input_ids, function(id) input[[id]]), input_ids)
       supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
 
       # Get the names to keep
-      names_to_keep <- names(mapping_list) |>
+      names_to_keep <- names(mapping_list) %>%
         keep(\(name) {
           # The logical condition with the any() fix
           !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
@@ -255,57 +257,64 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         showNotification(conditionMessage(e), type = "error", duration = NULL)
         NULL
       })
-    }) |>
+    }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
-    df_duplicates <- reactive({
-      req(mapped_data)
-      mapped_data() %>%
-        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-        filter(n() > 1) %>%
-        ungroup() %>%
-        mutate(.dup_group = paste(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM, sep = "_"))
-    })
 
+    df_duplicates <- reactiveVal(NULL)
     processed_data <- reactive({
       req(mapped_data())
-      dataset <- mapped_data()
 
-      if (nrow(df_duplicates()) == 0) {
-        return(mutate(dataset, DFLAG = FALSE))
-      }
-
-      # User resolves duplicates, apply DFLAG
-      duplicates(df_duplicates())
+      dataset <- mapped_data() %>%
+        # Annotate exact duplicate records
+        group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+        mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
+        # Annotate duplicate time records
+        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+        mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
+        mutate(.dup_group = cur_group_id()) %>%
+        ungroup() %>%
+        mutate(ROWID = row_number())
 
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
         # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
-        req(length(selected) > 0)
-
-        kept <- df_duplicates()[selected, , drop = FALSE]
-        removed <- anti_join(df_duplicates(), kept, by = colnames(kept))
-        dataset <- dataset %>%
-          mutate(DFLAG = FALSE)
-
-        # Set DFLAG to TRUE for the removed rows
-        dataset <- dataset %>%
-          rows_update(
-            removed %>%
-              mutate(DFLAG = TRUE) %>%
-              select(names(dataset)),
-            by = intersect(names(dataset), names(removed))
+        dataset <- df_duplicates() %>%
+          group_by(is.time.duplicate) %>%
+          mutate(
+            DTYPE = ifelse(
+              is.time.duplicate & !row_number() %in% selected,
+              "TIME DUPLICATE",
+              DTYPE
+            )
+          ) %>%
+          group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+          mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
+          ungroup()
+        if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
+          showNotification(
+            "There are still duplicate time records. Please resolve them before proceeding.",
+            type = "error", duration = NULL
           )
-
-        return(dataset)
+          return(NULL)
+        } else {
+          removeModal()
+          select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
+        }
       }
-      # Don't return anything until duplicates are resolved
-      return(NULL)
-    })
 
-    observeEvent(duplicates(), {
+      if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
+        df_duplicates(dataset)
+        return(NULL)
+      } else {
+        select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
+      }
+    }) %>%
+      bindEvent(list(mapped_data(), input$keep_selected_btn), ignoreInit = FALSE)
+
+    observeEvent(df_duplicates(), {
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -329,21 +338,17 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       )
     })
 
-    observeEvent(input$keep_selected_btn, {
-      duplicates(NULL)
-      removeModal()
-    })
-
     output$duplicate_modal_table <- renderReactable({
-      group_ids <- unique(df_duplicates()$.dup_group)
-      color_map <- setNames(rep(c("white", "#e6f2ff"), length.out = length(group_ids)), group_ids)
-
       reactable(
-        df_duplicates(),
+        df_duplicates() %>%
+          filter(is.time.duplicate),
         columns = list(.dup_group = colDef(show = FALSE)),
         rowStyle = function(index) {
-          group <- df_duplicates()$.dup_group[index]
-          list(background = color_map[[group]])
+          if (df_duplicates()[index, ".dup_group"] %% 2 == 0) {
+            list(background = "white")
+          } else {
+            list(background = "#e6f2ff")
+          }
         },
         selection = "multiple",
         onClick = "select",
@@ -358,7 +363,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     })
     list(
       processed_data = processed_data,
-      grouping_variables = reactive(input$select_Grouping_Variables)
+      grouping_variables = reactive(input$select_Grouping_Variables),
+      nca_exclusion_flags = reactive(input$select_NCAwXRS)
     )
   })
 }

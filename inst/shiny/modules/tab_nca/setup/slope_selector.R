@@ -252,7 +252,7 @@ slope_selector_server <- function( # nolint
           myres = lambdas_res(),
           r2adj_threshold = 0.7,
           time_column = pknca_data()$conc$columns$time
-        ) |>
+        ) %>%
           htmlwidgets::onRender(
             # nolint start
             "function(el, x) {
@@ -355,9 +355,9 @@ slope_selector_server <- function( # nolint
           PARAM == r["PARAM"],
           ATPTREF == r["ATPTREF"],
           DOSNOA == r["DOSNOA"]
-        ) |>
+        ) %>%
           NROW() != 0
-      }) |>
+      }) %>%
         all()
 
       if (!override_valid) {

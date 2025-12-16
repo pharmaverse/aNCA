@@ -29,15 +29,15 @@
 #' @importFrom stats sd median
 #' @export
 #' @examples
-#' \dontrun{
 #' data <- data.frame(
-#' ATPTREF = c(1, 1, 1, 1, 1, 1),
-#' PPTESTCD = c("A", "A", "B", "B", "C", "C"),
-#' PPSTRES = c(10, 20, 5, 15, NA, 30),
-#' PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
+#'   ATPTREF = c(1, 1, 1, 1, 1, 1),
+#'   PPTESTCD = c("A", "A", "B", "B", "C", "C"),
+#'   PPORRES = c(10, 20, 5, 15, NA, 30),
+#'   PPSTRES = c(10, 20, 5, 15, NA, 30),
+#'   PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L"),
+#'   PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 #' )
 #' calculate_summary_stats(data)
-#' }
 
 calculate_summary_stats <- function(data, input_groups = "ATPTREF") {
 
@@ -94,7 +94,7 @@ calculate_summary_stats <- function(data, input_groups = "ATPTREF") {
       Count.total = n(),
       .groups = "drop"
     ) %>%
-    mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>%
 
     # Pivot the data to return groups/statistics as rows & parameters as columns
     pivot_longer(

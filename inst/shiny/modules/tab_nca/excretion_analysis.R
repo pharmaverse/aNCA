@@ -170,7 +170,7 @@ excretion_server <- function(id, input_pknca_data) {
       suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
         # Apply standard CDISC names
         mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
-    }) |>
+    }) %>%
       bindEvent(input$submit_btn)
 
     results_output <- reactive({

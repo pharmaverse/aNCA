@@ -189,7 +189,7 @@ l_pkcl01 <- function(
                                      var_labels(data_grouped))
 
   # Split the lists based on the listgroup_vars
-  lapply(unique(data_grouped[["id_list"]]), \(id_val) {
+  lapply(unique(data_grouped[["id_list"]]), function(id_val) {
 
     list_data <- data_grouped %>% dplyr::filter(id_list ==  id_val)
 
