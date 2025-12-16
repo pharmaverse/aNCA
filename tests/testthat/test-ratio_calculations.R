@@ -291,29 +291,28 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPORRESU))
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
- # ------------------------------ jr:   placeholder -  
- it (" simplest example to cover anti-merge    ", { 
-  
- if (FALSE) { 
-   load_all()
-   source("tests/testthat/setup.R")
- }
-  
-  res <- FIXTURE_PKNCA_RES
-  res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
-  #test_groups <- data.frame(PARAM = "B")
-  test_groups <- NULL
-  ref_groups <- data.frame(PARAM = "A")
+ # ------------------------------ jr:   placeholder -   # nolint
+ it(" simplest example to cover anti-merge    ", {
+
+    if (FALSE) {
+      load_all()
+      source("tests/testthat/setup.R")
+    }
+
+    res <- FIXTURE_PKNCA_RES
+    res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+    test_groups <- NULL
+    ref_groups <- data.frame(PARAM = "A")
 
 
-  # Make a simple input version that has same units and only 1 subject
-  res_simple <- res
-  res_simple$result <- res$result %>%
-    filter(USUBJID == 8) %>%
-    mutate(
-      PPORRESU = "ng/mL",
-      PPSTRESU = "ng/mL"
-    )
+    # Make a simple input version that has same units and only 1 subject
+    res_simple <- res
+    res_simple$result <- res$result %>%
+      filter(USUBJID == 8) %>%
+      mutate(
+        PPORRESU = "ng/mL",
+        PPSTRESU = "ng/mL"
+      )
 
     ratios <- calculate_ratios(
       res_simple$result,
@@ -325,6 +324,6 @@ describe("calculate_ratios", {
     )
     expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
     expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
- 
-  })  
+
+  })
 })
