@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/Dummy_data.csv", package = "aNCA"))
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #' pknca_data <- PKNCA_create_data_object(adnca)
 #' pknca_data <- create_start_impute(pknca_data)
 #'
@@ -68,8 +68,8 @@ create_start_impute <- function(pknca_data) {
     rowwise() %>%
     mutate(
       impute = case_when(
-        # Start concentration already present: No imputation
-        !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ "",
+        # Start concentration already present: No imputation (NA)
+        !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ NA_character_,
 
         # 1st dose with not IV bolus or metabolite : Start concentration is 0
         is.first.dose & (!is.ivbolus | is.metabolite) ~ "start_conc0",
