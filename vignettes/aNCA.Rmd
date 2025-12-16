@@ -24,8 +24,6 @@ Click **Upload File** and select the dataset you would like to use. The data can
 Some variables are mandatory (marked with \*), while others are optional. Custom variable names are supported as long as they are correctly mapped during the [Data Mapping](###%20Data%20mapping) step.
 
 ```{r setup, include=FALSE}
-library(DT)
-
 # Making categories for the datatable
 category <- c("Grouping Identifiers", " ", " ", " ", " ", " ", " ", " ",
               "Sample Variables", " ", " ",
@@ -82,22 +80,19 @@ Click here to view a table describing each variable
 </summary>
 ```{r table-chunk, echo = FALSE}
 # This chunk generates the table
-# Using DT::datatable as an example
-datatable <- DT::datatable(dataformat, rownames = FALSE,
-                           colnames = c(" ", "Variable", "Description", "Format"),
-                           options = list(
-                             paging = FALSE,
-                             columnDefs = list(
-                               list(targets = 0, width = "25%"),
-                               list(targets = 1, width = "25%"),
-                               list(targets = 2, width = "25%"),
-                               list(targets = 3, width = "25%")
-                             )
-                           )) |>
-  formatStyle(columns = 1,
-              fontWeight = styleEqual(c("Grouping Identifiers", "Sample Variables",
-                                        "Dose Variables", "Time Variables"), rep("bold", 4)))
-datatable
+# Identify rows to bold
+bold_cats <- c("Grouping Identifiers", "Sample Variables", "Dose Variables", "Time Variables")
+
+# Add HTML bold tags to those specific rows
+dataformat$Category <- ifelse(dataformat$Category %in% bold_cats,
+                              paste0("<b>", dataformat$Category, "</b>"),
+                              dataformat$Category)
+
+# Render with kable
+knitr::kable(dataformat,
+             col.names = c(" ", "Variable", "Description", "Format"),
+             format = "html",
+             escape = FALSE)
 ```
 </details>
 
