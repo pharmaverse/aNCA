@@ -144,3 +144,46 @@ clean_deparse.integer <- clean_deparse.numeric
 clean_deparse.logical <- function(obj, indent = 0) {
   paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
 }
+
+default_mapping <- list(
+  select_STUDYID = "STUDYID",
+  select_USUBJID = "USUBJID",
+  select_DOSEA = "DOSEA",
+  select_DOSEU = "DOSEU",
+  select_DOSETRT = "DOSETRT",
+  select_PARAM = "PARAM",
+  select_Metabolites = "Metab-DrugA",
+  select_ARRLT = "ARRLT",
+  select_NRRLT = "NRRLT",
+  select_AFRLT = "AFRLT",
+  select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
+  select_NFRLT = "NFRLT",
+  select_PCSPEC = "PCSPEC",
+  select_ROUTE = "ROUTE",
+  select_TRTRINT = "TRTRINT",
+  select_ADOSEDUR = "ADOSEDUR",
+  select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
+  select_RRLTU = "RRLTU",
+  select_VOLUME = "VOLUME",
+  select_VOLUMEU = "VOLUMEU",
+  select_AVAL = "AVAL",
+  select_AVALU = "AVALU",
+  select_ATPTREF = "ATPTREF"
+)
+get_settings_code <- function(settings_file_path, data_path, mapping = default_mapping, template_path, output_path) {
+  settings <- readRDS(settings_file_path)
+  session <- list(userData = list(settings = settings, data_path = data_path, mapping = mapping))
+  get_session_code(
+    template_path = template_path,
+    session = session,
+    output_path = output_path
+  )
+  invisible(output_path)
+}
+settings_file_path <- "../../Downloads/elproject/settings/settings.rds"
+get_settings_code(
+  settings_file_path, 
+  data_path = "inst/shiny/data/example-ADNCA.csv",
+  template_path = "inst/shiny/www/templates/script_template.R",
+  output_path = "../../Downloads/elproject/settings/settings_code.R"
+)
