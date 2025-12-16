@@ -170,6 +170,19 @@ default_mapping <- list(
   select_AVALU = "AVALU",
   select_ATPTREF = "ATPTREF"
 )
+#' Generate a session script from settings and mapping files
+#'
+#' This function reads a settings RDS file and data path, and generates an R script
+#' that can reproduce the session using a template.
+#'
+#' @param settings_file_path Path to the RDS file containing the settings list.
+#' @param data_path Path to the data file to be referenced in the script.
+#' @param mapping Named list mapping variable names (default: \code{default_mapping}).
+#' @param template_path Path to the R script template file.
+#' @param output_path Path to write the resulting script file.
+#'
+#' @return Invisibly returns the output_path.
+#' @export
 get_settings_code <- function(settings_file_path, data_path, mapping = default_mapping, template_path, output_path) {
   settings <- readRDS(settings_file_path)
   session <- list(userData = list(settings = settings, data_path = data_path, mapping = mapping))
