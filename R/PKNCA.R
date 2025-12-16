@@ -294,7 +294,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   ) %>%
     unique()
 
-  data$intervals$impute <- ""
+  data$intervals$impute <- NA_character_
 
   # Impute start values if requested
   if (should_impute_c0) {
@@ -312,7 +312,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       intersect(names(PKNCA::get.interval.cols()))
 
     all_impute_methods <- na.omit(unique(data$intervals$impute))
-    all_impute_methods <- all_impute_methods[all_impute_methods != ""]
 
     data$intervals <- Reduce(function(d, ti_arg) {
       interval_remove_impute(
@@ -320,17 +319,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
         target_impute = ti_arg,
         target_params = params_not_to_impute
       )
-    }, all_impute_methods, init = data$intervals) %>%
-      mutate(impute = ifelse(is.na(impute), "", impute))
+    }, all_impute_methods, init = data$intervals)
   }
-
-  data$intervals <- Reduce(function(d, ti_arg) {
-    interval_remove_impute(
-      d,
-      target_impute = ti_arg,
-      target_params = params_not_to_impute
-    )
-  }, sort(all_impute_methods), init = data$intervals)
 
   # Define a BLQ imputation method for PKNCA
   # and apply it only for non-observational parameters
