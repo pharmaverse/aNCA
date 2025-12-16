@@ -326,7 +326,7 @@ describe("calculate_ratios", {
     expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
 
   })
- it("returns only PPORRESU when PPSTRESU is not defined in the input", {
+  it("returns only PPORRESU when PPSTRESU is not defined in the input", {
     res_no_units <- res_simple
     res_no_units$result <- res_simple$result %>%
       select(-PPSTRESU, -PPSTRES)
