@@ -334,9 +334,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   # Define a BLQ imputation method for PKNCA
   # and apply it only for non-observational parameters
-  
-  PKNCA_impute_method_blq <- function(conc, time) {
-    PKNCA::clean.conc.blq(conc = conc, time = time, conc.blq = blq_imputation_rule)
+
+  PKNCA_impute_method_blq <<- function(conc.group, time.group, ...) {
+    PKNCA::clean.conc.blq(conc = conc.group, time = time.group, conc.blq = blq_imputation_rule)
   }
 
   # Don't impute parameters that are not AUC dependent
@@ -355,10 +355,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
         has_param_to_impute,
         ifelse(impute == "", "blq", paste0("blq, ", impute)),
         impute
-      )
+      ),
+      impute = ifelse(impute == "", NA_character_, impute)
     ) %>%
     select(any_of(names(data$intervals)))
-browser()
+
   data
 }
 
