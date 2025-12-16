@@ -291,47 +291,40 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPORRESU))
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
- # jr 
- it ("EXPERIMENTAL    ", { 
+ # ------------------------------ jr:   placeholder -  
+ it (" simplest example to cover anti-merge    ", { 
   
- test <- tribble(
-   ~USUBJID,~NFRLT,~PPTESTCD,~PPORRES,~PPORRESU,
-"A",0,"CMAX",10,"ng/mL",
-"A",1,"CMAX",20,"ng/mL",
-"A",2,"CMAX",15,"ng/mL",
-"A",0,"AUCINF",25,"ng*h/mL",
-"A",1,"AUCINF",30,"ng*h/mL",
-"A",2,"AUCINF",40,"ng*h/mL",
-"A",0,"CMAX",5,"ng/mL",
-"A",1,"CMAX",10,"ng/mL",
-"A",2,"CMAX",8,"ng/mL",
-"A",0,"AUCINF",12,"ng*h/mL",
-"A",1,"AUCINF",18,"ng*h/mL",
-"A",2,"AUCINF",16,"ng*h/mL"
-)
- test_parameter <- "AUCINF"
+ if (FALSE) { 
+   load_all()
+   source("tests/testthat/setup.R")
+ }
+  
   res <- FIXTURE_PKNCA_RES
-  test_parameter = "AUCINF"
-  
-  
-  
+  res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
   #test_groups <- data.frame(PARAM = "B")
   test_groups <- NULL
-  ref_groups = data.frame(USUBJID = c("A"), NFRLT = c(0))
-  #ref_groups = data.frame(USUBJID = c("A"))
-  #ref_groups <- data.frame(PARAM = "A")
-  
-  # We must define a value for ref_groups to satisfy the function requirements.
-  # The content of ref_groups is irrelevant for making test_groups NULL,
-  # but it must exist to prevent a "missing argument" error.
-  
-  ratios <- calculate_ratios(
-      test,
-      test_parameter = test_parameter,
+  ref_groups <- data.frame(PARAM = "A")
+
+
+  # Make a simple input version that has same units and only 1 subject
+  res_simple <- res
+  res_simple$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
+
+    ratios <- calculate_ratios(
+      res_simple$result,
+      test_parameter = "CMAX",
       ref_parameter = "CMAX",
       match_cols = c("start", "end", "USUBJID"),
       ref_groups = ref_groups,
       test_groups = test_groups
     )
-  
+    expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
+    expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
+ 
+  })  
 })
