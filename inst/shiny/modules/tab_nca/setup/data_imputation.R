@@ -94,11 +94,11 @@ data_imputation_server <- function(id) {
       # Transform in the list text number to numeric
       rule_list <- lapply(rule_list, function(x) {
         if (x %in% c("drop", "keep")) {
-          return(x)
+          x
         } else if (grepl("^[0-9]+(\\.[0-9]+)?$", x)) {
-          return(as.numeric(x))
+          as.numeric(x)
         } else {
-          return(NA)
+          NA
         }
       })
       are_invalid_inputs <- is.na(unlist(rule_list))
@@ -115,10 +115,10 @@ data_imputation_server <- function(id) {
       rule_list
     })
 
-    return(list(
+    list(
       should_impute_c0 = should_impute_c0,
       blq_imputation_rule = blq_rule
-    ))
+    )
   })
 }
 

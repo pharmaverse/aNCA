@@ -93,17 +93,6 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
-# # <<<<<<< HEAD
-# 
-#       withProgress(message = "Calculating NCA...", value = 0, {
-#         log_info("Calculating NCA results...")
-#         tryCatch({
-#           # Create env for storing PKNCA run warnings, so that warning messages can be appended
-#           # from within warning handler without bleeding to global env.
-#           pknca_warn_env <- new.env()
-#           pknca_warn_env$warnings <- c()
-# # =======
-# # >>>>>>> origin/main
 
       if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
                                                               is.logical)]))) {

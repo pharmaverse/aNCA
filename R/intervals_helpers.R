@@ -405,7 +405,7 @@ interval_remove_all_imputes <- function(data, target_params) {
   # Get all parameter column names in the data frame
   all_param_options <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
   param_cols <- intersect(names(data), all_param_options)
-  
+
   # Handle target_params
   assert_subset(target_params, all_param_options)
 
