@@ -5,10 +5,14 @@ ADPP
 AFRLT
 ARRLT
 ATPTREF
+AUCPEO
+AUCPEP
 AUCinf
 AUClast
 AVAL
 AVALU
+AdjustingFactor
+AggregateSubject
 Analyte
 BLQ
 Buckeridge
@@ -31,6 +35,7 @@ Kobana
 LAMZ
 LAMZLL
 LAMZNPT
+LAMZSPN
 Lineplot
 METABFL
 MSCW
@@ -47,6 +52,7 @@ PKNCA
 PKNCAconc
 PKNCAdata
 PKNCAdose
+PKNCAresult
 PKNCAresults
 PPORRES
 PPSTRES
@@ -63,6 +69,8 @@ Pre
 README
 RRLTU
 RStudio
+RefGroups
+RefParameter
 Req
 Roadmap
 SDTM
@@ -73,6 +81,8 @@ TLGs
 TMAX
 TRT
 TRTRINT
+TestGroups
+TestParameter
 Tmax
 Tooltip
 UI
@@ -130,6 +140,7 @@ roadmap
 rpptx
 ruleset
 rulesets
+runnable
 signif
 tibble
 tidyverse
@@ -140,6 +151,7 @@ tooltip
 tooltips
 ug
 unmapped
+userData
 utilise
 visualizable
 yaml
