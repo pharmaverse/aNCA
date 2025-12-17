@@ -83,6 +83,10 @@ A data frame with 123 rows and 6 variables:
   Logical. Indicates if the parameter can be used in extravascular
   analysis
 
+- can_metabolite:
+
+  Logical. Indicates if the parameter can be used in metabolite analysis
+
 ## Source
 
 Generated for use in the `translate_nomenclature` function.

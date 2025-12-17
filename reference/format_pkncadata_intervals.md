@@ -6,14 +6,7 @@ pharmacokinetic parameters.
 ## Usage
 
 ``` r
-format_pkncadata_intervals(
-  pknca_conc,
-  pknca_dose,
-  params = c("aucinf.obs", "aucint.last", "auclast", "cmax", "half.life", "tmax",
-    "lambda.z", "lambda.z.n.points", "r.squared", "adj.r.squared", "lambda.z.time.first",
-    "aucpext.obs", "aucpext.pred", "clast.obs", "cl.obs"),
-  start_from_last_dose = TRUE
-)
+format_pkncadata_intervals(pknca_conc, pknca_dose, start_from_last_dose = TRUE)
 ```
 
 ## Arguments
@@ -25,11 +18,6 @@ format_pkncadata_intervals(
 - pknca_dose:
 
   A PKNCAdose object containing the dose data.
-
-- params:
-
-  A character vector specifying the pharmacokinetic parameters to
-  include.
 
 - start_from_last_dose:
 
@@ -67,6 +55,5 @@ adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 pknca_data <- PKNCA_create_data_object(adnca)
 pknca_conc <- pknca_data$conc
 pknca_dose <- pknca_data$dose
-params <- c("aucinf.obs", "cmax", "half.life", "tmax", "lambda.z")
-dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
+dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose)
 ```

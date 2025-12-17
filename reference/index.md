@@ -59,11 +59,17 @@
 - [`apply_filters()`](https://pharmaverse.github.io/aNCA/reference/apply_filters.md)
   : Apply Filters to a Dataset
 
+- [`apply_imputation()`](https://pharmaverse.github.io/aNCA/reference/apply_imputation.md)
+  : Apply Imputation for PKNCA Data
+
 - [`apply_labels()`](https://pharmaverse.github.io/aNCA/reference/apply_labels.md)
   : Apply Labels to a dataset
 
 - [`apply_mapping()`](https://pharmaverse.github.io/aNCA/reference/apply_mapping.md)
   : Apply UI-Based Column Mapping to a Dataset
+
+- [`apply_parameter_selections()`](https://pharmaverse.github.io/aNCA/reference/apply_parameter_selections.md)
+  : Helper to Apply Default or Override Parameter Selections
 
 - [`calculate_f()`](https://pharmaverse.github.io/aNCA/reference/calculate_f.md)
   : Calculate bioavailability with pivoted output
@@ -268,8 +274,9 @@
 - [`translate_terms()`](https://pharmaverse.github.io/aNCA/reference/translate_terms.md)
   : Translate Terms from One Nomenclature to Another
 
+- [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)
+  : Update an intervals data frame with user-selected parameters by
+  study type
+
 - [`validate_pk()`](https://pharmaverse.github.io/aNCA/reference/validate_pk.md)
   : Validates data table with raw pk data.
-
-- [`verify_parameters()`](https://pharmaverse.github.io/aNCA/reference/verify_parameters.md)
-  : Conditionally Verify and Override PK Parameters Based on Sample Type

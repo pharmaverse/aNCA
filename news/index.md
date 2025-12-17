@@ -24,6 +24,9 @@
   ([\#712](https://github.com/pharmaverse/aNCA/issues/712))
 - New flagging rule for lambda-z calculations based on r-squared, R2
   ([\#834](https://github.com/pharmaverse/aNCA/issues/834))
+- New Parameter Selection section in NCA tab allowing to select
+  parameters by study type
+  ([\#795](https://github.com/pharmaverse/aNCA/issues/795))
 
 ### Bugs fixed
 

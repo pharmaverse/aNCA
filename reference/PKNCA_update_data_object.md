@@ -8,12 +8,10 @@ user selections for method, analyte, dose, specimen, and parameters.
 ``` r
 PKNCA_update_data_object(
   adnca_data,
-  auc_data,
   method,
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  params,
   should_impute_c0 = TRUE
 )
 ```
@@ -23,10 +21,6 @@ PKNCA_update_data_object(
 - adnca_data:
 
   A reactive PKNCAdata object
-
-- auc_data:
-
-  A data frame containing partial aucs added by user
 
 - method:
 
@@ -43,10 +37,6 @@ PKNCA_update_data_object(
 - selected_pcspec:
 
   User selected specimen
-
-- params:
-
-  A list of parameters for NCA calculation
 
 - should_impute_c0:
 

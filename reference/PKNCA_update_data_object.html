@@ -9,7 +9,7 @@ based on user selections for method, analyte, dose, specimen, and parameters."><
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9014</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9015</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,12 +62,10 @@ based on user selections for method, analyte, dose, specimen, and parameters.</p
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">PKNCA_update_data_object</span><span class="op">(</span></span>
 <span>  <span class="va">adnca_data</span>,</span>
-<span>  <span class="va">auc_data</span>,</span>
 <span>  <span class="va">method</span>,</span>
 <span>  <span class="va">selected_analytes</span>,</span>
 <span>  <span class="va">selected_profile</span>,</span>
 <span>  <span class="va">selected_pcspec</span>,</span>
-<span>  <span class="va">params</span>,</span>
 <span>  should_impute_c0 <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -78,10 +76,6 @@ based on user selections for method, analyte, dose, specimen, and parameters.</p
 
 <dl><dt id="arg-adnca-data">adnca_data<a class="anchor" aria-label="anchor" href="#arg-adnca-data"></a></dt>
 <dd><p>A reactive PKNCAdata object</p></dd>
-
-
-<dt id="arg-auc-data">auc_data<a class="anchor" aria-label="anchor" href="#arg-auc-data"></a></dt>
-<dd><p>A data frame containing partial aucs added by user</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -98,10 +92,6 @@ based on user selections for method, analyte, dose, specimen, and parameters.</p
 
 <dt id="arg-selected-pcspec">selected_pcspec<a class="anchor" aria-label="anchor" href="#arg-selected-pcspec"></a></dt>
 <dd><p>User selected specimen</p></dd>
-
-
-<dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
-<dd><p>A list of parameters for NCA calculation</p></dd>
 
 
 <dt id="arg-should-impute-c-">should_impute_c0<a class="anchor" aria-label="anchor" href="#arg-should-impute-c-"></a></dt>

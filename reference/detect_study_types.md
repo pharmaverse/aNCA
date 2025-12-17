@@ -44,7 +44,7 @@ detect_study_types(
 
 ## Value
 
-A data frame summarizing the detected study types, including the
+A data frame with the unique combinations of study types, including the
 grouping columns and the identified type.
 
 ## Details

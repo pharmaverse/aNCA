@@ -35,8 +35,10 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_sl_plottabletable.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_table.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_filters.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/apply_imputation.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_labels.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_mapping.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/apply_parameter_selections.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
@@ -101,7 +103,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/select_minimal_grouping_cols.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/simplify_unit.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/update_main_intervals.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/validate_pk.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/verify_parameters.html</loc></url>
 </urlset>
 
