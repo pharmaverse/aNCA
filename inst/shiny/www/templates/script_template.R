@@ -39,7 +39,9 @@ units_table <- session$userData$final_units
 pknca_obj <- preprocessed_adnca %>%
 
   # Create from ADNCA the PKNCA object
-  PKNCA_create_data_object() %>%
+  PKNCA_create_data_object(
+    nca_exclude_reason_columns = c("DTYPE", mapping$NCAwXRS)
+  ) %>%
 
   # Setup basic settings
   PKNCA_update_data_object(
