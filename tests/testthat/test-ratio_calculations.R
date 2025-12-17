@@ -299,14 +299,6 @@ describe("calculate_ratios", {
     ref_groups <- data.frame(PARAM = "A")
 
 
-    # Make a simple input version that has same units and only 1 subject
-    res_simple <- res
-    res_simple$result <- res$result %>%
-      filter(USUBJID == 8) %>%
-      mutate(
-        PPORRESU = "ng/mL",
-        PPSTRESU = "ng/mL"
-      )
 
     ratios <- calculate_ratios(
       res_simple$result,
