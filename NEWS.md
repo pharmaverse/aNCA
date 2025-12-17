@@ -20,7 +20,7 @@
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
-
+* Summary statistic table changes in grouping variables won't remove previous summary settings (#840)
 
 # aNCA 0.1.0
 
