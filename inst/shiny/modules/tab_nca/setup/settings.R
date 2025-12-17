@@ -118,6 +118,11 @@ settings_ui <- function(id) {
           tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
         ),
         .rule_input(
+          ns("R2"), "R2 >=", 0.7, 0.05, 0, 1,
+          tooltip = "Minimum R-squared threshold for lambda-z related parameters",
+          checked = FALSE
+        ),
+        .rule_input(
           ns("AUCPEO"), "AUCPEO (% ext.observed) <=", 20, 1, 0, 100,
           tooltip = "Maximum allowed percent extrapolated (observed) for AUC related parameters"
         ),
@@ -207,6 +212,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         "R2ADJ",
         settings$flags$R2ADJ$is.checked,
         settings$flags$R2ADJ$threshold
+      )
+
+      .update_rule_input(
+        session,
+        "R2",
+        settings$flags$R2$is.checked,
+        settings$flags$R2$threshold
       )
 
       .update_rule_input(
@@ -435,6 +447,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             is.checked = input$R2ADJ_rule,
             threshold = input$R2ADJ_threshold
           ),
+          R2 = list(
+            is.checked = input$R2_rule,
+            threshold = input$R2_threshold
+          ),
           AUCPEO = list(
             is.checked = input$AUCPEO_rule,
             threshold = input$AUCPEO_threshold
@@ -482,8 +498,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 #' @param min     Min value for the `shiny::numericInput` widget.
 #' @param max     Max value for the `shiny::numericInput` widget.
 #' @param tooltip Optional tooltip function to add a tooltip to the label.
+#' @param checked Logical, default state of the checkbox (default TRUE).
 #' @returns `shiny::fluidRow` containing html elements of the widget.
-.rule_input <- function(id, label, tooltip = NULL, default, step, min, max = NULL) {
+.rule_input <- function(id, label, tooltip = NULL, default, step, min, max = NULL, checked = TRUE) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
   numeric_args <- list(
@@ -508,7 +525,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   fluidRow(
     column(
       width = 6,
-      checkboxInput(rule_id, label_tag, value = TRUE)
+      checkboxInput(rule_id, label_tag, value = checked)
     ),
     column(
       width = 6,

@@ -103,7 +103,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       applied_flags <- purrr::keep(settings()$flags, function(x) x$is.checked)
       flag_params <- names(settings()$flags)
       flag_thr <- sapply(settings()$flags, FUN =  function(x) x$threshold)
-      flag_rule_msgs <- paste0(flag_params, c(" < ", " > ", " > ", " < "), flag_thr)
+      flag_rule_msgs <- paste0(flag_params, c(" < ", " < ", " > ", " > ", " < "), flag_thr)
       flag_cols <- names(final_results)[formatters::var_labels(final_results)
                                         %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
