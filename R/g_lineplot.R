@@ -86,6 +86,7 @@ g_lineplot <- function(data,
                        ci = FALSE,
                        tooltip_vars = NULL,
                        labels_df = NULL) {
+  
   # If threshold is NA (logical), infinite, or not numeric, kill it.
   if (!is.null(threshold_value)) {
     if (!is.numeric(threshold_value) || is.na(threshold_value) || is.infinite(threshold_value)) {
