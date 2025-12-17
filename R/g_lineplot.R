@@ -138,11 +138,10 @@ g_lineplot <- function(data,
     x = !!sym(x_var),
     y = !!sym(y_var),
     color = color_var,
-    group = !!sym(group_var),
-    text = tooltip_text
+    group = !!sym(group_var)
   )) +
-    geom_line() +
-    geom_point() +
+    geom_line(aes(text = tooltip_text)) +
+    geom_point(aes(text = tooltip_text)) +
     labs(
       x = x_lab,
       y = y_lab,
