@@ -30,22 +30,13 @@ descriptive_statistics_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    card(
-      orderInput(
-        ns("summary_groupby_source"),
-        "Drag and drop these variables...",
-        items = "USUBJID",
-        width = shiny::validateCssUnit("100%"),
-        connect = ns("summary_groupby")
-      ),
-      orderInput(
-        ns("summary_groupby"),
-        "..to hierarchically group by (order matters!):",
-        items = NULL,
-        width = shiny::validateCssUnit("100%"),
-        connect = ns("summary_groupby_source"),
-        placeholder = "Drag items here to group hierarchically..."
-      )
+    pickerInput(
+      ns("summary_groupby"),
+      "Group by variables:",
+      choices = NULL,
+      selected = NULL,
+      multiple = TRUE,
+      options = list(`actions-box` = TRUE)
     ),
     card(
       reactable_ui(ns("descriptive_stats"))
@@ -63,16 +54,18 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     observeEvent(res_nca(), {
       req(res_nca())
 
+      subj_col <- res_nca()$data$conc$columns$subject
       group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
                             # By default SUBJECT column is aggregated
-                            res_nca()$data$conc$columns$subject)
+                            subj_col)
       classification_cols <- sort(c(grouping_vars(), "DOSEA", "ATPTREF"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
 
-      updateOrderInput(session, "summary_groupby",
-                       items = c(group_cols, classification_cols))
+      updatePickerInput(session, "summary_groupby",
+                        choices = c(group_cols, classification_cols, subj_col),
+                        selected = c(group_cols, classification_cols))
     })
 
     # Reactive expression for summary table based on selected group and parameters
