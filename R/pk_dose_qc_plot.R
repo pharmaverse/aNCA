@@ -143,13 +143,13 @@ pk_dose_qc_plot <- function(data_conc,
   legend_title <- paste(
     paste(
       if (plot_conc_data) {
-        get_label(variable = shape_var, type = "ADPC", labels_df = labels_df)
+        get_label(variable = shape_var, type = "ADNCA", labels_df = labels_df)
       } else {
         ""
       },
       if (plot_dose_data) {
         paste0(
-          get_label(variable = colour_var, type = "ADPC", labels_df = labels_df),
+          get_label(variable = colour_var, type = "ADNCA", labels_df = labels_df),
           colour_unit_lab
         )
       } else {
@@ -183,8 +183,8 @@ pk_dose_qc_plot <- function(data_conc,
                                            rep(0.6, length(colour_levels))),
                                          all_legend_levels), guide = "none") +
     labs(
-      x = paste0(get_label(variable = x_var, type =  "ADPC", labels_df = labels_df), x_unit_lab),
-      y = get_label(variable = y_var, type =  "ADPC", labels_df = labels_df),
+      x = paste0(get_label(variable = x_var, type =  "ADNCA", labels_df = labels_df), x_unit_lab),
+      y = get_label(variable = y_var, type =  "ADNCA", labels_df = labels_df),
       title = title
     ) +
     theme_bw()
@@ -240,14 +240,14 @@ prepare_plot_data <- function(data_conc,
     plot_data_list$conc <- data_conc %>%
       mutate(
         legend_group = as.character(!!sym(shape_var)),
-        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADNCA")
       )
   }
   if (plot_dose_data) {
     plot_data_list$dose <- data_dose %>%
       mutate(
         legend_group = as.character(!!sym(colour_var)),
-        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADPC")
+        tooltip_text = generate_tooltip_text(., labels_df, tooltip_vars, "ADNCA")
       )
   }
 

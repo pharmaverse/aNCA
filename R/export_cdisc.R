@@ -23,7 +23,7 @@
 export_cdisc <- function(res_nca) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
-    filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
+    filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
     arrange(Order) %>%
     split(.[["Dataset"]])
 
@@ -46,6 +46,7 @@ export_cdisc <- function(res_nca) {
     ) %>%
     unique()
 
+  conc_nca_excl_col <- res_nca$data$conc$columns$exclude
   conc_timeu_col <- res_nca$data$conc$columns$timeu[[1]]
   conc_time_col <- res_nca$data$conc$columns$time[[1]]
   dose_time_col <- res_nca$data$dose$columns$time[[1]]
@@ -156,7 +157,7 @@ export_cdisc <- function(res_nca) {
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select only columns needed for PP, ADPP, ADPC
+    # Select only columns needed for PP, ADPP, ADNCA
     select(any_of(metadata_nca_variables[["Variable"]])) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
@@ -216,7 +217,7 @@ export_cdisc <- function(res_nca) {
       )
     )
 
-  adpc <- res_nca$data$conc$data %>%
+  adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
               by = intersect(names(res_nca$data$conc$data), names(dose_info)),
               suffix = c("", ".y")) %>%
@@ -267,15 +268,20 @@ export_cdisc <- function(res_nca) {
         NA
       }
     ) %>%
+
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC$Variable)) %>%
+    select(any_of(c(CDISC_COLS$ADNCA$Variable, conc_nca_excl_col))) %>%
+
+    # Create NCA exclusion flags using the PKNCA exclude column
+    .create_nca_excl_columns(conc_nca_excl_col) %>%
+
     # Adjust class and length to the standards
-    adjust_class_and_length(metadata_nca_variables)
+    adjust_class_and_length(metadata_nca_variables) %>%
 
-  # Add variable labels for ADPC
-  var_labels(adpc) <- labels_map[names(adpc)]
+    # Add the missing labels
+    apply_labels()
 
-  list(pp = pp, adpp = adpp, adpc = adpc)
+  list(pp = pp, adpp = adpp, adnca = adnca)
 }
 
 #' Function to identify the common prefix in a character vector.
@@ -470,4 +476,50 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   dtc_vectors_nas <- sapply(dtc_vectors, function(x) sum(is.na(x)))
   dtc_vectors[[which.min(dtc_vectors_nas)]] %>%
     format("%Y-%m-%dT%H:%M:%S")
+}
+
+##' Create NCA exclusion flag columns from a semicolon-separated reason column
+##'
+##' This internal helper parses a character column that may contain one or more
+##' semicolon-separated exclusion reasons and expands it into CDISC-style
+##' `NCA<n>XRS` (reason text) and `NCA<n>XRSN` (numeric flag) columns. It also
+##' creates `NCAXFL`/`NCAXFN` summary flags and removes the original exclusion
+##' column.
+##'
+##' @param data A data.frame containing the exclusion column.
+##' @param nca_excl_colname Character name of the column in `data` that holds
+##'   semicolon-separated exclusion reasons.
+##' @return The input `data` with new `NCA<n>XRS`, `NCA<n>XRSN`, `NCAXFL`, and
+##'   `NCAXFN` columns added; the original exclusion column is removed.
+##' @noRd
+##' @keywords internal
+.create_nca_excl_columns <- function(data, nca_excl_colname) {
+
+  # Split the elements based on `;` and store them in a list
+  split_reasons <- strsplit(data[[nca_excl_colname]], "; ")
+  reasons <- unique(na.omit(unlist(split_reasons)))
+
+  # Create new columns NCAnXR for the range 1:max_elements
+  for (i in seq_along(reasons)) {
+    fl_col <- paste0("NCA", i, "XRS")
+    data[[fl_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, reasons[i], ""))
+    attr(data[[fl_col]], "label") <- paste0("Reason ", i, " for PK NCA Exclusion")
+
+    fln_col <- paste0("NCA", i, "XRSN")
+    data[[fln_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, 1, NA_integer_))
+    attr(data[[fln_col]], "label") <- paste0("Reason for PK NCA Exclusion of ", i, " (N)")
+  }
+
+  # Create NCAXFL, NCAXFN columns based on whether there is any exclusion reason
+  is_included <- is.na(data[[nca_excl_colname]]) | data[[nca_excl_colname]] == ""
+  if (any(!is_included)) {
+    data$NCAXFL <- ifelse(is_included, "", "Y")
+    attr(data$NCAXFL, "label") <- "NCA Exclusion Flag"
+    data$NCAXFN <- ifelse(is_included, NA_integer_, 1)
+    attr(data$NCAXFN, "label") <- "NCA Exclusion Number"
+  }
+
+  # Remove the original exclusion column and return the output
+  data %>%
+    select(-!!sym(nca_excl_colname))
 }

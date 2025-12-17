@@ -104,12 +104,12 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @returns Invisibly returns TRUE if slides were created.
 create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
   # Save an accessible object with all results
-  rda_path <- paste0(dirname(quarto_path), "/dose_escalation_outputs.rda")
+  rda_path <- paste0(dirname(quarto_path), "/results_slides_outputs.rda")
   save(list = as.character(quote(res_dose_slides)), file = rda_path)
 
   # Generate the main quarto document
   create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
-  for (i in seq_len(length(res_dose_slides))) {
+  for (i in seq_along(res_dose_slides)) {
     add_qmd_sl_plottabletable(
       quarto_path = quarto_path,
       df1 = paste0("res_dose_slides[[", i, "]]$info"),
@@ -130,7 +130,7 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
   }
 
   # Add the individual information slides
-  for (i in seq_len(length(res_dose_slides))) {
+  for (i in seq_along(res_dose_slides)) {
     for (subj in names(res_dose_slides[[i]]$ind_params)) {
       add_qmd_sl_plottabletable(
         quarto_path = quarto_path,
