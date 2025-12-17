@@ -59,7 +59,7 @@ Suggests:
     htmlwidgets,
     jsonlite,
     knitr,
-    lintr (>= 3.1.2),
+    lintr (>= 3.2.0),
     logger,
     markdown,
     mockery,
