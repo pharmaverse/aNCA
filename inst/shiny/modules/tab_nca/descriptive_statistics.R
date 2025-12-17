@@ -101,7 +101,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         apply_labels()
     })
 
-    observeEvent(summary_stats(), {
+    observeEvent(res_nca(), {
       req(summary_stats())
 
       session$userData$results$nca_results$descriptive_statistics <- summary_stats()
