@@ -87,13 +87,6 @@ g_lineplot <- function(data,
                        tooltip_vars = NULL,
                        labels_df = NULL) {
   
-  # If threshold is NA (logical), infinite, or not numeric, kill it.
-  if (!is.null(threshold_value)) {
-    if (!is.numeric(threshold_value) || is.na(threshold_value) || is.infinite(threshold_value)) {
-      threshold_value <- NULL
-    }
-  }
-  
   # Set up plot labels - assumes individual plot unless mean columns are present
   is_mean_plot <- all(c("Mean", "SD", "N") %in% names(data))
 
@@ -211,7 +204,11 @@ g_lineplot <- function(data,
 .add_threshold <- function(threshold_value) {
   if (is.null(threshold_value)) {
     return(NULL)
-  }
+  } else {
+    if (!is.numeric(threshold_value) || is.na(threshold_value) || is.infinite(threshold_value)) {
+      return(NULL)
+    }
+  }  
   geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
 }
 
