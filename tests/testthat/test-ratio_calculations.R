@@ -291,7 +291,7 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPORRESU))
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
- it("uses all alternative groups to ref_groups when test_groups is NULL", {
+  it("uses all alternative groups to ref_groups when test_groups is NULL", {
     test_groups <- NULL
     ref_groups <- data.frame(PARAM = "A")
 
