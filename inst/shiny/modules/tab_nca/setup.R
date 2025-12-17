@@ -21,7 +21,8 @@ setup_ui <- function(id) {
     nav_panel(
       "Settings",
       fluidRow(
-        column(6,
+        column(
+          6,
           fileInput(
             ns("settings_upload"),
             width = "100%",
@@ -30,7 +31,8 @@ setup_ui <- function(id) {
             accept = ".rds"
           )
         ),
-        column(6,
+        column(
+          6,
           downloadButton(
             ns("settings_download"),
             label = "Download settings"
@@ -79,7 +81,8 @@ setup_server <- function(id, data, adnca_data) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         params = settings()$parameter_selection,
-        should_impute_c0 = settings()$data_imputation$impute_c0
+        should_impute_c0 = settings()$data_imputation$impute_c0,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -121,7 +124,7 @@ setup_server <- function(id, data, adnca_data) {
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
       req(adnca_data(), settings(), settings()$profile,
-          settings()$analyte, settings()$pcspec)
+          settings()$analyte, settings()$pcspec, settings()$data_imputation$blq_imputation_rule)
       log_trace("Updating PKNCA::data object for slopes.")
 
       PKNCA_update_data_object(
@@ -133,7 +136,8 @@ setup_server <- function(id, data, adnca_data) {
         selected_pcspec = settings()$pcspec,
         params = c("lambda.z.n.points", "lambda.z.time.first",
                    "r.squared", "adj.r.squared", "tmax"),
-        should_impute_c0 = settings()$data_imputation$impute_c0
+        should_impute_c0 = settings()$data_imputation$impute_c0,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
     })
 

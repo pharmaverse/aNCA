@@ -173,6 +173,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
+
   pknca_data_object
 }
 
@@ -205,6 +206,11 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @param selected_pcspec User selected specimen
 #' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
+#' @param blq_imputation_rule A list defining the BLQ imputation rule using PKNCA format.
+#' The list should either contain three elements named: `first`, `middle`, and `last` or
+#' two elements named `before.tmax` and `after.tmax`. Each element can be a numeric value
+#' (substituting the BLQ value), or a string such as `"drop"` (ignores the value)
+#' or `"keep"` (keeps the value as 0).
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -222,7 +228,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_profile,
   selected_pcspec,
   params,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  # PKNCA default BLQ imputation rule
+  blq_imputation_rule = list(first = "keep", middle = "drop", last = "keep")
 ) {
 
   data <- adnca_data
@@ -286,7 +294,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   ) %>%
     unique()
 
-  data$impute <- NA
+  data$intervals$impute <- NA_character_
 
   # Impute start values if requested
   if (should_impute_c0) {
@@ -313,6 +321,36 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       )
     }, all_impute_methods, init = data$intervals)
   }
+
+  # Define a BLQ imputation method for PKNCA
+  # and apply it only for non-observational parameters
+
+  PKNCA_impute_method_blq <<- function(conc.group, time.group, ...) { #nolint
+    PKNCA::clean.conc.blq(conc = conc.group, time = time.group, conc.blq = blq_imputation_rule)
+  }
+
+  # Don't impute parameters that are not AUC dependent
+  params_to_impute <- metadata_nca_parameters %>%
+    filter((grepl("auc|aumc", PKNCA) | grepl("auc", Depends)),
+           TYPE != "PKNCA-not-covered") %>%
+    pull(PKNCA)
+
+  data$intervals <- data$intervals %>%
+    mutate(
+      param_to_impute_is_not_na = rowSums(!is.na(select(., all_of(params_to_impute)))) > 0,
+      param_to_impute_is_not_false = rowSums(
+        select(., all_of(params_to_impute)) != FALSE, na.rm = TRUE
+      ) > 0,
+      has_param_to_impute = param_to_impute_is_not_na & param_to_impute_is_not_false,
+      impute = ifelse(is.na(impute), "", impute),
+      impute = ifelse(
+        has_param_to_impute,
+        ifelse(impute == "", "blq", paste0("blq, ", impute)),
+        impute
+      ),
+      impute = ifelse(impute == "", NA_character_, impute)
+    ) %>%
+    select(any_of(names(data$intervals)))
 
   data
 }
