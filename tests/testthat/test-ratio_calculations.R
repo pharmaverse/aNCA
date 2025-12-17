@@ -292,7 +292,7 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
  # ------------------------------ jr:   placeholder -   # nolint
- it(" simplest example to cover anti-merge    ", {
+ it("uses all alternative groups to ref_groups when test_groups is NULL", {
 
 
     test_groups <- NULL
