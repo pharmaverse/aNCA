@@ -295,8 +295,6 @@ describe("calculate_ratios", {
  it(" simplest example to cover anti-merge    ", {
 
 
-    res <- FIXTURE_PKNCA_RES
-    res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
     test_groups <- NULL
     ref_groups <- data.frame(PARAM = "A")
 
