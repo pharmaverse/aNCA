@@ -294,10 +294,6 @@ describe("calculate_ratios", {
  # ------------------------------ jr:   placeholder -   # nolint
  it(" simplest example to cover anti-merge    ", {
 
-    if (FALSE) {
-      load_all()
-      source("tests/testthat/setup.R")
-    }
 
     res <- FIXTURE_PKNCA_RES
     res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
