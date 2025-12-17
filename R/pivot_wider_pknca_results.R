@@ -172,15 +172,16 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   )
 
   # If extra_vars_to_keep is provided, join these variables from the conc data
-  if (!is.null(extra_vars_to_keep) && length(extra_vars_to_keep) > 0) {
+  if (length(extra_vars_to_keep) > 0) {
     conc_data <- myres$data$conc$data
     # Only keep columns that exist in conc_data
     vars_to_join <- intersect(extra_vars_to_keep, names(conc_data))
+    group_vars <- group_vars(myres$data$conc)
     if (length(vars_to_join) > 0) {
       out <- out %>%
         dplyr::inner_join(
-          dplyr::select(conc_data, dplyr::any_of(vars_to_join)),
-          by = intersect(names(out), vars_to_join)
+          dplyr::select(conc_data, dplyr::any_of(c(vars_to_join, group_vars))),
+          by = intersect(names(out),  names(c(vars_to_join, group_vars)))
         ) %>%
         dplyr::distinct()
     }
