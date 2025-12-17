@@ -64,12 +64,12 @@
 #'     AVALU = "ng/mL"
 #'   )
 #'
-#'  p <- g_lineplot(
-#'    data = ind_data,
-#'    x_var = "time_var",
-#'    y_var = "AVAL",
-#'    color_by = "USUBJID"
-#'    )
+#' p <- g_lineplot(
+#'   data = ind_data,
+#'   x_var = "time_var",
+#'   y_var = "AVAL",
+#'   color_by = "USUBJID"
+#' )
 #' print(p)
 #' @export
 g_lineplot <- function(data,
@@ -86,7 +86,6 @@ g_lineplot <- function(data,
                        ci = FALSE,
                        tooltip_vars = NULL,
                        labels_df = NULL) {
-  
   # Set up plot labels - assumes individual plot unless mean columns are present
   is_mean_plot <- all(c("Mean", "SD", "N") %in% names(data))
 
@@ -94,7 +93,7 @@ g_lineplot <- function(data,
   if (!is_mean_plot) {
     sd_min <- FALSE
     sd_max <- FALSE
-    ci     <- FALSE
+    ci <- FALSE
   }
 
   x_lab <- paste0("Time [", unique(data$RRLTU), "]")
@@ -208,7 +207,7 @@ g_lineplot <- function(data,
     if (!is.numeric(threshold_value) || is.na(threshold_value) || is.infinite(threshold_value)) {
       return(NULL)
     }
-  }  
+  }
   geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
 }
 
