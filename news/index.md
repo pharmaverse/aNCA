@@ -22,6 +22,8 @@
 - Individual and Mean plots tabs now created using the same function, so
   the layout and plot themes are consistent across both plots
   ([\#712](https://github.com/pharmaverse/aNCA/issues/712))
+- New flagging rule for lambda-z calculations based on r-squared, R2
+  ([\#834](https://github.com/pharmaverse/aNCA/issues/834))
 
 ### Bugs fixed
 
