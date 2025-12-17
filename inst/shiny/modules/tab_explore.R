@@ -85,10 +85,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         ylog_scale = individual_inputs()$ylog_scale
       )
 
-      validate(need(nrow(individual_output$processed_data) > 0,
+      validate(need(nrow(individual_output) > 0,
                     "No data available for the selected filters."))
 
-      tt_vars <- unique(c("AVAL", individual_output$time_col,
+      time_col <- if (!is.null(individual_inputs()$profiles)) "ARRLT" else "AFRLT"
+
+      tt_vars <- unique(c("AVAL", time_col,
                           "USUBJID", individual_inputs()$color_by))
 
       dose_data = if (individual_inputs()$show_dose) {
@@ -99,8 +101,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       }
 
       lineplot <- g_lineplot(
-        data = individual_output$processed_data,
-        x_var = individual_output$time_col,
+        data = individual_output,
+        x_var = time_col,
         y_var = "AVAL",
         color_by = individual_inputs()$color_by,
         facet_by = individual_inputs()$facet_by,
@@ -155,10 +157,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         facet_by = mean_inputs()$facet_by
       )
 
-      validate(need(nrow(mean_output$summarised_data) > 0,
+      validate(need(nrow(mean_output) > 0,
                     "No data with >= 3 points to calculate mean."))
 
-      tt_vars <- unique(c("Mean", mean_output$time_col, mean_inputs()$colorby))
+      time_col <- if (!is.null(mean_inputs()$profiles)) "NRRLT" else "NFRLT"
+
+      tt_vars <- unique(c("Mean", time_col, mean_inputs()$colorby))
 
       dose_data = if (mean_inputs()$show_dose) {
         data() %>%
@@ -168,8 +172,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       }
 
       meanplot <- g_lineplot(
-        data = mean_output$summarised_data,
-        x_var = mean_output$time_col,
+        data = mean_output,
+        x_var = time_col,
         y_var = "Mean",
         color_by = mean_inputs()$color_by,
         facet_by = mean_inputs()$facet_by,

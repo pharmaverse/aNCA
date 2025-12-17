@@ -106,8 +106,8 @@ get_dose_esc_results <- function(
     )
 
     linplot_i <- g_lineplot(
-      data = linplot_data_i$processed_data,
-      x_var = linplot_data_i$time_col,
+      data = linplot_data_i,
+      x_var = "ARRLT",
       y_var = "AVAL",
       color_by = subj_col,
       facet_by = facet_vars,
@@ -125,8 +125,8 @@ get_dose_esc_results <- function(
     )
 
     meanplot_i <- g_lineplot(
-      data = meanplot_data_i$summarised_data,
-      x_var = meanplot_data_i$time_col,
+      data = meanplot_data_i,
+      x_var = "NRRLT",
       y_var = "Mean",
       facet_by = facet_vars,
       color_by = group_by_vars,
@@ -197,8 +197,8 @@ get_dose_esc_results <- function(
         )
 
         g_lineplot(
-          data = linplot_data_i$processed_data,
-          x_var = linplot_data_i$time_col,
+          data = d_conc_processed_i,
+          x_var = "AFRLT",
           y_var = "AVAL",
           color_by = subj_col,
           facet_by = facet_vars,

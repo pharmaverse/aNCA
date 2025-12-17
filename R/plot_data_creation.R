@@ -4,10 +4,9 @@
 #'
 #' @param data Raw data frame.
 #' @param selected_usubjids,selected_analytes,selected_pcspec Inputs for filters.
-#' @param profiles_selected Optional profiles to filter on. If not null, uses ARRLT as `time_col`.
+#' @param profiles_selected Optional profiles to filter on.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
-#' @returns A list with `processed_data` filtered for the spaghetti plots and `time_col`,
-#' either AFRLT or ARRLT depending on if profiles_selected is null or not.
+#' @returns `processed_data` filtered for the spaghetti plots.
 #'
 #' @import dplyr
 #' @importFrom rlang sym syms
@@ -51,8 +50,6 @@ process_data_individual <- function(data,
     processed_data <- processed_data %>% filter(AVAL > 0)
   }
 
-  time_col <- if (!is.null(profiles_selected)) "ARRLT" else "AFRLT"
-
   if (!is.null(profiles_selected)) {
     if ("ARRLT" %in% names(processed_data) &&
           any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
@@ -65,10 +62,8 @@ process_data_individual <- function(data,
     processed_data <- processed_data %>% filter(ATPTREF %in% profiles_selected)
   }
 
-  list(
-    processed_data = processed_data,
-    time_col = time_col
-  )
+
+  processed_data
 }
 
 #' Create a Mean PK Line Plot
@@ -77,8 +72,7 @@ process_data_individual <- function(data,
 #' @param selected_analytes,selected_pcspec,profiles_selected Inputs for filtering.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @param color_by,facet_by Optional grouping variables to be included in summary.
-#' @returns A list with `summarised_data` with Mean, SD, and CIs for the profiles selected,
-#' and `time_col`- either NFRLT or NRRLT depending on if profiles selected is null.
+#' @returns `summarised_data` with Mean, SD, and CIs for the profiles selected.
 #' @import dplyr
 #' @importFrom rlang sym syms
 #'
@@ -123,7 +117,6 @@ process_data_mean <- function(data,
   }
 
   time_col <- if (!is.null(profiles_selected)) "NRRLT" else "NFRLT"
-
   # Retrieve unique grouping variables
   grp_cols <- unique(c(color_by, time_col, facet_by, "RRLTU", "AVALU"))
 
@@ -150,8 +143,5 @@ process_data_mean <- function(data,
   }
 
 
-  list(
-    summarised_data = summarised_data,
-    time_col = time_col
-  )
+  summarised_data
 }

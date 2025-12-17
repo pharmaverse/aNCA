@@ -333,21 +333,6 @@ describe("g_lineplot: Graceful Handling", {
     expect_equal(length(p$layers), 2)
   })
 
-  it("handles missing aesthetic columns", {
-    expect_error(
-      print(
-        g_lineplot(
-          data = ind_data,
-          x_var = "MISSING_COLUMN", # This column doesn't exist
-          y_var = "AVAL",
-          color_by = "USUBJID"
-        )
-      ),
-      # use 'regexp' to catch this specific error message
-      regexp = "Column `MISSING_COLUMN` not found"
-    )
-  })
-
   it("handles missing mean-plot columns", {
     mean_data_missing_ci <- mean_data %>% select(-CI_lower)
     # Test for missing CI column

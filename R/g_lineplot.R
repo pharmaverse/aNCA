@@ -136,13 +136,13 @@ g_lineplot <- function(data,
     mutate(
       color_var = interaction(!!!syms(color_by), sep = ", ")
     ) %>%
-    arrange(.data[[x_var]])
+    arrange(!!sym(x_var))
 
   plt <- ggplot(plot_data, aes(
-    x = .data[[x_var]],
-    y = .data[[y_var]],
+    x = !!sym(x_var),
+    y = !!sym(y_var),
     color = color_var,
-    group = .data[[group_var]],
+    group = !!sym(group_var),
     text = tooltip_text
   )) +
     geom_line() +

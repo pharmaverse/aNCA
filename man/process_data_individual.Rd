@@ -18,13 +18,12 @@ process_data_individual(
 
 \item{selected_usubjids, selected_analytes, selected_pcspec}{Inputs for filters.}
 
-\item{profiles_selected}{Optional profiles to filter on. If not null, uses ARRLT as \code{time_col}.}
+\item{profiles_selected}{Optional profiles to filter on.}
 
 \item{ylog_scale}{Logical, whether to use a logarithmic scale for the y-axis.}
 }
 \value{
-A list with \code{processed_data} filtered for the spaghetti plots and \code{time_col},
-either AFRLT or ARRLT depending on if profiles_selected is null or not.
+\code{processed_data} filtered for the spaghetti plots.
 }
 \description{
 Creates a filtered data frame for individual spaghetti plots.
