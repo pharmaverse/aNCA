@@ -10,6 +10,7 @@
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 * Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (#712)
 * New flagging rule for lambda-z calculations based on r-squared, R2 (#834)
+* New Parameter Selection section in NCA tab allowing to select parameters by study type (#795)
 
 ## Bugs fixed
 * Bug fix for box/violin plots that were crashing when PPSTRES is NA (#785)
