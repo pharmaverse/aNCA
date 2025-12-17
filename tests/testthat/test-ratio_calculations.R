@@ -291,14 +291,9 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPORRESU))
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
- # ------------------------------ jr:   placeholder -   # nolint
  it("uses all alternative groups to ref_groups when test_groups is NULL", {
-
-
     test_groups <- NULL
     ref_groups <- data.frame(PARAM = "A")
-
-
 
     ratios <- calculate_ratios(
       res_simple$result,
