@@ -198,7 +198,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       # Individual plots
       session$userData$results$exploration$individualplot <- individualplot()
-      session$userData$results$exploration$individualplot_plotly <- ggplotly(individualplot(), tooltip = "text")
+      session$userData$results$exploration$individualplot_plotly <- ggplotly(individualplot(),
+                                                                             tooltip = "text")
 
       # Mean plots
       session$userData$results$exploration$meanplot <- meanplot()
