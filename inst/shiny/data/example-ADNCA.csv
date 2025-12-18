@@ -16,7 +16,7 @@
 "S1","S1-01","SERUM","DrugA","",28.606,28.5,4.488,4.5,24,"Hours",1.778,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",28.5,4.5,28.606,4.488
 "S1","S1-01","SERUM","DrugA","",30.126,30,6.009,6,24,"Hours",0.785,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",30,6,30.126,6.009
 "S1","S1-01","SERUM","DrugA","",31.646,31.5,7.529,7.5,24,"Hours",0.405,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",31.5,7.5,31.646,7.529
-"S1","S1-01","SERUM","DrugA","",36.142,36,12.024,12,24,"Hours",0.033,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",36,12,36.142,12.024
+"S1","S1-01","SERUM","DrugA","",36.142,36,12.024,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",36,12,36.142,12.024
 "S1","S1-01","SERUM","DrugA","",47.894,47.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",47.917,-0.083,47.894,-0.082
 "S1","S1-01","SERUM","DrugA","",48.534,48.5,0.558,0.5,24,"Hours",0.704,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",48.5,0.5,48.534,0.558
 "S1","S1-01","SERUM","DrugA","",49.417,49.5,1.441,1.5,24,"Hours",1.82,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",49.5,1.5,49.417,1.441
@@ -25,7 +25,7 @@
 "S1","S1-01","SERUM","DrugA","",52.44,52.5,4.464,4.5,24,"Hours",1.913,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",52.5,4.5,52.44,4.464
 "S1","S1-01","SERUM","DrugA","",53.992,54,6.016,6,24,"Hours",0.855,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",54,6,53.992,6.016
 "S1","S1-01","SERUM","DrugA","",55.416,55.5,7.44,7.5,24,"Hours",0.437,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",55.5,7.5,55.416,7.44
-"S1","S1-01","SERUM","DrugA","",60.016,60,12.04,12,24,"Hours",0.043,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",60,12,60.016,12.04
+"S1","S1-01","SERUM","DrugA","",60.016,60,12.04,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",60,12,60.016,12.04
 "S1","S1-01","SERUM","DrugA","",72.007,71.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",71.917,-0.083,72.007,-0.082
 "S1","S1-01","SERUM","DrugA","",72.674,72.5,0.584,0.5,24,"Hours",0.836,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",72.5,0.5,72.674,0.584
 "S1","S1-01","SERUM","DrugA","",73.631,73.5,1.542,1.5,24,"Hours",1.965,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",73.5,1.5,73.631,1.542
@@ -35,7 +35,7 @@
 "S1","S1-01","SERUM","DrugA","",78.135,78,6.045,6,24,"Hours",0.876,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",78,6,78.135,6.045
 "S1","S1-01","SERUM","DrugA","",79.621,79.5,7.532,7.5,24,"Hours",0.354,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",79.5,7.5,79.621,7.532
 "S1","S1-01","SERUM","DrugA","",84.157,84,12.068,12,24,"Hours",0.107,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",84,12,84.157,12.068
-"S1","S1-01","SERUM","DrugA","",96.023,95.917,-0.083,-0.083,24,"Hours",0.018,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",95.917,-0.083,96.023,-0.083
+"S1","S1-01","SERUM","DrugA","",96.023,95.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",95.917,-0.083,96.023,-0.083
 "S1","S1-01","SERUM","DrugA","",96.496,96.5,0.391,0.5,24,"Hours",0.379,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",96.5,0.5,96.496,0.391
 "S1","S1-01","SERUM","DrugA","",97.594,97.5,1.489,1.5,24,"Hours",1.977,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",97.5,1.5,97.594,1.489
 "S1","S1-01","SERUM","DrugA","",97.596,97.5,1.491,1.5,24,"Hours",1.938,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",97.5,1.5,97.596,1.491
@@ -43,7 +43,7 @@
 "S1","S1-01","SERUM","DrugA","",100.6,100.5,4.494,4.5,24,"Hours",1.996,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",100.5,4.5,100.6,4.494
 "S1","S1-01","SERUM","DrugA","",102.075,102,5.969,6,24,"Hours",0.852,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",102,6,102.075,5.969
 "S1","S1-01","SERUM","DrugA","",103.554,103.5,7.449,7.5,24,"Hours",0.525,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",103.5,7.5,103.554,7.449
-"S1","S1-01","SERUM","DrugA","",108.092,108,11.987,12,24,"Hours",0.008,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",108,12,108.092,11.987
+"S1","S1-01","SERUM","DrugA","",108.092,108,11.987,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",108,12,108.092,11.987
 "S1","S1-01","SERUM","DrugA","",119.946,119.917,-0.083,-0.083,24,"Hours",0.155,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",119.917,-0.083,119.946,-0.083
 "S1","S1-01","SERUM","DrugA","",120.592,120.5,0.562,0.5,24,"Hours",0.769,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",120.5,0.5,120.592,0.562
 "S1","S1-01","SERUM","DrugA","",121.542,121.5,1.512,1.5,24,"Hours",1.963,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",121.5,1.5,121.542,1.512
@@ -53,7 +53,7 @@
 "S1","S1-01","SERUM","DrugA","",126.021,126,5.992,6,24,"Hours",0.8,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",126,6,126.021,5.992
 "S1","S1-01","SERUM","DrugA","",127.505,127.5,7.475,7.5,24,"Hours",0.41,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",127.5,7.5,127.505,7.475
 "S1","S1-01","SERUM","DrugA","",132.173,132,12.144,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",132,12,132.173,12.144
-"S1","S1-01","SERUM","DrugA","",143.808,143.917,-0.084,-0.083,24,"Hours",0.01,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",143.917,-0.083,143.808,-0.084
+"S1","S1-01","SERUM","DrugA","",143.808,143.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",143.917,-0.083,143.808,-0.084
 "S1","S1-01","SERUM","DrugA","",144.328,144.5,0.436,0.5,24,"Hours",0.631,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",144.5,0.5,144.328,0.436
 "S1","S1-01","SERUM","DrugA","",145.288,145.5,1.396,1.5,24,"Hours",1.87,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",145.5,1.5,145.288,1.396
 "S1","S1-01","SERUM","DrugA","",145.377,145.5,1.484,1.5,24,"Hours",1.942,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",145.5,1.5,145.377,1.484
@@ -61,7 +61,7 @@
 "S1","S1-01","SERUM","DrugA","",148.356,148.5,4.464,4.5,24,"Hours",1.839,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",148.5,4.5,148.356,4.464
 "S1","S1-01","SERUM","DrugA","",149.883,150,5.991,6,24,"Hours",0.961,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",150,6,149.883,5.991
 "S1","S1-01","SERUM","DrugA","",151.527,151.5,7.634,7.5,24,"Hours",0.3,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",151.5,7.5,151.527,7.634
-"S1","S1-01","SERUM","DrugA","",155.829,156,11.937,12,24,"Hours",0.032,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",156,12,155.829,11.937
+"S1","S1-01","SERUM","DrugA","",155.829,156,11.937,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",156,12,155.829,11.937
 "S1","S1-01","SERUM","DrugA","",167.833,167.917,-0.083,-0.083,24,"Hours",0.052,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",167.917,-0.083,167.833,-0.083
 "S1","S1-01","SERUM","DrugA","",168.399,168.5,0.483,0.5,24,"Hours",0.551,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",168.5,0.5,168.399,0.483
 "S1","S1-01","SERUM","DrugA","",169.382,169.5,1.466,1.5,24,"Hours",1.962,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",169.5,1.5,169.382,1.466
@@ -70,79 +70,39 @@
 "S1","S1-01","SERUM","DrugA","",172.45,172.5,4.534,4.5,24,"Hours",1.906,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",172.5,4.5,172.45,4.534
 "S1","S1-01","SERUM","DrugA","",173.934,174,6.018,6,24,"Hours",0.984,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",174,6,173.934,6.018
 "S1","S1-01","SERUM","DrugA","",175.391,175.5,7.475,7.5,24,"Hours",0.433,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",175.5,7.5,175.391,7.475
-"S1","S1-01","SERUM","DrugA","",180.017,180,12.101,12,24,"Hours",0.004,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",180,12,180.017,12.101
-"S1","S1-01","URINE","DrugA","",-0.084,-0.083,-0.084,-0.083,24,"Hours",0.111,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",1.917,0.917,1.8,0.8
+"S1","S1-01","SERUM","DrugA","",180.017,180,12.101,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",180,12,180.017,12.101
 "S1","S1-01","URINE","DrugA","",0.538,0.5,0.538,0.5,24,"Hours",0.733,"mg/mL",103,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",2.5,1.5,2.4,1.6
-"S1","S1-01","URINE","DrugA","",1.511,1.5,1.511,1.5,24,"Hours",2.111,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",3.5,2.5,3.5,2.6
-"S1","S1-01","URINE","DrugA","",1.517,1.5,1.517,1.5,24,"Hours",2.097,"mg/mL",93,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",3.5,2.5,3.5,2.4
 "S1","S1-01","URINE","DrugA","",3.137,3,3.137,3,24,"Hours",3.597,"mg/mL",110,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",5,4,5,4
-"S1","S1-01","URINE","DrugA","",4.48,4.5,4.48,4.5,24,"Hours",1.827,"mg/mL",104,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",6.5,5.5,6.5,5.5
 "S1","S1-01","URINE","DrugA","",6.011,6,6.011,6,24,"Hours",0.702,"mg/mL",100,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",8,7,7.9,7.1
-"S1","S1-01","URINE","DrugA","",7.59,7.5,7.59,7.5,24,"Hours",0.308,"mg/mL",114,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",9.5,8.5,9.6,8.3
 "S1","S1-01","URINE","DrugA","",12.044,12,12.044,12,24,"Hours",0,"mg/mL",120,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",14,13,13.9,12.9
-"S1","S1-01","URINE","DrugA","",24.034,23.917,-0.083,-0.083,24,"Hours",0,"mg/mL",96,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",25.917,0.917,26,0.9
 "S1","S1-01","URINE","DrugA","",24.654,24.5,0.537,0.5,24,"Hours",0.651,"mg/mL",83,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",26.5,1.5,26.5,1.4
-"S1","S1-01","URINE","DrugA","",25.573,25.5,1.455,1.5,24,"Hours",1.953,"mg/mL",88,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",27.5,2.5,27.5,2.4
-"S1","S1-01","URINE","DrugA","",25.576,25.5,1.459,1.5,24,"Hours",1.887,"mg/mL",103,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",27.5,2.5,27.5,2.5
 "S1","S1-01","URINE","DrugA","",27.042,27,2.924,3,24,"Hours",3.876,"mg/mL",118,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",29,4,29.1,4
-"S1","S1-01","URINE","DrugA","",28.606,28.5,4.488,4.5,24,"Hours",1.778,"mg/mL",113,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",30.5,5.5,30.5,5.5
 "S1","S1-01","URINE","DrugA","",30.126,30,6.009,6,24,"Hours",0.785,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",32,7,31.9,7
-"S1","S1-01","URINE","DrugA","",31.646,31.5,7.529,7.5,24,"Hours",0.405,"mg/mL",80,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",33.5,8.5,33.5,8.4
-"S1","S1-01","URINE","DrugA","",36.142,36,12.024,12,24,"Hours",0.033,"mg/mL",79,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",38,13,38.1,13
-"S1","S1-01","URINE","DrugA","",47.894,47.917,-0.082,-0.083,24,"Hours",0,"mg/mL",108,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",49.917,0.917,49.7,0.9
+"S1","S1-01","URINE","DrugA","",36.142,36,12.024,12,24,"Hours",0,"mg/mL",79,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",38,13,38.1,13
 "S1","S1-01","URINE","DrugA","",48.534,48.5,0.558,0.5,24,"Hours",0.704,"mg/mL",112,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",50.5,1.5,50.5,1.6
-"S1","S1-01","URINE","DrugA","",49.417,49.5,1.441,1.5,24,"Hours",1.82,"mg/mL",113,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",51.5,2.5,51.4,2.5
-"S1","S1-01","URINE","DrugA","",49.483,49.5,1.507,1.5,24,"Hours",2.092,"mg/mL",117,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",51.5,2.5,51.7,2.4
 "S1","S1-01","URINE","DrugA","",51.043,51,3.067,3,24,"Hours",3.866,"mg/mL",90,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",53,4,52.9,4
-"S1","S1-01","URINE","DrugA","",52.44,52.5,4.464,4.5,24,"Hours",1.913,"mg/mL",83,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",54.5,5.5,54.5,5.6
 "S1","S1-01","URINE","DrugA","",53.992,54,6.016,6,24,"Hours",0.855,"mg/mL",104,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",56,7,55.8,7.2
-"S1","S1-01","URINE","DrugA","",55.416,55.5,7.44,7.5,24,"Hours",0.437,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",57.5,8.5,57.4,8.4
-"S1","S1-01","URINE","DrugA","",60.016,60,12.04,12,24,"Hours",0.043,"mg/mL",100,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",62,13,62,12.9
-"S1","S1-01","URINE","DrugA","",72.007,71.917,-0.082,-0.083,24,"Hours",NA,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","Missing AVAL value",73.917,0.917,73.9,0.8
+"S1","S1-01","URINE","DrugA","",60.016,60,12.04,12,24,"Hours",0,"mg/mL",100,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",62,13,62,12.9
 "S1","S1-01","URINE","DrugA","",72.674,72.5,0.584,0.5,24,"Hours",0.836,"mg/mL",141,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",74.5,1.5,74.5,1.4
-"S1","S1-01","URINE","DrugA","",73.631,73.5,1.542,1.5,24,"Hours",1.965,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",75.5,2.5,75.6,2.5
-"S1","S1-01","URINE","DrugA","",73.676,73.5,1.587,1.5,24,"Hours",2.153,"mg/mL",108,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",75.5,2.5,75.5,2.4
 "S1","S1-01","URINE","DrugA","",75.041,75,2.951,3,24,"Hours",4.005,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",77,4,77.1,4.1
-"S1","S1-01","URINE","DrugA","",76.634,76.5,4.545,4.5,24,"Hours",1.767,"mg/mL",111,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",78.5,5.5,78.5,5.5
 "S1","S1-01","URINE","DrugA","",78.135,78,6.045,6,24,"Hours",0.876,"mg/mL",114,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",80,7,80,7
-"S1","S1-01","URINE","DrugA","",79.621,79.5,7.532,7.5,24,"Hours",0.354,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",81.5,8.5,81.5,8.6
 "S1","S1-01","URINE","DrugA","",84.157,84,12.068,12,24,"Hours",0.107,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",86,13,86,12.8
-"S1","S1-01","URINE","DrugA","",96.023,95.917,-0.083,-0.083,24,"Hours",0.018,"mg/mL",78,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",97.917,0.917,98,1
 "S1","S1-01","URINE","DrugA","",96.496,96.5,0.391,0.5,24,"Hours",0.379,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",98.5,1.5,98.5,1.6
-"S1","S1-01","URINE","DrugA","",97.594,97.5,1.489,1.5,24,"Hours",1.977,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",99.5,2.5,99.3,2.5
-"S1","S1-01","URINE","DrugA","",97.596,97.5,1.491,1.5,24,"Hours",1.938,"mg/mL",129,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",99.5,2.5,99.6,2.4
 "S1","S1-01","URINE","DrugA","",99.065,99,2.96,3,24,"Hours",3.939,"mg/mL",125,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",101,4,101,3.9
-"S1","S1-01","URINE","DrugA","",100.6,100.5,4.494,4.5,24,"Hours",1.996,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",102.5,5.5,102.6,5.4
 "S1","S1-01","URINE","DrugA","",102.075,102,5.969,6,24,"Hours",0.852,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",104,7,104,7.1
-"S1","S1-01","URINE","DrugA","",103.554,103.5,7.449,7.5,24,"Hours",0.525,"mg/mL",114,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",105.5,8.5,105.6,8.5
-"S1","S1-01","URINE","DrugA","",108.092,108,11.987,12,24,"Hours",0.008,"mg/mL",125,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",110,13,109.8,12.9
-"S1","S1-01","URINE","DrugA","",119.946,119.917,-0.083,-0.083,24,"Hours",0.155,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",121.917,0.917,121.9,0.9
+"S1","S1-01","URINE","DrugA","",108.092,108,11.987,12,24,"Hours",0,"mg/mL",125,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.024,"DOSE 5",25,"Years","WHITE","M","","",110,13,109.8,12.9
 "S1","S1-01","URINE","DrugA","",120.592,120.5,0.562,0.5,24,"Hours",0.769,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",122.5,1.5,122.6,1.5
-"S1","S1-01","URINE","DrugA","",121.542,121.5,1.512,1.5,24,"Hours",1.963,"mg/mL",90,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",123.5,2.5,123.5,2.5
-"S1","S1-01","URINE","DrugA","",121.582,121.5,1.553,1.5,24,"Hours",2.102,"mg/mL",113,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",123.5,2.5,123.3,2.5
 "S1","S1-01","URINE","DrugA","",123.048,123,3.019,3,24,"Hours",3.994,"mg/mL",90,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",125,4,125,4.2
-"S1","S1-01","URINE","DrugA","",124.636,124.5,4.607,4.5,24,"Hours",1.857,"mg/mL",91,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",126.5,5.5,126.5,5.4
 "S1","S1-01","URINE","DrugA","",126.021,126,5.992,6,24,"Hours",0.8,"mg/mL",88,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",128,7,128,7
-"S1","S1-01","URINE","DrugA","",127.505,127.5,7.475,7.5,24,"Hours",0.41,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",129.5,8.5,129.6,8.4
 "S1","S1-01","URINE","DrugA","",132.173,132,12.144,12,24,"Hours",0,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",134,13,133.9,13.1
-"S1","S1-01","URINE","DrugA","",143.808,143.917,-0.084,-0.083,24,"Hours",0.01,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",145.917,0.917,145.8,1.1
 "S1","S1-01","URINE","DrugA","",144.328,144.5,0.436,0.5,24,"Hours",0.631,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",146.5,1.5,146.4,1.4
-"S1","S1-01","URINE","DrugA","",145.288,145.5,1.396,1.5,24,"Hours",1.87,"mg/mL",110,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",147.5,2.5,147.4,2.6
-"S1","S1-01","URINE","DrugA","",145.377,145.5,1.484,1.5,24,"Hours",1.942,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",147.5,2.5,147.6,2.6
 "S1","S1-01","URINE","DrugA","",146.74,147,2.848,3,24,"Hours",3.637,"mg/mL",104,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",149,4,149,4.1
-"S1","S1-01","URINE","DrugA","",148.356,148.5,4.464,4.5,24,"Hours",1.839,"mg/mL",88,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",150.5,5.5,150.4,5.6
 "S1","S1-01","URINE","DrugA","",149.883,150,5.991,6,24,"Hours",0.961,"mg/mL",82,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",152,7,152.1,7.2
-"S1","S1-01","URINE","DrugA","",151.527,151.5,7.634,7.5,24,"Hours",0.3,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",153.5,8.5,153.4,8.5
-"S1","S1-01","URINE","DrugA","",155.829,156,11.937,12,24,"Hours",0.032,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",158,13,157.9,13
-"S1","S1-01","URINE","DrugA","",167.833,167.917,-0.083,-0.083,24,"Hours",0.052,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",169.917,0.917,170.1,0.7
+"S1","S1-01","URINE","DrugA","",155.829,156,11.937,12,24,"Hours",0,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",158,13,157.9,13
 "S1","S1-01","URINE","DrugA","",168.399,168.5,0.483,0.5,24,"Hours",0.551,"mg/mL",107,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",170.5,1.5,170.5,1.6
-"S1","S1-01","URINE","DrugA","",169.382,169.5,1.466,1.5,24,"Hours",1.962,"mg/mL",84,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",171.5,2.5,171.5,2.7
-"S1","S1-01","URINE","DrugA","",169.388,169.5,1.472,1.5,24,"Hours",2.022,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",171.5,2.5,171.7,2.4
 "S1","S1-01","URINE","DrugA","",170.957,171,3.041,3,24,"Hours",3.974,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",173,4,173,3.9
-"S1","S1-01","URINE","DrugA","",172.45,172.5,4.534,4.5,24,"Hours",1.906,"mg/mL",83,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",174.5,5.5,174.3,5.6
 "S1","S1-01","URINE","DrugA","",173.934,174,6.018,6,24,"Hours",0.984,"mg/mL",119,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",176,7,175.9,7.1
-"S1","S1-01","URINE","DrugA","",175.391,175.5,7.475,7.5,24,"Hours",0.433,"mg/mL",71,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",177.5,8.5,177.4,8.6
-"S1","S1-01","URINE","DrugA","",180.017,180,12.101,12,24,"Hours",0.004,"mg/mL",114,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",182,13,182.1,13.1
+"S1","S1-01","URINE","DrugA","",180.017,180,12.101,12,24,"Hours",0,"mg/mL",114,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 8",25,"Years","WHITE","M","","",182,13,182.1,13.1
 "S1","S1-01","SERUM","Metab-DrugA","Y",-0.084,-0.083,-0.084,-0.083,24,"Hours",0.079,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",-0.083,-0.083,-0.084,-0.084
 "S1","S1-01","SERUM","Metab-DrugA","Y",0.538,0.5,0.538,0.5,24,"Hours",0.221,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",0.5,0.5,0.538,0.538
 "S1","S1-01","SERUM","Metab-DrugA","Y",1.511,1.5,1.511,1.5,24,"Hours",0.817,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.889,"DOSE 1",25,"Years","WHITE","M","","",1.5,1.5,1.511,1.511
@@ -160,8 +120,8 @@
 "S1","S1-01","SERUM","Metab-DrugA","Y",28.606,28.5,4.488,4.5,24,"Hours",0.774,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",28.5,4.5,28.606,4.488
 "S1","S1-01","SERUM","Metab-DrugA","Y",30.126,30,6.009,6,24,"Hours",0.329,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",30,6,30.126,6.009
 "S1","S1-01","SERUM","Metab-DrugA","Y",31.646,31.5,7.529,7.5,24,"Hours",0.154,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",31.5,7.5,31.646,7.529
-"S1","S1-01","SERUM","Metab-DrugA","Y",36.142,36,12.024,12,24,"Hours",0.045,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",36,12,36.142,12.024
-"S1","S1-01","SERUM","Metab-DrugA","Y",47.894,47.917,-0.082,-0.083,24,"Hours",0.002,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",47.917,-0.083,47.894,-0.082
+"S1","S1-01","SERUM","Metab-DrugA","Y",36.142,36,12.024,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.975,"DOSE 2",25,"Years","WHITE","M","","",36,12,36.142,12.024
+"S1","S1-01","SERUM","Metab-DrugA","Y",47.894,47.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",47.917,-0.083,47.894,-0.082
 "S1","S1-01","SERUM","Metab-DrugA","Y",48.534,48.5,0.558,0.5,24,"Hours",0.284,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",48.5,0.5,48.534,0.558
 "S1","S1-01","SERUM","Metab-DrugA","Y",49.417,49.5,1.441,1.5,24,"Hours",0.761,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",49.5,1.5,49.417,1.441
 "S1","S1-01","SERUM","Metab-DrugA","Y",49.483,49.5,1.507,1.5,24,"Hours",0.835,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",49.5,1.5,49.483,1.507
@@ -169,8 +129,8 @@
 "S1","S1-01","SERUM","Metab-DrugA","Y",52.44,52.5,4.464,4.5,24,"Hours",0.773,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",52.5,4.5,52.44,4.464
 "S1","S1-01","SERUM","Metab-DrugA","Y",53.992,54,6.016,6,24,"Hours",0.343,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",54,6,53.992,6.016
 "S1","S1-01","SERUM","Metab-DrugA","Y",55.416,55.5,7.44,7.5,24,"Hours",0.09,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",55.5,7.5,55.416,7.44
-"S1","S1-01","SERUM","Metab-DrugA","Y",60.016,60,12.04,12,24,"Hours",0.014,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",60,12,60.016,12.04
-"S1","S1-01","SERUM","Metab-DrugA","Y",72.007,71.917,-0.082,-0.083,24,"Hours",0.029,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",71.917,-0.083,72.007,-0.082
+"S1","S1-01","SERUM","Metab-DrugA","Y",60.016,60,12.04,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.015,"DOSE 3",25,"Years","WHITE","M","","",60,12,60.016,12.04
+"S1","S1-01","SERUM","Metab-DrugA","Y",72.007,71.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",71.917,-0.083,72.007,-0.082
 "S1","S1-01","SERUM","Metab-DrugA","Y",72.674,72.5,0.584,0.5,24,"Hours",0.415,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",72.5,0.5,72.674,0.584
 "S1","S1-01","SERUM","Metab-DrugA","Y",73.631,73.5,1.542,1.5,24,"Hours",0.856,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",73.5,1.5,73.631,1.542
 "S1","S1-01","SERUM","Metab-DrugA","Y",73.676,73.5,1.587,1.5,24,"Hours",0.838,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.971,"DOSE 4",25,"Years","WHITE","M","","",73.5,1.5,73.676,1.587
@@ -196,8 +156,8 @@
 "S1","S1-01","SERUM","Metab-DrugA","Y",124.636,124.5,4.607,4.5,24,"Hours",0.732,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",124.5,4.5,124.636,4.607
 "S1","S1-01","SERUM","Metab-DrugA","Y",126.021,126,5.992,6,24,"Hours",0.404,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",126,6,126.021,5.992
 "S1","S1-01","SERUM","Metab-DrugA","Y",127.505,127.5,7.475,7.5,24,"Hours",0.155,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",127.5,7.5,127.505,7.475
-"S1","S1-01","SERUM","Metab-DrugA","Y",132.173,132,12.144,12,24,"Hours",0.021,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",132,12,132.173,12.144
-"S1","S1-01","SERUM","Metab-DrugA","Y",143.808,143.917,-0.084,-0.083,24,"Hours",0.021,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",143.917,-0.083,143.808,-0.084
+"S1","S1-01","SERUM","Metab-DrugA","Y",132.173,132,12.144,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.004,"DOSE 6",25,"Years","WHITE","M","","",132,12,132.173,12.144
+"S1","S1-01","SERUM","Metab-DrugA","Y",143.808,143.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",143.917,-0.083,143.808,-0.084
 "S1","S1-01","SERUM","Metab-DrugA","Y",144.328,144.5,0.436,0.5,24,"Hours",0.304,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",144.5,0.5,144.328,0.436
 "S1","S1-01","SERUM","Metab-DrugA","Y",145.288,145.5,1.396,1.5,24,"Hours",0.696,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",145.5,1.5,145.288,1.396
 "S1","S1-01","SERUM","Metab-DrugA","Y",145.377,145.5,1.484,1.5,24,"Hours",0.865,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.029,"DOSE 7",25,"Years","WHITE","M","","",145.5,1.5,145.377,1.484
@@ -267,7 +227,7 @@
 "S1","S1-02","SERUM","DrugA","",124.282,124.5,4.543,4.5,24,"Hours",4.105,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",124.5,4.5,124.282,4.543
 "S1","S1-02","SERUM","DrugA","",125.804,126,6.064,6,24,"Hours",1.948,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",126,6,125.804,6.064
 "S1","S1-02","SERUM","DrugA","",127.282,127.5,7.543,7.5,24,"Hours",0.917,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",127.5,7.5,127.282,7.543
-"S1","S1-02","SERUM","DrugA","",131.79,132,12.051,12,24,"Hours",0.006,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",132,12,131.79,12.051
+"S1","S1-02","SERUM","DrugA","",131.79,132,12.051,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",132,12,131.79,12.051
 "S1","S1-02","SERUM","DrugA","",144.11,143.917,-0.083,-0.083,24,"Hours",0.115,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",143.917,-0.083,144.11,-0.083
 "S1","S1-02","SERUM","DrugA","",144.697,144.5,0.504,0.5,24,"Hours",1.482,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",144.5,0.5,144.697,0.504
 "S1","S1-02","SERUM","DrugA","",145.66,145.5,1.468,1.5,24,"Hours",4.184,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",145.5,1.5,145.66,1.468
@@ -276,7 +236,7 @@
 "S1","S1-02","SERUM","DrugA","",148.604,148.5,4.411,4.5,24,"Hours",4.299,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",148.5,4.5,148.604,4.411
 "S1","S1-02","SERUM","DrugA","",150.233,150,6.04,6,24,"Hours",1.842,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",150,6,150.233,6.04
 "S1","S1-02","SERUM","DrugA","",151.649,151.5,7.456,7.5,24,"Hours",0.97,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",151.5,7.5,151.649,7.456
-"S1","S1-02","SERUM","DrugA","",156.176,156,11.983,12,24,"Hours",0.045,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",156,12,156.176,11.983
+"S1","S1-02","SERUM","DrugA","",156.176,156,11.983,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",156,12,156.176,11.983
 "S1","S1-02","SERUM","DrugA","",167.947,167.917,-0.083,-0.083,24,"Hours",0.062,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",167.917,-0.083,167.947,-0.083
 "S1","S1-02","SERUM","DrugA","",168.551,168.5,0.521,0.5,24,"Hours",1.584,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",168.5,0.5,168.551,0.521
 "S1","S1-02","SERUM","DrugA","",169.508,169.5,1.478,1.5,24,"Hours",4.29,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",169.5,1.5,169.508,1.478
@@ -286,86 +246,47 @@
 "S1","S1-02","SERUM","DrugA","",173.979,174,5.949,6,24,"Hours",1.861,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",174,6,173.979,5.949
 "S1","S1-02","SERUM","DrugA","",175.455,175.5,7.425,7.5,24,"Hours",0.934,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",175.5,7.5,175.455,7.425
 "S1","S1-02","SERUM","DrugA","",180.094,180,12.064,12,24,"Hours",0.067,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",180,12,180.094,12.064
-"S1","S1-02","URINE","DrugA","",-0.084,-0.083,-0.084,-0.083,24,"Hours",0,"mg/mL",120,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",1.917,0.917,1.9,0.9
 "S1","S1-02","URINE","DrugA","",0.554,0.5,0.554,0.5,24,"Hours",1.517,"mg/mL",105,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",2.5,1.5,2.4,1.4
-"S1","S1-02","URINE","DrugA","",1.508,1.5,1.508,1.5,24,"Hours",4.345,"mg/mL",76,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",3.5,2.5,3.5,2.5
 "S1","S1-02","URINE","DrugA","",2.945,3,2.945,3,24,"Hours",8.55,"mg/mL",117,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",5,4,5.1,3.9
-"S1","S1-02","URINE","DrugA","",4.512,4.5,4.512,4.5,24,"Hours",4.042,"mg/mL",92,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",6.5,5.5,6.5,5.6
 "S1","S1-02","URINE","DrugA","",5.987,6,5.987,6,24,"Hours",1.963,"mg/mL",97,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",8,7,8,6.8
-"S1","S1-02","URINE","DrugA","",7.525,7.5,7.525,7.5,24,"Hours",0.897,"mg/mL",105,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",9.5,8.5,9.4,8.5
 "S1","S1-02","URINE","DrugA","",11.895,12,11.895,12,24,"Hours",0.052,"mg/mL",113,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",14,13,14,13
-"S1","S1-02","URINE","DrugA","",23.799,23.917,-0.082,-0.083,24,"Hours",0,"mg/mL",111,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",25.917,0.917,25.9,1
 "S1","S1-02","URINE","DrugA","",24.346,24.5,0.465,0.5,24,"Hours",1.35,"mg/mL",83,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",26.5,1.5,26.5,1.7
-"S1","S1-02","URINE","DrugA","",25.344,25.5,1.462,1.5,24,"Hours",4.249,"mg/mL",64,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",27.5,2.5,27.6,2.5
-"S1","S1-02","URINE","DrugA","",25.367,25.5,1.486,1.5,24,"Hours",4.339,"mg/mL",82,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",27.5,2.5,27.6,2.5
 "S1","S1-02","URINE","DrugA","",26.81,27,2.928,3,24,"Hours",8.55,"mg/mL",91,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",29,4,29,4
-"S1","S1-02","URINE","DrugA","",28.427,28.5,4.546,4.5,24,"Hours",4.008,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",30.5,5.5,30.3,5.5
 "S1","S1-02","URINE","DrugA","",29.894,30,6.012,6,24,"Hours",1.924,"mg/mL",99,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",32,7,32,7
-"S1","S1-02","URINE","DrugA","",31.286,31.5,7.404,7.5,24,"Hours",1.036,"mg/mL",70,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",33.5,8.5,33.4,8.6
-"S1","S1-02","URINE","DrugA","",35.914,36,12.033,12,24,"Hours",0.023,"mg/mL",96,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",38,13,38,13.1
-"S1","S1-02","URINE","DrugA","",48.007,47.917,-0.083,-0.083,24,"Hours",0.056,"mg/mL",99,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","Invalid administration","",49.917,0.917,49.8,0.9
+"S1","S1-02","URINE","DrugA","",35.914,36,12.033,12,24,"Hours",0,"mg/mL",96,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",38,13,38,13.1
 "S1","S1-02","URINE","DrugA","",48.544,48.5,0.454,0.5,24,"Hours",1.381,"mg/mL",84,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",50.5,1.5,50.6,1.5
-"S1","S1-02","URINE","DrugA","",49.541,49.5,1.451,1.5,24,"Hours",4.143,"mg/mL",110,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",51.5,2.5,51.3,2.6
-"S1","S1-02","URINE","DrugA","",49.602,49.5,1.512,1.5,24,"Hours",4.267,"mg/mL",134,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",51.5,2.5,51.3,2.6
 "S1","S1-02","URINE","DrugA","",51.109,51,3.019,3,24,"Hours",8.737,"mg/mL",92,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",53,4,53.1,3.9
-"S1","S1-02","URINE","DrugA","",52.477,52.5,4.387,4.5,24,"Hours",4.345,"mg/mL",114,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",54.5,5.5,54.3,5.4
 "S1","S1-02","URINE","DrugA","",54.038,54,5.948,6,24,"Hours",1.997,"mg/mL",108,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",56,7,56.2,7
-"S1","S1-02","URINE","DrugA","",55.538,55.5,7.448,7.5,24,"Hours",1.024,"mg/mL",116,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",57.5,8.5,57.5,8.5
 "S1","S1-02","URINE","DrugA","",60.101,60,12.011,12,24,"Hours",0.18,"mg/mL",92,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",62,13,62.1,12.9
-"S1","S1-02","URINE","DrugA","",71.976,71.917,-0.082,-0.083,24,"Hours",0,"mg/mL",125,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",73.917,0.917,73.9,1
 "S1","S1-02","URINE","DrugA","",72.6,72.5,0.542,0.5,24,"Hours",1.613,"mg/mL",103,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",74.5,1.5,74.4,1.5
-"S1","S1-02","URINE","DrugA","",73.475,73.5,1.417,1.5,24,"Hours",3.992,"mg/mL",88,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",75.5,2.5,75.5,2.6
-"S1","S1-02","URINE","DrugA","",73.546,73.5,1.488,1.5,24,"Hours",4.328,"mg/mL",82,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",75.5,2.5,75.4,2.4
 "S1","S1-02","URINE","DrugA","",75.074,75,3.016,3,24,"Hours",8.56,"mg/mL",88,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",77,4,77,4.1
-"S1","S1-02","URINE","DrugA","",76.567,76.5,4.509,4.5,24,"Hours",4.138,"mg/mL",110,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",78.5,5.5,78.4,5.5
 "S1","S1-02","URINE","DrugA","",78.019,78,5.961,6,24,"Hours",1.997,"mg/mL",85,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",80,7,80.2,7
-"S1","S1-02","URINE","DrugA","",79.583,79.5,7.525,7.5,24,"Hours",0.912,"mg/mL",99,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",81.5,8.5,81.3,8.7
 "S1","S1-02","URINE","DrugA","",84.044,84,11.986,12,24,"Hours",0.23,"mg/mL",113,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",86,13,86.2,12.9
-"S1","S1-02","URINE","DrugA","",95.917,95.917,-0.083,-0.083,24,"Hours",0.068,"mg/mL",79,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",97.917,0.917,98,0.9
 "S1","S1-02","URINE","DrugA","",96.527,96.5,0.527,0.5,24,"Hours",1.681,"mg/mL",83,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",98.5,1.5,98.5,1.5
-"S1","S1-02","URINE","DrugA","",97.453,97.5,1.454,1.5,24,"Hours",4.325,"mg/mL",106,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",99.5,2.5,99.5,2.7
-"S1","S1-02","URINE","DrugA","",97.468,97.5,1.468,1.5,24,"Hours",4.319,"mg/mL",108,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",99.5,2.5,99.4,2.4
 "S1","S1-02","URINE","DrugA","",98.984,99,2.984,3,24,"Hours",8.683,"mg/mL",67,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",101,4,101,4.1
-"S1","S1-02","URINE","DrugA","",100.593,100.5,4.593,4.5,24,"Hours",3.844,"mg/mL",77,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",102.5,5.5,102.3,5.4
 "S1","S1-02","URINE","DrugA","",101.984,102,5.985,6,24,"Hours",1.989,"mg/mL",93,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",104,7,104.2,7
-"S1","S1-02","URINE","DrugA","",103.527,103.5,7.528,7.5,24,"Hours",0.953,"mg/mL",86,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",105.5,8.5,105.5,8.5
 "S1","S1-02","URINE","DrugA","",107.951,108,11.952,12,24,"Hours",0.223,"mg/mL",107,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",110,13,110,13
-"S1","S1-02","URINE","DrugA","",119.656,119.917,-0.083,-0.083,24,"Hours",0,"mg/mL",103,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",121.917,0.917,121.9,0.9
 "S1","S1-02","URINE","DrugA","",120.27,120.5,0.531,0.5,24,"Hours",1.611,"mg/mL",111,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",122.5,1.5,122.5,1.4
-"S1","S1-02","URINE","DrugA","",121.2,121.5,1.461,1.5,24,"Hours",4.245,"mg/mL",108,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",123.5,2.5,123.6,2.5
-"S1","S1-02","URINE","DrugA","",121.318,121.5,1.579,1.5,24,"Hours",4.648,"mg/mL",90,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",123.5,2.5,123.5,2.7
 "S1","S1-02","URINE","DrugA","",122.767,123,3.028,3,24,"Hours",8.81,"mg/mL",105,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",125,4,125,3.9
-"S1","S1-02","URINE","DrugA","",124.282,124.5,4.543,4.5,24,"Hours",4.105,"mg/mL",111,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",126.5,5.5,126.5,5.5
 "S1","S1-02","URINE","DrugA","",125.804,126,6.064,6,24,"Hours",1.948,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",128,7,127.9,6.9
-"S1","S1-02","URINE","DrugA","",127.282,127.5,7.543,7.5,24,"Hours",0.917,"mg/mL",75,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",129.5,8.5,129.5,8.4
-"S1","S1-02","URINE","DrugA","",131.79,132,12.051,12,24,"Hours",0.006,"mg/mL",128,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",134,13,133.9,13
-"S1","S1-02","URINE","DrugA","",144.11,143.917,-0.083,-0.083,24,"Hours",0.115,"mg/mL",91,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",145.917,0.917,146,1
+"S1","S1-02","URINE","DrugA","",131.79,132,12.051,12,24,"Hours",0,"mg/mL",128,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",134,13,133.9,13
 "S1","S1-02","URINE","DrugA","",144.697,144.5,0.504,0.5,24,"Hours",1.482,"mg/mL",104,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",146.5,1.5,146.5,1.4
-"S1","S1-02","URINE","DrugA","",145.66,145.5,1.468,1.5,24,"Hours",4.184,"mg/mL",107,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",147.5,2.5,147.4,2.7
-"S1","S1-02","URINE","DrugA","",145.751,145.5,1.558,1.5,24,"Hours",4.591,"mg/mL",101,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",147.5,2.5,147.5,2.7
 "S1","S1-02","URINE","DrugA","",147.151,147,2.958,3,24,"Hours",8.713,"mg/mL",116,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",149,4,149.2,4
-"S1","S1-02","URINE","DrugA","",148.604,148.5,4.411,4.5,24,"Hours",4.299,"mg/mL",116,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",150.5,5.5,150.6,5.7
 "S1","S1-02","URINE","DrugA","",150.233,150,6.04,6,24,"Hours",1.842,"mg/mL",86,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",152,7,151.9,6.9
-"S1","S1-02","URINE","DrugA","",151.649,151.5,7.456,7.5,24,"Hours",0.97,"mg/mL",100,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",153.5,8.5,153.5,8.4
-"S1","S1-02","URINE","DrugA","",156.176,156,11.983,12,24,"Hours",0.045,"mg/mL",110,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",158,13,157.9,12.9
-"S1","S1-02","URINE","DrugA","",167.947,167.917,-0.083,-0.083,24,"Hours",0.062,"mg/mL",106,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",169.917,0.917,170,0.8
+"S1","S1-02","URINE","DrugA","",156.176,156,11.983,12,24,"Hours",0,"mg/mL",110,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",158,13,157.9,12.9
 "S1","S1-02","URINE","DrugA","",168.551,168.5,0.521,0.5,24,"Hours",1.584,"mg/mL",112,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",170.5,1.5,170.4,1.4
-"S1","S1-02","URINE","DrugA","",169.508,169.5,1.478,1.5,24,"Hours",4.29,"mg/mL",99,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",171.5,2.5,171.5,2.7
-"S1","S1-02","URINE","DrugA","",169.55,169.5,1.52,1.5,24,"Hours",4.466,"mg/mL",104,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",171.5,2.5,171.5,2.5
 "S1","S1-02","URINE","DrugA","",171.065,171,3.035,3,24,"Hours",8.681,"mg/mL",96,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",173,4,173,4.1
-"S1","S1-02","URINE","DrugA","",172.566,172.5,4.535,4.5,24,"Hours",4.082,"mg/mL",93,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",174.5,5.5,174.5,5.4
 "S1","S1-02","URINE","DrugA","",173.979,174,5.949,6,24,"Hours",1.861,"mg/mL",111,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",176,7,176,7
-"S1","S1-02","URINE","DrugA","",175.455,175.5,7.425,7.5,24,"Hours",0.934,"mg/mL",126,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",177.5,8.5,177.3,8.7
 "S1","S1-02","URINE","DrugA","",180.094,180,12.064,12,24,"Hours",0.067,"mg/mL",78,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",182,13,182,13
-"S1","S1-02","SERUM","Metab-DrugA","Y",-0.084,-0.083,-0.084,-0.083,24,"Hours",0.029,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",-0.083,-0.083,-0.084,-0.084
+"S1","S1-02","SERUM","Metab-DrugA","Y",-0.084,-0.083,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",-0.083,-0.083,-0.084,-0.084
 "S1","S1-02","SERUM","Metab-DrugA","Y",0.554,0.5,0.554,0.5,24,"Hours",0.518,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",0.5,0.5,0.554,0.554
 "S1","S1-02","SERUM","Metab-DrugA","Y",1.508,1.5,1.508,1.5,24,"Hours",1.703,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",1.5,1.5,1.508,1.508
 "S1","S1-02","SERUM","Metab-DrugA","Y",2.945,3,2.945,3,24,"Hours",3.404,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",3,3,2.945,2.945
 "S1","S1-02","SERUM","Metab-DrugA","Y",4.512,4.5,4.512,4.5,24,"Hours",1.558,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",4.5,4.5,4.512,4.512
 "S1","S1-02","SERUM","Metab-DrugA","Y",5.987,6,5.987,6,24,"Hours",0.824,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",6,6,5.987,5.987
 "S1","S1-02","SERUM","Metab-DrugA","Y",7.525,7.5,7.525,7.5,24,"Hours",0.369,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",7.5,7.5,7.525,7.525
-"S1","S1-02","SERUM","Metab-DrugA","Y",11.895,12,11.895,12,24,"Hours",0.015,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",12,12,11.895,11.895
-"S1","S1-02","SERUM","Metab-DrugA","Y",23.799,23.917,-0.082,-0.083,24,"Hours",0.017,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",23.917,-0.083,23.799,-0.082
+"S1","S1-02","SERUM","Metab-DrugA","Y",11.895,12,11.895,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.984,"DOSE 1",30,"Years","ASIAN","M","Invalid administration","",12,12,11.895,11.895
+"S1","S1-02","SERUM","Metab-DrugA","Y",23.799,23.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",23.917,-0.083,23.799,-0.082
 "S1","S1-02","SERUM","Metab-DrugA","Y",24.346,24.5,0.465,0.5,24,"Hours",0.494,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",24.5,0.5,24.346,0.465
 "S1","S1-02","SERUM","Metab-DrugA","Y",25.344,25.5,1.462,1.5,24,"Hours",1.691,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",25.5,1.5,25.344,1.462
 "S1","S1-02","SERUM","Metab-DrugA","Y",25.367,25.5,1.486,1.5,24,"Hours",1.788,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",25.5,1.5,25.367,1.486
@@ -374,7 +295,7 @@
 "S1","S1-02","SERUM","Metab-DrugA","Y",29.894,30,6.012,6,24,"Hours",0.812,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",30,6,29.894,6.012
 "S1","S1-02","SERUM","Metab-DrugA","Y",31.286,31.5,7.404,7.5,24,"Hours",0.356,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",31.5,7.5,31.286,7.404
 "S1","S1-02","SERUM","Metab-DrugA","Y",35.914,36,12.033,12,24,"Hours",0.064,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.964,"DOSE 2",30,"Years","ASIAN","M","Invalid administration","",36,12,35.914,12.033
-"S1","S1-02","SERUM","Metab-DrugA","Y",48.007,47.917,-0.083,-0.083,24,"Hours",0.011,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","Invalid administration","",47.917,-0.083,48.007,-0.083
+"S1","S1-02","SERUM","Metab-DrugA","Y",48.007,47.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","Invalid administration","",47.917,-0.083,48.007,-0.083
 "S1","S1-02","SERUM","Metab-DrugA","Y",48.544,48.5,0.454,0.5,24,"Hours",0.481,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",48.5,0.5,48.544,0.454
 "S1","S1-02","SERUM","Metab-DrugA","Y",49.541,49.5,1.451,1.5,24,"Hours",1.671,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",49.5,1.5,49.541,1.451
 "S1","S1-02","SERUM","Metab-DrugA","Y",49.602,49.5,1.512,1.5,24,"Hours",1.826,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",49.5,1.5,49.602,1.512
@@ -382,7 +303,7 @@
 "S1","S1-02","SERUM","Metab-DrugA","Y",52.477,52.5,4.387,4.5,24,"Hours",1.652,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",52.5,4.5,52.477,4.387
 "S1","S1-02","SERUM","Metab-DrugA","Y",54.038,54,5.948,6,24,"Hours",0.767,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",54,6,54.038,5.948
 "S1","S1-02","SERUM","Metab-DrugA","Y",55.538,55.5,7.448,7.5,24,"Hours",0.386,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",55.5,7.5,55.538,7.448
-"S1","S1-02","SERUM","Metab-DrugA","Y",60.101,60,12.011,12,24,"Hours",0.029,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",60,12,60.101,12.011
+"S1","S1-02","SERUM","Metab-DrugA","Y",60.101,60,12.011,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.001,"DOSE 3",30,"Years","ASIAN","M","","",60,12,60.101,12.011
 "S1","S1-02","SERUM","Metab-DrugA","Y",71.976,71.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",71.917,-0.083,71.976,-0.082
 "S1","S1-02","SERUM","Metab-DrugA","Y",72.6,72.5,0.542,0.5,24,"Hours",0.628,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",72.5,0.5,72.6,0.542
 "S1","S1-02","SERUM","Metab-DrugA","Y",73.475,73.5,1.417,1.5,24,"Hours",1.599,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.055,"DOSE 4",30,"Years","ASIAN","M","","",73.5,1.5,73.475,1.417
@@ -400,7 +321,7 @@
 "S1","S1-02","SERUM","Metab-DrugA","Y",100.593,100.5,4.593,4.5,24,"Hours",1.613,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",100.5,4.5,100.593,4.593
 "S1","S1-02","SERUM","Metab-DrugA","Y",101.984,102,5.985,6,24,"Hours",0.801,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",102,6,101.984,5.985
 "S1","S1-02","SERUM","Metab-DrugA","Y",103.527,103.5,7.528,7.5,24,"Hours",0.426,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",103.5,7.5,103.527,7.528
-"S1","S1-02","SERUM","Metab-DrugA","Y",107.951,108,11.952,12,24,"Hours",0.032,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",108,12,107.951,11.952
+"S1","S1-02","SERUM","Metab-DrugA","Y",107.951,108,11.952,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.968,"DOSE 5",30,"Years","ASIAN","M","","",108,12,107.951,11.952
 "S1","S1-02","SERUM","Metab-DrugA","Y",119.656,119.917,-0.083,-0.083,24,"Hours",0.057,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",119.917,-0.083,119.656,-0.083
 "S1","S1-02","SERUM","Metab-DrugA","Y",120.27,120.5,0.531,0.5,24,"Hours",0.528,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",120.5,0.5,120.27,0.531
 "S1","S1-02","SERUM","Metab-DrugA","Y",121.2,121.5,1.461,1.5,24,"Hours",1.636,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.027,"DOSE 6",30,"Years","ASIAN","M","","",121.5,1.5,121.2,1.461
@@ -419,7 +340,7 @@
 "S1","S1-02","SERUM","Metab-DrugA","Y",150.233,150,6.04,6,24,"Hours",0.765,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",150,6,150.233,6.04
 "S1","S1-02","SERUM","Metab-DrugA","Y",151.649,151.5,7.456,7.5,24,"Hours",0.413,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",151.5,7.5,151.649,7.456
 "S1","S1-02","SERUM","Metab-DrugA","Y",156.176,156,11.983,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.955,"DOSE 7",30,"Years","ASIAN","M","","",156,12,156.176,11.983
-"S1","S1-02","SERUM","Metab-DrugA","Y",167.947,167.917,-0.083,-0.083,24,"Hours",0.021,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",167.917,-0.083,167.947,-0.083
+"S1","S1-02","SERUM","Metab-DrugA","Y",167.947,167.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",167.917,-0.083,167.947,-0.083
 "S1","S1-02","SERUM","Metab-DrugA","Y",168.551,168.5,0.521,0.5,24,"Hours",0.565,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",168.5,0.5,168.551,0.521
 "S1","S1-02","SERUM","Metab-DrugA","Y",169.508,169.5,1.478,1.5,24,"Hours",1.657,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",169.5,1.5,169.508,1.478
 "S1","S1-02","SERUM","Metab-DrugA","Y",169.55,169.5,1.52,1.5,24,"Hours",1.765,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",169.5,1.5,169.55,1.52
@@ -427,8 +348,8 @@
 "S1","S1-02","SERUM","Metab-DrugA","Y",172.566,172.5,4.535,4.5,24,"Hours",1.607,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",172.5,4.5,172.566,4.535
 "S1","S1-02","SERUM","Metab-DrugA","Y",173.979,174,5.949,6,24,"Hours",0.784,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",174,6,173.979,5.949
 "S1","S1-02","SERUM","Metab-DrugA","Y",175.455,175.5,7.425,7.5,24,"Hours",0.476,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",175.5,7.5,175.455,7.425
-"S1","S1-02","SERUM","Metab-DrugA","Y",180.094,180,12.064,12,24,"Hours",0.024,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",180,12,180.094,12.064
-"S1","S1-03","SERUM","DrugA","",-0.083,-0.083,-0.083,-0.083,24,"Hours",0.034,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",-0.083,-0.083,-0.083,-0.083
+"S1","S1-02","SERUM","Metab-DrugA","Y",180.094,180,12.064,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.013,"DOSE 8",30,"Years","ASIAN","M","","",180,12,180.094,12.064
+"S1","S1-03","SERUM","DrugA","",-0.083,-0.083,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",-0.083,-0.083,-0.083,-0.083
 "S1","S1-03","SERUM","DrugA","",0.552,0.5,0.552,0.5,24,"Hours",0.72,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",0.5,0.5,0.552,0.552
 "S1","S1-03","SERUM","DrugA","",1.515,1.5,1.515,1.5,24,"Hours",2.203,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",1.5,1.5,1.515,1.515
 "S1","S1-03","SERUM","DrugA","",1.528,1.5,1.528,1.5,24,"Hours",2.359,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",1.5,1.5,1.528,1.528
@@ -455,7 +376,7 @@
 "S1","S1-03","SERUM","DrugA","",54.059,54,6.056,6,24,"Hours",0.963,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",54,6,54.059,6.056
 "S1","S1-03","SERUM","DrugA","",55.436,55.5,7.433,7.5,24,"Hours",0.607,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",55.5,7.5,55.436,7.433
 "S1","S1-03","SERUM","DrugA","",60.088,60,12.085,12,24,"Hours",0.111,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",60,12,60.088,12.085
-"S1","S1-03","SERUM","DrugA","",71.897,71.917,-0.083,-0.083,24,"Hours",0.014,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",71.917,-0.083,71.897,-0.083
+"S1","S1-03","SERUM","DrugA","",71.897,71.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",71.917,-0.083,71.897,-0.083
 "S1","S1-03","SERUM","DrugA","",72.56,72.5,0.58,0.5,24,"Hours",0.871,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",72.5,0.5,72.56,0.58
 "S1","S1-03","SERUM","DrugA","",73.445,73.5,1.464,1.5,24,"Hours",2.389,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",73.5,1.5,73.445,1.464
 "S1","S1-03","SERUM","DrugA","",73.484,73.5,1.504,1.5,24,"Hours",2.332,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",73.5,1.5,73.484,1.504
@@ -481,8 +402,8 @@
 "S1","S1-03","SERUM","DrugA","",124.454,124.5,4.474,4.5,24,"Hours",2.243,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",124.5,4.5,124.454,4.474
 "S1","S1-03","SERUM","DrugA","",126.038,126,6.058,6,24,"Hours",1.048,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",126,6,126.038,6.058
 "S1","S1-03","SERUM","DrugA","",127.51,127.5,7.53,7.5,24,"Hours",0.464,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",127.5,7.5,127.51,7.53
-"S1","S1-03","SERUM","DrugA","",132.001,132,12.021,12,24,"Hours",0.024,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",132,12,132.001,12.021
-"S1","S1-03","SERUM","DrugA","",143.934,143.917,-0.083,-0.083,24,"Hours",0.034,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",143.917,-0.083,143.934,-0.083
+"S1","S1-03","SERUM","DrugA","",132.001,132,12.021,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",132,12,132.001,12.021
+"S1","S1-03","SERUM","DrugA","",143.934,143.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",143.917,-0.083,143.934,-0.083
 "S1","S1-03","SERUM","DrugA","",144.523,144.5,0.506,0.5,24,"Hours",0.8,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",144.5,0.5,144.523,0.506
 "S1","S1-03","SERUM","DrugA","",145.453,145.5,1.436,1.5,24,"Hours",2.212,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",145.5,1.5,145.453,1.436
 "S1","S1-03","SERUM","DrugA","",145.491,145.5,1.474,1.5,24,"Hours",2.129,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",145.5,1.5,145.491,1.474
@@ -499,80 +420,40 @@
 "S1","S1-03","SERUM","DrugA","",172.337,172.5,4.489,4.5,24,"Hours",2.302,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",172.5,4.5,172.337,4.489
 "S1","S1-03","SERUM","DrugA","",173.828,174,5.98,6,24,"Hours",1.036,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",174,6,173.828,5.98
 "S1","S1-03","SERUM","DrugA","",175.302,175.5,7.454,7.5,24,"Hours",0.388,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",175.5,7.5,175.302,7.454
-"S1","S1-03","SERUM","DrugA","",179.852,180,12.004,12,24,"Hours",0.046,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",180,12,179.852,12.004
-"S1","S1-03","URINE","DrugA","",-0.083,-0.083,-0.083,-0.083,24,"Hours",0.034,"mg/mL",84,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",1.917,0.917,1.9,1
+"S1","S1-03","SERUM","DrugA","",179.852,180,12.004,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",180,12,179.852,12.004
 "S1","S1-03","URINE","DrugA","",0.552,0.5,0.552,0.5,24,"Hours",0.72,"mg/mL",80,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",2.5,1.5,2.5,1.5
-"S1","S1-03","URINE","DrugA","",1.515,1.5,1.515,1.5,24,"Hours",2.203,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",3.5,2.5,3.6,2.6
-"S1","S1-03","URINE","DrugA","",1.528,1.5,1.528,1.5,24,"Hours",2.359,"mg/mL",122,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",3.5,2.5,3.5,2.4
 "S1","S1-03","URINE","DrugA","",2.952,3,2.952,3,24,"Hours",4.556,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",5,4,4.9,4.1
-"S1","S1-03","URINE","DrugA","",4.505,4.5,4.505,4.5,24,"Hours",2.132,"mg/mL",110,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",6.5,5.5,6.4,5.6
 "S1","S1-03","URINE","DrugA","",5.994,6,5.994,6,24,"Hours",1.034,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",8,7,7.9,7
-"S1","S1-03","URINE","DrugA","",7.456,7.5,7.456,7.5,24,"Hours",0.557,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",9.5,8.5,9.6,8.5
 "S1","S1-03","URINE","DrugA","",12.011,12,12.011,12,24,"Hours",0,"mg/mL",107,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",14,13,14,13
-"S1","S1-03","URINE","DrugA","",23.878,23.917,-0.083,-0.083,24,"Hours",0,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",25.917,0.917,25.8,0.9
 "S1","S1-03","URINE","DrugA","",24.42,24.5,0.458,0.5,24,"Hours",0.711,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",26.5,1.5,26.5,1.5
-"S1","S1-03","URINE","DrugA","",25.458,25.5,1.497,1.5,24,"Hours",2.389,"mg/mL",121,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",27.5,2.5,27.6,2.5
-"S1","S1-03","URINE","DrugA","",25.545,25.5,1.584,1.5,24,"Hours",2.566,"mg/mL",104,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",27.5,2.5,27.4,2.5
 "S1","S1-03","URINE","DrugA","",26.967,27,3.006,3,24,"Hours",4.438,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",29,4,29,4.1
-"S1","S1-03","URINE","DrugA","",28.455,28.5,4.494,4.5,24,"Hours",2.134,"mg/mL",90,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",30.5,5.5,30.5,5.5
 "S1","S1-03","URINE","DrugA","",29.924,30,5.963,6,24,"Hours",1.087,"mg/mL",79,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",32,7,31.9,6.9
-"S1","S1-03","URINE","DrugA","",31.511,31.5,7.55,7.5,24,"Hours",0.488,"mg/mL",117,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",33.5,8.5,33.5,8.5
 "S1","S1-03","URINE","DrugA","",35.946,36,11.985,12,24,"Hours",0,"mg/mL",93,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",38,13,37.9,12.9
-"S1","S1-03","URINE","DrugA","",47.92,47.917,-0.083,-0.083,24,"Hours",0.07,"mg/mL",135,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",49.917,0.917,50,0.9
 "S1","S1-03","URINE","DrugA","",48.556,48.5,0.553,0.5,24,"Hours",0.739,"mg/mL",123,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",50.5,1.5,50.5,1.4
-"S1","S1-03","URINE","DrugA","",49.424,49.5,1.421,1.5,24,"Hours",2.168,"mg/mL",87,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",51.5,2.5,51.4,2.7
-"S1","S1-03","URINE","DrugA","",49.556,49.5,1.553,1.5,24,"Hours",2.302,"mg/mL",90,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",51.5,2.5,51.5,2.5
 "S1","S1-03","URINE","DrugA","",51.054,51,3.051,3,24,"Hours",4.555,"mg/mL",103,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",53,4,53,4
-"S1","S1-03","URINE","DrugA","",52.474,52.5,4.471,4.5,24,"Hours",2.316,"mg/mL",119,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",54.5,5.5,54.5,5.6
 "S1","S1-03","URINE","DrugA","",54.059,54,6.056,6,24,"Hours",0.963,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",56,7,56,6.9
-"S1","S1-03","URINE","DrugA","",55.436,55.5,7.433,7.5,24,"Hours",0.607,"mg/mL",97,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",57.5,8.5,57.6,8.5
 "S1","S1-03","URINE","DrugA","",60.088,60,12.085,12,24,"Hours",0.111,"mg/mL",94,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",62,13,61.8,13
-"S1","S1-03","URINE","DrugA","",71.897,71.917,-0.083,-0.083,24,"Hours",0.014,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",73.917,0.917,73.8,0.8
 "S1","S1-03","URINE","DrugA","",72.56,72.5,0.58,0.5,24,"Hours",0.871,"mg/mL",112,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",74.5,1.5,74.5,1.6
-"S1","S1-03","URINE","DrugA","",73.445,73.5,1.464,1.5,24,"Hours",2.389,"mg/mL",96,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",75.5,2.5,75.6,2.6
-"S1","S1-03","URINE","DrugA","",73.484,73.5,1.504,1.5,24,"Hours",2.332,"mg/mL",82,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",75.5,2.5,75.6,2.4
 "S1","S1-03","URINE","DrugA","",74.947,75,2.966,3,24,"Hours",4.531,"mg/mL",100,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",77,4,77.1,4.2
-"S1","S1-03","URINE","DrugA","",76.447,76.5,4.467,4.5,24,"Hours",2.018,"mg/mL",96,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",78.5,5.5,78.3,5.4
 "S1","S1-03","URINE","DrugA","",77.909,78,5.929,6,24,"Hours",1.06,"mg/mL",71,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",80,7,80,7
-"S1","S1-03","URINE","DrugA","",79.506,79.5,7.526,7.5,24,"Hours",0.64,"mg/mL",111,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",81.5,8.5,81.5,8.5
 "S1","S1-03","URINE","DrugA","",84.019,84,12.039,12,24,"Hours",0,"mg/mL",97,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.95,"DOSE 4",40,"Years","ASIAN","M","","",86,13,86,13
-"S1","S1-03","URINE","DrugA","",95.875,95.917,-0.084,-0.083,24,"Hours",0.092,"mg/mL",74,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",97.917,0.917,97.8,0.9
 "S1","S1-03","URINE","DrugA","",96.383,96.5,0.423,0.5,24,"Hours",0.608,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",98.5,1.5,98.6,1.5
-"S1","S1-03","URINE","DrugA","",97.362,97.5,1.403,1.5,24,"Hours",2.168,"mg/mL",93,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",99.5,2.5,99.5,2.7
-"S1","S1-03","URINE","DrugA","",97.391,97.5,1.432,1.5,24,"Hours",2.178,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",99.5,2.5,99.7,2.4
 "S1","S1-03","URINE","DrugA","",98.944,99,2.985,3,24,"Hours",4.622,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",101,4,100.9,4
-"S1","S1-03","URINE","DrugA","",100.55,100.5,4.591,4.5,24,"Hours",1.923,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",102.5,5.5,102.5,5.7
 "S1","S1-03","URINE","DrugA","",102.002,102,6.043,6,24,"Hours",1.03,"mg/mL",78,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",104,7,104,7.1
-"S1","S1-03","URINE","DrugA","",103.435,103.5,7.476,7.5,24,"Hours",0.494,"mg/mL",122,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",105.5,8.5,105.3,8.6
 "S1","S1-03","URINE","DrugA","",107.979,108,12.019,12,24,"Hours",0.057,"mg/mL",81,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.991,"DOSE 5",40,"Years","ASIAN","M","","",110,13,109.9,12.9
-"S1","S1-03","URINE","DrugA","",119.897,119.917,-0.083,-0.083,24,"Hours",0,"mg/mL",93,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",121.917,0.917,122,1
 "S1","S1-03","URINE","DrugA","",120.474,120.5,0.494,0.5,24,"Hours",0.708,"mg/mL",79,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",122.5,1.5,122.6,1.6
-"S1","S1-03","URINE","DrugA","",121.444,121.5,1.464,1.5,24,"Hours",2.337,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",123.5,2.5,123.6,2.3
-"S1","S1-03","URINE","DrugA","",121.572,121.5,1.592,1.5,24,"Hours",2.478,"mg/mL",76,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",123.5,2.5,123.3,2.6
 "S1","S1-03","URINE","DrugA","",122.979,123,2.999,3,24,"Hours",4.503,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",125,4,125,4
-"S1","S1-03","URINE","DrugA","",124.454,124.5,4.474,4.5,24,"Hours",2.243,"mg/mL",92,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",126.5,5.5,126.5,5.4
 "S1","S1-03","URINE","DrugA","",126.038,126,6.058,6,24,"Hours",1.048,"mg/mL",128,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",128,7,128.2,7.1
-"S1","S1-03","URINE","DrugA","",127.51,127.5,7.53,7.5,24,"Hours",0.464,"mg/mL",128,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",129.5,8.5,129.6,8.7
-"S1","S1-03","URINE","DrugA","",132.001,132,12.021,12,24,"Hours",0.024,"mg/mL",73,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",134,13,134,12.9
-"S1","S1-03","URINE","DrugA","",143.934,143.917,-0.083,-0.083,24,"Hours",0.034,"mg/mL",92,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",145.917,0.917,145.9,1
+"S1","S1-03","URINE","DrugA","",132.001,132,12.021,12,24,"Hours",0,"mg/mL",73,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.982,"DOSE 6",40,"Years","ASIAN","M","","",134,13,134,12.9
 "S1","S1-03","URINE","DrugA","",144.523,144.5,0.506,0.5,24,"Hours",0.8,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",146.5,1.5,146.5,1.5
-"S1","S1-03","URINE","DrugA","",145.453,145.5,1.436,1.5,24,"Hours",2.212,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",147.5,2.5,147.5,2.6
-"S1","S1-03","URINE","DrugA","",145.491,145.5,1.474,1.5,24,"Hours",2.129,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",147.5,2.5,147.6,2.5
 "S1","S1-03","URINE","DrugA","",146.947,147,2.93,3,24,"Hours",4.253,"mg/mL",63,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",149,4,149.1,4
-"S1","S1-03","URINE","DrugA","",148.559,148.5,4.542,4.5,24,"Hours",2.152,"mg/mL",76,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",150.5,5.5,150.4,5.4
 "S1","S1-03","URINE","DrugA","",149.931,150,5.913,6,24,"Hours",1.164,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",152,7,151.9,7.1
-"S1","S1-03","URINE","DrugA","",151.589,151.5,7.571,7.5,24,"Hours",0.428,"mg/mL",87,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",153.5,8.5,153.3,8.5
 "S1","S1-03","URINE","DrugA","",156.118,156,12.101,12,24,"Hours",0.123,"mg/mL",98,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.1,"DOSE 7",40,"Years","ASIAN","M","","",158,13,158,13
-"S1","S1-03","URINE","DrugA","",167.765,167.917,-0.083,-0.083,24,"Hours",0,"mg/mL",130,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",169.917,0.917,169.8,0.7
 "S1","S1-03","URINE","DrugA","",168.341,168.5,0.493,0.5,24,"Hours",0.72,"mg/mL",117,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",170.5,1.5,170.5,1.4
-"S1","S1-03","URINE","DrugA","",169.294,169.5,1.446,1.5,24,"Hours",2.198,"mg/mL",92,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",171.5,2.5,171.4,2.5
-"S1","S1-03","URINE","DrugA","",169.367,169.5,1.518,1.5,24,"Hours",2.263,"mg/mL",90,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",171.5,2.5,171.8,2.5
 "S1","S1-03","URINE","DrugA","",170.791,171,2.943,3,24,"Hours",4.447,"mg/mL",78,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",173,4,172.9,3.9
-"S1","S1-03","URINE","DrugA","",172.337,172.5,4.489,4.5,24,"Hours",2.302,"mg/mL",103,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",174.5,5.5,174.3,5.2
 "S1","S1-03","URINE","DrugA","",173.828,174,5.98,6,24,"Hours",1.036,"mg/mL",111,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",176,7,176.1,7
-"S1","S1-03","URINE","DrugA","",175.302,175.5,7.454,7.5,24,"Hours",0.388,"mg/mL",126,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",177.5,8.5,177.5,8.5
-"S1","S1-03","URINE","DrugA","",179.852,180,12.004,12,24,"Hours",0.046,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",182,13,182,13
-"S1","S1-03","SERUM","Metab-DrugA","Y",-0.083,-0.083,-0.083,-0.083,24,"Hours",0.04,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",-0.083,-0.083,-0.083,-0.083
+"S1","S1-03","URINE","DrugA","",179.852,180,12.004,12,24,"Hours",0,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",182,13,182,13
+"S1","S1-03","SERUM","Metab-DrugA","Y",-0.083,-0.083,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",-0.083,-0.083,-0.083,-0.083
 "S1","S1-03","SERUM","Metab-DrugA","Y",0.552,0.5,0.552,0.5,24,"Hours",0.272,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",0.5,0.5,0.552,0.552
 "S1","S1-03","SERUM","Metab-DrugA","Y",1.515,1.5,1.515,1.5,24,"Hours",0.991,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",1.5,1.5,1.515,1.515
 "S1","S1-03","SERUM","Metab-DrugA","Y",1.528,1.5,1.528,1.5,24,"Hours",0.962,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.083,"DOSE 1",40,"Years","ASIAN","M","","",1.5,1.5,1.528,1.528
@@ -590,7 +471,7 @@
 "S1","S1-03","SERUM","Metab-DrugA","Y",29.924,30,5.963,6,24,"Hours",0.42,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",30,6,29.924,5.963
 "S1","S1-03","SERUM","Metab-DrugA","Y",31.511,31.5,7.55,7.5,24,"Hours",0.237,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",31.5,7.5,31.511,7.55
 "S1","S1-03","SERUM","Metab-DrugA","Y",35.946,36,11.985,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.943,"DOSE 2",40,"Years","ASIAN","M","","",36,12,35.946,11.985
-"S1","S1-03","SERUM","Metab-DrugA","Y",47.92,47.917,-0.083,-0.083,24,"Hours",0.027,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",47.917,-0.083,47.92,-0.083
+"S1","S1-03","SERUM","Metab-DrugA","Y",47.92,47.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",47.917,-0.083,47.92,-0.083
 "S1","S1-03","SERUM","Metab-DrugA","Y",48.556,48.5,0.553,0.5,24,"Hours",0.317,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",48.5,0.5,48.556,0.553
 "S1","S1-03","SERUM","Metab-DrugA","Y",49.424,49.5,1.421,1.5,24,"Hours",0.893,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",49.5,1.5,49.424,1.421
 "S1","S1-03","SERUM","Metab-DrugA","Y",49.556,49.5,1.553,1.5,24,"Hours",1.018,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.057,"DOSE 3",40,"Years","ASIAN","M","","",49.5,1.5,49.556,1.553
@@ -644,7 +525,7 @@
 "S1","S1-03","SERUM","Metab-DrugA","Y",173.828,174,5.98,6,24,"Hours",0.457,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",174,6,173.828,5.98
 "S1","S1-03","SERUM","Metab-DrugA","Y",175.302,175.5,7.454,7.5,24,"Hours",0.187,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",175.5,7.5,175.302,7.454
 "S1","S1-03","SERUM","Metab-DrugA","Y",179.852,180,12.004,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.011,"DOSE 8",40,"Years","ASIAN","M","","",180,12,179.852,12.004
-"S1","S1-04","SERUM","DrugA","",-0.083,-0.083,-0.083,-0.083,24,"Hours",0.043,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",-0.083,-0.083,-0.083,-0.083
+"S1","S1-04","SERUM","DrugA","",-0.083,-0.083,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",-0.083,-0.083,-0.083,-0.083
 "S1","S1-04","SERUM","DrugA","",0.453,0.5,0.453,0.5,24,"Hours",1.223,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",0.5,0.5,0.453,0.453
 "S1","S1-04","SERUM","DrugA","",1.488,1.5,1.488,1.5,24,"Hours",4.201,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",1.5,1.5,1.488,1.488
 "S1","S1-04","SERUM","DrugA","",1.552,1.5,1.552,1.5,24,"Hours",4.262,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",1.5,1.5,1.552,1.552
@@ -661,7 +542,7 @@
 "S1","S1-04","SERUM","DrugA","",28.506,28.5,4.456,4.5,24,"Hours",4.095,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",28.5,4.5,28.506,4.456
 "S1","S1-04","SERUM","DrugA","",29.956,30,5.906,6,24,"Hours",1.89,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",30,6,29.956,5.906
 "S1","S1-04","SERUM","DrugA","",31.576,31.5,7.526,7.5,24,"Hours",1.076,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",31.5,7.5,31.576,7.526
-"S1","S1-04","SERUM","DrugA","",36.116,36,12.066,12,24,"Hours",0.024,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",36,12,36.116,12.066
+"S1","S1-04","SERUM","DrugA","",36.116,36,12.066,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",36,12,36.116,12.066
 "S1","S1-04","SERUM","DrugA","",47.875,47.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","Invalid administration","",47.917,-0.083,47.875,-0.082
 "S1","S1-04","SERUM","DrugA","",48.554,48.5,0.597,0.5,24,"Hours",1.632,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",48.5,0.5,48.554,0.597
 "S1","S1-04","SERUM","DrugA","",49.492,49.5,1.535,1.5,24,"Hours",4.212,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",49.5,1.5,49.492,1.535
@@ -670,7 +551,7 @@
 "S1","S1-04","SERUM","DrugA","",52.385,52.5,4.428,4.5,24,"Hours",4.227,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",52.5,4.5,52.385,4.428
 "S1","S1-04","SERUM","DrugA","",54.001,54,6.044,6,24,"Hours",1.909,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",54,6,54.001,6.044
 "S1","S1-04","SERUM","DrugA","",55.451,55.5,7.494,7.5,24,"Hours",0.982,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",55.5,7.5,55.451,7.494
-"S1","S1-04","SERUM","DrugA","",59.951,60,11.994,12,24,"Hours",0.037,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",60,12,59.951,11.994
+"S1","S1-04","SERUM","DrugA","",59.951,60,11.994,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",60,12,59.951,11.994
 "S1","S1-04","SERUM","DrugA","",71.831,71.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",71.917,-0.083,71.831,-0.083
 "S1","S1-04","SERUM","DrugA","",72.411,72.5,0.498,0.5,24,"Hours",1.355,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",72.5,0.5,72.411,0.498
 "S1","S1-04","SERUM","DrugA","",73.406,73.5,1.492,1.5,24,"Hours",4.194,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",73.5,1.5,73.406,1.492
@@ -680,7 +561,7 @@
 "S1","S1-04","SERUM","DrugA","",77.879,78,5.965,6,24,"Hours",1.741,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",78,6,77.879,5.965
 "S1","S1-04","SERUM","DrugA","",79.43,79.5,7.516,7.5,24,"Hours",0.854,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",79.5,7.5,79.43,7.516
 "S1","S1-04","SERUM","DrugA","",83.933,84,12.019,12,24,"Hours",0.098,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",84,12,83.933,12.019
-"S1","S1-04","SERUM","DrugA","",96.037,95.917,-0.084,-0.083,24,"Hours",0.045,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",95.917,-0.083,96.037,-0.084
+"S1","S1-04","SERUM","DrugA","",96.037,95.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",95.917,-0.083,96.037,-0.084
 "S1","S1-04","SERUM","DrugA","",96.675,96.5,0.554,0.5,24,"Hours",1.512,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",96.5,0.5,96.675,0.554
 "S1","S1-04","SERUM","DrugA","",97.613,97.5,1.493,1.5,24,"Hours",4.076,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",97.5,1.5,97.613,1.493
 "S1","S1-04","SERUM","DrugA","",97.656,97.5,1.535,1.5,24,"Hours",4.089,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",97.5,1.5,97.656,1.535
@@ -689,7 +570,7 @@
 "S1","S1-04","SERUM","DrugA","",102.101,102,5.981,6,24,"Hours",1.936,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",102,6,102.101,5.981
 "S1","S1-04","SERUM","DrugA","",103.744,103.5,7.624,7.5,24,"Hours",0.883,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",103.5,7.5,103.744,7.624
 "S1","S1-04","SERUM","DrugA","",108.121,108,12.001,12,24,"Hours",0.083,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",108,12,108.121,12.001
-"S1","S1-04","SERUM","DrugA","",119.935,119.917,-0.085,-0.083,24,"Hours",0.029,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",119.917,-0.083,119.935,-0.085
+"S1","S1-04","SERUM","DrugA","",119.935,119.917,-0.085,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",119.917,-0.083,119.935,-0.085
 "S1","S1-04","SERUM","DrugA","",120.582,120.5,0.562,0.5,24,"Hours",1.55,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",120.5,0.5,120.582,0.562
 "S1","S1-04","SERUM","DrugA","",121.497,121.5,1.477,1.5,24,"Hours",4.123,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",121.5,1.5,121.497,1.477
 "S1","S1-04","SERUM","DrugA","",121.53,121.5,1.51,1.5,24,"Hours",4.311,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",121.5,1.5,121.53,1.51
@@ -697,7 +578,7 @@
 "S1","S1-04","SERUM","DrugA","",124.611,124.5,4.59,4.5,24,"Hours",3.647,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",124.5,4.5,124.611,4.59
 "S1","S1-04","SERUM","DrugA","",125.995,126,5.974,6,24,"Hours",1.993,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",126,6,125.995,5.974
 "S1","S1-04","SERUM","DrugA","",127.517,127.5,7.497,7.5,24,"Hours",0.771,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",127.5,7.5,127.517,7.497
-"S1","S1-04","SERUM","DrugA","",132.052,132,12.031,12,24,"Hours",0.049,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",132,12,132.052,12.031
+"S1","S1-04","SERUM","DrugA","",132.052,132,12.031,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",132,12,132.052,12.031
 "S1","S1-04","SERUM","DrugA","",143.926,143.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",143.917,-0.083,143.926,-0.082
 "S1","S1-04","SERUM","DrugA","",144.489,144.5,0.481,0.5,24,"Hours",1.354,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",144.5,0.5,144.489,0.481
 "S1","S1-04","SERUM","DrugA","",145.482,145.5,1.473,1.5,24,"Hours",4.034,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",145.5,1.5,145.482,1.473
@@ -707,7 +588,7 @@
 "S1","S1-04","SERUM","DrugA","",149.983,150,5.974,6,24,"Hours",1.817,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",150,6,149.983,5.974
 "S1","S1-04","SERUM","DrugA","",151.541,151.5,7.533,7.5,24,"Hours",0.783,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",151.5,7.5,151.541,7.533
 "S1","S1-04","SERUM","DrugA","",155.942,156,11.934,12,24,"Hours",0.127,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",156,12,155.942,11.934
-"S1","S1-04","SERUM","DrugA","",167.958,167.917,-0.084,-0.083,24,"Hours",0.045,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",167.917,-0.083,167.958,-0.084
+"S1","S1-04","SERUM","DrugA","",167.958,167.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",167.917,-0.083,167.958,-0.084
 "S1","S1-04","SERUM","DrugA","",168.574,168.5,0.532,0.5,24,"Hours",1.53,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",168.5,0.5,168.574,0.532
 "S1","S1-04","SERUM","DrugA","",169.595,169.5,1.552,1.5,24,"Hours",4.176,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",169.5,1.5,169.595,1.552
 "S1","S1-04","SERUM","DrugA","",169.618,169.5,1.576,1.5,24,"Hours",4.276,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",169.5,1.5,169.618,1.576
@@ -716,77 +597,37 @@
 "S1","S1-04","SERUM","DrugA","",174.066,174,6.023,6,24,"Hours",2.062,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",174,6,174.066,6.023
 "S1","S1-04","SERUM","DrugA","",175.534,175.5,7.492,7.5,24,"Hours",0.808,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",175.5,7.5,175.534,7.492
 "S1","S1-04","SERUM","DrugA","",179.947,180,11.905,12,24,"Hours",0.14,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",180,12,179.947,11.905
-"S1","S1-04","URINE","DrugA","",-0.083,-0.083,-0.083,-0.083,24,"Hours",0.043,"mg/mL",114,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",1.917,0.917,2,1
 "S1","S1-04","URINE","DrugA","",0.453,0.5,0.453,0.5,24,"Hours",1.223,"mg/mL",94,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",2.5,1.5,2.5,1.3
-"S1","S1-04","URINE","DrugA","",1.488,1.5,1.488,1.5,24,"Hours",4.201,"mg/mL",99,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",3.5,2.5,3.4,2.4
-"S1","S1-04","URINE","DrugA","",1.552,1.5,1.552,1.5,24,"Hours",4.262,"mg/mL",117,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",3.5,2.5,3.5,2.4
 "S1","S1-04","URINE","DrugA","",3.02,3,3.02,3,24,"Hours",8.33,"mg/mL",96,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",5,4,5.1,4
-"S1","S1-04","URINE","DrugA","",4.513,4.5,4.513,4.5,24,"Hours",3.959,"mg/mL",126,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",6.5,5.5,6.4,5.4
 "S1","S1-04","URINE","DrugA","",6.043,6,6.043,6,24,"Hours",1.731,"mg/mL",128,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",8,7,8,7
-"S1","S1-04","URINE","DrugA","",7.506,7.5,7.506,7.5,24,"Hours",0.903,"mg/mL",109,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",9.5,8.5,9.7,8.8
 "S1","S1-04","URINE","DrugA","",12.061,12,12.061,12,24,"Hours",0.091,"mg/mL",116,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",14,13,14,13
-"S1","S1-04","URINE","DrugA","",23.965,23.917,-0.085,-0.083,24,"Hours",0,"mg/mL",114,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",25.917,0.917,26,1.1
 "S1","S1-04","URINE","DrugA","",24.631,24.5,0.581,0.5,24,"Hours",1.679,"mg/mL",98,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",26.5,1.5,26.5,1.5
-"S1","S1-04","URINE","DrugA","",25.535,25.5,1.485,1.5,24,"Hours",4.197,"mg/mL",100,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",27.5,2.5,27.5,2.5
-"S1","S1-04","URINE","DrugA","",25.637,25.5,1.587,1.5,24,"Hours",4.327,"mg/mL",83,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",27.5,2.5,27.4,2.6
 "S1","S1-04","URINE","DrugA","",27.03,27,2.98,3,24,"Hours",8.214,"mg/mL",97,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",29,4,28.9,4
-"S1","S1-04","URINE","DrugA","",28.506,28.5,4.456,4.5,24,"Hours",4.095,"mg/mL",101,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",30.5,5.5,30.5,5.7
 "S1","S1-04","URINE","DrugA","",29.956,30,5.906,6,24,"Hours",1.89,"mg/mL",86,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",32,7,31.9,6.9
-"S1","S1-04","URINE","DrugA","",31.576,31.5,7.526,7.5,24,"Hours",1.076,"mg/mL",103,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",33.5,8.5,33.7,8.4
-"S1","S1-04","URINE","DrugA","",36.116,36,12.066,12,24,"Hours",0.024,"mg/mL",117,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",38,13,38,12.9
-"S1","S1-04","URINE","DrugA","",47.875,47.917,-0.082,-0.083,24,"Hours",0,"mg/mL",97,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","Invalid administration","",49.917,0.917,49.9,1.1
+"S1","S1-04","URINE","DrugA","",36.116,36,12.066,12,24,"Hours",0,"mg/mL",117,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",38,13,38,12.9
 "S1","S1-04","URINE","DrugA","",48.554,48.5,0.597,0.5,24,"Hours",1.632,"mg/mL",101,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",50.5,1.5,50.6,1.5
-"S1","S1-04","URINE","DrugA","",49.492,49.5,1.535,1.5,24,"Hours",4.212,"mg/mL",119,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",51.5,2.5,51.4,2.3
-"S1","S1-04","URINE","DrugA","",49.537,49.5,1.58,1.5,24,"Hours",4.3,"mg/mL",110,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",51.5,2.5,51.5,2.4
 "S1","S1-04","URINE","DrugA","",50.92,51,2.963,3,24,"Hours",8.156,"mg/mL",96,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",53,4,52.8,4
-"S1","S1-04","URINE","DrugA","",52.385,52.5,4.428,4.5,24,"Hours",4.227,"mg/mL",86,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",54.5,5.5,54.4,5.5
 "S1","S1-04","URINE","DrugA","",54.001,54,6.044,6,24,"Hours",1.909,"mg/mL",100,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",56,7,56,6.9
-"S1","S1-04","URINE","DrugA","",55.451,55.5,7.494,7.5,24,"Hours",0.982,"mg/mL",82,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",57.5,8.5,57.5,8.5
-"S1","S1-04","URINE","DrugA","",59.951,60,11.994,12,24,"Hours",0.037,"mg/mL",93,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",62,13,62.1,13
-"S1","S1-04","URINE","DrugA","",71.831,71.917,-0.083,-0.083,24,"Hours",0,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",73.917,0.917,74.2,0.9
+"S1","S1-04","URINE","DrugA","",59.951,60,11.994,12,24,"Hours",0,"mg/mL",93,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",62,13,62.1,13
 "S1","S1-04","URINE","DrugA","",72.411,72.5,0.498,0.5,24,"Hours",1.355,"mg/mL",93,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",74.5,1.5,74.4,1.5
-"S1","S1-04","URINE","DrugA","",73.406,73.5,1.492,1.5,24,"Hours",4.194,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",75.5,2.5,75.6,2.5
-"S1","S1-04","URINE","DrugA","",73.448,73.5,1.534,1.5,24,"Hours",4.368,"mg/mL",107,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",75.5,2.5,75.4,2.4
 "S1","S1-04","URINE","DrugA","",74.879,75,2.965,3,24,"Hours",8.284,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",77,4,77,4.1
-"S1","S1-04","URINE","DrugA","",76.435,76.5,4.521,4.5,24,"Hours",3.872,"mg/mL",112,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",78.5,5.5,78.5,5.4
 "S1","S1-04","URINE","DrugA","",77.879,78,5.965,6,24,"Hours",1.741,"mg/mL",98,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",80,7,80,7
-"S1","S1-04","URINE","DrugA","",79.43,79.5,7.516,7.5,24,"Hours",0.854,"mg/mL",88,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",81.5,8.5,81.6,8.4
 "S1","S1-04","URINE","DrugA","",83.933,84,12.019,12,24,"Hours",0.098,"mg/mL",96,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",86,13,85.9,12.9
-"S1","S1-04","URINE","DrugA","",96.037,95.917,-0.084,-0.083,24,"Hours",0.045,"mg/mL",99,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",97.917,0.917,98.2,1.1
 "S1","S1-04","URINE","DrugA","",96.675,96.5,0.554,0.5,24,"Hours",1.512,"mg/mL",131,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",98.5,1.5,98.6,1.6
-"S1","S1-04","URINE","DrugA","",97.613,97.5,1.493,1.5,24,"Hours",4.076,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",99.5,2.5,99.5,2.5
-"S1","S1-04","URINE","DrugA","",97.656,97.5,1.535,1.5,24,"Hours",4.089,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",99.5,2.5,99.5,2.4
 "S1","S1-04","URINE","DrugA","",99.086,99,2.965,3,24,"Hours",8.032,"mg/mL",111,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",101,4,101.1,4
-"S1","S1-04","URINE","DrugA","",100.587,100.5,4.467,4.5,24,"Hours",4.199,"mg/mL",100,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",102.5,5.5,102.5,5.7
 "S1","S1-04","URINE","DrugA","",102.101,102,5.981,6,24,"Hours",1.936,"mg/mL",107,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",104,7,103.9,6.9
-"S1","S1-04","URINE","DrugA","",103.744,103.5,7.624,7.5,24,"Hours",0.883,"mg/mL",89,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",105.5,8.5,105.6,8.4
 "S1","S1-04","URINE","DrugA","",108.121,108,12.001,12,24,"Hours",0.083,"mg/mL",73,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",110,13,110.1,13.1
-"S1","S1-04","URINE","DrugA","",119.935,119.917,-0.085,-0.083,24,"Hours",0.029,"mg/mL",105,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",121.917,0.917,121.9,0.7
 "S1","S1-04","URINE","DrugA","",120.582,120.5,0.562,0.5,24,"Hours",1.55,"mg/mL",116,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",122.5,1.5,122.5,1.4
-"S1","S1-04","URINE","DrugA","",121.497,121.5,1.477,1.5,24,"Hours",4.123,"mg/mL",109,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",123.5,2.5,123.6,2.8
-"S1","S1-04","URINE","DrugA","",121.53,121.5,1.51,1.5,24,"Hours",4.311,"mg/mL",81,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",123.5,2.5,123.4,2.5
 "S1","S1-04","URINE","DrugA","",123.008,123,2.988,3,24,"Hours",8.158,"mg/mL",79,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",125,4,124.9,4
-"S1","S1-04","URINE","DrugA","",124.611,124.5,4.59,4.5,24,"Hours",3.647,"mg/mL",107,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",126.5,5.5,126.5,5.4
 "S1","S1-04","URINE","DrugA","",125.995,126,5.974,6,24,"Hours",1.993,"mg/mL",94,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",128,7,127.9,7
-"S1","S1-04","URINE","DrugA","",127.517,127.5,7.497,7.5,24,"Hours",0.771,"mg/mL",115,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",129.5,8.5,129.4,8.6
-"S1","S1-04","URINE","DrugA","",132.052,132,12.031,12,24,"Hours",0.049,"mg/mL",100,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",134,13,134.1,12.9
-"S1","S1-04","URINE","DrugA","",143.926,143.917,-0.082,-0.083,24,"Hours",0,"mg/mL",124,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",145.917,0.917,146,0.9
+"S1","S1-04","URINE","DrugA","",132.052,132,12.031,12,24,"Hours",0,"mg/mL",100,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",134,13,134.1,12.9
 "S1","S1-04","URINE","DrugA","",144.489,144.5,0.481,0.5,24,"Hours",1.354,"mg/mL",80,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",146.5,1.5,146.4,1.6
-"S1","S1-04","URINE","DrugA","",145.482,145.5,1.473,1.5,24,"Hours",4.034,"mg/mL",115,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",147.5,2.5,147.6,2.6
-"S1","S1-04","URINE","DrugA","",145.518,145.5,1.51,1.5,24,"Hours",4.321,"mg/mL",111,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",147.5,2.5,147.5,2.5
 "S1","S1-04","URINE","DrugA","",146.869,147,2.861,3,24,"Hours",8.019,"mg/mL",88,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",149,4,149,3.9
-"S1","S1-04","URINE","DrugA","",148.535,148.5,4.527,4.5,24,"Hours",3.84,"mg/mL",89,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",150.5,5.5,150.3,5.4
 "S1","S1-04","URINE","DrugA","",149.983,150,5.974,6,24,"Hours",1.817,"mg/mL",123,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",152,7,152.1,7
-"S1","S1-04","URINE","DrugA","",151.541,151.5,7.533,7.5,24,"Hours",0.783,"mg/mL",81,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",153.5,8.5,153.4,8.3
 "S1","S1-04","URINE","DrugA","",155.942,156,11.934,12,24,"Hours",0.127,"mg/mL",81,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",158,13,157.9,13
-"S1","S1-04","URINE","DrugA","",167.958,167.917,-0.084,-0.083,24,"Hours",0.045,"mg/mL",87,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",169.917,0.917,169.9,0.9
 "S1","S1-04","URINE","DrugA","",168.574,168.5,0.532,0.5,24,"Hours",1.53,"mg/mL",114,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",170.5,1.5,170.5,1.5
-"S1","S1-04","URINE","DrugA","",169.595,169.5,1.552,1.5,24,"Hours",4.176,"mg/mL",111,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",171.5,2.5,171.5,2.5
-"S1","S1-04","URINE","DrugA","",169.618,169.5,1.576,1.5,24,"Hours",4.276,"mg/mL",94,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",171.5,2.5,171.5,2.5
 "S1","S1-04","URINE","DrugA","",171.022,171,2.98,3,24,"Hours",8.149,"mg/mL",133,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",173,4,172.8,4.2
-"S1","S1-04","URINE","DrugA","",172.486,172.5,4.444,4.5,24,"Hours",4.246,"mg/mL",105,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",174.5,5.5,174.5,5.5
 "S1","S1-04","URINE","DrugA","",174.066,174,6.023,6,24,"Hours",2.062,"mg/mL",95,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",176,7,175.9,7
-"S1","S1-04","URINE","DrugA","",175.534,175.5,7.492,7.5,24,"Hours",0.808,"mg/mL",101,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",177.5,8.5,177.4,8.6
 "S1","S1-04","URINE","DrugA","",179.947,180,11.905,12,24,"Hours",0.14,"mg/mL",117,"mL","DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",182,13,181.9,12.9
 "S1","S1-04","SERUM","Metab-DrugA","Y",-0.083,-0.083,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",-0.083,-0.083,-0.083,-0.083
 "S1","S1-04","SERUM","Metab-DrugA","Y",0.453,0.5,0.453,0.5,24,"Hours",0.444,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",0.5,0.5,0.453,0.453
@@ -796,8 +637,8 @@
 "S1","S1-04","SERUM","Metab-DrugA","Y",4.513,4.5,4.513,4.5,24,"Hours",1.615,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",4.5,4.5,4.513,4.513
 "S1","S1-04","SERUM","Metab-DrugA","Y",6.043,6,6.043,6,24,"Hours",0.633,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",6,6,6.043,6.043
 "S1","S1-04","SERUM","Metab-DrugA","Y",7.506,7.5,7.506,7.5,24,"Hours",0.357,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",7.5,7.5,7.506,7.506
-"S1","S1-04","SERUM","Metab-DrugA","Y",12.061,12,12.061,12,24,"Hours",0.048,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",12,12,12.061,12.061
-"S1","S1-04","SERUM","Metab-DrugA","Y",23.965,23.917,-0.085,-0.083,24,"Hours",0.026,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",23.917,-0.083,23.965,-0.085
+"S1","S1-04","SERUM","Metab-DrugA","Y",12.061,12,12.061,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.009,"DOSE 1",25,"Years","WHITE","F","Invalid administration","",12,12,12.061,12.061
+"S1","S1-04","SERUM","Metab-DrugA","Y",23.965,23.917,-0.085,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",23.917,-0.083,23.965,-0.085
 "S1","S1-04","SERUM","Metab-DrugA","Y",24.631,24.5,0.581,0.5,24,"Hours",0.749,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",24.5,0.5,24.631,0.581
 "S1","S1-04","SERUM","Metab-DrugA","Y",25.535,25.5,1.485,1.5,24,"Hours",1.707,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",25.5,1.5,25.535,1.485
 "S1","S1-04","SERUM","Metab-DrugA","Y",25.637,25.5,1.587,1.5,24,"Hours",1.771,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",25.5,1.5,25.637,1.587
@@ -805,7 +646,7 @@
 "S1","S1-04","SERUM","Metab-DrugA","Y",28.506,28.5,4.456,4.5,24,"Hours",1.596,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",28.5,4.5,28.506,4.456
 "S1","S1-04","SERUM","Metab-DrugA","Y",29.956,30,5.906,6,24,"Hours",0.762,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",30,6,29.956,5.906
 "S1","S1-04","SERUM","Metab-DrugA","Y",31.576,31.5,7.526,7.5,24,"Hours",0.52,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",31.5,7.5,31.576,7.526
-"S1","S1-04","SERUM","Metab-DrugA","Y",36.116,36,12.066,12,24,"Hours",0.044,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",36,12,36.116,12.066
+"S1","S1-04","SERUM","Metab-DrugA","Y",36.116,36,12.066,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.025,"DOSE 2",25,"Years","WHITE","F","Invalid administration","",36,12,36.116,12.066
 "S1","S1-04","SERUM","Metab-DrugA","Y",47.875,47.917,-0.082,-0.083,24,"Hours",0.157,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","Invalid administration","",47.917,-0.083,47.875,-0.082
 "S1","S1-04","SERUM","Metab-DrugA","Y",48.554,48.5,0.597,0.5,24,"Hours",0.681,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",48.5,0.5,48.554,0.597
 "S1","S1-04","SERUM","Metab-DrugA","Y",49.492,49.5,1.535,1.5,24,"Hours",1.698,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",49.5,1.5,49.492,1.535
@@ -814,7 +655,7 @@
 "S1","S1-04","SERUM","Metab-DrugA","Y",52.385,52.5,4.428,4.5,24,"Hours",1.803,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",52.5,4.5,52.385,4.428
 "S1","S1-04","SERUM","Metab-DrugA","Y",54.001,54,6.044,6,24,"Hours",0.756,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",54,6,54.001,6.044
 "S1","S1-04","SERUM","Metab-DrugA","Y",55.451,55.5,7.494,7.5,24,"Hours",0.317,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",55.5,7.5,55.451,7.494
-"S1","S1-04","SERUM","Metab-DrugA","Y",59.951,60,11.994,12,24,"Hours",0.002,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",60,12,59.951,11.994
+"S1","S1-04","SERUM","Metab-DrugA","Y",59.951,60,11.994,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.048,"DOSE 3",25,"Years","WHITE","F","","",60,12,59.951,11.994
 "S1","S1-04","SERUM","Metab-DrugA","Y",71.831,71.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",71.917,-0.083,71.831,-0.083
 "S1","S1-04","SERUM","Metab-DrugA","Y",72.411,72.5,0.498,0.5,24,"Hours",0.569,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",72.5,0.5,72.411,0.498
 "S1","S1-04","SERUM","Metab-DrugA","Y",73.406,73.5,1.492,1.5,24,"Hours",1.646,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.943,"DOSE 4",25,"Years","WHITE","F","","",73.5,1.5,73.406,1.492
@@ -833,7 +674,7 @@
 "S1","S1-04","SERUM","Metab-DrugA","Y",102.101,102,5.981,6,24,"Hours",0.811,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",102,6,102.101,5.981
 "S1","S1-04","SERUM","Metab-DrugA","Y",103.744,103.5,7.624,7.5,24,"Hours",0.419,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",103.5,7.5,103.744,7.624
 "S1","S1-04","SERUM","Metab-DrugA","Y",108.121,108,12.001,12,24,"Hours",0.12,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.072,"DOSE 5",25,"Years","WHITE","F","","",108,12,108.121,12.001
-"S1","S1-04","SERUM","Metab-DrugA","Y",119.935,119.917,-0.085,-0.083,24,"Hours",0.008,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",119.917,-0.083,119.935,-0.085
+"S1","S1-04","SERUM","Metab-DrugA","Y",119.935,119.917,-0.085,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",119.917,-0.083,119.935,-0.085
 "S1","S1-04","SERUM","Metab-DrugA","Y",120.582,120.5,0.562,0.5,24,"Hours",0.604,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",120.5,0.5,120.582,0.562
 "S1","S1-04","SERUM","Metab-DrugA","Y",121.497,121.5,1.477,1.5,24,"Hours",1.525,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",121.5,1.5,121.497,1.477
 "S1","S1-04","SERUM","Metab-DrugA","Y",121.53,121.5,1.51,1.5,24,"Hours",1.608,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.97,"DOSE 6",25,"Years","WHITE","F","","",121.5,1.5,121.53,1.51
@@ -850,8 +691,8 @@
 "S1","S1-04","SERUM","Metab-DrugA","Y",148.535,148.5,4.527,4.5,24,"Hours",1.538,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",148.5,4.5,148.535,4.527
 "S1","S1-04","SERUM","Metab-DrugA","Y",149.983,150,5.974,6,24,"Hours",0.857,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",150,6,149.983,5.974
 "S1","S1-04","SERUM","Metab-DrugA","Y",151.541,151.5,7.533,7.5,24,"Hours",0.303,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",151.5,7.5,151.541,7.533
-"S1","S1-04","SERUM","Metab-DrugA","Y",155.942,156,11.934,12,24,"Hours",0.021,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",156,12,155.942,11.934
-"S1","S1-04","SERUM","Metab-DrugA","Y",167.958,167.917,-0.084,-0.083,24,"Hours",0.008,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",167.917,-0.083,167.958,-0.084
+"S1","S1-04","SERUM","Metab-DrugA","Y",155.942,156,11.934,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",2.99,"DOSE 7",25,"Years","WHITE","F","","",156,12,155.942,11.934
+"S1","S1-04","SERUM","Metab-DrugA","Y",167.958,167.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",167.917,-0.083,167.958,-0.084
 "S1","S1-04","SERUM","Metab-DrugA","Y",168.574,168.5,0.532,0.5,24,"Hours",0.631,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",168.5,0.5,168.574,0.532
 "S1","S1-04","SERUM","Metab-DrugA","Y",169.595,169.5,1.552,1.5,24,"Hours",1.622,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",169.5,1.5,169.595,1.552
 "S1","S1-04","SERUM","Metab-DrugA","Y",169.618,169.5,1.576,1.5,24,"Hours",1.764,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, Infusion",10,"mg","INTRAVENOUS DRIP",3.076,"DOSE 8",25,"Years","WHITE","F","","",169.5,1.5,169.618,1.576
@@ -868,7 +709,7 @@
 "S1","S1-05","SERUM","DrugA","",4.448,4.5,4.448,4.5,24,"Hours",1.978,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",4.5,4.5,4.448,4.448
 "S1","S1-05","SERUM","DrugA","",5.996,6,5.996,6,24,"Hours",0.818,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",6,6,5.996,5.996
 "S1","S1-05","SERUM","DrugA","",7.513,7.5,7.513,7.5,24,"Hours",0.291,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",7.5,7.5,7.513,7.513
-"S1","S1-05","SERUM","DrugA","",12.082,12,12.082,12,24,"Hours",0.008,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",12,12,12.082,12.082
+"S1","S1-05","SERUM","DrugA","",12.082,12,12.082,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",12,12,12.082,12.082
 "S1","S1-05","SERUM","DrugA","",23.936,23.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",23.917,-0.083,23.936,-0.082
 "S1","S1-05","SERUM","DrugA","",24.443,24.5,0.425,0.5,24,"Hours",0.569,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",24.5,0.5,24.443,0.425
 "S1","S1-05","SERUM","DrugA","",25.436,25.5,1.418,1.5,24,"Hours",1.662,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",25.5,1.5,25.436,1.418
@@ -905,7 +746,7 @@
 "S1","S1-05","SERUM","DrugA","",102.212,102,6.019,6,24,"Hours",0.675,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",102,6,102.212,6.019
 "S1","S1-05","SERUM","DrugA","",103.651,103.5,7.458,7.5,24,"Hours",0.331,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",103.5,7.5,103.651,7.458
 "S1","S1-05","SERUM","DrugA","",108.24,108,12.046,12,24,"Hours",0.178,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",108,12,108.24,12.046
-"S1","S1-05","SERUM","DrugA","",119.819,119.917,-0.082,-0.083,24,"Hours",0.032,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",119.917,-0.083,119.819,-0.082
+"S1","S1-05","SERUM","DrugA","",119.819,119.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",119.917,-0.083,119.819,-0.082
 "S1","S1-05","SERUM","DrugA","",120.472,120.5,0.57,0.5,24,"Hours",0.677,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",120.5,0.5,120.472,0.57
 "S1","S1-05","SERUM","DrugA","",121.34,121.5,1.439,1.5,24,"Hours",1.882,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",121.5,1.5,121.34,1.439
 "S1","S1-05","SERUM","DrugA","",121.445,121.5,1.544,1.5,24,"Hours",1.855,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",121.5,1.5,121.445,1.544
@@ -913,7 +754,7 @@
 "S1","S1-05","SERUM","DrugA","",124.362,124.5,4.46,4.5,24,"Hours",1.791,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",124.5,4.5,124.362,4.46
 "S1","S1-05","SERUM","DrugA","",125.887,126,5.985,6,24,"Hours",0.866,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",126,6,125.887,5.985
 "S1","S1-05","SERUM","DrugA","",127.314,127.5,7.412,7.5,24,"Hours",0.493,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",127.5,7.5,127.314,7.412
-"S1","S1-05","SERUM","DrugA","",131.932,132,12.03,12,24,"Hours",0.023,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",132,12,131.932,12.03
+"S1","S1-05","SERUM","DrugA","",131.932,132,12.03,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",132,12,131.932,12.03
 "S1","S1-05","SERUM","DrugA","",143.864,143.917,-0.082,-0.083,24,"Hours",0.069,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",143.917,-0.083,143.864,-0.082
 "S1","S1-05","SERUM","DrugA","",144.586,144.5,0.64,0.5,24,"Hours",0.702,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",144.5,0.5,144.586,0.64
 "S1","S1-05","SERUM","DrugA","",145.418,145.5,1.471,1.5,24,"Hours",1.933,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",145.5,1.5,145.418,1.471
@@ -922,7 +763,7 @@
 "S1","S1-05","SERUM","DrugA","",148.434,148.5,4.488,4.5,24,"Hours",1.819,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",148.5,4.5,148.434,4.488
 "S1","S1-05","SERUM","DrugA","",150.007,150,6.061,6,24,"Hours",0.824,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",150,6,150.007,6.061
 "S1","S1-05","SERUM","DrugA","",151.428,151.5,7.482,7.5,24,"Hours",0.436,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",151.5,7.5,151.428,7.482
-"S1","S1-05","SERUM","DrugA","",155.865,156,11.918,12,24,"Hours",0.035,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",156,12,155.865,11.918
+"S1","S1-05","SERUM","DrugA","",155.865,156,11.918,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",156,12,155.865,11.918
 "S1","S1-05","SERUM","DrugA","",167.903,167.917,-0.083,-0.083,24,"Hours",0.085,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",167.917,-0.083,167.903,-0.083
 "S1","S1-05","SERUM","DrugA","",168.493,168.5,0.507,0.5,24,"Hours",0.716,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",168.5,0.5,168.493,0.507
 "S1","S1-05","SERUM","DrugA","",169.508,169.5,1.522,1.5,24,"Hours",2.014,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",169.5,1.5,169.508,1.522
@@ -931,79 +772,39 @@
 "S1","S1-05","SERUM","DrugA","",172.426,172.5,4.44,4.5,24,"Hours",1.949,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",172.5,4.5,172.426,4.44
 "S1","S1-05","SERUM","DrugA","",173.976,174,5.99,6,24,"Hours",0.861,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",174,6,173.976,5.99
 "S1","S1-05","SERUM","DrugA","",175.448,175.5,7.462,7.5,24,"Hours",0.42,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",175.5,7.5,175.448,7.462
-"S1","S1-05","SERUM","DrugA","",179.954,180,11.968,12,24,"Hours",0.007,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",180,12,179.954,11.968
-"S1","S1-05","URINE","DrugA","",-0.084,-0.083,-0.084,-0.083,24,"Hours",0.063,"mg/mL",76,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",1.917,0.917,1.9,0.8
+"S1","S1-05","SERUM","DrugA","",179.954,180,11.968,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",180,12,179.954,11.968
 "S1","S1-05","URINE","DrugA","",0.515,0.5,0.515,0.5,24,"Hours",0.61,"mg/mL",112,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",2.5,1.5,2.7,1.4
-"S1","S1-05","URINE","DrugA","",1.479,1.5,1.479,1.5,24,"Hours",1.752,"mg/mL",97,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",3.5,2.5,3.4,2.6
-"S1","S1-05","URINE","DrugA","",1.566,1.5,1.566,1.5,24,"Hours",1.95,"mg/mL",69,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",3.5,2.5,3.5,2.5
 "S1","S1-05","URINE","DrugA","",3.032,3,3.032,3,24,"Hours",3.66,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",5,4,4.8,4.1
-"S1","S1-05","URINE","DrugA","",4.448,4.5,4.448,4.5,24,"Hours",1.978,"mg/mL",132,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",6.5,5.5,6.4,5.6
 "S1","S1-05","URINE","DrugA","",5.996,6,5.996,6,24,"Hours",0.818,"mg/mL",94,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",8,7,8,7
-"S1","S1-05","URINE","DrugA","",7.513,7.5,7.513,7.5,24,"Hours",0.291,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",9.5,8.5,9.5,8.6
-"S1","S1-05","URINE","DrugA","",12.082,12,12.082,12,24,"Hours",0.008,"mg/mL",94,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",14,13,13.9,13
-"S1","S1-05","URINE","DrugA","",23.936,23.917,-0.082,-0.083,24,"Hours",0,"mg/mL",103,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",25.917,0.917,25.9,1.1
+"S1","S1-05","URINE","DrugA","",12.082,12,12.082,12,24,"Hours",0,"mg/mL",94,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",14,13,13.9,13
 "S1","S1-05","URINE","DrugA","",24.443,24.5,0.425,0.5,24,"Hours",0.569,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",26.5,1.5,26.5,1.3
-"S1","S1-05","URINE","DrugA","",25.436,25.5,1.418,1.5,24,"Hours",1.662,"mg/mL",129,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",27.5,2.5,27.6,2.4
-"S1","S1-05","URINE","DrugA","",25.502,25.5,1.484,1.5,24,"Hours",2.001,"mg/mL",110,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",27.5,2.5,27.5,2.6
 "S1","S1-05","URINE","DrugA","",26.934,27,2.916,3,24,"Hours",3.831,"mg/mL",103,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",29,4,29.1,3.9
-"S1","S1-05","URINE","DrugA","",28.466,28.5,4.448,4.5,24,"Hours",1.869,"mg/mL",125,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",30.5,5.5,30.4,5.3
 "S1","S1-05","URINE","DrugA","",30.056,30,6.039,6,24,"Hours",0.843,"mg/mL",104,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",32,7,31.9,7.3
-"S1","S1-05","URINE","DrugA","",31.446,31.5,7.428,7.5,24,"Hours",0.323,"mg/mL",85,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",33.5,8.5,33.5,8.5
 "S1","S1-05","URINE","DrugA","",36.031,36,12.013,12,24,"Hours",0.069,"mg/mL",115,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.932,"DOSE 2",30,"Years","WHITE","M","","",38,13,38.2,13.1
-"S1","S1-05","URINE","DrugA","",48.035,47.917,-0.083,-0.083,24,"Hours",0.09,"mg/mL",100,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",49.917,0.917,49.9,1.1
 "S1","S1-05","URINE","DrugA","",48.623,48.5,0.505,0.5,24,"Hours",0.65,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",50.5,1.5,50.5,1.5
-"S1","S1-05","URINE","DrugA","",49.573,49.5,1.455,1.5,24,"Hours",1.817,"mg/mL",108,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",51.5,2.5,51.6,2.4
-"S1","S1-05","URINE","DrugA","",49.677,49.5,1.558,1.5,24,"Hours",2.008,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",51.5,2.5,51.4,2.6
 "S1","S1-05","URINE","DrugA","",51.122,51,3.004,3,24,"Hours",3.81,"mg/mL",80,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",53,4,53.1,3.9
-"S1","S1-05","URINE","DrugA","",52.593,52.5,4.474,4.5,24,"Hours",1.903,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",54.5,5.5,54.6,5.6
 "S1","S1-05","URINE","DrugA","",54.17,54,6.052,6,24,"Hours",0.851,"mg/mL",55,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",56,7,56,7.1
-"S1","S1-05","URINE","DrugA","",55.616,55.5,7.498,7.5,24,"Hours",0.497,"mg/mL",104,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",57.5,8.5,57.6,8.6
 "S1","S1-05","URINE","DrugA","",60.077,60,11.958,12,24,"Hours",0,"mg/mL",111,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",62,13,62.1,13
-"S1","S1-05","URINE","DrugA","",71.766,71.917,-0.082,-0.083,24,"Hours",0,"mg/mL",71,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",73.917,0.917,73.9,0.7
 "S1","S1-05","URINE","DrugA","",72.309,72.5,0.46,0.5,24,"Hours",0.519,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",74.5,1.5,74.4,1.4
-"S1","S1-05","URINE","DrugA","",73.389,73.5,1.541,1.5,24,"Hours",1.932,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",75.5,2.5,75.6,2.6
-"S1","S1-05","URINE","DrugA","",73.438,73.5,1.59,1.5,24,"Hours",1.883,"mg/mL",100,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",75.5,2.5,75.6,2.4
 "S1","S1-05","URINE","DrugA","",74.842,75,2.993,3,24,"Hours",3.733,"mg/mL",114,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",77,4,77.1,4
-"S1","S1-05","URINE","DrugA","",76.319,76.5,4.47,4.5,24,"Hours",1.897,"mg/mL",96,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",78.5,5.5,78.6,5.4
 "S1","S1-05","URINE","DrugA","",77.798,78,5.949,6,24,"Hours",0.858,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",80,7,80,6.9
-"S1","S1-05","URINE","DrugA","",79.378,79.5,7.529,7.5,24,"Hours",0.445,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",81.5,8.5,81.4,8.5
 "S1","S1-05","URINE","DrugA","",83.894,84,12.045,12,24,"Hours",0.065,"mg/mL",116,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",86,13,86.1,13
-"S1","S1-05","URINE","DrugA","",96.11,95.917,-0.084,-0.083,24,"Hours",0,"mg/mL",101,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",97.917,0.917,97.9,0.8
 "S1","S1-05","URINE","DrugA","",96.596,96.5,0.403,0.5,24,"Hours",0.605,"mg/mL",76,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",98.5,1.5,98.7,1.5
-"S1","S1-05","URINE","DrugA","",97.67,97.5,1.476,1.5,24,"Hours",2.001,"mg/mL",96,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",99.5,2.5,99.4,2.6
-"S1","S1-05","URINE","DrugA","",97.714,97.5,1.52,1.5,24,"Hours",2.017,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",99.5,2.5,99.5,2.5
 "S1","S1-05","URINE","DrugA","",99.188,99,2.995,3,24,"Hours",3.562,"mg/mL",120,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",101,4,101,3.9
-"S1","S1-05","URINE","DrugA","",100.636,100.5,4.442,4.5,24,"Hours",1.588,"mg/mL",115,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",102.5,5.5,102.6,5.6
 "S1","S1-05","URINE","DrugA","",102.212,102,6.019,6,24,"Hours",0.675,"mg/mL",103,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",104,7,104.1,7.2
-"S1","S1-05","URINE","DrugA","",103.651,103.5,7.458,7.5,24,"Hours",0.331,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",105.5,8.5,105.5,8.6
 "S1","S1-05","URINE","DrugA","",108.24,108,12.046,12,24,"Hours",0.178,"mg/mL",99,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.88,"DOSE 5",30,"Years","WHITE","M","","",110,13,110,13
-"S1","S1-05","URINE","DrugA","",119.819,119.917,-0.082,-0.083,24,"Hours",0.032,"mg/mL",121,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",121.917,0.917,121.9,1.1
 "S1","S1-05","URINE","DrugA","",120.472,120.5,0.57,0.5,24,"Hours",0.677,"mg/mL",115,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",122.5,1.5,122.6,1.5
-"S1","S1-05","URINE","DrugA","",121.34,121.5,1.439,1.5,24,"Hours",1.882,"mg/mL",100,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",123.5,2.5,123.5,2.3
-"S1","S1-05","URINE","DrugA","",121.445,121.5,1.544,1.5,24,"Hours",1.855,"mg/mL",106,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",123.5,2.5,123.4,2.1
 "S1","S1-05","URINE","DrugA","",122.812,123,2.91,3,24,"Hours",3.6,"mg/mL",84,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",125,4,124.9,4
-"S1","S1-05","URINE","DrugA","",124.362,124.5,4.46,4.5,24,"Hours",1.791,"mg/mL",91,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",126.5,5.5,126.7,5.5
 "S1","S1-05","URINE","DrugA","",125.887,126,5.985,6,24,"Hours",0.866,"mg/mL",95,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",128,7,127.9,6.9
-"S1","S1-05","URINE","DrugA","",127.314,127.5,7.412,7.5,24,"Hours",0.493,"mg/mL",92,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",129.5,8.5,129.6,8.6
-"S1","S1-05","URINE","DrugA","",131.932,132,12.03,12,24,"Hours",0.023,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",134,13,134.2,13.3
-"S1","S1-05","URINE","DrugA","",143.864,143.917,-0.082,-0.083,24,"Hours",0.069,"mg/mL",92,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",145.917,0.917,145.9,0.9
+"S1","S1-05","URINE","DrugA","",131.932,132,12.03,12,24,"Hours",0,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.035,"DOSE 6",30,"Years","WHITE","M","","",134,13,134.2,13.3
 "S1","S1-05","URINE","DrugA","",144.586,144.5,0.64,0.5,24,"Hours",0.702,"mg/mL",121,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",146.5,1.5,146.6,1.5
-"S1","S1-05","URINE","DrugA","",145.418,145.5,1.471,1.5,24,"Hours",1.933,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",147.5,2.5,147.6,2.5
-"S1","S1-05","URINE","DrugA","",145.533,145.5,1.586,1.5,24,"Hours",2.206,"mg/mL",109,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",147.5,2.5,147.5,2.5
 "S1","S1-05","URINE","DrugA","",147.022,147,3.075,3,24,"Hours",3.539,"mg/mL",94,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",149,4,149.1,4.1
-"S1","S1-05","URINE","DrugA","",148.434,148.5,4.488,4.5,24,"Hours",1.819,"mg/mL",112,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",150.5,5.5,150.3,5.5
 "S1","S1-05","URINE","DrugA","",150.007,150,6.061,6,24,"Hours",0.824,"mg/mL",89,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",152,7,151.9,7
-"S1","S1-05","URINE","DrugA","",151.428,151.5,7.482,7.5,24,"Hours",0.436,"mg/mL",97,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",153.5,8.5,153.4,8.5
-"S1","S1-05","URINE","DrugA","",155.865,156,11.918,12,24,"Hours",0.035,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",158,13,158,13.3
-"S1","S1-05","URINE","DrugA","",167.903,167.917,-0.083,-0.083,24,"Hours",0.085,"mg/mL",104,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",169.917,0.917,169.9,0.9
+"S1","S1-05","URINE","DrugA","",155.865,156,11.918,12,24,"Hours",0,"mg/mL",102,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",158,13,158,13.3
 "S1","S1-05","URINE","DrugA","",168.493,168.5,0.507,0.5,24,"Hours",0.716,"mg/mL",89,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",170.5,1.5,170.4,1.5
-"S1","S1-05","URINE","DrugA","",169.508,169.5,1.522,1.5,24,"Hours",2.014,"mg/mL",84,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",171.5,2.5,171.5,2.4
-"S1","S1-05","URINE","DrugA","",169.537,169.5,1.551,1.5,24,"Hours",2.115,"mg/mL",113,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",171.5,2.5,171.6,2.4
 "S1","S1-05","URINE","DrugA","",170.971,171,2.985,3,24,"Hours",3.812,"mg/mL",112,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",173,4,173.1,4
-"S1","S1-05","URINE","DrugA","",172.426,172.5,4.44,4.5,24,"Hours",1.949,"mg/mL",105,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",174.5,5.5,174.4,5.4
 "S1","S1-05","URINE","DrugA","",173.976,174,5.99,6,24,"Hours",0.861,"mg/mL",92,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",176,7,176.1,6.9
-"S1","S1-05","URINE","DrugA","",175.448,175.5,7.462,7.5,24,"Hours",0.42,"mg/mL",85,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",177.5,8.5,177.7,8.5
-"S1","S1-05","URINE","DrugA","",179.954,180,11.968,12,24,"Hours",0.007,"mg/mL",118,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",182,13,182.1,12.9
+"S1","S1-05","URINE","DrugA","",179.954,180,11.968,12,24,"Hours",0,"mg/mL",118,"mL","DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",182,13,182.1,12.9
 "S1","S1-05","SERUM","Metab-DrugA","Y",-0.084,-0.083,-0.084,-0.083,24,"Hours",0.087,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",-0.083,-0.083,-0.084,-0.084
 "S1","S1-05","SERUM","Metab-DrugA","Y",0.515,0.5,0.515,0.5,24,"Hours",0.258,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",0.5,0.5,0.515,0.515
 "S1","S1-05","SERUM","Metab-DrugA","Y",1.479,1.5,1.479,1.5,24,"Hours",0.741,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.065,"DOSE 1",30,"Years","WHITE","M","","",1.5,1.5,1.479,1.479
@@ -1031,7 +832,7 @@
 "S1","S1-05","SERUM","Metab-DrugA","Y",54.17,54,6.052,6,24,"Hours",0.316,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",54,6,54.17,6.052
 "S1","S1-05","SERUM","Metab-DrugA","Y",55.616,55.5,7.498,7.5,24,"Hours",0.142,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",55.5,7.5,55.616,7.498
 "S1","S1-05","SERUM","Metab-DrugA","Y",60.077,60,11.958,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.027,"DOSE 3",30,"Years","WHITE","M","","",60,12,60.077,11.958
-"S1","S1-05","SERUM","Metab-DrugA","Y",71.766,71.917,-0.082,-0.083,24,"Hours",0.046,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",71.917,-0.083,71.766,-0.082
+"S1","S1-05","SERUM","Metab-DrugA","Y",71.766,71.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",71.917,-0.083,71.766,-0.082
 "S1","S1-05","SERUM","Metab-DrugA","Y",72.309,72.5,0.46,0.5,24,"Hours",0.224,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",72.5,0.5,72.309,0.46
 "S1","S1-05","SERUM","Metab-DrugA","Y",73.389,73.5,1.541,1.5,24,"Hours",0.721,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",73.5,1.5,73.389,1.541
 "S1","S1-05","SERUM","Metab-DrugA","Y",73.438,73.5,1.59,1.5,24,"Hours",0.778,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",3.047,"DOSE 4",30,"Years","WHITE","M","","",73.5,1.5,73.438,1.59
@@ -1066,7 +867,7 @@
 "S1","S1-05","SERUM","Metab-DrugA","Y",148.434,148.5,4.488,4.5,24,"Hours",0.825,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",148.5,4.5,148.434,4.488
 "S1","S1-05","SERUM","Metab-DrugA","Y",150.007,150,6.061,6,24,"Hours",0.321,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",150,6,150.007,6.061
 "S1","S1-05","SERUM","Metab-DrugA","Y",151.428,151.5,7.482,7.5,24,"Hours",0.183,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",151.5,7.5,151.428,7.482
-"S1","S1-05","SERUM","Metab-DrugA","Y",155.865,156,11.918,12,24,"Hours",0.005,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",156,12,155.865,11.918
+"S1","S1-05","SERUM","Metab-DrugA","Y",155.865,156,11.918,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.953,"DOSE 7",30,"Years","WHITE","M","","",156,12,155.865,11.918
 "S1","S1-05","SERUM","Metab-DrugA","Y",167.903,167.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",167.917,-0.083,167.903,-0.083
 "S1","S1-05","SERUM","Metab-DrugA","Y",168.493,168.5,0.507,0.5,24,"Hours",0.335,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",168.5,0.5,168.493,0.507
 "S1","S1-05","SERUM","Metab-DrugA","Y",169.508,169.5,1.522,1.5,24,"Hours",0.81,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, Infusion",5,"mg","INTRAVENOUS DRIP",2.996,"DOSE 8",30,"Years","WHITE","M","","",169.5,1.5,169.508,1.522
@@ -1085,7 +886,7 @@
 "S1","S1-06","SERUM","DrugA","",6,6,6,6,24,"Hours",0.389,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",6,6,6,6
 "S1","S1-06","SERUM","DrugA","",7.506,7.5,7.506,7.5,24,"Hours",0.234,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",7.5,7.5,7.506,7.506
 "S1","S1-06","SERUM","DrugA","",12.057,12,12.057,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",12,12,12.057,12.057
-"S1","S1-06","SERUM","DrugA","",23.871,23.917,-0.083,-0.083,24,"Hours",0.019,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",23.917,-0.083,23.871,-0.083
+"S1","S1-06","SERUM","DrugA","",23.871,23.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",23.917,-0.083,23.871,-0.083
 "S1","S1-06","SERUM","DrugA","",24.478,24.5,0.525,0.5,24,"Hours",8.485,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",24.5,0.5,24.478,0.525
 "S1","S1-06","SERUM","DrugA","",25.502,25.5,1.549,1.5,24,"Hours",5.118,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",25.5,1.5,25.502,1.549
 "S1","S1-06","SERUM","DrugA","",25.515,25.5,1.562,1.5,24,"Hours",5.047,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",25.5,1.5,25.515,1.562
@@ -1093,7 +894,7 @@
 "S1","S1-06","SERUM","DrugA","",28.467,28.5,4.514,4.5,24,"Hours",1.081,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",28.5,4.5,28.467,4.514
 "S1","S1-06","SERUM","DrugA","",29.945,30,5.991,6,24,"Hours",0.557,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",30,6,29.945,5.991
 "S1","S1-06","SERUM","DrugA","",31.446,31.5,7.493,7.5,24,"Hours",0.341,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",31.5,7.5,31.446,7.493
-"S1","S1-06","SERUM","DrugA","",35.901,36,11.947,12,24,"Hours",0.036,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",36,12,35.901,11.947
+"S1","S1-06","SERUM","DrugA","",35.901,36,11.947,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",36,12,35.901,11.947
 "S1","S1-06","SERUM","DrugA","",47.901,47.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",35,"Years","ASIAN","F","","",47.917,-0.083,47.901,-0.083
 "S1","S1-06","SERUM","DrugA","",48.569,48.5,0.585,0.5,24,"Hours",8.251,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",35,"Years","ASIAN","F","","",48.5,0.5,48.569,0.585
 "S1","S1-06","SERUM","DrugA","",49.456,49.5,1.472,1.5,24,"Hours",5.315,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",35,"Years","ASIAN","F","","",49.5,1.5,49.456,1.472
@@ -1129,7 +930,7 @@
 "S1","S1-06","SERUM","DrugA","",124.495,124.5,4.472,4.5,24,"Hours",1.201,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",124.5,4.5,124.495,4.472
 "S1","S1-06","SERUM","DrugA","",125.996,126,5.973,6,24,"Hours",0.515,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",126,6,125.996,5.973
 "S1","S1-06","SERUM","DrugA","",127.509,127.5,7.486,7.5,24,"Hours",0.355,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",127.5,7.5,127.509,7.486
-"S1","S1-06","SERUM","DrugA","",132.067,132,12.044,12,24,"Hours",0.041,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",132,12,132.067,12.044
+"S1","S1-06","SERUM","DrugA","",132.067,132,12.044,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",132,12,132.067,12.044
 "S1","S1-06","SERUM","DrugA","",144.06,143.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",143.917,-0.083,144.06,-0.084
 "S1","S1-06","SERUM","DrugA","",144.655,144.5,0.511,0.5,24,"Hours",8.44,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",144.5,0.5,144.655,0.511
 "S1","S1-06","SERUM","DrugA","",145.611,145.5,1.467,1.5,24,"Hours",5.264,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",145.5,1.5,145.611,1.467
@@ -1147,8 +948,8 @@
 "S1","S1-06","SERUM","DrugA","",172.608,172.5,4.441,4.5,24,"Hours",1.163,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",172.5,4.5,172.608,4.441
 "S1","S1-06","SERUM","DrugA","",174.171,174,6.004,6,24,"Hours",0.627,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",174,6,174.171,6.004
 "S1","S1-06","SERUM","DrugA","",175.719,175.5,7.552,7.5,24,"Hours",0.289,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",175.5,7.5,175.719,7.552
-"S1","S1-06","SERUM","DrugA","",180.272,180,12.105,12,24,"Hours",0.039,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",180,12,180.272,12.105
-"S1","S1-06","SERUM","Metab-DrugA","Y",-0.084,-0.083,-0.084,-0.083,24,"Hours",0.043,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",-0.083,-0.083,-0.084,-0.084
+"S1","S1-06","SERUM","DrugA","",180.272,180,12.105,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",180,12,180.272,12.105
+"S1","S1-06","SERUM","Metab-DrugA","Y",-0.084,-0.083,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",-0.083,-0.083,-0.084,-0.084
 "S1","S1-06","SERUM","Metab-DrugA","Y",0.488,0.5,0.488,0.5,24,"Hours",8.623,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",0.5,0.5,0.488,0.488
 "S1","S1-06","SERUM","Metab-DrugA","Y",1.416,1.5,1.416,1.5,24,"Hours",5.455,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",1.5,1.5,1.416,1.416
 "S1","S1-06","SERUM","Metab-DrugA","Y",1.481,1.5,1.481,1.5,24,"Hours",5.223,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",1.5,1.5,1.481,1.481
@@ -1156,7 +957,7 @@
 "S1","S1-06","SERUM","Metab-DrugA","Y",4.528,4.5,4.528,4.5,24,"Hours",1.145,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",4.5,4.5,4.528,4.528
 "S1","S1-06","SERUM","Metab-DrugA","Y",6,6,6,6,24,"Hours",0.524,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",6,6,6,6
 "S1","S1-06","SERUM","Metab-DrugA","Y",7.506,7.5,7.506,7.5,24,"Hours",0.259,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",7.5,7.5,7.506,7.506
-"S1","S1-06","SERUM","Metab-DrugA","Y",12.057,12,12.057,12,24,"Hours",0.016,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",12,12,12.057,12.057
+"S1","S1-06","SERUM","Metab-DrugA","Y",12.057,12,12.057,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",35,"Years","ASIAN","F","","",12,12,12.057,12.057
 "S1","S1-06","SERUM","Metab-DrugA","Y",23.871,23.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",23.917,-0.083,23.871,-0.083
 "S1","S1-06","SERUM","Metab-DrugA","Y",24.478,24.5,0.525,0.5,24,"Hours",8.434,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",24.5,0.5,24.478,0.525
 "S1","S1-06","SERUM","Metab-DrugA","Y",25.502,25.5,1.549,1.5,24,"Hours",5.078,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",35,"Years","ASIAN","F","","",25.5,1.5,25.502,1.549
@@ -1192,7 +993,7 @@
 "S1","S1-06","SERUM","Metab-DrugA","Y",100.526,100.5,4.586,4.5,24,"Hours",1.056,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",35,"Years","ASIAN","F","","",100.5,4.5,100.526,4.586
 "S1","S1-06","SERUM","Metab-DrugA","Y",101.986,102,6.046,6,24,"Hours",0.548,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",35,"Years","ASIAN","F","","",102,6,101.986,6.046
 "S1","S1-06","SERUM","Metab-DrugA","Y",103.414,103.5,7.474,7.5,24,"Hours",0.275,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",35,"Years","ASIAN","F","","",103.5,7.5,103.414,7.474
-"S1","S1-06","SERUM","Metab-DrugA","Y",107.831,108,11.891,12,24,"Hours",0.047,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",35,"Years","ASIAN","F","","",108,12,107.831,11.891
+"S1","S1-06","SERUM","Metab-DrugA","Y",107.831,108,11.891,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",35,"Years","ASIAN","F","","",108,12,107.831,11.891
 "S1","S1-06","SERUM","Metab-DrugA","Y",119.939,119.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",119.917,-0.083,119.939,-0.084
 "S1","S1-06","SERUM","Metab-DrugA","Y",120.496,120.5,0.473,0.5,24,"Hours",8.68,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",120.5,0.5,120.496,0.473
 "S1","S1-06","SERUM","Metab-DrugA","Y",121.479,121.5,1.456,1.5,24,"Hours",5.325,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",35,"Years","ASIAN","F","","",121.5,1.5,121.479,1.456
@@ -1210,7 +1011,7 @@
 "S1","S1-06","SERUM","Metab-DrugA","Y",148.631,148.5,4.487,4.5,24,"Hours",1.125,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",148.5,4.5,148.631,4.487
 "S1","S1-06","SERUM","Metab-DrugA","Y",150.145,150,6.001,6,24,"Hours",0.433,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",150,6,150.145,6.001
 "S1","S1-06","SERUM","Metab-DrugA","Y",151.646,151.5,7.502,7.5,24,"Hours",0.288,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",151.5,7.5,151.646,7.502
-"S1","S1-06","SERUM","Metab-DrugA","Y",156.11,156,11.966,12,24,"Hours",0.007,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",156,12,156.11,11.966
+"S1","S1-06","SERUM","Metab-DrugA","Y",156.11,156,11.966,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",35,"Years","ASIAN","F","","",156,12,156.11,11.966
 "S1","S1-06","SERUM","Metab-DrugA","Y",168.082,167.917,-0.085,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",167.917,-0.083,168.082,-0.085
 "S1","S1-06","SERUM","Metab-DrugA","Y",168.592,168.5,0.425,0.5,24,"Hours",8.837,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",168.5,0.5,168.592,0.425
 "S1","S1-06","SERUM","Metab-DrugA","Y",169.584,169.5,1.417,1.5,24,"Hours",5.322,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",169.5,1.5,169.584,1.417
@@ -1219,7 +1020,7 @@
 "S1","S1-06","SERUM","Metab-DrugA","Y",172.608,172.5,4.441,4.5,24,"Hours",1.228,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",172.5,4.5,172.608,4.441
 "S1","S1-06","SERUM","Metab-DrugA","Y",174.171,174,6.004,6,24,"Hours",0.505,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",174,6,174.171,6.004
 "S1","S1-06","SERUM","Metab-DrugA","Y",175.719,175.5,7.552,7.5,24,"Hours",0.251,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",175.5,7.5,175.719,7.552
-"S1","S1-06","SERUM","Metab-DrugA","Y",180.272,180,12.105,12,24,"Hours",0.005,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",180,12,180.272,12.105
+"S1","S1-06","SERUM","Metab-DrugA","Y",180.272,180,12.105,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",35,"Years","ASIAN","F","","",180,12,180.272,12.105
 "S1","S1-07","SERUM","DrugA","",-0.085,-0.083,-0.085,-0.083,24,"Hours",0.076,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",-0.083,-0.083,-0.085,-0.085
 "S1","S1-07","SERUM","DrugA","",0.435,0.5,0.435,0.5,24,"Hours",4.426,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",0.5,0.5,0.435,0.435
 "S1","S1-07","SERUM","DrugA","",1.473,1.5,1.473,1.5,24,"Hours",2.718,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",1.5,1.5,1.473,1.473
@@ -1263,7 +1064,7 @@
 "S1","S1-07","SERUM","DrugA","",100.582,100.5,4.519,4.5,24,"Hours",0.513,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",100.5,4.5,100.582,4.519
 "S1","S1-07","SERUM","DrugA","",102.137,102,6.073,6,24,"Hours",0.289,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",102,6,102.137,6.073
 "S1","S1-07","SERUM","DrugA","",103.6,103.5,7.536,7.5,24,"Hours",0.232,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",103.5,7.5,103.6,7.536
-"S1","S1-07","SERUM","DrugA","",108.043,108,11.98,12,24,"Hours",0.04,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",108,12,108.043,11.98
+"S1","S1-07","SERUM","DrugA","",108.043,108,11.98,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",108,12,108.043,11.98
 "S1","S1-07","SERUM","DrugA","",119.787,119.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",119.917,-0.083,119.787,-0.083
 "S1","S1-07","SERUM","DrugA","",120.316,120.5,0.446,0.5,24,"Hours",4.381,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",120.5,0.5,120.316,0.446
 "S1","S1-07","SERUM","DrugA","",121.312,121.5,1.442,1.5,24,"Hours",2.716,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",121.5,1.5,121.312,1.442
@@ -1299,8 +1100,8 @@
 "S1","S1-07","SERUM","Metab-DrugA","Y",4.576,4.5,4.576,4.5,24,"Hours",0.574,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",4.5,4.5,4.576,4.576
 "S1","S1-07","SERUM","Metab-DrugA","Y",6.07,6,6.07,6,24,"Hours",0.301,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",6,6,6.07,6.07
 "S1","S1-07","SERUM","Metab-DrugA","Y",7.52,7.5,7.52,7.5,24,"Hours",0.18,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",7.5,7.5,7.52,7.52
-"S1","S1-07","SERUM","Metab-DrugA","Y",11.893,12,11.893,12,24,"Hours",0.01,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",12,12,11.893,11.893
-"S1","S1-07","SERUM","Metab-DrugA","Y",23.886,23.917,-0.083,-0.083,24,"Hours",0.045,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",23.917,-0.083,23.886,-0.083
+"S1","S1-07","SERUM","Metab-DrugA","Y",11.893,12,11.893,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",50,"Years","ASIAN","F","","",12,12,11.893,11.893
+"S1","S1-07","SERUM","Metab-DrugA","Y",23.886,23.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",23.917,-0.083,23.886,-0.083
 "S1","S1-07","SERUM","Metab-DrugA","Y",24.549,24.5,0.58,0.5,24,"Hours",4.104,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",24.5,0.5,24.549,0.58
 "S1","S1-07","SERUM","Metab-DrugA","Y",25.457,25.5,1.488,1.5,24,"Hours",2.643,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",25.5,1.5,25.457,1.488
 "S1","S1-07","SERUM","Metab-DrugA","Y",25.476,25.5,1.507,1.5,24,"Hours",2.559,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",25.5,1.5,25.476,1.507
@@ -1309,7 +1110,7 @@
 "S1","S1-07","SERUM","Metab-DrugA","Y",29.965,30,5.996,6,24,"Hours",0.365,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",30,6,29.965,5.996
 "S1","S1-07","SERUM","Metab-DrugA","Y",31.502,31.5,7.533,7.5,24,"Hours",0.084,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",31.5,7.5,31.502,7.533
 "S1","S1-07","SERUM","Metab-DrugA","Y",35.942,36,11.974,12,24,"Hours",0.066,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",50,"Years","ASIAN","F","","",36,12,35.942,11.974
-"S1","S1-07","SERUM","Metab-DrugA","Y",47.931,47.917,-0.085,-0.083,24,"Hours",0.042,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",47.917,-0.083,47.931,-0.085
+"S1","S1-07","SERUM","Metab-DrugA","Y",47.931,47.917,-0.085,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",47.917,-0.083,47.931,-0.085
 "S1","S1-07","SERUM","Metab-DrugA","Y",48.576,48.5,0.561,0.5,24,"Hours",4.145,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",48.5,0.5,48.576,0.561
 "S1","S1-07","SERUM","Metab-DrugA","Y",49.493,49.5,1.478,1.5,24,"Hours",2.561,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",49.5,1.5,49.493,1.478
 "S1","S1-07","SERUM","Metab-DrugA","Y",50.988,51,2.972,3,24,"Hours",1.302,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",51,3,50.988,2.972
@@ -1317,7 +1118,7 @@
 "S1","S1-07","SERUM","Metab-DrugA","Y",54.005,54,5.99,6,24,"Hours",0.219,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",54,6,54.005,5.99
 "S1","S1-07","SERUM","Metab-DrugA","Y",55.5,55.5,7.485,7.5,24,"Hours",0.151,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",55.5,7.5,55.5,7.485
 "S1","S1-07","SERUM","Metab-DrugA","Y",60.029,60,12.014,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",50,"Years","ASIAN","F","","",60,12,60.029,12.014
-"S1","S1-07","SERUM","Metab-DrugA","Y",71.796,71.917,-0.084,-0.083,24,"Hours",0.039,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",50,"Years","ASIAN","F","","",71.917,-0.083,71.796,-0.084
+"S1","S1-07","SERUM","Metab-DrugA","Y",71.796,71.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",50,"Years","ASIAN","F","","",71.917,-0.083,71.796,-0.084
 "S1","S1-07","SERUM","Metab-DrugA","Y",72.454,72.5,0.575,0.5,24,"Hours",4.088,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",50,"Years","ASIAN","F","","",72.5,0.5,72.454,0.575
 "S1","S1-07","SERUM","Metab-DrugA","Y",73.406,73.5,1.526,1.5,24,"Hours",2.615,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",50,"Years","ASIAN","F","","",73.5,1.5,73.406,1.526
 "S1","S1-07","SERUM","Metab-DrugA","Y",73.473,73.5,1.593,1.5,24,"Hours",2.454,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",50,"Years","ASIAN","F","","",73.5,1.5,73.473,1.593
@@ -1333,9 +1134,9 @@
 "S1","S1-07","SERUM","Metab-DrugA","Y",99.081,99,3.017,3,24,"Hours",1.224,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",99,3,99.081,3.017
 "S1","S1-07","SERUM","Metab-DrugA","Y",100.582,100.5,4.519,4.5,24,"Hours",0.646,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",100.5,4.5,100.582,4.519
 "S1","S1-07","SERUM","Metab-DrugA","Y",102.137,102,6.073,6,24,"Hours",0.261,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",102,6,102.137,6.073
-"S1","S1-07","SERUM","Metab-DrugA","Y",103.6,103.5,7.536,7.5,24,"Hours",0.019,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",103.5,7.5,103.6,7.536
+"S1","S1-07","SERUM","Metab-DrugA","Y",103.6,103.5,7.536,7.5,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",103.5,7.5,103.6,7.536
 "S1","S1-07","SERUM","Metab-DrugA","Y",108.043,108,11.98,12,24,"Hours",0.063,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",50,"Years","ASIAN","F","","",108,12,108.043,11.98
-"S1","S1-07","SERUM","Metab-DrugA","Y",119.787,119.917,-0.083,-0.083,24,"Hours",0.006,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",119.917,-0.083,119.787,-0.083
+"S1","S1-07","SERUM","Metab-DrugA","Y",119.787,119.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",119.917,-0.083,119.787,-0.083
 "S1","S1-07","SERUM","Metab-DrugA","Y",120.316,120.5,0.446,0.5,24,"Hours",4.387,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",120.5,0.5,120.316,0.446
 "S1","S1-07","SERUM","Metab-DrugA","Y",121.312,121.5,1.442,1.5,24,"Hours",2.693,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",121.5,1.5,121.312,1.442
 "S1","S1-07","SERUM","Metab-DrugA","Y",121.364,121.5,1.494,1.5,24,"Hours",2.632,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",50,"Years","ASIAN","F","","",121.5,1.5,121.364,1.494
@@ -1353,7 +1154,7 @@
 "S1","S1-07","SERUM","Metab-DrugA","Y",150.14,150,5.994,6,24,"Hours",0.291,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",50,"Years","ASIAN","F","","",150,6,150.14,5.994
 "S1","S1-07","SERUM","Metab-DrugA","Y",151.768,151.5,7.622,7.5,24,"Hours",0.131,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",50,"Years","ASIAN","F","","",151.5,7.5,151.768,7.622
 "S1","S1-07","SERUM","Metab-DrugA","Y",156.12,156,11.974,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",50,"Years","ASIAN","F","","",156,12,156.12,11.974
-"S1","S1-07","SERUM","Metab-DrugA","Y",167.775,167.917,-0.082,-0.083,24,"Hours",0.048,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",167.917,-0.083,167.775,-0.082
+"S1","S1-07","SERUM","Metab-DrugA","Y",167.775,167.917,-0.082,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",167.917,-0.083,167.775,-0.082
 "S1","S1-07","SERUM","Metab-DrugA","Y",168.4,168.5,0.543,0.5,24,"Hours",4.274,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",168.5,0.5,168.4,0.543
 "S1","S1-07","SERUM","Metab-DrugA","Y",169.284,169.5,1.426,1.5,24,"Hours",2.682,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",169.5,1.5,169.284,1.426
 "S1","S1-07","SERUM","Metab-DrugA","Y",169.413,169.5,1.555,1.5,24,"Hours",2.526,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",169.5,1.5,169.413,1.555
@@ -1361,7 +1162,7 @@
 "S1","S1-07","SERUM","Metab-DrugA","Y",172.4,172.5,4.542,4.5,24,"Hours",0.47,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",172.5,4.5,172.4,4.542
 "S1","S1-07","SERUM","Metab-DrugA","Y",173.819,174,5.961,6,24,"Hours",0.271,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",174,6,173.819,5.961
 "S1","S1-07","SERUM","Metab-DrugA","Y",175.488,175.5,7.631,7.5,24,"Hours",0.07,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",175.5,7.5,175.488,7.631
-"S1","S1-07","SERUM","Metab-DrugA","Y",179.848,180,11.99,12,24,"Hours",0.046,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",180,12,179.848,11.99
+"S1","S1-07","SERUM","Metab-DrugA","Y",179.848,180,11.99,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 5 mg, bolus",5,"mg","INTRAVENOUS BOLUS",0,"DOSE 8",50,"Years","ASIAN","F","","",180,12,179.848,11.99
 "S1","S1-08","SERUM","DrugA","",-0.084,-0.083,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",60,"Years","WHITE","M","","",-0.083,-0.083,-0.084,-0.084
 "S1","S1-08","SERUM","DrugA","",0.547,0.5,0.547,0.5,24,"Hours",7.673,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",60,"Years","WHITE","M","","",0.5,0.5,0.547,0.547
 "S1","S1-08","SERUM","DrugA","",1.467,1.5,1.467,1.5,24,"Hours",4.802,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",60,"Years","WHITE","M","","",1.5,1.5,1.467,1.467
@@ -1379,8 +1180,8 @@
 "S1","S1-08","SERUM","DrugA","",28.799,28.5,4.626,4.5,24,"Hours",1.002,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",28.5,4.5,28.799,4.626
 "S1","S1-08","SERUM","DrugA","",30.167,30,5.994,6,24,"Hours",0.542,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",30,6,30.167,5.994
 "S1","S1-08","SERUM","DrugA","",31.766,31.5,7.593,7.5,24,"Hours",0.16,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",31.5,7.5,31.766,7.593
-"S1","S1-08","SERUM","DrugA","",36.079,36,11.906,12,24,"Hours",0.006,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",36,12,36.079,11.906
-"S1","S1-08","SERUM","DrugA","",47.837,47.917,-0.084,-0.083,24,"Hours",0.029,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",47.917,-0.083,47.837,-0.084
+"S1","S1-08","SERUM","DrugA","",36.079,36,11.906,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",36,12,36.079,11.906
+"S1","S1-08","SERUM","DrugA","",47.837,47.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",47.917,-0.083,47.837,-0.084
 "S1","S1-08","SERUM","DrugA","",48.412,48.5,0.491,0.5,24,"Hours",7.817,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",48.5,0.5,48.412,0.491
 "S1","S1-08","SERUM","DrugA","",49.377,49.5,1.456,1.5,24,"Hours",4.827,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",49.5,1.5,49.377,1.456
 "S1","S1-08","SERUM","DrugA","",49.48,49.5,1.559,1.5,24,"Hours",4.65,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",49.5,1.5,49.48,1.559
@@ -1388,8 +1189,8 @@
 "S1","S1-08","SERUM","DrugA","",52.33,52.5,4.408,4.5,24,"Hours",1.125,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",52.5,4.5,52.33,4.408
 "S1","S1-08","SERUM","DrugA","",53.92,54,5.999,6,24,"Hours",0.508,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",54,6,53.92,5.999
 "S1","S1-08","SERUM","DrugA","",55.381,55.5,7.46,7.5,24,"Hours",0.296,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",55.5,7.5,55.381,7.46
-"S1","S1-08","SERUM","DrugA","",59.896,60,11.975,12,24,"Hours",0.01,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",60,12,59.896,11.975
-"S1","S1-08","SERUM","DrugA","",71.96,71.917,-0.084,-0.083,24,"Hours",0.003,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",71.917,-0.083,71.96,-0.084
+"S1","S1-08","SERUM","DrugA","",59.896,60,11.975,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",60,12,59.896,11.975
+"S1","S1-08","SERUM","DrugA","",71.96,71.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",71.917,-0.083,71.96,-0.084
 "S1","S1-08","SERUM","DrugA","",72.508,72.5,0.464,0.5,24,"Hours",7.931,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",72.5,0.5,72.508,0.464
 "S1","S1-08","SERUM","DrugA","",73.445,73.5,1.401,1.5,24,"Hours",4.964,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",73.5,1.5,73.445,1.401
 "S1","S1-08","SERUM","DrugA","",73.548,73.5,1.504,1.5,24,"Hours",4.805,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",73.5,1.5,73.548,1.504
@@ -1415,7 +1216,7 @@
 "S1","S1-08","SERUM","DrugA","",124.644,124.5,4.547,4.5,24,"Hours",0.957,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",60,"Years","WHITE","M","","",124.5,4.5,124.644,4.547
 "S1","S1-08","SERUM","DrugA","",126.041,126,5.944,6,24,"Hours",0.505,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",60,"Years","WHITE","M","","",126,6,126.041,5.944
 "S1","S1-08","SERUM","DrugA","",127.61,127.5,7.513,7.5,24,"Hours",0.312,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",60,"Years","WHITE","M","","",127.5,7.5,127.61,7.513
-"S1","S1-08","SERUM","DrugA","",132.106,132,12.009,12,24,"Hours",0.001,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",60,"Years","WHITE","M","","",132,12,132.106,12.009
+"S1","S1-08","SERUM","DrugA","",132.106,132,12.009,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 6",60,"Years","WHITE","M","","",132,12,132.106,12.009
 "S1","S1-08","SERUM","DrugA","",144.081,143.917,-0.083,-0.083,24,"Hours",0.068,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",60,"Years","WHITE","M","","",143.917,-0.083,144.081,-0.083
 "S1","S1-08","SERUM","DrugA","",144.703,144.5,0.54,0.5,24,"Hours",7.562,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",60,"Years","WHITE","M","","",144.5,0.5,144.703,0.54
 "S1","S1-08","SERUM","DrugA","",145.699,145.5,1.535,1.5,24,"Hours",4.611,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 7",60,"Years","WHITE","M","","",145.5,1.5,145.699,1.535
@@ -1443,7 +1244,7 @@
 "S1","S1-08","SERUM","Metab-DrugA","Y",5.991,6,5.991,6,24,"Hours",0.477,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",60,"Years","WHITE","M","","",6,6,5.991,5.991
 "S1","S1-08","SERUM","Metab-DrugA","Y",7.48,7.5,7.48,7.5,24,"Hours",0.286,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",60,"Years","WHITE","M","","",7.5,7.5,7.48,7.48
 "S1","S1-08","SERUM","Metab-DrugA","Y",12.052,12,12.052,12,24,"Hours",0.055,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 1",60,"Years","WHITE","M","","",12,12,12.052,12.052
-"S1","S1-08","SERUM","Metab-DrugA","Y",24.09,23.917,-0.083,-0.083,24,"Hours",0.029,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",23.917,-0.083,24.09,-0.083
+"S1","S1-08","SERUM","Metab-DrugA","Y",24.09,23.917,-0.083,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",23.917,-0.083,24.09,-0.083
 "S1","S1-08","SERUM","Metab-DrugA","Y",24.764,24.5,0.591,0.5,24,"Hours",7.437,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",24.5,0.5,24.764,0.591
 "S1","S1-08","SERUM","Metab-DrugA","Y",25.63,25.5,1.457,1.5,24,"Hours",4.82,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",25.5,1.5,25.63,1.457
 "S1","S1-08","SERUM","Metab-DrugA","Y",25.721,25.5,1.548,1.5,24,"Hours",4.621,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",25.5,1.5,25.721,1.548
@@ -1451,7 +1252,7 @@
 "S1","S1-08","SERUM","Metab-DrugA","Y",28.799,28.5,4.626,4.5,24,"Hours",0.934,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",28.5,4.5,28.799,4.626
 "S1","S1-08","SERUM","Metab-DrugA","Y",30.167,30,5.994,6,24,"Hours",0.56,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",30,6,30.167,5.994
 "S1","S1-08","SERUM","Metab-DrugA","Y",31.766,31.5,7.593,7.5,24,"Hours",0.19,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",31.5,7.5,31.766,7.593
-"S1","S1-08","SERUM","Metab-DrugA","Y",36.079,36,11.906,12,24,"Hours",0.004,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",36,12,36.079,11.906
+"S1","S1-08","SERUM","Metab-DrugA","Y",36.079,36,11.906,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 2",60,"Years","WHITE","M","","",36,12,36.079,11.906
 "S1","S1-08","SERUM","Metab-DrugA","Y",47.837,47.917,-0.084,-0.083,24,"Hours",0.067,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",47.917,-0.083,47.837,-0.084
 "S1","S1-08","SERUM","Metab-DrugA","Y",48.412,48.5,0.491,0.5,24,"Hours",7.796,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",48.5,0.5,48.412,0.491
 "S1","S1-08","SERUM","Metab-DrugA","Y",49.377,49.5,1.456,1.5,24,"Hours",4.808,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",49.5,1.5,49.377,1.456
@@ -1460,7 +1261,7 @@
 "S1","S1-08","SERUM","Metab-DrugA","Y",52.33,52.5,4.408,4.5,24,"Hours",1.088,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",52.5,4.5,52.33,4.408
 "S1","S1-08","SERUM","Metab-DrugA","Y",53.92,54,5.999,6,24,"Hours",0.352,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",54,6,53.92,5.999
 "S1","S1-08","SERUM","Metab-DrugA","Y",55.381,55.5,7.46,7.5,24,"Hours",0.127,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",55.5,7.5,55.381,7.46
-"S1","S1-08","SERUM","Metab-DrugA","Y",59.896,60,11.975,12,24,"Hours",0.001,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",60,12,59.896,11.975
+"S1","S1-08","SERUM","Metab-DrugA","Y",59.896,60,11.975,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 3",60,"Years","WHITE","M","","",60,12,59.896,11.975
 "S1","S1-08","SERUM","Metab-DrugA","Y",71.96,71.917,-0.084,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",71.917,-0.083,71.96,-0.084
 "S1","S1-08","SERUM","Metab-DrugA","Y",72.508,72.5,0.464,0.5,24,"Hours",7.904,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",72.5,0.5,72.508,0.464
 "S1","S1-08","SERUM","Metab-DrugA","Y",73.445,73.5,1.401,1.5,24,"Hours",4.963,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",73.5,1.5,73.445,1.401
@@ -1469,7 +1270,7 @@
 "S1","S1-08","SERUM","Metab-DrugA","Y",76.506,76.5,4.462,4.5,24,"Hours",1.113,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",76.5,4.5,76.506,4.462
 "S1","S1-08","SERUM","Metab-DrugA","Y",78.033,78,5.989,6,24,"Hours",0.463,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",78,6,78.033,5.989
 "S1","S1-08","SERUM","Metab-DrugA","Y",79.589,79.5,7.545,7.5,24,"Hours",0.276,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",79.5,7.5,79.589,7.545
-"S1","S1-08","SERUM","Metab-DrugA","Y",84.103,84,12.059,12,24,"Hours",0.046,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",84,12,84.103,12.059
+"S1","S1-08","SERUM","Metab-DrugA","Y",84.103,84,12.059,12,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 4",60,"Years","WHITE","M","","",84,12,84.103,12.059
 "S1","S1-08","SERUM","Metab-DrugA","Y",95.978,95.917,-0.085,-0.083,24,"Hours",0,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",60,"Years","WHITE","M","","",95.917,-0.083,95.978,-0.085
 "S1","S1-08","SERUM","Metab-DrugA","Y",96.606,96.5,0.544,0.5,24,"Hours",7.581,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",60,"Years","WHITE","M","","",96.5,0.5,96.606,0.544
 "S1","S1-08","SERUM","Metab-DrugA","Y",97.576,97.5,1.513,1.5,24,"Hours",4.728,"ug/mL",NA,NA,"DrugA","DrugA 10 mg, bolus",10,"mg","INTRAVENOUS BOLUS",0,"DOSE 5",60,"Years","WHITE","M","","",97.5,1.5,97.576,1.513
