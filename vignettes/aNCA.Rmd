@@ -99,7 +99,7 @@ knitr::kable(dataformat,
 
 ### Adding Filters
 
-Once your data is uploaded, examine it and then click the "Next" button on the bottom right. 
+Once your data is uploaded, examine it, and then click the "Next" button on the bottom right. 
 
 <image src="images/get_started/examine_data_next.gif" alt="Mapping"/ /width="100%"> 
 
