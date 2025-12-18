@@ -34,7 +34,7 @@ Imports:
     methods,
     officer,
     PKNCA (>= 0.12.1),
-    plotly,
+    plotly (>= 4.10.4),
     purrr,
     rlang,
     rlistings,
