@@ -27,6 +27,8 @@ Indicates if the parameter can be used in single dose analysis}
 Indicates if the parameter can be used in multiple dose analysis}
 \item{can_extravascular}{Logical.
 Indicates if the parameter can be used in extravascular analysis}
+\item{can_metabolite}{Logical.
+Indicates if the parameter can be used in metabolite analysis}
 }
 }
 \source{
