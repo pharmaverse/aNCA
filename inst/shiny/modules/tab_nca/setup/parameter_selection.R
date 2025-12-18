@@ -25,7 +25,6 @@ parameter_selection_ui <- function(id) {
 
     br(),
     p("The following parameters are currently selected:"),
-    br(),
     reactable_ui(ns("selected_parameters_table")),
 
     br(),
@@ -39,6 +38,34 @@ parameter_selection_ui <- function(id) {
 parameter_selection_server <- function(id, processed_pknca_data, parameter_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    initialised_modules <- new.env()
+
+    # Define parameters to be selected by default
+    DEFAULT_PARAMS <- c(
+      "aucinf.obs", "aucinf.obs.dn",
+      "auclast", "auclast.dn",
+      "cmax", "cmax.dn",
+      "clast.obs", "clast.obs.dn",
+      "tlast", "tmax",
+      "half.life", "cl.obs", "vss.obs", "vz.obs",
+      "mrt.last", "mrt.obs",
+      "lambda.z", "lambda.z.n.points",
+      "r.squared", "span.ratio",
+      "adj.r.squared", "lambda.z.time.first",
+      "aucpext.obs", "aucpext.pred",
+      "ae", "fe"
+    )
+
+    # List of parameter data frames by type
+    all_params <- metadata_nca_parameters %>%
+      filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
+      select(
+        TYPE, PKNCA, PPTESTCD, PPTEST,
+        can_excretion, can_non_excretion, can_single_dose,
+        can_multiple_dose, can_extravascular, can_metabolite
+      ) %>%
+      mutate(sort_order = row_number())
 
     # Retrieve study types
     study_types_df <- reactive({
@@ -87,31 +114,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
     })
 
-    DEFAULT_PARAMS <- c(
-      "aucinf.obs", "aucinf.obs.dn",
-      "auclast", "auclast.dn",
-      "cmax", "cmax.dn",
-      "clast.obs", "clast.obs.dn",
-      "tlast", "tmax",
-      "half.life", "cl.obs", "vss.obs", "vz.obs",
-      "mrt.last", "mrt.obs",
-      "lambda.z",
-      "lambda.z.n.points", "r.squared",
-      "adj.r.squared", "lambda.z.time.first",
-      "aucpext.obs", "aucpext.pred",
-      "ae", "fe"
-    )
-
-    # List of parameter data frames by type
-    all_params <- metadata_nca_parameters %>%
-      filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
-      select(
-        TYPE, PKNCA, PPTESTCD, PPTEST,
-        can_excretion, can_non_excretion, can_single_dose,
-        can_multiple_dose, can_extravascular, can_metabolite
-      ) %>%
-      mutate(sort_order = row_number())
-
     # ReactiveVal for parameter selection state
     selections_state <- reactiveVal()
 
@@ -129,21 +131,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       })
 
       # Update parameter selection using override and considering study types
-      selection_df <- apply_parameter_selections(
+      apply_parameter_selections(
         selection_df = all_params,
         study_type_names = study_type_names,
         default_params = DEFAULT_PARAMS,
         selections_override = selections_override
       ) %>%
         # Remove unneeded columns
-        select(
-          -any_of(
-            c("can_excretion", "can_non_excretion", "can_single_dose",
-              "can_multiple_dose", "can_extravascular", "can_metabolite")
-          )
-        )
-
-      selection_df
+        select(-starts_with("can_"))
     })
 
     # Sync the base state to the live state
@@ -158,9 +153,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     output$dynamic_study_accordion <- renderUI({
       req(study_types_list())
 
-      all_main_panels <- map(study_types_list(), ~{
-        study_type <- .x
-
+      all_main_panels <- map(study_types_list(), function(study_type) {
         # Unique ID for each module
         module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
 
@@ -190,10 +183,17 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         split(.$TYPE)
 
       # Loop and create servers
-      map(current_types, ~{
-        study_type <- .x
-        # Make module ID safe for use
+      map(current_types, function(study_type) {
+        # Define module ID
         module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
+
+        if (exists(module_id, envir = initialised_modules)) {
+          # If it exists, exit this iteration
+          return()
+        }
+
+        # If not, mark it as initialized
+        assign(module_id, TRUE, envir = initialised_modules)
 
         current_type_selections <- reactive({
           state <- selections_state()
@@ -231,6 +231,15 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             selections_state(selections_df)
           }
         }, ignoreNULL = FALSE, ignoreInit = TRUE)
+
+        selection_debounce <- debounce(selection_single_type_grouped, 2000)
+
+        observeEvent(selection_debounce(), {
+          params <- selection_debounce()
+          n_params <- if (is.null(params)) 0 else length(params)
+
+          log_info("Parameter selection for '{study_type}': {n_params} parameters selected.")
+        }, ignoreNULL = FALSE, ignoreInit = TRUE)
       })
     })
 
@@ -267,39 +276,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     selected_parameters_df <- reactive({
       req(parameter_lists_by_type())
 
-      selections_list <- parameter_lists_by_type()
-
-      # Get all unique parameters selected across all study types
-      all_params_selected <- unique(unlist(selections_list))
-      if (length(all_params_selected) == 0) {
-        return(data.frame(Message = "No parameters are selected."))
-      }
-
-      # Get all study types
-      all_study_types <- names(selections_list)
-      if (length(all_study_types) == 0) {
-        return(data.frame(Message = "No study types found."))
-      }
-
-      # Create a wide data frame with TRUE/FALSE for selection
-      wide_df <- map_dfc(all_study_types, ~ {
-        setNames(data.frame(all_params_selected %in% selections_list[[.x]]), .x)
-      })
-      wide_df$PKNCA <- all_params_selected
-
-      # Join with metadata to get labels
-      metadata_df <- all_params %>%
-        select(PKNCA, PPTESTCD, PPTEST, sort_order) %>%
-        distinct(PKNCA, .keep_all = TRUE)
-
-      accordion_order <- study_types_list()
-
-      wide_df %>%
-        left_join(metadata_df, by = "PKNCA") %>%
-        arrange(sort_order) %>%
-        # Reorder columns to put labels first
-        select(PPTESTCD, PPTEST, PKNCA, any_of(accordion_order))
-
+      .prepare_selection_table(
+        selections_list = parameter_lists_by_type(),
+        all_params = all_params,
+        study_types_list = study_types_list()
+      )
     })
 
     # Render the reactable
@@ -315,6 +296,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
         # Define Fixed Sticky Columns
         fixed_cols <- list(
+          TYPE = colDef(sticky = "left", minWidth = 100),
           PPTESTCD = colDef(sticky = "left", minWidth = 100),
           PPTEST = colDef(sticky = "left", minWidth = 200),
           PKNCA = colDef(show = FALSE)
@@ -358,4 +340,48 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       types_df = study_types_df
     )
   })
+}
+
+
+#' Helper: Transforms the selection list into a formatted, sorted, wide dataframe
+#' for the Reactable display.
+#'
+#' @param selections_list List of selected parameters by study type
+#' @param all_params Metadata dataframe for parameters
+#' @param study_types_list Vector of study type names
+#' @return A formatted dataframe or a dataframe with a "Message" column
+.prepare_selection_table <- function(selections_list, all_params, study_types_list) {
+
+  # Get all unique parameters selected
+  all_params_selected <- unique(unlist(selections_list))
+
+  # Guard clauses for empty states
+  if (length(all_params_selected) == 0) {
+    return(data.frame(Message = "No parameters are selected."))
+  }
+  if (length(study_types_list) == 0) {
+    return(data.frame(Message = "No study types found."))
+  }
+
+  # Create wide data frame (True/False columns)
+  wide_df <- map_dfc(study_types_list, ~ {
+    setNames(data.frame(all_params_selected %in% selections_list[[.x]]), .x)
+  })
+  wide_df$PKNCA <- all_params_selected
+
+  if (nrow(wide_df) == 0) {
+    return(data.frame(Message = "No parameters are selected."))
+  }
+
+  # Join metadata and sort
+  metadata_df <- all_params %>%
+    select(TYPE, PKNCA, PPTESTCD, PPTEST, sort_order) %>%
+    distinct(PKNCA, .keep_all = TRUE)
+
+  wide_df %>%
+    left_join(metadata_df, by = "PKNCA") %>%
+    arrange(sort_order) %>%
+    # Reorder columns
+    select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(study_types_list))
+
 }

@@ -140,11 +140,11 @@ update_main_intervals <- function(data, parameter_selections,
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
 
-  # 1. Add the 'type' column to the intervals data
+  # Add the 'type' column to the intervals data
   intervals_with_types <- data$intervals %>%
     left_join(study_types_df, by = grouping_cols)
 
-  # 3. Iterate over selections to set new flags to TRUE
+  # Iterate over selections to set new flags to TRUE
   updated_intervals <- intervals_with_types
   if (length(parameter_selections) > 0) {
     for (study_type in names(parameter_selections)) {
@@ -153,7 +153,7 @@ update_main_intervals <- function(data, parameter_selections,
         updated_intervals <- updated_intervals %>%
           mutate(across(
             .cols = all_of(params_for_type),
-            .fns = ~ if_else(type == study_type, TRUE, .)
+            .fns = \(x) if_else(type == study_type, TRUE, x)
           ))
       }
     }
@@ -163,7 +163,7 @@ update_main_intervals <- function(data, parameter_selections,
   data$intervals <- updated_intervals %>%
     select(-type)
 
-  # # Add partial AUCs if any
+  # Add partial AUCs if any
   auc_ranges <- auc_data %>%
     filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
 
@@ -189,30 +189,31 @@ update_main_intervals <- function(data, parameter_selections,
 
   # Impute start values if requested
   if (impute) {
-    data <- handle_imputation(data)
+    data <- apply_imputation(data)
   }
 
   data
 }
 
-#' Handle Imputation for PKNCA Data
+#' Apply Imputation for PKNCA Data
 #'
 #' Applies imputation rules to a PKNCAdata object, imputing start values and then
 #' selectively removing imputation for parameters that are not dependent on AUC.
 #'
 #' @param data A PKNCAdata object.
+#' @param nca_parameters A dataset containing the mapping between PKNCA terms and CDISC terms.
 #' @returns A PKNCAdata object with imputation rules applied.
 #' @import dplyr
 #'
-handle_imputation <- function(data) {
+apply_imputation <- function(data, nca_parameters = metadata_nca_parameters) {
   data <- create_start_impute(data)
 
   # Don't impute parameters that are not AUC dependent
-  params_auc_dep <- metadata_nca_parameters %>%
+  params_auc_dep <- nca_parameters %>%
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
-  params_not_to_impute <- metadata_nca_parameters %>%
+  params_not_to_impute <- nca_parameters %>%
     filter(!grepl("auc|aumc", PKNCA),
            !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
     pull(PKNCA) %>%
