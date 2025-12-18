@@ -166,16 +166,26 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
         # Reshape intervals, filter
         params_not_requested <- res$data$intervals %>%
-          select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
-          # For all logical columns, mutate FALSE to NA
-          mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
-          # Only select column that are only NA
-          select(where(~ all(is.na(.x)))) %>%
-          names()
+          # pivot for requested params
+          pivot_longer(
+            cols = (any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))),
+            names_to = "PPTESTCD",
+            values_to = "is_requested"
+          ) %>%
+          # Translate terms
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+          # Group by all identifying cols EXCEPT the impute column and the value column
+          group_by(across(c(-impute, -is_requested))) %>%
+          # If all are FALSE, any(is_requested) will be FALSE.
+          summarise(
+            is_requested = any(is_requested),
+            .groups = "drop"
+          ) %>%
+          filter(!is_requested)
 
         # Filter for requested params based on intervals
         res$result <- res$result %>%
-          filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
+          anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
 
         res
       }, error = function(e) {
