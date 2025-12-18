@@ -147,7 +147,7 @@ g_lineplot <- function(data,
     .add_palette(palette),
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
-    .add_threshold(threshold_value),
+    .add_thr(threshold_value),
     .add_dose_lines(dose_data, facet_by),
     .add_mean_layers(
       is_mean_plot,
@@ -191,15 +191,11 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_threshold <- function(threshold_value) {
-  if (is.null(threshold_value)) {
+.add_thr <- function(thr) {
+  if (!is.numeric(thr) || length(thr) != 1 || !is.finite(thr)) {
     return(NULL)
-  } else {
-    if (!is.numeric(threshold_value) || is.na(threshold_value) || is.infinite(threshold_value)) {
-      return(NULL)
-    }
   }
-  geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  geom_hline(yintercept = thr, linetype = "dotted", color = "red")
 }
 
 #' @noRd
