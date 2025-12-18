@@ -48,6 +48,9 @@
 - Bug fix for box/violin plots that were crashing when violin option
   selected ([\#786](https://github.com/pharmaverse/aNCA/issues/786))
 
+- Bug fix for settings upload via zip file output
+  ([\#832](https://github.com/pharmaverse/aNCA/issues/832))
+
 ## aNCA 0.1.0
 
 CRAN release: 2025-12-09
