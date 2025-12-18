@@ -37,6 +37,7 @@ format_pkncaconc_data <- function(ADNCA,
                                   time_column = "AFRLT",
                                   rrlt_column = "ARRLT",
                                   route_column = "ROUTE",
+                                  time_end_column = NULL,
                                   nca_exclude_reason_columns = NULL) {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
@@ -57,6 +58,10 @@ format_pkncaconc_data <- function(ADNCA,
   if ("PARAMCD" %in% colnames(ADNCA)) {
     ADNCA <- ADNCA %>%
       filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
+  }
+  
+  if (!is.null(time_end_column)) {
+    ADNCA[["CONCDUR"]] <- ADNCA[[time_end_column]] - ADNCA[[time_column]] 
   }
 
   if (!is.null(nca_exclude_reason_columns)) {

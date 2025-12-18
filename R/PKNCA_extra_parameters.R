@@ -102,7 +102,7 @@ pk.calc.ertmax <- function( #nolint
     midtime <- time + duration.conc / 2
     ret <- midtime[er %in% ermax]
     
-    first.tmax <- PKNCA::PKNCA.choose.option(name="first.tmax", value = first.tmax, options = options)
+    first.tmax <- PKNCA::PKNCA.choose.option(name = "first.tmax", value = first.tmax, options = options)
     if (first.tmax) {
       ret <- ret[1]
     } else {
