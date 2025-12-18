@@ -25,6 +25,8 @@
 
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
 
+* Bug fix for settings upload via zip file output (#832)
+
 
 # aNCA 0.1.0
 
