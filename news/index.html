@@ -57,9 +57,7 @@
 <h2 class="pkg-version" data-toc-text="0.2.0" id="anca-020">aNCA 0.2.0<a class="anchor" aria-label="anchor" href="#anca-020"></a></h2>
 <div class="section level3">
 <h3 id="features-added-0-2-0">Features added<a class="anchor" aria-label="anchor" href="#features-added-0-2-0"></a></h3>
-<ul><li>Rename all “ADPC” label mentions in the App to “ADNCA”, which is the CDISC standard the App promotes (<a href="https://github.com/pharmaverse/aNCA/issues/778" class="external-link">#778</a>)</li>
-<li>Interface includes now a color legend next to the pivoted NCA results to indicate missing and flagged parameters (<a href="https://github.com/pharmaverse/aNCA/issues/779" class="external-link">#779</a>)</li>
-<li>Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (<a href="https://github.com/pharmaverse/aNCA/issues/791" class="external-link">#791</a>)</li>
+<ul><li>Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (<a href="https://github.com/pharmaverse/aNCA/issues/791" class="external-link">#791</a>)</li>
 <li>Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (<a href="https://github.com/pharmaverse/aNCA/issues/752" class="external-link">#752</a>)</li>
 <li>Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (<a href="https://github.com/pharmaverse/aNCA/issues/712" class="external-link">#712</a>)</li>
 <li>New flagging rule for lambda-z calculations based on r-squared, R2 (<a href="https://github.com/pharmaverse/aNCA/issues/834" class="external-link">#834</a>)</li>
@@ -67,9 +65,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bugs-fixed-0-2-0">Bugs fixed<a class="anchor" aria-label="anchor" href="#bugs-fixed-0-2-0"></a></h3>
-<ul><li><p>Bug fix for box/violin plots that were crashing when PPSTRES is NA (<a href="https://github.com/pharmaverse/aNCA/issues/785" class="external-link">#785</a>)</p></li>
-<li><p>Exact duplicate records (DTYPE = “COPY”) and time duplicates (DTYPE = “TIME DUPLICATE”) are not removed from the data, but just excluded from the analysis (<a href="https://github.com/pharmaverse/aNCA/issues/765" class="external-link">#765</a>)</p></li>
-<li><p>ZIP folder with results will include now the exploration tab outputs: individual plots, mean plots (<a href="https://github.com/pharmaverse/aNCA/issues/794" class="external-link">#794</a>)</p></li>
+<ul><li><p>ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (<a href="https://github.com/pharmaverse/aNCA/issues/794" class="external-link">#794</a>)</p></li>
 <li><p>Updated TMAX label from Time of CMAX to Time of CMAX Observation (<a href="https://github.com/pharmaverse/aNCA/issues/787" class="external-link">#787</a>)</p></li>
 <li><p>Bug fix for box/violin plots that were crashing when violin option selected (<a href="https://github.com/pharmaverse/aNCA/issues/786" class="external-link">#786</a>)</p></li>
 <li><p>Bug fix for settings upload via zip file output (<a href="https://github.com/pharmaverse/aNCA/issues/832" class="external-link">#832</a>)</p></li>
