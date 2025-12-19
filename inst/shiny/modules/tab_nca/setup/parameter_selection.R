@@ -257,7 +257,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       # Get base data frame
       df <- selections_state()
       study_type_names <- unique(study_types_df()$type)
-      
+
       if (length(study_type_names) == 0) return(list())
 
       # Convert from wide to long, filter for selected rows,
