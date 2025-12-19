@@ -175,7 +175,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
           # pivot for requested params
           pivot_longer(
             cols = (any_of(c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")),
-                           settings()$bioavailability))),
+                             settings()$bioavailability))),
             names_to = "PPTESTCD",
             values_to = "is_requested"
           ) %>%
