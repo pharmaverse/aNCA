@@ -86,11 +86,11 @@ data_upload_server <- function(id) {
 
         # Process results
         successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
-        errors <- purrr::keep(read_results, ~ .x$status == "error")
+        errors <- purrr::keep(read_results, \(x) x$status == "error")
 
         # Handle Errors
         if (length(successful_loads) == 0) {
-          error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
+          error_msgs <- purrr::map_chr(errors, \(x) paste0(.x$name, ": ", .x$message))
           file_loading_error(paste(error_msgs, collapse = "<br>"))
           log_error("Errors loading files: ", paste(error_msgs, collapse = "; "))
           DUMMY_DATA
@@ -100,12 +100,12 @@ data_upload_server <- function(id) {
             combined_df <- successful_loads %>%
               purrr::map("data") %>%
               #mutate all to character to prevent errors
-              purrr::map(~ mutate_all(.x, as.character)) %>%
+              purrr::map(\(x) mutate_all(.x, as.character)) %>%
               dplyr::bind_rows()
 
             # If there were partial failures (some read, some didn't), warn the user
             if (length(errors) > 0) {
-              error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
+              error_msgs <- purrr::map_chr(errors, \(x) paste0(.x$name, ": ", .x$message))
               file_loading_error(paste(error_msgs, collapse = "<br>"))
               log_warn("Some files failed to load: ", paste(error_msgs, collapse = "; "))
             } else {
@@ -119,7 +119,7 @@ data_upload_server <- function(id) {
             bind_error <- paste0("Error combining files: ", e$message)
 
             if (length(errors) > 0) {
-              read_errors <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
+              read_errors <- purrr::map_chr(errors, \(x) paste0(.x$name, ": ", .x$message))
               file_loading_error(paste(c(read_errors, bind_error), collapse = "<br>"))
             } else {
               file_loading_error(bind_error)
