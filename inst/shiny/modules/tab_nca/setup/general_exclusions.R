@@ -2,6 +2,24 @@
     ns <- NS(id)
     tagList(
       h3("General Exclusions"),
+      # Color legend for the exclusions table
+      div(
+        class = "results-legend",
+        style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
+        div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Row Colors:"),
+        div(style = "display:flex; align-items:center; gap:6px;",
+          div(style = paste0(
+            "width:14px; height:14px; background:", EXCL_COLOR_DEFAULT, "; border:1px solid #ddd;"
+          )),
+          span("Default NCA exclusion", style = "font-size:0.9em;")
+        ),
+        div(style = "display:flex; align-items:center; gap:6px;",
+          div(style = paste0(
+            "width:14px; height:14px; background:", EXCL_COLOR_MANUAL, "; border:1px solid #ddd;"
+          )),
+          span("Manual exclusion", style = "font-size:0.9em;")
+        )
+      ),
       reactable_ui(ns("conc_table")),
       textInput(ns("exclusion_reason"), "Exclusion reason", ""),
       actionButton(ns("add_exclusion_reason"), "Add exclusion reason"),
@@ -28,14 +46,13 @@
         style = list(fontSize = "0.75em"),
         rowStyle = function(x) {
           function(index) {
-            # Get all indices from exclusion_list
             excl_indices <- unlist(lapply(exclusion_list(), function(x) x$rows))
             if (index %in% excl_indices) {
-              return(list(background = "#FFCCCC")) # red
+              return(list(background = EXCL_COLOR_MANUAL))
             }
             row <- x[index,]
             if (!is.null(row$nca_exclude) && nzchar(row$nca_exclude)) {
-              return(list(background = "#FFFF99")) # yellow
+              return(list(background = EXCL_COLOR_DEFAULT))
             }
             return(NULL)
           }
@@ -43,7 +60,6 @@
       )
 
       observeEvent(input$add_exclusion_reason, {
-        browser()
         rows_sel <- getReactableState("conc_table-table", "selected")
         reason <- input$exclusion_reason
         if (length(rows_sel) > 0 && nzchar(reason)) {
@@ -84,3 +100,7 @@
       return(list(exclusion_list = exclusion_list))
     })
   }
+
+# Color constants for exclusion row highlighting
+EXCL_COLOR_DEFAULT <- "#FFFF99"  # yellow
+EXCL_COLOR_MANUAL  <- "#FFCCCC"  # red
