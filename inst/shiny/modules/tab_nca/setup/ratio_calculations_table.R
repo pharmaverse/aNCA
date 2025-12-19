@@ -126,7 +126,7 @@ ratios_table_server <- function(
         # Select only columns where all values are not NA
         select(where(~ !all(is.na(.)))) %>%
         names() %>%
-        purrr::keep(~ grepl("^(auc[itl\\.]|cmax)", ., ignore.case = TRUE)) %>%
+        purrr::keep(~ grepl("^(auc[itl\\.]|cmax|ae)", ., ignore.case = TRUE)) %>%
         translate_terms("PKNCA", "PPTESTCD")
     })
 
@@ -279,7 +279,7 @@ ratios_table_server <- function(
           tbl[edit$row, edit$column] <- edit$value
 
           # If Parameter or Reference changed, update PPTESTCD for that row
-          if (colname %in% c("TestParameter", "RefGroups")) {
+          if (colname %in% c("TestParameter", "RefGroups", "TestGroups")) {
             ref <- tbl[edit$row, "RefGroups"]
             param <- tbl[edit$row, "TestParameter"]
             automatic_tbl <- .generate_pptestcd_for_ratios(tbl, adnca_data = adnca_data())
@@ -311,6 +311,11 @@ ratios_table_server <- function(
       PPTESTCD = case_when(
         startsWith(RefGroups, analyte_col) ~ paste0("MR", TestParameter),
         startsWith(RefGroups, profile_col) ~ paste0("AR", TestParameter),
+        startsWith(TestGroups, paste0(pcspec_col, ": URINE")) &
+          startsWith(RefGroups, pcspec_col) &
+          !endsWith(RefGroups, "URINE") &
+          startsWith(TestParameter, "RCAMINT") &
+          startsWith(RefParameter, "AUC") ~ "RENALCL",
         startsWith(
           toupper(RefGroups),
           paste0(toupper(route_col), ": INTRAVASCULAR")

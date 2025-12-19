@@ -57,9 +57,7 @@ clast.obs,CLST,Last Nonzero Conc,CLST: Last Nonzero Conc,pk.calc.clast.obs,The l
 clast.obs.dn,CLSTD,Last Nonzero Conc Norm by Dose,CLSTD: Last Nonzero Conc Norm by Dose,pk.calc.dn,Dose normalized clast.obs,TRUE,conc_dosenorm,Standard,Clearance,clast.obs,T,T,T,T,T,F
 clast.pred,CLSTP,Clast pred,CLSTP: Clast pred,,The concentration at Tlast as predicted by the half-life,FALSE,conc,Standard,Clearance,half.life,T,T,T,T,T,T
 clast.pred.dn,CLSTPD,Clast pred (dose-normalized),CLSTPD: Clast pred (dose-normalized),pk.calc.dn,Dose normalized clast.pred,FALSE,conc_dosenorm,Standard,Clearance,clast.pred,T,T,T,T,T,F
-clr.last,RENALCL,Renal CL,RENALCL: Renal CL,pk.calc.clr,The renal clearance calculated using AUClast,TRUE,renal_clearance,Urine,Clearance,,T,F,T,T,T,F
-clr.obs,RENALCLO,"Renal clearance (from AUCinf,obs)","RENALCLO: Renal clearance (from AUCinf,obs)",pk.calc.clr,"The renal clearance calculated using AUCinf,obs",FALSE,renal_clearance,Urine,Clearance,,T,F,T,F,T,F
-clr.pred,RENALCLP,"Renal clearance (from AUCinf,pred)","RENALCLP: Renal clearance (from AUCinf,pred)",pk.calc.clr,"The renal clearance calculated using AUCinf,pred",FALSE,renal_clearance,Urine,Clearance,,T,F,T,F,T,F
+"clr.last, clr.obs, clr.pred",RENALCL,Renal CL,RENALCL: Renal CL,pk.calc.clr,The renal clearance calculated using AUClast,TRUE,ratio,PKNCA-not-covered,Ratio,,T,F,T,T,T,F
 cmax,CMAX,Max Conc,CMAX: Max Conc,pk.calc.cmax,Maximum observed concentration,TRUE,conc,Standard,Concentration,,T,T,T,T,T,T
 cmax.dn,CMAXD,Max Conc Norm by Dose,CMAXD: Max Conc Norm by Dose,pk.calc.dn,Dose normalized cmax,TRUE,conc_dosenorm,Standard,Concentration,cmax,T,T,T,T,T,F
 cmin,CMIN,Min Conc,CMIN: Min Conc,pk.calc.cmin,Minimum observed concentration,TRUE,conc,Standard,Concentration,,T,T,T,T,T,T
