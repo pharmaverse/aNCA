@@ -38,8 +38,7 @@
 
           # Clear selected rows and reason input
           updateTextInput(session, "exclusion_reason", value = "")
-          updateReactable("conc_table-table", selected = NULL)
-          updateReactable("conc_table", selected = NULL)
+          updateReactable("conc_table-table", selected = NA)
         }
       })
 
