@@ -13,7 +13,7 @@ NON_STD_MAPPING_INFO <- data.frame(
   ),
   mapping_section = c("Supplemental Variables", "Sample Variables"),
   mapping_alternatives = c(
-    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, AGE, RACE, SEX, GROUP, NOMDOSE, DOSEP",
+    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, STRAIN, DOSFRM, NOMDOSE, DOSEP",
     ""
   ),
   is_multiple_choice = c(TRUE, TRUE)
@@ -23,7 +23,9 @@ NON_STD_MAPPING_INFO <- data.frame(
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
   select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
-  mutate(is_multiple_choice = FALSE) %>%
+  mutate(
+    is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
+  ) %>%
   bind_rows(NON_STD_MAPPING_INFO) %>%
   arrange(Order)
 
@@ -361,7 +363,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     })
     list(
       processed_data = processed_data,
-      grouping_variables = reactive(input$select_Grouping_Variables)
+      grouping_variables = reactive(input$select_Grouping_Variables),
+      nca_exclusion_flags = reactive(input$select_NCAwXRS)
     )
   })
 }
