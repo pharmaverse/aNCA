@@ -126,7 +126,7 @@ ratios_table_server <- function(
         # Select only columns where all values are not NA
         select(where(~ !all(is.na(.)))) %>%
         names() %>%
-        purrr::keep(~ grepl("^(auc[itl\\.]|cmax)", ., ignore.case = TRUE)) %>%
+        purrr::keep(~ grepl("^(auc[itl\\.]|cmax|ae)", ., ignore.case = TRUE)) %>%
         translate_terms("PKNCA", "PPTESTCD")
     })
 
@@ -311,6 +311,9 @@ ratios_table_server <- function(
       PPTESTCD = case_when(
         startsWith(RefGroups, analyte_col) ~ paste0("MR", TestParameter),
         startsWith(RefGroups, profile_col) ~ paste0("AR", TestParameter),
+        startsWith(TestGroups, paste0(pcspec_col, ": URINE")) &
+          startsWith(TestParameter, "RCAMINT") &
+          startsWith(RefParameter, "AUC") ~ "RENALCL",
         startsWith(
           toupper(RefGroups),
           paste0(toupper(route_col), ": INTRAVASCULAR")
