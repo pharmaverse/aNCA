@@ -16,7 +16,7 @@
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
-* No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is not accurate for them. Instead, the ratios table should be used (#781)
+* No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the ratios table should be used (#781)
 
 * Bug fix for settings upload via zip file output (#832)
 
