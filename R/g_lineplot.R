@@ -98,6 +98,7 @@ g_lineplot <- function(data,
   }
 
   # Concatenate unique units, sep by ","
+  #TODO: potential to facet if > 1 unit (#848)
   x_unit <- paste0(unique(data$RRLTU), collapse = ", ")
   y_unit <- paste0(unique(data$AVALU), collapse = ", ")
 
