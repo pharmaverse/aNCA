@@ -137,5 +137,5 @@ RAAUCLST,RAAUCLST,Ratio AUClast,RAAUCLST: Ratio of AUClast,calculate_ratios,Rati
 RAAUCIFO,RAAUCIFO,Ratio AUCinf.obs,RAAUCIFO: Ratio of AUCinf.obs,calculate_ratios,Ratio of AUCinf.obs,FALSE,unitless,PKNCA-not-covered,Ratio,aucinf.obs,,,,,,
 MRAUCIFO,MRAUCIFO,Metabolite Ratio for AUCinf.obs,MRAUCIFO: Metabolite Ratio for AUCinf.obs,calculate_ratios,Metabolite Ratio for AUCinf.obs,FALSE,unitless,PKNCA-not-covered,Ratio,aucinf.obs,,,,,,
 ARAUCIFO,ARAUCIFO,Accumulation Ratio AUCinf.obs,ARAUCIFO: Accumulation Ratio for AUCinf.obs,calculate_ratios,Accumulation Ratio for AUCinf.obs,FALSE,unitless,PKNCA-not-covered,Ratio,aucinf.obs,,,,,,
-ertlst,ERTLST,Midpoint of Interval of Last Nonzero ER,ERTLST: Midpoint of Interval of Last Nonzero ER,pk.calc.ertlst,The midpoint collection time of the last measurable excretion rate (typically in urine or feces),TRUE,time,Urine,Excretion,,,,,,,
-ermax,ERMAX,Max Excretion Rate,ERMAX: Max Excretion Rate,pk.calc.ermax,The maximum excretion rate (typically in urine or feces),TRUE,amount_time,Urine,Excretion,,,,,,,
+ertlst,ERTLST,Midpoint of Interval of Last Nonzero ER,ERTLST: Midpoint of Interval of Last Nonzero ER,pk.calc.ertlst,The midpoint collection time of the last measurable excretion rate (typically in urine or feces),TRUE,time,Urine,Elimination,,T,F,T,T,T,T
+ertmax,ERTMAX,Midpoint of Interval of Maximum ER,ERTMAX: Midpoint of Interval of Maximum ER,pk.calc.ertmax,Midpoint of Interval of Maximum ER,TRUE,time,Urine,Elimination,,T,F,T,T,T,T
