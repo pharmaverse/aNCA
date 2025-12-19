@@ -25,7 +25,21 @@
         conc_data,
         selection = "multiple",
         defaultPageSize = 25,
-        style = list(fontSize = "0.75em")
+        style = list(fontSize = "0.75em"),
+        rowStyle = function(x) {
+          function(index) {
+            # Get all indices from exclusion_list
+            excl_indices <- unlist(lapply(exclusion_list(), function(x) x$rows))
+            if (index %in% excl_indices) {
+              return(list(background = "#FFCCCC")) # red
+            }
+            row <- x[index,]
+            if (!is.null(row$nca_exclude) && nzchar(row$nca_exclude)) {
+              return(list(background = "#FFFF99")) # yellow
+            }
+            return(NULL)
+          }
+        }
       )
 
       observeEvent(input$add_exclusion_reason, {
