@@ -104,8 +104,6 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     observeEvent(res_nca(), {
       req(summary_stats())
 
-      session$userData$results$nca_results$descriptive_statistics <- summary_stats()
-
       # Update the select display parameters picker input
       updatePickerInput(
         session,
@@ -121,6 +119,11 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         choices = unique(summary_stats()$Statistic),
         selected = unique(summary_stats()$Statistic)
       )
+    })
+
+    # Save the updates of the object for the ZIP file
+    observeEvent(summary_stats(), {
+      session$userData$results$nca_results$descriptive_statistics <- summary_stats()
     })
 
     # Render the reactive summary table in a data table
