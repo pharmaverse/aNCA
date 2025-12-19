@@ -86,10 +86,8 @@ g_lineplot <- function(data,
                        ci = FALSE,
                        tooltip_vars = NULL,
                        labels_df = NULL) {
-
   # Set up plot labels - assumes individual plot unless mean columns are present
   is_mean_plot <- all(c("Mean", "SD", "N") %in% names(data))
-
   # Defensively set mean-plot flags to FALSE if it's not a mean plot
   if (!is_mean_plot) {
     sd_min <- FALSE
@@ -104,18 +102,16 @@ g_lineplot <- function(data,
 
   x_lab <- paste0("Time [", x_unit, "]")
   y_lab <- paste0("Concentration [", y_unit, "]")
+
   title <- "PK Concentration - Time Profile"
   group_var <- "USUBJID"
-
   if (is_mean_plot) {
     x_lab <- paste("Nominal", x_lab)
     y_lab <- paste("Mean", y_lab)
     title <- paste("Mean", title)
     group_var <- "color_var"
   }
-
   # --- Tooltip Construction ---
-
   if (!is.null(tooltip_vars)) {
     if (!is.null(labels_df)) {
       # Generate tooltip if labels_df available
@@ -131,14 +127,12 @@ g_lineplot <- function(data,
   } else {
     data$tooltip_text <- rep(NA_character_, nrow(data))
   }
-
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
       color_var = interaction(!!!syms(color_by), sep = ", ")
     ) %>%
     arrange(!!sym(x_var))
-
   plt <- ggplot(plot_data, aes(
     x = !!sym(x_var),
     y = !!sym(y_var),
@@ -155,13 +149,12 @@ g_lineplot <- function(data,
       color = paste(color_by, collapse = ", ")
     ) +
     theme_bw()
-
   # Add optional layers
   optional_layers <- list(
     .add_palette(palette),
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
-    .add_threshold(threshold_value),
+    .add_thr(threshold_value),
     .add_dose_lines(dose_data, facet_by),
     .add_mean_layers(
       is_mean_plot,
@@ -174,7 +167,6 @@ g_lineplot <- function(data,
       group_var
     )
   )
-
   plt + optional_layers
 }
 
@@ -206,11 +198,11 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_threshold <- function(threshold_value) {
-  if (is.null(threshold_value)) {
+.add_thr <- function(thr) {
+  if (!is.numeric(thr) || length(thr) != 1 || !is.finite(thr)) {
     return(NULL)
   }
-  geom_hline(yintercept = threshold_value, linetype = "dotted", color = "red")
+  geom_hline(yintercept = thr, linetype = "dotted", color = "red")
 }
 
 #' @noRd
@@ -218,12 +210,10 @@ g_lineplot <- function(data,
   if (is.null(dose_data)) {
     return(NULL)
   }
-
   dose_info <- dose_data %>%
     select(all_of(unique(c(facet_by, "TIME_DOSE", "DOSEA")))) %>%
     distinct() %>%
     filter(!is.na(TIME_DOSE))
-
   geom_vline(data = dose_info, aes(xintercept = TIME_DOSE), linetype = "dotted", color = "grey")
 }
 
@@ -233,7 +223,6 @@ g_lineplot <- function(data,
   if (!is_mean_plot) {
     return(NULL)
   }
-
   # 1. Error bars
   error_bar_layer <- NULL
   if (isTRUE(sd_min) || isTRUE(sd_max)) {
@@ -251,7 +240,6 @@ g_lineplot <- function(data,
       width = 0.4
     )
   }
-
   # 2. CI Ribbon
   ci_ribbon_layer <- NULL
   if (isTRUE(ci)) {
@@ -261,7 +249,6 @@ g_lineplot <- function(data,
       labs(color = paste0(paste(color_by, collapse = ", "), " (95% CI)"))
     )
   }
-
   # Return a list of all layers
   list(error_bar_layer, ci_ribbon_layer)
 }
