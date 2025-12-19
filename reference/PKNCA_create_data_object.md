@@ -109,7 +109,7 @@ RRLTU = rep("hour", 6)
 PKNCA_create_data_object(adnca_data)
 #> Formula for concentration:
 #>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM
-#> <environment: 0x55f30eb64488>
+#> <environment: 0x56470cf4b018>
 #> Data are dense PK.
 #> With 1 subjects defined in the 'USUBJID' column.
 #> Nominal time column is: NFRLT
@@ -122,20 +122,20 @@ PKNCA_create_data_object(adnca_data)
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    7 ng/mL   100    mg
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    3 ng/mL   100    mg
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    1 ng/mL   100    mg
-#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU nca_exclude     std_route DOSNOA
-#>      0     0     0      0.5  hour             intravascular      1
-#>      1     1     1      0.5  hour             intravascular      1
-#>      2     2     2      0.5  hour             intravascular      1
-#>      3     3     3      0.5  hour             intravascular      1
-#>      4     4     4      0.5  hour             intravascular      1
-#>      6     6     6      0.5  hour             intravascular      1
-#>  is.excluded.hl is.included.hl REASON exclude_half.life volume duration
-#>           FALSE          FALSE     NA             FALSE     NA        0
-#>           FALSE          FALSE     NA             FALSE     NA        0
-#>           FALSE          FALSE     NA             FALSE     NA        0
-#>           FALSE          FALSE     NA             FALSE     NA        0
-#>           FALSE          FALSE     NA             FALSE     NA        0
-#>           FALSE          FALSE     NA             FALSE     NA        0
+#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU CONCDUR nca_exclude     std_route DOSNOA
+#>      0     0     0      0.5  hour       0             intravascular      1
+#>      1     1     1      0.5  hour       0             intravascular      1
+#>      2     2     2      0.5  hour       0             intravascular      1
+#>      3     3     3      0.5  hour       0             intravascular      1
+#>      4     4     4      0.5  hour       0             intravascular      1
+#>      6     6     6      0.5  hour       0             intravascular      1
+#>  is.excluded.hl is.included.hl REASON exclude_half.life volume
+#>           FALSE          FALSE     NA             FALSE     NA
+#>           FALSE          FALSE     NA             FALSE     NA
+#>           FALSE          FALSE     NA             FALSE     NA
+#>           FALSE          FALSE     NA             FALSE     NA
+#>           FALSE          FALSE     NA             FALSE     NA
+#>           FALSE          FALSE     NA             FALSE     NA
 #>  include_half.life
 #>                 NA
 #>                 NA
@@ -150,8 +150,8 @@ PKNCA_create_data_object(adnca_data)
 #> Data for dosing:
 #>   STUDYID PCSPEC ROUTE DOSETRT USUBJID ATPTREF    PARAM AVAL AVALU DOSEA DOSEU
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    0 ng/mL   100    mg
-#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU nca_exclude     std_route DOSNOA
-#>      0     0     0      0.5  hour             intravascular      1
+#>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU CONCDUR nca_exclude     std_route DOSNOA
+#>      0     0     0      0.5  hour       0             intravascular      1
 #>  is.excluded.hl is.included.hl REASON exclude_half.life exclude
 #>           FALSE          FALSE     NA             FALSE    <NA>
 #> 

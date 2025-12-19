@@ -235,6 +235,16 @@
 - [`pivot_wider_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/pivot_wider_pknca_results.md)
   : Reshape PKNCA Results
 
+- [`pk.calc.ermax()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.ermax.md)
+  : Calculate the maximum excretion rate
+
+- [`pk.calc.ertlst()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.ertlst.md)
+  : Calculate the midpoint collection time of the last measurable
+  excretion rate
+
+- [`pk.calc.ertmax()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.ertmax.md)
+  : Calculate the midpoint collection time of the maximum excretion rate
+
 - [`pk.calc.volpk()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.volpk.md)
   : Calculate the total urine volume
 

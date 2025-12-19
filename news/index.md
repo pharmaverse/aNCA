@@ -21,6 +21,9 @@
 - New Parameter Selection section in NCA tab allowing to select
   parameters by study type
   ([\#795](https://github.com/pharmaverse/aNCA/issues/795))
+- The App optionally maps end of sample collection (AEFRLT) for
+  excretion rate parameter calculations: ERTLST, ERTMAX.
+  ([\#745](https://github.com/pharmaverse/aNCA/issues/745))
 
 ### Bugs fixed
 
