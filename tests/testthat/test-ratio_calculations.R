@@ -291,28 +291,9 @@ describe("calculate_ratios", {
     expect_true(is.character(ratios_empty$PPORRESU))
     expect_true(is.character(ratios_empty$PPSTRESU))
   })
- # ------------------------------ jr:   placeholder -   # nolint
- it(" simplest example to cover anti-merge    ", {
-
-    if (FALSE) {
-      load_all()
-      source("tests/testthat/setup.R")
-    }
-
-    res <- FIXTURE_PKNCA_RES
-    res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+  it("uses all alternative groups to ref_groups when test_groups is NULL", {
     test_groups <- NULL
     ref_groups <- data.frame(PARAM = "A")
-
-
-    # Make a simple input version that has same units and only 1 subject
-    res_simple <- res
-    res_simple$result <- res$result %>%
-      filter(USUBJID == 8) %>%
-      mutate(
-        PPORRESU = "ng/mL",
-        PPSTRESU = "ng/mL"
-      )
 
     ratios <- calculate_ratios(
       res_simple$result,
