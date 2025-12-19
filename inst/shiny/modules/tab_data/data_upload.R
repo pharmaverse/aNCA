@@ -88,19 +88,19 @@ data_upload_server <- function(id) {
         successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
           purrr::map(\(x) paste0(x$name, ": ", x$message))
-        
+
         loaded_data <- DUMMY_DATA
 
         # Handle Errors
         if (length(successful_loads) > 0) {
-        # Case: At least some files were read, attempt to bind them
+          # Case: At least some files were read, attempt to bind them
           tryCatch({
             loaded_data <- successful_loads %>%
               purrr::map("data") %>%
               dplyr::bind_rows() %>%
               #mutate all to character to prevent errors
               dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
-  
+
             log_success("All user data loaded successfully.")
           }, error = function(e) {
             # Case: Binding failed (e.g. column mismatch)
