@@ -9,6 +9,8 @@
 * Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (#712)
 * New flagging rule for lambda-z calculations based on r-squared, R2 (#834)
 * New Parameter Selection section in NCA tab allowing to select parameters by study type (#795)
+* The App optionally maps end of sample collection (AEFRLT) for excretion rate parameter calculations: ERTLST, ERTMAX. (#745)
+
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
@@ -16,6 +18,7 @@
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
+* No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the ratios table should be used (#781)
 
 * Bug fix for settings upload via zip file output (#832)
 
@@ -24,4 +27,4 @@
 
 # aNCA 0.1.0
 
-* Initial CRAN submission.
+-   Initial CRAN submission.
