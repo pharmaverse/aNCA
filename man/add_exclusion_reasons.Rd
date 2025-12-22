@@ -2,10 +2,8 @@
 % Please edit documentation in R/PKNCA.R
 \name{add_exclusion_reasons}
 \alias{add_exclusion_reasons}
-\title{Add Exclusion Reasons to PKNCAdata Concentration Object}
+\title{Add Exclusion Reasons to PKNCAdata Object}
 \usage{
-add_exclusion_reasons(pknca_data, exclusion_list)
-
 add_exclusion_reasons(pknca_data, exclusion_list)
 }
 \arguments{
@@ -19,13 +17,8 @@ add_exclusion_reasons(pknca_data, exclusion_list)
 }
 \value{
 The modified PKNCAdata object with updated exclusion reasons in the concentration object.
-
-The modified PKNCAdata object with updated exclusion reasons in the concentration object.
 }
 \description{
-This function adds exclusion reasons to the \code{exclude} column of the concentration object
-within a PKNCAdata object, based on a list of reasons and row indices.
-
 This function adds exclusion reasons to the \code{exclude} column of the concentration object
 within a PKNCAdata object, based on a list of reasons and row indices.
 }
