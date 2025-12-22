@@ -133,8 +133,13 @@ general_exclusions_server <- function(id, processed_pknca_data) {
       )
     })
     
+    # Prepare exclusion list for return (without btn_id)
+    exclusion_list_no_btnid <- reactive({
+      lapply(exclusion_list(), function(x) x[setdiff(names(x), "btn_id")])
+    })
+
     # Return the exclusion list as a reactive
-    return(list(exclusion_list = exclusion_list))
+    return(list(exclusion_list = exclusion_list_no_btnid))
   })
 }
 
