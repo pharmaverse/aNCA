@@ -10,7 +10,8 @@ PKNCA_update_data_object(
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  exclusion_list = NULL
 )
 }
 \arguments{
@@ -23,8 +24,6 @@ PKNCA_update_data_object(
 \item{selected_profile}{User selected dose numbers/profiles}
 
 \item{selected_pcspec}{User selected specimen}
-
-\item{should_impute_c0}{Logical indicating if start values should be imputed}
 }
 \value{
 A fully configured \code{PKNCAdata} object.
