@@ -19,6 +19,8 @@
 
 * Bug fix for settings upload via zip file output (#832)
 
+* Bug fix for plotting section where if there is >1 unit the axis label will contain both unique units. (#818)
+
 
 # aNCA 0.1.0
 
