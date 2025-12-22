@@ -99,6 +99,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
+  time_end_column <- if ("AEFRLT" %in% names(adnca_data)) "AEFRLT" else time_column
   dosno_column <- "ATPTREF"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
@@ -126,6 +127,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     ADNCA = adnca_data,
     group_columns = all_group_columns,
     time_column = time_column,
+    time_end_column = time_end_column,
     rrlt_column = "ARRLT",
     route_column = route_column,
     nca_exclude_reason_columns = nca_exclude_reason_columns
@@ -160,6 +162,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
+    duration = "CONCDUR",
     concu = "AVALU",
     timeu = "RRLTU",
     amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL,
