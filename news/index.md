@@ -24,6 +24,9 @@
 - The App optionally maps end of sample collection (AEFRLT) for
   excretion rate parameter calculations: ERTLST, ERTMAX.
   ([\#745](https://github.com/pharmaverse/aNCA/issues/745))
+- Option to upload multiple input files, which will be bound together to
+  form a single ADNCA data set
+  ([\#821](https://github.com/pharmaverse/aNCA/issues/821))
 
 ### Bugs fixed
 
