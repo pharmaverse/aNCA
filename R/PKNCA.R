@@ -265,7 +265,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     ),
     min.hl.r.squared = 0.01
   )
-  
+
   # Add on top of the default ones, the exclusions listed
   data <- add_exclusion_reasons(data, exclusion_list)
 
@@ -687,25 +687,25 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   exclude_col <- pknca_data$conc$columns$exclude
-    if (is.null(exclude_col)) {
-        pknca_data$conc$data$exclude <- rep("", nrow(pknca_data$conc$data))
-        pknca_data$conc$columns$exclude <- "exclude"
+  if (is.null(exclude_col)) {
+    pknca_data$conc$data$exclude <- rep("", nrow(pknca_data$conc$data))
+    pknca_data$conc$columns$exclude <- "exclude"
+  }
+  for (excl in exclusion_list) {
+    reason <- excl$reason
+    rows <- excl$rows
+    if (any(rows < 1 | rows > nrow(pknca_data$conc$data))) {
+      stop(
+        "Row indices in exclusion_list are out of bounds",
+        " for the exclusion: ", reason
+      )
+    } else {
+      pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
+        pknca_data$conc$data[[exclude_col]][rows] == "",
+        reason,
+        paste0(pknca_data$conc$data[[exclude_col]][rows], ";", reason)
+      )
     }
-    for (excl in exclusion_list){
-        reason <- excl$reason
-        rows <- excl$rows
-        if (any(rows < 1 | rows > nrow(pknca_data$conc$data))){
-            stop(
-                "Row indices in exclusion_list are out of bounds",
-                " for the exclusion: ", reason
-            )
-        } else {
-            pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
-                pknca_data$conc$data[[exclude_col]][rows] == "",
-                reason,
-                paste0(pknca_data$conc$data[[exclude_col]][rows], ";", reason)
-            )
-        }
-    }
-    pknca_data
+  }
+  pknca_data
 }

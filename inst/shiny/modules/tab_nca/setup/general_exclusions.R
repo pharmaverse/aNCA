@@ -39,16 +39,16 @@ general_exclusions_ui <- function(id) {
       style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
       div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Row Colors:"),
       div(style = "display:flex; align-items:center; gap:6px;",
-          div(style = paste0(
-            "width:14px; height:14px; background:", EXCL_COLOR_DEFAULT, "; border:1px solid #ddd;"
-          )),
-          span("Default NCA exclusion", style = "font-size:0.9em;")
+        div(style = paste0(
+          "width:14px; height:14px; background:", EXCL_COLOR_DEFAULT, "; border:1px solid #ddd;"
+        )),
+        span("Default NCA exclusion", style = "font-size:0.9em;")
       ),
       div(style = "display:flex; align-items:center; gap:6px;",
-          div(style = paste0(
-            "width:14px; height:14px; background:", EXCL_COLOR_MANUAL, "; border:1px solid #ddd;"
-          )),
-          span("Manual exclusion", style = "font-size:0.9em;")
+        div(style = paste0(
+          "width:14px; height:14px; background:", EXCL_COLOR_MANUAL, "; border:1px solid #ddd;"
+        )),
+        span("Manual exclusion", style = "font-size:0.9em;")
       )
     ),
     # Main concentration data table with row selection and color coding
@@ -68,7 +68,7 @@ general_exclusions_server <- function(id, processed_pknca_data) {
       req(processed_pknca_data())
       processed_pknca_data()$conc$data
     })
-    
+
     # Render the reactable with row coloring for exclusions
     reactable_server(
       "conc_table",
@@ -82,15 +82,15 @@ general_exclusions_server <- function(id, processed_pknca_data) {
           if (index %in% excl_indices) {
             return(list(background = EXCL_COLOR_MANUAL))
           }
-          row <- x[index,]
+          row <- x[index, ]
           if (!is.null(row$nca_exclude) && nzchar(row$nca_exclude)) {
             return(list(background = EXCL_COLOR_DEFAULT))
           }
-          return(NULL)
+          NULL
         }
       }
     )
-    
+
     # Add a new manual exclusion when the Add button is pressed
     observeEvent(input$add_exclusion_reason, {
       rows_sel <- getReactableState("conc_table-table", "selected")
@@ -99,13 +99,14 @@ general_exclusions_server <- function(id, processed_pknca_data) {
         current <- exclusion_list()
         xbtn_id <- paste0("remove_exclusion_reason_", xbtn_counter() + 1)
         xbtn_counter(xbtn_counter() + 1)
-        exclusion_list(append(current, list(list(reason = reason, rows = rows_sel, xbtn_id = xbtn_id))))
+        list_new_reason <- list(list(reason = reason, rows = rows_sel, xbtn_id = xbtn_id))
+        exclusion_list(append(current, list_new_reason))
         # Clear selected rows and reason input
         updateTextInput(session, "exclusion_reason", value = "")
         updateReactable("conc_table-table", selected = NA)
       }
     })
-    
+
 
     # Dynamically observe all remove buttons for exclusion reasons
     observe({
@@ -119,25 +120,34 @@ general_exclusions_server <- function(id, processed_pknca_data) {
         }, ignoreInit = TRUE, once = TRUE)
       })
     })
-    
+
     # Render the manual exclusions table (not shown if empty)
     output$exclusion_list_ui <- renderUI({
       lst <- exclusion_list()
       if (length(lst) == 0) return(NULL)
       tags$table(
-        style = "width:100%; background:#f9f9f9; font-size:0.95em; margin-bottom:12px; border-radius:4px; border-collapse:separate; border-spacing:0;",
+        style = paste(
+          "width:100%",
+          "background:#f9f9f9",
+          "font-size:0.95em",
+          "margin-bottom:12px",
+          "border-radius:4px",
+          "border-collapse:separate",
+          "border-spacing:0",
+          sep = "; "
+        ),
         tags$thead(
           tags$tr(
-            tags$th("Rows", style="font-weight:600; padding:4px 8px;"),
-            tags$th("Reason", style="font-weight:600; padding:4px 8px;"),
-            tags$th("", style="width:36px;")
+            tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
+            tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
+            tags$th("", style = "width:36px;")
           )
         ),
         tags$tbody(
           lapply(lst, function(item) {
             tags$tr(
-              tags$td(paste(item$rows, collapse = ", "), style="padding:4px 8px;"),
-              tags$td(item$reason, style="padding:4px 8px;"),
+              tags$td(paste(item$rows, collapse = ", "), style = "padding:4px 8px;"),
+              tags$td(item$reason, style = "padding:4px 8px;"),
               tags$td(
                 actionButton(
                   ns(item$xbtn_id),
@@ -152,15 +162,13 @@ general_exclusions_server <- function(id, processed_pknca_data) {
         )
       )
     })
-    
+
     # Prepare exclusion list for return (without xbtn_id, for downstream use)
     exclusion_list_for_return <- reactive({
       lapply(exclusion_list(), function(x) x[setdiff(names(x), "xbtn_id")])
     })
 
     # Return the exclusion list as a reactive
-    # Return the exclusion list as a reactive
-    return(list(exclusion_list = exclusion_list_for_return))
+    list(exclusion_list = exclusion_list_for_return)
   })
 }
-

@@ -72,9 +72,9 @@ setup_server <- function(id, data, adnca_data) {
       adnca_data,
       settings_override
     )
-    
+
     general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
-    
+
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
       req(adnca_data(), settings())
