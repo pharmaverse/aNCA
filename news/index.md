@@ -45,6 +45,10 @@
 - Bug fix for settings upload via zip file output
   ([\#832](https://github.com/pharmaverse/aNCA/issues/832))
 
+- Bug fix for plotting section where if there is \>1 unit the axis label
+  will contain both unique units.
+  ([\#818](https://github.com/pharmaverse/aNCA/issues/818))
+
 ## aNCA 0.1.0
 
 CRAN release: 2025-12-09
