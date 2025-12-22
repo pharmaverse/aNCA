@@ -663,10 +663,11 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @return The modified PKNCAdata object with updated exclusion reasons in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
-  exclude_col <- pknca_data$conc$columns$exclude
+  exclude_col <- pknca_data$conc$columns[["exclude"]]
   if (is.null(exclude_col)) {
     pknca_data$conc$data$exclude <- rep("", nrow(pknca_data$conc$data))
-    pknca_data$conc$columns$exclude <- "exclude"
+    pknca_data$conc$columns[["exclude"]] <- "exclude"
+    exclude_col <- "exclude"
   }
   for (excl in exclusion_list) {
     reason <- excl$reason
