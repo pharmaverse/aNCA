@@ -15,7 +15,6 @@ general_exclusions_ui <- function(id) {
   # UI for the General Exclusions module
   ns <- NS(id)
   tagList(
-    h3("General Exclusions"),
     # Input row for exclusion reason and add button
     div(
       style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
@@ -74,6 +73,8 @@ general_exclusions_server <- function(id, processed_pknca_data) {
       "conc_table",
       conc_data,
       selection = "multiple",
+      onClick = "select",
+      borderless = TRUE,
       defaultPageSize = 25,
       style = list(fontSize = "0.75em"),
       rowStyle = function(x) {
