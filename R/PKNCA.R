@@ -680,7 +680,7 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
       pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
         pknca_data$conc$data[[exclude_col]][rows] == "",
         reason,
-        paste0(pknca_data$conc$data[[exclude_col]][rows], ";", reason)
+        paste0(pknca_data$conc$data[[exclude_col]][rows], "; ", reason)
       )
     }
   }
