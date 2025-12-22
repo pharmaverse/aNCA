@@ -233,7 +233,6 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
-#' @param should_impute_c0 Logical indicating if start values should be imputed
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -249,7 +248,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  exclusion_list = NULL
 ) {
 
   data <- adnca_data
@@ -265,6 +265,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     ),
     min.hl.r.squared = 0.01
   )
+  
+  # Add on top of the default ones, the exclusions listed
+  data <- add_exclusion_reasons(data, exclusion_list)
 
   # Format intervals
   data$intervals <- format_pkncadata_intervals(
