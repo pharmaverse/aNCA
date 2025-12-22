@@ -11,6 +11,7 @@
 * Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (#712)
 * New flagging rule for lambda-z calculations based on r-squared, R2 (#834)
 * New Parameter Selection section in NCA tab allowing to select parameters by study type (#795)
+* Option to upload multiple input files, which will be bound together to form a single ADNCA data set (#821)
 
 ## Bugs fixed
 * Bug fix for box/violin plots that were crashing when PPSTRES is NA (#785)

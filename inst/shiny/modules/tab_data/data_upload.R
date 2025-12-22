@@ -78,7 +78,6 @@ data_upload_server <- function(id) {
             data <- read_pk(path)
             list(status = "success", data = data, name = name, type = "data")
           }, error = function(e) {
-            # If read_pk fails
             # TODO: @Jana, check if settings file is loaded and then create settings override (719)
             list(status = "error", message = e$message, name = name)
           })
@@ -93,7 +92,6 @@ data_upload_server <- function(id) {
 
         # Handle Errors
         if (length(successful_loads) > 0) {
-          # Case: At least some files were read, attempt to bind them
           tryCatch({
             loaded_data <- successful_loads %>%
               purrr::map("data") %>%
@@ -103,8 +101,7 @@ data_upload_server <- function(id) {
 
             log_success("All user data loaded successfully.")
           }, error = function(e) {
-            # Case: Binding failed (e.g. column mismatch)
-            # Combine read errors with the bind error
+            # combine errors
             errors <<- append(errors, paste0("Error combining files: ", e$message))
             log_error("Error binding user data: ", e$message)
           })
