@@ -236,6 +236,11 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
+#' @param should_impute_c0 Logical indicating whether to impute start concentration values
+#' @param exclusion_list List of exclusion reasons and row indices to apply to the
+#' concentration data. Each item in the list should have:
+#' - reason: character string with the exclusion reason (e.g., "Vomiting")
+#' - rows: integer vector of row indices to apply the exclusion to
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'

@@ -24,6 +24,15 @@ PKNCA_update_data_object(
 \item{selected_profile}{User selected dose numbers/profiles}
 
 \item{selected_pcspec}{User selected specimen}
+
+\item{should_impute_c0}{Logical indicating whether to impute start concentration values}
+
+\item{exclusion_list}{List of exclusion reasons and row indices to apply to the
+concentration data. Each item in the list should have:
+\itemize{
+\item reason: character string with the exclusion reason (e.g., "Vomiting")
+\item rows: integer vector of row indices to apply the exclusion to
+}}
 }
 \value{
 A fully configured \code{PKNCAdata} object.
