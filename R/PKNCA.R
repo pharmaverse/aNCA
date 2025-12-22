@@ -1,34 +1,3 @@
-#' Add Exclusion Reasons to PKNCAdata Concentration Object
-#'
-#' This function adds exclusion reasons to the `exclude` column of the concentration object
-#' within a PKNCAdata object, based on a list of reasons and row indices.
-#'
-#' @param pknca_data A PKNCAdata object.
-#' @param exclusion_list A list of lists, each with elements:
-#'   - reason: character string with the exclusion reason (e.g., "Vomiting")
-#'   - rows: integer vector of row indices to apply the reason to
-#'
-#' @return The modified PKNCAdata object with updated exclusion reasons in the concentration object.
-#' @export
-add_exclusion_reasons <- function(pknca_data, exclusion_list) {
-  conc <- pknca_data$conc$data
-  if (!"exclude" %in% names(conc)) {
-    conc$exclude <- ""
-  }
-  for (item in exclusion_list) {
-    reason <- item$reason
-    rows <- item$rows
-    for (i in rows) {
-      if (is.na(conc$exclude[i]) || conc$exclude[i] == "") {
-        conc$exclude[i] <- reason
-      } else {
-        conc$exclude[i] <- paste0(conc$exclude[i], ";", reason)
-      }
-    }
-  }
-  pknca_data$conc$data <- conc
-  pknca_data
-}
 #' Creates a `PKNCA::PKNCAdata` object.
 #'
 #' @details
