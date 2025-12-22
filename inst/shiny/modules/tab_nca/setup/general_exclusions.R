@@ -1,8 +1,22 @@
+#' General Exclusions Shiny Module
+#'
+#' UI and server logic for managing and displaying manual and default NCA exclusions.
+#' Allows users to select rows from a concentration table, provide exclusion reasons,
+#' and manage a list of exclusions with visual feedback and color coding.
+#'
+#' - Yellow: Default NCA exclusions (from data)
+#' - Red: Manual in-app exclusions
+
+# Color constants for exclusion row highlighting
+EXCL_COLOR_DEFAULT <- "#FFFF99"  # yellow
+EXCL_COLOR_MANUAL  <- "#FFCCCC"  # red
+
 general_exclusions_ui <- function(id) {
+  # UI for the General Exclusions module
   ns <- NS(id)
   tagList(
     h3("General Exclusions"),
-    # Exclusion reason input and add button at the top, inline
+    # Input row for exclusion reason and add button
     div(
       style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
       textInput(
@@ -16,9 +30,10 @@ general_exclusions_ui <- function(id) {
         class = "btn btn-primary btn-sm"
       )
     ),
-    # Exclusion reasons table (compact, below input)
+    # Table of current manual exclusions (compact, below input)
     uiOutput(ns("exclusion_list_ui")),
     # Color legend for the exclusions table
+    # Color legend for row highlighting
     div(
       class = "results-legend",
       style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
@@ -36,6 +51,7 @@ general_exclusions_ui <- function(id) {
           span("Manual exclusion", style = "font-size:0.9em;")
       )
     ),
+    # Main concentration data table with row selection and color coding
     reactable_ui(ns("conc_table"))
   )
 }
@@ -43,15 +59,17 @@ general_exclusions_ui <- function(id) {
 general_exclusions_server <- function(id, processed_pknca_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    # Store the list of manual exclusions and a counter for unique button IDs
     exclusion_list <- reactiveVal(list())
-    exclusion_btn_counter <- reactiveVal(0)
-    
-    # Render the concentration data table with row selection
+    xbtn_counter <- reactiveVal(0)
+
+    # Reactive for the concentration data table rendered
     conc_data <- reactive({
       req(processed_pknca_data())
       processed_pknca_data()$conc$data
     })
     
+    # Render the reactable with row coloring for exclusions
     reactable_server(
       "conc_table",
       conc_data,
@@ -73,14 +91,15 @@ general_exclusions_server <- function(id, processed_pknca_data) {
       }
     )
     
+    # Add a new manual exclusion when the Add button is pressed
     observeEvent(input$add_exclusion_reason, {
       rows_sel <- getReactableState("conc_table-table", "selected")
       reason <- input$exclusion_reason
       if (length(rows_sel) > 0 && nzchar(reason)) {
         current <- exclusion_list()
-        btn_id <- paste0("remove_exclusion_reason_", exclusion_btn_counter() + 1)
-        exclusion_btn_counter(exclusion_btn_counter() + 1)
-        exclusion_list(append(current, list(list(reason = reason, rows = rows_sel, btn_id = btn_id))))
+        xbtn_id <- paste0("remove_exclusion_reason_", xbtn_counter() + 1)
+        xbtn_counter(xbtn_counter() + 1)
+        exclusion_list(append(current, list(list(reason = reason, rows = rows_sel, xbtn_id = xbtn_id))))
         # Clear selected rows and reason input
         updateTextInput(session, "exclusion_reason", value = "")
         updateReactable("conc_table-table", selected = NA)
@@ -92,15 +111,16 @@ general_exclusions_server <- function(id, processed_pknca_data) {
     observe({
       lst <- exclusion_list()
       lapply(lst, function(item) {
-        btn_id <- item$btn_id
-        observeEvent(input[[btn_id]], {
+        xbtn_id <- item$xbtn_id
+        observeEvent(input[[xbtn_id]], {
           current <- exclusion_list()
-          # Remove the item with this btn_id
-          exclusion_list(Filter(function(x) x$btn_id != btn_id, current))
+          # Remove the item with this xbtn_id
+          exclusion_list(Filter(function(x) x$xbtn_id != xbtn_id, current))
         }, ignoreInit = TRUE, once = TRUE)
       })
     })
     
+    # Render the manual exclusions table (not shown if empty)
     output$exclusion_list_ui <- renderUI({
       lst <- exclusion_list()
       if (length(lst) == 0) return(NULL)
@@ -120,7 +140,7 @@ general_exclusions_server <- function(id, processed_pknca_data) {
               tags$td(item$reason, style="padding:4px 8px;"),
               tags$td(
                 actionButton(
-                  ns(item$btn_id),
+                  ns(item$xbtn_id),
                   label = NULL,
                   icon = shiny::icon("times"),
                   class = "btn btn-link btn-sm",
@@ -133,16 +153,14 @@ general_exclusions_server <- function(id, processed_pknca_data) {
       )
     })
     
-    # Prepare exclusion list for return (without btn_id)
-    exclusion_list_no_btnid <- reactive({
-      lapply(exclusion_list(), function(x) x[setdiff(names(x), "btn_id")])
+    # Prepare exclusion list for return (without xbtn_id, for downstream use)
+    exclusion_list_for_return <- reactive({
+      lapply(exclusion_list(), function(x) x[setdiff(names(x), "xbtn_id")])
     })
 
     # Return the exclusion list as a reactive
-    return(list(exclusion_list = exclusion_list_no_btnid))
+    # Return the exclusion list as a reactive
+    return(list(exclusion_list = exclusion_list_for_return))
   })
 }
 
-# Color constants for exclusion row highlighting
-EXCL_COLOR_DEFAULT <- "#FFFF99"  # yellow
-EXCL_COLOR_MANUAL  <- "#FFCCCC"  # red
