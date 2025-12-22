@@ -96,6 +96,7 @@ colour
 concu
 customizable
 customizations
+dataformat
 dateTime
 devtools
 df
@@ -103,7 +104,10 @@ doi
 extravascular
 ggplot
 ggplots
+ifelse
 intravascular
+kable
+knitr
 linters
 lintr
 lin
@@ -131,6 +135,7 @@ rpptx
 ruleset
 rulesets
 signif
+src
 tibble
 tidyverse
 timeframe
