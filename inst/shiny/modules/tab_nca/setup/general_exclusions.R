@@ -2,6 +2,20 @@
     ns <- NS(id)
     tagList(
       h3("General Exclusions"),
+      # Exclusion reason input and add button at the top, inline
+      div(
+        style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
+        textInput(
+          ns("exclusion_reason"),
+          label = NULL,
+          placeholder = "Enter exclusion reason"
+        ),
+        actionButton(
+          ns("add_exclusion_reason"),
+          label = "Add",
+          class = "btn btn-primary btn-sm"
+        )
+      ),
       # Color legend for the exclusions table
       div(
         class = "results-legend",
@@ -21,8 +35,6 @@
         )
       ),
       reactable_ui(ns("conc_table")),
-      textInput(ns("exclusion_reason"), "Exclusion reason", ""),
-      actionButton(ns("add_exclusion_reason"), "Add exclusion reason"),
       uiOutput(ns("exclusion_list_ui"))
     )
   }
