@@ -291,8 +291,8 @@ adpc1 <- FIXTURE_CONC_DATA %>%
   mutate(USUBJID = as.character(USUBJID),
          DOSNO = as.character(ATPTREF),
          TRT01A = "Dummy Treatment",
-         AVALCAT1 = as.character(AVAL),
-         AVALCAT1 = ifelse(NFRLT == 0.0 & DOSNO == 1, "BLQ", AVALCAT1),
+         AVALC = as.character(AVAL),
+         AVALC = ifelse(NFRLT == 0.0 & DOSNO == 1, "BLQ", AVALC),
          DOSEA = ifelse(USUBJID %in% c("3", "4", "5", "7", "8"), 50, 100))
 
 attr(adpc1$USUBJID, "label") <- "Subject ID"

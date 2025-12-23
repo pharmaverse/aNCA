@@ -11,7 +11,7 @@
     "AUCdn_IV",
     "AUCdn_IV_prof",
     "AVAL",
-    "AVALCAT1",
+    "AVALC",
     "AVALU",
     "CI_lower",
     "CI_upper",

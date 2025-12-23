@@ -787,17 +787,26 @@ pkcg03 <- function(
   plots <- lapply(plot_ids, function(id_val) {
     plot_data <- adnca_grouped %>%
       filter(id_plot == id_val)
-
+    
+    # identify valid BLQ column
+    blq_col <- intersect(c("AVALC", "AVALCAT1"), names(plot_data))[1]
+    
     # Keep timepoints for which at least 50% of the values are not BLQ by timepoint/group
+    # (only if character col exists)
     keep_timepoint <- plot_data %>%
+      mutate(is_blq = if (!is.na(blq_col)) {
+        # Count number of BLQ samples for each timepoint by group
+        grepl("BLQ|LTR|<[1-9]|<PCLLOQ", .data[[blq_col]])
+      } else {
+        FALSE
+      }) %>%
       group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
-      summarise(# Count number of samples for each timepoint by group
-                n_samples =  n_distinct(USUBJID),
-                # Count number of BLQ samples for each timepoint by group
-                n_blq = (sum(grepl("BLQ|LTR|<[1-9]|<PCLLOQ", AVALCAT1))),
-                # Compute BLQ ratio for each timepoint by group
-                n_blq_ratio = n_blq / n_samples,
-                .groups = "drop") %>%
+      summarise( # Count number of samples for each timepoint by group
+        n_samples = n_distinct(USUBJID), 
+        # # Compute BLQ ratio for each timepoint by group
+        n_blq_ratio = sum(is_blq) / n_samples,
+        .groups = "drop"
+      ) %>%
       filter(n_blq_ratio <= 0.5, n_samples > 1) %>%
       select(all_of(c(mean_group_var, xvar)))
 
