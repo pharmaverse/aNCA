@@ -898,12 +898,10 @@ pkcg03 <- function(
     aval_stat <- mid_value
     if (scale == "LOG") {
 
-      log_data <- plot$data %>%
-        dplyr::mutate(!!sym(aval_stat)  := ifelse(
-          !!sym(aval_stat) < 1e-3,
-          yes = 1e-3, no = !!sym(aval_stat)
-        ))
-      plot <- plot + log_data
+      plot$data[[aval_stat]] <- ifelse(
+        plot$data[[aval_stat]] < 1e-3,
+        yes = 1e-3, no = plot$data[[aval_stat]]
+      )
 
       if (!plotly) {
         plot <- plot +
@@ -929,7 +927,9 @@ pkcg03 <- function(
           )
         )
 
-      plot <- plot + sbs_data +
+      plot$data <- sbs_data
+      
+      plot <- plot +
         facet_wrap(~ view, scales = "free_y") +
         ggh4x::scale_y_facet(view == "Semilogarithmic view (Log10)",
           trans  = "log10",
