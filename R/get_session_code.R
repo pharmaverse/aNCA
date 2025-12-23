@@ -21,7 +21,6 @@ get_session_code <- function(template_path, session, output_path) {
     }
     obj
   }
-
   # Read template
   script <- readLines(template_path, warn = FALSE) %>%
     paste(collapse = "\n")
@@ -115,6 +114,10 @@ clean_deparse.list <- function(obj, indent = 0) {
   nms <- names(obj)
   items <- vapply(seq_len(n), FUN.VALUE = "", function(i) {
     name <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("V", i)
+    # Quote name if not a valid R symbol
+    if (!grepl("^[A-Za-z.][A-Za-z0-9._]*$", name)) {
+      name <- sprintf('"%s"', name)
+    }
     val <- obj[[i]]
     paste0(name, " = ", clean_deparse(val, indent + 1))
   })
