@@ -961,6 +961,15 @@ pkcg03 <- function(
 
     if (plotly) {
       suppressWarnings({
+        # Explicity set geom_line for plotly
+        plot <- plot + 
+          geom_line(
+            aes(
+              y = !!sym(mid_value), 
+              group = !!sym(mean_group_var)
+            )
+          )
+        
         plotly_plot <- plot %>%
           ggplotly(
             tooltip = c("x", "y"),
