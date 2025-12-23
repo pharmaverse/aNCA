@@ -13,7 +13,32 @@ nca_results_ui <- function(id) {
       options = list(`actions-box` = TRUE)
     ),
     units_table_ui(ns("units_table")),
-    reactableOutput(ns("myresults")),
+    reactable_ui(ns("myresults")),
+
+    # Color legend for the results table
+    div(
+      class = "results-legend",
+      style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
+      div(style = "font-weight:600; font-size:0.95em; margin-right:8px;", "Flag Rules:"),
+      div(style = "display:flex; align-items:center; gap:6px;",
+        div(style = paste0(
+          "width:14px; height:14px; background:", FLAG_COLOR_FLAGGED, "; border:1px solid #ddd;"
+        )),
+        span("FLAGGED", style = "font-size:0.9em;")
+      ),
+      div(style = "display:flex; align-items:center; gap:6px;",
+        div(style = paste0(
+          "width:14px; height:14px; background:", FLAG_COLOR_MISSING, "; border:1px solid #ddd;"
+        )),
+        span("MISSING", style = "font-size:0.9em;")
+      ),
+      div(style = "display:flex; align-items:center; gap:6px;",
+        div(style = "width:14px; height:14px; background:#ffffff; border:1px solid #ddd;"),
+        span("ACCEPTED", style = "font-size:0.9em;")
+      )
+    ),
+
+    # Download buttons
     downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data"),
     downloadButton(ns("download_zip"), "Download All Results as ZIP")
   )
@@ -63,7 +88,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
           grouping_vars(),
           unname(unlist(res_nca()$data$conc$columns$groups)),
           "DOSEA",
-          "NCA_PROFILE",
+          "ATPTREF",
           "ROUTE"
         )))
 
@@ -75,25 +100,22 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         )
 
       # Add flaging column in the pivoted results
-      # ToDo(Gerardo): Once PKNCAoptions allow specification of adj.r.squared,
-      #                we can simplify this part by using the PKNCA object
-      rules <- settings()$flags
-      rule_thr <- lapply(rules, FUN =  \(x) x$threshold)
-      rule_pretty_names <- translate_terms(names(rules), "PKNCA", "PPTEST")
-      rule_msgs <- paste0(rule_pretty_names, c(" < ", " > ", " > ", " < "))
+      applied_flags <- purrr::keep(settings()$flags, function(x) x$is.checked)
+      flag_params <- names(settings()$flags)
+      flag_thr <- sapply(settings()$flags, FUN =  function(x) x$threshold)
+      flag_rule_msgs <- paste0(flag_params, c(" < ", " < ", " > ", " > ", " < "), flag_thr)
+      flag_cols <- names(final_results)[formatters::var_labels(final_results)
+                                        %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
-      rules_applied <- sapply(rules, FUN =  \(x) x$is.checked)
-      params_applied <- translate_terms(names(rules), "PKNCA", "PPTEST")[rules_applied]
-      params_applied <- names(final_results)[formatters::var_labels(final_results)
-                                             %in% params_applied]
-
-      if (length(params_applied) > 0) {
+      if (length(flag_params) > 0) {
         final_results <- final_results %>%
           mutate(
             flagged = case_when(
-              rowSums(is.na(select(., any_of(params_applied)))) > 0 ~ "MISSING",
+              rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
               is.na(Exclude) ~ "ACCEPTED",
-              any(sapply(rule_msgs, \(msg) str_detect(Exclude, fixed(msg)))) ~ "FLAGGED",
+              any(sapply(
+                flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
+              )) ~ "FLAGGED",
               TRUE ~ "ACCEPTED"
             )
           )
@@ -109,14 +131,76 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
       content = function(fname) {
-        output_tmpdir <- file.path(tempdir(), "output")
+        tryCatch({
+          shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
 
-        save_output(output = session$userData$results, output_path = output_tmpdir)
-        files <- list.files(output_tmpdir, pattern = ".[(csv)|(rds)|(xpt)]$", recursive = TRUE)
-        wd <- getwd()
-        on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler function
-        setwd(output_tmpdir)
-        utils::zip(zipfile = fname, files = files)
+            # Create an output folder with all plots, tables and listings
+            output_tmpdir <- file.path(tempdir(), "output")
+            save_output(output = session$userData$results, output_path = output_tmpdir)
+            incProgress(0.1)
+
+            # Create presentation slides
+            res_nca <- res_nca()
+            res_dose_slides <- get_dose_esc_results(
+              o_nca = res_nca,
+              group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
+              facet_vars = "DOSEA",
+              statistics = c("Mean"),
+              stats_parameters = c(
+                "CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"
+              ),
+              info_vars = grouping_vars()
+            )
+            presentations_path <- paste0(output_tmpdir, "/presentations")
+            dir.create(presentations_path)
+
+            create_qmd_dose_slides(
+              res_dose_slides = res_dose_slides,
+              quarto_path = paste0(presentations_path, "/results_slides.qmd"),
+              title = paste0("NCA Results", "\n", session$userData$project_name()),
+              use_plotly = TRUE
+            )
+            incProgress(0.3)
+            create_pptx_dose_slides(
+              res_dose_slides = res_dose_slides,
+              path = paste0(presentations_path, "/results_slides.pptx"),
+              title = paste0("NCA Results", "\n", session$userData$project_name()),
+              template = "www/templates/template.pptx"
+            )
+            incProgress(0.6)
+
+            # Create a settings folder
+            setts_tmpdir <- file.path(output_tmpdir, "settings")
+            dir.create(setts_tmpdir, recursive = TRUE)
+            settings_list <- session$userData$settings
+            setings_to_save <- list(
+              settings = settings_list$settings(),
+              slope_rules = settings_list$slope_rules()
+            )
+
+            saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+
+            files <- list.files(
+              output_tmpdir,
+              pattern = paste0(
+                "(\\.csv)|(\\.rds)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
+                "|(results_slides\\.pptx)|(results_slides\\.qmd)$"
+              ),
+              recursive = TRUE
+            )
+
+            wd <- getwd()
+            on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
+            setwd(output_tmpdir)
+            incProgress(0.9)
+            zip::zipr(zipfile = fname, files = files, mode = "mirror")
+            incProgress(1)
+          })
+        }, error = function(e) {
+          message("Download Error:")
+          message(e$message)
+          stop(e)
+        })
       }
     )
 
@@ -158,40 +242,30 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)]))) %>%
+        # Add group variable labels (others were added in pivot_wider_pknca_result)
+        apply_labels()
     })
 
-    output$myresults <- reactable::renderReactable({
-      req(output_results())
-
-      # Generate column definitions that can be hovered in the UI
-      col_defs <- generate_col_defs(output_results())
-
-      # Make the reactable object
-      reactable(
-        output_results(),
-        columns = col_defs,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        striped = TRUE,
-        bordered = TRUE,
-        height = "68vh",
-        rowStyle = function(index) {
-          flagged_value <- output_results()$flagged[index]
+    reactable_server(
+      "myresults",
+      output_results,
+      compact = TRUE,
+      style = list(fontSize = "0.75em"),
+      height = "68vh",
+      rowStyle = function(x) {
+        function(index) {
+          flagged_value <- x$flagged[index]
           if (flagged_value == "FLAGGED") {
-            list(backgroundColor = "#f5b4b4")
+            list(backgroundColor = FLAG_COLOR_FLAGGED)
           } else if (flagged_value == "MISSING") {
-            list(backgroundColor = "#cbaddd")
+            list(backgroundColor = FLAG_COLOR_MISSING)
           } else {
             NULL
           }
         }
-      )
-    })
+      }
+    )
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
@@ -203,3 +277,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
     )
   })
 }
+
+# Color constants for flagged results
+FLAG_COLOR_FLAGGED <- "#f5b4b4"
+FLAG_COLOR_MISSING <- "#cbaddd"

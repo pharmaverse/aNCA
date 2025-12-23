@@ -3,13 +3,6 @@
 #' @param x character string with range notation, e.g. 1:5.
 #' @returns numeric vector with specified range of numbers, NA if notation is invalid
 #'
-#' @examples
-#' \dontrun{
-#' # Basic usage
-#' .eval_range("1:5") # c(1, 2, 3, 4, 5)
-#' .eval_range("5,3:1,15") # c(5, 3, 2, 1, 15)
-#' }
-#'
 .eval_range <- function(x) {
   val_range <- try({
     if (!grepl("^[0-9,:]+$", x)) stop("Error: not a valid range notation.")
@@ -26,13 +19,6 @@
 #'
 #' @importFrom methods is
 #'
-#' @examples
-#' \dontrun{
-#' # Basic usage
-#' .compress_range(c(1, 2, 3, 4)) # "1:4"
-#' .compress_range(c(15, 1, 11, 4, 5, 10, 2, 12, 3)) # "1:5,10:12,15"
-#' }
-#'
 .compress_range <- function(range_vector) {
   if (!is(range_vector, "numeric")) range_vector <- suppressWarnings(as.numeric(range_vector))
   if (any(is.na(range_vector))) stop("Error: only numeric values allowed")
@@ -43,7 +29,7 @@
     cumsum() %>%
     split(range_vector, .)
 
-  subranges <- sapply(grouped_range, \(group) {
+  subranges <- sapply(grouped_range, function(group) {
     if (length(group) > 1) paste0(group[1], ":", group[length(group)]) else as.character(group)
   })
 
@@ -106,4 +92,44 @@ parse_annotation <- function(data, text) {
     gsub("\\$(\\w+)", "{unique(data[['\\1']])}", .) %>%
     gsub("!(\\w+)", "{attr(data[['\\1']], 'label')}", .) %>%
     str_glue(.na = "ERR", .null = "ERR")
+}
+
+#' Contatenates a list and data frame objects into formatted string for logging.
+#'
+#' @details
+#' Utilitary function for logging a list object (like mapping list or used settings) in
+#' a nice format. Parses a list into nice string and logs at DEBUG level. Can also process
+#' data frames, which will be converted into a list of rows.
+#'
+#' @param title Title for the logs.
+#' @param l     List object to be parsed into log. Can also be a data.frame.
+#' @returns Character string ready for logging.
+#'
+#' @importFrom purrr imap
+#'
+#' @noRd
+#' @keywords internal
+.concatenate_list <- function(title, l) {
+
+  # Make a list of rows for data frames
+  if (is.data.frame(l))
+    l <- split(l, seq_len(nrow(l)))
+
+  # Construct the log message for each list element
+  log_msg <- imap(l, function(val, nm) {
+    sep <- ", "
+    if (is.list(val)) {
+      val <- imap(val, function(val2, nm2) {
+        paste0("\t* ", nm2, " -> ", paste0(val2, collapse = ", "))
+      }) %>%
+        paste0(collapse = "\n") %>%
+        paste0("\n", .)
+    } else {
+      val <- paste0(val, collapse = ", ")
+    }
+    paste0("* ", nm, " -> ", val, collapse = "\n")
+  })
+
+  # Paste all together in different lines
+  paste0(title, "\n", paste0(log_msg, collapse = "\n"))
 }

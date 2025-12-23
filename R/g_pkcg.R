@@ -4,7 +4,7 @@
 #' @returns ggplot2 object for pkcg01.
 #' @export
 g_pkcg01_lin <- function(data, ...) {
-  pkcg01(adpc = data, scale = "LIN", ...)
+  pkcg01(adnca = data, scale = "LIN", ...)
 }
 
 #' Wrapper around aNCA::pkcg01() function. Calls the function with `LOG` scale argument.
@@ -13,14 +13,14 @@ g_pkcg01_lin <- function(data, ...) {
 #' @returns ggplot2 object for pkcg01.
 #' @export
 g_pkcg01_log <- function(data, ...) {
-  pkcg01(adpc = data, scale = "LOG", ...)
+  pkcg01(adnca = data, scale = "LOG", ...)
 }
 
 #' Generate PK Concentration-Time Profile Plots
 #'
 #' This function generates a list of ggplots for PK concentration-time profiles.
 #'
-#' @param adpc            A data frame containing the data.
+#' @param adnca            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
 #' @param yvar            A character string of the variable name for the y-axis.
 #' @param xvar_unit       A character string of the unit for the x-axis variable.
@@ -51,27 +51,17 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom stats setNames
 #'
 #' @examples
-#' \dontrun{
-#'   adpc <- read.csv("inst/shiny/data/DummyRO_ADNCA.csv")
-#'   attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
-#'   attr(adpc[["AVAL"]], "label") <- "Analysis val"
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- subset(adnca, adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)])
+#' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
+#' attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'
-#'   plots_lin <- pckg01(adpc = adpc, xmax = 1)
-#'   plots_log <- pckg01(adpc = adpc, color_var = "USUBJID", scale = "LOG")
-#'   plots_sbs <- pckg01(
-#'     adpc = adpc,
-#'     color_var = "USUBJID",
-#'     xbreaks_var = "NFRLT",
-#'     xmin = 100,
-#'     xmax = 1000,
-#'     scale = "SBS"
-#'   )
-#' }
+#' plots_lin <- pkcg01(adnca = adnca, xmax = 1)
 #'
 #' @export
 #' @author Gerardo Rodriguez
 pkcg01 <- function(
-  adpc = data(),
+  adnca = data(),
   xvar = "AFRLT",
   yvar = "AVAL",
   xvar_unit = "RRLTU",
@@ -112,23 +102,23 @@ pkcg01 <- function(
 
   # Ensure color_var is interpreted as a factor
   if (!is.null(color_var)) {
-    adpc[[color_var]] <- as.factor(adpc[[color_var]])
+    adnca[[color_var]] <- as.factor(adnca[[color_var]])
   }
 
-  # save col labels, as further adpc tranformations cause them to be lost #
-
-  adpc_grouped <- adpc %>%
+  # save col labels, as further adnca tranformations cause them to be lost #
+  adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
+    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars))) %>%
+    filter(!is.na(id_plot))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
-  old_labels <- c(formatters::var_labels(adpc), id_plot = NA)
-  formatters::var_labels(adpc_grouped) <- ifelse(!is.na(old_labels),
-                                                 old_labels,
-                                                 names(adpc_grouped))
+  old_labels <- c(formatters::var_labels(adnca), id_plot = NA)
+  formatters::var_labels(adnca_grouped) <- ifelse(!is.na(old_labels),
+                                                  old_labels,
+                                                  names(adnca_grouped))
 
   # Construct the reference ggplot object
-  plot_data <- adpc_grouped %>% filter(id_plot == id_plot[1])
+  plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
 
   plot <- tern::g_ipp(
     df = plot_data,
@@ -160,7 +150,7 @@ pkcg01 <- function(
         min_cm_distance = xbreaks_mindist,
         plot = plot
       ),
-      labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+      labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
     )
 
   # Add color when specified
@@ -170,10 +160,10 @@ pkcg01 <- function(
       theme(legend.position = "none")
 
     # Add color legend only when neccessary
-    if (length(unique(adpc[[color_var]])) > 1) {
+    if (length(unique(adnca[[color_var]])) > 1) {
 
       # Make sure the variable is interpreted as a factor
-      adpc[[color_var]] <- as.factor(adpc[[color_var]])
+      adnca[[color_var]] <- as.factor(adnca[[color_var]])
 
       # Add to the plot the color_var and color_var_label
       plot <- plot +
@@ -183,20 +173,19 @@ pkcg01 <- function(
   }
 
   if (scale == "LOG") {
-    adpc_grouped[[yvar]] <- ifelse(
-      adpc_grouped[[yvar]] < 1e-3,
-      yes = 1e-3, no = adpc_grouped[[yvar]]
+    adnca_grouped[[yvar]] <- ifelse(
+      adnca_grouped[[yvar]] < 1e-3,
+      yes = 1e-3, no = adnca_grouped[[yvar]]
     )
 
     if (!plotly) {
       plot <- plot +
         scale_y_continuous(
           transform = "log10",
-          labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
         )
     }
   }
-
 
   if (scale == "SBS") {
     if (!requireNamespace("ggh4x", quietly = FALSE))
@@ -211,9 +200,9 @@ pkcg01 <- function(
       )
 
     # Create SBS version of data and plot
-    adpc_grouped <- bind_rows(
-      adpc_grouped %>% dplyr::mutate(view = "Linear view"),
-      adpc_grouped %>% dplyr::mutate(view = "Semilogarithmic view (Log10)")
+    adnca_grouped <- bind_rows(
+      adnca_grouped %>% dplyr::mutate(view = "Linear view"),
+      adnca_grouped %>% dplyr::mutate(view = "Semilogarithmic view (Log10)")
     ) %>%
       dplyr::mutate(
         !!sym(yvar) := ifelse(
@@ -222,24 +211,27 @@ pkcg01 <- function(
         )
       )
 
-    plot <- plot %+% dplyr::filter(adpc_grouped, id_plot == unique(id_plot)[1]) +
+    plot$data <- plot_data
+    plot <- plot +
       facet_wrap(~ view, scales = "free_y") +
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
         trans  = "log10",
-        labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+        labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
       )
   }
 
   # Create the list of plots for each unique group
-  plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
-    plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
+  plots <- lapply(unique(adnca_grouped[["id_plot"]]), function(id_val) {
+    plot_data <- adnca_grouped %>% dplyr::filter(id_plot == id_val)
 
     title <- generate_title(plot_data, title, scale, studyid)
     subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
     title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
+
+    plot$data <- plot_data
 
     #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
@@ -251,8 +243,8 @@ pkcg01 <- function(
     }
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
-      plotly_plot <- plot %+%
-        plot_data %+%
+
+      plotly_plot <- plot +
         theme(
           # add margin to make space for subtitle and footnote #
           plot.margin = margin(
@@ -262,7 +254,9 @@ pkcg01 <- function(
             0,
             "cm"
           )
-        ) %>%
+        )
+
+      plotly_plot <- plotly_plot %>%
         # This because of no spec of parse annotation generates warning is.na()
         ggplotly(
           tooltip = c("x", "y"),
@@ -297,8 +291,7 @@ pkcg01 <- function(
 
       plotly_plot
     } else {
-      plot %+%
-        plot_data +
+      plot +
         labs(
           title = title,
           subtitle = subtitle,
@@ -306,8 +299,8 @@ pkcg01 <- function(
         )
     }
   })
-  plots |>
-    setNames(unique(adpc[["id_plot"]]))
+  plots %>%
+    setNames(unique(adnca[["id_plot"]]))
 }
 
 # Helper Function for Title Generation
@@ -348,7 +341,7 @@ generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plot
 #' @returns ggplot2 object for pkcg02.
 #' @export
 g_pkcg02_lin <- function(data, ...) {
-  pkcg02(adpc = data, scale = "LIN", ...)
+  pkcg02(adnca = data, scale = "LIN", ...)
 }
 
 #' Wrapper around aNCA::pkcg02() function. Calls the function with `LOG` scale argument.
@@ -357,14 +350,14 @@ g_pkcg02_lin <- function(data, ...) {
 #' @returns ggplot2 object for pkcg02.
 #' @export
 g_pkcg02_log <- function(data, ...) {
-  pkcg02(adpc = data, scale = "LOG", ...)
+  pkcg02(adnca = data, scale = "LOG", ...)
 }
 
 #' Generate Combined PK Concentration-Time Profile Plot by Cohort
 #'
 #' This function generates a list of plotly objects PK concentration-time profiles by group
 #'
-#' @param adpc            A data frame containing the data.
+#' @param adnca            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
 #' @param yvar            A character string of the variable name for the y-axis.
 #' @param xvar_unit       A character string of the unit for the x-axis variable.
@@ -395,21 +388,22 @@ g_pkcg02_log <- function(data, ...) {
 #' @importFrom stats setNames
 
 #' @examples
-#' \dontrun{
-#'   adpc <- read.csv(system.file("shiny/data/DummyRO_ADNCA.csv", package = "aNCA"))
-#'   attr(adpc[["AFRLT"]], "label") <- "Actual time from first dose"
-#'   attr(adpc[["AVAL"]], "label") <- "Analysis value"
+#' # Make an example small dataset
+#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- adnca[adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)],]
+#' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
+#' attr(adnca[["AVAL"]], "label") <- "Analysis value"
 #'
-#'   plots <- pkcg02(adpc)
-#'   plots_log <- pkcg02(adpc, scale = "LOG")
-#'   plots_custom <- pkcg02(adpc, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study XYZ")
-#'   plotly::plotly_build(plots[[1]]) # View the first plot
-#' }
+#' # Run the function
+#' plots <- pkcg02(adnca)
+#' plots_log <- pkcg02(adnca, scale = "LOG")
+#' plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
+#' plotly::plotly_build(plots[[1]]) # View the first plot
 #'
 #' @export
 #' @author Kezia Kobana
 pkcg02 <- function(
-  adpc = data(),
+  adnca = data(),
   xvar = "AFRLT",
   yvar = "AVAL",
   xvar_unit = "RRLTU",
@@ -447,22 +441,22 @@ pkcg02 <- function(
 
   # Ensure color_var is interpreted as a factor
   if (!is.null(color_var)) {
-    adpc[[color_var]] <- as.factor(adpc[[color_var]])
+    adnca[[color_var]] <- as.factor(adnca[[color_var]])
   }
 
-  # save col labels, as further adpc tranformations cause them to be lost #
-  adpc_grouped <- adpc %>%
+  # save col labels, as further adnca tranformations cause them to be lost #
+  adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
     dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
-  old_labels <- c(formatters::var_labels(adpc), id_plot = NA)
-  formatters::var_labels(adpc_grouped) <- ifelse(!is.na(old_labels),
-                                                 old_labels,
-                                                 names(adpc_grouped))
+  old_labels <- c(formatters::var_labels(adnca), id_plot = NA)
+  formatters::var_labels(adnca_grouped) <- ifelse(!is.na(old_labels),
+                                                  old_labels,
+                                                  names(adnca_grouped))
 
   # Construct the reference ggplot object
-  plot_data <- adpc_grouped %>% filter(id_plot == id_plot[1])
+  plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
 
   plot <- tern::g_ipp(
     df = plot_data,
@@ -493,7 +487,7 @@ pkcg02 <- function(
       min_cm_distance = xbreaks_mindist,
       plot = plot
     ),
-    labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+    labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
   )
 
   # Add color when specified
@@ -502,30 +496,26 @@ pkcg02 <- function(
       ggplot2::aes(color = !!sym(color_var)) +
       ggplot2::theme(legend.position = "none")
 
-    # Add color legend only when neccessary
-    if (length(unique(adpc[[color_var]])) > 1) {
+    # Make sure the variable is interpreted as a factor
+    adnca[[color_var]] <- as.factor(adnca[[color_var]])
 
-      # Make sure the variable is interpreted as a factor
-      adpc[[color_var]] <- as.factor(adpc[[color_var]])
-
-      # Add to the plot the color_var and color_var_label
-      plot <- plot +
-        ggplot2::labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
-        ggplot2::theme(legend.position = "bottom")
-    }
+    # Add to the plot the color_var and color_var_label
+    plot <- plot +
+      ggplot2::labs(color = if (!is.null(color_var_label)) color_var_label else color_var) +
+      ggplot2::theme(legend.position = "bottom")
   }
 
   if (scale == "LOG") {
-    adpc_grouped[[yvar]] <- ifelse(
-      adpc_grouped[[yvar]] < 1e-3,
-      yes = 1e-3, no = adpc_grouped[[yvar]]
+    adnca_grouped[[yvar]] <- ifelse(
+      adnca_grouped[[yvar]] < 1e-3,
+      yes = 1e-3, no = adnca_grouped[[yvar]]
     )
 
     if (!plotly) {
       plot <- plot +
         scale_y_continuous(
           transform = "log10",
-          labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
         )
     }
   }
@@ -543,9 +533,9 @@ pkcg02 <- function(
       )
 
     # Create SBS version of data and plot
-    adpc_grouped <- bind_rows(
-      adpc_grouped %>% dplyr::mutate(view = "Linear view"),
-      adpc_grouped %>% dplyr::mutate(view = "Semilogarithmic view (Log10)")
+    adnca_grouped <- bind_rows(
+      adnca_grouped %>% dplyr::mutate(view = "Linear view"),
+      adnca_grouped %>% dplyr::mutate(view = "Semilogarithmic view (Log10)")
     ) %>%
       dplyr::mutate(
         !!sym(yvar) := ifelse(
@@ -554,24 +544,27 @@ pkcg02 <- function(
         )
       )
 
-    plot <- plot %+% dplyr::filter(adpc_grouped, id_plot == unique(id_plot)[1]) +
+    plot$data <- plot_data
+    plot <- plot +
       facet_wrap(~ view, scales = "free_y") +
       ggh4x::scale_y_facet(
         view == "Semilogarithmic view (Log10)",
         trans  = "log10",
-        labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+        labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
       )
   }
 
   # Create the list of plots for each unique group
-  plots <- lapply(unique(adpc_grouped[["id_plot"]]), \(id_val) {
-    plot_data <- adpc_grouped %>% dplyr::filter(id_plot == id_val)
+  plots <- lapply(unique(adnca_grouped[["id_plot"]]), function(id_val) {
+    plot_data <- adnca_grouped %>% dplyr::filter(id_plot == id_val)
 
     title <- generate_title(plot_data, title, scale, studyid)
     subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
     title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
+
+    plot$data <- plot_data
 
     #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
@@ -584,8 +577,7 @@ pkcg02 <- function(
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
       suppressWarnings({
-        plotly_plot <- plot %+%
-          plot_data %+%
+        plotly_plot <- plot +
           theme(
             # add margin to make space for subtitle and footnote #
             plot.margin = margin(
@@ -595,14 +587,16 @@ pkcg02 <- function(
               0,
               "cm"
             )
-          ) %>%
-          # This because of no spec of parse annotation generates warning is.na()
-          ggplotly(
-            tooltip = c("x", "y"),
-            dynamicTicks = if (scale != "SBS") TRUE else FALSE,
-            #' NOTE: might require some fine tuning down the line, looks fine now
-            height = 500 + (footnote_y * 25) + title_margin * 50
-          ) %>%
+          )
+
+        # This because of no spec of parse annotation generates warning is.na()
+        plotly_plot <- ggplotly(
+          plotly_plot,
+          tooltip = c("x", "y"),
+          dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+          #' NOTE: might require some fine tuning down the line, looks fine now
+          height = 500 + (footnote_y * 25) + title_margin * 50
+        ) %>%
           layout(
             # title and subtitle #
             title = list(text = title_text),
@@ -631,8 +625,7 @@ pkcg02 <- function(
         plotly_plot
       })
     } else {
-      plot %+%
-        plot_data +
+      plot +
         labs(
           title = title,
           subtitle = subtitle,
@@ -640,8 +633,8 @@ pkcg02 <- function(
         )
     }
   })
-  plots |>
-    setNames(unique(adpc[["id_plot"]]))
+  plots %>%
+    setNames(unique(adnca[["id_plot"]]))
 
 }
 

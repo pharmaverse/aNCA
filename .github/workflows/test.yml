@@ -49,34 +49,38 @@ jobs:
         with:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.staged.dependencies
-          key: staged-deps
-
-      - name: Run Staged dependencies
-        uses: insightsengineering/staged-dependencies-action@v1
-        with:
-          run-system-dependencies: true
-          renv-restore: false
-          enable-check: false
-          direction: upstream
-          git-ref: ${{ steps.branch-name.outputs.current_branch }}
+      - name: Install system dependencies (Chrome)
+        if: |
+          (github.event_name == 'workflow_dispatch' && matrix.r_version == 'devel') ||
+          matrix.r_version != 'devel'
         env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install dependencies from DESCRIPTION
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          remotes::install_local(force = TRUE, dependencies = TRUE)
-        shell: Rscript {0}
-        env:
-          R_REMOTES_STANDALONE: "true"
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+          apt-get update -qq
+          apt-get install -qq -y wget gnupg
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+          apt-get update -qq
+          apt-get install -qq -y google-chrome-stable
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install R Dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: tests
+          extra-packages: |
+            local::.
+            any::devtools
 
       - name: Run tests
         shell: Rscript {0}
+        env:
+          NOT_CRAN: "true"
+          CHROMOTE_CHROME: "/usr/bin/google-chrome"
         run: |
           devtools::load_all(".")
-          testthat::test_dir("tests/testthat", stop_on_failure = TRUE)
+          testthat::test_local(stop_on_failure = TRUE)

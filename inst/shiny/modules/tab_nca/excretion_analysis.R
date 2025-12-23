@@ -1,4 +1,3 @@
-
 #' NCA Excretion Analysis Module
 #'
 #' This module handles logic for excretion analysis in NCA.
@@ -24,7 +23,7 @@ excretion_ui <- function(id) {
           card_body(
             selectInput(ns("matrix_select"), "Select Matrices:", choices = NULL, multiple = TRUE),
             selectInput(ns("end_time_col"), "Map End Time Column:", choices = NULL),
-            checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = FALSE),
+            checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = TRUE),
             selectInput(ns("param_select"), "Select Parameters:", choices = NULL, multiple = TRUE),
             checkboxGroupInput(
               ns("interval_types"),
@@ -36,7 +35,7 @@ excretion_ui <- function(id) {
           )
         ),
         card(
-          reactableOutput(ns("results_table"))
+          reactable_ui(ns("results_table"))
         )
       )
     )
@@ -77,9 +76,9 @@ excretion_server <- function(id, input_pknca_data) {
       updateSelectInput(session, "end_time_col", choices = available_cols,
                         selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
       updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
-                          filter(startsWith(PPTESTCD, "RCA")) %>%
+                          filter(TYPE == "Urine") %>%
                           pull(PKNCA, PPTESTCD),
-                        selected = c("ae"))
+                        selected = c("ae", "fe"))
     })
 
     # Perform calculations
@@ -117,14 +116,17 @@ excretion_server <- function(id, input_pknca_data) {
             !!dose_col := map_dbl(dose_total_unit, drop_units),
             !!doseu := map_chr(dose_total_unit, deparse_unit)
           )
+
+        # Update units
+        data$units <- PKNCA_build_units_table(data$conc, data$dose)
       }
 
       # Update intervals
       # dose profile intervals
       data$intervals <- format_pkncadata_intervals(data$conc,
-                                                   data$dose,
-                                                   params = input$param_select) %>%
-        mutate(type_interval = "profile") %>%
+                                                   data$dose) %>%
+        mutate(across(any_of(input$param_select), ~ TRUE, .names = "{.col}"),
+               type_interval = "profile") %>%
         filter(PCSPEC %in% input$matrix_select)
 
       # excretion sample intervals
@@ -159,11 +161,16 @@ excretion_server <- function(id, input_pknca_data) {
         filter(type_interval %in% input$interval_types) %>%
         arrange(PCSPEC, start, end)
 
+      data$units <- data$units  %>%
+        mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
+               conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
+
+      data$options$keep_interval_cols <- c("ATPTREF", "type_interval")
       # Run PKNCA analysis
       suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
         # Apply standard CDISC names
         mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
-    }) |>
+    }) %>%
       bindEvent(input$submit_btn)
 
     results_output <- reactive({
@@ -178,20 +185,24 @@ excretion_server <- function(id, input_pknca_data) {
                                  PPTESTCD)) %>%
         select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude) %>%
         pivot_wider(names_from = PPTESTCD, values_from = PPSTRES) %>%
-        select(-DOSNOA) %>%
         # Add "label" attribute to columns
         add_label_attribute(analysis_result())
     })
 
     # Render results
-    output$results_table <- renderReactable({
-      req(results_output())
+    reactable_server(
+      "results_table",
+      results_output,
+      defaultPageSize = 10,
+      compact = TRUE,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
+      style = list(fontSize = "0.75em")
+    )
 
-      reactable(results_output(),
-                defaultPageSize = 10,
-                searchable = TRUE,
-                highlight = TRUE)
-
+    # Save the results in the output folder
+    observeEvent(results_output(), {
+      session$userData$results$additional_analysis$excretion_results <- results_output()
     })
   })
 }

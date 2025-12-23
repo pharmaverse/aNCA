@@ -6,7 +6,8 @@
 \usage{
 calculate_ratios(
   data,
-  parameter,
+  test_parameter,
+  ref_parameter = test_parameter,
   match_cols,
   ref_groups,
   test_groups = NULL,
@@ -17,7 +18,10 @@ calculate_ratios(
 \arguments{
 \item{data}{A PKNCAresults object or its result data.frame.}
 
-\item{parameter}{Character. The PPTESTCD value to use for the calculation (e.g., "AUCINF").}
+\item{test_parameter}{Character. The PPTESTCD value to use as test (numerator).}
+
+\item{ref_parameter}{Character. The PPTESTCD value to use as reference (denominator).
+Defaults to test_parameter.}
 
 \item{match_cols}{Character vector of column names to match between test and reference groups
 or a data.frame specifying columns and values.}

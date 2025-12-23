@@ -9,7 +9,9 @@ format_pkncaconc_data(
   group_columns,
   time_column = "AFRLT",
   rrlt_column = "ARRLT",
-  route_column = "ROUTE"
+  route_column = "ROUTE",
+  time_end_column = NULL,
+  nca_exclude_reason_columns = NULL
 )
 }
 \arguments{
@@ -22,9 +24,25 @@ format_pkncaconc_data(
 \item{rrlt_column}{A character string specifying the time since last dose column.}
 
 \item{route_column}{A character string specifying the route column.}
+
+\item{time_end_column}{(Optional) A character string specifying the column for end time, used to
+calculate \code{CONCDUR}.}
+
+\item{nca_exclude_reason_columns}{A character vector specifying the columns to indicate reasons
+for excluding records from NCA analysis.}
 }
 \value{
-A data frame containing the filtered and processed concentration data.
+A data frame containing the filtered and processed concentration data. The following new
+columns are created:
+\itemize{
+\item \code{DOSNOA}: Sequential dose number within each group, based on time of dose.
+\item \code{std_route}: Standardized route, either "intravascular" or "extravascular", derived from the
+route column.
+\item \code{nca_exclude}: Character column with concatenated exclusion reasons (if
+\code{nca_exclude_reason_columns} is provided), otherwise empty string.
+\item \code{CONCDUR}: (Optional) Sampling duration, calculated as \code{time_end_column - time_column}
+if \code{time_end_column} is provided.
+}
 }
 \description{
 This function creates a pharmacokinetic concentration dataset from the provided ADNCA data.
@@ -33,21 +51,23 @@ This function creates a pharmacokinetic concentration dataset from the provided 
 The function performs the following steps:
 \itemize{
 \item Checks for required columns and data.
-\item Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
-(dosing data- not CDISC standard)
-\item Calculates \code{TIME_DOSE}as the time of dose reference by the PK sample
-\item Creates \code{DOSNOA} variable, sequential numbers based on time of dose
-\item Adds a 'std_route' column taking values "intravascular" or "extravascular".
-\item Arranges the data by group_columns.
+\item Filters out rows with EVID = 0 and PARAMCD containing "DOSE" (removes dosing data; not CDISC
+standard).
+\item Optionally creates \code{CONCDUR} if \code{time_end_column} is provided.
+\item Optionally creates \code{nca_exclude} by merging specified exclusion reason columns.
+\item Creates \code{DOSNOA} variable: sequential numbers based on time of dose within each group.
+\item Creates a \code{std_route} column with PKNCA values "intravascular" or "extravascular" based on
+the route column (ROUTE, CDISC: C66729).
+\item Arranges the data by group_columns and dose time.
 }
 }
 \examples{
-\dontrun{
-  # Example usage:
-  conc_data <- format_pkncaconc_data(ADNCA,
-                                     group_columns,
-                                     "AFRLT",
-                                     "ROUTE")
-}
-
+adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+conc_data <- format_pkncaconc_data(
+  ADNCA = adnca,
+  group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
+  time_column = "AFRLT",
+  rrlt_column = "ARRLT",
+  route_column = "ROUTE"
+)
 }

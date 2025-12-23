@@ -29,7 +29,7 @@ filter_slopes <- function(data, slopes, profiles, slope_groups, check_reasons = 
     if (any(exclusions$REASON == "")) {
       missing_reasons <- filter(exclusions, REASON == "") %>%
         select(-REASON) %>%
-        apply(1, \(x) paste0(x, collapse = " "))
+        apply(1, function(x) paste0(x, collapse = " "))
 
       stop(
         "No reason provided for the following exclusions:\n",

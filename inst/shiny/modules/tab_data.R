@@ -15,6 +15,9 @@
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
+
+  tabs <- c("Upload", "Mapping", "Filtering", "Preview")
+
   tagList(
     shinyjs::useShinyjs(),
     div(
@@ -27,23 +30,27 @@ tab_data_ui <- function(id) {
             id = ns("data_navset"),
             nav_panel(
               "Upload",
+              stepper_ui("Upload", tabs),
               data_upload_ui(ns("raw_data"))
             ),
             nav_panel(
+              "Mapping",
+              stepper_ui("Mapping", tabs),
+              data_mapping_ui(ns("column_mapping"))
+            ),
+            nav_panel(
               "Filtering",
+              stepper_ui("Filtering", tabs),
               data_filtering_ui(ns("data_filtering"))
             ),
             nav_panel(
-              "Mapping",
-              data_mapping_ui(ns("column_mapping"))
-            ),
-            nav_panel("Preview",
+              "Preview",
               id = ns("data_navset-review"),
               div(
-                stepper_ui("Preview"),
+                stepper_ui("Preview", tabs),
                 div(
                   uiOutput(ns("processed_data_message")),
-                  reactableOutput(ns("data_processed"))
+                  reactable_ui(ns("data_processed"))
                 )
               )
             )
@@ -54,7 +61,6 @@ tab_data_ui <- function(id) {
         class = "data-tab-btns-container",
         # Left side: Restart button
         actionButton(ns("restart"), "Restart"),
-
         # Right side: Previous and Next buttons
         div(
           class = "nav-btns",
@@ -69,11 +75,10 @@ tab_data_ui <- function(id) {
 tab_data_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    steps <- c("upload", "filtering", "mapping", "preview")
-    step_labels <- c("Upload", "Filtering", "Mapping", "Preview")
+    trigger_mapping_submit <- reactiveVal(0)
+    steps <- c("upload", "mapping", "filtering", "preview")
+    step_labels <- c("Upload", "Mapping", "Filtering", "Preview")
     data_step <- reactiveVal("upload")
-
     observe({
       current <- data_step()
       if (current == steps[1]) {
@@ -81,26 +86,29 @@ tab_data_server <- function(id) {
       } else {
         shinyjs::enable("prev_step")
       }
-
-      if (current == steps[length(steps)]) {
-        shinyjs::disable("next_step")
-      } else {
-        shinyjs::enable("next_step")
-      }
     })
-
     observeEvent(input$restart, {
-      data_step(steps[1])
-      updateTabsetPanel(session, "data_navset", selected = step_labels[1])
+      log_info("Application restarting...")
+      session$reload()
+    })
+    observeEvent(input$next_step, {
+      shinyjs::disable("next_step") # Disable button on click
+      current_step <- isolate(data_step())
+      if (current_step %in% c("upload", "filtering")) {
+        idx <- match(current_step, steps)
+        data_step(steps[idx + 1])
+        updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
+      } else if (current_step == "mapping") {
+        trigger_mapping_submit(trigger_mapping_submit() + 1)
+      } else if (current_step == "preview") {
+        shinyjs::runjs("document.querySelector(`a[data-value='exploration']`).click();")
+      }
     })
 
-    observeEvent(input$next_step, {
-      current <- data_step()
-      idx <- match(current, steps)
-      if (!is.na(idx) && idx < length(steps)) {
-        data_step(steps[idx + 1])
-      }
-      updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
+    # enable next step after progression
+    observe({
+      data_step()
+      shinyjs::enable("next_step")
     })
 
     observeEvent(input$prev_step, {
@@ -111,30 +119,29 @@ tab_data_server <- function(id) {
       }
       updateTabsetPanel(session, "data_navset", selected = step_labels[idx - 1])
     })
-
     #' Load raw ADNCA data
     adnca_raw <- data_upload_server("raw_data")
-
-    #' Filter data
-    adnca_filtered <- data_filtering_server("data_filtering", adnca_raw)
 
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
-      adnca_data = adnca_filtered
+      adnca_data = adnca_raw,
+      trigger = trigger_mapping_submit
     )
-
     #' Reactive value for the processed dataset
-    processed_data <- column_mapping$processed_data
-    observeEvent(processed_data(), {
-      req(processed_data())
-      data_step("preview")
-      updateTabsetPanel(session, "data_navset", selected = "Preview")
+    adnca_mapped <- column_mapping$processed_data
+
+    observeEvent(adnca_mapped(), {
+      req(adnca_mapped())
+      data_step("filtering")
+      updateTabsetPanel(session, "data_navset", selected = "Filtering")
     })
 
-    #' Global variable to store grouping variables
-    grouping_variables <- column_mapping$grouping_variables
+    #' Filter data
+    processed_data <- data_filtering_server("data_filtering", adnca_mapped)
 
+    #' Global variable to store grouping variables
+    extra_group_vars <- column_mapping$grouping_variables
     output$processed_data_message <- renderUI({
       tryCatch(
         {
@@ -151,31 +158,72 @@ tab_data_server <- function(id) {
     })
 
     # Update the data table object with the filtered data
-    output$data_processed <- renderReactable({
+    reactable_server(
+      "data_processed",
+      processed_data,
+      compact = TRUE,
+      style = list(fontSize = "0.75em"),
+      height = "50vh",
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
+    )
+
+    # Use the pre-processed data to create a PKNCA object
+    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
+    pknca_data <- reactive({
       req(processed_data())
+      log_trace("Creating PKNCA::data object.")
 
-      # Generate column definitions
-      col_defs <- generate_col_defs(processed_data())
+      tryCatch({
+        #' Create data object
+        pknca_object <- PKNCA_create_data_object(
+          adnca_data = processed_data(),
+          nca_exclude_reason_columns = c("DTYPE", column_mapping$nca_exclusion_flags())
+        )
+        ############################################################################################
+        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
+        # this is implemented here via hardcoding in PPSTRESU
+        pknca_object$units <- pknca_object$units %>%
+          mutate(
+            PPSTRESU = {
+              new_ppstresu <- ifelse(
+                PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                  metadata_nca_parameters$unit_type == "volume"
+                ],
+                sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
+                PPSTRESU
+              )
+              # Only accept changes producing simple units
+              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
+            },
+            conversion_factor = ifelse(
+              PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                metadata_nca_parameters$unit_type == "volume"
+              ],
+              get_conversion_factor(PPORRESU, PPSTRESU),
+              conversion_factor
+            )
+          )
+        ############################################################################################
+        log_success("PKNCA data object created.")
 
-      reactable(
-        processed_data(),
-        columns = col_defs,
-        rownames = FALSE,
-        searchable = TRUE,
-        sortable = TRUE,
-        highlight = TRUE,
-        wrap = FALSE,
-        resizable = TRUE,
-        defaultPageSize = 25,
-        showPageSizeOptions = TRUE,
-        height = "70vh",
-        class = "reactable-table"
-      )
-    })
+        #' Enable related tabs and update the curent view if data is created succesfully.
+        purrr::walk(c("nca", "exploration", "tlg"), function(tab) {
+          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+        })
+
+        pknca_object
+      }, error = function(e) {
+        log_error(e$message)
+        showNotification(e$message, type = "error", duration = NULL)
+        NULL
+      })
+    }) %>%
+      bindEvent(processed_data())
 
     list(
-      data = processed_data,
-      grouping_variables = grouping_variables
+      pknca_data = pknca_data,
+      extra_group_vars = extra_group_vars
     )
   })
 }

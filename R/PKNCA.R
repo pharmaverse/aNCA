@@ -6,9 +6,9 @@
 #' - STUDYID: Study identifier.
 #' - PCSPEC: Matrix.
 #' - ROUTE: Route of administration.
-#' - DRUG: Drug identifier.
+#' - DOSETRT: Drug identifier.
 #' - USUBJID: Unique subject identifier.
-#' - NCA_PROFILE: (Non- standard column). Can be any column, used for filtering the data for NCA
+#' - ATPTREF: (Non- standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
@@ -23,13 +23,16 @@
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
 #' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
-#' with formula `AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM`.
+#' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM`.
 #' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
-#' with formula `DOSEA ~ TIME | STUDYID + DRUG + USUBJID`.
+#' with formula `DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
 #' @param adnca_data Data table containing ADNCA data.
+#' @param nca_exclude_reason_columns Optional character vector of column names.
+#' Excluding records from the NCA
+#' must be indicated by populating any of these columns with a non-empty character value.
 #'
 #' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
 #'
@@ -38,9 +41,9 @@
 #' STUDYID = rep("STUDY001", 6),
 #' PCSPEC = rep("Plasma", 6),
 #' ROUTE = rep("IV", 6),
-#' DRUG = rep("DrugA", 6),
+#' DOSETRT = rep("DrugA", 6),
 #' USUBJID = rep("SUBJ001", 6),
-#' NCA_PROFILE = rep(1, 6),
+#' ATPTREF = rep(1, 6),
 #' PARAM = rep("AnalyteA", 6),
 #' AVAL = c(0, 5, 10, 7, 3, 1),
 #' AVALU = rep("ng/mL", 6),
@@ -57,37 +60,46 @@
 #' @importFrom dplyr filter select arrange across
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units deparse_unit
+#' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
+PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NULL) { # nolint: object_name_linter
   # Define column names based on ADNCA vars
-  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DRUG"))
+  group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
-  dosno_column <- "NCA_PROFILE"
+  time_end_column <- if ("AEFRLT" %in% names(adnca_data)) "AEFRLT" else time_column
+  dosno_column <- "ATPTREF"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
   matrix_column <- "PCSPEC"
   std_route_column <- "std_route"
   volume_column <- "VOLUME"
+  conc_column <- "AVAL"
+  studyid_column <- "STUDYID"
+  drug_column <- "DOSETRT"
 
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
 
+  conc_formula <-
+    "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" %>% # nolint
+    glue::glue() %>%
+    as.formula()
 
-  #Filter out flagged duplicates if DFLAG column available
-  if ("DFLAG" %in% colnames(adnca_data)) {
-    adnca_data <- adnca_data %>%
-      filter(!DFLAG) %>%
-      select(-DFLAG)
-  }
+  dose_formula <-
+    "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
+    glue::glue() %>%
+    as.formula()
 
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
     group_columns = all_group_columns,
     time_column = time_column,
+    time_end_column = time_end_column,
     rrlt_column = "ARRLT",
-    route_column = route_column
+    route_column = route_column,
+    nca_exclude_reason_columns = nca_exclude_reason_columns
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
 
@@ -115,13 +127,15 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   args_list <- list(
     data = df_conc,
-    formula = AVAL ~ TIME | STUDYID + PCSPEC + DRUG + USUBJID / PARAM,
+    formula = conc_formula,
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
+    duration = "CONCDUR",
     concu = "AVALU",
     timeu = "RRLTU",
-    amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL
+    amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL,
+    exclude = "nca_exclude"
   )
 
   if ("VOLUME" %in% colnames(df_conc)) {
@@ -138,7 +152,7 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
-    formula = DOSEA ~ TIME_DOSE | STUDYID + DRUG + USUBJID,
+    formula = dose_formula,
     route = std_route_column,
     time.nominal = "NFRLT",
     duration = "ADOSEDUR",
@@ -187,12 +201,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' created using the `PKNCA_create_data_object()` function.
 #'
 #' @param adnca_data A reactive PKNCAdata object
-#' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
-#' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
 #'
 #' @returns A fully configured `PKNCAdata` object.
@@ -205,12 +217,10 @@ PKNCA_create_data_object <- function(adnca_data) { # nolint: object_name_linter
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
   adnca_data,
-  auc_data,
   method,
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  params,
   should_impute_c0 = TRUE
 ) {
 
@@ -222,7 +232,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     auc.method = method,
     progress = FALSE,
     keep_interval_cols = c(
-      "NCA_PROFILE", "DOSNOA", "type_interval",
+      "ATPTREF", "DOSNOA", "type_interval",
       adnca_data$dose$columns$route, "ROUTE"
     ),
     min.hl.r.squared = 0.01
@@ -232,7 +242,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    params = params,
     start_from_last_dose = should_impute_c0
   ) %>%
     # Join route information
@@ -248,60 +257,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- data$intervals %>%
     filter(
       PARAM %in% selected_analytes,
-      NCA_PROFILE %in% selected_profile,
+      ATPTREF %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
-
-  # # Add partial AUCs if any
-
-  auc_ranges <- auc_data %>%
-    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
-
-  # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
-    data$intervals %>%
-      mutate(
-        start = start + start_auc,
-        end = start + (end_auc - start_auc),
-        across(where(is.logical), ~FALSE),
-        aucint.last = TRUE,
-        type_interval = "manual"
-      )
-  })
-
-  data$intervals <- bind_rows(
-    data$intervals,
-    intervals_list
-  ) %>%
-    unique()
-
-  data$impute <- NA
-
-  # Impute start values if requested
-  if (should_impute_c0) {
-    data <- create_start_impute(data)
-
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) |>
-      intersect(names(PKNCA::get.interval.cols()))
-
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
-  }
 
   data
 }
@@ -323,9 +281,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'   STUDYID = rep("STUDY001", 6),
 #'   PCSPEC = rep("Plasma", 6),
 #'   ROUTE = rep("IV", 6),
-#'   DRUG = rep("DrugA", 6),
+#'   DOSETRT = rep("DrugA", 6),
 #'   USUBJID = rep("SUBJ001", 6),
-#'   NCA_PROFILE = rep(1, 6),
+#'   ATPTREF = rep(1, 6),
 #'   PARAM = rep("AnalyteA", 6),
 #'   AVAL = c(0, 5, 10, 7, 3, 1),
 #'   AVALU = rep("ng/mL", 6),
@@ -635,11 +593,11 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
   candidate_cols <- candidate_cols[candidate_n_levels > 1]
 
   # 3. Check combinations of columns to find minimal key combination to level group strata_cols
-  for (n in seq_len(length(candidate_cols))) {
+  for (n in seq_along(candidate_cols)) {
     all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
     for (comb in all_candidate_combs) {
       comb_vals <- apply(df[, comb, drop = FALSE], 1, paste, collapse = "_")
-      if (all(tapply(strata_vals, comb_vals, FUN = \(x) length(unique(x)) == 1))) {
+      if (all(tapply(strata_vals, comb_vals, FUN = function(x) length(unique(x)) == 1))) {
         return(df[c(comb, strata_cols)])
       }
     }
@@ -659,19 +617,24 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' @importFrom PKNCA exclude
 #' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
-
   for (param in names(rules)) {
-    if (startsWith(param, "aucpext")) {
-      exc_fun <- exclude_nca_by_param(
+    if (startsWith(param, "AUCPE")) {
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         max_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps(
+            translate_terms(gsub("PE", "IF", param), "PPTESTCD", "PKNCA")
+          )
+        )
       )
     } else {
-      exc_fun <- exclude_nca_by_param(
+      exc_fun <- PKNCA::exclude_nca_by_param(
         param,
         min_thr = rules[[param]],
-        affected_parameters = PKNCA::get.parameter.deps("half.life")
+        affected_parameters = translate_terms(
+          PKNCA::get.parameter.deps("half.life")
+        )
       )
     }
     res <- PKNCA::exclude(res, FUN = exc_fun)

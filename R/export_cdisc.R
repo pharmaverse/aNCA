@@ -23,21 +23,12 @@
 export_cdisc <- function(res_nca) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
-    filter(Dataset %in% c("ADPC", "ADPP", "PP")) %>%
+    filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
     arrange(Order) %>%
     split(.[["Dataset"]])
 
   # Only select from results the requested parameters by the user
   res_nca_req <- res_nca
-  res_nca_req$result <- res_nca_req$result %>%
-    mutate(
-      PPTESTCD = translate_terms(PPTESTCD, "PPTESTCD", "PKNCA")
-    )
-  res_nca_req$result <- as.data.frame(res_nca_req, filter_requested = TRUE) %>%
-    mutate(
-      PPTEST = translate_terms(PPTESTCD, "PKNCA", "PPTEST"),
-      PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-    )
 
   # Define group columns in the data
   group_conc_cols <- unique(unlist(res_nca$data$conc$columns$groups))
@@ -55,6 +46,7 @@ export_cdisc <- function(res_nca) {
     ) %>%
     unique()
 
+  conc_nca_excl_col <- res_nca$data$conc$columns$exclude
   conc_timeu_col <- res_nca$data$conc$columns$timeu[[1]]
   conc_time_col <- res_nca$data$conc$columns$time[[1]]
   dose_time_col <- res_nca$data$dose$columns$time[[1]]
@@ -72,7 +64,7 @@ export_cdisc <- function(res_nca) {
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "ATPTREF", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
@@ -84,7 +76,7 @@ export_cdisc <- function(res_nca) {
       any_of(c(
         to_match_res_cols, conc_timeu_col, conc_time_col,
         # Variables that can be used to guess other missing variables
-        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "AVISIT", "EXFAST",
+        "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "ATPTREF", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
       ))
     ) %>%
@@ -109,6 +101,12 @@ export_cdisc <- function(res_nca) {
       )))
     ) %>%
     arrange(!!!syms(c(group_dose_cols, "start", "end", group_diff_cols, "PPTESTCD"))) %>%
+
+    # Name parameters according to CDISC standards
+    mutate(
+      PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"),
+      PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")
+    ) %>%
 
     # Parameters with a one-to-many mapping in PKNCA / CDISC
     mutate(
@@ -159,7 +157,7 @@ export_cdisc <- function(res_nca) {
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select only columns needed for PP, ADPP, ADPC
+    # Select only columns needed for PP, ADPP, ADNCA
     select(any_of(metadata_nca_variables[["Variable"]])) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
@@ -219,7 +217,7 @@ export_cdisc <- function(res_nca) {
       )
     )
 
-  adpc <- res_nca$data$conc$data %>%
+  adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
               by = intersect(names(res_nca$data$conc$data), names(dose_info)),
               suffix = c("", ".y")) %>%
@@ -238,17 +236,26 @@ export_cdisc <- function(res_nca) {
         NULL
       },
       SUBJID = get_subjid(.),
-      ATPT = {
-        if ("PCTPT" %in% names(.)) PCTPT
-        else NA_character_
+      ATPT = if ("ATPT" %in% names(.)) {
+        ATPT
+      } else if ("PCTPT" %in% names(.)) {
+        PCTPT
+      } else {
+        NA_character_
       },
-      ATPTN = {
-        if ("PCTPTNUM" %in% names(.)) PCTPTNUM
-        else NA
+      ATPTN = if ("ATPTN" %in% names(.)) {
+        ATPTN
+      } else if ("PCTPTNUM" %in% names(.)) {
+        PCTPTNUM
+      } else {
+        NA
       },
-      ATPTREF = {
-        if ("PCTPTREF" %in% names(.)) PCTPTREF
-        else NA_character_
+      ATPTREF = if ("ATPTREF" %in% names(.)) {
+        ATPTREF
+      } else if ("PCTPTREF" %in% names(.)) {
+        PCTPTREF
+      } else {
+        NA_character_
       },
       PCSTRESU = if (!is.null(concu_col)) {
         .[[concu_col]]
@@ -261,15 +268,20 @@ export_cdisc <- function(res_nca) {
         NA
       }
     ) %>%
+
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(CDISC_COLS$ADPC$Variable)) %>%
+    select(any_of(c(CDISC_COLS$ADNCA$Variable, conc_nca_excl_col))) %>%
+
+    # Create NCA exclusion flags using the PKNCA exclude column
+    .create_nca_excl_columns(conc_nca_excl_col) %>%
+
     # Adjust class and length to the standards
-    adjust_class_and_length(metadata_nca_variables)
+    adjust_class_and_length(metadata_nca_variables) %>%
 
-  # Add variable labels for ADPC
-  var_labels(adpc) <- labels_map[names(adpc)]
+    # Add the missing labels
+    apply_labels()
 
-  list(pp = pp, adpp = adpp, adpc = adpc)
+  list(pp = pp, adpp = adpp, adnca = adnca)
 }
 
 #' Function to identify the common prefix in a character vector.
@@ -368,14 +380,10 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       DOMAIN = "PP",
       # Group ID
       PPGRPID = {
-        if ("AVISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "AVISIT")), sep = "-")
-        } else if ("VISIT" %in% names(.) & !is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "VISIT")), sep = "-")
-        } else if (!is.null(conc_group_sp_cols)) {
-          paste(!!!syms(c(conc_group_sp_cols, "NCA_PROFILE")), sep = "-")
+        if ("ATPTREF" %in% names(.)) {
+          paste(!!!syms(c(conc_group_sp_cols, "ATPTREF")), sep = "-")
         } else {
-          NA_character_
+          paste(!!!syms(c(conc_group_sp_cols)), sep = "-")
         }
       },
       # Parameter Category
@@ -426,12 +434,12 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       },
       # TODO start and end intervals in case of partial aucs -> see oak file in templates
       PPSTINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
+        grepl("INT", PPTESTCD),
         convert_to_iso8601_duration(start - .[[dose_time_col]], .[[conc_timeu_col]]),
         NA_character_
       ),
       PPENINT = ifelse(
-        startsWith(PPTESTCD, "AUCINT"),
+        grepl("INT", PPTESTCD),
         convert_to_iso8601_duration(end - .[[dose_time_col]], .[[conc_timeu_col]]),
         NA_character_
       ),
@@ -451,8 +459,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       AVALC = PPSTRESC,
       AVALU = PPSTRESU,
       PARAMCD = PPTESTCD,
-      PARAM = PPTEST,
-      NCA_PROFILE = NCA_PROFILE
+      PARAM = PPTEST
     )
 }
 
@@ -466,7 +473,53 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   ) %>%
     lapply(\(format) strptime(dt, format = format))
 
-  dtc_vectors_nas <- sapply(dtc_vectors, \(x) sum(is.na(x)))
+  dtc_vectors_nas <- sapply(dtc_vectors, function(x) sum(is.na(x)))
   dtc_vectors[[which.min(dtc_vectors_nas)]] %>%
     format("%Y-%m-%dT%H:%M:%S")
+}
+
+##' Create NCA exclusion flag columns from a semicolon-separated reason column
+##'
+##' This internal helper parses a character column that may contain one or more
+##' semicolon-separated exclusion reasons and expands it into CDISC-style
+##' `NCA<n>XRS` (reason text) and `NCA<n>XRSN` (numeric flag) columns. It also
+##' creates `NCAXFL`/`NCAXFN` summary flags and removes the original exclusion
+##' column.
+##'
+##' @param data A data.frame containing the exclusion column.
+##' @param nca_excl_colname Character name of the column in `data` that holds
+##'   semicolon-separated exclusion reasons.
+##' @return The input `data` with new `NCA<n>XRS`, `NCA<n>XRSN`, `NCAXFL`, and
+##'   `NCAXFN` columns added; the original exclusion column is removed.
+##' @noRd
+##' @keywords internal
+.create_nca_excl_columns <- function(data, nca_excl_colname) {
+
+  # Split the elements based on `;` and store them in a list
+  split_reasons <- strsplit(data[[nca_excl_colname]], "; ")
+  reasons <- unique(na.omit(unlist(split_reasons)))
+
+  # Create new columns NCAnXR for the range 1:max_elements
+  for (i in seq_along(reasons)) {
+    fl_col <- paste0("NCA", i, "XRS")
+    data[[fl_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, reasons[i], ""))
+    attr(data[[fl_col]], "label") <- paste0("Reason ", i, " for PK NCA Exclusion")
+
+    fln_col <- paste0("NCA", i, "XRSN")
+    data[[fln_col]] <- sapply(split_reasons, function(x) ifelse(reasons[i] %in% x, 1, NA_integer_))
+    attr(data[[fln_col]], "label") <- paste0("Reason for PK NCA Exclusion of ", i, " (N)")
+  }
+
+  # Create NCAXFL, NCAXFN columns based on whether there is any exclusion reason
+  is_included <- is.na(data[[nca_excl_colname]]) | data[[nca_excl_colname]] == ""
+  if (any(!is_included)) {
+    data$NCAXFL <- ifelse(is_included, "", "Y")
+    attr(data$NCAXFL, "label") <- "NCA Exclusion Flag"
+    data$NCAXFN <- ifelse(is_included, NA_integer_, 1)
+    attr(data$NCAXFN, "label") <- "NCA Exclusion Number"
+  }
+
+  # Remove the original exclusion column and return the output
+  data %>%
+    select(-!!sym(nca_excl_colname))
 }

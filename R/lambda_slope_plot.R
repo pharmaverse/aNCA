@@ -10,6 +10,8 @@
 #' @param myres          A PKNCAresults object containing the results of the NCA analysis
 #' @param r2adj_threshold Numeric value representing the R-squared adjusted threshold for
 #'                      determining the subtitle color (default is 0.7).
+#' @param time_column   The name of the time column in the concentration data frame.
+#'                      (default is "AFRLT").
 #'
 #' @return A plotly object representing the lambda slope plot.
 #'
@@ -31,15 +33,49 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   plot <- lambda_slope_plot(conc_pknca_df = mydata$conc$data,
-#'                             row_values = list(USUBJID = "001", STUDYID = "A", DOSENO = 1),
-#'                             myres = res_nca,
-#'                             r2adj_threshold = 0.7)
-#'   plot
-#' }
+#' \donttest{
+#' if (interactive()) {
+#'   # Load a small packaged example dataset
+#'   adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
 #'
+#'   # Subset to a single subject to keep the example fast
+#'   subj1 <- unique(adnca$USUBJID)[3]
+#'   dose1 <- unique(adnca$DOSNOP)[1]
+#'   adnca_sub <- adnca[adnca$USUBJID == subj1 & adnca$DOSNOP == dose1, ]
+#'
+#'   # Analysis details (minimal example)
+#'   method <- "lin up/log down"
+#'   params <- c("cmax", "tmax", "auclast", "aucinf.obs")
+#'   analytes <- unique(adnca_sub$PARAM)
+#'   dosnos <- unique(adnca_sub$ATPTREF)
+#'   pcspecs <- unique(adnca_sub$PCSPEC)
+#'   auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
+#'
+#'   # Build a minimal PKNCA data object and run NCA (kept in \donttest for CRAN safety)
+#'   pknca_data <- PKNCA_create_data_object(adnca_sub)
+#'   pknca_data <- create_start_impute(pknca_data)
+#'   pknca_data <- PKNCA_update_data_object(
+#'     pknca_data,
+#'     auc_data = auc_data,
+#'     method = method,
+#'     params = params,
+#'     selected_analytes = analytes,
+#'     selected_profile = dosnos,
+#'     selected_pcspec = pcspecs
+#'   )
+#'
+#'   pknca_res <- PKNCA_calculate_nca(pknca_data)
+#'
+#'   # Create the lambda slope plot for the example subject
+#'   plot <- lambda_slope_plot(
+#'     conc_pknca_df = pknca_data$conc$data,
+#'     row_values = list(USUBJID = subj1, STUDYID = unique(adnca_sub$STUDYID)[1], DOSNOA = 1),
+#'     myres = pknca_res,
+#'     r2adj_threshold = 0.7
+#'   )
+#'   print(plot)
+#' }
+#' }
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom plotly ggplotly layout config style add_trace
@@ -49,11 +85,12 @@ lambda_slope_plot <- function(
   conc_pknca_df,
   row_values,
   myres = myres,
-  r2adj_threshold = 0.7
+  r2adj_threshold = 0.7,
+  time_column = "AFRLT"
 ) {
 
   column_names <- names(row_values)
-  grouping_names <- setdiff(column_names, "NCA_PROFILE")
+  grouping_names <- setdiff(column_names, "ATPTREF")
   #Create duplicates for predose and last dose points per profile
   conc_pknca_df <- dose_profile_duplicates(conc_pknca_df, grouping_names)
   #Obtain values for slopes selection
@@ -72,7 +109,7 @@ lambda_slope_plot <- function(
     filter(
       if_all(all_of(grouping_names), ~ .x == row_values[[deparse(substitute(.x))]]),
       !exclude_half.life,
-      TIME >= sum(
+      !!sym(time_column) >= sum(
         subset(
           lambda_res,
           lambda_res$PPTESTCD == "lambda.z.time.first",
@@ -88,7 +125,8 @@ lambda_slope_plot <- function(
   r2adj_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "adj.r.squared"]), 3)
   half_life_value <- signif(as.numeric(lambda_res$PPSTRES[lambda_res$PPTESTCD == "half.life"]), 3)
   time_span <- signif(
-    abs(lambda_z_ix_rows$TIME[nrow(lambda_z_ix_rows)] - lambda_z_ix_rows$TIME[1]), 3
+    abs(dplyr::last(lambda_z_ix_rows[[time_column]])
+        - dplyr::first(lambda_z_ix_rows[[time_column]])), 3
   )
 
   subtitle_color <- ifelse(

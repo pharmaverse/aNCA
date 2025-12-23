@@ -93,3 +93,38 @@ describe(".plotly_empty_plot", {
     expect_false(plot$x$layoutAttrs[[1]]$yaxis$visible)
   })
 })
+
+describe(".concatenate_list", {
+  it("formats a simple named list correctly", {
+    l <- list(a = 1, b = 2:3)
+    result <- .concatenate_list("Test List", l)
+    expect_equal(
+      result,
+      "Test List\n* a -> 1\n* b -> 2, 3"
+    )
+  })
+
+  it("formats a nested list correctly", {
+    l <- list(main = list(sub1 = 1, sub2 = c(2, 3)))
+    result <- .concatenate_list("Nested List", l)
+    expect_equal(
+      result,
+      "Nested List\n* main -> \n\t* sub1 -> 1\n\t* sub2 -> 2, 3"
+    )
+  })
+
+  it("formats a data.frame as a list of rows", {
+    df <- data.frame(x = 1:2, y = c("A", "B"))
+    result <- .concatenate_list("Data Frame", df)
+    expect_equal(
+      result,
+      "Data Frame\n* 1 -> \n\t* x -> 1\n\t* y -> A\n* 2 -> \n\t* x -> 2\n\t* y -> B"
+    )
+  })
+
+  it("handles empty list", {
+    l <- list()
+    result <- .concatenate_list("Empty List", l)
+    expect_true(grepl("Empty List", result))
+  })
+})

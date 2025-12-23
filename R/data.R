@@ -15,7 +15,18 @@
 #'   \item{unit_type}{Type of unit associated with the term}
 #'   \item{TYPE}{Type of data associated with the parameter/term}
 #'   \item{CAT}{Arbitrary assigned subclass for the parameter/term}
-#'   \item{Depends}{PKNCA derived. Designates all directly used parameters in calculation}\
+#'   \item{Depends}{PKNCA derived. Designates all directly used parameters in calculation}
+#'   \item{can_excretion}{Logical. Indicates if the parameter can be used in excretion analysis}
+#'   \item{can_non_excretion}{Logical.
+#'    Indicates if the parameter can be used in non-excretion analysis}
+#'   \item{can_single_dose}{Logical.
+#'    Indicates if the parameter can be used in single dose analysis}
+#'   \item{can_multiple_dose}{Logical.
+#'    Indicates if the parameter can be used in multiple dose analysis}
+#'   \item{can_extravascular}{Logical.
+#'    Indicates if the parameter can be used in extravascular analysis}
+#'   \item{can_metabolite}{Logical.
+#'    Indicates if the parameter can be used in metabolite analysis}
 #' }
 #' @source Generated for use in the `translate_nomenclature` function.
 "metadata_nca_parameters"
@@ -27,7 +38,7 @@
 #'
 #' @format A data frame with 361 rows and 14 variables:
 #' \describe{
-#'   \item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADPC, ADPP).}
+#'   \item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADNCA, ADPP).}
 #'   \item{Order}{Numeric. Variable order within its domain, based on Role, Core and Variable}
 #'   \item{Variable}{Character. The short name of the variable.}
 #'   \item{Label}{Character. A descriptive label for the variable.}
@@ -40,8 +51,12 @@
 #'   \item{Length}{Numeric. The maximum length of the variable.}
 #'   \item{Controlled_Terms}{Character. Reference to controlled terminology (e.g., C85839, C66731).}
 #'   \item{is.used}{Logical. TRUE if the variable is meant to be included.}
-#'   \item{Values}{Character. Possible values for the variable (if applicable).}
+#'   \item{Values}{Character. Possible values (if applicable) for the variable separated by ', '.}
 #'   \item{is.mapped}{Logical. TRUE if the variable is mapped in ADNCA (App's input).}
+#'   \item{mapping_tooltip}{Character. Tooltip text for mapping guidance in the App.}
+#'   \item{mapping_section}{Character. Mapping section where the variable is classified in the App.}
+#'   \item{mapping_alternatives}{Character. Alternative column names for the variable.}
+#'   \item{mapping_order}{Numeric. Defines the mapped variables order in the mapped dataset}
 #' }
 #' @source Used for PP and ADPP mapping rules and checks in the export_cdisc function
 "metadata_nca_variables"

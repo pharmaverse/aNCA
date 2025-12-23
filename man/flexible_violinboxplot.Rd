@@ -5,20 +5,20 @@
 \title{Flexible Violin/Box Plot}
 \usage{
 flexible_violinboxplot(
-  boxplotdata,
+  res_nca,
   parameter,
   xvars,
   colorvars,
-  varvalstofilter,
-  columns_to_hover,
+  varvalstofilter = NULL,
+  tooltip_vars,
+  labels_df = metadata_nca_variables,
   box = TRUE,
-  plotly = TRUE
+  plotly = TRUE,
+  seed = NULL
 )
 }
 \arguments{
-\item{boxplotdata}{A list containing the data to be plotted. It should have a \code{data}
-element with dose information and a \code{formatted} element with the
-data to be plotted.}
+\item{res_nca}{A PKNCA results object containing the results and concentration data.}
 
 \item{parameter}{A string specifying the parameter to be plotted.}
 
@@ -26,16 +26,23 @@ data to be plotted.}
 
 \item{colorvars}{Variables for the color aesthetic.}
 
-\item{varvalstofilter}{Variables to filter on.}
+\item{varvalstofilter}{Character vector specifying which variable and value to pre-filter
+as \code{colname: value}. By default is NULL (no pre-filtering)}
 
-\item{columns_to_hover}{A character vector indicating the column names from result_data that
-should be used to identify when hovering the plotly outputs}
+\item{tooltip_vars}{A character vector indicating the column names from result_data that
+should be used to identify when hovering the plotly outputs.}
+
+\item{labels_df}{A data.frame used for label lookups in tooltips.
+Defaults to metadata_nca_variables.}
 
 \item{box}{A logical value indicating whether to plot a box plot (\code{TRUE}) or a
 violin plot (\code{FALSE}). Default is \code{TRUE}.}
 
 \item{plotly}{A logical value defining if the output is plotly (TRUE, default)
 or ggplot otherwise (FALSE)}
+
+\item{seed}{An integer value to set the seed for reproducibility of jittering.
+Default (NULL) will use the current R seed.}
 }
 \value{
 A plotly object representing the violin or box plot.

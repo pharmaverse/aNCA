@@ -3,8 +3,7 @@
 #' This function adds "label" attributes to all columns in a dataset
 #'
 #' @param data The dataset to which labels will be applied.
-#' @param labels_df A data frame with three columns: Variable, Label, and Dataset,
-#'  for the dataset you are applying it .
+#' @param labels_df A data frame containing at least the columns "Variable", "Label", and "Dataset".
 #' @param type The type variable in labels_df for which the labels are to be applied.
 #'
 #' @return The same dataset with label attributes applied to all columns.
@@ -16,108 +15,23 @@
 #'  labels <- data.frame(
 #'    Variable = c("USUBJID", "AVAL"),
 #'    Label = c("Unique Subject Identifier", "Analysis Value"),
-#'    Dataset = c("ADPC", "ADPC")
+#'    Dataset = c("ADNCA", "ADNCA")
 #'  )
-#'  data <- apply_labels(data, labels, "ADPC")
+#'  data <- apply_labels(data, labels, "ADNCA")
 #'  print(attr(data$USUBJID, "label")) # "Unique Subject Identifier"
 #'  print(attr(data$AVAL, "label"))    # "Analysis Value"
 #'
-#' @importFrom dplyr filter
-#' @importFrom magrittr `%>%`
-#' @importFrom stats setNames
+#' @importFrom formatters var_labels
 #'
 #' @export
-apply_labels <- function(data, labels_df, type) {
-  labels_df <- dplyr::filter(labels_df, Dataset == type)
-  labels_reference <- stats::setNames(labels_df$Label, labels_df$Variable)
-
-  for (col in colnames(data)) {
-    if (!is.null(attr(data[[col]], "label"))) next # Preserve existing labels
-
-    if (col %in% names(labels_reference)) {
-      base::attr(data[[col]], "label") <- labels_reference[[col]]
-    } else {
-      base::attr(data[[col]], "label") <- col
-    }
-
-    # Check if the column is a factor and keep the levels order
-    if (is.factor(data[[col]])) {
-      data[[col]] <- as_factor_preserve_label(data[[col]])
-    }
-  }
+apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADNCA") {
+  formatters::var_labels(data) <- ifelse(
+    is.na(formatters::var_labels(data)),
+    get_label(names(data), type = type, labels_df = labels_df),
+    formatters::var_labels(data)
+  )
 
   data
-}
-
-#' Convert to Factor While Preserving Label
-#'
-#' This function converts a vector to a factor while preserving its "label" attribute.
-#'
-#' @param x A vector to be converted to a factor.
-#'
-#' @return A factor with the original "label" attribute preserved.
-#'
-#' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   vec <- c("A", "B", "C")
-#'   attr(vec, "label") <- "Example Label"
-#'   factor_vec <- as_factor_preserve_label(vec)
-#'   print(factor_vec)
-#'   print(base::attr(factor_vec, "label"))
-#' }
-#'
-#' @export
-as_factor_preserve_label <- function(x) {
-  label <- attr(x, "label")
-  x <- as.factor(x)
-  attr(x, "label") <- label
-  return(x)
-}
-
-#' Check if a Vector Has a Label
-#'
-#' This function checks if a vector has a "label" attribute.
-#'
-#' @param x A vector to be checked for a "label" attribute.
-#'
-#' @return A logical value indicating whether the vector has a "label" attribute.
-#'
-#' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   vec <- c("A", "B", "C")
-#'   attr(vec, "label") <- "Example Label"
-#'   has_label(vec)  # Returns TRUE
-#' }
-#'
-#' @export
-has_label <- function(x) {
-  return(!is.null(attr(x, "label")))
-}
-
-#' Set an Empty Label if None Exists
-#'
-#' This function sets an empty "label" attribute for a vector if it does not already have one.
-#'
-#' @param x A vector to be checked and potentially assigned an empty "label" attribute.
-#'
-#' @return The vector with an empty "label" attribute if it did not already have one.
-#'
-#' @examples
-#' \dontrun{
-#'   # Example usage:
-#'   vec <- c("A", "B", "C")
-#'   vec <- set_empty_label(vec)
-#'   print(attr(vec, "label"))  # Returns ""
-#' }
-#'
-#' @export
-set_empty_label <- function(x) {
-  if (is.null(attr(x, "label"))) {
-    attr(x, "label") <- ""
-  }
-  return(x)
 }
 
 #' Get the Label of a Heading
@@ -126,30 +40,28 @@ set_empty_label <- function(x) {
 #'
 #' @param variable The variable for which the label is to be retrieved.
 #' @param type The type of the dataset for which the label is to be retrieved.
-#' @param labels_df A data frame with three columns: Variable, Label, and Dataset.
+#' @param labels_df A data frame containing at least the columns "Variable", "Label", and "Dataset".
 #'
 #' @return The label of the heading if it exists in the labels file,
 #' otherwise the variable name.
 #'
 #' @examples
-#' \dontrun{
-#'  # Example usage:
 #'  LABELS <- data.frame(
-#'  Variable = c("USUBJID", "AVAL"),
-#'  Label = c("Unique Subject Identifier", "Analysis Value"),
-#'  Dataset = c("ADPC", "ADPC")
+#'    Variable = c("USUBJID", "AVAL"),
+#'    Label = c("Unique Subject Identifier", "Analysis Value"),
+#'    Dataset = c("ADNCA", "ADNCA")
 #'  )
-#'  get_label(LABELS, "USUBJID", "ADPC")  # Returns "Unique Subject Identifier"
-#'  get_label(LABELS, "AGE", "ADPC")  # Returns "AGE"
-#' }
+#'  get_label("USUBJID", "ADNCA", LABELS)  # Returns "Unique Subject Identifier"
+#'  get_label("AGE", "ADNCA", LABELS)  # Returns "AGE"
 #'
 #' @export
-get_label <- function(labels_df, variable, type) {
-  label <- labels_df$Label[labels_df$Variable == variable & labels_df$Dataset == type]
-  if (length(label) == 0) {
-    return(variable)
-  }
-  label
+get_label <- function(variable, type = "ADNCA", labels_df = metadata_nca_variables) {
+  translate_terms(
+    variable,
+    "Variable",
+    "Label",
+    metadata = dplyr::filter(labels_df, Dataset == type)
+  )
 }
 
 #' Generate HTML Tooltip Text
@@ -167,8 +79,6 @@ get_label <- function(labels_df, variable, type) {
 #'
 #' @return A character vector of formatted HTML tooltip strings.
 #'
-#' @importFrom purrr pmap_chr map_chr
-#'
 #' @examples
 #' # Sample data
 #' my_data <- data.frame(
@@ -177,34 +87,41 @@ get_label <- function(labels_df, variable, type) {
 #'   RESPONSE = c(5.4, 8.1)
 #'   )
 #'
-#' my_labels <- data.frame() # Dummy labels object
+#' my_labels <- data.frame(
+#'   Dataset = "ADNCA",
+#'   Variable = "USUBJID",
+#'   Label = "Unique Subject ID"
+#'   ) # Dummy labels object
 #'
 #' vars_to_show <- c("USUBJID", "DOSE", "RESPONSE")
 #'
 #' # Generate the tooltip text vector
-#' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADPC")
+#' tooltips <- generate_tooltip_text(my_data, my_labels, vars_to_show, "ADNCA")
 #' my_data$tooltip <- tooltips
 #'
 #' @export
 generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 
+  if (nrow(data) == 0) {
+    return(character())
+  }
+
+  tooltip_vars <- tooltip_vars[tooltip_vars %in% names(data)]
+
   if (length(tooltip_vars) == 0) {
     return(rep("", nrow(data)))
   }
 
-  pmap_chr(
-    .l = select(data, all_of(tooltip_vars)),
-    .f = function(...) {
+  # Get all labels
+  labels <- purrr::map_chr(tooltip_vars, function(x) get_label(x, type, labels_df = labels_df))
 
-      row_values <- list(...)
+  # Create a list where each element is a vector of "Label: Value"
+  # strings for an entire column
+  tooltip_components <- purrr::map2(tooltip_vars, labels, function(var_name, label) {
+    paste0("<b>", label, "</b>: ", data[[var_name]])
+  })
 
-      # For each variable, create a formatted line retrieving its label
-      lines <- map_chr(tooltip_vars, ~ paste0(
-        "<b>", get_label(labels_df, .x, type), "</b>: ", row_values[[.x]]
-      ))
+  # Combine the components for each row
+  do.call(paste, c(tooltip_components, sep = "<br>"))
 
-      # Paste all lines together with HTML line breaks
-      paste(lines, collapse = "<br>")
-    }
-  )
 }

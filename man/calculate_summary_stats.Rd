@@ -4,7 +4,7 @@
 \alias{calculate_summary_stats}
 \title{Calculate Summary Statistics}
 \usage{
-calculate_summary_stats(data, input_groups = "NCA_PROFILE")
+calculate_summary_stats(data, input_groups = "ATPTREF")
 }
 \arguments{
 \item{data}{A data frame containing results of
@@ -38,13 +38,13 @@ The resulting summary statistics are rounded to three decimal places.
 If units are different, they are standardized to the group's most frequent first unit.
 }
 \examples{
-\dontrun{
 data <- data.frame(
-NCA_PROFILE = c(1, 1, 1, 1, 1, 1),
-PPTESTCD = c("A", "A", "B", "B", "C", "C"),
-PPSTRES = c(10, 20, 5, 15, NA, 30),
-PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
+  ATPTREF = c(1, 1, 1, 1, 1, 1),
+  PPTESTCD = c("A", "A", "B", "B", "C", "C"),
+  PPORRES = c(10, 20, 5, 15, NA, 30),
+  PPSTRES = c(10, 20, 5, 15, NA, 30),
+  PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L"),
+  PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 )
 calculate_summary_stats(data)
-}
 }

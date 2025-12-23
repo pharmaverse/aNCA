@@ -27,7 +27,7 @@ tlg_option_table_ui <- function(id, opt_def, data) {
 tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
   moduleServer(id, function(input, output, session) {
     #' Generates default table based on provided default option definition
-    default_table <- lapply(opt_def$default_rows, \(x) {
+    default_table <- lapply(opt_def$default_rows, function(x) {
       as.list(x) %>%
         setNames(names(opt_def$cols)) %>%
         as_tibble() %>%
@@ -53,7 +53,7 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
     #' Renders the editing table
     output$table <- renderReactable({
       #' Create edit widgets using `reactable.extras` based on provided definitions
-      edit_widgets <- imap(opt_def$cols, \(def, colname) {
+      edit_widgets <- imap(opt_def$cols, function(def, colname) {
         colDef(
           cell = switch(
             def$type,
@@ -62,9 +62,9 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
               id = session$ns(colname),
               choices = {
                 if (isTRUE(def$choices == ".colnames")) {
-                  names(data())
+                  names(data()$conc$data)
                 } else if (length(def$choices) == 1 && grepl("^\\$", def$choices)) {
-                  unique(data()[, sub("^\\$", "", def$choices)])
+                  unique(data()$conc$data[, sub("^\\$", "", def$choices)])
                 } else {
                   def$choices
                 }
@@ -84,6 +84,11 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
         highlight = TRUE,
         columns = edit_widgets,
         selection = "multiple",
+        compact = TRUE,
+        style = list(fontSize = "0.75em"),
+        showPageSizeOptions = TRUE,
+        pageSizeOptions = c(10, 25, 50, 100, nrow(edits_table())),
+        defaultPageSize = 10,
         theme = reactableTheme(
           rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
         )
@@ -94,7 +99,7 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
     #' Attach observers that listen to any changes provided by the user.
     observe({
       req(output_table())
-      purrr::walk(names(opt_def$cols), \(colname) {
+      purrr::walk(names(opt_def$cols), function(colname) {
         observeEvent(input[[colname]], {
           edit <- input[[colname]]
           edited_vars <- edits_table()

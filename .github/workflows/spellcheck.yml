@@ -66,23 +66,15 @@ jobs:
         with:
           ref: ${{ steps.branch-name.outputs.head_ref_branch }}
 
-      - name: Restore cache
-        uses: actions/cache@v4
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
         with:
-          path: |
-            ~/.staged.dependencies
-          key: staged-deps
+          use-public-rspm: true
 
-      - name: Run Staged dependencies
-        uses: insightsengineering/staged-dependencies-action@v1
+      - name: Install R Dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          run-system-dependencies: true
-          renv-restore: false
-          enable-check: false
-          direction: upstream
-          git-ref: ${{ steps.branch-name.outputs.current_branch }}
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+          needs: Suggests
       ##################### END boilerplate steps #####################
 
       - name: Run Spellcheck

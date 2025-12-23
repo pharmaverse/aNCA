@@ -29,17 +29,17 @@
 #' @importFrom stats sd median
 #' @export
 #' @examples
-#' \dontrun{
 #' data <- data.frame(
-#' NCA_PROFILE = c(1, 1, 1, 1, 1, 1),
-#' PPTESTCD = c("A", "A", "B", "B", "C", "C"),
-#' PPSTRES = c(10, 20, 5, 15, NA, 30),
-#' PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
+#'   ATPTREF = c(1, 1, 1, 1, 1, 1),
+#'   PPTESTCD = c("A", "A", "B", "B", "C", "C"),
+#'   PPORRES = c(10, 20, 5, 15, NA, 30),
+#'   PPSTRES = c(10, 20, 5, 15, NA, 30),
+#'   PPORRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L"),
+#'   PPSTRESU = c("mg/L", "mg/L", "ng/mL", "ng/mL", "µg/L", "µg/L")
 #' )
 #' calculate_summary_stats(data)
-#' }
 
-calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
+calculate_summary_stats <- function(data, input_groups = "ATPTREF") {
 
   # Return an empty data frame if the input data is empty
   if (nrow(data) == 0) {
@@ -64,9 +64,11 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
 
     # Standardize units to the most frequent one within the groups (or first otherwise)
     mutate(
-      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE, useNA = "ifany"))[1],
-      ModeConv_factor = as.numeric(names(sort(table(conv_factor),
-                                              decreasing = TRUE, useNA = "ifany"))[1]),
+      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE, useNA = "ifany")[1])[1]
+    ) %>%
+    ungroup() %>%
+    mutate(
+      ModeConv_factor = get_conversion_factor(PPORRESU, ModeUnit),
       PPSTRES = PPORRES * ModeConv_factor,
       PPTESTCD = ifelse(
         ModeUnit == "",
@@ -75,6 +77,9 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
       ),
       PPSTRES_log = log(ifelse(PPSTRES > 0, PPSTRES, NA_real_)),
     ) %>%
+
+    # Group by the input groups and the parameter test codes
+    group_by(across(all_of(c(input_groups, "PPTESTCD")))) %>%
 
     # Calculate summary statistics
     summarise(
@@ -89,7 +94,7 @@ calculate_summary_stats <- function(data, input_groups = "NCA_PROFILE") {
       Count.total = n(),
       .groups = "drop"
     ) %>%
-    mutate(across(where(is.numeric), \(x) round(x, 3))) %>%
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>%
 
     # Pivot the data to return groups/statistics as rows & parameters as columns
     pivot_longer(

@@ -27,7 +27,7 @@ Some variables are mandatory (marked with \*), while others are optional. Custom
 |------------------|------------------|-------------------|------------------|
 | **Grouping Identifiers** | STUDYID \*     | Study Identifier                                                   | character         |
 |                          | USUBJID \*     | Unique Subject Identifier                                          | character/numeric |
-|                          | NCA_PROFILE \* | Can be any column, and used to filter data for NCA calculations     | any               |
+|                          | ATPTREF \* | Can be any column, and used to filter data for NCA calculations     | any               |
 |                          | TRT01A         | Treatment Group Identifier (Actual)                                | character         |
 |                          | TRT01P         | Treatment Group Identifier (Planned)                               | character         |
 |                          | AGE            | Age of Subject                                                     | numeric           |
@@ -38,7 +38,7 @@ Some variables are mandatory (marked with \*), while others are optional. Custom
 |                          | PCSPEC \*      | Specimen Material Type                                             | character         |
 |                          | AVAL \*        | Analysis Value                                                     | numeric           |
 |                          |                |                                                                    |                   |
-| **Dose Variables**       | DRUG \*        | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
+| **Dose Variables**       | DOSETRT \*        | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
 |                          | ROUTE \*       | Route of Administration, either {intravascular} or {extravascular} | character         |
 |                          | DOSEA \*       | Actual Treatment Dose                                              | numeric           |
 |                          | ADOSEDUR       | Actual Treatment Dose                                              | numeric           |
@@ -80,7 +80,11 @@ Click "Next" to get to the *Mapping* section.
 
 Review the data and ensure that the columns have been mapped correctly, and all your filters have been applied. If there are any problems with your data (duplicates, missing times), application will display a warning message and in certain situations manual edits will be requested. Just follow the instructions.
 
-# Step 2: Run NCA
+# Step 2: Exploratory Analysis
+
+In the *Exploration* tab, you will find the different visualization options, including Individual Plots and Mean Plots. Here you can check out your data to see if the profiles and subjects look good.
+
+# Step 3: Run NCA
 
 Click on the *NCA* tab in the menu bar to switch to the next section.
 
@@ -95,7 +99,7 @@ You can also download the settings you have created, and upload them again the n
 
 <img src="images/get_started/05.png" alt="Running NCA"/>
 
-# Step 3: NCA Results
+# Step 4: NCA Results
 
 ## Main Results
 
@@ -140,7 +144,7 @@ If you do not click **Run NCA**, the manual slopes will not be added!
 
 ### Parameter Datasets
 
-In the Parameter Datasets tab you can see and export the ADPP, ADPC, and PP datasets.
+In the Parameter Datasets tab you can see and export the ADPP, ADNCA, and PP datasets.
 
 <img src="images/get_started/12.png" alt="Parameter Datasets"/>
 
@@ -149,16 +153,6 @@ In the Parameter Datasets tab you can see and export the ADPP, ADPC, and PP data
 In the *Additional Analysis* tab, you can calculate tissue-matrix ratios using the concentration ratios tab. Input which specimen you would like as the numerator and denominator, and click **Submit**.
 
 <img src="images/get_started/13.png" alt="Additional Analysis"/>
-
-# Step 4: Visualization
-
-In the *Visualization* tab, you will find the different visualization options, including Individual Plots, Mean Plots, Descriptive Statistics, and Boxplots.
-
-<blockquote class="warning">
-
-Currently work in progress
-
-</blockquote>
 
 # Step 5: TLGs
 

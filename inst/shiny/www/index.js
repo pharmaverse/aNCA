@@ -3,6 +3,9 @@
  */
 $(document).ready(() => {
   $('[data-toggle="tooltip"]').tooltip();
+
+  const results_table = document.getElementById('nca-nca_results-myresults-table');
+  observe_visible(results_table, "nca-results_visible");
 });
 
 /**
@@ -82,3 +85,23 @@ document.addEventListener('DOMContentLoaded', function () {
   enableDragAndDropUpload('data-raw_data-upload_container');
 
 });
+
+/**
+ * Creates a custom observer that checks if particular element is visible in the viewport.
+ * If it is, it sets a Shiny input value to a random number (to trigger reactivity).
+ * @param {Array} elements List of observed elements.
+ * @param {String} inputid Name of the Shiny input to set when element is visible.
+ */
+observe_visible = function(element, input_id) {
+  const observer = new IntersectionObserver(function(els) {
+    els.forEach(function(el) {
+      if (el.isIntersecting) {
+        Shiny.setInputValue(input_id, Math.random(), {priority: "event"});
+      }
+    });
+  }, {
+    threshold: 0.1
+  });
+
+  observer.observe(element);
+}

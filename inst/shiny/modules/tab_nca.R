@@ -15,47 +15,54 @@
 #'
 #' @param id           ID of the module.
 #' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
-#' @param grouping_vars A character vector with grouping variables for the analysis.
+#' @param extra_group_vars Column name(s) of the additional variable options for input widgets
 #'
 #' @returns `res_nca` reactive with results data object.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
 
-  fluidPage(
-    div(
-      class = "d-flex justify-content-between",
-      actionButton(ns("nca"), "Run NCA", class = "run-nca-btn")
+  navset_card_pill(
+    id = ns("nca_navset"),
+    nav_panel(
+      "Setup",
+      fluid = TRUE,
+      actionButton(
+        inputId = ns("run_nca"),
+        label = "Run NCA",
+        icon = icon("play"),
+        class = "btn btn-primary",
+        width = "100%"
+      ),
+      setup_ui(ns("nca_setup")),
     ),
-    navset_tab(
-      id = ns("ncapanel"),
-      nav_panel(
-        "Setup",
-        fluid = TRUE,
-        setup_ui(ns("nca_setup")),
-      ),
-      #' Results
-      nav_panel(
-        "Results", fluid = TRUE,
-        navset_pill_list(
-          nca_results_ui(ns("nca_results")),
-          nav_panel(
-            "Slopes Information",
-            navset_pill(
-              nav_panel("Slopes Results", DTOutput(ns("slope_results"))),
-              nav_panel("Manual Adjustments", tableOutput(ns("manual_slopes"))),
-            )
-          ),
-          nav_panel("Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))),
-          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets")))
-        )
-      ),
-      #' Additional analysis
-      nav_panel("Additional Analysis", additional_analysis_ui(ns("non_nca")))
+    #' Results
+    nav_panel(
+      "Results", fluid = TRUE,
+      navset_pill_list(
+        nca_results_ui(ns("nca_results")),
+        nav_panel(
+          "Slopes Information",
+          navset_pill(
+            nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
+            nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+          )
+        ),
+        nav_panel(
+          "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
+        ),
+        nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+        nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+      )
+    ),
+    #' Additional analysis
+    nav_panel(
+      "Additional Analysis",
+      additional_analysis_ui(ns("non_nca"))
     )
   )
 }
 
-tab_nca_server <- function(id, adnca_data, grouping_vars) {
+tab_nca_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -64,39 +71,22 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
 
-    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
-    pknca_data <- reactive({
-      req(adnca_data())
-      log_trace("Creating PKNCA::data object.")
-
-      tryCatch({
-        #' Create data object
-        pknca_object <- PKNCA_create_data_object(adnca_data())
-        log_success("PKNCA data object created.")
-
-        #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "visualisation", "tlg"), \(tab) {
-          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
-        })
-
-        pknca_object
-      }, error = function(e) {
-        log_error(e$message)
-        showNotification(e$message, type = "error", duration = NULL)
-        NULL
-      })
-    }) |>
-      bindEvent(adnca_data())
+    adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
     nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
+    session$userData$settings <- list(
+      settings =  settings,
+      slope_rules = slope_rules$manual_slopes
+    ) # This will be saved in the results zip folder
 
-    output$manual_slopes <- renderTable(slope_rules$manual_slopes())
+    reactable_server("manual_slopes", slope_rules$manual_slopes)
 
     # List all irrelevant warnings to suppres in the NCA calculation
     irrelevant_regex_warnings <- c(
@@ -117,123 +107,145 @@ tab_nca_server <- function(id, adnca_data, grouping_vars) {
         return(NULL)
       }
 
-      withProgress(message = "Calculating NCA...", value = 0, {
-        log_info("Calculating NCA results...")
-        tryCatch({
-          # Create env for storing PKNCA run warnings, so that warning messages can be appended
-          # from within warning handler without bleeding to global env.
-          pknca_warn_env <- new.env()
-          pknca_warn_env$warnings <- c()
+      loading_popup("Calculating NCA results...")
 
-          #' Calculate results
-          res <- withCallingHandlers({
-            processed_pknca_data() %>%
-              filter_slopes(
-                slope_rules$manual_slopes(),
-                slope_rules$profiles_per_subject(),
-                slope_rules$slopes_groups(),
-                check_reasons = TRUE
-              ) %>%
-              PKNCA_calculate_nca() %>%
-              # Add bioavailability results if requested
-              add_f_to_pknca_results(settings()$bioavailability) %>%
-              # Apply standard CDISC names
-              mutate(
-                PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-              ) %>%
-              # Add parameter ratio calculations
-              calculate_table_ratios_app(ratio_table = ratio_table())
-          },
-          warning = function(w) {
-            if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
-                       conditionMessage(w))) {
-              pknca_warn_env$warnings <- append(pknca_warn_env$warnings, conditionMessage(w))
-            }
-            invokeRestart("muffleWarning")
-          })
+      log_info("Calculating NCA results...")
 
-          # Apply flag rules to mark results in the `exclude` column
-          current_rules <- isolate(settings()$flags)
-          flag_rules_to_apply <- current_rules |>
-            purrr::keep(~ .x$is.checked) |>
-            purrr::map(~ .x$threshold)
-          res <- PKNCA_hl_rules_exclusion(res, flag_rules_to_apply)
+      tryCatch({
+        # Create env for storing PKNCA run warnings, so that warning messages can be appended
+        # from within warning handler without bleeding to global env.
+        pknca_warn_env <- new.env()
+        pknca_warn_env$warnings <- c()
 
-          # Display unique warnings thrown by PKNCA run.
-          purrr::walk(unique(pknca_warn_env$warnings), \(w) {
-            w_message <- paste0("PKNCA run produced a warning: ", w)
-            log_warn(w_message)
-            showNotification(w_message, type = "warning", duration = 5)
-          })
+        # Update units table
+        processed_pknca_data <- processed_pknca_data()
+        if (!is.null(session$userData$units_table())) {
+          processed_pknca_data$units <- session$userData$units_table()
+        }
 
-
-          #' Apply units
-          if (!is.null(session$userData$units_table())) {
-            res$data$units <- session$userData$units_table()
-            res$result <- res$result %>%
-              select(-PPSTRESU, -PPSTRES) %>%
-              left_join(
-                session$userData$units_table(),
-                by = intersect(names(.), names(session$userData$units_table()))
-              ) %>%
-              mutate(PPSTRES = PPORRES * conversion_factor) %>%
-              select(-conversion_factor)
+        #' Calculate results
+        res <- withCallingHandlers({
+          processed_pknca_data %>%
+            filter_slopes(
+              slope_rules$manual_slopes(),
+              slope_rules$profiles_per_subject(),
+              slope_rules$slopes_groups(),
+              check_reasons = TRUE
+            ) %>%
+            # Perform PKNCA parameter calculations
+            PKNCA_calculate_nca() %>%
+            # Add bioavailability results if requested
+            add_f_to_pknca_results(settings()$bioavailability) %>%
+            # Apply standard CDISC names
+            mutate(
+              PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+            ) %>%
+            # Apply flag rules to mark results in the `exclude` column
+            PKNCA_hl_rules_exclusion(
+              rules = isolate(settings()$flags) %>%
+                purrr::keep(\(x) x$is.checked) %>%
+                purrr::map(\(x) x$threshold)
+            ) %>%
+            # Add parameter ratio calculations
+            calculate_table_ratios_app(ratio_table = ratio_table())
+        },
+        warning = function(w) {
+          if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
+                     conditionMessage(w))) {
+            pknca_warn_env$warnings <- append(pknca_warn_env$warnings, conditionMessage(w))
           }
-
-          updateTabsetPanel(session, "ncapanel", selected = "Results")
-
-          log_success("NCA results calculated.")
-
-          # Apply standard CDISC names and return the object
-          res %>%
-            mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
-
-        }, error = function(e) {
-          log_error("Error calculating NCA results:\n{conditionMessage(e)}")
-          showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
-          NULL
+          invokeRestart("muffleWarning")
         })
+
+        # Display unique warnings thrown by PKNCA run.
+        purrr::walk(unique(pknca_warn_env$warnings), function(w) {
+          w_message <- paste0("PKNCA run produced a warning: ", w)
+          log_warn(w_message)
+          showNotification(w_message, type = "warning", duration = 5)
+        })
+
+        updateTabsetPanel(session, "nca_navset", selected = "Results")
+
+        log_success("NCA results calculated.")
+
+        # Reshape intervals, filter
+        params_not_requested <- res$data$intervals %>%
+          # pivot for requested params
+          pivot_longer(
+            cols = (any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))),
+            names_to = "PPTESTCD",
+            values_to = "is_requested"
+          ) %>%
+          # Translate terms
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+          # Group by all identifying cols EXCEPT the impute column and the value column
+          group_by(across(c(-impute, -is_requested))) %>%
+          # If all are FALSE, any(is_requested) will be FALSE.
+          summarise(
+            is_requested = any(is_requested),
+            .groups = "drop"
+          ) %>%
+          filter(!is_requested)
+
+        # Filter for requested params based on intervals
+        res$result <- res$result %>%
+          anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
+
+        res
+      }, error = function(e) {
+        log_error("Error calculating NCA results:\n{conditionMessage(e)}")
+        showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
+        NULL
+      }, finally = {
+        # Delay the removal of loading modal to give it enough time to render
+        later::later(~shiny::removeModal(session = session), delay = 0.5)
       })
-    }) |>
-      bindEvent(input$nca)
+    }) %>%
+      bindEvent(input$run_nca)
 
     #' Show slopes results
-    output$slope_results <- DT::renderDataTable({
+    pivoted_slopes <- reactive({
       req(res_nca())
       pivot_wider_pknca_results(res_nca()) %>%
         select(
-          any_of(c("USUBJID", "NCA_PROFILE", "PARAM", "PCSPEC")),
+          any_of(c("USUBJID", "ATPTREF", "PARAM", "PCSPEC")),
           starts_with("LAMZ"),
           starts_with("lambda.z"),
           starts_with("R2ADJ"),
           "Exclude"
-        ) %>%
-        DT::datatable(
-          extensions = "FixedHeader",
-          options = list(scrollX = TRUE, scrollY = "80vh",
-                         lengthMenu = list(c(10, 25, -1), c("10", "25", "All")),
-                         pageLength = -1, fixedHeader = TRUE)
-        ) %>%
-        formatStyle("Exclude", target = "row",
-                    backgroundColor = styleEqual(NA, NA, default = "#f5b4b4"))
+        )
     })
+
+    reactable_server(
+      "slope_results",
+      pivoted_slopes,
+      download_buttons = c("csv", "xlsx"),
+      file_name = function() paste0("NCA_Slope_Results_", Sys.Date()),
+      defaultPageSize = 10,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = reactive(c(10, 50, nrow(pivoted_slopes()))),
+      style = list(fontSize = "0.75em")
+    )
 
     #' Prepares and displays the pivoted NCA results
     nca_results_server(
-      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, grouping_vars
+      "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
     )
 
     #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, grouping_vars)
+    descriptive_statistics_server("descriptive_stats", res_nca, extra_group_vars)
 
     #' Additional analysis module
-    additional_analysis_server("non_nca", processed_pknca_data, grouping_vars)
+    additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca)
 
+    #' Parameter plots module
+    parameter_plots_server("parameter_plots", res_nca)
+
     # return results for use in other modules
-    res_nca
+    list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
   })
 }
 

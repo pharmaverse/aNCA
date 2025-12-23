@@ -4,7 +4,7 @@
 <!-- badges: start -->
 
 [![Pharmaverse](https://pharmaverse.org/shields/aNCA.svg)](https://pharmaverse.org)
-[![License](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://github.com/pharmaverse/aNCA?tab=Apache-2.0-1-ov-file)
 [![CRAN status](https://www.r-pkg.org/badges/version/aNCA)](https://CRAN.R-project.org/package=aNCA)
 [![R build status](https://github.com/pharmaverse/aNCA/actions/workflows/main.yml/badge.svg)](https://github.com/pharmaverse/aNCA/actions)
 ![Code coverage](https://raw.githubusercontent.com/pharmaverse/aNCA/badges/main/test-coverage.svg)
@@ -29,7 +29,17 @@ This application enables users to upload their datasets and perform Non-Compartm
 
 ## Installation
 
-### Via pak (recommended)
+### From CRAN 
+
+The stable version of the package can be easily downloaded:
+
+```R
+install.packages("aNCA")
+```
+
+---
+
+### From GitHub
 
 We recommend using [pak](https://github.com/r-lib/pak) for package installation, along with all system dependencies. If you do not have `pak` available, you will need to set it up first:
 
@@ -44,6 +54,8 @@ pak::pak("pharmaverse/aNCA")
 ```
 
 in your R console.
+
+---
 
 ### Via cloning the repository (for contributors)
 
@@ -77,15 +89,11 @@ For more detailed instructions, check out the [Get Started](https://pharmaverse.
 
 ## Contributing
 
-### As developer
+Check our [contributing guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 
-To ensure a clean codebase and smooth cooperation, please adhere to the [contributing guidelines](CONTRIBUTING.md).
-
-### As user
-
-Feel free to open identified [issues](https://github.com/pharmaverse/aNCA/issues/new/choose), to reach out to us for questions or report in our [google sheet](https://forms.gle/c9ULTTv1s75yRaLj7) for feedback.
 
 ## Documentation and references
 
-- Please go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app** (still in development).
+- Go to [our Website](https://pharmaverse.github.io/aNCA/) for further information on the **aNCA app**.
 - The main package used by the App is `PKNCA`. You can find more of it on its [GitHub](https://github.com/humanpred/pknca)
+- aNCA has different system validations, you can consult them [here](https://pharmaverse.github.io/aNCA/articles/validations.html)
