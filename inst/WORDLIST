@@ -2,6 +2,7 @@ ADNCA
 ADOSEDUR
 ADPC
 ADPP
+AEFRLT
 AFRLT
 ARRLT
 ATPTREF
@@ -28,6 +29,8 @@ DTYPE
 Denney
 Duvvuri
 EMA
+ERTLST
+ERTMAX
 EVID
 Extravascular
 Kezia
@@ -66,6 +69,8 @@ Pharmacokinetics
 Pharmaverse
 Plotly
 Pre
+RCAMINT
+RENALCL
 README
 RRLTU
 RStudio
@@ -87,7 +92,6 @@ Tmax
 Tooltip
 UI
 USUBJID
-USUBJIDs
 UX
 VOLUMEU
 XPT
@@ -116,7 +120,6 @@ ggplots
 intravascular
 linters
 lintr
-lin
 mL
 macroparameters
 md
@@ -132,7 +135,6 @@ plotly
 pptest
 pre
 pred
-predose
 qmd
 reproducibility
 reupload
