@@ -109,8 +109,6 @@ setup_server <- function(id, data, adnca_data) {
         selections = parameters_output$selections(),
         types_df = parameters_output$types_df()
       )
-        
-
       current_settings
     })
 
