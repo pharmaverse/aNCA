@@ -928,7 +928,7 @@ pkcg03 <- function(
         )
 
       plot$data <- sbs_data
-      
+
       plot <- plot +
         facet_wrap(~ view, scales = "free_y") +
         ggh4x::scale_y_facet(view == "Semilogarithmic view (Log10)",
