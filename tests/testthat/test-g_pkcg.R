@@ -289,7 +289,7 @@ describe("g_pkcg02_log", {
 adpc1 <- FIXTURE_CONC_DATA %>%
   filter(USUBJID %in% unique(USUBJID)) %>%
   mutate(USUBJID = as.character(USUBJID),
-         DOSNO = as.character(NCA_PROFILE),
+         DOSNO = as.character(ATPTREF),
          TRT01A = "Dummy Treatment",
          AVALCAT1 = as.character(AVAL),
          AVALCAT1 = ifelse(NFRLT == 0.0 & DOSNO == 1, "BLQ", AVALCAT1),
