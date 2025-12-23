@@ -754,20 +754,20 @@ pkcg03 <- function(
   if (!summary_method %in% names(SUMMARY_SETTINGS)) {
     stop("Invalid summary_method. Choose from: ", paste(names(SUMMARY_SETTINGS), collapse = ", "))
   }
-  
+
   if (!whiskers_lwr_upr %in% c("Both", "Upper", "Lower")) {
     stop("Invalid whiskers_lwr_upr. Choose from: 'Both', 'Upper', 'Lower'.")
   }
-  
+
   # Define summary settings
   summary_settings <- SUMMARY_SETTINGS[[summary_method]]
-  
+
   if (whiskers_lwr_upr == "Upper") {
     summary_settings$whiskers_value <- summary_settings$whiskers_value[2]
   } else if (whiskers_lwr_upr == "Lower") {
     summary_settings$whiskers_value <- summary_settings$whiskers_value[1]
   }
-  
+
   mid_value <- summary_settings$mid_value
   interval_value <- summary_settings$interval_value
   whiskers_value <- summary_settings$whiskers_value
@@ -779,18 +779,18 @@ pkcg03 <- function(
   # reapply col labels to grouped data and make sure all variables are labeled #
   old_labels <- c(formatters::var_labels(adnca), id_plot = NA)
   formatters::var_labels(adnca_grouped) <- ifelse(!is.na(old_labels),
-                                                 old_labels,
-                                                 names(adnca_grouped))
+                                                  old_labels,
+                                                  names(adnca_grouped))
 
   plot_ids <- unique(adnca_grouped[["id_plot"]])
   # Create list of plots
   plots <- lapply(plot_ids, function(id_val) {
     plot_data <- adnca_grouped %>%
       filter(id_plot == id_val)
-    
+
     # identify valid BLQ column
     blq_col <- intersect(c("AVALC", "AVALCAT1"), names(plot_data))[1]
-    
+
     # Keep timepoints for which at least 50% of the values are not BLQ by timepoint/group
     # (only if character col exists)
     keep_timepoint <- plot_data %>%
@@ -802,7 +802,7 @@ pkcg03 <- function(
       }) %>%
       group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
       summarise( # Count number of samples for each timepoint by group
-        n_samples = n_distinct(USUBJID), 
+        n_samples = n_distinct(USUBJID),
         # # Compute BLQ ratio for each timepoint by group
         n_blq_ratio = sum(is_blq) / n_samples,
         .groups = "drop"
@@ -962,14 +962,14 @@ pkcg03 <- function(
     if (plotly) {
       suppressWarnings({
         # Explicity set geom_line for plotly
-        plot <- plot + 
+        plot <- plot +
           geom_line(
             aes(
-              y = !!sym(mid_value), 
+              y = !!sym(mid_value),
               group = !!sym(mean_group_var)
             )
           )
-        
+
         plotly_plot <- plot %>%
           ggplotly(
             tooltip = c("x", "y"),
@@ -1001,7 +1001,7 @@ pkcg03 <- function(
         }
 
         plotly_plot
-        })
+      })
     } else {
       plot <- plot +
         labs(
@@ -1012,7 +1012,7 @@ pkcg03 <- function(
     }
   })
 
-  final_plots <- plots  |>
+  final_plots <- plots %>%
     setNames(plot_ids)
 
   # Filter out NULL elements from the list of plots

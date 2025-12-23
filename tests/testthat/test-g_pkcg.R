@@ -376,7 +376,7 @@ describe("pkcg03", {
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
         if (pkg == "ggh4x")
-          return(FALSE)
+          FALSE
         else
           TRUE
       },
@@ -402,7 +402,7 @@ describe("pkcg03", {
     # Generate the plot
     plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Upper", plotly = FALSE)
     p <- plots[[1]]
-    
+
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
     expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_upr")
   })
@@ -411,7 +411,7 @@ describe("pkcg03", {
     # Generate the plot
     plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Lower", plotly = FALSE)
     p <- plots[[1]]
-    
+
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
     expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_lwr")
   })
@@ -427,7 +427,7 @@ describe("pkcg03", {
       },
       `requireNamespace` = function(pkg, quietly = FALSE) {
         if (pkg == "scales")
-          return(FALSE)
+          FALSE
         else
           TRUE
       },
