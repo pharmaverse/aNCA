@@ -35,6 +35,8 @@ preprocessed_adnca <- adnca_data %>%
 ## Setup NCA settings in the PKNCA object ########################
 auc_data <- session$userData$settings$partial_aucs
 units_table <- session$userData$final_units
+parameters_selected_per_study <- session$userData$settings$parameters$selections
+study_types_df <- session$userData$settings$parameters$types_df
 
 pknca_obj <- preprocessed_adnca %>%
 
@@ -45,13 +47,18 @@ pknca_obj <- preprocessed_adnca %>%
 
   # Setup basic settings
   PKNCA_update_data_object(
-    auc_data = auc_data,
     method = session$userData$settings$method,
     selected_analytes = session$userData$settings$analyte,
     selected_profile = session$userData$settings$profile,
     selected_pcspec = session$userData$settings$pcspec,
-    params = session$userData$settings$parameter_selection,
     should_impute_c0 = session$userData$settings$data_imputation$impute_c0
+  ) %>%
+
+  update_main_intervals(
+    auc_data = auc_data,
+    parameter_selections = parameters_selected_per_study,
+    study_types_df =  study_types_df,
+    impute = session$userData$settings$data_imputation$impute_c0
   ) %>%
 
   # Define the desired units for the parameters (PPSTRESU)
