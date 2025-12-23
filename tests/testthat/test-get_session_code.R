@@ -23,6 +23,12 @@ describe("clean_deparse()", {
     expect_equal(clean_deparse(l), exp_named)
   })
 
+  it("formats named lists with non-syntactic names correctly", {
+    l <- list("first item" = 1, "second-item" = "x")
+    exp_named <- "list(\n  \"first item\" = 1,\n  \"second-item\" = \"x\"\n)"
+    expect_equal(clean_deparse(l), exp_named)
+  })
+
   it("renders data.frame as data.frame(...) with per-column vectors", {
     df <- data.frame(x = c(1, 2), y = c("a", "b"), stringsAsFactors = FALSE)
     exp_df <- paste0(
