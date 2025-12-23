@@ -27,12 +27,28 @@ general_exclusions_ui <- function(id) {
         ns("add_exclusion_reason"),
         label = "Add",
         class = "btn btn-primary btn-sm"
+      ),
+      # Help button (dropdown)
+      dropdown(
+        div(
+          style = "min-width:340px; max-width:480px;",
+          tags$h2("NCA Exclusions Help", style = "font-size:1.2em; margin-bottom:8px;"),
+          p("Records excluded here are not used in the NCA PK calculations."),
+          tags$ul(
+            tags$li(tags$b("Yellow"), ": Default exclusion (NCAwXRS columns mapped)"),
+            tags$li(tags$b("Red"), ": In-App exclusion (added via this interface)")
+          ),
+          p("Select rows and add a reason to exclude. Remove exclusions anytime.")
+        ),
+        style = "unite",
+        right = TRUE,
+        icon = icon("question"),
+        status = "primary"
       )
     ),
     # Table of current manual exclusions (compact, below input)
     uiOutput(ns("exclusion_list_ui")),
     # Color legend for the exclusions table
-    # Color legend for row highlighting
     div(
       class = "results-legend",
       style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
