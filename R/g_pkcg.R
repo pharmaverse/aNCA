@@ -788,27 +788,14 @@ pkcg03 <- function(
     plot_data <- adnca_grouped %>%
       filter(id_plot == id_val)
 
-    # identify valid BLQ column
-    blq_col <- intersect(c("AVALC", "AVALCAT1"), names(plot_data))[1]
 
     # Keep timepoints for which at least 50% of the values are not BLQ by timepoint/group
     # (only if character col exists)
-    keep_timepoint <- plot_data %>%
-      mutate(is_blq = if (!is.na(blq_col)) {
-        # Count number of BLQ samples for each timepoint by group
-        grepl("BLQ|LTR|<[1-9]|<PCLLOQ", .data[[blq_col]])
-      } else {
-        FALSE
-      }) %>%
-      group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
-      summarise( # Count number of samples for each timepoint by group
-        n_samples = n_distinct(USUBJID),
-        # # Compute BLQ ratio for each timepoint by group
-        n_blq_ratio = sum(is_blq) / n_samples,
-        .groups = "drop"
-      ) %>%
-      filter(n_blq_ratio <= 0.5, n_samples > 1) %>%
-      select(all_of(c(mean_group_var, xvar)))
+    keep_timepoint <- keep_blq_timepoints(
+      plot_data,
+      xvar = xvar,
+      mean_group_var = mean_group_var
+    )
 
     # Filter adnca to keep only timepoints of interest (group, timevar match keep_timepoint entries)
     plot_data <- plot_data %>% inner_join(keep_timepoint,
@@ -928,17 +915,8 @@ pkcg03 <- function(
     }
 
     if (scale == "SBS") {
-      if (!requireNamespace("ggh4x", quietly = FALSE))
-        stop(
-          "Side-by-side view requires `ggh4x` package, please install it with ",
-          "`install.packages('ggh4x')`"
-        )
-      if (!requireNamespace("scales", quietly = FALSE))
-        stop(
-          "Side-by-side view requires `scales` package, please install it with ",
-          "`install.packages('scales')`"
-        )
 
+      req_sbs_pkgs()
       # Create SBS version of data and plot
       sbs_data  <- bind_rows(plot$data %>% dplyr::mutate(view = "Linear view"),
                              plot$data %>%
@@ -1020,6 +998,34 @@ pkcg03 <- function(
 
 }
 
+#' Helper function for BLQ processing
+#' @param plot_data Data frame containing the data to be processed.
+#' @param xvar Character string of the variable name for the x-axis.
+#' @param mean_group_var Character string specifying the grouping variable to plot by group.
+#' @returns A data frame with valid timepoints based on BLQ criteria.
+keep_blq_timepoints <- function(plot_data, xvar, mean_group_var) {
+  # identify valid BLQ column
+  blq_col <- intersect(c("AVALC", "AVALCAT1"), names(plot_data))[1]
+
+  plot_data %>%
+    mutate(is_blq = if (!is.na(blq_col)) {
+      # Count number of BLQ samples for each timepoint by group
+      grepl("BLQ|LTR|<[1-9]|<PCLLOQ", .data[[blq_col]])
+    } else {
+      FALSE
+    }) %>%
+    group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+    summarise( # Count number of samples for each timepoint by group
+      n_samples = n_distinct(USUBJID),
+      # # Compute BLQ ratio for each timepoint by group
+      n_blq_ratio = sum(is_blq) / n_samples,
+      .groups = "drop"
+    ) %>%
+    filter(n_blq_ratio <= 0.5, n_samples > 1) %>%
+    select(all_of(c(mean_group_var, xvar)))
+}
+
+# Helper Function for Title Generation
 generate_title_mean <- function(plot_data, title, scale, studyid, mean_group_var) {
   if (is.null(title)) {
     paste0(
@@ -1047,6 +1053,20 @@ generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgrou
   } else {
     parse_annotation(plot_data, subtitle)
   }
+}
+
+# Helper function to assert package availability
+req_sbs_pkgs <- function() {
+  if (!requireNamespace("ggh4x", quietly = FALSE))
+    stop(
+      "Side-by-side view requires `ggh4x` package, please install it with ",
+      "`install.packages('ggh4x')`"
+    )
+  if (!requireNamespace("scales", quietly = FALSE))
+    stop(
+      "Side-by-side view requires `scales` package, please install it with ",
+      "`install.packages('scales')`"
+    )
 }
 
 

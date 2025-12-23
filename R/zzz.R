@@ -136,6 +136,7 @@
     "interval_name_col",
     "interval_next",
     "interval_prev",
+    "is_blq",
     "is.excluded.hl",
     "is.included.hl",
     "is.iv",
