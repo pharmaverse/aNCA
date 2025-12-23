@@ -751,7 +751,23 @@ pkcg03 <- function(
   ymax <- as.numeric(ymax)
 
   # Define summary settings
-  summary_settings <- define_summary_settings(summary_method, whiskers_lwr_upr)
+  if (!summary_method %in% names(SUMMARY_SETTINGS)) {
+    stop("Invalid summary_method. Choose from: ", paste(names(SUMMARY_SETTINGS), collapse = ", "))
+  }
+  
+  if (!whiskers_lwr_upr %in% c("Both", "Upper", "Lower")) {
+    stop("Invalid whiskers_lwr_upr. Choose from: 'Both', 'Upper', 'Lower'.")
+  }
+  
+  # Define summary settings
+  summary_settings <- SUMMARY_SETTINGS[[summary_method]]
+  
+  if (whiskers_lwr_upr == "Upper") {
+    summary_settings$whiskers_value <- summary_settings$whiskers_value[2]
+  } else if (whiskers_lwr_upr == "Lower") {
+    summary_settings$whiskers_value <- summary_settings$whiskers_value[1]
+  }
+  
   mid_value <- summary_settings$mid_value
   interval_value <- summary_settings$interval_value
   whiskers_value <- summary_settings$whiskers_value
@@ -783,7 +799,7 @@ pkcg03 <- function(
                 n_blq_ratio = n_blq / n_samples,
                 .groups = "drop") %>%
       filter(n_blq_ratio <= 0.5, n_samples > 1) %>%
-      select(.data[[mean_group_var]], .data[[xvar]])
+      select(all_of(c(mean_group_var, xvar)))
 
     # Filter adnca to keep only timepoints of interest (group, timevar match keep_timepoint entries)
     plot_data <- plot_data %>% inner_join(keep_timepoint,
@@ -891,7 +907,7 @@ pkcg03 <- function(
           !!sym(aval_stat) < 1e-3,
           yes = 1e-3, no = !!sym(aval_stat)
         ))
-      plot <- plot %+%  log_data
+      plot <- plot + log_data
 
       if (!plotly) {
         plot <- plot +
@@ -926,7 +942,7 @@ pkcg03 <- function(
           )
         )
 
-      plot <- plot %+%  sbs_data +
+      plot <- plot + sbs_data +
         facet_wrap(~ view, scales = "free_y") +
         ggh4x::scale_y_facet(view == "Semilogarithmic view (Log10)",
           trans  = "log10",
@@ -935,6 +951,7 @@ pkcg03 <- function(
     }
 
     if (plotly) {
+      suppressWarnings({
         plotly_plot <- plot %>%
           ggplotly(
             tooltip = c("x", "y"),
@@ -966,7 +983,7 @@ pkcg03 <- function(
         }
 
         plotly_plot
-
+        })
     } else {
       plot <- plot +
         labs(
@@ -1013,38 +1030,27 @@ generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgrou
     parse_annotation(plot_data, subtitle)
   }
 }
-define_summary_settings <- function(summary_method, whiskers_lwr_upr) {
-  summary_settings <- list(
-    Mean_ci = list(mid = "mean",
-                   interval = "mean_ci",
-                   whiskers = c("mean_ci_lwr", "mean_ci_upr")), # Removed 'lower =' and 'upper ='
-    Mean_sdi = list(mid = "mean",
-                    interval = "mean_sdi",
-                    whiskers = c("mean_sdi_lwr", "mean_sdi_upr")),
-    Mean_se = list(mid = "mean", interval = "mean_sei",
-                   whiskers = c("mean_sei_lwr", "mean_sei_upr")),
-    Median_ci = list(mid = "median",
-                     interval = "median_ci",
-                     whiskers = c("median_ci_lwr", "median_ci_upr"))
+
+
+SUMMARY_SETTINGS <- list(
+  Mean_ci = list(
+    mid_value = "mean",
+    interval_value = "mean_ci",
+    whiskers_value = c("mean_ci_lwr", "mean_ci_upr")
+  ),
+  Mean_sdi = list(
+    mid_value = "mean",
+    interval_value = "mean_sdi",
+    whiskers_value = c("mean_sdi_lwr", "mean_sdi_upr")
+  ),
+  Mean_se = list(
+    mid_value = "mean",
+    interval_value = "mean_sei",
+    whiskers_value = c("mean_sei_lwr", "mean_sei_upr")
+  ),
+  Median_ci = list(
+    mid_value = "median",
+    interval_value = "median_ci",
+    whiskers_value = c("median_ci_lwr", "median_ci_upr")
   )
-  if (!summary_method %in% names(summary_settings)) {
-    stop("Invalid summary_method. Choose from: ", paste(names(summary_settings), collapse = ", "))
-  }
-
-  mid_value <- summary_settings[[summary_method]]$mid
-  interval_value <- summary_settings[[summary_method]]$interval
-
-  whiskers_base <- summary_settings[[summary_method]]$whiskers
-
-  if (whiskers_lwr_upr == "Both") {
-    whiskers_value <- whiskers_base
-  } else if (whiskers_lwr_upr == "Upper") {
-    whiskers_value <- whiskers_base[2]
-  } else if (whiskers_lwr_upr == "Lower") {
-    whiskers_value <- whiskers_base[1]
-  } else {
-    stop("Invalid whiskers_lwr_upr. Choose from: 'Both', 'Upper', 'Lower'.")
-  }
-
-  list(mid_value = mid_value, interval_value = interval_value, whiskers_value = whiskers_value)
-}
+)

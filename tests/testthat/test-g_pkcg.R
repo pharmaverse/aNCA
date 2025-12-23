@@ -393,19 +393,27 @@ describe("pkcg03", {
 
   it("returns error for invalid whiskers_lwr_upr option", {
     expect_error(
-      define_summary_settings(summary_method = "Mean_sdi", whiskers_lwr_upr = "Invalid"),
+      pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Invalid"),
       "Invalid whiskers_lwr_upr. Choose from: 'Both', 'Upper', 'Lower'."
     )
   })
 
   it("correctly selects whiskers for 'Upper' option", {
-    settings <- define_summary_settings(summary_method = "Mean_sdi", whiskers_lwr_upr = "Upper")
-    expect_equal(settings$whiskers_value, "mean_sdi_upr")
+    # Generate the plot
+    plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Upper", plotly = FALSE)
+    p <- plots[[1]]
+    
+    layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_upr")
   })
 
   it("correctly selects whiskers for 'Lower' option", {
-    settings <- define_summary_settings(summary_method = "Mean_sdi", whiskers_lwr_upr = "Lower")
-    expect_equal(settings$whiskers_value, "mean_sdi_lwr")
+    # Generate the plot
+    plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Lower", plotly = FALSE)
+    p <- plots[[1]]
+    
+    layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_lwr")
   })
 
   it("returns error if missing scales package for SBS scale", {
