@@ -483,6 +483,7 @@ g_pkcg03_lin:
       type: numeric
 
 g_pkcg03_log:
+  template: g_pkcg03_lin
   is_default: true
   type: Graph
   dataset: ADNCA
@@ -494,6 +495,7 @@ g_pkcg03_log:
   condition: null
 
 g_pkcg03_sbs:
+  template: g_pkcg03_lin
   is_default: false
   type: Graph
   dataset: ADNCA
