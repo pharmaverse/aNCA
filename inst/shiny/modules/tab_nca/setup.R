@@ -48,7 +48,8 @@ setup_ui <- function(id) {
       )
     ),
     nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
-    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
+    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
+    nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
   )
 }
 
@@ -72,6 +73,8 @@ setup_server <- function(id, data, adnca_data) {
       settings_override
     )
 
+    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
+
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
       req(adnca_data(), settings())
@@ -83,7 +86,8 @@ setup_server <- function(id, data, adnca_data) {
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        should_impute_c0 = settings()$data_imputation$impute_c0
+        should_impute_c0 = settings()$data_imputation$impute_c0,
+        exclusion_list = general_exclusions$exclusion_list()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -200,7 +204,8 @@ setup_server <- function(id, data, adnca_data) {
       processed_pknca_data = processed_pknca_data,
       settings = final_settings,
       ratio_table = ratio_table,
-      slope_rules = slope_rules
+      slope_rules = slope_rules,
+      general_exclusions = general_exclusions$exclusion_list
     )
   })
 }
