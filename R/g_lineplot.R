@@ -95,6 +95,14 @@ g_lineplot <- function(data,
     ci     <- FALSE
   }
 
+  if (nrow(data) == 0) {
+    error_msg <- paste0(
+      "No data available for the ",
+      if (is_mean_plot) "mean plot" else "individual plot"
+    )
+    return(.error_plot(error_msg))
+  }
+
   # Concatenate unique units, sep by ","
   #TODO: potential to facet if > 1 unit (#848)
   x_unit <- paste0(unique(data$RRLTU), collapse = ", ")
@@ -251,4 +259,12 @@ g_lineplot <- function(data,
   }
   # Return a list of all layers
   list(error_bar_layer, ci_ribbon_layer)
+}
+
+#' @noRd
+.error_plot <- function(msg) {
+  ggplot() +
+    annotate("text", x = 0.5, y = 0.5, label = msg, size = 6, hjust = 0.5, vjust = 0.5) +
+    theme_void() +
+    ggtitle("Error")
 }

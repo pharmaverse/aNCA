@@ -1,4 +1,3 @@
-
 # --- Setup: Sample Data ---
 
 # 1. Sample data for INDIVIDUAL plot mode
@@ -163,6 +162,23 @@ describe("g_lineplot: Individual Plot Mode", {
     )
     expect_equal(p$labels$colour, "USUBJID, DOSEA")
   })
+
+  it("handles empty data.frame with a plot informing of no data", {
+    empty_ind_data <- ind_data[0, ]
+    p <- g_lineplot(
+      data = empty_ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      color_by = "USUBJID"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_equal(p$labels$title, "Error")
+    gg_build <- ggplot_build(p)
+    expect_equal(
+      gg_build[[1]][[1]]$label,
+      "No data available for the individual plot"
+    )
+  })
 })
 
 describe("g_lineplot: Mean Plot Mode", {
@@ -274,6 +290,23 @@ describe("g_lineplot: Mean Plot Mode", {
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomErrorbar" %in% layer_classes)
     expect_true("GeomRibbon" %in% layer_classes)
+  })
+
+  it("handles empty data.frame with a plot informing of no data", {
+    empty_mean_data <- mean_data[0, ]
+    p <- g_lineplot(
+      data = empty_mean_data,
+      x_var = "time_var",
+      y_var = "Mean",
+      color_by = "color_var"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_equal(p$labels$title, "Error")
+    gg_build <- ggplot_build(p)
+    expect_equal(
+      gg_build[[1]][[1]]$label,
+      "No data available for the mean plot"
+    )
   })
 })
 
