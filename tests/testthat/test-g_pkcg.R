@@ -364,6 +364,26 @@ describe("pkcg03", {
     expect_true(length(plots_mean_se) > 0)
     vdiffr::expect_doppelganger("mean_se_plot", plots_mean_se[[1]])
   })
+  
+  it("generates plot if AVALC column not available", {
+    adpc1_no_AVALC <- adpc1 %>% select(-AVALC)
+    plots <- pkcg03(adpc1_no_AVALC, plotly = FALSE)
+    expect_true(length(plots) > 0)
+    vdiffr::expect_doppelganger("mean_plot_no_AVALC", plots[[1]])
+  })
+  
+  it("correctly filters BLQ timepoints if > 50% are BLQ", {
+    adpc1_blq <- adpc1 %>%
+      mutate(AVALC = ifelse(NFRLT == 0.5, "BLQ", AVALC))
+    
+    plots <- pkcg03(adpc1_blq, plotly = FALSE)
+    p <- plots[[1]]
+    
+    # Check that timepoints >= 12 are not present in the plot data
+    plot_data <- ggplot2::ggplot_build(p)$data[[1]]
+    expect_true(all(plot_data$NFRLT != 0.5))
+  
+  })
 
   it("returns error if missing ggh4x package for SBS scale", {
     # Temporarily mock requireNamespace to simulate ggh4x not being available
