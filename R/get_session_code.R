@@ -71,7 +71,7 @@ get_session_code <- function(template_path, session, output_path) {
 #' @return A single string containing R code that, when evaluated, will
 #'   reconstruct `obj` (or a close approximation for complex types).
 #' @keywords internal
-clean_deparse <- function(obj, indent = 0) {
+clean_deparse <- function(obj, indent = 0, max_per_line = 10) {
   # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(class(obj)[1], "()"))
@@ -80,17 +80,17 @@ clean_deparse <- function(obj, indent = 0) {
 }
 
 #' @noRd
-clean_deparse.default <- function(obj, indent = 0) {
+clean_deparse.default <- function(obj, indent = 0, max_per_line = 10) {
   paste(deparse(obj, width.cutoff = 500), collapse = "")
 }
 
 #' @noRd
-clean_deparse.data.frame <- function(obj, indent = 0) {
+clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10) {
   ind <- paste(rep("  ", indent), collapse = "")
   if (nrow(obj) == 0) return("data.frame()")
 
   cols <- lapply(obj, function(col) {
-    clean_deparse(col, indent + 1)
+    clean_deparse(col, indent + 1, max_per_line = max_per_line)
   })
 
   col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
@@ -102,7 +102,7 @@ clean_deparse.data.frame <- function(obj, indent = 0) {
 }
 
 #' @noRd
-clean_deparse.list <- function(obj, indent = 0) {
+clean_deparse.list <- function(obj, indent = 0, max_per_line = 10) {
   ind <- paste(rep("  ", indent), collapse = "")
   n <- length(obj)
   nms <- names(obj)
@@ -113,8 +113,7 @@ clean_deparse.list <- function(obj, indent = 0) {
       name <- sprintf('"%s"', name)
     }
     val <- obj[[i]]
-    # Use specialized deparsers for atomic vectors
-    val_str <- clean_deparse(val, indent + 1)
+    val_str <- clean_deparse(val, indent + 1, max_per_line = max_per_line)
     paste0(name, " = ", val_str)
   })
   if (length(items) > 1) {
@@ -127,13 +126,13 @@ clean_deparse.list <- function(obj, indent = 0) {
 
 #' @noRd
 
-clean_deparse.character <- function(obj, indent = 0) {
+clean_deparse.character <- function(obj, indent = 0, max_per_line = 10) {
   n <- length(obj)
   if (n == 1) {
     return(sprintf('"%s"', obj))
-  } else if (n > 10) {
+  } else if (n > max_per_line) {
     ind <- paste(rep("  ", indent), collapse = "")
-    lines <- split(obj, ceiling(seq_along(obj) / 10))
+    lines <- split(obj, ceiling(seq_along(obj) / max_per_line))
     line_strs <- vapply(lines, function(x) paste(sprintf('"%s"', x), collapse = ", "), "")
     paste0(
       "c(\n",
@@ -147,13 +146,13 @@ clean_deparse.character <- function(obj, indent = 0) {
 
 #' @noRd
 
-clean_deparse.numeric <- function(obj, indent = 0) {
+clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10) {
   n <- length(obj)
   if (n == 1) {
     return(paste0(obj))
-  } else if (n > 10) {
+  } else if (n > max_per_line) {
     ind <- paste(rep("  ", indent), collapse = "")
-    lines <- split(obj, ceiling(seq_along(obj) / 10))
+    lines <- split(obj, ceiling(seq_along(obj) / max_per_line))
     line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
     paste0(
       "c(\n",
@@ -169,7 +168,7 @@ clean_deparse.numeric <- function(obj, indent = 0) {
 clean_deparse.integer <- clean_deparse.numeric
 
 #' @noRd
-clean_deparse.logical <- function(obj, indent = 0) {
+clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10) {
   n <- length(obj)
   if (n == 0) {
     return("logical()")
