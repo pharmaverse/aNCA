@@ -61,4 +61,14 @@ describe("clean_deparse()", {
     expect_equal(clean_deparse(character(0)), "character()")
     expect_equal(clean_deparse(numeric(0)), "numeric()")
   })
+
+  it("renders data.frame with long columns using newlines and indentation", {
+    long_vec <- as.character(1:25)
+    df <- data.frame(x = 1:25, y = long_vec, stringsAsFactors = FALSE)
+    out <- clean_deparse(df)
+    expect_true(grepl("c\\(\n", out)) # Should use newlines for long columns
+    expect_true(grepl("    1, 2, 3", out)) # Indentation present
+    expect_true(grepl("x = c\\(", out)) # Column x uses c( ... )
+    expect_true(grepl("y = c\\(", out)) # Column y uses c( ... )
+  })
 })
