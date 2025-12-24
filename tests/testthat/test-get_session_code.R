@@ -71,4 +71,54 @@ describe("clean_deparse()", {
     expect_true(grepl("x = c\\(", out)) # Column x uses c( ... )
     expect_true(grepl("y = c\\(", out)) # Column y uses c( ... )
   })
+  
+  it("respects max_per_line for character vectors", {
+    v <- as.character(1:6)
+    out <- clean_deparse(v, max_per_line = 2)
+    exp_out <- "c(\n  \"1\", \"2\",\n  \"3\", \"4\",\n  \"5\", \"6\"\n)"
+    expect_equal(out, exp_out)
+  })
+
+  it("respects max_per_line for numeric vectors", {
+    v <- 1:6
+    out <- clean_deparse(v, max_per_line = 2)
+    exp_out <- "c(\n  1, 2,\n  3, 4,\n  5, 6\n)"
+    expect_equal(out, exp_out)
+  })
+
+  it("respects max_per_line for lists of vectors", {
+    l <- list(a = 1:4, b = letters[1:4])
+    out <- clean_deparse(l, max_per_line = 2)
+    exp_out <- paste0(
+      "list(\n",
+      "  a = c(\n",
+      "    1, 2,\n",
+      "    3, 4\n",
+      "  ),\n",
+      "  b = c(\n",
+      '    "a", "b",\n',
+      '    "c", "d"\n',
+      "  )\n",
+      ")"
+    )
+    expect_equal(out, exp_out)
+  })
+
+  it("respects max_per_line for data.frames", {
+    df <- data.frame(x = 1:4, y = letters[1:4], stringsAsFactors = FALSE)
+    out <- clean_deparse(df, max_per_line = 2)
+    exp_out <- paste0(
+      "data.frame(\n",
+      "  x = c(\n",
+      "    1, 2,\n",
+      "    3, 4\n",
+      "  ),\n",
+      "  y = c(\n",
+      '    "a", "b",\n',
+      '    "c", "d"\n',
+      "  )\n",
+      ")"
+    )
+    expect_equal(out, exp_out)
+  })
 })
