@@ -80,46 +80,15 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       results <- res_nca()
 
       # Transform results
-      final_results <- pivot_wider_pknca_results(results)
+      extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
+      session$userData$extra_vars_to_keep <- extra_vars_to_keep
 
-      # Join subject data to allow the user to group by it
-      conc_data_to_join <- res_nca()$data$conc$data %>%
-        select(any_of(c(
-          grouping_vars(),
-          unname(unlist(res_nca()$data$conc$columns$groups)),
-          "DOSEA",
-          "ATPTREF",
-          "ROUTE"
-        )))
+      final_results <- pivot_wider_pknca_results(
+        results,
+        flag_rules = settings()$flags,
+        extra_vars_to_keep = extra_vars_to_keep
+      )
 
-      final_results <- final_results %>%
-        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct() %>%
-        mutate(
-          flagged = "NOT DONE"
-        )
-
-      # Add flaging column in the pivoted results
-      applied_flags <- purrr::keep(settings()$flags, function(x) x$is.checked)
-      flag_params <- names(settings()$flags)
-      flag_thr <- sapply(settings()$flags, FUN =  function(x) x$threshold)
-      flag_rule_msgs <- paste0(flag_params, c(" < ", " < ", " > ", " > ", " < "), flag_thr)
-      flag_cols <- names(final_results)[formatters::var_labels(final_results)
-                                        %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
-
-      if (length(flag_params) > 0) {
-        final_results <- final_results %>%
-          mutate(
-            flagged = case_when(
-              rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
-              is.na(Exclude) ~ "ACCEPTED",
-              any(sapply(
-                flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
-              )) ~ "FLAGGED",
-              TRUE ~ "ACCEPTED"
-            )
-          )
-      }
       final_results
     })
 
@@ -160,6 +129,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               title = paste0("NCA Results", "\n", session$userData$project_name()),
               use_plotly = TRUE
             )
+
             incProgress(0.3)
             create_pptx_dose_slides(
               res_dose_slides = res_dose_slides,
@@ -172,19 +142,39 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             # Create a settings folder
             setts_tmpdir <- file.path(output_tmpdir, "settings")
             dir.create(setts_tmpdir, recursive = TRUE)
-            settings_list <- session$userData$settings
+            settings_list <- session$userData$settings()
             setings_to_save <- list(
-              settings = settings_list$settings(),
-              slope_rules = settings_list$slope_rules()
+              settings = settings_list,
+              slope_rules = list(
+                manual_slopes = session$userData$slope_rules$manual_slopes(),
+                profiles_per_subject = session$userData$slope_rules$profiles_per_subject(),
+                slopes_groups = session$userData$slope_rules$slopes_groups()
+              )
             )
 
             saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+
+            # Save input dataset used
+            data_tmpdir <- file.path(output_tmpdir, "data")
+            dir.create(data_tmpdir, recursive = TRUE)
+            data <- read_pk(session$userData$data_path)
+            saveRDS(data, paste0(data_tmpdir, "/data.rds"))
+
+            # Save a code R script template for the session
+            script_tmpdir <- file.path(output_tmpdir, "code")
+            dir.create(script_tmpdir, recursive = TRUE)
+            script_template_path <- "www/templates/script_template.R"
+            get_session_code(
+              template_path = script_template_path,
+              session = session,
+              output_path = paste0(script_tmpdir, "/session_code.R")
+            )
 
             files <- list.files(
               output_tmpdir,
               pattern = paste0(
                 "(\\.csv)|(\\.rds)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
-                "|(results_slides\\.pptx)|(results_slides\\.qmd)$"
+                "|(results_slides\\.pptx)|(results_slides\\.qmd)|(session_code\\.R)$"
               ),
               recursive = TRUE
             )

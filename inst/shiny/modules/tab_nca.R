@@ -86,6 +86,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       slope_rules = slope_rules$manual_slopes
     ) # This will be saved in the results zip folder
 
+    # This will be saved in the results zip folder
+    session$userData$settings <- settings
+    session$userData$ratio_table <- ratio_table
+    session$userData$slope_rules <- slope_rules
+
     reactable_server("manual_slopes", slope_rules$manual_slopes)
 
     # List all irrelevant warnings to suppres in the NCA calculation
@@ -202,6 +207,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       })
     }) %>%
       bindEvent(input$run_nca)
+
+    observe({
+      req(res_nca())
+      session$userData$final_units <- res_nca()$data$units
+    })
 
     #' Show slopes results
     pivoted_slopes <- reactive({

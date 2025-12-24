@@ -112,6 +112,9 @@ data_filtering_server <- function(id, raw_adnca_data) {
         paste0("Submitting the following filters:\n", .) %>%
         log_info()
 
+      # Save the filters object
+      session$userData$applied_filters <- applied_filters
+
       # Filter and return data
       withCallingHandlers({
         apply_filters(raw_adnca_data(), applied_filters)
