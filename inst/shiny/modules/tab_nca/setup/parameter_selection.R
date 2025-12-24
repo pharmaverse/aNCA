@@ -259,7 +259,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       study_type_names <- unique(study_types_df()$type)
 
       if (length(study_type_names) == 0) return(list())
-
+browser()
       # Convert from wide to long, filter for selected rows,
       # and then split the result into a list by study_type.
       df %>%

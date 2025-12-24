@@ -56,20 +56,27 @@ setup_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive({
-      req(input$settings_upload)
-      readRDS(input$settings_upload$datapath)
+      req(settings_override())
+      settings_override()$settings
+    })
+    
+    imported_slopes <- reactive({
+      req(settings_override())
+      settings_override()$slope_rules
+    })
+    
+    imported_params <- reactive({
+      req(imported_settings())
+      imported_settings()$parameter_selections
     })
 
-    settings_override <- reactive(imported_settings()$settings)
-    manual_slopes_override <- reactive(imported_settings()$slope_rules)
-    parameters_override <- reactive(imported_settings()$settings$parameter_selections)
 
     # Gather all settings from the appropriate module
     settings <- settings_server(
       "nca_settings",
       data,
       adnca_data,
-      settings_override
+      imported_settings
     )
 
     # Create processed data object with applied settings.
@@ -99,7 +106,7 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     parameters_output <- parameter_selection_server(
       "nca_setup_parameter",
       base_pknca_data,
-      parameters_override
+      imported_params
     )
 
     final_settings <- reactive({
@@ -145,9 +152,9 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     session$userData$ratio_table <- reactive(ratio_table())
 
     # Automatically update the units table when settings are uploaded.
-    observeEvent(settings_override(), {
-      req(settings_override()$units)
-      session$userData$units_table(settings_override()$units)
+    observeEvent(imported_settings(), {
+      req(imported_settings()$units)
+      session$userData$units_table(imported_settings()$units)
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
@@ -183,7 +190,7 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     slope_rules <- slope_selector_server(
       "slope_selector",
       slopes_pknca_data,
-      manual_slopes_override
+      imported_slopes
     )
 
     # Handle downloading and uploading settings
