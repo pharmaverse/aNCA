@@ -71,7 +71,7 @@ describe("clean_deparse()", {
     expect_true(grepl("x = c\\(", out)) # Column x uses c( ... )
     expect_true(grepl("y = c\\(", out)) # Column y uses c( ... )
   })
-  
+
   it("respects max_per_line for character vectors", {
     v <- as.character(1:6)
     out <- clean_deparse(v, max_per_line = 2)

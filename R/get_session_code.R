@@ -129,7 +129,7 @@ clean_deparse.list <- function(obj, indent = 0, max_per_line = 10) {
 clean_deparse.character <- function(obj, indent = 0, max_per_line = 10) {
   n <- length(obj)
   if (n == 1) {
-    return(sprintf('"%s"', obj))
+    sprintf('"%s"', obj)
   } else if (n > max_per_line) {
     ind <- paste(rep("  ", indent), collapse = "")
     lines <- split(obj, ceiling(seq_along(obj) / max_per_line))
@@ -149,7 +149,7 @@ clean_deparse.character <- function(obj, indent = 0, max_per_line = 10) {
 clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10) {
   n <- length(obj)
   if (n == 1) {
-    return(paste0(obj))
+    paste0(obj)
   } else if (n > max_per_line) {
     ind <- paste(rep("  ", indent), collapse = "")
     lines <- split(obj, ceiling(seq_along(obj) / max_per_line))
@@ -171,9 +171,9 @@ clean_deparse.integer <- clean_deparse.numeric
 clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10) {
   n <- length(obj)
   if (n == 0) {
-    return("logical()")
+    "logical()"
   } else if (n == 1) {
-    return(paste0(obj))
+    paste0(obj)
   } else {
     paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
   }
