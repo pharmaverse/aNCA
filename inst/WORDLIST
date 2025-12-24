@@ -2,6 +2,7 @@ ADNCA
 ADOSEDUR
 ADPC
 ADPP
+AEFRLT
 AFRLT
 ARRLT
 ATPTREF
@@ -24,6 +25,8 @@ DTYPE
 Denney
 Duvvuri
 EMA
+ERTLST
+ERTMAX
 EVID
 Extravascular
 Kezia
@@ -31,7 +34,6 @@ Kobana
 LAMZ
 LAMZLL
 LAMZNPT
-Lineplot
 METABFL
 MSCW
 NCA
@@ -60,6 +62,8 @@ Pharmacokinetics
 Pharmaverse
 Plotly
 Pre
+RCAMINT
+RENALCL
 README
 RRLTU
 RStudio
@@ -77,7 +81,6 @@ Tmax
 Tooltip
 UI
 USUBJID
-USUBJIDs
 UX
 VOLUMEU
 XPT
@@ -95,6 +98,7 @@ cmax
 colour
 concu
 customizable
+customizations
 dateTime
 devtools
 df
@@ -120,7 +124,6 @@ plotly
 pptest
 pre
 pred
-predose
 qmd
 reproducibility
 reupload

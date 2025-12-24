@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.1.0.9012
+Version: 0.1.0.9023
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -34,7 +34,7 @@ Imports:
     methods,
     officer,
     PKNCA (>= 0.12.1),
-    plotly,
+    plotly (>= 4.11.0),
     purrr,
     rlang,
     rlistings,
@@ -59,7 +59,7 @@ Suggests:
     htmlwidgets,
     jsonlite,
     knitr,
-    lintr (>= 3.1.2),
+    lintr (>= 3.2.0),
     logger,
     markdown,
     mockery,

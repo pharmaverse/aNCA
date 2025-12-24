@@ -96,34 +96,42 @@ get_dose_esc_results <- function(
     o_res_i <- merge(o_nca$result, group_i)
     o_nca_i$result <- o_res_i
 
-    linplot_i <- general_lineplot(
+    linplot_data_i <- process_data_individual(
       data = d_conc_i,
       selected_analytes = d_conc_i[[analyte_col]],
       selected_pcspec = d_conc_i[[pcspec_col]],
       selected_usubjids = d_conc_i[[subj_col]],
-      colorby_var = subj_col,
-      facet_by = facet_vars,
-      time_scale = "Whole",
-      yaxis_scale = "Log",
-      show_threshold = FALSE,
-      threshold_value = 0,
-      show_dose = FALSE,
-      cycle = NULL,
-      palette = NULL
+      profiles_selected = unique(d_conc_i[[profile_col]]),
+      ylog_scale = TRUE
     )
 
-    meanplot_i <- general_meanplot(
+    linplot_i <- g_lineplot(
+      data = linplot_data_i,
+      x_var = "ARRLT",
+      y_var = "AVAL",
+      color_by = subj_col,
+      facet_by = facet_vars,
+      ylog_scale = TRUE
+    )
+
+    meanplot_data_i <- process_data_mean(
       data = d_conc_i,
-      selected_studyids = unique(d_conc_i[[studyid_col]]),
       selected_analytes = unique(d_conc_i[[analyte_col]]),
-      selected_pcspecs = unique(d_conc_i[[pcspec_col]]),
-      selected_cycles = unique(d_conc_i[[profile_col]]),
-      id_variable = facet_vars,
-      groupby_var = group_by_vars,
-      plot_ylog = FALSE,
-      plot_sd_min = TRUE,
-      plot_sd_max = TRUE,
-      plot_ci = FALSE
+      selected_pcspec = unique(d_conc_i[[pcspec_col]]),
+      profiles_selected = unique(d_conc_i[[profile_col]]),
+      ylog_scale = TRUE,
+      facet_by = facet_vars,
+      color_by = group_by_vars
+    )
+
+    meanplot_i <- g_lineplot(
+      data = meanplot_data_i,
+      x_var = "NRRLT",
+      y_var = "Mean",
+      facet_by = facet_vars,
+      color_by = group_by_vars,
+      ylog_scale = TRUE,
+      sd_max = TRUE
     )
 
     stats_i <- calculate_summary_stats(
@@ -180,20 +188,21 @@ get_dose_esc_results <- function(
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
       lapply(function(d_conc_i) {
-        general_lineplot(
+        d_conc_processed_i <- process_data_individual(
           data = d_conc_i,
           selected_analytes = d_conc_i[[analyte_col]],
           selected_pcspec = d_conc_i[[pcspec_col]],
           selected_usubjids = d_conc_i[[subj_col]],
-          colorby_var = subj_col,
+          ylog_scale = TRUE
+        )
+
+        g_lineplot(
+          data = d_conc_processed_i,
+          x_var = "AFRLT",
+          y_var = "AVAL",
+          color_by = subj_col,
           facet_by = facet_vars,
-          time_scale = "Whole",
-          yaxis_scale = "Log",
-          show_threshold = FALSE,
-          threshold_value = 0,
-          show_dose = FALSE,
-          cycle = NULL,
-          palette = NULL
+          ylog_scale = TRUE
         )
       })
 

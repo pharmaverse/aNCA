@@ -47,7 +47,7 @@ data_upload_server <- function(id) {
       if (is.null(file_loading_error())) {
         p("")
       } else {
-        p(file_loading_error(), class = "error-string")
+        p(span(HTML(file_loading_error())), class = "error-string")
       }
     })
 
@@ -83,7 +83,6 @@ data_upload_server <- function(id) {
             # check if settings file is loaded and then create settings override
             tryCatch({
               obj <- readRDS(path)
-
               # Check for settings
               is_settings <- is.list(obj) && "settings" %in% names(obj)
               
@@ -104,7 +103,8 @@ data_upload_server <- function(id) {
 
         # Process results
         successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
-        errors <- purrr::keep(read_results, ~ .x$status == "error")
+        errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
+          purrr::map(\(x) paste0(x$name, ": ", x$message))
         
         # Extract and apply settings if any found
         found_settings <- purrr::keep(successful_loads, ~ .x$type == "settings")
@@ -112,7 +112,9 @@ data_upload_server <- function(id) {
         if (length(found_settings) > 1) {
           # Error: Too many settings files
           msg <- "Error: Multiple settings files detected. Please upload only one settings file."
-          prev_msgs <- if (length(errors) > 0) paste(purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg)), collapse = "<br>") else ""
+          prev_msgs <- if (length(errors) > 0){
+            paste(purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg)), collapse = "<br>")
+          } else ""
           file_loading_error(paste(c(prev_msgs, msg), collapse = "<br>"))
           
           # Do not apply any settings if ambiguous
@@ -126,47 +128,32 @@ data_upload_server <- function(id) {
           showNotification(paste("Settings successfully loaded."), type = "message")
         }
 
+        loaded_data <- DUMMY_DATA
+
+        found_data <- purrr::keep(successful_loads, ~ .x$type == "data")
         # Handle Errors
-        if (length(successful_loads) == 0) {
-          error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
-          file_loading_error(paste(error_msgs, collapse = "<br>"))
-          log_error("Errors loading files: ", paste(error_msgs, collapse = "; "))
-          DUMMY_DATA
-        } else {
-          # Case: At least some files were read, attempt to bind them
+        if (length(found_data) > 0) {
           tryCatch({
-            combined_df <- successful_loads %>%
+            loaded_data <- successful_loads %>%
               purrr::map("data") %>%
+              dplyr::bind_rows() %>%
               #mutate all to character to prevent errors
-              purrr::map(~ mutate_all(.x, as.character)) %>%
-              dplyr::bind_rows()
+              dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
 
-            # If there were partial failures (some read, some didn't), warn the user
-            if (length(errors) > 0) {
-              error_msgs <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
-              file_loading_error(paste(error_msgs, collapse = "<br>"))
-              log_warn("Some files failed to load: ", paste(error_msgs, collapse = "; "))
-            } else {
-              log_success("All user data loaded successfully.")
-            }
-
-            combined_df
+            log_success("All user data loaded successfully.")
           }, error = function(e) {
-            # Case: Binding failed (e.g. column mismatch)
-            # Combine read errors with the bind error
-            bind_error <- paste0("Error combining files: ", e$message)
-
-            if (length(errors) > 0) {
-              read_errors <- purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$message))
-              file_loading_error(paste(c(read_errors, bind_error), collapse = "<br>"))
-            } else {
-              file_loading_error(bind_error)
-            }
-
+            # combine errors
+            errors <<- append(errors, paste0("Error combining files: ", e$message))
             log_error("Error binding user data: ", e$message)
-            DUMMY_DATA
           })
         }
+
+        if (length(errors) > 0) {
+          file_loading_error(paste(errors, collapse = "<br>"))
+          log_error("Errors loading files: ", paste(errors, collapse = "; "))
+        }
+
+        loaded_data
 
       }) %>%
         bindEvent(input$data_upload, ignoreNULL = FALSE)
