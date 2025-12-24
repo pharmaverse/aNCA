@@ -4,7 +4,7 @@
 \alias{clean_deparse}
 \title{Convert R objects into reproducible R code strings (internal)}
 \usage{
-clean_deparse(obj, indent = 0)
+clean_deparse(obj, indent = 0, max_per_line = 10)
 }
 \arguments{
 \item{obj}{An R object to convert to a string of R code.}
