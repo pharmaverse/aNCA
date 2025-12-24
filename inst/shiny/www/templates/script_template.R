@@ -1,10 +1,14 @@
-# Load the package (https://github.com/pharmaverse/aNCA) #
+# Load the package (https://github.com/pharmaverse/aNCA)  #
+###########################################################
+## Please, set your working directory to this file:
+# setwd("path/to/this/file/script_template.R")
+
 if (!require("aNCA")) install.packages("aNCA")
 library(aNCA)
 library(dplyr)
 
 # Load raw data #
-data_path <- session$userData$data_path
+data_path <- "../data/data.rds"
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data ########################################

@@ -154,6 +154,12 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
             saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
 
+            # Save input dataset used
+            data_tmpdir <- file.path(output_tmpdir, "data")
+            dir.create(data_tmpdir, recursive = TRUE)
+            data <- read_pk(session$userData$data_path)
+            saveRDS(data, paste0(data_tmpdir, "/data.rds"))
+
             # Save a code R script template for the session
             script_tmpdir <- file.path(output_tmpdir, "code")
             dir.create(script_tmpdir, recursive = TRUE)
