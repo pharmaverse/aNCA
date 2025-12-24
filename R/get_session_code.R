@@ -76,10 +76,6 @@ clean_deparse <- function(obj, indent = 0) {
   if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(class(obj)[1], "()"))
   }
-  # For single-element atomic numeric/integer/logical return bare representation
-  if (length(obj) == 1 && class(obj)[1] %in% c("integer", "numeric", "logical")) {
-    return(as.character(obj))
-  }
   UseMethod("clean_deparse")
 }
 
@@ -94,10 +90,9 @@ clean_deparse.data.frame <- function(obj, indent = 0) {
   if (nrow(obj) == 0) return("data.frame()")
 
   cols <- lapply(obj, function(col) {
-    d <- deparse(col, width.cutoff = 500) %>% paste(collapse = "")
-    if (length(col) > 1 && !grepl("^c\\(", d)) d <- paste0("c(", d, ")")
-    d
+    clean_deparse(col, indent + 1)
   })
+
   col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
   if (length(col_strs) > 1) {
     not_last <- seq_len(length(col_strs) - 1)
@@ -110,7 +105,6 @@ clean_deparse.data.frame <- function(obj, indent = 0) {
 clean_deparse.list <- function(obj, indent = 0) {
   ind <- paste(rep("  ", indent), collapse = "")
   n <- length(obj)
-  if (n == 0) return("list()")
   nms <- names(obj)
   items <- vapply(seq_len(n), FUN.VALUE = "", function(i) {
     name <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("V", i)
@@ -119,7 +113,9 @@ clean_deparse.list <- function(obj, indent = 0) {
       name <- sprintf('"%s"', name)
     }
     val <- obj[[i]]
-    paste0(name, " = ", clean_deparse(val, indent + 1))
+    # Use specialized deparsers for atomic vectors
+    val_str <- clean_deparse(val, indent + 1)
+    paste0(name, " = ", val_str)
   })
   if (length(items) > 1) {
     not_last <- seq_len(length(items) - 1)
@@ -130,14 +126,43 @@ clean_deparse.list <- function(obj, indent = 0) {
 }
 
 #' @noRd
+
 clean_deparse.character <- function(obj, indent = 0) {
-  if (length(obj) == 1) return(sprintf('"%s"', obj))
-  paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
+  n <- length(obj)
+  if (n == 1) {
+    return(sprintf('"%s"', obj))
+  } else if (n > 10) {
+    ind <- paste(rep("  ", indent), collapse = "")
+    lines <- split(obj, ceiling(seq_along(obj) / 10))
+    line_strs <- vapply(lines, function(x) paste(sprintf('"%s"', x), collapse = ", "), "")
+    paste0(
+      "c(\n",
+      paste0(ind, "  ", line_strs, collapse = ",\n"),
+      "\n", ind, ")"
+    )
+  } else {
+    paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
+  }
 }
 
 #' @noRd
+
 clean_deparse.numeric <- function(obj, indent = 0) {
-  paste0("c(", paste(obj, collapse = ", "), ")")
+  n <- length(obj)
+  if (n == 1) {
+    return(paste0(obj))
+  } else if (n > 10) {
+    ind <- paste(rep("  ", indent), collapse = "")
+    lines <- split(obj, ceiling(seq_along(obj) / 10))
+    line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
+    paste0(
+      "c(\n",
+      paste0(ind, "  ", line_strs, collapse = ",\n"),
+      "\n", ind, ")"
+    )
+  } else {
+    paste0("c(", paste(obj, collapse = ", "), ")")
+  }
 }
 
 #' @noRd
@@ -145,5 +170,12 @@ clean_deparse.integer <- clean_deparse.numeric
 
 #' @noRd
 clean_deparse.logical <- function(obj, indent = 0) {
-  paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
+  n <- length(obj)
+  if (n == 0) {
+    return("logical()")
+  } else if (n == 1) {
+    return(paste0(obj))
+  } else {
+    paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
+  }
 }
