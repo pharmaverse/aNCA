@@ -138,7 +138,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # File Upload Handling
     observeEvent(c(settings_override(), data()), {
       settings <- settings_override()
-browser()
+
       log_debug_list("User settings override:", settings)
 
       not_compatible <- c()
