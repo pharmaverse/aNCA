@@ -136,7 +136,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     conc_data <- reactive(adnca_data()$conc$data)
 
     # File Upload Handling
-    observeEvent(c(settings_override(), data()), {
+    observeEvent(c(data(), settings_override()), priority = 0, {
+      req(data())
+      
       settings <- settings_override()
 
       log_debug_list("User settings override:", settings)
@@ -230,7 +232,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
 
     # Choose data to be analyzed
-    observeEvent(data(), priority = -1, {
+    observeEvent(data(), priority = 1, {
       req(data())
 
       choices <- unique(data()$PARAM) %>%
