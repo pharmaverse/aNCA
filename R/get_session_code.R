@@ -85,7 +85,7 @@ clean_deparse <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
 }
 
 #' @noRd
-clean_deparse.default <- function(obj, indent = 0, max_per_line = 10) {
+clean_deparse.default <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   paste(deparse(obj, width.cutoff = 500), collapse = "")
 }
 

@@ -143,7 +143,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             setts_tmpdir <- file.path(output_tmpdir, "settings")
             dir.create(setts_tmpdir, recursive = TRUE)
             settings_list <- session$userData$settings()
-            setings_to_save <- list(
+            settings_to_save <- list(
               settings = settings_list,
               slope_rules = list(
                 manual_slopes = session$userData$slope_rules$manual_slopes(),
@@ -152,7 +152,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               )
             )
 
-            saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+            saveRDS(settings_to_save, paste0(setts_tmpdir, "/settings.rds"))
 
             # Save input dataset used
             data_tmpdir <- file.path(output_tmpdir, "data")

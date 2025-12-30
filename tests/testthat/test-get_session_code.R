@@ -137,7 +137,7 @@ describe("clean_deparse()", {
 
     # Test numeric
     vec <- c(rep(5, 10), 6, 7, rep(8, 5))
-    out_vec <- clean_deparse.numeric(vec, max_per_line = 3, min_to_rep = 2)
+    out_vec <- clean_deparse(vec, max_per_line = 3, min_to_rep = 2)
     exp_out_vec <- paste0(
       "c(\n",
       "  rep(5, 10), 6, 7,\n",
