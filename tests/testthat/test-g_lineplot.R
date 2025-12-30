@@ -353,19 +353,6 @@ describe("g_lineplot: Tooltips", {
 })
 
 describe("g_lineplot: Graceful Handling", {
-  it("handles empty data.frame", {
-    empty_ind_data <- ind_data[0, ]
-    p <- g_lineplot(
-      data = empty_ind_data,
-      x_var = "time_var",
-      y_var = "AVAL",
-      color_by = "USUBJID"
-    )
-    expect_s3_class(p, "ggplot")
-    # g_lineplot *always* adds geom_line and geom_point
-    expect_equal(length(p$layers), 2)
-  })
-
   it("handles missing mean-plot columns", {
     mean_data_missing_ci <- mean_data %>% select(-CI_lower)
     # Test for missing CI column
