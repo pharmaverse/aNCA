@@ -123,7 +123,6 @@ describe("clean_deparse()", {
   })
 
   it("uses rep(...) when values are repeated at least min_to_rep times", {
-
     # Test character
     char_vec <- c(rep("apple", 5), "banana", "cherry", rep("date", 3))
     out_char <- clean_deparse.character(char_vec, max_per_line = 3, min_to_rep = 2)
