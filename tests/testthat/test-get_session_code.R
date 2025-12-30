@@ -106,7 +106,7 @@ describe("clean_deparse()", {
 
   it("respects max_per_line for data.frames", {
     df <- data.frame(x = 1:4, y = letters[1:4], stringsAsFactors = FALSE)
-    out <- clean_deparse(df, max_per_line = 2)
+    out <- clean_deparse.data.frame(df, max_per_line = 2)
     exp_out <- paste0(
       "data.frame(\n",
       "  x = c(\n",
@@ -120,5 +120,42 @@ describe("clean_deparse()", {
       ")"
     )
     expect_equal(out, exp_out)
+  })
+
+  it("uses rep(...) when values are repeated at least min_to_rep times", {
+
+    # Test character
+    char_vec <- c(rep("apple", 5), "banana", "cherry", rep("date", 3))
+    out_char <- clean_deparse.character(char_vec, max_per_line = 3, min_to_rep = 2)
+    exp_out_char <- paste0(
+      "c(\n",
+      "  rep(\"apple\", 5), \"banana\", \"cherry\",\n",
+      "  rep(\"date\", 3)\n",
+      ")"
+    )
+    expect_equal(out_char, exp_out_char)
+
+    # Test numeric
+    vec <- c(rep(5, 10), 6, 7, rep(8, 5))
+    out_vec <- clean_deparse.numeric(vec, max_per_line = 3, min_to_rep = 2)
+    exp_out_vec <- paste0(
+      "c(\n",
+      "  rep(5, 10), 6, 7,\n",
+      "  rep(8, 5)\n",
+      ")"
+    )
+    expect_equal(out_vec, exp_out_vec)
+
+    # Test min_to_rep greater than any repetition
+    vec <- c(1, rep(2, 2), rep(3, 3), rep(4, 4))
+
+    out_rep1234 <- clean_deparse.numeric(vec, max_per_line = 10, min_to_rep = 2)
+
+    out_rep4 <- clean_deparse.numeric(vec, max_per_line = 10, min_to_rep = 3)
+    exp_out_rep4 <- paste0(
+      "c(\n",
+      "  1, 2, 2, 3, 3, 3, rep(4, 4)\n",
+      ")"
+    )
   })
 })
