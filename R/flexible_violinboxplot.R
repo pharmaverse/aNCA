@@ -65,11 +65,16 @@ flexible_violinboxplot <- function(res_nca,
       PPTESTCD == parameter
     )
 
+  # Verify data is not empty
+  if (nrow(box_data) == 0 || is.null(box_data)) {
+    error_msg <- paste("No data available")
+    return(error_plot(error_msg))
+  }
+
   # Verify that PPSTRES exists and is not NA, otherwise return empty plot
   if (!is_PPSTRES_valid(box_data)) {
-    return(ggplot() +
-             labs(title = paste("No data available for parameter:", parameter)) +
-             theme_minimal())
+    error_msg <- paste("No data available for parameter:", parameter)
+    return(error_plot(error_msg))
   }
 
   # --- Tooltip Construction ---
