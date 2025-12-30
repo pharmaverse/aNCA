@@ -4,12 +4,18 @@
 \alias{clean_deparse}
 \title{Convert R objects into reproducible R code strings (internal)}
 \usage{
-clean_deparse(obj, indent = 0, max_per_line = 10)
+clean_deparse(obj, indent = 0, max_per_line = 10, min_to_rep = 3)
 }
 \arguments{
 \item{obj}{An R object to convert to a string of R code.}
 
 \item{indent}{Integer indentation level for multi-line outputs.}
+
+\item{max_per_line}{Maximum number of elements to include per line for
+long vectors/lists.}
+
+\item{min_to_rep}{Minimum number of repeated elements to use \code{rep()} for
+long vectors/lists.}
 }
 \value{
 A single string containing R code that, when evaluated, will
