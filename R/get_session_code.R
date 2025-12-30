@@ -179,7 +179,7 @@ clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10, min_to_rep
     for (i in seq_along(rle_obj$lengths)) {
       val <- rle_obj$values[i]
       len <- rle_obj$lengths[i]
-      if (len > min_to_rep) {
+      if (len >= min_to_rep) {
         lines_obj <- c(lines_obj, sprintf("rep(%s, %d)", val, len))
       } else if (len == 1) {
         lines_obj <- c(lines_obj, as.character(val))
