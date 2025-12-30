@@ -124,9 +124,9 @@ excretion_server <- function(id, input_pknca_data) {
       # Update intervals
       # dose profile intervals
       data$intervals <- format_pkncadata_intervals(data$conc,
-                                                   data$dose,
-                                                   params = input$param_select) %>%
-        mutate(type_interval = "profile") %>%
+                                                   data$dose) %>%
+        mutate(across(any_of(input$param_select), ~ TRUE, .names = "{.col}"),
+               type_interval = "profile") %>%
         filter(PCSPEC %in% input$matrix_select)
 
       # excretion sample intervals

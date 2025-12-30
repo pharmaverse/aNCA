@@ -2,33 +2,48 @@
 #'
 #' This function creates a pharmacokinetic concentration dataset from the provided ADNCA data.
 #'
+
 #' @param ADNCA A data frame containing the ADNCA data.
 #' @param group_columns A character vector specifying the columns to group by.
 #' @param time_column A character string specifying the time column.
 #' @param rrlt_column A character string specifying the time since last dose column.
 #' @param route_column A character string specifying the route column.
-#' @param nca_exclude_reason_columns A character vector specifying the columns
-#' to indicate reasons for excluding records from NCA analysis.
+#' @param time_end_column (Optional) A character string specifying the column for end time, used to
+#'   calculate `CONCDUR`.
+#' @param nca_exclude_reason_columns A character vector specifying the columns to indicate reasons
+#'   for excluding records from NCA analysis.
 #'
-#' @returns A data frame containing the filtered and processed concentration data.
+#' @returns A data frame containing the filtered and processed concentration data. The following new
+#'   columns are created:
+#'   - `DOSNOA`: Sequential dose number within each group, based on time of dose.
+#'   - `std_route`: Standardized route, either "intravascular" or "extravascular", derived from the
+#'     route column.
+#'   - `nca_exclude`: Character column with concatenated exclusion reasons (if
+#'     `nca_exclude_reason_columns` is provided), otherwise empty string.
+#'   - `CONCDUR`: (Optional) Sampling duration, calculated as `time_end_column - time_column`
+#'     if `time_end_column` is provided.
 #'
 #' @details
 #' The function performs the following steps:
 #'   - Checks for required columns and data.
-#'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE"
-#'   (dosing data- not CDISC standard)
-#'   - Creates `DOSNOA` variable, sequential numbers based on time of dose
-#'   - Creates a 'std_route' column with PKNCA values "intravascular" or "extravascular"
-#'   based on route_column (ROUTE, CDISC: C66729).
-#'   - Arranges the data by group_columns.
+#'   - Filters out rows with EVID = 0 and PARAMCD containing "DOSE" (removes dosing data; not CDISC
+#'     standard).
+#'   - Optionally creates `CONCDUR` if `time_end_column` is provided.
+#'   - Optionally creates `nca_exclude` by merging specified exclusion reason columns.
+#'   - Creates `DOSNOA` variable: sequential numbers based on time of dose within each group.
+#'   - Creates a `std_route` column with PKNCA values "intravascular" or "extravascular" based on
+#'     the route column (ROUTE, CDISC: C66729).
+#'   - Arranges the data by group_columns and dose time.
 #'
 #' @examples
 #' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
-#' conc_data <- format_pkncaconc_data(ADNCA = adnca,
-#'                                    group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
-#'                                    time_column = "AFRLT",
-#'                                    rrlt_column = "ARRLT",
-#'                                    route_column = "ROUTE")
+#' conc_data <- format_pkncaconc_data(
+#'   ADNCA = adnca,
+#'   group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
+#'   time_column = "AFRLT",
+#'   rrlt_column = "ARRLT",
+#'   route_column = "ROUTE"
+#' )
 #' @import dplyr
 #' @export
 
@@ -37,6 +52,7 @@ format_pkncaconc_data <- function(ADNCA,
                                   time_column = "AFRLT",
                                   rrlt_column = "ARRLT",
                                   route_column = "ROUTE",
+                                  time_end_column = NULL,
                                   nca_exclude_reason_columns = NULL) {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
@@ -57,6 +73,10 @@ format_pkncaconc_data <- function(ADNCA,
   if ("PARAMCD" %in% colnames(ADNCA)) {
     ADNCA <- ADNCA %>%
       filter(!grepl("DOSE", PARAMCD, ignore.case = TRUE))
+  }
+
+  if (!is.null(time_end_column)) {
+    ADNCA[["CONCDUR"]] <- ADNCA[[time_end_column]] - ADNCA[[time_column]]
   }
 
   if (!is.null(nca_exclude_reason_columns)) {
@@ -158,187 +178,4 @@ format_pkncadose_data <- function(pkncaconc_data,
     filter(!is.na(DOSEA)) %>%
     arrange(across(all_of(c(group_columns, time_column))))
 
-}
-
-#' Create Dose Intervals Dataset
-#'
-#' This function creates a dataset with dose intervals and specified pharmacokinetic parameters.
-#'
-#' @param pknca_conc A PKNCAdose object containing the concentration data.
-#' @param pknca_dose A PKNCAdose object containing the dose data.
-#' @param params A character vector specifying the pharmacokinetic parameters to include.
-#' @param start_from_last_dose Logical defining if start is at time of last dose or C1.
-#'
-#' @returns A data frame containing the dose intervals and specified pharmacokinetic parameters.
-#'
-#' @details
-#' The function performs the following steps:
-#'   - Creates a vector with all pharmacokinetic parameters.
-#'   - Based on dose times, creates a data frame with start and end times.
-#'   - If TRTRINT column is present in data, sets last dose end time to start + TRTRINT,
-#'   or if TRTRINT is NA then either Inf if only one dose present, or max end time if not.
-#'   - If no TRTRINT column in data, sets last dose end time to the time of last sample
-#'   or Inf if single dose data.
-#'   - Adds logical columns for each specified parameter.
-#'
-#'  Assumes that multiple dose data will have a TRTRINT column
-#'  or contain multiple doses in dataset
-#'
-#' @examples
-#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
-#' pknca_data <- PKNCA_create_data_object(adnca)
-#' pknca_conc <- pknca_data$conc
-#' pknca_dose <- pknca_data$dose
-#' params <- c("aucinf.obs", "cmax", "half.life", "tmax", "lambda.z")
-#' dose_intervals <- format_pkncadata_intervals(pknca_conc, pknca_dose, params)
-#'
-#' @import dplyr
-#' @importFrom stats setNames
-#' @export
-format_pkncadata_intervals <- function(pknca_conc,
-                                       pknca_dose,
-                                       params =  c("aucinf.obs", "aucint.last", "auclast",
-                                                   "cmax", "half.life", "tmax", "lambda.z",
-                                                   "lambda.z.n.points", "r.squared",
-                                                   "adj.r.squared", "lambda.z.time.first",
-                                                   "aucpext.obs", "aucpext.pred", "clast.obs",
-                                                   "cl.obs"),
-                                       start_from_last_dose = TRUE) {
-  if (!inherits(pknca_conc, "PKNCAconc")) {
-    stop("Input pknca_conc must be a PKNCAconc object from the PKNCA package.")
-  }
-
-  if (!inherits(pknca_dose, "PKNCAdose")) {
-    stop("Input pknca_dose must be a PKNCAdose object from the PKNCA package.")
-  }
-
-  required_columns <- c(unname(unlist(pknca_dose$columns$groups)), pknca_dose$columns$time)
-  missing_columns <- setdiff(required_columns, colnames(pknca_dose$data))
-  if (length(missing_columns) > 0) {
-    stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
-  }
-
-  # Select relevant group columns
-  conc_groups <- unname(unlist(pknca_conc$columns$groups))
-  dose_groups <- unname(unlist(pknca_dose$columns$groups))
-  time_column <- pknca_dose$columns$time
-  # Obtain all possible pknca parameters
-  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
-                              c("start", "end"))
-
-  # Select conc data and for time column give priority to non-predose samples
-  sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "ARRLT", "ATPTREF", "DOSNOA", "TRTRINT", "VOLUME")))
-
-  has_tau <- "TRTRINT" %in% names(sub_pknca_conc)
-
-  # Select dose data and use its time column as a time of last dose reference
-  sub_pknca_dose <- pknca_dose$data %>%
-    group_by(!!!syms(dose_groups)) %>%
-    mutate(is_one_dose = length(unique(DOSNOA)) == 1) %>%
-    ungroup() %>%
-    select(any_of(c(dose_groups,
-                    time_column, "DOSNOA", "is_one_dose")))
-
-  # Based on dose times create a data frame with start and end times
-  dose_intervals <- left_join(sub_pknca_dose,
-                              sub_pknca_conc,
-                              by = intersect(names(sub_pknca_dose), c(conc_groups, "DOSNOA")),
-                              relationship = "many-to-many") %>%
-
-    # Pick 1 per concentration group and dose number
-    group_by(!!!syms(dose_groups), DOSNOA) %>%
-    mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
-    filter(ARRLT >= 0) %>% # filter out negative ARRLT values
-    group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
-    slice(1) %>% # slice one row per conc group
-    ungroup() %>%
-
-    # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
-    mutate(start = if (start_from_last_dose) !!sym(time_column)
-           else !!sym(time_column) + !!sym("ARRLT")) %>%
-    group_by(!!!syms(conc_groups)) %>%
-    arrange(start) %>%
-
-    # Make end based on next dose time (if no more, Tau or last NFRLT)
-    mutate(end = if (has_tau) {
-      case_when(
-        !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
-        is.na(TRTRINT) & is_one_dose ~ Inf,
-        is.na(TRTRINT) ~ start + max_end,
-        TRUE ~ start + TRTRINT
-      )
-    } else {
-      case_when(
-        !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
-        is_one_dose ~ Inf,
-        TRUE ~ start + max_end
-      )
-    }
-    ) %>%
-    ungroup() %>%
-    select(any_of(c("start", "end", conc_groups,
-                    "ATPTREF", "DOSNOA", "VOLUME"))) %>%
-
-    # Create logical columns with only TRUE for the NCA parameters requested by the user
-    mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
-    mutate(across(any_of(params), ~ TRUE, .names = "{.col}")) %>%
-    # Set FALSE for aucint when end = Inf
-    mutate(across(starts_with("aucint"), ~ if_else(end == Inf, FALSE, .))) %>%
-    # Identify the intervals as the base ones for the NCA analysis
-    mutate(type_interval = "main")
-
-  verify_parameters(dose_intervals, params, all_pknca_params)
-}
-
-#' Conditionally Verify and Override PK Parameters Based on Sample Type
-#'
-#' This helper function updates a PKNCA intervals data frame by verifying and overriding
-#' specific pharmacokinetic parameters depending on whether the sample is identified
-#' as excreta (e.g., urine, feces, bile). Parameters related to excretion
-#' (such as `ae`, `fe`, and those starting with `"clr."`) are selectively enabled
-#' only for excreta samples and set to `FALSE` otherwise.
-#' @param pknca_intervals A data frame containing PKNCA interval information,
-#'   including pharmacokinetic parameters and a `PCSPEC` column that describes the
-#'   specimen type.
-#' @param params A character vector of parameter names selected by the user.
-#'   Only these parameters will remain `TRUE` for excreta types.
-#' @param all_pknca_params A character vector of all pharmacokinetic parameters
-#'   that may be present in `pknca_intervals`. These will be checked and updated accordingly.
-#'
-#' @importFrom dplyr mutate across select case_when
-#'
-#' @returns A modified version of the `pknca_intervals` data frame with appropriate
-#'  parameters updated based on the specimen type.
-
-verify_parameters <- function(pknca_intervals, params, all_pknca_params) {
-
-  has_volume <- "VOLUME" %in% names(pknca_intervals)
-
-  if (has_volume) {
-    pknca_intervals <- pknca_intervals %>%
-      mutate(across(
-        any_of(all_pknca_params),
-        ~ {
-          col <- cur_column()
-          case_when(
-            (col %in% c("ae", "fe") | startsWith(col, "clr.")) ~ !is.na(VOLUME) & col %in% params,
-            TRUE ~ col %in% params
-          )
-        }
-      )) %>%
-      select(-VOLUME)
-
-  } else {
-    pknca_intervals <- pknca_intervals %>%
-      mutate(across(
-        any_of(all_pknca_params),
-        ~ {
-          col <- cur_column()
-          !(col %in% c("ae", "fe") || startsWith(col, "clr.")) && col %in% params
-        }
-      ))
-  }
-
-  pknca_intervals
 }
