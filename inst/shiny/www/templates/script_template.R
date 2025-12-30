@@ -34,7 +34,10 @@ preprocessed_adnca <- adnca_data %>%
   ) %>%
 
   # Derive METABFL column using PARAM metabolites
-  create_metabfl(mapping$Metabolites)
+  create_metabfl(mapping$Metabolites) %>%
+  
+  # Make sure all variables are in its correct class
+  adjust_class_and_length(metadata_nca_variables)
 
 ## Setup NCA settings in the PKNCA object ########################
 auc_data <- session$userData$settings$partial_aucs
