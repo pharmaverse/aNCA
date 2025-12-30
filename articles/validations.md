@@ -14,9 +14,9 @@ The current validation methods for aNCA are listed here:
   documentation aspects (completeness, spelling…)
 - **Internal company validations.** So far, we obtained a successfully
   validated report from Roche; see the
-  [report](https://github.com/pharmaverse/aNCA/raw/main/inst/extras/validation_reports/v0.1.0-roche-report.pdf)
-  and the [validation
-  details](https://pharmar.org/posts/case-studies/roche-case-study/),
+  [report](https://github.com/pharmaverse/aNCA/blob/main/inst/extras/validation_reports/v0.1.0-roche-report.pdf).
+  The validation methodology can be consulted
+  [here](https://pharmar.org/posts/case-studies/roche-case-study/), or
   also
   [here](https://static.sched.com/hosted_files/userconf2024/10/useR%21%202024%20Presentation.pdf?_gl=1*f3341l*_gcl_au*MTkxODk3NTU2OC4xNzYyMjQwNjMz*FPAU*MTkxODk3NTU2OC4xNzYyMjQwNjMz)
 - **Parameter calculations done using the PKNCA.** This R package has
