@@ -435,10 +435,13 @@ describe("add_exclusion_reasons", {
   })
 
   it("creates the exclude column if it does not exist", {
+    excl_list <- list(
+      list(reason = "Exclusion reason", rows = c(1, 2))
+    )
     pknca_data_no_excl <- pknca_data
     excl_col <- pknca_data_no_excl$conc$columns[["exclude"]]
     pknca_data_no_excl$conc$columns[["exclude"]] <- NULL
     pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
-    expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "New Exclusion")
+    expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
   })
 })
