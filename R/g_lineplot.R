@@ -100,7 +100,7 @@ g_lineplot <- function(data,
       "No data available for the ",
       if (is_mean_plot) "mean plot" else "individual plot"
     )
-    return(.error_plot(error_msg))
+    return(error_plot(error_msg))
   }
 
   # Concatenate unique units, sep by ","
@@ -261,8 +261,16 @@ g_lineplot <- function(data,
   list(error_bar_layer, ci_ribbon_layer)
 }
 
-#' @noRd
-.error_plot <- function(msg) {
+#' Create a simple error plot with a message
+#'
+#' This internal function generates a minimal ggplot2 plot displaying a given error message.
+#' It is used to return a plot object when an error or empty data condition is encountered in plotting functions.
+#'
+#' @param msg Character string. The error message to display in the plot.
+#'
+#' @return A ggplot object with the error message displayed.
+#' @keywords internal
+error_plot <- function(msg) {
   ggplot() +
     annotate("text", x = 0.5, y = 0.5, label = msg, size = 6, hjust = 0.5, vjust = 0.5) +
     theme_void() +
