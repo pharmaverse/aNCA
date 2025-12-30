@@ -148,13 +148,19 @@ describe("clean_deparse()", {
     # Test min_to_rep greater than any repetition
     vec <- c(1, rep(2, 2), rep(3, 3), rep(4, 4))
 
-    out_rep1234 <- clean_deparse.numeric(vec, max_per_line = 10, min_to_rep = 2)
-
-    out_rep4 <- clean_deparse.numeric(vec, max_per_line = 10, min_to_rep = 3)
-    exp_out_rep4 <- paste0(
+    out_2_to_rep <- clean_deparse(vec, max_per_line = 10, min_to_rep = 2)
+    out_3_to_rep <- clean_deparse(vec, max_per_line = 10, min_to_rep = 3)
+    exp_out_2_to_rep <- paste0(
       "c(\n",
-      "  1, 2, 2, 3, 3, 3, rep(4, 4)\n",
+      "  1, rep(2, 2), rep(3, 3), rep(4, 4)\n",
       ")"
     )
+    exp_out_3_to_rep <- paste0(
+      "c(\n",
+      "  1, 2, 2, rep(3, 3), rep(4, 4)\n",
+      ")"
+    )
+    expect_equal(out_2_to_rep, exp_out_2_to_rep)
+    expect_equal(out_3_to_rep, exp_out_3_to_rep)
   })
 })
