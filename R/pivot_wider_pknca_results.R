@@ -181,7 +181,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       out <- out %>%
         dplyr::inner_join(
           dplyr::select(conc_data, dplyr::any_of(c(vars_to_join, group_vars))),
-          by = intersect(names(out),  names(c(vars_to_join, group_vars)))
+          by = intersect(names(out),  c(vars_to_join, group_vars))
         ) %>%
         dplyr::distinct()
     }
