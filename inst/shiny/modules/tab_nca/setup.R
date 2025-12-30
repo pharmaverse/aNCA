@@ -64,6 +64,7 @@ setup_server <- function(id, data, adnca_data) {
     settings_override <- reactive(imported_settings()$settings)
     manual_slopes_override <- reactive(imported_settings()$slope_rules)
     parameters_override <- reactive(imported_settings()$settings$parameter_selections)
+    general_excl_override <- reactive(imported_settings()$settings$general_exclusions)
 
     # Gather all settings from the appropriate module
     settings <- settings_server(
@@ -107,9 +108,10 @@ setup_server <- function(id, data, adnca_data) {
     )
 
     final_settings <- reactive({
-      req(settings(), parameters_output$selections())
+      req(settings(), parameters_output$selections(), general_exclusions)
 
       current_settings <- settings()
+      current_settings$general_exclusions <- general_exclusions
       current_settings$parameter_selections <- parameters_output$selections()
 
       current_settings
