@@ -109,7 +109,7 @@ clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10, min_to_
 }
 
 #' @noRd
-clean_deparse.list <- function(obj, indent = 0, max_per_line = 10) {
+clean_deparse.list <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   ind <- paste(rep("  ", indent), collapse = "")
   n <- length(obj)
   nms <- names(obj)
@@ -134,68 +134,15 @@ clean_deparse.list <- function(obj, indent = 0, max_per_line = 10) {
 #' @noRd
 
 clean_deparse.character <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
-  n <- length(obj)
   obj <- sprintf('"%s"', obj)
-  if (n == 1) {
-    return(obj)
-  } else {
-    rle_obj <- rle(obj)
-    lines_obj <- c()
-    for (i in seq_along(rle_obj$values)) {
-      val <- rle_obj$values[i]
-      len <- rle_obj$lengths[i]
-
-      if (len >= min_to_rep) {
-        rep_obj <- paste0("rep(", val, ", ", len, ")")
-        lines_obj <- c(lines_obj, rep_obj)
-      } else {
-        lines_obj <- c(lines_obj, (rep(val, len)))
-      }
-    }
-  }
-  ind <- paste(rep("  ", indent), collapse = "")
-  lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
-  line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
-
-  if (is.list(lines) && length(lines) > 1) {
-    out <- paste0(ind, "  ", line_strs, collapse = ",\n")
-    paste0("c(\n", out, "\n", ind, ")")
-  } else {
-    paste0("c(", paste0(line_strs, collapse = ",\n"), ")")
-  }
+  .deparse_vector(obj, indent, max_per_line, min_to_rep)
 }
 
 #' @noRd
 
 clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
-  n <- length(obj)
-  if (n == 1) {
-    paste0(obj)
-  } else {
-    rle_obj <- rle(obj)
-    lines_obj <- c()
-    for (i in seq_along(rle_obj$lengths)) {
-      val <- rle_obj$values[i]
-      len <- rle_obj$lengths[i]
-      if (len >= min_to_rep) {
-        lines_obj <- c(lines_obj, sprintf("rep(%s, %d)", val, len))
-      } else if (len == 1) {
-        lines_obj <- c(lines_obj, as.character(val))
-      } else {
-        lines_obj <- c(lines_obj, as.character(rep(val, len)))
-      }
-    }
-    ind <- paste(rep("  ", indent), collapse = "")
-    lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
-    line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
-
-    if (is.list(lines) && length(lines) > 1) {
-      out <- paste0(ind, "  ", line_strs, collapse = ",\n")
-      paste0("c(\n", out, "\n", ind, ")")
-    } else {
-      paste0("c(", paste0(line_strs, collapse = ",\n"), ")")
-    }
-  }
+  obj <- sprintf("%s", obj)
+  .deparse_vector(obj, indent, max_per_line, min_to_rep)
 }
 
 #' @noRd
@@ -204,13 +151,40 @@ clean_deparse.integer <- function(obj, indent = 0, max_per_line = 10, min_to_rep
 }
 
 #' @noRd
-clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10) {
+clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  obj <- as.character(obj)
+  .deparse_vector(obj, indent, max_per_line, min_to_rep)
+}
+
+#' Internal helper to deparse atomic vectors
+#' using repetition simplification (rep) and line splitting
+#'
+#' @noRd
+.deparse_vector <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   n <- length(obj)
-  if (n == 0) {
-    "logical()"
-  } else if (n == 1) {
-    paste0(obj)
+  if (n == 1) {
+    return(obj)
   } else {
-    paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
+    rle_obj <- rle(obj)
+    lines_obj <- c()
+    for (i in seq_along(rle_obj$values)) {
+      val <- rle_obj$values[i]
+      len <- rle_obj$lengths[i]
+      if (len >= min_to_rep) {
+        rep_obj <- paste0("rep(", val, ", ", len, ")")
+        lines_obj <- c(lines_obj, rep_obj)
+      } else {
+        lines_obj <- c(lines_obj, rep(val, len))
+      }
+    }
+  }
+  ind <- paste(rep("  ", indent), collapse = "")
+  lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
+  line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
+  if (is.list(lines) && length(lines) > 1) {
+    out <- paste0(ind, "  ", line_strs, collapse = ",\n")
+    paste0("c(\n", out, "\n", ind, ")")
+  } else {
+    paste0("c(", paste0(line_strs, collapse = ",\n"), ")")
   }
 }

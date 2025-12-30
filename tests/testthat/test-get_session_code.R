@@ -15,6 +15,7 @@ describe("clean_deparse()", {
   it("formats logical values correctly", {
     expect_equal(clean_deparse(TRUE), "TRUE")
     expect_equal(clean_deparse(c(TRUE, FALSE)), "c(TRUE, FALSE)")
+    expect_equal(clean_deparse(logical()), "logical()")
   })
 
   it("formats named lists correctly", {
