@@ -138,9 +138,7 @@ clean_deparse.character <- function(obj, indent = 0, max_per_line = 10, min_to_r
   obj <- sprintf('"%s"', obj)
   if (n == 1) {
     return(obj)
-  } else if (n <= max_per_line) {
-    return(paste0("c(", paste0(obj, collapse = ", "), ")"))
-  } else if (n > max_per_line) {
+  } else {
     rle_obj <- rle(obj)
     lines_obj <- c()
     for (i in seq_along(rle_obj$values)) {
@@ -158,11 +156,13 @@ clean_deparse.character <- function(obj, indent = 0, max_per_line = 10, min_to_r
   ind <- paste(rep("  ", indent), collapse = "")
   lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
   line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
-  paste0(
-    "c(\n",
-    paste0(ind, "  ", line_strs, collapse = ",\n"),
-    "\n", ind, ")"
-  )
+
+  if (is.list(lines) && length(lines) > 1) {
+    out <- paste0(ind, "  ", line_strs, collapse = ",\n")
+    paste0("c(\n", out, "\n", ind, ")")
+  } else {
+    paste0("c(", paste0(line_strs, collapse = ",\n"), ")")
+  }
 }
 
 #' @noRd
@@ -171,9 +171,7 @@ clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10, min_to_rep
   n <- length(obj)
   if (n == 1) {
     paste0(obj)
-  } else if (n <= max_per_line) {
-    paste0("c(", paste0(obj, collapse = ", "), ")")
-  } else if (n > max_per_line) {
+  } else {
     rle_obj <- rle(obj)
     lines_obj <- c()
     for (i in seq_along(rle_obj$lengths)) {
@@ -190,11 +188,13 @@ clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10, min_to_rep
     ind <- paste(rep("  ", indent), collapse = "")
     lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
     line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
-    paste0(
-      "c(\n",
-      paste0(ind, "  ", line_strs, collapse = ",\n"),
-      "\n", ind, ")"
-    )
+
+    if (is.list(lines) && length(lines) > 1) {
+      out <- paste0(ind, "  ", line_strs, collapse = ",\n")
+      paste0("c(\n", out, "\n", ind, ")")
+    } else {
+      paste0("c(", paste0(line_strs, collapse = ",\n"), ")")
+    }
   }
 }
 
