@@ -65,17 +65,9 @@ flexible_violinboxplot <- function(res_nca,
       PPTESTCD == parameter
     )
 
-  # Verify data is not empty
-  if (nrow(box_data) == 0 || is.null(box_data)) {
-    error_msg <- paste("No data available")
-    return(error_plot(error_msg))
-  }
-
-  # Verify that PPSTRES exists and is not NA, otherwise return empty plot
-  if (!is_PPSTRES_valid(box_data)) {
-    error_msg <- paste("No data available for parameter:", parameter)
-    return(error_plot(error_msg))
-  }
+  # Check boxplot data validity; return a plot with an error message if invalid
+  check_data <- .check_boxplot_data(box_data, parameter)
+  if (!is.null(check_data)) return(check_data)
 
   # --- Tooltip Construction ---
   box_data <- .handle_tooltips(box_data, tooltip_vars, labels_df)
@@ -182,7 +174,25 @@ flexible_violinboxplot <- function(res_nca,
   reduce(cond_list, ~ expr(!!.x & !!.y))
 }
 
-# Check if data is valid
-is_PPSTRES_valid <- function(box_data) { #nolint
-  "PPSTRES" %in% colnames(box_data) && !all(is.na(box_data$PPSTRES))
+#' Check validity of boxplot data for plotting
+#'
+#' Internal function to check if box_data is empty or lacks valid PPSTRES values.
+#' Returns an error plot if invalid, otherwise NULL.
+#'
+#' @param box_data Data frame to check.
+#' @param parameter Parameter name for error message context.
+#' @return NULL if valid, or a ggplot error plot if invalid.
+#' @noRd
+.check_boxplot_data <- function(box_data, parameter) {
+  # Check for empty data
+  if (is.null(box_data) || nrow(box_data) == 0) {
+    error_msg <- paste("No data available")
+    return(error_plot(error_msg))
+  }
+  # Check for invalid PPSTRES values
+  if (!"PPSTRES" %in% colnames(box_data) || all(is.na(box_data$PPSTRES))) {
+    error_msg <- paste("No data available for parameter:", parameter)
+    return(error_plot(error_msg))
+  }
+  NULL
 }
