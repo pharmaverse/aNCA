@@ -148,19 +148,21 @@ describe("clean_deparse()", {
     # Test min_to_rep greater than any repetition
     vec <- c(1, rep(2, 2), rep(3, 3), rep(4, 4))
 
+    out_no_rep <- clean_deparse(vec, max_per_line = 10, min_to_rep = Inf)
+    out_1_to_rep <- clean_deparse(vec, max_per_line = 10, min_to_rep = 1)
     out_2_to_rep <- clean_deparse(vec, max_per_line = 10, min_to_rep = 2)
     out_3_to_rep <- clean_deparse(vec, max_per_line = 10, min_to_rep = 3)
-    exp_out_2_to_rep <- paste0(
-      "c(\n",
-      "  1, rep(2, 2), rep(3, 3), rep(4, 4)\n",
-      ")"
-    )
-    exp_out_3_to_rep <- paste0(
-      "c(\n",
-      "  1, 2, 2, rep(3, 3), rep(4, 4)\n",
-      ")"
-    )
+    out_4_to_rep <- clean_deparse(vec, max_per_line = 10, min_to_rep = 4)
+
+    exp_out_no_rep <- "c(1, 2, 2, 3, 3, 3, 4, 4, 4, 4)"
+    exp_out_1_to_rep <- "c(rep(1, 1), rep(2, 2), rep(3, 3), rep(4, 4))"
+    exp_out_2_to_rep <- "c(1, rep(2, 2), rep(3, 3), rep(4, 4))"
+    exp_out_3_to_rep <- "c(1, 2, 2, rep(3, 3), rep(4, 4))"
+    exp_out_4_to_rep <- "c(1, 2, 2, 3, 3, 3, rep(4, 4))"
+
+    expect_equal(out_no_rep, exp_out_no_rep)
     expect_equal(out_2_to_rep, exp_out_2_to_rep)
     expect_equal(out_3_to_rep, exp_out_3_to_rep)
+    expect_equal(out_4_to_rep, exp_out_4_to_rep)
   })
 })
