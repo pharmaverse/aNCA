@@ -45,7 +45,7 @@ get_session_code <- function(template_path, session, output_path) {
     path <- sub("^session\\$userData\\$", "", matched)
     value <- get_session_value(path)
 
-    deparsed <- clean_deparse(value)
+    deparsed <- clean_deparse(value, max_per_line = 15)
     script <- paste0(
       substr(script, 1, start - 1),
       deparsed,
@@ -71,7 +71,7 @@ get_session_code <- function(template_path, session, output_path) {
 #' @return A single string containing R code that, when evaluated, will
 #'   reconstruct `obj` (or a close approximation for complex types).
 #' @keywords internal
-clean_deparse <- function(obj, indent = 0, max_per_line = 10) {
+clean_deparse <- function(obj, indent = 0, max_per_line = 10,  simplify_with_rep = TRUE) {
   # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(class(obj)[1], "()"))
@@ -85,7 +85,7 @@ clean_deparse.default <- function(obj, indent = 0, max_per_line = 10) {
 }
 
 #' @noRd
-clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10) {
+clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10,  simplify_with_rep = TRUE) {
   ind <- paste(rep("  ", indent), collapse = "")
   if (nrow(obj) == 0) return("data.frame()")
 
@@ -126,46 +126,75 @@ clean_deparse.list <- function(obj, indent = 0, max_per_line = 10) {
 
 #' @noRd
 
-clean_deparse.character <- function(obj, indent = 0, max_per_line = 10) {
+clean_deparse.character <- function(obj, indent = 0, max_per_line = 10, min_to_rep = max_per_line) {
   n <- length(obj)
+  obj <- sprintf('"%s"', obj)
   if (n == 1) {
-    sprintf('"%s"', obj)
+    return(obj)
+  } else if (n <= max_per_line) {
+    return(paste0("c(", paste0(obj, collapse = ", "), ")"))
   } else if (n > max_per_line) {
-    ind <- paste(rep("  ", indent), collapse = "")
-    lines <- split(obj, ceiling(seq_along(obj) / max_per_line))
-    line_strs <- vapply(lines, function(x) paste(sprintf('"%s"', x), collapse = ", "), "")
-    paste0(
-      "c(\n",
-      paste0(ind, "  ", line_strs, collapse = ",\n"),
-      "\n", ind, ")"
-    )
-  } else {
-    paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
+    rle_obj <- rle(obj)
+    lines_obj <- c()
+    for (i in seq_along(rle_obj$values)) {
+      val <- rle_obj$values[i]
+      len <- rle_obj$lengths[i]
+
+      if (len >= min_to_rep) {
+        rep_obj <- paste0("rep(", val, ", ", len, ")")
+        lines_obj <- c(lines_obj, rep_obj)
+      } else {
+        lines_obj <- c(lines_obj, (rep(val, len)))
+      }
+    }
   }
+  ind <- paste(rep("  ", indent), collapse = "")
+  lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
+  line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
+  paste0(
+    "c(\n",
+    paste0(ind, "  ", line_strs, collapse = ",\n"),
+    "\n", ind, ")"
+  )
 }
 
 #' @noRd
 
-clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10) {
+clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10, min_to_rep = max_per_line) {
   n <- length(obj)
   if (n == 1) {
     paste0(obj)
+  } else if (n <= max_per_line) {
+    paste0("c(", paste0(obj, collapse = ", "), ")")
   } else if (n > max_per_line) {
+    rle_obj <- rle(obj)
+    lines_obj <- c()
+    for (i in seq_along(rle_obj$lengths)) {
+      val <- rle_obj$values[i]
+      len <- rle_obj$lengths[i]
+      if (len > min_to_rep) {
+        lines_obj  <- c(lines_obj, sprintf('rep(%s, %d)', val, len))
+      } else if (len == 1) {
+        lines_obj <- c(lines_obj, as.character(val))
+      } else {
+        lines_obj <-  c(lines_obj, as.character(rep(val, len)))
+      }
+    }
     ind <- paste(rep("  ", indent), collapse = "")
-    lines <- split(obj, ceiling(seq_along(obj) / max_per_line))
+    lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
     line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
     paste0(
       "c(\n",
       paste0(ind, "  ", line_strs, collapse = ",\n"),
       "\n", ind, ")"
     )
-  } else {
-    paste0("c(", paste(obj, collapse = ", "), ")")
   }
 }
 
 #' @noRd
-clean_deparse.integer <- clean_deparse.numeric
+clean_deparse.integer <- function(obj, indent = 0, max_per_line = 10, min_to_rep = max_per_line) {
+  clean_deparse.numeric(obj, indent = indent, max_per_line = max_per_line, min_to_rep = min_to_rep)
+}
 
 #' @noRd
 clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10) {
