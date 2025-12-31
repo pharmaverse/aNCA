@@ -42,7 +42,7 @@ data_upload_server <- function(id) {
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
     settings_override <- reactiveVal(NULL) # Store loaded settings
-    
+
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
         p("")
@@ -85,9 +85,9 @@ data_upload_server <- function(id) {
               obj <- readRDS(path)
               # Check for settings
               is_settings <- is.list(obj) && "settings" %in% names(obj)
-              
+
               final_settings <- if (is_settings) obj else NULL
-              
+
               if (!is.null(final_settings)) {
                 list(status = "success", type = "settings", content = final_settings, name = name)
               } else {
@@ -105,21 +105,23 @@ data_upload_server <- function(id) {
         successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
           purrr::map(\(x) paste0(x$name, ": ", x$message))
-        
+
         # Extract and apply settings if any found
         found_settings <- purrr::keep(successful_loads, ~ .x$type == "settings")
-        
+
         if (length(found_settings) > 1) {
           # Error: Too many settings files
           msg <- "Error: Multiple settings files detected. Please upload only one settings file."
-          prev_msgs <- if (length(errors) > 0){
+          prev_msgs <- if (length(errors) > 0) {
             paste(purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg)), collapse = "<br>")
-          } else ""
+          } else {
+            ""
+          }
           file_loading_error(paste(c(prev_msgs, msg), collapse = "<br>"))
-          
+
           # Do not apply any settings if ambiguous
           settings_override(NULL)
-          
+
         } else if (length(found_settings) == 1) {
           # Success: Single settings file
           latest <- found_settings[[1]]

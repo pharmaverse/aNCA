@@ -138,7 +138,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # File Upload Handling
     observeEvent(c(data(), settings_override()), priority = 0, {
       req(data())
-      
+
       settings <- settings_override()
 
       log_debug_list("User settings override:", settings)
