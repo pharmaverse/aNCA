@@ -191,7 +191,7 @@ update_main_intervals <- function(data, parameter_selections,
 
   # Impute start values if requested
   if (impute) {
-    data <- apply_imputation(data)
+    data <- create_start_impute(data)
   }
 
   ############################################
@@ -202,27 +202,17 @@ update_main_intervals <- function(data, parameter_selections,
     PKNCA::clean.conc.blq(conc = conc.group, time = time.group, conc.blq = blq_imputation_rule)
   }
 
-  # Don't impute parameters that are not AUC dependent
-  params_to_impute <- metadata_nca_parameters %>%
-    filter((grepl("auc|aumc", PKNCA) | grepl("auc", Depends)),
-           TYPE != "PKNCA-not-covered") %>%
-    pull(PKNCA)
-
   data$intervals <- data$intervals %>%
     mutate(
-      param_to_impute_is_not_na = if_any(all_of(params_to_impute), ~ !is.na(.)),
-      param_to_impute_is_not_false = if_any(all_of(params_to_impute), ~ !isFALSE(.)),
-      has_param_to_impute = param_to_impute_is_not_na & param_to_impute_is_not_false,
-      impute = ifelse(is.na(impute), "", impute),
       impute = ifelse(
-        has_param_to_impute,
-        ifelse(impute == "", "blq", paste0("blq, ", impute)),
-        impute
-      ),
-      impute = ifelse(impute == "", NA_character_, impute)
-    ) %>%
-    select(any_of(names(data$intervals)))
-    ##############################################
+        is.na(impute) | impute == "",
+        "blq",
+        paste0("blq, ", impute)
+      )
+    )
+  ############################################
+  # Remove the 
+  data <- rm_impute_obs_params(data, metadata_nca_parameters)
 
   data
 }
@@ -237,22 +227,24 @@ update_main_intervals <- function(data, parameter_selections,
 #' @returns A PKNCAdata object with imputation rules applied.
 #' @import dplyr
 #'
-apply_imputation <- function(data, nca_parameters = metadata_nca_parameters) {
-  data <- create_start_impute(data)
-
+rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_parameters) {
   # Don't impute parameters that are not AUC dependent
-  params_auc_dep <- nca_parameters %>%
+  params_auc_dep <- metadata_nca_parameters %>%
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
-
-  params_not_to_impute <- nca_parameters %>%
+  
+  params_not_to_impute <- metadata_nca_parameters %>%
     filter(!grepl("auc|aumc", PKNCA),
            !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
-
-  all_impute_methods <- na.omit(unique(data$intervals$impute))
-
+  
+  all_impute_methods <- na.omit(unique(data$intervals$impute)) %>%
+    strsplit(split = ",") %>%
+    unlist() %>%
+    trimws() %>%
+    unique()
+  
   data$intervals <- Reduce(function(d, ti_arg) {
     interval_remove_impute(
       d,
