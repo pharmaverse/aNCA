@@ -9,7 +9,8 @@ update_main_intervals(
   parameter_selections,
   study_types_df,
   auc_data,
-  impute = TRUE
+  impute = TRUE,
+  blq_imputation_rule = list(first = "keep", middle = "keep", last = "keep")
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ update_main_intervals(
 \item{auc_data}{A data frame containing partial AUC ranges.}
 
 \item{impute}{Logical indicating whether to impute start values for parameters.}
+
+\item{blq_imputation_rule}{A list defining the BLQ imputation rule using PKNCA format.
+Defaults to keeping all BLQ values without imputation.}
 }
 \value{
 An updated PKNCAdata object with parameter intervals based on user selections.
