@@ -68,6 +68,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
+  time_end_column <- if ("AEFRLT" %in% names(adnca_data)) "AEFRLT" else time_column
   dosno_column <- "ATPTREF"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
@@ -95,6 +96,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     ADNCA = adnca_data,
     group_columns = all_group_columns,
     time_column = time_column,
+    time_end_column = time_end_column,
     rrlt_column = "ARRLT",
     route_column = route_column,
     nca_exclude_reason_columns = nca_exclude_reason_columns
@@ -129,6 +131,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
+    duration = "CONCDUR",
     concu = "AVALU",
     timeu = "RRLTU",
     amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL,
@@ -199,12 +202,10 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' created using the `PKNCA_create_data_object()` function.
 #'
 #' @param adnca_data A reactive PKNCAdata object
-#' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
-#' @param params A list of parameters for NCA calculation
 #' @param should_impute_c0 Logical indicating if start values should be imputed
 #' @param blq_imputation_rule A list defining the BLQ imputation rule using PKNCA format.
 #' The list should either contain three elements named: `first`, `middle`, and `last` or
@@ -222,14 +223,11 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
   adnca_data,
-  auc_data,
   method,
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  params,
-  should_impute_c0 = TRUE,
-  blq_imputation_rule = list(first = "keep", middle = "drop", last = "keep")
+  should_impute_c0 = TRUE
 ) {
 
   data <- adnca_data
@@ -250,7 +248,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    params = params,
     start_from_last_dose = should_impute_c0
   ) %>%
     # Join route information
@@ -269,85 +266,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       ATPTREF %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
-
-  # # Add partial AUCs if any
-
-  auc_ranges <- auc_data %>%
-    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
-
-  # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
-    data$intervals %>%
-      mutate(
-        start = start + start_auc,
-        end = start + (end_auc - start_auc),
-        across(where(is.logical), ~FALSE),
-        aucint.last = TRUE,
-        type_interval = "manual"
-      )
-  })
-
-  data$intervals <- bind_rows(
-    data$intervals,
-    intervals_list
-  ) %>%
-    unique()
-
-  data$intervals$impute <- NA_character_
-
-  # Impute start values if requested
-  if (should_impute_c0) {
-    data <- create_start_impute(data)
-
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) %>%
-      intersect(names(PKNCA::get.interval.cols()))
-
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
-  }
-
-  # Define a BLQ imputation method for PKNCA
-  # and apply it only for non-observational parameters
-
-  PKNCA_impute_method_blq <<- function(conc.group, time.group, ...) { #nolint
-    PKNCA::clean.conc.blq(conc = conc.group, time = time.group, conc.blq = blq_imputation_rule)
-  }
-
-  # Don't impute parameters that are not AUC dependent
-  params_to_impute <- metadata_nca_parameters %>%
-    filter((grepl("auc|aumc", PKNCA) | grepl("auc", Depends)),
-           TYPE != "PKNCA-not-covered") %>%
-    pull(PKNCA)
-
-  data$intervals <- data$intervals %>%
-    mutate(
-      param_to_impute_is_not_na = if_any(all_of(params_to_impute), ~ !is.na(.)),
-      param_to_impute_is_not_false = if_any(all_of(params_to_impute), ~ !isFALSE(.)),
-      has_param_to_impute = param_to_impute_is_not_na & param_to_impute_is_not_false,
-      impute = ifelse(is.na(impute), "", impute),
-      impute = ifelse(
-        has_param_to_impute,
-        ifelse(impute == "", "blq", paste0("blq, ", impute)),
-        impute
-      ),
-      impute = ifelse(impute == "", NA_character_, impute)
-    ) %>%
-    select(any_of(names(data$intervals)))
 
   data
 }

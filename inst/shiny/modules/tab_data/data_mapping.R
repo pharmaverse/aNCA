@@ -235,7 +235,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
             MAPPING_DESIRED_ORDER,
             silent = FALSE
           ) %>%
-          create_metabfl(input$select_Metabolites)
+          create_metabfl(input$select_Metabolites) %>%
+          adjust_class_and_length(metadata_nca_variables)
+
       }, warning = function(w) {
         withCallingHandlers(
           {
@@ -245,7 +247,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
                 MAPPING_DESIRED_ORDER,
                 silent = FALSE
               ) %>%
-              create_metabfl(input$select_Metabolites)
+              create_metabfl(input$select_Metabolites) %>%
+              adjust_class_and_length(metadata_nca_variables)
           },
           warning = function(w) {
             log_warn(conditionMessage(w))
