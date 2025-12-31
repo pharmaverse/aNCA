@@ -10,8 +10,8 @@ data_imputation_ui <- function(id) {
     br(),
     helpText(HTML(paste(
       "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-      "- If DOSNO = 1 & IV bolus: C0 = 0",
-      "- If DOSNO > 1 & not IV bolus: C0 = predose",
+      "- If first dose & IV bolus: C0 = 0",
+      "- If not first dose or not IV bolus: C0 = predose",
       "- If IV bolus & monoexponential data: logslope",
       "- If IV bolus & not monoexponential data: C0 = C1",
       sep = "<br>"
@@ -29,7 +29,6 @@ data_imputation_ui <- function(id) {
       ),
       selected = "Tmax based imputation"
     ),
-    # Always render all inputs, but use conditionalPanel to show/hide
     div(
       style = "margin-top: 1em;",
       conditionalPanel(

@@ -229,7 +229,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_pcspec,
   params,
   should_impute_c0 = TRUE,
-  # PKNCA default BLQ imputation rule
   blq_imputation_rule = list(first = "keep", middle = "drop", last = "keep")
 ) {
 
@@ -337,10 +336,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   data$intervals <- data$intervals %>%
     mutate(
-      param_to_impute_is_not_na = rowSums(!is.na(select(., all_of(params_to_impute)))) > 0,
-      param_to_impute_is_not_false = rowSums(
-        select(., all_of(params_to_impute)) != FALSE, na.rm = TRUE
-      ) > 0,
+      param_to_impute_is_not_na = if_any(all_of(params_to_impute), ~ !is.na(.)),
+      param_to_impute_is_not_false = if_any(all_of(params_to_impute), ~ !isFALSE(.)),
       has_param_to_impute = param_to_impute_is_not_na & param_to_impute_is_not_false,
       impute = ifelse(is.na(impute), "", impute),
       impute = ifelse(
