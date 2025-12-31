@@ -100,7 +100,7 @@ data_imputation_server <- function(id) {
       if (any(are_invalid_inputs)) {
         showNotification(
           "BLQ imputation values must be numeric, 'drop' or 'keep'. 
-          Otherwise, default PKNCA imputation (BLQ position) will be used",
+          Otherwise, no BLQ imputation will be applied.",
           type = "warning",
           duration = 8
         )

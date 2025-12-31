@@ -123,12 +123,14 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
 #' @param study_types_df A data frame mapping analysis profiles to their study type.
 #' @param auc_data A data frame containing partial AUC ranges.
+#' @param blq_imputation_rule A list defining the BLQ imputation rule using PKNCA format.
+#' Defaults to keeping all BLQ values without imputation.
 #' @param impute Logical indicating whether to impute start values for parameters.
 #'
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #'
 update_main_intervals <- function(data, parameter_selections,
-                                  study_types_df, auc_data, impute = TRUE, blq_imputation_rule = list(first = "keep", middle = "drop", last = "keep")) {
+                                  study_types_df, auc_data, impute = TRUE, blq_imputation_rule = list(first = "keep", middle = "keep", last = "keep")) {
 
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
