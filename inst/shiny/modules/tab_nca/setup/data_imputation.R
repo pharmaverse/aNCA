@@ -60,10 +60,6 @@ data_imputation_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    should_impute_c0 <- reactive({
-      input$should_impute_c0
-    })
-
     blq_rule <- reactive({
       req(input$select_blq_strategy)
       rule_list <- switch(
@@ -115,7 +111,7 @@ data_imputation_server <- function(id) {
     })
 
     list(
-      should_impute_c0 = should_impute_c0,
+      should_impute_c0 = reactive(input$should_impute_c0),
       blq_imputation_rule = blq_rule
     )
   })
