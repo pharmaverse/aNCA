@@ -95,7 +95,7 @@ general_exclusions_server <- function(id, processed_pknca_data) {
       style = list(fontSize = "0.75em"),
       rowStyle = function(x) {
         function(index) {
-          excl_indices <- unlist(lapply(exclusion_list(), function(x) x$rows))
+          excl_indices <- unlist(lapply(exclusion_list(), function(excl) excl$rows))
           if (index %in% excl_indices) {
             return(list(background = EXCL_COLOR_MANUAL))
           }

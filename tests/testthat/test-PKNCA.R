@@ -406,7 +406,7 @@ describe("add_exclusion_reasons", {
     expect_true(all(pknca_data_excl$conc$data[[excl_col]][-c(1, 3, 4)] %in% c("", NA)))
   })
 
-  it("overwrites previous exclusion reasons for the same row", {
+  it("appends additional exclusion reasons to the row", {
     excl_list <- list(
       list(reason = "First Reason", rows = 2),
       list(reason = "Second Reason", rows = 2)
@@ -425,12 +425,12 @@ describe("add_exclusion_reasons", {
 
   it("provides an error message if specified rows are out of bounds", {
     excl_list <- list(
-      list(reason = "Exlusion out of bounds", rows = c(1, 100)),
+      list(reason = "Exclusion out of bounds", rows = c(1, 100)),
       list(reason = "Valid exclusion", rows = 1)
     )
     expect_error(
       add_exclusion_reasons(pknca_data, excl_list),
-      "Row indices in exclusion_list are out of bounds for the exclusion: Exlusion out of bounds"
+      "Row indices in exclusion_list are out of bounds for the exclusion: Exclusion out of bounds"
     )
   })
 
