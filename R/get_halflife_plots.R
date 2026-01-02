@@ -113,7 +113,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     ) %>%
     ungroup() %>%
     # Disconsider BLQ points at the end (never used for half-life)
-    filter(.[[time_col]] <= tlast)
+    filter(.[[time_col]] <= tlast) %>%
+    # Disconsider BLQ points at the middle as well
+    filter(.[[conc_col]] > 0)
 
   info_per_plot_list <- info_per_plot_list %>%
     mutate(
