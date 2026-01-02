@@ -127,8 +127,12 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
 #' @param study_types_df A data frame mapping analysis profiles to their study type.
 #' @param auc_data A data frame containing partial AUC ranges.
-#' @param blq_imputation_rule A list defining the BLQ imputation rule using PKNCA format.
-#' Defaults to keeping all BLQ values without imputation.
+#' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ) 
+#' imputation rule using PKNCA format. The list should either contain three elements named: 
+#' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
+#' Each element can be a numeric value (substituting the BLQ value), or a string such as 
+#' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
+#' which does not specify any BLQ imputation in any interval. 
 #' @param impute Logical indicating whether to impute start values for parameters.
 #'
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
