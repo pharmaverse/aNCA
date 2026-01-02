@@ -262,9 +262,9 @@ describe("simplify_unit", {
     expect_equal(as.numeric(result), 1000)
   })
 
-  it("returns an error for invalid inputs", {
-    expect_error(simplify_unit(list(a = 1)),
-                 "Input must be a valid units object or character string")
+  it("returns the same unit for unrecognised inputs", {
+    expect_warning(simplify_unit(list(a = 1)),
+                 "Unit '1' could not be simplified.")
   })
 
   it("returns only the unit as character when as_character = TRUE", {
