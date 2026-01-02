@@ -258,7 +258,7 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     intersect(names(PKNCA::get.interval.cols()))
 
   all_impute_methods <- na.omit(unique(data$intervals$impute))
-  if (is.null(all_impute_methods)) {
+  if (length(all_impute_methods) == 0) {
     return(data)
   }
   all_impute_methods <- all_impute_methods %>%
