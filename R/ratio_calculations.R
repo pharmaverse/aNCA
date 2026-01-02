@@ -172,13 +172,17 @@ calculate_ratios.data.frame <- function(
     # Use mean values in case of multiple denominator rows per test
     mutate(
       PPORRES_ref = mean(PPORRES_ref, na.rm = TRUE),
-      PPSTRES_ref = mean(PPSTRES_ref, na.rm = TRUE),
+      PPSTRES_ref = if ("PPSTRESU" %in% names(.)) {
+        mean(PPSTRES_ref, na.rm = TRUE)
+      } else {
+        NULL
+      },
       n = n()
     ) %>%
     ungroup() %>%
     mutate(
       PPORRES = (PPORRES / PPORRES_ref) * adjusting_factor,
-      PPSTRES = if ("PPSTRES" %in% names(.)) {
+      PPSTRES = if ("PPSTRES" %in% names(.) & "PPSTRES_ref" %in% names(.)) {
         (PPSTRES / PPSTRES_ref) * adjusting_factor
       } else {
         NULL
@@ -218,7 +222,11 @@ calculate_ratios.data.frame <- function(
     # Make sure all basic columns are still character (even when empty #730)
     mutate(
       PPORRESU = as.character(PPORRESU),
-      PPSTRESU = as.character(PPSTRESU),
+      PPSTRESU = if ("PPSTRESU" %in% names(.)) {
+        as.character(PPSTRESU)
+      } else {
+        NULL
+      },
       PPANMETH = as.character(PPANMETH)
     ) %>%
     # Keep same format as the input (PKNCAresults)
@@ -238,7 +246,6 @@ calculate_ratios.PKNCAresults <- function(
   adjusting_factor = 1,
   custom_pptestcd = NULL
 ) {
-
   # Check if match_cols and ref_groups are valid group columns
   # Make checks on the input formats
   cols_used_for_ratios <- c(match_cols, names(ref_groups), names(test_groups))

@@ -11,8 +11,10 @@
 #' @param colorvars           Variables for the color aesthetic.
 #' @param varvalstofilter     Character vector specifying which variable and value to pre-filter
 #'                            as `colname: value`. By default is NULL (no pre-filtering)
-#' @param columns_to_hover    A character vector indicating the column names from result_data that
-#'                            should be used to identify when hovering the plotly outputs
+#' @param tooltip_vars        A character vector indicating the column names from result_data that
+#'                            should be used to identify when hovering the plotly outputs.
+#' @param labels_df           A data.frame used for label lookups in tooltips.
+#'                            Defaults to metadata_nca_variables.
 #' @param box                 A logical value indicating whether to plot a box plot (`TRUE`) or a
 #'                            violin plot (`FALSE`). Default is `TRUE`.
 #' @param plotly              A logical value defining if the output is plotly (TRUE, default)
@@ -29,7 +31,8 @@ flexible_violinboxplot <- function(res_nca,
                                    xvars,
                                    colorvars,
                                    varvalstofilter = NULL,
-                                   columns_to_hover,
+                                   tooltip_vars,
+                                   labels_df = metadata_nca_variables,
                                    box = TRUE,
                                    plotly = TRUE,
                                    seed = NULL) {
@@ -53,7 +56,7 @@ flexible_violinboxplot <- function(res_nca,
     )
 
   # Create filter expression
-  filter_expr <- create_filter_expr(boxplotdata, varvalstofilter)
+  filter_expr <- .create_filter_expr(boxplotdata, varvalstofilter)
 
   # Filter data
   box_data <- boxplotdata %>%
@@ -62,20 +65,12 @@ flexible_violinboxplot <- function(res_nca,
       PPTESTCD == parameter
     )
 
-  # Verify that PPSTRES exists and is not NA, otherwise return empty plot
-  if (!is_PPSTRES_valid(box_data)) {
-    return(ggplot() +
-             labs(title = paste("No data available for parameter:", parameter)) +
-             theme_minimal())
-  }
+  # Check boxplot data validity; return a plot with an error message if invalid
+  error_boxplot <- .check_boxplot_data(box_data, parameter)
+  if (!is.null(error_boxplot)) return(error_boxplot)
 
-  # Hover text to identify each point
-  hover_text <- apply(box_data[columns_to_hover] %>%
-                        mutate(across(where(is.numeric), function(x) round(x, digits = 2))),
-                      MARGIN = 1,
-                      function(row) {
-                        paste(names(row), row, sep = ": ", collapse = "<br>")
-                      })
+  # --- Tooltip Construction ---
+  box_data <- .handle_tooltips(box_data, tooltip_vars, labels_df)
 
   # ylabel of violin/boxplot
   ylabel <- {
@@ -95,21 +90,37 @@ flexible_violinboxplot <- function(res_nca,
     aes(
       x = interaction(!!!syms(xvars), sep = "\n"),
       y = PPSTRES,
-      color = interaction(!!!syms(colorvars))
+      color = interaction(!!!syms(colorvars)),
+      text = tooltip_text
     )
   )
 
   #  Make boxplot or violin
   if (box) {
-    p <- p + geom_boxplot()
+    p <- p + geom_boxplot(
+      aes(
+        x = interaction(!!!syms(xvars), sep = "\n"),
+        y = PPSTRES,
+        color = interaction(!!!syms(colorvars))
+      ),
+      inherit.aes = FALSE
+    )
   } else {
-    p <- p + geom_violin()
+
+    p <- p + geom_violin(
+      aes(
+        x = interaction(!!!syms(xvars), sep = "\n"),
+        y = PPSTRES,
+        color = interaction(!!!syms(colorvars))
+      ),
+      inherit.aes = FALSE,
+      drop = FALSE
+    )
   }
 
   # Include points, labels and theme
   p <- p +
     geom_point(position = position_jitterdodge(seed = seed)) +
-    # facet_wrap(~STUDYID) +
     labs(
       x = paste(xvars, collapse = ", "),
       y = ylabel,
@@ -123,7 +134,7 @@ flexible_violinboxplot <- function(res_nca,
 
   # Make plotly with hover features
   if (plotly) {
-    ggplotly(p + aes(text = hover_text), tooltip = "text")
+    ggplotly(p, tooltip = "text")
   } else {
     p
   }
@@ -137,7 +148,7 @@ flexible_violinboxplot <- function(res_nca,
 #' @importFrom rlang expr sym
 #' @importFrom purrr reduce
 #' @returns  The filter expression
-create_filter_expr <- function(boxplotdata, varvalstofilter) {
+.create_filter_expr <- function(boxplotdata, varvalstofilter) {
   if (is.null(varvalstofilter)) return(expr(TRUE))
 
   # 1. Parse inputs
@@ -163,7 +174,25 @@ create_filter_expr <- function(boxplotdata, varvalstofilter) {
   reduce(cond_list, ~ expr(!!.x & !!.y))
 }
 
-# Check if data is valid
-is_PPSTRES_valid <- function(box_data) { #nolint
-  "PPSTRES" %in% colnames(box_data) && !all(is.na(box_data$PPSTRES))
+#' Check validity of boxplot data for plotting
+#'
+#' Internal function to check if box_data is empty or lacks valid PPSTRES values.
+#' Returns an error plot if invalid, otherwise NULL.
+#'
+#' @param box_data Data frame to check.
+#' @param parameter Parameter name for error message context.
+#' @return NULL if valid, or a ggplot error plot if invalid.
+#' @noRd
+.check_boxplot_data <- function(box_data, parameter) {
+  # Check for empty data
+  if (is.null(box_data) || nrow(box_data) == 0) {
+    error_msg <- paste("No data available")
+    return(error_plot(error_msg))
+  }
+  # Check for invalid PPSTRES values
+  if (!"PPSTRES" %in% colnames(box_data) || all(is.na(box_data$PPSTRES))) {
+    error_msg <- paste("No data available for parameter:", parameter)
+    return(error_plot(error_msg))
+  }
+  NULL
 }
