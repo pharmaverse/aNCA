@@ -56,7 +56,7 @@ g_pkcg01_log <- function(data, ...) {
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'
-#' plots_lin <- pkcg01(adnca = adnca, xmax = 1)
+#' plots_lin <- pkcg01(adnca = adnca, xmax = 1, scale = "LIN")
 #'
 #' @export
 #' @author Gerardo Rodriguez

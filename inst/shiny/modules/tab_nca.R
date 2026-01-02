@@ -126,12 +126,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
         #' Calculate results
         res <- withCallingHandlers({
           processed_pknca_data %>%
-            filter_slopes(
-              slope_rules$manual_slopes(),
-              slope_rules$profiles_per_subject(),
-              slope_rules$slopes_groups(),
-              check_reasons = TRUE
-            ) %>%
+            # Check if there are exclusions that contains a filled reason
+            checks_before_running_nca() %>%
             # Perform PKNCA parameter calculations
             PKNCA_calculate_nca() %>%
             # Add bioavailability results if requested
