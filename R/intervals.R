@@ -234,7 +234,7 @@ update_main_intervals <- function(
 #' selectively removing imputation for parameters that are not dependent on AUC.
 #'
 #' @param data A PKNCAdata object.
-#' @param metadata_nca_parameters A dataset containing the mapping between PKNCA parameters (`PKNCA`)
+#' @param metadata_nca_parameters A data frame mapping PKNCA parameters (`PKNCA`)
 #' and information on their parameter dependencies ('Depends').
 #' @returns A PKNCAdata object with imputation rules applied.
 #' @import dplyr

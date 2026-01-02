@@ -9,7 +9,7 @@ rm_impute_obs_params(data, metadata_nca_parameters = metadata_nca_parameters)
 \arguments{
 \item{data}{A PKNCAdata object.}
 
-\item{metadata_nca_parameters}{A dataset containing the mapping between PKNCA parameters (\code{PKNCA})
+\item{metadata_nca_parameters}{A data frame mapping PKNCA parameters (\code{PKNCA})
 and information on their parameter dependencies ('Depends').}
 }
 \value{
