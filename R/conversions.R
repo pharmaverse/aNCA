@@ -284,7 +284,7 @@ simplify_unit <- function(x, as_character = FALSE) {
   tryCatch({
     # Attempt to parse and simplify
     simplified_obj <- units::set_units(value, unit_char, mode = "standard")
-    
+
     if (as_character) {
       units::deparse_unit(simplified_obj)
     } else {
@@ -293,11 +293,11 @@ simplify_unit <- function(x, as_character = FALSE) {
   }, error = function(e) {
     # Log warning and return original
     warning("Unit '", unit_char, "' could not be simplified.")
-    
+
     if (as_character) {
-      return(unit_char)
+      unit_char
     } else {
-      return(x)
+      x
     }
   })
 }
