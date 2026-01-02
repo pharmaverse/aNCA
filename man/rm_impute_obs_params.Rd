@@ -9,7 +9,8 @@ rm_impute_obs_params(data, metadata_nca_parameters = metadata_nca_parameters)
 \arguments{
 \item{data}{A PKNCAdata object.}
 
-\item{nca_parameters}{A dataset containing the mapping between PKNCA terms and CDISC terms.}
+\item{metadata_nca_parameters}{A dataset containing the mapping between PKNCA parameters (\code{PKNCA})
+and information on their parameter dependencies ('Depends').}
 }
 \value{
 A PKNCAdata object with imputation rules applied.
