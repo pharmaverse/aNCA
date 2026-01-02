@@ -86,7 +86,7 @@ data_imputation_server <- function(id) {
         NULL
       )
 
-      # Transform in the list text number to numeric
+      # Transform text numbers in the list to numeric
       rule_list <- lapply(rule_list, function(x) {
         if (x %in% c("drop", "keep")) {
           x
