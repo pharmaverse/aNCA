@@ -138,7 +138,7 @@ update_main_intervals <- function(
   parameter_selections,
   study_types_df, auc_data,
   impute = TRUE,
-  blq_imputation_rule = list(first = "keep", middle = "keep", last = "keep")
+  blq_imputation_rule = NULL
 ) {
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
@@ -206,18 +206,21 @@ update_main_intervals <- function(
   # Define a BLQ imputation method for PKNCA
   # and apply it only for non-observational parameters
 
-  PKNCA_impute_method_blq <<- function(conc.group, time.group, ...) { # nolint
-    PKNCA::clean.conc.blq(conc = conc.group, time = time.group, conc.blq = blq_imputation_rule)
+  if (!is.null(blq_imputation_rule)) {
+    PKNCA_impute_method_blq <<- function(conc.group, time.group, ...) { # nolint
+      PKNCA::clean.conc.blq(conc = conc.group, time = time.group, conc.blq = blq_imputation_rule)
+    }
+
+    data$intervals <- data$intervals %>%
+      mutate(
+        impute = ifelse(
+          is.na(impute) | impute == "",
+          "blq",
+          paste0("blq, ", impute)
+        )
+      )
   }
 
-  data$intervals <- data$intervals %>%
-    mutate(
-      impute = ifelse(
-        is.na(impute) | impute == "",
-        "blq",
-        paste0("blq, ", impute)
-      )
-    )
   ############################################
   # Remove any imputation from the observational parameters
   data <- rm_impute_obs_params(data, metadata_nca_parameters)
@@ -249,7 +252,11 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
-  all_impute_methods <- na.omit(unique(data$intervals$impute)) %>%
+  all_impute_methods <- na.omit(unique(data$intervals$impute))
+  if (is.null(all_impute_methods)) {
+    return(data)
+  }
+  all_impute_methods <- all_impute_methods %>%
     strsplit(split = ",") %>%
     unlist() %>%
     trimws() %>%
