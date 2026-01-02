@@ -176,6 +176,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
+
   pknca_data_object
 }
 
