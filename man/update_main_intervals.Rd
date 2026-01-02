@@ -10,7 +10,7 @@ update_main_intervals(
   study_types_df,
   auc_data,
   impute = TRUE,
-  blq_imputation_rule = list(first = "keep", middle = "keep", last = "keep")
+  blq_imputation_rule = NULL
 )
 }
 \arguments{
