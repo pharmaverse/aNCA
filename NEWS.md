@@ -11,7 +11,7 @@
 * New Parameter Selection section in NCA tab allowing to select parameters by study type (#795)
 * The App optionally maps end of sample collection (AEFRLT) for excretion rate parameter calculations: ERTLST, ERTMAX. (#745)
 * Option to upload multiple input files, which will be bound together to form a single ADNCA data set (#821)
-* BLQ imputation rules can be applied to the NCA via `NCA Setup > Data Imputation`
+* BLQ imputation rules can be applied to the NCA via `NCA Setup > Data Imputation` (#139)
 
 
 ## Bugs fixed
