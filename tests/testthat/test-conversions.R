@@ -264,7 +264,7 @@ describe("simplify_unit", {
 
   it("returns the same unit for unrecognised inputs", {
     expect_warning(simplify_unit(list(a = 1)),
-                 "Unit '1' could not be simplified.")
+                   "Unit '1' could not be simplified.")
   })
 
   it("returns only the unit as character when as_character = TRUE", {
