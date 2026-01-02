@@ -99,8 +99,10 @@ data_imputation_server <- function(id) {
       are_invalid_inputs <- is.na(unlist(rule_list))
       if (any(are_invalid_inputs)) {
         showNotification(
-          "BLQ imputation values must be numeric, 'drop' or 'keep'. 
-          Otherwise, no BLQ imputation will be applied.",
+          paste0(
+            "BLQ imputation values must be numeric, 'drop' or 'keep'. ",
+            "Otherwise, no BLQ imputation will be applied."
+          ),
           type = "warning",
           duration = 8
         )
