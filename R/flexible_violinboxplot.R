@@ -66,8 +66,8 @@ flexible_violinboxplot <- function(res_nca,
     )
 
   # Check boxplot data validity; return a plot with an error message if invalid
-  check_data <- .check_boxplot_data(box_data, parameter)
-  if (!is.null(check_data)) return(check_data)
+  error_boxplot <- .check_boxplot_data(box_data, parameter)
+  if (!is.null(error_boxplot)) return(error_boxplot)
 
   # --- Tooltip Construction ---
   box_data <- .handle_tooltips(box_data, tooltip_vars, labels_df)
