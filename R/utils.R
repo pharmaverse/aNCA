@@ -135,18 +135,18 @@ parse_annotation <- function(data, text) {
 }
 
 #' Helper: adjust class and length for a data.frame based on metadata_nca_variables
-#' 
+#'
 #' @details
 #' Adjusts the class and length of each variable in the provided data frame
 #' according to the specifications in the metadata data frame.
-#' 
+#'
 #' @param df Data frame to adjust.
 #' @param metadata Metadata data frame with variable specifications.
 #' @returns Adjusted data frame.
-#' 
+#'
 #' @importFrom dplyr filter
 #' @importFrom magrittr `%>%`
-#' 
+#'
 #' @export
 adjust_class_and_length <- function(df, metadata) {
   for (var in names(df)) {
@@ -155,7 +155,7 @@ adjust_class_and_length <- function(df, metadata) {
     if (var_specs$Type %in% c("Char", "text")) {
       df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
     } else if (var_specs$Type %in% c("Num", "integer", "float") &&
-               !endsWith(var, "DTM")) {
+                 !endsWith(var, "DTM")) {
       df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
     } else if (!var_specs$Type %in% c(
       "dateTime", "duration", "integer", "float", "Num"
