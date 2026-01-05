@@ -27,7 +27,6 @@ units_table_server <- function(id, mydata) {
     # Define the modal message displayed with the parameter units table #
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
-
       # Make a reactive variable from the units table
       if (!is.null(session$userData$units_table())) {
         modal_units_table(session$userData$units_table())
@@ -74,7 +73,10 @@ units_table_server <- function(id, mydata) {
     #' Rendering the modal units table
     unit_edits <- reactable_server(
       "modal_units_table",
-      modal_units_table,
+      reactive({modal_units_table() %>%
+        mutate(
+          PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTEST")
+        )}),
       wrap = TRUE,
       width = "775px", # fit to the modal width
       height = "65vh",
