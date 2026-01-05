@@ -285,7 +285,7 @@ describe("update_main_intervals", {
       filter(USUBJID == unique(USUBJID)[1], AVAL == 0)
 
     # Only calculate one observational parameter and one imputable parameter
-    parameters <- list(`Single Extravascular Dose` = c("tmax", "aucinf.obs"))
+    parameters <- list(`Single Extravascular Dose` = c("tmax", "auclast", "lambda.z"))
     auc_data <- tibble(start_auc = NA_real_, end_auc = NA_real_)
 
     # Test no BLQ imputation case
@@ -293,19 +293,69 @@ describe("update_main_intervals", {
     data_no_blq_impute <- update_main_intervals(data, parameters, study_types_df, auc_data, blq_imputation_rule = blq_rule_none)
     res_no_blq_impute <- PKNCA::pk.nca(data_no_blq_impute)
     res_no_impute_blq <- res_no_blq_impute$result %>%
-      filter(USUBJID == unique(USUBJID)[1])
+      filter(USUBJID == unique(USUBJID)[1]) %>%
+      unique()
 
     # Test when all BLQ points are kept; same as no imputation
     blq_rule_all_keep <- list(first = "keep", middle = "keep", last = "keep")
     data_blq_all_keep <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = TRUE, blq_imputation_rule = blq_rule_all_keep)
     res_all_keep_blq <- PKNCA::pk.nca(data_blq_all_keep)
     res_all_keep_blq <- res_all_keep_blq$result %>%
-      filter(USUBJID == unique(USUBJID)[1])
+      filter(USUBJID == unique(USUBJID)[1]) %>%
+      unique()
     expect_equal(res_no_impute_blq, res_all_keep_blq)
 
     # Test that BLQ imputation affects lambda.z & aucinf.obs for after tmax calculations in extravascular doses
     # while before tmax BLQ handling does only affect aucinf.obs
-    blq_rule_before_tmax <- list(before_tmax = 100, after_tmax = "keep") 
-    blq_rule_after_tmax <- list(before_tmax = "keep", after_tmax = 100)
+    blq_rule_before_tmax <- list(before.tmax = 100, after.tmax = "keep")
+    blq_rule_after_tmax <- list(before.tmax = "keep", after.tmax = 100)
+    blq_rule_mixed_tmax <- list(before.tmax = 100, after.tmax = 100)
+
+    data_blq_before_tmax <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = TRUE, blq_imputation_rule = blq_rule_before_tmax)
+    res_blq_before_tmax <- PKNCA::pk.nca(data_blq_before_tmax)
+    res_blq_before_tmax <- res_blq_before_tmax$result %>%
+      filter(USUBJID == unique(USUBJID)[1]) %>%
+      unique()
+    expect_equal(
+      res_blq_before_tmax %>% filter(PPTESTCD == "auclast") %>% pull(PPORRES),
+      99.66,
+      tolerance = 0.01
+    )
+
+    data_blq_after_tmax <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = TRUE, blq_imputation_rule = blq_rule_after_tmax)
+    res_blq_after_tmax <- PKNCA::pk.nca(data_blq_after_tmax)
+    res_blq_after_tmax <- res_blq_after_tmax$result %>%
+      filter(USUBJID == unique(USUBJID)[1]) %>%
+      unique()
+    expect_equal(
+      res_blq_after_tmax %>% filter(PPTESTCD == "auclast") %>% pull(PPORRES),
+      56,
+      tolerance = 0.01
+    )
+
+    data_blq_mixed_tmax <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = TRUE, blq_imputation_rule = blq_rule_mixed_tmax)
+    res_blq_mixed_tmax <- PKNCA::pk.nca(data_blq_mixed_tmax)
+    res_blq_mixed_tmax <- res_blq_mixed_tmax$result %>%
+      filter(USUBJID == unique(USUBJID)[1]) %>%
+      unique()
+    expect_equal(
+      res_blq_mixed_tmax %>% filter(PPTESTCD == "auclast") %>% pull(PPORRES),
+      151,
+      tolerance = 0.01
+    )
+
+    # Test that indeed tmax (observational parameter) is unaffected by BLQ imputation
+    expect_equal(
+      res_blq_before_tmax %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES),
+      res_no_impute_blq %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES)
+    )
+    expect_equal(
+      res_blq_after_tmax %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES),
+      res_no_impute_blq %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES)
+    )
+    expect_equal(
+      res_blq_mixed_tmax %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES),
+      res_no_impute_blq %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES)
+    )
   })
 })
