@@ -351,7 +351,13 @@ get_subjid <- function(data) {
   }
 }
 
-# Helper: adjust class and length for a data.frame based on metadata_nca_variables
+#' Helper: adjust class and length for a data.frame based on metadata_nca_variables
+#' 
+#' @param df Data frame to adjust.
+#' @param metadata Metadata data frame with variable specifications.
+#' @returns Adjusted data frame.
+#' @noRd
+#' @keywords internal
 adjust_class_and_length <- function(df, metadata) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
