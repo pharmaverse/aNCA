@@ -73,10 +73,19 @@ units_table_server <- function(id, mydata) {
     #' Rendering the modal units table
     unit_edits <- reactable_server(
       "modal_units_table",
-      reactive({modal_units_table() %>%
-        mutate(
-          PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTEST")
-        )}),
+      reactive({
+        # Add a hidden flag to the data based on the indices to hide
+        data <- modal_units_table() %>%
+          mutate(
+            PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTEST")
+          )
+        data$is_hidden <- FALSE
+        rows_to_hide <- rows_to_hide_units_table()
+        if (length(rows_to_hide) > 0) {
+          data$is_hidden[rows_to_hide] <- TRUE
+        }
+        data
+      }),
       wrap = TRUE,
       width = "775px", # fit to the modal width
       height = "65vh",
@@ -85,23 +94,21 @@ units_table_server <- function(id, mydata) {
         PPTESTCD = colDef(name = "Parameter"),
         PPORRESU = colDef(name = "Default Unit"),
         PPSTRESU = colDef(name = "Custom Unit"),
-        conversion_factor = colDef(name = "Conversion Factor")
+        conversion_factor = colDef(name = "Conversion Factor"),
+        is_hidden = colDef(show = FALSE)
       ),
       pagination = FALSE,
-      on_render = paste0("function(el, x) {
-        const rows_to_hide = ", jsonlite::toJSON(rows_to_hide_units_table(), auto_unbox = TRUE), ";
-        $(el).find('.rt-tr-group').each(function(index) {
-          if (rows_to_hide.includes(index + 1)) {
-            $(this).hide();
-          }
-        });
+      filterable = TRUE,
+      rowStyle = reactable::JS("function(rowInfo) {
+        if (rowInfo.values['is_hidden']) {
+          return { display: 'none' }
+        }
       }")
     )
 
     # Accept user modifications in the modal units table
     observeEvent(unit_edits()$edit(), {
       req(unit_edits()$edit())
-
       info <- unit_edits()$edit()
       modal_units_table <- modal_units_table()
 
