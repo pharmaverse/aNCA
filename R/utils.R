@@ -133,3 +133,38 @@ parse_annotation <- function(data, text) {
   # Paste all together in different lines
   paste0(title, "\n", paste0(log_msg, collapse = "\n"))
 }
+
+#' Helper: adjust class and length for a data.frame based on metadata_nca_variables
+#' 
+#' @details
+#' Adjusts the class and length of each variable in the provided data frame
+#' according to the specifications in the metadata data frame.
+#' 
+#' @param df Data frame to adjust.
+#' @param metadata Metadata data frame with variable specifications.
+#' @returns Adjusted data frame.
+#' 
+#' @importFrom dplyr filter
+#' @importFrom magrittr `%>%`
+#' 
+#' @export
+adjust_class_and_length <- function(df, metadata) {
+  for (var in names(df)) {
+    var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
+    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
+    if (var_specs$Type %in% c("Char", "text")) {
+      df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
+    } else if (var_specs$Type %in% c("Num", "integer", "float") &&
+               !endsWith(var, "DTM")) {
+      df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
+    } else if (!var_specs$Type %in% c(
+      "dateTime", "duration", "integer", "float", "Num"
+    )) {
+      warning(
+        "Unknown var specification type: ", var_specs$Type,
+        " (", var_specs$Variable, ")"
+      )
+    }
+  }
+  df
+}
