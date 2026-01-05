@@ -128,3 +128,98 @@ describe(".concatenate_list", {
     expect_true(grepl("Empty List", result))
   })
 })
+
+describe("adjust_class_and_length", {
+  
+  it("truncates 'text' variables to the specified length", {
+    # ABLFL in metadata: Type='text', Length=1
+    df <- data.frame(
+      ABLFL = c("Yes", "No", "Y"), 
+      stringsAsFactors = FALSE
+    )
+    
+    res <- adjust_class_and_length(df, metadata_nca_variables)
+    
+    # Should be truncated to 1 character
+    expect_equal(res$ABLFL, c("Y", "N", "Y"))
+  })
+  
+  it("rounds 'float' variables to the specified length", {
+    # DOSEA in metadata: Type='float', Length=12
+    val <- 1.12345678901234567 
+    df <- data.frame(DOSEA = c(val), stringsAsFactors = FALSE)
+    
+    res <- adjust_class_and_length(df, metadata_nca_variables)
+    
+    # Expect rounding to 12 decimal places
+    expected <- round(val, 12)
+    expect_equal(res$DOSEA, expected)
+    expect_true(res$DOSEA != val)
+  })
+  
+  it("ignores numeric processing for variables ending in 'DTM'", {
+    # PCRFTDTM in metadata
+    val <- 1.12345 # Should NOT be rounded to integer/length
+    df <- data.frame(PCRFTDTM = c(val), stringsAsFactors = FALSE)
+    
+    res <- adjust_class_and_length(df, metadata_nca_variables)
+    
+    # Value should remain untouched
+    expect_equal(res$PCRFTDTM, val)
+  })
+  
+  it("handles duplicate variables in metadata by taking the first match", {
+    # AGE appears multiple times (ADNCA, ADPP) in the metadata
+    # AGE is integer, Length 12.
+    val <- 25.123456789012345
+    df <- data.frame(AGE = c(val), stringsAsFactors = FALSE)
+    
+    res <- adjust_class_and_length(df, metadata_nca_variables)
+    
+    # Should run successfully and round (Length 12)
+    expect_equal(res$AGE, round(val, 12))
+  })
+  
+  it("silently passes through 'dateTime' and 'duration' types", {
+    # PCDTC is dateTime, PPENINT is duration
+    df <- data.frame(
+      PCDTC = c("2021-01-01"),
+      PPENINT = c(100.5),
+      stringsAsFactors = FALSE
+    )
+    res <- adjust_class_and_length(df, metadata_nca_variables)
+    expect_equal(res, df)
+  })
+  
+  it("skips variables that are not present in the metadata", {
+    df <- data.frame(NOT_IN_CSV = c(1, 2, 3))
+    res <- adjust_class_and_length(df, metadata_nca_variables)
+    expect_equal(res, df)
+  })
+  
+  it("skips variables containing all NA values", {
+    # ABLFL exists but is all NA here
+    df <- data.frame(ABLFL = c(NA_character_, NA_character_))
+    res <- adjust_class_and_length(df, metadata_nca_variables)
+    expect_equal(res$ABLFL, c(NA_character_, NA_character_))
+  })
+  
+  it("warns when encountering a variable with an unknown type specification", {
+    bad_metadata <- bind_rows(
+      metadata_nca_variables,
+      data.frame(
+        Variable = "BAD_VAR",
+        Type = "unknown_type",
+        Length = 10,
+        stringsAsFactors = FALSE
+      )
+    )
+    
+    df <- data.frame(BAD_VAR = "some_value", stringsAsFactors = FALSE)
+    
+    expect_warning(
+      adjust_class_and_length(df, bad_metadata),
+      "Unknown var specification type: unknown_type \\(BAD_VAR\\)"
+    )
+  })
+})
