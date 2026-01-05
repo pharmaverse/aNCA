@@ -148,7 +148,6 @@ describe("format_pkncadata_intervals", {
 })
 
 describe("update_main_intervals", {
-
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
                               c("start", "end"))
   # setup data using FIXTURES
@@ -271,4 +270,42 @@ describe("update_main_intervals", {
                  "Missing required columns: PCSPEC")
   })
 
+  it("applies blq_imputation_rule and sets impute column for BLQ", {
+    # Make 3 BLQ points for subject 1
+    data$conc$data <- data$conc$data %>%
+      mutate(AVAL = ifelse(
+        USUBJID == unique(USUBJID)[1] & AFRLT %in% c(0, 2, 4),
+        0,
+        AVAL
+        )
+      )
+
+    # Keep the BLQ rows for subject 1 for testing
+    blq_rows_subj1 <- data$conc$data %>%
+      filter(USUBJID == unique(USUBJID)[1], AVAL == 0)
+
+    # Only calculate one observational parameter and one imputable parameter
+    parameters <- list(`Single Extravascular Dose` = c("tmax", "aucinf.obs"))
+    auc_data <- tibble(start_auc = NA_real_, end_auc = NA_real_)
+
+    # Test no BLQ imputation case
+    blq_rule_none <- NULL
+    data_no_blq_impute <- update_main_intervals(data, parameters, study_types_df, auc_data, blq_imputation_rule = blq_rule_none)
+    res_no_blq_impute <- PKNCA::pk.nca(data_no_blq_impute)
+    res_no_impute_blq <- res_no_blq_impute$result %>%
+      filter(USUBJID == unique(USUBJID)[1])
+
+    # Test when all BLQ points are kept; same as no imputation
+    blq_rule_all_keep <- list(first = "keep", middle = "keep", last = "keep")
+    data_blq_all_keep <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = TRUE, blq_imputation_rule = blq_rule_all_keep)
+    res_all_keep_blq <- PKNCA::pk.nca(data_blq_all_keep)
+    res_all_keep_blq <- res_all_keep_blq$result %>%
+      filter(USUBJID == unique(USUBJID)[1])
+    expect_equal(res_no_impute_blq, res_all_keep_blq)
+
+    # Test that BLQ imputation affects lambda.z & aucinf.obs for after tmax calculations in extravascular doses
+    # while before tmax BLQ handling does only affect aucinf.obs
+    blq_rule_before_tmax <- list(before_tmax = 100, after_tmax = "keep") 
+    blq_rule_after_tmax <- list(before_tmax = "keep", after_tmax = 100)
+  })
 })
