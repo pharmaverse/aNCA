@@ -34,30 +34,30 @@ handle_table_edits_ui <- function(id) {
 #' Handles adding/removing/editing rules, table's reactivity, and optional override logic.
 #'
 #' @param id Shiny module id
-#' @param mydata Reactive providing the current PKNCA data object
+#' @param pknca_data Reactive providing the current PKNCA data object
 #' @param manual_slopes_override Optional reactive providing a table to override manual slopes
 #' @return List with:
 #'   - manual_slopes: reactiveVal containing the current manual slopes table
 #'   - refresh_reactable: reactiveVal for triggering table re-render
 handle_table_edits_server <- function(
-  id, mydata, manual_slopes_override = NULL
+  id, pknca_data, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
     # Get group columns for the current PKNCA data (for table structure)
     slopes_pknca_groups <- reactive({
-      req(mydata())
-      mydata()$intervals %>%
-        select(any_of(c(group_vars(mydata()))))
+      req(pknca_data())
+      pknca_data()$intervals %>%
+        select(any_of(c(group_vars(pknca_data()))))
     })
 
     # manual_slopes: stores the current table of user rules (inclusion/exclusion)
     manual_slopes <- reactiveVal(NULL)
-    # When mydata() changes, reset the manual_slopes table to empty with correct columns
-    observeEvent(mydata(), {
-      req(is.null(manual_slopes()))
-      req(slopes_pknca_groups())
+    # When pknca_data() changes, reset the manual_slopes table to empty with correct columns
+    observeEvent(pknca_data(), {
+      req(is.null(manual_slopes()), slopes_pknca_groups())
+
       ms_colnames <- c(colnames(slopes_pknca_groups()), c("TYPE", "RANGE", "REASON"))
       initial_manual_slopes <- data.frame(
         matrix(
@@ -70,19 +70,20 @@ handle_table_edits_server <- function(
       manual_slopes(initial_manual_slopes)
     })
 
+    # create a reactive to update the reactable UI when the table changes
+    refresh_reactable <- reactiveVal(0)
+
     # Add a new row to the table when the user clicks the add button
     observeEvent(input$add_rule, {
       log_trace("{id}: adding manual slopes row")
       first_group <- slopes_pknca_groups()[1, ]
+      time_col <- pknca_data()$conc$columns$time
       new_row <- cbind(
         first_group,
         data.frame(
           TYPE = "Exclusion",
           RANGE = paste0(
-            inner_join(
-              slopes_pknca_groups()[1, ],
-              mydata()$conc$data
-            )[[mydata()$conc$columns$time]][2]
+            inner_join(first_group, pknca_data()$conc$data)[[time_col]][2]
           ),
           REASON = ""
         )
@@ -108,7 +109,6 @@ handle_table_edits_server <- function(
     })
 
     # Render the manual slopes table (reactable)
-    refresh_reactable <- reactiveVal(1)
     output$manual_slopes <- renderReactable({
       req(manual_slopes())
       log_trace("{id}: rendering slope edit data table")
@@ -187,7 +187,7 @@ handle_table_edits_server <- function(
         log_debug_list("Manual slopes override:", manual_slopes_override())
         override_valid <- apply(manual_slopes_override(), 1, function(r) {
           dplyr::filter(
-            mydata()$conc$data,
+            pknca_data()$conc$data,
             PCSPEC == r["PCSPEC"],
             USUBJID == r["USUBJID"],
             PARAM == r["PARAM"],

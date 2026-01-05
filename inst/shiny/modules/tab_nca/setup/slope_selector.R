@@ -166,24 +166,16 @@ slope_selector_server <- function( # nolint
       pknca_data(new_pknca_data)
     })
 
-    # HACK: workaround to avoid plotly_click not being registered warning
-    session$userData$plotlyShinyEventIDs <- "plotly_click-A"
-
-    # --- Pagination and search logic ---
-    search_subject_r <- reactive(input$search_subject)
-    plots_per_page_r <- reactive(input$plots_per_page)
-
     # Call the pagination/searcher module to:
     # - Providing indices of plots for the selected subject(s)
     # - Providing indices for which plots to display based on pagination
     page_search <- page_and_searcher_server(
       id = "page_and_searcher",
-      search_subject = search_subject_r,
+      search_subject = reactive(input$search_subject),
       plot_outputs = plot_outputs,
-      plots_per_page = plots_per_page_r
+      plots_per_page = reactive(input$plots_per_page)
     )
-
-    # Render only the plots requested by the user
+    
     observe({
       req(plot_outputs())
       output$slope_plots_ui <- renderUI({

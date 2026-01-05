@@ -168,7 +168,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
       ),
       xlab = df$xlab[1],
       ylab = df$ylab[1],
-      subtitle_text = df$subtitle[1],
+      subtitle = df$subtitle[1],
       color = df$color,
       symbol = df$symbol,
       group_vars = group_vars(pknca_data),
@@ -176,7 +176,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     )
     data_list[[plotid]] <- df
   }
-  return(list(plots = plot_list, data = data_list))
+  list(plots = plot_list, data = data_list)
 }
 
 #' Internal helper for plotting a single half-life plot
@@ -191,24 +191,25 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 #' @param title Plot title
 #' @param xlab X axis label
 #' @param ylab Y axis label
-#' @param subtitle_text Subtitle/annotation (HTML allowed)
+#' @param subtitle Subtitle/annotation (HTML allowed)
 #' @param color Vector of colors for points (same length as plot_data)
 #' @param symbol Vector of marker symbols for points (same length as plot_data)
 #' @param group_vars Character vector of grouping variable names (for `customdata`)
 #' @param add_annotations Logical, whether to add the subtitle annotation
 #' @param text Optional vector of hover text for points (same length as plot_data)
+#' @returns A plotly object representing the data points (plot_data)
 get_halflife_plots_single <- function(
-  fit_line_data,
   plot_data,
+  fit_line_data,
   time_col,
   conc_col,
+  group_vars,
   title,
+  subtitle,
   xlab,
   ylab,
-  subtitle_text,
   color,
   symbol,
-  group_vars,
   add_annotations = TRUE,
   text = NULL
 ) {
@@ -245,7 +246,7 @@ get_halflife_plots_single <- function(
         zeroline = FALSE
       ),
       annotations = list(
-        text = subtitle_text,
+        text = subtitle,
         showarrow = FALSE,
         xref = "paper",
         yref = "paper",
