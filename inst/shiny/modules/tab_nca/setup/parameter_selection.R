@@ -77,11 +77,12 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
+          !is.null(col) && 
+            length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
       filtered_intervals <- processed_pknca_data()$intervals %>%
-        select(all_of(groups))
+        select(all_of(c(groups, "USUBJID")))
 
       df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
 
@@ -120,7 +121,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # Build the base state from data or overrides
     base_selections <- reactive({
       req(study_types_df())
-
       study_type_names <- unique(study_types_df()$type)
 
       # Get override file
