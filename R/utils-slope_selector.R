@@ -9,6 +9,14 @@ update_pknca_with_rules <- function(data, slopes) {
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
   include_hl_col <- data$conc$columns$include_half.life
+
+  #####################################################
+  # TODO: Make a better fix to understand why slopes is constructed 2 times
+  # when adding exclusion, running NCA and then removing slope (#641)
+
+  # Make sure when rows are removed no NA value is left
+  slopes <- na.omit(slopes)
+  #####################################################
   for (i in seq_len(nrow(slopes))) {
     # Determine the time range for the points adjusted
     range <- strsplit(as.character(slopes$RANGE[i]), ":")[[1]] %>%
