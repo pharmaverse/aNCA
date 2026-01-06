@@ -77,7 +77,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && 
+          !is.null(col) &&
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
