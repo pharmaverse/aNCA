@@ -349,7 +349,7 @@ slope_selector_server <- function( # nolint
 
       allowed_keys <- c("PCSPEC", "USUBJID", "PARAM", "ATPTREF", "DOSNOA")
       use_keys <- intersect(allowed_keys, names(manual_slopes_override()))
-      
+
       override_valid <- manual_slopes_override() %>%
         dplyr::semi_join(plot_data()$conc$data, by = use_keys) %>%
         nrow() == nrow(manual_slopes_override())
