@@ -340,25 +340,19 @@ slope_selector_server <- function( # nolint
     })
 
     #' If any settings are uploaded by the user, overwrite current rules
-    observeEvent(manual_slopes_override(), {
-      req(manual_slopes_override())
+    observeEvent(list(manual_slopes_override(), plot_data()), {
+      req(manual_slopes_override(), plot_data())
 
       if (nrow(manual_slopes_override()) == 0) return(NULL)
 
       log_debug_list("Manual slopes override:", manual_slopes_override())
 
-      override_valid <- apply(manual_slopes_override(), 1, function(r) {
-        dplyr::filter(
-          plot_data()$conc$data,
-          PCSPEC == r["PCSPEC"],
-          USUBJID == r["USUBJID"],
-          PARAM == r["PARAM"],
-          ATPTREF == r["ATPTREF"],
-          DOSNOA == r["DOSNOA"]
-        ) %>%
-          NROW() != 0
-      }) %>%
-        all()
+      allowed_keys <- c("PCSPEC", "USUBJID", "PARAM", "ATPTREF", "DOSNOA")
+      use_keys <- intersect(allowed_keys, names(manual_slopes_override()))
+      
+      override_valid <- manual_slopes_override() %>%
+        dplyr::semi_join(plot_data()$conc$data, by = use_keys) %>%
+        nrow() == nrow(manual_slopes_override())
 
       if (!override_valid) {
         msg <- "Manual slopes not compatible with current data, leaving as default."
