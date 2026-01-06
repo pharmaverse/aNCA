@@ -5,47 +5,50 @@
 \title{Internal helper for plotting a single half-life plot}
 \usage{
 get_halflife_plots_single(
-  fit_line_data,
   plot_data,
+  fit_line_data,
   time_col,
   conc_col,
+  group_vars,
   title,
+  subtitle,
   xlab,
   ylab,
-  subtitle_text,
   color,
   symbol,
-  group_vars,
   add_annotations = TRUE,
   text = NULL
 )
 }
 \arguments{
-\item{fit_line_data}{Data frame for the fit line (must have columns for time and y)}
-
 \item{plot_data}{Data frame for the scatter points}
+
+\item{fit_line_data}{Data frame for the fit line (must have columns for time and y)}
 
 \item{time_col}{Name of the time column (string)}
 
 \item{conc_col}{Name of the concentration column (string)}
 
+\item{group_vars}{Character vector of grouping variable names (for \code{customdata})}
+
 \item{title}{Plot title}
+
+\item{subtitle}{Subtitle/annotation (HTML allowed)}
 
 \item{xlab}{X axis label}
 
 \item{ylab}{Y axis label}
 
-\item{subtitle_text}{Subtitle/annotation (HTML allowed)}
-
 \item{color}{Vector of colors for points (same length as plot_data)}
 
 \item{symbol}{Vector of marker symbols for points (same length as plot_data)}
 
-\item{group_vars}{Character vector of grouping variable names (for \code{customdata})}
-
 \item{add_annotations}{Logical, whether to add the subtitle annotation}
 
 \item{text}{Optional vector of hover text for points (same length as plot_data)}
+}
+\value{
+A plotly object representing the scatter points (plot_data)
 }
 \description{
 Generates a single plotly for NCA half-life visualization, with a fit line and scatter points.

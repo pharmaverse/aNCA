@@ -380,29 +380,31 @@ describe("select_level_grouping_cols", {
   })
 })
 
-describe("checks_before_running_nca", {
+describe("check_valid_pknca_data", {
   pknca_data <- FIXTURE_PKNCA_DATA
 
   it("returns the input object if no issues are found", {
     # Without exclusions for half-life
-    result <- checks_before_running_nca(pknca_data)
-    expect_identical(result, pknca_data)
-
-    # With exclusions for half-life (with REASON values)
-    excl_hl_col <- pknca_data$conc$columns$exclude_half.life
-    pknca_data$conc$data[1, excl_hl_col] <- TRUE
-    pknca_data$conc$data$REASON <- "Test reason"
-    result <- checks_before_running_nca(pknca_data)
+    result <- check_valid_pknca_data(pknca_data)
     expect_identical(result, pknca_data)
   })
 
-  it("throws an error if exclusions for half-life do not include a REASON value", {
-    excl_hl_col <- pknca_data$conc$columns$exclude_half.life
-    pknca_data$conc$data[1, excl_hl_col] <- TRUE
-    pknca_data$conc$data$REASON <- ""
+  # Make checks for half-life exclusions ----
+  pknca_data_with_excl <- pknca_data
+  excl_hl_col <- pknca_data_with_excl$conc$columns$exclude_half.life
+  pknca_data_with_excl$conc$data[1, excl_hl_col] <- TRUE
 
+  it ("does not throw an error if exclusions for half-life include a REASON value", {
+    pknca_data_with_excl$conc$data$REASON <- "Test reason"
+    expect_no_error(
+      check_valid_pknca_data(pknca_data_with_excl, exclusions_have_reasons = TRUE)
+    )
+  })
+
+  it("throws an error if exclusions for half-life do not include a REASON value", {
+    pknca_data_with_excl$conc$data$REASON <- ""
     expect_error(
-      checks_before_running_nca(pknca_data, exclusions_have_reasons = TRUE),
+      check_valid_pknca_data(pknca_data, exclusions_have_reasons = TRUE),
       "No reason provided for the following half-life exclusions:"
     )
   })

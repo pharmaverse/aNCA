@@ -127,7 +127,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
         res <- withCallingHandlers({
           processed_pknca_data %>%
             # Check if there are exclusions that contains a filled reason
-            checks_before_running_nca() %>%
+            check_valid_pknca_data() %>%
             # Perform PKNCA parameter calculations
             PKNCA_calculate_nca() %>%
             # Add bioavailability results if requested

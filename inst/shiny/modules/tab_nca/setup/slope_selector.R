@@ -10,7 +10,7 @@
 #'   └─> slope_selector_server
 #'        ├──> plot_outputs (reactive, updated by processed_pknca_data changes)
 #'        └──> ├> handle_plotly_click (updates manual_slopes on plot click)
-#'             └> handle_table_edits (updates manual_slopes on user edits & setting overrides)
+#'             └> slopes_table (updates manual_slopes on user edits & setting overrides)
 #'               └─> manual_slopes (output, used by parent to update processed_pknca_data)
 #'
 #'
@@ -21,7 +21,7 @@
 #'
 #' @details
 #' - The module's main output is the manual_slopes table, which is updated by user
-#'   edits in the table UI (handle_table_edits) or by plot clicking (handle_plotly_click).
+#'   edits in the table UI (slopes_table) or by plot clicking (handle_plotly_click).
 #' - The parent module (setup.R) uses manual_slopes to update processed_pknca_data,
 #'   which is then fed back in this module to update plots.
 
@@ -31,7 +31,7 @@ slope_selector_ui <- function(id) {
 
   div(
     class = "slope-selector-module",
-    handle_table_edits_ui(ns("manual_slopes")),
+    slopes_table_ui(ns("manual_slopes")),
     # Help widget #
     dropdown(
       div(
@@ -104,7 +104,7 @@ slope_selector_ui <- function(id) {
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
     br(),
     # Use the new pagination UI module
-    page_and_searcher_page_ui(ns("page_and_searcher")),
+    page_and_searcher_ui(ns("page_and_searcher")),
     br()
   )
 }
@@ -192,7 +192,7 @@ slope_selector_server <- function( # nolint
 
     # Creates an initial version of the manual slope adjustments table with pknca_data
     # and handles the addition and deletion of rows through the UI
-    slopes_table <- handle_table_edits_server("manual_slopes", pknca_data, manual_slopes_override)
+    slopes_table <- slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
 

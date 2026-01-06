@@ -24,7 +24,7 @@ describe("get_halflife_plot", {
     expect_length(plots, 0)
   })
 
-  it("marker colors and shapes - no exclusion/inclusion", {
+  it("renders markers, colors and shapes with no exclusion/inclusion", {
     pknca_no_excl_incl <- base_pknca
     pknca_no_excl_incl$conc$data$exclude_half.life <- FALSE
     pknca_no_excl_incl$conc$data$include_half.life <- FALSE
@@ -41,7 +41,7 @@ describe("get_halflife_plot", {
     expect_true(all(plot_data$marker$symbol == "circle"))
   })
 
-  it("marker colors and shapes - exclusion of a lambda.z point", {
+  it("renders markers, colors and shapes with exclusion of a lambda.z point", {
     pknca_excl <- base_pknca
     pknca_excl$intervals <- pknca_excl$intervals[2, ]
     pknca_excl_with_excl <- pknca_excl
@@ -75,7 +75,7 @@ describe("get_halflife_plot", {
     expect_equal(plots_with_excl_details, exp_plots_details_with_excl, ignore_attr = TRUE)
   })
 
-  it("marker colors and shapes - inclusion of lambda.z points", {
+  it("renders markers, colors and shapes with inclusion of lambda.z points", {
     pknca_incl <- base_pknca
     pknca_incl$intervals <- pknca_incl$intervals[3, ]
     pknca_incl$conc$data$exclude_half.life <- FALSE
@@ -111,7 +111,7 @@ describe("get_halflife_plot", {
     expect_equal(plots_with_incl_details, exp_plots_details_with_incl, ignore_attr = TRUE)
   })
 
-  it("marker colors and shapes - exclusion column missing still works", {
+  it("renders markers, colors and shapes with exclusion column missing still works", {
     pknca_no_excl_col <- base_pknca
     pknca_no_excl_col$intervals <- pknca_no_excl_col$intervals[2, ]
     pknca_no_excl_col$conc$data$exclude_half.life <- NULL

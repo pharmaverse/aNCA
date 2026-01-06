@@ -197,7 +197,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 #' @param group_vars Character vector of grouping variable names (for `customdata`)
 #' @param add_annotations Logical, whether to add the subtitle annotation
 #' @param text Optional vector of hover text for points (same length as plot_data)
-#' @returns A plotly object representing the data points (plot_data)
+#' @returns A plotly object representing the scatter points (plot_data)
 get_halflife_plots_single <- function(
   plot_data,
   fit_line_data,
@@ -264,9 +264,8 @@ get_halflife_plots_single <- function(
       mode = "markers",
       marker = list(
         color = color,
-        size = 15,
-        symbol = symbol,
-        size = 20
+        size = 20,
+        symbol = symbol
       ),
       customdata = apply(
         plot_data[, c(group_vars, "ROWID"), drop = FALSE],

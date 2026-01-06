@@ -6,7 +6,7 @@
 #'
 #' @param id Shiny module id
 #' @return Shiny UI element (fluidRow)
-handle_table_edits_ui <- function(id) {
+slopes_table_ui <- function(id) {
   ns <- NS(id)
 
   fluidRow(
@@ -39,7 +39,7 @@ handle_table_edits_ui <- function(id) {
 #' @return List with:
 #'   - manual_slopes: reactiveVal containing the current manual slopes table
 #'   - refresh_reactable: reactiveVal for triggering table re-render
-handle_table_edits_server <- function(
+slopes_table_server <- function(
   id, pknca_data, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {

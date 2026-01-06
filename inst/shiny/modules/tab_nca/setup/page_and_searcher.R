@@ -2,7 +2,7 @@
 #'
 #' This UI module provides the page navigation controls (previous, next, selector, number).
 #' The search_subject input remains outside for now in the parent (slope_selector.R)
-page_and_searcher_page_ui <- function(id) {
+page_and_searcher_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
     class = "plot-widgets-container-2",
