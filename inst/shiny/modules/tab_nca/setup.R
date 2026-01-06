@@ -56,17 +56,14 @@ setup_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive({
-      req(settings_override())
       settings_override()$settings
     })
 
     imported_slopes <- reactive({
-      req(settings_override())
       settings_override()$slope_rules
     })
 
     imported_params <- reactive({
-      req(imported_settings())
       imported_settings()$parameter_selections
     })
 

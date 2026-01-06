@@ -163,6 +163,55 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         if (!all(settings$pcspec %in% data()$PCSPEC)) {
           not_compatible <- c(not_compatible, "Dose Specimen")
         }
+        
+        # Additional settings (PCSPEC and ATPTREF handled later)
+        updateSelectInput(session, inputId = "method", selected = settings$method)
+        
+        if (!is.null(settings$bioavailability))
+          updateSelectInput(session, inputId = "bioavailability", selected = settings$bioavailability)
+        
+        # Data imputation #
+        update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+        
+        # Partial AUCs #
+        auc_data(settings$partial_aucs)
+        refresh_reactable(refresh_reactable() + 1)
+        
+        # Flags #
+        .update_rule_input(
+          session,
+          "R2ADJ",
+          settings$flags$R2ADJ$is.checked,
+          settings$flags$R2ADJ$threshold
+        )
+        
+        .update_rule_input(
+          session,
+          "R2",
+          settings$flags$R2$is.checked,
+          settings$flags$R2$threshold
+        )
+        
+        .update_rule_input(
+          session,
+          "AUCPEO",
+          settings$flags$AUCPEO$is.checked,
+          settings$flags$AUCPEO$threshold
+        )
+        
+        .update_rule_input(
+          session,
+          "AUCPEP",
+          settings$flags$AUCPEP$is.checked,
+          settings$flags$AUCPEP$threshold
+        )
+        
+        .update_rule_input(
+          session,
+          "LAMZSPN",
+          settings$flags$LAMZSPN$is.checked,
+          settings$flags$LAMZSPN$threshold
+        )
       }
       
       if (length(not_compatible) > 0) {
@@ -173,60 +222,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       }
       
       updatePickerInput(session, "select_analyte", choices = choices, selected = selected)
-      
-      # Additional settings (PCSPEC and ATPTREF handled later)
-      updateSelectInput(session, inputId = "method", selected = settings$method)
-      
-      if (!is.null(settings$bioavailability))
-        updateSelectInput(session, inputId = "bioavailability", selected = settings$bioavailability)
-      
-      # Data imputation #
-      update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
-      
-      # Partial AUCs #
-      auc_data(settings$partial_aucs)
-      refresh_reactable(refresh_reactable() + 1)
-      
-      # Flags #
-      .update_rule_input(
-        session,
-        "R2ADJ",
-        settings$flags$R2ADJ$is.checked,
-        settings$flags$R2ADJ$threshold
-      )
-      
-      .update_rule_input(
-        session,
-        "R2",
-        settings$flags$R2$is.checked,
-        settings$flags$R2$threshold
-      )
-      
-      .update_rule_input(
-        session,
-        "AUCPEO",
-        settings$flags$AUCPEO$is.checked,
-        settings$flags$AUCPEO$threshold
-      )
-      
-      .update_rule_input(
-        session,
-        "AUCPEP",
-        settings$flags$AUCPEP$is.checked,
-        settings$flags$AUCPEP$threshold
-      )
-      
-      .update_rule_input(
-        session,
-        "LAMZSPN",
-        settings$flags$LAMZSPN$is.checked,
-        settings$flags$LAMZSPN$threshold
-      )
     })
     
     # Update Downstream Inputs (Profile & Specimen)
     observeEvent(input$select_analyte, {
       req(data())
+
       settings <- settings_override()
       
       # Filter data based on Analyte
