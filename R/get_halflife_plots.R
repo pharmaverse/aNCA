@@ -264,7 +264,7 @@ get_halflife_plots_single <- function(
       mode = "markers",
       marker = list(
         color = color,
-        size = 20,
+        size = 15,
         symbol = symbol
       ),
       customdata = apply(
