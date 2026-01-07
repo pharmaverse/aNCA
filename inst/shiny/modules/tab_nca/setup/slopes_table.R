@@ -193,9 +193,9 @@ slopes_table_server <- function(
             PARAM == r["PARAM"],
             ATPTREF == r["ATPTREF"],
             DOSNOA == r["DOSNOA"]
-          ) |>
+          ) %>%
             NROW() != 0
-        }) |>
+        }) %>%
           all()
         if (!override_valid) {
           msg <- "Manual slopes not compatible with current data, leaving as default."

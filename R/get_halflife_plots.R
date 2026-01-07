@@ -128,7 +128,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 
   plot_list <- list()
   data_list <- list()
-  for (i in seq_len(length(info_per_plot_list))) {
+  for (i in seq_along(info_per_plot_list)) {
     df <- info_per_plot_list[[i]]
 
     # Create line data

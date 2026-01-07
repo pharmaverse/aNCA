@@ -186,7 +186,7 @@ describe("handle_hl_adj_change", {
     new_plots <- handle_hl_adj_change(new_data, old_data, old_plots)
 
     # Check that the plots for other groups remain unchanged
-    ix_unchanged_plots <- setdiff(seq_len(length(new_plots)), 4)
+    ix_unchanged_plots <- setdiff(seq_along(new_plots), 4)
     expect_equal(new_plots[ix_unchanged_plots], old_plots[ix_unchanged_plots])
 
     # Define the expected differences in the original and updated plots

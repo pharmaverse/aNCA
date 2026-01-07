@@ -175,7 +175,7 @@ slope_selector_server <- function( # nolint
       plot_outputs = plot_outputs,
       plots_per_page = reactive(input$plots_per_page)
     )
-    
+
     observe({
       req(plot_outputs())
       output$slope_plots_ui <- renderUI({

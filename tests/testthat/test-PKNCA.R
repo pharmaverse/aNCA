@@ -394,7 +394,7 @@ describe("check_valid_pknca_data", {
   excl_hl_col <- pknca_data_with_excl$conc$columns$exclude_half.life
   pknca_data_with_excl$conc$data[1, excl_hl_col] <- TRUE
 
-  it ("does not throw an error if exclusions for half-life include a REASON value", {
+  it("does not throw an error if exclusions for half-life include a REASON value", {
     pknca_data_with_excl$conc$data$REASON <- "Test reason"
     expect_no_error(
       check_valid_pknca_data(pknca_data_with_excl, exclusions_have_reasons = TRUE)
