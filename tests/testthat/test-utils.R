@@ -179,6 +179,29 @@ describe("adjust_class_and_length", {
     # Should run successfully and round (Length 12)
     expect_equal(res$AGE, round(val, 12))
   })
+  
+  
+  it("only adjusts class if adjust_length is FALSE", {
+    
+    # DOSEA in metadata: Type='float', Length=12
+    val <- 1.12345678901234567
+    df <- data.frame(DOSEA = c(val), stringsAsFactors = FALSE) %>%
+      mutate(DOSEA = as.character(DOSEA))
+    
+    res <- adjust_class_and_length(
+      df,
+      metadata_nca_variables,
+      adjust_length = FALSE
+    )
+    
+    # Assertions
+    # 1. Check Class changed correctly
+    expect_type(res$DOSEA, "double")
+    
+    # 2. Check Length/Rounding was ignored (values should match input converted to class)
+    expect_equal(res$DOSEA, 1.12345678901234567)
+    
+  })
 
   it("silently passes through 'dateTime' and 'duration' types", {
     # PCDTC is dateTime, PPENINT is duration

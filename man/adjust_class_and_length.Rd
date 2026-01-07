@@ -2,22 +2,27 @@
 % Please edit documentation in R/utils.R
 \name{adjust_class_and_length}
 \alias{adjust_class_and_length}
-\title{Helper: adjust class and length for a data.frame based on metadata_nca_variables}
+\title{Helper: adjust class and length (optional) for a data.frame
+based on metadata_nca_variables}
 \usage{
-adjust_class_and_length(df, metadata)
+adjust_class_and_length(df, metadata, adjust_length = TRUE)
 }
 \arguments{
 \item{df}{Data frame to adjust.}
 
 \item{metadata}{Metadata data frame with variable specifications.}
+
+\item{adjust_length}{Logical indicating whether to adjust length of variables.}
 }
 \value{
 Adjusted data frame.
 }
 \description{
-Helper: adjust class and length for a data.frame based on metadata_nca_variables
+Helper: adjust class and length (optional) for a data.frame
+based on metadata_nca_variables
 }
 \details{
 Adjusts the class and length of each variable in the provided data frame
-according to the specifications in the metadata data frame.
+according to the specifications in the metadata data frame. Only adjusts
+the length if \code{adjust_length = TRUE}
 }

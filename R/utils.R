@@ -134,29 +134,43 @@ parse_annotation <- function(data, text) {
   paste0(title, "\n", paste0(log_msg, collapse = "\n"))
 }
 
-#' Helper: adjust class and length for a data.frame based on metadata_nca_variables
+#' Helper: adjust class and length (optional) for a data.frame
+#'  based on metadata_nca_variables
 #'
 #' @details
 #' Adjusts the class and length of each variable in the provided data frame
-#' according to the specifications in the metadata data frame.
+#' according to the specifications in the metadata data frame. Only adjusts
+#' the length if `adjust_length = TRUE`
 #'
 #' @param df Data frame to adjust.
 #' @param metadata Metadata data frame with variable specifications.
+#' @param adjust_length Logical indicating whether to adjust length of variables.
 #' @returns Adjusted data frame.
 #'
 #' @importFrom dplyr filter
 #' @importFrom magrittr `%>%`
 #'
 #' @export
-adjust_class_and_length <- function(df, metadata) {
+adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
     if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
+    
+    # Character handling
     if (var_specs$Type %in% c("Char", "text")) {
-      df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
-    } else if (var_specs$Type %in% c("Num", "integer", "float") &&
-                 !endsWith(var, "DTM")) {
-      df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
+      val <- as.character(df[[var]])
+      if (adjust_length) {
+        val <- substr(val, 1, var_specs$Length)
+      }
+      df[[var]] <- val
+      
+      # Numeric handling
+    } else if (var_specs$Type %in% c("Num", "integer", "float") && !endsWith(var, "DTM")) {
+      val <- as.numeric(df[[var]])
+      if (adjust_length) {
+        val <- round(val, var_specs$Length)
+      }
+      df[[var]] <- val
     } else if (!var_specs$Type %in% c(
       "dateTime", "duration", "integer", "float", "Num"
     )) {
