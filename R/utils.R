@@ -155,7 +155,7 @@ adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
     if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
-    
+
     # Character handling
     if (var_specs$Type %in% c("Char", "text")) {
       val <- as.character(df[[var]])
@@ -163,7 +163,7 @@ adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
         val <- substr(val, 1, var_specs$Length)
       }
       df[[var]] <- val
-      
+
       # Numeric handling
     } else if (var_specs$Type %in% c("Num", "integer", "float") && !endsWith(var, "DTM")) {
       val <- as.numeric(df[[var]])
@@ -178,6 +178,35 @@ adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
         "Unknown var specification type: ", var_specs$Type,
         " (", var_specs$Variable, ")"
       )
+    }
+  }
+  df
+}
+adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
+  for (var in names(df)) {
+    var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
+
+    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
+
+    type <- var_specs$Type
+
+    #  Handle Character
+    if (type %in% c("Char", "text")) {
+      df[[var]] <- as.character(df[[var]])
+      if (adjust_length) df[[var]] <- substr(df[[var]], 1, var_specs$Length)
+      next
+    }
+
+    #  Handle Numeric
+    if (type %in% c("Num", "integer", "float") && !endsWith(var, "DTM")) {
+      df[[var]] <- as.numeric(df[[var]])
+      if (adjust_length) df[[var]] <- round(df[[var]], var_specs$Length)
+      next
+    }
+
+    #  Handle Warnings for unknown types
+    if (!type %in% c("dateTime", "duration", "integer", "float", "Num")) {
+      warning("Unknown var specification type: ", type, " (", var, ")")
     }
   }
   df
