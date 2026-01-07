@@ -49,6 +49,7 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
 #' @importFrom stats setNames
+#' @importFrom plotly ggplotly layout
 #'
 #' @examples
 #' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
