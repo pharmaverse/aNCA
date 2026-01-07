@@ -4,7 +4,6 @@
 #' The search_subject input remains outside for now in the parent (slope_selector.R)
 page_and_searcher_ui <- function(id) {
   ns <- NS(id)
-  shinyjs::useShinyjs()
   fluidRow(
     class = "plot-widgets-container-2",
     div(
