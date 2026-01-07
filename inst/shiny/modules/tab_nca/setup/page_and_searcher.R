@@ -4,6 +4,7 @@
 #' The search_subject input remains outside for now in the parent (slope_selector.R)
 page_and_searcher_ui <- function(id) {
   ns <- NS(id)
+  shinyjs::useShinyjs()
   fluidRow(
     class = "plot-widgets-container-2",
     div(
@@ -66,13 +67,11 @@ page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per
       if (current_page() < num_pages()) {
         current_page(current_page() + 1)
       }
-      shinyjs::disable(selector = ".btn-page")
     })
     observeEvent(input$previous_page, {
       if (current_page() > 1) {
         current_page(current_page() - 1)
       }
-      shinyjs::disable(selector = ".btn-page")
     })
     observeEvent(input$select_page, {
       val <- as.numeric(input$select_page)
@@ -99,10 +98,14 @@ page_and_searcher_server <- function(id, search_subject, plot_outputs, plots_per
         selected = current_page()
       )
     })
+    # Enable/disable page buttons based on current page
     observe({
-      shinyjs::toggleState(id = "previous_page", condition = current_page() == 1)
-      shinyjs::toggleState(id = "next_page", condition = current_page() == num_pages())
+      curr_page <- current_page()
+      last_page <- num_pages()
+      shinyjs::toggleState(id = "previous_page", condition = curr_page > 1)
+      shinyjs::toggleState(id = "next_page", condition = curr_page < last_page)
     })
+
     observe({
       shinyjs::toggleClass(
         selector = ".slope-plots-container",
