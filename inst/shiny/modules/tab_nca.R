@@ -173,11 +173,15 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
         log_success("NCA results calculated.")
 
+        params_requested <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")),
+                              settings()$bioavailability)
         # Reshape intervals, filter
         params_not_requested <- res$data$intervals %>%
+          # add bioavailability if requested
+          mutate(!!!rlang::set_names(TRUE, settings()$bioavailability)) %>%
           # pivot for requested params
           pivot_longer(
-            cols = (any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))),
+            cols = (any_of(params_requested)),
             names_to = "PPTESTCD",
             values_to = "is_requested"
           ) %>%
