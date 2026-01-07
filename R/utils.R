@@ -154,60 +154,39 @@ parse_annotation <- function(data, text) {
 adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
+
     if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
 
-    # Character handling
-    if (var_specs$Type %in% c("Char", "text")) {
-      val <- as.character(df[[var]])
-      if (adjust_length) {
-        val <- substr(val, 1, var_specs$Length)
-      }
-      df[[var]] <- val
-
-      # Numeric handling
-    } else if (var_specs$Type %in% c("Num", "integer", "float") && !endsWith(var, "DTM")) {
-      val <- as.numeric(df[[var]])
-      if (adjust_length) {
-        val <- round(val, var_specs$Length)
-      }
-      df[[var]] <- val
-    } else if (!var_specs$Type %in% c(
-      "dateTime", "duration", "integer", "float", "Num"
-    )) {
-      warning(
-        "Unknown var specification type: ", var_specs$Type,
-        " (", var_specs$Variable, ")"
-      )
-    }
+    df[[var]] <- .apply_var_rules(
+      df[[var]], var_specs$Type, var_specs$Length, var, adjust_length
+    )
   }
   df
 }
-adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
-  for (var in names(df)) {
-    var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
 
-    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
+# Helper: Handles the logic for a single variable
+.apply_var_rules <- function(val, type, len, name, adjust_length) {
 
-    type <- var_specs$Type
-
-    #  Handle Character
-    if (type %in% c("Char", "text")) {
-      df[[var]] <- as.character(df[[var]])
-      if (adjust_length) df[[var]] <- substr(df[[var]], 1, var_specs$Length)
-      next
-    }
-
-    #  Handle Numeric
-    if (type %in% c("Num", "integer", "float") && !endsWith(var, "DTM")) {
-      df[[var]] <- as.numeric(df[[var]])
-      if (adjust_length) df[[var]] <- round(df[[var]], var_specs$Length)
-      next
-    }
-
-    #  Handle Warnings for unknown types
-    if (!type %in% c("dateTime", "duration", "integer", "float", "Num")) {
-      warning("Unknown var specification type: ", type, " (", var, ")")
-    }
+  # Character
+  if (type %in% c("Char", "text")) {
+    val <- as.character(val)
+    if (adjust_length) return(substr(val, 1, len))
+    return(val)
   }
-  df
+
+  # Numeric
+  if (type %in% c("Num", "integer", "float") && !endsWith(name, "DTM")) {
+    val <- as.numeric(val)
+    if (adjust_length) return(round(val, len))
+    return(val)
+  }
+
+  # Silent Ignore
+  if (type %in% c("dateTime", "duration", "integer", "float", "Num")) {
+    return(val)
+  }
+
+  # Warning
+  warning("Unknown var specification type: ", type, " (", name, ")")
+  val
 }
