@@ -154,7 +154,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
             # Add parameter ratio calculations
             calculate_table_ratios_app(ratio_table = ratio_table()) %>%
             # Keep only parameters requested by the user
-            remove_parameters_not_requested()
+            remove_pp_not_requested()
         },
         warning = function(w) {
           if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),

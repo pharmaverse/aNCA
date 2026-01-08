@@ -118,7 +118,7 @@ pknca_res <- pknca_obj %>%
   calculate_table_ratios_app(ratio_table) %>%
   
   # Filter only parameters that have been requested
-  remove_parameters_not_requested()
+  remove_pp_not_requested()
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- pknca_res %>%

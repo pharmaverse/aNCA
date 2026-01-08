@@ -658,7 +658,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
 #' @return The PKNCA results object with unrequested parameters removed from $result.
 #' @export
-remove_parameters_not_requested <- function(pknca_res) {
+remove_pp_not_requested <- function(pknca_res) {
   params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
   # Reshape intervals, filter
   params_not_requested <- pknca_res$data$intervals %>%
