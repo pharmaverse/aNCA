@@ -40,6 +40,10 @@
 - Bug fix for box/violin plots that were crashing when violin option
   selected ([\#786](https://github.com/pharmaverse/aNCA/issues/786))
 
+- Summary statistic table changes in grouping variables won’t remove
+  previous summary settings
+  ([\#840](https://github.com/pharmaverse/aNCA/issues/840))
+
 - No longer offering direct PK calculations for renal clearance
   (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the
   ratios table should be used
