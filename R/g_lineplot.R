@@ -94,8 +94,23 @@ g_lineplot <- function(data,
     sd_max <- FALSE
     ci     <- FALSE
   }
-  x_lab <- paste0("Time [", unique(data$RRLTU), "]")
-  y_lab <- paste0("Concentration [", unique(data$AVALU), "]")
+
+  if (nrow(data) == 0) {
+    error_msg <- paste0(
+      "No data available for the ",
+      if (is_mean_plot) "mean plot" else "individual plot"
+    )
+    return(error_plot(error_msg))
+  }
+
+  # Concatenate unique units, sep by ","
+  #TODO: potential to facet if > 1 unit (#848)
+  x_unit <- paste0(unique(data$RRLTU), collapse = ", ")
+  y_unit <- paste0(unique(data$AVALU), collapse = ", ")
+
+  x_lab <- paste0("Time [", x_unit, "]")
+  y_lab <- paste0("Concentration [", y_unit, "]")
+
   title <- "PK Concentration - Time Profile"
   group_var <- "USUBJID"
   if (is_mean_plot) {
