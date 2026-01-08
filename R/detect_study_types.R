@@ -142,7 +142,7 @@ detect_study_types <- function(data, groups, metabfl_column,
         TRUE ~ paste0(dose_prefix, " ", dose_description, metabolite_suffix)
       )
     ) %>%
-    select(!!!syms(full_grouping), type) %>%
+    select(!!!syms(full_grouping), type, USUBJID) %>%
     distinct() %>%
     arrange(!!!syms(full_grouping))
 }
