@@ -1,0 +1,131 @@
+data_imputation_ui <- function(id) {
+  ns <- NS(id)
+
+  tagList(
+    input_switch(
+      id = ns("should_impute_c0"),
+      label = "Impute Concentration",
+      value = TRUE
+    ),
+    br(),
+    helpText(HTML(paste(
+      "Imputes a start-of-interval concentration to calculate non-observational parameters:",
+      "- If first dose & IV bolus: C0 = 0",
+      "- If not first dose or not IV bolus: C0 = predose",
+      "- If IV bolus & monoexponential data: logslope",
+      "- If IV bolus & not monoexponential data: C0 = C1",
+      sep = "<br>"
+    ))),
+    br(),
+    br(),
+    selectInput(
+      ns("select_blq_strategy"),
+      "Select BLQ Imputation Strategy",
+      choices = c(
+        "Tmax based imputation",
+        "Positional BLQ imputation",
+        "Set value for all BLQ",
+        "No BLQ handling"
+      ),
+      selected = "Tmax based imputation"
+    ),
+    div(
+      style = "margin-top: 1em;",
+      conditionalPanel(
+        condition = sprintf("input['%s'] == 'Tmax based imputation'", ns("select_blq_strategy")),
+        blq_selectize(ns("before_tmax"), "Before tmax", selected = "0"),
+        blq_selectize(ns("after_tmax"), "After tmax", selected = "drop")
+      ),
+      conditionalPanel(
+        condition = sprintf(
+          "input['%s'] == 'Positional BLQ imputation'", ns("select_blq_strategy")
+        ),
+        blq_selectize(ns("before_first_non_blq"), "Before first non-BLQ", selected = "drop"),
+        blq_selectize(ns("in_between_non_blqs"), "In between non-BLQs", selected = "keep"),
+        blq_selectize(ns("after_last_non_blq"), "After last non-BLQ", selected = "drop")
+      ),
+      conditionalPanel(
+        condition = sprintf("input['%s'] == 'Set value for all BLQ'", ns("select_blq_strategy")),
+        blq_selectize(ns("blq_value"), "Value for BLQ", selected = "0.05"),
+      ),
+      conditionalPanel(
+        condition = sprintf("input['%s'] == 'No BLQ handling'", ns("select_blq_strategy")),
+        helpText("No BLQ imputation will be applied. All values are kept as is")
+      )
+    )
+  )
+}
+
+data_imputation_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
+    blq_imputation_rule <- reactive({
+      req(input$select_blq_strategy)
+      rule_list <- switch(
+        input$select_blq_strategy,
+        "Tmax based imputation" = list(
+          before.tmax = input$before_tmax,
+          after.tmax = input$after_tmax
+        ),
+        "Positional BLQ imputation" = list(
+          first = input$before_first_non_blq,
+          middle = input$in_between_non_blqs,
+          last = input$after_last_non_blq
+        ),
+        "Set value for all BLQ" = list(
+          first = input$blq_value,
+          middle = input$blq_value,
+          last = input$blq_value
+        ),
+        "No BLQ handling" = list(
+          first = "keep",
+          middle = "keep",
+          last = "keep"
+        ),
+        NULL
+      )
+
+      # Transform text numbers in the list to numeric
+      rule_list <- lapply(rule_list, function(x) {
+        if (x %in% c("drop", "keep")) {
+          x
+        } else if (grepl("^[0-9]+(\\.[0-9]+)?$", x)) {
+          as.numeric(x)
+        } else {
+          NA
+        }
+      })
+      are_invalid_inputs <- is.na(unlist(rule_list))
+      if (any(are_invalid_inputs)) {
+        showNotification(
+          paste0(
+            "BLQ imputation values must be numeric, 'drop' or 'keep'. ",
+            "Otherwise, no BLQ imputation will be applied."
+          ),
+          type = "warning",
+          duration = 8
+        )
+        return(NULL)
+      }
+
+      rule_list
+    })
+
+    list(
+      should_impute_c0 = reactive(input$should_impute_c0),
+      blq_imputation_rule = blq_imputation_rule
+    )
+  })
+}
+
+# Helper function for BLQ selectize inputs
+blq_selectize <- function(id, label, selected = NULL) {
+  selectizeInput(
+    id, label,
+    choices = unique(c("drop", "keep", selected)),
+    selected = selected,
+    options = list(create = TRUE),
+    width = "25%"
+  )
+}
