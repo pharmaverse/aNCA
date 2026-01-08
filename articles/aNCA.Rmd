@@ -13,13 +13,44 @@ This guide will provide users with information on how to get started with the aN
 
 # Step 1: Prepare Dataset
 
-### Uploading a dataset
+### 1. Uploading a dataset
 
 Click **Upload File** and select the dataset you would like to use. The data can be in `.csv`, `sas7bdat`, `.xslx`, `.parquet` or `.rds` format. The best input for the app is data that follows the ADNCA format according to CDISC guidelines. Other formats of data will also work. Alternatively, for exploring the app, Users can use the Dummy dataset that is already uploaded.
 
 <image src="images/get_started/upload_dataset.gif" alt="Data upload"/ width="100%">
 
-### Data format
+
+### 2. Adding Filters
+
+Once your data is uploaded, examine it, and then click the "Next" button on the bottom right. 
+
+<image src="images/get_started/examine_data_next.gif" alt="Mapping"/ /width="100%"> 
+
+If you want to change the data by adding filters, click the *Add Filter* button.
+
+<image src="images/get_started/adding_filters.gif" alt="Adding filters"/width="100%">
+
+<blockquote class="important">
+
+Don’t forget to click **Submit Filters**!
+
+</blockquote>
+
+
+### 3. Data Mapping
+
+Click **Next** to get to the *Mapping* section.
+
+-   Map the correct columns in your dataset to the corresponding label.
+
+-   For Unit Variables, if your dataset has a defined column for units, select it. Otherwise, by scrolling down, you can select the units for the corresponding columns. For example, you can select the value "mg" in AVALU.
+
+-   Click **Next** to get to the *Preview* section where you can review your dataset.
+
+<image src="images/get_started/data_mapping.gif" alt="Mapping"/ /width="100%"> 
+
+
+### Data Format
 
 Some variables are mandatory (marked with \*), while others are optional. Custom variable names are supported as long as they are correctly mapped during the [Data Mapping](###%20Data%20mapping) step.
 
@@ -97,35 +128,7 @@ knitr::kable(dataformat,
 </details>
 
 
-### Adding Filters
-
-Once your data is uploaded, examine it, and then click the "Next" button on the bottom right. 
-
-<image src="images/get_started/examine_data_next.gif" alt="Mapping"/ /width="100%"> 
-
-If you want to change the data by adding filters, click the *Add Filter* button.
-
-<image src="images/get_started/adding_filters.gif" alt="Adding filters"/width="100%">
-
-<blockquote class="important">
-
-Don’t forget to click **Submit Filters**!
-
-</blockquote>
-
-### Data Mapping
-
-Click **Next** to get to the *Mapping* section.
-
--   Map the correct columns in your dataset to the corresponding label.
-
--   For Unit Variables, if your dataset has a defined column for units, select it. Otherwise, by scrolling down, you can select the units for the corresponding columns.
-
--   Click **Next** to get to the *Preview* section where you can review your dataset.
-
-<image src="images/get_started/data_mapping.gif" alt="Mapping"/ /width="100%"> 
-
-### Preview
+### 4. Preview
 
 Review the data to ensure that the columns have been mapped correctly, and that all of your filters have been applied. If there are any problems with your data (duplicates, missing times), the application will display a warning message and in certain situations manual edits will be requested. Just follow the instructions. The 'Exploration', 'NCA' and 'TLG' tabs on the left should now be accessible.
 
@@ -157,7 +160,7 @@ Click on the *NCA* tab in the menu bar to switch to the next section.
 
 #### Via the Buttons
 
-1.  For selection and exclusion, click **+ Exclusion/Selection** and input the corresponding information. RANGE refers to the data point number in the slope, which can be seen by hovering over the points in the plots below.
+1.  For selection and exclusion, click on **+ Exclusion/Selection** and input the corresponding information. RANGE refers to the data point number in the slope, which can be seen by hovering over the points in the plots below.
 2.  To remove, select the sample row and click **- Remove selected rows**.
 
 <image src="images/get_started/slope_selector_exclusion_remove.gif" alt="NCA settings"/ width="100%">
@@ -182,7 +185,7 @@ For in-app guidance, you can click the [?]{.help-button} button.
 
 ## Main Results
 
-The *NCA Results* tab shows the individual results of the NCA. You can select which parameters you would like to view. Results in red have been flagged as "FALSE" for the rule sets selected, results in purple are flagged as "MISSING", and results in white are not flagged. Here, you have the option to download all of the results and just the NCA data, this is found at the bottom of the page.
+The *NCA Results* tab shows the individual results of the NCA. You can select which parameters you would like to view. Results in <span style="color: red;">red have been flagged as "FALSE"</span> for the rule sets selected, results in <span style="color: #8660CD;">purple are flagged as "MISSING"</span>, and results in white are not flagged. Here, you have the option to download all of the results and just the NCA data, this is found at the bottom of the page.
 
 <image src="images/get_started/nca_results_download.gif" alt="NCA settings"/ width="100%">
 
