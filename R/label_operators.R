@@ -129,9 +129,9 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 #' Helper function to add "label" attribute to columns based on parameter names.
 #' @param df Data frame to which labels will be added.
 #' @param myres The output of PKNCA::pk.nca.
-#' 
+#'
 #' @returns Data frame with "label" attributes added to specified columns.
-#' 
+#'
 #' @examples
 #' # 1. Setup example data
 #' df <- data.frame(a = c(5.2, 6.3), b = c(50.1, 60.2))
@@ -170,10 +170,10 @@ add_label_attribute <- function(df, myres) {
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)
-  
+
   mapping_cols <- intersect(names(df), names(mapping_vr))
   attrs <- unname(mapping_vr[mapping_cols])
-  
+
   df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
     attr(col, "label") <- bw
     col

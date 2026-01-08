@@ -122,7 +122,7 @@ describe("calculate_summary_stats", {
       ),
       `A[µg/L]` = c(1414.214, 50.00, 1500.00, 707.107, 1000.00, 2000.00, 1500.00, 1.00, 3.00)
     )
-    
+
     expect_equal(result, expected_result)
   })
 })

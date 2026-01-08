@@ -410,23 +410,23 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 #'   study type.
 #'
 .apply_parameter_selections <- function(selection_df,
-                                       study_type_names,
-                                       default_params,
-                                       selections_override = NULL) {
-  
+                                        study_type_names,
+                                        default_params,
+                                        selections_override = NULL) {
+
   # Use override if available, otherwise use defaults
   if (is.null(selections_override) || length(selections_override) == 0) {
     # Default behavior
     for (st_name in study_type_names) {
       is_selected <- selection_df$PKNCA %in% default_params
-      
+
       # Apply metadata rules
       is_selected <- is_selected & if (st_name == "Excretion Data") {
         selection_df$can_excretion
       } else {
         selection_df$can_non_excretion
       }
-      
+
       if (stringr::str_detect(st_name, "Single")) {
         is_selected <- is_selected & selection_df$can_single_dose
       }
@@ -439,7 +439,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       if (stringr::str_detect(st_name, "Metabolite")) {
         is_selected <- is_selected & selection_df$can_metabolite
       }
-      
+
       selection_df[[st_name]] <- is_selected
     }
   } else {
