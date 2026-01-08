@@ -10,7 +10,8 @@ PKNCA_update_data_object(
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  exclusion_list = NULL
 )
 }
 \arguments{
@@ -24,7 +25,14 @@ PKNCA_update_data_object(
 
 \item{selected_pcspec}{User selected specimen}
 
-\item{should_impute_c0}{Logical indicating if start values should be imputed}
+\item{should_impute_c0}{Logical indicating whether to impute start concentration values}
+
+\item{exclusion_list}{List of exclusion reasons and row indices to apply to the
+concentration data. Each item in the list should have:
+\itemize{
+\item reason: character string with the exclusion reason (e.g., "Vomiting")
+\item rows: integer vector of row indices to apply the exclusion to
+}}
 }
 \value{
 A fully configured \code{PKNCAdata} object.

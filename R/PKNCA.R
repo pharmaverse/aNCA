@@ -205,7 +205,11 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
-#' @param should_impute_c0 Logical indicating if start values should be imputed
+#' @param should_impute_c0 Logical indicating whether to impute start concentration values
+#' @param exclusion_list List of exclusion reasons and row indices to apply to the
+#' concentration data. Each item in the list should have:
+#' - reason: character string with the exclusion reason (e.g., "Vomiting")
+#' - rows: integer vector of row indices to apply the exclusion to
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -221,7 +225,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  exclusion_list = NULL
 ) {
 
   data <- adnca_data
@@ -237,6 +242,9 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     ),
     min.hl.r.squared = 0.01
   )
+
+  # Add on top of the default ones, the exclusions listed
+  data <- add_exclusion_reasons(data, exclusion_list)
 
   # Format intervals
   data$intervals <- format_pkncadata_intervals(
@@ -642,36 +650,6 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
   res
 }
 
-
-#' Filter Out Parameters Not Requested in PKNCA Results
-#'
-#' This function removes parameters from the PKNCA results that were not requested by the user,
-#' based on the intervals table. It identifies columns in the intervals table that are all NA
-#' (i.e., not requested), translates them to PPTESTCD terms, and filters them out from the results.
-#'
-#' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
-#'
-#' @return The PKNCA results object with unrequested parameters removed from $result.
-#'
-#' @examples
-#' # pknca_res <- ... # your PKNCA results object
-#' # pknca_res <- filter_parameters_not_requested(pknca_res)
-#'
-#' @export
-remove_parameters_not_requested <- function(pknca_res) {
-  params_not_requested <- pknca_res$data$intervals %>%
-    select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
-    # For all logical columns, mutate FALSE to NA
-    mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
-    # Only select columns that are only NA
-    select(where(~ all(is.na(.x)))) %>%
-    names()
-  pknca_res$result <- pknca_res$result %>%
-    filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
-  pknca_res
-}
-
-
 #' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 #'
 #' This function removes parameters from the PKNCA results that were not requested by the user,
@@ -680,7 +658,7 @@ remove_parameters_not_requested <- function(pknca_res) {
 #' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
 #' @return The PKNCA results object with unrequested parameters removed from $result.
 #' @export
-filter_parameters_not_requested <- function(pknca_res) {
+remove_parameters_not_requested <- function(pknca_res) {
   params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
   # Reshape intervals, filter
   params_not_requested <- pknca_res$data$intervals %>%
@@ -701,4 +679,42 @@ filter_parameters_not_requested <- function(pknca_res) {
   pknca_res$result <- pknca_res$result %>%
     anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
   pknca_res
+}
+
+#' Add Exclusion Reasons to PKNCAdata Object
+#'
+#' This function adds exclusion reasons to the `exclude` column of the concentration object
+#' within a PKNCAdata object, based on a list of reasons and row indices.
+#'
+#' @param pknca_data A PKNCAdata object.
+#' @param exclusion_list A list of lists, each with elements:
+#'   - reason: character string with the exclusion reason (e.g., "Vomiting")
+#'   - rows: integer vector of row indices to apply the reason to
+#'
+#' @return The modified PKNCAdata object with updated exclusion reasons in the concentration object.
+#' @export
+add_exclusion_reasons <- function(pknca_data, exclusion_list) {
+  exclude_col <- pknca_data$conc$columns[["exclude"]]
+  if (is.null(exclude_col)) {
+    pknca_data$conc$data$exclude <- rep("", nrow(pknca_data$conc$data))
+    pknca_data$conc$columns[["exclude"]] <- "exclude"
+    exclude_col <- "exclude"
+  }
+  for (excl in exclusion_list) {
+    reason <- excl$reason
+    rows <- excl$rows
+    if (any(rows < 1 | rows > nrow(pknca_data$conc$data))) {
+      stop(
+        "Row indices in exclusion_list are out of bounds",
+        " for the exclusion: ", reason
+      )
+    } else {
+      pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
+        pknca_data$conc$data[[exclude_col]][rows] == "",
+        reason,
+        paste0(pknca_data$conc$data[[exclude_col]][rows], "; ", reason)
+      )
+    }
+  }
+  pknca_data
 }
