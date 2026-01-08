@@ -125,3 +125,58 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
   do.call(paste, c(tooltip_components, sep = "<br>"))
 
 }
+
+#' Helper function to add "label" attribute to columns based on parameter names.
+#' @param df Data frame to which labels will be added.
+#' @param myres The output of PKNCA::pk.nca.
+#' 
+#' @returns Data frame with "label" attributes added to specified columns.
+#' 
+#' @examples
+#' # 1. Setup example data
+#' df <- data.frame(a = c(5.2, 6.3), b = c(50.1, 60.2))
+#' names(df) <- c("CMAX[ng/mL]", "AUCLST[hr*ng/mL]")
+#'
+#' # 2. Setup mock metadata (myres)
+#' myres <- list(
+#'   result = data.frame(
+#'     PPTESTCD = c("CMAX", "AUCLST"),
+#'     PPSTRESU = c("ng/mL", "hr*ng/mL"),
+#'     type_interval = "main",
+#'     start = 0,
+#'     end = 24
+#'   )
+#' )
+#'
+#' # 3. Apply labels
+#' labeled_df <- add_label_attribute(df, myres)
+#'
+#' # 4. Check label
+#' attr(labeled_df[["CMAX[ng/mL]"]], "label")
+#' @export
+add_label_attribute <- function(df, myres) {
+  mapping_vr <- myres$result %>%
+    mutate(
+      PPTESTCD_unit = case_when(
+        type_interval == "manual" ~ paste0(
+          PPTESTCD, "_", start, "-", end,
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
+        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
+        TRUE ~ PPTESTCD
+      ),
+      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
+    ) %>%
+    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
+    distinct() %>%
+    pull(PPTESTCD_cdisc, PPTESTCD_unit)
+  
+  mapping_cols <- intersect(names(df), names(mapping_vr))
+  attrs <- unname(mapping_vr[mapping_cols])
+  
+  df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
+    attr(col, "label") <- bw
+    col
+  }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
+  df
+}

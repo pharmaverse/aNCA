@@ -107,7 +107,7 @@ describe("calculate_summary_stats", {
       PPTESTCD = c("A", "A", "A"),
       PPORRES = c(1, 2, NA),
       PPORRESU = c("mg/L", "mg/L", "mg/L"),
-      PPSTRES = c(1, 2, NA),
+      PPSTRES = c(1000, 2000, NA),
       PPSTRESU = c("µg/L", "µg/L", "µg/L")
     )
 
@@ -116,9 +116,13 @@ describe("calculate_summary_stats", {
     # Define the expected result
     expected_result <- tibble(
       ATPTREF = rep(1, 9),
-      Statistic = "Mean",
-      `A[µg/L]` = 1.5
+      Statistic = c(
+        "Geomean", "Geocv", "Mean", "SD", "Min",
+        "Max", "Median", "Count.missing", "Count.total"
+      ),
+      `A[µg/L]` = c(1414.214, 50.00, 1500.00, 707.107, 1000.00, 2000.00, 1500.00, 1.00, 3.00)
     )
-
+    
+    expect_equal(result, expected_result)
   })
 })
