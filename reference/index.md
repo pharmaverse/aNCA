@@ -31,6 +31,9 @@
 - [`PKNCA_update_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_update_data_object.md)
   : Create a PKNCAdata Object for NCA or Slope Analysis
 
+- [`add_exclusion_reasons()`](https://pharmaverse.github.io/aNCA/reference/add_exclusion_reasons.md)
+  : Add Exclusion Reasons to PKNCAdata Object
+
 - [`add_f_to_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.md)
   : Add bioavailability results to PKNCA results
 

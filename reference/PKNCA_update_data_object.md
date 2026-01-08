@@ -12,7 +12,8 @@ PKNCA_update_data_object(
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  exclusion_list = NULL
 )
 ```
 
@@ -40,7 +41,17 @@ PKNCA_update_data_object(
 
 - should_impute_c0:
 
-  Logical indicating if start values should be imputed
+  Logical indicating whether to impute start concentration values
+
+- exclusion_list:
+
+  List of exclusion reasons and row indices to apply to the
+  concentration data. Each item in the list should have:
+
+  - reason: character string with the exclusion reason (e.g.,
+    "Vomiting")
+
+  - rows: integer vector of row indices to apply the exclusion to
 
 ## Value
 

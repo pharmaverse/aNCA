@@ -27,6 +27,8 @@
 - Option to upload multiple input files, which will be bound together to
   form a single ADNCA data set
   ([\#821](https://github.com/pharmaverse/aNCA/issues/821))
+- Section `General Exclusions` allowing to perform in-App NCA exclusions
+  ([\#851](https://github.com/pharmaverse/aNCA/issues/851))
 
 ### Bugs fixed
 
