@@ -641,3 +641,64 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
   }
   res
 }
+
+
+#' Filter Out Parameters Not Requested in PKNCA Results
+#'
+#' This function removes parameters from the PKNCA results that were not requested by the user,
+#' based on the intervals table. It identifies columns in the intervals table that are all NA
+#' (i.e., not requested), translates them to PPTESTCD terms, and filters them out from the results.
+#'
+#' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
+#'
+#' @return The PKNCA results object with unrequested parameters removed from $result.
+#'
+#' @examples
+#' # pknca_res <- ... # your PKNCA results object
+#' # pknca_res <- filter_parameters_not_requested(pknca_res)
+#'
+#' @export
+remove_parameters_not_requested <- function(pknca_res) {
+  params_not_requested <- pknca_res$data$intervals %>%
+    select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
+    # For all logical columns, mutate FALSE to NA
+    mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
+    # Only select columns that are only NA
+    select(where(~ all(is.na(.x)))) %>%
+    names()
+  pknca_res$result <- pknca_res$result %>%
+    filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
+  pknca_res
+}
+
+
+#' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
+#'
+#' This function removes parameters from the PKNCA results that were not requested by the user,
+#' using a pivoted approach that also handles bioavailability settings.
+#'
+#' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
+#' @return The PKNCA results object with unrequested parameters removed from $result.
+#' @export
+filter_parameters_not_requested <- function(pknca_res) {
+  params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+  # Reshape intervals, filter
+  params_not_requested <- pknca_res$data$intervals %>%
+    pivot_longer(
+      cols = (any_of(params)),
+      names_to = "PPTESTCD",
+      values_to = "is_requested"
+    ) %>%
+    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+    group_by(across(c(-impute, -is_requested))) %>%
+    summarise(
+      is_requested = any(is_requested),
+      .groups = "drop"
+    ) %>%
+    filter(!is_requested)
+
+  # Filter for requested params based on intervals
+  pknca_res$result <- pknca_res$result %>%
+    anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
+  pknca_res
+}

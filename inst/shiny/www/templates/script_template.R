@@ -114,10 +114,15 @@ pknca_res <- pknca_obj %>%
   ) %>%
 
   # Derive secondary parameters (ratio parameters)
-  calculate_table_ratios_app(ratio_table)
+  calculate_table_ratios_app(ratio_table) %>%
+  
+  # Filter only parameters that have been requested
+  remove_parameters_not_requested()
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
-cdisc_datasets <- export_cdisc(pknca_res)
+cdisc_datasets <- pknca_res %>%
+  export_cdisc()
+
 pivoted_results <- pivot_wider_pknca_results(
   myres = pknca_res,
   flag_rules = flag_rules,
