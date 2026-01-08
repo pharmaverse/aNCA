@@ -15,12 +15,10 @@
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
-
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
-
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
+* Summary statistic table changes in grouping variables won't remove previous summary settings (#840)
 * No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the ratios table should be used (#781)
-
 * Bug fix for settings upload via zip file output (#832)
 
 * Bug fix for plotting section where if there is >1 unit the axis label will contain both unique units. (#818)
