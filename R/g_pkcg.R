@@ -1011,7 +1011,7 @@ keep_blq_timepoints <- function(plot_data, xvar, mean_group_var) {
   plot_data %>%
     mutate(is_blq = if (!is.na(blq_col)) {
       # Count number of BLQ samples for each timepoint by group
-      grepl("BLQ|LTR|<[1-9]|<PCLLOQ", !!sym(blq_col))
+      grepl("BLQ|LTR|<[1-9]|<PCLLOQ", .data[[blq_col]])
     } else {
       FALSE
     }) %>%
