@@ -408,6 +408,8 @@ describe("check_valid_pknca_data", {
       "No reason provided for the following half-life exclusions:"
     )
   })
+})
+
 # Tests for add_exclusion_reasons
 describe("add_exclusion_reasons", {
   it("adds a single exclusion reason to specified rows", {
