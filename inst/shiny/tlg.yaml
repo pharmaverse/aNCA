@@ -401,7 +401,7 @@ g_pkcg02_sbs:
         - TRT01A
 
 ####### GRAPHS - Mean
-p_pkcg03_lin:
+g_pkcg03_lin:
   is_default: true
   type: Graph
   dataset: ADNCA
@@ -409,10 +409,81 @@ p_pkcg03_lin:
   label: "pkcg03 - Mean Linear by Treatment"
   description: "Mean plot of concentrations vs. time (overlaid by treatment)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
-  fun: p_pkcg03_lin
-  condition: null
+  fun: g_pkcg03_lin
+  options:
+    .group_label_1: "General"
+    xvar:
+      type: select
+      label: X axis
+      choices: .colnames
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .all
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+    mean_group_var:
+      type: select
+      label: "Mean Grouping variable"
+      choices: .colnames
+      default: "DOSEA" 
+    summary_method:
+      type: select
+      label: "Summary Statistic"
+      default: "mean_sdi"
+      multiple: false
+      choices:
+        - Mean_ci
+        - Mean_sdi
+        - Mean_se
+        - Median_ci
+    whiskers_lwr_upr:
+      type: select
+      label: "Whiskers selection"
+      default: "Both"
+      multiple: false
+      choices:
+        - Both
+        - Lower
+        - Upper
 
-p_pkcg03_log:
+    .group_label_2: "Labels"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    xlab:
+      type: text
+      label: X axis label
+    ylab:
+      type: text
+      label: Y axis label
+    xbreaks_var:
+      type: select
+      label: "X ticks"
+      choices: .colnames
+      default: "NFRLT"
+
+    .group_label_3: "Limits"
+    xmin:
+      type: numeric
+    xmax:
+      type: numeric
+    ymin:
+      type: numeric
+    ymax:
+      type: numeric
+
+g_pkcg03_log:
+  template: g_pkcg03_lin
   is_default: true
   type: Graph
   dataset: ADNCA
@@ -420,10 +491,11 @@ p_pkcg03_log:
   label: "pkcg03 - Mean Log by Treatment"
   description: "Mean plot of concentrations vs. time in Log Scale (overlaid by treatment)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
-  fun: p_pkcg03_log
+  fun: g_pkcg03_log
   condition: null
 
-p_pkcg03_sbs:
+g_pkcg03_sbs:
+  template: g_pkcg03_lin
   is_default: false
   type: Graph
   dataset: ADNCA
@@ -431,7 +503,7 @@ p_pkcg03_sbs:
   label: "pkcg03 - Mean Side-by-Side by Treatment"
   description: "Side-by-side Mean plot of concentration vs. time, linear and log scale (overlaid by treatment)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
-  fun: p_pkcg03_sbs
+  fun: g_pkcg03_sbs
   condition: null
 
 ####### GRAPHS - Mean by Dose
