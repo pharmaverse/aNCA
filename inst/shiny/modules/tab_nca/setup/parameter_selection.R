@@ -313,7 +313,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           colDef(
             name = col_name,
             align = "center",
-            cell = function(value) if (isTRUE(value)) "✔" else "",
+            cell = function(value) if (isTRUE(value)) "\u2714" else "",
             minWidth = 150
           )
         })
