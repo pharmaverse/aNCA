@@ -938,6 +938,7 @@ pkcg03 <- function(
     }
 
     if (plotly) {
+      # suppress warning `plotly.js does not (yet) support horizontal legend items`
       suppressWarnings({
         # Explicity set geom_line for plotly
         plot <- plot +
@@ -1010,11 +1011,11 @@ keep_blq_timepoints <- function(plot_data, xvar, mean_group_var) {
   plot_data %>%
     mutate(is_blq = if (!is.na(blq_col)) {
       # Count number of BLQ samples for each timepoint by group
-      grepl("BLQ|LTR|<[1-9]|<PCLLOQ", .data[[blq_col]])
+      grepl("BLQ|LTR|<[1-9]|<PCLLOQ", !!sym(blq_col))
     } else {
       FALSE
     }) %>%
-    group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+    group_by(!!sym(mean_group_var), !!sym(xvar)) %>%
     summarise( # Count number of samples for each timepoint by group
       n_samples = n_distinct(USUBJID),
       # # Compute BLQ ratio for each timepoint by group
