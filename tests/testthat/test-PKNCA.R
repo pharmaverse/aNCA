@@ -189,14 +189,6 @@ describe("PKNCA_calculate_nca", {
     expect_equal(length(colnames(nca_results$result)), 15)
   })
 
-  it("handles warning levels correctly", {
-
-    # Modify the data to eliminate points needed for half life
-    modified_data <- simple_data[1, ] # Remove one time point
-    modified_data$AVAL <- NA
-    pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
-    pknca_data_modified$intervals$half.life <- TRUE
-  })
 })
 
 describe("PKNCA_impute_method_start_logslope", {
