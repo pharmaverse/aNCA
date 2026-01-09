@@ -408,4 +408,68 @@ describe("check_valid_pknca_data", {
       "No reason provided for the following half-life exclusions:"
     )
   })
+# Tests for add_exclusion_reasons
+describe("add_exclusion_reasons", {
+  it("adds a single exclusion reason to specified rows", {
+    # Prepare exclusion list: exclude row 2 with reason "Test Reason"
+    excl_list <- list(list(reason = "Test Reason", rows = 2))
+    pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- pknca_data_excl$conc$columns$exclude
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][2], "Test Reason")
+    # Other rows should remain unchanged (empty string or NA)
+    expect_true(all(pknca_data_excl$conc$data[[excl_col]][-2] %in% c("", NA)))
+  })
+
+  it("adds multiple exclusion reasons to multiple rows", {
+    excl_list <- list(
+      list(reason = "Reason 1", rows = c(1, 3)),
+      list(reason = "Reason 2", rows = 4)
+    )
+    pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- pknca_data_excl$conc$columns$exclude
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][1], "Reason 1")
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][3], "Reason 1")
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][4], "Reason 2")
+    # Other rows should remain unchanged (empty string or NA)
+    expect_true(all(pknca_data_excl$conc$data[[excl_col]][-c(1, 3, 4)] %in% c("", NA)))
+  })
+
+  it("appends additional exclusion reasons to the row", {
+    excl_list <- list(
+      list(reason = "First Reason", rows = 2),
+      list(reason = "Second Reason", rows = 2)
+    )
+    pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- pknca_data_excl$conc$columns$exclude
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][2], "First Reason; Second Reason")
+  })
+
+  it("returns unchanged object if exclusion_list is NULL or empty", {
+    pknca_data_nochange1 <- add_exclusion_reasons(pknca_data, NULL)
+    pknca_data_nochange2 <- add_exclusion_reasons(pknca_data, list())
+    expect_equal(pknca_data_nochange1, pknca_data)
+    expect_equal(pknca_data_nochange2, pknca_data)
+  })
+
+  it("provides an error message if specified rows are out of bounds", {
+    excl_list <- list(
+      list(reason = "Exclusion out of bounds", rows = c(1, 100)),
+      list(reason = "Valid exclusion", rows = 1)
+    )
+    expect_error(
+      add_exclusion_reasons(pknca_data, excl_list),
+      "Row indices in exclusion_list are out of bounds for the exclusion: Exclusion out of bounds"
+    )
+  })
+
+  it("creates the exclude column if it does not exist", {
+    excl_list <- list(
+      list(reason = "Exclusion reason", rows = c(1, 2))
+    )
+    pknca_data_no_excl <- pknca_data
+    excl_col <- pknca_data_no_excl$conc$columns[["exclude"]]
+    pknca_data_no_excl$conc$columns[["exclude"]] <- NULL
+    pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
+    expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
+  })
 })
