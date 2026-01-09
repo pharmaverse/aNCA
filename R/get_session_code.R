@@ -92,9 +92,6 @@ clean_deparse.default <- function(obj, indent = 0, max_per_line = 10, min_to_rep
 #' @noRd
 clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   ind <- paste(rep("  ", indent), collapse = "")
-  if (nrow(obj) == 0) {
-    return("data.frame()")
-  }
 
   cols <- lapply(obj, function(col) {
     clean_deparse(col, indent + 1, max_per_line = max_per_line)
@@ -188,3 +185,7 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
     paste0("c(", paste0(line_strs, collapse = ",\n"), ")")
   }
 }
+
+# TODO (Gerardo): Create a linked function
+# to obtain the code from a settings file
+# (#826)
