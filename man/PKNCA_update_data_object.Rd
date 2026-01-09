@@ -26,10 +26,11 @@ PKNCA_update_data_object(
 
 \item{selected_pcspec}{User selected specimen}
 
+\item{should_impute_c0}{Logical indicating whether to impute start concentration values}
+
 \item{hl_adj_rules}{A data frame containing half-life adjustment rules. It must
 contain group columns and rule specification columns;
 TYPE: (Inclusion, Exclusion), RANGE: (start-end).}
-\item{should_impute_c0}{Logical indicating whether to impute start concentration values}
 
 \item{exclusion_list}{List of exclusion reasons and row indices to apply to the
 concentration data. Each item in the list should have:
