@@ -10,7 +10,7 @@ remove_pp_not_requested(pknca_res)
 \item{pknca_res}{A PKNCA results object containing at least $data$intervals and $result.}
 }
 \value{
-The PKNCA results object with unrequested parameters removed from $result.
+The PKNCA results object with non requested parameters removed from $result.
 }
 \description{
 This function removes parameters from the PKNCA results that were not requested by the user,

@@ -656,7 +656,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' using a pivoted approach that also handles bioavailability settings.
 #'
 #' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
-#' @return The PKNCA results object with unrequested parameters removed from $result.
+#' @return The PKNCA results object with non requested parameters removed from $result.
 #' @export
 remove_pp_not_requested <- function(pknca_res) {
   params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
