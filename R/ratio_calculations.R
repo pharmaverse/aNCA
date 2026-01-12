@@ -287,12 +287,9 @@ calculate_ratios.PKNCAresults <- function(
 #' @returns The updated PKNCAresult object with added rows in the `result` data.frame.
 #' @export
 calculate_table_ratios <- function(res, ratio_table) {
-  # Make a list to save all results
-  ratio_results <- vector("list", nrow(ratio_table))
-
-  # Loop through each row of the ratio_table
-  for (i in seq_len(nrow(ratio_table))) {
-    ratio_results[[i]] <- calculate_ratio_app(
+  # Use lapply to process each row of ratio_table
+  ratio_results <- lapply(seq_len(nrow(ratio_table)), function(i) {
+    result <- calculate_ratio_app(
       res = res,
       test_parameter = ratio_table$TestParameter[i],
       ref_parameter = ratio_table$RefParameter[i],
@@ -302,8 +299,7 @@ calculate_table_ratios <- function(res, ratio_table) {
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
       custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
     )
-
-    if (nrow(ratio_results[[i]]) == 0) {
+    if (nrow(result) == 0) {
       warning(
         "Ratio ", ratio_table$PPTESTCD[i], " not computed.",
         "No comparable groups found between RefGroups",
@@ -312,7 +308,8 @@ calculate_table_ratios <- function(res, ratio_table) {
         " (", ratio_table$TestGroups[i], ")"
       )
     }
-  }
+    result
+  })
   if (!"PPANMETH" %in% names(res$result)) {
     res$result$PPANMETH <- ""
   }
@@ -396,8 +393,6 @@ calculate_ratio_app <- function(
     )
   )
 
-
-    # Use lapply to calculate all ratios and bind at once
     ratio_list <- lapply(seq_along(match_cols), function(ix) {
       calculate_ratios(
         data = res$result,
