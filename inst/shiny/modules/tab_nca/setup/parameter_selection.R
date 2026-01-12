@@ -82,7 +82,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         })
 
       subj_column <- processed_pknca_data()$conc$columns$subject
-      
+
       filtered_intervals <- processed_pknca_data()$intervals %>%
         select(all_of(c(groups, subj_column)))
       # keep subj col to prevent issues if only one subject selected (#858)
@@ -106,7 +106,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
       group_columns <- unique(c(conc_group_columns, dose_group_columns))
       subj_column <- processed_pknca_data()$conc$columns$subject
-      
+
       groups <- group_columns %>%
         purrr::keep(\(col) {
           !is.null(col) && col != subj_column &&
