@@ -39,6 +39,20 @@ data_imputation_ui <- function(id) {
       )
     ),
     hr(),
+    # NA imputation widget
+    div(
+      style = "margin-top: 1em;",
+      selectizeInput(
+        ns("na_imputation"),
+        "NA Imputation",
+        choices = c("drop", "0"),
+        selected = "drop",
+        options = list(create = TRUE, placeholder = "Type a numeric value to impute or select option"),
+        width = "25%"
+      ),
+      helpText("Choose how to handle NA values: Drop, Impute 0, or enter a numeric value.")
+    ),
+    hr(),
     # Start impute (C0) widget
     input_switch(
       id = ns("should_impute_c0"),
@@ -60,6 +74,7 @@ data_imputation_ui <- function(id) {
 data_imputation_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
 
     blq_imputation_rule <- reactive({
       req(input$select_blq_strategy)
@@ -113,9 +128,30 @@ data_imputation_server <- function(id) {
       rule_list
     })
 
+    na_imputation_rule <- reactive({
+      val <- input$na_imputation
+      if (is.null(val)) return(NULL)
+      if (val %in% c("drop", "0")) {
+        if (val == "0") return(0)
+        return(val)
+      }
+      # Check if numeric
+      if (grepl("^[0-9]+(\\.[0-9]+)?$", val)) {
+        return(as.numeric(val))
+      } else {
+        showNotification(
+          "NA imputation value must be numeric, 'drop', or '0'.",
+          type = "warning",
+          duration = 8
+        )
+        return(NULL)
+      }
+    })
+
     list(
       should_impute_c0 = reactive(input$should_impute_c0),
-      blq_imputation_rule = blq_imputation_rule
+      blq_imputation_rule = blq_imputation_rule,
+      na_imputation_rule = na_imputation_rule
     )
   })
 }
