@@ -211,6 +211,7 @@ update_main_intervals <- function(
   # and apply it only for non-observational parameters
 
   if (!is.null(blq_imputation_rule)) {
+    pknca_impute <- new.env()
     assign(
       "PKNCA_impute_method_blq", # nolint
       function(conc.group, time.group, ...) { # nolint
@@ -220,7 +221,8 @@ update_main_intervals <- function(
           conc.blq = blq_imputation_rule
         )
       },
-      envir = as.environment("package:aNCA")
+      pknca_impute,
+      envir = .GlobalEnv
     )
 
     data$intervals <- data$intervals %>%
