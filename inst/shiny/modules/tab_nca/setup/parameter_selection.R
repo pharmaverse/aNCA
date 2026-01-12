@@ -81,8 +81,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
+      subj_column <- processed_pknca_data()$conc$columns$subject
+      
       filtered_intervals <- processed_pknca_data()$intervals %>%
-        select(all_of(c(groups, "USUBJID")))
+        select(all_of(c(groups, subj_column)))
+      # keep subj col to prevent issues if only one subject selected (#858)
 
       df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
 
@@ -102,10 +105,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
       group_columns <- unique(c(conc_group_columns, dose_group_columns))
-
+      subj_column <- processed_pknca_data()$conc$columns$subject
+      
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "USUBJID" &&
+          !is.null(col) && col != subj_column &&
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
