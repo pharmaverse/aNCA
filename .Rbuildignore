@@ -20,3 +20,4 @@ inst/shiny/www/.sass_cache_keys
 ^documentation/.*
 ^data-raw$
 ^articles/
+^vignettes/
