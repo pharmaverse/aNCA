@@ -29,6 +29,8 @@
   ([\#821](https://github.com/pharmaverse/aNCA/issues/821))
 - Section `General Exclusions` allowing to perform in-App NCA exclusions
   ([\#851](https://github.com/pharmaverse/aNCA/issues/851))
+- Mean plots have been added in the TLGs section, with BLQ handling
+  ([\#555](https://github.com/pharmaverse/aNCA/issues/555))
 
 ### Bugs fixed
 

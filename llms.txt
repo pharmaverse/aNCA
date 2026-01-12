@@ -313,6 +313,18 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
   Wrapper around aNCA::pkcg02() function. Calls the function with `LOG`
   scale argument.
 
+- [`g_pkcg03_lin()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg03_lin.md)
+  :
+
+  Wrapper around aNCA::pkcg03() function. Calls the function with `LIN`
+  scale argument.
+
+- [`g_pkcg03_log()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg03_log.md)
+  :
+
+  Wrapper around aNCA::pkcg03() function. Calls the function with `LOG`
+  scale argument.
+
 - [`generate_tooltip_text()`](https://pharmaverse.github.io/aNCA/reference/generate_tooltip_text.md)
   : Generate HTML Tooltip Text
 
@@ -329,6 +341,9 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 - [`interval_remove_impute()`](https://pharmaverse.github.io/aNCA/reference/interval_remove_impute.md)
   : Remove specified imputation from the intervals in a PKNCAdata or
   data.frame (intervals) object.
+
+- [`keep_blq_timepoints()`](https://pharmaverse.github.io/aNCA/reference/keep_blq_timepoints.md)
+  : Helper function for BLQ processing
 
 - [`l_pkcl01()`](https://pharmaverse.github.io/aNCA/reference/l_pkcl01.md)
   : Create PK Concentration Listing
@@ -377,6 +392,9 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 
 - [`pkcg02()`](https://pharmaverse.github.io/aNCA/reference/pkcg02.md) :
   Generate Combined PK Concentration-Time Profile Plot by Cohort
+
+- [`pkcg03()`](https://pharmaverse.github.io/aNCA/reference/pkcg03.md) :
+  Generate PK Concentration-Time Profile Plots
 
 - [`pknca_calculate_f()`](https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.md)
   : Calculate bioavailability for intravascular vs extravascular aucs
