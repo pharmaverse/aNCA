@@ -2,22 +2,7 @@ data_imputation_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    input_switch(
-      id = ns("should_impute_c0"),
-      label = "Impute Concentration",
-      value = TRUE
-    ),
-    br(),
-    helpText(HTML(paste(
-      "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-      "- If first dose & IV bolus: C0 = 0",
-      "- If not first dose or not IV bolus: C0 = predose",
-      "- If IV bolus & monoexponential data: logslope",
-      "- If IV bolus & not monoexponential data: C0 = C1",
-      sep = "<br>"
-    ))),
-    br(),
-    br(),
+    # BLQ imputation widgets
     selectInput(
       ns("select_blq_strategy"),
       "Select BLQ Imputation Strategy",
@@ -52,7 +37,23 @@ data_imputation_ui <- function(id) {
         condition = sprintf("input['%s'] == 'No BLQ handling'", ns("select_blq_strategy")),
         helpText("No BLQ imputation will be applied. All values are kept as is")
       )
-    )
+    ),
+    hr(),
+    # Start impute (C0) widget
+    input_switch(
+      id = ns("should_impute_c0"),
+      label = "Impute Start Concentration",
+      value = TRUE
+    ),
+    br(),
+    helpText(HTML(paste(
+      "Imputes a start-of-interval concentration to calculate non-observational parameters:",
+      "- If first dose & IV bolus: C0 = 0",
+      "- If not first dose or not IV bolus: C0 = predose",
+      "- If IV bolus & monoexponential data: logslope",
+      "- If IV bolus & not monoexponential data: C0 = C1",
+      sep = "<br>"
+    )))
   )
 }
 
