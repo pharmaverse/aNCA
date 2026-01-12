@@ -84,7 +84,6 @@ Suggests:
     withr,
     yaml,
     zip
-VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
