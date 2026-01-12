@@ -258,7 +258,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       df <- selections_state()
       study_type_names <- unique(study_types_df()$type)
 
+      # Validation checks
       if (length(study_type_names) == 0) return(list())
+      req(all(study_type_names %in% names(df)))
 
       # Convert from wide to long, filter for selected rows,
       # and then split the result into a list by study_type.

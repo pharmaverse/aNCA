@@ -122,7 +122,7 @@ describe("flexible_violinboxplot", {
     expect_true(any("ggplot" %in% class(violin_plot)))
   })
 
-  it("handles missing data gracefully", {
+  it("handles missing results (PPSTRES) plotting an error message", {
     boxplotdata_missing <- boxplotdata %>%
       mutate(PPSTRES = NA)
     missing_plot <- flexible_violinboxplot(
@@ -138,7 +138,38 @@ describe("flexible_violinboxplot", {
     )
 
     expect_s3_class(missing_plot, "ggplot")
-    expect_true(length(missing_plot$layers) == 0)
+
+    # The plot shows an error message
+    gg_build <- ggplot_build(missing_plot)
+    expect_equal(
+      gg_build[[1]][[1]]$label,
+      "No data available for parameter: CMAX"
+    )
+  })
+
+  it("handles empty results plotting an error", {
+    boxplotdata_empty <- boxplotdata %>%
+      filter(PPTESTCD == "non-existent")
+    empty_plot <- flexible_violinboxplot(
+      res_nca = boxplotdata_empty,
+      parameter = "CMAX",
+      xvars = "DOSEA",
+      colorvars = "ATPTREF",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2", "USUBJID: 6"),
+      tooltip_vars = c("DOSEA", "USUBJID", "ATPTREF", "PARAM"),
+      box = TRUE,
+      plotly = FALSE,
+      seed = 123
+    )
+
+    expect_s3_class(empty_plot, "ggplot")
+
+    # The plot shows an error message
+    gg_build <- ggplot_build(empty_plot)
+    expect_equal(
+      gg_build[[1]][[1]]$label,
+      "No data available"
+    )
   })
 
   it("handles axis labels correctly when parameter has no unit", {
