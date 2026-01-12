@@ -152,7 +152,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
                 purrr::map(\(x) x$threshold)
             ) %>%
             # Add parameter ratio calculations
-            calculate_table_ratios_app(ratio_table = ratio_table()) %>%
+            calculate_table_ratios(ratio_table = ratio_table()) %>%
             # Keep only parameters requested by the user
             remove_pp_not_requested()
         },

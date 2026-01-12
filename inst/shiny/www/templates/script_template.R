@@ -115,7 +115,7 @@ pknca_res <- pknca_obj %>%
   ) %>%
 
   # Derive secondary parameters (ratio parameters)
-  calculate_table_ratios_app(ratio_table) %>%
+  calculate_table_ratios(ratio_table) %>%
   
   # Filter only parameters that have been requested
   remove_pp_not_requested()
