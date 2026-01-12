@@ -77,11 +77,15 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
+          !is.null(col) &&
+            length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
+      subj_column <- processed_pknca_data()$conc$columns$subject
+
       filtered_intervals <- processed_pknca_data()$intervals %>%
-        select(all_of(groups))
+        select(all_of(c(groups, subj_column)))
+      # keep subj col to prevent issues if only one subject selected (#858)
 
       df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
 
@@ -101,10 +105,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
       group_columns <- unique(c(conc_group_columns, dose_group_columns))
+      subj_column <- processed_pknca_data()$conc$columns$subject
 
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "USUBJID" &&
+          !is.null(col) && col != subj_column &&
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
@@ -120,7 +125,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # Build the base state from data or overrides
     base_selections <- reactive({
       req(study_types_df())
-
       study_type_names <- unique(study_types_df()$type)
 
       # Get override file
@@ -258,7 +262,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       df <- selections_state()
       study_type_names <- unique(study_types_df()$type)
 
+      # Validation checks
       if (length(study_type_names) == 0) return(list())
+      req(all(study_type_names %in% names(df)))
 
       # Convert from wide to long, filter for selected rows,
       # and then split the result into a list by study_type.
