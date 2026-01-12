@@ -100,7 +100,7 @@ units_table_server <- function(id, mydata) {
       pagination = FALSE,
       filterable = TRUE,
       rowStyle = reactable::JS("function(rowInfo) {
-        if (rowInfo.values['is_hidden']) {
+        if (rowInfo && rowInfo.values && rowInfo.values['is_hidden']) {
           return { display: 'none' }
         }
       }")
