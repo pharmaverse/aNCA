@@ -393,19 +393,19 @@ calculate_ratio_app <- function(
     )
   )
 
-    ratio_list <- lapply(seq_along(match_cols), function(ix) {
-      calculate_ratios(
-        data = res$result,
-        test_parameter = test_parameter,
-        ref_parameter = ref_parameter,
-        match_cols = match_cols[[ix]],
-        ref_groups = ref_groups,
-        test_groups = test_groups,
-        adjusting_factor = adjusting_factor,
-        custom_pptestcd = custom_pptestcd
-      )
-    })
-    all_ratios <- bind_rows(ratio_list)
+  ratio_list <- lapply(seq_along(match_cols), function(ix) {
+    calculate_ratios(
+      data = res$result,
+      test_parameter = test_parameter,
+      ref_parameter = ref_parameter,
+      match_cols = match_cols[[ix]],
+      ref_groups = ref_groups,
+      test_groups = test_groups,
+      adjusting_factor = adjusting_factor,
+      custom_pptestcd = custom_pptestcd
+    )
+  })
+  all_ratios <- bind_rows(ratio_list)
 
   # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
   # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed
