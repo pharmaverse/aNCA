@@ -13,6 +13,7 @@
 * Option to upload multiple input files, which will be bound together to form a single ADNCA data set (#821)
 * BLQ imputation rules can be applied to the NCA via `NCA Setup > Data Imputation` (#139)
 * Section `General Exclusions` allowing to perform in-App NCA exclusions (#851)
+* Mean plots have been added in the TLGs section, with BLQ handling (#555)
 
 
 ## Bugs fixed
@@ -22,8 +23,8 @@
 * Summary statistic table changes in grouping variables won't remove previous summary settings (#840)
 * No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the ratios table should be used (#781)
 * Bug fix for settings upload via zip file output (#832)
-
 * Bug fix for plotting section where if there is >1 unit the axis label will contain both unique units. (#818)
+* Units table bugs fixed, so it is filtered based on NCA setup and the table is searchable for each column (#870)
 
 
 # aNCA 0.1.0
