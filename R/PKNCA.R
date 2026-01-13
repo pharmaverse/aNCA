@@ -312,10 +312,28 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' nca_results <- PKNCA_calculate_nca(pknca_data)
 #'
 #' @export
-PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
+PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_name_linter
+
+  # Define BLQ imputation method in global environment for PKNCA to access
+  if (!is.null(blq_rule)) {
+    assign(
+      "PKNCA_impute_method_blq", #nolint
+      function(conc.group, time.group, ...) { #nolint
+        PKNCA::clean.conc.blq(
+          conc = conc.group,
+          time = time.group,
+          conc.blq = blq_rule
+        )
+      },
+      envir = .GlobalEnv
+    )
+  }
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
+
+  # Remove the global PKNCA_impute_method_blq to avoid side effects
+  rm("PKNCA_impute_method_blq", envir = .GlobalEnv)
 
   dose_data_to_join <- select(
     pknca_data$dose$data,
