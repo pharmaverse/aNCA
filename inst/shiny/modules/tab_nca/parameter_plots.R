@@ -59,13 +59,13 @@ parameter_plots_server <- function(id, res_nca) {
     observeEvent(res_nca(), {
       # Update the selected_param_boxplot picker input
       param_choices <- unique(res_nca()$result$PPTESTCD)
-      
+
       default_selection <- if ("CMAX" %in% param_choices) {
         "CMAX"
       } else {
         param_choices[1]
       }
-      
+
       conc_dose_cols <- unique(c(
         names(res_nca()$data$conc$data),
         names(res_nca()$data$dose$data)
