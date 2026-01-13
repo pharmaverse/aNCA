@@ -133,3 +133,12 @@ parse_annotation <- function(data, text) {
   # Paste all together in different lines
   paste0(title, "\n", paste0(log_msg, collapse = "\n"))
 }
+
+#' Assigns a value to a variable in the global environment.
+#' @param name Name of the variable to assign.
+#' @param value Value to assign to the variable.
+#' @noRd
+#' @keywords internal
+.assign_global <- function(name, value) {
+  assign(name, value, envir = .GlobalEnv)
+}

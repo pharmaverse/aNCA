@@ -324,16 +324,14 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
 
   # Define BLQ imputation method in global environment for PKNCA to access
   if (!is.null(blq_rule)) {
-    assign(
-      "PKNCA_impute_method_blq", #nolint
+    .assign_global("PKNCA_impute_method_blq", #nolint
       function(conc.group, time.group, ...) { #nolint
         PKNCA::clean.conc.blq(
           conc = conc.group,
           time = time.group,
           conc.blq = blq_rule
         )
-      },
-      envir = .GlobalEnv
+      }
     )
   }
 
