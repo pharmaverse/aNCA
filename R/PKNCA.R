@@ -320,7 +320,20 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' nca_results <- PKNCA_calculate_nca(pknca_data)
 #'
 #' @export
-PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_name_linter
+PKNCA_calculate_nca <- function(pknca_data, na_rule = NULL, blq_rule = NULL) { # nolint: object_name_linter
+
+  # Define NA imputation method in global environment for PKNCA to access
+  if (!is.null(na_rule)) {
+    .assign_global("PKNCA_impute_method_na", #nolint
+      function(conc.group, time.group, ...) { #nolint
+        PKNCA::clean.conc.na(
+          conc = conc.group,
+          time = time.group,
+          conc.na = na_rule
+        )
+      }
+    )
+  }
 
   # Define BLQ imputation method in global environment for PKNCA to access
   if (!is.null(blq_rule)) {
@@ -338,7 +351,8 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
-  # Remove the global PKNCA_impute_method_blq to avoid side effects
+  # Remove the global PKNCA_impute_methods after calculation
+  rm("PKNCA_impute_method_na", envir = as.environment(1))
   rm("PKNCA_impute_method_blq", envir = as.environment(1))
 
   dose_data_to_join <- select(

@@ -351,6 +351,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         bioavailability = input$bioavailability,
         data_imputation = list(
           impute_c0 = data_imputation$should_impute_c0(),
+          na_imputation_rule = data_imputation$na_imputation_rule(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
         partial_aucs = auc_data(),
