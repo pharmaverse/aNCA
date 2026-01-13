@@ -66,18 +66,39 @@ data_imputation_ui <- function(id) {
       )
     ),
     hr(),
-    # NA imputation widget
-    div(
-      style = "margin-top: 1em;",
-      selectizeInput(
-        ns("na_imputation"),
-        "NA Imputation",
-        choices = c("drop", "0"),
-        selected = "drop",
-        options = list(create = TRUE, placeholder = "Type a numeric value to impute or select option"),
-        width = "25%"
+    # NA imputation widgets
+    fluidRow(
+      column(
+        width = 10,
+        selectizeInput(
+          ns("na_imputation"),
+          "NA Imputation",
+          choices = c("drop", "0"),
+          selected = "drop",
+          options = list(create = TRUE, placeholder = "Type a numeric value to impute or select option"),
+          width = "25%"
+        )
       ),
-      helpText("Choose how to handle NA values: Drop, Impute 0, or enter a numeric value.")
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h4("NA Imputation Help"),
+            p("NA imputation controls how missing (NA) values are handled in the data."),
+            tags$ul(
+              tags$li(tags$b("drop:"), " Remove rows with NA values."),
+              tags$li(tags$b("0:"), " Impute NA values as 0."),
+              tags$li(tags$b("Numeric value:"), " Type a number (e.g., 0.1) and press Enter to impute all NAs with that value.")
+            ),
+            p(HTML("Only numeric values, <code>drop</code>, or <code>0</code> are accepted."))
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "400px"
+        )
+      )
     ),
     hr(),
     # Start impute (C0) widget
