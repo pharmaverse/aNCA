@@ -313,9 +313,9 @@ describe("update_main_intervals", {
     auc_empty <- tibble(start_auc = NA_real_, end_auc = NA_real_)
 
     # --- Helper: Extract results for subject 1 ---
-    get_results <- function(data_obj) {
+    get_results <- function(data_obj, blq_rule) {
       suppressWarnings(
-        PKNCA_calculate_nca(data_obj, blq_rule = blq_keep)[["result"]]
+        PKNCA_calculate_nca(data_obj, blq_rule = blq_rule)[["result"]]
       ) %>% unique()
     }
 
@@ -323,14 +323,14 @@ describe("update_main_intervals", {
     no_blq <- update_main_intervals(
       data, param_list, study_types_df, auc_empty, blq_imputation_rule = NULL
     )
-    res_no_blq <- get_results(no_blq)
+    res_no_blq <- get_results(no_blq, NULL)
 
     # --- 2. All BLQ points kept (should match no imputation) ---
     blq_keep <- list(first = "keep", middle = "keep", last = "keep")
     all_keep <- update_main_intervals(
       data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_keep
     )
-    res_all_keep <- get_results(all_keep)
+    res_all_keep <- get_results(all_keep, blq_keep)
     expect_equal(res_no_blq, res_all_keep)
 
     # --- 3. BLQ imputation: before.tmax, after.tmax, and both ---
@@ -340,13 +340,13 @@ describe("update_main_intervals", {
 
     res_before <- get_results(update_main_intervals(
       data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_before
-    ))
+    ), blq_before)
     res_after <- get_results(update_main_intervals(
       data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_after
-    ))
+    ), blq_after)
     res_both <- get_results(update_main_intervals(
       data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_both
-    ))
+    ), blq_both)
 
     # --- 4. Check that BLQ imputation affects only non-observational parameters ---
     expect_equal(filter(res_before, PPTESTCD == "auclast") %>% pull(PPORRES), 99.6, tolerance = 0.1)
