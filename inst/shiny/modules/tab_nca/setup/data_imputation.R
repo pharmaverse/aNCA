@@ -15,7 +15,7 @@ data_imputation_ui <- function(id) {
             "Set value for all BLQ",
             "No BLQ handling"
           ),
-          selected = "Tmax based imputation"
+          selected = "No BLQ handling"
         )
       ),
       column(
