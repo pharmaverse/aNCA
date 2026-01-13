@@ -127,6 +127,7 @@ blq_selectize <- function(id, label, selected = NULL) {
     choices = unique(c("drop", "keep", selected)),
     selected = selected,
     options = list(create = TRUE),
+    placeholder = "Type a numeric value to impute or select option",
     width = "25%"
   )
 }
