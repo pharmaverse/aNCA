@@ -339,7 +339,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
   # Remove the global PKNCA_impute_method_blq to avoid side effects
-  rm("PKNCA_impute_method_blq", envir = .GlobalEnv)
+  rm("PKNCA_impute_method_blq", envir = as.environment(1))
 
   dose_data_to_join <- select(
     pknca_data$dose$data,

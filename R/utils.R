@@ -137,8 +137,10 @@ parse_annotation <- function(data, text) {
 #' Assigns a value to a variable in the global environment.
 #' @param name Name of the variable to assign.
 #' @param value Value to assign to the variable.
+#' @param pos_env Position of the environment to assign the variable to.
+#' Default is 1 (global environment).
 #' @noRd
 #' @keywords internal
-.assign_global <- function(name, value) {
-  assign(name, value, envir = .GlobalEnv)
+.assign_global <- function(name, value, pos_env = 1) {
+  assign(name, value, envir = as.environment(pos_env))
 }
