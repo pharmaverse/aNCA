@@ -314,7 +314,9 @@ describe("update_main_intervals", {
 
     # --- Helper: Extract results for subject 1 ---
     get_results <- function(data_obj) {
-      suppressWarnings(PKNCA::pk.nca(data_obj)$result) %>% unique()
+      suppressWarnings(
+        PKNCA_calculate_nca(data_obj, blq_rule = blq_keep)[["result"]]
+      ) %>% unique()
     }
 
     # --- 1. No BLQ imputation ---
