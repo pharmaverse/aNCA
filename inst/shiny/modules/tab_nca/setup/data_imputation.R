@@ -3,16 +3,43 @@ data_imputation_ui <- function(id) {
 
   tagList(
     # BLQ imputation widgets
-    selectInput(
-      ns("select_blq_strategy"),
-      "Select BLQ Imputation Strategy",
-      choices = c(
-        "Tmax based imputation",
-        "Positional BLQ imputation",
-        "Set value for all BLQ",
-        "No BLQ handling"
+    fluidRow(
+      column(
+        width = 10,
+        selectInput(
+          ns("select_blq_strategy"),
+          "Select BLQ Imputation Strategy",
+          choices = c(
+            "Tmax based imputation",
+            "Positional BLQ imputation",
+            "Set value for all BLQ",
+            "No BLQ handling"
+          ),
+          selected = "No BLQ handling"
+        )
       ),
-      selected = "Tmax based imputation"
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h4("BLQ Imputation Help"),
+            p("BLQ (Below Limit of Quantification) imputation controls how values below the quantification limit are handled."),
+            tags$ul(
+              tags$li(tags$b("Tmax based:"), " Set rules for BLQ before/after Tmax."),
+              tags$li(tags$b("Positional:"), " Set rules for BLQ before, between, or after non-BLQ values."),
+              tags$li(tags$b("Set value:"), " Assign a single value to all BLQ."),
+              tags$li(tags$b("No handling:"), " Keep all values as is.")
+            ),
+            tags$b("Custom values:"),
+            p(HTML("In dropdowns, select <code>drop</code>, <code>keep</code>, or type a number (e.g., <code>0.05</code>) and press <kbd>Enter</kbd>.<br>Only numeric values, <code>drop</code>, or <code>keep</code> are accepted."))
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "400px"
+        )
+      )
     ),
     div(
       style = "margin-top: 1em;",
@@ -162,7 +189,10 @@ blq_selectize <- function(id, label, selected = NULL) {
     id, label,
     choices = unique(c("drop", "keep", selected)),
     selected = selected,
-    options = list(create = TRUE),
+    options = list(
+      create = TRUE,
+      placeholder = "Type a numeric value to impute or select option"
+    ),
     width = "25%"
   )
 }
