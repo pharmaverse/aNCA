@@ -137,6 +137,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
             # Create an output folder with all plots, tables and listings
             output_tmpdir <- file.path(tempdir(), "output")
+            browser()
+            session$userData$results
             save_output(output = session$userData$results, output_path = output_tmpdir)
             incProgress(0.1)
 
