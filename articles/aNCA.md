@@ -5,7 +5,7 @@ with the aNCA app.
 
 ## Step 1: Prepare Dataset
 
-#### Uploading a dataset
+#### 1. Uploading a dataset
 
 Click **Upload File** and select the dataset you would like to use. The
 data can be in `.csv`, `sas7bdat`, `.xslx`, `.parquet` or `.rds` format.
@@ -14,139 +14,118 @@ according to CDISC guidelines. Other formats of data will also work.
 Alternatively, for exploring the app, Users can use the Dummy dataset
 that is already uploaded.
 
-![Data upload](images/get_started/01.png)
+#### 2. Adding Filters
 
-#### Data format
+Once your data is uploaded, examine it, and then click the “Next” button
+on the bottom right.
+
+If you want to change the data by adding filters, click the *Add Filter*
+button.
+
+> Don’t forget to click **Submit Filters**!
+
+#### 3. Data Mapping
+
+Click **Next** to get to the *Mapping* section.
+
+- Map the correct columns in your dataset to the corresponding label.
+
+- For Unit Variables, if your dataset has a defined column for units,
+  select it. Otherwise, by scrolling down, you can select the units for
+  the corresponding columns. For example, you can select the value “mg”
+  in AVALU.
+
+- Click **Next** to get to the *Preview* section where you can review
+  your dataset.
+
+#### Data Format
 
 Some variables are mandatory (marked with \*), while others are
 optional. Custom variable names are supported as long as they are
 correctly mapped during the [Data Mapping](#id_##%20Data%20mapping)
 step.
 
-|                          | **Variable** | **Description**                                                    | **Format**        |
-|--------------------------|--------------|--------------------------------------------------------------------|-------------------|
-| **Grouping Identifiers** | STUDYID \*   | Study Identifier                                                   | character         |
-|                          | USUBJID \*   | Unique Subject Identifier                                          | character/numeric |
-|                          | ATPTREF \*   | Can be any column, and used to filter data for NCA calculations    | any               |
-|                          | TRT01A       | Treatment Group Identifier (Actual)                                | character         |
-|                          | TRT01P       | Treatment Group Identifier (Planned)                               | character         |
-|                          | AGE          | Age of Subject                                                     | numeric           |
-|                          | RACE         | Race of Subject                                                    | character         |
-|                          | SEX          | Sex of Subject                                                     | character         |
-|                          |              |                                                                    |                   |
-| **Sample variables**     | PARAM \*     | Analyte studied in the sample                                      | character         |
-|                          | PCSPEC \*    | Specimen Material Type                                             | character         |
-|                          | AVAL \*      | Analysis Value                                                     | numeric           |
-|                          |              |                                                                    |                   |
-| **Dose Variables**       | DOSETRT \*   | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
-|                          | ROUTE \*     | Route of Administration, either {intravascular} or {extravascular} | character         |
-|                          | DOSEA \*     | Actual Treatment Dose                                              | numeric           |
-|                          | ADOSEDUR     | Actual Treatment Dose                                              | numeric           |
-|                          |              |                                                                    |                   |
-| **Time Variables**       | AFRLT \*     | Actual Relative Time from Analyte First Dose                       | numeric           |
-|                          | ARRLT \*     | Actual Relative Time from Reference Dose                           | numeric           |
-|                          | NFRLT \*     | Nominal Relative Time from Analyte First Dose                      | numeric           |
-|                          | NRRLT \*     | Nominal Relative Time from Reference Dose                          | numeric           |
-|                          |              |                                                                    |                   |
-| **Time Variables**       | AVALU        | Analysis Value Unit                                                | character         |
-|                          | DOSEU        | Treatment Dose Units                                               | character         |
-|                          | RRLTU        | Relative Time from Reference Dose Unit                             | character         |
+Click here to view a table describing each variable
 
-#### Adding Filters
+|                          | Variable   | Description                                                        | Format            |
+|:-------------------------|:-----------|:-------------------------------------------------------------------|:------------------|
+| **Grouping Identifiers** | STUDYID \* | Study Identifier                                                   | character         |
+|                          | USUBJID \* | Unique Subject Identifier                                          | character/numeric |
+|                          | ATPTREF \* | Can be any column, and used to filter data for NCA calculations    | any               |
+|                          | TRT01A     | Treatment Group Identifier (Actual)                                | character         |
+|                          | TRT01P     | Treatment Group Identifier (Planned)                               | character         |
+|                          | AGE        | Age of Subject                                                     | numeric           |
+|                          | RACE       | Race of Subject                                                    | character         |
+|                          | SEX        | Sex of Subject                                                     | character         |
+| **Sample Variables**     | PARAM \*   | Analyte studied in the sample                                      | character         |
+|                          | PCSPEC \*  | Specimen Material Type                                             | character         |
+|                          | AVAL \*    | Analysis Value                                                     | numeric           |
+| **Dose Variables**       | DOSETRT \* | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
+|                          | ROUTE \*   | Route of Administration, either {intravascular} or {extravascular} | character         |
+|                          | DOSEA \*   | Actual Treatment Dose                                              | numeric           |
+|                          | ADOSEDUR   | Actual Treatment Dose                                              | numeric           |
+| **Time Variables**       | AFRLT \*   | Actual Relative Time from Analyte First Dose                       | numeric           |
+|                          | ARRLT \*   | Actual Relative Time from Reference Dose                           | numeric           |
+|                          | NFRLT \*   | Nominal Relative Time from Analyte First Dose                      | numeric           |
+|                          | NRRLT \*   | Nominal Relative Time from Reference Dose                          | numeric           |
+| **Time Variables**       | AVALU      | Analysis Value Unit                                                | character         |
+|                          | DOSEU      | Treatment Dose Units                                               | character         |
+|                          | RRLTU      | Relative Time from Reference Dose Unit                             | character         |
 
-Once your data is uploaded, examine it and then click “Next”. If you
-want to change the data by adding filters, click the *Add Filter*
-button.
+#### 4. Preview
 
-![Adding filters](images/get_started/02.png)
-
-> Don’t forget to click **Submit Filters**!
-
-#### Data Mapping
-
-Click “Next” to get to the *Mapping* section.
-
-- Map the correct columns in your dataset to the corresponding label.
-
-- For Unit Variables, if your dataset has a defined column for units,
-  select it. Otherwise, by scrolling down, you can select the units for
-  the corresponding columns.
-
-- Click **Submit Mapping**. You will be automatically directed to the
-  next tab.
-
-![Mapping](images/get_started/03.png)
-
-#### Preview
-
-Review the data and ensure that the columns have been mapped correctly,
-and all your filters have been applied. If there are any problems with
-your data (duplicates, missing times), application will display a
-warning message and in certain situations manual edits will be
-requested. Just follow the instructions.
+Review the data to ensure that the columns have been mapped correctly,
+and that all of your filters have been applied. If there are any
+problems with your data (duplicates, missing times), the application
+will display a warning message and in certain situations manual edits
+will be requested. Just follow the instructions. The ‘Exploration’,
+‘NCA’ and ‘TLG’ tabs on the left should now be accessible.
 
 ## Step 2: Exploratory Analysis
 
 In the *Exploration* tab, you will find the different visualization
-options, including Individual Plots and Mean Plots. Here you can check
-out your data to see if the profiles and subjects look good.
+options, including individual plots and mean plots.
+
+Here, you can check out your data to see if the profiles and subjects
+look good, and use the selection boxes on the right to toggle the
+formatting and other aspects of the plots. These include changing the
+scale (linear/log) of the plots and adding/removing standard deviation
+error bars and confidence intervals on the mean plots.
+
+Once you’ve made your choices you can download, save and inspect the
+visualizations in the top right corner of the plot.
 
 ## Step 3: Run NCA
 
 Click on the *NCA* tab in the menu bar to switch to the next section.
 
-### Data selection
+### Setup - Data Selection
 
 1.  *Settings*: Choose the Analyte, Dose Number(s) and/or Specimen(s)
     you would like to run the NCA on, the extrapolation method and the
     NCA parameters to calculate. Select additional options including
-    partial AUCs, units, or rule sets to flag the data. In the summary
-    tab, a table summarizes the settings you have selected. You can also
-    download the settings you have created, and upload them again the
-    next time you use the app, which will implement the saved setup.
-    ![NCA settings](images/get_started/04.png)
+    partial AUCs, units, or rule sets to flag the data at the bottom of
+    this tab. You can also download the settings you have created, and
+    upload them again the next time you use the app, which will
+    implement the saved setup. Note, only settings downloaded from the
+    app can be uploaded here.
 
-2.  Click **Run NCA** at the top of the page and check that the data is
-    as expected. You will automatically be redirected to the *Results*
-    tab.
-
-![Running NCA](images/get_started/05.png)
-
-## Step 4: NCA Results
-
-### Main Results
-
-The *NCA Results* tab shows the individual results of the NCA. You can
-select which parameters you would like to view. Results in red have been
-flagged as “FALSE” for the rule sets selected, results in purple are
-flagged as “MISSING”, and results in white are not flagged.
-
-### Exclusions and Manual Slopes
-
-Click on the *Slopes Information* tab to view more detailed information
-about the slopes selected in the NCA. To add exclusions or manual slope
-selections, redirect to the *Slope Selector* tab in the *Setup* page.
-
-![Slope selection](images/get_started/08.png)
-
-There are two different ways to add exclusions/selections to the slopes.
+*Slope Selector*: To add exclusions or manual slope selections, go to
+the *Slope Selector* tab in the *Setup* page. There are two different
+ways to add exclusions/selections to the slopes.
 
 ##### Via the Buttons
 
-1.  For selection and exclusion, click **+ Exclusion/Selection** and
+1.  For selection and exclusion, click on **+ Exclusion/Selection** and
     input the corresponding information. RANGE refers to the data point
     number in the slope, which can be seen by hovering over the points
     in the plots below.
 2.  To remove, select the sample row and click **- Remove selected
     rows**.
 
-![Slope selection buttons](images/get_started/09.png)
-
 ##### Via the Plots
 
 For in-app guidance, you can click the ? button.
-
-![Guidance](images/get_started/10.png)
 
 1.  For selection, click the first point and then the last point you
     want included in the slope. The plot should then update and a row
@@ -157,29 +136,63 @@ For in-app guidance, you can click the ? button.
 3.  To remove, either remove via the table selection, or repeat the same
     action (i.e. select a new slope, double click the same point).
 
-##### Applying the exclusions
+*Summary*: In this tab, a table summarizes the settings you have
+selected.
 
-Once the exclusions/selections have been added, click **Run NCA** again.
+2.  Click **Run NCA** at the top of the page and check that the data is
+    as expected. You will automatically be redirected to the *Results*
+    tab.
 
-You can check if they have been applied in the *Slopes Information*
-page, on the *Manual Adjustments* tab.
+## Step 4: NCA Results
+
+### Main Results
+
+The *NCA Results* tab shows the individual results of the NCA. You can
+select which parameters you would like to view. Results in red have been
+flagged as “FALSE” for the rule sets selected, results in purple are
+flagged as “MISSING”, and results in white are not flagged. Here, you
+have the option to download all of the results and just the NCA data,
+this is found at the bottom of the page.
+
+### Slopes Information - Exclusions and Manual Slopes after NCA
+
+You may also choose to add some exclusions or manual slope selections
+after the NCA has been run if you wish, this up to you. Just go back to
+the *Setup* tab and follow the instructions above about the *Slope
+Selector* in Step 3. Once the exclusions/selections have been added,
+click **Run NCA** again.
 
 > If you do not click **Run NCA**, the manual slopes will not be added!
+
+Back in the *Results* tab, click on the *Slopes Information* tab to view
+more detailed information about the slopes selected in the NCA. This is
+also where you can check that your slope modifications have been applied
+in the *Manual Adjustments* tab.
+
+### Descriptive Statistics
+
+The *Descriptive Statistics* tab allows you to see the statistical data
+calculated by the NCA. This includes mean, SD, min, max and others, you
+can choose which statistics and parameters you wish to display in your
+summary table. You can also choose which variables you want to group by.
+After you have selected your preferences, you can scroll down and press
+*Download NCA Summary Data* to download this summary table.
 
 #### Parameter Datasets
 
 In the Parameter Datasets tab you can see and export the ADPP, ADNCA,
 and PP datasets.
 
-![Parameter Datasets](images/get_started/12.png)
-
 ### Additional Analysis
 
 In the *Additional Analysis* tab, you can calculate tissue-matrix ratios
-using the concentration ratios tab. Input which specimen you would like
-as the numerator and denominator, and click **Submit**.
+and perform excretion analysis where applicable.
 
-![Additional Analysis](images/get_started/13.png)
+*Concentration Ratios*: You can calculate tissue-matrix ratios in this
+tab. Input which specimen you would like as the numerator and
+denominator, and you can choose what variable you would like to
+summarize this data by. This will generate a matrix ratios results table
+which you can download.
 
 ## Step 5: TLGs
 
@@ -188,38 +201,32 @@ as the numerator and denominator, and click **Submit**.
 After performing the analysis, you can prepare reports regarding the
 analysis, including various tables, listings and graphs.
 
-#### Order details
+#### Order Details
 
-Firstly, you will need to prepare an order for TLGs. Table in the *Order
-details* tab will display some default TLGs with their metadata. You can
-add additional reports by clicking the **Add TLG** button. This will
-bring up a list of available, defined TLGs. Select the ones you are
-interested in and click the **Add TLGs to Order** button. You can also
-remove unwanted entries by selecting them and clicking **Remove TLG**.
+Firstly, you will need to prepare an order for TLGs. The table in the
+*Order details* tab will display some default TLGs with their metadata.
+You can add additional reports by clicking the **Add TLG** button. This
+will bring up a list of available, defined TLGs. Select the ones you are
+interested in and click the **Add TLGs to Order** button.
+
+You can also remove unwanted entries by selecting them and clicking
+**Remove TLG**.
 
 When you are happy with the selection, click **Submit Order Details**.
-
-![Default TLG table](images/get_started/tlg_01.png)
 
 #### Navigating the TLGs
 
 The application provides three separate tabs for differentiating
-**Tables**, **Listings** and **Graphs**.
+**Tables**, **Listings** and **Graphs**, these are found at the top.
 
 Each tab will show a sidebar on the left of the screen. This will let
 you navigate each specific entry.
 
-![TLG navigation](images/get_started/tlg_02.png)
-
-Using the widgets at the top you can specify the number of entries per
-page and change the pages.
-
-![TLG pages](images/get_started/tlg_03.png)
+Also, in each tab using the widgets at the top you can specify the
+number of entries per page and change the pages.
 
 Lastly, the widgets on the right are used for customizing the resulting
 reports.
-
-![TLG customization](images/get_started/tlg_04.png)
 
 #### Customizing the TLGs
 
@@ -243,4 +250,4 @@ the data:
   given column, e.g. `$DOSEU` will translate to mg (for the dummy
   dataset).
 
-You can always click on the ? button for help.
+You can always click on the **?** button for help.

@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9028</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9033</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,7 +92,7 @@ with the aNCA app.</p>
 <h2 id="step-1-prepare-dataset">Step 1: Prepare Dataset<a class="anchor" aria-label="anchor" href="#step-1-prepare-dataset"></a>
 </h2>
 <div class="section level4">
-<h4 id="uploading-a-dataset">Uploading a dataset<a class="anchor" aria-label="anchor" href="#uploading-a-dataset"></a>
+<h4 id="uploading-a-dataset">1. Uploading a dataset<a class="anchor" aria-label="anchor" href="#uploading-a-dataset"></a>
 </h4>
 <p>Click <strong>Upload File</strong> and select the dataset you would
 like to use. The data can be in <code>.csv</code>,
@@ -101,232 +101,382 @@ like to use. The data can be in <code>.csv</code>,
 follows the ADNCA format according to CDISC guidelines. Other formats of
 data will also work. Alternatively, for exploring the app, Users can use
 the Dummy dataset that is already uploaded.</p>
-<p><img src="images/get_started/01.png" alt="Data upload"></p>
+<p><image src="images/get_started/upload_dataset.gif" alt="Data upload" width="100%"></image></p>
 </div>
 <div class="section level4">
-<h4 id="data-format">Data format<a class="anchor" aria-label="anchor" href="#data-format"></a>
+<h4 id="adding-filters">2. Adding Filters<a class="anchor" aria-label="anchor" href="#adding-filters"></a>
 </h4>
-<p>Some variables are mandatory (marked with *), while others are
-optional. Custom variable names are supported as long as they are
-correctly mapped during the <a href="#id_##%20Data%20mapping">Data
-Mapping</a> step.</p>
-<table style="width:100%;" class="table">
-<colgroup>
-<col width="24%">
-<col width="24%">
-<col width="26%">
-<col width="24%">
-</colgroup>
-<thead><tr class="header">
-<th></th>
-<th><strong>Variable</strong></th>
-<th><strong>Description</strong></th>
-<th><strong>Format</strong></th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><strong>Grouping Identifiers</strong></td>
-<td>STUDYID *</td>
-<td>Study Identifier</td>
-<td>character</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>USUBJID *</td>
-<td>Unique Subject Identifier</td>
-<td>character/numeric</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>ATPTREF *</td>
-<td>Can be any column, and used to filter data for NCA calculations</td>
-<td>any</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>TRT01A</td>
-<td>Treatment Group Identifier (Actual)</td>
-<td>character</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>TRT01P</td>
-<td>Treatment Group Identifier (Planned)</td>
-<td>character</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>AGE</td>
-<td>Age of Subject</td>
-<td>numeric</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>RACE</td>
-<td>Race of Subject</td>
-<td>character</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>SEX</td>
-<td>Sex of Subject</td>
-<td>character</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td><strong>Sample variables</strong></td>
-<td>PARAM *</td>
-<td>Analyte studied in the sample</td>
-<td>character</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>PCSPEC *</td>
-<td>Specimen Material Type</td>
-<td>character</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>AVAL *</td>
-<td>Analysis Value</td>
-<td>numeric</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td><strong>Dose Variables</strong></td>
-<td>DOSETRT *</td>
-<td>Drug/Treatment compound. When relevant, should match with PARAM</td>
-<td>character</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>ROUTE *</td>
-<td>Route of Administration, either {intravascular} or
-{extravascular}</td>
-<td>character</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>DOSEA *</td>
-<td>Actual Treatment Dose</td>
-<td>numeric</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>ADOSEDUR</td>
-<td>Actual Treatment Dose</td>
-<td>numeric</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td><strong>Time Variables</strong></td>
-<td>AFRLT *</td>
-<td>Actual Relative Time from Analyte First Dose</td>
-<td>numeric</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>ARRLT *</td>
-<td>Actual Relative Time from Reference Dose</td>
-<td>numeric</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>NFRLT *</td>
-<td>Nominal Relative Time from Analyte First Dose</td>
-<td>numeric</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>NRRLT *</td>
-<td>Nominal Relative Time from Reference Dose</td>
-<td>numeric</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td><strong>Time Variables</strong></td>
-<td>AVALU</td>
-<td>Analysis Value Unit</td>
-<td>character</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>DOSEU</td>
-<td>Treatment Dose Units</td>
-<td>character</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>RRLTU</td>
-<td>Relative Time from Reference Dose Unit</td>
-<td>character</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level4">
-<h4 id="adding-filters">Adding Filters<a class="anchor" aria-label="anchor" href="#adding-filters"></a>
-</h4>
-<p>Once your data is uploaded, examine it and then click “Next”. If you
-want to change the data by adding filters, click the <em>Add Filter</em>
-button.</p>
-<p><img src="images/get_started/02.png" alt="Adding filters"></p>
+<p>Once your data is uploaded, examine it, and then click the “Next”
+button on the bottom right.</p>
+<p><image src="images/get_started/examine_data_next.gif" alt="Mapping"></image></p>
+<p>If you want to change the data by adding filters, click the <em>Add
+Filter</em> button.</p>
+<p><image src="images/get_started/adding_filters.gif" alt="Adding filters"></image></p>
 <blockquote class="important">
 <p>Don’t forget to click <strong>Submit Filters</strong>!</p>
 </blockquote>
 </div>
 <div class="section level4">
-<h4 id="data-mapping">Data Mapping<a class="anchor" aria-label="anchor" href="#data-mapping"></a>
+<h4 id="data-mapping">3. Data Mapping<a class="anchor" aria-label="anchor" href="#data-mapping"></a>
 </h4>
-<p>Click “Next” to get to the <em>Mapping</em> section.</p>
+<p>Click <strong>Next</strong> to get to the <em>Mapping</em>
+section.</p>
 <ul>
 <li><p>Map the correct columns in your dataset to the corresponding
 label.</p></li>
 <li><p>For Unit Variables, if your dataset has a defined column for
 units, select it. Otherwise, by scrolling down, you can select the units
-for the corresponding columns.</p></li>
-<li><p>Click <strong>Submit Mapping</strong>. You will be automatically
-directed to the next tab.</p></li>
+for the corresponding columns. For example, you can select the value
+“mg” in AVALU.</p></li>
+<li><p>Click <strong>Next</strong> to get to the <em>Preview</em>
+section where you can review your dataset.</p></li>
 </ul>
-<p><img src="images/get_started/03.png" alt="Mapping"></p>
+<p><image src="images/get_started/data_mapping.gif" alt="Mapping"></image></p>
 </div>
 <div class="section level4">
-<h4 id="preview">Preview<a class="anchor" aria-label="anchor" href="#preview"></a>
+<h4 id="data-format">Data Format<a class="anchor" aria-label="anchor" href="#data-format"></a>
 </h4>
-<p>Review the data and ensure that the columns have been mapped
-correctly, and all your filters have been applied. If there are any
-problems with your data (duplicates, missing times), application will
-display a warning message and in certain situations manual edits will be
-requested. Just follow the instructions.</p>
+<p>Some variables are mandatory (marked with *), while others are
+optional. Custom variable names are supported as long as they are
+correctly mapped during the <a href="#id_##%20Data%20mapping">Data
+Mapping</a> step.</p>
+<details><summary style="font-weight: bold; font-size:large;">
+Click here to view a table describing each variable
+</summary><table class="table">
+<thead><tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:left;">
+Description
+</th>
+<th style="text-align:left;">
+Format
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<b>Grouping Identifiers</b>
+</td>
+<td style="text-align:left;">
+STUDYID *
+</td>
+<td style="text-align:left;">
+Study Identifier
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+USUBJID *
+</td>
+<td style="text-align:left;">
+Unique Subject Identifier
+</td>
+<td style="text-align:left;">
+character/numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+ATPTREF *
+</td>
+<td style="text-align:left;">
+Can be any column, and used to filter data for NCA calculations
+</td>
+<td style="text-align:left;">
+any
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+TRT01A
+</td>
+<td style="text-align:left;">
+Treatment Group Identifier (Actual)
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+TRT01P
+</td>
+<td style="text-align:left;">
+Treatment Group Identifier (Planned)
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+AGE
+</td>
+<td style="text-align:left;">
+Age of Subject
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+RACE
+</td>
+<td style="text-align:left;">
+Race of Subject
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SEX
+</td>
+<td style="text-align:left;">
+Sex of Subject
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<b>Sample Variables</b>
+</td>
+<td style="text-align:left;">
+PARAM *
+</td>
+<td style="text-align:left;">
+Analyte studied in the sample
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+PCSPEC *
+</td>
+<td style="text-align:left;">
+Specimen Material Type
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+AVAL *
+</td>
+<td style="text-align:left;">
+Analysis Value
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<b>Dose Variables</b>
+</td>
+<td style="text-align:left;">
+DOSETRT *
+</td>
+<td style="text-align:left;">
+Drug/Treatment compound. When relevant, should match with PARAM
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+ROUTE *
+</td>
+<td style="text-align:left;">
+Route of Administration, either {intravascular} or {extravascular}
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+DOSEA *
+</td>
+<td style="text-align:left;">
+Actual Treatment Dose
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+ADOSEDUR
+</td>
+<td style="text-align:left;">
+Actual Treatment Dose
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<b>Time Variables</b>
+</td>
+<td style="text-align:left;">
+AFRLT *
+</td>
+<td style="text-align:left;">
+Actual Relative Time from Analyte First Dose
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+ARRLT *
+</td>
+<td style="text-align:left;">
+Actual Relative Time from Reference Dose
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+NFRLT *
+</td>
+<td style="text-align:left;">
+Nominal Relative Time from Analyte First Dose
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+NRRLT *
+</td>
+<td style="text-align:left;">
+Nominal Relative Time from Reference Dose
+</td>
+<td style="text-align:left;">
+numeric
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<b>Time Variables</b>
+</td>
+<td style="text-align:left;">
+AVALU
+</td>
+<td style="text-align:left;">
+Analysis Value Unit
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+DOSEU
+</td>
+<td style="text-align:left;">
+Treatment Dose Units
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+RRLTU
+</td>
+<td style="text-align:left;">
+Relative Time from Reference Dose Unit
+</td>
+<td style="text-align:left;">
+character
+</td>
+</tr>
+</tbody>
+</table></details>
+</div>
+<div class="section level4">
+<h4 id="preview">4. Preview<a class="anchor" aria-label="anchor" href="#preview"></a>
+</h4>
+<p>Review the data to ensure that the columns have been mapped
+correctly, and that all of your filters have been applied. If there are
+any problems with your data (duplicates, missing times), the application
+will display a warning message and in certain situations manual edits
+will be requested. Just follow the instructions. The ‘Exploration’,
+‘NCA’ and ‘TLG’ tabs on the left should now be accessible.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="step-2-exploratory-analysis">Step 2: Exploratory Analysis<a class="anchor" aria-label="anchor" href="#step-2-exploratory-analysis"></a>
 </h2>
 <p>In the <em>Exploration</em> tab, you will find the different
-visualization options, including Individual Plots and Mean Plots. Here
-you can check out your data to see if the profiles and subjects look
-good.</p>
+visualization options, including individual plots and mean plots.</p>
+<p><image src="images/get_started/exploratory_plot_types.gif" alt="Mapping"></image></p>
+<p>Here, you can check out your data to see if the profiles and subjects
+look good, and use the selection boxes on the right to toggle the
+formatting and other aspects of the plots. These include changing the
+scale (linear/log) of the plots and adding/removing standard deviation
+error bars and confidence intervals on the mean plots.</p>
+<p><image src="images/get_started/exploratory_graph_toggles.gif" alt="Mapping"></image></p>
+<p>Once you’ve made your choices you can download, save and inspect the
+visualizations in the top right corner of the plot.</p>
+<p><image src="images/get_started/exploration_options.gif" alt="Mapping"></image></p>
 </div>
 <div class="section level2">
 <h2 id="step-3-run-nca">Step 3: Run NCA<a class="anchor" aria-label="anchor" href="#step-3-run-nca"></a>
@@ -334,64 +484,42 @@ good.</p>
 <p>Click on the <em>NCA</em> tab in the menu bar to switch to the next
 section.</p>
 <div class="section level3">
-<h3 id="data-selection">Data selection<a class="anchor" aria-label="anchor" href="#data-selection"></a>
+<h3 id="setup---data-selection">Setup - Data Selection<a class="anchor" aria-label="anchor" href="#setup---data-selection"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li><p><em>Settings</em>: Choose the Analyte, Dose Number(s) and/or
+<li>
+<em>Settings</em>: Choose the Analyte, Dose Number(s) and/or
 Specimen(s) you would like to run the NCA on, the extrapolation method
 and the NCA parameters to calculate. Select additional options including
-partial AUCs, units, or rule sets to flag the data. In the summary tab,
-a table summarizes the settings you have selected. You can also download
-the settings you have created, and upload them again the next time you
-use the app, which will implement the saved setup.
-<img src="images/get_started/04.png" alt="NCA settings"></p></li>
-<li><p>Click <strong>Run NCA</strong> at the top of the page and check
-that the data is as expected. You will automatically be redirected to
-the <em>Results</em> tab.</p></li>
+partial AUCs, units, or rule sets to flag the data at the bottom of this
+tab. You can also download the settings you have created, and upload
+them again the next time you use the app, which will implement the saved
+setup. Note, only settings downloaded from the app can be uploaded
+here.</li>
 </ol>
-<p><img src="images/get_started/05.png" alt="Running NCA"></p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="step-4-nca-results">Step 4: NCA Results<a class="anchor" aria-label="anchor" href="#step-4-nca-results"></a>
-</h2>
-<div class="section level3">
-<h3 id="main-results">Main Results<a class="anchor" aria-label="anchor" href="#main-results"></a>
-</h3>
-<p>The <em>NCA Results</em> tab shows the individual results of the NCA.
-You can select which parameters you would like to view. Results in red
-have been flagged as “FALSE” for the rule sets selected, results in
-purple are flagged as “MISSING”, and results in white are not
-flagged.</p>
-</div>
-<div class="section level3">
-<h3 id="exclusions-and-manual-slopes">Exclusions and Manual Slopes<a class="anchor" aria-label="anchor" href="#exclusions-and-manual-slopes"></a>
-</h3>
-<p>Click on the <em>Slopes Information</em> tab to view more detailed
-information about the slopes selected in the NCA. To add exclusions or
-manual slope selections, redirect to the <em>Slope Selector</em> tab in
-the <em>Setup</em> page.</p>
-<p><img src="images/get_started/08.png" alt="Slope selection"></p>
-<p>There are two different ways to add exclusions/selections to the
+<p><image src="images/get_started/download_settings_nca.gif" alt="NCA settings" width="100%"></image></p>
+<p><em>Slope Selector</em>: To add exclusions or manual slope
+selections, go to the <em>Slope Selector</em> tab in the <em>Setup</em>
+page. There are two different ways to add exclusions/selections to the
 slopes.</p>
 <div class="section level5">
 <h5 id="via-the-buttons">Via the Buttons<a class="anchor" aria-label="anchor" href="#via-the-buttons"></a>
 </h5>
 <ol style="list-style-type: decimal">
-<li>For selection and exclusion, click <strong>+
+<li>For selection and exclusion, click on <strong>+
 Exclusion/Selection</strong> and input the corresponding information.
 RANGE refers to the data point number in the slope, which can be seen by
 hovering over the points in the plots below.</li>
 <li>To remove, select the sample row and click <strong>- Remove selected
 rows</strong>.</li>
 </ol>
-<p><img src="images/get_started/09.png" alt="Slope selection buttons"></p>
+<p><image src="images/get_started/slope_selector_exclusion_remove.gif" alt="NCA settings" width="100%"></image></p>
 </div>
 <div class="section level5">
 <h5 id="via-the-plots">Via the Plots<a class="anchor" aria-label="anchor" href="#via-the-plots"></a>
 </h5>
 <p>For in-app guidance, you can click the <span class="help-button">?</span> button.</p>
-<p><img src="images/get_started/10.png" alt="Guidance"></p>
+<p><image src="images/get_started/nca_setup_slope_selector.gif" alt="NCA settings" width="100%"></image></p>
 <ol style="list-style-type: decimal">
 <li>For selection, click the first point and then the last point you
 want included in the slope. The plot should then update and a row should
@@ -401,35 +529,80 @@ should update along with the table.</li>
 <li>To remove, either remove via the table selection, or repeat the same
 action (i.e. select a new slope, double click the same point).</li>
 </ol>
+<p><em>Summary</em>: In this tab, a table summarizes the settings you
+have selected.</p>
+<ol start="2" style="list-style-type: decimal">
+<li>Click <strong>Run NCA</strong> at the top of the page and check that
+the data is as expected. You will automatically be redirected to the
+<em>Results</em> tab.</li>
+</ol>
+<p><image src="images/get_started/run_nca_button.gif" alt="NCA settings" width="100%"></image></p>
 </div>
-<div class="section level5">
-<h5 id="applying-the-exclusions">Applying the exclusions<a class="anchor" aria-label="anchor" href="#applying-the-exclusions"></a>
-</h5>
-<p>Once the exclusions/selections have been added, click <strong>Run
-NCA</strong> again.</p>
-<p>You can check if they have been applied in the <em>Slopes
-Information</em> page, on the <em>Manual Adjustments</em> tab.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="step-4-nca-results">Step 4: NCA Results<a class="anchor" aria-label="anchor" href="#step-4-nca-results"></a>
+</h2>
+<div class="section level3">
+<h3 id="main-results">Main Results<a class="anchor" aria-label="anchor" href="#main-results"></a>
+</h3>
+<p>The <em>NCA Results</em> tab shows the individual results of the NCA.
+You can select which parameters you would like to view. Results in <span style="color: red;">red have been flagged as “FALSE”</span> for the rule
+sets selected, results in <span style="color: #8660CD;">purple are
+flagged as “MISSING”</span>, and results in white are not flagged. Here,
+you have the option to download all of the results and just the NCA
+data, this is found at the bottom of the page.</p>
+<p><image src="images/get_started/nca_results_download.gif" alt="NCA settings" width="100%"></image></p>
+</div>
+<div class="section level3">
+<h3 id="slopes-information---exclusions-and-manual-slopes-after-nca">Slopes Information - Exclusions and Manual Slopes after NCA<a class="anchor" aria-label="anchor" href="#slopes-information---exclusions-and-manual-slopes-after-nca"></a>
+</h3>
+<p>You may also choose to add some exclusions or manual slope selections
+after the NCA has been run if you wish, this up to you. Just go back to
+the <em>Setup</em> tab and follow the instructions above about the
+<em>Slope Selector</em> in Step 3. Once the exclusions/selections have
+been added, click <strong>Run NCA</strong> again.</p>
 <blockquote class="important">
 <p>If you do not click <strong>Run NCA</strong>, the manual slopes will
 not be added!</p>
 </blockquote>
+<p>Back in the <em>Results</em> tab, click on the <em>Slopes
+Information</em> tab to view more detailed information about the slopes
+selected in the NCA. This is also where you can check that your slope
+modifications have been applied in the <em>Manual Adjustments</em>
+tab.</p>
 </div>
+<div class="section level3">
+<h3 id="descriptive-statistics">Descriptive Statistics<a class="anchor" aria-label="anchor" href="#descriptive-statistics"></a>
+</h3>
+<p>The <em>Descriptive Statistics</em> tab allows you to see the
+statistical data calculated by the NCA. This includes mean, SD, min, max
+and others, you can choose which statistics and parameters you wish to
+display in your summary table. You can also choose which variables you
+want to group by. After you have selected your preferences, you can
+scroll down and press <em>Download NCA Summary Data</em> to download
+this summary table.</p>
+<p><image src="images/get_started/descriptive_statistics.gif" alt="NCA settings" width="100%"></image></p>
 <div class="section level4">
 <h4 id="parameter-datasets">Parameter Datasets<a class="anchor" aria-label="anchor" href="#parameter-datasets"></a>
 </h4>
 <p>In the Parameter Datasets tab you can see and export the ADPP, ADNCA,
 and PP datasets.</p>
-<p><img src="images/get_started/12.png" alt="Parameter Datasets"></p>
+<p><image src="images/get_started/parameter_datasets.gif" alt="Parameter Datasets" width="100%"></image></p>
 </div>
 </div>
 <div class="section level3">
 <h3 id="additional-analysis">Additional Analysis<a class="anchor" aria-label="anchor" href="#additional-analysis"></a>
 </h3>
 <p>In the <em>Additional Analysis</em> tab, you can calculate
-tissue-matrix ratios using the concentration ratios tab. Input which
-specimen you would like as the numerator and denominator, and click
-<strong>Submit</strong>.</p>
-<p><img src="images/get_started/13.png" alt="Additional Analysis"></p>
+tissue-matrix ratios and perform excretion analysis where
+applicable.</p>
+<p><em>Concentration Ratios</em>: You can calculate tissue-matrix ratios
+in this tab. Input which specimen you would like as the numerator and
+denominator, and you can choose what variable you would like to
+summarize this data by. This will generate a matrix ratios results table
+which you can download.</p>
+<p><image src="images/get_started/matrix_ratios.gif" alt="Parameter Datasets" width="100%"></image></p>
 </div>
 </div>
 <div class="section level2">
@@ -442,34 +615,36 @@ available.</p>
 <p>After performing the analysis, you can prepare reports regarding the
 analysis, including various tables, listings and graphs.</p>
 <div class="section level4">
-<h4 id="order-details">Order details<a class="anchor" aria-label="anchor" href="#order-details"></a>
+<h4 id="order-details">Order Details<a class="anchor" aria-label="anchor" href="#order-details"></a>
 </h4>
-<p>Firstly, you will need to prepare an order for TLGs. Table in the
+<p>Firstly, you will need to prepare an order for TLGs. The table in the
 <em>Order details</em> tab will display some default TLGs with their
 metadata. You can add additional reports by clicking the <strong>Add
 TLG</strong> button. This will bring up a list of available, defined
 TLGs. Select the ones you are interested in and click the <strong>Add
-TLGs to Order</strong> button. You can also remove unwanted entries by
-selecting them and clicking <strong>Remove TLG</strong>.</p>
+TLGs to Order</strong> button.</p>
+<p><image src="images/get_started/tlg_selection_add.gif" alt="Default TLG table" width="100%"></image></p>
+<p>You can also remove unwanted entries by selecting them and clicking
+<strong>Remove TLG</strong>.</p>
+<p><image src="images/get_started/tlg_selection_remove.gif" alt="Default TLG table" width="100%"></image></p>
 <p>When you are happy with the selection, click <strong>Submit Order
 Details</strong>.</p>
-<p><img src="images/get_started/tlg_01.png" alt="Default TLG table"></p>
 </div>
 <div class="section level4">
 <h4 id="navigating-the-tlgs">Navigating the TLGs<a class="anchor" aria-label="anchor" href="#navigating-the-tlgs"></a>
 </h4>
 <p>The application provides three separate tabs for differentiating
 <strong>Tables</strong>, <strong>Listings</strong> and
-<strong>Graphs</strong>.</p>
+<strong>Graphs</strong>, these are found at the top.</p>
 <p>Each tab will show a sidebar on the left of the screen. This will let
 you navigate each specific entry.</p>
-<p><img src="images/get_started/tlg_02.png" alt="TLG navigation"></p>
-<p>Using the widgets at the top you can specify the number of entries
-per page and change the pages.</p>
-<p><img src="images/get_started/tlg_03.png" alt="TLG pages"></p>
+<p><image src="images/get_started/tlg_sidebar.gif" alt="TLG navigation" width="100%"></image></p>
+<p>Also, in each tab using the widgets at the top you can specify the
+number of entries per page and change the pages.</p>
+<p><image src="images/get_started/tlg_widgets.gif" alt="TLG pages" width="100%"></image></p>
 <p>Lastly, the widgets on the right are used for customizing the
 resulting reports.</p>
-<p><img src="images/get_started/tlg_04.png" alt="TLG customization"></p>
+<p><image src="images/get_started/tlg_customizing_reports.gif" alt="TLG customization" width="100%"></image></p>
 </div>
 <div class="section level4">
 <h4 id="customizing-the-tlgs">Customizing the TLGs<a class="anchor" aria-label="anchor" href="#customizing-the-tlgs"></a>
@@ -493,8 +668,7 @@ e.g. <code>!DOSEU</code> will translate to
 <strong>value</strong> for a given column, e.g. <code>$DOSEU</code> will
 translate to mg (for the dummy dataset).</li>
 </ul>
-<p>You can always click on the <span class="help-button">?</span> button
-for help.</p>
+<p>You can always click on the <strong><span class="help-button">?</span></strong> button for help.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
