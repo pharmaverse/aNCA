@@ -56,6 +56,8 @@
 - Units table bugs fixed, so it is filtered based on NCA setup and the
   table is searchable for each column
   ([\#870](https://github.com/pharmaverse/aNCA/issues/870))
+- Bug fix to allow for unrecognized units to be used in AVALU and DOSEU
+  ([\#861](https://github.com/pharmaverse/aNCA/issues/861))
 
 ## aNCA 0.1.0
 
