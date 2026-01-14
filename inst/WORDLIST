@@ -1,6 +1,5 @@
 ADNCA
 ADOSEDUR
-ADPC
 ADPP
 AEFRLT
 AFRLT
@@ -25,7 +24,6 @@ DOSEA
 DOSETRT
 DOSEU
 DOSNOA
-DTYPE
 Denney
 Duvvuri
 EMA
@@ -69,15 +67,15 @@ Pharmacokinetics
 Pharmaverse
 Plotly
 Pre
-RCAMINT
-RENALCL
 README
+RENALCL
 RRLTU
 RStudio
 RefGroups
 RefParameter
 Req
 Roadmap
+SBS
 SDTM
 SMS
 STUDYID
@@ -119,6 +117,7 @@ extravascular
 ggplot
 ggplots
 ifelse
+img
 intravascular
 kable
 knitr
