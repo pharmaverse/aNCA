@@ -144,3 +144,60 @@ parse_annotation <- function(data, text) {
 .assign_global <- function(name, value, pos_env = 1) {
   assign(name, value, envir = as.environment(pos_env))
 }
+
+#' Helper: adjust class and length (optional) for a data.frame
+#'  based on metadata_nca_variables
+#'
+#' @details
+#' Adjusts the class and length of each variable in the provided data frame
+#' according to the specifications in the metadata data frame. Only adjusts
+#' the length if `adjust_length = TRUE`
+#'
+#' @param df Data frame to adjust.
+#' @param metadata Metadata data frame with variable specifications.
+#' @param adjust_length Logical indicating whether to adjust length of variables.
+#' @returns Adjusted data frame.
+#'
+#' @importFrom dplyr filter
+#' @importFrom magrittr `%>%`
+#'
+#' @export
+adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
+  for (var in names(df)) {
+    var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
+
+    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
+
+    df[[var]] <- .apply_var_rules(
+      df[[var]], var_specs$Type, var_specs$Length, var, adjust_length
+    )
+  }
+  df
+}
+
+# Helper: Handles the logic for a single variable
+.apply_var_rules <- function(val, type, len, name, adjust_length) {
+
+  # Character
+  if (type %in% c("Char", "text")) {
+    val <- as.character(val)
+    if (adjust_length) return(substr(val, 1, len))
+    return(val)
+  }
+
+  # Numeric
+  if (type %in% c("Num", "integer", "float") && !endsWith(name, "DTM")) {
+    val <- as.numeric(val)
+    if (adjust_length) return(round(val, len))
+    return(val)
+  }
+
+  # Silent Ignore
+  if (type %in% c("dateTime", "duration", "integer", "float", "Num")) {
+    return(val)
+  }
+
+  # Warning
+  warning("Unknown var specification type: ", type, " (", name, ")")
+  val
+}
