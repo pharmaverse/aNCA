@@ -223,14 +223,14 @@ update_main_intervals <- function(
       envir = as.environment("package:aNCA")
     )
 
-  data$intervals <- data$intervals %>%
-    mutate(
-      impute = ifelse(
-        is.na(impute) | impute == "",
-        "na",
-        paste0("na, ", impute)
+    data$intervals <- data$intervals %>%
+      mutate(
+        impute = ifelse(
+          is.na(impute) | impute == "",
+          "na",
+          paste0("na, ", impute)
+        )
       )
-    )
   }
 
   ############################################

@@ -11,7 +11,10 @@ data_imputation_ui <- function(id) {
           "NA Imputation",
           choices = c("drop", "0"),
           selected = "drop",
-          options = list(create = TRUE, placeholder = "Type a numeric value to impute or select option"),
+          options = list(
+            create = TRUE,
+            placeholder = "Type a numeric value to impute or select option"
+          ),
           width = "25%"
         )
       ),
@@ -24,10 +27,16 @@ data_imputation_ui <- function(id) {
             tags$ul(
               tags$li(tags$b("drop:"), " Remove rows with NA values."),
               tags$li(tags$b("0:"), " Impute NA values as 0."),
-              tags$li(tags$b("Numeric value:"), " Type a number (e.g., 0.1) and press Enter to impute all NAs with that value.")
+              tags$li(
+                tags$b("Numeric value:"),
+                " Type a number (e.g., 0.1) and press Enter to impute all NAs with that value."
+              )
             ),
-            p(HTML("Only numeric values, <code>drop</code>, or <code>0</code> are accepted. NA imputation occurs before BLQ imputation.
-                   Any imputed 0 values will be considered BLQs for it."))
+            p(HTML(
+              "Only numeric values, <code>drop</code>, or <code>0</code> are accepted. ",
+              "NA imputation occurs before BLQ imputation. ",
+              "Any imputed 0 values will be considered BLQs for it."
+            ))
           ),
           style = "unite",
           right = TRUE,
