@@ -14,13 +14,19 @@ according to CDISC guidelines. Other formats of data will also work.
 Alternatively, for exploring the app, Users can use the Dummy dataset
 that is already uploaded.
 
+![Data upload](images/get_started/upload_dataset.gif)
+
 #### 2. Adding Filters
 
 Once your data is uploaded, examine it, and then click the “Next” button
 on the bottom right.
 
+![Mapping](images/get_started/examine_data_next.gif)
+
 If you want to change the data by adding filters, click the *Add Filter*
 button.
+
+![Adding filters](images/get_started/adding_filters.gif)
 
 > Don’t forget to click **Submit Filters**!
 
@@ -37,6 +43,8 @@ Click **Next** to get to the *Mapping* section.
 
 - Click **Next** to get to the *Preview* section where you can review
   your dataset.
+
+![Mapping](images/get_started/data_mapping.gif)
 
 #### Data Format
 
@@ -86,14 +94,20 @@ will be requested. Just follow the instructions. The ‘Exploration’,
 In the *Exploration* tab, you will find the different visualization
 options, including individual plots and mean plots.
 
+![Mapping](images/get_started/exploratory_plot_types.gif)
+
 Here, you can check out your data to see if the profiles and subjects
 look good, and use the selection boxes on the right to toggle the
 formatting and other aspects of the plots. These include changing the
 scale (linear/log) of the plots and adding/removing standard deviation
 error bars and confidence intervals on the mean plots.
 
+![Mapping](images/get_started/exploratory_graph_toggles.gif)
+
 Once you’ve made your choices you can download, save and inspect the
 visualizations in the top right corner of the plot.
+
+![Mapping](images/get_started/exploration_options.gif)
 
 ## Step 3: Run NCA
 
@@ -110,6 +124,8 @@ Click on the *NCA* tab in the menu bar to switch to the next section.
     implement the saved setup. Note, only settings downloaded from the
     app can be uploaded here.
 
+![NCA settings](images/get_started/download_settings_nca.gif)
+
 *Slope Selector*: To add exclusions or manual slope selections, go to
 the *Slope Selector* tab in the *Setup* page. There are two different
 ways to add exclusions/selections to the slopes.
@@ -123,9 +139,13 @@ ways to add exclusions/selections to the slopes.
 2.  To remove, select the sample row and click **- Remove selected
     rows**.
 
+![NCA settings](images/get_started/slope_selector_exclusion_remove.gif)
+
 ##### Via the Plots
 
 For in-app guidance, you can click the ? button.
+
+![NCA settings](images/get_started/nca_setup_slope_selector.gif)
 
 1.  For selection, click the first point and then the last point you
     want included in the slope. The plot should then update and a row
@@ -143,6 +163,8 @@ selected.
     as expected. You will automatically be redirected to the *Results*
     tab.
 
+![NCA settings](images/get_started/run_nca_button.gif)
+
 ## Step 4: NCA Results
 
 ### Main Results
@@ -153,6 +175,8 @@ flagged as “FALSE” for the rule sets selected, results in purple are
 flagged as “MISSING”, and results in white are not flagged. Here, you
 have the option to download all of the results and just the NCA data,
 this is found at the bottom of the page.
+
+![NCA settings](images/get_started/nca_results_download.gif)
 
 ### Slopes Information - Exclusions and Manual Slopes after NCA
 
@@ -178,10 +202,14 @@ summary table. You can also choose which variables you want to group by.
 After you have selected your preferences, you can scroll down and press
 *Download NCA Summary Data* to download this summary table.
 
+![NCA settings](images/get_started/descriptive_statistics.gif)
+
 #### Parameter Datasets
 
 In the Parameter Datasets tab you can see and export the ADPP, ADNCA,
 and PP datasets.
+
+![Parameter Datasets](images/get_started/parameter_datasets.gif)
 
 ### Additional Analysis
 
@@ -193,6 +221,8 @@ tab. Input which specimen you would like as the numerator and
 denominator, and you can choose what variable you would like to
 summarize this data by. This will generate a matrix ratios results table
 which you can download.
+
+![Parameter Datasets](images/get_started/matrix_ratios.gif)
 
 ## Step 5: TLGs
 
@@ -209,8 +239,12 @@ You can add additional reports by clicking the **Add TLG** button. This
 will bring up a list of available, defined TLGs. Select the ones you are
 interested in and click the **Add TLGs to Order** button.
 
+![Default TLG table](images/get_started/tlg_selection_add.gif)
+
 You can also remove unwanted entries by selecting them and clicking
 **Remove TLG**.
+
+![Default TLG table](images/get_started/tlg_selection_remove.gif)
 
 When you are happy with the selection, click **Submit Order Details**.
 
@@ -222,11 +256,17 @@ The application provides three separate tabs for differentiating
 Each tab will show a sidebar on the left of the screen. This will let
 you navigate each specific entry.
 
+![TLG navigation](images/get_started/tlg_sidebar.gif)
+
 Also, in each tab using the widgets at the top you can specify the
 number of entries per page and change the pages.
 
+![TLG pages](images/get_started/tlg_widgets.gif)
+
 Lastly, the widgets on the right are used for customizing the resulting
 reports.
+
+![TLG customization](images/get_started/tlg_customizing_reports.gif)
 
 #### Customizing the TLGs
 
