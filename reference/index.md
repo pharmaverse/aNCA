@@ -59,6 +59,10 @@
 - [`add_qmd_table()`](https://pharmaverse.github.io/aNCA/reference/add_qmd_table.md)
   : Helper to create a Quarto code chunk for a table
 
+- [`adjust_class_and_length()`](https://pharmaverse.github.io/aNCA/reference/adjust_class_and_length.md)
+  : Helper: adjust class and length (optional) for a data.frame based on
+  metadata_nca_variables
+
 - [`apply_filters()`](https://pharmaverse.github.io/aNCA/reference/apply_filters.md)
   : Apply Filters to a Dataset
 
