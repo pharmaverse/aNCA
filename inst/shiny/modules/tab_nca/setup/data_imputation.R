@@ -60,15 +60,29 @@ data_imputation_ui <- function(id) {
         dropdown(
           div(
             tags$h4("BLQ Imputation Help"),
-            p("BLQ (Below Limit of Quantification) imputation controls how values below the quantification limit are handled."),
+            p("BLQ (Below Limit of Quantification) imputation controls"),
             tags$ul(
-              tags$li(tags$b("Tmax based:"), " Set rules for BLQ before/after Tmax."),
-              tags$li(tags$b("Positional:"), " Set rules for BLQ before, between, or after non-BLQ values."),
-              tags$li(tags$b("Set value:"), " Assign a single value to all BLQ."),
-              tags$li(tags$b("No handling:"), " Keep all values as is.")
+              tags$li(
+                tags$b("Tmax based:"), " Set rules for BLQ values before/after Tmax."
+              ),
+              tags$li(
+                tags$b("Positional:"),
+                " Set rules for BLQ values before, between, or after non-BLQ values."
+              ),
+              tags$li(
+                tags$b("Set value:"), " Assign a single value to all BLQ."
+              ),
+              tags$li(
+                tags$b("No handling:"), " Keep all values as is."
+              )
             ),
             tags$b("Custom values:"),
-            p(HTML("In dropdowns, select <code>drop</code>, <code>keep</code>, or type a number (e.g., <code>0.05</code>) and press <kbd>Enter</kbd>.<br>Only numeric values, <code>drop</code>, or <code>keep</code> are accepted."))
+            p(HTML(
+              "In dropdowns, select <code>drop</code>, <code>keep</code>, ",
+              "or type a number (e.g., <code>0.05</code>) ",
+              "and press <kbd>Enter</kbd>.<br>Only numeric values, <code>drop</code>, ",
+              "or <code>keep</code> are accepted."
+            ))
           ),
           style = "unite",
           right = TRUE,
