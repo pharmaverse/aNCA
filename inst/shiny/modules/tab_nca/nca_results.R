@@ -178,13 +178,13 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               settings = settings_list$settings(),
               slope_rules = settings_list$slope_rules()
             )
-
-            saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+            
+            yaml::write_yaml(setings_to_save, paste0(setts_tmpdir, "/settings.yaml"))
 
             files <- list.files(
               output_tmpdir,
               pattern = paste0(
-                "(\\.csv)|(\\.rds)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
+                "(\\.csv)|(\\.rds)|(\\.yaml)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
                 "|(results_slides\\.pptx)|(results_slides\\.qmd)$"
               ),
               recursive = TRUE
