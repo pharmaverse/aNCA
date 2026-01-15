@@ -21,20 +21,9 @@ setup_ui <- function(id) {
     nav_panel(
       "Settings",
       fluidRow(
-        column(6,
-          fileInput(
-            ns("settings_upload"),
-            width = "100%",
-            label = "Upload settings",
-            buttonLabel = list(icon("folder"), "Browse"),
-            accept = ".rds"
-          )
-        ),
-        column(6,
-          downloadButton(
-            ns("settings_download"),
-            label = "Download settings"
-          )
+        downloadButton(
+          ns("settings_download"),
+          label = "Download settings"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
