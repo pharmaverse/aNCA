@@ -352,7 +352,7 @@ slope_selector_server <- function( # nolint
 
       override_valid <- manual_slopes_override() %>%
         mutate(across(all_of(use_keys), as.character)) %>% # mutate incase of type issues
-        semi_join(plot_data()$conc$data %>% 
+        semi_join(plot_data()$conc$data %>%
                     mutate(across(all_of(use_keys), as.character)), by = use_keys) %>%
         nrow() == nrow(manual_slopes_override())
 
