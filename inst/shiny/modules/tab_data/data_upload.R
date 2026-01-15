@@ -102,12 +102,12 @@ data_upload_server <- function(id) {
         })
 
         # Process results
-        successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
+        successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
           purrr::map(\(x) paste0(x$name, ": ", x$message))
 
         # Extract and apply settings if any found
-        found_settings <- purrr::keep(successful_loads, ~ .x$type == "settings")
+        found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
 
         if (length(found_settings) > 1) {
           # Error: Too many settings files
