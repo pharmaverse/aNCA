@@ -73,57 +73,15 @@ data_upload_server <- function(id) {
         }
 
         # Iterate over files: Try reading as Data, then as Settings
-        read_results <- purrr::map2(paths, filenames, function(path, name) {
-          tryCatch({
-            # Attempt to read
-            data <- read_pk(path)
-            list(status = "success", data = data, name = name, type = "data")
-          }, error = function(e_pk) {
-            # If read_pk fails
-            # check if settings file is loaded and then create settings override
-            tryCatch({
-              obj <- yaml::read_yaml(path)
-              # Process yaml settings
-              # 1. Slope rules
-              if (!is.null(obj$slope_rules) && is.list(obj$slope_rules)) {
-                obj$slope_rules <- dplyr::bind_rows(obj$slope_rules)
-              }
-              
-              # 2. Partial AUCs (nested in settings)
-              if (!is.null(obj$settings$partial_aucs) && is.list(obj$settings$partial_aucs)) {
-                obj$settings$partial_aucs <- dplyr::bind_rows(obj$settings$partial_aucs)
-              }
-              
-              # 3. Units (nested in settings)
-              if (!is.null(obj$settings$units) && is.list(obj$settings$units)) {
-                obj$settings$units <- dplyr::bind_rows(obj$settings$units)
-              }
-              
-              # Check for settings
-              is_settings <- is.list(obj) && "settings" %in% names(obj)
-
-              final_settings <- if (is_settings) obj else NULL
-
-              if (!is.null(final_settings)) {
-                list(status = "success", type = "settings", content = final_settings, name = name)
-              } else {
-                # Not a settings file either, return original PK error
-                stop(e_pk$message)
-              }
-            }, error = function(e_rds) {
-              # Return the original read_pk error to the user
-              list(status = "error", msg = e_pk$message, name = name)
-            })
-          })
-        })
+        read_results <- purrr::map2(paths, filenames, .read_uploaded_file)
 
         # Process results
-        successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
+        successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
           purrr::map(\(x) paste0(x$name, ": ", x$message))
 
         # Extract and apply settings if any found
-        found_settings <- purrr::keep(successful_loads, ~ .x$type == "settings")
+        found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
 
         if (length(found_settings) > 1) {
           # Error: Too many settings files
@@ -148,7 +106,7 @@ data_upload_server <- function(id) {
 
         loaded_data <- DUMMY_DATA
 
-        found_data <- purrr::keep(successful_loads, ~ .x$type == "data")
+        found_data <- purrr::keep(successful_loads, \(x) x$type == "data")
         # Handle Errors
         if (length(found_data) > 0) {
           tryCatch({
@@ -190,5 +148,47 @@ data_upload_server <- function(id) {
       adnca_raw = raw_data,
       settings_override = settings_override
     )
+  })
+}
+
+# Helper to standardize binding lists within settings
+.bind_settings_list <- function(obj_list) {
+  if (!is.null(obj_list) && is.list(obj_list)) dplyr::bind_rows(obj_list) else obj_list
+}
+
+# Helper Logic to parse and structure settings YAML
+.parse_settings_yaml <- function(path) {
+  obj <- yaml::read_yaml(path)
+  
+  if (!is.null(obj$slope_rules)) {
+    obj$slope_rules <- .bind_settings_list(obj$slope_rules)
+  }
+  
+  if (!is.null(obj$settings)) {
+    obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
+    obj$settings$units <- .bind_settings_list(obj$settings$units)
+  }
+  
+  if (is.list(obj) && "settings" %in% names(obj)) obj else NULL
+}
+
+# Helper Main file reader: attempts Data read, falls back to Settings read
+.read_uploaded_file <- function(path, name) {
+  tryCatch({
+    # Attempt 1: Read as Data
+    data <- read_pk(path)
+    list(status = "success", data = data, name = name, type = "data")
+  }, error = function(e_pk) {
+    # Attempt 2: Read as Settings
+    tryCatch({
+      settings <- .parse_settings_yaml(path)
+      if (!is.null(settings)) {
+        list(status = "success", content = settings, name = name, type = "settings")
+      } else {
+        stop(e_pk$message) # Throw original PK error if not settings
+      }
+    }, error = function(e_yaml) {
+      list(status = "error", msg = e_pk$message, name = name)
+    })
   })
 }

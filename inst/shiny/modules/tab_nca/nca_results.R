@@ -178,7 +178,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               settings = settings_list$settings(),
               slope_rules = settings_list$slope_rules()
             )
-            
+
             yaml::write_yaml(setings_to_save, paste0(setts_tmpdir, "/settings.yaml"))
 
             files <- list.files(
