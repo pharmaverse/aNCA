@@ -159,16 +159,16 @@ data_upload_server <- function(id) {
 # Helper Logic to parse and structure settings YAML
 .parse_settings_yaml <- function(path) {
   obj <- yaml::read_yaml(path)
-  
+
   if (!is.null(obj$slope_rules)) {
     obj$slope_rules <- .bind_settings_list(obj$slope_rules)
   }
-  
+
   if (!is.null(obj$settings)) {
     obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
     obj$settings$units <- .bind_settings_list(obj$settings$units)
   }
-  
+
   if (is.list(obj) && "settings" %in% names(obj)) obj else NULL
 }
 
