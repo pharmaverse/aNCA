@@ -31,6 +31,8 @@
   ([\#851](https://github.com/pharmaverse/aNCA/issues/851))
 - Mean plots have been added in the TLGs section, with BLQ handling
   ([\#555](https://github.com/pharmaverse/aNCA/issues/555))
+- CMAX automatically selected in box plots if available
+  ([\#890](https://github.com/pharmaverse/aNCA/issues/890))
 
 ### Bugs fixed
 
