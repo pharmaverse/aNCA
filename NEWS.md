@@ -13,6 +13,7 @@
 * Option to upload multiple input files, which will be bound together to form a single ADNCA data set (#821)
 * Section `General Exclusions` allowing to perform in-App NCA exclusions (#851)
 * Mean plots have been added in the TLGs section, with BLQ handling (#555)
+* CMAX automatically selected in box plots if available (#890)
 
 
 ## Bugs fixed
