@@ -47,13 +47,12 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
         options = list(`actions-box` = TRUE)
       )
     },
-    pickerInput(
+    selectInput(
       inputId = ns("colorby"),
       label = "Choose the variables to color by:",
       choices = NULL,
       selected = NULL,
       multiple = TRUE,
-      options = list(`actions-box` = TRUE)
     ),
     pickerInput(
       inputId = ns("facetby"),
@@ -158,7 +157,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
                                      dose_col, grouping_vars(), "ATPTREF"))
 
-      updatePickerInput(
+      updateSelectInput(
         session,
         "colorby",
         choices = full_grouping_vars,
