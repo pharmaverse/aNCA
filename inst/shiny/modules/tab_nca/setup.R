@@ -48,25 +48,18 @@ setup_ui <- function(id) {
       )
     ),
     nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
-    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector")))
+    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
+    nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
   )
 }
 
 setup_server <- function(id, data, adnca_data, settings_override) {
   moduleServer(id, function(input, output, session) {
 
-    imported_settings <- reactive({
-      settings_override()$settings
-    })
-
-    imported_slopes <- reactive({
-      settings_override()$slope_rules
-    })
-
-    imported_params <- reactive({
-      imported_settings()$parameter_selections
-    })
-
+    imported_settings <- reactive(settings_override()$settings)
+    imported_slopes <- reactive(settings_override()$slope_rules)
+    imported_params <- reactive(imported_settings()$parameter_selections)
+    general_excl_override <- reactive(imported_settings()$general_exclusions)
 
     # Gather all settings from the appropriate module
     settings <- settings_server(
@@ -75,6 +68,8 @@ setup_server <- function(id, data, adnca_data, settings_override) {
       adnca_data,
       imported_settings
     )
+
+    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
@@ -87,7 +82,8 @@ setup_server <- function(id, data, adnca_data, settings_override) {
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        should_impute_c0 = settings()$data_imputation$impute_c0
+        should_impute_c0 = settings()$data_imputation$impute_c0,
+        exclusion_list = general_exclusions$exclusion_list()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -107,9 +103,10 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     )
 
     final_settings <- reactive({
-      req(settings(), parameters_output$selections())
+      req(settings(), parameters_output$selections(), general_exclusions)
 
       current_settings <- settings()
+      current_settings$general_exclusions <- general_exclusions
       current_settings$parameter_selections <- parameters_output$selections()
 
       current_settings
@@ -204,7 +201,8 @@ setup_server <- function(id, data, adnca_data, settings_override) {
       processed_pknca_data = processed_pknca_data,
       settings = final_settings,
       ratio_table = ratio_table,
-      slope_rules = slope_rules
+      slope_rules = slope_rules,
+      general_exclusions = general_exclusions$exclusion_list
     )
   })
 }
