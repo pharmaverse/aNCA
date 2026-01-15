@@ -71,12 +71,31 @@ general_exclusions_ui <- function(id) {
   )
 }
 
-general_exclusions_server <- function(id, processed_pknca_data) {
+general_exclusions_server <- function(id, processed_pknca_data, general_exclusions_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Store the list of manual exclusions and a counter for unique button IDs
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
+    
+    # Initalise settings override if available
+    observeEvent(general_exclusions_override(), {
+      overrides <- general_exclusions_override()
+      
+      if (!is.null(overrides) && length(overrides) > 0) {
+        # Reconstruct list with new button IDs to match current session context
+        current_count <- xbtn_counter()
+        rehydrated_list <- lapply(overrides, function(item) {
+          current_count <<- current_count + 1
+          item$xbtn_id <- paste0("remove_exclusion_reason_", current_count)
+          item
+        })
+        
+        # Update state
+        xbtn_counter(current_count)
+        exclusion_list(rehydrated_list)
+      }
+    })
 
     # Reactive for the concentration data table rendered
     conc_data <- reactive({
@@ -186,6 +205,6 @@ general_exclusions_server <- function(id, processed_pknca_data) {
     })
 
     # Return the exclusion list as a reactive
-    list(exclusion_list = exclusion_list_for_return)
+    exclusion_list_for_return
   })
 }

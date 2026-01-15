@@ -58,7 +58,7 @@ setup_server <- function(id, data, adnca_data, settings_override) {
       imported_settings
     )
 
-    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
+    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data, general_excl_override)
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
@@ -72,7 +72,7 @@ setup_server <- function(id, data, adnca_data, settings_override) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        exclusion_list = general_exclusions$exclusion_list()
+        exclusion_list = general_exclusions()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -92,10 +92,10 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     )
 
     final_settings <- reactive({
-      req(settings(), parameters_output$selections(), general_exclusions)
+      req(settings(), parameters_output$selections(), general_exclusions())
 
       current_settings <- settings()
-      current_settings$general_exclusions <- general_exclusions
+      current_settings$general_exclusions <- general_exclusions()
       current_settings$parameter_selections <- parameters_output$selections()
 
       current_settings
@@ -190,8 +190,7 @@ setup_server <- function(id, data, adnca_data, settings_override) {
       processed_pknca_data = processed_pknca_data,
       settings = final_settings,
       ratio_table = ratio_table,
-      slope_rules = slope_rules,
-      general_exclusions = general_exclusions$exclusion_list
+      slope_rules = slope_rules
     )
   })
 }
