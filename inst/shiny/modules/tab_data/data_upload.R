@@ -82,7 +82,23 @@ data_upload_server <- function(id) {
             # If read_pk fails
             # check if settings file is loaded and then create settings override
             tryCatch({
-              obj <- readRDS(path)
+              obj <- yaml::read_yaml(path)
+              # Process yaml settings
+              # 1. Slope rules
+              if (!is.null(obj$slope_rules) && is.list(obj$slope_rules)) {
+                obj$slope_rules <- dplyr::bind_rows(obj$slope_rules)
+              }
+              
+              # 2. Partial AUCs (nested in settings)
+              if (!is.null(obj$settings$partial_aucs) && is.list(obj$settings$partial_aucs)) {
+                obj$settings$partial_aucs <- dplyr::bind_rows(obj$settings$partial_aucs)
+              }
+              
+              # 3. Units (nested in settings)
+              if (!is.null(obj$settings$units) && is.list(obj$settings$units)) {
+                obj$settings$units <- dplyr::bind_rows(obj$settings$units)
+              }
+              
               # Check for settings
               is_settings <- is.list(obj) && "settings" %in% names(obj)
 
