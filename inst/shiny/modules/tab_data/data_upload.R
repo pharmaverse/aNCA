@@ -15,7 +15,7 @@ data_upload_ui <- function(id) {
     div(
       class = "upload-container",
       id = ns("upload_container"),
-      p("Upload your PK dataset."),
+      p("Upload your PK dataset and Settings file (optional)."),
       fileInput(
         ns("data_upload"),
         width = "50%",
