@@ -172,6 +172,7 @@
     "start_auc",
     "start_dose",
     "strata_cols_comb",
+    "time",
     "tooltip_text",
     "type_interval",
     "var_name",
