@@ -239,7 +239,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
             silent = FALSE
           ) %>%
           create_metabfl(input$select_Metabolites) %>%
-          adjust_class_and_length(metadata_nca_variables)
+          adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
 
       }, warning = function(w) {
         withCallingHandlers(
@@ -251,7 +251,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
                 silent = FALSE
               ) %>%
               create_metabfl(input$select_Metabolites) %>%
-              adjust_class_and_length(metadata_nca_variables)
+              adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
           },
           warning = function(w) {
             log_warn(conditionMessage(w))
