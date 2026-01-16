@@ -161,12 +161,10 @@ describe("add_label_attribute", {
 
     df_result <- add_label_attribute(df_input, myres_base)
 
-    for (col_name in names(expected_labels_map)) {
-      expect_equal(
-        attr(df_result[[col_name]], "label"),
-        expected_labels_map[[col_name]],
-        info = paste("Checking label for", col_name)
-      )
-    }
+    purrr::iwalk(expected_labels_map, ~ expect_equal(
+      attr(df_result[[.y]], "label"),
+      .x,
+      info = paste("Checking label for", .y)
+    ))
   })
 })
