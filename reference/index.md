@@ -37,6 +37,10 @@
 - [`add_f_to_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.md)
   : Add bioavailability results to PKNCA results
 
+- [`add_label_attribute()`](https://pharmaverse.github.io/aNCA/reference/add_label_attribute.md)
+  : Helper function to add "label" attribute to columns based on
+  parameter names.
+
 - [`add_pptx_sl_plot()`](https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_plot.md)
   : Add a slide with a plot only
 
@@ -74,9 +78,6 @@
 
 - [`apply_mapping()`](https://pharmaverse.github.io/aNCA/reference/apply_mapping.md)
   : Apply UI-Based Column Mapping to a Dataset
-
-- [`apply_parameter_selections()`](https://pharmaverse.github.io/aNCA/reference/apply_parameter_selections.md)
-  : Helper to Apply Default or Override Parameter Selections
 
 - [`calculate_f()`](https://pharmaverse.github.io/aNCA/reference/calculate_f.md)
   : Calculate bioavailability with pivoted output
