@@ -41,7 +41,7 @@ save_plotly_format <- function(x, file_name, formats = "html") {
   }
 }
 
-save_output <- function(output, output_path, ggplot_formats = c("png", "html"), table_formats = c("csv", "rds", "xpt")) {
+save_output <- function(output, output_path, ggplot_formats = c("png", "html"), table_formats = c("csv", "rds", "xpt"), obj_names = NULL) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
     file_name <- paste0(output_path, "/", name)
@@ -49,15 +49,17 @@ save_output <- function(output, output_path, ggplot_formats = c("png", "html"), 
       dir.create(file_name, recursive = TRUE)
     }
     x <- output[[name]]
+    is_obj_to_export <- is.null(obj_names) || name %in% obj_names
+
     if (inherits(x, "list")) {
-      save_output(output = x, output_path = file_name, ggplot_formats = ggplot_formats, table_formats = table_formats)
-    } else if (inherits(x, "ggplot")) {
+      save_output(output = x, output_path = file_name, ggplot_formats = ggplot_formats, table_formats = table_formats, obj_names = obj_names)
+    } else if (inherits(x, "ggplot") && is_obj_to_export) {
       save_ggplot_format(x, file_name, ggplot_formats)
-    } else if (inherits(x, "data.frame")) {
+    } else if (inherits(x, "data.frame") && is_obj_to_export) {
       save_table_format(x, file_name, table_formats)
-    } else if (inherits(x, "plotly")) {
+    } else if (inherits(x, "plotly") && is_obj_to_export) {
       save_plotly_format(x, file_name, "html")
-    } else {
+    } else if (is_obj_to_export) {
       stop(
         "Unsupported output type object in the list: ",
         paste0(class(x), collapse = ", ")

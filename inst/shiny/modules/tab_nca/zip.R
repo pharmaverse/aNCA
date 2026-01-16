@@ -62,66 +62,63 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 						plot_formats <- input$plot_formats
 						slide_formats <- input$slide_formats
 						table_formats <- input$table_formats
+						browser()
 
-						res_tree_list <- session$userData$results
-						extras_tree_list <- list(
-							presentation_slides = list(
-								results_slides = ""
-							),
-							r_script = "",
-							settings_file = ""
-						)
-
-						res_tree_ui <- create_tree_from_list_names(session$userData$results)
-						extras_tree_ui <- create_tree_from_list_names(extras_tree_list)
-
-						session$userData$results
-						save_output(output = session$userData$results, output_path = output_tmpdir)
+						save_output(
+              output = session$userData$results,
+              output_path = output_tmpdir,
+              ggplot_formats = plot_formats,
+              table_formats = table_formats,
+              obj_names = input$res_tree
+            )
 						incProgress(0.1)
+                        
+            if ("results_slides" %in% input$res_tree) {
+                # Create presentation slides
+                res_nca_val <- res_nca()
+                res_dose_slides <- get_dose_esc_results(
+                  o_nca = res_nca_val,
+                  group_by_vars = setdiff(grouping_vars(), res_nca_val$data$conc$columns$subject),
+                  facet_vars = "DOSEA",
+                  statistics = c("Mean"),
+                  stats_parameters = c(
+                    "CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"
+                  ),
+                  info_vars = grouping_vars()
+                )
+                presentations_path <- paste0(output_tmpdir, "/presentations")
+                dir.create(presentations_path)
 
-						# Create presentation slides
-						res_nca_val <- res_nca()
-						res_dose_slides <- get_dose_esc_results(
-							o_nca = res_nca_val,
-							group_by_vars = setdiff(grouping_vars(), res_nca_val$data$conc$columns$subject),
-							facet_vars = "DOSEA",
-							statistics = c("Mean"),
-							stats_parameters = c(
-								"CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"
-							),
-							info_vars = grouping_vars()
-						)
-						presentations_path <- paste0(output_tmpdir, "/presentations")
-						dir.create(presentations_path)
-
-						if ("qmd" %in% slide_formats) {
-							create_qmd_dose_slides(
-								res_dose_slides = res_dose_slides,
-								quarto_path = paste0(presentations_path, "/results_slides.qmd"),
-								title = paste0("NCA Results", "\n", session$userData$project_name()),
-								use_plotly = TRUE
-							)
-						}
-						if ("pptx" %in% slide_formats) {
-							create_pptx_dose_slides(
-								res_dose_slides = res_dose_slides,
-								path = paste0(presentations_path, "/results_slides.pptx"),
-								title = paste0("NCA Results", "\n", session$userData$project_name()),
-								template = "www/templates/template.pptx"
-							)
-						}
-						incProgress(0.6)
+                if ("qmd" %in% slide_formats) {
+                    create_qmd_dose_slides(
+                        res_dose_slides = res_dose_slides,
+                        quarto_path = paste0(presentations_path, "/results_slides.qmd"),
+                        title = paste0("NCA Results", "\n", session$userData$project_name()),
+                        use_plotly = TRUE
+                    )
+                }
+                if ("pptx" %in% slide_formats) {
+                    create_pptx_dose_slides(
+                        res_dose_slides = res_dose_slides,
+                        path = paste0(presentations_path, "/results_slides.pptx"),
+                        title = paste0("NCA Results", "\n", session$userData$project_name()),
+                        template = "www/templates/template.pptx"
+                    )
+                }
+            }
+            incProgress(0.6)
 
 						# Create a settings folder
-						setts_tmpdir <- file.path(output_tmpdir, "settings")
-						dir.create(setts_tmpdir, recursive = TRUE)
-						settings_list <- session$userData$settings
-						setings_to_save <- list(
-							settings = settings_list$settings(),
-							slope_rules = settings_list$slope_rules()
-						)
-
-						saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+            if ("settings_file" %in% input$res_tree) {
+                setts_tmpdir <- file.path(output_tmpdir, "settings")
+                dir.create(setts_tmpdir, recursive = TRUE)
+                settings_list <- session$userData$settings
+                setings_to_save <- list(
+                    settings = settings_list$settings(),
+                    slope_rules = settings_list$slope_rules()
+                )
+                saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+            }
 
 						# Filter files by selected formats (for demonstration, not full implementation)
 						files <- list.files(
@@ -131,13 +128,14 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 								paste0(c(
 									if (length(table_formats) > 0) paste0("\\.", table_formats),
 									if (length(plot_formats) > 0) paste0("\\.", plot_formats),
-									if (length(slide_formats) > 0) paste0("results_slides\\.", slide_formats)
+									if (length(slide_formats) > 0) paste0("results_slides\\.", slide_formats),
+                  if ("r_script" %in% input$res_tree) "r_script\\.R",
+                  if ("settings_file" %in% input$res_tree) "settings\\.rds"
 								), collapse = "|"),
 								")$"
 							),
 							recursive = TRUE
 						)
-
 						wd <- getwd()
 						on.exit(setwd(wd), add = TRUE)
 						setwd(output_tmpdir)
