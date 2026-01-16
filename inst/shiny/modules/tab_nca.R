@@ -62,7 +62,7 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, pknca_data, extra_group_vars) {
+tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -74,7 +74,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
+    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, settings_override)
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
