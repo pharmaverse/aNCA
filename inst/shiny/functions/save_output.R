@@ -3,44 +3,64 @@
 #' @param output Output object, can be a data frame, plot or a list of them.
 #' @param output_path Path to the output directory (should exist or be creatable).
 #' @returns Invisibly returns the file path written.
-save_output <- function(output, output_path) {
 
-  # Create output directory if it doesn't exist
+
+# Helper for saving ggplot objects (multiple formats)
+save_ggplot_format <- function(x, file_name, formats) {
+  if ("png" %in% formats) {
+    ggsave(paste0(file_name, ".png"), plot = x, width = 10, height = 6)
+  }
+  if ("html" %in% formats) {
+    plotly_obj <- plotly::ggplotly(x)
+    htmlwidgets::saveWidget(plotly_obj, file = paste0(file_name, ".html"))
+  }
+}
+
+# Helper for saving data.frame objects (multiple formats)
+save_table_format <- function(x, file_name, formats) {
+  if ("csv" %in% formats) {
+    write.csv(x, file = paste0(file_name, ".csv"), row.names = FALSE)
+  }
+  if ("rds" %in% formats) {
+    saveRDS(x, file = paste0(file_name, ".rds"))
+  }
+  if ("xpt" %in% formats) {
+    tryCatch(
+      haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt")),
+      error = function(e) {
+        message("Error writing XPT file for ", file_name, ": ", e$message)
+      }
+    )
+  }
+}
+
+# Helper for saving plotly objects (only html for now)
+save_plotly_format <- function(x, file_name, formats = "html") {
+  if ("html" %in% formats) {
+    htmlwidgets::saveWidget(x, file = paste0(file_name, ".html"))
+  }
+}
+
+save_output <- function(output, output_path, ggplot_formats = c("png", "html"), table_formats = c("csv", "rds", "xpt")) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
-
   for (name in names(output)) {
     file_name <- paste0(output_path, "/", name)
-
     if (!dir.exists(file_name)) {
       dir.create(file_name, recursive = TRUE)
     }
-
-    if (inherits(output[[name]], "list")) {
-
-      save_output(output = output[[name]], output_path = file_name)
-
-    } else if (inherits(output[[name]], "ggplot")) {
-      file_name <- paste0(output_path, "/", name, ".png")
-      ggsave(file_name, plot = output[[name]], width = 10, height = 6)
-
-    } else if (inherits(output[[name]], "data.frame")) {
-      write.csv(output[[name]], file = paste0(file_name, ".csv"), row.names = FALSE)
-      saveRDS(output[[name]], file = paste0(file_name, ".rds"))
-      tryCatch(
-        haven::write_xpt(format_to_xpt_compatible(output[[name]]), paste0(file_name, ".xpt")),
-        error = function(e) {
-          message("Error writing XPT file for ", name, ": ", e$message)
-        }
-      )
-    } else if (inherits(output[[name]], "plotly")) {
-      htmlwidgets::saveWidget(
-        output[[name]],
-        file = paste0(file_name, ".html")
-      )
+    x <- output[[name]]
+    if (inherits(x, "list")) {
+      save_output(output = x, output_path = file_name, ggplot_formats = ggplot_formats, table_formats = table_formats)
+    } else if (inherits(x, "ggplot")) {
+      save_ggplot_format(x, file_name, ggplot_formats)
+    } else if (inherits(x, "data.frame")) {
+      save_table_format(x, file_name, table_formats)
+    } else if (inherits(x, "plotly")) {
+      save_plotly_format(x, file_name, "html")
     } else {
       stop(
         "Unsupported output type object in the list: ",
-        paste0(class(output[[name]]), collapse = ", ")
+        paste0(class(x), collapse = ", ")
       )
     }
   }
