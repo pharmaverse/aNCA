@@ -21,45 +21,46 @@
 tab_nca_ui <- function(id) {
   ns <- NS(id)
 
-  navset_card_pill(
-    id = ns("nca_navset"),
-    nav_panel(
-      "Setup",
-      fluid = TRUE,
-      actionButton(
-        inputId = ns("run_nca"),
-        label = "Run NCA",
-        icon = icon("play"),
-        class = "btn btn-primary",
-        width = "100%"
+    navset_card_pill(
+      id = ns("nca_navset"),
+      nav_panel(
+        "Setup",
+        fluid = TRUE,
+        actionButton(
+          inputId = ns("run_nca"),
+          label = "Run NCA",
+          icon = icon("play"),
+          class = "btn btn-primary",
+          width = "100%"
+        ),
+        setup_ui(ns("nca_setup")),
       ),
-      setup_ui(ns("nca_setup")),
-    ),
-    #' Results
-    nav_panel(
-      "Results", fluid = TRUE,
-      navset_pill_list(
-        nca_results_ui(ns("nca_results")),
-        nav_panel(
-          "Slopes Information",
-          navset_pill(
-            nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
-            nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
-          )
-        ),
-        nav_panel(
-          "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
-        ),
-        nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-        nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+      #' Results
+      nav_panel(
+        "Results", fluid = TRUE,
+        navset_pill_list(
+          nca_results_ui(ns("nca_results")),
+          nav_panel(
+            "Slopes Information",
+            navset_pill(
+              nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
+              nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+            )
+          ),
+          nav_panel(
+            "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
+          ),
+          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots"))),
+          nav_panel("ZIP Download", zip_ui(ns("zip")))
+        )
+      ),
+      #' Additional analysis
+      nav_panel(
+        "Additional Analysis",
+        additional_analysis_ui(ns("non_nca"))
       )
-    ),
-    #' Additional analysis
-    nav_panel(
-      "Additional Analysis",
-      additional_analysis_ui(ns("non_nca"))
     )
-  )
 }
 
 tab_nca_server <- function(id, pknca_data, extra_group_vars) {
@@ -234,6 +235,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     #' Prepares and displays the pivoted NCA results
     nca_results_server(
       "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
+    )
+
+    #' ZIP Download module
+    zip_server(
+      "zip", res_nca, settings, ratio_table, extra_group_vars, processed_pknca_data, session
     )
 
     #' Descriptive statistics module
