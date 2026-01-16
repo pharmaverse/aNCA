@@ -73,3 +73,28 @@ create_tree_from_list_names <- function(x, parent_id = "tree") {
     node
   })
 }
+
+get_tree_leaf_ids <- function(tree) {
+  if (is.null(tree) || length(tree) == 0) return(character(0))
+  ids <- character(0)
+  for (node in tree) {
+    if (!is.null(node$children) && length(node$children) > 0) {
+      ids <- c(ids, get_tree_leaf_ids(node$children))
+    } else if (!is.null(node$id)) {
+      ids <- c(ids, node$id)
+    }
+  }
+  ids
+}
+
+cities <- data.frame(
+  continent = c("America", "America", "America", "Africa",
+                "Africa", "Africa", "Africa", "Africa",
+                "Europe", "Europe", "Europe", "Antarctica"),
+  country = c("Canada", "Canada", "USA", "Tunisia", "Tunisia",
+              "Tunisia", "Algeria", "Algeria", "Italy", "Germany", "Spain", NA),
+  city = c("Trois-Rivières", "Québec", "San Francisco", "Tunis",
+           "Monastir", "Sousse", "Alger", "Oran", "Rome", "Berlin", "Madrid", NA),
+  stringsAsFactors = FALSE
+)
+shinyWidgets::create_tree(cities)

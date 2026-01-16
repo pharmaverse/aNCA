@@ -239,7 +239,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
     #' ZIP Download module
     zip_server(
-      "zip", res_nca, settings, ratio_table, extra_group_vars, processed_pknca_data, session
+      "zip", res_nca, settings, ratio_table, extra_group_vars, processed_pknca_data
     )
 
     #' Descriptive statistics module

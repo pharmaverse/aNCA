@@ -1,13 +1,51 @@
 zip_ui <- function(id) {
 	ns <- NS(id)
 	tagList(
+	  fluidRow(
+	    shinyWidgets::treeInput(
+	      inputId = ns("res_tree"),
+	      label = "Exportable ZIP Contents:",
+	      selected = get_tree_leaf_ids(TREE_LIST),
+	      choices = TREE_LIST
+	    )
+	  ),
+		fluidRow(
+			column(4,
+				selectizeInput(
+					ns("plot_formats"),
+					"Plot formats:",
+					choices = c("png", "html"),
+					selected = c("png", "html"),
+					multiple = TRUE
+				)
+			),
+			column(4,
+				selectizeInput(
+					ns("slide_formats"),
+					"Slide formats:",
+					choices = c("pptx", "qmd"),
+					selected = c("pptx", "qmd"),
+					multiple = TRUE
+				)
+			),
+			column(4,
+				selectizeInput(
+					ns("table_formats"),
+					"Table formats:",
+					choices = c("rds", "xpt", "csv"),
+					selected = c("rds", "xpt", "csv"),
+					multiple = TRUE
+				)
+			)
+		),
 		downloadButton(ns("download_zip"), "Download All Results as ZIP")
 	)
 }
 
-zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_data, session) {
+zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_data) {
 	moduleServer(id, function(input, output, session) {
 		ns <- session$ns
+        session_results <- reactive(session$userData$results)
 
 		output$download_zip <- downloadHandler(
 			filename = function() {
@@ -19,6 +57,11 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 				tryCatch({
 					shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
 						output_tmpdir <- file.path(tempdir(), "output")
+
+						# Use selected formats from UI
+						plot_formats <- input$plot_formats
+						slide_formats <- input$slide_formats
+						table_formats <- input$table_formats
 
 						res_tree_list <- session$userData$results
 						extras_tree_list <- list(
@@ -51,19 +94,22 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 						presentations_path <- paste0(output_tmpdir, "/presentations")
 						dir.create(presentations_path)
 
-						create_qmd_dose_slides(
-							res_dose_slides = res_dose_slides,
-							quarto_path = paste0(presentations_path, "/results_slides.qmd"),
-							title = paste0("NCA Results", "\n", session$userData$project_name()),
-							use_plotly = TRUE
-						)
-						incProgress(0.3)
-						create_pptx_dose_slides(
-							res_dose_slides = res_dose_slides,
-							path = paste0(presentations_path, "/results_slides.pptx"),
-							title = paste0("NCA Results", "\n", session$userData$project_name()),
-							template = "www/templates/template.pptx"
-						)
+						if ("qmd" %in% slide_formats) {
+							create_qmd_dose_slides(
+								res_dose_slides = res_dose_slides,
+								quarto_path = paste0(presentations_path, "/results_slides.qmd"),
+								title = paste0("NCA Results", "\n", session$userData$project_name()),
+								use_plotly = TRUE
+							)
+						}
+						if ("pptx" %in% slide_formats) {
+							create_pptx_dose_slides(
+								res_dose_slides = res_dose_slides,
+								path = paste0(presentations_path, "/results_slides.pptx"),
+								title = paste0("NCA Results", "\n", session$userData$project_name()),
+								template = "www/templates/template.pptx"
+							)
+						}
 						incProgress(0.6)
 
 						# Create a settings folder
@@ -77,11 +123,17 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 
 						saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
 
+						# Filter files by selected formats (for demonstration, not full implementation)
 						files <- list.files(
 							output_tmpdir,
 							pattern = paste0(
-								"(\\.csv)|(\\.rds)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
-								"|(results_slides\\.pptx)|(results_slides\\.qmd)$"
+								"(",
+								paste0(c(
+									if (length(table_formats) > 0) paste0("\\.", table_formats),
+									if (length(plot_formats) > 0) paste0("\\.", plot_formats),
+									if (length(slide_formats) > 0) paste0("results_slides\\.", slide_formats)
+								), collapse = "|"),
+								")$"
 							),
 							recursive = TRUE
 						)
@@ -102,3 +154,28 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 		)
 	})
 }
+
+# Define a global EXTRAS_TREE_LIST to be used in the zip_ui tree
+TREE_LIST <- create_tree_from_list_names(
+    list(
+        exploration = list(
+            individualplot = "",
+            meanplot = ""
+        ),
+        nca_results = list(
+            pivoted_results = ""
+        ),
+        CDISC = list(
+            pp = "",
+            adpp = "",
+            adnca = ""
+        ),
+        extras = list(
+            presentation_slides = list(
+                results_slides = ""
+            ),
+            r_script = "",
+            settings_file = ""
+        )
+    )
+)
