@@ -47,12 +47,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
         options = list(`actions-box` = TRUE)
       )
     },
-    selectInput(
-      inputId = ns("colorby"),
-      label = "Choose the variables to color by:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
+    uiOutput(ns("colorby_ui_wrapper")
     ),
     pickerInput(
       inputId = ns("facetby"),
@@ -154,16 +149,58 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         )
       }
 
+      # Get the grouping variables for colory and facetby
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
                                      dose_col, grouping_vars(), "ATPTREF"))
 
-      updateSelectInput(
-        session,
-        "colorby",
-        choices = full_grouping_vars,
-        # Always select USUBJID if individual, if mean plot, select nothing
-        selected = if ("usubjid" %in% names(input)) subject_col else dose_col
-      )
+      # Generate dataset for variables and labels in the dropdowns
+      formatted_choices <- reactive({
+        req(metadata_nca_variables)
+
+        # Taking the variables and labels from the metadata
+        choices_df <- metadata_nca_variables %>%
+          select(Variable, Label) %>%
+          distinct(Variable, .keep_all = TRUE) %>%
+          filter(!is.na(Variable), Variable != "") %>%
+          filter(Variable %in% full_grouping_vars)
+
+        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
+          list(
+            label = as.character(var),
+            value = as.character(var),
+            description = as.character(lab)
+          )
+        }))
+      })
+
+      # Rendering the selection dropdowns
+      output$colorby_ui_wrapper <- renderUI({
+        req(formatted_choices(), pknca_data())
+        grouping_vars <- formatted_choices()
+
+        # Ensuring that the initial selection only appears once (USUBJID)
+        isolate({
+          current_selection <- input$colorby
+          if (is.null(current_selection)) {
+            subject_col <- pknca_data()$conc$columns$subject
+            dose_col <- pknca_data()$dose$columns$dose
+            # Always select USUBJID if individual, if mean plot, select nothing
+            target_selection <- if ("usubjid" %in% names(input)) subject_col else dose_col
+          } else {
+            target_selection <- current_selection
+          }
+        })
+
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("colorby"),
+          label = "Choose the variables to color by:",
+          choices = grouping_vars,
+          multiple = TRUE,
+          selected = target_selection,
+          search = TRUE,
+          hasOptionDescription = TRUE
+        )
+      })
 
       updatePickerInput(
         session,
