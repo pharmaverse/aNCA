@@ -26,6 +26,7 @@ This application enables users to upload their datasets and perform Non-Compartm
 - **Visualize data and results** with interactive boxplots, summary statistic tables and scatter plots
 - **Produce PP and ADPP** dataset formats of the resulting parameters
 - **Save your analysis settings** and reupload them later to keep on analysing!
+- **Reproduce your NCA outside of the app**, using the R script created
 
 ## Installation
 
