@@ -209,13 +209,13 @@ apply_imputation <- function(data, nca_parameters = metadata_nca_parameters) {
   data <- create_start_impute(data)
 
   # Don't impute parameters that are not AUC dependent
-  params_auc_dep <- nca_parameters %>%
-    filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
+  params_hl_dep <- nca_parameters %>%
+    filter(grepl("auc|aumc|lambda.z|half.life", PKNCA) | grepl("auc|half.life|lambda.z", Depends)) %>%
     pull(PKNCA)
 
   params_not_to_impute <- nca_parameters %>%
     filter(!grepl("auc|aumc", PKNCA),
-           !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
+           !grepl(paste0(params_hl_dep, collapse = "|"), Depends)) %>%
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
