@@ -49,13 +49,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     },
     uiOutput(ns("colorby_ui_wrapper")
     ),
-    pickerInput(
-      inputId = ns("facetby"),
-      label = "Choose the variables to facet by:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("facetby_ui_wrapper")
     ),
     checkboxInput(
       ns("log"),
@@ -173,7 +167,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         }))
       })
 
-      # Rendering the selection dropdowns
+      # Rendering the colorby selector
       output$colorby_ui_wrapper <- renderUI({
         req(formatted_choices(), pknca_data())
         grouping_vars <- formatted_choices()
@@ -201,13 +195,22 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
           hasOptionDescription = TRUE
         )
       })
-
-      updatePickerInput(
-        session,
-        "facetby",
-        choices = full_grouping_vars,
-        selected = NULL
-      )
+      
+      # Rendering the facetby selector
+      output$facetby_ui_wrapper <- renderUI({
+        req(formatted_choices(), pknca_data())
+        grouping_vars <- formatted_choices()
+        
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("facetby"),
+          label = "Choose the variables to facet by:",
+          choices = grouping_vars,
+          multiple = TRUE,
+          selected = NULL,
+          search = TRUE,
+          hasOptionDescription = TRUE
+        )
+      })
     })
 
     # Render the cycle selection UI
