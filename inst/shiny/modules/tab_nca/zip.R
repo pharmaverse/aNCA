@@ -11,57 +11,15 @@
 
 zip_ui <- function(id) {
   ns <- NS(id)
-  TREE_UI <- create_tree_from_list_names(TREE_LIST)
   tagList(
-    fluidRow(
-      column(
-        width = 6,
-        h4("Select Results to Export"),
-        shinyWidgets::treeInput(
-          inputId = ns("res_tree"),
-          label = NULL,
-          selected = get_tree_leaf_ids(TREE_UI),
-          choices = TREE_UI
-        )
-      ),
-      column(
-        width = 6,
-        h4("Choose Export Formats"),
-        div(
-          selectizeInput(
-            ns("plot_formats"),
-            "Graphics and plots:",
-            choices = c("png", "html"),
-            selected = c("png", "html"),
-            multiple = TRUE
-          ),
-          style = "margin-bottom: 1em;"
-        ),
-        div(
-          selectizeInput(
-            ns("slide_formats"),
-            "Slide decks:",
-            choices = c("pptx", "qmd"),
-            selected = c("pptx", "qmd"),
-            multiple = TRUE
-          ),
-          style = "margin-bottom: 1em;"
-        ),
-        div(
-          selectizeInput(
-            ns("table_formats"),
-            "Data tables:",
-            choices = c("rds", "xpt", "csv"),
-            selected = c("rds", "xpt", "csv"),
-            multiple = TRUE
-          ),
-          style = "margin-bottom: 2em;"
-        ),
-        div(
-          downloadButton(ns("download_zip"), "Export ZIP"),
-          style = "text-align: left;"
-        )
-      )
+    actionButton(
+      inputId = ns("open_zip_modal"),
+      label = NULL,
+      icon = icon("download"),
+      class = "btn btn-secondary",
+      style = "margin-left: 10px;",
+      title = "Export ZIP",
+      disabled = TRUE
     )
   )
 }
@@ -69,6 +27,81 @@ zip_ui <- function(id) {
 zip_server <- function(id, res_nca, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Enable/disable ZIP export button based on res_nca availability
+    observe({
+      btn_id <- "open_zip_modal"
+      if (!is.null(res_nca()) && !is.null(res_nca())) {
+        shinyjs::enable(btn_id)
+      } else {
+        shinyjs::disable(btn_id)
+      }
+    })
+
+    # Show ZIP export modal when button is clicked
+    observeEvent(input$open_zip_modal, {
+      TREE_UI <- create_tree_from_list_names(TREE_LIST)
+      showModal(
+        modalDialog(
+          title = "Export Results as ZIP",
+          tagList(
+            fluidRow(
+              column(
+                width = 6,
+                h4("Select Results to Export"),
+                shinyWidgets::treeInput(
+                  inputId = ns("res_tree"),
+                  label = NULL,
+                  selected = get_tree_leaf_ids(TREE_UI),
+                  choices = TREE_UI
+                )
+              ),
+              column(
+                width = 6,
+                h4("Choose Export Formats"),
+                div(
+                  selectizeInput(
+                    ns("plot_formats"),
+                    "Graphics and plots:",
+                    choices = c("png", "html"),
+                    selected = c("png", "html"),
+                    multiple = TRUE
+                  ),
+                  style = "margin-bottom: 1em;"
+                ),
+                div(
+                  selectizeInput(
+                    ns("slide_formats"),
+                    "Slide decks:",
+                    choices = c("pptx", "qmd"),
+                    selected = c("pptx", "qmd"),
+                    multiple = TRUE
+                  ),
+                  style = "margin-bottom: 1em;"
+                ),
+                div(
+                  selectizeInput(
+                    ns("table_formats"),
+                    "Data tables:",
+                    choices = c("rds", "xpt", "csv"),
+                    selected = c("rds", "xpt", "csv"),
+                    multiple = TRUE
+                  ),
+                  style = "margin-bottom: 2em;"
+                ),
+                div(
+                  downloadButton(ns("download_zip"), "Export ZIP"),
+                  style = "text-align: left;"
+                )
+              )
+            )
+          ),
+          easyClose = TRUE,
+          footer = NULL,
+          size = "l"
+        )
+      )
+    })
 
     output$download_zip <- downloadHandler(
       filename = function() {

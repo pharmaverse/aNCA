@@ -51,8 +51,7 @@ tab_nca_ui <- function(id) {
           "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
         ),
         nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-        nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots"))),
-        nav_panel("ZIP Download", zip_ui(ns("zip")))
+        nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
       )
     ),
     #' Additional analysis

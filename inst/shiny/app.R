@@ -45,7 +45,8 @@ ui <- function() {
       div(
         class = "project-name-container",
         textInput("project_name", label = NULL, placeholder = "Project Name"),
-        icon("file", class = "project-name-icon")
+        icon("file", class = "project-name-icon"),
+        zip_ui("zip_trigger")
       )
     ),
 
@@ -126,6 +127,13 @@ ui <- function() {
 }
 
 server <- function(input, output, session) {
+  # ZIP export server logic (moved from NCA tab)
+  zip_server(
+    id = "zip_trigger",
+    res_nca = tab_nca_outputs$res_nca,
+    settings = session$userData$settings,
+    grouping_vars = tab_nca_outputs$processed_pknca_data
+  )
   log_info("Startup")
 
   # Store globally the name of the project
@@ -157,6 +165,14 @@ server <- function(input, output, session) {
 
   # TLG
   tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
+
+  # ZIP export server logic (moved from NCA tab)
+  zip_server(
+    id = "zip_modal",
+    res_nca = tab_nca_outputs$res_nca,
+    settings = session$userData$settings,
+    grouping_vars = tab_nca_outputs$processed_pknca_data
+  )
 }
 
 shiny::shinyApp(ui, server)
