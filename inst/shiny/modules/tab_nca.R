@@ -78,8 +78,13 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
+    session$userData$settings <- list(
+      settings =  settings,
+      slope_rules = slope_rules$manual_slopes
+    ) # This will be saved in the results zip folder
 
     # This will be saved in the results zip folder
     session$userData$settings <- settings
@@ -147,7 +152,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
                 purrr::map(\(x) x$threshold)
             ) %>%
             # Add parameter ratio calculations
-            calculate_table_ratios_app(ratio_table = ratio_table())
+            calculate_table_ratios(ratio_table = ratio_table()) %>%
+            # Keep only parameters requested by the user
+            remove_pp_not_requested()
         },
         warning = function(w) {
           if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
@@ -167,19 +174,6 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
         updateTabsetPanel(session, "nca_navset", selected = "Results")
 
         log_success("NCA results calculated.")
-
-        # Reshape intervals, filter
-        params_not_requested <- res$data$intervals %>%
-          select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
-          # For all logical columns, mutate FALSE to NA
-          mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
-          # Only select column that are only NA
-          select(where(~ all(is.na(.x)))) %>%
-          names()
-
-        # Filter for requested params based on intervals
-        res$result <- res$result %>%
-          filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
 
         res
       }, error = function(e) {

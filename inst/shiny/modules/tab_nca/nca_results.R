@@ -129,6 +129,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               title = paste0("NCA Results", "\n", session$userData$project_name()),
               use_plotly = TRUE
             )
+
             incProgress(0.3)
             create_pptx_dose_slides(
               res_dose_slides = res_dose_slides,
@@ -141,7 +142,23 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             # Create a settings folder
             setts_tmpdir <- file.path(output_tmpdir, "settings")
             dir.create(setts_tmpdir, recursive = TRUE)
-            saveRDS(session$userData$settings(), paste0(setts_tmpdir, "/settings.rds"))
+            settings_list <- session$userData$settings()
+            settings_to_save <- list(
+              settings = settings_list,
+              slope_rules = list(
+                manual_slopes = session$userData$slope_rules$manual_slopes(),
+                profiles_per_subject = session$userData$slope_rules$profiles_per_subject(),
+                slopes_groups = session$userData$slope_rules$slopes_groups()
+              )
+            )
+
+            saveRDS(settings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+
+            # Save input dataset used
+            data_tmpdir <- file.path(output_tmpdir, "data")
+            dir.create(data_tmpdir, recursive = TRUE)
+            data <- read_pk(session$userData$data_path)
+            saveRDS(data, paste0(data_tmpdir, "/data.rds"))
 
             # Save a code R script template for the session
             script_tmpdir <- file.path(output_tmpdir, "code")

@@ -1,10 +1,14 @@
-# Load the package (https://github.com/pharmaverse/aNCA) #
+# Load the package (https://github.com/pharmaverse/aNCA)  #
+###########################################################
+## Please, set your working directory to this file:
+# setwd("path/to/this/file/script_template.R")
+
 if (!require("aNCA")) install.packages("aNCA")
 library(aNCA)
 library(dplyr)
 
 # Load raw data #
-data_path <- session$userData$data_path
+data_path <- "../data/data.rds"
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data ########################################
@@ -30,26 +34,39 @@ preprocessed_adnca <- adnca_data %>%
   ) %>%
 
   # Derive METABFL column using PARAM metabolites
-  create_metabfl(mapping$Metabolites)
+  create_metabfl(mapping$Metabolites) %>%
+  
+  # Make sure all variables are in its correct class
+  adjust_class_and_length(metadata_nca_variables)
 
 ## Setup NCA settings in the PKNCA object ########################
 auc_data <- session$userData$settings$partial_aucs
 units_table <- session$userData$final_units
+parameters_selected_per_study <- session$userData$settings$parameters$selections
+study_types_df <- session$userData$settings$parameters$types_df
 
 pknca_obj <- preprocessed_adnca %>%
 
   # Create from ADNCA the PKNCA object
-  PKNCA_create_data_object() %>%
+  PKNCA_create_data_object(
+    nca_exclude_reason_columns = c("DTYPE", mapping$NCAwXRS)
+  ) %>%
 
   # Setup basic settings
   PKNCA_update_data_object(
-    auc_data = auc_data,
     method = session$userData$settings$method,
     selected_analytes = session$userData$settings$analyte,
     selected_profile = session$userData$settings$profile,
     selected_pcspec = session$userData$settings$pcspec,
-    params = session$userData$settings$parameter_selection,
-    should_impute_c0 = session$userData$settings$data_imputation$impute_c0
+    should_impute_c0 = session$userData$settings$data_imputation$impute_c0,
+    exclusion_list = session$userData$settings$general_exclusions$exclusion_list
+  ) %>%
+
+  update_main_intervals(
+    auc_data = auc_data,
+    parameter_selections = parameters_selected_per_study,
+    study_types_df =  study_types_df,
+    impute = session$userData$settings$data_imputation$impute_c0
   ) %>%
 
   # Define the desired units for the parameters (PPSTRESU)
@@ -98,10 +115,15 @@ pknca_res <- pknca_obj %>%
   ) %>%
 
   # Derive secondary parameters (ratio parameters)
-  calculate_table_ratios_app(ratio_table)
+  calculate_table_ratios(ratio_table) %>%
+  
+  # Filter only parameters that have been requested
+  remove_pp_not_requested()
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
-cdisc_datasets <- export_cdisc(pknca_res)
+cdisc_datasets <- pknca_res %>%
+  export_cdisc()
+
 pivoted_results <- pivot_wider_pknca_results(
   myres = pknca_res,
   flag_rules = flag_rules,

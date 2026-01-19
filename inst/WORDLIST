@@ -1,7 +1,7 @@
 ADNCA
 ADOSEDUR
-ADPC
 ADPP
+AEFRLT
 AFRLT
 ARRLT
 ATPTREF
@@ -24,10 +24,11 @@ DOSEA
 DOSETRT
 DOSEU
 DOSNOA
-DTYPE
 Denney
 Duvvuri
 EMA
+ERTLST
+ERTMAX
 EVID
 Extravascular
 Kezia
@@ -67,12 +68,14 @@ Pharmaverse
 Plotly
 Pre
 README
+RENALCL
 RRLTU
 RStudio
 RefGroups
 RefParameter
 Req
 Roadmap
+SBS
 SDTM
 SMS
 STUDYID
@@ -87,7 +90,6 @@ Tmax
 Tooltip
 UI
 USUBJID
-USUBJIDs
 UX
 VOLUMEU
 XPT
@@ -106,6 +108,7 @@ colour
 concu
 customizable
 customizations
+dataformat
 dateTime
 devtools
 df
@@ -113,10 +116,13 @@ doi
 extravascular
 ggplot
 ggplots
+ifelse
+img
 intravascular
+kable
+knitr
 linters
 lintr
-lin
 mL
 macroparameters
 md
@@ -132,7 +138,6 @@ plotly
 pptest
 pre
 pred
-predose
 qmd
 reproducibility
 reupload
@@ -141,7 +146,9 @@ rpptx
 ruleset
 rulesets
 runnable
+SBS
 signif
+src
 tibble
 tidyverse
 timeframe

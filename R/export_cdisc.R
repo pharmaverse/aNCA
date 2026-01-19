@@ -276,10 +276,10 @@ export_cdisc <- function(res_nca) {
     .create_nca_excl_columns(conc_nca_excl_col) %>%
 
     # Adjust class and length to the standards
-    adjust_class_and_length(metadata_nca_variables)
+    adjust_class_and_length(metadata_nca_variables) %>%
 
-  # Add variable labels for ADNCA
-  var_labels(adnca) <- labels_map[names(adnca)]
+    # Add the missing labels
+    apply_labels()
 
   list(pp = pp, adpp = adpp, adnca = adnca)
 }
@@ -349,28 +349,6 @@ get_subjid <- function(data) {
   } else {
     NA
   }
-}
-
-# Helper: adjust class and length for a data.frame based on metadata_nca_variables
-adjust_class_and_length <- function(df, metadata) {
-  for (var in names(df)) {
-    var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
-    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
-    if (var_specs$Type %in% c("Char", "text")) {
-      df[[var]] <- substr(as.character(df[[var]]), 0, var_specs$Length)
-    } else if (var_specs$Type %in% c("Num", "integer", "float") &&
-                 !endsWith(var, "DTM")) {
-      df[[var]] <- round(as.numeric(df[[var]]), var_specs$Length)
-    } else if (!var_specs$Type %in% c(
-      "dateTime", "duration", "integer", "float", "Num"
-    )) {
-      warning(
-        "Unknown var specification type: ", var_specs$Type,
-        " (", var_specs$Variable, ")"
-      )
-    }
-  }
-  df
 }
 
 # Helper: add derived CDISC variables based on PKNCA terms

@@ -85,9 +85,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         ylog_scale = individual_inputs()$ylog_scale
       )
 
-      validate(need(nrow(individual_output) > 0,
-                    "No data available for the selected filters."))
-
       time_col <- if (!is.null(individual_inputs()$profiles)) "ARRLT" else "AFRLT"
 
       tt_vars <- unique(c("AVAL", time_col,
@@ -157,9 +154,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         facet_by = mean_inputs()$facet_by
       )
 
-      validate(need(nrow(mean_output) > 0,
-                    "No data with >= 3 points to calculate mean."))
-
       time_col <- if (!is.null(mean_inputs()$profiles)) "NRRLT" else "NFRLT"
 
       tt_vars <- unique(c("Mean", time_col, mean_inputs()$colorby))
@@ -198,11 +192,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       # Individual plots
       session$userData$results$exploration$individualplot <- individualplot()
-      session$userData$results$exploration$individualplot_plotly <- ggplotly(individualplot())
+      session$userData$results$exploration$individualplot_plotly <- ggplotly(individualplot(),
+                                                                             tooltip = "text")
 
       # Mean plots
       session$userData$results$exploration$meanplot <- meanplot()
-      session$userData$results$exploration$meanplot_plotly <- ggplotly(meanplot())
+      session$userData$results$exploration$meanplot_plotly <- ggplotly(meanplot(), tooltip = "text")
     })
 
     # Render the mean plot output in plotly

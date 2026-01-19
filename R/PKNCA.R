@@ -68,6 +68,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
   time_column <- "AFRLT"
+  time_end_column <- if ("AEFRLT" %in% names(adnca_data)) "AEFRLT" else time_column
   dosno_column <- "ATPTREF"
   route_column <- "ROUTE"
   analyte_column <- "PARAM"
@@ -95,6 +96,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     ADNCA = adnca_data,
     group_columns = all_group_columns,
     time_column = time_column,
+    time_end_column = time_end_column,
     rrlt_column = "ARRLT",
     route_column = route_column,
     nca_exclude_reason_columns = nca_exclude_reason_columns
@@ -129,6 +131,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     exclude_half.life = "exclude_half.life",
     include_half.life = "include_half.life",
     time.nominal = "NFRLT",
+    duration = "CONCDUR",
     concu = "AVALU",
     timeu = "RRLTU",
     amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL,
@@ -198,13 +201,15 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' created using the `PKNCA_create_data_object()` function.
 #'
 #' @param adnca_data A reactive PKNCAdata object
-#' @param auc_data A data frame containing partial aucs added by user
 #' @param method NCA calculation method selection
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
-#' @param params A list of parameters for NCA calculation
-#' @param should_impute_c0 Logical indicating if start values should be imputed
+#' @param should_impute_c0 Logical indicating whether to impute start concentration values
+#' @param exclusion_list List of exclusion reasons and row indices to apply to the
+#' concentration data. Each item in the list should have:
+#' - reason: character string with the exclusion reason (e.g., "Vomiting")
+#' - rows: integer vector of row indices to apply the exclusion to
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -216,13 +221,12 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
   adnca_data,
-  auc_data,
   method,
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  params,
-  should_impute_c0 = TRUE
+  should_impute_c0 = TRUE,
+  exclusion_list = NULL
 ) {
 
   data <- adnca_data
@@ -239,11 +243,13 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     min.hl.r.squared = 0.01
   )
 
+  # Add on top of the default ones, the exclusions listed
+  data <- add_exclusion_reasons(data, exclusion_list)
+
   # Format intervals
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    params = params,
     start_from_last_dose = should_impute_c0
   ) %>%
     # Join route information
@@ -262,57 +268,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       ATPTREF %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
-
-  # # Add partial AUCs if any
-
-  auc_ranges <- auc_data %>%
-    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
-
-  # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
-    data$intervals %>%
-      mutate(
-        start = start + start_auc,
-        end = start + (end_auc - start_auc),
-        across(where(is.logical), ~FALSE),
-        aucint.last = TRUE,
-        type_interval = "manual"
-      )
-  })
-
-  data$intervals <- bind_rows(
-    data$intervals,
-    intervals_list
-  ) %>%
-    unique()
-
-  data$impute <- NA
-
-  # Impute start values if requested
-  if (should_impute_c0) {
-    data <- create_start_impute(data)
-
-    # Don't impute parameters that are not AUC dependent
-    params_auc_dep <- metadata_nca_parameters %>%
-      filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
-      pull(PKNCA)
-
-    params_not_to_impute <- metadata_nca_parameters %>%
-      filter(!grepl("auc|aumc", PKNCA),
-             !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
-      pull(PKNCA) %>%
-      intersect(names(PKNCA::get.interval.cols()))
-
-    all_impute_methods <- na.omit(unique(data$intervals$impute))
-
-    data$intervals <- Reduce(function(d, ti_arg) {
-      interval_remove_impute(
-        d,
-        target_impute = ti_arg,
-        target_params = params_not_to_impute
-      )
-    }, all_impute_methods, init = data$intervals)
-  }
 
   data
 }
@@ -693,4 +648,73 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
     res <- PKNCA::exclude(res, FUN = exc_fun)
   }
   res
+}
+
+#' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
+#'
+#' This function removes parameters from the PKNCA results that were not requested by the user,
+#' using a pivoted approach that also handles bioavailability settings.
+#'
+#' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
+#' @return The PKNCA results object with non requested parameters removed from $result.
+#' @export
+remove_pp_not_requested <- function(pknca_res) {
+  params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+  # Reshape intervals, filter
+  params_not_requested <- pknca_res$data$intervals %>%
+    pivot_longer(
+      cols = (any_of(params)),
+      names_to = "PPTESTCD",
+      values_to = "is_requested"
+    ) %>%
+    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+    group_by(across(c(-impute, -is_requested))) %>%
+    summarise(
+      is_requested = any(is_requested),
+      .groups = "drop"
+    ) %>%
+    filter(!is_requested)
+
+  # Filter for requested params based on intervals
+  pknca_res$result <- pknca_res$result %>%
+    anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
+  pknca_res
+}
+
+#' Add Exclusion Reasons to PKNCAdata Object
+#'
+#' This function adds exclusion reasons to the `exclude` column of the concentration object
+#' within a PKNCAdata object, based on a list of reasons and row indices.
+#'
+#' @param pknca_data A PKNCAdata object.
+#' @param exclusion_list A list of lists, each with elements:
+#'   - reason: character string with the exclusion reason (e.g., "Vomiting")
+#'   - rows: integer vector of row indices to apply the reason to
+#'
+#' @return The modified PKNCAdata object with updated exclusion reasons in the concentration object.
+#' @export
+add_exclusion_reasons <- function(pknca_data, exclusion_list) {
+  exclude_col <- pknca_data$conc$columns[["exclude"]]
+  if (is.null(exclude_col)) {
+    pknca_data$conc$data$exclude <- rep("", nrow(pknca_data$conc$data))
+    pknca_data$conc$columns[["exclude"]] <- "exclude"
+    exclude_col <- "exclude"
+  }
+  for (excl in exclusion_list) {
+    reason <- excl$reason
+    rows <- excl$rows
+    if (any(rows < 1 | rows > nrow(pknca_data$conc$data))) {
+      stop(
+        "Row indices in exclusion_list are out of bounds",
+        " for the exclusion: ", reason
+      )
+    } else {
+      pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
+        pknca_data$conc$data[[exclude_col]][rows] == "",
+        reason,
+        paste0(pknca_data$conc$data[[exclude_col]][rows], "; ", reason)
+      )
+    }
+  }
+  pknca_data
 }

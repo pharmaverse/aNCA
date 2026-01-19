@@ -6,7 +6,6 @@
 #' @return The output_path (invisibly)
 #' @export
 get_session_code <- function(template_path, session, output_path) {
-
   # Helper to get value from session$userData by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
@@ -17,11 +16,12 @@ get_session_code <- function(template_path, session, output_path) {
       } else {
         obj <- obj[[p]]
       }
-      if (is.null(obj)) return(NULL)
+      if (is.null(obj)) {
+        return(NULL)
+      }
     }
     obj
   }
-
   # Read template
   script <- readLines(template_path, warn = FALSE) %>%
     paste(collapse = "\n")
@@ -46,7 +46,7 @@ get_session_code <- function(template_path, session, output_path) {
     path <- sub("^session\\$userData\\$", "", matched)
     value <- get_session_value(path)
 
-    deparsed <- clean_deparse(value)
+    deparsed <- clean_deparse(value, max_per_line = 15)
     script <- paste0(
       substr(script, 1, start - 1),
       deparsed,
@@ -68,37 +68,35 @@ get_session_code <- function(template_path, session, output_path) {
 #' serialize `session$userData` values into a runnable R script.
 #'
 #' @param obj An R object to convert to a string of R code.
+#' @param max_per_line Maximum number of elements to include per line for
+#'   long vectors/lists.
+#' @param min_to_rep Minimum number of repeated elements to use `rep()` for
+#'   long vectors/lists.
 #' @param indent Integer indentation level for multi-line outputs.
 #' @return A single string containing R code that, when evaluated, will
 #'   reconstruct `obj` (or a close approximation for complex types).
 #' @keywords internal
-clean_deparse <- function(obj, indent = 0) {
+clean_deparse <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(class(obj)[1], "()"))
-  }
-  # For single-element atomic numeric/integer/logical return bare representation
-  if (length(obj) == 1 && class(obj)[1] %in% c("integer", "numeric", "logical")) {
-    return(as.character(obj))
   }
   UseMethod("clean_deparse")
 }
 
 #' @noRd
-clean_deparse.default <- function(obj, indent = 0) {
+clean_deparse.default <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   paste(deparse(obj, width.cutoff = 500), collapse = "")
 }
 
 #' @noRd
-clean_deparse.data.frame <- function(obj, indent = 0) {
+clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   ind <- paste(rep("  ", indent), collapse = "")
-  if (nrow(obj) == 0) return("data.frame()")
 
   cols <- lapply(obj, function(col) {
-    d <- deparse(col, width.cutoff = 500) %>% paste(collapse = "")
-    if (length(col) > 1 && !grepl("^c\\(", d)) d <- paste0("c(", d, ")")
-    d
+    clean_deparse(col, indent + 1, max_per_line = max_per_line)
   })
+
   col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
   if (length(col_strs) > 1) {
     not_last <- seq_len(length(col_strs) - 1)
@@ -108,15 +106,19 @@ clean_deparse.data.frame <- function(obj, indent = 0) {
 }
 
 #' @noRd
-clean_deparse.list <- function(obj, indent = 0) {
+clean_deparse.list <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   ind <- paste(rep("  ", indent), collapse = "")
   n <- length(obj)
-  if (n == 0) return("list()")
   nms <- names(obj)
   items <- vapply(seq_len(n), FUN.VALUE = "", function(i) {
     name <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("V", i)
+    # Quote name if not a valid R symbol
+    if (!grepl("^[A-Za-z.][A-Za-z0-9._]*$", name)) {
+      name <- sprintf('"%s"', name)
+    }
     val <- obj[[i]]
-    paste0(name, " = ", clean_deparse(val, indent + 1))
+    val_str <- clean_deparse(val, indent + 1, max_per_line = max_per_line)
+    paste0(name, " = ", val_str)
   })
   if (length(items) > 1) {
     not_last <- seq_len(length(items) - 1)
@@ -127,22 +129,61 @@ clean_deparse.list <- function(obj, indent = 0) {
 }
 
 #' @noRd
-clean_deparse.character <- function(obj, indent = 0) {
-  if (length(obj) == 1) return(sprintf('"%s"', obj))
-  paste0("c(", paste(sprintf('"%s"', obj), collapse = ", "), ")")
+
+clean_deparse.character <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  obj <- sprintf('"%s"', obj)
+  .deparse_vector(obj, indent, max_per_line, min_to_rep)
 }
 
 #' @noRd
-clean_deparse.numeric <- function(obj, indent = 0) {
-  paste0("c(", paste(obj, collapse = ", "), ")")
+
+clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  obj <- sprintf("%s", obj)
+  .deparse_vector(obj, indent, max_per_line, min_to_rep)
 }
 
 #' @noRd
-clean_deparse.integer <- clean_deparse.numeric
+clean_deparse.integer <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  clean_deparse.numeric(obj, indent = indent, max_per_line = max_per_line, min_to_rep = min_to_rep)
+}
 
 #' @noRd
-clean_deparse.logical <- function(obj, indent = 0) {
-  paste0("c(", paste(ifelse(obj, "TRUE", "FALSE"), collapse = ", "), ")")
+clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  obj <- as.character(obj)
+  .deparse_vector(obj, indent, max_per_line, min_to_rep)
+}
+
+#' Internal helper to deparse atomic vectors
+#' using repetition simplification (rep) and line splitting
+#'
+#' @noRd
+.deparse_vector <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  n <- length(obj)
+  if (n == 1) {
+    return(obj)
+  } else {
+    rle_obj <- rle(obj)
+    lines_obj <- c()
+    for (i in seq_along(rle_obj$values)) {
+      val <- rle_obj$values[i]
+      len <- rle_obj$lengths[i]
+      if (len >= min_to_rep) {
+        rep_obj <- paste0("rep(", val, ", ", len, ")")
+        lines_obj <- c(lines_obj, rep_obj)
+      } else {
+        lines_obj <- c(lines_obj, rep(val, len))
+      }
+    }
+  }
+  ind <- paste(rep("  ", indent), collapse = "")
+  lines <- split(lines_obj, ceiling(seq_along(lines_obj) / max_per_line))
+  line_strs <- vapply(lines, function(x) paste(x, collapse = ", "), "")
+  if (is.list(lines) && length(lines) > 1) {
+    out <- paste0(ind, "  ", line_strs, collapse = ",\n")
+    paste0("c(\n", out, "\n", ind, ")")
+  } else {
+    paste0("c(", paste0(line_strs, collapse = ",\n"), ")")
+  }
 }
 
 default_mapping <- list(
@@ -200,3 +241,7 @@ get_settings_code(
   template_path = "inst/shiny/www/templates/script_template.R",
   output_path = "../../Downloads/elproject/settings/settings_code.R"
 )
+
+# TODO (Gerardo): Create a linked function
+# to obtain the code from a settings file
+# (#826)

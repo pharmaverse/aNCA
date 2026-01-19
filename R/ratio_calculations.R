@@ -172,13 +172,17 @@ calculate_ratios.data.frame <- function(
     # Use mean values in case of multiple denominator rows per test
     mutate(
       PPORRES_ref = mean(PPORRES_ref, na.rm = TRUE),
-      PPSTRES_ref = mean(PPSTRES_ref, na.rm = TRUE),
+      PPSTRES_ref = if ("PPSTRESU" %in% names(.)) {
+        mean(PPSTRES_ref, na.rm = TRUE)
+      } else {
+        NULL
+      },
       n = n()
     ) %>%
     ungroup() %>%
     mutate(
       PPORRES = (PPORRES / PPORRES_ref) * adjusting_factor,
-      PPSTRES = if ("PPSTRES" %in% names(.)) {
+      PPSTRES = if ("PPSTRES" %in% names(.) & "PPSTRES_ref" %in% names(.)) {
         (PPSTRES / PPSTRES_ref) * adjusting_factor
       } else {
         NULL
@@ -218,7 +222,11 @@ calculate_ratios.data.frame <- function(
     # Make sure all basic columns are still character (even when empty #730)
     mutate(
       PPORRESU = as.character(PPORRESU),
-      PPSTRESU = as.character(PPSTRESU),
+      PPSTRESU = if ("PPSTRESU" %in% names(.)) {
+        as.character(PPSTRESU)
+      } else {
+        NULL
+      },
       PPANMETH = as.character(PPANMETH)
     ) %>%
     # Keep same format as the input (PKNCAresults)
@@ -238,7 +246,6 @@ calculate_ratios.PKNCAresults <- function(
   adjusting_factor = 1,
   custom_pptestcd = NULL
 ) {
-
   # Check if match_cols and ref_groups are valid group columns
   # Make checks on the input formats
   cols_used_for_ratios <- c(match_cols, names(ref_groups), names(test_groups))
@@ -279,13 +286,10 @@ calculate_ratios.PKNCAresults <- function(
 #' AdjustingFactor, TestGroups, RefGroups, PPTESTCD.
 #' @returns The updated PKNCAresult object with added rows in the `result` data.frame.
 #' @export
-calculate_table_ratios_app <- function(res, ratio_table) {
-  # Make a list to save all results
-  ratio_results <- vector("list", nrow(as.data.frame(ratio_table)))
-
-  # Loop through each row of the ratio_table
-  for (i in seq_len(nrow(as.data.frame(ratio_table)))) {
-    ratio_results[[i]] <- calculate_ratio_app(
+calculate_table_ratios <- function(res, ratio_table) {
+  # Use lapply to process each row of ratio_table
+  ratio_results <- lapply(seq_len(nrow(ratio_table)), function(i) {
+    result <- calculate_ratio_app(
       res = res,
       test_parameter = ratio_table$TestParameter[i],
       ref_parameter = ratio_table$RefParameter[i],
@@ -295,8 +299,7 @@ calculate_table_ratios_app <- function(res, ratio_table) {
       adjusting_factor = as.numeric(ratio_table$AdjustingFactor[i]),
       custom_pptestcd = if (ratio_table$PPTESTCD[i] == "") NULL else ratio_table$PPTESTCD[i]
     )
-
-    if (nrow(ratio_results[[i]]) == 0) {
+    if (nrow(result) == 0) {
       warning(
         "Ratio ", ratio_table$PPTESTCD[i], " not computed.",
         "No comparable groups found between RefGroups",
@@ -305,7 +308,8 @@ calculate_table_ratios_app <- function(res, ratio_table) {
         " (", ratio_table$TestGroups[i], ")"
       )
     }
-  }
+    result
+  })
   if (!"PPANMETH" %in% names(res$result)) {
     res$result$PPANMETH <- ""
   }
@@ -389,11 +393,8 @@ calculate_ratio_app <- function(
     )
   )
 
-
-  all_ratios <- data.frame()
-
-  for (ix in seq_along(match_cols)) {
-    ratio_calculations <- calculate_ratios(
+  ratio_list <- lapply(seq_along(match_cols), function(ix) {
+    calculate_ratios(
       data = res$result,
       test_parameter = test_parameter,
       ref_parameter = ref_parameter,
@@ -403,8 +404,8 @@ calculate_ratio_app <- function(
       adjusting_factor = adjusting_factor,
       custom_pptestcd = custom_pptestcd
     )
-    all_ratios <- bind_rows(all_ratios, ratio_calculations)
-  }
+  })
+  all_ratios <- bind_rows(ratio_list)
 
   # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
   # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed

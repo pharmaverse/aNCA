@@ -172,15 +172,16 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   )
 
   # If extra_vars_to_keep is provided, join these variables from the conc data
-  if (!is.null(extra_vars_to_keep) && length(extra_vars_to_keep) > 0) {
+  if (length(extra_vars_to_keep) > 0) {
     conc_data <- myres$data$conc$data
     # Only keep columns that exist in conc_data
     vars_to_join <- intersect(extra_vars_to_keep, names(conc_data))
+    group_vars <- group_vars(myres$data$conc)
     if (length(vars_to_join) > 0) {
       out <- out %>%
         dplyr::inner_join(
-          dplyr::select(conc_data, dplyr::any_of(vars_to_join)),
-          by = intersect(names(out), vars_to_join)
+          dplyr::select(conc_data, dplyr::any_of(c(vars_to_join, group_vars))),
+          by = intersect(names(out),  c(vars_to_join, group_vars))
         ) %>%
         dplyr::distinct()
     }
@@ -240,22 +241,23 @@ add_label_attribute <- function(df, myres) {
   applied_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
   flag_params <- names(flag_rules)
   flag_thr <- sapply(flag_rules, FUN =  function(x) x$threshold)
-  flag_rule_msgs <- paste0(flag_params, c(" < ", " > ", " > ", " < "), flag_thr)
+  flag_rule_msgs <- paste0(flag_params, c(" < ", "<", " > ", " > ", " < "), flag_thr)
   flag_cols <- names(final_results)[formatters::var_labels(final_results)
                                     %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
   if (length(flag_params) > 0) {
     final_results <- final_results %>%
+      rowwise() %>%
       mutate(
         flagged = case_when(
-          rowSums(is.na(select(., any_of(flag_cols)))) > 0 ~ "MISSING",
           is.na(Exclude) ~ "ACCEPTED",
           any(sapply(
             flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
           )) ~ "FLAGGED",
-          TRUE ~ "ACCEPTED"
+          TRUE ~ "MISSING"
         )
-      )
+      ) %>%
+      ungroup()
   }
   final_results
 }

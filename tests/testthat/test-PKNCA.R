@@ -131,12 +131,10 @@ describe("PKNCA_update_data_object", {
   it("returns a PKNCAdata object", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
-      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      params = params,
       should_impute_c0 = TRUE
     )
     expect_s3_class(updated_data, "PKNCAdata")
@@ -145,12 +143,10 @@ describe("PKNCA_update_data_object", {
   it("includes only selected analytes, dosnos, and pcspecs in intervals", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = ma_data,
-      auc_data = auc_data,
       method = method,
       selected_analytes = "AnalyteX",
       selected_profile = 1,
       selected_pcspec = "Plasma",
-      params = params,
       should_impute_c0 = FALSE
     )
     intervals <- updated_data$intervals
@@ -162,72 +158,15 @@ describe("PKNCA_update_data_object", {
   it("sets NCA options correctly", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
-      auc_data = auc_data,
       method = method,
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      params = params,
       should_impute_c0 = TRUE
     )
     expect_equal(updated_data$options$auc.method, "lin up log down")
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
-  })
-
-  it("does not impute C0 when not requested", {
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = method,
-      selected_analytes = analytes,
-      selected_profile = dosnos,
-      selected_pcspec = pcspecs,
-      params = params,
-      should_impute_c0 = FALSE
-    )
-    expect_true("impute" %in% names(updated_data))
-    expect_true(all(is.na(updated_data$impute)))
-  })
-
-  it("handles partial AUCs (auc_data) creating proper intervals for each", {
-    auc_data <- data.frame(
-      start_auc = c(0, 1, 2),
-      end_auc = c(1, 2, 3)
-    )
-    updated_data <- PKNCA_update_data_object(
-      adnca_data = pknca_data,
-      auc_data = auc_data,
-      method = method,
-      selected_analytes = analytes,
-      selected_profile = dosnos,
-      selected_pcspec = pcspecs,
-      params = params,
-      should_impute_c0 = TRUE
-    )
-    # Check that the interval_type column is present with at least one "manual" value
-    expect_true(any(updated_data$intervals$type_interval == "manual"))
-
-    # Check AUC interval rows have proper columns and only aucint.last parameter as TRUE
-    auc_intervals <- updated_data$intervals  %>%
-      dplyr::filter(type_interval == "manual") %>%
-      dplyr::select(start, end, STUDYID, DOSETRT, USUBJID, PARAM,
-                    ATPTREF, auclast, aucint.last, tmax)
-
-    expected_res <- tidyr::tibble(
-      start = c(0, 1, 2),
-      end = c(1, 2, 3),
-      STUDYID = rep("STUDY001", 3),
-      DOSETRT = rep("DrugA", 3),
-      USUBJID = rep("SUBJ001", 3),
-      PARAM = rep("AnalyteA", 3),
-      ATPTREF = rep(1, 3),
-      auclast = rep(FALSE, 3),
-      aucint.last = rep(TRUE, 3),
-      tmax = rep(FALSE, 3)
-    )
-
-    expect_equal(auc_intervals, expected_res)
   })
 })
 
@@ -250,14 +189,6 @@ describe("PKNCA_calculate_nca", {
     expect_equal(length(colnames(nca_results$result)), 15)
   })
 
-  it("handles warning levels correctly", {
-
-    # Modify the data to eliminate points needed for half life
-    modified_data <- simple_data[1, ] # Remove one time point
-    modified_data$AVAL <- NA
-    pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
-    pknca_data_modified$intervals$half.life <- TRUE
-  })
 })
 
 describe("PKNCA_impute_method_start_logslope", {
@@ -438,5 +369,71 @@ describe("select_level_grouping_cols", {
     data[, "a"] <- 10
     result <- select_minimal_grouping_cols(data, "d")
     expect_equal(result, data["d"])
+  })
+})
+
+# Tests for add_exclusion_reasons
+describe("add_exclusion_reasons", {
+  it("adds a single exclusion reason to specified rows", {
+    # Prepare exclusion list: exclude row 2 with reason "Test Reason"
+    excl_list <- list(list(reason = "Test Reason", rows = 2))
+    pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- pknca_data_excl$conc$columns$exclude
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][2], "Test Reason")
+    # Other rows should remain unchanged (empty string or NA)
+    expect_true(all(pknca_data_excl$conc$data[[excl_col]][-2] %in% c("", NA)))
+  })
+
+  it("adds multiple exclusion reasons to multiple rows", {
+    excl_list <- list(
+      list(reason = "Reason 1", rows = c(1, 3)),
+      list(reason = "Reason 2", rows = 4)
+    )
+    pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- pknca_data_excl$conc$columns$exclude
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][1], "Reason 1")
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][3], "Reason 1")
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][4], "Reason 2")
+    # Other rows should remain unchanged (empty string or NA)
+    expect_true(all(pknca_data_excl$conc$data[[excl_col]][-c(1, 3, 4)] %in% c("", NA)))
+  })
+
+  it("appends additional exclusion reasons to the row", {
+    excl_list <- list(
+      list(reason = "First Reason", rows = 2),
+      list(reason = "Second Reason", rows = 2)
+    )
+    pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- pknca_data_excl$conc$columns$exclude
+    expect_equal(pknca_data_excl$conc$data[[excl_col]][2], "First Reason; Second Reason")
+  })
+
+  it("returns unchanged object if exclusion_list is NULL or empty", {
+    pknca_data_nochange1 <- add_exclusion_reasons(pknca_data, NULL)
+    pknca_data_nochange2 <- add_exclusion_reasons(pknca_data, list())
+    expect_equal(pknca_data_nochange1, pknca_data)
+    expect_equal(pknca_data_nochange2, pknca_data)
+  })
+
+  it("provides an error message if specified rows are out of bounds", {
+    excl_list <- list(
+      list(reason = "Exclusion out of bounds", rows = c(1, 100)),
+      list(reason = "Valid exclusion", rows = 1)
+    )
+    expect_error(
+      add_exclusion_reasons(pknca_data, excl_list),
+      "Row indices in exclusion_list are out of bounds for the exclusion: Exclusion out of bounds"
+    )
+  })
+
+  it("creates the exclude column if it does not exist", {
+    excl_list <- list(
+      list(reason = "Exclusion reason", rows = c(1, 2))
+    )
+    pknca_data_no_excl <- pknca_data
+    excl_col <- pknca_data_no_excl$conc$columns[["exclude"]]
+    pknca_data_no_excl$conc$columns[["exclude"]] <- NULL
+    pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
+    expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
   })
 })
