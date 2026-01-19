@@ -113,7 +113,7 @@ data_upload_server <- function(id) {
           # Error: Too many settings files
           msg <- "Error: Multiple settings files detected. Please upload only one settings file."
           prev_msgs <- if (length(errors) > 0) {
-            paste(purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg)), collapse = "<br>")
+            paste(purrr::map_chr(errors, \(x) paste0(x$name, ": ", x$msg)), collapse = "<br>")
           } else {
             ""
           }
@@ -132,7 +132,7 @@ data_upload_server <- function(id) {
 
         loaded_data <- DUMMY_DATA
 
-        found_data <- purrr::keep(successful_loads, ~ .x$type == "data")
+        found_data <- purrr::keep(successful_loads, \(x) x$type == "data")
         # Handle Errors
         if (length(found_data) > 0) {
           tryCatch({
