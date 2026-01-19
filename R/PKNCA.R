@@ -289,6 +289,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' which does not specify any BLQ function to use for imputation. It is required if `blq`
 #' is defined in the intervals impute column of the `pknca_data` object, as the function
 #' will be applied to those intervals during the NCA calculation.
+#' @param na_rule A string defining the NA imputation rule using PKNCA format.
+#' It can be a numeric value (substituting the NA value), or a string "drop" to
+#' ignore the value.
+#'
 #'
 #' @returns Results object with start and end times for each dose, from first dose
 #' and from most recent dose
