@@ -82,43 +82,39 @@ data_upload_server <- function(id) {
             # If read_pk fails
             # check if settings file is loaded and then create settings override
             tryCatch({
+              # check if error aligns with what we expect for setttings file
+              if (conditionMessage(e_pk) != "Invalid data format.
+                  Data frame was expected, but received list.") {
+                return(list(status = "error", msg = conditionMessage(e_pk), name = name))
+              }
+
               obj <- readRDS(path)
               # Check for settings
               is_settings <- is.list(obj) && "settings" %in% names(obj)
 
-              final_settings <- if (is_settings) obj else NULL
-
-              if (!is.null(final_settings)) {
-                list(status = "success", type = "settings", content = final_settings, name = name)
-              } else {
-                # Not a settings file either, return original PK error
-                stop(e_pk$message)
+              if (!is_settings) {
+                stop(conditionMessage(e_pk))
               }
+
+              list(status = "success", type = "settings", content = obj, name = name)
             }, error = function(e_rds) {
-              # Return the original read_pk error to the user
-              list(status = "error", msg = e_pk$message, name = name)
+              list(status = "error", msg = conditionMessage(e_pk), name = name)
             })
           })
         })
 
         # Process results
-        successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
+        successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
-          purrr::map(\(x) paste0(x$name, ": ", x$message))
+          purrr::map(\(x) paste0(x$name, ": ", x$msg))
 
         # Extract and apply settings if any found
-        found_settings <- purrr::keep(successful_loads, ~ .x$type == "settings")
+        found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
 
         if (length(found_settings) > 1) {
           # Error: Too many settings files
-          msg <- "Error: Multiple settings files detected. Please upload only one settings file."
-          prev_msgs <- if (length(errors) > 0) {
-            paste(purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg)), collapse = "<br>")
-          } else {
-            ""
-          }
-          file_loading_error(paste(c(prev_msgs, msg), collapse = "<br>"))
-
+          errors <- append(errors, "Error: Multiple settings files detected.
+                           Please upload only one settings file.")
           # Do not apply any settings if ambiguous
           settings_override(NULL)
 
@@ -132,7 +128,7 @@ data_upload_server <- function(id) {
 
         loaded_data <- DUMMY_DATA
 
-        found_data <- purrr::keep(successful_loads, ~ .x$type == "data")
+        found_data <- purrr::keep(successful_loads, \(x) x$type == "data")
         # Handle Errors
         if (length(found_data) > 0) {
           tryCatch({
