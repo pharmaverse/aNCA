@@ -238,9 +238,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     )
 
     #' ZIP Download module
-    zip_server(
-      "zip", res_nca, settings, ratio_table, extra_group_vars, processed_pknca_data
-    )
+    #' It will indirectly also use the stored session$userData$results
+    zip_server("zip", res_nca, settings, extra_group_vars)
 
     #' Descriptive statistics module
     descriptive_statistics_server("descriptive_stats", res_nca, extra_group_vars)

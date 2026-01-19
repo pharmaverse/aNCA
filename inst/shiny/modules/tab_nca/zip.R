@@ -2,14 +2,13 @@
 ##'
 ##' This module provides UI and server logic for exporting NCA results, plots, tables, and slides as a ZIP file.
 ##' Users can select which results to export, choose output formats for graphics, tables, and slides,
-##' and download all selected outputs in a single ZIP archive.
+##' and download all selected outputs in a single ZIP archive. This module indirectly utilizes the stored
+##' session$userData$results for generating the outputs in the server.
 ##'
 ##' @param id A character string used to uniquely identify the module.
 ##' @param res_nca NCA results object (for server).
 ##' @param settings Settings object (for server).
-##' @param ratio_table Ratio table object (for server).
 ##' @param grouping_vars Grouping variables (for server).
-##' @param pknca_data PKNCA data object (for server).
 
 zip_ui <- function(id) {
 	ns <- NS(id)
@@ -68,7 +67,7 @@ zip_ui <- function(id) {
   )
 }
 
-zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_data) {
+zip_server <- function(id, res_nca, settings, grouping_vars) {
 	moduleServer(id, function(input, output, session) {
 		ns <- session$ns
 
@@ -87,7 +86,6 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 						plot_formats <- input$plot_formats
 						slide_formats <- input$slide_formats
 						table_formats <- input$table_formats
-						browser()
 
 						save_output(
               output = session$userData$results,
