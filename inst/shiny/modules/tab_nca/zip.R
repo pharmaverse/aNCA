@@ -91,7 +91,7 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
                 res_nca_val <- res_nca()
                 res_dose_slides <- get_dose_esc_results(
                   o_nca = res_nca_val,
-                  group_by_vars = setdiff(grouping_vars(), res_nca_val$data$conc$columns$subject),
+                  group_by_vars = setdiff(group_vars(res_nca()), res_nca_val$data$conc$columns$subject),
                   facet_vars = "DOSEA",
                   statistics = c("Mean"),
                   stats_parameters = c(
