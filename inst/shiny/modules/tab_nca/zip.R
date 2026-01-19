@@ -1,9 +1,8 @@
 ##' NCA ZIP Export Module
 ##'
-##' This module provides UI and server logic for exporting NCA results, plots, tables, and slides as a ZIP file.
-##' Users can select which results to export, choose output formats for graphics, tables, and slides,
-##' and download all selected outputs in a single ZIP archive. This module indirectly utilizes the stored
-##' session$userData$results for generating the outputs in the server.
+##' This module provides UI and server logic to export all relevant App results a ZIP file.
+##' Users can select which results to export and the output formats for graphics, tables and slides.
+##' This module indirectly uses the stored session$userData$results.
 ##'
 ##' @param id A character string used to uniquely identify the module.
 ##' @param res_nca NCA results object (for server).
@@ -11,10 +10,10 @@
 ##' @param grouping_vars Grouping variables (for server).
 
 zip_ui <- function(id) {
-	ns <- NS(id)
-	TREE_UI <- create_tree_from_list_names(TREE_LIST)
-	tagList(
-	  fluidRow(
+  ns <- NS(id)
+  TREE_UI <- create_tree_from_list_names(TREE_LIST)
+  tagList(
+    fluidRow(
       column(
         width = 6,
         h4("Select Results to Export"),
@@ -63,45 +62,49 @@ zip_ui <- function(id) {
           style = "text-align: left;"
         )
       )
-	)
+    )
   )
 }
 
 zip_server <- function(id, res_nca, settings, grouping_vars) {
-	moduleServer(id, function(input, output, session) {
-		ns <- session$ns
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
-		output$download_zip <- downloadHandler(
-			filename = function() {
-				project <- session$userData$project_name()
-				datetime <- attr(res_nca(), "provenance")$datetime
-				paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
-			},
-			content = function(fname) {
-				tryCatch({
-					shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
-						output_tmpdir <- file.path(tempdir(), "output")
+    output$download_zip <- downloadHandler(
+      filename = function() {
+        project <- session$userData$project_name()
+        datetime <- attr(res_nca(), "provenance")$datetime
+        paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
+      },
+      content = function(fname) {
+        tryCatch(
+          {
+            shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
+              output_tmpdir <- file.path(tempdir(), "output")
 
-						# Use selected formats from UI
-						plot_formats <- input$plot_formats
-						slide_formats <- input$slide_formats
-						table_formats <- input$table_formats
+              # Use selected formats from UI
+              plot_formats <- input$plot_formats
+              slide_formats <- input$slide_formats
+              table_formats <- input$table_formats
 
-						save_output(
-              output = session$userData$results,
-              output_path = output_tmpdir,
-              ggplot_formats = plot_formats,
-              table_formats = table_formats,
-              obj_names = input$res_tree
-            )
-						incProgress(0.1)
-                        
-            if ("results_slides" %in% input$res_tree) {
+              save_output(
+                output = session$userData$results,
+                output_path = output_tmpdir,
+                ggplot_formats = plot_formats,
+                table_formats = table_formats,
+                obj_names = input$res_tree
+              )
+              incProgress(0.1)
+
+              if ("results_slides" %in% input$res_tree) {
                 # Create presentation slides
                 res_nca_val <- res_nca()
                 res_dose_slides <- get_dose_esc_results(
                   o_nca = res_nca_val,
-                  group_by_vars = setdiff(group_vars(res_nca()), res_nca_val$data$conc$columns$subject),
+                  group_by_vars = setdiff(
+                    group_vars(res_nca()),
+                    res_nca_val$data$conc$columns$subject
+                  ),
                   facet_vars = "DOSEA",
                   statistics = c("Mean"),
                   stats_parameters = c(
@@ -113,89 +116,91 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                 dir.create(presentations_path)
 
                 if ("qmd" %in% slide_formats) {
-                    create_qmd_dose_slides(
-                        res_dose_slides = res_dose_slides,
-                        quarto_path = paste0(presentations_path, "/results_slides.qmd"),
-                        title = paste0("NCA Results", "\n", session$userData$project_name()),
-                        use_plotly = TRUE
-                    )
+                  create_qmd_dose_slides(
+                    res_dose_slides = res_dose_slides,
+                    quarto_path = paste0(presentations_path, "/results_slides.qmd"),
+                    title = paste0("NCA Results", "\n", session$userData$project_name()),
+                    use_plotly = TRUE
+                  )
                 }
                 if ("pptx" %in% slide_formats) {
-                    create_pptx_dose_slides(
-                        res_dose_slides = res_dose_slides,
-                        path = paste0(presentations_path, "/results_slides.pptx"),
-                        title = paste0("NCA Results", "\n", session$userData$project_name()),
-                        template = "www/templates/template.pptx"
-                    )
+                  create_pptx_dose_slides(
+                    res_dose_slides = res_dose_slides,
+                    path = paste0(presentations_path, "/results_slides.pptx"),
+                    title = paste0("NCA Results", "\n", session$userData$project_name()),
+                    template = "www/templates/template.pptx"
+                  )
                 }
-            }
-            incProgress(0.6)
+              }
+              incProgress(0.6)
 
-						# Create a settings folder
-            if ("settings_file" %in% input$res_tree) {
+              # Create a settings folder
+              if ("settings_file" %in% input$res_tree) {
                 setts_tmpdir <- file.path(output_tmpdir, "settings")
                 dir.create(setts_tmpdir, recursive = TRUE)
                 settings_list <- session$userData$settings
                 setings_to_save <- list(
-                    settings = settings_list$settings(),
-                    slope_rules = settings_list$slope_rules()
+                  settings = settings_list$settings(),
+                  slope_rules = settings_list$slope_rules()
                 )
                 saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
-            }
+              }
 
-						# Filter files by selected formats (for demonstration, not full implementation)
-						files <- list.files(
-							output_tmpdir,
-							pattern = paste0(
-								"(",
-								paste0(c(
-									if (length(table_formats) > 0) paste0("\\.", table_formats),
-									if (length(plot_formats) > 0) paste0("\\.", plot_formats),
-									if (length(slide_formats) > 0) paste0("results_slides\\.", slide_formats),
-                  if ("r_script" %in% input$res_tree) "r_script\\.R",
-                  if ("settings_file" %in% input$res_tree) "settings\\.rds"
-								), collapse = "|"),
-								")$"
-							),
-							recursive = TRUE
-						)
-						wd <- getwd()
-						on.exit(setwd(wd), add = TRUE)
-						setwd(output_tmpdir)
-						incProgress(0.9)
-						zip::zipr(zipfile = fname, files = files, mode = "mirror")
-						incProgress(1)
-					})
-				}, error = function(e) {
-					message("Download Error:")
-					message(e$message)
-					stop(e)
-				})
-			}
-		)
-	})
+              # Filter files by selected formats (for demonstration, not full implementation)
+              files <- list.files(
+                output_tmpdir,
+                pattern = paste0(
+                  "(",
+                  paste0(c(
+                    if (length(table_formats) > 0) paste0("\\.", table_formats),
+                    if (length(plot_formats) > 0) paste0("\\.", plot_formats),
+                    if (length(slide_formats) > 0) paste0("results_slides\\.", slide_formats),
+                    if ("r_script" %in% input$res_tree) "r_script\\.R",
+                    if ("settings_file" %in% input$res_tree) "settings\\.rds"
+                  ), collapse = "|"),
+                  ")$"
+                ),
+                recursive = TRUE
+              )
+              wd <- getwd()
+              on.exit(setwd(wd), add = TRUE)
+              setwd(output_tmpdir)
+              incProgress(0.9)
+              zip::zipr(zipfile = fname, files = files, mode = "mirror")
+              incProgress(1)
+            })
+          },
+          error = function(e) {
+            message("Download Error:")
+            message(e$message)
+            stop(e)
+          }
+        )
+      }
+    )
+  })
 }
 
 # Define a list with the possible outputs to export as end objects.
 # Consider all the zip_server options to create and align accordingly.
 TREE_LIST <- list(
   exploration = list(
-      individualplot = "",
-      meanplot = ""
+    individualplot = "",
+    meanplot = ""
   ),
   nca_results = list(
-      pivoted_results = ""
+    pivoted_results = ""
   ),
   CDISC = list(
-      pp = "",
-      adpp = "",
-      adnca = ""
+    pp = "",
+    adpp = "",
+    adnca = ""
   ),
   extras = list(
-      presentation_slides = list(
-          results_slides = ""
-      ),
-      r_script = "",
-      settings_file = ""
+    presentation_slides = list(
+      results_slides = ""
+    ),
+    r_script = "",
+    settings_file = ""
   )
 )

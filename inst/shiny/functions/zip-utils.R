@@ -41,7 +41,25 @@ save_plotly_format <- function(x, file_name, formats = "html") {
   }
 }
 
-save_output <- function(output, output_path, ggplot_formats = c("png", "html"), table_formats = c("csv", "rds", "xpt"), obj_names = NULL) {
+# Helper for saving different object types
+save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
+  if (inherits(x, "ggplot")) {
+    save_ggplot_format(x, file_name, ggplot_formats)
+  } else if (inherits(x, "data.frame")) {
+    save_table_format(x, file_name, table_formats)
+  } else if (inherits(x, "plotly")) {
+    save_plotly_format(x, file_name, "html")
+  } else {
+    stop("Unsupported output type object in the list: ", paste0(class(x), collapse = ", "))
+  }
+}
+
+save_output <- function(
+  output, output_path,
+  ggplot_formats = c("png", "html"),
+  table_formats = c("csv", "rds", "xpt"),
+  obj_names = NULL
+) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
     file_name <- paste0(output_path, "/", name)
@@ -52,17 +70,19 @@ save_output <- function(output, output_path, ggplot_formats = c("png", "html"), 
     is_obj_to_export <- is.null(obj_names) || name %in% obj_names
 
     if (inherits(x, "list")) {
-      save_output(output = x, output_path = file_name, ggplot_formats = ggplot_formats, table_formats = table_formats, obj_names = obj_names)
-    } else if (inherits(x, "ggplot") && is_obj_to_export) {
-      save_ggplot_format(x, file_name, ggplot_formats)
-    } else if (inherits(x, "data.frame") && is_obj_to_export) {
-      save_table_format(x, file_name, table_formats)
-    } else if (inherits(x, "plotly") && is_obj_to_export) {
-      save_plotly_format(x, file_name, "html")
+      save_output(
+        output = x,
+        output_path = file_name,
+        ggplot_formats = ggplot_formats,
+        table_formats = table_formats,
+        obj_names = obj_names
+      )
     } else if (is_obj_to_export) {
-      stop(
-        "Unsupported output type object in the list: ",
-        paste0(class(x), collapse = ", ")
+      save_dispatch(
+        x = x,
+        file_name = paste0(file_name, "/", name),
+        ggplot_formats = ggplot_formats,
+        table_formats = table_formats
       )
     }
   }
@@ -265,8 +285,9 @@ create_tree_from_list_names <- function(x, parent_id = "tree") {
 }
 
 #' Get All Leaf Node IDs from a Tree Structure
-#' Recursively traverses a tree list (as produced by create_tree_from_list_names) and returns the IDs of all leaf nodes.
-#' @param tree A list representing a tree structure, where each node may have an 'id' and optionally 'children'.
+#' Recursively traverses a tree list (shinyWidgets object) to return its leaf nodes' IDs.
+#' @param tree A list representing a tree structure,
+#' where each node may have an 'id' and optionally 'children'.
 #' @return A character vector of leaf node IDs.
 get_tree_leaf_ids <- function(tree) {
   if (is.null(tree) || length(tree) == 0) return(character(0))

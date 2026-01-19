@@ -51,4 +51,3 @@ log_debug_list <- function(title, l) {
 reset_reactable_memory <- function() {
   shinyjs::runjs("memory = {};")
 }
-
