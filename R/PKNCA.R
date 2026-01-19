@@ -504,15 +504,6 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   groups_units_clean <- groups_units_tbl %>%
     drop_na(all_of(valid_unit_cols))
 
-  n_dropped <- nrow(groups_units_tbl) - nrow(groups_units_clean)
-  # Notify if NAs were dropping
-  if (n_dropped > 0) {
-    showNotification(
-      paste("Identified", n_dropped, "rows with missing units.
-            These will be excluded from analysis."),
-      type = "warning"
-    )
-  }
   # Check that at least for each concentration group units are uniform
   mismatching_units_groups <- groups_units_clean %>%
     add_count(!!!syms(group_conc_cols), name = "n") %>%
