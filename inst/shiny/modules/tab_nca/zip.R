@@ -1,45 +1,58 @@
 zip_ui <- function(id) {
 	ns <- NS(id)
+	TREE_UI <- create_tree_from_list_names(TREE_LIST)
 	tagList(
 	  fluidRow(
-	    shinyWidgets::treeInput(
-	      inputId = ns("res_tree"),
-	      label = "Exportable ZIP Contents:",
-	      selected = get_tree_leaf_ids(TREE_LIST),
-	      choices = TREE_LIST
-	    )
-	  ),
-		fluidRow(
-			column(4,
-				selectizeInput(
-					ns("plot_formats"),
-					"Plot formats:",
-					choices = c("png", "html"),
-					selected = c("png", "html"),
-					multiple = TRUE
-				)
-			),
-			column(4,
-				selectizeInput(
-					ns("slide_formats"),
-					"Slide formats:",
-					choices = c("pptx", "qmd"),
-					selected = c("pptx", "qmd"),
-					multiple = TRUE
-				)
-			),
-			column(4,
-				selectizeInput(
-					ns("table_formats"),
-					"Table formats:",
-					choices = c("rds", "xpt", "csv"),
-					selected = c("rds", "xpt", "csv"),
-					multiple = TRUE
-				)
-			)
-		),
-		downloadButton(ns("download_zip"), "Download All Results as ZIP")
+      column(
+        width = 6,
+        h4("Select Results to Export"),
+        shinyWidgets::treeInput(
+          inputId = ns("res_tree"),
+          label = NULL,
+          selected = get_tree_leaf_ids(TREE_UI),
+          choices = TREE_UI
+        )
+      ),
+      column(
+        width = 6,
+        h4("Choose Export Formats"),
+        div(
+          selectizeInput(
+            ns("plot_formats"),
+            "Graphics and plots:",
+            choices = c("png", "html"),
+            selected = c("png", "html"),
+            multiple = TRUE
+          ),
+          style = "margin-bottom: 1em;"
+        ),
+        div(
+          selectizeInput(
+            ns("slide_formats"),
+            "Slide decks:",
+            choices = c("pptx", "qmd"),
+            selected = c("pptx", "qmd"),
+            multiple = TRUE
+          ),
+          style = "margin-bottom: 1em;"
+        ),
+        div(
+          selectizeInput(
+            ns("table_formats"),
+            "Data tables:",
+            choices = c("rds", "xpt", "csv"),
+            selected = c("rds", "xpt", "csv"),
+            multiple = TRUE
+          ),
+          style = "margin-bottom: 2em;"
+        ),
+        div(
+          downloadButton(ns("download_zip"), "Export ZIP"),
+          style = "text-align: left;"
+        )
+      )
 	)
+  )
 }
 
 zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_data) {
@@ -154,26 +167,25 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 }
 
 # Define a global EXTRAS_TREE_LIST to be used in the zip_ui tree
-TREE_LIST <- create_tree_from_list_names(
-    list(
-        exploration = list(
-            individualplot = "",
-            meanplot = ""
-        ),
-        nca_results = list(
-            pivoted_results = ""
-        ),
-        CDISC = list(
-            pp = "",
-            adpp = "",
-            adnca = ""
-        ),
-        extras = list(
-            presentation_slides = list(
-                results_slides = ""
-            ),
-            r_script = "",
-            settings_file = ""
-        )
-    )
+TREE_LIST <- list(
+  exploration = list(
+      individualplot = "",
+      meanplot = ""
+  ),
+  nca_results = list(
+      pivoted_results = ""
+  ),
+  CDISC = list(
+      pp = "",
+      adpp = "",
+      adnca = ""
+  ),
+  extras = list(
+      presentation_slides = list(
+          results_slides = ""
+      ),
+      r_script = "",
+      settings_file = ""
+  )
 )
+
