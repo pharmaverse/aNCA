@@ -241,3 +241,38 @@ get_dose_esc_results <- function(
   }
   output_list
 }
+
+#' Create a tree structure from a named list, with 'text', 'id', and 'children' fields
+#' @param x A named list
+#' @param parent_id Internal use. Used to build unique ids for each node.
+#' @return A list of nodes suitable for shinyWidgets::create_tree-like UI
+create_tree_from_list_names <- function(x, parent_id = "tree") {
+  if (!inherits(x, "list")) return(NULL)
+  nms <- names(x)
+  lapply(seq_along(nms), function(i) {
+    nm <- nms[i]
+    child <- x[[nm]]
+    this_id <- paste0(parent_id, "_", i)
+    node <- list(
+      text = nm,
+      id = this_id
+    )
+    if (inherits(child, "list") && !inherits(child, "data.frame")) {
+      node$children <- create_tree_from_list_names(child, parent_id = this_id)
+    }
+    node
+  })
+}
+
+get_tree_leaf_ids <- function(tree) {
+  if (is.null(tree) || length(tree) == 0) return(character(0))
+  ids <- character(0)
+  for (node in tree) {
+    if (!is.null(node$children) && length(node$children) > 0) {
+      ids <- c(ids, get_tree_leaf_ids(node$children))
+    } else if (!is.null(node$id)) {
+      ids <- c(ids, node$id)
+    }
+  }
+  ids
+}
