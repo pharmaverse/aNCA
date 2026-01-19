@@ -112,14 +112,7 @@ data_upload_server <- function(id) {
 
         if (length(found_settings) > 1) {
           # Error: Too many settings files
-          msg <- "Error: Multiple settings files detected. Please upload only one settings file."
-          prev_msgs <- if (length(errors) > 0) {
-            paste(purrr::map_chr(errors, \(x) paste0(x$name, ": ", x$msg)), collapse = "<br>")
-          } else {
-            ""
-          }
-          file_loading_error(paste(c(prev_msgs, msg), collapse = "<br>"))
-
+          errors <- append(errors, "Error: Multiple settings files detected. Please upload only one settings file.")
           # Do not apply any settings if ambiguous
           settings_override(NULL)
 
