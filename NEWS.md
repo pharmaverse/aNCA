@@ -6,7 +6,7 @@
 
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
-* R script exported in ZIP folder to re-run and replicate dataset outputs (#789)
+* R script exported in ZIP folder to re-run and replicate App outputs (#789)
 * Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (#712)
 * New flagging rule for lambda-z calculations based on r-squared, R2 (#834)
 * New Parameter Selection section in NCA tab allowing to select parameters by study type (#795)
