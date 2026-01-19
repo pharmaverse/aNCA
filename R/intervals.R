@@ -126,7 +126,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param impute Logical indicating whether to impute start values for parameters.
 #'
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
-#'
+#' @export
 update_main_intervals <- function(data, parameter_selections,
                                   study_types_df, auc_data, impute = TRUE) {
 
