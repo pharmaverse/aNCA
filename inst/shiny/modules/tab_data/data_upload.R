@@ -82,21 +82,22 @@ data_upload_server <- function(id) {
             # If read_pk fails
             # check if settings file is loaded and then create settings override
             tryCatch({
+              # check if error aligns with what we expect for setttings file
+              if (conditionMessage(e_pk) != "Invalid data format. Data frame was expected, but received list.") {
+                return(list(status = "error", msg = conditionMessage(e_pk), name = name))
+              }
+              
               obj <- readRDS(path)
               # Check for settings
               is_settings <- is.list(obj) && "settings" %in% names(obj)
 
-              final_settings <- if (is_settings) obj else NULL
-
-              if (!is.null(final_settings)) {
-                list(status = "success", type = "settings", content = final_settings, name = name)
-              } else {
-                # Not a settings file either, return original PK error
-                stop(e_pk$message)
+              if (!is_settings) {
+                stop(conditionMessage(e_pk))
               }
+
+              list(status = "success", type = "settings", content = obj, name = name)
             }, error = function(e_rds) {
-              # Return the original read_pk error to the user
-              list(status = "error", msg = e_pk$message, name = name)
+              list(status = "error", msg = conditionMessage(e_pk), name = name)
             })
           })
         })
@@ -104,7 +105,7 @@ data_upload_server <- function(id) {
         # Process results
         successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
-          purrr::map(\(x) paste0(x$name, ": ", x$message))
+          purrr::map(\(x) paste0(x$name, ": ", x$msg))
 
         # Extract and apply settings if any found
         found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
