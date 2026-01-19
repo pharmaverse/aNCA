@@ -493,11 +493,27 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   ) %>%
     # Prevent any issue with NAs in the group(s) or unit columns
     mutate(across(everything(), ~ as.character(.))) %>%
-    unique() %>%
-    drop_na(where(~ !all(is.na(.))))
-
+    unique()
+  
+  # Identify unit columns that exist in data AND have at least one non-NA value
+  valid_unit_cols <- groups_units_tbl %>%
+    select(any_of(all_unit_cols)) %>%
+    select(where(~ !all(is.na(.)))) %>%
+    names()
+  
+  groups_units_clean <- groups_units_tbl %>%
+    drop_na(all_of(valid_unit_cols))
+  
+  n_dropped <- nrow(groups_units_tbl) - nrow(groups_units_clean)
+  # Notify if NAs were dropping
+  if (n_dropped > 0) {
+    showNotification(
+      paste("Identified", n_dropped, "rows with missing units. These will be excluded from analysis."),
+      type = "warning"
+    )
+  }
   # Check that at least for each concentration group units are uniform
-  mismatching_units_groups <- groups_units_tbl %>%
+  mismatching_units_groups <- groups_units_clean %>%
     add_count(!!!syms(group_conc_cols), name = "n") %>%
     filter(n > 1) %>%
     select(-n)
@@ -511,7 +527,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   }
 
   # Generate the PKNCA units table
-  groups_units_tbl %>%
+  groups_units_clean %>%
     # Pick only the group columns that are relevant in stratifying the units
     select_minimal_grouping_cols(all_unit_cols) %>%
     unique() %>%
