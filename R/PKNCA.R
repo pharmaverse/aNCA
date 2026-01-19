@@ -493,13 +493,15 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   ) %>%
     # Prevent any issue with NAs in the group(s) or unit columns
     mutate(across(everything(), ~ as.character(.))) %>%
-    unique()
+    unique() %>%
+    drop_na(where(~ !all(is.na(.))))
 
   # Check that at least for each concentration group units are uniform
   mismatching_units_groups <- groups_units_tbl %>%
     add_count(!!!syms(group_conc_cols), name = "n") %>%
     filter(n > 1) %>%
     select(-n)
+  
   if (nrow(mismatching_units_groups) > 0) {
     stop(
       "Units should be uniform at least across concentration groups.",
