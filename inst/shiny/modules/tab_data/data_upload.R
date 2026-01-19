@@ -151,27 +151,6 @@ data_upload_server <- function(id) {
   })
 }
 
-# Helper to standardize binding lists within settings
-.bind_settings_list <- function(obj_list) {
-  if (!is.null(obj_list) && is.list(obj_list)) dplyr::bind_rows(obj_list) else obj_list
-}
-
-# Helper Logic to parse and structure settings YAML
-.parse_settings_yaml <- function(path) {
-  obj <- yaml::read_yaml(path)
-
-  if (!is.null(obj$slope_rules)) {
-    obj$slope_rules <- .bind_settings_list(obj$slope_rules)
-  }
-
-  if (!is.null(obj$settings)) {
-    obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
-    obj$settings$units <- .bind_settings_list(obj$settings$units)
-  }
-
-  if (is.list(obj) && "settings" %in% names(obj)) obj else NULL
-}
-
 # Helper Main file reader: attempts Data read, falls back to Settings read
 .read_uploaded_file <- function(path, name) {
   tryCatch({
@@ -191,4 +170,32 @@ data_upload_server <- function(id) {
       list(status = "error", msg = e_pk$message, name = name)
     })
   })
+}
+
+# Helper Logic to parse and structure settings YAML
+.parse_settings_yaml <- function(path) {
+  # Check extension
+  is_yaml <- tolower(tools::file_ext(name)) %in% c("yaml", "yml")
+  
+  if (!is_yaml) return(NULL)
+  
+  obj <- yaml::read_yaml(path)
+  
+  if (!is.list(obj) || !"settings" %in% names(obj)) return(NULL)
+  
+  if (!is.null(obj$slope_rules)) {
+    obj$slope_rules <- .bind_settings_list(obj$slope_rules)
+  }
+  
+  if (!is.null(obj$settings)) {
+    obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
+    obj$settings$units <- .bind_settings_list(obj$settings$units)
+  }
+  
+  obj
+}
+
+# Helper to standardize binding lists within settings
+.bind_settings_list <- function(obj_list) {
+  if (!is.null(obj_list) && is.list(obj_list)) dplyr::bind_rows(obj_list) else obj_list
 }
