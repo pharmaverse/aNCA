@@ -1,3 +1,16 @@
+##' NCA ZIP Export Module
+##'
+##' This module provides UI and server logic for exporting NCA results, plots, tables, and slides as a ZIP file.
+##' Users can select which results to export, choose output formats for graphics, tables, and slides,
+##' and download all selected outputs in a single ZIP archive.
+##'
+##' @param id A character string used to uniquely identify the module.
+##' @param res_nca NCA results object (for server).
+##' @param settings Settings object (for server).
+##' @param ratio_table Ratio table object (for server).
+##' @param grouping_vars Grouping variables (for server).
+##' @param pknca_data PKNCA data object (for server).
+
 zip_ui <- function(id) {
 	ns <- NS(id)
 	TREE_UI <- create_tree_from_list_names(TREE_LIST)
@@ -58,7 +71,6 @@ zip_ui <- function(id) {
 zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_data) {
 	moduleServer(id, function(input, output, session) {
 		ns <- session$ns
-        session_results <- reactive(session$userData$results)
 
 		output$download_zip <- downloadHandler(
 			filename = function() {
@@ -166,7 +178,8 @@ zip_server <- function(id, res_nca, settings, ratio_table, grouping_vars, pknca_
 	})
 }
 
-# Define a global EXTRAS_TREE_LIST to be used in the zip_ui tree
+# Define a list with the possible outputs to export as end objects.
+# Consider all the zip_server options to create and align accordingly.
 TREE_LIST <- list(
   exploration = list(
       individualplot = "",
@@ -188,4 +201,3 @@ TREE_LIST <- list(
       settings_file = ""
   )
 )
-

@@ -264,6 +264,10 @@ create_tree_from_list_names <- function(x, parent_id = "tree") {
   })
 }
 
+#' Get All Leaf Node IDs from a Tree Structure
+#' Recursively traverses a tree list (as produced by create_tree_from_list_names) and returns the IDs of all leaf nodes.
+#' @param tree A list representing a tree structure, where each node may have an 'id' and optionally 'children'.
+#' @return A character vector of leaf node IDs.
 get_tree_leaf_ids <- function(tree) {
   if (is.null(tree) || length(tree) == 0) return(character(0))
   ids <- character(0)
