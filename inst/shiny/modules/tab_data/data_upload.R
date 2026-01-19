@@ -154,7 +154,7 @@ data_upload_server <- function(id) {
   }, error = function(e_pk) {
     # Attempt 2: Read as Settings
     tryCatch({
-      settings <- .parse_settings_yaml(path)
+      settings <- .parse_settings_yaml(path, name)
       if (!is.null(settings)) {
         list(status = "success", content = settings, name = name, type = "settings")
       } else {
@@ -167,25 +167,25 @@ data_upload_server <- function(id) {
 }
 
 # Helper Logic to parse and structure settings YAML
-.parse_settings_yaml <- function(path) {
+.parse_settings_yaml <- function(path, name) {
   # Check extension
   is_yaml <- tolower(tools::file_ext(name)) %in% c("yaml", "yml")
-  
+
   if (!is_yaml) return(NULL)
-  
+
   obj <- yaml::read_yaml(path)
-  
+
   if (!is.list(obj) || !"settings" %in% names(obj)) return(NULL)
-  
+
   if (!is.null(obj$slope_rules)) {
     obj$slope_rules <- .bind_settings_list(obj$slope_rules)
   }
-  
+
   if (!is.null(obj$settings)) {
     obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
     obj$settings$units <- .bind_settings_list(obj$settings$units)
   }
-  
+
   obj
 }
 
