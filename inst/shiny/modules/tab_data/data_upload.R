@@ -78,21 +78,15 @@ data_upload_server <- function(id) {
         # Process results
         successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
-          purrr::map(\(x) paste0(x$name, ": ", x$message))
+          purrr::map(\(x) paste0(x$name, ": ", x$msg))
 
         # Extract and apply settings if any found
         found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
 
         if (length(found_settings) > 1) {
           # Error: Too many settings files
-          msg <- "Error: Multiple settings files detected. Please upload only one settings file."
-          prev_msgs <- if (length(errors) > 0) {
-            paste(purrr::map_chr(errors, ~ paste0(.x$name, ": ", .x$msg)), collapse = "<br>")
-          } else {
-            ""
-          }
-          file_loading_error(paste(c(prev_msgs, msg), collapse = "<br>"))
-
+          errors <- append(errors, "Error: Multiple settings files detected.
+                           Please upload only one settings file.")
           # Do not apply any settings if ambiguous
           settings_override(NULL)
 
