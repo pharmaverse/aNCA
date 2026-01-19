@@ -340,13 +340,12 @@ describe("PKNCA_build_units_table", {
       regexp = "Units should be uniform at least across concentration groups.*"
     )
   })
-  
-  
+
   it("ignores NA units when the unit column already contains one valid value", {
     d_conc$AVALU[1] <- NA
     o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
                                concu = "AVALU", timeu = "RRLTU")
-    
+
     units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
   })
 })
