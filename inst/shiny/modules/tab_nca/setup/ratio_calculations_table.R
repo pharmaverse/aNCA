@@ -74,24 +74,31 @@ ratios_table_ui <- function(id) {
 }
 
 ratios_table_server <- function(
-  id, adnca_data
+  id, adnca_data, extra_group_vars
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Helper: get group vars and group values
     ratio_groups <- reactive({
-
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         filter(type_interval == "main") %>%
-        select(
-          -any_of(c(names(PKNCA::get.interval.cols()), "impute", "type_interval"))
+
+        # Join extra grouping variables
+        left_join(
+          adnca_data()$dose$data %>%
+          select(any_of(c(group_vars(adnca_data()$dose), extra_group_vars()))) %>%
+          unique(),
+          by = group_vars(adnca_data()$dose)
         ) %>%
+
+        # Remove interval parameter columns
         select(
-          any_of(
-            c(group_vars(adnca_data()$conc), "ROUTE", "ATPTREF")
-          )
+          -any_of(
+            c(
+              names(PKNCA::get.interval.cols()), "impute", "type_interval", "VOLUME"
+            ))
         ) %>%
         # Filter out the columns with one one unique value (no ratio possible!)
         select(where(~ length(unique(.)) > 1)) %>%
