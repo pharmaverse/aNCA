@@ -233,9 +233,7 @@ TREE_LIST <- list(
     adnca = ""
   ),
   extras = list(
-    presentation_slides = list(
-      results_slides = ""
-    ),
+    results_slides = "",
     r_script = "",
     settings_file = ""
   )
