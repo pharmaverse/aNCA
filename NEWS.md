@@ -1,7 +1,5 @@
 # aNCA (development version)
 
-# aNCA 0.2.0
-
 ## Features added
 
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
@@ -21,6 +19,7 @@
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
 * Summary statistic table changes in grouping variables won't remove previous summary settings (#840)
 * No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the ratios table should be used (#781)
+* No longer offering PK calculations for PKNCA multidose parameters; mean residence time (MRTMDO, MRTMDP), steady state volume of distribution (VSSMDP, VSSMDO) and time above (TAT). They are not really able to be calculated using PKNCA (#869)
 * Bug fix for settings upload via zip file output (#832)
 * Bug fix for plotting section where if there is >1 unit the axis label will contain both unique units. (#818)
 * Units table bugs fixed, so it is filtered based on NCA setup and the table is searchable for each column (#870)
