@@ -14,6 +14,7 @@
 * Section `General Exclusions` allowing to perform in-App NCA exclusions (#851)
 * Mean plots have been added in the TLGs section, with BLQ handling (#555)
 * CMAX automatically selected in box plots if available (#890)
+* Allow user to select additional `grouping variables` (chosen in the mapping) for ratio calculations (#868)
 
 
 ## Bugs fixed
