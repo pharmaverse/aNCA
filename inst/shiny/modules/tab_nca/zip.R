@@ -49,11 +49,14 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               column(
                 width = 6,
                 h4("Select Results to Export"),
-                shinyWidgets::treeInput(
-                  inputId = ns("res_tree"),
-                  label = NULL,
-                  selected = get_tree_leaf_ids(TREE_UI),
-                  choices = TREE_UI
+                div(
+                  shinyWidgets::treeInput(
+                    inputId = ns("res_tree"),
+                    label = NULL,
+                    selected = get_tree_leaf_ids(TREE_UI),
+                    choices = TREE_UI
+                  ),
+                  style = "text-align: left;"
                 )
               ),
               column(
