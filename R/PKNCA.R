@@ -436,7 +436,7 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' 2. Joins the concentration and dose data based on their grouping columns.
 #' 3. Generates a PKNCA units table for each group, including conversion factors and custom units.
 #' 4. Returns a unique table with relevant columns for PKNCA analysis.
-#' 
+#'
 #' Any NA units in groups already containing at least one valid value will
 #'  be ignored from the creation of the units table.
 #'
