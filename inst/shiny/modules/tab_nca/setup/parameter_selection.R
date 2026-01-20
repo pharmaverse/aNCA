@@ -77,11 +77,15 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && length(unique(processed_pknca_data()$conc$data[[col]])) > 1
+          !is.null(col) &&
+            length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
+      subj_column <- processed_pknca_data()$conc$columns$subject
+
       filtered_intervals <- processed_pknca_data()$intervals %>%
-        select(all_of(groups))
+        select(all_of(c(groups, subj_column)))
+      # keep subj col to prevent issues if only one subject selected (#858)
 
       df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
 
@@ -101,10 +105,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       conc_group_columns <- group_vars(processed_pknca_data()$conc)
       dose_group_columns <- group_vars(processed_pknca_data()$dose)
       group_columns <- unique(c(conc_group_columns, dose_group_columns))
+      subj_column <- processed_pknca_data()$conc$columns$subject
 
       groups <- group_columns %>%
         purrr::keep(\(col) {
-          !is.null(col) && col != "USUBJID" &&
+          !is.null(col) && col != subj_column &&
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
@@ -120,7 +125,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # Build the base state from data or overrides
     base_selections <- reactive({
       req(study_types_df())
-
       study_type_names <- unique(study_types_df()$type)
 
       # Get override file
@@ -131,7 +135,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       })
 
       # Update parameter selection using override and considering study types
-      apply_parameter_selections(
+      .apply_parameter_selections(
         selection_df = all_params,
         study_type_names = study_type_names,
         default_params = DEFAULT_PARAMS,
@@ -258,7 +262,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       df <- selections_state()
       study_type_names <- unique(study_types_df()$type)
 
+      # Validation checks
       if (length(study_type_names) == 0) return(list())
+      req(all(study_type_names %in% names(df)))
 
       # Convert from wide to long, filter for selected rows,
       # and then split the result into a list by study_type.
@@ -311,7 +317,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           colDef(
             name = col_name,
             align = "center",
-            cell = function(value) if (isTRUE(value)) "✔" else "",
+            cell = function(value) if (isTRUE(value)) "\u2714" else "",
             minWidth = 150
           )
         })
@@ -386,4 +392,70 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # Reorder columns
     select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(study_types_list))
 
+}
+
+#' Helper to Apply Default or Override Parameter Selections
+#'
+#' Populates a selection data frame with boolean columns for each study type,
+#' indicating which parameters are selected based on either default rules or a
+#' provided override list.
+#'
+#' @param selection_df A data frame containing PK parameters and their metadata.
+#'   Must include a 'PKNCA' column and logical columns for various attributes
+#'   (e.g., 'can_excretion', 'can_single_dose').
+#' @param study_type_names A character vector of study type names to generate
+#'   selection columns for.
+#' @param default_params A character vector of default PKNCA parameters to select.
+#' @param selections_override An optional named list where names correspond to
+#'   study types and values are character vectors of PKNCA parameters to select.
+#'   If NULL, default logic is applied.
+#'
+#' @returns The 'selection_df' data frame with added boolean columns for each
+#'   study type.
+#'
+.apply_parameter_selections <- function(selection_df,
+                                        study_type_names,
+                                        default_params,
+                                        selections_override = NULL) {
+
+  # Use override if available, otherwise use defaults
+  if (is.null(selections_override) || length(selections_override) == 0) {
+    # Default behavior
+    for (st_name in study_type_names) {
+      is_selected <- selection_df$PKNCA %in% default_params
+
+      # Apply metadata rules
+      is_selected <- is_selected & if (st_name == "Excretion Data") {
+        selection_df$can_excretion
+      } else {
+        selection_df$can_non_excretion
+      }
+
+      if (stringr::str_detect(st_name, "Single")) {
+        is_selected <- is_selected & selection_df$can_single_dose
+      }
+      if (stringr::str_detect(st_name, "Multiple")) {
+        is_selected <- is_selected & selection_df$can_multiple_dose
+      }
+      if (stringr::str_detect(st_name, "Extravascular")) {
+        is_selected <- is_selected & selection_df$can_extravascular
+      }
+      if (stringr::str_detect(st_name, "Metabolite")) {
+        is_selected <- is_selected & selection_df$can_metabolite
+      }
+
+      selection_df[[st_name]] <- is_selected
+    }
+  } else {
+    # Override behavior
+    for (st_name in study_type_names) {
+      override_params <- selections_override[[st_name]]
+      if (!is.null(override_params)) {
+        selection_df[[st_name]] <- selection_df$PKNCA %in% override_params
+      } else {
+        selection_df[[st_name]] <- FALSE
+      }
+    }
+  }
+  selection_df
 }
