@@ -14,11 +14,18 @@ zip_ui <- function(id) {
   tagList(
     actionButton(
       inputId = ns("open_zip_modal"),
-      label = NULL,
+      label = "Export ZIP",
       icon = icon("download"),
-      class = "btn btn-secondary",
-      style = "margin-left: 10px;",
-      title = "Export ZIP",
+      class = "btn btn-primary",
+      style = paste(
+        "margin-left: 10px;",
+        "padding: 8px 18px;",
+        "border-radius: 8px;",
+        "box-shadow: 0 2px 6px rgba(0,0,0,0.08);",
+        "font-weight: 500;",
+        "font-size: 1rem;"
+      ),
+      title = "Export all selected results as a ZIP archive",
       disabled = TRUE
     )
   )
@@ -48,8 +55,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             fluidRow(
               column(
                 width = 6,
-                h4("Select Results to Export"),
                 div(
+                  h4("Results to Export"),
                   shinyWidgets::treeInput(
                     inputId = ns("res_tree"),
                     label = NULL,
@@ -61,7 +68,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               ),
               column(
                 width = 6,
-                h4("Choose Export Formats"),
+                h4("Export Formats"),
                 div(
                   selectizeInput(
                     ns("plot_formats"),
@@ -93,8 +100,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                   style = "margin-bottom: 2em;"
                 ),
                 div(
-                  downloadButton(ns("download_zip"), "Export ZIP"),
-                  style = "text-align: left;"
+                  downloadButton(ns("download_zip"), "Export ZIP")
                 )
               )
             )
