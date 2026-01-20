@@ -18,8 +18,7 @@ ratios_table_ui <- function(id) {
             This section is to perform ratio calculations within the allowed parameters
             that you previously selected. Add a new row for each ratio calculation to
             compute. You can also select and remove rows.
-            "
-          ),
+            "),
           p("For each ratio you need to specify:"),
           tags$ul(
             tags$li(
@@ -36,19 +35,19 @@ ratios_table_ui <- function(id) {
             ),
             tags$li(
               tags$b("TestGroups"),
-              ": The level/value to use as test (numerator). If you select 'all other levels,' 
-              the ratio is calculated using the reference level (e.g., Group = A) against all 
+              ": The level/value to use as test (numerator). If you select 'all other levels,'
+              the ratio is calculated using the reference level (e.g., Group = A) against all
               other values of the variable (e.g., Groups = B, C, D)"
             ),
             tags$li(
               tags$b("Aggregate Subject"),
-              ": `yes` aggregates reference values using the mean of all subjects, 
-              `no` does not, and 
+              ": `yes` aggregates reference values using the mean of all subjects,
+              `no` does not, and
               `if-needed` only when ratios cannot be performed within the same subject."
             ),
             tags$li(
               tags$b("Adjusting Factor"),
-              ": Factor to multiply the ratio with i.e, for molecular weight ratios 
+              ": Factor to multiply the ratio with i.e, for molecular weight ratios
               (MW_ref / MW_test)."
             ),
             tags$li(
@@ -74,8 +73,7 @@ ratios_table_ui <- function(id) {
 }
 
 ratios_table_server <- function(
-  id, adnca_data, extra_group_vars
-) {
+    id, adnca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -84,21 +82,20 @@ ratios_table_server <- function(
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         filter(type_interval == "main") %>%
-
         # Join extra grouping variables
         left_join(
           adnca_data()$dose$data %>%
-          select(any_of(c(group_vars(adnca_data()$dose), extra_group_vars()))) %>%
-          unique(),
+            select(any_of(c(group_vars(adnca_data()$dose), extra_group_vars()))) %>%
+            unique(),
           by = group_vars(adnca_data()$dose)
         ) %>%
-
         # Remove interval parameter columns
         select(
           -any_of(
             c(
               names(PKNCA::get.interval.cols()), "impute", "type_interval", "VOLUME"
-            ))
+            )
+          )
         ) %>%
         # Filter out the columns with one one unique value (no ratio possible!)
         select(where(~ length(unique(.)) > 1)) %>%
@@ -159,7 +156,6 @@ ratios_table_server <- function(
 
     # Add row
     observeEvent(input$add_row, {
-
       if (length(ratio_param_options()) == 0 || length(ratio_reference_options()) == 0) {
         showNotification(
           "No parameters or group variables available to add a row.",
@@ -200,7 +196,6 @@ ratios_table_server <- function(
     # Render table
     refresh_reactable <- reactiveVal(1)
     output$ratio_calculations <- renderReactable({
-
       # Update column names for display in the UI
       col_defs <- list(
         TestParameter = colDef(
