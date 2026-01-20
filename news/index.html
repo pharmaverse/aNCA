@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9038</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9039</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,11 +52,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.2.0" id="anca-020">aNCA 0.2.0<a class="anchor" aria-label="anchor" href="#anca-020"></a></h2>
 <div class="section level3">
-<h3 id="features-added-0-2-0">Features added<a class="anchor" aria-label="anchor" href="#features-added-0-2-0"></a></h3>
+<h3 id="features-added-development-version">Features added<a class="anchor" aria-label="anchor" href="#features-added-development-version"></a></h3>
 <ul><li>Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (<a href="https://github.com/pharmaverse/aNCA/issues/791" class="external-link">#791</a>)</li>
 <li>Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (<a href="https://github.com/pharmaverse/aNCA/issues/752" class="external-link">#752</a>)</li>
 <li>Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (<a href="https://github.com/pharmaverse/aNCA/issues/712" class="external-link">#712</a>)</li>
@@ -69,12 +66,13 @@
 <li>CMAX automatically selected in box plots if available (<a href="https://github.com/pharmaverse/aNCA/issues/890" class="external-link">#890</a>)</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bugs-fixed-0-2-0">Bugs fixed<a class="anchor" aria-label="anchor" href="#bugs-fixed-0-2-0"></a></h3>
+<h3 id="bugs-fixed-development-version">Bugs fixed<a class="anchor" aria-label="anchor" href="#bugs-fixed-development-version"></a></h3>
 <ul><li>ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (<a href="https://github.com/pharmaverse/aNCA/issues/794" class="external-link">#794</a>)</li>
 <li>Updated TMAX label from Time of CMAX to Time of CMAX Observation (<a href="https://github.com/pharmaverse/aNCA/issues/787" class="external-link">#787</a>)</li>
 <li>Bug fix for box/violin plots that were crashing when violin option selected (<a href="https://github.com/pharmaverse/aNCA/issues/786" class="external-link">#786</a>)</li>
 <li>Summary statistic table changes in grouping variables won’t remove previous summary settings (<a href="https://github.com/pharmaverse/aNCA/issues/840" class="external-link">#840</a>)</li>
 <li>No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the ratios table should be used (<a href="https://github.com/pharmaverse/aNCA/issues/781" class="external-link">#781</a>)</li>
+<li>No longer offering PK calculations for PKNCA multidose parameters; mean residence time (MRTMDO, MRTMDP), steady state volume of distribution (VSSMDP, VSSMDO) and time above (TAT). They are not really able to be calculated using PKNCA (<a href="https://github.com/pharmaverse/aNCA/issues/869" class="external-link">#869</a>)</li>
 <li>Bug fix for settings upload via zip file output (<a href="https://github.com/pharmaverse/aNCA/issues/832" class="external-link">#832</a>)</li>
 <li>Bug fix for plotting section where if there is &gt;1 unit the axis label will contain both unique units. (<a href="https://github.com/pharmaverse/aNCA/issues/818" class="external-link">#818</a>)</li>
 <li>Units table bugs fixed, so it is filtered based on NCA setup and the table is searchable for each column (<a href="https://github.com/pharmaverse/aNCA/issues/870" class="external-link">#870</a>)</li>
