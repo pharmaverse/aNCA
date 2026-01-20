@@ -110,7 +110,7 @@ format_pkncaconc_data <- function(ADNCA,
     "INTRACARDIAC|INTRACORONARY)"
   )
   ADNCA %>%
-    mutate(browser(), #round to prevent floating point precision issues
+    mutate( #round to prevent floating point precision issues
       dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
       std_route =  ifelse(
         grepl(intravascular_pattern, gsub("[^[:alnum:]]", "", toupper(!!sym(route_column)))),
