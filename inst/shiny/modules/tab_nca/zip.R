@@ -46,7 +46,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
       showModal(
         modalDialog(
-          title = "Export Results as ZIP",
+          title = NULL,
           tagList(
             fluidRow(
               column(
@@ -94,11 +94,12 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                     multiple = TRUE
                   ),
                   style = "margin-bottom: 2em;"
-                ),
-                div(
-                  downloadButton(ns("download_zip"), "Export ZIP")
                 )
               )
+            ),
+            div(
+              downloadButton(ns("download_zip"), "Export ZIP with Results"),
+              style = "text-align: center; margin-top: 0.5em;"
             )
           ),
           easyClose = TRUE,
