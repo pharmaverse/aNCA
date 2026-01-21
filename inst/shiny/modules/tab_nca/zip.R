@@ -14,7 +14,7 @@ zip_ui <- function(id) {
   tagList(
     actionButton(
       inputId = ns("open_zip_modal"),
-      label = "Export ZIP",
+      label = "Save",
       icon = icon("download"),
       class = "btn btn-primary",
       style = paste(
