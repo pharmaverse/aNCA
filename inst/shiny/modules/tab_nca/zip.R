@@ -37,12 +37,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 
     # Enable/disable ZIP export button based on res_nca availability
     observe({
-      btn_id <- "open_zip_modal"
-      if (!is.null(res_nca()) && !is.null(res_nca())) {
-        shinyjs::enable(btn_id)
-      } else {
-        shinyjs::disable(btn_id)
-      }
+      req(res_nca())
+      shinyjs::enable("open_zip_modal")
     })
 
     # Show ZIP export modal when button is clicked
@@ -139,13 +135,14 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               incProgress(0.1)
 
               if ("results_slides" %in% input$res_tree) {
+
                 # Create presentation slides
-                res_nca_val <- res_nca()
+                res_nca <- res_nca()
                 res_dose_slides <- get_dose_esc_results(
-                  o_nca = res_nca_val,
+                  o_nca = res_nca(),
                   group_by_vars = setdiff(
                     group_vars(res_nca()),
-                    res_nca_val$data$conc$columns$subject
+                    res_nca()$data$conc$columns$subject
                   ),
                   facet_vars = "DOSEA",
                   statistics = c("Mean"),
