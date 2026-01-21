@@ -137,7 +137,6 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               if ("results_slides" %in% input$res_tree) {
 
                 # Create presentation slides
-                res_nca <- res_nca()
                 res_dose_slides <- get_dose_esc_results(
                   o_nca = res_nca(),
                   group_by_vars = setdiff(
@@ -234,6 +233,10 @@ TREE_LIST <- list(
     pp = "",
     adpp = "",
     adnca = ""
+  ),
+  additional_analysis = list(
+    matrix_ratios = "",
+    excretion_results = ""
   ),
   extras = list(
     results_slides = "",
