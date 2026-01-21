@@ -28,13 +28,15 @@ reactable_ui <- function(id) {
 
 reactable_server <- function(
   id, data, download_buttons = c(), file_name = NULL, on_render = NULL, editable = NULL,
-  edit_debounce = 750, ...
+  edit_debounce = 750, generate_col_defs = NULL, ...
 ) {
   moduleServer(id, function(input, output, session) {
     default_reactable_opts <- list(
+      fullWidth = FALSE,
       searchable = TRUE,
       sortable = TRUE,
       highlight = TRUE,
+      striped = TRUE,
       wrap = FALSE,
       resizable = TRUE,
       defaultPageSize = 25,
@@ -133,4 +135,33 @@ reactable_server <- function(
     }
   }
   paste0(f_name, ".", ext)
+}
+
+
+
+col_reactable <- function(data, max_px = 150, expand_factor = 8) {
+  req(data)
+  
+  cols <- lapply(names(data), function(col_name) {
+    # Calculate max character length comparing header and content
+    max_char <- max(
+      c(nchar(as.character(data[[col_name]])), nchar(col_name)), 
+      na.rm = TRUE
+    )
+    
+    # Calculate base width
+    calculated_width <- max_char * expand_factor + 20
+    
+    # Use minWidth to set the initial auto-size while allowing resizable to function
+    target_min <- if(calculated_width < max_px) calculated_width else max_px
+    
+    colDef(
+      minWidth = target_min,
+      maxWidth = 2 * max_px, # High limit to ensure resizable isn't blocked too early
+      resizable = TRUE
+    )
+  })
+  
+  names(cols) <- names(data)
+  cols
 }

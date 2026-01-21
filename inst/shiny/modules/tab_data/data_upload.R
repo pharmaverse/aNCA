@@ -124,7 +124,8 @@ data_upload_server <- function(id) {
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data()))),
       height = "50vh",
       class = "reactable-table",
-      style = list(fontSize = "0.75em")
+      style = list(fontSize = "0.75em"),
+      generate_col_defs = col_reactable
     )
 
     raw_data
