@@ -251,7 +251,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     reactable_server(
       "study_types",
       study_types_summary,
-      height = "28vh"
+      height = "28vh",
+      generate_col_defs = col_reactable
     )
 
     # Transform the TRUE/FALSE data frame into a named list
