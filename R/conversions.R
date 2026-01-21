@@ -281,19 +281,23 @@ simplify_unit <- function(x, as_character = FALSE) {
   on.exit(units_options(simplify = old_opt))
   units_options(simplify = TRUE)
 
-  # Create the simplified units object within tryCatch
-  simplified_obj <- tryCatch({
-    # Attempt to parse and simplify the unit
-    set_units(value, unit_char, mode = "standard")
-  }, error = function(e) {
-    # If an error occurs, it's an invalid unit.
-    stop("Input must be a valid units object or character string.")
-  })
+  tryCatch({
+    # Attempt to parse and simplify
+    simplified_obj <- units::set_units(value, unit_char, mode = "standard")
 
-  # Return either the final units object or character string
-  if (as_character) {
-    deparse_unit(simplified_obj)
-  } else {
-    simplified_obj
-  }
+    if (as_character) {
+      units::deparse_unit(simplified_obj)
+    } else {
+      simplified_obj
+    }
+  }, error = function(e) {
+    # Log warning and return original
+    warning("Unit '", unit_char, "' could not be simplified.")
+
+    if (as_character) {
+      unit_char
+    } else {
+      x
+    }
+  })
 }

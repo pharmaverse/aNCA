@@ -189,14 +189,6 @@ describe("PKNCA_calculate_nca", {
     expect_equal(length(colnames(nca_results$result)), 15)
   })
 
-  it("handles warning levels correctly", {
-
-    # Modify the data to eliminate points needed for half life
-    modified_data <- simple_data[1, ] # Remove one time point
-    modified_data$AVAL <- NA
-    pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
-    pknca_data_modified$intervals$half.life <- TRUE
-  })
 })
 
 describe("PKNCA_impute_method_start_logslope", {
@@ -347,6 +339,14 @@ describe("PKNCA_build_units_table", {
       PKNCA_build_units_table(o_conc, o_dose),
       regexp = "Units should be uniform at least across concentration groups.*"
     )
+  })
+
+  it("ignores NA units when the unit column already contains one valid value", {
+    d_conc$AVALU[1] <- NA
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                               concu = "AVALU", timeu = "RRLTU")
+
+    units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
   })
 })
 

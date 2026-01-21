@@ -170,33 +170,3 @@ pivot_wider_pknca_results <- function(myres) {
 
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }
-
-#' Helper function to add "label" attribute to columns based on parameter names.
-#' @noRd
-#' @keywords internal
-add_label_attribute <- function(df, myres) {
-  mapping_vr <- myres$result %>%
-    mutate(
-      PPTESTCD_unit = case_when(
-        type_interval == "manual" ~ paste0(
-          PPTESTCD, "_", start, "-", end,
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        ),
-        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
-        TRUE ~ PPTESTCD
-      ),
-      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
-    ) %>%
-    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
-    distinct() %>%
-    pull(PPTESTCD_cdisc, PPTESTCD_unit)
-
-  mapping_cols <- intersect(names(df), names(mapping_vr))
-  attrs <- unname(mapping_vr[mapping_cols])
-
-  df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
-    attr(col, "label") <- bw
-    col
-  }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
-  df
-}
