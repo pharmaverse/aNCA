@@ -25,7 +25,7 @@ parameter_selection_ui <- function(id) {
 
     br(),
     p("The following parameters are currently selected:"),
-    reactable_ui(ns("selected_parameters_table")),
+    card(reactable_ui(ns("selected_parameters_table")), class = "border-0 shadow-none"),
 
     br(),
     p("Select the parameters to calculate for each study type.
@@ -297,6 +297,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       "selected_parameters_table",
       selected_parameters_df,
       height = "35vh",
+      generate_col_defs = col_reactable,
       columns = function(data) {
         # Handle empty table
         if ("Message" %in% names(data)) {
