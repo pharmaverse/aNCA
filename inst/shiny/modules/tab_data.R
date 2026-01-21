@@ -166,6 +166,7 @@ tab_data_server <- function(id) {
       height = "50vh",
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
+      generate_col_defs = col_reactable
     )
 
     # Use the pre-processed data to create a PKNCA object
