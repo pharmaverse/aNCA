@@ -135,8 +135,10 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
 #' which does not specify any BLQ imputation in any interval.
 #'
+#' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
+#' @importFrom purrr pmap
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
-#'
+#' @export
 update_main_intervals <- function(
   data,
   parameter_selections,
