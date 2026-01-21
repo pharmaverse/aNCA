@@ -82,13 +82,6 @@ ratios_table_server <- function(
       adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         filter(type_interval == "main") %>%
-        # Join extra grouping variables
-        left_join(
-          adnca_data()$dose$data %>%
-            select(any_of(c(group_vars(adnca_data()$dose), extra_group_vars()))) %>%
-            unique(),
-          by = group_vars(adnca_data()$dose)
-        ) %>%
         # Remove interval parameter columns
         select(
           -any_of(

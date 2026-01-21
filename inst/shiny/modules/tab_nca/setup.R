@@ -88,7 +88,8 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        exclusion_list = general_exclusions$exclusion_list()
+        exclusion_list = general_exclusions$exclusion_list(),
+        keep_interval_cols = extra_group_vars()
       )
 
       # Show bioavailability widget if it is possible to calculate

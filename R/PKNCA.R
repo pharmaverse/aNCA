@@ -226,7 +226,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_profile,
   selected_pcspec,
   should_impute_c0 = TRUE,
-  exclusion_list = NULL
+  exclusion_list = NULL,
+  keep_interval_cols = NULL
 ) {
 
   data <- adnca_data
@@ -238,7 +239,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     progress = FALSE,
     keep_interval_cols = c(
       "ATPTREF", "DOSNOA", "type_interval",
-      adnca_data$dose$columns$route, "ROUTE"
+      adnca_data$dose$columns$route, "ROUTE",
+      keep_interval_cols
     ),
     min.hl.r.squared = 0.01
   )
@@ -250,9 +252,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    start_from_last_dose = should_impute_c0
+    start_from_last_dose = should_impute_c0,
+    keep_interval_cols = keep_interval_cols
   ) %>%
     # Join route information
+    # TODO (Gerardo): Add ROUTE to keep_interval_cols
     left_join(
       select(
         adnca_data$dose$data,
