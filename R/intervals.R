@@ -136,7 +136,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' which does not specify any BLQ imputation in any interval.
 #'
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
-#'
+#' @export
 update_main_intervals <- function(
   data,
   parameter_selections,
