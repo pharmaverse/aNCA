@@ -210,6 +210,8 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' concentration data. Each item in the list should have:
 #' - reason: character string with the exclusion reason (e.g., "Vomiting")
 #' - rows: integer vector of row indices to apply the exclusion to
+#' @param keep_interval_cols Optional character vector of additional columns
+#' to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
