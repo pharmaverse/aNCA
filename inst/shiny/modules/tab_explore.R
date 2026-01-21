@@ -90,7 +90,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       tt_vars <- unique(c("AVAL", time_col,
                           "USUBJID", individual_inputs()$color_by))
 
-      dose_data = if (individual_inputs()$show_dose) {
+      dose_data <- if (individual_inputs()$show_dose) {
         data() %>%
           mutate(TIME_DOSE = round(AFRLT - ARRLT, 6))
       } else {
@@ -158,7 +158,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       tt_vars <- unique(c("Mean", time_col, mean_inputs()$colorby))
 
-      dose_data = if (mean_inputs()$show_dose) {
+      dose_data <- if (mean_inputs()$show_dose) {
         data() %>%
           mutate(TIME_DOSE = round(NFRLT - NRRLT, 6))
       } else {

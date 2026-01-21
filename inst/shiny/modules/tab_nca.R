@@ -43,7 +43,8 @@ tab_nca_ui <- function(id) {
         nav_panel(
           "Slopes Information",
           navset_pill(
-            nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")), class = "border-0 shadow-none")),
+            nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
+                                             class = "border-0 shadow-none")),
             nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
           )
         ),
