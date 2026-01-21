@@ -35,9 +35,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
     card(
       height = "60vh",
       card_header(paste0(title, " Results")),
-      card_body(
-        reactable_ui(ns("results"))
-      )
+      card(reactable_ui(ns("results")), class = "border-0 shadow-none")
     )
   )
 }
@@ -195,7 +193,8 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       defaultPageSize = 10,
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 50, nrow(full_output()))),
-      style = list(fontSize = "0.75em")
+      style = list(fontSize = "0.75em"),
+      generate_col_defs = col_reactable
     )
 
     # Save the results in the output folder

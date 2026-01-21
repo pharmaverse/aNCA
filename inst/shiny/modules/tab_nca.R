@@ -87,7 +87,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       slope_rules = slope_rules$manual_slopes
     ) # This will be saved in the results zip folder
 
-    reactable_server("manual_slopes", slope_rules$manual_slopes)
+    reactable_server("manual_slopes", slope_rules$manual_slopes,
+                     generate_col_defs = col_reactable)
 
     # List all irrelevant warnings to suppres in the NCA calculation
     irrelevant_regex_warnings <- c(
