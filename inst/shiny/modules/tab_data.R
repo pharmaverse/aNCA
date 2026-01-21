@@ -50,7 +50,7 @@ tab_data_ui <- function(id) {
                 stepper_ui("Preview", tabs),
                 div(
                   uiOutput(ns("processed_data_message")),
-                  reactable_ui(ns("data_processed"))
+                  card(reactable_ui(ns("data_processed")), class = "border-0 shadow-none")
                 )
               )
             )

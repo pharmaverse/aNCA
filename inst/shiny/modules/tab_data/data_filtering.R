@@ -26,7 +26,7 @@ data_filtering_ui <- function(id) {
         class = "data-filtering-container",
         div(
           class = "filtered-table-container",
-          reactable_ui(ns("filtered_data_display"))
+          card(reactable_ui(ns("filtered_data_display")), class = "border-0 shadow-none")
         ),
         div(
           class = "filters-container",

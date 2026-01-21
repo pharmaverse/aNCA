@@ -13,7 +13,7 @@ nca_results_ui <- function(id) {
       options = list(`actions-box` = TRUE)
     ),
     units_table_ui(ns("units_table")),
-    reactable_ui(ns("myresults")),
+    card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
 
     # Color legend for the results table
     div(
@@ -265,7 +265,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             NULL
           }
         }
-      }
+      },
+      generate_col_defs = col_reactable
     )
 
     output$local_download_NCAres <- downloadHandler(

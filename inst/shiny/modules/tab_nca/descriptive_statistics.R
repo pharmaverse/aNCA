@@ -38,9 +38,7 @@ descriptive_statistics_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    card(
-      reactable_ui(ns("descriptive_stats"))
-    ),
+    card(reactable_ui(ns("descriptive_stats")), class = "border-0 shadow-none"),
     card(
       downloadButton(ns("download_summary"), "Download the NCA Summary Data")
     )
@@ -135,7 +133,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       striped = TRUE,
       bordered = TRUE,
       compact = TRUE,
-      style = list(fontSize = "0.75em")
+      style = list(fontSize = "0.75em"),
+      generate_col_defs = col_reactable
     )
 
     # Download summary statistics as CSV

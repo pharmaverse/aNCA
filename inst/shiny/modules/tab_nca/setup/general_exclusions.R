@@ -67,7 +67,7 @@ general_exclusions_ui <- function(id) {
       )
     ),
     # Main concentration data table with row selection and color coding
-    reactable_ui(ns("conc_table"))
+    card(reactable_ui(ns("conc_table")), class = "border-0 shadow-none")
   )
 }
 

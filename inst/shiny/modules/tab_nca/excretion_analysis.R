@@ -34,9 +34,7 @@ excretion_ui <- function(id) {
             actionButton(ns("submit_btn"), "Submit")
           )
         ),
-        card(
-          reactable_ui(ns("results_table"))
-        )
+        card(reactable_ui(ns("results_table")), class = "border-0 shadow-none")
       )
     )
   )
@@ -197,7 +195,8 @@ excretion_server <- function(id, input_pknca_data) {
       compact = TRUE,
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
-      style = list(fontSize = "0.75em")
+      style = list(fontSize = "0.75em"),
+      generate_col_defs = col_reactable
     )
 
     # Save the results in the output folder

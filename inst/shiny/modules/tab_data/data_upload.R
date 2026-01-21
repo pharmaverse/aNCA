@@ -26,7 +26,7 @@ data_upload_ui <- function(id) {
       ),
       uiOutput(ns("file_loading_message"))
     ),
-    reactable_ui(ns("data_display"))
+    card(reactable_ui(ns("data_display")), class = "border-0 shadow-none")
   )
 }
 

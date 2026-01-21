@@ -43,7 +43,7 @@ tab_nca_ui <- function(id) {
         nav_panel(
           "Slopes Information",
           navset_pill(
-            nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
+            nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")), class = "border-0 shadow-none")),
             nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
           )
         ),
@@ -228,7 +228,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       defaultPageSize = 10,
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 50, nrow(pivoted_slopes()))),
-      style = list(fontSize = "0.75em")
+      style = list(fontSize = "0.75em"),
+      generate_col_defs = col_reactable
     )
 
     #' Prepares and displays the pivoted NCA results
