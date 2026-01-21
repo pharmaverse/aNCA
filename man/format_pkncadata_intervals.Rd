@@ -18,7 +18,8 @@ format_pkncadata_intervals(
 
 \item{start_from_last_dose}{Logical defining if start is at time of last dose or C1.}
 
-\item{keep_interval_cols}{Optional character vector of additional columns to keep in the intervals
+\item{keep_interval_cols}{Optional character vector of additional columns
+to keep in the intervals
 data frame.}
 }
 \value{
