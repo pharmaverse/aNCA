@@ -63,6 +63,9 @@
   ([\#870](https://github.com/pharmaverse/aNCA/issues/870))
 - Bug fix to allow for unrecognized units to be used in AVALU and DOSEU
   ([\#861](https://github.com/pharmaverse/aNCA/issues/861))
+- Bug fix so NA units are allowed in the data (as per CDISC guidelines
+  for NA samples) and not treated as a unique unit
+  ([\#907](https://github.com/pharmaverse/aNCA/issues/907))
 
 ## aNCA 0.1.0
 

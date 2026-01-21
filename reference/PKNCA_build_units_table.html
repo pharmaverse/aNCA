@@ -9,7 +9,7 @@ among the dose and/or concentration groups."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9039</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9040</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,7 +85,9 @@ among the dose and/or concentration groups.</p>
 <li><p>Joins the concentration and dose data based on their grouping columns.</p></li>
 <li><p>Generates a PKNCA units table for each group, including conversion factors and custom units.</p></li>
 <li><p>Returns a unique table with relevant columns for PKNCA analysis.</p></li>
-</ol></div>
+</ol><p>Any NA units in groups already containing at least one valid value will
+be ignored from the creation of the units table.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

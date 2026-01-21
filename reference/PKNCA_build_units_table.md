@@ -38,6 +38,9 @@ The function performs the following steps:
 
 4.  Returns a unique table with relevant columns for PKNCA analysis.
 
+Any NA units in groups already containing at least one valid value will
+be ignored from the creation of the units table.
+
 ## Examples
 
 ``` r
