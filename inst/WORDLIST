@@ -1,6 +1,5 @@
 ADNCA
 ADOSEDUR
-ADPC
 ADPP
 AEFRLT
 AFRLT
@@ -21,7 +20,6 @@ DOSEA
 DOSETRT
 DOSEU
 DOSNOA
-DTYPE
 Denney
 Duvvuri
 EMA
@@ -35,6 +33,8 @@ LAMZ
 LAMZLL
 LAMZNPT
 METABFL
+MRTMDO
+MRTMDP
 MSCW
 NCA
 NCAwXRS
@@ -62,13 +62,13 @@ Pharmacokinetics
 Pharmaverse
 Plotly
 Pre
-RCAMINT
-RENALCL
 README
+RENALCL
 RRLTU
 RStudio
 Req
 Roadmap
+SBS
 SDTM
 SMS
 STUDYID
@@ -83,6 +83,8 @@ UI
 USUBJID
 UX
 VOLUMEU
+VSSMDO
+VSSMDP
 XPT
 YAML
 amountu
@@ -108,6 +110,7 @@ extravascular
 ggplot
 ggplots
 ifelse
+img
 intravascular
 kable
 knitr
@@ -116,6 +119,7 @@ lintr
 mL
 macroparameters
 md
+multidose
 nca
 oligo
 pak
@@ -135,7 +139,6 @@ roadmap
 rpptx
 ruleset
 rulesets
-SBS
 signif
 src
 tibble
