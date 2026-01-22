@@ -13,7 +13,8 @@ PKNCA_update_data_object(
   selected_profile,
   selected_pcspec,
   should_impute_c0 = TRUE,
-  exclusion_list = NULL
+  exclusion_list = NULL,
+  keep_interval_cols = NULL
 )
 ```
 
@@ -52,6 +53,12 @@ PKNCA_update_data_object(
     "Vomiting")
 
   - rows: integer vector of row indices to apply the exclusion to
+
+- keep_interval_cols:
+
+  Optional character vector of additional columns to keep in the
+  intervals data frame and when the NCA is run (pk.nca) also in the
+  results
 
 ## Value
 

@@ -6,7 +6,12 @@ pharmacokinetic parameters.
 ## Usage
 
 ``` r
-format_pkncadata_intervals(pknca_conc, pknca_dose, start_from_last_dose = TRUE)
+format_pkncadata_intervals(
+  pknca_conc,
+  pknca_dose,
+  start_from_last_dose = TRUE,
+  keep_interval_cols = NULL
+)
 ```
 
 ## Arguments
@@ -22,6 +27,11 @@ format_pkncadata_intervals(pknca_conc, pknca_dose, start_from_last_dose = TRUE)
 - start_from_last_dose:
 
   Logical defining if start is at time of last dose or C1.
+
+- keep_interval_cols:
+
+  Optional character vector of additional columns to keep in the
+  intervals data frame.
 
 ## Value
 

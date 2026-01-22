@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9041</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9042</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,12 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">format_pkncadata_intervals</span><span class="op">(</span><span class="va">pknca_conc</span>, <span class="va">pknca_dose</span>, start_from_last_dose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">format_pkncadata_intervals</span><span class="op">(</span></span>
+<span>  <span class="va">pknca_conc</span>,</span>
+<span>  <span class="va">pknca_dose</span>,</span>
+<span>  start_from_last_dose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  keep_interval_cols <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,6 +79,12 @@
 
 <dt id="arg-start-from-last-dose">start_from_last_dose<a class="anchor" aria-label="anchor" href="#arg-start-from-last-dose"></a></dt>
 <dd><p>Logical defining if start is at time of last dose or C1.</p></dd>
+
+
+<dt id="arg-keep-interval-cols">keep_interval_cols<a class="anchor" aria-label="anchor" href="#arg-keep-interval-cols"></a></dt>
+<dd><p>Optional character vector of additional columns
+to keep in the intervals
+data frame.</p></dd>
 
 </dl></div>
     <div class="section level2">
