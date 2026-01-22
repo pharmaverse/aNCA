@@ -3,44 +3,86 @@
 #' @param output Output object, can be a data frame, plot or a list of them.
 #' @param output_path Path to the output directory (should exist or be creatable).
 #' @returns Invisibly returns the file path written.
-save_output <- function(output, output_path) {
 
-  # Create output directory if it doesn't exist
+
+# Helper for saving ggplot objects (multiple formats)
+save_ggplot_format <- function(x, file_name, formats) {
+  if ("png" %in% formats) {
+    ggsave(paste0(file_name, ".png"), plot = x, width = 10, height = 6)
+  }
+  if ("html" %in% formats) {
+    plotly_obj <- plotly::ggplotly(x)
+    htmlwidgets::saveWidget(plotly_obj, file = paste0(file_name, ".html"))
+  }
+}
+
+# Helper for saving data.frame objects (multiple formats)
+save_table_format <- function(x, file_name, formats) {
+  if ("csv" %in% formats) {
+    write.csv(x, file = paste0(file_name, ".csv"), row.names = FALSE)
+  }
+  if ("rds" %in% formats) {
+    saveRDS(x, file = paste0(file_name, ".rds"))
+  }
+  if ("xpt" %in% formats) {
+    tryCatch(
+      haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt")),
+      error = function(e) {
+        message("Error writing XPT file for ", file_name, ": ", e$message)
+      }
+    )
+  }
+}
+
+# Helper for saving plotly objects (only html for now)
+save_plotly_format <- function(x, file_name, formats = "html") {
+  if ("html" %in% formats) {
+    htmlwidgets::saveWidget(x, file = paste0(file_name, ".html"))
+  }
+}
+
+# Helper for saving different object types
+save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
+  if (inherits(x, "ggplot")) {
+    save_ggplot_format(x, file_name, ggplot_formats)
+  } else if (inherits(x, "data.frame")) {
+    save_table_format(x, file_name, table_formats)
+  } else if (inherits(x, "plotly")) {
+    save_plotly_format(x, file_name, "html")
+  } else {
+    stop("Unsupported output type object in the list: ", paste0(class(x), collapse = ", "))
+  }
+}
+
+save_output <- function(
+  output, output_path,
+  ggplot_formats = c("png", "html"),
+  table_formats = c("csv", "rds", "xpt"),
+  obj_names = NULL
+) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
-
   for (name in names(output)) {
     file_name <- paste0(output_path, "/", name)
-
     if (!dir.exists(file_name)) {
       dir.create(file_name, recursive = TRUE)
     }
+    x <- output[[name]]
+    is_obj_to_export <- is.null(obj_names) || name %in% obj_names
 
-    if (inherits(output[[name]], "list")) {
-
-      save_output(output = output[[name]], output_path = file_name)
-
-    } else if (inherits(output[[name]], "ggplot")) {
-      file_name <- paste0(output_path, "/", name, ".png")
-      ggsave(file_name, plot = output[[name]], width = 10, height = 6)
-
-    } else if (inherits(output[[name]], "data.frame")) {
-      write.csv(output[[name]], file = paste0(file_name, ".csv"), row.names = FALSE)
-      saveRDS(output[[name]], file = paste0(file_name, ".rds"))
-      tryCatch(
-        haven::write_xpt(format_to_xpt_compatible(output[[name]]), paste0(file_name, ".xpt")),
-        error = function(e) {
-          message("Error writing XPT file for ", name, ": ", e$message)
-        }
+    if (inherits(x, "list")) {
+      save_output(
+        output = x,
+        output_path = file_name,
+        ggplot_formats = ggplot_formats,
+        table_formats = table_formats,
+        obj_names = obj_names
       )
-    } else if (inherits(output[[name]], "plotly")) {
-      htmlwidgets::saveWidget(
-        output[[name]],
-        file = paste0(file_name, ".html")
-      )
-    } else {
-      stop(
-        "Unsupported output type object in the list: ",
-        paste0(class(output[[name]]), collapse = ", ")
+    } else if (is_obj_to_export) {
+      save_dispatch(
+        x = x,
+        file_name = paste0(file_name, "/", name),
+        ggplot_formats = ggplot_formats,
+        table_formats = table_formats
       )
     }
   }
@@ -218,4 +260,44 @@ get_dose_esc_results <- function(
     )
   }
   output_list
+}
+
+#' Create a tree structure from a named list, with 'text', 'id', and 'children' fields
+#' @param x A named list
+#' @param parent_id Internal use. Used to build unique ids for each node.
+#' @return A list of nodes suitable for shinyWidgets::create_tree-like UI
+create_tree_from_list_names <- function(x, parent_id = "tree") {
+  if (!inherits(x, "list")) return(NULL)
+  nms <- names(x)
+  lapply(seq_along(nms), function(i) {
+    nm <- nms[i]
+    child <- x[[nm]]
+    this_id <- paste0(parent_id, "_", i)
+    node <- list(
+      text = nm,
+      id = this_id
+    )
+    if (inherits(child, "list") && !inherits(child, "data.frame")) {
+      node$children <- create_tree_from_list_names(child, parent_id = this_id)
+    }
+    node
+  })
+}
+
+#' Get All Leaf Node IDs from a Tree Structure
+#' Recursively traverses a tree list (shinyWidgets object) to return its leaf nodes' IDs.
+#' @param tree A list representing a tree structure,
+#' where each node may have an 'id' and optionally 'children'.
+#' @return A character vector of leaf node IDs.
+get_tree_leaf_ids <- function(tree) {
+  if (is.null(tree) || length(tree) == 0) return(character(0))
+  ids <- character(0)
+  for (node in tree) {
+    if (!is.null(node$children) && length(node$children) > 0) {
+      ids <- c(ids, get_tree_leaf_ids(node$children))
+    } else if (!is.null(node$id)) {
+      ids <- c(ids, node$id)
+    }
+  }
+  ids
 }
