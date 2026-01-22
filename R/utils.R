@@ -144,6 +144,7 @@ parse_annotation <- function(data, text) {
 .assign_global <- function(name, value, pos_env = 1) {
   assign(name, value, envir = as.environment(pos_env))
 }
+
 #' Helper: adjust class and length (optional) for a data.frame
 #'  based on metadata_nca_variables
 #'

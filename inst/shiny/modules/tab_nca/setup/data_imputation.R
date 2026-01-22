@@ -2,7 +2,53 @@ data_imputation_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    # BLQ imputation widgets
+    # NA imputation widgets (moved to top)
+    fluidRow(
+      column(
+        width = 10,
+        selectizeInput(
+          ns("na_imputation"),
+          "NA Imputation",
+          choices = c("drop", "0"),
+          selected = "drop",
+          options = list(
+            create = TRUE,
+            placeholder = "Type a numeric value to impute or select option"
+          ),
+          width = "25%"
+        )
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h4("NA Imputation Help"),
+            p("NA imputation controls how missing (NA) values are handled in the data."),
+            tags$ul(
+              tags$li(tags$b("drop:"), " Remove rows with NA values."),
+              tags$li(tags$b("0:"), " Impute NA values as 0."),
+              tags$li(
+                tags$b("Numeric value:"),
+                " Type a number (e.g., 0.1) and press Enter to impute all NAs with that value."
+              )
+            ),
+            p(HTML(
+              "Only numeric values, <code>drop</code>, or <code>0</code> are accepted. ",
+              "NA imputation occurs before BLQ imputation. ",
+              "Any imputed 0 values will be considered BLQs for it."
+            ))
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "400px"
+        )
+      )
+    ),
+    helpText("Choose how to handle NA values: Drop, Impute 0, or enter a numeric value."),
+    hr(),
+    # BLQ imputation widgets (now below NA imputation)
     fluidRow(
       column(
         width = 10,
@@ -103,6 +149,7 @@ data_imputation_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+
     blq_imputation_rule <- reactive({
       req(input$select_blq_strategy)
       rule_list <- switch(
@@ -155,9 +202,30 @@ data_imputation_server <- function(id) {
       rule_list
     })
 
+    na_imputation_rule <- reactive({
+      val <- input$na_imputation
+      if (is.null(val)) return(NULL)
+      if (val %in% c("drop", "0")) {
+        if (val == "0") return(0)
+        return(val)
+      }
+      # Check if numeric
+      if (grepl("^[0-9]+(\\.[0-9]+)?$", val)) {
+        return(as.numeric(val))
+      } else {
+        showNotification(
+          "NA imputation value must be numeric, 'drop', or '0'.",
+          type = "warning",
+          duration = 8
+        )
+        return(NULL)
+      }
+    })
+
     list(
       should_impute_c0 = reactive(input$should_impute_c0),
-      blq_imputation_rule = blq_imputation_rule
+      blq_imputation_rule = blq_imputation_rule,
+      na_imputation_rule = na_imputation_rule
     )
   })
 }

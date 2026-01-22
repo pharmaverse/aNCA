@@ -134,6 +134,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
             ) %>%
             # Perform PKNCA parameter calculations
             PKNCA_calculate_nca(
+              na_rule = settings()$data_imputation$na_imputation_rule,
               blq_rule = settings()$data_imputation$blq_imputation_rule
             ) %>%
             # Add bioavailability results if requested

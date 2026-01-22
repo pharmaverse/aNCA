@@ -295,6 +295,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' which does not specify any BLQ function to use for imputation. It is required if `blq`
 #' is defined in the intervals impute column of the `pknca_data` object, as the function
 #' will be applied to those intervals during the NCA calculation.
+#' @param na_rule A string defining the NA imputation rule using PKNCA format.
+#' It can be a numeric value (substituting the NA value), or a string "drop" to
+#' ignore the value.
+#'
 #'
 #' @returns Results object with start and end times for each dose, from first dose
 #' and from most recent dose
@@ -326,7 +330,20 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' nca_results <- PKNCA_calculate_nca(pknca_data)
 #'
 #' @export
-PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_name_linter
+PKNCA_calculate_nca <- function(pknca_data, na_rule = NULL, blq_rule = NULL) { # nolint: object_name_linter
+
+  # Define NA imputation method in global environment for PKNCA to access
+  if (!is.null(na_rule)) {
+    .assign_global("PKNCA_impute_method_na", #nolint
+      function(conc.group, time.group, ...) { #nolint
+        PKNCA::clean.conc.na(
+          conc = conc.group,
+          time = time.group,
+          conc.na = na_rule
+        )
+      }
+    )
+  }
 
   # Define BLQ imputation method in global environment for PKNCA to access
   if (!is.null(blq_rule)) {
@@ -336,7 +353,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
           conc = conc.group,
           time = time.group,
           conc.blq = blq_rule,
-          conc.na = "drop"
+          conc.na = if (!is.null(na_rule)) na_rule else "drop"
         )
 
         # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
@@ -360,12 +377,15 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
       rm("PKNCA_impute_method_blq", envir = as.environment(1))
     }
+    if (exists("PKNCA_impute_method_na", envir = as.environment(1), inherits = FALSE)) {
+      rm("PKNCA_impute_method_na", envir = as.environment(1))
+    }
   }, add = TRUE)
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
-
+  # Join dosing data to results to get dose relevant columns
   dose_data_to_join <- select(
     pknca_data$dose$data,
     unlist(unname(pknca_data$dose$columns$groups)),

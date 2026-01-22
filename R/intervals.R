@@ -150,6 +150,7 @@ update_main_intervals <- function(
   parameter_selections,
   study_types_df, auc_data,
   impute = TRUE,
+  na_imputation_rule = NULL,
   blq_imputation_rule = NULL
 ) {
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
@@ -212,6 +213,32 @@ update_main_intervals <- function(
   # Impute start values if requested
   if (impute) {
     data <- create_start_impute(data)
+  }
+
+  ############################################
+  # Define a NA imputation method for PKNCA
+  # and apply it only for non-observational parameters
+  if (!is.null(na_imputation_rule)) {
+    assign(
+      "PKNCA_impute_method_na", # nolint
+      function(conc.group, time.group, ...) { # nolint
+        PKNCA::clean.conc.na(
+          conc = conc.group,
+          time = time.group,
+          conc.na = na_imputation_rule
+        )
+      },
+      envir = as.environment("package:aNCA")
+    )
+
+    data$intervals <- data$intervals %>%
+      mutate(
+        impute = ifelse(
+          is.na(impute) | impute == "",
+          "na",
+          paste0("na, ", impute)
+        )
+      )
   }
 
   ############################################
