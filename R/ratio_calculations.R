@@ -315,7 +315,7 @@ calculate_table_ratios <- function(res, ratio_table) {
   }
 
   # Combine all results into the original PKNCAresult object
-  res$result <- do.call(rbind, c(list(res$result), ratio_results))
+  res$result <- do.call(bind_rows, c(list(res$result), ratio_results))
   res
 }
 

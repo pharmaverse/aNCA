@@ -21,7 +21,8 @@ setup_ui <- function(id) {
     nav_panel(
       "Settings",
       fluidRow(
-        column(6,
+        column(
+          6,
           fileInput(
             ns("settings_upload"),
             width = "100%",
@@ -30,7 +31,8 @@ setup_ui <- function(id) {
             accept = ".rds"
           )
         ),
-        column(6,
+        column(
+          6,
           downloadButton(
             ns("settings_download"),
             label = "Download settings"
@@ -53,7 +55,7 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data) {
+setup_server <- function(id, data, adnca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive({
@@ -88,7 +90,8 @@ setup_server <- function(id, data, adnca_data) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        exclusion_list = general_exclusions$exclusion_list()
+        exclusion_list = general_exclusions$exclusion_list(),
+        keep_interval_cols = extra_group_vars()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -130,7 +133,8 @@ setup_server <- function(id, data, adnca_data) {
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
         auc_data = settings()$partial_aucs,
-        impute = settings()$data_imputation$impute_c0
+        impute = settings()$data_imputation$impute_c0,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
       if (nrow(final_data$intervals) == 0) {
@@ -147,7 +151,8 @@ setup_server <- function(id, data, adnca_data) {
     # Keep the post processing ratio calculations requested by the user
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
-      adnca_data = processed_pknca_data
+      adnca_data = processed_pknca_data,
+      extra_group_vars = extra_group_vars
     )
 
     # Automatically update the units table when settings are uploaded.
@@ -163,8 +168,10 @@ setup_server <- function(id, data, adnca_data) {
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
-      req(adnca_data(), settings(), settings()$profile,
-          settings()$analyte, settings()$pcspec)
+      req(
+        adnca_data(), settings(), settings()$profile,
+        settings()$analyte, settings()$pcspec
+      )
       log_trace("Updating PKNCA::data object for slopes.")
 
       df <- PKNCA_update_data_object(

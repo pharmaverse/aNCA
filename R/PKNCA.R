@@ -176,6 +176,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     intervals = intervals, #TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
+
   pknca_data_object
 }
 
@@ -210,6 +211,8 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' concentration data. Each item in the list should have:
 #' - reason: character string with the exclusion reason (e.g., "Vomiting")
 #' - rows: integer vector of row indices to apply the exclusion to
+#' @param keep_interval_cols Optional character vector of additional columns
+#' to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -226,7 +229,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   selected_profile,
   selected_pcspec,
   should_impute_c0 = TRUE,
-  exclusion_list = NULL
+  exclusion_list = NULL,
+  keep_interval_cols = NULL
 ) {
 
   data <- adnca_data
@@ -238,7 +242,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     progress = FALSE,
     keep_interval_cols = c(
       "ATPTREF", "DOSNOA", "type_interval",
-      adnca_data$dose$columns$route, "ROUTE"
+      adnca_data$dose$columns$route, "ROUTE",
+      keep_interval_cols
     ),
     min.hl.r.squared = 0.01
   )
@@ -250,9 +255,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    start_from_last_dose = should_impute_c0
+    start_from_last_dose = should_impute_c0,
+    keep_interval_cols = keep_interval_cols
   ) %>%
     # Join route information
+    # TODO (Gerardo): Add ROUTE to keep_interval_cols
     left_join(
       select(
         adnca_data$dose$data,
@@ -280,6 +287,14 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' with the start and end times for each dose, from first and most recent dose.
 #'
 #' @param pknca_data Data object created using PKNCA::PKNCAdata() function.
+#' @param blq_rule A list defining the Below Limit of Quantification (BLQ)
+#' imputation rule using PKNCA format. The list should either contain three elements named:
+#' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
+#' Each element can be a numeric value (substituting the BLQ value), or a string such as
+#' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
+#' which does not specify any BLQ function to use for imputation. It is required if `blq`
+#' is defined in the intervals impute column of the `pknca_data` object, as the function
+#' will be applied to those intervals during the NCA calculation.
 #'
 #' @returns Results object with start and end times for each dose, from first dose
 #' and from most recent dose
@@ -311,10 +326,45 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' nca_results <- PKNCA_calculate_nca(pknca_data)
 #'
 #' @export
-PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
+PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_name_linter
+
+  # Define BLQ imputation method in global environment for PKNCA to access
+  if (!is.null(blq_rule)) {
+    .assign_global("PKNCA_impute_method_blq", #nolint
+      function(conc.group, time.group, ...) { #nolint
+        d <- PKNCA::clean.conc.blq(
+          conc = conc.group,
+          time = time.group,
+          conc.blq = blq_rule,
+          conc.na = "drop"
+        )
+
+        # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
+        # have AVAL NA, this was only affecting BLQ branch (#139) but not main, related
+        # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
+        # done, this values dissappear and then it is considered that those times were
+        # also NA, which causes the error. Investigate further if this can be fixed
+        # in the main package or otherwise assuming in aNCA missing values are dealt with
+        d_na <- data.frame(
+          conc = conc.group[is.na(conc.group)],
+          time = time.group[is.na(conc.group)]
+        )
+        rbind(d, d_na) %>%
+          arrange(time)
+      }
+    )
+  }
+
+  # Ensure removal of the global PKNCA_impute_method_blq once NCA is run to avoid side effects
+  on.exit({
+    if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
+      rm("PKNCA_impute_method_blq", envir = as.environment(1))
+    }
+  }, add = TRUE)
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
+
 
   dose_data_to_join <- select(
     pknca_data$dose$data,
@@ -338,7 +388,7 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
-    group_by(across(-c(PPSTRES, PPORRES, exclude))) %>%
+    group_by(across(-c(intersect(names(.), c("PPSTRES", "PPORRES", "exclude"))))) %>%
     slice_tail(n = 1) %>%
     ungroup()
 
@@ -437,6 +487,9 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' 3. Generates a PKNCA units table for each group, including conversion factors and custom units.
 #' 4. Returns a unique table with relevant columns for PKNCA analysis.
 #'
+#' Any NA units in groups already containing at least one valid value will
+#'  be ignored from the creation of the units table.
+#'
 #' @examples
 #' # Assuming `o_conc` and `o_dose` are valid PKNCA objects:
 #' # 1) Sharing group variables in their formulas
@@ -495,11 +548,21 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
     mutate(across(everything(), ~ as.character(.))) %>%
     unique()
 
+  # Identify unit columns that exist in data AND have at least one non-NA value
+  valid_unit_cols <- groups_units_tbl %>%
+    select(any_of(all_unit_cols)) %>%
+    select(where(~ !all(is.na(.)))) %>%
+    names()
+
+  groups_units_clean <- groups_units_tbl %>%
+    drop_na(all_of(valid_unit_cols))
+
   # Check that at least for each concentration group units are uniform
-  mismatching_units_groups <- groups_units_tbl %>%
+  mismatching_units_groups <- groups_units_clean %>%
     add_count(!!!syms(group_conc_cols), name = "n") %>%
     filter(n > 1) %>%
     select(-n)
+
   if (nrow(mismatching_units_groups) > 0) {
     stop(
       "Units should be uniform at least across concentration groups.",
@@ -509,7 +572,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   }
 
   # Generate the PKNCA units table
-  groups_units_tbl %>%
+  groups_units_clean %>%
     # Pick only the group columns that are relevant in stratifying the units
     select_minimal_grouping_cols(all_unit_cols) %>%
     unique() %>%
