@@ -13,6 +13,7 @@
 * Section `General Exclusions` allowing to perform in-App NCA exclusions (#851)
 * Mean plots have been added in the TLGs section, with BLQ handling (#555)
 * CMAX automatically selected in box plots if available (#890)
+* General button at top page to save all NCA results, settings & draft slides as a ZIP file (#638)
 
 
 ## Bugs fixed
@@ -26,6 +27,7 @@
 * Bug fix for plotting section where if there is >1 unit the axis label will contain both unique units. (#818)
 * Units table bugs fixed, so it is filtered based on NCA setup and the table is searchable for each column (#870)
 * Bug fix to allow for unrecognized units to be used in AVALU and DOSEU (#861)
+* Bug fix so NA units are allowed in the data (as per CDISC guidelines for NA samples) and not treated as a unique unit (#907)
 
 
 # aNCA 0.1.0

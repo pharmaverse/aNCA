@@ -476,6 +476,9 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' 3. Generates a PKNCA units table for each group, including conversion factors and custom units.
 #' 4. Returns a unique table with relevant columns for PKNCA analysis.
 #'
+#' Any NA units in groups already containing at least one valid value will
+#'  be ignored from the creation of the units table.
+#'
 #' @examples
 #' # Assuming `o_conc` and `o_dose` are valid PKNCA objects:
 #' # 1) Sharing group variables in their formulas
@@ -534,11 +537,21 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
     mutate(across(everything(), ~ as.character(.))) %>%
     unique()
 
+  # Identify unit columns that exist in data AND have at least one non-NA value
+  valid_unit_cols <- groups_units_tbl %>%
+    select(any_of(all_unit_cols)) %>%
+    select(where(~ !all(is.na(.)))) %>%
+    names()
+
+  groups_units_clean <- groups_units_tbl %>%
+    drop_na(all_of(valid_unit_cols))
+
   # Check that at least for each concentration group units are uniform
-  mismatching_units_groups <- groups_units_tbl %>%
+  mismatching_units_groups <- groups_units_clean %>%
     add_count(!!!syms(group_conc_cols), name = "n") %>%
     filter(n > 1) %>%
     select(-n)
+
   if (nrow(mismatching_units_groups) > 0) {
     stop(
       "Units should be uniform at least across concentration groups.",
@@ -548,7 +561,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   }
 
   # Generate the PKNCA units table
-  groups_units_tbl %>%
+  groups_units_clean %>%
     # Pick only the group columns that are relevant in stratifying the units
     select_minimal_grouping_cols(all_unit_cols) %>%
     unique() %>%
