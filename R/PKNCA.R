@@ -331,27 +331,27 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
   # Define BLQ imputation method in global environment for PKNCA to access
   if (!is.null(blq_rule)) {
     .assign_global("PKNCA_impute_method_blq", #nolint
-      function(conc.group, time.group, ...) { #nolint
-        d <- PKNCA::clean.conc.blq(
-          conc = conc.group,
-          time = time.group,
-          conc.blq = blq_rule,
-          conc.na = "drop"
-        )
-
-        # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
-        # have AVAL NA, this was only affecting BLQ branch (#139) but not main, related
-        # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
-        # done, this values dissappear and then it is considered that those times were
-        # also NA, which causes the error. Investigate further if this can be fixed
-        # in the main package or otherwise assuming in aNCA missing values are dealt with
-        d_na <- data.frame(
-          conc = conc.group[is.na(conc.group)],
-          time = time.group[is.na(conc.group)]
-        )
-        rbind(d, d_na) %>%
-          arrange(time)
-      }
+       function(conc, time, ...) { #nolint
+         d <- PKNCA::clean.conc.blq(
+           conc = conc,
+           time = time,
+           conc.blq = blq_rule,
+           conc.na = "drop"
+         )
+         
+         # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
+         # have AVAL NA, this was only affecting BLQ branch (#139) but not main, related
+         # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
+         # done, this values dissappear and then it is considered that those times were
+         # also NA, which causes the error. Investigate further if this can be fixed
+         # in the main package or otherwise assuming in aNCA missing values are dealt with
+         d_na <- data.frame(
+           conc = conc[is.na(conc)],
+           time = time[is.na(conc)]
+         )
+         rbind(d, d_na) %>%
+           arrange(time)
+       }
     )
   }
 
