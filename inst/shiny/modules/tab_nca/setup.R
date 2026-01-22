@@ -21,7 +21,8 @@ setup_ui <- function(id) {
     nav_panel(
       "Settings",
       fluidRow(
-        column(6,
+        column(
+          6,
           fileInput(
             ns("settings_upload"),
             width = "100%",
@@ -30,7 +31,8 @@ setup_ui <- function(id) {
             accept = ".rds"
           )
         ),
-        column(6,
+        column(
+          6,
           downloadButton(
             ns("settings_download"),
             label = "Download settings"
@@ -130,7 +132,8 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
         auc_data = settings()$partial_aucs,
-        impute = settings()$data_imputation$impute_c0
+        impute = settings()$data_imputation$impute_c0,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
       if (nrow(final_data$intervals) == 0) {
@@ -165,8 +168,10 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
-      req(adnca_data(), settings(), settings()$profile,
-          settings()$analyte, settings()$pcspec)
+      req(
+        adnca_data(), settings(), settings()$profile,
+        settings()$analyte, settings()$pcspec
+      )
       log_trace("Updating PKNCA::data object for slopes.")
 
       df <- PKNCA_update_data_object(

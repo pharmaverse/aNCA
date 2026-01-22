@@ -9,7 +9,8 @@ update_main_intervals(
   parameter_selections,
   study_types_df,
   auc_data,
-  impute = TRUE
+  impute = TRUE,
+  blq_imputation_rule = NULL
 )
 }
 \arguments{
@@ -22,6 +23,13 @@ update_main_intervals(
 \item{auc_data}{A data frame containing partial AUC ranges.}
 
 \item{impute}{Logical indicating whether to impute start values for parameters.}
+
+\item{blq_imputation_rule}{A list defining the Below Limit of Quantification (BLQ)
+imputation rule using PKNCA format. The list should either contain three elements named:
+\code{first}, \code{middle}, and \code{last} or two elements named \code{before.tmax} and \code{after.tmax}.
+Each element can be a numeric value (substituting the BLQ value), or a string such as
+\code{"drop"} (ignores the value) or \code{"keep"} (keeps the value as 0). Default is NULL,
+which does not specify any BLQ imputation in any interval.}
 }
 \value{
 An updated PKNCAdata object with parameter intervals based on user selections.

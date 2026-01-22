@@ -57,8 +57,10 @@ format_pkncadata_intervals <- function(pknca_conc,
   dose_groups <- unname(unlist(pknca_dose$columns$groups))
   time_column <- pknca_dose$columns$time
   # Obtain all possible pknca parameters
-  params <- setdiff(names(PKNCA::get.interval.cols()),
-                    c("start", "end"))
+  params <- setdiff(
+    names(PKNCA::get.interval.cols()),
+    c("start", "end")
+  )
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
@@ -74,15 +76,17 @@ format_pkncadata_intervals <- function(pknca_conc,
     group_by(!!!syms(dose_groups)) %>%
     mutate(is_one_dose = length(unique(DOSNOA)) == 1) %>%
     ungroup() %>%
-    select(any_of(c(dose_groups,
-                    time_column, "DOSNOA", "is_one_dose")))
+    select(any_of(c(
+      dose_groups,
+      time_column, "DOSNOA", "is_one_dose"
+    )))
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
-                              sub_pknca_conc,
-                              by = intersect(names(sub_pknca_dose), c(conc_groups, "DOSNOA")),
-                              relationship = "many-to-many") %>%
-
+    sub_pknca_conc,
+    by = intersect(names(sub_pknca_dose), c(conc_groups, "DOSNOA")),
+    relationship = "many-to-many"
+  ) %>%
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
     mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
@@ -90,13 +94,14 @@ format_pkncadata_intervals <- function(pknca_conc,
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
     ungroup() %>%
-
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
-    mutate(start = if (start_from_last_dose) !!sym(time_column)
-           else !!sym(time_column) + !!sym("ARRLT")) %>%
+    mutate(start = if (start_from_last_dose) {
+      !!sym(time_column)
+    } else {
+      !!sym(time_column) + !!sym("ARRLT")
+    }) %>%
     group_by(!!!syms(conc_groups)) %>%
     arrange(start) %>%
-
     # Make end based on next dose time (if no more, TRTRINT or last NFRLT)
     mutate(end = if (has_trtrint) {
       case_when(
@@ -111,8 +116,7 @@ format_pkncadata_intervals <- function(pknca_conc,
         is_one_dose ~ Inf,
         TRUE ~ start + max_end
       )
-    }
-    ) %>%
+    }) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups,
                     "ATPTREF", "DOSNOA", "VOLUME", keep_interval_cols))) %>%
@@ -121,7 +125,6 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(!!!setNames(rep(FALSE, length(params)), params)) %>%
     # Identify the intervals as the base ones for the NCA analysis
     mutate(type_interval = "main")
-
 }
 
 #' Update an intervals data frame with user-selected parameters by study type
@@ -131,12 +134,24 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param study_types_df A data frame mapping analysis profiles to their study type.
 #' @param auc_data A data frame containing partial AUC ranges.
 #' @param impute Logical indicating whether to impute start values for parameters.
+#' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
+#' imputation rule using PKNCA format. The list should either contain three elements named:
+#' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
+#' Each element can be a numeric value (substituting the BLQ value), or a string such as
+#' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
+#' which does not specify any BLQ imputation in any interval.
 #'
+#' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
+#' @importFrom purrr pmap
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
-update_main_intervals <- function(data, parameter_selections,
-                                  study_types_df, auc_data, impute = TRUE) {
-
+update_main_intervals <- function(
+  data,
+  parameter_selections,
+  study_types_df, auc_data,
+  impute = TRUE,
+  blq_imputation_rule = NULL
+) {
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
   # Determine the grouping columns from the study_types_df
@@ -196,8 +211,27 @@ update_main_intervals <- function(data, parameter_selections,
 
   # Impute start values if requested
   if (impute) {
-    data <- apply_imputation(data)
+    data <- create_start_impute(data)
   }
+
+  ############################################
+  # Define a BLQ imputation method for PKNCA
+  # and apply it only for non-observational parameters
+
+  if (!is.null(blq_imputation_rule)) {
+    data$intervals <- data$intervals %>%
+      mutate(
+        impute = ifelse(
+          is.na(impute) | impute == "",
+          "blq",
+          paste0("blq, ", impute)
+        )
+      )
+  }
+
+  ############################################
+  # Remove any imputation from the observational parameters
+  data <- rm_impute_obs_params(data, metadata_nca_parameters)
 
   data
 }
@@ -208,25 +242,34 @@ update_main_intervals <- function(data, parameter_selections,
 #' selectively removing imputation for parameters that are not dependent on AUC.
 #'
 #' @param data A PKNCAdata object.
-#' @param nca_parameters A dataset containing the mapping between PKNCA terms and CDISC terms.
+#' @param metadata_nca_parameters A data frame mapping PKNCA parameters (`PKNCA`)
+#' and information on their parameter dependencies ('Depends').
 #' @returns A PKNCAdata object with imputation rules applied.
 #' @import dplyr
 #'
-apply_imputation <- function(data, nca_parameters = metadata_nca_parameters) {
-  data <- create_start_impute(data)
-
+rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_parameters) {
   # Don't impute parameters that are not AUC dependent
-  params_auc_dep <- nca_parameters %>%
+  params_auc_dep <- metadata_nca_parameters %>%
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
-  params_not_to_impute <- nca_parameters %>%
-    filter(!grepl("auc|aumc", PKNCA),
-           !grepl(paste0(params_auc_dep, collapse = "|"), Depends)) %>%
+  params_not_to_impute <- metadata_nca_parameters %>%
+    filter(
+      !grepl("auc|aumc", PKNCA),
+      !grepl(paste0(params_auc_dep, collapse = "|"), Depends)
+    ) %>%
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
   all_impute_methods <- na.omit(unique(data$intervals$impute))
+  if (length(all_impute_methods) == 0) {
+    return(data)
+  }
+  all_impute_methods <- all_impute_methods %>%
+    strsplit(split = ",") %>%
+    unlist() %>%
+    trimws() %>%
+    unique()
 
   data$intervals <- Reduce(function(d, ti_arg) {
     interval_remove_impute(
