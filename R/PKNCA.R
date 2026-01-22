@@ -222,8 +222,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @importFrom purrr pmap
 #'
 #' @export
-PKNCA_update_data_object <- function(
-    # nolint: object_name_linter
+PKNCA_update_data_object <- function( # nolint: object_name_linter
     adnca_data,
     method,
     selected_analytes,
