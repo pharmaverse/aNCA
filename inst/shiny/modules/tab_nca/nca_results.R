@@ -97,19 +97,57 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         mutate(
           flagged = "NOT DONE"
         )
-
-      # Add flaging column in the pivoted results
+      
+      # Add flagging column in the pivoted results
       applied_flags <- purrr::keep(settings()$flags, function(x) x$is.checked)
-      flag_params <- names(settings()$flags)
+      flag_params <- names(applied_flags)
+      flag_params_pknca <- translate_terms(flag_params, "PPTESTCD", "PKNCA")
+
+      requested_flags <- res_nca()$data$intervals %>%
+        select(any_of(c(
+          unname(unlist(res_nca()$data$conc$columns$groups)),
+          flag_params_pknca
+        ))) %>%
+        # Group by all columns EXCEPT the flag parameters
+        group_by(across(-any_of(flag_params_pknca))) %>%
+        # Collapse duplicates: if any row is TRUE, the result is TRUE
+        summarise(across(any_of(flag_params_pknca), any), .groups = "drop")
+      
       flag_thr <- sapply(settings()$flags, FUN =  function(x) x$threshold)
-      flag_rule_msgs <- paste0(flag_params, c(" < ", " < ", " > ", " > ", " < "), flag_thr)
+      flag_rule_msgs <- c(paste0(names(settings()$flags), c(" < ", " < ", " > ", " > ", " < "), flag_thr))
+      
+      valid_indices <- map_lgl(flag_params, function(p) {
+        any(grepl(paste0("^", p, "(\\[|$)"), names(final_results)))
+      })
+      
+      flag_params_pknca <- flag_params_pknca[valid_indices]
+      
       flag_cols <- names(final_results)[formatters::var_labels(final_results)
                                         %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
-
-      if (length(flag_params) > 0) {
+      # join flag columns to final results
+      final_results <- final_results %>%
+        left_join(requested_flags, by = intersect(names(.), names(requested_flags)))
+      
+      if (length(flag_cols) > 0) {
         final_results <- final_results %>%
           rowwise() %>%
           mutate(
+            na_msg_vec = list(purrr::map2_chr(flag_cols, flag_params_pknca, function(d_col, f_col) {
+              if (!is.na(d_col) && is.na(get(d_col)) && isTRUE(get(f_col))) {
+                # Return "Param is NA" (stripping unit for cleaner message)
+                paste(str_remove(d_col, "\\[.*\\]"), "is NA")
+              } else {
+                NA_character_
+              }
+            }) %>% na.omit()),
+            na_msg = paste(na_msg_vec, collapse = "; "),
+            # Update Exclude using case_when
+            Exclude = case_when(
+              # Combine na message and existing Exclude text
+              na_msg != "" & !is.na(Exclude) ~ paste(Exclude, na_msg, sep = "; "),
+              na_msg != "" ~ na_msg,
+              TRUE ~ Exclude
+            ),
             flagged = case_when(
               is.na(Exclude) ~ "ACCEPTED",
               any(sapply(
@@ -118,7 +156,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               TRUE ~ "MISSING"
             )
           ) %>%
-          ungroup()
+          ungroup() %>%
+          select(-all_of(c(flag_params_pknca, "na_msg_vec", "na_msg")))
       }
       final_results
     })
