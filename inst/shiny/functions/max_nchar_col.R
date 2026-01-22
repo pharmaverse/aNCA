@@ -21,26 +21,23 @@
 #'   PARAMCD = "DRUG_CONC",
 #'   AVAL = 15.5
 #' )
-#' col_defs <- max_nchar_col(adpc, overrides = list(AVAL = reactable::colDef(format = reactable::colFormat(digits = 2))))
+#' col_defs <- max_nchar_col(adpc,
+#' overrides = list(AVAL = reactable::colDef(format = reactable::colFormat(digits = 2))))
 #'
 #' @export
 max_nchar_col <- function(data, max_px = 150, expand_factor = 8, overrides = list()) {
   shiny::req(data)
-  
   defs <- purrr::imap(data, ~ {
     max_char <- max(nchar(as.character(.x)), nchar(.y), na.rm = TRUE)
     calc_width <- max_char * expand_factor + 20
-    
     reactable::colDef(
       minWidth = min(calc_width, max_px),
       maxWidth = 2 * max_px,
       resizable = TRUE
     )
   })
-  
   if (length(overrides) > 0) {
     defs <- utils::modifyList(defs, overrides)
   }
-  
   defs
 }

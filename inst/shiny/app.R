@@ -30,6 +30,8 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 
 assets <- system.file("shiny/www", package = "aNCA")
 
+shiny::addResourcePath("logos", system.file("man/figures", package = "aNCA"))
+
 sass(
   sass_file(file.path(assets, "styles/main.scss")),
   output = file.path(assets, "main.css")
@@ -41,7 +43,14 @@ ui <- function() {
   page_sidebar(
     id = "sidebar",
     title = tagList(
-      span("aNCA"),
+      div(
+        style = "display: flex; align-items: center; gap: 10px;",
+        tags$img(
+          src = "logos/aNCA_logo.png", # Ensure file is in www/ or resource path
+          alt = "aNCA logo",
+          width = "40px" # Adjusted for sidebar header scale
+        )
+      ),
       div(
         class = "project-name-container",
         textInput("project_name", label = NULL, placeholder = "Project Name"),
