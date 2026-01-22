@@ -38,7 +38,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_table.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/adjust_class_and_length.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_filters.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/apply_imputation.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_labels.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_mapping.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_f.html</loc></url>
@@ -109,6 +108,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/process_data_mean.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/rm_impute_obs_params.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/select_minimal_grouping_cols.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/simplify_unit.html</loc></url>

@@ -5,7 +5,7 @@ Calculates results for PKNCA analysis.
 ## Usage
 
 ``` r
-PKNCA_calculate_nca(pknca_data)
+PKNCA_calculate_nca(pknca_data, blq_rule = NULL)
 ```
 
 ## Arguments
@@ -13,6 +13,19 @@ PKNCA_calculate_nca(pknca_data)
 - pknca_data:
 
   Data object created using PKNCA::PKNCAdata() function.
+
+- blq_rule:
+
+  A list defining the Below Limit of Quantification (BLQ) imputation
+  rule using PKNCA format. The list should either contain three elements
+  named: `first`, `middle`, and `last` or two elements named
+  `before.tmax` and `after.tmax`. Each element can be a numeric value
+  (substituting the BLQ value), or a string such as `"drop"` (ignores
+  the value) or `"keep"` (keeps the value as 0). Default is NULL, which
+  does not specify any BLQ function to use for imputation. It is
+  required if `blq` is defined in the intervals impute column of the
+  `pknca_data` object, as the function will be applied to those
+  intervals during the NCA calculation.
 
 ## Value
 

@@ -70,9 +70,6 @@
 - [`apply_filters()`](https://pharmaverse.github.io/aNCA/reference/apply_filters.md)
   : Apply Filters to a Dataset
 
-- [`apply_imputation()`](https://pharmaverse.github.io/aNCA/reference/apply_imputation.md)
-  : Apply Imputation for PKNCA Data
-
 - [`apply_labels()`](https://pharmaverse.github.io/aNCA/reference/apply_labels.md)
   : Apply Labels to a dataset
 
@@ -297,6 +294,9 @@
 
 - [`read_pk()`](https://pharmaverse.github.io/aNCA/reference/read_pk.md)
   : Reads PK datasets from various file formats.
+
+- [`rm_impute_obs_params()`](https://pharmaverse.github.io/aNCA/reference/rm_impute_obs_params.md)
+  : Apply Imputation for PKNCA Data
 
 - [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
   : Run the Shiny app
