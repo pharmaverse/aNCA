@@ -69,6 +69,9 @@
 - Bug fix so NA units are allowed in the data (as per CDISC guidelines
   for NA samples) and not treated as a unique unit
   ([\#907](https://github.com/pharmaverse/aNCA/issues/907))
+- Bug fix so app doesn’t crash if NCA is rerun with an error (e.g. No
+  exclusion REASON)
+  ([\#913](https://github.com/pharmaverse/aNCA/issues/913))
 
 ## aNCA 0.1.0
 
