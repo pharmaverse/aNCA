@@ -137,9 +137,7 @@ tab_tlg_server <- function(id, data) {
       wrap = TRUE,
       selection = "multiple",
       editable = c("Footnote", "Stratification", "Condition", "Comment"),
-      columns = list(
-        Output = colDef(html = TRUE)
-      )
+      generate_col_defs = function(df) max_nchar_col(df, overrides = list(Output = colDef(html = TRUE)))
     )
 
     observeEvent(selected_tlg_state()$edit(), {
@@ -179,9 +177,7 @@ tab_tlg_server <- function(id, data) {
       selection = "multiple",
       defaultExpanded = TRUE,
       width = "775px", # fit to the modal width
-      columns = list(
-        PKid = colDef(html = TRUE)
-      )
+      generate_col_defs = function(df) max_nchar_col(df, overrides = list(Output = colDef(html = TRUE)))
     )
 
     # Update the Selection column when the confirm_add_tlg button is pressed
