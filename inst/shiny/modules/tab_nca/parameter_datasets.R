@@ -38,7 +38,7 @@ parameter_datasets_server <- function(id, res_nca) {
       file_name = function() paste0(session$userData$project_name(), "_pp"),
       style = list(fontSize = "0.75em"),
       height = "68vh",
-      generate_col_defs = col_reactable
+      generate_col_defs = max_nchar_col
     )
     reactable_server(
       "adpp_dataset",
@@ -47,7 +47,7 @@ parameter_datasets_server <- function(id, res_nca) {
       file_name = function() paste0(session$userData$project_name(), "_adpp"),
       style = list(fontSize = "0.75em"),
       height = "68vh",
-      generate_col_defs = col_reactable
+      generate_col_defs = max_nchar_col
     )
     reactable_server(
       "adnca_dataset",
@@ -56,7 +56,7 @@ parameter_datasets_server <- function(id, res_nca) {
       file_name = function() paste0(session$userData$project_name(), "_adnca"),
       style = list(fontSize = "0.75em"),
       height = "68vh",
-      generate_col_defs = col_reactable
+      generate_col_defs = max_nchar_col
     )
 
     # Save the results in the output folder

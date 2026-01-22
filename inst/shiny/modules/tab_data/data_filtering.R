@@ -133,7 +133,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       height = "50vh",
       defaultPageSize = 25,
       style = list(fontSize = "0.75em"),
-      generate_col_defs = col_reactable
+      generate_col_defs = max_nchar_col
     )
 
     filtered_data

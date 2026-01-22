@@ -125,7 +125,7 @@ data_upload_server <- function(id) {
       height = "50vh",
       class = "reactable-table",
       style = list(fontSize = "0.75em"),
-      generate_col_defs = col_reactable
+      generate_col_defs = max_nchar_col
     )
 
     raw_data

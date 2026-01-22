@@ -88,7 +88,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     ) # This will be saved in the results zip folder
 
     reactable_server("manual_slopes", slope_rules$manual_slopes,
-                     generate_col_defs = col_reactable)
+                     generate_col_defs = max_nchar_col)
 
     # List all irrelevant warnings to suppres in the NCA calculation
     irrelevant_regex_warnings <- c(
@@ -231,7 +231,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 50, nrow(pivoted_slopes()))),
       style = list(fontSize = "0.75em"),
-      generate_col_defs = col_reactable
+      generate_col_defs = max_nchar_col
     )
 
     #' Prepares and displays the pivoted NCA results

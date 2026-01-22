@@ -134,7 +134,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       bordered = TRUE,
       compact = TRUE,
       style = list(fontSize = "0.75em"),
-      generate_col_defs = col_reactable
+      generate_col_defs = max_nchar_col
     )
 
     # Download summary statistics as CSV
