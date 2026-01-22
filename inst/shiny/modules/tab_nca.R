@@ -74,7 +74,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
+    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, extra_group_vars)
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
