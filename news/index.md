@@ -31,6 +31,9 @@
   ([\#555](https://github.com/pharmaverse/aNCA/issues/555))
 - CMAX automatically selected in box plots if available
   ([\#890](https://github.com/pharmaverse/aNCA/issues/890))
+- General button at top page to save all NCA results, settings & draft
+  slides as a ZIP file
+  ([\#638](https://github.com/pharmaverse/aNCA/issues/638))
 
 ### Bugs fixed
 
