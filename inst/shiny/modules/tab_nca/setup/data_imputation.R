@@ -118,7 +118,7 @@ data_imputation_ui <- function(id) {
       ),
       conditionalPanel(
         condition = sprintf("input['%s'] == 'Set value for all BLQ'", ns("select_blq_strategy")),
-        blq_selectize(ns("blq_value"), "Value for BLQ", selected = "0.05"),
+        blq_selectize(ns("blq_value"), "Value for BLQ", selected = "0.05")
       ),
       conditionalPanel(
         condition = sprintf("input['%s'] == 'No BLQ handling'", ns("select_blq_strategy")),
@@ -135,8 +135,9 @@ data_imputation_ui <- function(id) {
     br(),
     helpText(HTML(paste(
       "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-      "- If first dose & IV bolus: C0 = 0",
-      "- If not first dose or not IV bolus: C0 = predose",
+      "- If start concentration is present: C0 = C0",
+      "- If not IV bolus (or metabolite) & first dose: C0 = 0",
+      "- If not IV bolus (or metabolite) & not first dose with predose: C0 = predose",
       "- If IV bolus & monoexponential data: logslope",
       "- If IV bolus & not monoexponential data: C0 = C1",
       sep = "<br>"

@@ -353,13 +353,13 @@ PKNCA_calculate_nca <- function(pknca_data, na_rule = NULL, blq_rule = NULL) { #
           conc = conc.group,
           time = time.group,
           conc.blq = blq_rule,
-          conc.na = "drop"
+          conc.na = if (!is.null(na_rule)) na_rule else "drop"
         )
 
         # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
         # have AVAL NA, this was only affecting BLQ branch (#139) but not main, related
         # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
-        # done, this values dissapear and then it is considered that those times were
+        # done, this values dissappear and then it is considered that those times were
         # also NA, which causes the error. Investigate further if this can be fixed
         # in the main package or otherwise assuming in aNCA missing values are dealt with
         d_na <- data.frame(
@@ -372,13 +372,20 @@ PKNCA_calculate_nca <- function(pknca_data, na_rule = NULL, blq_rule = NULL) { #
     )
   }
 
+  # Ensure removal of the global PKNCA_impute_method_blq once NCA is run to avoid side effects
+  on.exit({
+    if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
+      rm("PKNCA_impute_method_blq", envir = as.environment(1))
+    }
+    if (exists("PKNCA_impute_method_na", envir = as.environment(1), inherits = FALSE)) {
+      rm("PKNCA_impute_method_na", envir = as.environment(1))
+    }
+  }, add = TRUE)
+
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
-  # Remove the global PKNCA_impute_methods after calculation
-  rm("PKNCA_impute_method_na", envir = as.environment(1))
-  rm("PKNCA_impute_method_blq", envir = as.environment(1))
-
+  # Join dosing data to results to get dose relevant columns
   dose_data_to_join <- select(
     pknca_data$dose$data,
     unlist(unname(pknca_data$dose$columns$groups)),
