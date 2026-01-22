@@ -5,6 +5,9 @@
 #' @param pknca_conc A PKNCAdose object containing the concentration data.
 #' @param pknca_dose A PKNCAdose object containing the dose data.
 #' @param start_from_last_dose Logical defining if start is at time of last dose or C1.
+#' @param keep_interval_cols Optional character vector of additional columns
+#'  to keep in the intervals
+#' data frame.
 #'
 #' @returns A data frame containing the dose intervals and specified pharmacokinetic parameters.
 #'
@@ -33,7 +36,8 @@
 #' @export
 format_pkncadata_intervals <- function(pknca_conc,
                                        pknca_dose,
-                                       start_from_last_dose = TRUE) {
+                                       start_from_last_dose = TRUE,
+                                       keep_interval_cols = NULL) {
   if (!inherits(pknca_conc, "PKNCAconc")) {
     stop("Input pknca_conc must be a PKNCAconc object from the PKNCA package.")
   }
@@ -58,7 +62,10 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Select conc data and for time column give priority to non-predose samples
   sub_pknca_conc <- pknca_conc$data %>%
-    select(any_of(c(conc_groups, "ARRLT", "ATPTREF", "DOSNOA", "TRTRINT", "VOLUME")))
+    select(any_of(c(
+      conc_groups, "ARRLT", "ATPTREF", "DOSNOA",
+      "TRTRINT", "VOLUME", keep_interval_cols
+    )))
 
   has_trtrint <- "TRTRINT" %in% names(sub_pknca_conc)
 
@@ -108,7 +115,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     ) %>%
     ungroup() %>%
     select(any_of(c("start", "end", conc_groups,
-                    "ATPTREF", "DOSNOA", "VOLUME"))) %>%
+                    "ATPTREF", "DOSNOA", "VOLUME", keep_interval_cols))) %>%
 
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(params)), params)) %>%

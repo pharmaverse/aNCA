@@ -53,7 +53,7 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data) {
+setup_server <- function(id, data, adnca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive({
@@ -88,7 +88,8 @@ setup_server <- function(id, data, adnca_data) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        exclusion_list = general_exclusions$exclusion_list()
+        exclusion_list = general_exclusions$exclusion_list(),
+        keep_interval_cols = extra_group_vars()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -146,7 +147,8 @@ setup_server <- function(id, data, adnca_data) {
     # Keep the post processing ratio calculations requested by the user
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
-      adnca_data = processed_pknca_data
+      adnca_data = processed_pknca_data,
+      extra_group_vars = extra_group_vars
     )
     session$userData$ratio_table <- reactive(ratio_table())
 
