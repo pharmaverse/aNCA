@@ -183,7 +183,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                   slope_rules = session$userData$slope_rules()
                 )
                 saveRDS(settings_to_save, paste0(setts_tmpdir, "/settings.rds"))
-                
+
               }
 
               # Save input dataset used
