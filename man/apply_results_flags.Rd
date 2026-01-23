@@ -7,9 +7,11 @@
 apply_results_flags(data, nca_intervals, group_cols, flag_settings)
 }
 \arguments{
-\item{data}{A data frame. The pivot-wider NCA results containing subject data from \code{PKNCAresults} object.}
+\item{data}{A data frame. NCA results from the \code{pivot_wider_pknca_results} function,
+with additional grouping variables merged.}
 
-\item{nca_intervals}{A data frame. The intervals object from the PKNCA result (e.g., \code{res$data$intervals}).}
+\item{nca_intervals}{A data frame. The intervals object from the
+PKNCA result (e.g., \code{res$data$intervals}).}
 
 \item{group_cols}{A character vector. The column names used for grouping the data.}
 
