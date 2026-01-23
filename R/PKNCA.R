@@ -38,22 +38,22 @@
 #'
 #' @examples
 #' adnca_data <- data.frame(
-#' STUDYID = rep("STUDY001", 6),
-#' PCSPEC = rep("Plasma", 6),
-#' ROUTE = rep("IV", 6),
-#' DOSETRT = rep("DrugA", 6),
-#' USUBJID = rep("SUBJ001", 6),
-#' ATPTREF = rep(1, 6),
-#' PARAM = rep("AnalyteA", 6),
-#' AVAL = c(0, 5, 10, 7, 3, 1),
-#' AVALU = rep("ng/mL", 6),
-#' DOSEA = rep(100, 6),
-#' DOSEU = rep("mg", 6),
-#' AFRLT = c(0, 1, 2, 3, 4, 6),
-#' ARRLT = c(0, 1, 2, 3, 4, 6),
-#' NFRLT = c(0, 1, 2, 3, 4, 6),
-#' ADOSEDUR = rep(0.5, 6),
-#' RRLTU = rep("hour", 6)
+#'   STUDYID = rep("STUDY001", 6),
+#'   PCSPEC = rep("Plasma", 6),
+#'   ROUTE = rep("IV", 6),
+#'   DOSETRT = rep("DrugA", 6),
+#'   USUBJID = rep("SUBJ001", 6),
+#'   ATPTREF = rep(1, 6),
+#'   PARAM = rep("AnalyteA", 6),
+#'   AVAL = c(0, 5, 10, 7, 3, 1),
+#'   AVALU = rep("ng/mL", 6),
+#'   DOSEA = rep(100, 6),
+#'   DOSEU = rep("mg", 6),
+#'   AFRLT = c(0, 1, 2, 3, 4, 6),
+#'   ARRLT = c(0, 1, 2, 3, 4, 6),
+#'   NFRLT = c(0, 1, 2, 3, 4, 6),
+#'   ADOSEDUR = rep(0.5, 6),
+#'   RRLTU = rep("hour", 6)
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
@@ -173,7 +173,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   pknca_data_object <- PKNCA::PKNCAdata(
     data.conc = pknca_conc,
     data.dose = pknca_dose,
-    intervals = intervals, #TODO: should be default
+    intervals = intervals, # TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
 
@@ -223,16 +223,14 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
-  adnca_data,
-  method,
-  selected_analytes,
-  selected_profile,
-  selected_pcspec,
-  should_impute_c0 = TRUE,
-  exclusion_list = NULL,
-  keep_interval_cols = NULL
-) {
-
+    adnca_data,
+    method,
+    selected_analytes,
+    selected_profile,
+    selected_pcspec,
+    should_impute_c0 = TRUE,
+    exclusion_list = NULL,
+    keep_interval_cols = NULL) {
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
@@ -330,24 +328,26 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
 
   # Define BLQ imputation method in global environment for PKNCA to access
   if (!is.null(blq_rule)) {
-    .assign_global("PKNCA_impute_method_blq", #nolint
-      function(conc.group, time.group, ...) { #nolint
+    .assign_global(
+      "PKNCA_impute_method_blq", # nolint
+      function(conc, time, ...) { # nolint
+
         d <- PKNCA::clean.conc.blq(
-          conc = conc.group,
-          time = time.group,
+          conc = conc,
+          time = time,
           conc.blq = blq_rule,
           conc.na = "drop"
         )
 
         # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
-        # have AVAL NA, this was only affecting BLQ branch (#139) but not main, related
+        # drop values, this was only affecting BLQ branch (#139) but not main, related
         # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
         # done, this values dissappear and then it is considered that those times were
-        # also NA, which causes the error. Investigate further if this can be fixed
-        # in the main package or otherwise assuming in aNCA missing values are dealt with
+        # also NA, which causes the error. In PKNCA dropping in imputation works fine,
+        # but aNCA might be doing something special we are missing
         d_na <- data.frame(
-          conc = conc.group[is.na(conc.group)],
-          time = time.group[is.na(conc.group)]
+          conc = rep(NA, sum(!time %in% d$time)), # PKNCA will drop the value
+          time = time[!time %in% d$time]
         )
         rbind(d, d_na) %>%
           arrange(time)
@@ -356,11 +356,14 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
   }
 
   # Ensure removal of the global PKNCA_impute_method_blq once NCA is run to avoid side effects
-  on.exit({
-    if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
-      rm("PKNCA_impute_method_blq", envir = as.environment(1))
-    }
-  }, add = TRUE)
+  on.exit(
+    {
+      if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
+        rm("PKNCA_impute_method_blq", envir = as.environment(1))
+      }
+    },
+    add = TRUE
+  )
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
@@ -384,7 +387,6 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
-
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
@@ -417,12 +419,11 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
 #' start <- 0
 #' end <- 4
 #' PKNCA_impute_method_start_logslope(conc, time, start, end)
-
 PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., options = list()) { # nolint
   d_conc_time <- data.frame(conc = conc, time = time)
   if (!any(time == start)) {
-    all_concs <- conc[time >= start  &  time <= end]
-    all_times <- time[time >= start  &  time <= end]
+    all_concs <- conc[time >= start & time <= end]
+    all_times <- time[time >= start & time <= end]
     if (!all(is.na(all_concs))) {
       c0 <- PKNCA::pk.calc.c0(all_concs, all_times, time.dose = start, method = "logslope")
       if (!is.na(c0)) {
@@ -595,8 +596,10 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
       conversion_factor = 1
     ) %>%
     # Order the columns to have them in a clean display
-    select(any_of(c(group_conc_cols, group_dose_cols)),
-           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor)
+    select(
+      any_of(c(group_conc_cols, group_dose_cols)),
+      PPTESTCD, PPORRESU, PPSTRESU, conversion_factor
+    )
 }
 
 #' Ensure Unit Columns Exist in PKNCA Object
@@ -640,7 +643,9 @@ ensure_column_unit_exists <- function(pknca_obj, unit_name) {
 #' @returns A data frame containing the strata columns and their minimal set of grouping columns.
 select_minimal_grouping_cols <- function(df, strata_cols) {
   # If there is no strata_cols specified, simply return the original df
-  if (length(strata_cols) == 0) return(df)
+  if (length(strata_cols) == 0) {
+    return(df)
+  }
 
   # Obtain the comb_vals values of the target column(s)
   strata_vals <- df %>%
