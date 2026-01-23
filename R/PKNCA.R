@@ -718,6 +718,54 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
   res
 }
 
+
+#' Checks Before Running NCA
+#'
+#' This function checks that:
+#' 1) exclusions_have_reasons: all manually excluded half-life points in the concentration data
+#' have a non-empty reason provided. If any exclusions are missing a reason, it stops with an error
+#' and prints the affected rows (group columns and time column).
+#'
+#' @param processed_pknca_data A processed PKNCA data object.
+#' @param exclusions_have_reasons Logical; Check that all exclusions have a reason (default: TRUE).
+#'
+#' @return The processed_pknca_data object (input), if checks are successful.
+#'
+#' @details
+#' - If any excluded half-life points are missing a reason, an error is thrown.
+#' - If no exclusions or all have reasons, the function returns the input object.
+#' - Used to enforce good practice/documentation before NCA calculation.
+#'
+#' @examples
+#' # Suppose processed_pknca_data is a valid PKNCA data object
+#' # check_valid_pknca_data(processed_pknca_data)
+check_valid_pknca_data <- function(processed_pknca_data, exclusions_have_reasons = TRUE) {
+  if (exclusions_have_reasons) {
+    excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
+    
+    if (!is.null(excl_hl_col)) {
+      data_conc <- processed_pknca_data$conc$data
+      conc_groups <- group_vars(processed_pknca_data$conc)
+      time_col <- processed_pknca_data$conc$columns$time
+      
+      missing_reasons <- data_conc[[excl_hl_col]] & nchar(data_conc[["REASON"]]) == 0
+      missing_reasons_rows <- data_conc[missing_reasons, ] %>%
+        select(any_of(c(conc_groups, time_col)))
+      
+      if (nrow(missing_reasons_rows) > 0) {
+        stop(
+          "No reason provided for the following half-life exclusions:\n",
+          "\n",
+          paste(capture.output(print(missing_reasons_rows)), collapse = "\n"),
+          "\n",
+          "Please go to `Slope Selection` table and include it"
+        )
+      }
+    }
+  }
+  processed_pknca_data
+}
+
 #' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 #'
 #' This function removes parameters from the PKNCA results that were not requested by the user,
