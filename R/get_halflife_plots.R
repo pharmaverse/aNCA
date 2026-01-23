@@ -198,6 +198,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 #' @param add_annotations Logical, whether to add the subtitle annotation
 #' @param text Optional vector of hover text for points (same length as plot_data)
 #' @returns A plotly object representing the scatter points (plot_data)
+#' @noRd
 get_halflife_plots_single <- function(
   plot_data,
   fit_line_data,
