@@ -112,12 +112,13 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
     )
 
     final_settings <- reactive({
-      req(settings(), parameters_output$selections(), general_exclusions)
-
+      req(settings(), parameters_output$selections())
       current_settings <- settings()
       current_settings$general_exclusions <- general_exclusions
-      current_settings$parameter_selections <- parameters_output$selections()
-
+      current_settings$parameters <- list(
+        selections = parameters_output$selections(),
+        types_df = parameters_output$types_df()
+      )
       current_settings
     })
 
@@ -154,7 +155,6 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
       adnca_data = processed_pknca_data,
       extra_group_vars = extra_group_vars
     )
-    session$userData$ratio_table <- reactive(ratio_table())
 
     # Automatically update the units table when settings are uploaded.
     observeEvent(settings_override(), {

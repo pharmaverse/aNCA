@@ -776,6 +776,37 @@ check_valid_pknca_data <- function(processed_pknca_data, exclusions_have_reasons
   }
   processed_pknca_data
 }
+#' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
+#'
+#' This function removes parameters from the PKNCA results that were not requested by the user,
+#' using a pivoted approach that also handles bioavailability settings.
+#'
+#' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
+#' @return The PKNCA results object with non requested parameters removed from $result.
+#' @export
+remove_pp_not_requested <- function(pknca_res) {
+  params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+  # Reshape intervals, filter
+  params_not_requested <- pknca_res$data$intervals %>%
+    pivot_longer(
+      cols = (any_of(params)),
+      names_to = "PPTESTCD",
+      values_to = "is_requested"
+    ) %>%
+    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+    group_by(across(c(-impute, -is_requested))) %>%
+    summarise(
+      is_requested = any(is_requested),
+      .groups = "drop"
+    ) %>%
+    filter(!is_requested)
+
+  # Filter for requested params based on intervals
+  pknca_res$result <- pknca_res$result %>%
+    anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
+  pknca_res
+}
+
 #' Add Exclusion Reasons to PKNCAdata Object
 #'
 #' This function adds exclusion reasons to the `exclude` column of the concentration object

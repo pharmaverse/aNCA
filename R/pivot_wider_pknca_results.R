@@ -15,6 +15,13 @@
 #'   of the dose, relative to the last reference dose.
 #'   5) Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
 #'   "LAMZLL", "LAMZ" Used to derive `LAMZNPT` and `LAMZMTD`.
+#' @param flag_rules A named list of flagging rules to be applied to the results. Each rule
+#' should be a list with two elements: `is.checked` (logical) indicating whether the rule
+#' should be applied, and `threshold` (numeric) specifying the threshold value for flagging.
+#' The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
+#' (e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").
+#' @param extra_vars_to_keep Optional character vector of variable names to join from the
+#' concentration data to the output. Default is NULL.
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
@@ -24,9 +31,11 @@
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
 #' @importFrom purrr pmap_chr
+#' @importFrom stringr str_detect fixed
 #' @export
 #'
-pivot_wider_pknca_results <- function(myres) {
+
+pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_keep = NULL) {
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
   # ToDo: At some point this will be integrated in PKNCA and will need to be removed//modified
@@ -153,7 +162,32 @@ pivot_wider_pknca_results <- function(myres) {
     ungroup()
 
   # Add "label" attribute to columns
-  add_label_attribute(pivoted_res, myres)
+  pivoted_res <- add_label_attribute(pivoted_res, myres)
+
+  # Add flagging columns for each rule and a general "flagged" column
+  out <- .create_flags_for_profiles(
+    final_results = pivoted_res,
+    myres = myres,
+    flag_rules = flag_rules
+  )
+
+  # If extra_vars_to_keep is provided, join these variables from the conc data
+  if (length(extra_vars_to_keep) > 0) {
+    conc_data <- myres$data$conc$data
+    # Only keep columns that exist in conc_data
+    vars_to_join <- intersect(extra_vars_to_keep, names(conc_data))
+    group_vars <- group_vars(myres$data$conc)
+    if (length(vars_to_join) > 0) {
+      out <- out %>%
+        dplyr::inner_join(
+          dplyr::select(conc_data, dplyr::any_of(c(vars_to_join, group_vars))),
+          by = intersect(names(out),  c(vars_to_join, group_vars))
+        ) %>%
+        dplyr::distinct()
+    }
+  }
+
+  out
 }
 
 #' Helper function to extract exclude values
@@ -169,4 +203,61 @@ pivot_wider_pknca_results <- function(myres) {
   unique_values <- unique(trimws(split_values))
 
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
+}
+
+#' Helper function to add "label" attribute to columns based on parameter names.
+#' @noRd
+#' @keywords internal
+add_label_attribute <- function(df, myres) {
+  mapping_vr <- myres$result %>%
+    mutate(
+      PPTESTCD_unit = case_when(
+        type_interval == "manual" ~ paste0(
+          PPTESTCD, "_", start, "-", end,
+          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+        ),
+        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
+        TRUE ~ PPTESTCD
+      ),
+      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
+    ) %>%
+    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
+    distinct() %>%
+    pull(PPTESTCD_cdisc, PPTESTCD_unit)
+
+  mapping_cols <- intersect(names(df), names(mapping_vr))
+  attrs <- unname(mapping_vr[mapping_cols])
+
+  df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
+    attr(col, "label") <- bw
+    col
+  }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
+  df
+}
+
+.create_flags_for_profiles <- function(final_results, myres, flag_rules) {
+
+  # Add flaging columns in the pivoted results
+  applied_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
+  flag_params <- names(flag_rules)
+  flag_thr <- sapply(flag_rules, FUN =  \(x) x$threshold)
+  flag_rule_msgs <- paste0(flag_params, c(" < ", "<", " > ", " > ", " < "), flag_thr)
+  flag_cols <- names(final_results)[formatters::var_labels(final_results)
+                                    %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
+
+  if (length(flag_params) > 0) {
+    final_results <- final_results %>%
+      rowwise() %>%
+      mutate(
+        flagged = case_when(
+          is.na(Exclude) ~ "ACCEPTED",
+          any(sapply(
+            flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
+          )) ~ "FLAGGED",
+          TRUE ~ "MISSING"
+        )
+      ) %>%
+      ungroup()
+  }
+  final_results
 }
