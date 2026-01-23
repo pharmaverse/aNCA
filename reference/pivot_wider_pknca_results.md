@@ -11,7 +11,7 @@ additional columns.
 ## Usage
 
 ``` r
-pivot_wider_pknca_results(myres)
+pivot_wider_pknca_results(myres, flag_rules = NULL, extra_vars_to_keep = NULL)
 ```
 
 ## Arguments
@@ -35,6 +35,20 @@ pivot_wider_pknca_results(myres)
   5.  Temporarily: CDISC denomination of PK parameters related to
       half-life: "LAMZNPT", "LAMZLL", "LAMZ" Used to derive `LAMZNPT`
       and `LAMZMTD`.
+
+- flag_rules:
+
+  A named list of flagging rules to be applied to the results. Each rule
+  should be a list with two elements: `is.checked` (logical) indicating
+  whether the rule should be applied, and `threshold` (numeric)
+  specifying the threshold value for flagging. The name of each rule
+  should correspond to a parameter in the results data.frame as a
+  PPTESTCD (e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").
+
+- extra_vars_to_keep:
+
+  Optional character vector of variable names to join from the
+  concentration data to the output. Default is NULL.
 
 ## Value
 

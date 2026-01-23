@@ -41,9 +41,12 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_labels.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_mapping.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_f.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratio_app.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/clean_deparse.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_to_iso8601_duration.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_volume_units.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_html_dose_slides.html</loc></url>
@@ -81,6 +84,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/generate_tooltip_text.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_conversion_factor.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/get_label.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/get_session_code.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/identify_target_rows.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/index.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/interval_add_impute.html</loc></url>
@@ -108,6 +112,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/process_data_mean.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/remove_pp_not_requested.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/rm_impute_obs_params.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/select_minimal_grouping_cols.html</loc></url>

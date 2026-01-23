@@ -69,7 +69,7 @@ corresponding units. AUC intervals, if present, are be added as additional colum
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pivot_wider_pknca_results</span><span class="op">(</span><span class="va">myres</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pivot_wider_pknca_results</span><span class="op">(</span><span class="va">myres</span>, flag_rules <span class="op">=</span> <span class="cn">NULL</span>, extra_vars_to_keep <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -86,6 +86,19 @@ of the dose, relative to the last reference dose.</p></li>
 <li><p>Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
 "LAMZLL", "LAMZ" Used to derive <code>LAMZNPT</code> and <code>LAMZMTD</code>.</p></li>
 </ol></dd>
+
+
+<dt id="arg-flag-rules">flag_rules<a class="anchor" aria-label="anchor" href="#arg-flag-rules"></a></dt>
+<dd><p>A named list of flagging rules to be applied to the results. Each rule
+should be a list with two elements: <code>is.checked</code> (logical) indicating whether the rule
+should be applied, and <code>threshold</code> (numeric) specifying the threshold value for flagging.
+The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
+(e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").</p></dd>
+
+
+<dt id="arg-extra-vars-to-keep">extra_vars_to_keep<a class="anchor" aria-label="anchor" href="#arg-extra-vars-to-keep"></a></dt>
+<dd><p>Optional character vector of variable names to join from the
+concentration data to the output. Default is NULL.</p></dd>
 
 </dl></div>
     <div class="section level2">

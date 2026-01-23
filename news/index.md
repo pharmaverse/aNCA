@@ -11,6 +11,8 @@
   defined by ADNCA standards. Any record populated within these columns
   will be excluded for the NCA
   ([\#752](https://github.com/pharmaverse/aNCA/issues/752))
+- R script exported in ZIP folder to re-run and replicate App outputs
+  ([\#789](https://github.com/pharmaverse/aNCA/issues/789))
 - Individual and Mean plots tabs now created using the same function, so
   the layout and plot themes are consistent across both plots
   ([\#712](https://github.com/pharmaverse/aNCA/issues/712))

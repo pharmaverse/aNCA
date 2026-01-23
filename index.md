@@ -26,6 +26,7 @@ possess, the App can:
 - **Produce PP and ADPP** dataset formats of the resulting parameters
 - **Save your analysis settings** and reupload them later to keep on
   analysing!
+- **Reproduce your NCA outside of the app**, using the R script created
 
 ## Installation
 

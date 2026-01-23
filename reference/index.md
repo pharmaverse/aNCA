@@ -79,11 +79,18 @@
 - [`calculate_f()`](https://pharmaverse.github.io/aNCA/reference/calculate_f.md)
   : Calculate bioavailability with pivoted output
 
+- [`calculate_ratio_app()`](https://pharmaverse.github.io/aNCA/reference/calculate_ratio_app.md)
+  : Links the table ratio of the App with the ratio calculations via
+  PKNCA results
+
 - [`calculate_ratios()`](https://pharmaverse.github.io/aNCA/reference/calculate_ratios.md)
   : Calculate Ratios from PKNCA Results
 
 - [`calculate_summary_stats()`](https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.md)
   : Calculate Summary Statistics
+
+- [`calculate_table_ratios()`](https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.md)
+  : Apply Ratio Calculations to PKNCAresult Object
 
 - [`check_slope_rule_overlap()`](https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.md)
   : Check overlap between existing and new slope rulesets
@@ -218,6 +225,10 @@
 - [`get_label()`](https://pharmaverse.github.io/aNCA/reference/get_label.md)
   : Get the Label of a Heading
 
+- [`get_session_code()`](https://pharmaverse.github.io/aNCA/reference/get_session_code.md)
+  : Generate a session script code in R that can replicate the App
+  outputs
+
 - [`interval_add_impute()`](https://pharmaverse.github.io/aNCA/reference/interval_add_impute.md)
   : Add specified imputation methods to the intervals in a PKNCAdata or
   data.frame object.
@@ -294,6 +305,9 @@
 
 - [`read_pk()`](https://pharmaverse.github.io/aNCA/reference/read_pk.md)
   : Reads PK datasets from various file formats.
+
+- [`remove_pp_not_requested()`](https://pharmaverse.github.io/aNCA/reference/remove_pp_not_requested.md)
+  : Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 
 - [`rm_impute_obs_params()`](https://pharmaverse.github.io/aNCA/reference/rm_impute_obs_params.md)
   : Apply Imputation for PKNCA Data
