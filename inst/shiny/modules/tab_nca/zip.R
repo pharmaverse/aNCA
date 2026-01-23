@@ -179,7 +179,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                 dir.create(setts_tmpdir, recursive = TRUE)
                 settings_list <- session$userData$settings()
                 settings_to_save <- list(
-                  settings = settings_list$settings(),
+                  settings = settings_list,
                   slope_rules = list(
                     manual_slopes = session$userData$slope_rules$manual_slopes(),
                     profiles_per_subject = session$userData$slope_rules$profiles_per_subject(),
