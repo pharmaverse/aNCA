@@ -74,7 +74,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data)
+    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, extra_group_vars)
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
@@ -129,7 +129,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
             # Check if there are exclusions that contains a filled reason
             check_valid_pknca_data() %>%
             # Perform PKNCA parameter calculations
-            PKNCA_calculate_nca() %>%
+            PKNCA_calculate_nca(
+              blq_rule = settings()$data_imputation$blq_imputation_rule
+            ) %>%
             # Add bioavailability results if requested
             add_f_to_pknca_results(settings()$bioavailability) %>%
             # Apply standard CDISC names

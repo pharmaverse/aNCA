@@ -12,7 +12,8 @@ PKNCA_update_data_object(
   selected_pcspec,
   should_impute_c0 = TRUE,
   hl_adj_rules = NULL,
-  exclusion_list = NULL
+  exclusion_list = NULL,
+  keep_interval_cols = NULL
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ concentration data. Each item in the list should have:
 \item reason: character string with the exclusion reason (e.g., "Vomiting")
 \item rows: integer vector of row indices to apply the exclusion to
 }}
+
+\item{keep_interval_cols}{Optional character vector of additional columns
+to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results}
 }
 \value{
 A fully configured \code{PKNCAdata} object.
