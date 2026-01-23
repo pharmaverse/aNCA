@@ -89,27 +89,27 @@ requires the following columns in the ADNCA data:
 
 ``` r
 adnca_data <- data.frame(
-STUDYID = rep("STUDY001", 6),
-PCSPEC = rep("Plasma", 6),
-ROUTE = rep("IV", 6),
-DOSETRT = rep("DrugA", 6),
-USUBJID = rep("SUBJ001", 6),
-ATPTREF = rep(1, 6),
-PARAM = rep("AnalyteA", 6),
-AVAL = c(0, 5, 10, 7, 3, 1),
-AVALU = rep("ng/mL", 6),
-DOSEA = rep(100, 6),
-DOSEU = rep("mg", 6),
-AFRLT = c(0, 1, 2, 3, 4, 6),
-ARRLT = c(0, 1, 2, 3, 4, 6),
-NFRLT = c(0, 1, 2, 3, 4, 6),
-ADOSEDUR = rep(0.5, 6),
-RRLTU = rep("hour", 6)
+  STUDYID = rep("STUDY001", 6),
+  PCSPEC = rep("Plasma", 6),
+  ROUTE = rep("IV", 6),
+  DOSETRT = rep("DrugA", 6),
+  USUBJID = rep("SUBJ001", 6),
+  ATPTREF = rep(1, 6),
+  PARAM = rep("AnalyteA", 6),
+  AVAL = c(0, 5, 10, 7, 3, 1),
+  AVALU = rep("ng/mL", 6),
+  DOSEA = rep(100, 6),
+  DOSEU = rep("mg", 6),
+  AFRLT = c(0, 1, 2, 3, 4, 6),
+  ARRLT = c(0, 1, 2, 3, 4, 6),
+  NFRLT = c(0, 1, 2, 3, 4, 6),
+  ADOSEDUR = rep(0.5, 6),
+  RRLTU = rep("hour", 6)
 )
 PKNCA_create_data_object(adnca_data)
 #> Formula for concentration:
 #>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM
-#> <environment: 0x55c1a712b058>
+#> <environment: 0x563079b27708>
 #> Data are dense PK.
 #> With 1 subjects defined in the 'USUBJID' column.
 #> Nominal time column is: NFRLT
