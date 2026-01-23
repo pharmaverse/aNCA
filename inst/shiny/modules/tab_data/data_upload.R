@@ -162,6 +162,11 @@ data_upload_server <- function(id) {
       }) %>%
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
+    
+    observeEvent(raw_data(), {
+      session$userData$raw_data <- raw_data()
+      }
+    )
 
     reactable_server(
       "data_display",

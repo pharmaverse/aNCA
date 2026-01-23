@@ -189,7 +189,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               # Save input dataset used
               data_tmpdir <- file.path(output_tmpdir, "data")
               dir.create(data_tmpdir, recursive = TRUE)
-              data <- read_pk(session$userData$data_path)
+              data <- session$userData$raw_data
               saveRDS(data, paste0(data_tmpdir, "/data.rds"))
 
               # Save a code R script template for the session
