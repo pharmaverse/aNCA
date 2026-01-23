@@ -742,16 +742,16 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 check_valid_pknca_data <- function(processed_pknca_data, exclusions_have_reasons = TRUE) {
   if (exclusions_have_reasons) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
-    
+
     if (!is.null(excl_hl_col)) {
       data_conc <- processed_pknca_data$conc$data
       conc_groups <- group_vars(processed_pknca_data$conc)
       time_col <- processed_pknca_data$conc$columns$time
-      
+
       missing_reasons <- data_conc[[excl_hl_col]] & nchar(data_conc[["REASON"]]) == 0
       missing_reasons_rows <- data_conc[missing_reasons, ] %>%
         select(any_of(c(conc_groups, time_col)))
-      
+
       if (nrow(missing_reasons_rows) > 0) {
         stop(
           "No reason provided for the following half-life exclusions:\n",
