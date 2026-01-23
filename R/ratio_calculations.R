@@ -345,10 +345,9 @@ calculate_ratio_app <- function(
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
 
   ########### This is very App specific ###############
-  if ("ATPTREF" %in% reference_colname) {
-    match_cols <- setdiff(match_cols, c("start", "end"))
-  }
-  if ("ROUTE" %in% reference_colname && aggregate_subject == "no") {
+  atptref_exists <- "ATPTREF" %in% reference_colname
+  route_and_aggregate <- "ROUTE" %in% reference_colname && aggregate_subject == "no"
+  if (atptref_exists || route_and_aggregate) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
   #####################################################
