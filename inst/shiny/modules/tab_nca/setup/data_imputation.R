@@ -23,7 +23,7 @@ data_imputation_ui <- function(id) {
         dropdown(
           div(
             tags$h4("BLQ Imputation Help"),
-            p("BLQ (Below Limit of Quantification) imputation controls"),
+            p("Imputes concentration values for BLQ (Below Limit of Quantification) samples. Only applies to non-observational parameters:"),
             tags$ul(
               tags$li(
                 tags$b("Tmax based:"), " Set rules for BLQ values before/after Tmax."
@@ -95,13 +95,37 @@ data_imputation_ui <- function(id) {
         dropdown(
           div(
             tags$h4("Start Concentration Imputation Help"),
-            p("Imputes a start-of-interval concentration to calculate non-observational parameters:"),
-            tags$ul(
-              tags$li("If start concentration is present always uses it: C0 = C0"),
-              tags$li("If not IV bolus (or metabolite) & first dose: C0 = 0"),
-              tags$li("If not IV bolus (or metabolite) & not first dose with predose: C0 = predose"),
-              tags$li("If IV bolus & monoexponential data: log-back-extrapolation"),
-              tags$li("If IV bolus & not monoexponential data uses first concentration: C0 = C1")
+            p("Imputes a start-of-interval concentration (dose time). It only applies to non-observational parameters. Depending on the interval, the imputation changes:"),
+            tags$table(
+              style = "width:100%; border-collapse:collapse;",
+              tags$thead(
+                tags$tr(
+                  tags$th("Interval scenario", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"),
+                  tags$th("Imputation Rule", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;")
+                )
+              ),
+              tags$tbody(
+                tags$tr(
+                  tags$td("Start concentration already present", style = "padding:4px;"),
+                  tags$td("C0 = C0", style = "padding:4px;")
+                ),
+                tags$tr(
+                  tags$td("Not IV bolus (or metabolite) & first dose", style = "padding:4px;"),
+                  tags$td("C0 = 0", style = "padding:4px;")
+                ),
+                tags$tr(
+                  tags$td("Not IV bolus (or metabolite) & not first dose with predose", style = "padding:4px;"),
+                  tags$td("C0 = predose", style = "padding:4px;")
+                ),
+                tags$tr(
+                  tags$td("IV bolus & monoexponential data", style = "padding:4px;"),
+                  tags$td("log-back-extrapolation", style = "padding:4px;")
+                ),
+                tags$tr(
+                  tags$td("IV bolus & not monoexponential data", style = "padding:4px;"),
+                  tags$td("C0 = C1", style = "padding:4px;")
+                )
+              )
             )
           ),
           style = "unite",
