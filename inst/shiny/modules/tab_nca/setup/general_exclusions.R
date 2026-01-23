@@ -84,15 +84,14 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
       
       if (!is.null(overrides) && length(overrides) > 0) {
         # Reconstruct list with new button IDs to match current session context
-        current_count <- xbtn_counter()
-        rehydrated_list <- lapply(overrides, function(item) {
-          current_count <<- current_count + 1
-          item$xbtn_id <- paste0("remove_exclusion_reason_", current_count)
+        new_ids <- seq_along(overrides) + xbtn_counter()
+        rehydrated_list <- purrr::map2(overrides, new_ids, function(item, id) {
+          item$xbtn_id <- paste0("remove_exclusion_reason_", id)
           item
         })
         
         # Update state
-        xbtn_counter(current_count)
+        xbtn_counter(max(new_ids))
         exclusion_list(rehydrated_list)
       }
     })
