@@ -24,19 +24,31 @@ data_imputation_ui <- function(id) {
           div(
             tags$h4("BLQ Imputation Help"),
             p("Imputes concentration values for BLQ (Below Limit of Quantification) samples. Only applies to non-observational parameters:"),
-            tags$ul(
-              tags$li(
-                tags$b("Tmax based:"), " Set rules for BLQ values before/after Tmax."
+            tags$table(
+              style = "width:100%; border-collapse:collapse; margin-bottom: 8px;",
+              tags$thead(
+                tags$tr(
+                  tags$th("Strategy", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"),
+                  tags$th("Description", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;")
+                )
               ),
-              tags$li(
-                tags$b("Positional:"),
-                " Set rules for BLQ values before, between, or after non-BLQ values."
-              ),
-              tags$li(
-                tags$b("Set value:"), " Assign a single value to all BLQ."
-              ),
-              tags$li(
-                tags$b("No handling:"), " Keep all values as is."
+              tags$tbody(
+                tags$tr(
+                  tags$td("Tmax based", style = "padding:4px;"),
+                  tags$td("Set rules for BLQ values before/after Tmax", style = "padding:4px;")
+                ),
+                tags$tr(
+                  tags$td("Positional", style = "padding:4px;"),
+                  tags$td("Set rules for BLQ values before, between, or after the first/last non-BLQ values", style = "padding:4px;")
+                ),
+                tags$tr(
+                  tags$td("Set value", style = "padding:4px;"),
+                  tags$td("Assign a single value to all BLQ", style = "padding:4px;")
+                ),
+                tags$tr(
+                  tags$td("No handling", style = "padding:4px;"),
+                  tags$td("Keep all values as is", style = "padding:4px;")
+                )
               )
             ),
             tags$b("Custom values:"),
