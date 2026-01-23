@@ -52,6 +52,13 @@ data_upload_server <- function(id) {
     })
 
     datapath <- getOption("aNCA.datapath", NULL)
+    observe({
+      if (!is.null(input$data_upload$datapath)) {
+        session$userData$data_path <- input$data_upload$datapath
+      } else {
+        session$userData$data_path <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
+      }
+    })
 
     raw_data <- (
       reactive({
