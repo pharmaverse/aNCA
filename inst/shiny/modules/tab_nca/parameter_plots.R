@@ -136,24 +136,18 @@ parameter_plots_server <- function(id, res_nca) {
         
         shinyWidgets::virtualSelectInput(
           inputId = ns("selected_colorvars_boxplot"),
-          label = "Select X grouping variables",
+          label = "Select coloring variables to differentiate boxplots",
           choices = x_colouring_vars,
           multiple = TRUE,
           selected = c(res_nca()$data$dose$columns$dose,
                        res_nca()$data$conc$columns$groups$group_analyte),
           search = TRUE,
           hasOptionDescription = TRUE,
-          dropboxDirection = "bottom"
+          dropboxDirection = "bottom",
+          position = "bottom",
+          autoSelectFirstOption = TRUE
         )
       })
-      
-      updatePickerInput(
-        session,
-        "selected_colorvars_boxplot",
-        choices = conc_dose_cols,
-        selected = c(res_nca()$data$dose$columns$dose,
-                     res_nca()$data$conc$columns$groups$group_analyte)
-      )
     })
 
     observeEvent(list(input$selected_xvars_boxplot, input$selected_colorvars_boxplot), {
