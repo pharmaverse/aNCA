@@ -187,7 +187,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
         paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
       },
       content = function(con) {
-        saveRDS(list(settings = final_settings(), slope_rules = slope_rules$manual_slopes()), con)
+        saveRDS(list(settings = final_settings(), slope_rules = slope_rules()), con)
       }
     )
 

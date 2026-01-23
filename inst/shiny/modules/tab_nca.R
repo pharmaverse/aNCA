@@ -81,9 +81,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
+
     session$userData$settings <- list(
       settings =  settings,
-      slope_rules = slope_rules$manual_slopes
+      slope_rules = slope_rules
     ) # This will be saved in the results zip folder
 
     reactable_server("manual_slopes", slope_rules$manual_slopes)
@@ -127,9 +128,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         res <- withCallingHandlers({
           processed_pknca_data %>%
             filter_slopes(
-              slope_rules$manual_slopes(),
-              slope_rules$profiles_per_subject(),
-              slope_rules$slopes_groups(),
+              slope_rules()$manual_slopes,
+              slope_rules()$profiles_per_subject,
+              slope_rules()$slopes_groups,
               check_reasons = TRUE
             ) %>%
             # Perform PKNCA parameter calculations
