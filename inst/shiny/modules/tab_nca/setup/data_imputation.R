@@ -23,18 +23,28 @@ data_imputation_ui <- function(id) {
         dropdown(
           div(
             tags$h4("BLQ Imputation Help"),
-            p("Imputes concentration values for BLQ (Below Limit of Quantification) samples. Only applies to non-observational parameters:"),
+            p(
+              "Imputes concentration values for BLQ (Below Limit of Quantification) samples.",
+              "Only applies to non-observational parameters:"
+            ),
             tags$table(
               style = "width:100%; border-collapse:collapse; margin-bottom: 8px;",
               tags$thead(
                 tags$tr(
-                  tags$th("Strategy", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"),
-                  tags$th("Description", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;")
+                  tags$th(
+                    "Strategy",
+                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
+                  ),
+                  tags$th(
+                    "Description",
+                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
+                  )
                 )
               ),
               tags$tbody(
                 tr("Tmax based", "Set rules for BLQ values before/after Tmax"),
-                tr("Positional", "Set rules for BLQ values before, between, or after the first/last non-BLQ values"),
+                tr("Positional",
+                   "Set rules for BLQ before, between or after the first/last non-BLQ values"),
                 tr("Set value", "Assign a single value to all BLQ"),
                 tr("No handling", "Keep all values as is")
               )
@@ -95,13 +105,23 @@ data_imputation_ui <- function(id) {
         dropdown(
           div(
             tags$h4("Start Concentration Imputation Help"),
-            p("Imputes a start-of-interval concentration (dose time). It only applies to non-observational parameters. Depending on the interval, the imputation changes:"),
+            p(
+              "Imputes a start-of-interval concentration (dose time).",
+              "It only applies to non-observational parameters.",
+              "Depending on the interval, the imputation changes:"
+            ),
             tags$table(
               style = "width:100%; border-collapse:collapse;",
               tags$thead(
                 tags$tr(
-                  tags$th("Interval scenario", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"),
-                  tags$th("Imputation Rule", style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;")
+                  tags$th(
+                    "Interval scenario",
+                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
+                  ),
+                  tags$th(
+                    "Imputation Rule",
+                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
+                  )
                 )
               ),
               tags$tbody(
