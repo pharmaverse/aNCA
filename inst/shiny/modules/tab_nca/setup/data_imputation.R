@@ -80,22 +80,38 @@ data_imputation_ui <- function(id) {
       )
     ),
     hr(),
-    # Start impute (C0) widget
-    input_switch(
-      id = ns("should_impute_c0"),
-      label = "Impute Start Concentration",
-      value = TRUE
-    ),
-    br(),
-    helpText(HTML(paste(
-      "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-      "- If start concentration is present: C0 = C0",
-      "- If not IV bolus (or metabolite) & first dose: C0 = 0",
-      "- If not IV bolus (or metabolite) & not first dose with predose: C0 = predose",
-      "- If IV bolus & monoexponential data: logslope",
-      "- If IV bolus & not monoexponential data: C0 = C1",
-      sep = "<br>"
-    )))
+    # Start impute (C0) widget and help button
+    fluidRow(
+      column(
+        width = 10,
+        input_switch(
+          id = ns("should_impute_c0"),
+          label = "Impute Start Concentration",
+          value = TRUE
+        )
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h4("Start Concentration Imputation Help"),
+            p("Imputes a start-of-interval concentration to calculate non-observational parameters:"),
+            tags$ul(
+              tags$li("If start concentration is present always uses it: C0 = C0"),
+              tags$li("If not IV bolus (or metabolite) & first dose: C0 = 0"),
+              tags$li("If not IV bolus (or metabolite) & not first dose with predose: C0 = predose"),
+              tags$li("If IV bolus & monoexponential data: log-back-extrapolation"),
+              tags$li("If IV bolus & not monoexponential data uses first concentration: C0 = C1")
+            )
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "500px"
+        )
+      )
+    )
   )
 }
 
