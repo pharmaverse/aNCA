@@ -352,19 +352,26 @@ calculate_ratio_app <- function(
   }
   #####################################################
 
-  if (aggregate_subject == "yes") {
-    match_cols <- list(setdiff(match_cols, "USUBJID"))
-  } else if (aggregate_subject == "no") {
-    if (!"USUBJID" %in% match_cols) {
-      stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
+  match_cols <- switch(
+    aggregate_subject,
+    "yes" = {
+      list(setdiff(match_cols, "USUBJID"))
+    },
+    "no" = {  
+      if (!"USUBJID" %in% match_cols) {
+        stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
+      }
+      list(match_cols)
+    },
+    "if-needed" = {
+      match_cols <- list(match_cols)
+      if ("USUBJID" %in% match_cols) {
+        # Perform both individual & aggregated calculations, then eliminate duplicates
+        match_cols <- c(match_cols, list(setdiff(match_cols, "USUBJID")))
+      }
+      match_cols
     }
-    match_cols <- list(match_cols)
-  } else if (aggregate_subject == "if-needed") {
-    if ("USUBJID" %in% match_cols) {
-      # Perform both individual & aggregated calculations, then eliminate duplicates
-      match_cols <- list(match_cols, setdiff(match_cols, "USUBJID"))
-    }
-  }
+  )
 
   if (test_group == "(all other levels)") {
     test_groups <- NULL
@@ -414,4 +421,4 @@ calculate_ratio_app <- function(
       all_of(c("PPTESTCD", group_vars(res$data), "end"))
     ),
     .keep_all = TRUE)
-}
+  }
