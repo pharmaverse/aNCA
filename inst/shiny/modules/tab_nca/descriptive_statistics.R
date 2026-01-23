@@ -133,11 +133,11 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       clean_params_needed <- gsub("\\[.*", "", params_needed)
       
       
-      # Generate dataset for variables and labels in the dropdowns
+      # Generate dataset for parameters and labels in the dropdowns
       formatted_choices <- reactive({
         req(metadata_nca_parameters)
         
-        # Taking the variables and labels from the metadata
+        # Taking the parameters and labels from the metadata
         choices_df <- metadata_nca_parameters %>%
           select(PPTESTCD, PPTEST) %>%
           distinct(PPTESTCD, .keep_all = TRUE) %>%
@@ -154,7 +154,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         }))
       })
       
-      # Rendering the colorby selector
+      # Rendering the parameters to display selector
       output$param_to_display_ui_wrapper <- renderUI({
         req(summary_stats())
         params_to_display <- formatted_choices()
@@ -170,7 +170,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         )
       })
 
-      # Update the select display parameters picker input
+      # Update the select display statistics picker input
       updatePickerInput(
         session,
         "select_display_statistic",
