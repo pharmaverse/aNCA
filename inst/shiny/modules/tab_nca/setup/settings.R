@@ -52,7 +52,8 @@ settings_ui <- function(id) {
         ),
         # Method, NCA parameters, and units table
         fluidRow(
-          column(4,
+          column(
+            4,
             selectInput(
               ns("method"),
               "Extrapolation Method:",
@@ -60,7 +61,8 @@ settings_ui <- function(id) {
               selected = "lin up/log down"
             )
           ),
-          column(4, # pickerinput only enabled when IV and EX data present
+          column(
+            4, # pickerinput only enabled when IV and EX data present
             shinyjs::hidden(
               div(
                 class = "bioavailability-picker",
@@ -80,20 +82,9 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Data Imputation",
-        input_switch(
-          id = ns("should_impute_c0"),
-          label = "Impute Concentration",
-          value = TRUE
-        ),
-        br(),
-        helpText(HTML(paste(
-          "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-          "- If first dose & IV infusion: C0 = 0",
-          "- If not first dose & IV infusion: C0 = predose",
-          "- If IV bolus & monoexponential data: logslope",
-          "- If IV bolus & not monoexponential data: C0 = C1",
-          sep = "<br>"
-        )))
+
+        # Moved input_switch for should_impute_c0 into the data_imputation module
+        data_imputation_ui(ns("data_imputation"))
       ),
       accordion_panel(
         title = "Partial AUCs",
@@ -134,6 +125,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     ns <- session$ns
 
     conc_data <- reactive(adnca_data()$conc$data)
+
+    # Modules for Data Imputation
+    data_imputation <- data_imputation_server("data_imputation")
 
     # File Upload Handling
     observeEvent(c(data(), settings_override()), {
@@ -345,7 +339,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         method = input$method,
         bioavailability = input$bioavailability,
         data_imputation = list(
-          impute_c0 = input$should_impute_c0
+          impute_c0 = data_imputation$should_impute_c0(),
+          blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
         partial_aucs = auc_data(),
         flags = list(

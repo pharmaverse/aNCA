@@ -33,6 +33,8 @@ LAMZ
 LAMZLL
 LAMZNPT
 METABFL
+MRTMDO
+MRTMDP
 MSCW
 NCA
 NCAwXRS
@@ -81,6 +83,8 @@ UI
 USUBJID
 UX
 VOLUMEU
+VSSMDO
+VSSMDP
 XPT
 YAML
 amountu
@@ -115,6 +119,7 @@ lintr
 mL
 macroparameters
 md
+multidose
 nca
 oligo
 pak

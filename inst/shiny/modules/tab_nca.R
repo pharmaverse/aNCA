@@ -74,7 +74,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, settings_override)
+    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, extra_group_vars, settings_override)
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
@@ -133,7 +133,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
               check_reasons = TRUE
             ) %>%
             # Perform PKNCA parameter calculations
-            PKNCA_calculate_nca() %>%
+            PKNCA_calculate_nca(
+              blq_rule = settings()$data_imputation$blq_imputation_rule
+            ) %>%
             # Add bioavailability results if requested
             add_f_to_pknca_results(settings()$bioavailability) %>%
             # Apply standard CDISC names

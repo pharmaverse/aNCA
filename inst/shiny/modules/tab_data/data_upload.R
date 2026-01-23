@@ -82,9 +82,8 @@ data_upload_server <- function(id) {
             # If read_pk fails
             # check if settings file is loaded and then create settings override
             tryCatch({
-              # check if error aligns with what we expect for setttings file
-              if (conditionMessage(e_pk) != "Invalid data format.
-                  Data frame was expected, but received list.") {
+              # check if error aligns with what we expect for settings file
+              if (conditionMessage(e_pk) != "Invalid data format. Data frame was expected, but received list.") {
                 return(list(status = "error", msg = conditionMessage(e_pk), name = name))
               }
 
