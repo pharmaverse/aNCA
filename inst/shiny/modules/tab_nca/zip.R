@@ -177,12 +177,34 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               if ("settings_file" %in% input$res_tree) {
                 setts_tmpdir <- file.path(output_tmpdir, "settings")
                 dir.create(setts_tmpdir, recursive = TRUE)
-                settings_list <- session$userData$settings
-                setings_to_save <- list(
-                  settings = settings_list$settings(),
-                  slope_rules = settings_list$slope_rules()
+                settings_list <- session$userData$settings()
+                settings_to_save <- list(
+                  settings = settings_list,
+                  slope_rules = list(
+                    manual_slopes = session$userData$slope_rules$manual_slopes(),
+                    profiles_per_subject = session$userData$slope_rules$profiles_per_subject(),
+                    slopes_groups = session$userData$slope_rules$slopes_groups()
+                  )
                 )
-                saveRDS(setings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+                saveRDS(settings_to_save, paste0(setts_tmpdir, "/settings.rds"))
+              }
+
+              # Save input dataset used
+              data_tmpdir <- file.path(output_tmpdir, "data")
+              dir.create(data_tmpdir, recursive = TRUE)
+              data <- read_pk(session$userData$data_path)
+              saveRDS(data, paste0(data_tmpdir, "/data.rds"))
+
+              # Save a code R script template for the session
+              if ("r_script" %in% input$res_tree) {
+                script_tmpdir <- file.path(output_tmpdir, "code")
+                dir.create(script_tmpdir, recursive = TRUE)
+                script_template_path <- "www/templates/script_template.R"
+                get_session_code(
+                  template_path = script_template_path,
+                  session = session,
+                  output_path = paste0(script_tmpdir, "/session_code.R")
+                )
               }
 
               # Filter files by selected formats (for demonstration, not full implementation)
@@ -194,7 +216,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                     if (length(table_formats) > 0) paste0("\\.", table_formats),
                     if (length(plot_formats) > 0) paste0("\\.", plot_formats),
                     if (length(slide_formats) > 0) paste0("results_slides\\.", slide_formats),
-                    if ("r_script" %in% input$res_tree) "r_script\\.R",
+                    if ("r_script" %in% input$res_tree) "session_code\\.R",
                     if ("settings_file" %in% input$res_tree) "settings\\.rds"
                   ), collapse = "|"),
                   ")$"

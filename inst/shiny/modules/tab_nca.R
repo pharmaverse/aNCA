@@ -86,6 +86,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       slope_rules = slope_rules$manual_slopes
     ) # This will be saved in the results zip folder
 
+    # This will be saved in the results zip folder
+    session$userData$settings <- settings
+    session$userData$ratio_table <- ratio_table
+    session$userData$slope_rules <- slope_rules
+
     reactable_server("manual_slopes", slope_rules$manual_slopes)
 
     # List all irrelevant warnings to suppres in the NCA calculation
@@ -149,7 +154,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
                 purrr::map(\(x) x$threshold)
             ) %>%
             # Add parameter ratio calculations
-            calculate_table_ratios_app(ratio_table = ratio_table())
+            calculate_table_ratios(ratio_table = ratio_table()) %>%
+            # Keep only parameters requested by the user
+            remove_pp_not_requested()
         },
         warning = function(w) {
           if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
@@ -170,33 +177,6 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
         log_success("NCA results calculated.")
 
-        params_requested <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")),
-                              settings()$bioavailability)
-        # Reshape intervals, filter
-        params_not_requested <- res$data$intervals %>%
-          # add bioavailability if requested
-          mutate(!!!rlang::set_names(TRUE, settings()$bioavailability)) %>%
-          # pivot for requested params
-          pivot_longer(
-            cols = (any_of(params_requested)),
-            names_to = "PPTESTCD",
-            values_to = "is_requested"
-          ) %>%
-          # Translate terms
-          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
-          # Group by all identifying cols EXCEPT the impute column and the value column
-          group_by(across(c(-impute, -is_requested))) %>%
-          # If all are FALSE, any(is_requested) will be FALSE.
-          summarise(
-            is_requested = any(is_requested),
-            .groups = "drop"
-          ) %>%
-          filter(!is_requested)
-
-        # Filter for requested params based on intervals
-        res$result <- res$result %>%
-          anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
-
         res
       }, error = function(e) {
         log_error("Error calculating NCA results:\n{conditionMessage(e)}")
@@ -208,6 +188,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
       })
     }) %>%
       bindEvent(input$run_nca)
+
+    observe({
+      req(res_nca())
+      session$userData$final_units <- res_nca()$data$units
+    })
 
     #' Show slopes results
     pivoted_slopes <- reactive({

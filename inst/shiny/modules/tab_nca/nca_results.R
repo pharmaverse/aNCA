@@ -79,47 +79,15 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       results <- res_nca()
 
       # Transform results
-      final_results <- pivot_wider_pknca_results(results)
+      extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
+      session$userData$extra_vars_to_keep <- extra_vars_to_keep
 
-      # Join subject data to allow the user to group by it
-      conc_data_to_join <- res_nca()$data$conc$data %>%
-        select(any_of(c(
-          grouping_vars(),
-          unname(unlist(res_nca()$data$conc$columns$groups)),
-          "DOSEA",
-          "ATPTREF",
-          "ROUTE"
-        )))
+      final_results <- pivot_wider_pknca_results(
+        results,
+        flag_rules = settings()$flags,
+        extra_vars_to_keep = extra_vars_to_keep
+      )
 
-      final_results <- final_results %>%
-        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct() %>%
-        mutate(
-          flagged = "NOT DONE"
-        )
-
-      # Add flaging column in the pivoted results
-      applied_flags <- purrr::keep(settings()$flags, function(x) x$is.checked)
-      flag_params <- names(settings()$flags)
-      flag_thr <- sapply(settings()$flags, FUN =  function(x) x$threshold)
-      flag_rule_msgs <- paste0(flag_params, c(" < ", " < ", " > ", " > ", " < "), flag_thr)
-      flag_cols <- names(final_results)[formatters::var_labels(final_results)
-                                        %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
-
-      if (length(flag_params) > 0) {
-        final_results <- final_results %>%
-          rowwise() %>%
-          mutate(
-            flagged = case_when(
-              is.na(Exclude) ~ "ACCEPTED",
-              any(sapply(
-                flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
-              )) ~ "FLAGGED",
-              TRUE ~ "MISSING"
-            )
-          ) %>%
-          ungroup()
-      }
       final_results
     })
 
