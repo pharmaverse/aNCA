@@ -130,8 +130,7 @@ data_imputation_server <- function(id) {
 
     blq_imputation_rule <- reactive({
       req(input$select_blq_strategy)
-      rule_list <- switch(
-        input$select_blq_strategy,
+      rule_list <- switch(input$select_blq_strategy,
         "Tmax based imputation" = list(
           before.tmax = input$before_tmax,
           after.tmax = input$after_tmax
@@ -207,4 +206,3 @@ tr <- function(...) {
     lapply(list(...), function(cell) tags$td(cell, style = "padding:4px;"))
   )
 }
-
