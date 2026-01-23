@@ -8,13 +8,7 @@ parameter_plots_ui <- function(id) {
       ),
       uiOutput(ns("group_xvars_ui_wrapper")
       ),
-      pickerInput(
-        inputId = ns("selected_colorvars_boxplot"),
-        label = "Select coloring variables to differentiate boxplots",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("select_colorvars_ui_wrapper")
       ),
       pickerInput(
         inputId = ns("selected_filters_boxplot"),
@@ -134,6 +128,32 @@ parameter_plots_server <- function(id, res_nca) {
           dropboxDirection = "bottom"
         )
       })
+      
+      # Rendering select color vars dropdown
+      output$select_colorvars_ui_wrapper <- renderUI({
+        req(variables_choices())
+        x_colouring_vars <- variables_choices()
+        
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("selected_colorvars_boxplot"),
+          label = "Select X grouping variables",
+          choices = x_colouring_vars,
+          multiple = TRUE,
+          selected = c(res_nca()$data$dose$columns$dose,
+                       res_nca()$data$conc$columns$groups$group_analyte),
+          search = TRUE,
+          hasOptionDescription = TRUE,
+          dropboxDirection = "bottom"
+        )
+      })
+      
+      updatePickerInput(
+        session,
+        "selected_colorvars_boxplot",
+        choices = conc_dose_cols,
+        selected = c(res_nca()$data$dose$columns$dose,
+                     res_nca()$data$conc$columns$groups$group_analyte)
+      )
     })
 
     observeEvent(list(input$selected_xvars_boxplot, input$selected_colorvars_boxplot), {
