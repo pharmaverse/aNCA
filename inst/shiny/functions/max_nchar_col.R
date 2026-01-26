@@ -26,7 +26,9 @@
 #'
 #' @export
 max_nchar_col <- function(data, max_px = 150, expand_factor = 8, overrides = list()) {
-  shiny::req(data)
+  if (is.null(data)) {
+    return(NULL)
+  }
   defs <- purrr::imap(data, ~ {
     max_char <- max(nchar(as.character(.x)), nchar(.y), na.rm = TRUE)
     calc_width <- max_char * expand_factor + 20
