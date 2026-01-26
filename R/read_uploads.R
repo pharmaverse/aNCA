@@ -140,15 +140,15 @@ read_uploaded_file <- function(path, name) {
   
   if (!is.list(obj) || !"settings" %in% names(obj)) return(NULL)
   
-  # if (!is.null(obj$slope_rules)) {
-  #   obj$slope_rules$manual_slopes <- .bind_settings_list(obj$slope_rules$manual_slopes)
-  #   obj$slope_rules$profiles_per_subject <- .bind_settings_list(obj$slope_rules$manual_slopes)
-  # }
-  # 
-  # if (!is.null(obj$settings)) {
-  #   obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
-  #   obj$settings$units <- .bind_settings_list(obj$settings$units)
-  # }
+  if (!is.null(obj$slope_rules)) {
+    obj$slope_rules$manual_slopes <- .bind_settings_list(obj$slope_rules$manual_slopes)
+    obj$slope_rules$profiles_per_subject <- .bind_settings_list(obj$slope_rules$manual_slopes)
+  }
+
+  if (!is.null(obj$settings)) {
+    obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
+    obj$settings$units <- .bind_settings_list(obj$settings$units)
+  }
   
   obj
 }

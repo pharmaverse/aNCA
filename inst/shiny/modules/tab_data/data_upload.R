@@ -73,7 +73,7 @@ data_upload_server <- function(id) {
         }
 
         # Iterate over files: Try reading as Data, then as Settings
-        read_results <- purrr::map2(paths, filenames, .read_uploaded_file)
+        read_results <- purrr::map2(paths, filenames, read_uploaded_file)
 
         # Process results
         successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
