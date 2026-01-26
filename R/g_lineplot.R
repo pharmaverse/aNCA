@@ -77,6 +77,7 @@ g_lineplot <- function(data,
                        y_var,
                        color_by,
                        facet_by = NULL,
+                       group_by = "USUBJID",
                        ylog_scale = FALSE,
                        threshold_value = NULL,
                        dose_data = NULL,
@@ -86,10 +87,7 @@ g_lineplot <- function(data,
                        labels_df = NULL) {
 
   if (nrow(data) == 0) {
-    error_msg <- paste0(
-      "No data available for the plot"
-    )
-    return(error_plot(error_msg))
+    return(error_plot("No data available for the plot"))
   }
 
   # Concatenate unique units, sep by ","
@@ -101,7 +99,6 @@ g_lineplot <- function(data,
   y_lab <- paste0("Concentration [", y_unit, "]")
 
   title <- "PK Concentration - Time Profile"
-  group_var <- "USUBJID"
 
   # --- Tooltip Construction ---
   if (!is.null(tooltip_vars)) {
@@ -129,7 +126,7 @@ g_lineplot <- function(data,
     x = !!sym(x_var),
     y = !!sym(y_var),
     color = color_var,
-    group = !!sym(group_var),
+    group = !!sym(group_by),
     text = tooltip_text
   )) +
     geom_line() +
