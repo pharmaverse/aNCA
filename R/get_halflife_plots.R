@@ -4,11 +4,12 @@
 #'
 #' @param pknca_data PKNCA data object
 #' @param add_annotations Logical, whether to add the subtitle annotation
-#' @return A list with plotly objects and data
+#' @returns A list with plotly objects and data
 #' @importFrom dplyr filter select mutate group_by ungroup group_split %>% any_of
 #' @importFrom stats lm predict as.formula
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
 #' @importFrom PKNCA pk.nca
+#' @export
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 
   # If the input has empty concentration or intervals, just return an empty list
