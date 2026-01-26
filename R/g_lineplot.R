@@ -81,24 +81,13 @@ g_lineplot <- function(data,
                        threshold_value = NULL,
                        dose_data = NULL,
                        palette = NULL,
-                       sd_min = FALSE,
-                       sd_max = FALSE,
                        ci = FALSE,
                        tooltip_vars = NULL,
                        labels_df = NULL) {
-  # Set up plot labels - assumes individual plot unless mean columns are present
-  is_mean_plot <- all(c("Mean", "SD", "N") %in% names(data))
-  # Defensively set mean-plot flags to FALSE if it's not a mean plot
-  if (!is_mean_plot) {
-    sd_min <- FALSE
-    sd_max <- FALSE
-    ci     <- FALSE
-  }
 
   if (nrow(data) == 0) {
     error_msg <- paste0(
-      "No data available for the ",
-      if (is_mean_plot) "mean plot" else "individual plot"
+      "No data available for the plot"
     )
     return(error_plot(error_msg))
   }
@@ -113,12 +102,7 @@ g_lineplot <- function(data,
 
   title <- "PK Concentration - Time Profile"
   group_var <- "USUBJID"
-  if (is_mean_plot) {
-    x_lab <- paste("Nominal", x_lab)
-    y_lab <- paste("Mean", y_lab)
-    title <- paste("Mean", title)
-    group_var <- "color_var"
-  }
+
   # --- Tooltip Construction ---
   if (!is.null(tooltip_vars)) {
     if (!is.null(labels_df)) {
@@ -163,17 +147,7 @@ g_lineplot <- function(data,
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_thr(threshold_value),
-    .add_dose_lines(dose_data, facet_by),
-    .add_mean_layers(
-      is_mean_plot,
-      sd_min,
-      sd_max,
-      ci,
-      color_by,
-      y_var,
-      x_var,
-      group_var
-    )
+    .add_dose_lines(dose_data, facet_by)
   )
   plt + optional_layers
 }
@@ -260,3 +234,90 @@ g_lineplot <- function(data,
   # Return a list of all layers
   list(error_bar_layer, ci_ribbon_layer)
 }
+
+exploration_meanplot <- function(
+  data,
+  x_var,
+  y_var,
+  color_by,
+  facet_by = NULL,
+  ylog_scale = FALSE,
+  threshold_value = NULL,
+  dose_data = NULL,
+  palette = NULL,
+  sd_min = FALSE,
+  sd_max = FALSE,
+  ci = FALSE,
+  tooltip_vars = NULL,
+  labels_df = NULL,
+  selected_analytes = NULL,
+  selected_pcspec = NULL,
+  profiles_selected = NULL
+) {
+
+  mean_data <- process_data_mean(
+    data = data,
+    selected_analytes = selected_analytes,
+    selected_pcspec = selected_pcspec,
+    profiles_selected = profiles_selected,
+    color_by = color_by,
+    facet_by = facet_by,
+    ylog_scale = ylog_scale
+  )
+
+  plot <- g_lineplot(
+    data = mean_data,
+    x_var = x_var,
+    y_var = y_var,
+    color_by = color_by,
+    facet_by = facet_by,
+    ylog_scale = ylog_scale,
+    threshold_value = threshold_value,
+    dose_data = dose_data,
+    palette = palette,
+    sd_min = sd_min,
+    sd_max = sd_max,
+    ci = ci,
+    tooltip_vars = tooltip_vars,
+    labels_df = labels_df
+  )
+
+  x_lab <- ggplot_build(plot)$labels$x
+  y_lab <- ggplot_build(plot)$labels$y
+  title <- ggplot_build(plot)$labels$title
+
+  x_lab <- paste("Nominal", x_lab)
+  y_lab <- paste("Mean", y_lab)
+  title <- paste("Mean", title)
+  plot + list(
+    .add_mean_layers(
+      is_mean_plot = TRUE,
+      sd_min = sd_min,
+      sd_max = sd_max,
+      ci = ci,
+      color_by = color_by,
+      y_var = y_var,
+      x_var = x_var,
+      group_var = "color_var")
+  )
+}
+
+sample_data
+exploration_meanplot(
+  data = sample_data,
+  x_var = "NFRLT",
+  y_var = "Mean",
+  color_by = "DOSEA",
+  sd_min = TRUE,
+  sd_max = TRUE,
+  ci = TRUE,
+  selected_analytes = "Analyte1",
+  selected_pcspec = "Spec1",
+  profiles_selected = NULL,
+  ylog_scale = FALSE,
+  threshold_value = NULL,
+  dose_data = NULL,
+  palette = NULL,
+  tooltip_vars = NULL,
+  labels_df = NULL
+)
