@@ -122,7 +122,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     mutate(
       color = "black",
       color = ifelse(.[[exclude_hl_col]], "red", color),
-      color = ifelse(is_halflife_used, "green", color),
+      color = ifelse(is_halflife_used & !is.na(is_halflife_used), "green", color),
       symbol = ifelse(.[[exclude_hl_col]], "x", "circle")
     ) %>%
     group_by(!!!syms(c(group_vars(pknca_data), "start", "end"))) %>%

@@ -58,14 +58,14 @@ describe("get_halflife_plot", {
 
     plots_details <- plots[[1]]$x$data[[2]]$marker
     exp_plots_details <- list(
-      color = c("red", "red", "green", "green", "green"),
+      color = c("black", "black", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
     )
     plots_with_excl_details <- plots_with_excl[[1]]$x$data[[2]]$marker
     exp_plots_details_with_excl <- list(
-      color = c("red", "red", "red", "green", "green"),
+      color = c("black", "black", "red", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "x", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
@@ -94,7 +94,7 @@ describe("get_halflife_plot", {
 
     plots_details <- plots[[1]]$x$data[[2]]$marker
     exp_plots_details <- list(
-      color = c("red", "red", "green", "green", "green"),
+      color = c("black", "black", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
@@ -120,7 +120,7 @@ describe("get_halflife_plot", {
 
     plots_details <- plots[[1]]$x$data[[2]]$marker
     exp_plots_details <- list(
-      color = c("red", "red", "green", "green", "green"),
+      color = c("black", "black", "green", "green", "green"),
       size = 15,
       symbol = c("circle", "circle", "circle", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
