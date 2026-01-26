@@ -24,7 +24,6 @@
 #' col_defs <- max_nchar_col(adpc,
 #' overrides = list(AVAL = reactable::colDef(format = reactable::colFormat(digits = 2))))
 #'
-#' @export
 max_nchar_col <- function(data, max_px = 150, expand_factor = 8, overrides = list()) {
   if (is.null(data)) {
     return(NULL)
