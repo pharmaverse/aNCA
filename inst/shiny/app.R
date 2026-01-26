@@ -54,7 +54,8 @@ ui <- function() {
       div(
         class = "project-name-container",
         textInput("project_name", label = NULL, placeholder = "Project Name"),
-        icon("file", class = "project-name-icon")
+        icon("file", class = "project-name-icon"),
+        zip_ui("zip_modal")
       )
     ),
 
@@ -161,11 +162,20 @@ server <- function(input, output, session) {
   tab_nca_outputs <- tab_nca_server(
     "nca",
     tab_data_outputs$pknca_data,
-    tab_data_outputs$extra_group_vars
+    tab_data_outputs$extra_group_vars,
+    tab_data_outputs$settings_override
   )
 
   # TLG
   tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
+
+  # ZIP export
+  zip_server(
+    "zip_modal",
+    res_nca = tab_nca_outputs$res_nca,
+    settings = session$userData$settings,
+    grouping_vars = tab_data_outputs$extra_group_vars
+  )
 }
 
 shiny::shinyApp(ui, server)

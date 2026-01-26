@@ -220,6 +220,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       # Subset the list with the final names
       mapping_list[names_to_keep]
     })
+    observe({
+      session$userData$mapping <- mapping()
+    })
 
     mapped_data <- reactive({
       req(adnca_data())

@@ -38,22 +38,22 @@
 #'
 #' @examples
 #' adnca_data <- data.frame(
-#' STUDYID = rep("STUDY001", 6),
-#' PCSPEC = rep("Plasma", 6),
-#' ROUTE = rep("IV", 6),
-#' DOSETRT = rep("DrugA", 6),
-#' USUBJID = rep("SUBJ001", 6),
-#' ATPTREF = rep(1, 6),
-#' PARAM = rep("AnalyteA", 6),
-#' AVAL = c(0, 5, 10, 7, 3, 1),
-#' AVALU = rep("ng/mL", 6),
-#' DOSEA = rep(100, 6),
-#' DOSEU = rep("mg", 6),
-#' AFRLT = c(0, 1, 2, 3, 4, 6),
-#' ARRLT = c(0, 1, 2, 3, 4, 6),
-#' NFRLT = c(0, 1, 2, 3, 4, 6),
-#' ADOSEDUR = rep(0.5, 6),
-#' RRLTU = rep("hour", 6)
+#'   STUDYID = rep("STUDY001", 6),
+#'   PCSPEC = rep("Plasma", 6),
+#'   ROUTE = rep("IV", 6),
+#'   DOSETRT = rep("DrugA", 6),
+#'   USUBJID = rep("SUBJ001", 6),
+#'   ATPTREF = rep(1, 6),
+#'   PARAM = rep("AnalyteA", 6),
+#'   AVAL = c(0, 5, 10, 7, 3, 1),
+#'   AVALU = rep("ng/mL", 6),
+#'   DOSEA = rep(100, 6),
+#'   DOSEU = rep("mg", 6),
+#'   AFRLT = c(0, 1, 2, 3, 4, 6),
+#'   ARRLT = c(0, 1, 2, 3, 4, 6),
+#'   NFRLT = c(0, 1, 2, 3, 4, 6),
+#'   ADOSEDUR = rep(0.5, 6),
+#'   RRLTU = rep("hour", 6)
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
@@ -173,9 +173,10 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   pknca_data_object <- PKNCA::PKNCAdata(
     data.conc = pknca_conc,
     data.dose = pknca_dose,
-    intervals = intervals, #TODO: should be default
+    intervals = intervals, # TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
+
   pknca_data_object
 }
 
@@ -210,6 +211,8 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' concentration data. Each item in the list should have:
 #' - reason: character string with the exclusion reason (e.g., "Vomiting")
 #' - rows: integer vector of row indices to apply the exclusion to
+#' @param keep_interval_cols Optional character vector of additional columns
+#' to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -220,15 +223,14 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
-  adnca_data,
-  method,
-  selected_analytes,
-  selected_profile,
-  selected_pcspec,
-  should_impute_c0 = TRUE,
-  exclusion_list = NULL
-) {
-
+    adnca_data,
+    method,
+    selected_analytes,
+    selected_profile,
+    selected_pcspec,
+    should_impute_c0 = TRUE,
+    exclusion_list = NULL,
+    keep_interval_cols = NULL) {
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
@@ -238,7 +240,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     progress = FALSE,
     keep_interval_cols = c(
       "ATPTREF", "DOSNOA", "type_interval",
-      adnca_data$dose$columns$route, "ROUTE"
+      adnca_data$dose$columns$route, "ROUTE",
+      keep_interval_cols
     ),
     min.hl.r.squared = 0.01
   )
@@ -250,9 +253,11 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    start_from_last_dose = should_impute_c0
+    start_from_last_dose = should_impute_c0,
+    keep_interval_cols = keep_interval_cols
   ) %>%
     # Join route information
+    # TODO (Gerardo): Add ROUTE to keep_interval_cols
     left_join(
       select(
         adnca_data$dose$data,
@@ -280,6 +285,14 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' with the start and end times for each dose, from first and most recent dose.
 #'
 #' @param pknca_data Data object created using PKNCA::PKNCAdata() function.
+#' @param blq_rule A list defining the Below Limit of Quantification (BLQ)
+#' imputation rule using PKNCA format. The list should either contain three elements named:
+#' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
+#' Each element can be a numeric value (substituting the BLQ value), or a string such as
+#' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
+#' which does not specify any BLQ function to use for imputation. It is required if `blq`
+#' is defined in the intervals impute column of the `pknca_data` object, as the function
+#' will be applied to those intervals during the NCA calculation.
 #'
 #' @returns Results object with start and end times for each dose, from first dose
 #' and from most recent dose
@@ -311,10 +324,50 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' nca_results <- PKNCA_calculate_nca(pknca_data)
 #'
 #' @export
-PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
+PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_name_linter
+
+  # Define BLQ imputation method in global environment for PKNCA to access
+  if (!is.null(blq_rule)) {
+    .assign_global(
+      "PKNCA_impute_method_blq", # nolint
+      function(conc, time, ...) { # nolint
+
+        d <- PKNCA::clean.conc.blq(
+          conc = conc,
+          time = time,
+          conc.blq = blq_rule,
+          conc.na = "drop"
+        )
+
+        # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
+        # drop values, this was only affecting BLQ branch (#139) but not main, related
+        # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
+        # done, this values dissappear and then it is considered that those times were
+        # also NA, which causes the error. In PKNCA dropping in imputation works fine,
+        # but aNCA might be doing something special we are missing
+        d_na <- data.frame(
+          conc = rep(NA, sum(!time %in% d$time)), # PKNCA will drop the value
+          time = time[!time %in% d$time]
+        )
+        rbind(d, d_na) %>%
+          arrange(time)
+      }
+    )
+  }
+
+  # Ensure removal of the global PKNCA_impute_method_blq once NCA is run to avoid side effects
+  on.exit(
+    {
+      if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
+        rm("PKNCA_impute_method_blq", envir = as.environment(1))
+      }
+    },
+    add = TRUE
+  )
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
+
 
   dose_data_to_join <- select(
     pknca_data$dose$data,
@@ -334,11 +387,10 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
       end_dose = end - !!sym(results$data$dose$columns$time)
     ) %>%
     select(names(results$result), start_dose, end_dose) %>%
-
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
-    group_by(across(-c(PPSTRES, PPORRES, exclude))) %>%
+    group_by(across(-c(intersect(names(.), c("PPSTRES", "PPORRES", "exclude"))))) %>%
     slice_tail(n = 1) %>%
     ungroup()
 
@@ -367,12 +419,11 @@ PKNCA_calculate_nca <- function(pknca_data) { # nolint: object_name_linter
 #' start <- 0
 #' end <- 4
 #' PKNCA_impute_method_start_logslope(conc, time, start, end)
-
 PKNCA_impute_method_start_logslope <- function(conc, time, start, end, ..., options = list()) { # nolint
   d_conc_time <- data.frame(conc = conc, time = time)
   if (!any(time == start)) {
-    all_concs <- conc[time >= start  &  time <= end]
-    all_times <- time[time >= start  &  time <= end]
+    all_concs <- conc[time >= start & time <= end]
+    all_times <- time[time >= start & time <= end]
     if (!all(is.na(all_concs))) {
       c0 <- PKNCA::pk.calc.c0(all_concs, all_times, time.dose = start, method = "logslope")
       if (!is.na(c0)) {
@@ -545,8 +596,10 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
       conversion_factor = 1
     ) %>%
     # Order the columns to have them in a clean display
-    select(any_of(c(group_conc_cols, group_dose_cols)),
-           PPTESTCD, PPORRESU, PPSTRESU, conversion_factor)
+    select(
+      any_of(c(group_conc_cols, group_dose_cols)),
+      PPTESTCD, PPORRESU, PPSTRESU, conversion_factor
+    )
 }
 
 #' Ensure Unit Columns Exist in PKNCA Object
@@ -590,7 +643,9 @@ ensure_column_unit_exists <- function(pknca_obj, unit_name) {
 #' @returns A data frame containing the strata columns and their minimal set of grouping columns.
 select_minimal_grouping_cols <- function(df, strata_cols) {
   # If there is no strata_cols specified, simply return the original df
-  if (length(strata_cols) == 0) return(df)
+  if (length(strata_cols) == 0) {
+    return(df)
+  }
 
   # Obtain the comb_vals values of the target column(s)
   strata_vals <- df %>%
@@ -661,6 +716,37 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
     res <- PKNCA::exclude(res, FUN = exc_fun)
   }
   res
+}
+
+#' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
+#'
+#' This function removes parameters from the PKNCA results that were not requested by the user,
+#' using a pivoted approach that also handles bioavailability settings.
+#'
+#' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
+#' @return The PKNCA results object with non requested parameters removed from $result.
+#' @export
+remove_pp_not_requested <- function(pknca_res) {
+  params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+  # Reshape intervals, filter
+  params_not_requested <- pknca_res$data$intervals %>%
+    pivot_longer(
+      cols = (any_of(params)),
+      names_to = "PPTESTCD",
+      values_to = "is_requested"
+    ) %>%
+    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+    group_by(across(c(-impute, -is_requested))) %>%
+    summarise(
+      is_requested = any(is_requested),
+      .groups = "drop"
+    ) %>%
+    filter(!is_requested)
+
+  # Filter for requested params based on intervals
+  pknca_res$result <- pknca_res$result %>%
+    anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
+  pknca_res
 }
 
 #' Add Exclusion Reasons to PKNCAdata Object

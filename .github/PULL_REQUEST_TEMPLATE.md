@@ -21,6 +21,8 @@ How to test features not covered by unit tests.
 - [ ] New logic is documented
 - [ ] App or package changes are reflected in NEWS
 - [ ] Package version is incremented
+- [ ] R script works with the new implementation (if applicable)
+- [ ] Settings upload works with the new implementation (if applicable)
 
 ## Notes to reviewer
 
