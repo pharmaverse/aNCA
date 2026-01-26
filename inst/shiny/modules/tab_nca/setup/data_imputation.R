@@ -28,17 +28,11 @@ data_imputation_ui <- function(id) {
               "Only applies to non-observational parameters:"
             ),
             tags$table(
-              style = "width:100%; border-collapse:collapse; margin-bottom: 8px;",
+              class = "imputation-help-table",
               tags$thead(
                 tags$tr(
-                  tags$th(
-                    "Strategy",
-                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
-                  ),
-                  tags$th(
-                    "Description",
-                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
-                  )
+                  tags$th("Strategy"),
+                  tags$th("Description")
                 )
               ),
               tags$tbody(
@@ -111,17 +105,11 @@ data_imputation_ui <- function(id) {
               "Depending on the interval, the imputation changes:"
             ),
             tags$table(
-              style = "width:100%; border-collapse:collapse;",
+              class = "imputation-help-table",
               tags$thead(
                 tags$tr(
-                  tags$th(
-                    "Interval scenario",
-                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
-                  ),
-                  tags$th(
-                    "Imputation Rule",
-                    style = "text-align:left; border-bottom:1px solid #ddd; padding:4px;"
-                  )
+                  tags$th("Interval scenario"),
+                  tags$th("Imputation Rule")
                 )
               ),
               tags$tbody(
