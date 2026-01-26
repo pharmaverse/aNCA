@@ -133,9 +133,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
     reactable_server(
       "filtered_data_display",
       filtered_data,
-      height = "50vh",
-      defaultPageSize = 25,
-      style = list(fontSize = "0.75em")
+      height = "50vh"
     )
 
     filtered_data

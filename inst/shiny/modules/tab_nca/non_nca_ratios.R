@@ -188,12 +188,10 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
     reactable_server(
       "results",
       full_output,
-      download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0("Ratios_result_", Sys.Date()),
       defaultPageSize = 10,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 50, nrow(full_output()))),
-      style = list(fontSize = "0.75em")
+      download_buttons = c("csv", "xlsx"),
+      pageSizeOptions = reactive(c(10, 25, 50, nrow(full_output()))),
+      file_name = function() paste0("Ratios_result_", Sys.Date())
     )
 
     # Save the results in the output folder

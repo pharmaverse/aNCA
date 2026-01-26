@@ -192,10 +192,7 @@ excretion_server <- function(id, input_pknca_data) {
       "results_table",
       results_output,
       defaultPageSize = 10,
-      compact = TRUE,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output())))
     )
 
     # Save the results in the output folder

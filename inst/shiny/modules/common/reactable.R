@@ -32,7 +32,6 @@ reactable_server <- function(
 ) {
   moduleServer(id, function(input, output, session) {
     default_reactable_opts <- list(
-      fullWidth = FALSE,
       searchable = TRUE,
       sortable = TRUE,
       highlight = TRUE,
@@ -42,7 +41,8 @@ reactable_server <- function(
       defaultPageSize = 25,
       showPageSizeOptions = TRUE,
       compact = TRUE,
-      style = list(fontSize = "0.75em"),
+      style = list(fontSize = "0.75em",
+                   maxHeight = "68vh"),
       class = "reactable-table",
       columns = columns
     )

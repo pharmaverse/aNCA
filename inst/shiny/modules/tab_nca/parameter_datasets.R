@@ -18,25 +18,19 @@ parameter_datasets_server <- function(id, res_nca) {
       "pp_dataset",
       reactive(CDISC()$pp),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_pp"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_name(), "_pp")
     )
     reactable_server(
       "adpp_dataset",
       reactive(CDISC()$adpp),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_adpp"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_name(), "_adpp")
     )
     reactable_server(
       "adnca_dataset",
       reactive(CDISC()$adnca),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_adnca"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_name(), "_adnca")
     )
 
     # Save the results in the output folder

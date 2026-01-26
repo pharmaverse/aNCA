@@ -99,7 +99,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     session$userData$ratio_table <- ratio_table
     session$userData$slope_rules <- slope_rules
 
-    reactable_server("manual_slopes", slope_rules$manual_slopes,
+    reactable_server("manual_slopes", 
+                     slope_rules$manual_slopes,
                      columns = NULL)
 
     # List all irrelevant warnings to suppres in the NCA calculation
@@ -219,12 +220,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     reactable_server(
       "slope_results",
       pivoted_slopes,
-      download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0("NCA_Slope_Results_", Sys.Date()),
       defaultPageSize = 10,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 50, nrow(pivoted_slopes()))),
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, nrow(pivoted_slopes()))),
+      download_buttons = c("csv", "xlsx"),
+      file_name = function() paste0("NCA_Slope_Results_", Sys.Date())
     )
 
     #' Prepares and displays the pivoted NCA results
