@@ -62,7 +62,6 @@ process_data_individual <- function(data,
     processed_data <- processed_data %>% filter(ATPTREF %in% profiles_selected)
   }
 
-
   processed_data
 }
 
@@ -179,7 +178,7 @@ exploration_individualplot <- function(
     facet_by = NULL,
     ylog_scale = FALSE,
     threshold_value = NULL,
-    dose_data = NULL,
+    show_dose = FALSE,
     palette = NULL,
     tooltip_vars = NULL,
     labels_df = NULL,
@@ -189,8 +188,28 @@ exploration_individualplot <- function(
     selected_usubjids = NULL
 ) {
 
+  data <- if (show_dose) {
+    time_dose <- pknca_data$dose$columns$time
+    dose_group_vars <- group_vars(pknca_data$dose)
+
+    left_join(
+      pknca_data$conc$data,
+      pknca_data$dose$data %>%
+        mutate(TIME_DOSE = !!sym(time_dose)) %>%
+        select(!!!syms(c(dose_group_vars, "TIME_DOSE"))),
+      by = dose_group_vars
+    ) %>%
+      filter(TIME_DOSE <= !!sym(pknca_data$conc$columns$time)) %>%
+      # For each sample time, get the most recent TIME_DOSE
+      group_by(!!!syms(setdiff(names(pknca_data$conc$data), "TIME_DOSE"))) %>%
+      arrange(TIME_DOSE) %>%
+      slice_tail(n = 1)
+  } else {
+    pknca_data$conc$data
+  }
+
   individual_data <- process_data_individual(
-    data = pknca_data$conc$data,
+    data = data,
     selected_usubjids = selected_usubjids,
     selected_analytes = selected_analytes,
     selected_pcspec = selected_pcspec,
@@ -213,10 +232,10 @@ exploration_individualplot <- function(
     group_by = group_by,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
-    dose_data = dose_data,
     palette = palette,
     tooltip_vars = tooltip_vars,
-    labels_df = labels_df
+    labels_df = labels_df,
+    vline_var = if (show_dose) "TIME_DOSE" else NULL
   )
 }
 
@@ -264,21 +283,41 @@ exploration_meanplot <- function(
     selected_pcspec = NULL,
     profiles_selected = NULL
 ) {
-  
+
+  time_sample <- pknca_data$conc$columns$time
+  data <- if (show_dose) {
+    time_dose <- pknca_data$dose$columns$time
+    dose_group_vars <- group_vars(pknca_data$dose)
+
+    left_join(
+      pknca_data$conc$data,
+      pknca_data$dose$data %>%
+        mutate(TIME_DOSE = !!sym(time_dose)) %>%
+        select(!!!syms(c(dose_group_vars, "TIME_DOSE"))),
+      by = dose_group_vars
+    ) %>%
+      filter(TIME_DOSE <= !!sym(time_sample)) %>%
+      # For each sample time, get the most recent TIME_DOSE
+      group_by(!!!syms(setdiff(names(pknca_data$conc$data), "TIME_DOSE"))) %>%
+      arrange(TIME_DOSE) %>%
+      slice_tail(n = 1)
+  } else {
+    pknca_data$conc$data
+  }
+
   mean_data <- process_data_mean(
-    data = pknca_data$conc$data,
+    data = data,
     selected_analytes = selected_analytes,
     selected_pcspec = selected_pcspec,
     profiles_selected = profiles_selected,
     color_by = color_by,
-    facet_by = facet_by,
+    facet_by = c(facet_by, "TIME_DOSE"),
     ylog_scale = ylog_scale
   )
 
   time_nominal_col <- pknca_data$conc$columns$time.nominal
   x_var <- if (!is.null(time_nominal_col)) time_nominal_col else pknca_data$conc$columns$time
   y_var <- "Mean"
-  dose_data <- if (show_dose) pknca_data$dose$data else NULL
 
   plot <- g_lineplot(
     data = mean_data,
@@ -289,10 +328,10 @@ exploration_meanplot <- function(
     group_by = color_by,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
-    dose_data = dose_data,
     palette = palette,
     tooltip_vars = tooltip_vars,
-    labels_df = labels_df
+    labels_df = labels_df,
+    vline_var = if (show_dose) "TIME_DOSE" else NULL
   )
 
   plot_build <- ggplot_build(plot)
@@ -319,7 +358,7 @@ exploration_meanplot <- function(
       group_var = "color_var")
   )
 }
-# 
+
 # sample_data
 # exploration_meanplot(
 #   data = sample_data,

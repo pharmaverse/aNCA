@@ -86,7 +86,8 @@ g_lineplot <- function(data,
                        palette = NULL,
                        ci = FALSE,
                        tooltip_vars = NULL,
-                       labels_df = NULL) {
+                       labels_df = NULL,
+                       vline_var = NULL) {
 
   if (nrow(data) == 0) {
     return(error_plot("No data available for the plot"))
@@ -140,13 +141,15 @@ g_lineplot <- function(data,
       color = paste(color_by, collapse = ", ")
     ) +
     theme_bw()
+
   # Add optional layers
   optional_layers <- list(
     .add_palette(palette),
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_thr(threshold_value),
-    .add_dose_lines(dose_data, facet_by)
+    #.add_dose_lines(dose_data, facet_by),
+    .add_vline(data, vline_var)
   )
   plt + optional_layers
 }
@@ -186,16 +189,24 @@ g_lineplot <- function(data,
   geom_hline(yintercept = thr, linetype = "dotted", color = "red")
 }
 
-#' @noRd
-.add_dose_lines <- function(dose_data, facet_by) {
-  if (is.null(dose_data)) {
+# #' @noRd
+# .add_dose_lines <- function(dose_data, facet_by) {
+#   if (is.null(dose_data)) {
+#     return(NULL)
+#   }
+#   browser()
+#   dose_info <- dose_data %>%
+#     select(all_of(unique(c(facet_by, "TIME_DOSE", "DOSEA")))) %>%
+#     distinct() %>%
+#     filter(!is.na(TIME_DOSE))
+#   geom_vline(data = dose_info, aes(xintercept = TIME_DOSE), linetype = "dotted", color = "grey")
+# }
+
+.add_vline <- function(data, vline_var) {
+  if (is.null(vline_var)) {
     return(NULL)
   }
-  dose_info <- dose_data %>%
-    select(all_of(unique(c(facet_by, "TIME_DOSE", "DOSEA")))) %>%
-    distinct() %>%
-    filter(!is.na(TIME_DOSE))
-  geom_vline(data = dose_info, aes(xintercept = TIME_DOSE), linetype = "dotted", color = "grey")
+  geom_vline(data = data, aes(xintercept = !!sym(vline_var)), linetype = "dotted", color = "blue")
 }
 
 #' @noRd

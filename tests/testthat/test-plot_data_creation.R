@@ -313,6 +313,24 @@ describe("exploration_individualplot: Individual Plot Mode", {
     gg_build <- ggplot_build(p)
     expect_true(any(grepl("No data available", gg_build[[1]][[1]]$label)))
   })
+
+  it("shows dose lines when show_dose is TRUE", {
+    p <- exploration_individualplot(
+      pknca_data = sample_data,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      facet_by = "PARAM",
+      selected_analytes = analytes[1],
+      selected_pcspec = pcspecs[1],
+      selected_usubjids = subjects[1]
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomVline" %in% layer_classes)
+
+    vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
+    # Check vline data contains facet variables
+    expect_true(all("PARAM" %in% names(vline_layer$data)))
+  })
 })
 
 describe("exploration_meanplot: Mean Plot Mode", {
@@ -382,6 +400,23 @@ describe("exploration_meanplot: Mean Plot Mode", {
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomErrorbar" %in% layer_classes)
     expect_true("GeomRibbon" %in% layer_classes)
+  })
+
+  it("shows dose lines when show_dose is TRUE", {
+    p <- exploration_meanplot(
+      pknca_data = sample_data,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      facet_by = "PARAM",
+      selected_analytes = analytes[1],
+      selected_pcspec = pcspecs[1]
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomVline" %in% layer_classes)
+
+    vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
+    # Check vline data contains facet variables
+    expect_true(all("PARAM" %in% names(vline_layer$data)))
   })
 
   it("handles empty data.frame with a plot informing of no data", {
