@@ -60,7 +60,7 @@ pknca_obj <- preprocessed_adnca %>%
     selected_profile = session$userData$settings$profile,
     selected_pcspec = session$userData$settings$pcspec,
     should_impute_c0 = session$userData$settings$data_imputation$impute_c0,
-    exclusion_list = session$userData$settings$general_exclusions$exclusion_list,
+    exclusion_list = session$userData$settings$general_exclusions,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE"))
   ) %>%
 
