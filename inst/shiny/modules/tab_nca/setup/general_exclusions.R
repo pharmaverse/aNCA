@@ -77,11 +77,11 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
     # Store the list of manual exclusions and a counter for unique button IDs
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
-    
+
     # Initalise settings override if available
     observeEvent(general_exclusions_override(), {
       overrides <- general_exclusions_override()
-      
+
       if (!is.null(overrides) && length(overrides) > 0) {
         # Reconstruct list with new button IDs to match current session context
         new_ids <- seq_along(overrides) + xbtn_counter()
@@ -89,7 +89,7 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
           item$xbtn_id <- paste0("remove_exclusion_reason_", id)
           item
         })
-        
+
         # Update state
         xbtn_counter(max(new_ids))
         exclusion_list(rehydrated_list)

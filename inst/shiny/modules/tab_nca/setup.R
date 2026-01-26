@@ -58,7 +58,11 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       imported_settings
     )
 
-    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data, general_excl_override)
+    general_exclusions <- general_exclusions_server(
+      "general_exclusions",
+      processed_pknca_data,
+      general_excl_override
+    )
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
