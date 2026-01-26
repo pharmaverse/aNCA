@@ -152,7 +152,7 @@ process_data_mean <- function(data,
 #' This function generates a line plot for individual pharmacokinetic (PK) concentration-time profiles (spaghetti plots).
 #' It supports filtering by subject, analyte, specimen, and profile, and allows customization of axes, color, faceting, and tooltips.
 #'
-#' @param data A data.frame containing the raw PK data.
+#' @param pknca_data A PKNCAdata object containing the raw PK concentration data.
 #' @param x_var Character string specifying the column name for the x-axis.
 #' @param y_var Character string specifying the column name for the y-axis (typically "AVAL").
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
@@ -172,9 +172,9 @@ process_data_mean <- function(data,
 #' @seealso [g_lineplot()], [process_data_individual()]
 #' @export
 exploration_individualplot <- function(
-    data,
-    x_var,
-    y_var,
+    pknca_data,
+    # x_var,
+    # y_var,
     color_by,
     facet_by = NULL,
     ylog_scale = FALSE,
@@ -188,23 +188,29 @@ exploration_individualplot <- function(
     profiles_selected = NULL,
     selected_usubjids = NULL
 ) {
-  
+
   individual_data <- process_data_individual(
-    data = data,
+    data = pknca_data$conc$data,
     selected_usubjids = selected_usubjids,
     selected_analytes = selected_analytes,
     selected_pcspec = selected_pcspec,
     profiles_selected = profiles_selected,
     ylog_scale = ylog_scale
   )
-  
+
+  x_var <- pknca_data$conc$columns$time # or ARRLT for 1 profile, which does not make sense...
+  y_var <- pknca_data$conc$columns$concentration
+  x_var_unit <- pknca_data$conc$columns$timeu
+  y_var_unit <- pknca_data$conc$columns$concu
+  group_by <- pknca_data$conc$columns$subject
+
   g_lineplot(
     data = individual_data,
     x_var = x_var,
     y_var = y_var,
     color_by = color_by,
     facet_by = facet_by,
-    group_by = "USUBJID",
+    group_by = group_by,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     dose_data = dose_data,
@@ -220,7 +226,7 @@ exploration_individualplot <- function(
 #' This function generates a line plot for mean pharmacokinetic (PK) concentration-time profiles.
 #' It supports error bars (SD), confidence intervals, faceting, and custom tooltips, and allows filtering by analyte, specimen, and profile.
 #'
-#' @param data A data.frame containing the raw PK data.
+#' @param pknca_data A PKNCAdata object containing the raw PK concentration data.
 #' @param x_var Character string specifying the column name for the x-axis.
 #' @param y_var Character string specifying the column name for the y-axis (typically "Mean").
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
@@ -242,14 +248,12 @@ exploration_individualplot <- function(
 #' @seealso [g_lineplot()], [process_data_mean()]
 #' @export
 exploration_meanplot <- function(
-    data,
-    x_var,
-    y_var,
+    pknca_data,
     color_by,
     facet_by = NULL,
     ylog_scale = FALSE,
     threshold_value = NULL,
-    dose_data = NULL,
+    show_dose = FALSE,
     palette = NULL,
     sd_min = FALSE,
     sd_max = FALSE,
@@ -262,7 +266,7 @@ exploration_meanplot <- function(
 ) {
   
   mean_data <- process_data_mean(
-    data = data,
+    data = pknca_data$conc$data,
     selected_analytes = selected_analytes,
     selected_pcspec = selected_pcspec,
     profiles_selected = profiles_selected,
@@ -270,6 +274,11 @@ exploration_meanplot <- function(
     facet_by = facet_by,
     ylog_scale = ylog_scale
   )
+
+  time_nominal_col <- pknca_data$conc$columns$time.nominal
+  x_var <- if (!is.null(time_nominal_col)) time_nominal_col else pknca_data$conc$columns$time
+  y_var <- "Mean"
+  dose_data <- if (show_dose) pknca_data$dose$data else NULL
 
   plot <- g_lineplot(
     data = mean_data,

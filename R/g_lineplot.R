@@ -26,6 +26,8 @@
 #'   dataset that are used to determine the color of the lines and points.
 #' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
+#' @param group_by A character string specifying the column name used to group
+#'  the lines. Default is NULL for no grouping.
 #' @param ylog_scale A logical value (`TRUE` or `FALSE`) indicating whether to use
 #'  a logarithmic scale for the y-axis.
 #' @param threshold_value A numeric value for the y-intercept of the threshold line.
@@ -77,7 +79,7 @@ g_lineplot <- function(data,
                        y_var,
                        color_by,
                        facet_by = NULL,
-                       group_by = "USUBJID",
+                       group_by = NULL,
                        ylog_scale = FALSE,
                        threshold_value = NULL,
                        dose_data = NULL,
@@ -126,7 +128,7 @@ g_lineplot <- function(data,
     x = !!sym(x_var),
     y = !!sym(y_var),
     color = color_var,
-    group = !!sym(group_by),
+    group = if (!is.null(group_by)) !!sym(group_by) else NULL,
     text = tooltip_text
   )) +
     geom_line() +
