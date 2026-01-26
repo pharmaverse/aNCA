@@ -37,6 +37,20 @@ describe("format_pkncaconc_data", {
       )
     )
   })
+  
+  it("handles nca_exclude_reason_columns correctly", {
+    df_conc <- format_pkncaconc_data(ADNCA,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DOSETRT", "PARAM"),
+                                     time_column = "AFRLT",
+                                     rrlt_column = "ARRLT",
+                                     nca_exclude_reason_columns = c("RACE"))
+    
+     
+    expect_false(c("RACE") %in% colnames(df_conc)) 
+    expect_s3_class(df_conc, "data.frame")
+    
+  })
 
   it("filters EVID if column is present", {
     # Create base data with EVID = 0
