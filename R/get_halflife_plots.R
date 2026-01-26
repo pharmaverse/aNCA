@@ -10,39 +10,39 @@
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
 #' @importFrom PKNCA pk.nca
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
-  
+
   # If the input has empty concentration or intervals, just return an empty list
   if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
     return(list(plots = list(), data = list()))
   }
-  
+
   # Identify column names
   time_col <- pknca_data$conc$columns$time
   conc_col <- pknca_data$conc$columns$concentration
   timeu_col <- pknca_data$conc$columns$timeu
   concu_col <- pknca_data$conc$columns$concu
   exclude_hl_col <- pknca_data$conc$columns$exclude_half.life
-  
+
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
     pknca_data$conc$data[["exclude_half.life"]] <- FALSE
     exclude_hl_col <- "exclude_half.life"
   }
-  
+
   # Adjust the input to compute half-life & show original row number
   pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data))
   pknca_data$intervals <- pknca_data$intervals %>%
     filter(type_interval == "main", half.life) %>%
     unique()
   o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
-  
+
   if (!"PPSTRES" %in% names(o_nca$result)) {
     o_nca$result$PPSTRES <- o_nca$result$PPORRES
     if ("PPORRESU" %in% names(o_nca$result)) {
       o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
     }
   }
-  
+
   # Prepare an object with all plot information
   wide_output <- o_nca
   wide_output$result <- wide_output$result %>%
@@ -52,10 +52,10 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     ) %>%
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
-  
+
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()
-  
+
   d_conc_with_res <- merge(
     pknca_data$conc$data %>%
       select(
@@ -67,7 +67,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     by = c(group_vars(pknca_data))
   ) %>%
     dplyr::filter(.[[time_col]] >= start & .[[time_col]] <= end)
-  
+
   # Mark points used in half-life calculation
   info_per_plot_list <- d_conc_with_res %>%
     # Indicate plot details
@@ -116,7 +116,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     filter(.[[time_col]] <= tlast) %>%
     # Disconsider BLQ points at the middle as well
     filter(.[[conc_col]] > 0)
-  
+
   info_per_plot_list <- info_per_plot_list %>%
     mutate(
       color = ifelse(is.na(is_halflife_used), "black",
@@ -125,12 +125,12 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     ) %>%
     group_by(!!!syms(c(group_vars(pknca_data), "start", "end"))) %>%
     group_split()
-  
+
   plot_list <- list()
   data_list <- list()
   for (i in seq_along(info_per_plot_list)) {
     df <- info_per_plot_list[[i]]
-    
+
     # Create line data
     if (any(!is.na(df$is_halflife_used))) {
       df_fit <- df[df$is_halflife_used, ]
@@ -145,7 +145,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
       )
       colnames(fit_line_data)[1] <- time_col
     }
-    
+
     # Unique plot ID based on grouping variables and interval times
     plotid_vars <- c(group_vars(pknca_data), "start", "end")
     plotid <- paste0(
@@ -154,7 +154,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
         collapse = "_"
       )
     )
-    
+
     # Create the plot
     plot_list[[plotid]] <- get_halflife_plots_single(
       fit_line_data = fit_line_data,
@@ -200,19 +200,19 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 #' @returns A plotly object representing the scatter points (plot_data)
 #' @noRd
 get_halflife_plots_single <- function(
-    plot_data,
-    fit_line_data,
-    time_col,
-    conc_col,
-    group_vars,
-    title,
-    subtitle,
-    xlab,
-    ylab,
-    color,
-    symbol,
-    add_annotations = TRUE,
-    text = NULL
+  plot_data,
+  fit_line_data,
+  time_col,
+  conc_col,
+  group_vars,
+  title,
+  subtitle,
+  xlab,
+  ylab,
+  color,
+  symbol,
+  add_annotations = TRUE,
+  text = NULL
 ) {
   if (is.null(text)) {
     text <- paste0(
