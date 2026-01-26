@@ -38,9 +38,8 @@ nca_results_ui <- function(id) {
       )
     ),
 
-    # Download buttons
-    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data"),
-    downloadButton(ns("download_zip"), "Download All Results as ZIP")
+    # Download button
+    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
   )
 }
 
@@ -80,130 +79,17 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       results <- res_nca()
 
       # Transform results
-      final_results <- pivot_wider_pknca_results(results)
+      extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
+      session$userData$extra_vars_to_keep <- extra_vars_to_keep
 
-      # Join subject data to allow the user to group by it
-      conc_data_to_join <- res_nca()$data$conc$data %>%
-        select(any_of(c(
-          grouping_vars(),
-          unname(unlist(res_nca()$data$conc$columns$groups)),
-          "DOSEA",
-          "ATPTREF",
-          "ROUTE"
-        )))
+      final_results <- pivot_wider_pknca_results(
+        results,
+        flag_rules = settings()$flags,
+        extra_vars_to_keep = extra_vars_to_keep
+      )
 
-      final_results <- final_results %>%
-        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct() %>%
-        mutate(
-          flagged = "NOT DONE"
-        )
-
-      # Add flaging column in the pivoted results
-      applied_flags <- purrr::keep(settings()$flags, function(x) x$is.checked)
-      flag_params <- names(settings()$flags)
-      flag_thr <- sapply(settings()$flags, FUN =  function(x) x$threshold)
-      flag_rule_msgs <- paste0(flag_params, c(" < ", " < ", " > ", " > ", " < "), flag_thr)
-      flag_cols <- names(final_results)[formatters::var_labels(final_results)
-                                        %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
-
-      if (length(flag_params) > 0) {
-        final_results <- final_results %>%
-          rowwise() %>%
-          mutate(
-            flagged = case_when(
-              is.na(Exclude) ~ "ACCEPTED",
-              any(sapply(
-                flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
-              )) ~ "FLAGGED",
-              TRUE ~ "MISSING"
-            )
-          ) %>%
-          ungroup()
-      }
       final_results
     })
-
-    # Provide the zip file for download
-    output$download_zip <- downloadHandler(
-      filename = function() {
-        project <- session$userData$project_name()
-        datetime <- attr(res_nca(), "provenance")$datetime
-        paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
-      },
-      content = function(fname) {
-        tryCatch({
-          shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
-
-            # Create an output folder with all plots, tables and listings
-            output_tmpdir <- file.path(tempdir(), "output")
-            save_output(output = session$userData$results, output_path = output_tmpdir)
-            incProgress(0.1)
-
-            # Create presentation slides
-            res_nca <- res_nca()
-            res_dose_slides <- get_dose_esc_results(
-              o_nca = res_nca,
-              group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
-              facet_vars = "DOSEA",
-              statistics = c("Mean"),
-              stats_parameters = c(
-                "CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"
-              ),
-              info_vars = grouping_vars()
-            )
-            presentations_path <- paste0(output_tmpdir, "/presentations")
-            dir.create(presentations_path)
-
-            create_qmd_dose_slides(
-              res_dose_slides = res_dose_slides,
-              quarto_path = paste0(presentations_path, "/results_slides.qmd"),
-              title = paste0("NCA Results", "\n", session$userData$project_name()),
-              use_plotly = TRUE
-            )
-            incProgress(0.3)
-            create_pptx_dose_slides(
-              res_dose_slides = res_dose_slides,
-              path = paste0(presentations_path, "/results_slides.pptx"),
-              title = paste0("NCA Results", "\n", session$userData$project_name()),
-              template = "www/templates/template.pptx"
-            )
-            incProgress(0.6)
-
-            # Create a settings folder
-            setts_tmpdir <- file.path(output_tmpdir, "settings")
-            dir.create(setts_tmpdir, recursive = TRUE)
-            settings_list <- session$userData$settings
-            setings_to_save <- list(
-              settings = settings_list$settings(),
-              slope_rules = settings_list$slope_rules()
-            )
-
-            yaml::write_yaml(setings_to_save, paste0(setts_tmpdir, "/settings.yaml"))
-
-            files <- list.files(
-              output_tmpdir,
-              pattern = paste0(
-                "(\\.csv)|(\\.rds)|(\\.yaml)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
-                "|(results_slides\\.pptx)|(results_slides\\.qmd)$"
-              ),
-              recursive = TRUE
-            )
-
-            wd <- getwd()
-            on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
-            setwd(output_tmpdir)
-            incProgress(0.9)
-            zip::zipr(zipfile = fname, files = files, mode = "mirror")
-            incProgress(1)
-          })
-        }, error = function(e) {
-          message("Download Error:")
-          message(e$message)
-          stop(e)
-        })
-      }
-    )
 
     observeEvent(final_results(), {
       req(final_results())

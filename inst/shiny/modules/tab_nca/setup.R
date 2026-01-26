@@ -42,7 +42,7 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data, settings_override) {
+setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive(settings_override()$settings)
@@ -58,7 +58,11 @@ setup_server <- function(id, data, adnca_data, settings_override) {
       imported_settings
     )
 
-    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
+    general_exclusions <- general_exclusions_server(
+      "general_exclusions",
+      processed_pknca_data,
+      general_excl_override
+    )
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
@@ -72,7 +76,8 @@ setup_server <- function(id, data, adnca_data, settings_override) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        exclusion_list = general_exclusions$exclusion_list()
+        exclusion_list = general_exclusions(),
+        keep_interval_cols = extra_group_vars()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -92,12 +97,15 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     )
 
     final_settings <- reactive({
-      req(settings(), parameters_output$selections(), general_exclusions)
+
+      req(settings(), parameters_output$selections(), general_exclusions())
 
       current_settings <- settings()
-      current_settings$general_exclusions <- general_exclusions
-      current_settings$parameter_selections <- parameters_output$selections()
-
+      current_settings$general_exclusions <- general_exclusions()
+      current_settings$parameters <- list(
+        selections = parameters_output$selections(),
+        types_df = parameters_output$types_df()
+      )
       current_settings
     })
 
@@ -113,7 +121,8 @@ setup_server <- function(id, data, adnca_data, settings_override) {
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
         auc_data = settings()$partial_aucs,
-        impute = settings()$data_imputation$impute_c0
+        impute = settings()$data_imputation$impute_c0,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
       if (nrow(final_data$intervals) == 0) {
@@ -130,9 +139,9 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     # Keep the post processing ratio calculations requested by the user
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
-      adnca_data = processed_pknca_data
+      adnca_data = processed_pknca_data,
+      extra_group_vars = extra_group_vars
     )
-    session$userData$ratio_table <- reactive(ratio_table())
 
     # Automatically update the units table when settings are uploaded.
     observeEvent(imported_settings(), {
@@ -147,8 +156,10 @@ setup_server <- function(id, data, adnca_data, settings_override) {
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
-      req(adnca_data(), settings(), settings()$profile,
-          settings()$analyte, settings()$pcspec)
+      req(
+        adnca_data(), settings(), settings()$profile,
+        settings()$analyte, settings()$pcspec
+      )
       log_trace("Updating PKNCA::data object for slopes.")
 
       df <- PKNCA_update_data_object(
@@ -185,7 +196,7 @@ setup_server <- function(id, data, adnca_data, settings_override) {
         # Prepare the list
         export_list <- list(
           settings = final_settings(),
-          slope_rules = slope_rules$manual_slopes()
+          slope_rules = slope_rules()
         )
         # write yaml file
         yaml::write_yaml(export_list, file = con)
@@ -196,8 +207,7 @@ setup_server <- function(id, data, adnca_data, settings_override) {
       processed_pknca_data = processed_pknca_data,
       settings = final_settings,
       ratio_table = ratio_table,
-      slope_rules = slope_rules,
-      general_exclusions = general_exclusions$exclusion_list
+      slope_rules = slope_rules
     )
   })
 }

@@ -5,10 +5,14 @@ AEFRLT
 AFRLT
 ARRLT
 ATPTREF
+AUCPEO
+AUCPEP
 AUCinf
 AUClast
 AVAL
 AVALU
+AdjustingFactor
+AggregateSubject
 Analyte
 BLQ
 Buckeridge
@@ -32,7 +36,11 @@ Kobana
 LAMZ
 LAMZLL
 LAMZNPT
+LAMZSPN
+Lineplot
 METABFL
+MRTMDO
+MRTMDP
 MSCW
 NCA
 NCAwXRS
@@ -47,6 +55,7 @@ PKNCA
 PKNCAconc
 PKNCAdata
 PKNCAdose
+PKNCAresult
 PKNCAresults
 PPORRES
 PPSTRES
@@ -64,6 +73,8 @@ README
 RENALCL
 RRLTU
 RStudio
+RefGroups
+RefParameter
 Req
 Roadmap
 SBS
@@ -75,12 +86,16 @@ TLGs
 TMAX
 TRT
 TRTRINT
+TestGroups
+TestParameter
 Tmax
 Tooltip
 UI
 USUBJID
 UX
 VOLUMEU
+VSSMDO
+VSSMDP
 XPT
 YAML
 amountu
@@ -115,6 +130,7 @@ lintr
 mL
 macroparameters
 md
+multidose
 nca
 oligo
 pak
@@ -134,6 +150,8 @@ roadmap
 rpptx
 ruleset
 rulesets
+runnable
+SBS
 signif
 src
 tibble
@@ -145,6 +163,7 @@ tooltip
 tooltips
 ug
 unmapped
+userData
 utilise
 visualizable
 yaml

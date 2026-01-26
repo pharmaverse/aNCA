@@ -18,13 +18,19 @@ ADNCA <- data.frame(
 describe("format_pkncadata_intervals", {
   multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Metabolite1"), each = 10))
   df_conc <- format_pkncaconc_data(multi_analyte_adnca,
-                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DOSETRT", "PARAM"),
-                                   time_column = "AFRLT")
+    group_columns = c(
+      "STUDYID", "USUBJID", "PCSPEC",
+      "DOSETRT", "PARAM"
+    ),
+    time_column = "AFRLT"
+  )
 
   df_dose <- format_pkncadose_data(df_conc,
-                                   group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DOSETRT"))
+    group_columns = c(
+      "STUDYID", "USUBJID", "PCSPEC",
+      "DOSETRT"
+    )
+  )
 
   pknca_conc <- PKNCA::PKNCAconc(
     df_conc,
@@ -48,15 +54,16 @@ describe("format_pkncadata_intervals", {
     expect_equal(result$tmax[1], FALSE)
     expect_equal(result$half.life[1], FALSE)
     expect_equal(result$cl.obs[1], FALSE)
-
   })
 
   it("handles incorrect input type", {
     expect_error(format_pkncadata_intervals(pknca_conc = df_conc, data.frame()),
-                 regexp = "Input pknca_conc must be a PKNCAconc object from the PKNCA package.")
+      regexp = "Input pknca_conc must be a PKNCAconc object from the PKNCA package."
+    )
 
     expect_error(format_pkncadata_intervals(pknca_conc = pknca_conc, data.frame()),
-                 regexp = "Input pknca_dose must be a PKNCAdose object from the PKNCA package.")
+      regexp = "Input pknca_dose must be a PKNCAdose object from the PKNCA package."
+    )
   })
 
   it("handles missing columns", {
@@ -73,7 +80,7 @@ describe("format_pkncadata_intervals", {
 
   it("correctly uses tau if column is available", {
     df_conc_tau <- df_conc %>%
-      mutate(TRTRINT = 5)  # Add a tau column for testing
+      mutate(TRTRINT = 5) # Add a tau column for testing
 
     pknca_conc_tau <- PKNCA::PKNCAconc(
       df_conc_tau,
@@ -95,30 +102,34 @@ describe("format_pkncadata_intervals", {
   it("sets end to Inf if no TRTRINT and single dose", {
     single_dose_pknca_conc <- pknca_conc
     single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
-      filter(DOSNOA == 1)  # Filter to a single dose
+      filter(DOSNOA == 1) # Filter to a single dose
 
     single_dose_pknca_dose <- pknca_dose
     single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
-      filter(DOSNOA == 1)  # Filter to a single dose
+      filter(DOSNOA == 1) # Filter to a single dose
 
-    result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc,
-                                                     single_dose_pknca_dose)
+    result_single_dose <- format_pkncadata_intervals(
+      single_dose_pknca_conc,
+      single_dose_pknca_dose
+    )
     expect_true(all(is.infinite(result_single_dose$end)))
   })
 
   it("sets end to Inf if TRTRINT= NA and single dose", {
     single_dose_pknca_conc <- pknca_conc
     single_dose_pknca_conc$data <- single_dose_pknca_conc$data %>%
-      mutate(TRTRINT = NA) %>%  # Set TRTRINT to NA
-      filter(DOSNOA == 1)  # Filter to a single dose
+      mutate(TRTRINT = NA) %>% # Set TRTRINT to NA
+      filter(DOSNOA == 1) # Filter to a single dose
 
     single_dose_pknca_dose <- pknca_dose
     single_dose_pknca_dose$data <- single_dose_pknca_dose$data %>%
-      mutate(TRTRINT = NA) %>%  # Set TRTRINT to NA
-      filter(DOSNOA == 1)  # Filter to a single dose
+      mutate(TRTRINT = NA) %>% # Set TRTRINT to NA
+      filter(DOSNOA == 1) # Filter to a single dose
 
-    result_single_dose <- format_pkncadata_intervals(single_dose_pknca_conc,
-                                                     single_dose_pknca_dose)
+    result_single_dose <- format_pkncadata_intervals(
+      single_dose_pknca_conc,
+      single_dose_pknca_dose
+    )
     expect_true(all(is.infinite(result_single_dose$end)))
   })
 
@@ -129,10 +140,12 @@ describe("format_pkncadata_intervals", {
 
     pknca_dose_na_tau <- pknca_dose
     pknca_dose_na_tau$data <- pknca_dose$data %>%
-      mutate(TRTRINT = NA)  # Set TRTRINT to NA
+      mutate(TRTRINT = NA) # Set TRTRINT to NA
 
-    result_single_dose <- format_pkncadata_intervals(pknca_conc_na_tau,
-                                                     pknca_dose_na_tau)
+    result_single_dose <- format_pkncadata_intervals(
+      pknca_conc_na_tau,
+      pknca_dose_na_tau
+    )
     expect_equal(result_single_dose$end[4], max(pknca_conc_na_tau$data$AFRLT, na.rm = TRUE))
   })
 
@@ -144,37 +157,38 @@ describe("format_pkncadata_intervals", {
     )
     expect_true(all(result$start >= 0))
   })
-
 })
 
 describe("update_main_intervals", {
-
-  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
-                              c("start", "end"))
+  all_pknca_params <- setdiff(
+    names(PKNCA::get.interval.cols()),
+    c("start", "end")
+  )
   # setup data using FIXTURES
   data <- FIXTURE_PKNCA_DATA
   data$intervals <- data$intervals %>%
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params),
-           PCSPEC = "SERUM",
-           STUDYID = "S1") %>%
+      PCSPEC = "SERUM",
+      STUDYID = "S1"
+    ) %>%
     filter(type_interval == "main") %>%
     select(-impute)
 
-  #create study types df
+  # create study types df
   study_types_df <- tribble(
-    ~STUDYID, ~DOSETRT, ~USUBJID, ~PCSPEC, ~ROUTE,         ~type,
-    "S1",      "A",           1, "SERUM",  "extravascular", "Single Extravascular Dose",
-    "S1",      "A",           2, "SERUM",  "extravascular", "Multiple Extravascular Doses",
-    "S1",      "A",           3, "SERUM",  "intravascular", "Multiple IV Doses",
-    "S1",      "A",           4, "SERUM",  "intravascular", "Single IV Dose",
-    "S1",      "A",           5, "SERUM",  "intravascular", "Single IV Dose",
-    "S1",      "A",           6, "SERUM",  "intravascular", "Single IV Dose",
-    "S1",      "A",           7, "SERUM",  "intravascular", "Single IV Dose",
-    "S1",      "A",           8, "SERUM",  "extravascular", "Single Extravascular Dose",
-    "S1",      "A",           8, "SERUM",  "intravascular", "Multiple IV Doses"
+    ~STUDYID, ~DOSETRT, ~USUBJID, ~PCSPEC, ~ROUTE, ~type,
+    "S1", "A", 1, "SERUM", "extravascular", "Single Extravascular Dose",
+    "S1", "A", 2, "SERUM", "extravascular", "Multiple Extravascular Doses",
+    "S1", "A", 3, "SERUM", "intravascular", "Multiple IV Doses",
+    "S1", "A", 4, "SERUM", "intravascular", "Single IV Dose",
+    "S1", "A", 5, "SERUM", "intravascular", "Single IV Dose",
+    "S1", "A", 6, "SERUM", "intravascular", "Single IV Dose",
+    "S1", "A", 7, "SERUM", "intravascular", "Single IV Dose",
+    "S1", "A", 8, "SERUM", "extravascular", "Single Extravascular Dose",
+    "S1", "A", 8, "SERUM", "intravascular", "Multiple IV Doses"
   )
 
-  #Create parameter list for each study type (one different per type)
+  # Create parameter list for each study type (one different per type)
   parameters <- list(
     `Single Extravascular Dose`    = c("cmax", "tmax", "auclast"),
     `Multiple Extravascular Doses` = c("cmax", "tmax", "half.life"),
@@ -186,7 +200,9 @@ describe("update_main_intervals", {
 
   it("correctly updates parameter flags based on study type", {
     result <- update_main_intervals(data, parameters, study_types_df,
-                                    auc_data, impute = FALSE)
+      auc_data,
+      impute = FALSE
+    )
 
     # Check a specific profile: USUBJID 1 is 'Single Extravascular Dose'
     profile_1 <- result$intervals %>% filter(USUBJID == 1)
@@ -206,7 +222,6 @@ describe("update_main_intervals", {
   })
 
   it("handles partial AUCs (auc_data) creating proper intervals for each", {
-
     auc_data <- data.frame(
       start_auc = c(0, 1, 2),
       end_auc = c(1, 2, 3)
@@ -238,25 +253,31 @@ describe("update_main_intervals", {
   it("handles empty parameter selections and empty AUC data", {
     # Test with empty parameter list
     result_no_params <- update_main_intervals(data, list(), study_types_df,
-                                              auc_data, impute = FALSE)
+      auc_data,
+      impute = FALSE
+    )
     param_flags <- result_no_params$intervals %>% select(all_of(all_pknca_params))
     expect_true(all(param_flags == FALSE))
 
     # Test with empty auc_data
     result_no_auc <- update_main_intervals(data, parameters, study_types_df,
-                                           auc_data, impute = FALSE)
+      auc_data,
+      impute = FALSE
+    )
     expect_equal(nrow(result_no_auc$intervals), nrow(data$intervals))
   })
 
   it("filters out invalid AUC ranges before creating intervals", {
     invalid_auc_data <- data.frame(
-      start_auc = c(0,  5, -1, 2, NA), # valid, start > end, negative, start > end, NA
-      end_auc   = c(4,  2,  1, 2, 4)
+      start_auc = c(0, 5, -1, 2, NA), # valid, start > end, negative, start > end, NA
+      end_auc   = c(4, 2, 1, 2, 4)
     ) # Only first row is valid
 
     original_rows <- nrow(data$intervals)
     result <- update_main_intervals(data, parameters, study_types_df,
-                                    invalid_auc_data, impute = FALSE)
+      invalid_auc_data,
+      impute = FALSE
+    )
 
     # Expect one new set of intervals for the single valid AUC range
     expect_equal(nrow(result$intervals), original_rows * 2)
@@ -266,9 +287,78 @@ describe("update_main_intervals", {
     # remove PCSPEC column from intervals
     data$intervals$PCSPEC <- NULL
 
-    expect_error(update_main_intervals(data, parameters, study_types_df,
-                                       auc_data, impute = FALSE),
-                 "Missing required columns: PCSPEC")
+    expect_error(
+      update_main_intervals(data, parameters, study_types_df,
+        auc_data,
+        impute = FALSE
+      ),
+      "Missing required columns: PCSPEC"
+    )
   })
 
+  it("applies blq_imputation_rule only to non-observational parameters (refactored)", {
+    # --- Setup: Add BLQ (AVAL == 0) for subject 1 at times 0, 2, 4 ---
+    subj1 <- unique(data$conc$data$USUBJID)[1]
+    blq_times <- c(0, 2, 4)
+    data$conc$data <- data$conc$data %>%
+      mutate(AVAL = ifelse(USUBJID == subj1 & AFRLT %in% blq_times, 0, AVAL)) %>%
+      filter(USUBJID == subj1)
+    data$intervals <- data$intervals %>%
+      filter(USUBJID == subj1)
+    study_types_df <- study_types_df %>%
+      filter(USUBJID == subj1)
+
+    # For clarity, define subject and parameters
+    param_list <- list(`Single Extravascular Dose` = c("tmax", "auclast"))
+    auc_empty <- tibble(start_auc = NA_real_, end_auc = NA_real_)
+
+    # --- Helper: Extract results for subject 1 ---
+    get_results <- function(data_obj, blq_rule) {
+      suppressWarnings(
+        PKNCA_calculate_nca(data_obj, blq_rule = blq_rule)[["result"]]
+      ) %>% unique()
+    }
+
+    # --- 1. No BLQ imputation ---
+    no_blq <- update_main_intervals(
+      data, param_list, study_types_df, auc_empty, blq_imputation_rule = NULL
+    )
+    res_no_blq <- get_results(no_blq, NULL)
+
+    # --- 2. All BLQ points kept (should match no imputation) ---
+    blq_keep <- list(first = "keep", middle = "keep", last = "keep")
+    all_keep <- update_main_intervals(
+      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_keep
+    )
+    res_all_keep <- get_results(all_keep, blq_keep)
+    expect_equal(res_no_blq, res_all_keep)
+
+    # --- 3. BLQ imputation: before.tmax, after.tmax, and both ---
+    blq_before <- list(before.tmax = 100, after.tmax = "keep")
+    blq_after <- list(before.tmax = "keep", after.tmax = 100)
+    blq_both <- list(before.tmax = 100, after.tmax = 100)
+
+    res_before <- get_results(update_main_intervals(
+      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_before
+    ), blq_before)
+    res_after <- get_results(update_main_intervals(
+      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_after
+    ), blq_after)
+    res_both <- get_results(update_main_intervals(
+      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_both
+    ), blq_both)
+
+    # --- 4. Check that BLQ imputation affects only non-observational parameters ---
+    expect_equal(filter(res_before, PPTESTCD == "auclast") %>% pull(PPORRES), 99.6, tolerance = 0.1)
+    expect_equal(filter(res_after, PPTESTCD == "auclast") %>% pull(PPORRES), 56, tolerance = 0.1)
+    expect_equal(filter(res_both, PPTESTCD == "auclast") %>% pull(PPORRES), 151, tolerance = 0.1)
+
+    # --- 5. tmax (observational) is unaffected by BLQ imputation ---
+    tmax_no_blq <- res_no_blq %>%
+      filter(PPTESTCD == "tmax") %>%
+      pull(PPORRES)
+    expect_equal(res_before %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
+    expect_equal(res_after %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
+    expect_equal(res_both %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
+  })
 })
