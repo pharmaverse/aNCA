@@ -397,14 +397,14 @@ describe("check_valid_pknca_data", {
   it("does not throw an error if exclusions for half-life include a REASON value", {
     pknca_data_with_excl$conc$data$REASON <- "Test reason"
     expect_no_error(
-      check_valid_pknca_data(pknca_data_with_excl, exclusions_have_reasons = TRUE)
+      check_valid_pknca_data(pknca_data_with_excl, check_exclusion_has_reason = TRUE)
     )
   })
 
   it("throws an error if exclusions for half-life do not include a REASON value", {
     pknca_data_with_excl$conc$data$REASON <- ""
     expect_error(
-      check_valid_pknca_data(pknca_data_with_excl, exclusions_have_reasons = TRUE),
+      check_valid_pknca_data(pknca_data_with_excl, check_exclusion_has_reason = TRUE),
       "No reason provided for the following half-life exclusions:"
     )
   })

@@ -17,7 +17,7 @@ The processed_pknca_data object (input), if checks are successful.
 \description{
 This function checks that:
 \enumerate{
-\item exclusions_have_reasons: all manually excluded half-life points in the concentration data
+\item check_exclusion_has_reason: all manually excluded half-life points in the concentration data
 have a non-empty reason provided. If any exclusions are missing a reason, it stops with an error
 and prints the affected rows (group columns and time column).
 }

@@ -722,7 +722,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' Checks Before Running NCA
 #'
 #' This function checks that:
-#' 1) exclusions_have_reasons: all manually excluded half-life points in the concentration data
+#' 1) check_exclusion_has_reason: all manually excluded half-life points in the concentration data
 #' have a non-empty reason provided. If any exclusions are missing a reason, it stops with an error
 #' and prints the affected rows (group columns and time column).
 #'
@@ -740,7 +740,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' # Suppose processed_pknca_data is a valid PKNCA data object
 #' # check_valid_pknca_data(processed_pknca_data)
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
-  if (exclusions_have_reasons) {
+  if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
     if (!is.null(excl_hl_col)) {
