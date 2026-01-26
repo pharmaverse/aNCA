@@ -21,22 +21,9 @@ setup_ui <- function(id) {
     nav_panel(
       "Settings",
       fluidRow(
-        column(
-          6,
-          fileInput(
-            ns("settings_upload"),
-            width = "100%",
-            label = "Upload settings",
-            buttonLabel = list(icon("folder"), "Browse"),
-            accept = ".rds"
-          )
-        ),
-        column(
-          6,
-          downloadButton(
-            ns("settings_download"),
-            label = "Download settings"
-          )
+        downloadButton(
+          ns("settings_download"),
+          label = "Download settings"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
@@ -55,25 +42,20 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data, extra_group_vars) {
+setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
 
-    imported_settings <- reactive({
-      req(input$settings_upload)
-      readRDS(input$settings_upload$datapath)
-    })
-
-    settings_override <- reactive(imported_settings()$settings)
-    manual_slopes_override <- reactive(imported_settings()$slope_rules)
-    parameters_override <- reactive(imported_settings()$settings$parameter_selections)
-    general_excl_override <- reactive(imported_settings()$settings$general_exclusions)
+    imported_settings <- reactive(settings_override()$settings)
+    imported_slopes <- reactive(settings_override()$slope_rules)
+    imported_params <- reactive(imported_settings()$parameter_selections)
+    general_excl_override <- reactive(imported_settings()$general_exclusions)
 
     # Gather all settings from the appropriate module
     settings <- settings_server(
       "nca_settings",
       data,
       adnca_data,
-      settings_override
+      imported_settings
     )
 
     general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
@@ -107,7 +89,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
     parameters_output <- parameter_selection_server(
       "nca_setup_parameter",
       base_pknca_data,
-      parameters_override
+      imported_params
     )
 
     final_settings <- reactive({
@@ -156,9 +138,9 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
     )
 
     # Automatically update the units table when settings are uploaded.
-    observeEvent(settings_override(), {
-      req(settings_override()$units)
-      session$userData$units_table(settings_override()$units)
+    observeEvent(imported_settings(), {
+      req(imported_settings()$units)
+      session$userData$units_table(imported_settings()$units)
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
@@ -196,7 +178,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
     slope_rules <- slope_selector_server(
       "slope_selector",
       slopes_pknca_data,
-      manual_slopes_override
+      imported_slopes
     )
 
     # Handle downloading and uploading settings
@@ -205,7 +187,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars) {
         paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
       },
       content = function(con) {
-        saveRDS(list(settings = final_settings(), slope_rules = slope_rules$manual_slopes()), con)
+        saveRDS(list(settings = final_settings(), slope_rules = slope_rules()), con)
       }
     )
 

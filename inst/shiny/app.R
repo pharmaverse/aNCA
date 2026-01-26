@@ -153,7 +153,8 @@ server <- function(input, output, session) {
   tab_nca_outputs <- tab_nca_server(
     "nca",
     tab_data_outputs$pknca_data,
-    tab_data_outputs$extra_group_vars
+    tab_data_outputs$extra_group_vars,
+    tab_data_outputs$settings_override
   )
 
   # TLG
