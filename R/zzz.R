@@ -115,6 +115,7 @@
     "aucs_extravascular",
     "aucs_intravascular",
     "calculate_ratio_app",
+    "color",
     "color_var",
     "combn",
     "conv_factor",
