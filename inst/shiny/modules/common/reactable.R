@@ -157,17 +157,14 @@ reactable_server <- function(
 #'
 #' @examples
 #' library(reactable)
-#' 
 #' # Prepare data with CDISC labels
 #' adpc <- data.frame(
 #'   USUBJID = c("STUDY-001-001", "STUDY-001-002"),
 #'   AVAL    = c(15.2, 0.45),
 #'   PARAMCD = c("DRUG_CONC", "DRUG_CONC")
 #' )
-#' 
 #' attr(adpc$USUBJID, "label") <- "Unique Subject Identifier"
 #' attr(adpc$AVAL, "label")    <- "Analysis Value (ng/mL)"
-#' 
 #' # Generate definitions with custom overrides
 #' col_defs <- define_cols(
 #'   data = adpc,
@@ -175,7 +172,6 @@ reactable_server <- function(
 #'     AVAL = colDef(format = colFormat(digits = 2))
 #'   )
 #' )
-#' 
 #' # Render table
 #' if (interactive()) {
 #'   reactable(adpc, columns = col_defs)
@@ -184,15 +180,12 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
   if (is.null(data)) {
     return(NULL)
   }
-  
   defs <- purrr::imap(data, \(values, col_name) {
     # Define width based on max character length
     max_char <- max(nchar(as.character(values)), nchar(col_name), na.rm = TRUE)
     calc_width <- max_char * expand_factor + 20
-    
     # Label for tooltip
     label <- unname(attr(values, "label"))
-    
     if (!is.null(label)) {
       reactable::colDef(
         html = TRUE,
@@ -215,10 +208,8 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
       )
     }
   })
-  
   if (length(overrides) > 0) {
     defs <- utils::modifyList(defs, overrides)
   }
-  
   defs
 }
