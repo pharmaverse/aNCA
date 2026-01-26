@@ -28,7 +28,7 @@ reactable_ui <- function(id) {
 
 reactable_server <- function(
   id, data, download_buttons = c(), file_name = NULL, on_render = NULL, editable = NULL,
-  edit_debounce = 750, generate_col_defs = NULL, ...
+  edit_debounce = 750, columns = define_cols, ...
 ) {
   moduleServer(id, function(input, output, session) {
     default_reactable_opts <- list(
@@ -44,7 +44,7 @@ reactable_server <- function(
       compact = TRUE,
       style = list(fontSize = "0.75em"),
       class = "reactable-table",
-      columns = generate_col_defs
+      columns = columns
     )
 
     args <- list(...)
@@ -135,4 +135,89 @@ reactable_server <- function(
     }
   }
   paste0(f_name, ".", ext)
+}
+
+#' Define Column Definitions for PK/PD reactable Tables
+#'
+#' This function generates column definitions for a reactable table by merging
+#' label-based tooltips with dynamic width estimation based on character length.
+#'
+#' @param data A data frame containing the data to be displayed in the reactable table.
+#' @param max_px Integer. Maximum allowable base width in pixels. Default is 150.
+#' @param expand_factor Integer. Multiplier to convert character count to pixels. Default is 8.
+#' @param overrides A named list of [reactable::colDef()] objects to override defaults.
+#'
+#' @return A named list of [reactable::colDef()] objects.
+#'
+#' @importFrom reactable colDef
+#' @importFrom purrr imap
+#' @importFrom utils modifyList
+#' @importFrom htmltools tags
+#'
+#' @examples
+#' library(reactable)
+#' 
+#' # Prepare data with CDISC labels
+#' adpc <- data.frame(
+#'   USUBJID = c("STUDY-001-001", "STUDY-001-002"),
+#'   AVAL    = c(15.2, 0.45),
+#'   PARAMCD = c("DRUG_CONC", "DRUG_CONC")
+#' )
+#' 
+#' attr(adpc$USUBJID, "label") <- "Unique Subject Identifier"
+#' attr(adpc$AVAL, "label")    <- "Analysis Value (ng/mL)"
+#' 
+#' # Generate definitions with custom overrides
+#' col_defs <- define_cols(
+#'   data = adpc,
+#'   overrides = list(
+#'     AVAL = colDef(format = colFormat(digits = 2))
+#'   )
+#' )
+#' 
+#' # Render table
+#' if (interactive()) {
+#'   reactable(adpc, columns = col_defs)
+#' }
+define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list()) {
+  if (is.null(data)) {
+    return(NULL)
+  }
+  
+  defs <- purrr::imap(data, \(values, col_name) {
+    # Define width based on max character length
+    max_char <- max(nchar(as.character(values)), nchar(col_name), na.rm = TRUE)
+    calc_width <- max_char * expand_factor + 20
+    
+    # Label for tooltip
+    label <- unname(attr(values, "label"))
+    
+    if (!is.null(label)) {
+      reactable::colDef(
+        html = TRUE,
+        header = htmltools::tags$span(
+          col_name,
+          `data-toggle` = "tooltip",
+          `data-placement` = "top",
+          title = label
+        ),
+        minWidth = min(calc_width, max_px),
+        maxWidth = 2 * max_px,
+        resizable = TRUE
+      )
+    } else {
+      reactable::colDef(
+        name = col_name,
+        minWidth = min(calc_width, max_px),
+        maxWidth = 2 * max_px,
+        resizable = TRUE
+      )
+    }
+  })
+  
+  if (length(overrides) > 0) {
+    defs <- utils::modifyList(defs, overrides)
+  }
+  
+  defs
 }
