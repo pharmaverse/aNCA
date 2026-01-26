@@ -85,3 +85,79 @@ readers <- list(
     arrow::read_parquet(path)
   }
 )
+
+#' Read uploaded file
+#' This function reads the uploaded input and attempts to parse
+#'  it as either PK data or settings YAML.
+#'
+#' @param path Character string with path to the uploaded file.
+#' @param name Character string with the name of the uploaded file.
+#' @returns A list with status, content, name, and type of the uploaded file.
+#' 
+#' @examples
+#' # Example of reading a PK data file
+#' data_file <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
+#' result_data <- read_uploaded_file(data_file, "example-ADNCA.csv")
+#' 
+#' @importFrom tools file_ext
+#' @importFrom yaml read_yaml
+#' @importFrom dplyr bind_rows
+#' 
+#' @export
+read_uploaded_file <- function(path, name) {
+  tryCatch({
+    # Attempt 1: Read as Data
+    data <- read_pk(path)
+    list(status = "success", data = data, name = name, type = "data")
+  }, error = function(e_pk) {
+    # Attempt 2: Read as Settings
+    tryCatch({
+      settings <- .parse_settings_yaml(path, name)
+      if (!is.null(settings)) {
+        list(status = "success", content = settings, name = name, type = "settings")
+      } else {
+        stop(e_pk$message) # Throw original PK error if not settings
+      }
+    }, error = function(e_yaml) {
+      list(status = "error", msg = e_pk$message, name = name)
+    })
+  })
+}
+
+#' Helper Logic to parse and structure settings YAML
+#' @param path Character string with path to the settings YAML file.
+#' @param name Character string with the name of the settings YAML file.
+#' @returns A list with parsed settings or NULL if not a valid settings file.
+#' @keywords internal
+#' @noRd
+.parse_settings_yaml <- function(path, name) {
+  # Check extension
+  is_yaml <- tolower(tools::file_ext(name)) %in% c("yaml", "yml")
+  
+  if (!is_yaml) return(NULL)
+  
+  obj <- yaml::read_yaml(path)
+  
+  if (!is.list(obj) || !"settings" %in% names(obj)) return(NULL)
+  
+  # if (!is.null(obj$slope_rules)) {
+  #   obj$slope_rules$manual_slopes <- .bind_settings_list(obj$slope_rules$manual_slopes)
+  #   obj$slope_rules$profiles_per_subject <- .bind_settings_list(obj$slope_rules$manual_slopes)
+  # }
+  # 
+  # if (!is.null(obj$settings)) {
+  #   obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
+  #   obj$settings$units <- .bind_settings_list(obj$settings$units)
+  # }
+  
+  obj
+}
+
+#' Helper to standardize binding lists within settings
+#' @param obj_list A list of settings to bind.
+#' @returns A data frame if binding was successful, otherwise returns the original object.
+#' @keywords internal
+#' @noRd
+.bind_settings_list <- function(obj_list) {
+  if (!is.null(obj_list) && is.list(obj_list)) dplyr::bind_rows(obj_list) else obj_list
+}
