@@ -130,87 +130,145 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     data_imputation <- data_imputation_server("data_imputation")
 
     # File Upload Handling
-    observeEvent(settings_override(), {
+    observeEvent(c(data(), settings_override()), {
+      req(data())
+      # Initialize Analyte + Global Validation
+      choices <- unique(data()$PARAM) %>% na.omit()
       settings <- settings_override()
 
-      log_debug_list("User settings override:", settings)
-
+      # Defaults
+      selected <- choices
       not_compatible <- c()
 
-      # General #
-      if (all(settings$analyte %in% unique(data()$PARAM))) {
-        updatePickerInput(inputId = "select_analyte", selected = settings$analyte)
-      } else {
-        not_compatible <- append(not_compatible, "Analyte")
-      }
+      # if settings exist, update analyte picker input and check compatibility
+      if (!is.null(settings)) {
 
-      if (all(settings$profile %in% unique(data()$ATPTREF))) {
-        updatePickerInput(inputId = "select_profile", selected = settings$profile)
-      } else {
-        not_compatible <- append(not_compatible, "NCA Profile")
-      }
+        if (all(settings$analyte %in% choices)) {
+          selected <- settings$analyte
+        } else {
+          not_compatible <- c(not_compatible, "Analyte")
+        }
 
-      if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
-        updatePickerInput(inputId = "select_pcspec", selected = settings$pcspec)
-      } else {
-        not_compatible <- append(not_compatible, "Dose Specimen")
-      }
+        # We check raw data here just to see if the settings exist
+        if (!all(settings$profile %in% data()$ATPTREF)) {
+          not_compatible <- c(not_compatible, "Profile")
+        }
+        if (!all(settings$pcspec %in% data()$PCSPEC)) {
+          not_compatible <- c(not_compatible, "Dose Specimen")
+        }
 
-      if (length(not_compatible) != 0) {
-        msg <- paste0(
-          paste0(not_compatible, collapse = ", "),
-          " not compatible with current data, leaving as default."
+        # Additional settings (PCSPEC and ATPTREF handled later)
+        updateSelectInput(session, inputId = "method", selected = settings$method)
+
+        if (!is.null(settings$bioavailability))
+          updateSelectInput(session, inputId = "bioavailability",
+                            selected = settings$bioavailability)
+
+        # Data imputation #
+        update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+
+        # Partial AUCs #
+        auc_data(settings$partial_aucs)
+        refresh_reactable(refresh_reactable() + 1)
+
+        # Flags #
+        .update_rule_input(
+          session,
+          "R2ADJ",
+          settings$flags$R2ADJ$is.checked,
+          settings$flags$R2ADJ$threshold
         )
+
+        .update_rule_input(
+          session,
+          "R2",
+          settings$flags$R2$is.checked,
+          settings$flags$R2$threshold
+        )
+
+        .update_rule_input(
+          session,
+          "AUCPEO",
+          settings$flags$AUCPEO$is.checked,
+          settings$flags$AUCPEO$threshold
+        )
+
+        .update_rule_input(
+          session,
+          "AUCPEP",
+          settings$flags$AUCPEP$is.checked,
+          settings$flags$AUCPEP$threshold
+        )
+
+        .update_rule_input(
+          session,
+          "LAMZSPN",
+          settings$flags$LAMZSPN$is.checked,
+          settings$flags$LAMZSPN$threshold
+        )
+      }
+
+      if (length(not_compatible) > 0) {
+        msg <- paste0(paste0(not_compatible, collapse = ", "),
+                      " settings not found in data. Reverting to defaults.")
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 10)
       }
 
-      updateSelectInput(inputId = "method", selected = settings$method)
+      updatePickerInput(session, "select_analyte", choices = choices, selected = selected)
+    })
 
-      if (!is.null(settings$bioavailability))
-        updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
+    # Update Downstream Inputs (Profile & Specimen)
+    observeEvent(input$select_analyte, {
+      req(data())
 
-      # Data imputation #
-      update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+      settings <- settings_override()
 
-      # Partial AUCs #
-      auc_data(settings$partial_aucs)
-      refresh_reactable(refresh_reactable() + 1)
+      # Filter data based on Analyte
+      filtered_data <- data() %>%
+        filter(PARAM %in% input$select_analyte, !is.na(PCSPEC), !is.na(ATPTREF))
 
-      # Flags #
-      .update_rule_input(
+      profile_choices <- sort(unique(filtered_data$ATPTREF))
+      pcspec_choices  <- unique(filtered_data$PCSPEC)
+
+      # PROFILE
+      current_profile <- isolate(input$select_profile)
+      # SPECIMEN
+      current_pcspec <- isolate(input$select_pcspec)
+
+      if (!is.null(settings)) {
+        if (all(settings$profile %in% profile_choices)) {
+          target_profile <- settings$profile
+        }
+        if (all(settings$pcspec %in% pcspec_choices)) {
+          target_pcspec <- settings$pcspec
+        }
+      } else {
+        if (length(intersect(current_profile, profile_choices)) > 0) {
+          target_profile <- current_profile # Keep current if valid
+        } else {
+          target_profile <- profile_choices[1]
+        }
+        if (length(intersect(current_pcspec, pcspec_choices)) > 0) {
+          target_pcspec <- current_pcspec # Keep current if valid
+        } else {
+          # Smart Default (Plasma/Serum)
+          plasma_serum <- grep("^plasma$|^serum$", pcspec_choices, value = TRUE, ignore.case = TRUE)
+          target_pcspec <- if (length(plasma_serum) > 0) plasma_serum else pcspec_choices
+        }
+      }
+
+      updatePickerInput(
         session,
-        "R2ADJ",
-        settings$flags$R2ADJ$is.checked,
-        settings$flags$R2ADJ$threshold
+        "select_profile",
+        choices = profile_choices,
+        selected = target_profile
       )
-
-      .update_rule_input(
+      updatePickerInput(
         session,
-        "R2",
-        settings$flags$R2$is.checked,
-        settings$flags$R2$threshold
-      )
-
-      .update_rule_input(
-        session,
-        "AUCPEO",
-        settings$flags$AUCPEO$is.checked,
-        settings$flags$AUCPEO$threshold
-      )
-
-      .update_rule_input(
-        session,
-        "AUCPEP",
-        settings$flags$AUCPEP$is.checked,
-        settings$flags$AUCPEP$threshold
-      )
-
-      .update_rule_input(
-        session,
-        "LAMZSPN",
-        settings$flags$LAMZSPN$is.checked,
-        settings$flags$LAMZSPN$threshold
+        "select_pcspec",
+        choices = pcspec_choices,
+        selected = target_pcspec
       )
     })
 
@@ -221,75 +279,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEO_threshold", max = 100, min = 0, lab = "AUCPEO")
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
-
-
-    # Choose data to be analyzed
-    observeEvent(data(), priority = -1, {
-      req(data())
-
-      choices <- unique(data()$PARAM) %>%
-        na.omit()
-
-      updatePickerInput(
-        session,
-        inputId = "select_analyte",
-        choices = choices,
-        selected = choices
-      )
-
-    })
-
-    observeEvent(input$select_analyte, {
-      req(data())
-
-      # Isolate current selections to prevent reactive loops
-      current_profile <- isolate(input$select_profile)
-      current_pcspec <- isolate(input$select_pcspec)
-
-      filtered_data <- data() %>%
-        filter(PARAM %in% input$select_analyte,
-               !is.na(PCSPEC),
-               !is.na(ATPTREF)) # Filter together so there's no combinations of NAs
-
-      profile_choices <- unique(filtered_data$ATPTREF) %>%
-        sort()
-
-      pcspec_choices <- unique(filtered_data$PCSPEC)
-
-
-      # Fallback if the current selection is empty
-      if (length(current_profile) == 0) {
-        current_profile <- profile_choices[1]
-      }
-      if (length(current_pcspec) == 0) {
-        # Select plasma/serum if available
-        plasma_serum_values <- grep("^plasma$|^serum$",
-                                    pcspec_choices,
-                                    value = TRUE,
-                                    ignore.case = TRUE)
-
-        # Assign to current_pcspec if found, otherwise select all
-        if (length(plasma_serum_values) > 0) {
-          current_pcspec <- plasma_serum_values
-        } else {
-          current_pcspec <- pcspec_choices
-        }
-      }
-
-      updatePickerInput(
-        session,
-        inputId = "select_profile",
-        choices = profile_choices,
-        selected = current_profile
-      )
-
-      updatePickerInput(
-        session,
-        inputId = "select_pcspec",
-        choices = pcspec_choices,
-        selected = current_pcspec
-      )
-    })
 
     # Reactive value to store the AUC data table
     auc_data <- reactiveVal(

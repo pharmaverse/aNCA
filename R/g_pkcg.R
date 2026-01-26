@@ -49,6 +49,7 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
 #' @importFrom stats setNames
+#' @importFrom plotly ggplotly layout
 #'
 #' @examples
 #' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
@@ -56,7 +57,7 @@ g_pkcg01_log <- function(data, ...) {
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'
-#' plots_lin <- pkcg01(adnca = adnca, xmax = 1)
+#' plots_lin <- pkcg01(adnca = adnca, xmax = 1, scale = "LIN")
 #'
 #' @export
 #' @author Gerardo Rodriguez
