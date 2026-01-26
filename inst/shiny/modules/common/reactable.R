@@ -186,6 +186,9 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
     calc_width <- max_char * expand_factor + 20
     # Label for tooltip
     label <- unname(attr(values, "label"))
+    min_width <-  min(calc_width, max_px)
+    max_width <- 2 * max_px
+  
     if (!is.null(label)) {
       reactable::colDef(
         html = TRUE,
@@ -195,15 +198,15 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
           `data-placement` = "top",
           title = label
         ),
-        minWidth = min(calc_width, max_px),
-        maxWidth = 2 * max_px,
+        minWidth = min_width,
+        maxWidth = max_width,
         resizable = TRUE
       )
     } else {
       reactable::colDef(
         name = col_name,
-        minWidth = min(calc_width, max_px),
-        maxWidth = 2 * max_px,
+        minWidth = min_width,
+        maxWidth = max_width,
         resizable = TRUE
       )
     }
