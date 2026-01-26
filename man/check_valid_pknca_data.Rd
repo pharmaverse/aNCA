@@ -4,12 +4,12 @@
 \alias{check_valid_pknca_data}
 \title{Checks Before Running NCA}
 \usage{
-check_valid_pknca_data(processed_pknca_data, exclusions_have_reasons = TRUE)
+check_valid_pknca_data(processed_pknca_data, check_exclusion_has_reason = TRUE)
 }
 \arguments{
 \item{processed_pknca_data}{A processed PKNCA data object.}
 
-\item{exclusions_have_reasons}{Logical; Check that all exclusions have a reason (default: TRUE).}
+\item{check_exclusion_has_reason}{Logical; Check if all exclusions have a reason (default: TRUE).}
 }
 \value{
 The processed_pknca_data object (input), if checks are successful.

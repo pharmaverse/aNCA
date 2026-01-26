@@ -727,7 +727,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' and prints the affected rows (group columns and time column).
 #'
 #' @param processed_pknca_data A processed PKNCA data object.
-#' @param exclusions_have_reasons Logical; Check that all exclusions have a reason (default: TRUE).
+#' @param check_exclusion_has_reason Logical; Check if all exclusions have a reason (default: TRUE).
 #'
 #' @return The processed_pknca_data object (input), if checks are successful.
 #'
@@ -739,7 +739,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @examples
 #' # Suppose processed_pknca_data is a valid PKNCA data object
 #' # check_valid_pknca_data(processed_pknca_data)
-check_valid_pknca_data <- function(processed_pknca_data, exclusions_have_reasons = TRUE) {
+check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
   if (exclusions_have_reasons) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
