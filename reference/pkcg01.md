@@ -151,5 +151,5 @@ adnca <- subset(adnca, adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)])
 attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 attr(adnca[["AVAL"]], "label") <- "Analysis val"
 
-plots_lin <- pkcg01(adnca = adnca, xmax = 1)
+plots_lin <- pkcg01(adnca = adnca, xmax = 1, scale = "LIN")
 ```
