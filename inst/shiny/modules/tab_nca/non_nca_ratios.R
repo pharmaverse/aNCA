@@ -193,8 +193,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       defaultPageSize = 10,
       showPageSizeOptions = TRUE,
       pageSizeOptions = reactive(c(10, 50, nrow(full_output()))),
-      style = list(fontSize = "0.75em"),
-      generate_col_defs = max_nchar_col
+      style = list(fontSize = "0.75em")
     )
 
     # Save the results in the output folder

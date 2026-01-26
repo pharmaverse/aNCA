@@ -251,8 +251,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     reactable_server(
       "study_types",
       study_types_summary,
-      height = "28vh",
-      generate_col_defs = max_nchar_col
+      height = "28vh"
     )
 
     # Transform the TRUE/FALSE data frame into a named list
@@ -297,7 +296,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       "selected_parameters_table",
       selected_parameters_df,
       height = "35vh",
-      generate_col_defs = max_nchar_col,
       columns = function(data) {
         # Handle empty table
         if ("Message" %in% names(data)) {

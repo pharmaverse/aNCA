@@ -129,12 +129,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       "descriptive_stats",
       summary_stats_filtered,
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered()))),
-      defaultPageSize = 10,
-      striped = TRUE,
-      bordered = TRUE,
-      compact = TRUE,
-      style = list(fontSize = "0.75em"),
-      generate_col_defs = max_nchar_col
+      defaultPageSize = 10
     )
 
     # Download summary statistics as CSV

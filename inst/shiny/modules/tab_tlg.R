@@ -137,8 +137,8 @@ tab_tlg_server <- function(id, data) {
       wrap = TRUE,
       selection = "multiple",
       editable = c("Footnote", "Stratification", "Condition", "Comment"),
-      generate_col_defs = function(df) {
-        max_nchar_col(df, overrides = list(Output = colDef(html = TRUE)))
+      columns = function(df) {
+        define_cols(df, overrides = list(Output = colDef(html = TRUE)))
       }
     )
 
@@ -179,8 +179,8 @@ tab_tlg_server <- function(id, data) {
       selection = "multiple",
       defaultExpanded = TRUE,
       width = "775px", # fit to the modal width
-      generate_col_defs = function(df) {
-        max_nchar_col(df, overrides = list(Output = colDef(html = TRUE)))
+      columns = function(df) {
+        define_cols(df, overrides = list(Output = colDef(html = TRUE)))
       }
     )
 

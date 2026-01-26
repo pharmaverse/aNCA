@@ -105,8 +105,7 @@ general_exclusions_server <- function(id, processed_pknca_data) {
           }
           NULL
         }
-      },
-      generate_col_defs = max_nchar_col
+      }
     )
 
     # Add a new manual exclusion when the Add button is pressed

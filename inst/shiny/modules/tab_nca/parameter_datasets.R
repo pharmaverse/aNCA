@@ -37,8 +37,7 @@ parameter_datasets_server <- function(id, res_nca) {
       download_buttons = c("csv", "xlsx"),
       file_name = function() paste0(session$userData$project_name(), "_pp"),
       style = list(fontSize = "0.75em"),
-      height = "68vh",
-      generate_col_defs = max_nchar_col
+      height = "68vh"
     )
     reactable_server(
       "adpp_dataset",
@@ -46,8 +45,7 @@ parameter_datasets_server <- function(id, res_nca) {
       download_buttons = c("csv", "xlsx"),
       file_name = function() paste0(session$userData$project_name(), "_adpp"),
       style = list(fontSize = "0.75em"),
-      height = "68vh",
-      generate_col_defs = max_nchar_col
+      height = "68vh"
     )
     reactable_server(
       "adnca_dataset",
@@ -55,8 +53,7 @@ parameter_datasets_server <- function(id, res_nca) {
       download_buttons = c("csv", "xlsx"),
       file_name = function() paste0(session$userData$project_name(), "_adnca"),
       style = list(fontSize = "0.75em"),
-      height = "68vh",
-      generate_col_defs = max_nchar_col
+      height = "68vh"
     )
 
     # Save the results in the output folder

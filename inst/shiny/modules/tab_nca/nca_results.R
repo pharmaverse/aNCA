@@ -265,8 +265,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             NULL
           }
         }
-      },
-      generate_col_defs = max_nchar_col
+      }
     )
 
     output$local_download_NCAres <- downloadHandler(
