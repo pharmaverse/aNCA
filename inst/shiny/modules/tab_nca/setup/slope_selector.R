@@ -340,25 +340,21 @@ slope_selector_server <- function( # nolint
     })
 
     #' If any settings are uploaded by the user, overwrite current rules
-    observeEvent(manual_slopes_override(), {
-      req(manual_slopes_override())
+    observeEvent(list(manual_slopes_override(), plot_data()), {
+      req(manual_slopes_override(), plot_data())
 
-      if (nrow(manual_slopes_override()) == 0) return(NULL)
+      if (nrow(manual_slopes_override()$manual_slopes) == 0) return(NULL)
 
-      log_debug_list("Manual slopes override:", manual_slopes_override())
+      log_debug_list("Manual slopes override:", manual_slopes_override()$manual_slopes)
 
-      override_valid <- apply(manual_slopes_override(), 1, function(r) {
-        dplyr::filter(
-          plot_data()$conc$data,
-          PCSPEC == r["PCSPEC"],
-          USUBJID == r["USUBJID"],
-          PARAM == r["PARAM"],
-          ATPTREF == r["ATPTREF"],
-          DOSNOA == r["DOSNOA"]
-        ) %>%
-          NROW() != 0
-      }) %>%
-        all()
+      allowed_keys <- c("PCSPEC", "USUBJID", "PARAM", "ATPTREF", "DOSNOA")
+      use_keys <- intersect(allowed_keys, names(manual_slopes_override()$manual_slopes))
+
+      override_valid <- manual_slopes_override()$manual_slopes %>%
+        mutate(across(all_of(use_keys), as.character)) %>% # mutate incase of type issues
+        semi_join(plot_data()$conc$data %>%
+                    mutate(across(all_of(use_keys), as.character)), by = use_keys) %>%
+        nrow() == nrow(manual_slopes_override()$manual_slopes)
 
       if (!override_valid) {
         msg <- "Manual slopes not compatible with current data, leaving as default."
@@ -367,14 +363,16 @@ slope_selector_server <- function( # nolint
         return(NULL)
       }
 
-      manual_slopes(manual_slopes_override())
+      manual_slopes(manual_slopes_override()$manual_slopes)
     })
 
     #' return reactive with slope exclusions data to be displayed in Results -> Exclusions tab
-    list(
-      manual_slopes = manual_slopes,
-      profiles_per_subject = profiles_per_subject,
-      slopes_groups = slopes_groups
-    )
+    reactive({
+      list(
+        manual_slopes = manual_slopes(),
+        profiles_per_subject = profiles_per_subject(),
+        slopes_groups = slopes_groups()
+      )
+    })
   })
 }

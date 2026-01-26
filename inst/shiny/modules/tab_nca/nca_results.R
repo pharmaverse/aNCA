@@ -79,21 +79,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       results <- res_nca()
 
       # Transform results
-      final_results <- pivot_wider_pknca_results(results)
+      extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
+      session$userData$extra_vars_to_keep <- extra_vars_to_keep
 
-      # Join subject data to allow the user to group by it
-      conc_data_to_join <- res_nca()$data$conc$data %>%
-        select(any_of(c(
-          grouping_vars(),
-          unname(unlist(res_nca()$data$conc$columns$groups)),
-          "DOSEA",
-          "ATPTREF",
-          "ROUTE"
-        )))
-
-      final_results <- final_results %>%
-        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct() %>%
+      final_results <- pivot_wider_pknca_results(
+        results,
+        flag_rules = settings()$flags,
+        extra_vars_to_keep = extra_vars_to_keep
+      ) %>%
         apply_results_flags(
           nca_intervals = res_nca()$data$intervals,
           group_cols = unname(unlist(res_nca()$data$conc$columns$groups)),
