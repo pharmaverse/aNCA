@@ -188,7 +188,6 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
     label <- unname(attr(values, "label"))
     min_width <-  min(calc_width, max_px)
     max_width <- 2 * max_px
-  
     if (!is.null(label)) {
       reactable::colDef(
         html = TRUE,
