@@ -157,6 +157,7 @@
     "metadata_nca_parameters",
     "metadata_nca_variables",
     "missing_tau",
+    "na_msg_vec",
     "need",
     "next_dose_time",
     "next_dosno",
