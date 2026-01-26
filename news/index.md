@@ -42,6 +42,9 @@
 - General button at top page to save all NCA results, settings & draft
   slides as a ZIP file
   ([\#638](https://github.com/pharmaverse/aNCA/issues/638))
+- Settings are now uploaded on initial opening of the app in the data
+  tab, and applied to the next steps
+  ([\#860](https://github.com/pharmaverse/aNCA/issues/860))
 
 ### Bugs fixed
 

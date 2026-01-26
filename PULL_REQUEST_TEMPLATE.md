@@ -32,6 +32,8 @@ Package version is incremented
 
 R script works with the new implementation (if applicable)
 
+Settings upload works with the new implementation (if applicable)
+
 ## Notes to reviewer
 
 Anything that the reviewer should know before tacking the pull request?
