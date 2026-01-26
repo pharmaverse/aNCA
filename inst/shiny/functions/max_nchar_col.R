@@ -28,8 +28,8 @@ max_nchar_col <- function(data, max_px = 150, expand_factor = 8, overrides = lis
   if (is.null(data)) {
     return(NULL)
   }
-  defs <- purrr::imap(data, ~ {
-    max_char <- max(nchar(as.character(.x)), nchar(.y), na.rm = TRUE)
+  defs <- purrr::imap(data, \(values, col_name) {
+    max_char <- max(nchar(as.character(values)), nchar(col_name), na.rm = TRUE)
     calc_width <- max_char * expand_factor + 20
     reactable::colDef(
       minWidth = min(calc_width, max_px),
