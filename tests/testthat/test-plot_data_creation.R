@@ -1,4 +1,3 @@
-
 base_df <- expand.grid(
   USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
   PARAM = c("Analyte1", "Analyte2"),
@@ -222,4 +221,197 @@ describe("process_data_mean functions correctly", {
     expect_true(all(p$Mean > 0))
   })
 
+})
+
+describe("exploration_individualplot: Individual Plot Mode", {
+  it("returns a ggplot object with individual labels", {
+    p <- exploration_individualplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "DOSEA",
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      selected_usubjids = "Subject1"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_equal(p$labels$title, "PK Concentration - Time Profile")
+    expect_true(grepl("Concentration", p$labels$y))
+    expect_true(grepl("Time", p$labels$x))
+    expect_equal(p$labels$colour, "DOSEA")
+  })
+
+  it("applies faceting", {
+    p <- exploration_individualplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "DOSEA",
+      facet_by = "PARAM",
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      selected_usubjids = "Subject1"
+    )
+    expect_s3_class(p$facet, "FacetWrap")
+  })
+
+  it("applies log scale", {
+    p <- exploration_individualplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "DOSEA",
+      ylog_scale = TRUE,
+      selected_analytes = "Analyte2",
+      selected_pcspec = "Spec2",
+      selected_usubjids = "Subject1"
+    )
+    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
+    expect_true(is_log_scale)
+  })
+
+  it("shows threshold line", {
+    p <- exploration_individualplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "DOSEA",
+      threshold_value = 10,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      selected_usubjids = "Subject1"
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomHline" %in% layer_classes)
+  })
+
+  it("applies a custom palette", {
+    test_palette <- c("35" = "#FF0000", "70" = "#0000FF")
+    p <- exploration_individualplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "DOSEA",
+      palette = test_palette,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      selected_usubjids = "Subject1"
+    )
+    p_build <- ggplot_build(p)
+    plot_colors <- unique(p_build$data[[1]]$colour)
+    expect_true(all(plot_colors %in% test_palette))
+  })
+
+  it("handles empty data.frame with a plot informing of no data", {
+    empty_data <- sample_data[0, ]
+    p <- exploration_individualplot(
+      data = empty_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "DOSEA",
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1",
+      selected_usubjids = "Subject1"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_equal(p$labels$title, "Error")
+    gg_build <- ggplot_build(p)
+    expect_true(any(grepl("No data available", gg_build[[1]][[1]]$label)))
+  })
+})
+
+describe("exploration_meanplot: Mean Plot Mode", {
+  it("returns a ggplot object with mean labels", {
+    p <- exploration_meanplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "Mean",
+      color_by = "DOSEA",
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_true(grepl("Mean", p$labels$title))
+    expect_true(grepl("Mean", p$labels$y))
+    expect_true(grepl("Nominal", p$labels$x))
+    expect_equal(p$labels$colour, "DOSEA")
+  })
+
+  it("applies log scale", {
+    p <- exploration_meanplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "Mean",
+      color_by = "DOSEA",
+      ylog_scale = TRUE,
+      selected_analytes = "Analyte2",
+      selected_pcspec = "Spec2"
+    )
+    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
+    expect_true(is_log_scale)
+  })
+
+  it("shows SD error bars (min, max, and both)", {
+    p_both <- exploration_meanplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "Mean",
+      color_by = "DOSEA",
+      sd_min = TRUE,
+      sd_max = TRUE,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1"
+    )
+    p_both_build <- ggplot_build(p_both)
+    layer_classes <- sapply(p_both$layers, function(x) class(x$geom)[1])
+    expect_true("GeomErrorbar" %in% layer_classes)
+  })
+
+  it("shows CI ribbon and updates legend", {
+    p <- exploration_meanplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "Mean",
+      color_by = "DOSEA",
+      ci = TRUE,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1"
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomRibbon" %in% layer_classes)
+    expect_true(grepl("(95% CI)", p$labels$colour))
+  })
+
+  it("can show both SD bars and CI ribbon", {
+    p <- exploration_meanplot(
+      data = sample_data,
+      x_var = "NFRLT",
+      y_var = "Mean",
+      color_by = "DOSEA",
+      sd_min = TRUE,
+      sd_max = TRUE,
+      ci = TRUE,
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1"
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomErrorbar" %in% layer_classes)
+    expect_true("GeomRibbon" %in% layer_classes)
+  })
+
+  it("handles empty data.frame with a plot informing of no data", {
+    empty_data <- sample_data[0, ]
+    p <- exploration_meanplot(
+      data = empty_data,
+      x_var = "NFRLT",
+      y_var = "Mean",
+      color_by = "DOSEA",
+      selected_analytes = "Analyte1",
+      selected_pcspec = "Spec1"
+    )
+    expect_s3_class(p, "ggplot")
+    expect_equal(p$labels$title, "Error")
+    gg_build <- ggplot_build(p)
+    expect_true(any(grepl("No data available", gg_build[[1]][[1]]$label)))
+  })
 })
