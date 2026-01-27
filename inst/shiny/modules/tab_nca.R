@@ -141,9 +141,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
             filter_slopes(
               slope_rules()$manual_slopes,
               slope_rules()$profiles_per_subject,
-              slope_rules()$slopes_groups,
-              check_reasons = TRUE
+              slope_rules()$slopes_groups
             ) %>%
+            # Check if there are exclusions that contains a filled reason
+            check_valid_pknca_data() %>%
             # Perform PKNCA parameter calculations
             PKNCA_calculate_nca(
               blq_rule = settings()$data_imputation$blq_imputation_rule
@@ -268,7 +269,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 
   } else if (grepl("^No reason provided", msg)) {
     # Handle no reason provided erros from the calculation function.
-    msg <- paste(msg, "<br><br>Please provide the reason in Setup > Slope Selector tab.")
+    msg <- msg
 
   } else {
     # Handle unknown error
