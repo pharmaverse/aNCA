@@ -142,7 +142,7 @@ read_uploaded_file <- function(path, name) {
   
   if (!is.null(obj$slope_rules)) {
     obj$slope_rules$manual_slopes <- .bind_settings_list(obj$slope_rules$manual_slopes)
-    obj$slope_rules$profiles_per_subject <- .bind_settings_list(obj$slope_rules$manual_slopes)
+    obj$slope_rules$profiles_per_subject <- .bind_settings_list(obj$slope_rules$profiles_per_subject)
   }
 
   if (!is.null(obj$settings)) {
