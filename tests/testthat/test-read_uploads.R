@@ -100,59 +100,59 @@ describe("read_pk", {
 
 describe("read_uploaded_file", {
   data_dummy <- read.csv("data/test-multispec-ADNCA.csv")
-  
+
   it("successfully reads a PK data file (csv)", {
     tmp_csv <- withr::local_tempfile(fileext = ".csv")
     write.csv(data_dummy, tmp_csv, row.names = FALSE)
-    
+
     res <- read_uploaded_file(tmp_csv, "test.csv")
-    
+
     expect_equal(res$status, "success")
     expect_equal(res$type, "data")
     expect_s3_class(res$data, "data.frame")
   })
-  
+
   it("successfully reads a valid settings YAML", {
     path <- "data/test-settings.yaml"
     skip_if_not(file.exists(path))
-    
+
     res <- read_uploaded_file(path, "test-settings.yaml")
-    
+
     expect_equal(res$status, "success")
     expect_equal(res$type, "settings")
     expect_true("settings" %in% names(res$content))
     expect_s3_class(res$content$slope_rules$profiles_per_subject, "data.frame")
   })
-  
+
   it("returns error status for invalid file types", {
     tmp_txt <- withr::local_tempfile(fileext = ".txt")
     writeLines("random text", tmp_txt)
-    
+
     res <- read_uploaded_file(tmp_txt, "test.txt")
-    
+
     expect_equal(res$status, "error")
     expect_match(res$msg, "Invalid file type.")
   })
-  
+
   it("falls back to PK error if YAML parsing returns NULL (invalid schema)", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
     # Valid YAML syntax but missing 'settings' key required by .parse_settings_yaml
     yaml::write_yaml(list(wrong_key = 123), tmp_yaml)
-    
+
     res <- read_uploaded_file(tmp_yaml, "wrong_schema.yaml")
-    
+
     expect_equal(res$status, "error")
     # Should report the error from the initial read_pk attempt
-    expect_match(res$msg, "Invalid file type") 
+    expect_match(res$msg, "Invalid file type")
   })
-  
+
   it("successfully reads settings when optional sections are missing", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
     # Minimal valid settings file (missing units, slope_rules, etc.)
     yaml::write_yaml(list(settings = list(other_param = "test")), tmp_yaml)
-    
+
     res <- read_uploaded_file(tmp_yaml, "minimal_settings.yaml")
-    
+
     expect_equal(res$status, "success")
     expect_equal(res$type, "settings")
     expect_equal(res$content$settings$other_param, "test")

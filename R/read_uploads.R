@@ -93,16 +93,15 @@ readers <- list(
 #' @param path Character string with path to the uploaded file.
 #' @param name Character string with the name of the uploaded file.
 #' @returns A list with status, content, name, and type of the uploaded file.
-#' 
+#'
 #' @examples
 #' # Example of reading a PK data file
 #' data_file <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
 #' result_data <- read_uploaded_file(data_file, "example-ADNCA.csv")
-#' 
+#'
 #' @importFrom tools file_ext
-#' @importFrom yaml read_yaml
 #' @importFrom dplyr bind_rows
-#' 
+#'
 #' @export
 read_uploaded_file <- function(path, name) {
   tryCatch({
@@ -133,23 +132,25 @@ read_uploaded_file <- function(path, name) {
 .parse_settings_yaml <- function(path, name) {
   # Check extension
   is_yaml <- tolower(tools::file_ext(name)) %in% c("yaml", "yml")
-  
+
   if (!is_yaml) return(NULL)
-  
+
   obj <- yaml::read_yaml(path)
-  
+
   if (!is.list(obj) || !"settings" %in% names(obj)) return(NULL)
-  
+
   if (!is.null(obj$slope_rules)) {
     obj$slope_rules$manual_slopes <- .bind_settings_list(obj$slope_rules$manual_slopes)
-    obj$slope_rules$profiles_per_subject <- .bind_settings_list(obj$slope_rules$profiles_per_subject)
+    obj$slope_rules$profiles_per_subject <- .bind_settings_list(
+      obj$slope_rules$profiles_per_subject
+    )
   }
 
   if (!is.null(obj$settings)) {
     obj$settings$partial_aucs <- .bind_settings_list(obj$settings$partial_aucs)
     obj$settings$units <- .bind_settings_list(obj$settings$units)
   }
-  
+
   obj
 }
 
