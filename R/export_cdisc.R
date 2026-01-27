@@ -376,9 +376,21 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       },
       SUBJID = get_subjid(.),
       # Parameter Variables
-      PPORRES = as.character(round(as.numeric(PPORRES), 12)),
-      PPSTRESN = round(as.numeric(PPSTRES), 12),
-      PPSTRESC = as.character(format(PPSTRESN, scientific = FALSE, trim = TRUE)),
+      PPORRES = {
+        x <- PPORRES
+        idx <- !is.na(x)
+        x[idx] <- as.numeric(format(round(as.numeric(x[idx]), 8), scientific = FALSE))
+        x
+      },
+      PPSTRESN = {
+        x <- PPSTRES
+        idx <- !is.na(x)
+        x[idx] <- as.numeric(format(round(as.numeric(x[idx]), 8), scientific = FALSE))
+        x
+      },
+      PPSTRESC = ifelse(is.na(PPSTRESN),
+                        NA_character_,
+                        format(PPSTRESN, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)),
       # SD0027: Units should be NA if there is no value
       PPORRESU = ifelse(is.na(PPORRES), NA_character_, PPORRESU),
       PPSTRESU = ifelse(is.na(PPSTRES), NA_character_, PPSTRESU),
