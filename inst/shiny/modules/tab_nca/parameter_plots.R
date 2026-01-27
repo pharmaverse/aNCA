@@ -125,7 +125,8 @@ parameter_plots_server <- function(id, res_nca) {
                        res_nca()$data$conc$columns$groups$group_analyte),
           search = TRUE,
           hasOptionDescription = TRUE,
-          dropboxDirection = "bottom"
+          position = "bottom",
+          dropboxWrapper = "body" #Making sure the selector doesn't automatically open upwards
         )
       })
       
