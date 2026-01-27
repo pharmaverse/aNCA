@@ -116,7 +116,7 @@ read_uploaded_file <- function(path, name) {
       if (!is.null(settings)) {
         list(status = "success", content = settings, name = name, type = "settings")
       } else {
-        stop(e_pk$message) # Throw original PK error if not settings
+        stop(e_pk$message)
       }
     }, error = function(e_yaml) {
       list(status = "error", msg = e_pk$message, name = name)
