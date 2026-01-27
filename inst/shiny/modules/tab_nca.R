@@ -98,7 +98,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     session$userData$ratio_table <- ratio_table
     session$userData$slope_rules <- slope_rules
 
-    reactable_server("manual_slopes", slope_rules$manual_slopes)
+    reactable_server(id = "manual_slopes", data =  reactive(slope_rules()$manual_slopes))
 
     # List all irrelevant warnings to suppres in the NCA calculation
     irrelevant_regex_warnings <- c(
