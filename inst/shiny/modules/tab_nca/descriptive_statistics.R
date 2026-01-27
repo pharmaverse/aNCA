@@ -152,6 +152,5 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         write.csv(summary_stats_filtered(), file)
       }
     )
-
   })
 }
