@@ -718,6 +718,49 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
   res
 }
 
+
+#' Checks Before Running NCA
+#'
+#' This function checks that:
+#' 1) check_exclusion_has_reason: all manually excluded half-life points in the concentration data
+#' have a non-empty reason provided. If any exclusions are missing a reason, it stops with an error
+#' and prints the affected rows (group columns and time column).
+#'
+#' @param processed_pknca_data A processed PKNCA data object.
+#' @param check_exclusion_has_reason Logical; Check if all exclusions have a reason (default: TRUE).
+#'
+#' @return The processed_pknca_data object (input), if checks are successful.
+#'
+#' @details
+#' - If any excluded half-life points are missing a reason, an error is thrown.
+#' - If no exclusions or all have reasons, the function returns the input object.
+#' - Used to enforce good practice/documentation before NCA calculation.
+#'
+#' @examples
+#' # Suppose processed_pknca_data is a valid PKNCA data object
+#' # check_valid_pknca_data(processed_pknca_data)
+check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
+  if (check_exclusion_has_reason) {
+    excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
+
+    if (!is.null(excl_hl_col)) {
+      data_conc <- processed_pknca_data$conc$data
+      conc_groups <- group_vars(processed_pknca_data$conc)
+      time_col <- processed_pknca_data$conc$columns$time
+
+      missing_reasons <- data_conc[[excl_hl_col]] & nchar(data_conc[["REASON"]]) == 0
+
+      if (any(missing_reasons)) {
+        stop(
+          "No reason provided for at least one half-life exclusion.\n",
+          "Please go to `Setup > Slope Selector` and type a REASON in the table for each."
+        )
+      }
+    }
+  }
+  processed_pknca_data
+}
+
 #' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 #'
 #' This function removes parameters from the PKNCA results that were not requested by the user,

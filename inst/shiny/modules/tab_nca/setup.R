@@ -58,7 +58,11 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       imported_settings
     )
 
-    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
+    general_exclusions <- general_exclusions_server(
+      "general_exclusions",
+      processed_pknca_data,
+      general_excl_override
+    )
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
@@ -72,7 +76,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        exclusion_list = general_exclusions$exclusion_list(),
+        exclusion_list = general_exclusions(),
         keep_interval_cols = extra_group_vars()
       )
 
@@ -93,9 +97,11 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
     )
 
     final_settings <- reactive({
-      req(settings(), parameters_output$selections())
+
+      req(settings(), parameters_output$selections(), general_exclusions())
+
       current_settings <- settings()
-      current_settings$general_exclusions <- general_exclusions
+      current_settings$general_exclusions <- general_exclusions()
       current_settings$parameters <- list(
         selections = parameters_output$selections(),
         types_df = parameters_output$types_df()
@@ -195,8 +201,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       processed_pknca_data = processed_pknca_data,
       settings = final_settings,
       ratio_table = ratio_table,
-      slope_rules = slope_rules,
-      general_exclusions = general_exclusions$exclusion_list
+      slope_rules = slope_rules
     )
   })
 }
