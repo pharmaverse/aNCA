@@ -4,12 +4,12 @@
 \alias{check_valid_pknca_data}
 \title{Checks Before Running NCA}
 \usage{
-check_valid_pknca_data(processed_pknca_data, exclusions_have_reasons = TRUE)
+check_valid_pknca_data(processed_pknca_data, check_exclusion_has_reason = TRUE)
 }
 \arguments{
 \item{processed_pknca_data}{A processed PKNCA data object.}
 
-\item{exclusions_have_reasons}{Logical; Check that all exclusions have a reason (default: TRUE).}
+\item{check_exclusion_has_reason}{Logical; Check if all exclusions have a reason (default: TRUE).}
 }
 \value{
 The processed_pknca_data object (input), if checks are successful.
@@ -17,7 +17,7 @@ The processed_pknca_data object (input), if checks are successful.
 \description{
 This function checks that:
 \enumerate{
-\item exclusions_have_reasons: all manually excluded half-life points in the concentration data
+\item check_exclusion_has_reason: all manually excluded half-life points in the concentration data
 have a non-empty reason provided. If any exclusions are missing a reason, it stops with an error
 and prints the affected rows (group columns and time column).
 }

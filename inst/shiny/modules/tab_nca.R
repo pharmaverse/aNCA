@@ -62,7 +62,7 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, pknca_data, extra_group_vars) {
+tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -74,16 +74,23 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server("nca_setup", adnca_data, pknca_data, extra_group_vars)
+    nca_setup <- setup_server(
+      "nca_setup",
+      adnca_data,
+      pknca_data,
+      extra_group_vars,
+      settings_override
+    )
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
 
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
+
     session$userData$settings <- list(
       settings =  settings,
-      slope_rules = slope_rules$manual_slopes
+      slope_rules = slope_rules
     ) # This will be saved in the results zip folder
 
     # This will be saved in the results zip folder
@@ -257,7 +264,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars) {
 
   } else if (grepl("^No reason provided", msg)) {
     # Handle no reason provided erros from the calculation function.
-    msg <- paste(msg, "<br><br>Please provide the reason in Setup > Slope Selector tab.")
+    msg <- msg
 
   } else {
     # Handle unknown error

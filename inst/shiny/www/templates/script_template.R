@@ -44,6 +44,7 @@ auc_data <- session$userData$settings$partial_aucs
 units_table <- session$userData$final_units
 parameters_selected_per_study <- session$userData$settings$parameters$selections
 study_types_df <- session$userData$settings$parameters$types_df
+extra_vars_to_keep <-  session$userData$extra_vars_to_keep
 
 pknca_obj <- preprocessed_adnca %>%
 
@@ -59,7 +60,8 @@ pknca_obj <- preprocessed_adnca %>%
     selected_profile = session$userData$settings$profile,
     selected_pcspec = session$userData$settings$pcspec,
     should_impute_c0 = session$userData$settings$data_imputation$impute_c0,
-    exclusion_list = session$userData$settings$general_exclusions$exclusion_list
+    exclusion_list = session$userData$settings$general_exclusions,
+    keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE"))
   ) %>%
 
   update_main_intervals(
@@ -86,7 +88,6 @@ slope_rules <- list(
 )
 flag_rules <- session$userData$settings$flags
 ratio_table <- session$userData$ratio_table
-extra_vars_to_keep <-  session$userData$extra_vars_to_keep
 
 pknca_res <- pknca_obj %>%
 
