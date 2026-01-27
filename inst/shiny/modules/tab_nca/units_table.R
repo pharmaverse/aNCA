@@ -88,7 +88,6 @@ units_table_server <- function(id, mydata) {
       }),
       wrap = TRUE,
       width = "775px", # fit to the modal width
-      height = "65vh",
       editable = c("PPSTRESU", "conversion_factor"),
       columns = list(
         PPTESTCD = colDef(name = "Parameter"),
