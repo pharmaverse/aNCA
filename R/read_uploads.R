@@ -101,6 +101,7 @@ readers <- list(
 #'
 #' @importFrom tools file_ext
 #' @importFrom dplyr bind_rows
+#' @importFrom yaml read_yaml
 #'
 #' @export
 read_uploaded_file <- function(path, name) {
