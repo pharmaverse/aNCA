@@ -410,6 +410,18 @@ div[data-value="Settings"] > div.row a {
   gap: 1rem;
 }
 
+.imputation-help-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.imputation-help-table th, .imputation-help-table td {
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  padding: 4px;
+}
+
 .data-tab-container {
   display: flex;
   flex-direction: column;
