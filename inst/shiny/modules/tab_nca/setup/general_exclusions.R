@@ -67,7 +67,7 @@ general_exclusions_ui <- function(id) {
       )
     ),
     # Main concentration data table with row selection and color coding
-    reactable_ui(ns("conc_table"))
+    card(reactable_ui(ns("conc_table")), class = "border-0 shadow-none")
   )
 }
 
@@ -109,8 +109,6 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
       selection = "multiple",
       onClick = "select",
       borderless = TRUE,
-      defaultPageSize = 25,
-      style = list(fontSize = "0.75em"),
       rowStyle = function(x) {
         function(index) {
           excl_indices <- unlist(lapply(exclusion_list(), function(excl) excl$rows))

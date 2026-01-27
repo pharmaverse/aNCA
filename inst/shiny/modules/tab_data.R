@@ -50,7 +50,7 @@ tab_data_ui <- function(id) {
                 stepper_ui("Preview", tabs),
                 div(
                   uiOutput(ns("processed_data_message")),
-                  reactable_ui(ns("data_processed"))
+                  card(reactable_ui(ns("data_processed")), class = "border-0 shadow-none")
                 )
               )
             )
@@ -161,11 +161,8 @@ tab_data_server <- function(id) {
     reactable_server(
       "data_processed",
       processed_data,
-      compact = TRUE,
-      style = list(fontSize = "0.75em"),
       height = "50vh",
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data())))
     )
 
     # Use the pre-processed data to create a PKNCA object

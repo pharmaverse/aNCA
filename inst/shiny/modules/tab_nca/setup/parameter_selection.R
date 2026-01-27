@@ -21,11 +21,11 @@ parameter_selection_ui <- function(id) {
   ns <- NS(id)
   tagList(
     p("The following study types were detected in the data:"),
-    reactable_ui(ns("study_types")),
+    card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
 
     br(),
     p("The following parameters are currently selected:"),
-    reactable_ui(ns("selected_parameters_table")),
+    card(reactable_ui(ns("selected_parameters_table")), class = "border-0 shadow-none"),
 
     br(),
     p("Select the parameters to calculate for each study type.
