@@ -125,11 +125,12 @@ g_lineplot <- function(data,
       color_var = interaction(!!!syms(color_by), sep = ", ")
     ) %>%
     arrange(!!sym(x_var))
+
   plt <- ggplot(plot_data, aes(
     x = !!sym(x_var),
     y = !!sym(y_var),
     color = color_var,
-    group = if (!is.null(group_by)) !!sym(group_by) else NULL,
+    group = if (!is.null(group_by)) !!!syms(group_by) else NULL,
     text = tooltip_text
   )) +
     geom_line() +

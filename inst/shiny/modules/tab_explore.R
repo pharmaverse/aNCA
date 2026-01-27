@@ -76,41 +76,22 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           individual_inputs()$color_by)
       log_info("Rendering individual plots")
 
-      individual_output <- process_data_individual(
-        data = data(),
-        selected_usubjids = individual_inputs()$usubjid,
-        selected_analytes = individual_inputs()$param,
-        selected_pcspec = individual_inputs()$pcspec,
-        profiles_selected = individual_inputs()$profiles,
-        ylog_scale = individual_inputs()$ylog_scale
-      )
-
-      time_col <- if (!is.null(individual_inputs()$profiles)) "ARRLT" else "AFRLT"
-
-      tt_vars <- unique(c("AVAL", time_col,
-                          "USUBJID", individual_inputs()$color_by))
-
-      dose_data = if (individual_inputs()$show_dose) {
-        data() %>%
-          mutate(TIME_DOSE = round(AFRLT - ARRLT, 6))
-      } else {
-        NULL
-      }
-
-      lineplot <- g_lineplot(
-        data = individual_output,
-        x_var = time_col,
-        y_var = "AVAL",
+      individualplot <- exploration_individualplot(
+        pknca_data = pknca_data(),
         color_by = individual_inputs()$color_by,
         facet_by = individual_inputs()$facet_by,
+        selected_analytes = individual_inputs()$param,
+        selected_pcspec = individual_inputs()$pcspec,
+        selected_profiles = individual_inputs()$profiles,
+        selected_usubjids = individual_inputs()$usubjid,
+        show_dose = individual_inputs()$show_dose,
         ylog_scale = individual_inputs()$ylog_scale,
         threshold_value = individual_inputs()$threshold_value,
-        dose_data = dose_data,
-        palette = master_palettes_list(),
-        tooltip_vars = tt_vars,
         labels_df = metadata_nca_variables
       )
-      lineplot
+
+      #lineplot
+      individualplot
     })
 
     # Save the object for the zip folder whenever it changes
@@ -144,41 +125,20 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
 
-      mean_output <- process_data_mean(
-        data = data(),
-        selected_analytes = mean_inputs()$param,
-        selected_pcspec = mean_inputs()$pcspec,
-        profiles_selected = mean_inputs()$profiles,
-        ylog_scale = mean_inputs()$ylog_scale,
-        color_by = mean_inputs()$color_by,
-        facet_by = mean_inputs()$facet_by
-      )
-
-      time_col <- if (!is.null(mean_inputs()$profiles)) "NRRLT" else "NFRLT"
-
-      tt_vars <- unique(c("Mean", time_col, mean_inputs()$colorby))
-
-      dose_data = if (mean_inputs()$show_dose) {
-        data() %>%
-          mutate(TIME_DOSE = round(NFRLT - NRRLT, 6))
-      } else {
-        NULL
-      }
-
-      meanplot <- g_lineplot(
-        data = mean_output,
-        x_var = time_col,
-        y_var = "Mean",
+      meanplot <- exploration_meanplot(
+        pknca_data = pknca_data(),
         color_by = mean_inputs()$color_by,
         facet_by = mean_inputs()$facet_by,
-        ylog_scale = mean_inputs()$ylog_scale,
+        selected_analytes = mean_inputs()$param,
+        selected_pcspec = mean_inputs()$pcspec,
+        selected_profiles = mean_inputs()$profiles,
+        show_dose = mean_inputs()$show_dose,
+        palette = mean_palettes_list(),
         sd_min = mean_inputs()$sd_min,
         sd_max = mean_inputs()$sd_max,
         ci = mean_inputs()$ci,
+        ylog_scale = mean_inputs()$ylog_scale,
         threshold_value = mean_inputs()$threshold_value,
-        dose_data = dose_data,
-        palette = mean_palettes_list(),
-        tooltip_vars = tt_vars,
         labels_df = metadata_nca_variables
       )
 

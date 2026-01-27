@@ -4,7 +4,7 @@
 #'
 #' @param data Raw data frame.
 #' @param selected_usubjids,selected_analytes,selected_pcspec Inputs for filters.
-#' @param profiles_selected Optional profiles to filter on.
+#' @param selected_profiles Optional profiles to filter on.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @returns `processed_data` filtered for the spaghetti plots.
 #'
@@ -27,7 +27,7 @@
 #' selected_usubjids = c("Subject1", "Subject2"),
 #' selected_analytes = c("Analyte1"),
 #' selected_pcspec = c("Spec1"),
-#' profiles_selected = NULL,
+#' selected_profiles = NULL,
 #' ylog_scale = FALSE
 #' )
 #' @export
@@ -35,7 +35,7 @@ process_data_individual <- function(data,
                                     selected_usubjids,
                                     selected_analytes,
                                     selected_pcspec,
-                                    profiles_selected = NULL,
+                                    selected_profiles = NULL,
                                     ylog_scale = FALSE) {
 
   processed_data <- data %>%
@@ -43,6 +43,7 @@ process_data_individual <- function(data,
       USUBJID %in% selected_usubjids,
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
+      if (!is.null(selected_profiles)) ATPTREF %in% selected_profiles else TRUE,
       !is.na(AVAL)
     )
 
@@ -50,17 +51,17 @@ process_data_individual <- function(data,
     processed_data <- processed_data %>% filter(AVAL > 0)
   }
 
-  if (!is.null(profiles_selected)) {
-    if ("ARRLT" %in% names(processed_data) &&
-          any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
-      processed_data <- dose_profile_duplicates(
-        processed_data,
-        groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
-        dosno = "ATPTREF"
-      )
-    }
-    processed_data <- processed_data %>% filter(ATPTREF %in% profiles_selected)
-  }
+  # if (!is.null(selected_profiles)) {
+  #   if ("ARRLT" %in% names(processed_data) &&
+  #         any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
+  #     processed_data <- dose_profile_duplicates(
+  #       processed_data,
+  #       groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
+  #       dosno = "ATPTREF"
+  #     )
+  #   }
+  #   processed_data <- processed_data %>% filter(ATPTREF %in% selected_profiles)
+  # }
 
   processed_data
 }
@@ -68,7 +69,7 @@ process_data_individual <- function(data,
 #' Create a Mean PK Line Plot
 #'
 #' @param data Raw data frame.
-#' @param selected_analytes,selected_pcspec,profiles_selected Inputs for filtering.
+#' @param selected_analytes,selected_pcspec,selected_profiles Inputs for filtering.
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @param color_by,facet_by Optional grouping variables to be included in summary.
 #' @returns `summarised_data` with Mean, SD, and CIs for the profiles selected.
@@ -92,14 +93,14 @@ process_data_individual <- function(data,
 #' data = base_df,
 #' selected_analytes = c("Analyte1"),
 #' selected_pcspec = c("Spec1"),
-#' profiles_selected = NULL,
+#' selected_profiles = NULL,
 #' ylog_scale = FALSE
 #' )
 #' @export
 process_data_mean <- function(data,
                               selected_analytes,
                               selected_pcspec,
-                              profiles_selected = NULL,
+                              selected_profiles = NULL,
                               ylog_scale = FALSE,
                               color_by = NULL,
                               facet_by = NULL) {
@@ -108,16 +109,12 @@ process_data_mean <- function(data,
     filter(
       PARAM %in% selected_analytes,
       PCSPEC %in% selected_pcspec,
+      if (!is.null(selected_profiles)) ATPTREF %in% selected_profiles else TRUE,
       !is.na(AVAL)
     )
 
-  if (!is.null(profiles_selected)) {
-    processed <- processed %>% filter(ATPTREF %in% profiles_selected)
-  }
-
-  time_col <- if (!is.null(profiles_selected)) "NRRLT" else "NFRLT"
   # Retrieve unique grouping variables
-  grp_cols <- unique(c(color_by, time_col, facet_by, "RRLTU", "AVALU"))
+  grp_cols <- unique(c(color_by, facet_by, "RRLTU", "AVALU"))
 
   summarised_data <- processed %>%
     group_by(!!!syms(grp_cols)) %>%
@@ -164,7 +161,7 @@ process_data_mean <- function(data,
 #' @param labels_df Optional data.frame for variable label lookups (for tooltips). Default is `NULL`.
 #' @param selected_analytes Character vector of analyte names to filter. Default is `NULL` (no filter).
 #' @param selected_pcspec Character vector of specimen names to filter. Default is `NULL` (no filter).
-#' @param profiles_selected Optional vector of profile IDs to filter. Default is `NULL` (no filter).
+#' @param selected_profiles Optional vector of profile IDs to filter. Default is `NULL` (no filter).
 #' @param selected_usubjids Character vector of subject IDs to filter. Default is `NULL` (no filter).
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
@@ -184,15 +181,15 @@ exploration_individualplot <- function(
     labels_df = NULL,
     selected_analytes = NULL,
     selected_pcspec = NULL,
-    profiles_selected = NULL,
+    selected_profiles = NULL,
     selected_usubjids = NULL
 ) {
 
-  data <- if (show_dose) {
+  data <- if (show_dose || !is.null(selected_profiles)) {
     time_dose <- pknca_data$dose$columns$time
     dose_group_vars <- group_vars(pknca_data$dose)
 
-    left_join(
+    data<- left_join(
       pknca_data$conc$data,
       pknca_data$dose$data %>%
         mutate(TIME_DOSE = !!sym(time_dose)) %>%
@@ -204,6 +201,11 @@ exploration_individualplot <- function(
       group_by(!!!syms(setdiff(names(pknca_data$conc$data), "TIME_DOSE"))) %>%
       arrange(TIME_DOSE) %>%
       slice_tail(n = 1)
+    if (!is.null(selected_profiles)) {
+      mutate(data, !!sym(pknca_data$conc$columns$time) := !!sym(pknca_data$conc$columns$time) - TIME_DOSE)
+    } else {
+      data
+    }
   } else {
     pknca_data$conc$data
   }
@@ -213,7 +215,7 @@ exploration_individualplot <- function(
     selected_usubjids = selected_usubjids,
     selected_analytes = selected_analytes,
     selected_pcspec = selected_pcspec,
-    profiles_selected = profiles_selected,
+    selected_profiles = selected_profiles,
     ylog_scale = ylog_scale
   )
 
@@ -261,7 +263,7 @@ exploration_individualplot <- function(
 #' @param labels_df Optional data.frame for variable label lookups (for tooltips). Default is `NULL`.
 #' @param selected_analytes Character vector of analyte names to filter. Default is `NULL` (no filter).
 #' @param selected_pcspec Character vector of specimen names to filter. Default is `NULL` (no filter).
-#' @param profiles_selected Optional vector of profile IDs to filter. Default is `NULL` (no filter).
+#' @param selected_profiles Optional vector of profile IDs to filter. Default is `NULL` (no filter).
 #'
 #' @return A `ggplot` object representing the mean PK line plot.
 #' @seealso [g_lineplot()], [process_data_mean()]
@@ -281,15 +283,18 @@ exploration_meanplot <- function(
     labels_df = NULL,
     selected_analytes = NULL,
     selected_pcspec = NULL,
-    profiles_selected = NULL
+    selected_profiles = NULL
 ) {
 
-  time_sample <- pknca_data$conc$columns$time
-  data <- if (show_dose) {
+  x_var_unit <- pknca_data$conc$columns$timeu
+  y_var_unit <- pknca_data$conc$columns$concu
+  time_sample <- pknca_data$conc$columns$time.nominal
+  time_sample <- if(is.null(time_sample)) pknca_data$conc$columns$time else time_sample
+  data <- if (show_dose || !is.null(selected_profiles)) {
     time_dose <- pknca_data$dose$columns$time
     dose_group_vars <- group_vars(pknca_data$dose)
 
-    left_join(
+    data <- left_join(
       pknca_data$conc$data,
       pknca_data$dose$data %>%
         mutate(TIME_DOSE = !!sym(time_dose)) %>%
@@ -301,6 +306,12 @@ exploration_meanplot <- function(
       group_by(!!!syms(setdiff(names(pknca_data$conc$data), "TIME_DOSE"))) %>%
       arrange(TIME_DOSE) %>%
       slice_tail(n = 1)
+
+    if (!is.null(selected_profiles)) {
+      mutate(data, !!sym(time_sample) := NRRLT)
+    } else {
+      data
+    }
   } else {
     pknca_data$conc$data
   }
@@ -309,14 +320,13 @@ exploration_meanplot <- function(
     data = data,
     selected_analytes = selected_analytes,
     selected_pcspec = selected_pcspec,
-    profiles_selected = profiles_selected,
-    color_by = color_by,
-    facet_by = c(facet_by, "TIME_DOSE"),
+    selected_profiles = selected_profiles,
+    color_by = c(color_by, time_sample, x_var_unit, y_var_unit),
+    facet_by = if (show_dose) c(facet_by, "TIME_DOSE") else facet_by,
     ylog_scale = ylog_scale
   )
 
-  time_nominal_col <- pknca_data$conc$columns$time.nominal
-  x_var <- if (!is.null(time_nominal_col)) time_nominal_col else pknca_data$conc$columns$time
+  x_var <- time_sample
   y_var <- "Mean"
 
   plot <- g_lineplot(
@@ -370,7 +380,7 @@ exploration_meanplot <- function(
 #   ci = TRUE,
 #   selected_analytes = "Analyte1",
 #   selected_pcspec = "Spec1",
-#   profiles_selected = NULL,
+#   selected_profiles = NULL,
 #   ylog_scale = FALSE,
 #   threshold_value = NULL,
 #   dose_data = NULL,
@@ -385,7 +395,7 @@ exploration_meanplot <- function(
 #   color_by = "DOSEA",
 #   selected_analytes = "Analyte1",
 #   selected_pcspec = "Spec1",
-#   profiles_selected = 1,
+#   selected_profiles = 1,
 #   ylog_scale = FALSE,
 #   threshold_value = NULL,
 #   dose_data = NULL,

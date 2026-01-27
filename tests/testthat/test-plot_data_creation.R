@@ -106,7 +106,7 @@ describe("process_data_individual functions correctly", {
       selected_usubjids = "Subject1",
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
-      profiles_selected = 1
+      selected_profiles = 1
     )
 
     # Check that data is filtered to the selected cycle
@@ -120,7 +120,7 @@ describe("process_data_individual functions correctly", {
       selected_usubjids = "Subject1",
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
-      profiles_selected = 1
+      selected_profiles = 1
     )
 
     predose_record_in_plot <- p %>%
@@ -136,7 +136,7 @@ describe("process_data_individual functions correctly", {
       selected_usubjids = "Subject1",
       selected_analytes = "Analyte2",
       selected_pcspec = "Spec2",
-      profiles_selected = 1,
+      selected_profiles = 1,
       ylog_scale = TRUE
     )
 
@@ -181,7 +181,7 @@ describe("process_data_mean functions correctly", {
       selected_analytes = "Analyte1",
       selected_pcspec = "Spec1",
       color_by = "DOSEA",
-      profiles_selected = 1
+      selected_profiles = 1
     )
 
     # Check that data is filtered to the selected cycle
@@ -213,7 +213,7 @@ describe("process_data_mean functions correctly", {
       selected_analytes = "Analyte2",
       selected_pcspec = "Spec2",
       color_by = "DOSEA",
-      profiles_selected = 1,
+      selected_profiles = 1,
       ylog_scale = TRUE
     )
 
