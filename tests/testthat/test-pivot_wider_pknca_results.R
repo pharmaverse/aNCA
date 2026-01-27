@@ -259,3 +259,82 @@ describe("pivot_wider_pknca_results", {
     expect_true(all(present_vars %in% names(pivoted_res)))
   })
 })
+
+describe("pivot_wider_pknca_results flagging integration", {
+  
+  pknca_res <- FIXTURE_PKNCA_RES
+  
+  it("assigns ACCEPTED status when no thresholds are breached", {
+    # Using USUBJID 2 as a known pass
+    flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.8))
+    
+    result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
+    
+    status <- result %>% filter(USUBJID == 2) %>% pull(flagged)
+    expect_equal(status[1], "ACCEPTED")
+  })
+  
+  it("assigns FLAGGED status when a threshold is breached", {
+    # Set a high threshold to force a flag on USUBJID 2
+    flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.999))
+    
+    # We must ensure the underlying PKNCA object has the exclude string 
+    # as apply_results_flags detects breaches via the Exclude string
+    pknca_flagged <- PKNCA_hl_rules_exclusion(pknca_res, list("R2ADJ" = 0.999))
+    result <- pivot_wider_pknca_results(pknca_flagged, flag_rules = flag_rules)
+    
+    status <- result %>% filter(USUBJID == 2) %>% pull(flagged)
+    expect_equal(status[1], "FLAGGED")
+  })
+  
+  it("identifies MISSING parameters that were requested in intervals", {
+    # USUBJID 1, ATPTREF 1 is known to have missing LAMZSPN in fixture
+    flag_rules <- list("LAMZSPN" = list(is.checked = TRUE, threshold = 1))
+    
+    result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
+    
+    status <- result %>% filter(USUBJID == 1, ATPTREF == 1) %>% pull(flagged)
+    expect_equal(status[1], "MISSING")
+  })
+  
+  it("concatenates existing Exclude reasons with new NA messages", {
+    flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.8))
+    
+    # Force adj.r.squared to be TRUE in intervals to trigger "is NA" check
+    pknca_mod <- pknca_res
+    pknca_mod$data$intervals$adj.r.squared <- TRUE
+    
+    result <- pivot_wider_pknca_results(pknca_mod, flag_rules = flag_rules)
+    
+    exclude_str <- result %>% filter(USUBJID == 1, ATPTREF == 1) %>% pull(Exclude)
+    expect_match(exclude_str, "R2ADJ is NA")
+  })
+  
+  it("flags NOT DONE if no flags are active", {
+    flag_rules <- list("R2ADJ" = list(is.checked = FALSE, threshold = 0.8))
+    
+    result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
+    
+    expect_true(all(result$flagged == "NOT DONE"))
+  })
+  
+  it("does not set to FLAGGED if parameter was not requested", {
+    # USUBJID 2 has R2ADJ ~0.97
+    # Set threshold to 0.99 (a breach), but disable R2ADJ in intervals
+    flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.99))
+    
+    pknca_mod <- pknca_res
+    # Ensure the interval logic dictates R2ADJ was not part of the plan
+    pknca_mod$data$intervals$adj.r.squared <- FALSE
+    
+    # We must also ensure the Exclude string doesn't contain the breach msg 
+    # since apply_results_flags checks the text of the Exclude column
+    result <- pivot_wider_pknca_results(pknca_mod, flag_rules = flag_rules)
+    
+    res_row <- result %>% filter(USUBJID == 2)
+    
+    # Status should be ACCEPTED because the parameter wasn't "requested"
+    expect_equal(res_row$flagged[1], "ACCEPTED")
+    expect_false(grepl("R2ADJ < 0.99", res_row$Exclude[1]))
+  })
+})
