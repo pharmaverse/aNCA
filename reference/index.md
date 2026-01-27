@@ -95,6 +95,9 @@
 - [`check_slope_rule_overlap()`](https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.md)
   : Check overlap between existing and new slope rulesets
 
+- [`check_valid_pknca_data()`](https://pharmaverse.github.io/aNCA/reference/check_valid_pknca_data.md)
+  : Checks Before Running NCA
+
 - [`convert_volume_units()`](https://pharmaverse.github.io/aNCA/reference/convert_volume_units.md)
   : Convert Volume Units to Match Concentration Denominator Units
 
