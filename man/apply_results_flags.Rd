@@ -7,7 +7,7 @@
 apply_results_flags(data, nca_intervals, group_cols, flag_settings)
 }
 \arguments{
-\item{data}{A data frame. NCA results from the \code{pivot_wider_pknca_results} function,
+\item{data}{A data frame of pivoted NCA results.
 with additional grouping variables merged.}
 
 \item{nca_intervals}{A data frame. The intervals object from the
