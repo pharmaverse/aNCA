@@ -340,6 +340,14 @@ describe("PKNCA_build_units_table", {
       regexp = "Units should be uniform at least across concentration groups.*"
     )
   })
+
+  it("ignores NA units when the unit column already contains one valid value", {
+    d_conc$AVALU[1] <- NA
+    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+                               concu = "AVALU", timeu = "RRLTU")
+
+    units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+  })
 })
 
 describe("select_level_grouping_cols", {
@@ -369,6 +377,36 @@ describe("select_level_grouping_cols", {
     data[, "a"] <- 10
     result <- select_minimal_grouping_cols(data, "d")
     expect_equal(result, data["d"])
+  })
+})
+
+describe("check_valid_pknca_data", {
+  pknca_data <- FIXTURE_PKNCA_DATA
+
+  it("returns the input object if no issues are found", {
+    # Without exclusions for half-life
+    result <- check_valid_pknca_data(pknca_data)
+    expect_identical(result, pknca_data)
+  })
+
+  # Make checks for half-life exclusions ----
+  pknca_data_with_excl <- pknca_data
+  excl_hl_col <- pknca_data_with_excl$conc$columns$exclude_half.life
+  pknca_data_with_excl$conc$data[1, excl_hl_col] <- TRUE
+
+  it("does not throw an error if exclusions for half-life include a REASON value", {
+    pknca_data_with_excl$conc$data$REASON <- "Test reason"
+    expect_no_error(
+      check_valid_pknca_data(pknca_data_with_excl, check_exclusion_has_reason = TRUE)
+    )
+  })
+
+  it("throws an error if exclusions for half-life do not include a REASON value", {
+    pknca_data_with_excl$conc$data$REASON <- ""
+    expect_error(
+      check_valid_pknca_data(pknca_data_with_excl, check_exclusion_has_reason = TRUE),
+      "No reason provided for at least one half-life exclusion"
+    )
   })
 })
 

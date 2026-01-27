@@ -67,10 +67,10 @@ describe("clean_deparse()", {
     long_vec <- as.character(1:25)
     df <- data.frame(x = 1:25, y = long_vec, stringsAsFactors = FALSE)
     out <- clean_deparse(df)
-    expect_true(grepl("c\\(\n", out)) # Should use newlines for long columns
-    expect_true(grepl("    1, 2, 3", out)) # Indentation present
-    expect_true(grepl("x = c\\(", out)) # Column x uses c( ... )
-    expect_true(grepl("y = c\\(", out)) # Column y uses c( ... )
+    expect_match(out, "c\\(\n") # Should use newlines for long columns
+    expect_match(out, "    1, 2, 3") # Indentation present
+    expect_match(out, "x = c\\(") # Column x uses c( ... )
+    expect_match(out, "y = c\\(") # Column y uses c( ... )
   })
 
   it("respects max_per_line for character vectors", {
@@ -107,7 +107,7 @@ describe("clean_deparse()", {
 
   it("respects max_per_line for data.frames", {
     df <- data.frame(x = 1:4, y = letters[1:4], stringsAsFactors = FALSE)
-    out <- clean_deparse.data.frame(df, max_per_line = 2)
+    out <- clean_deparse(df, max_per_line = 2)
     exp_out <- paste0(
       "data.frame(\n",
       "  x = c(\n",

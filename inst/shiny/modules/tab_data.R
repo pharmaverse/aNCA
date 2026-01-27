@@ -50,7 +50,7 @@ tab_data_ui <- function(id) {
                 stepper_ui("Preview", tabs),
                 div(
                   uiOutput(ns("processed_data_message")),
-                  reactable_ui(ns("data_processed"))
+                  card(reactable_ui(ns("data_processed")), class = "border-0 shadow-none")
                 )
               )
             )
@@ -120,12 +120,12 @@ tab_data_server <- function(id) {
       updateTabsetPanel(session, "data_navset", selected = step_labels[idx - 1])
     })
     #' Load raw ADNCA data
-    adnca_raw <- data_upload_server("raw_data")
+    uploaded_data <- data_upload_server("raw_data")
 
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
-      adnca_data = adnca_raw,
+      adnca_data = uploaded_data$adnca_raw,
       trigger = trigger_mapping_submit
     )
     #' Reactive value for the processed dataset
@@ -161,11 +161,8 @@ tab_data_server <- function(id) {
     reactable_server(
       "data_processed",
       processed_data,
-      compact = TRUE,
-      style = list(fontSize = "0.75em"),
       height = "50vh",
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data()))),
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data())))
     )
 
     # Use the pre-processed data to create a PKNCA object
@@ -223,7 +220,8 @@ tab_data_server <- function(id) {
 
     list(
       pknca_data = pknca_data,
-      extra_group_vars = extra_group_vars
+      extra_group_vars = extra_group_vars,
+      settings_override = uploaded_data$settings_override
     )
   })
 }

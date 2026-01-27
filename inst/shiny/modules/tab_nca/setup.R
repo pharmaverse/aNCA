@@ -21,20 +21,9 @@ setup_ui <- function(id) {
     nav_panel(
       "Settings",
       fluidRow(
-        column(6,
-          fileInput(
-            ns("settings_upload"),
-            width = "100%",
-            label = "Upload settings",
-            buttonLabel = list(icon("folder"), "Browse"),
-            accept = ".rds"
-          )
-        ),
-        column(6,
-          downloadButton(
-            ns("settings_download"),
-            label = "Download settings"
-          )
+        downloadButton(
+          ns("settings_download"),
+          label = "Download settings"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
@@ -53,28 +42,27 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data) {
+setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
 
-    imported_settings <- reactive({
-      req(input$settings_upload)
-      readRDS(input$settings_upload$datapath)
-    })
-
-    settings_override <- reactive(imported_settings()$settings)
-    manual_slopes_override <- reactive(imported_settings()$slope_rules)
-    parameters_override <- reactive(imported_settings()$settings$parameter_selections)
-    general_excl_override <- reactive(imported_settings()$settings$general_exclusions)
+    imported_settings <- reactive(settings_override()$settings)
+    imported_slopes <- reactive(settings_override()$slope_rules)
+    imported_params <- reactive(imported_settings()$parameter_selections)
+    general_excl_override <- reactive(imported_settings()$general_exclusions)
 
     # Gather all settings from the appropriate module
     settings <- settings_server(
       "nca_settings",
       data,
       adnca_data,
-      settings_override
+      imported_settings
     )
 
-    general_exclusions <- general_exclusions_server("general_exclusions", processed_pknca_data)
+    general_exclusions <- general_exclusions_server(
+      "general_exclusions",
+      processed_pknca_data,
+      general_excl_override
+    )
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
@@ -88,7 +76,8 @@ setup_server <- function(id, data, adnca_data) {
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        exclusion_list = general_exclusions$exclusion_list()
+        exclusion_list = general_exclusions(),
+        keep_interval_cols = extra_group_vars()
       )
 
       # Show bioavailability widget if it is possible to calculate
@@ -104,13 +93,15 @@ setup_server <- function(id, data, adnca_data) {
     parameters_output <- parameter_selection_server(
       "nca_setup_parameter",
       base_pknca_data,
-      parameters_override
+      imported_params
     )
 
     final_settings <- reactive({
-      req(settings(), parameters_output$selections())
+
+      req(settings(), parameters_output$selections(), general_exclusions())
+
       current_settings <- settings()
-      current_settings$general_exclusions <- general_exclusions
+      current_settings$general_exclusions <- general_exclusions()
       current_settings$parameters <- list(
         selections = parameters_output$selections(),
         types_df = parameters_output$types_df()
@@ -130,7 +121,8 @@ setup_server <- function(id, data, adnca_data) {
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
         auc_data = settings()$partial_aucs,
-        impute = settings()$data_imputation$impute_c0
+        impute = settings()$data_imputation$impute_c0,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
       if (nrow(final_data$intervals) == 0) {
@@ -147,13 +139,14 @@ setup_server <- function(id, data, adnca_data) {
     # Keep the post processing ratio calculations requested by the user
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
-      adnca_data = processed_pknca_data
+      adnca_data = processed_pknca_data,
+      extra_group_vars = extra_group_vars
     )
 
     # Automatically update the units table when settings are uploaded.
-    observeEvent(settings_override(), {
-      req(settings_override()$units)
-      session$userData$units_table(settings_override()$units)
+    observeEvent(imported_settings(), {
+      req(imported_settings()$units)
+      session$userData$units_table(imported_settings()$units)
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
@@ -163,8 +156,10 @@ setup_server <- function(id, data, adnca_data) {
     # Only parameters required for the slope plots are set in intervals
     # NCA dynamic changes/filters based on user selections
     slopes_pknca_data <- reactive({
-      req(adnca_data(), settings(), settings()$profile,
-          settings()$analyte, settings()$pcspec)
+      req(
+        adnca_data(), settings(), settings()$profile,
+        settings()$analyte, settings()$pcspec
+      )
       log_trace("Updating PKNCA::data object for slopes.")
 
       df <- PKNCA_update_data_object(
@@ -189,7 +184,7 @@ setup_server <- function(id, data, adnca_data) {
     slope_rules <- slope_selector_server(
       "slope_selector",
       slopes_pknca_data,
-      manual_slopes_override
+      imported_slopes
     )
 
     # Handle downloading and uploading settings
@@ -198,7 +193,7 @@ setup_server <- function(id, data, adnca_data) {
         paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
       },
       content = function(con) {
-        saveRDS(list(settings = final_settings(), slope_rules = slope_rules$manual_slopes()), con)
+        saveRDS(list(settings = final_settings(), slope_rules = slope_rules()), con)
       }
     )
 
@@ -206,8 +201,7 @@ setup_server <- function(id, data, adnca_data) {
       processed_pknca_data = processed_pknca_data,
       settings = final_settings,
       ratio_table = ratio_table,
-      slope_rules = slope_rules,
-      general_exclusions = general_exclusions$exclusion_list
+      slope_rules = slope_rules
     )
   })
 }

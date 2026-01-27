@@ -30,6 +30,8 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 
 assets <- system.file("shiny/www", package = "aNCA")
 
+shiny::addResourcePath("logos", system.file("man/figures", package = "aNCA"))
+
 sass(
   sass_file(file.path(assets, "styles/main.scss")),
   output = file.path(assets, "main.css")
@@ -41,11 +43,19 @@ ui <- function() {
   page_sidebar(
     id = "sidebar",
     title = tagList(
-      span("aNCA"),
+      div(
+        style = "display: flex; align-items: center; gap: 10px;",
+        tags$img(
+          src = "logos/aNCA_logo.png", # Ensure file is in www/ or resource path
+          alt = "aNCA logo",
+          width = "40px" # Adjusted for sidebar header scale
+        )
+      ),
       div(
         class = "project-name-container",
         textInput("project_name", label = NULL, placeholder = "Project Name"),
-        icon("file", class = "project-name-icon")
+        icon("file", class = "project-name-icon"),
+        zip_ui("zip_modal")
       )
     ),
 
@@ -152,11 +162,20 @@ server <- function(input, output, session) {
   tab_nca_outputs <- tab_nca_server(
     "nca",
     tab_data_outputs$pknca_data,
-    tab_data_outputs$extra_group_vars
+    tab_data_outputs$extra_group_vars,
+    tab_data_outputs$settings_override
   )
 
   # TLG
   tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
+
+  # ZIP export
+  zip_server(
+    "zip_modal",
+    res_nca = tab_nca_outputs$res_nca,
+    settings = session$userData$settings,
+    grouping_vars = tab_data_outputs$extra_group_vars
+  )
 }
 
 shiny::shinyApp(ui, server)

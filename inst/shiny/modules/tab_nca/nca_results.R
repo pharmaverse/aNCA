@@ -13,7 +13,7 @@ nca_results_ui <- function(id) {
       options = list(`actions-box` = TRUE)
     ),
     units_table_ui(ns("units_table")),
-    reactable_ui(ns("myresults")),
+    card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
 
     # Color legend for the results table
     div(
@@ -38,9 +38,8 @@ nca_results_ui <- function(id) {
       )
     ),
 
-    # Download buttons
-    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data"),
-    downloadButton(ns("download_zip"), "Download All Results as ZIP")
+    # Download button
+    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
   )
 }
 
@@ -92,108 +91,6 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       final_results
     })
 
-    # Provide the zip file for download
-    output$download_zip <- downloadHandler(
-      filename = function() {
-        project <- session$userData$project_name()
-        datetime <- attr(res_nca(), "provenance")$datetime
-        paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
-      },
-      content = function(fname) {
-        tryCatch({
-          shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
-
-            # Create an output folder with all plots, tables and listings
-            output_tmpdir <- file.path(tempdir(), "output")
-            save_output(output = session$userData$results, output_path = output_tmpdir)
-            incProgress(0.1)
-
-            # Create presentation slides
-            res_nca <- res_nca()
-            res_dose_slides <- get_dose_esc_results(
-              o_nca = res_nca,
-              group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
-              facet_vars = "DOSEA",
-              statistics = c("Mean"),
-              stats_parameters = c(
-                "CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"
-              ),
-              info_vars = grouping_vars()
-            )
-            presentations_path <- paste0(output_tmpdir, "/presentations")
-            dir.create(presentations_path)
-
-            create_qmd_dose_slides(
-              res_dose_slides = res_dose_slides,
-              quarto_path = paste0(presentations_path, "/results_slides.qmd"),
-              title = paste0("NCA Results", "\n", session$userData$project_name()),
-              use_plotly = TRUE
-            )
-
-            incProgress(0.3)
-            create_pptx_dose_slides(
-              res_dose_slides = res_dose_slides,
-              path = paste0(presentations_path, "/results_slides.pptx"),
-              title = paste0("NCA Results", "\n", session$userData$project_name()),
-              template = "www/templates/template.pptx"
-            )
-            incProgress(0.6)
-
-            # Create a settings folder
-            setts_tmpdir <- file.path(output_tmpdir, "settings")
-            dir.create(setts_tmpdir, recursive = TRUE)
-            settings_list <- session$userData$settings()
-            settings_to_save <- list(
-              settings = settings_list,
-              slope_rules = list(
-                manual_slopes = session$userData$slope_rules$manual_slopes(),
-                profiles_per_subject = session$userData$slope_rules$profiles_per_subject(),
-                slopes_groups = session$userData$slope_rules$slopes_groups()
-              )
-            )
-
-            saveRDS(settings_to_save, paste0(setts_tmpdir, "/settings.rds"))
-
-            # Save input dataset used
-            data_tmpdir <- file.path(output_tmpdir, "data")
-            dir.create(data_tmpdir, recursive = TRUE)
-            data <- read_pk(session$userData$data_path)
-            saveRDS(data, paste0(data_tmpdir, "/data.rds"))
-
-            # Save a code R script template for the session
-            script_tmpdir <- file.path(output_tmpdir, "code")
-            dir.create(script_tmpdir, recursive = TRUE)
-            script_template_path <- "www/templates/script_template.R"
-            get_session_code(
-              template_path = script_template_path,
-              session = session,
-              output_path = paste0(script_tmpdir, "/session_code.R")
-            )
-
-            files <- list.files(
-              output_tmpdir,
-              pattern = paste0(
-                "(\\.csv)|(\\.rds)|(\\.xpt)|(\\.html)|(\\.rda)|(\\.png)",
-                "|(results_slides\\.pptx)|(results_slides\\.qmd)|(session_code\\.R)$"
-              ),
-              recursive = TRUE
-            )
-
-            wd <- getwd()
-            on.exit(setwd(wd), add = TRUE) # this will reset the wd after the download handler
-            setwd(output_tmpdir)
-            incProgress(0.9)
-            zip::zipr(zipfile = fname, files = files, mode = "mirror")
-            incProgress(1)
-          })
-        }, error = function(e) {
-          message("Download Error:")
-          message(e$message)
-          stop(e)
-        })
-      }
-    )
-
     observeEvent(final_results(), {
       req(final_results())
 
@@ -232,17 +129,12 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)]))) %>%
-        # Add group variable labels (others were added in pivot_wider_pknca_result)
-        apply_labels()
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
     })
 
     reactable_server(
       "myresults",
       output_results,
-      compact = TRUE,
-      style = list(fontSize = "0.75em"),
-      height = "68vh",
       rowStyle = function(x) {
         function(index) {
           flagged_value <- x$flagged[index]
