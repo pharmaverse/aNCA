@@ -5,7 +5,7 @@
 #' parameters that were requested (based on intervals), applies threshold rules to the `Exclude`
 #' column, and determines the final `flagged` status (ACCEPTED, FLAGGED, or MISSING).
 #'
-#' @param data A data frame. NCA results from the `pivot_wider_pknca_results` function,
+#' @param data A data frame of pivoted NCA results.
 #' with additional grouping variables merged.
 #' @param nca_intervals A data frame. The intervals object from the
 #'  PKNCA result (e.g., `res$data$intervals`).

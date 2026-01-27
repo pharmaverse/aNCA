@@ -165,10 +165,11 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   pivoted_res <- add_label_attribute(pivoted_res, myres)
 
   # Add flagging columns for each rule and a general "flagged" column
-  out <- .create_flags_for_profiles(
-    final_results = pivoted_res,
-    myres = myres,
-    flag_rules = flag_rules
+  out <- apply_results_flags(
+    data = pivoted_res,
+    nca_intervals = myres$data$intervals,
+    group_cols = unname(unlist(myres$data$conc$columns$groups)),
+    flag_settings = flag_rules
   )
 
   # If extra_vars_to_keep is provided, join these variables from the conc data
@@ -233,31 +234,4 @@ add_label_attribute <- function(df, myres) {
     col
   }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
   df
-}
-
-.create_flags_for_profiles <- function(final_results, myres, flag_rules) {
-
-  # Add flaging columns in the pivoted results
-  applied_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
-  flag_params <- names(flag_rules)
-  flag_thr <- sapply(flag_rules, FUN =  \(x) x$threshold)
-  flag_rule_msgs <- paste0(flag_params, c(" < ", "<", " > ", " > ", " < "), flag_thr)
-  flag_cols <- names(final_results)[formatters::var_labels(final_results)
-                                    %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
-
-  if (length(flag_params) > 0) {
-    final_results <- final_results %>%
-      rowwise() %>%
-      mutate(
-        flagged = case_when(
-          is.na(Exclude) ~ "ACCEPTED",
-          any(sapply(
-            flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
-          )) ~ "FLAGGED",
-          TRUE ~ "MISSING"
-        )
-      ) %>%
-      ungroup()
-  }
-  final_results
 }
