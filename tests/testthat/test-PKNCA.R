@@ -405,7 +405,7 @@ describe("check_valid_pknca_data", {
     pknca_data_with_excl$conc$data$REASON <- ""
     expect_error(
       check_valid_pknca_data(pknca_data_with_excl, check_exclusion_has_reason = TRUE),
-      "No reason provided for all half-life exclusions"
+      "No reason provided for at least one half-life exclusion"
     )
   })
 })

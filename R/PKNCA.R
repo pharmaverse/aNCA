@@ -752,7 +752,7 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
 
       if (any(missing_reasons)) {
         stop(
-          "No reason provided for all half-life exclusions.\n",
+          "No reason provided for at least one half-life exclusion.\n",
           "Please go to `Setup > Slope Selector` and type a REASON in the table for each."
         )
       }
