@@ -86,12 +86,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         results,
         flag_rules = settings()$flags,
         extra_vars_to_keep = extra_vars_to_keep
-      ) %>%
-        apply_results_flags(
-          nca_intervals = res_nca()$data$intervals,
-          group_cols = unname(unlist(res_nca()$data$conc$columns$groups)),
-          flag_settings = settings()$flags
-        )
+      )
 
       final_results
     })
