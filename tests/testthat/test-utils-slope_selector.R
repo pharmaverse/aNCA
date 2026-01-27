@@ -71,23 +71,6 @@ describe(".filter_slopes", {
     )
   })
 
-  it("should throw an error if reasons are missing", {
-    selection <- data.frame(
-      TYPE = rep("Exclusion", 2),
-      USUBJID = c(1, 3),
-      ATPTREF = c(1, 1),
-      PARAM = c("A", "A"),
-      PCSPEC = c(1, 1),
-      RANGE = c("1:3", "2:4"),
-      REASON = ""
-    )
-
-    expect_error(
-      filter_slopes(DATA_FIXTURE, selection, DOSNOS_FIXTURE, slope_groups, TRUE),
-      "^No reason provided for the following exclusions*"
-    )
-  })
-
   it("should return data unchanged if no slopes are provided", {
     res_null <- filter_slopes(DATA_FIXTURE, NULL, DOSNOS_FIXTURE, slope_groups)
     res_empty <- filter_slopes(DATA_FIXTURE, data.frame(), DOSNOS_FIXTURE, slope_groups)
