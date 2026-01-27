@@ -222,6 +222,9 @@
 - [`get_conversion_factor()`](https://pharmaverse.github.io/aNCA/reference/get_conversion_factor.md)
   : Transform Units
 
+- [`get_halflife_plots()`](https://pharmaverse.github.io/aNCA/reference/get_halflife_plots.md)
+  : Create a Plotly Half-life Plot
+
 - [`get_label()`](https://pharmaverse.github.io/aNCA/reference/get_label.md)
   : Get the Label of a Heading
 
