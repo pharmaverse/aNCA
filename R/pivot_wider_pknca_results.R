@@ -30,8 +30,10 @@
 #' @importFrom dplyr select left_join rename mutate distinct group_by arrange ungroup
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
-#' @importFrom purrr pmap_chr
-#' @importFrom stringr str_detect fixed
+#' @importFrom purrr pmap_chr map_lgl map2_chr keep
+#' @importFrom stringr str_detect fixed str_remove
+#' @importFrom rlang syms sym
+#' 
 #' @export
 #'
 
@@ -255,28 +257,28 @@ add_label_attribute <- function(df, myres) {
 #' @keywords internal
 #' @noRd
 .apply_results_flags <- function(data, nca_intervals, group_cols, flag_settings) {
-  
+
   #Initialise flagged column
   flagged_data <- data %>%
     mutate(
       flagged = "NOT DONE"
     )
-  
+
   # Add flagging column in the pivoted results
   applied_flags <- purrr::keep(flag_settings, function(x) x$is.checked)
   flag_params <- names(applied_flags)
   flag_params_pknca <- translate_terms(flag_params, "PPTESTCD", "PKNCA")
-  
+
   flag_thr <- sapply(flag_settings, FUN =  function(x) x$threshold)
   flag_rule_msgs <- c(paste0(names(flag_settings), c(" < ", " < ", " > ", " > ", " < "), flag_thr))
-  
+
   valid_indices <- map_lgl(flag_params, function(p) {
     any(grepl(paste0("^", p, "(\\[|$)"), names(flagged_data)))
   })
-  
+
   flag_cols <- names(flagged_data)[formatters::var_labels(flagged_data)
                                    %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
-  
+
   if (length(flag_cols) > 0) {
     requested_flags <- nca_intervals %>%
       select(any_of(c(
@@ -286,7 +288,7 @@ add_label_attribute <- function(df, myres) {
       group_by(across(any_of(group_cols))) %>%
       # Collapse duplicates: if any row is TRUE, the result is TRUE
       summarise(across(any_of(flag_params_pknca), any), .groups = "drop")
-    
+
     flagged_data <- flagged_data %>%
       left_join(requested_flags, by = intersect(names(.), names(requested_flags))) %>%
       rowwise() %>%
@@ -321,6 +323,6 @@ add_label_attribute <- function(df, myres) {
       ungroup() %>%
       select(-all_of(c(flag_params_pknca, "na_msg_vec", "na_msg")))
   }
-  
+
   flagged_data
 }
