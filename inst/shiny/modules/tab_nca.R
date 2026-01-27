@@ -269,7 +269,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 
   } else if (grepl("^No reason provided", msg)) {
     # Handle no reason provided erros from the calculation function.
-    msg <- paste(msg, "<br><br>Please provide the reason in Setup > Slope Selector tab.")
+    msg <- msg
 
   } else {
     # Handle unknown error

@@ -749,16 +749,11 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
       time_col <- processed_pknca_data$conc$columns$time
 
       missing_reasons <- data_conc[[excl_hl_col]] & nchar(data_conc[["REASON"]]) == 0
-      missing_reasons_rows <- data_conc[missing_reasons, ] %>%
-        select(any_of(c(conc_groups, time_col)))
 
-      if (nrow(missing_reasons_rows) > 0) {
+      if (any(missing_reasons)) {
         stop(
-          "No reason provided for the following half-life exclusions:\n",
-          "\n",
-          paste(capture.output(print(missing_reasons_rows)), collapse = "\n"),
-          "\n",
-          "Please go to `Slope Selection` table and include it"
+          "No reason provided for all half-life exclusions:\n",
+          "Please go to `Setup > Slope Selector` and type a REASON in the table for each"
         )
       }
     }
