@@ -9,6 +9,7 @@
 #' @param x_var Name of the x variable.
 #' @return Finalized ggplot object for mean PK plot.
 #' @keywords internal
+#' @noRd
 finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) {
   plot_build <- ggplot2::ggplot_build(plot)
   plot +
@@ -36,6 +37,7 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
 #' @param conc_time_col Name of the time column in concentration data (default: pknca_data$conc$columns$time).
 #' @return Data frame with TIME_DOSE column added, representing the last dose time for each sample.
 #' @keywords internal
+#' @noRd
 derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$columns$time) {
   conc_data <- pknca_data$conc$data
   dose_data <- pknca_data$dose$data
@@ -62,6 +64,7 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
 #' @param filtering_list A named list where each name is a column and each value is a vector of allowed values.
 #' @return Filtered data frame.
 #' @keywords internal
+#' @noRd
 filter_by_list <- function(data, filtering_list) {
   if (is.null(filtering_list) || length(filtering_list) == 0) return(data)
   purrr::reduce(
@@ -107,6 +110,7 @@ filter_by_list <- function(data, filtering_list) {
 #'   ylog_scale = FALSE
 #' )
 #' @keywords internal
+#' @noRd
 process_data_individual <- function(data,
                                     filtering_list = NULL,
                                     ylog_scale = FALSE,
@@ -119,42 +123,29 @@ process_data_individual <- function(data,
   processed_data
 }
 
-#' Process data for mean PK line plot
-#'
-#' Creates a summarised data frame for mean PK concentration-time profiles.
-#'
-#' @param data Raw data frame.
-#' @param filtering_list Named list of filters (column = allowed values).
-#' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
-#' @param color_by,facet_by Optional grouping variables to be included in summary.
-#' @param conc_col Name of the concentration column (default: "AVAL").
-#' @param grouping_cols Character vector of columns to group by (default: c(color_by, facet_by, "RRLTU", "AVALU")).
-#' @returns `summarised_data` with Mean, SD, and CIs for the profiles selected.
-#'
-#' @import dplyr
-#' @importFrom rlang sym syms
-#' @examples
-#' base_df <- expand.grid(
-#'   USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
-#'   PARAM = c("Analyte1"),
-#'   PCSPEC = c("Spec1"),
-#'   ATPTREF = 1,
-#'   NFRLT = 0:5,
-#'   AVALU = "ug/ml",
-#'   RRLTU = "hr"
-#' )
-#' set.seed(123)
-#' base_df$AVAL <- rnorm(nrow(base_df), mean = 50, sd = 10)
-#'
-#' result <- process_data_mean(
-#'   data = base_df,
-#'   filtering_list = list(
-#'     PARAM = c("Analyte1"),
-#'     PCSPEC = c("Spec1")
-#'   ),
-#'   ylog_scale = FALSE
-#' )
-#' @keywords internal
+##' Process data for mean PK line plot
+##'
+##' Creates a summarised data frame for mean PK concentration-time profiles, with optional alignment to last dose and dose time aggregation.
+##'
+##' @param data Raw concentration data frame (before dose alignment).
+##' @param filtering_list Named list of filters (column = allowed values).
+##' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
+##' @param color_by,facet_by Optional grouping variables to be included in summary.
+##' @param conc_col Name of the concentration column (default: "AVAL").
+##' @param grouping_cols Character vector of columns to group by (default: c(color_by, facet_by, "RRLTU", "AVALU")).
+##' @param align_last_dose Logical; if TRUE, align concentration data to last dose using `derive_last_dose_time` (requires `pknca_data` and `conc_time_col`).
+##' @param pknca_data Optional PKNCAdata object for dose alignment (required if align_last_dose is TRUE).
+##' @param conc_time_col Name of the time column to align on (required if align_last_dose is TRUE).
+##' @param aggregate_dose_time Logical; if TRUE, aggregate dose times by group (requires `dose_group_cols` and `time_sample`).
+##' @param dose_group_cols Character vector of columns for dose grouping (used if aggregate_dose_time is TRUE).
+##' @param time_sample Name of the time variable for dose aggregation (used if aggregate_dose_time is TRUE).
+##'
+##' @return Data frame summarised by group, with columns for Mean, SD, N, SE, SD_min, SD_max, CI_lower, CI_upper.
+##'
+##' @import dplyr
+##' @importFrom rlang sym syms
+##' @keywords internal
+#' @noRd
 process_data_mean <- function(data,
                               filtering_list = NULL,
                               ylog_scale = FALSE,

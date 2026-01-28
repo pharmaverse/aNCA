@@ -149,7 +149,6 @@ g_lineplot <- function(data,
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_thr(threshold_value),
-    #.add_dose_lines(dose_data, facet_by),
     .add_vline(data, vline_var)
   )
   plt + optional_layers
@@ -190,19 +189,7 @@ g_lineplot <- function(data,
   geom_hline(yintercept = thr, linetype = "dotted", color = "red")
 }
 
-# #' @noRd
-# .add_dose_lines <- function(dose_data, facet_by) {
-#   if (is.null(dose_data)) {
-#     return(NULL)
-#   }
-#   browser()
-#   dose_info <- dose_data %>%
-#     select(all_of(unique(c(facet_by, "TIME_DOSE", "DOSEA")))) %>%
-#     distinct() %>%
-#     filter(!is.na(TIME_DOSE))
-#   geom_vline(data = dose_info, aes(xintercept = TIME_DOSE), linetype = "dotted", color = "grey")
-# }
-
+#' @noRd
 .add_vline <- function(data, vline_var) {
   if (is.null(vline_var)) {
     return(NULL)
@@ -211,11 +198,8 @@ g_lineplot <- function(data,
 }
 
 #' @noRd
-.add_mean_layers <- function(is_mean_plot, sd_min, sd_max,
-                             ci, color_by, y_var, x_var, group_var) {
-  if (!is_mean_plot) {
-    return(NULL)
-  }
+.add_mean_layers <- function(sd_min, sd_max, ci, color_by, y_var, x_var, group_var) {
+
   # 1. Error bars
   error_bar_layer <- NULL
   if (isTRUE(sd_min) || isTRUE(sd_max)) {

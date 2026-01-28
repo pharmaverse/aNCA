@@ -2,13 +2,13 @@ base_df <- expand.grid(
   USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
   PARAM = c("Analyte1", "Analyte2"),
   PCSPEC = c("Spec1", "Spec2"),
-  PARAM = c(1, 2), # 2 cycles
+  ATPTREF = 1,
   NRRLT = 0:5 # 6 nominal time points per cycle
 )
 
 set.seed(123) # for reproducible ARRLT
 test_data <- base_df %>%
-  dplyr::arrange(USUBJID, PARAM, PCSPEC, PARAM, NRRLT) %>%
+  dplyr::arrange(USUBJID, PARAM, PCSPEC, NRRLT) %>%
   dplyr::mutate(
     STUDYID = "Study1",
     EVID = 0,
@@ -59,29 +59,39 @@ sample_data <- dplyr::bind_rows(
 
 
 
+# Expand the original FIXTURE_PKNCA_DATA to have more subjects for the meanplot tests
+sample_data <- FIXTURE_PKNCA_DATA
+d_data <- sample_data$conc$data %>%
+  filter(PARAM == unique(PARAM)[1], PCSPEC == unique(PCSPEC)[1])
+d_data2 <- d_data %>%
+  mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 3)
+d_data3 <- d_data %>%
+  mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 7)
+sample_data$conc$data <- bind_rows(d_data, d_data2, d_data3)
+pknca_data <- sample_data
+
+filtering_list <- list(
+  USUBJID = unique(pknca_data$conc$data$USUBJID)[1],
+  PARAM = unique(pknca_data$conc$data$PARAM)[1],
+  PCSPEC = unique(pknca_data$conc$data$PCSPEC)[1],
+  ATPTREF = unique(pknca_data$conc$data$ATPTREF)[1]
+)
+
 describe("process_data_individual functions correctly", {
 
   it("returns a dataframe with default settings", {
     res <- process_data_individual(
-      data = sample_data,
-      selected_usubjids = "Subject1",
-      selected_analytes = "Analyte1",
-      selected_pcspec = "Spec1"
+      data = sample_data
     )
-
     # expect data frame output
     expect_true(is.data.frame(res))
   })
-
 
   it("handles missing columns gracefully", {
     incomplete_data <- sample_data %>% select(-AVAL)
     expect_error(
       process_data_individual(
-        data = incomplete_data,
-        selected_usubjids = "Subject1",
-        selected_analytes = "Analyte1",
-        selected_pcspec = "Spec1"
+        data = incomplete_data
       ),
       "object 'AVAL' not found"
     )
@@ -99,18 +109,15 @@ describe("process_data_individual functions correctly", {
     expect_true(all(!is.na(p$AVAL)))
   })
 
-
-  it("filters data if selected profiles is not null", {
+  it("filters data according to filtering_list", {
     p <- process_data_individual(
       data = sample_data,
-      selected_usubjids = "Subject1",
-      selected_analytes = "Analyte1",
-      selected_pcspec = "Spec1",
+      filtering_list = filtering_list,
       selected_profiles = 1
     )
 
     # Check that data is filtered to the selected cycle
-    expect_true(all(p$PARAM == 1))
+    expect_true(all(p$ATPTREF == 1))
   })
 
   it("handles predose duplication if selected profiles is not null", {
@@ -127,7 +134,7 @@ describe("process_data_individual functions correctly", {
       filter(NFRLT == 168)
 
     expect_true(nrow(predose_record_in_plot) == 1)
-    expect_true(predose_record_in_plot$PARAM == 1)
+    expect_true(predose_record_in_plot$ATPTREF == 1)
   })
 
   it("filters non-positive AVAL if log scale selected", {
@@ -146,7 +153,6 @@ describe("process_data_individual functions correctly", {
 })
 
 describe("process_data_mean functions correctly", {
-
 
   it("returns a dataframe with default settings", {
     p <- process_data_mean(
