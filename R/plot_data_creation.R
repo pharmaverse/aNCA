@@ -30,38 +30,29 @@
 #' selected_profiles = NULL,
 #' ylog_scale = FALSE
 #' )
-#' @export
+#' @keywords internal
 process_data_individual <- function(data,
-                                    selected_usubjids,
-                                    selected_analytes,
-                                    selected_pcspec,
-                                    selected_profiles = NULL,
-                                    ylog_scale = FALSE) {
+                                    filtering_list = NULL,
+                                    # selected_usubjids,
+                                    # selected_analytes,
+                                    # selected_pcspec,
+                                    # selected_profiles = NULL,
+                                    ylog_scale = FALSE,
+                                    
+                                    conc_col = "AVAL") {
 
-  processed_data <- data %>%
-    filter(
-      USUBJID %in% selected_usubjids,
-      PARAM %in% selected_analytes,
-      PCSPEC %in% selected_pcspec,
-      if (!is.null(selected_profiles)) ATPTREF %in% selected_profiles else TRUE,
-      !is.na(AVAL)
-    )
+  processed_data <- purrr::reduce(
+    names(filtering_list),
+    function(df, var) {
+      df %>% filter(!!sym(var) %in% filtering_list[[var]])
+    },
+    .init = data
+  ) %>%
+    filter(!is.na(!!sym(conc_col)))
 
   if (isTRUE(ylog_scale)) {
-    processed_data <- processed_data %>% filter(AVAL > 0)
+    processed_data <- processed_data %>% filter(!!sym(conc_col) > 0)
   }
-
-  # if (!is.null(selected_profiles)) {
-  #   if ("ARRLT" %in% names(processed_data) &&
-  #         any(processed_data$ARRLT < 0 & processed_data$AFRLT > 0)) {
-  #     processed_data <- dose_profile_duplicates(
-  #       processed_data,
-  #       groups = c("USUBJID", "PCSPEC", "PARAM", "ATPTREF"),
-  #       dosno = "ATPTREF"
-  #     )
-  #   }
-  #   processed_data <- processed_data %>% filter(ATPTREF %in% selected_profiles)
-  # }
 
   processed_data
 }
@@ -96,31 +87,33 @@ process_data_individual <- function(data,
 #' selected_profiles = NULL,
 #' ylog_scale = FALSE
 #' )
-#' @export
+#' @keywords internal
 process_data_mean <- function(data,
-                              selected_analytes,
-                              selected_pcspec,
-                              selected_profiles = NULL,
+                              filtering_list = NULL,
+                              # selected_analytes,
+                              # selected_pcspec,
+                              # selected_profiles = NULL,
                               ylog_scale = FALSE,
                               color_by = NULL,
-                              facet_by = NULL) {
+                              facet_by = NULL,
 
-  processed <- data %>%
-    filter(
-      PARAM %in% selected_analytes,
-      PCSPEC %in% selected_pcspec,
-      if (!is.null(selected_profiles)) ATPTREF %in% selected_profiles else TRUE,
-      !is.na(AVAL)
-    )
+                              conc_col = "AVAL",
+                              grouping_cols = c(color_by, facet_by, "RRLTU", "AVALU")) {
 
-  # Retrieve unique grouping variables
-  grp_cols <- unique(c(color_by, facet_by, "RRLTU", "AVALU"))
+  processed <- purrr::reduce(
+    names(filtering_list),
+    function(df, var) {
+      df %>% filter(!!sym(var) %in% filtering_list[[var]])
+    },
+    .init = data
+  ) %>%
+    filter(!is.na(!!sym(conc_col)))
 
   summarised_data <- processed %>%
-    group_by(!!!syms(grp_cols)) %>%
+    group_by(!!!syms(grouping_cols)) %>%
     summarise(
-      Mean = round(mean(AVAL, na.rm = TRUE), 3),
-      SD = sd(AVAL, na.rm = TRUE),
+      Mean = round(mean(!!sym(conc_col), na.rm = TRUE), 3),
+      SD = sd(!!sym(conc_col), na.rm = TRUE),
       N = n(),
       SE = SD / sqrt(N),
       .groups = "drop"
@@ -139,8 +132,6 @@ process_data_mean <- function(data,
   }
   summarised_data
 }
-
-
 
 
 #' Create an Individual PK Line Plot
@@ -179,13 +170,15 @@ exploration_individualplot <- function(
     palette = NULL,
     tooltip_vars = NULL,
     labels_df = NULL,
-    selected_analytes = NULL,
-    selected_pcspec = NULL,
-    selected_profiles = NULL,
-    selected_usubjids = NULL
+    # selected_analytes = NULL,
+    # selected_pcspec = NULL,
+    # selected_profiles = NULL,
+    # selected_usubjids = NULL,
+    filtering_list = NULL,
+    use_time_since_last_dose = FALSE
 ) {
 
-  data <- if (show_dose || !is.null(selected_profiles)) {
+  data <- if (show_dose || use_time_since_last_dose) {
     time_dose <- pknca_data$dose$columns$time
     dose_group_vars <- group_vars(pknca_data$dose)
 
@@ -201,7 +194,7 @@ exploration_individualplot <- function(
       group_by(!!!syms(setdiff(names(pknca_data$conc$data), "TIME_DOSE"))) %>%
       arrange(TIME_DOSE) %>%
       slice_tail(n = 1)
-    if (!is.null(selected_profiles)) {
+    if (use_time_since_last_dose) {
       mutate(data, !!sym(pknca_data$conc$columns$time) := !!sym(pknca_data$conc$columns$time) - TIME_DOSE)
     } else {
       data
@@ -210,16 +203,24 @@ exploration_individualplot <- function(
     pknca_data$conc$data
   }
 
+  filtering_list <- list(
+    USUBJID = data$USUBJID %>% unique(),
+    PARAM = data$PARAM %>% unique(),
+    PCSPEC = data$PCSPEC %>% unique(),
+    ATPTREF = data$ATPTREF %>% unique()
+  )
+
   individual_data <- process_data_individual(
     data = data,
-    selected_usubjids = selected_usubjids,
-    selected_analytes = selected_analytes,
-    selected_pcspec = selected_pcspec,
-    selected_profiles = selected_profiles,
+    # selected_usubjids = selected_usubjids,
+    # selected_analytes = selected_analytes,
+    # selected_pcspec = selected_pcspec,
+    # selected_profiles = selected_profiles,
+    filtering_list = filtering_list,
     ylog_scale = ylog_scale
   )
 
-  x_var <- pknca_data$conc$columns$time # or ARRLT for 1 profile, which does not make sense...
+  x_var <- pknca_data$conc$columns$time
   y_var <- pknca_data$conc$columns$concentration
   x_var_unit <- pknca_data$conc$columns$timeu
   y_var_unit <- pknca_data$conc$columns$concu
@@ -281,16 +282,18 @@ exploration_meanplot <- function(
     ci = FALSE,
     tooltip_vars = NULL,
     labels_df = NULL,
-    selected_analytes = NULL,
-    selected_pcspec = NULL,
-    selected_profiles = NULL
+    # selected_analytes = NULL,
+    # selected_pcspec = NULL,
+    # selected_profiles = NULL,
+    filtering_list = NULL,
+    use_time_since_last_dose = FALSE
 ) {
 
   x_var_unit <- pknca_data$conc$columns$timeu
   y_var_unit <- pknca_data$conc$columns$concu
   time_sample <- pknca_data$conc$columns$time.nominal
   time_sample <- if(is.null(time_sample)) pknca_data$conc$columns$time else time_sample
-  data <- if (show_dose || !is.null(selected_profiles)) {
+  data <- if (show_dose || use_time_since_last_dose) {
     time_dose <- pknca_data$dose$columns$time
     dose_group_vars <- group_vars(pknca_data$dose)
 
@@ -307,7 +310,7 @@ exploration_meanplot <- function(
       arrange(TIME_DOSE) %>%
       slice_tail(n = 1)
 
-    if (!is.null(selected_profiles)) {
+    if (use_time_since_last_dose) {
       mutate(data, !!sym(time_sample) := NRRLT)
     } else {
       data
@@ -316,13 +319,18 @@ exploration_meanplot <- function(
     pknca_data$conc$data
   }
 
+  grouping_cols <- unique(c(color_by, facet_by, time_sample, x_var_unit, y_var_unit))
+  if (show_dose) grouping_cols <- c(grouping_cols, "TIME_DOSE")
+
   mean_data <- process_data_mean(
     data = data,
-    selected_analytes = selected_analytes,
-    selected_pcspec = selected_pcspec,
-    selected_profiles = selected_profiles,
-    color_by = c(color_by, time_sample, x_var_unit, y_var_unit),
-    facet_by = if (show_dose) c(facet_by, "TIME_DOSE") else facet_by,
+    filtering_list = filtering_list,
+    # selected_analytes = selected_analytes,
+    # selected_pcspec = selected_pcspec,
+    # selected_profiles = selected_profiles,
+    # color_by = c(color_by, time_sample, x_var_unit, y_var_unit),
+    # facet_by = if (show_dose) c(facet_by, "TIME_DOSE") else facet_by,
+    grouping_cols = grouping_cols,
     ylog_scale = ylog_scale
   )
 
