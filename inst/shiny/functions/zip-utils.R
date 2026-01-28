@@ -301,3 +301,125 @@ get_tree_leaf_ids <- function(tree) {
   }
   ids
 }
+
+#' Create export structure
+#' 
+#' @param target_dir Path to the directory where files will be written.
+#' @param res_nca NCA results object.
+#' @param settings Settings object.
+#' @param grouping_vars Reactive or list of grouping variables.
+#' @param input Shiny input object from the zip module.
+#' @param session Shiny session object.
+create_export_structure <- function(target_dir, res_nca, settings, grouping_vars, input, session) {
+
+  # 1. Standard Outputs (Tables/Plots)
+  save_output(
+    output = session$userData$results,
+    output_path = target_dir,
+    ggplot_formats = input$plot_formats,
+    table_formats = input$table_formats,
+    obj_names = input$res_tree
+  )
+  
+  shiny::incProgress(0.2)
+  # 2. Presentation Slides
+  if ("results_slides" %in% input$res_tree) {
+    res_dose_slides <- get_dose_esc_results(
+      o_nca = res_nca,
+      group_by_vars = setdiff(
+        group_vars(res_nca),
+        res_nca$data$conc$columns$subject
+      ),
+      facet_vars = "DOSEA",
+      statistics = c("Mean"),
+      stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+      info_vars = grouping_vars
+    )
+    
+    presentations_path <- file.path(target_dir, "presentations")
+    dir.create(presentations_path, showWarnings = FALSE)
+    
+    if ("qmd" %in% input$slide_formats) {
+      create_qmd_dose_slides(
+        res_dose_slides = res_dose_slides,
+        quarto_path = file.path(presentations_path, "results_slides.qmd"),
+        title = paste0("NCA Results\n", session$userData$project_name()),
+        use_plotly = TRUE
+      )
+    }
+    if ("pptx" %in% input$slide_formats) {
+      create_pptx_dose_slides(
+        res_dose_slides = res_dose_slides,
+        path = file.path(presentations_path, "results_slides.pptx"),
+        title = paste0("NCA Results\n", session$userData$project_name()),
+        template = "www/templates/template.pptx"
+      )
+    }
+  }
+  
+  shiny::incProgress(0.2)
+  # 3. Settings
+  if ("settings_file" %in% input$res_tree) {
+    setts_tmpdir <- file.path(target_dir, "settings")
+    dir.create(setts_tmpdir, recursive = TRUE, showWarnings = FALSE)
+    settings_to_save <- list(
+      settings = session$userData$settings(),
+      slope_rules = session$userData$slope_rules()
+    )
+    saveRDS(settings_to_save, file.path(setts_tmpdir, "settings.rds"))
+  }
+  
+  shiny::incProgress(0.2)
+  
+  # 4. Input Data
+  data_tmpdir <- file.path(target_dir, "data")
+  dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
+  saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
+  
+  shiny::incProgress(0.2)
+  # 5. R Script Template
+  if ("r_script" %in% input$res_tree) {
+    script_tmpdir <- file.path(target_dir, "code")
+    dir.create(script_tmpdir, recursive = TRUE, showWarnings = FALSE)
+    get_session_code(
+      template_path = "www/templates/script_template.R",
+      session = session,
+      output_path = file.path(script_tmpdir, "session_code.R")
+    )
+  }
+  
+  # 6. Clean the files structure
+  all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
+  
+  # Build the pattern
+  valid_extensions <- c(
+    if (length(input$table_formats) > 0) paste0("\\.", input$table_formats),
+    if (length(input$plot_formats) > 0) paste0("\\.", input$plot_formats),
+    if (length(input$slide_formats) > 0) paste0("results_slides\\.", input$slide_formats), # Simplified slide check
+    if ("r_script" %in% input$res_tree) "session_code\\.R",
+    if ("settings_file" %in% input$res_tree) "settings\\.rds",
+    "data\\.rds" 
+  )
+  
+  if (length(valid_extensions) > 0) {
+    pattern <- paste0("(", paste0(valid_extensions, collapse = "|"), ")$")
+    
+    # Identify files to keep
+    to_keep <- grepl(pattern, all_files, ignore.case = TRUE)
+    
+    to_remove <- all_files[!to_keep]
+    if (length(to_remove) > 0) file.remove(to_remove)
+  } else {
+    # If the user somehow unselected everything, clear the folder
+    file.remove(all_files)
+  }
+  
+  # Clean up empty directories left behind
+  dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
+  
+  for (d in dirs[rev(order(nchar(dirs)))]) {
+    if (length(list.files(d, all.files = TRUE, recursive = TRUE)) == 0 && d != target_dir) {
+      unlink(d, recursive = TRUE)
+    }
+  }
+}
