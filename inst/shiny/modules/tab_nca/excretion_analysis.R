@@ -22,9 +22,9 @@ excretion_ui <- function(id) {
         card(
           card_body(
             selectInput(ns("matrix_select"), "Select Matrices:", choices = NULL, multiple = TRUE),
-            selectInput(ns("end_time_col"), "Map End Time Column:", choices = NULL),
+            uiOutput(ns("map_end_col_ui_wrapper")),
             checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = TRUE),
-            selectInput(ns("param_select"), "Select Parameters:", choices = NULL, multiple = TRUE),
+            uiOutput(ns("param_select_ui_wrapper")),
             checkboxGroupInput(
               ns("interval_types"),
               "Select Interval Types:",
@@ -68,15 +68,87 @@ excretion_server <- function(id, input_pknca_data) {
           character(0)
         }
       }
-
+      
       updateSelectInput(session, "matrix_select", choices = pcspecs,
                         selected = if ("Urine" %in% pcspecs) "Urine" else NULL)
-      updateSelectInput(session, "end_time_col", choices = available_cols,
-                        selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
-      updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
-                          filter(TYPE == "Urine") %>%
-                          pull(PKNCA, PPTESTCD),
-                        selected = c("ae", "fe"))
+      
+      variables_choices <- reactive({
+        req(metadata_nca_variables)
+        
+        # Taking the variables and labels from the metadata
+        choices_df <- metadata_nca_variables %>%
+          select(Variable, Label) %>%
+          distinct(Variable, .keep_all = TRUE) %>%
+          filter(!is.na(Variable), Variable != "") %>%
+          filter(Variable %in% available_cols)
+        
+        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
+          list(
+            label = as.character(var),
+            value = as.character(var),
+            description = as.character(lab)
+          )
+        }))
+      })
+      
+      # Rendering the map end time column selector
+      output$map_end_col_ui_wrapper <- renderUI({
+        req(variables_choices())
+        end_time_col_vars <- variables_choices()
+        
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("end_time_col"),
+          label = "Map End Time Column:",
+          choices = end_time_col_vars,
+          multiple = TRUE,
+          selected =  if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL,
+          search = TRUE,
+          hasOptionDescription = TRUE,
+          position = "bottom",
+          dropboxWrapper = "body"
+        )
+      })
+
+      urine_params_to_select <- metadata_nca_parameters %>%
+        filter(TYPE == "Urine")
+      
+      parameters_to_select <- urine_params_to_select$PPTESTCD
+      
+      parameters_choices <- reactive({
+        req(metadata_nca_parameters)
+        
+        # Taking the parameters and labels from the metadata
+        choices_df <- metadata_nca_parameters %>%
+          select(PPTESTCD, PPTEST) %>%
+          distinct(PPTESTCD, .keep_all = TRUE) %>%
+          filter(!is.na(PPTESTCD), PPTESTCD != "") %>%
+          filter(PPTESTCD %in% parameters_to_select)
+        
+        unname(purrr::pmap(list(choices_df$PPTESTCD, choices_df$PPTEST), function(var, lab) {
+          list(
+            label = as.character(var),
+            value = as.character(var),
+            description = as.character(lab)
+          )
+        }))
+      })
+      
+      # Rendering the parameters to select selector
+      output$param_select_ui_wrapper <- renderUI({
+        req(parameters_choices())
+        parameters_select <- parameters_choices()
+        
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("param_select"),
+          label = "Select Parameters:",
+          choices = parameters_select,
+          multiple = TRUE,
+          selected = c("RCAMINT", "FREXINT"),
+          search = TRUE,
+          hasOptionDescription = TRUE,
+          dropboxDirection = "bottom"
+        )
+      })
     })
 
     # Perform calculations
