@@ -60,25 +60,26 @@ sample_data <- dplyr::bind_rows(
 
 
 # Expand the original FIXTURE_PKNCA_DATA to have more subjects for the meanplot tests
-sample_data <- FIXTURE_PKNCA_DATA
-d_data <- sample_data$conc$data %>%
-  filter(PARAM == unique(PARAM)[1], PCSPEC == unique(PCSPEC)[1])
-d_data2 <- d_data %>%
-  mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 3)
-d_data3 <- d_data %>%
-  mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 7)
-sample_data$conc$data <- bind_rows(d_data, d_data2, d_data3)
-pknca_data <- sample_data
+# sample_data <- FIXTURE_PKNCA_DATA
+# d_data <- sample_data$conc$data %>%
+#   filter(PARAM == unique(PARAM)[1], PCSPEC == unique(PCSPEC)[1])
+# d_data2 <- d_data %>%
+#   mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 3)
+# d_data3 <- d_data %>%
+#   mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 7)
+# sample_data$conc$data <- bind_rows(d_data, d_data2, d_data3)
+# pknca_data <- sample_data
 
-filtering_list <- list(
-  USUBJID = unique(pknca_data$conc$data$USUBJID)[1],
-  PARAM = unique(pknca_data$conc$data$PARAM)[1],
-  PCSPEC = unique(pknca_data$conc$data$PCSPEC)[1],
-  ATPTREF = unique(pknca_data$conc$data$ATPTREF)[1]
-)
+# filtering_list <- list(
+#   USUBJID = unique(pknca_data$conc$data$USUBJID)[1],
+#   PARAM = unique(pknca_data$conc$data$PARAM)[1],
+#   PCSPEC = unique(pknca_data$conc$data$PCSPEC)[1],
+#   ATPTREF = unique(pknca_data$conc$data$ATPTREF)[1]
+# )
 
 describe("process_data_individual functions correctly", {
 
+  sample_data <- pknca_data$conc$data
   it("returns a dataframe with default settings", {
     res <- process_data_individual(
       data = sample_data
@@ -99,12 +100,13 @@ describe("process_data_individual functions correctly", {
 
   it("filters out EVID != 0 and NA AVAL", {
     p <- process_data_individual(
-      data = sample_data, # sample_data contains EVID=1 and NA AVAL
-      selected_usubjids = "Subject1",
-      selected_analytes = "Analyte1",
-      selected_pcspec = "Spec1"
+      data = sample_data,
+      filtering_list = list(
+        USUBJID = sample_data$USUBJID[1],
+        PARAM = sample_data$PARAM[1],
+        PCSPEC = sample_data$PCSPEC[1]
+      )
     )
-    # Check that the records were removed by the internal filter
     expect_true(all(p$EVID == 0))
     expect_true(all(!is.na(p$AVAL)))
   })
@@ -112,42 +114,38 @@ describe("process_data_individual functions correctly", {
   it("filters data according to filtering_list", {
     p <- process_data_individual(
       data = sample_data,
-      filtering_list = filtering_list,
-      selected_profiles = 1
+      filtering_list = filtering_list
     )
-
-    # Check that data is filtered to the selected cycle
     expect_true(all(p$ATPTREF == 1))
   })
 
-  it("handles predose duplication if selected profiles is not null", {
-
+  it("handles predose duplication if filtering_list is used", {
     p <- process_data_individual(
       data = sample_data,
-      selected_usubjids = "Subject1",
-      selected_analytes = "Analyte1",
-      selected_pcspec = "Spec1",
-      selected_profiles = 1
+      filtering_list = list(
+        USUBJID = sample_data$USUBJID[1],
+        PARAM = sample_data$PARAM[1],
+        PCSPEC = sample_data$PCSPEC[1],
+        ATPTREF = sample_data$ATPTREF[1]
+      )
     )
-
     predose_record_in_plot <- p %>%
       filter(NFRLT == 168)
-
     expect_true(nrow(predose_record_in_plot) == 1)
-    expect_true(predose_record_in_plot$ATPTREF == 1)
+    expect_true(predose_record_in_plot$ATPTREF == sample_data$ATPTREF[1])
   })
 
   it("filters non-positive AVAL if log scale selected", {
     p <- process_data_individual(
-      data = sample_data, # sample_data has AVAL=0 and AVAL=-10
-      selected_usubjids = "Subject1",
-      selected_analytes = "Analyte2",
-      selected_pcspec = "Spec2",
-      selected_profiles = 1,
+      data = sample_data,
+      filtering_list = list(
+        USUBJID = "Subject1",
+        PARAM = "Analyte2",
+        PCSPEC = "Spec2",
+        ATPTREF = 1
+      ),
       ylog_scale = TRUE
     )
-
-    # Check that non-positive values were filtered
     expect_true(all(p$AVAL > 0))
   })
 })
@@ -157,15 +155,14 @@ describe("process_data_mean functions correctly", {
   it("returns a dataframe with default settings", {
     p <- process_data_mean(
       data = sample_data,
-      selected_analytes = "Analyte1",
-      selected_pcspec = "Spec1",
-      color_by = "DOSEA"
+      filtering_list = list(
+        PARAM = sample_data$PARAM[1],
+        PCSPEC = sample_data$PCSPEC[1]
+      ),
+      color_by = "ATPTREF"
     )
-
-    # Calculates mean
     expect_true("Mean" %in% names(p))
-    # Groups by color by vars
-    expect_true("DOSEA" %in% names(p))
+    expect_true("ATPTREF" %in% names(p))
   })
 
   it("handles missing columns gracefully", {
@@ -173,57 +170,55 @@ describe("process_data_mean functions correctly", {
     expect_error(
       process_data_mean(
         data = incomplete_data,
-        selected_analytes = "Analyte1",
-        selected_pcspec = "Spec1",
-        color_by = "DOSEA"
+        filtering_list = list(
+          PARAM = sample_data$PARAM[1],
+          PCSPEC = sample_data$PCSPEC[1]
+        ),
+        color_by = "ATPTREF"
       ),
       "object 'AVAL' not found"
     )
   })
 
-  it("filters data if selected profiles is not null", {
+  it("filters data if filtering_list is used", {
     p <- process_data_mean(
       data = sample_data,
-      selected_analytes = "Analyte1",
-      selected_pcspec = "Spec1",
-      color_by = "DOSEA",
-      selected_profiles = 1
+      filtering_list = list(
+        PARAM = sample_data$PARAM[1],
+        PCSPEC = sample_data$PCSPEC[1],
+        ATPTREF = sample_data$ATPTREF[1]
+      ),
+      color_by = "ATPTREF"
     )
-
-    # Check that data is filtered to the selected cycle
     expect_true(max(p$NRRLT) <= 5)
   })
 
   it("supports multiple color_by and facet_by", {
     p <- process_data_mean(
       data = sample_data,
-      selected_analytes = c("Analyte1", "Analyte2"),
-      selected_pcspec = "Spec1",
+      filtering_list = list(
+        PARAM = c(sample_data$PARAM[1], sample_data$PARAM[2]),
+        PCSPEC = sample_data$PCSPEC[1]
+      ),
       color_by = c("DOSEA", "SEX"),
       facet_by = "PARAM"
     )
-
-    # Check variables exist in summary_data
     expect_true("DOSEA" %in% names(p))
     expect_true("SEX" %in% names(p))
     expect_true("PARAM" %in% names(p))
-
   })
 
-
   it("filters non-positive Mean for log scale", {
-    # sample_data (Analyte2, Spec2, Cycle 1, NRRLT=0) has AVAL=0 for all 4 subjects
-    # This will result in Mean = 0, which should be filtered.
     p <- process_data_mean(
       data = sample_data,
-      selected_analytes = "Analyte2",
-      selected_pcspec = "Spec2",
+      filtering_list = list(
+        PARAM = "Analyte2",
+        PCSPEC = "Spec2",
+        ATPTREF = 1
+      ),
       color_by = "DOSEA",
-      selected_profiles = 1,
       ylog_scale = TRUE
     )
-
-    # Check that non-positive Mean values were filtered
     expect_true(all(p$Mean > 0))
   })
 
@@ -240,9 +235,11 @@ describe("exploration_individualplot: Individual Plot Mode", {
     p <- exploration_individualplot(
       pknca_data = sample_data,
       color_by = "PARAM",
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1],
-      selected_usubjids = subjects[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1],
+        USUBJID = subjects[1]
+      )
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "PK Concentration - Time Profile")
@@ -256,9 +253,11 @@ describe("exploration_individualplot: Individual Plot Mode", {
       pknca_data = sample_data,
       color_by = "PARAM",
       facet_by = "PARAM",
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1],
-      selected_usubjids = subjects[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1],
+        USUBJID = subjects[1]
+      )
     )
     expect_s3_class(p$facet, "FacetWrap")
   })
@@ -268,9 +267,11 @@ describe("exploration_individualplot: Individual Plot Mode", {
       pknca_data = sample_data,
       color_by = "PARAM",
       ylog_scale = TRUE,
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1],
-      selected_usubjids = subjects[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1],
+        USUBJID = subjects[1]
+      )
     )
     is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
     expect_true(is_log_scale)
@@ -281,9 +282,11 @@ describe("exploration_individualplot: Individual Plot Mode", {
       pknca_data = sample_data,
       color_by = "PARAM",
       threshold_value = 0.1,
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1],
-      selected_usubjids = subjects[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1],
+        USUBJID = subjects[1]
+      )
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomHline" %in% layer_classes)
@@ -295,9 +298,11 @@ describe("exploration_individualplot: Individual Plot Mode", {
       pknca_data = sample_data,
       color_by = "PARAM",
       palette = test_palette,
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1],
-      selected_usubjids = subjects[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1],
+        USUBJID = subjects[1]
+      )
     )
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
@@ -310,9 +315,11 @@ describe("exploration_individualplot: Individual Plot Mode", {
     p <- exploration_individualplot(
       pknca_data = empty_data,
       color_by = "PARAM",
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1],
-      selected_usubjids = subjects[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1],
+        USUBJID = subjects[1]
+      )
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "Error")
@@ -326,15 +333,16 @@ describe("exploration_individualplot: Individual Plot Mode", {
       color_by = "PARAM",
       show_dose = TRUE,
       facet_by = "PARAM",
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1],
-      selected_usubjids = subjects[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1],
+        USUBJID = subjects[1]
+      )
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
 
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
-    # Check vline data contains facet variables
     expect_true(all("PARAM" %in% names(vline_layer$data)))
   })
 })
@@ -366,14 +374,46 @@ describe("exploration_meanplot: Mean Plot Mode", {
     expect_true(is_log_scale)
   })
 
+  it("returns a ggplot object with mean labels", {
+    p <- exploration_meanplot(
+      pknca_data = sample_data,
+      color_by = "PARAM",
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1]
+      )
+    )
+    expect_s3_class(p, "ggplot")
+    expect_true(grepl("Mean", p$labels$title))
+    expect_true(grepl("Mean", p$labels$y))
+    expect_true(grepl("Nominal", p$labels$x))
+    expect_equal(p$labels$colour, "PARAM")
+  })
+
+  it("applies log scale", {
+    p <- exploration_meanplot(
+      pknca_data = sample_data,
+      color_by = "PARAM",
+      ylog_scale = TRUE,
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1]
+      )
+    )
+    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
+    expect_true(is_log_scale)
+  })
+
   it("shows SD error bars (min, max, and both)", {
     p_both <- exploration_meanplot(
       pknca_data = sample_data,
       color_by = "PARAM",
       sd_min = TRUE,
       sd_max = TRUE,
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1]
+      )
     )
     p_both_build <- ggplot_build(p_both)
     layer_classes <- sapply(p_both$layers, function(x) class(x$geom)[1])
@@ -385,8 +425,10 @@ describe("exploration_meanplot: Mean Plot Mode", {
       pknca_data = sample_data,
       color_by = "PARAM",
       ci = TRUE,
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1]
+      )
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomRibbon" %in% layer_classes)
@@ -400,8 +442,10 @@ describe("exploration_meanplot: Mean Plot Mode", {
       sd_min = TRUE,
       sd_max = TRUE,
       ci = TRUE,
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1]
+      )
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomErrorbar" %in% layer_classes)
@@ -414,14 +458,15 @@ describe("exploration_meanplot: Mean Plot Mode", {
       color_by = "PARAM",
       show_dose = TRUE,
       facet_by = "PARAM",
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1]
+      )
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
 
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
-    # Check vline data contains facet variables
     expect_true(all("PARAM" %in% names(vline_layer$data)))
   })
 
@@ -431,8 +476,10 @@ describe("exploration_meanplot: Mean Plot Mode", {
     p <- exploration_meanplot(
       pknca_data = empty_data,
       color_by = "PARAM",
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1]
+      filtering_list = list(
+        PARAM = analytes[1],
+        PCSPEC = pcspecs[1]
+      )
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "Error")
