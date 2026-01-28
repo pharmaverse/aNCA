@@ -756,12 +756,6 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
-    ####################################################################################
-    # TODO (Until new slope management is merged, we need to use the old is.excluded.hl)
-    # Check with #641 and see test-PKNCA.R
-    excl_hl_col <- "is.excluded.hl"
-    ####################################################################################
-
     if (!is.null(excl_hl_col)) {
       data_conc <- processed_pknca_data$conc$data
       conc_groups <- group_vars(processed_pknca_data$conc)
