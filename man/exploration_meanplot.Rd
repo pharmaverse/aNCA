@@ -47,8 +47,6 @@ exploration_meanplot(
 \item{filtering_list}{Named list of filters (column = allowed values). Default is \code{NULL} (no filtering).}
 
 \item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose. Default is \code{FALSE}, which uses time since first dose.}
-
-\item{dose_data}{Optional data.frame with dosing information for vertical dose lines. Must include \code{TIME_DOSE} and any faceting variables. Default is \code{NULL}.}
 }
 \value{
 A \code{ggplot} object representing the mean PK line plot.
@@ -56,7 +54,4 @@ A \code{ggplot} object representing the mean PK line plot.
 \description{
 This function generates a line plot for mean pharmacokinetic (PK) concentration-time profiles.
 It supports error bars (SD), confidence intervals, faceting, and custom tooltips, and allows filtering by analyte, specimen, and profile.
-}
-\seealso{
-\code{\link[=g_lineplot]{g_lineplot()}}, \code{\link[=process_data_mean]{process_data_mean()}}
 }

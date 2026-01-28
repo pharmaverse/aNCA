@@ -123,28 +123,28 @@ process_data_individual <- function(data,
   processed_data
 }
 
-##' Process data for mean PK line plot
-##'
-##' Creates a summarised data frame for mean PK concentration-time profiles, with optional alignment to last dose and dose time aggregation.
-##'
-##' @param data Raw concentration data frame (before dose alignment).
-##' @param filtering_list Named list of filters (column = allowed values).
-##' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
-##' @param color_by,facet_by Optional grouping variables to be included in summary.
-##' @param conc_col Name of the concentration column (default: "AVAL").
-##' @param grouping_cols Character vector of columns to group by (default: c(color_by, facet_by, "RRLTU", "AVALU")).
-##' @param align_last_dose Logical; if TRUE, align concentration data to last dose using `derive_last_dose_time` (requires `pknca_data` and `conc_time_col`).
-##' @param pknca_data Optional PKNCAdata object for dose alignment (required if align_last_dose is TRUE).
-##' @param conc_time_col Name of the time column to align on (required if align_last_dose is TRUE).
-##' @param aggregate_dose_time Logical; if TRUE, aggregate dose times by group (requires `dose_group_cols` and `time_sample`).
-##' @param dose_group_cols Character vector of columns for dose grouping (used if aggregate_dose_time is TRUE).
-##' @param time_sample Name of the time variable for dose aggregation (used if aggregate_dose_time is TRUE).
-##'
-##' @return Data frame summarised by group, with columns for Mean, SD, N, SE, SD_min, SD_max, CI_lower, CI_upper.
-##'
-##' @import dplyr
-##' @importFrom rlang sym syms
-##' @keywords internal
+#' Process data for mean PK line plot
+#'
+#' Creates a summarised data frame for mean PK concentration-time profiles, with optional alignment to last dose and dose time aggregation.
+#'
+#' @param data Raw concentration data frame (before dose alignment).
+#' @param filtering_list Named list of filters (column = allowed values).
+#' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
+#' @param color_by,facet_by Optional grouping variables to be included in summary.
+#' @param conc_col Name of the concentration column (default: "AVAL").
+#' @param grouping_cols Character vector of columns to group by (default: c(color_by, facet_by, "RRLTU", "AVALU")).
+#' @param align_last_dose Logical; if TRUE, align concentration data to last dose using `derive_last_dose_time` (requires `pknca_data` and `conc_time_col`).
+#' @param pknca_data Optional PKNCAdata object for dose alignment (required if align_last_dose is TRUE).
+#' @param conc_time_col Name of the time column to align on (required if align_last_dose is TRUE).
+#' @param aggregate_dose_time Logical; if TRUE, aggregate dose times by group (requires `dose_group_cols` and `time_sample`).
+#' @param dose_group_cols Character vector of columns for dose grouping (used if aggregate_dose_time is TRUE).
+#' @param time_sample Name of the time variable for dose aggregation (used if aggregate_dose_time is TRUE).
+#'
+#' @return Data frame summarised by group, with columns for Mean, SD, N, SE, SD_min, SD_max, CI_lower, CI_upper.
+#'
+#' @import dplyr
+#' @importFrom rlang sym syms
+#' @keywords internal
 #' @noRd
 process_data_mean <- function(data,
                               filtering_list = NULL,
@@ -200,7 +200,6 @@ process_data_mean <- function(data,
 #' @param facet_by Character vector of column names to facet the plot by. Default is `NULL` (no faceting).
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line. Default is `NULL` (no threshold).
-#' @param dose_data Optional data.frame with dosing information for vertical dose lines. Must include `TIME_DOSE` and any faceting variables. Default is `NULL`.
 #' @param palette Optional named character vector of colors for the plot. Names should match levels of the color variable. Default is `NULL`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip. Default is `NULL`.
 #' @param labels_df Optional data.frame for variable label lookups (for tooltips). Default is `NULL`.
@@ -268,23 +267,11 @@ exploration_individualplot <- function(
 #' This function generates a line plot for mean pharmacokinetic (PK) concentration-time profiles.
 #' It supports error bars (SD), confidence intervals, faceting, and custom tooltips, and allows filtering by analyte, specimen, and profile.
 #'
-#' @param pknca_data A PKNCAdata object containing the raw PK concentration data.
-#' @param color_by Character vector specifying the column(s) used to color the lines and points.
-#' @param facet_by Character vector of column names to facet the plot by. Default is `NULL` (no faceting).
-#' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
-#' @param threshold_value Numeric; y-intercept for a horizontal threshold line. Default is `NULL` (no threshold).
-#' @param dose_data Optional data.frame with dosing information for vertical dose lines. Must include `TIME_DOSE` and any faceting variables. Default is `NULL`.
-#' @param palette Optional named character vector of colors for the plot. Names should match levels of the color variable. Default is `NULL`.
+#' @inheritParams exploration_individualplot
 #' @param sd_min Logical; if `TRUE`, plot lower SD error bars. Default is `FALSE`.
 #' @param sd_max Logical; if `TRUE`, plot upper SD error bars. Default is `FALSE`.
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
-#' @param tooltip_vars Character vector of column names to include in the tooltip. Default is `NULL`.
-#' @param labels_df Optional data.frame for variable label lookups (for tooltips). Default is `NULL`.
-#' @param filtering_list Named list of filters (column = allowed values). Default is `NULL` (no filtering).
-#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose. Default is `FALSE`, which uses time since first dose.
-#'
 #' @return A `ggplot` object representing the mean PK line plot.
-#' @seealso [g_lineplot()], [process_data_mean()]
 #' @export
 exploration_meanplot <- function(
     pknca_data,

@@ -38,8 +38,6 @@ exploration_individualplot(
 \item{filtering_list}{Named list of filters (column = allowed values). Default is \code{NULL} (no filtering).}
 
 \item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose. Default is \code{FALSE}, which uses time since first dose.}
-
-\item{dose_data}{Optional data.frame with dosing information for vertical dose lines. Must include \code{TIME_DOSE} and any faceting variables. Default is \code{NULL}.}
 }
 \value{
 A \code{ggplot} object representing the individual PK line plot.
