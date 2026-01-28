@@ -301,3 +301,139 @@ get_tree_leaf_ids <- function(tree) {
   }
   ids
 }
+
+#' Create export structure
+#'
+#' @param target_dir Path to the directory where files will be written.
+#' @param res_nca NCA results object.
+#' @param settings Settings object.
+#' @param grouping_vars Reactive or list of grouping variables.
+#' @param input Shiny input object from the zip module.
+#' @param session Shiny session object.
+create_export_structure <- function(target_dir, res_nca, settings, grouping_vars, input, session) {
+
+  # 1. Standard Outputs (Tables/Plots)
+  save_output(
+    output = session$userData$results,
+    output_path = target_dir,
+    ggplot_formats = input$plot_formats,
+    table_formats = input$table_formats,
+    obj_names = input$res_tree
+  )
+
+  shiny::incProgress(0.2)
+  # 2. Presentation Slides
+  if ("results_slides" %in% input$res_tree) {
+    .export_slides(target_dir, res_nca, grouping_vars, input, session)
+  }
+  shiny::incProgress(0.2)
+
+  # 3. Settings
+  if ("settings_file" %in% input$res_tree) .export_settings(target_dir, session)
+  shiny::incProgress(0.2)
+
+  # 4. Input Data
+  data_tmpdir <- file.path(target_dir, "data")
+  dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
+  saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
+
+  # 5. R Script Template
+  if ("r_script" %in% input$res_tree) .export_script(target_dir, session)
+  shiny::incProgress(0.2)
+
+  # 6. Clean the whitelist
+  .clean_export_dir(target_dir, input)
+}
+
+# Helpers to export different output types
+#' Export slides helper
+#' @param target_dir Target directory to save the slides.
+#' @param res_nca NCA results object.
+#' @param grouping_vars Grouping variables for dose escalation results.
+#' @param input Shiny input object.
+#' @param session Shiny session object.
+#' @keywords internal
+#' @noRd
+.export_slides <- function(target_dir, res_nca, grouping_vars, input, session) {
+  res_dose_slides <- get_dose_esc_results(
+    o_nca = res_nca,
+    group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
+    facet_vars = "DOSEA",
+    statistics = "Mean",
+    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+    info_vars = grouping_vars
+  )
+
+  path <- file.path(target_dir, "presentations")
+  dir.create(path, showWarnings = FALSE)
+
+  if ("qmd" %in% input$slide_formats) {
+    create_qmd_dose_slides(
+      res_dose_slides,
+      file.path(path, "results_slides.qmd"),
+      paste0("NCA Results\n", session$userData$project_name()),
+      TRUE
+    )
+  }
+  if ("pptx" %in% input$slide_formats) {
+    create_pptx_dose_slides(
+      res_dose_slides,
+      file.path(path, "results_slides.pptx"),
+      paste0("NCA Results\n", session$userData$project_name()),
+      "www/templates/template.pptx"
+    )
+  }
+}
+
+#' Helper to export settings file
+#' @param target_dir Target directory to save the settings
+#' @param session Shiny session object
+#' @keywords internal
+#' @noRd
+.export_settings <- function(target_dir, session) {
+  path <- file.path(target_dir, "settings")
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  saveRDS(list(settings = session$userData$settings(),
+               slope_rules = session$userData$slope_rules()),
+          file.path(path, "settings.rds"))
+}
+
+#' Helper to export R script
+#' @param target_dir Target directory to save the R script
+#' @param session Shiny session object
+#' @keywords internal
+#' @noRd
+.export_script <- function(target_dir, session) {
+  path <- file.path(target_dir, "code")
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  get_session_code(
+    "www/templates/script_template.R",
+    session,
+    file.path(path, "session_code.R")
+  )
+}
+
+#' Clean Export Directory
+#' @param target_dir Target directory to clean
+#' @param input Shiny input object
+#' @keywords internal
+#' @noRd
+.clean_export_dir <- function(target_dir, input) {
+  all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
+
+  exts <- c(
+    if (length(input$table_formats) > 0) paste0("\\.", input$table_formats),
+    if (length(input$plot_formats) > 0) paste0("\\.", input$plot_formats),
+    if (length(input$slide_formats) > 0) paste0("results_slides\\.", input$slide_formats),
+    "session_code\\.R", "settings\\.rds", "data\\.rds"
+  )
+
+  pattern <- paste0("(", paste0(exts, collapse = "|"), ")$")
+  file.remove(all_files[!grepl(pattern, all_files, ignore.case = TRUE)])
+
+  # Recursive directory cleanup
+  dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
+  for (d in dirs[rev(order(nchar(dirs)))]) {
+    if (length(list.files(d, all.files = TRUE)) == 0 && d != target_dir) unlink(d, recursive = TRUE)
+  }
+}
