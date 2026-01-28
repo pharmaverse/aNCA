@@ -1,4 +1,5 @@
-#' Join and align concentration and dose data for PK plotting
+
+#' Derive last dose time for each sample
 #'
 #' @param conc_data Concentration data frame.
 #' @param dose_data Dose data frame.
@@ -6,28 +7,25 @@
 #' @param dose_time_col Name of the time column in dose_data.
 #' @param dose_group_vars Grouping variables for joining.
 #' @param align_time_col Name of the time column to align on (default: conc_time_col).
-#' @param use_time_since_last_dose Logical; if TRUE, subtract TIME_DOSE from time.
-#' @return Data frame with joined and aligned dose/concentration data.
+#' @return Data frame with TIME_DOSE column added, representing the last dose time for each sample.
 #' @keywords internal
-join_and_align_dose_conc <- function(conc_data, dose_data, conc_time_col, dose_time_col, dose_group_vars, align_time_col = NULL, use_time_since_last_dose = FALSE) {
-  align_time_col <- if (is.null(align_time_col)) conc_time_col else align_time_col
-  data <- dplyr::left_join(
+derive_last_dose_time <- function(conc_data, dose_data, conc_time_col, dose_time_col, dose_group_vars) {
+
+  dplyr::left_join(
     conc_data,
     dose_data %>%
       dplyr::mutate(TIME_DOSE = !!rlang::sym(dose_time_col)) %>%
       dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE"))),
     by = dose_group_vars
   ) %>%
-    dplyr::filter(TIME_DOSE <= !!rlang::sym(align_time_col)) %>%
+    dplyr::filter(TIME_DOSE <= !!rlang::sym(conc_time_col)) %>%
     dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), "TIME_DOSE"))) %>%
     dplyr::arrange(TIME_DOSE) %>%
     dplyr::slice_tail(n = 1) %>%
     dplyr::ungroup()
-  if (use_time_since_last_dose) {
-    data <- dplyr::mutate(data, !!align_time_col := !!rlang::sym(align_time_col) - TIME_DOSE)
-  }
-  data
 }
+
+
 
 #' Filter a data frame by a list of column-value pairs
 #'
@@ -135,6 +133,7 @@ process_data_mean <- function(data,
                               facet_by = NULL,
                               conc_col = "AVAL",
                               grouping_cols = c(color_by, facet_by, "RRLTU", "AVALU")) {
+
   processed <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!rlang::sym(conc_col)))
   summarised_data <- processed %>%
@@ -195,15 +194,17 @@ exploration_individualplot <- function(
 ) {
 
   data <- if (show_dose || use_time_since_last_dose) {
-    join_and_align_dose_conc(
+    data <- derive_last_dose_time(
       conc_data = pknca_data$conc$data,
       dose_data = pknca_data$dose$data,
       conc_time_col = pknca_data$conc$columns$time,
       dose_time_col = pknca_data$dose$columns$time,
-      dose_group_vars = group_vars(pknca_data$dose),
-      align_time_col = pknca_data$conc$columns$time,
-      use_time_since_last_dose = use_time_since_last_dose
+      dose_group_vars = group_vars(pknca_data$dose)
     )
+    if (use_time_since_last_dose) {
+      data <- dplyr::mutate(data, !!pknca_data$conc$columns$time := !!rlang::sym(pknca_data$conc$columns$time) - TIME_DOSE)
+    }
+    data
   } else {
     pknca_data$conc$data
   }
@@ -280,23 +281,28 @@ exploration_meanplot <- function(
   x_var_unit <- pknca_data$conc$columns$timeu
   y_var_unit <- pknca_data$conc$columns$concu
   time_sample <- pknca_data$conc$columns$time.nominal
-  time_sample <- if(is.null(time_sample)) pknca_data$conc$columns$time else time_sample
-  data <- if (show_dose || use_time_since_last_dose) {
-    join_and_align_dose_conc(
+  time_sample <- if (is.null(time_sample)) pknca_data$conc$columns$time else time_sample
+  time_sample <- if (use_time_since_last_dose) "NRRLT" else time_sample
+  dose_group_cols <- setdiff(group_vars(pknca_data$dose), pknca_data$conc$columns$subject)
+  tooltip_vars = c(group_vars(pknca_data$dose), time_sample, "Mean")
+
+  data <- if (show_dose) {
+    derive_last_dose_time(
       conc_data = pknca_data$conc$data,
       dose_data = pknca_data$dose$data,
-      conc_time_col = pknca_data$conc$columns$time,
+      conc_time_col = time_sample,
       dose_time_col = pknca_data$dose$columns$time,
-      dose_group_vars = group_vars(pknca_data$dose),
-      align_time_col = time_sample,
-      use_time_since_last_dose = use_time_since_last_dose
-    )
+      dose_group_vars = group_vars(pknca_data$dose)
+    ) %>%
+    group_by(!!!rlang::syms(dose_group_cols), !!sym(time_sample)) %>%
+    mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
+    ungroup()
   } else {
     pknca_data$conc$data
   }
 
-  grouping_cols <- unique(c(color_by, facet_by, time_sample, x_var_unit, y_var_unit))
-  if (show_dose) grouping_cols <- c(grouping_cols, "TIME_DOSE")
+  grouping_cols <- unique(c(color_by, facet_by, time_sample, x_var_unit, y_var_unit, dose_group_cols))
+  grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
   mean_data <- process_data_mean(
     data = data,
@@ -328,6 +334,7 @@ exploration_meanplot <- function(
   if (has_error_msg) {
     return(plot)
   }
+
   plot <- plot +
     labs(
       x = paste("Nominal", plot_build$labels$x),
@@ -337,7 +344,6 @@ exploration_meanplot <- function(
 
   plot + list(
     .add_mean_layers(
-      is_mean_plot = TRUE,
       sd_min = sd_min,
       sd_max = sd_max,
       ci = ci,
