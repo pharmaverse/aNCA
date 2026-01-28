@@ -551,7 +551,8 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
   # Identify unit columns that exist in data AND have at least one non-NA value
   valid_unit_cols <- groups_units_tbl %>%
-    select(any_of(all_unit_cols)) %>%
+    # excluding AMOUNTU as NAs are allowed
+    select(any_of(c(concu_col, timeu_col, doseu_col))) %>%
     select(where(~ !all(is.na(.)))) %>%
     names()
 

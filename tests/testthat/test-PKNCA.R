@@ -342,11 +342,36 @@ describe("PKNCA_build_units_table", {
   })
 
   it("ignores NA units when the unit column already contains one valid value", {
+
     d_conc$AVALU[1] <- NA
-    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                               concu = "AVALU", timeu = "RRLTU")
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc,
+      AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "AVALU",
+      timeu = "RRLTU"
+    )
+    expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+  })
+
+  it("does not ignore NA units in the case of AMOUNTU", {
+
+    d_conc$AMOUNTU <- "g"
+    d_conc <- d_conc %>%
+      mutate(AMOUNTU = ifelse(PARAM == "A", NA_character_, AMOUNTU))
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc,
+      AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "AVALU",
+      timeu = "RRLTU",
+      amountu = "AMOUNTU"
+    )
 
     units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+    # expect NA for ae for PARAM = "A"
+    amountu_a <- units_table %>%
+      dplyr::filter(PARAM == "A", PPTESTCD == "ae") %>%
+      dplyr::pull(PPSTRESU)
+    expect_true(is.na(amountu_a))
   })
 })
 
