@@ -129,9 +129,9 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                 input = input,
                 session = session
               )
-              
+
               files <- list.files(output_tmpdir, recursive = TRUE)
-              
+
               wd <- getwd()
               on.exit(setwd(wd), add = TRUE)
               setwd(output_tmpdir)
