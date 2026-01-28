@@ -186,6 +186,62 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
   }
 }
 
+default_mapping <- list(
+  select_STUDYID = "STUDYID",
+  select_USUBJID = "USUBJID",
+  select_DOSEA = "DOSEA",
+  select_DOSEU = "DOSEU",
+  select_DOSETRT = "DOSETRT",
+  select_PARAM = "PARAM",
+  select_Metabolites = "Metab-DrugA",
+  select_ARRLT = "ARRLT",
+  select_NRRLT = "NRRLT",
+  select_AFRLT = "AFRLT",
+  select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
+  select_NFRLT = "NFRLT",
+  select_PCSPEC = "PCSPEC",
+  select_ROUTE = "ROUTE",
+  select_TRTRINT = "TRTRINT",
+  select_ADOSEDUR = "ADOSEDUR",
+  select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
+  select_RRLTU = "RRLTU",
+  select_VOLUME = "VOLUME",
+  select_VOLUMEU = "VOLUMEU",
+  select_AVAL = "AVAL",
+  select_AVALU = "AVALU",
+  select_ATPTREF = "ATPTREF"
+)
+#' Generate a session script from settings and mapping files
+#'
+#' This function reads a settings RDS file and data path, and generates an R script
+#' that can reproduce the session using a template.
+#'
+#' @param settings_file_path Path to the RDS file containing the settings list.
+#' @param data_path Path to the data file to be referenced in the script.
+#' @param mapping Named list mapping variable names (default: \code{default_mapping}).
+#' @param template_path Path to the R script template file.
+#' @param output_path Path to write the resulting script file.
+#'
+#' @return Invisibly returns the output_path.
+#' @export
+get_settings_code <- function(settings_file_path, data_path, mapping = default_mapping, template_path, output_path) {
+  settings <- readRDS(settings_file_path)
+  session <- list(userData = list(settings = settings, data_path = data_path, mapping = mapping))
+  get_session_code(
+    template_path = template_path,
+    session = session,
+    output_path = output_path
+  )
+  invisible(output_path)
+}
+settings_file_path <- "../../Downloads/elproject/settings/settings.rds"
+get_settings_code(
+  settings_file_path, 
+  data_path = "inst/shiny/data/example-ADNCA.csv",
+  template_path = "inst/shiny/www/templates/script_template.R",
+  output_path = "../../Downloads/elproject/settings/settings_code.R"
+)
+
 # TODO (Gerardo): Create a linked function
 # to obtain the code from a settings file
 # (#826)
