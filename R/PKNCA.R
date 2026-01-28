@@ -63,7 +63,7 @@
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NULL) { # nolint: object_name_linter
+PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NULL,dose_column = "DOSEA") { # nolint: object_name_linter
   # Define column names based on ADNCA vars
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
@@ -87,7 +87,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     as.formula()
 
   dose_formula <-
-    "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
+    "{dose_column} ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
     glue::glue() %>%
     as.formula()
 
@@ -149,7 +149,11 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     pkncaconc_data = df_conc,
     group_columns = c(group_columns, usubjid_column)
   )
-
+  
+  if (!dose_column %in% names(df_dose) && "DOSEA" %in% names(df_dose)) {
+    df_dose <- dplyr::rename(df_dose, !!dose_column := DOSEA)
+  }
+  
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = dose_formula,
