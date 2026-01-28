@@ -21,11 +21,11 @@ parameter_selection_ui <- function(id) {
   ns <- NS(id)
   tagList(
     p("The following study types were detected in the data:"),
-    reactable_ui(ns("study_types")),
+    card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
 
     br(),
     p("The following parameters are currently selected:"),
-    reactable_ui(ns("selected_parameters_table")),
+    card(reactable_ui(ns("selected_parameters_table")), class = "border-0 shadow-none"),
 
     br(),
     p("Select the parameters to calculate for each study type.
@@ -265,7 +265,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       # Validation checks
       if (length(study_type_names) == 0) return(list())
       req(all(study_type_names %in% names(df)))
-
       # Convert from wide to long, filter for selected rows,
       # and then split the result into a list by study_type.
       df %>%
