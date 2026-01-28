@@ -161,10 +161,21 @@ process_data_mean <- function(data,
                               color_by = NULL,
                               facet_by = NULL,
                               conc_col = "AVAL",
-                              grouping_cols = c(color_by, facet_by, "RRLTU", "AVALU")) {
+                              grouping_cols = c(color_by, facet_by, "RRLTU", "AVALU"),
+                              aggregate_dose_time = FALSE,
+                              dose_group_cols = NULL,
+                              time_sample = NULL) {
 
   processed <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!rlang::sym(conc_col)))
+
+  if (aggregate_dose_time && !is.null(dose_group_cols) && !is.null(time_sample)) {
+    processed <- processed %>%
+      dplyr::group_by(!!!rlang::syms(dose_group_cols), !!rlang::sym(time_sample)) %>%
+      dplyr::mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
+      dplyr::ungroup()
+  }
+
   summarised_data <- processed %>%
     dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
     dplyr::summarise(
@@ -241,19 +252,16 @@ exploration_individualplot <- function(
     ylog_scale = ylog_scale
   )
 
-  x_var <- pknca_data$conc$columns$time
-  y_var <- pknca_data$conc$columns$concentration
   x_var_unit <- pknca_data$conc$columns$timeu
   y_var_unit <- pknca_data$conc$columns$concu
-  group_by <- pknca_data$conc$columns$subject
 
   g_lineplot(
     data = individual_data,
-    x_var = x_var,
-    y_var = y_var,
+    x_var = pknca_data$conc$columns$time,
+    y_var = pknca_data$conc$columns$concentration,
     color_by = color_by,
     facet_by = facet_by,
-    group_by = group_by,
+    group_by = pknca_data$conc$columns$subject,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     palette = palette,
@@ -298,7 +306,7 @@ exploration_meanplot <- function(
     sd_min = FALSE,
     sd_max = FALSE,
     ci = FALSE,
-    tooltip_vars = NULL,
+    tooltip_vars = c(group_vars(pknca_data$dose), time_sample, "Mean"),
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE
@@ -310,30 +318,28 @@ exploration_meanplot <- function(
   time_sample <- if (is.null(time_sample)) pknca_data$conc$columns$time else time_sample
   time_sample <- if (use_time_since_last_dose) "NRRLT" else time_sample
   dose_group_cols <- setdiff(group_vars(pknca_data$dose), pknca_data$conc$columns$subject)
-  tooltip_vars = c(group_vars(pknca_data$dose), time_sample, "Mean")
   x_var <- time_sample
   y_var <- "Mean"
+  grouping_cols <- unique(c(color_by, facet_by, time_sample, x_var_unit, y_var_unit, dose_group_cols))
+  grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
   data <- if (show_dose) {
     derive_last_dose_time(
       pknca_data = pknca_data,
       conc_time_col = time_sample
-    ) %>%
-    group_by(!!!rlang::syms(dose_group_cols), !!sym(time_sample)) %>%
-    mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
-    ungroup()
+    )
   } else {
     pknca_data$conc$data
   }
-
-  grouping_cols <- unique(c(color_by, facet_by, time_sample, x_var_unit, y_var_unit, dose_group_cols))
-  grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
   mean_data <- process_data_mean(
     data = data,
     filtering_list = filtering_list,
     grouping_cols = grouping_cols,
-    ylog_scale = ylog_scale
+    ylog_scale = ylog_scale,
+    aggregate_dose_time = show_dose,
+    dose_group_cols = dose_group_cols,
+    time_sample = time_sample
   )
 
   plot <- g_lineplot(
@@ -351,7 +357,7 @@ exploration_meanplot <- function(
     vline_var = if (show_dose) "TIME_DOSE" else NULL
   )
 
-  # If there is no mean data, return the plot as the error
+  # If there is no mean data, return the error plot
   if (nrow(mean_data) == 0) {
     return(plot)
   }
