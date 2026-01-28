@@ -1,11 +1,59 @@
+#' Join and align concentration and dose data for PK plotting
+#'
+#' @param conc_data Concentration data frame.
+#' @param dose_data Dose data frame.
+#' @param conc_time_col Name of the time column in conc_data.
+#' @param dose_time_col Name of the time column in dose_data.
+#' @param dose_group_vars Grouping variables for joining.
+#' @param align_time_col Name of the time column to align on (default: conc_time_col).
+#' @param use_time_since_last_dose Logical; if TRUE, subtract TIME_DOSE from time.
+#' @return Data frame with joined and aligned dose/concentration data.
+#' @keywords internal
+join_and_align_dose_conc <- function(conc_data, dose_data, conc_time_col, dose_time_col, dose_group_vars, align_time_col = NULL, use_time_since_last_dose = FALSE) {
+  align_time_col <- if (is.null(align_time_col)) conc_time_col else align_time_col
+  data <- dplyr::left_join(
+    conc_data,
+    dose_data %>%
+      dplyr::mutate(TIME_DOSE = !!rlang::sym(dose_time_col)) %>%
+      dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE"))),
+    by = dose_group_vars
+  ) %>%
+    dplyr::filter(TIME_DOSE <= !!rlang::sym(align_time_col)) %>%
+    dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), "TIME_DOSE"))) %>%
+    dplyr::arrange(TIME_DOSE) %>%
+    dplyr::slice_tail(n = 1) %>%
+    dplyr::ungroup()
+  if (use_time_since_last_dose) {
+    data <- dplyr::mutate(data, !!align_time_col := !!rlang::sym(align_time_col) - TIME_DOSE)
+  }
+  data
+}
+
+#' Filter a data frame by a list of column-value pairs
+#'
+#' @param data A data frame to filter.
+#' @param filtering_list A named list where each name is a column and each value is a vector of allowed values.
+#' @return Filtered data frame.
+#' @keywords internal
+filter_by_list <- function(data, filtering_list) {
+  if (is.null(filtering_list) || length(filtering_list) == 0) return(data)
+  purrr::reduce(
+    names(filtering_list),
+    function(df, var) {
+      df %>% dplyr::filter(!!rlang::sym(var) %in% filtering_list[[var]])
+    },
+    .init = data
+  )
+}
+
 #' Process data for individual line plot
 #'
 #' Creates a filtered data frame for individual spaghetti plots.
 #'
 #' @param data Raw data frame.
-#' @param selected_usubjids,selected_analytes,selected_pcspec Inputs for filters.
-#' @param selected_profiles Optional profiles to filter on.
+#' @param filtering_list Named list of filters (column = allowed values).
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
+#' @param conc_col Name of the concentration column (default: "AVAL").
 #' @returns `processed_data` filtered for the spaghetti plots.
 #'
 #' @import dplyr
@@ -13,126 +61,104 @@
 #' @seealso dose_profile_duplicates
 #' @examples
 #' base_df <- expand.grid(
-#' USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
-#' PARAM = c("Analyte1"),
-#' PCSPEC = c("Spec1"),
-#' ATPTREF = 1,
-#' AFRLT = 0:5
+#'   USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
+#'   PARAM = c("Analyte1"),
+#'   PCSPEC = c("Spec1"),
+#'   ATPTREF = 1,
+#'   AFRLT = 0:5
 #' )
 #' set.seed(123)
 #' base_df$AVAL <- rnorm(nrow(base_df), mean = 50, sd = 10)
 #'
 #' result <- process_data_individual(
-#' data = base_df,
-#' selected_usubjids = c("Subject1", "Subject2"),
-#' selected_analytes = c("Analyte1"),
-#' selected_pcspec = c("Spec1"),
-#' selected_profiles = NULL,
-#' ylog_scale = FALSE
+#'   data = base_df,
+#'   filtering_list = list(
+#'     USUBJID = c("Subject1", "Subject2"),
+#'     PARAM = c("Analyte1"),
+#'     PCSPEC = c("Spec1")
+#'   ),
+#'   ylog_scale = FALSE
 #' )
 #' @keywords internal
 process_data_individual <- function(data,
                                     filtering_list = NULL,
-                                    # selected_usubjids,
-                                    # selected_analytes,
-                                    # selected_pcspec,
-                                    # selected_profiles = NULL,
                                     ylog_scale = FALSE,
-                                    
                                     conc_col = "AVAL") {
-
-  processed_data <- purrr::reduce(
-    names(filtering_list),
-    function(df, var) {
-      df %>% filter(!!sym(var) %in% filtering_list[[var]])
-    },
-    .init = data
-  ) %>%
-    filter(!is.na(!!sym(conc_col)))
-
+  processed_data <- filter_by_list(data, filtering_list) %>%
+    dplyr::filter(!is.na(!!rlang::sym(conc_col)))
   if (isTRUE(ylog_scale)) {
-    processed_data <- processed_data %>% filter(!!sym(conc_col) > 0)
+    processed_data <- processed_data %>% dplyr::filter(!!rlang::sym(conc_col) > 0)
   }
-
   processed_data
 }
 
-#' Create a Mean PK Line Plot
+#' Process data for mean PK line plot
+#'
+#' Creates a summarised data frame for mean PK concentration-time profiles.
 #'
 #' @param data Raw data frame.
-#' @param selected_analytes,selected_pcspec,selected_profiles Inputs for filtering.
+#' @param filtering_list Named list of filters (column = allowed values).
 #' @param ylog_scale Logical, whether to use a logarithmic scale for the y-axis.
 #' @param color_by,facet_by Optional grouping variables to be included in summary.
+#' @param conc_col Name of the concentration column (default: "AVAL").
+#' @param grouping_cols Character vector of columns to group by (default: c(color_by, facet_by, "RRLTU", "AVALU")).
 #' @returns `summarised_data` with Mean, SD, and CIs for the profiles selected.
+#'
 #' @import dplyr
 #' @importFrom rlang sym syms
-#'
 #' @examples
 #' base_df <- expand.grid(
-#' USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
-#' PARAM = c("Analyte1"),
-#' PCSPEC = c("Spec1"),
-#' ATPTREF = 1,
-#' NFRLT = 0:5,
-#' AVALU = "ug/ml",
-#' RRLTU = "hr"
+#'   USUBJID = c("Subject1", "Subject2", "Subject3", "Subject4"),
+#'   PARAM = c("Analyte1"),
+#'   PCSPEC = c("Spec1"),
+#'   ATPTREF = 1,
+#'   NFRLT = 0:5,
+#'   AVALU = "ug/ml",
+#'   RRLTU = "hr"
 #' )
 #' set.seed(123)
 #' base_df$AVAL <- rnorm(nrow(base_df), mean = 50, sd = 10)
 #'
 #' result <- process_data_mean(
-#' data = base_df,
-#' selected_analytes = c("Analyte1"),
-#' selected_pcspec = c("Spec1"),
-#' selected_profiles = NULL,
-#' ylog_scale = FALSE
+#'   data = base_df,
+#'   filtering_list = list(
+#'     PARAM = c("Analyte1"),
+#'     PCSPEC = c("Spec1")
+#'   ),
+#'   ylog_scale = FALSE
 #' )
 #' @keywords internal
 process_data_mean <- function(data,
                               filtering_list = NULL,
-                              # selected_analytes,
-                              # selected_pcspec,
-                              # selected_profiles = NULL,
                               ylog_scale = FALSE,
                               color_by = NULL,
                               facet_by = NULL,
-
                               conc_col = "AVAL",
                               grouping_cols = c(color_by, facet_by, "RRLTU", "AVALU")) {
-
-  processed <- purrr::reduce(
-    names(filtering_list),
-    function(df, var) {
-      df %>% filter(!!sym(var) %in% filtering_list[[var]])
-    },
-    .init = data
-  ) %>%
-    filter(!is.na(!!sym(conc_col)))
-
+  processed <- filter_by_list(data, filtering_list) %>%
+    dplyr::filter(!is.na(!!rlang::sym(conc_col)))
   summarised_data <- processed %>%
-    group_by(!!!syms(grouping_cols)) %>%
-    summarise(
-      Mean = round(mean(!!sym(conc_col), na.rm = TRUE), 3),
-      SD = sd(!!sym(conc_col), na.rm = TRUE),
-      N = n(),
+    dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
+    dplyr::summarise(
+      Mean = round(mean(!!rlang::sym(conc_col), na.rm = TRUE), 3),
+      SD = sd(!!rlang::sym(conc_col), na.rm = TRUE),
+      N = dplyr::n(),
       SE = SD / sqrt(N),
       .groups = "drop"
     ) %>%
-    filter(N >= 3) %>%
-    mutate(
+    dplyr::filter(N >= 3) %>%
+    dplyr::mutate(
       SD_min = Mean - SD,
       SD_max = Mean + SD,
       CI_lower = Mean - 1.96 * SE,
       CI_upper = Mean + 1.96 * SE
     )
-
   if (isTRUE(ylog_scale)) {
     summarised_data <- summarised_data %>%
-      filter(Mean > 0)
+      dplyr::filter(Mean > 0)
   }
   summarised_data
 }
-
 
 #' Create an Individual PK Line Plot
 #'
@@ -140,8 +166,6 @@ process_data_mean <- function(data,
 #' It supports filtering by subject, analyte, specimen, and profile, and allows customization of axes, color, faceting, and tooltips.
 #'
 #' @param pknca_data A PKNCAdata object containing the raw PK concentration data.
-#' @param x_var Character string specifying the column name for the x-axis.
-#' @param y_var Character string specifying the column name for the y-axis (typically "AVAL").
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
 #' @param facet_by Character vector of column names to facet the plot by. Default is `NULL` (no faceting).
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
@@ -150,18 +174,14 @@ process_data_mean <- function(data,
 #' @param palette Optional named character vector of colors for the plot. Names should match levels of the color variable. Default is `NULL`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip. Default is `NULL`.
 #' @param labels_df Optional data.frame for variable label lookups (for tooltips). Default is `NULL`.
-#' @param selected_analytes Character vector of analyte names to filter. Default is `NULL` (no filter).
-#' @param selected_pcspec Character vector of specimen names to filter. Default is `NULL` (no filter).
-#' @param selected_profiles Optional vector of profile IDs to filter. Default is `NULL` (no filter).
-#' @param selected_usubjids Character vector of subject IDs to filter. Default is `NULL` (no filter).
+#' @param filtering_list Named list of filters (column = allowed values). Default is `NULL` (no filtering).
+#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose. Default is `FALSE`, which uses time since first dose.
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
 #' @seealso [g_lineplot()], [process_data_individual()]
 #' @export
 exploration_individualplot <- function(
     pknca_data,
-    # x_var,
-    # y_var,
     color_by,
     facet_by = NULL,
     ylog_scale = FALSE,
@@ -170,52 +190,26 @@ exploration_individualplot <- function(
     palette = NULL,
     tooltip_vars = NULL,
     labels_df = NULL,
-    # selected_analytes = NULL,
-    # selected_pcspec = NULL,
-    # selected_profiles = NULL,
-    # selected_usubjids = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE
 ) {
 
   data <- if (show_dose || use_time_since_last_dose) {
-    time_dose <- pknca_data$dose$columns$time
-    dose_group_vars <- group_vars(pknca_data$dose)
-
-    data<- left_join(
-      pknca_data$conc$data,
-      pknca_data$dose$data %>%
-        mutate(TIME_DOSE = !!sym(time_dose)) %>%
-        select(!!!syms(c(dose_group_vars, "TIME_DOSE"))),
-      by = dose_group_vars
-    ) %>%
-      filter(TIME_DOSE <= !!sym(pknca_data$conc$columns$time)) %>%
-      # For each sample time, get the most recent TIME_DOSE
-      group_by(!!!syms(setdiff(names(pknca_data$conc$data), "TIME_DOSE"))) %>%
-      arrange(TIME_DOSE) %>%
-      slice_tail(n = 1)
-    if (use_time_since_last_dose) {
-      mutate(data, !!sym(pknca_data$conc$columns$time) := !!sym(pknca_data$conc$columns$time) - TIME_DOSE)
-    } else {
-      data
-    }
+    join_and_align_dose_conc(
+      conc_data = pknca_data$conc$data,
+      dose_data = pknca_data$dose$data,
+      conc_time_col = pknca_data$conc$columns$time,
+      dose_time_col = pknca_data$dose$columns$time,
+      dose_group_vars = group_vars(pknca_data$dose),
+      align_time_col = pknca_data$conc$columns$time,
+      use_time_since_last_dose = use_time_since_last_dose
+    )
   } else {
     pknca_data$conc$data
   }
 
-  filtering_list <- list(
-    USUBJID = data$USUBJID %>% unique(),
-    PARAM = data$PARAM %>% unique(),
-    PCSPEC = data$PCSPEC %>% unique(),
-    ATPTREF = data$ATPTREF %>% unique()
-  )
-
   individual_data <- process_data_individual(
     data = data,
-    # selected_usubjids = selected_usubjids,
-    # selected_analytes = selected_analytes,
-    # selected_pcspec = selected_pcspec,
-    # selected_profiles = selected_profiles,
     filtering_list = filtering_list,
     ylog_scale = ylog_scale
   )
@@ -249,8 +243,6 @@ exploration_individualplot <- function(
 #' It supports error bars (SD), confidence intervals, faceting, and custom tooltips, and allows filtering by analyte, specimen, and profile.
 #'
 #' @param pknca_data A PKNCAdata object containing the raw PK concentration data.
-#' @param x_var Character string specifying the column name for the x-axis.
-#' @param y_var Character string specifying the column name for the y-axis (typically "Mean").
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
 #' @param facet_by Character vector of column names to facet the plot by. Default is `NULL` (no faceting).
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
@@ -262,9 +254,8 @@ exploration_individualplot <- function(
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip. Default is `NULL`.
 #' @param labels_df Optional data.frame for variable label lookups (for tooltips). Default is `NULL`.
-#' @param selected_analytes Character vector of analyte names to filter. Default is `NULL` (no filter).
-#' @param selected_pcspec Character vector of specimen names to filter. Default is `NULL` (no filter).
-#' @param selected_profiles Optional vector of profile IDs to filter. Default is `NULL` (no filter).
+#' @param filtering_list Named list of filters (column = allowed values). Default is `NULL` (no filtering).
+#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose. Default is `FALSE`, which uses time since first dose.
 #'
 #' @return A `ggplot` object representing the mean PK line plot.
 #' @seealso [g_lineplot()], [process_data_mean()]
@@ -282,9 +273,6 @@ exploration_meanplot <- function(
     ci = FALSE,
     tooltip_vars = NULL,
     labels_df = NULL,
-    # selected_analytes = NULL,
-    # selected_pcspec = NULL,
-    # selected_profiles = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE
 ) {
@@ -294,27 +282,15 @@ exploration_meanplot <- function(
   time_sample <- pknca_data$conc$columns$time.nominal
   time_sample <- if(is.null(time_sample)) pknca_data$conc$columns$time else time_sample
   data <- if (show_dose || use_time_since_last_dose) {
-    time_dose <- pknca_data$dose$columns$time
-    dose_group_vars <- group_vars(pknca_data$dose)
-
-    data <- left_join(
-      pknca_data$conc$data,
-      pknca_data$dose$data %>%
-        mutate(TIME_DOSE = !!sym(time_dose)) %>%
-        select(!!!syms(c(dose_group_vars, "TIME_DOSE"))),
-      by = dose_group_vars
-    ) %>%
-      filter(TIME_DOSE <= !!sym(time_sample)) %>%
-      # For each sample time, get the most recent TIME_DOSE
-      group_by(!!!syms(setdiff(names(pknca_data$conc$data), "TIME_DOSE"))) %>%
-      arrange(TIME_DOSE) %>%
-      slice_tail(n = 1)
-
-    if (use_time_since_last_dose) {
-      mutate(data, !!sym(time_sample) := NRRLT)
-    } else {
-      data
-    }
+    join_and_align_dose_conc(
+      conc_data = pknca_data$conc$data,
+      dose_data = pknca_data$dose$data,
+      conc_time_col = pknca_data$conc$columns$time,
+      dose_time_col = pknca_data$dose$columns$time,
+      dose_group_vars = group_vars(pknca_data$dose),
+      align_time_col = time_sample,
+      use_time_since_last_dose = use_time_since_last_dose
+    )
   } else {
     pknca_data$conc$data
   }
@@ -325,11 +301,6 @@ exploration_meanplot <- function(
   mean_data <- process_data_mean(
     data = data,
     filtering_list = filtering_list,
-    # selected_analytes = selected_analytes,
-    # selected_pcspec = selected_pcspec,
-    # selected_profiles = selected_profiles,
-    # color_by = c(color_by, time_sample, x_var_unit, y_var_unit),
-    # facet_by = if (show_dose) c(facet_by, "TIME_DOSE") else facet_by,
     grouping_cols = grouping_cols,
     ylog_scale = ylog_scale
   )
@@ -376,39 +347,3 @@ exploration_meanplot <- function(
       group_var = "color_var")
   )
 }
-
-# sample_data
-# exploration_meanplot(
-#   data = sample_data,
-#   x_var = "NFRLT",
-#   y_var = "Mean",
-#   color_by = "DOSEA",
-#   sd_min = TRUE,
-#   sd_max = TRUE,
-#   ci = TRUE,
-#   selected_analytes = "Analyte1",
-#   selected_pcspec = "Spec1",
-#   selected_profiles = NULL,
-#   ylog_scale = FALSE,
-#   threshold_value = NULL,
-#   dose_data = NULL,
-#   palette = NULL,
-#   tooltip_vars = NULL,
-#   labels_df = NULL
-# )
-# exploration_individualplot(
-#   data = sample_data,
-#   x_var = "NFRLT",
-#   y_var = "AVAL",
-#   color_by = "DOSEA",
-#   selected_analytes = "Analyte1",
-#   selected_pcspec = "Spec1",
-#   selected_profiles = 1,
-#   ylog_scale = FALSE,
-#   threshold_value = NULL,
-#   dose_data = NULL,
-#   palette = NULL,
-#   tooltip_vars = NULL,
-#   labels_df = NULL,
-#   selected_usubjids = "Subject1"
-# )
