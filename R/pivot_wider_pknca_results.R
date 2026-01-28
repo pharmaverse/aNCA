@@ -33,10 +33,8 @@
 #' @importFrom purrr pmap_chr map_lgl map2_chr keep
 #' @importFrom stringr str_detect fixed str_remove
 #' @importFrom rlang syms sym
-#' 
-#' @export
 #'
-
+#' @export
 pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_keep = NULL) {
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
