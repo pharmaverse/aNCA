@@ -392,6 +392,14 @@ describe("check_valid_pknca_data", {
   # Make checks for half-life exclusions ----
   pknca_data_with_excl <- pknca_data
   excl_hl_col <- pknca_data_with_excl$conc$columns$exclude_half.life
+
+  #####################################################################################
+  # TODO (Until new slope management is merged, we need to use the old is.excluded.hl)
+  # Check with #641
+  pknca_data$conc$data[["is.excluded.hl"]] <- pknca_data$conc$data[[excl_hl_col]]
+  excl_hl_col <- "is.excluded.hl"
+  ####################################################################################
+
   pknca_data_with_excl$conc$data[1, excl_hl_col] <- TRUE
 
   it("does not throw an error if exclusions for half-life include a REASON value", {
