@@ -562,7 +562,8 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 
   # Identify unit columns that exist in data AND have at least one non-NA value
   valid_unit_cols <- groups_units_tbl %>%
-    select(any_of(all_unit_cols)) %>%
+    # excluding AMOUNTU as NAs are allowed
+    select(any_of(c(concu_col, timeu_col, doseu_col))) %>%
     select(where(~ !all(is.na(.)))) %>%
     names()
 
@@ -751,15 +752,24 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' # Suppose processed_pknca_data is a valid PKNCA data object
 #' # check_valid_pknca_data(processed_pknca_data)
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
+
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
+
+    ####################################################################################
+    # TODO (Until new slope management is merged, we need to use the old is.excluded.hl)
+    # Check with #641 and see test-PKNCA.R
+    excl_hl_col <- "is.excluded.hl"
+    ####################################################################################
 
     if (!is.null(excl_hl_col)) {
       data_conc <- processed_pknca_data$conc$data
       conc_groups <- group_vars(processed_pknca_data$conc)
       time_col <- processed_pknca_data$conc$columns$time
 
-      missing_reasons <- data_conc[[excl_hl_col]] & nchar(data_conc[["REASON"]]) == 0
+      has_no_reason <- (nchar(data_conc[["REASON"]]) == 0) | is.na(data_conc[["REASON"]])
+      has_hl_excl <- data_conc[[excl_hl_col]]
+      missing_reasons <- has_hl_excl & has_no_reason
 
       if (any(missing_reasons)) {
         stop(
