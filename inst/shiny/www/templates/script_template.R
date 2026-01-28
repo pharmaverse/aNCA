@@ -88,6 +88,7 @@ slope_rules <- list(
 )
 flag_rules <- session$userData$settings$flags
 ratio_table <- session$userData$ratio_table
+blq_rule <- session$userData$settings$data_imputation$blq_imputation_rule
 
 pknca_res <- pknca_obj %>%
 
@@ -100,7 +101,10 @@ pknca_res <- pknca_obj %>%
   ) %>%
 
   # Run pk.nca and join subject and dose information to the results
-  PKNCA_calculate_nca() %>%
+  # Consider the BLQ imputation rule before calculations (if any)
+  PKNCA_calculate_nca(
+    blq_rule = blq_rule
+  ) %>%
 
   # Add bioavailability results if requested
   add_f_to_pknca_results(session$userData$settings$bioavailability) %>%
