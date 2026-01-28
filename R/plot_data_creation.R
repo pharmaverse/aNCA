@@ -1,15 +1,46 @@
-
-#' Derive last dose time for each sample
+#' Finalize mean PK plot with labels and mean layers
 #'
-#' @param conc_data Concentration data frame.
-#' @param dose_data Dose data frame.
-#' @param conc_time_col Name of the time column in conc_data.
-#' @param dose_time_col Name of the time column in dose_data.
-#' @param dose_group_vars Grouping variables for joining.
-#' @param align_time_col Name of the time column to align on (default: conc_time_col).
+#' @param plot The ggplot object to finalize.
+#' @param sd_min Logical; if TRUE, plot lower SD error bars.
+#' @param sd_max Logical; if TRUE, plot upper SD error bars.
+#' @param ci Logical; if TRUE, plot 95% confidence interval ribbon.
+#' @param color_by Character vector for color grouping.
+#' @param y_var Name of the y variable.
+#' @param x_var Name of the x variable.
+#' @return Finalized ggplot object for mean PK plot.
+#' @keywords internal
+finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) {
+  plot_build <- ggplot2::ggplot_build(plot)
+  plot +
+    labs(
+      x = paste("Nominal", plot_build$labels$x),
+      y = paste("Mean", plot_build$labels$y),
+      title = paste("Mean", plot_build$labels$title)
+    ) +
+    list(
+      .add_mean_layers(
+        sd_min = sd_min,
+        sd_max = sd_max,
+        ci = ci,
+        color_by = color_by,
+        y_var = y_var,
+        x_var = x_var,
+        group_var = "color_var"
+      )
+    )
+}
+
+#' Derive last dose time for each sample in the concentration data of a PKNCAdata object
+#'
+#' @param pknca_data A PKNCAdata object containing concentration and dose data.
+#' @param conc_time_col Name of the time column in concentration data (default: pknca_data$conc$columns$time).
 #' @return Data frame with TIME_DOSE column added, representing the last dose time for each sample.
 #' @keywords internal
-derive_last_dose_time <- function(conc_data, dose_data, conc_time_col, dose_time_col, dose_group_vars) {
+derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$columns$time) {
+  conc_data <- pknca_data$conc$data
+  dose_data <- pknca_data$dose$data
+  dose_time_col <- pknca_data$dose$columns$time
+  dose_group_vars <- group_vars(pknca_data$dose)
 
   dplyr::left_join(
     conc_data,
@@ -24,8 +55,6 @@ derive_last_dose_time <- function(conc_data, dose_data, conc_time_col, dose_time
     dplyr::slice_tail(n = 1) %>%
     dplyr::ungroup()
 }
-
-
 
 #' Filter a data frame by a list of column-value pairs
 #'
@@ -195,11 +224,8 @@ exploration_individualplot <- function(
 
   data <- if (show_dose || use_time_since_last_dose) {
     data <- derive_last_dose_time(
-      conc_data = pknca_data$conc$data,
-      dose_data = pknca_data$dose$data,
-      conc_time_col = pknca_data$conc$columns$time,
-      dose_time_col = pknca_data$dose$columns$time,
-      dose_group_vars = group_vars(pknca_data$dose)
+      pknca_data = pknca_data,
+      conc_time_col = pknca_data$conc$columns$time
     )
     if (use_time_since_last_dose) {
       data <- dplyr::mutate(data, !!pknca_data$conc$columns$time := !!rlang::sym(pknca_data$conc$columns$time) - TIME_DOSE)
@@ -285,14 +311,13 @@ exploration_meanplot <- function(
   time_sample <- if (use_time_since_last_dose) "NRRLT" else time_sample
   dose_group_cols <- setdiff(group_vars(pknca_data$dose), pknca_data$conc$columns$subject)
   tooltip_vars = c(group_vars(pknca_data$dose), time_sample, "Mean")
+  x_var <- time_sample
+  y_var <- "Mean"
 
   data <- if (show_dose) {
     derive_last_dose_time(
-      conc_data = pknca_data$conc$data,
-      dose_data = pknca_data$dose$data,
-      conc_time_col = time_sample,
-      dose_time_col = pknca_data$dose$columns$time,
-      dose_group_vars = group_vars(pknca_data$dose)
+      pknca_data = pknca_data,
+      conc_time_col = time_sample
     ) %>%
     group_by(!!!rlang::syms(dose_group_cols), !!sym(time_sample)) %>%
     mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
@@ -311,9 +336,6 @@ exploration_meanplot <- function(
     ylog_scale = ylog_scale
   )
 
-  x_var <- time_sample
-  y_var <- "Mean"
-
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
@@ -329,27 +351,19 @@ exploration_meanplot <- function(
     vline_var = if (show_dose) "TIME_DOSE" else NULL
   )
 
-  plot_build <- ggplot_build(plot)
-  has_error_msg <- isTRUE(plot_build[[1]][[1]]$label == "No data available for the plot")
-  if (has_error_msg) {
+  # If there is no mean data, return the plot as the error
+  if (nrow(mean_data) == 0) {
     return(plot)
   }
 
-  plot <- plot +
-    labs(
-      x = paste("Nominal", plot_build$labels$x),
-      y = paste("Mean", plot_build$labels$y),
-      title = paste("Mean", plot_build$labels$title)
-    )
-
-  plot + list(
-    .add_mean_layers(
-      sd_min = sd_min,
-      sd_max = sd_max,
-      ci = ci,
-      color_by = color_by,
-      y_var = y_var,
-      x_var = x_var,
-      group_var = "color_var")
+  # Add final layers for meanplot with error bars and CIs
+  finalize_meanplot(
+    plot = plot,
+    sd_min = sd_min,
+    sd_max = sd_max,
+    ci = ci,
+    color_by = color_by,
+    y_var = y_var,
+    x_var = x_var
   )
 }
