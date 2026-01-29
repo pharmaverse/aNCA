@@ -88,8 +88,7 @@ exploration_meanplot <- function(
 
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
-    color_by = color_by,
-    facet_by = facet_by,
+    extra_grouping_vars = c(color_by, facet_by),
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
     show_dose = show_dose,
@@ -194,8 +193,7 @@ process_data_individual <- function(pknca_data,
 #' @keywords internal
 #' @noRd
 process_data_mean <- function(pknca_data,
-                              color_by = NULL,
-                              facet_by = NULL,
+                              extra_grouping_vars = NULL,
                               filtering_list = NULL,
                               ylog_scale = FALSE,
                               show_dose = FALSE,
@@ -206,7 +204,7 @@ process_data_mean <- function(pknca_data,
   x_var <- if (use_time_since_last_dose) "NRRLT" else pknca_data$conc$columns$time.nominal
   y_var <- pknca_data$conc$columns$concentration
   dose_group_cols <- setdiff(group_vars(pknca_data$dose), pknca_data$conc$columns$subject)
-  grouping_cols <- unique(c(color_by, facet_by, "TIME_NOMINAL", x_var_unit, y_var_unit, dose_group_cols))
+  grouping_cols <- unique(c(extra_grouping_vars, "TIME_NOMINAL", x_var_unit, y_var_unit, dose_group_cols))
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
   data <- if (show_dose) {
