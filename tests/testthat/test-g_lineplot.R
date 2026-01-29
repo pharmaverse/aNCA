@@ -59,6 +59,8 @@ describe("g_lineplot: structure and arguments", {
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
+      x_unit = "RRLTU",
+      y_unit = "AVALU",
       color_by = "USUBJID"
     )
     expect_s3_class(p, "ggplot")
@@ -88,8 +90,8 @@ describe("g_lineplot: structure and arguments", {
       ylog_scale = TRUE
     )
     # Test: Check that the log scale was *added* to the plot
-    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
-    expect_true(is_log_scale)
+    plot_build <- ggplot_build(p)
+    expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
   })
 
   it("shows threshold line", {
