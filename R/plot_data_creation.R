@@ -43,6 +43,8 @@ exploration_individualplot <- function(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
     y_var = pknca_data$conc$columns$concentration,
+    x_unit = pknca_data$conc$columns$timeu,
+    y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
     facet_by = facet_by,
     group_by = pknca_data$conc$columns$subject,
@@ -98,6 +100,8 @@ exploration_meanplot <- function(
     data = mean_data,
     x_var = "TIME_NOMINAL",
     y_var = "Mean",
+    x_unit = pknca_data$conc$columns$timeu,
+    y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
     facet_by = facet_by,
     group_by = color_by,
@@ -280,11 +284,12 @@ filter_by_list <- function(data, filtering_list) {
 #' @noRd
 finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) {
   plot_build <- ggplot2::ggplot_build(plot)
+
   plot +
     labs(
-      x = paste("Nominal", plot_build$labels$x),
-      y = paste("Mean", plot_build$labels$y),
-      title = paste("Mean", plot_build$labels$title)
+      x = paste("Nominal", plot_build$plot$labels$x),
+      y = paste("Mean", plot_build$plot$labels$y),
+      title = paste("Mean", plot_build$plot$labels$title)
     ) +
     list(
       .add_mean_layers(

@@ -73,6 +73,8 @@
 g_lineplot <- function(data,
                        x_var,
                        y_var,
+                       x_unit = NULL,
+                       y_unit = NULL,
                        color_by,
                        facet_by = NULL,
                        group_by = NULL,
@@ -90,12 +92,8 @@ g_lineplot <- function(data,
 
   # Concatenate unique units, sep by ","
   #TODO: potential to facet if > 1 unit (#848)
-  x_unit <- paste0(unique(data$RRLTU), collapse = ", ")
-  y_unit <- paste0(unique(data$AVALU), collapse = ", ")
-
-  x_lab <- paste0("Time [", x_unit, "]")
-  y_lab <- paste0("Concentration [", y_unit, "]")
-
+  x_lab <- if (is.null(x_unit)) "Time" else paste0("Time [", paste0(unique(data[[x_unit]]), collapse = ", "), "]")
+  y_lab <- if (is.null(y_unit)) "Concentration" else paste0("Concentration [", paste0(unique(data[[y_unit]]), collapse = ", "), "]")
   title <- "PK Concentration - Time Profile"
 
   # --- Tooltip Construction ---
