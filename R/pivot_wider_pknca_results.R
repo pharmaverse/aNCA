@@ -25,7 +25,9 @@
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
-#'          of the NCA parameters (cmax, AUC, AUClast)
+#'          of the NCA parameters (cmax, AUC, AUClast), including new columns `Exclude` (a
+#'          derivation from pknca$exclude and flagging rules) and `flagged` (indicating if the row
+#'          is ACCEPTED, FLAGGED or MISSING based on the flagging rules).
 #'
 #' @importFrom dplyr select left_join rename mutate distinct group_by arrange ungroup
 #' @importFrom dplyr filter slice across where
@@ -269,7 +271,7 @@ add_label_attribute <- function(df, myres) {
   })
 
   flag_cols <- names(data)[formatters::var_labels(data)
-                                   %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
+                           %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
   if (length(flag_cols) > 0) {
     requested_flags <- nca_intervals %>%
