@@ -27,7 +27,6 @@ tab_explore_ui <- function(id) {
 }
 
 # SERVER LOGIC OF NAVBAR OUTPUT TAB ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 # In the output tab of the navbar, dynamic graphics of the input
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
@@ -55,7 +54,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(pknca_data(), individual_inputs()$color_by)
       log_info("Rendering individual plots")
 
-      individualplot <- exploration_individualplot(
+      exploration_individualplot(
         pknca_data = pknca_data(),
         color_by = individual_inputs()$color_by,
         facet_by = individual_inputs()$facet_by,
@@ -67,9 +66,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
         palette = individual_inputs()$palette_theme
       )
-
-      #lineplot
-      individualplot
     })
 
     # Render the individual plot in plotly
@@ -84,7 +80,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(pknca_data(), mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
 
-      meanplot <- exploration_meanplot(
+      exploration_meanplot(
         pknca_data = pknca_data(),
         color_by = mean_inputs()$color_by,
         facet_by = mean_inputs()$facet_by,
@@ -99,7 +95,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         labels_df = metadata_nca_variables,
         use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
       )
-      meanplot
     })
 
     # Save the objects for the ZIP folder whenever they change
