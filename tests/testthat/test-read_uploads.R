@@ -101,7 +101,7 @@ describe("read_pk", {
 describe("read_settings", {
 
   path <- "data/test-settings.yaml"
-  
+
   it("successfully reads a valid settings YAML", {
     skip_if_not(file.exists(path))
 
@@ -109,7 +109,7 @@ describe("read_settings", {
 
     expect_type(res, "list")
     expect_equal(names(res), c("settings", "slope_rules"))
-    
+
   })
 
   it("converts slope_rules elements into data frames", {
