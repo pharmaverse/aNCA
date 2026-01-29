@@ -189,6 +189,20 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       )
     })
 
+    filtering_list <- reactive({
+      lst <- list(
+        PARAM = input$param,
+        PCSPEC = input$pcspec
+      )
+      if ("usubjid" %in% names(input)) {
+        lst$USUBJID <- input$usubjid
+      }
+      if (!is.null(input$profiles)) {
+        lst$ATPTREF <- input$profiles
+      }
+      lst
+    })
+
     # Return all inputs as a list of reactives
     reactive({
       list(
@@ -204,7 +218,9 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         show_dose = input$show_dose,
         sd_max = input$sd_max,
         sd_min = input$sd_min,
-        ci = input$ci
+        ci = input$ci,
+        filtering_list = filtering_list(),
+        use_time_since_last_dose = input$timescale == "By Dose Profile"
       )
     })
   })

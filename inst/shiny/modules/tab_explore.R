@@ -63,42 +63,24 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # Compute the individual plot object
     individualplot <- reactive({
-      req(pknca_data(), individual_inputs()$param,
-          individual_inputs()$pcspec,
-          individual_inputs()$usubjid,
-          individual_inputs()$color_by)
+      req(pknca_data(), individual_inputs()$color_by)
       log_info("Rendering individual plots")
-
-      filtering_list <- list(
-        USUBJID = individual_inputs()$usubjid,
-        PARAM = individual_inputs()$param,
-        PCSPEC = individual_inputs()$pcspec,
-        ATPTREF = individual_inputs()$profiles
-      )
-      filtering_list <- filtering_list[!sapply(filtering_list, is.null)]
-
-      use_time_since_last_dose <- "ATPTREF" %in% names(filtering_list)
-
+browser()
       individualplot <- exploration_individualplot(
         pknca_data = pknca_data(),
         color_by = individual_inputs()$color_by,
         facet_by = individual_inputs()$facet_by,
-        filtering_list = filtering_list,
+        filtering_list = individual_inputs()$filtering_list,
         show_dose = individual_inputs()$show_dose,
         ylog_scale = individual_inputs()$ylog_scale,
         threshold_value = individual_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
-        use_time_since_last_dose = use_time_since_last_dose
+        use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
+        palette = master_palettes_list()
       )
 
       #lineplot
       individualplot
-    })
-
-    # Save the object for the zip folder whenever it changes
-    observe({
-      req(individualplot())
-      session$userData$results$exploration$individualplot <- individualplot()
     })
 
     # Render the individual plot in plotly
@@ -122,24 +104,14 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # Compute the meanplot object
     meanplot <- reactive({
-      req(pknca_data(), mean_inputs()$param, mean_inputs()$pcspec,
-          mean_inputs()$color_by)
+      req(pknca_data(), mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
-
-      filtering_list <- list(
-        PARAM = mean_inputs()$param,
-        PCSPEC = mean_inputs()$pcspec,
-        ATPTREF = mean_inputs()$profiles
-      )
-      filtering_list <- filtering_list[!sapply(filtering_list, is.null)]
-
-      use_time_since_last_dose <- "ATPTREF" %in% names(filtering_list)
 
       meanplot <- exploration_meanplot(
         pknca_data = pknca_data(),
         color_by = mean_inputs()$color_by,
         facet_by = mean_inputs()$facet_by,
-        filtering_list = filtering_list,
+        filtering_list = mean_inputs()$filtering_list,
         show_dose = mean_inputs()$show_dose,
         palette = mean_palettes_list(),
         sd_min = mean_inputs()$sd_min,
@@ -148,10 +120,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         ylog_scale = mean_inputs()$ylog_scale,
         threshold_value = mean_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
-        use_time_since_last_dose = use_time_since_last_dose
+        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
       )
-
-      session$userData$results$exploration$meanplot <- meanplot
       meanplot
     })
 
