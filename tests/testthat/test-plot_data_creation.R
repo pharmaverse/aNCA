@@ -276,19 +276,14 @@ describe("exploration_individualplot: Individual Plot Mode", {
     expect_s3_class(p$facet, "FacetWrap")
   })
 
-  it("applies log scale", {
+  it("applies log10 scale to y-axis when ylog_scale is TRUE", {
     p <- exploration_individualplot(
       pknca_data = sample_data,
       color_by = "PARAM",
-      ylog_scale = TRUE,
-      filtering_list = list(
-        PARAM = analytes[1],
-        PCSPEC = pcspecs[1],
-        USUBJID = subjects[1]
-      )
+      ylog_scale = TRUE
     )
-    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
-    expect_true(is_log_scale)
+    plot_build <- ggplot_build(p)
+    expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
   })
 
   it("shows threshold line", {
@@ -307,11 +302,11 @@ describe("exploration_individualplot: Individual Plot Mode", {
   })
 
   it("applies a custom palette", {
-    test_palette <- setNames(c("#FF0000", "#0000FF"), analytes[c(1,2)])
+
     p <- exploration_individualplot(
       pknca_data = sample_data,
       color_by = "PARAM",
-      palette = test_palette,
+      palette = "viridis",
       filtering_list = list(
         PARAM = analytes[1],
         PCSPEC = pcspecs[1],
@@ -320,7 +315,7 @@ describe("exploration_individualplot: Individual Plot Mode", {
     )
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
-    expect_true(all(plot_colors %in% test_palette))
+    expect_true(all(plot_colors %in% viridis::viridis(1)))
   })
 
   it("handles empty data.frame with a plot informing of no data", {
@@ -365,9 +360,7 @@ describe("exploration_meanplot: Mean Plot Mode", {
   it("returns a ggplot object with mean labels", {
     p <- exploration_meanplot(
       pknca_data = sample_data,
-      color_by = "PARAM",
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1]
+      color_by = "PARAM"
     )
     expect_s3_class(p, "ggplot")
     expect_true(grepl("Mean", p$labels$title))
@@ -376,16 +369,14 @@ describe("exploration_meanplot: Mean Plot Mode", {
     expect_equal(p$labels$colour, "PARAM")
   })
 
-  it("applies log scale", {
+  it("applies log10 scale to y-axis when ylog_scale is TRUE", {
     p <- exploration_meanplot(
       pknca_data = sample_data,
       color_by = "PARAM",
-      ylog_scale = TRUE,
-      selected_analytes = analytes[1],
-      selected_pcspec = pcspecs[1]
+      ylog_scale = TRUE
     )
-    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
-    expect_true(is_log_scale)
+    plot_build <- ggplot_build(p)
+    expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
   })
 
   it("returns a ggplot object with mean labels", {
@@ -402,20 +393,6 @@ describe("exploration_meanplot: Mean Plot Mode", {
     expect_true(grepl("Mean", p$labels$y))
     expect_true(grepl("Nominal", p$labels$x))
     expect_equal(p$labels$colour, "PARAM")
-  })
-
-  it("applies log scale", {
-    p <- exploration_meanplot(
-      pknca_data = sample_data,
-      color_by = "PARAM",
-      ylog_scale = TRUE,
-      filtering_list = list(
-        PARAM = analytes[1],
-        PCSPEC = pcspecs[1]
-      )
-    )
-    is_log_scale <- grepl("log", p$scales$scales[[1]]$trans$name)
-    expect_true(is_log_scale)
   })
 
   it("shows SD error bars (min, max, and both)", {
