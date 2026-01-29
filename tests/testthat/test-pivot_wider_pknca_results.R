@@ -99,7 +99,7 @@ describe("pivot_wider_pknca_results", {
       # Parameter columns transformed by the function
       exp_main_param_cols,
       # Columns currently made by the function
-      "LAMZIX", "LAMZMTD", "Exclude", "flagged",
+      "LAMZIX", "LAMZMTD", "Exclude",
       # Concentration group columns
       colnames(group_columns),
       # Columns from dose data
@@ -126,7 +126,7 @@ describe("pivot_wider_pknca_results", {
       exp_main_param_cols,
       "AUCINT_0-2[hr*ng/mL]", "AUCINT_2-4[hr*ng/mL]",
       # Columns currently made by the function
-      "LAMZIX", "LAMZMTD", "Exclude", "flagged",
+      "LAMZIX", "LAMZMTD", "Exclude",
       colnames(group_columns),
       intersect(colnames(pknca_res$data$dose$data), colnames(pivoted_res))
     )
@@ -174,7 +174,7 @@ describe("pivot_wider_pknca_results", {
       `AUCIFO[hr*ng/mL]` = "AUC Infinity Obs",
       `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2",
       `AUCINT_2-4[hr*ng/mL]` = "AUC from T1 to T2",
-      `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA, `flagged` = NA
+      `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
     expect_equal(labels, expected_labels)
   })

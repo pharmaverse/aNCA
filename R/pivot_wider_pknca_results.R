@@ -265,10 +265,10 @@ add_label_attribute <- function(df, myres) {
   flag_rule_msgs <- c(paste0(names(flag_settings), c(" < ", " < ", " > ", " > ", " < "), flag_thr))
 
   valid_indices <- map_lgl(flag_params, function(p) {
-    any(grepl(paste0("^", p, "(\\[|$)"), names(flagged_data)))
+    any(grepl(paste0("^", p, "(\\[|$)"), names(data)))
   })
 
-  flag_cols <- names(flagged_data)[formatters::var_labels(flagged_data)
+  flag_cols <- names(data)[formatters::var_labels(data)
                                    %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
   if (length(flag_cols) > 0) {
@@ -281,7 +281,7 @@ add_label_attribute <- function(df, myres) {
       # Collapse duplicates: if any row is TRUE, the result is TRUE
       summarise(across(any_of(flag_params_pknca), any), .groups = "drop")
 
-    flagged_data <- flagged_data %>%
+    data <- data %>%
       left_join(requested_flags, by = intersect(names(.), names(requested_flags))) %>%
       rowwise() %>%
       mutate(
@@ -316,5 +316,5 @@ add_label_attribute <- function(df, myres) {
       select(-all_of(c(flag_params_pknca, "na_msg_vec", "na_msg")))
   }
 
-  flagged_data
+  data
 }
