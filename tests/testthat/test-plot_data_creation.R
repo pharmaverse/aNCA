@@ -59,48 +59,61 @@ sample_data <- dplyr::bind_rows(
 
 
 
-# Expand the original FIXTURE_PKNCA_DATA to have more subjects for the meanplot tests
-# sample_data <- FIXTURE_PKNCA_DATA
-# d_data <- sample_data$conc$data %>%
-#   filter(PARAM == unique(PARAM)[1], PCSPEC == unique(PCSPEC)[1])
-# d_data2 <- d_data %>%
-#   mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 3)
-# d_data3 <- d_data %>%
-#   mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 7)
-# sample_data$conc$data <- bind_rows(d_data, d_data2, d_data3)
-# pknca_data <- sample_data
 
-# filtering_list <- list(
-#   USUBJID = unique(pknca_data$conc$data$USUBJID)[1],
-#   PARAM = unique(pknca_data$conc$data$PARAM)[1],
-#   PCSPEC = unique(pknca_data$conc$data$PCSPEC)[1],
-#   ATPTREF = unique(pknca_data$conc$data$ATPTREF)[1]
-# )
+
+
+# Expand the original FIXTURE_PKNCA_DATA to have more subjects for the meanplot tests
+sample_data <- FIXTURE_PKNCA_DATA
+d_data <- sample_data$conc$data %>%
+  filter(PARAM == unique(PARAM)[1], PCSPEC == unique(PCSPEC)[1])
+d_data2 <- d_data %>%
+  mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 3)
+d_data3 <- d_data %>%
+  mutate(USUBJID = as.numeric(as.factor(USUBJID)) + 7)
+sample_data$conc$data <- bind_rows(d_data, d_data2, d_data3)
+pknca_data <- sample_data
+
+conc_data <- pknca_data$conc$data
+
+filtering_list <- list(
+  USUBJID = unique(pknca_data$conc$data$USUBJID)[1],
+  PARAM = unique(pknca_data$conc$data$PARAM)[1],
+  PCSPEC = unique(pknca_data$conc$data$PCSPEC)[1],
+  ATPTREF = unique(pknca_data$conc$data$ATPTREF)[1]
+)
 
 describe("process_data_individual functions correctly", {
 
-  sample_data <- pknca_data$conc$data
   it("returns a dataframe with default settings", {
     res <- process_data_individual(
-      data = sample_data
+      pknca_data = sample_data
     )
     # expect data frame output
     expect_true(is.data.frame(res))
   })
 
   it("handles missing columns gracefully", {
-    incomplete_data <- sample_data %>% select(-AVAL)
+    conc_col <- sample_data$conc$columns$concentration
+    data_no_conc_col <- sample_data
+    data_no_conc_col$conc$data <- select(conc_data, -all_of(conc_col))
     expect_error(
       process_data_individual(
-        data = incomplete_data
+        pknca_data = data_no_conc_col
       ),
       "object 'AVAL' not found"
     )
   })
 
-  it("filters out EVID != 0 and NA AVAL", {
+  it("filters out EVID != 0 and NA concentration", {
+    conc_col <- sample_data$conc$columns$concentration
+    conc_data_with_na_evid <- conc_data
+    conc_data_with_na_evid$EVID <- c(0, rep(1, nrow(conc_data) - 1))
+    conc_data_with_na_evid[[conc_col]][c(2,3)] <- NA
+    sample_data_with_na_evid <- sample_data
+    sample_data_with_na_evid$conc$data <- conc_data_with_na_evid
+
     p <- process_data_individual(
-      data = sample_data,
+      pknca_data = sample_data_with_na_evid,
       filtering_list = list(
         USUBJID = sample_data$USUBJID[1],
         PARAM = sample_data$PARAM[1],
@@ -108,13 +121,15 @@ describe("process_data_individual functions correctly", {
       )
     )
     expect_true(all(p$EVID == 0))
-    expect_true(all(!is.na(p$AVAL)))
+    expect_true(all(!is.na(p[[conc_col]])))
   })
 
   it("filters data according to filtering_list", {
     p <- process_data_individual(
-      data = sample_data,
-      filtering_list = filtering_list
+      pknca_data = sample_data,
+      filtering_list = list(
+        ATPTREF = sample_data$ATPTREF[1]
+      )
     )
     expect_true(all(p$ATPTREF == 1))
   })
@@ -136,17 +151,16 @@ describe("process_data_individual functions correctly", {
   })
 
   it("filters non-positive AVAL if log scale selected", {
+    aval_zeros <- conc_data
+    aval_zeros$AVAL[c(1,2)] <- c(0, 0)
+    pknca_aval_zeros <- sample_data
+    pknca_aval_zeros$conc$data <- aval_zeros
+
     p <- process_data_individual(
-      data = sample_data,
-      filtering_list = list(
-        USUBJID = "Subject1",
-        PARAM = "Analyte2",
-        PCSPEC = "Spec2",
-        ATPTREF = 1
-      ),
+      pknca_data = pknca_aval_zeros,
       ylog_scale = TRUE
     )
-    expect_true(all(p$AVAL > 0))
+    expect_true(all(p[[conc_col]] > 0))
   })
 })
 
@@ -154,27 +168,29 @@ describe("process_data_mean functions correctly", {
 
   it("returns a dataframe with default settings", {
     p <- process_data_mean(
-      data = sample_data,
+      pknca_data = sample_data,
       filtering_list = list(
         PARAM = sample_data$PARAM[1],
         PCSPEC = sample_data$PCSPEC[1]
       ),
-      color_by = "ATPTREF"
+      extra_grouping_vars = "ATPTREF"
     )
     expect_true("Mean" %in% names(p))
     expect_true("ATPTREF" %in% names(p))
   })
 
   it("handles missing columns gracefully", {
-    incomplete_data <- sample_data %>% select(-AVAL)
+    incomplete_data <- conc_data %>% select(-AVAL)
+    pknca_incomplete <- sample_data
+    pknca_incomplete$conc$data <- incomplete_data
     expect_error(
       process_data_mean(
-        data = incomplete_data,
+        pknca_data = pknca_incomplete,
         filtering_list = list(
           PARAM = sample_data$PARAM[1],
           PCSPEC = sample_data$PCSPEC[1]
         ),
-        color_by = "ATPTREF"
+        extra_grouping_vars = "ATPTREF"
       ),
       "object 'AVAL' not found"
     )
@@ -182,46 +198,44 @@ describe("process_data_mean functions correctly", {
 
   it("filters data if filtering_list is used", {
     p <- process_data_mean(
-      data = sample_data,
+      pknca_data = pknca_data,
       filtering_list = list(
-        PARAM = sample_data$PARAM[1],
-        PCSPEC = sample_data$PCSPEC[1],
-        ATPTREF = sample_data$ATPTREF[1]
+        PARAM = conc_data$PARAM[1],
+        PCSPEC = conc_data$PCSPEC[1],
+        ATPTREF = conc_data$ATPTREF[1]
       ),
-      color_by = "ATPTREF"
+      extra_grouping_vars = c("ATPTREF", "PARAM", "PCSPEC")
     )
-    expect_true(max(p$NRRLT) <= 5)
+    expect_true(all(p$ATPTREF == conc_data$ATPTREF[1]))
+    expect_true(all(p$PARAM == conc_data$PARAM[1]))
+    expect_true(all(p$PCSPEC == conc_data$PCSPEC[1]))
   })
 
-  it("supports multiple color_by and facet_by", {
+  it("supports using extra grouping variables to keep after summarization", {
     p <- process_data_mean(
-      data = sample_data,
+      pknca_data = pknca_data,
       filtering_list = list(
-        PARAM = c(sample_data$PARAM[1], sample_data$PARAM[2]),
-        PCSPEC = sample_data$PCSPEC[1]
+        PARAM = c(conc_data$PARAM[1], conc_data$PARAM[2]),
+        PCSPEC = conc_data$PCSPEC[1]
       ),
-      color_by = c("DOSEA", "SEX"),
-      facet_by = "PARAM"
+      extra_grouping_vars = c("DOSETRT", "PCSPEC", "PARAM"),
     )
-    expect_true("DOSEA" %in% names(p))
-    expect_true("SEX" %in% names(p))
+    expect_true("DOSETRT" %in% names(p))
+    expect_true("PCSPEC" %in% names(p))
     expect_true("PARAM" %in% names(p))
   })
 
   it("filters non-positive Mean for log scale", {
+    zero_data <- conc_data %>%
+      mutate(AVAL = ifelse(USUBJID %in% unique(USUBJID)[1:2], 0, AVAL))
+    pknca_zero_data <- pknca_data
+    pknca_zero_data$conc$data <- zero_data
     p <- process_data_mean(
-      data = sample_data,
-      filtering_list = list(
-        PARAM = "Analyte2",
-        PCSPEC = "Spec2",
-        ATPTREF = 1
-      ),
-      color_by = "DOSEA",
+      pknca_data = pknca_zero_data,
       ylog_scale = TRUE
     )
     expect_true(all(p$Mean > 0))
   })
-
 })
 
 sample_data <- FIXTURE_PKNCA_DATA
