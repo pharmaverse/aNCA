@@ -220,7 +220,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         sd_min = input$sd_min,
         ci = input$ci,
         filtering_list = filtering_list(),
-        use_time_since_last_dose = input$timescale == "By Dose Profile"
+        use_time_since_last_dose = input$timescale == "By Dose Profile",
+        palette = input$palette_theme
       )
     })
   })

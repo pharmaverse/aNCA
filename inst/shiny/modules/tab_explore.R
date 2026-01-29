@@ -50,22 +50,11 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     )
 
     # TAB: General Lineplot --------------------------------------------------------
-    master_palettes_list <- reactive({
-      req(individual_inputs()$palette_theme)
-      req(individual_inputs()$color_by)
-
-      get_persistent_palette(
-        pknca_data()$conc$data,
-        individual_inputs()$color_by,
-        palette_name = individual_inputs()$palette_theme
-      )
-    })
-
     # Compute the individual plot object
     individualplot <- reactive({
       req(pknca_data(), individual_inputs()$color_by)
       log_info("Rendering individual plots")
-browser()
+
       individualplot <- exploration_individualplot(
         pknca_data = pknca_data(),
         color_by = individual_inputs()$color_by,
@@ -76,7 +65,7 @@ browser()
         threshold_value = individual_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
         use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
-        palette = master_palettes_list()
+        palette = individual_inputs()$palette_theme
       )
 
       #lineplot
@@ -90,18 +79,6 @@ browser()
     })
 
     # TAB: Mean Plot -----------------------------------------------------------
-
-    mean_palettes_list <- reactive({
-      req(mean_inputs()$palette_theme)
-      req(mean_inputs()$color_by)
-
-      get_persistent_palette(
-        pknca_data()$conc$data,
-        mean_inputs()$color_by,
-        palette_name = mean_inputs()$palette_theme
-      )
-    })
-
     # Compute the meanplot object
     meanplot <- reactive({
       req(pknca_data(), mean_inputs()$color_by)
@@ -113,7 +90,7 @@ browser()
         facet_by = mean_inputs()$facet_by,
         filtering_list = mean_inputs()$filtering_list,
         show_dose = mean_inputs()$show_dose,
-        palette = mean_palettes_list(),
+        palette = mean_inputs()$palette_theme,
         sd_min = mean_inputs()$sd_min,
         sd_max = mean_inputs()$sd_max,
         ci = mean_inputs()$ci,
