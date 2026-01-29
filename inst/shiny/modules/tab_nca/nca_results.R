@@ -142,6 +142,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       height = "68vh",
       rowStyle = function(x) {
         function(index) {
+          if (!"flagged" %in% names(x)) return(NULL)
+
           flagged_value <- x$flagged[index]
           if (flagged_value == "FLAGGED") {
             list(backgroundColor = FLAG_COLOR_FLAGGED)

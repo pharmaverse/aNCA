@@ -310,12 +310,13 @@ describe("pivot_wider_pknca_results flagging integration", {
     expect_match(exclude_str, "R2ADJ is NA")
   })
 
-  it("flags NOT DONE if no flags are active", {
+  it("does not create flagged column if no flags are active", {
     flag_rules <- list("R2ADJ" = list(is.checked = FALSE, threshold = 0.8))
 
     result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
 
-    expect_true(all(result$flagged == "NOT DONE"))
+    # expect no flagged column in result
+    expect_true(!"flagged" %in% colnames(result))
   })
 
   it("does not set to FLAGGED if parameter was not requested", {

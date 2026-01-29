@@ -256,12 +256,6 @@ add_label_attribute <- function(df, myres) {
 #' @noRd
 .apply_results_flags <- function(data, nca_intervals, group_cols, flag_settings) {
 
-  #Initialise flagged column
-  flagged_data <- data %>%
-    mutate(
-      flagged = "NOT DONE"
-    )
-
   # Add flagging column in the pivoted results
   applied_flags <- purrr::keep(flag_settings, function(x) x$is.checked)
   flag_params <- names(applied_flags)
