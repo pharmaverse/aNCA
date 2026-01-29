@@ -36,11 +36,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    data <- reactive({
-      req(pknca_data())
-      pknca_data()$conc$data
-    })
-
     # Initiate the sidebar server modules
     individual_inputs <- plot_sidebar_server(
       "individual_sidebar",
@@ -54,15 +49,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       grouping_vars = extra_group_vars
     )
 
-
     # TAB: General Lineplot --------------------------------------------------------
-
     master_palettes_list <- reactive({
       req(individual_inputs()$palette_theme)
       req(individual_inputs()$color_by)
 
       get_persistent_palette(
-        data(),
+        pknca_data()$conc$data,
         individual_inputs()$color_by,
         palette_name = individual_inputs()$palette_theme
       )
@@ -70,7 +63,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # Compute the individual plot object
     individualplot <- reactive({
-      req(data(), individual_inputs()$param,
+      req(pknca_data(), individual_inputs()$param,
           individual_inputs()$pcspec,
           individual_inputs()$usubjid,
           individual_inputs()$color_by)
@@ -121,7 +114,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(mean_inputs()$color_by)
 
       get_persistent_palette(
-        data(),
+        pknca_data()$conc$data,
         mean_inputs()$color_by,
         palette_name = mean_inputs()$palette_theme
       )
@@ -129,7 +122,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # Compute the meanplot object
     meanplot <- reactive({
-      req(data(), mean_inputs()$param, mean_inputs()$pcspec,
+      req(pknca_data(), mean_inputs()$param, mean_inputs()$pcspec,
           mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
 
