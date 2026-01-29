@@ -72,8 +72,24 @@ data_upload_server <- function(id) {
           filenames <- input$data_upload$name
         }
 
-        # Iterate over files: Try reading as Data, then as Settings
-        read_results <- purrr::map2(paths, filenames, read_uploaded_file)
+        # Iterate over files: Identify file extension and read either settings or data
+        read_results <- purrr::map2(paths, filenames, function(path, name) {
+          if (tools::file_ext(path) %in% c("yml", "yaml")) {
+            tryCatch({
+              obj <- read_settings(path)
+              list(status = "success", type = "settings", content = obj, name = name)
+            }, error = function(e) {
+              list(status = "error", msg = conditionMessage(e), name = name)
+            })
+          } else {
+            tryCatch({
+              obj <- read_pk(path)
+              list(status = "success", type = "data", content = obj, name = name)
+            }, error = function(e) {
+              list(status = "error", msg = conditionMessage(e), name = name)
+            })
+          }
+        })
 
         # Process results
         successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
@@ -105,7 +121,7 @@ data_upload_server <- function(id) {
         if (length(found_data) > 0) {
           tryCatch({
             loaded_data <- successful_loads %>%
-              purrr::map("data") %>%
+              purrr::map("content") %>%
               dplyr::bind_rows() %>%
               #mutate all to character to prevent errors
               dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
