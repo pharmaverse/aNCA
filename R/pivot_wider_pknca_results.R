@@ -169,7 +169,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   # Add flagging columns for each rule and a general "flagged" column
   out <- .apply_results_flags(
     data = pivoted_res,
-    nca_intervals = myres$data$intervals,
+    pknca_res = myres$result,
     group_cols = unname(unlist(myres$data$conc$columns$groups)),
     flag_settings = flag_rules
   )
@@ -247,8 +247,8 @@ add_label_attribute <- function(df, myres) {
 #'
 #' @param data A data frame of pivoted NCA results.
 #' with additional grouping variables merged.
-#' @param nca_intervals A data frame. The intervals object from the
-#'  PKNCA result (e.g., `res$data$intervals`).
+#' @param pknca_res A data frame. The results object from the
+#'  PKNCA result (e.g., `res$result`).
 #' @param group_cols A character vector. The column names used for grouping the data.
 #' @param flag_settings A named list of flag settings. Each element must contain
 #'   `is.checked` (logical) and `threshold` (numeric or character).
@@ -256,7 +256,7 @@ add_label_attribute <- function(df, myres) {
 #' @returns A data frame with updated `Exclude` and `flagged` columns.
 #' @keywords internal
 #' @noRd
-.apply_results_flags <- function(data, nca_intervals, group_cols, flag_settings) {
+.apply_results_flags <- function(data, pknca_res, group_cols, flag_settings) {
 
   # Add flagging column in the pivoted results
   applied_flags <- purrr::keep(flag_settings, function(x) x$is.checked)
@@ -274,49 +274,53 @@ add_label_attribute <- function(df, myres) {
                            %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
   if (length(flag_cols) > 0) {
-    requested_flags <- nca_intervals %>%
+    missing_flags <- pknca_res %>%
+      filter(PPTESTCD %in% flag_params) %>%
       select(any_of(c(
         group_cols,
-        flag_params_pknca
+        "PPTESTCD",
+        "PPSTRES"
       ))) %>%
-      group_by(across(any_of(group_cols))) %>%
-      # Collapse duplicates: if any row is TRUE, the result is TRUE
-      summarise(across(any_of(flag_params_pknca), any), .groups = "drop")
+      mutate(is_missing = is.na(PPSTRES)) %>%
+      pivot_wider(
+        names_from = PPTESTCD,
+        values_from = is_missing,
+        names_prefix = "missing_"
+      ) %>%
+      mutate(Missing = pmap_chr(across(starts_with("missing_")), .extract_missing_values)) %>%
+      select(-starts_with("missing_"), -PPSTRES)
 
     data <- data %>%
-      left_join(requested_flags, by = intersect(names(.), names(requested_flags))) %>%
+      left_join(missing_flags,
+                by = intersect(names(data), names(missing_flags))) %>%
       rowwise() %>%
       mutate(
-        na_msg_vec = list(
-          purrr::map2_chr(flag_cols, flag_params_pknca[valid_indices],
-                          function(d_col, f_col) {
-                            if (!is.na(d_col) && is.na(get(d_col)) && isTRUE(get(f_col))) {
-                              # Return "Param is NA"
-                              paste(str_remove(d_col, "\\[.*\\]"), "is NA")
-                            } else {
-                              NA_character_
-                            }
-                          }) %>% na.omit()
-        ),
-        na_msg = paste(na_msg_vec, collapse = "; "),
-        # Update Exclude using case_when
-        Exclude = case_when(
-          # Combine na message and existing Exclude text
-          na_msg != "" & !is.na(Exclude) ~ paste(Exclude, na_msg, sep = "; "),
-          na_msg != "" ~ na_msg,
-          TRUE ~ Exclude
-        ),
         flagged = case_when(
-          is.na(Exclude) ~ "ACCEPTED",
+          is.na(Exclude) && is.na(Missing) ~ "ACCEPTED",
           any(sapply(
             flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
           )) ~ "FLAGGED",
           TRUE ~ "MISSING"
         )
       ) %>%
-      ungroup() %>%
-      select(-all_of(c(flag_params_pknca, "na_msg_vec", "na_msg")))
+      ungroup()
   }
 
   data
+}
+
+# Helper function to extract missing values
+#' @noRd
+.extract_missing_values <- function(...) {
+  # Get the values for the current row
+  vals <- c(...)
+  # Get the names associated with the TRUE values
+  missing_names <- names(vals)[which(vals == TRUE)]
+  
+  if (length(missing_names) == 0) return(NA_character_)
+  
+  missing_names %>%
+    stringr::str_remove("missing_") %>%
+    paste0(" is NA") %>%
+    paste(collapse = "; ")
 }
