@@ -1,0 +1,310 @@
+settings:
+  analyte: Analyte01
+  profile: DOSE 1
+  pcspec: SERUM
+  method: lin up/log down
+  bioavailability: ~
+  data_imputation:
+    impute_c0: yes
+    blq_imputation_rule:
+      first: keep
+      middle: keep
+      last: keep
+  partial_aucs:
+    start_auc:
+    - .na.real
+    - .na.real
+    end_auc:
+    - .na.real
+    - .na.real
+  flags:
+    R2ADJ:
+      is.checked: yes
+      threshold: 0.7
+    R2:
+      is.checked: no
+      threshold: 0.7
+    AUCPEO:
+      is.checked: yes
+      threshold: 20
+    AUCPEP:
+      is.checked: yes
+      threshold: 20
+    LAMZSPN:
+      is.checked: yes
+      threshold: 2
+  units: ~
+  general_exclusions: []
+  parameters:
+    selections:
+      Multiple IV Infusion:
+      - adj.r.squared
+      - auclast
+      - auclast.dn
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vss.obs
+    types_df:
+      USUBJID:
+      - '11101'
+      - '11102'
+      - '11103'
+      - '11104'
+      - '11105'
+      - '11106'
+      - '11107'
+      - '11108'
+      - '11109'
+      - '11110'
+      - '11111'
+      - '11112'
+      - '11201'
+      - '11202'
+      - '11203'
+      - '11204'
+      - '11301'
+      - '11302'
+      - '25101'
+      - '25102'
+      - '25103'
+      - '25104'
+      - '25201'
+      std_route:
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      type:
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+      - Multiple IV Infusion
+slope_rules:
+  manual_slopes:
+    USUBJID: []
+    ATPTREF: []
+    DOSNOA: []
+    TYPE: []
+    RANGE: []
+    REASON: []
+  profiles_per_subject:
+    STUDYID:
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    - XX01
+    PCSPEC:
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    - SERUM
+    DOSETRT:
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    USUBJID:
+    - '11101'
+    - '11102'
+    - '11103'
+    - '11104'
+    - '11105'
+    - '11106'
+    - '11107'
+    - '11108'
+    - '11109'
+    - '11110'
+    - '11111'
+    - '11112'
+    - '11201'
+    - '11202'
+    - '11203'
+    - '11204'
+    - '11301'
+    - '11302'
+    - '25101'
+    - '25102'
+    - '25103'
+    - '25104'
+    - '25201'
+    PARAM:
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    - Analyte01
+    DOSNOA:
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    - '1'
+    ATPTREF:
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+    - DOSE 1
+  slopes_groups:
+  - USUBJID
+  - ATPTREF
+  - DOSNOA
