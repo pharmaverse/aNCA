@@ -133,14 +133,14 @@ describe("g_lineplot: structure and arguments", {
     )
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
-    expect_true(all(plot_colors %in% viridis::viridis(2)))
+    expect_true(all(plot_colors %in% viridisLite::viridis(2)))
 
     # Test default palette
     p <- g_lineplot(data = ind_data, x_var = "time_var", y_var = "AVAL",
                     color_by = "color_var")
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
-    expect_true(!all(plot_colors %in% viridis::viridis(2)))
+    expect_true(!all(plot_colors %in% viridisLite::viridis(2)))
   })
 
   it("handles multiple color_by labels", {

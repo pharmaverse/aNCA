@@ -157,7 +157,7 @@ describe("process_data_mean functions correctly", {
   })
 })
 
-describe("exploration_individualplot: Individual Plot Mode", {
+describe("exploration_individualplot:", {
   it("returns a ggplot object with individual labels", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
@@ -242,7 +242,7 @@ describe("exploration_individualplot: Individual Plot Mode", {
   })
 })
 
-describe("exploration_meanplot: Mean Plot Mode", {
+describe("exploration_meanplot:", {
   it("returns a ggplot object with mean labels", {
     p <- exploration_meanplot(
       pknca_data = pknca_data,
