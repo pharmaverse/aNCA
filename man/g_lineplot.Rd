@@ -56,25 +56,9 @@ A \code{ggplot} object representing the line plot.
 }
 \description{
 This function creates a ggplot2 line plot for pharmacokinetic (PK) data.
-It is designed to be flexible and can generate plots for both individual
-concentration-time profiles and mean concentration-time profiles. The function
-supports various customizations including log scales, faceting, error bars (for mean plots),
+The function supports various customizations including log scales, faceting
 and threshold lines.
 }
-\section{Plot Types}{
-
-The function's behavior changes based on the arguments provided, for two main plot types:
-\itemize{
-\item \strong{Individual Plots}:
-Set \code{y_var = "AVAL"}
-The input \code{data} should be from \code{process_data_individual}.
-\item \strong{Mean Plots}:
-Set \code{y_var = "Mean"}
-The input \code{data} should be from \code{process_data_mean}. The arguments \code{sd_min},
-\code{sd_max}, and \code{ci} are only applicable to this plot type.
-}
-}
-
 \examples{
 library(dplyr)
 ind_data <- expand.grid(
