@@ -187,18 +187,23 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       imported_slopes
     )
 
-    # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {
         paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".yaml")
       },
       content = function(con) {
-        # Prepare the list
+        export_settings <- final_settings()
+        if (!is.null(export_settings$units)) {
+          export_settings$units <- export_settings$units %>%
+            dplyr::filter(!default) %>%
+            dplyr::select(-default)
+        }
+
         export_list <- list(
-          settings = final_settings(),
+          settings = export_settings,
           slope_rules = slope_rules()
         )
-        # write yaml file
+
         yaml::write_yaml(export_list, file = con)
       }
     )
