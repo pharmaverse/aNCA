@@ -38,9 +38,7 @@ descriptive_statistics_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    card(
-      reactable_ui(ns("descriptive_stats"))
-    ),
+    card(reactable_ui(ns("descriptive_stats")), class = "border-0 shadow-none"),
     card(
       downloadButton(ns("download_summary"), "Download the NCA Summary Data")
     )
@@ -97,8 +95,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     summary_stats_filtered <- reactive({
       summary_stats() %>%
         select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
-        filter(Statistic %in% input$select_display_statistic) %>%
-        apply_labels()
+        filter(Statistic %in% input$select_display_statistic)
     })
 
     observeEvent(res_nca(), {
@@ -130,12 +127,8 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     reactable_server(
       "descriptive_stats",
       summary_stats_filtered,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered()))),
       defaultPageSize = 10,
-      striped = TRUE,
-      bordered = TRUE,
-      compact = TRUE,
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered())))
     )
 
     # Download summary statistics as CSV
@@ -152,6 +145,5 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         write.csv(summary_stats_filtered(), file)
       }
     )
-
   })
 }

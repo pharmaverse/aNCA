@@ -34,6 +34,9 @@
 #' @return A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
 #'
 #' @export
+#' @importFrom ggplot2 ggplot aes geom_point facet_wrap scale_shape_manual
+#' scale_colour_manual scale_alpha_manual labs theme_bw
+#' @importFrom plotly ggplotly layout
 #' @examples
 #'
 #' # Sample concentration data

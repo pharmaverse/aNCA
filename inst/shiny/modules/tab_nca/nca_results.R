@@ -13,7 +13,7 @@ nca_results_ui <- function(id) {
       options = list(`actions-box` = TRUE)
     ),
     units_table_ui(ns("units_table")),
-    reactable_ui(ns("myresults")),
+    card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
 
     # Color legend for the results table
     div(
@@ -129,17 +129,12 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)]))) %>%
-        # Add group variable labels (others were added in pivot_wider_pknca_result)
-        apply_labels()
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
     })
 
     reactable_server(
       "myresults",
       output_results,
-      compact = TRUE,
-      style = list(fontSize = "0.75em"),
-      height = "68vh",
       rowStyle = function(x) {
         function(index) {
           if (!"flagged" %in% names(x)) return(NULL)
