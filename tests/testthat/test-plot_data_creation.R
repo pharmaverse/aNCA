@@ -75,8 +75,12 @@ describe("process_data_individual functions correctly", {
 })
 
 describe("process_data_mean functions correctly", {
-  filter_param_pcspec <- list(PARAM = pknca_data$PARAM[1], PCSPEC = pknca_data$PCSPEC[1])
-  filter_all <- list(PARAM = conc_data$PARAM[1], PCSPEC = conc_data$PCSPEC[1], ATPTREF = conc_data$ATPTREF[1])
+  filter_param_pcspec <- list(
+    PARAM = pknca_data$PARAM[1], PCSPEC = pknca_data$PCSPEC[1]
+  )
+  filter_all <- list(
+    PARAM = conc_data$PARAM[1], PCSPEC = conc_data$PCSPEC[1], ATPTREF = conc_data$ATPTREF[1]
+  )
 
   it("returns a dataframe with default settings", {
     p <- process_data_mean(

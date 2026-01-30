@@ -1,19 +1,25 @@
 #' Create an Individual PK Line Plot
 #'
-#' Generates a line plot for individual pharmacokinetic (PK) concentration-time profiles (spaghetti plots).
-#' Supports filtering by subject, analyte, specimen, and profile, and allows customization of axes, color, faceting, and tooltips.
+#' Generates a line plot for individual pharmacokinetic (PK) concentration-time profiles
 #'
 #' @param pknca_data A PKNCAdata object containing the raw PK concentration data.
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
-#' @param facet_by Character vector of column names to facet the plot by. Default is `NULL` (no faceting).
+#' @param facet_by Character vector of column names to facet the plot by.
+#' Default is `NULL` (no faceting).
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
-#' @param threshold_value Numeric; y-intercept for a horizontal threshold line. Default is `NULL` (no threshold).
+#' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
+#' Default is `NULL` (no threshold).
 #' @param show_dose Logical; if `TRUE`, vertical lines for dose times are shown. Default is `FALSE`.
-#' @param palette Optional palette name or named character vector of colors for the plot. Default is "default".
-#' @param tooltip_vars Character vector of column names to include in the tooltip. Default is `NULL`.
-#' @param labels_df Optional data.frame for variable label lookups (for tooltips). Default is `NULL`.
-#' @param filtering_list Named list of filters (column = allowed values). Default is `NULL` (no filtering).
-#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose. Default is `FALSE` (time since first dose).
+#' @param palette Optional palette name or named character vector of colors for the plot.
+#' Default is "default" color palette.
+#' @param tooltip_vars Character vector of column names to include in the tooltip.
+#' Default is `NULL`.
+#' @param labels_df Optional data.frame for variable label lookups (for tooltips).
+#' Default is `NULL`.
+#' @param filtering_list Named list of filters (column = allowed values).
+#' Default is `NULL` (no filtering).
+#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
+#' Default is `FALSE` (time since first dose).
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
 #' @seealso [g_lineplot()], [process_data_individual()]
@@ -29,9 +35,7 @@ exploration_individualplot <- function(
     tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
-    use_time_since_last_dose = FALSE
-) {
-
+    use_time_since_last_dose = FALSE) {
   individual_data <- process_data_individual(
     pknca_data = pknca_data,
     filtering_list = filtering_list,
@@ -61,15 +65,16 @@ exploration_individualplot <- function(
 
 #' Create a Mean PK Line Plot
 #'
-#' Generates a line plot for mean pharmacokinetic (PK) concentration-time profiles.
-#' Supports error bars (SD), confidence intervals, faceting, and custom tooltips, and allows filtering by analyte, specimen, and profile.
+#' Generates a line plot for mean pharmacokinetic (PK) concentration-time profiles
 #'
 #' @inheritParams exploration_individualplot
 #' @param sd_min Logical; if `TRUE`, plot lower SD error bars. Default is `FALSE`.
 #' @param sd_max Logical; if `TRUE`, plot upper SD error bars. Default is `FALSE`.
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
-#' @param tooltip_vars Character vector of column names to include in the tooltip. Default includes dose group vars and "Mean".
-#' @return A `ggplot` object representing the mean PK line plot, with error bars and/or confidence intervals if requested.
+#' @param tooltip_vars Character vector of column names to include in the tooltip.
+#' Default includes dose group vars and "Mean".
+#' @return A `ggplot` object representing the mean PK line plot,
+#' with error bars and/or confidence intervals if requested.
 #' @seealso [g_lineplot()], [process_data_mean()]
 #' @export
 exploration_meanplot <- function(
@@ -86,9 +91,7 @@ exploration_meanplot <- function(
     tooltip_vars = c(group_vars(pknca_data$dose), "Mean"),
     labels_df = NULL,
     filtering_list = NULL,
-    use_time_since_last_dose = FALSE
-) {
-
+    use_time_since_last_dose = FALSE) {
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
@@ -134,17 +137,21 @@ exploration_meanplot <- function(
 
 #' Process data for individual line plot
 #'
-#' Creates a filtered data frame for individual spaghetti plots, with optional alignment to last dose
-#' (time since last dose) and derivation of dose times in a new column (TIME_DOSE).
+#' Creates a filtered data frame for individual spaghetti plots
 #'
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
-#' @param filtering_list Named list of filters (column = allowed values). Default is `NULL` (no filtering).
-#' @param ylog_scale Logical; if `TRUE`, removes non-positive concentrations. Default is `FALSE`.
+#' @param filtering_list Named list of filters (column = allowed values).
+#' Default is `NULL` (no filtering).
+#' @param ylog_scale Logical; if `TRUE`, removes non-positive concentrations.
+#' Default is `FALSE`.
 #' @param conc_col Name of the concentration column. Default is "AVAL".
-#' @param show_dose Logical; if `TRUE`, derives dose times and includes TIME_DOSE column. Default is `FALSE`.
-#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose. Default is `FALSE` (time since first dose).
+#' @param show_dose Logical; if `TRUE`, derives dose times and includes TIME_DOSE column.
+#' Default is `FALSE`.
+#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
+#' Default is `FALSE` (time since first dose).
 #'
-#' @return Data frame filtered and ready for individual spaghetti plots, with optional TIME_DOSE column.
+#' @return Data frame filtered and ready for individual spaghetti plots,
+#' with optional TIME_DOSE column.
 #' @keywords internal
 #' @noRd
 process_data_individual <- function(pknca_data,
@@ -159,7 +166,10 @@ process_data_individual <- function(pknca_data,
       conc_time_col = pknca_data$conc$columns$time
     )
     if (use_time_since_last_dose) {
-      data <- dplyr::mutate(data, !!pknca_data$conc$columns$time := !!sym(pknca_data$conc$columns$time) - TIME_DOSE)
+      data <- dplyr::mutate(
+        data,
+        !!pknca_data$conc$columns$time := !!sym(pknca_data$conc$columns$time) - TIME_DOSE
+      )
     }
     data
   } else {
@@ -175,16 +185,21 @@ process_data_individual <- function(pknca_data,
 
 #' Process data for mean PK line plot
 #'
-#' Creates a summarised data frame for mean PK concentration-time profiles, with optional alignment to last dose and dose time aggregation.
+#' Creates a summarised data frame for mean PK concentration-time profiles
 #'
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
-#' @param extra_grouping_vars Character vector of extra grouping variables to include in summary. Default is `NULL`.
-#' @param filtering_list Named list of filters (column = allowed values). Default is `NULL` (no filtering).
+#' @param extra_grouping_vars Character vector of extra grouping variables to include in summary.
+#' Default is `NULL`.
+#' @param filtering_list Named list of filters (column = allowed values).
+#' Default is `NULL` (no filtering).
 #' @param ylog_scale Logical; if `TRUE`, removes non-positive means. Default is `FALSE`.
-#' @param show_dose Logical; if `TRUE`, derives dose times and includes TIME_DOSE column. Default is `FALSE`.
-#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose. Default is `FALSE` (time since first dose).
+#' @param show_dose Logical; if `TRUE`, derives dose times and includes TIME_DOSE column.
+#' Default is `FALSE`.
+#' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
+#' Default is `FALSE` (time since first dose).
 #'
-#' @return Data frame summarised by group, with columns for Mean, SD, N, SE, SD_min, SD_max, CI_lower, CI_upper, and optional TIME_DOSE.
+#' @return Data frame summarised by group, with columns for Mean, SD, N, SE, SD_min, SD_max,
+#' CI_lower, CI_upper, and optional TIME_DOSE.
 #' @keywords internal
 #' @noRd
 process_data_mean <- function(pknca_data,
@@ -199,7 +214,9 @@ process_data_mean <- function(pknca_data,
   x_var <- if (use_time_since_last_dose) "NRRLT" else pknca_data$conc$columns$time.nominal
   y_var <- pknca_data$conc$columns$concentration
   dose_group_cols <- setdiff(group_vars(pknca_data$dose), pknca_data$conc$columns$subject)
-  grouping_cols <- unique(c(extra_grouping_vars, "TIME_NOMINAL", x_var_unit, y_var_unit, dose_group_cols))
+  grouping_cols <- unique(
+    c(extra_grouping_vars, "TIME_NOMINAL", x_var_unit, y_var_unit, dose_group_cols)
+  )
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
   data <- if (show_dose) {
@@ -252,20 +269,24 @@ process_data_mean <- function(pknca_data,
 #' Filters a data frame by a named list of column-value pairs, using apply_filters for logic.
 #'
 #' @param data A data frame to filter.
-#' @param filtering_list A named list where each name is a column and each value is a vector of allowed values.
+#' @param filtering_list A named list where each name is a column and each value is a vector
+#' of allowed values.
 #'
 #' @return Filtered data frame.
 #' @keywords internal
 #' @noRd
 filter_by_list <- function(data, filtering_list) {
-  if (is.null(filtering_list) || length(filtering_list) == 0) return(data)
+  if (is.null(filtering_list) || length(filtering_list) == 0) {
+    return(data)
+  }
   filters <- lapply(names(filtering_list), function(var) {
     list(column = var, condition = "==", value = filtering_list[[var]])
   })
   apply_filters(data, filters)
 }
 
-#' Finalize mean PK plot by adding label prefixes and mean layers (SD error bars, confidence intervals)
+#' Finalize mean PK plot by adding label prefixes and mean layers
+#' (SD error bars, confidence intervals)
 #'
 #' @param plot The ggplot object to finalize.
 #' @param sd_min Logical; if TRUE, plot lower SD error bars.
@@ -302,10 +323,12 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
 
 #' Derive last dose time for each sample in the concentration data of a PKNCAdata object
 #'
-#' Adds a TIME_DOSE column to the concentration data, representing the last dose time for each sample.
+#' Adds a TIME_DOSE column to the concentration data, representing the last dose time
+#' for each sample.
 #'
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
-#' @param conc_time_col Name of the time column in concentration data. Default is pknca_data$conc$columns$time.
+#' @param conc_time_col Name of the time column in concentration data.
+#' Default is pknca_data$conc$columns$time.
 #'
 #' @return Data frame with TIME_DOSE column added, representing the last dose time for each sample.
 #' @keywords internal
