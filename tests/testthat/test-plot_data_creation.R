@@ -198,7 +198,7 @@ describe("exploration_individualplot: Individual Plot Mode", {
     )
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
-    expect_true(all(plot_colors %in% viridis::viridis(1)))
+    expect_true(all(plot_colors %in% viridisLite::viridis(1)))
   })
 
   it("handles empty data.frame with a plot informing of no data", {
