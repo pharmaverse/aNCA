@@ -205,6 +205,8 @@ g_lineplot <- function(data,
 #' @param data The full, unfiltered data.frame.
 #' @param colorby_vars A character vector of one or more column names.
 #' @param palette_name The name of the color theme (e.g., "default", "viridis").
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom viridisLite viridis
 #' @return A single named color vector (palette).
 #' @noRd
 .get_persistent_palette <- function(data, colorby_vars, palette_name = "default") {
