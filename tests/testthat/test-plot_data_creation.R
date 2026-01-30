@@ -39,7 +39,7 @@ describe("process_data_individual functions correctly", {
   it("filters out NA concentration", {
     conc_data_with_na <- conc_data
     conc_data_with_na$EVID <- c(0, rep(1, nrow(conc_data) - 1))
-    conc_data_with_na[[conc_col]][c(2,3)] <- NA
+    conc_data_with_na[[conc_col]][c(2, 3)] <- NA
     pknca_data_with_na_evid <- pknca_data
     pknca_data_with_na_evid$conc$data <- conc_data_with_na
     p <- process_data_individual(pknca_data = pknca_data_with_na_evid)
@@ -63,7 +63,7 @@ describe("process_data_individual functions correctly", {
 
   it("filters non-positive AVAL if log scale selected", {
     aval_zeros <- conc_data
-    aval_zeros$AVAL[c(1,2)] <- c(0, 0)
+    aval_zeros$AVAL[c(1, 2)] <- c(0, 0)
     pknca_aval_zeros <- pknca_data
     pknca_aval_zeros$conc$data <- aval_zeros
     p <- process_data_individual(
@@ -187,7 +187,6 @@ describe("exploration_individualplot: Individual Plot Mode", {
   })
 
   it("applies a custom palette", {
-
     p <- exploration_individualplot(
       pknca_data = pknca_data,
       color_by = "PARAM",

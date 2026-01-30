@@ -83,7 +83,7 @@ describe("g_lineplot: structure and arguments", {
 
   it("applies log scale", {
     p <- g_lineplot(
-      data = ind_data, # Contains an AVAL = 0 record
+      data = ind_data %>% filter(AVAL > 0), # Remove non-positive for log test
       x_var = "time_var",
       y_var = "AVAL",
       color_by = "USUBJID",
@@ -123,18 +123,24 @@ describe("g_lineplot: structure and arguments", {
     expect_true(all(c("PARAM", "DOSEA") %in% names(vline_layer$data)))
   })
 
-  it("applies a custom palette", {
-    test_palette <- c("Subject1, Dose 1" = "#FF0000", "Subject2, Dose 1" = "#0000FF")
+  it("applies a custom palette (if unespecified uses default)", {
     p <- g_lineplot(
       data = ind_data,
       x_var = "time_var",
       y_var = "AVAL",
       color_by = "color_var",
-      palette = test_palette
+      palette = "viridis"
     )
     p_build <- ggplot_build(p)
     plot_colors <- unique(p_build$data[[1]]$colour)
-    expect_true(all(plot_colors %in% test_palette))
+    expect_true(all(plot_colors %in% viridis::viridis(2)))
+
+    # Test default palette
+    p <- g_lineplot(data = ind_data, x_var = "time_var", y_var = "AVAL",
+                    color_by = "color_var")
+    p_build <- ggplot_build(p)
+    plot_colors <- unique(p_build$data[[1]]$colour)
+    expect_true(!all(plot_colors %in% viridis::viridis(2)))
   })
 
   it("handles multiple color_by labels", {
