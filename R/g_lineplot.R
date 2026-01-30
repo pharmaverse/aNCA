@@ -19,8 +19,8 @@
 #'  a logarithmic scale for the y-axis.
 #' @param threshold_value A numeric value for the y-intercept of the threshold line.
 #'   Only used if `show_threshold` is `TRUE`.
-#' @param palette A character string specifying the color palette to use. Deafault is
-#'   "default".
+#' @param palette A character string specifying the color palette to use. Default is
+#'   "default" palette.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
 #' @param labels_df A data.frame for variable label lookups.
 #'

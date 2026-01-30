@@ -44,8 +44,8 @@ a logarithmic scale for the y-axis.}
 \item{threshold_value}{A numeric value for the y-intercept of the threshold line.
 Only used if \code{show_threshold} is \code{TRUE}.}
 
-\item{palette}{A character string specifying the color palette to use. Deafault is
-"default".}
+\item{palette}{A character string specifying the color palette to use. Default is
+"default" palette.}
 
 \item{tooltip_vars}{Character vector of column names to include in the tooltip.}
 
