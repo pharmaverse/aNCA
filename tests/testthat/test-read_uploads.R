@@ -100,7 +100,7 @@ describe("read_pk", {
 
 describe("read_settings", {
 
-  path <- "data/test-settings.yaml"
+  path <- testthat::test_path("data/test-settings.yaml")
 
   it("successfully reads a valid settings YAML", {
     skip_if_not(file.exists(path))
