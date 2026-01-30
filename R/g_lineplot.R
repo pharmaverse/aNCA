@@ -123,7 +123,7 @@ g_lineplot <- function(data,
 
   # Add optional layers
   optional_layers <- list(
-    .add_palette(palette, color_by, plot_data),
+    .add_colour_palette(palette),
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_thr(threshold_value),
@@ -200,53 +200,12 @@ g_lineplot <- function(data,
   list(error_bar_layer, ci_ribbon_layer)
 }
 
-#' Get a Persistent Color Palette for a Set of Variables
-#'
-#' @param data The full, unfiltered data.frame.
-#' @param colorby_vars A character vector of one or more column names.
-#' @param palette_name The name of the color theme (e.g., "default", "viridis").
-#' @importFrom RColorBrewer brewer.pal
-#' @importFrom viridisLite viridis
-#' @return A single named color vector (palette).
+#' @importFrom ggplot2 scale_color_viridis_d
 #' @noRd
-.get_persistent_palette <- function(data, colorby_vars, palette_name = "default") {
-  # Return NULL if no variables are provided
-  if (is.null(colorby_vars) || length(colorby_vars) == 0) {
-    return(NULL)
+.add_colour_palette <- function(palette) {
+  if (palette %in% c("plasma", "cividis", "inferno")) {
+    scale_color_viridis_d(option = palette)
+  } else {
+    NULL
   }
-
-  # Create a temporary column in the data representing the interaction of the variables
-  # and get all unique values
-  all_levels <- data %>%
-    mutate(interaction_col = interaction(!!!syms(colorby_vars), sep = ", ")) %>%
-    pull(interaction_col) %>%
-    na.omit() %>%
-    unique() %>%
-    sample()
-
-  n <- length(all_levels)
-
-  if (n == 0) return(NULL)
-
-  switch(
-    palette_name,
-    "default" = scales::hue_pal()(n),
-    "viridis" = viridisLite::viridis(n),
-    "spectral" = if (n > 11) {
-      grDevices::colorRampPalette(RColorBrewer::brewer.pal(11, "Spectral"))(n)
-    } else {
-      RColorBrewer::brewer.pal(max(n, 3), "Spectral")[1:n]
-    },
-    scales::hue_pal()(n)  # Fallback to default hue palette
-  ) %>%
-    setNames(all_levels)
-}
-
-#' @noRd
-.add_palette <- function(palette, color_by, data) {
-  palette <- .get_persistent_palette(data, color_by, palette_name = palette)
-  if (is.null(palette)) {
-    return(NULL)
-  }
-  scale_color_manual(values = palette)
 }

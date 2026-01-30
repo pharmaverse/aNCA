@@ -204,17 +204,6 @@ describe("exploration_individualplot:", {
     expect_true("GeomHline" %in% layer_classes)
   })
 
-  it("applies a custom palette", {
-    p <- exploration_individualplot(
-      pknca_data = pknca_data,
-      color_by = "PARAM",
-      palette = "viridis"
-    )
-    p_build <- ggplot_build(p)
-    plot_colors <- unique(p_build$data[[1]]$colour)
-    expect_true(all(plot_colors %in% viridisLite::viridis(1)))
-  })
-
   it("handles empty data.frame with a plot informing of no data", {
     empty_data <- pknca_data
     empty_data$conc$data <- empty_data$conc$data[0, ]

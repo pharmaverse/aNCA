@@ -16,8 +16,9 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       "Select Color Theme:",
       choices = c(
         "Default (ggplot2)" = "default",
-        "Viridis" = "viridis",
-        "Spectral" = "spectral"
+        "Plasma" = "plasma",
+        "Cividis" = "cividis",
+        "Inferno" = "inferno"
       ),
       selected = "default"
     ),
