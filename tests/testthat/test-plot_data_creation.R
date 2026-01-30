@@ -55,7 +55,7 @@ describe("process_data_individual functions correctly", {
   })
 
   it("handles predose duplication if filtering_list is used", {
-    p <- process_data_individual(data = pknca_data, filtering_list = default_filter)
+    p <- process_data_individual(pknca_data = pknca_data, filtering_list = default_filter)
     predose_record_in_plot <- p %>% filter(NFRLT == 168)
     expect_true(nrow(predose_record_in_plot) == 1)
     expect_true(predose_record_in_plot$ATPTREF == pknca_data$ATPTREF[1])
@@ -311,6 +311,27 @@ describe("exploration_meanplot: Mean Plot Mode", {
 
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
     expect_true(all("PARAM" %in% names(vline_layer$data)))
+  })
+
+  it("uses NRRLT as x axis when use_time_since_last_dose is TRUE", {
+    p_nfrlt <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      use_time_since_last_dose = FALSE
+    )
+    pb_nfrlt <- ggplot_build(p_nfrlt)
+    nfrlt_vals <- unique(pknca_data$conc$data$NFRLT)
+    expect_true(all(nfrlt_vals %in% pb_nfrlt$data[[1]]$x))
+
+    p_nrrlt <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      use_time_since_last_dose = TRUE
+    )
+    pb_nrrlt <- ggplot_build(p_nrrlt)
+    nrrlt_vals <- unique(pknca_data$conc$data$NRRLT)
+    expect_true(all(nrrlt_vals %in% pb_nrrlt$data[[1]]$x))
+    expect_false(all(nfrlt_vals %in% pb_nrrlt$data[[1]]$x))
   })
 
   it("handles empty data.frame with a plot informing of no data", {
