@@ -45,6 +45,9 @@
 - Settings are now uploaded on initial opening of the app in the data
   tab, and applied to the next steps
   ([\#860](https://github.com/pharmaverse/aNCA/issues/860))
+- Settings file has been converted from rds to yaml, allowing better
+  readability and editing for users.
+  ([\#901](https://github.com/pharmaverse/aNCA/issues/901))
 
 ### Bugs fixed
 

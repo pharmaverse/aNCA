@@ -312,6 +312,9 @@
 - [`read_pk()`](https://pharmaverse.github.io/aNCA/reference/read_pk.md)
   : Reads PK datasets from various file formats.
 
+- [`read_settings()`](https://pharmaverse.github.io/aNCA/reference/read_settings.md)
+  : Helper Logic to parse and structure settings YAML
+
 - [`remove_pp_not_requested()`](https://pharmaverse.github.io/aNCA/reference/remove_pp_not_requested.md)
   : Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 
