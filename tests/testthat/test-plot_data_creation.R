@@ -54,11 +54,25 @@ describe("process_data_individual functions correctly", {
     expect_true(all(p$ATPTREF == 1))
   })
 
-  it("handles predose duplication if filtering_list is used", {
-    p <- process_data_individual(pknca_data = pknca_data, filtering_list = default_filter)
-    predose_record_in_plot <- p %>% filter(NFRLT == 168)
-    expect_true(nrow(predose_record_in_plot) == 1)
-    expect_true(predose_record_in_plot$ATPTREF == pknca_data$ATPTREF[1])
+  # TODO (Gerardo): Relax this assumption in the future. If possible
+  # by not using dose_profile_duplicates
+  it("handles predose duplication if filtering_list (ATPTREF) is used", {
+    conc_data_subj2 <- filter(conc_data, USUBJID == subjects[2], ATPTREF %in% c(1, 2))
+    # Create a predose record with a custom time and assign it to ATPTREF = 2
+    predose <- conc_data[1, ]
+    predose$AFRLT <- 4.99
+    predose$ARRLT <- -0.01
+    predose$ATPTREF <- 2
+    # Combine with the rest of the data
+    test_data <- bind_rows(conc_data, predose)
+    test_pknca <- pknca_data
+    test_pknca$conc$data <- test_data
+    # Filter for ATPTREF = 1 (should only get the predose with ATPTREF = 1)
+    p1 <- process_data_individual(test_pknca, filtering_list = list(ATPTREF = 1))
+    expect_equal(filter(p1, AFRLT == 4.99)$ATPTREF, 1)
+    # Filter for ATPTREF = 2 (should only get the predose with ATPTREF = 2)
+    p2 <- process_data_individual(test_pknca, filtering_list = list(ATPTREF = 2))
+    expect_equal(filter(p2, AFRLT == 4.99)$ATPTREF, 2)
   })
 
   it("filters non-positive AVAL if log scale selected", {
