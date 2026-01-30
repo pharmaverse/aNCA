@@ -123,7 +123,7 @@ describe("g_lineplot: structure and arguments", {
     expect_true(all(c("PARAM", "DOSEA") %in% names(vline_layer$data)))
   })
 
-  it("applies a custom palette (if unespecified uses default)", {
+  it("applies a custom palette (if unspecified uses default)", {
     p <- g_lineplot(
       data = ind_data,
       x_var = "time_var",

@@ -22,7 +22,6 @@
 #' Default is `FALSE` (time since first dose).
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
-#' @seealso [g_lineplot()], [process_data_individual()]
 #' @export
 exploration_individualplot <- function(
     pknca_data,
@@ -75,7 +74,6 @@ exploration_individualplot <- function(
 #' Default includes dose group vars and "Mean".
 #' @return A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
-#' @seealso [g_lineplot()], [process_data_mean()]
 #' @export
 exploration_meanplot <- function(
     pknca_data,

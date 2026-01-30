@@ -54,6 +54,3 @@ A \code{ggplot} object representing the individual PK line plot.
 \description{
 Generates a line plot for individual pharmacokinetic (PK) concentration-time profiles
 }
-\seealso{
-\code{\link[=g_lineplot]{g_lineplot()}}, \code{\link[=process_data_individual]{process_data_individual()}}
-}

@@ -9,11 +9,13 @@
 #'   pre-processed by either `process_data_individual` or `process_data_mean`.
 #' @param x_var A character string specifying the column name for the x-axis.
 #' @param y_var A character string specifying the column name for the y-axis.
+#' @param x_unit Optional character string specifying the column name for the x-axis unit.
+#' @param y_unit Optional character string specifying the column name for the y-axis unit.
 #' @param color_by A character vector specifying the column(s) from the original
 #'   dataset that are used to determine the color of the lines and points.
 #' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
-#' @param group_by A character string specifying the column name used to group
+#' @param group_by A character vector specifying the column names used to group
 #'  the lines. Default is NULL for no grouping.
 #' @param ylog_scale A logical value (`TRUE` or `FALSE`) indicating whether to use
 #'  a logarithmic scale for the y-axis.
@@ -23,7 +25,8 @@
 #'   "default" palette.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
 #' @param labels_df A data.frame for variable label lookups.
-#'
+#' @param vline_var Optional character string specifying the column name for vertical
+#' lines.
 #' @returns A `ggplot` object representing the line plot.
 #'
 #' @import ggplot2
@@ -96,7 +99,8 @@ g_lineplot <- function(data,
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
-      color_var = interaction(!!!syms(color_by), sep = ", ")
+      color_var = interaction(!!!syms(color_by), sep = ", "),
+      group_var = if (!is.null(group_by)) interaction(!!!syms(group_by)) else NULL
     ) %>%
     arrange(!!sym(x_var))
 
@@ -104,7 +108,7 @@ g_lineplot <- function(data,
     x = !!sym(x_var),
     y = !!sym(y_var),
     color = color_var,
-    group = if (!is.null(group_by)) !!!syms(group_by) else NULL,
+    group = if (!is.null(group_by)) group_var else NULL,
     text = tooltip_text
   )) +
     geom_line() +

@@ -64,6 +64,3 @@ with error bars and/or confidence intervals if requested.
 \description{
 Generates a line plot for mean pharmacokinetic (PK) concentration-time profiles
 }
-\seealso{
-\code{\link[=g_lineplot]{g_lineplot()}}, \code{\link[=process_data_mean]{process_data_mean()}}
-}
