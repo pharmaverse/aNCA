@@ -75,7 +75,12 @@ pknca_obj <- preprocessed_adnca %>%
   {
     pknca_obj <- .
     if (!is.null(units_table)) {
-      pknca_obj[["units"]] <- units_table
+      pknca_obj[["units"]] <- dplyr::rows_update(
+        pknca_obj[["units"]],
+        units_table,
+        by = c("PPTESTCD", "PPORRESU"),
+        unmatched = "ignore"
+      )
     }
     pknca_obj
   }

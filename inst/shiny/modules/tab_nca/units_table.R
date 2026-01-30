@@ -24,18 +24,23 @@ units_table_server <- function(id, mydata) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Define the modal message displayed with the parameter units table #
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
-      # Make a reactive variable from the units table
+      default_units <- mydata()$units %>%
+        dplyr::mutate(default = TRUE)
+
       if (!is.null(session$userData$units_table())) {
-        modal_units_table(session$userData$units_table())
+        dplyr::rows_update(
+          default_units,
+          dplyr::mutate(session$userData$units_table(), default = FALSE),
+          by = c("PPTESTCD", "PPORRESU"),
+          unmatched = "ignore"
+        ) %>%
+          modal_units_table()
       } else {
-        # If the user has not set any custom units table, use the default one
-        modal_units_table(mydata()$units)
+        modal_units_table(default_units)
       }
 
-      # Show the modal message with the units table and an analyte selector
       showModal(modalDialog(
         title = tagList(
           span("Units of NCA parameter results")
@@ -94,7 +99,8 @@ units_table_server <- function(id, mydata) {
         PPORRESU = colDef(name = "Default Unit"),
         PPSTRESU = colDef(name = "Custom Unit"),
         conversion_factor = colDef(name = "Conversion Factor"),
-        is_hidden = colDef(show = FALSE)
+        is_hidden = colDef(show = FALSE),
+        default = colDef(show = FALSE)
       ),
       pagination = FALSE,
       filterable = TRUE,
@@ -147,6 +153,7 @@ units_table_server <- function(id, mydata) {
           )
         }
 
+        modal_units_table[info$row, "default"] <- FALSE
         modal_units_table[info$row, "conversion_factor"] <- conversion_factor_value
       }
 
