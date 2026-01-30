@@ -305,48 +305,48 @@ describe("pivot_wider_pknca_results flagging integration", {
 
   it("does not create flagged column if no flags are active", {
     flag_rules <- list("R2ADJ" = list(is.checked = FALSE, threshold = 0.8))
-    
+
     result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
-    
+
     # expect no flagged column in result
     expect_true(!"flagged" %in% colnames(result))
   })
-  
+
   it("does not create flagged column if no flag parameters requested", {
     flag_rules <- list("AUCPEP" = list(is.checked = TRUE, threshold = 20))
-    
+
     # For USUBJID = 1, R2ADJ not requested, but missing
     result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
-    
+
     # Flag column shouldn't exist as there is no flags needed
     expect_true(!"flagged" %in% colnames(result))
   })
-  
+
   it("does not flag MISSING if parameter not requested but column exists", {
     flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.8))
-    
+
     # Remove R2ADJ from results for subj 4 to simulate not requested
     pknca_res_mod <- pknca_res
     pknca_res_mod$result <- pknca_res_mod$result %>%
       filter(PPTESTCD != "R2ADJ" | USUBJID != 4)
-    
+
     result <- pivot_wider_pknca_results(pknca_res_mod, flag_rules = flag_rules)
-    
+
     # Expect no MISSING flag as R2ADJ was not requested
     expect_true("flagged" %in% colnames(result))
     status <- result %>% filter(USUBJID == 4) %>% pull(flagged)
     expect_equal(status[1], "ACCEPTED")
   })
-  
+
   it("Flags if PKNCA flags parameter, even if not requested", {
     flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.99))
-    
+
     pknca_flagged <- PKNCA_hl_rules_exclusion(pknca_res, list("R2ADJ" = 0.999))
     pknca_flagged$result <- pknca_flagged$result %>%
       filter(PPTESTCD != "R2ADJ" | USUBJID != 3)
-    
+
     result <- pivot_wider_pknca_results(pknca_flagged, flag_rules = flag_rules)
-    
+
     status <- result %>% filter(USUBJID == 3) %>% pull(flagged)
     expect_equal(status[1], "FLAGGED")
   })

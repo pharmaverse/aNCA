@@ -242,8 +242,8 @@ add_label_attribute <- function(df, myres) {
 #'
 #' @description
 #' Evaluates NCA results against defined flag settings and intervals. It checks for missing
-#' parameters that were requested (based on intervals), applies threshold rules to the `Exclude`
-#' column, and determines the final `flagged` status (ACCEPTED, FLAGGED, or MISSING).
+#' parameters that were requested, and determines the final `flagged` status
+#'  (ACCEPTED, FLAGGED, or MISSING).
 #'
 #' @param data A data frame of pivoted NCA results.
 #' with additional grouping variables merged.
@@ -314,9 +314,9 @@ add_label_attribute <- function(df, myres) {
   vals <- c(...)
   # Get the names associated with the TRUE values
   missing_names <- names(vals)[which(vals == TRUE)]
-  
+
   if (length(missing_names) == 0) return(NA_character_)
-  
+
   missing_names %>%
     stringr::str_remove("missing_") %>%
     paste0(" is NA") %>%
