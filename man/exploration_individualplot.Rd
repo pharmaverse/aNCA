@@ -11,7 +11,7 @@ exploration_individualplot(
   ylog_scale = FALSE,
   threshold_value = NULL,
   show_dose = FALSE,
-  palette = NULL,
+  palette = "default",
   tooltip_vars = NULL,
   labels_df = NULL,
   filtering_list = NULL,
@@ -23,28 +23,36 @@ exploration_individualplot(
 
 \item{color_by}{Character vector specifying the column(s) used to color the lines and points.}
 
-\item{facet_by}{Character vector of column names to facet the plot by. Default is \code{NULL} (no faceting).}
+\item{facet_by}{Character vector of column names to facet the plot by.
+Default is \code{NULL} (no faceting).}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
 
-\item{threshold_value}{Numeric; y-intercept for a horizontal threshold line. Default is \code{NULL} (no threshold).}
+\item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
+Default is \code{NULL} (no threshold).}
 
-\item{palette}{Optional named character vector of colors for the plot. Names should match levels of the color variable. Default is \code{NULL}.}
+\item{show_dose}{Logical; if \code{TRUE}, vertical lines for dose times are shown. Default is \code{FALSE}.}
 
-\item{tooltip_vars}{Character vector of column names to include in the tooltip. Default is \code{NULL}.}
+\item{palette}{Optional palette name or named character vector of colors for the plot.
+Default is "default" color palette.}
 
-\item{labels_df}{Optional data.frame for variable label lookups (for tooltips). Default is \code{NULL}.}
+\item{tooltip_vars}{Character vector of column names to include in the tooltip.
+Default is \code{NULL}.}
 
-\item{filtering_list}{Named list of filters (column = allowed values). Default is \code{NULL} (no filtering).}
+\item{labels_df}{Optional data.frame for variable label lookups (for tooltips).
+Default is \code{NULL}.}
 
-\item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose. Default is \code{FALSE}, which uses time since first dose.}
+\item{filtering_list}{Named list of filters (column = allowed values).
+Default is \code{NULL} (no filtering).}
+
+\item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose.
+Default is \code{FALSE} (time since first dose).}
 }
 \value{
 A \code{ggplot} object representing the individual PK line plot.
 }
 \description{
-This function generates a line plot for individual pharmacokinetic (PK) concentration-time profiles (spaghetti plots).
-It supports filtering by subject, analyte, specimen, and profile, and allows customization of axes, color, faceting, and tooltips.
+Generates a line plot for individual pharmacokinetic (PK) concentration-time profiles
 }
 \seealso{
 \code{\link[=g_lineplot]{g_lineplot()}}, \code{\link[=process_data_individual]{process_data_individual()}}

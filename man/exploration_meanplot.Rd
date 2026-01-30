@@ -11,11 +11,11 @@ exploration_meanplot(
   ylog_scale = FALSE,
   threshold_value = NULL,
   show_dose = FALSE,
-  palette = NULL,
+  palette = "default",
   sd_min = FALSE,
   sd_max = FALSE,
   ci = FALSE,
-  tooltip_vars = c(group_vars(pknca_data$dose), time_sample, "Mean"),
+  tooltip_vars = c(group_vars(pknca_data$dose), "Mean"),
   labels_df = NULL,
   filtering_list = NULL,
   use_time_since_last_dose = FALSE
@@ -26,13 +26,18 @@ exploration_meanplot(
 
 \item{color_by}{Character vector specifying the column(s) used to color the lines and points.}
 
-\item{facet_by}{Character vector of column names to facet the plot by. Default is \code{NULL} (no faceting).}
+\item{facet_by}{Character vector of column names to facet the plot by.
+Default is \code{NULL} (no faceting).}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
 
-\item{threshold_value}{Numeric; y-intercept for a horizontal threshold line. Default is \code{NULL} (no threshold).}
+\item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
+Default is \code{NULL} (no threshold).}
 
-\item{palette}{Optional named character vector of colors for the plot. Names should match levels of the color variable. Default is \code{NULL}.}
+\item{show_dose}{Logical; if \code{TRUE}, vertical lines for dose times are shown. Default is \code{FALSE}.}
+
+\item{palette}{Optional palette name or named character vector of colors for the plot.
+Default is "default" color palette.}
 
 \item{sd_min}{Logical; if \code{TRUE}, plot lower SD error bars. Default is \code{FALSE}.}
 
@@ -40,18 +45,25 @@ exploration_meanplot(
 
 \item{ci}{Logical; if \code{TRUE}, plot 95\% confidence interval ribbon. Default is \code{FALSE}.}
 
-\item{tooltip_vars}{Character vector of column names to include in the tooltip. Default is \code{NULL}.}
+\item{tooltip_vars}{Character vector of column names to include in the tooltip.
+Default includes dose group vars and "Mean".}
 
-\item{labels_df}{Optional data.frame for variable label lookups (for tooltips). Default is \code{NULL}.}
+\item{labels_df}{Optional data.frame for variable label lookups (for tooltips).
+Default is \code{NULL}.}
 
-\item{filtering_list}{Named list of filters (column = allowed values). Default is \code{NULL} (no filtering).}
+\item{filtering_list}{Named list of filters (column = allowed values).
+Default is \code{NULL} (no filtering).}
 
-\item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose. Default is \code{FALSE}, which uses time since first dose.}
+\item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose.
+Default is \code{FALSE} (time since first dose).}
 }
 \value{
-A \code{ggplot} object representing the mean PK line plot.
+A \code{ggplot} object representing the mean PK line plot,
+with error bars and/or confidence intervals if requested.
 }
 \description{
-This function generates a line plot for mean pharmacokinetic (PK) concentration-time profiles.
-It supports error bars (SD), confidence intervals, faceting, and custom tooltips, and allows filtering by analyte, specimen, and profile.
+Generates a line plot for mean pharmacokinetic (PK) concentration-time profiles
+}
+\seealso{
+\code{\link[=g_lineplot]{g_lineplot()}}, \code{\link[=process_data_mean]{process_data_mean()}}
 }
