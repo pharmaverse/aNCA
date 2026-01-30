@@ -12,7 +12,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     position = "right",
     open = TRUE,
     selectInput(
-      ns("palette_theme"),
+      ns("palette"),
       "Select Color Theme:",
       choices = c(
         "Default (ggplot2)" = "default",
@@ -207,22 +207,17 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
     # Return all inputs as a list of reactives
     reactive({
       list(
-        palette_theme = input$palette_theme,
-        param = input$param,
-        pcspec = input$pcspec,
-        usubjid = input$usubjid,
+        palette = input$palette,
         color_by = input$colorby,
         facet_by = input$facetby,
         ylog_scale = input$log,
-        profiles_selected = input$profiles,
         threshold_value = input$threshold_value,
         show_dose = input$show_dose,
         sd_max = input$sd_max,
         sd_min = input$sd_min,
         ci = input$ci,
         filtering_list = filtering_list(),
-        use_time_since_last_dose = input$timescale == "By Dose Profile",
-        palette = input$palette_theme
+        use_time_since_last_dose = input$timescale == "By Dose Profile"
       )
     })
   })

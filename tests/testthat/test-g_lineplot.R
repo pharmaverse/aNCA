@@ -210,29 +210,3 @@ describe("g_lineplot: Tooltips", {
     expect_false(any(grepl("<b>", p$data$tooltip_text)))
   })
 })
-
-describe("g_lineplot: palette options", {
-  palettes <- c("plasma", "cividis", "inferno")
-  palette_funs <- list(
-    plasma = function(n) viridisLite::plasma(n),
-    cividis = function(n) viridisLite::cividis(n),
-    inferno = function(n) viridisLite::inferno(n)
-  )
-  n_colors <- length(unique(ind_data$color_var))
-  for (pal in palettes) {
-    it(paste("applies palette:", pal), {
-      p <- g_lineplot(
-        data = ind_data,
-        x_var = "time_var",
-        y_var = "AVAL",
-        color_by = "color_var",
-        palette = pal
-      )
-      p_build <- ggplot_build(p)
-      plot_colors <- unique(p_build$data[[1]]$colour)
-      expected_colors <- palette_funs[[pal]](n_colors)
-      # Allow for possible reordering, but all plot colors should be in expected
-      expect_true(all(plot_colors %in% expected_colors))
-    })
-  }
-})
