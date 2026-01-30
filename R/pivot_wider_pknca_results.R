@@ -274,21 +274,19 @@ add_label_attribute <- function(df, myres) {
                            %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
 
   if (length(flag_cols) > 0) {
+
     missing_flags <- pknca_res %>%
-      filter(PPTESTCD %in% flag_params) %>%
-      select(any_of(c(
-        group_cols,
-        "PPTESTCD",
-        "PPSTRES"
-      ))) %>%
+      filter(PPTESTCD %in% flag_params,
+             type_interval == "main") %>%
       mutate(is_missing = is.na(PPSTRES)) %>%
+      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
       pivot_wider(
         names_from = PPTESTCD,
         values_from = is_missing,
         names_prefix = "missing_"
       ) %>%
       mutate(Missing = pmap_chr(across(starts_with("missing_")), .extract_missing_values)) %>%
-      select(-starts_with("missing_"), -PPSTRES)
+      select(-starts_with("missing_"), -exclude, -start_dose, -end_dose)
 
     data <- data %>%
       left_join(missing_flags,

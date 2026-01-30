@@ -225,12 +225,7 @@ describe("pivot_wider_pknca_results", {
 
     # Missing results produce "MISSING" flag
     na_result <- piv_result %>%
-      filter(is.na(R2) | is.na(R2ADJ)) %>%
-
-      # TODO (Gerardo): Exclude test on SUBJ 4 because
-      # is a weird case scenario that PKNCA does not detect
-      # It is a straight line, R2 = NA, but PKNCA does not flag exclude
-      filter(USUBJID != 4)
+      filter(is.na(R2) | is.na(R2ADJ))
 
     expect_equal(unique(na_result$flagged), "MISSING")
 
@@ -295,20 +290,9 @@ describe("pivot_wider_pknca_results flagging integration", {
 
     status <- result %>% filter(USUBJID == 1, ATPTREF == 1) %>% pull(flagged)
     expect_equal(status[1], "MISSING")
+    expect_true(grepl("LAMZSPN is NA", result$Missing[1]))
   })
 
-  it("concatenates existing Exclude reasons with new NA messages", {
-    flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.8))
-
-    # Force adj.r.squared to be TRUE in intervals to trigger "is NA" check
-    pknca_mod <- pknca_res
-    pknca_mod$data$intervals$adj.r.squared <- TRUE
-
-    result <- pivot_wider_pknca_results(pknca_mod, flag_rules = flag_rules)
-
-    exclude_str <- result %>% filter(USUBJID == 1, ATPTREF == 1) %>% pull(Exclude)
-    expect_match(exclude_str, "R2ADJ is NA")
-  })
 
   it("does not create flagged column if no flags are active", {
     flag_rules <- list("R2ADJ" = list(is.checked = FALSE, threshold = 0.8))
@@ -319,23 +303,51 @@ describe("pivot_wider_pknca_results flagging integration", {
     expect_true(!"flagged" %in% colnames(result))
   })
 
-  it("does not set to FLAGGED if parameter was not requested", {
-    # USUBJID 2 has R2ADJ ~0.97
-    # Set threshold to 0.99 (a breach), but disable R2ADJ in intervals
+  it("does not create flagged column if no flags are active", {
+    flag_rules <- list("R2ADJ" = list(is.checked = FALSE, threshold = 0.8))
+    
+    result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
+    
+    # expect no flagged column in result
+    expect_true(!"flagged" %in% colnames(result))
+  })
+  
+  it("does not create flagged column if no flag parameters requested", {
+    flag_rules <- list("AUCPEP" = list(is.checked = TRUE, threshold = 20))
+    
+    # For USUBJID = 1, R2ADJ not requested, but missing
+    result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
+    
+    # Flag column shouldn't exist as there is no flags needed
+    expect_true(!"flagged" %in% colnames(result))
+  })
+  
+  it("does not flag MISSING if parameter not requested but column exists", {
+    flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.8))
+    
+    # Remove R2ADJ from results for subj 4 to simulate not requested
+    pknca_res_mod <- pknca_res
+    pknca_res_mod$result <- pknca_res_mod$result %>%
+      filter(PPTESTCD != "R2ADJ" | USUBJID != 4)
+    
+    result <- pivot_wider_pknca_results(pknca_res_mod, flag_rules = flag_rules)
+    
+    # Expect no MISSING flag as R2ADJ was not requested
+    expect_true("flagged" %in% colnames(result))
+    status <- result %>% filter(USUBJID == 4) %>% pull(flagged)
+    expect_equal(status[1], "ACCEPTED")
+  })
+  
+  it("Flags if PKNCA flags parameter, even if not requested", {
     flag_rules <- list("R2ADJ" = list(is.checked = TRUE, threshold = 0.99))
-
-    pknca_mod <- pknca_res
-    # Ensure the interval logic dictates R2ADJ was not part of the plan
-    pknca_mod$data$intervals$adj.r.squared <- FALSE
-
-    # We must also ensure the Exclude string doesn't contain the breach msg
-    # since apply_results_flags checks the text of the Exclude column
-    result <- pivot_wider_pknca_results(pknca_mod, flag_rules = flag_rules)
-
-    res_row <- result %>% filter(USUBJID == 2)
-
-    # Status should be ACCEPTED because the parameter wasn't "requested"
-    expect_equal(res_row$flagged[1], "ACCEPTED")
-    expect_false(grepl("R2ADJ < 0.99", res_row$Exclude[1]))
+    
+    pknca_flagged <- PKNCA_hl_rules_exclusion(pknca_res, list("R2ADJ" = 0.999))
+    pknca_flagged$result <- pknca_flagged$result %>%
+      filter(PPTESTCD != "R2ADJ" | USUBJID != 3)
+    
+    result <- pivot_wider_pknca_results(pknca_flagged, flag_rules = flag_rules)
+    
+    status <- result %>% filter(USUBJID == 3) %>% pull(flagged)
+    expect_equal(status[1], "FLAGGED")
   })
 })
