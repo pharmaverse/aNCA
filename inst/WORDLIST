@@ -37,7 +37,6 @@ LAMZ
 LAMZLL
 LAMZNPT
 LAMZSPN
-Lineplot
 METABFL
 MRTMDO
 MRTMDP
@@ -144,6 +143,7 @@ pptest
 pre
 pred
 qmd
+rds
 reproducibility
 reupload
 roadmap
@@ -151,7 +151,6 @@ rpptx
 ruleset
 rulesets
 runnable
-SBS
 signif
 src
 tibble
