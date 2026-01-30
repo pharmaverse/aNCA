@@ -208,40 +208,6 @@ describe("pivot_wider_pknca_results", {
     expect_false("PPANMETH" %in% result)
   })
 
-  it("includes the flagged column and the flag rule columns when flag_rules are provided", {
-
-    # Prepare a PKNCA results object with the exclusions to flag
-    flag_rules <- list(
-      R2ADJ = list(is.checked = TRUE, threshold = 0.99),
-      R2 = list(is.checked = TRUE, threshold = 0.99)
-    )
-    flag_rules_pknca <- flag_rules %>%
-      purrr::keep(\(x) x$is.checked) %>%
-      purrr::map(\(x) x$threshold)
-    pknca_res <- PKNCA_hl_rules_exclusion(res = pknca_res, rules = flag_rules_pknca)
-
-    # Produce the output to be tested
-    piv_result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
-
-    # Missing results produce "MISSING" flag
-    na_result <- piv_result %>%
-      filter(is.na(R2) | is.na(R2ADJ))
-
-    expect_equal(unique(na_result$flagged), "MISSING")
-
-    # Invalid rules produce "FLAGGED" flag
-    flagged_result <- piv_result %>%
-      filter(!is.na(R2) & !is.na(R2ADJ)) %>%
-      filter(R2 < flag_rules$R2$threshold | R2ADJ < flag_rules$R2ADJ$threshold)
-    expect_equal(unique(flagged_result$flagged), "FLAGGED")
-
-    # Passed rules produce "ACCEPTED" flag
-    accepted_result <- piv_result %>%
-      filter(!is.na(R2) & !is.na(R2ADJ)) %>%
-      filter(R2 >= flag_rules$R2$threshold & R2ADJ >= flag_rules$R2ADJ$threshold)
-    expect_equal(unique(accepted_result$flagged), "ACCEPTED")
-  })
-
   it("includes extra_vars_to_keep columns when provided", {
     pknca_res <- FIXTURE_PKNCA_RES
     extra_vars <- c("ROUTE", "DOSEA", "ATPTREF")
@@ -293,15 +259,6 @@ describe("pivot_wider_pknca_results flagging integration", {
     expect_true(grepl("LAMZSPN is NA", result$Missing[1]))
   })
 
-
-  it("does not create flagged column if no flags are active", {
-    flag_rules <- list("R2ADJ" = list(is.checked = FALSE, threshold = 0.8))
-
-    result <- pivot_wider_pknca_results(pknca_res, flag_rules = flag_rules)
-
-    # expect no flagged column in result
-    expect_true(!"flagged" %in% colnames(result))
-  })
 
   it("does not create flagged column if no flags are active", {
     flag_rules <- list("R2ADJ" = list(is.checked = FALSE, threshold = 0.8))

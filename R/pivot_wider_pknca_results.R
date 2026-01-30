@@ -291,13 +291,10 @@ add_label_attribute <- function(df, myres) {
     data <- data %>%
       left_join(missing_flags,
                 by = intersect(names(data), names(missing_flags))) %>%
-      rowwise() %>%
       mutate(
         flagged = case_when(
+          sapply(Exclude, function(x) any(str_detect(x, fixed(flag_rule_msgs)))) ~ "FLAGGED",
           is.na(Missing) ~ "ACCEPTED",
-          any(sapply(
-            flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
-          )) ~ "FLAGGED",
           TRUE ~ "MISSING"
         )
       ) %>%
