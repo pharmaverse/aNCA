@@ -294,7 +294,7 @@ add_label_attribute <- function(df, myres) {
       rowwise() %>%
       mutate(
         flagged = case_when(
-          is.na(Exclude) && is.na(Missing) ~ "ACCEPTED",
+          is.na(Missing) ~ "ACCEPTED",
           any(sapply(
             flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
           )) ~ "FLAGGED",
