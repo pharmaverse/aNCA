@@ -236,19 +236,18 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       # SPECIMEN
       current_pcspec <- isolate(input$select_pcspec)
 
-      if (!is.null(settings)) {
-        if (all(settings$profile %in% profile_choices)) {
-          target_profile <- settings$profile
-        }
-        if (all(settings$pcspec %in% pcspec_choices)) {
-          target_pcspec <- settings$pcspec
-        }
+      if (!is.null(settings$profile) &&all(settings$profile %in% profile_choices)) {
+      target_profile <- settings$profile
       } else {
-        if (length(intersect(current_profile, profile_choices)) > 0) {
-          target_profile <- current_profile # Keep current if valid
-        } else {
-          target_profile <- profile_choices[1]
+      if (length(intersect(current_profile, profile_choices)) > 0) {
+        target_profile <- current_profile # Keep current if valid
+      } else {
+        target_profile <- profile_choices[1]
         }
+      }
+      if (!is.null(settings$pcspec) && all(settings$pcspec %in% pcspec_choices)) {
+        target_pcspec <- settings$pcspec
+      } else {
         if (length(intersect(current_pcspec, pcspec_choices)) > 0) {
           target_pcspec <- current_pcspec # Keep current if valid
         } else {
