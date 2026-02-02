@@ -201,6 +201,7 @@ describe("get_settings_code: ", {
 describe("get_session_code: ", {
   setts_file <- testthat::test_path("data/test-settings.yaml")
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
+  output_file <- tempfile(fileext = ".R")
 
   default_mapping <- list(
     select_STUDYID = "STUDYID",
