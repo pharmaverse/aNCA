@@ -181,3 +181,20 @@ describe("clean_deparse()", {
     expect_equal(out, exp_out)
   })
 })
+
+describe("get_settings_code: ", {
+
+  setts_file <- testthat::test_path("data/test-settings.yaml")
+  data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
+  output_file <- tempfile(fileext = ".R")
+
+  it("writes a script R file output", {
+    get_settings_code(
+      settings_file_path = setts_file,
+      data_path = data_file,
+      output_path = output_file
+    )
+    # Check if the file was created
+    expect_true(file.exists(output_file))
+  })
+})
