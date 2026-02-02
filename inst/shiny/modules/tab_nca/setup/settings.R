@@ -236,7 +236,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         available_choices = profile_choices,
         override_val = settings$profile
       )
-      
+
       target_pcspec <- .get_target_selection(
         current_val = isolate(input$select_pcspec),
         available_choices = pcspec_choices,
@@ -449,22 +449,27 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 #' @param available_choices Available choices to select from.
 #' @param override_val Override value(s) to use if valid.
 #' @param default_logic Optional function to determine default selection from available choices.
-.get_target_selection <- function(current_val, available_choices, override_val, default_logic = NULL) {
+.get_target_selection <- function(
+  current_val,
+  available_choices,
+  override_val,
+  default_logic = NULL
+) {
   # Check Settings Override
   if (!is.null(override_val) && all(override_val %in% available_choices)) {
     return(override_val)
   }
-  
+
   # 2. Maintain Selection
   if (length(intersect(current_val, available_choices)) > 0) {
     return(current_val)
   }
-  
+
   # Fallback to Default Logic or First Choice
   if (!is.null(default_logic)) {
     fallback <- default_logic(available_choices)
     if (length(fallback) > 0) return(fallback)
   }
-  
+
   available_choices[1]
 }
