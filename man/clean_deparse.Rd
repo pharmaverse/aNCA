@@ -25,6 +25,6 @@ reconstruct \code{obj} (or a close approximation for complex types).
 This internal S3 generic converts common R objects (data frames, lists,
 atomic vectors, etc.) into character strings containing R code that will
 reconstruct the object. It is used by the app script generator to
-serialize \code{session$userData} values into a runnable R script.
+serialize \code{yaml_setts} values into a runnable R script.
 }
 \keyword{internal}

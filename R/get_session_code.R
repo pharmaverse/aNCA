@@ -6,6 +6,7 @@
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R")
 #' @return The output_path (invisibly)
 #' @keywords internal
+#' @noRd
 get_code <- function(template_path, setts_obj, output_path) {
   # Helper to get value from yaml_setts by path (e.g., 'settings$method')
   get_session_value <- function(path) {
@@ -258,11 +259,22 @@ get_settings_code <- function(
   invisible(output_path)
 }
 
+#' Generate a session script from a Shiny session object
+#'
+#' This function generates an R script that can reproduce the outputs of a Shiny app session.
+#' It extracts the session's user data, substitutes it into a script template, and writes
+#' the result to a file.
+#'
+#' @param session The Shiny session object containing user data (typically from a running app).
+#' @param output_path Path to write the resulting script file (e.g., "output_script.R").
+#' @return Invisibly returns the output_path.
+#' @keywords Internal
+#' @noRd
 get_session_code <- function(session, output_path) {
-  yaml_setts <- list(session$userData)
   get_code(
     template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
-    setts_obj = yaml_setts,
+    setts_obj = list(session$userData),
     output_path = output_path
   )
+  invisible(output_path)
 }
