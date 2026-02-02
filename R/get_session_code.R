@@ -7,7 +7,11 @@
 #' @return The output_path (invisibly)
 #' @keywords internal
 #' @noRd
-get_code <- function(template_path, setts_obj, output_path) {
+get_code <- function(
+  setts_obj,
+  output_path,
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+) {
   # Helper to get value from yaml_setts by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
@@ -32,7 +36,6 @@ get_code <- function(template_path, setts_obj, output_path) {
   pattern <- "yaml_setts(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
   if (matches[1] == -1) {
-    browser()
     stop(
       "Template has no placeholders (yaml_setts...) to substitute.",
       "This may be due to an incorrect file path, a missing template, ",
