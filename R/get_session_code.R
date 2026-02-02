@@ -233,14 +233,14 @@ default_mapping <- list(
 #' @return Invisibly returns the output_path.
 #' @export
 get_settings_code <- function(
-    settings_file_path,
-    data_path,
-    output_path = "settings_code.R",
-    template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
-    # TODO: mapping & ratio_table should be included in the settings file as well
-    # so they keep working as expected also from the settings file
-    mapping = default_mapping,
-    ratio_table = data.frame()
+  settings_file_path,
+  data_path,
+  output_path = "settings_code.R",
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+  # TODO: mapping & ratio_table should be included in the settings file as well
+  # so they keep working as expected also from the settings file
+  mapping = default_mapping,
+  ratio_table = data.frame()
 ) {
   settings <- read_settings(settings_file_path)
   session <- list(yaml_setts = list(
