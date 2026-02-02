@@ -1,15 +1,16 @@
 #' Generate a session script code in R that can replicate the App outputs
 #'
 #' @param template_path Path to the R script template (e.g., script_template.R)
-#' @param session The session object containing userData, etc.
+#' @param setts_obj The read settings object with all analysis specifications
+#' or the full session object from the App.
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R")
 #' @return The output_path (invisibly)
-#' @export
-get_session_code <- function(template_path, session, output_path) {
-  # Helper to get value from session$userData by path (e.g., 'settings$method')
+#' @keywords internal
+get_code <- function(template_path, setts_obj, output_path) {
+  # Helper to get value from yaml_setts by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
-    obj <- session$userData
+    obj <- setts_obj
     for (p in parts) {
       if (inherits(obj[[p]], "reactive")) {
         obj <- obj[[p]]()
@@ -26,12 +27,13 @@ get_session_code <- function(template_path, session, output_path) {
   script <- readLines(template_path, warn = FALSE) %>%
     paste(collapse = "\n")
 
-  # Find all session$userData$...
-  pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
+  # Find all yaml_setts$...
+  pattern <- "yaml_setts(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
   if (matches[1] == -1) {
+    browser()
     stop(
-      "Template has no placeholders (session$userData...) to substitute.",
+      "Template has no placeholders (yaml_setts...) to substitute.",
       "This may be due to an incorrect file path, a missing template, ",
       "or a modified template without placeholders."
     )
@@ -42,8 +44,8 @@ get_session_code <- function(template_path, session, output_path) {
     start <- matches[i]
     len <- attr(matches, "match.length")[i]
     matched <- substr(script, start, start + len - 1)
-    # Extract the path after session$userData$
-    path <- sub("^session\\$userData\\$", "", matched)
+    # Extract the path after yaml_setts$
+    path <- sub("^yaml_setts\\$", "", matched)
     value <- get_session_value(path)
 
     deparsed <- clean_deparse(value, max_per_line = 15)
@@ -65,7 +67,7 @@ get_session_code <- function(template_path, session, output_path) {
 #' This internal S3 generic converts common R objects (data frames, lists,
 #' atomic vectors, etc.) into character strings containing R code that will
 #' reconstruct the object. It is used by the app script generator to
-#' serialize `session$userData` values into a runnable R script.
+#' serialize `yaml_setts` values into a runnable R script.
 #'
 #' @param obj An R object to convert to a string of R code.
 #' @param max_per_line Maximum number of elements to include per line for
@@ -214,6 +216,7 @@ default_mapping <- list(
   select_AVALU = "AVALU",
   select_ATPTREF = "ATPTREF"
 )
+
 #' Generate a session script from settings and mapping files
 #'
 #' This function reads a settings RDS file and data path, and generates an R script
@@ -240,28 +243,26 @@ get_settings_code <- function(
     ratio_table = data.frame()
 ) {
   settings <- read_settings(settings_file_path)
-  session <- list(userData = list(
+  session <- list(yaml_setts = list(
     settings = settings[["settings"]],
     slope_rules = settings[["slope_rules"]],
     data_path = data_path,
     mapping = mapping,
     ratio_table = ratio_table
   ))
-  get_session_code(
+  get_code(
     template_path = template_path,
-    session = session,
+    setts_obj = session,
     output_path = output_path
   )
   invisible(output_path)
 }
-# settings_file_path <- "../../Downloads/THESETTS.yaml"
-# get_settings_code(
-#   settings_file_path,
-#   data_path = "inst/shiny/data/example-ADNCA.csv",
-#   template_path = "inst/shiny/www/templates/script_template.R",
-#   output_path = "../../Downloads/elproject/settings/settings_code.R"
-# )
 
-# TODO (Gerardo): Create a linked function
-# to obtain the code from a settings file
-# (#826)
+get_session_code <- function(session, output_path) {
+  yaml_setts <- list(session$userData)
+  get_code(
+    template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+    setts_obj = yaml_setts,
+    output_path = output_path
+  )
+}
