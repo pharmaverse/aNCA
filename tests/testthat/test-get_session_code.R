@@ -183,7 +183,6 @@ describe("clean_deparse()", {
 })
 
 describe("get_settings_code: ", {
-
   setts_file <- testthat::test_path("data/test-settings.yaml")
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   output_file <- tempfile(fileext = ".R")
@@ -192,6 +191,57 @@ describe("get_settings_code: ", {
     get_settings_code(
       settings_file_path = setts_file,
       data_path = data_file,
+      output_path = output_file
+    )
+    # Check if the file was created
+    expect_true(file.exists(output_file))
+  })
+})
+
+describe("get_session_code: ", {
+  setts_file <- testthat::test_path("data/test-settings.yaml")
+  data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
+
+  default_mapping <- list(
+  select_STUDYID = "STUDYID",
+  select_USUBJID = "USUBJID",
+  select_DOSEA = "DOSEA",
+  select_DOSEU = "DOSEU",
+  select_DOSETRT = "DOSETRT",
+  select_PARAM = "PARAM",
+  select_Metabolites = "Metab-DrugA",
+  select_ARRLT = "ARRLT",
+  select_NRRLT = "NRRLT",
+  select_AFRLT = "AFRLT",
+  select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
+  select_NFRLT = "NFRLT",
+  select_PCSPEC = "PCSPEC",
+  select_ROUTE = "ROUTE",
+  select_TRTRINT = "TRTRINT",
+  select_ADOSEDUR = "ADOSEDUR",
+  select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
+  select_RRLTU = "RRLTU",
+  select_VOLUME = "VOLUME",
+  select_VOLUMEU = "VOLUMEU",
+  select_AVAL = "AVAL",
+  select_AVALU = "AVALU",
+  select_ATPTREF = "ATPTREF"
+  )
+
+  # Create a mock session object
+  setts <- read_settings(setts_file)
+  session <- list(
+    userData = list(
+      yaml_setts = setts,
+      data_path = data_file,
+      mapping = default_mapping,
+      ratio_table = data.frame()
+    )
+  )
+
+  it("writes a script R file output", {
+    get_session_code(
+      session = session,
       output_path = output_file
     )
     # Check if the file was created
