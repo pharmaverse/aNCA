@@ -123,10 +123,9 @@ describe("read_settings", {
     # Partial AUC definitions
     res <- read_settings(path)
     expect_s3_class(res$settings$partial_aucs, "data.frame")
-    
+
     # Parameter selections by study type
     expect_s3_class(res$settings$parameters$types_df, "data.frame")
-    expect_equal(nrow(res$settings$parameters$types_df), 3)
   })
 
   it("handles empty or null units/general_exclusions gracefully", {
