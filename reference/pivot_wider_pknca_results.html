@@ -15,7 +15,7 @@ corresponding units. AUC intervals, if present, are be added as additional colum
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9054</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9055</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,7 +105,10 @@ concentration data to the output. Default is NULL.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame which provides an easy overview on the results from the NCA
 in each profile/subject and how it was computed lambda (half life) and the results
-of the NCA parameters (cmax, AUC, AUClast)</p>
+of the NCA parameters (cmax, AUC, AUClast), including new columns <code>Exclude</code> (a
+derivation from pknca$exclude), <code>Missing</code>(indicating if flag parameters are missing
+from PKNCA calculation), and <code>flagged</code> (indicating if the row
+is ACCEPTED, FLAGGED or MISSING based on the flagging rules).</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

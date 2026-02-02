@@ -86,6 +86,9 @@
 - Bug fix so app doesn’t crash if NCA is rerun with an error (e.g. No
   exclusion REASON)
   ([\#913](https://github.com/pharmaverse/aNCA/issues/913))
+- NCA results flagging logic updated to include Missing column and
+  correctly identify difference between missing and not requested
+  ([\#934](https://github.com/pharmaverse/aNCA/issues/934))
 
 ## aNCA 0.1.0
 
