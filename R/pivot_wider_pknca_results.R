@@ -26,7 +26,8 @@
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
 #'          of the NCA parameters (cmax, AUC, AUClast), including new columns `Exclude` (a
-#'          derivation from pknca$exclude and flagging rules) and `flagged` (indicating if the row
+#'          derivation from pknca$exclude), `Missing`(indicating if flag parameters are missing
+#'          from PKNCA calculation), and `flagged` (indicating if the row
 #'          is ACCEPTED, FLAGGED or MISSING based on the flagging rules).
 #'
 #' @importFrom dplyr select left_join rename mutate distinct group_by arrange ungroup
@@ -170,7 +171,6 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   out <- .apply_results_flags(
     data = pivoted_res,
     pknca_res = myres$result,
-    group_cols = unname(unlist(myres$data$conc$columns$groups)),
     flag_settings = flag_rules
   )
 
@@ -249,26 +249,20 @@ add_label_attribute <- function(df, myres) {
 #' with additional grouping variables merged.
 #' @param pknca_res A data frame. The results object from the
 #'  PKNCA result (e.g., `res$result`).
-#' @param group_cols A character vector. The column names used for grouping the data.
 #' @param flag_settings A named list of flag settings. Each element must contain
 #'   `is.checked` (logical) and `threshold` (numeric or character).
 #'
 #' @returns A data frame with updated `Exclude` and `flagged` columns.
 #' @keywords internal
 #' @noRd
-.apply_results_flags <- function(data, pknca_res, group_cols, flag_settings) {
+.apply_results_flags <- function(data, pknca_res, flag_settings) {
 
   # Add flagging column in the pivoted results
   applied_flags <- purrr::keep(flag_settings, function(x) x$is.checked)
   flag_params <- names(applied_flags)
-  flag_params_pknca <- translate_terms(flag_params, "PPTESTCD", "PKNCA")
 
   flag_thr <- sapply(flag_settings, FUN =  function(x) x$threshold)
   flag_rule_msgs <- c(paste0(names(flag_settings), c(" < ", " < ", " > ", " > ", " < "), flag_thr))
-
-  valid_indices <- map_lgl(flag_params, function(p) {
-    any(grepl(paste0("^", p, "(\\[|$)"), names(data)))
-  })
 
   flag_cols <- names(data)[formatters::var_labels(data)
                            %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
