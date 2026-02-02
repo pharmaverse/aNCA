@@ -460,7 +460,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     return(override_val)
   }
 
-  # 2. Maintain Selection
+  # Maintain Selection
   if (length(intersect(current_val, available_choices)) > 0) {
     return(current_val)
   }
