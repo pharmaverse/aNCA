@@ -164,10 +164,16 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
+        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".yaml")
       },
       content = function(con) {
-        saveRDS(list(settings = final_settings(), slope_rules = slope_rules()), con)
+        # Prepare the list
+        export_list <- list(
+          settings = final_settings(),
+          slope_rules = slope_rules()
+        )
+        # write yaml file
+        yaml::write_yaml(export_list, file = con)
       }
     )
 
