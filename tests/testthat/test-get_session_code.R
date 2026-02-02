@@ -166,4 +166,18 @@ describe("clean_deparse()", {
     expect_equal(out_3_to_rep, exp_out_3_to_rep)
     expect_equal(out_4_to_rep, exp_out_4_to_rep)
   })
+
+  it("interprets tbl_df as data.frame", {
+    # check for filled object
+    df <- dplyr::tibble(a = 1:3, b = c("x", "y", "z"))
+    out <- clean_deparse(df)
+    exp_out <- clean_deparse(as.data.frame(df))
+    expect_equal(out, exp_out)
+
+    # check for empty object
+    df <- dplyr::tibble()
+    out <- clean_deparse(df)
+    exp_out <- clean_deparse(data.frame())
+    expect_equal(out, exp_out)
+  })
 })

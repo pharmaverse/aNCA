@@ -77,11 +77,14 @@ get_session_code <- function(template_path, session, output_path) {
 #'   reconstruct `obj` (or a close approximation for complex types).
 #' @keywords internal
 clean_deparse <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  # Handle tbl_df objects as data.frame
+  if (inherits(obj, "tbl_df")) obj <- as.data.frame(obj)
+
   # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(class(obj)[1], "()"))
   }
-  UseMethod("clean_deparse")
+  UseMethod("clean_deparse", obj)
 }
 
 #' @noRd
