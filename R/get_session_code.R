@@ -219,14 +219,31 @@ default_mapping <- list(
 #' @param settings_file_path Path to the RDS file containing the settings list.
 #' @param data_path Path to the data file to be referenced in the script.
 #' @param mapping Named list mapping variable names (default: \code{default_mapping}).
-#' @param template_path Path to the R script template file.
+#' @param template_path Path to the R script template file. By default, uses the one
+#' installed from your aNCA package version.
 #' @param output_path Path to write the resulting script file.
 #'
+#' @importFrom yaml read_yaml
 #' @return Invisibly returns the output_path.
 #' @export
-get_settings_code <- function(settings_file_path, data_path, mapping = default_mapping, template_path, output_path) {
-  settings <- readRDS(settings_file_path)
-  session <- list(userData = list(settings = settings, data_path = data_path, mapping = mapping))
+get_settings_code <- function(
+    settings_file_path,
+    data_path,
+    output_path = "settings_code.R",
+    template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+    # TODO: mapping & ratio_table should be included in the settings file as well
+    # so they keep working as expected also from the settings file
+    mapping = default_mapping,
+    ratio_table = data.frame()
+) {
+  settings <- read_settings(settings_file_path)
+  session <- list(userData = list(
+    settings = settings[["settings"]],
+    slope_rules = settings[["slope_rules"]],
+    data_path = data_path,
+    mapping = mapping,
+    ratio_table = ratio_table
+  ))
   get_session_code(
     template_path = template_path,
     session = session,
@@ -234,13 +251,13 @@ get_settings_code <- function(settings_file_path, data_path, mapping = default_m
   )
   invisible(output_path)
 }
-settings_file_path <- "../../Downloads/elproject/settings/settings.rds"
-get_settings_code(
-  settings_file_path, 
-  data_path = "inst/shiny/data/example-ADNCA.csv",
-  template_path = "inst/shiny/www/templates/script_template.R",
-  output_path = "../../Downloads/elproject/settings/settings_code.R"
-)
+# settings_file_path <- "../../Downloads/THESETTS.yaml"
+# get_settings_code(
+#   settings_file_path,
+#   data_path = "inst/shiny/data/example-ADNCA.csv",
+#   template_path = "inst/shiny/www/templates/script_template.R",
+#   output_path = "../../Downloads/elproject/settings/settings_code.R"
+# )
 
 # TODO (Gerardo): Create a linked function
 # to obtain the code from a settings file
