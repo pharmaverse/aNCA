@@ -112,10 +112,7 @@ read_settings <- function(path, name) {
   if (!is.null(obj$settings) && is.list(obj$settings)) {
     obj$settings$partial_aucs <- bind_rows(obj$settings$partial_aucs)
     obj$settings$units <- bind_rows(obj$settings$units)
-  }
-
-  if (!is.null(obj$parameters$types_df) && is.list(obj$parameters$types_df)) {
-    obj$parameters$types_df <- bind_rows(obj$parameters$types_df)
+    obj$settings$parameters$types_df <- bind_rows(obj$settings$parameters$types_df)
   }
 
   obj
