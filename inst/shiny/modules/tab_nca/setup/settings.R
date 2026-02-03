@@ -282,7 +282,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Reactive value to store the AUC data table
     auc_data <- reactiveVal(
-      tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
+      tibble(
+        parameter = INT_PARAMS$PPTESTCD[1],
+        start_auc = rep(NA_real_, 2),
+        end_auc = rep(NA_real_, 2))
     )
 
     # Render the editable reactable table
@@ -291,6 +294,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       reactable(
         auc_data(),
         columns = list(
+          parameter = colDef(
+            name = "Parameter",
+            cell = dropdown_extra(
+              id = ns("edit_parameter"),
+              choices = INT_PARAMS$PPTESTCD,
+              class = "table-dropdown"
+             ),
+             align = "center"
+          ),
           start_auc = colDef(
             name = "Start",  # Display name
             cell = text_extra(id = ns("edit_start_auc")),
@@ -309,7 +321,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # Add a blank row on button click
     observeEvent(input$addRow, {
       df <- auc_data()
-      auc_data(bind_rows(df, tibble(start_auc = NA_real_, end_auc = NA_real_)))
+      auc_data(bind_rows(df, tibble(
+        parameter = INT_PARAMS$PPTESTCD[2],
+        start_auc = NA_real_,
+        end_auc = NA_real_)
+      ))
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
@@ -319,11 +335,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     observe({
       req(auc_data())
       # Dynamically attach observers for each column
-      purrr::walk(c("start_auc", "end_auc"), function(colname) {
-        observeEvent(input[[paste0("edit_", colname)]], {
-          edit <- input[[paste0("edit_", colname)]]
+      edit_inputs <- intersect(names(input), paste0("edit_", names(auc_data())))
+      purrr::walk(edit_inputs, function(edit_input) {
+        observeEvent(input[[edit_input]], {
+          edit <- input[[edit_input]]
           partial_aucs <- auc_data()
-          partial_aucs[edit$row, edit$column] <- as.numeric(edit$value)
+          val <- if (edit$column != "parameter") as.numeric(edit$value) else edit$value
+          partial_aucs[edit$row, edit$column] <- val
           auc_data(partial_aucs)
         })
       })
@@ -455,3 +473,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   if (checked)
     updateNumericInput(session = session, inputId = threshold_id, value = value)
 }
+
+INT_PARAMS <- metadata_nca_parameters %>%
+  filter(grepl("INT", PPTESTCD)) %>%
+  arrange(PPTESTCD)
