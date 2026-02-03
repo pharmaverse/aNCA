@@ -228,10 +228,11 @@ default_mapping <- list(
 #'
 #' @param settings_file_path Path to the RDS file containing the settings list.
 #' @param data_path Path to the data file to be referenced in the script.
-#' @param mapping Named list mapping variable names (default: \code{default_mapping}).
 #' @param template_path Path to the R script template file. By default, uses the one
 #' installed from your aNCA package version.
 #' @param output_path Path to write the resulting script file.
+#' @param mapping Named list mapping variable names (default: \code{default_mapping}).
+#' @param ratio_table Data frame containing ratio definitions (default: empty data frame).
 #'
 #' @importFrom yaml read_yaml
 #' @return Invisibly returns the output_path.

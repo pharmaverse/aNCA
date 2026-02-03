@@ -24,6 +24,8 @@ get_settings_code(
 installed from your aNCA package version.}
 
 \item{mapping}{Named list mapping variable names (default: \code{default_mapping}).}
+
+\item{ratio_table}{Data frame containing ratio definitions (default: empty data frame).}
 }
 \value{
 Invisibly returns the output_path.
