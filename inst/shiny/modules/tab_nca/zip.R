@@ -119,35 +119,35 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
         tryCatch(
           {
             progress <- shiny::Progress$new(min = 0, max = 1)
-            progress$set(message = 'Creating exports...')
+            progress$set(message = "Creating exports...")
             progress$inc(0.1)
-            
-              output_tmpdir <- file.path(tempdir(), "output")
 
-              prepare_export_files(
-                target_dir = output_tmpdir,
-                res_nca = res_nca(),
-                settings = settings,
-                grouping_vars = grouping_vars(),
-                input = input,
-                session = session,
-                progress = progress
-              )
+            output_tmpdir <- file.path(tempdir(), "output")
 
-              files <- list.files(output_tmpdir, recursive = TRUE)
+            prepare_export_files(
+              target_dir = output_tmpdir,
+              res_nca = res_nca(),
+              settings = settings,
+              grouping_vars = grouping_vars(),
+              input = input,
+              session = session,
+              progress = progress
+            )
 
-              wd <- getwd()
-              on.exit(setwd(wd), add = TRUE)
-              setwd(output_tmpdir)
+            files <- list.files(output_tmpdir, recursive = TRUE)
 
-              progress$inc(0.9)
-              progress$set(message = 'Creating exports...',
-                           detail = 'Final touches...')
-              zip::zipr(zipfile = fname, files = files, mode = "mirror")
+            wd <- getwd()
+            on.exit(setwd(wd), add = TRUE)
+            setwd(output_tmpdir)
 
-              progress$set(message = 'Complete!',
-                           detail = '')
-              progress$inc(1)
+            progress$inc(0.9)
+            progress$set(message = "Creating exports...",
+                         detail = "Final touches...")
+            zip::zipr(zipfile = fname, files = files, mode = "mirror")
+
+            progress$set(message = "Complete!",
+                         detail = "")
+            progress$inc(1)
           },
           error = function(e) {
             message("Download Error:")
