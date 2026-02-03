@@ -310,9 +310,11 @@ get_tree_leaf_ids <- function(tree) {
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
-prepare_export_files <- function(target_dir, res_nca, settings, grouping_vars, input, session) {
+prepare_export_files <- function(target_dir, res_nca, settings, grouping_vars, input, session, progress) {
 
   # Save Standard Outputs (Tables/Plots)
+  progress$set(message = 'Creating exports...',
+               detail = 'Saving tables and images...')
   save_output(
     output = session$userData$results,
     output_path = target_dir,
@@ -321,22 +323,32 @@ prepare_export_files <- function(target_dir, res_nca, settings, grouping_vars, i
     obj_names = input$res_tree
   )
 
-  shiny::incProgress(0.2)
+  progress$inc(0.2)
 
   if ("results_slides" %in% input$res_tree) {
+    progress$set(message = 'Creating exports...',
+                 detail = 'Saving slideshow...')
     .export_slides(target_dir, res_nca, grouping_vars, input, session)
   }
-  shiny::incProgress(0.2)
+  progress$inc(0.4)
 
-  if ("settings_file" %in% input$res_tree) .export_settings(target_dir, session)
-  shiny::incProgress(0.2)
+  if ("settings_file" %in% input$res_tree) {
+    progress$set(message = 'Creating exports...',
+                 detail = 'Saving settings...')
+    .export_settings(target_dir, session)
+  }
+  progress$inc(0.6)
 
   data_tmpdir <- file.path(target_dir, "data")
   dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
   saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
 
-  if ("r_script" %in% input$res_tree) .export_script(target_dir, session)
-  shiny::incProgress(0.2)
+  if ("r_script" %in% input$res_tree) {
+    progress$set(message = 'Creating exports...',
+                 detail = 'Saving R script...')
+    .export_script(target_dir, session)
+  }
+  progress$inc(0.8)
 
   .clean_export_dir(target_dir, input)
 }

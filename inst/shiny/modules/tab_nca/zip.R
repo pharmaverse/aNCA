@@ -118,7 +118,10 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       content = function(fname) {
         tryCatch(
           {
-            shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
+            progress <- shiny::Progress$new(min = 0, max = 1)
+            progress$set(message = 'Creating exports...')
+            progress$inc(0.1)
+            
               output_tmpdir <- file.path(tempdir(), "output")
 
               prepare_export_files(
@@ -127,7 +130,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                 settings = settings,
                 grouping_vars = grouping_vars(),
                 input = input,
-                session = session
+                session = session,
+                progress = progress
               )
 
               files <- list.files(output_tmpdir, recursive = TRUE)
@@ -135,10 +139,15 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               wd <- getwd()
               on.exit(setwd(wd), add = TRUE)
               setwd(output_tmpdir)
-              incProgress(0.9)
+
+              progress$inc(0.9)
+              progress$set(message = 'Creating exports...',
+                           detail = 'Final touches...')
               zip::zipr(zipfile = fname, files = files, mode = "mirror")
-              incProgress(1)
-            })
+
+              progress$set(message = 'Complete!',
+                           detail = '')
+              progress$inc(1)
           },
           error = function(e) {
             message("Download Error:")
