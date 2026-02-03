@@ -96,9 +96,9 @@ ADNCA,93,TBILIBL,Bilirubin at Baseline (BLOOD),float,Topic,Perm,TRUE,FALSE,12,,F
 ADNCA,94,TEMPBL,Temperature at Baseline,float,Topic,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,95,TOBBL,Smoking Status at Baseline,float,Topic,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,96,TPROTBL,Total Protein at Baseline (BLOOD),float,Topic,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA
-ADNCA,97,TRTRINT,Planned Treatment Interval,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,TRUE,"Numeric column for planned time between 2 consecutive doses in multiple dose studies (optional, sometimes referred to as TAU). Must be in RRTLU units",Supplemental Variables,TAU,19
+ADNCA,97,TRTRINT,Planned Treatment Interval,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,TRUE,"Numeric column for planned time between 2 consecutive doses in multiple dose studies (optional, sometimes referred to as TAU). Must be in RRTLU units",Supplemental Variables,TAU,21
 ADNCA,98,TRTRINTU,Planned Treatment Interval Units,text,Topic,Perm,FALSE,FALSE,40,,FALSE,,FALSE,,,,NA
-ADNCA,99,WTBL,Weight at Baseline,float,Topic,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA
+ADNCA,99,WTBL,Weight at Baseline,float,Topic,Perm,TRUE,FALSE,12,,FALSE,,TRUE,Numeric column for subject's weight. Only required for excretion studies.,Supplemental Variables,WEIGHT,19
 ADNCA,100,ADOSEDUR,Actual Duration of Treatment Dose,float,Topic,Cond,FALSE,FALSE,12,,FALSE,,TRUE,"Numeric column for dose administration duration. Only required when the data contains dose infusions. If not mapped, all values are set to 0.",Supplemental Variables,,16
 ADNCA,101,DOSEFRQ,Dose Frequency,text,Topic,Cond,FALSE,FALSE,40,,FALSE,,FALSE,,,,NA
 ADNCA,102,DOSPCTDF,Percent Diff. Nominal vs. Actual Dose,float,Topic,Cond,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
@@ -160,7 +160,7 @@ ADNCA,158,TOBBLU,Smoking Status at Baseline (Unit),text,Synonym Qualifier,Perm,T
 ADNCA,159,TPROTBLU,Total Protein at Baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA
 ADNCA,160,WBCBL,WBC Count at Baseline,float,Synonym Qualifier,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,161,WBCBLU,WBC Count at baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA
-ADNCA,162,WTBLU,Weight at Baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA
+ADNCA,162,WTBLU,Weight at Baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,"mg, g, kg",TRUE,"Character column for unit of WTBL. Instead of a column name, a unique value can be mapped for all records (i.e, ""kg""). Only relevant when WTBL is mapped.",Supplemental Variables,WEIGHTU,20
 ADNCA,163,VOLUME,Volume Value,float,Synonym Qualifier,Cond,FALSE,FALSE,12,,FALSE,,TRUE,Numeric column for collected sample's volume. Only required for excretion studies.,Supplemental Variables,,17
 ADNCA,164,VOLUMEU,Volume Value Unit,text,Synonym Qualifier,Cond,FALSE,FALSE,40,,FALSE,"mL, L, uL, dL, cL",TRUE,"Character column for unit of VOLUME (C71620). Instead of a column name, a unique value can be mapped for all records (i.e, ""mL""). Only relevant when VOLUME is mapped.",Supplemental Variables,,18
 ADNCA,166,AVISIT,Analysis Visit,text,Grouping Qualifier,Req,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA
@@ -183,7 +183,6 @@ ADNCA,183,APERIODC,Period (C),text,Grouping Qualifier,Cond,FALSE,FALSE,200,,FALS
 ADNCA,184,TRT01A,Actual Treatment for Period 01,text,Grouping Qualifier,Cond,TRUE,FALSE,200,,FALSE,,FALSE,,,,NA
 ADNCA,185,TRTSEQA,Actual Sequence of Treatments,text,Grouping Qualifier,Cond,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA
 ADNCA,186,TRTSEQP,Planned Sequence of Treatments,text,Grouping Qualifier,Cond,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA
-ADNCA,187,NCA_PROFILE,NCA Profile Identifier,integer,Record Qualifier,Perm,TRUE,FALSE,12,,FALSE,,FALSE,Numeric column to indicate the NCA profile. Usually indicating dose number or cycle.,Group Identifiers,"ATPTREF, DOSNO, DOSNOP",5
 ADNCA,188,DOSNOP,Planned Dose Number,integer,Record Qualifier,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,189,FEDSTATE,Fasted / Fed Status,text,Record Qualifier,Perm,TRUE,FALSE,10,,FALSE,,FALSE,,,,NA
 ADNCA,190,NCAXFL,PK NCA Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA
