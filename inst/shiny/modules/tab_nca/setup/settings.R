@@ -87,8 +87,8 @@ settings_ui <- function(id) {
         data_imputation_ui(ns("data_imputation"))
       ),
       accordion_panel(
-        title = "Partial AUCs",
-        reactableOutput(ns("auc_table")),
+        title = "Partial Interval Calculations",
+        reactableOutput(ns("int_parameters_table")),
         actionButton(ns("addRow"), "Add Row")
       ),
       accordion_panel(
@@ -168,7 +168,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
 
         # Partial AUCs #
-        int_parameters(settings$partial_aucs)
+        int_parameters(settings$int_parameters)
         refresh_reactable(refresh_reactable() + 1)
 
         # Flags #
@@ -290,7 +290,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Render the editable reactable table
     refresh_reactable <- reactiveVal(1)
-    output$auc_table <- renderReactable({
+    output$int_parameters_table <- renderReactable({
       reactable(
         int_parameters(),
         columns = list(

@@ -40,7 +40,7 @@ preprocessed_adnca <- adnca_data %>%
   adjust_class_and_length(metadata_nca_variables)
 
 ## Setup NCA settings in the PKNCA object ########################
-int_parameters <- session$userData$settings$partial_aucs
+int_parameters <- session$userData$settings$int_parameters
 units_table <- session$userData$final_units
 parameters_selected_per_study <- session$userData$settings$parameters$selections
 study_types_df <- session$userData$settings$parameters$types_df
