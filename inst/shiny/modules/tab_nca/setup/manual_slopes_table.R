@@ -6,7 +6,7 @@
 #'
 #' @param id Shiny module id
 #' @return Shiny UI element (fluidRow)
-slopes_table_ui <- function(id) {
+manual_slopes_table_ui <- function(id) {
   ns <- NS(id)
 
   fluidRow(
@@ -26,8 +26,6 @@ slopes_table_ui <- function(id) {
   )
 }
 
-
-
 #' Manual Slopes Table Server for Slope Selection
 #'
 #' Server module for managing the manual slopes table (inclusion/exclusion rules).
@@ -39,7 +37,7 @@ slopes_table_ui <- function(id) {
 #' @return List with:
 #'   - manual_slopes: reactiveVal containing the current manual slopes table
 #'   - refresh_reactable: reactiveVal for triggering table re-render
-slopes_table_server <- function(
+manual_slopes_table_server <- function(
   id, pknca_data, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {
@@ -206,7 +204,6 @@ slopes_table_server <- function(
         manual_slopes(manual_slopes_override())
       })
     }
-
     # Output: manual_slopes (reactiveVal) and refresh_reactable (for UI updates)
     list(
       manual_slopes = manual_slopes,

@@ -31,7 +31,7 @@ slope_selector_ui <- function(id) {
 
   div(
     class = "slope-selector-module",
-    slopes_table_ui(ns("manual_slopes")),
+    manual_slopes_table_ui(ns("manual_slopes")),
     # Help widget #
     dropdown(
       div(
@@ -192,7 +192,7 @@ slope_selector_server <- function( # nolint
 
     # Creates an initial version of the manual slope adjustments table with pknca_data
     # and handles the addition and deletion of rows through the UI
-    slopes_table <- slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
+    slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
 
