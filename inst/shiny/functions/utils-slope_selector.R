@@ -149,23 +149,6 @@ parse_plot_names_to_df <- function(named_list) {
     mutate(PLOTID = names(named_list))
 }
 
-
-#' Arrange Plots by Group Columns
-#'
-#' Orders a named list of plots according to specified grouping columns.
-#' Assumes a specific naming format (i.e, 'col1: val1, col2: val2, ...').
-#'
-#' @param named_list A named list of plots, with names in the format 'col1: val1, col2: val2, ...'.
-#' @param group_cols Character vector of column names to sort by.
-#' @importFrom dplyr arrange across all_of
-#' @return A named list of plots, ordered by the specified group columns.
-arrange_plots_by_groups <- function(named_list, group_cols) {
-  plot_df <- parse_plot_names_to_df(named_list)
-  arranged_df <- plot_df %>%
-    arrange(across(all_of(group_cols)))
-  named_list[arranged_df$PLOTID]
-}
-
 #' Check overlap between existing and new slope rulesets
 #'
 #' Takes in tables with existing and incoming selections and exclusions, finds any overlap and
