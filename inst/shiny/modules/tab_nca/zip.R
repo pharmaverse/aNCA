@@ -121,7 +121,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             shiny::withProgress(message = "Preparing ZIP file...", value = 0, {
               output_tmpdir <- file.path(tempdir(), "output")
 
-              create_export_structure(
+              prepare_export_files(
                 target_dir = output_tmpdir,
                 res_nca = res_nca(),
                 settings = settings,

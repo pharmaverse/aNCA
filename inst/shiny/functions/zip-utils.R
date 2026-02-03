@@ -302,7 +302,7 @@ get_tree_leaf_ids <- function(tree) {
   ids
 }
 
-#' Create export structure
+#' Prepare export files 
 #'
 #' @param target_dir Path to the directory where files will be written.
 #' @param res_nca NCA results object.
@@ -310,9 +310,9 @@ get_tree_leaf_ids <- function(tree) {
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
-create_export_structure <- function(target_dir, res_nca, settings, grouping_vars, input, session) {
+prepare_export_files <- function(target_dir, res_nca, settings, grouping_vars, input, session) {
 
-  # 1. Standard Outputs (Tables/Plots)
+  # Save Standard Outputs (Tables/Plots)
   save_output(
     output = session$userData$results,
     output_path = target_dir,
@@ -322,26 +322,22 @@ create_export_structure <- function(target_dir, res_nca, settings, grouping_vars
   )
 
   shiny::incProgress(0.2)
-  # 2. Presentation Slides
+
   if ("results_slides" %in% input$res_tree) {
     .export_slides(target_dir, res_nca, grouping_vars, input, session)
   }
   shiny::incProgress(0.2)
 
-  # 3. Settings
   if ("settings_file" %in% input$res_tree) .export_settings(target_dir, session)
   shiny::incProgress(0.2)
 
-  # 4. Input Data
   data_tmpdir <- file.path(target_dir, "data")
   dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
   saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
 
-  # 5. R Script Template
   if ("r_script" %in% input$res_tree) .export_script(target_dir, session)
   shiny::incProgress(0.2)
 
-  # 6. Clean the whitelist
   .clean_export_dir(target_dir, input)
 }
 
