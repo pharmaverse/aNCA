@@ -389,9 +389,11 @@ prepare_export_files <- function(target_dir, res_nca, settings, grouping_vars, i
 .export_settings <- function(target_dir, session) {
   path <- file.path(target_dir, "settings")
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
-  saveRDS(list(settings = session$userData$settings(),
-               slope_rules = session$userData$slope_rules()),
-          file.path(path, "settings.rds"))
+  settings_to_save <- list(
+    settings = session$userData$settings(),
+    slope_rules = session$userData$slope_rules()
+  )
+  yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
 
 #' Helper to export R script
@@ -421,7 +423,7 @@ prepare_export_files <- function(target_dir, res_nca, settings, grouping_vars, i
     if (length(input$table_formats) > 0) paste0("\\.", input$table_formats),
     if (length(input$plot_formats) > 0) paste0("\\.", input$plot_formats),
     if (length(input$slide_formats) > 0) paste0("results_slides\\.", input$slide_formats),
-    "session_code\\.R", "settings\\.rds", "data\\.rds"
+    "session_code\\.R", "settings\\.yaml", "data\\.rds"
   )
 
   pattern <- paste0("(", paste0(exts, collapse = "|"), ")$")

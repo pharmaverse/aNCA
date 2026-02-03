@@ -26,7 +26,7 @@ data_upload_ui <- function(id) {
       ),
       uiOutput(ns("file_loading_message"))
     ),
-    reactable_ui(ns("data_display"))
+    card(reactable_ui(ns("data_display")), class = "border-0 shadow-none")
   )
 }
 
@@ -72,34 +72,23 @@ data_upload_server <- function(id) {
           filenames <- input$data_upload$name
         }
 
-        # Iterate over files: Try reading as Data, then as Settings
+        # Iterate over files: Identify file extension and read either settings or data
         read_results <- purrr::map2(paths, filenames, function(path, name) {
-          tryCatch({
-            # Attempt to read
-            data <- read_pk(path)
-            list(status = "success", data = data, name = name, type = "data")
-          }, error = function(e_pk) {
-            # If read_pk fails
-            # check if settings file is loaded and then create settings override
+          if (tools::file_ext(path) %in% c("yml", "yaml")) {
             tryCatch({
-              # check if error aligns with what we expect for settings file
-              if (conditionMessage(e_pk) != "Invalid data format. Data frame was expected, but received list.") { #nolint
-                return(list(status = "error", msg = conditionMessage(e_pk), name = name))
-              }
-
-              obj <- readRDS(path)
-              # Check for settings
-              is_settings <- is.list(obj) && "settings" %in% names(obj)
-
-              if (!is_settings) {
-                stop(conditionMessage(e_pk))
-              }
-
+              obj <- read_settings(path)
               list(status = "success", type = "settings", content = obj, name = name)
-            }, error = function(e_rds) {
-              list(status = "error", msg = conditionMessage(e_pk), name = name)
+            }, error = function(e) {
+              list(status = "error", msg = conditionMessage(e), name = name)
             })
-          })
+          } else {
+            tryCatch({
+              obj <- read_pk(path)
+              list(status = "success", type = "data", content = obj, name = name)
+            }, error = function(e) {
+              list(status = "error", msg = conditionMessage(e), name = name)
+            })
+          }
         })
 
         # Process results
@@ -132,7 +121,7 @@ data_upload_server <- function(id) {
         if (length(found_data) > 0) {
           tryCatch({
             loaded_data <- successful_loads %>%
-              purrr::map("data") %>%
+              purrr::map("content") %>%
               dplyr::bind_rows() %>%
               #mutate all to character to prevent errors
               dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
@@ -163,10 +152,8 @@ data_upload_server <- function(id) {
     reactable_server(
       "data_display",
       raw_data,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data()))),
       height = "50vh",
-      class = "reactable-table",
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data())))
     )
 
     list(
