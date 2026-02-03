@@ -96,8 +96,7 @@ pknca_res <- pknca_obj %>%
   filter_slopes(
     slope_rules$manual_slopes,
     slope_rules$profiles_per_subject,
-    slope_rules$slopes_groups,
-    check_reasons = TRUE
+    slope_rules$slopes_groups
   ) %>%
 
   # Run pk.nca and join subject and dose information to the results

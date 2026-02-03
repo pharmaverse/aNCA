@@ -17,6 +17,7 @@
 * Allow user to select additional `grouping variables` (chosen in the mapping) for ratio calculations (#868)
 * General button at top page to save all NCA results, settings & draft slides as a ZIP file (#638)
 * Settings are now uploaded on initial opening of the app in the data tab, and applied to the next steps (#860)
+* Settings file has been converted from rds to yaml, allowing better readability and editing for users. (#901)
 
 
 ## Bugs fixed
@@ -32,6 +33,8 @@
 * Bug fix to allow for unrecognized units to be used in AVALU and DOSEU (#861)
 * Bug fix so NA units are allowed in the data (as per CDISC guidelines for NA samples) and not treated as a unique unit (#907)
 * Bug fix so app doesn't crash if NCA is rerun with an error (e.g. No exclusion REASON) (#913)
+* NCA results flagging logic updated to include Missing column and correctly
+identify difference between missing and not requested (#934)
 
 # aNCA 0.1.0
 
