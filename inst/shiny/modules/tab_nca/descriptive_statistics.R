@@ -14,13 +14,7 @@ descriptive_statistics_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    pickerInput(
-      inputId = ns("select_display_parameters"),
-      label = "Parameter to display:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("param_to_display_ui_wrapper")
     ),
     pickerInput(
       inputId = ns("select_display_statistic"),
@@ -30,13 +24,7 @@ descriptive_statistics_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    pickerInput(
-      ns("summary_groupby"),
-      "Group by variables:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("groupby_ui_wrapper")
     ),
     card(reactable_ui(ns("descriptive_stats")), class = "border-0 shadow-none"),
     card(
@@ -48,6 +36,8 @@ descriptive_statistics_ui <- function(id) {
 # Server function for the summary statistics module
 descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+    
     # Update the input for the group by picker
     observeEvent(res_nca(), {
       req(res_nca())
@@ -60,10 +50,44 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
-
-      updatePickerInput(session, "summary_groupby",
-                        choices = c(group_cols, classification_cols, subj_col),
-                        selected = c(group_cols, classification_cols))
+      
+      grouping_vars <- c(group_cols, classification_cols, subj_col)
+      initial_selection <-  c(group_cols, classification_cols)
+      
+      formatted_choices <- reactive({
+        req(metadata_nca_variables)
+        
+        # Taking the variables and labels from the metadata
+        choices_df <- metadata_nca_variables %>%
+          select(Variable, Label) %>%
+          distinct(Variable, .keep_all = TRUE) %>%
+          filter(!is.na(Variable), Variable != "") %>%
+          filter(Variable %in% grouping_vars)
+        
+        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
+          list(
+            label = as.character(var),
+            value = as.character(var),
+            description = as.character(lab)
+          )
+        }))
+      })
+      
+      # Rendering the colorby selector
+      output$groupby_ui_wrapper <- renderUI({
+        req(formatted_choices())
+        grouping_vars <- formatted_choices()
+        
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("summary_groupby"),
+          label = "Group by variables:",
+          choices = grouping_vars,
+          multiple = TRUE,
+          selected = initial_selection,
+          search = TRUE,
+          hasOptionDescription = TRUE
+        )
+      })
     })
 
     # Reactive expression for summary table based on selected group and parameters
@@ -100,16 +124,50 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
     observeEvent(res_nca(), {
       req(summary_stats())
+      
+      # Get the statistics variables needed
+      params_needed <- setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
+      clean_params_needed <- gsub("\\[.*", "", params_needed)
+      
+      
+      # Generate dataset for parameters and labels in the dropdowns
+      formatted_choices <- reactive({
+        req(metadata_nca_parameters)
+        
+        # Taking the parameters and labels from the metadata
+        choices_df <- metadata_nca_parameters %>%
+          select(PPTESTCD, PPTEST) %>%
+          distinct(PPTESTCD, .keep_all = TRUE) %>%
+          filter(!is.na(PPTESTCD), PPTESTCD != "") %>%
+          filter(PPTESTCD %in% clean_params_needed)
+        print(choices_df)
+        
+        unname(purrr::pmap(list(params_needed, choices_df$PPTEST), function(var, lab) {
+          list(
+            label = as.character(var),
+            value = as.character(var),
+            description = as.character(lab)
+          )
+        }))
+      })
+      
+      # Rendering the parameters to display selector
+      output$param_to_display_ui_wrapper <- renderUI({
+        req(summary_stats())
+        params_to_display <- formatted_choices()
+        
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("select_display_parameters"),
+          label = "Parameter to display:",
+          choices = params_to_display,
+          multiple = TRUE,
+          selected = params_needed,
+          search = TRUE,
+          hasOptionDescription = TRUE
+        )
+      })
 
-      # Update the select display parameters picker input
-      updatePickerInput(
-        session,
-        "select_display_parameters",
-        choices = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby)),
-        selected = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
-      )
-
-      # Update the select display parameters picker input
+      # Update the select display statistics picker input
       updatePickerInput(
         session,
         "select_display_statistic",
@@ -147,3 +205,4 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     )
   })
 }
+

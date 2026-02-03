@@ -16,13 +16,7 @@ pk_dose_qc_plot_ui <- function(id) {
     sidebar = sidebar(
       position = "right",
       open = TRUE,
-      pickerInput(
-        inputId = ns("group_var"),
-        label = "Choose the variables to group by:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("groupvar_ui_wrapper")
       ),
       pickerInput(
         inputId = ns("colour_var"),
@@ -99,14 +93,42 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         choices = param_choices_colour,
         selected = param_choices_colour[1]
       )
-
+      
       param_choices_group <- grouping_vars()
-      updatePickerInput(
-        session,
-        "group_var",
-        choices = param_choices_group,
-        selected = param_choices_group[1]
-      )
+      formatted_choices <- reactive({
+        req(metadata_nca_variables)
+        
+        # Taking the variables and labels from the metadata
+        choices_df <- metadata_nca_variables %>%
+          select(Variable, Label) %>%
+          distinct(Variable, .keep_all = TRUE) %>%
+          filter(!is.na(Variable), Variable != "") %>%
+          filter(Variable %in% param_choices_group)
+        
+        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
+          list(
+            label = as.character(var),
+            value = as.character(var),
+            description = as.character(lab)
+          )
+        }))
+      })
+      
+      # Rendering the colorby selector
+      output$groupvar_ui_wrapper <- renderUI({
+        req(formatted_choices(), pknca_data())
+        group_vars <- formatted_choices()
+        
+        shinyWidgets::virtualSelectInput(
+          inputId = ns("group_var"),
+          label = "Choose the variables to group by:",
+          choices = group_vars,
+          multiple = TRUE,
+          selected = group_vars[[1]]$value,
+          search = TRUE,
+          hasOptionDescription = TRUE
+        )
+      })
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
       updatePickerInput(
