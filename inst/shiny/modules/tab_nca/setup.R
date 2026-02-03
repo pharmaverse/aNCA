@@ -120,7 +120,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
         data = base_pknca_data(),
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
-        auc_data = settings()$partial_aucs,
+        int_parameters = settings()$partial_aucs,
         impute = settings()$data_imputation$impute_c0,
         blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )

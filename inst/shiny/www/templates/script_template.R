@@ -40,7 +40,7 @@ preprocessed_adnca <- adnca_data %>%
   adjust_class_and_length(metadata_nca_variables)
 
 ## Setup NCA settings in the PKNCA object ########################
-auc_data <- session$userData$settings$partial_aucs
+int_parameters <- session$userData$settings$partial_aucs
 units_table <- session$userData$final_units
 parameters_selected_per_study <- session$userData$settings$parameters$selections
 study_types_df <- session$userData$settings$parameters$types_df
@@ -65,7 +65,7 @@ pknca_obj <- preprocessed_adnca %>%
   ) %>%
 
   update_main_intervals(
-    auc_data = auc_data,
+    int_parameters = int_parameters,
     parameter_selections = parameters_selected_per_study,
     study_types_df =  study_types_df,
     impute = session$userData$settings$data_imputation$impute_c0

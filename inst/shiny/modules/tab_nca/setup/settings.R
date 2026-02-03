@@ -168,7 +168,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
 
         # Partial AUCs #
-        auc_data(settings$partial_aucs)
+        int_parameters(settings$partial_aucs)
         refresh_reactable(refresh_reactable() + 1)
 
         # Flags #
@@ -281,7 +281,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
 
     # Reactive value to store the AUC data table
-    auc_data <- reactiveVal(
+    int_parameters <- reactiveVal(
       tibble(
         parameter = INT_PARAMS$PPTESTCD[1],
         start_auc = rep(NA_real_, 2),
@@ -292,7 +292,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     refresh_reactable <- reactiveVal(1)
     output$auc_table <- renderReactable({
       reactable(
-        auc_data(),
+        int_parameters(),
         columns = list(
           parameter = colDef(
             name = "Parameter",
@@ -320,8 +320,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Add a blank row on button click
     observeEvent(input$addRow, {
-      df <- auc_data()
-      auc_data(bind_rows(df, tibble(
+      df <- int_parameters()
+      int_parameters(bind_rows(df, tibble(
         parameter = INT_PARAMS$PPTESTCD[2],
         start_auc = NA_real_,
         end_auc = NA_real_)
@@ -333,16 +333,16 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     #' For each of the columns in partial aucs data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
-      req(auc_data())
+      req(int_parameters())
       # Dynamically attach observers for each column
-      edit_inputs <- intersect(names(input), paste0("edit_", names(auc_data())))
+      edit_inputs <- intersect(names(input), paste0("edit_", names(int_parameters())))
       purrr::walk(edit_inputs, function(edit_input) {
         observeEvent(input[[edit_input]], {
           edit <- input[[edit_input]]
-          partial_aucs <- auc_data()
+          partial_aucs <- int_parameters()
           val <- if (edit$column != "parameter") as.numeric(edit$value) else edit$value
           partial_aucs[edit$row, edit$column] <- val
-          auc_data(partial_aucs)
+          int_parameters(partial_aucs)
         })
       })
     })
@@ -360,7 +360,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           impute_c0 = data_imputation$should_impute_c0(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
-        partial_aucs = auc_data(),
+        partial_aucs = int_parameters(),
         flags = list(
           R2ADJ = list(
             is.checked = input$R2ADJ_rule,

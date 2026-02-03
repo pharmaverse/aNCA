@@ -8,7 +8,7 @@ update_main_intervals(
   data,
   parameter_selections,
   study_types_df,
-  auc_data,
+  int_parameters,
   impute = TRUE,
   blq_imputation_rule = NULL
 )
@@ -20,7 +20,7 @@ update_main_intervals(
 
 \item{study_types_df}{A data frame mapping analysis profiles to their study type.}
 
-\item{auc_data}{A data frame containing partial AUC ranges.}
+\item{int_parameters}{A data frame containing partial AUC ranges.}
 
 \item{impute}{Logical indicating whether to impute start values for parameters.}
 

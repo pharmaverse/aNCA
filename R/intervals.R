@@ -132,7 +132,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param data A PKNCAdata object containing intervals and dosing data.
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
 #' @param study_types_df A data frame mapping analysis profiles to their study type.
-#' @param auc_data A data frame containing partial AUC ranges.
+#' @param int_parameters A data frame containing partial AUC ranges.
 #' @param impute Logical indicating whether to impute start values for parameters.
 #' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
 #' imputation rule using PKNCA format. The list should either contain three elements named:
@@ -148,7 +148,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 update_main_intervals <- function(
   data,
   parameter_selections,
-  study_types_df, auc_data,
+  study_types_df, int_parameters,
   impute = TRUE,
   blq_imputation_rule = NULL
 ) {
@@ -186,7 +186,7 @@ update_main_intervals <- function(
     select(-type)
 
   # Add partial AUCs if any
-  auc_ranges <- auc_data %>%
+  auc_ranges <- int_parameters %>%
     filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc) %>%
     mutate(parameter = translate_terms(parameter, "PPTESTCD", "PKNCA"))
 
