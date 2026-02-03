@@ -40,7 +40,6 @@ detect_pknca_data_changes <- function(old, new) {
   )
 }
 
-
 #' Handle half-life adjustment changes
 #'
 #' Updates only the plots affected by changes in half-life inclusion/exclusion columns.
@@ -66,7 +65,6 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
     distinct()
   update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
 }
-
 
 #' Handle interval changes
 #'
@@ -123,7 +121,6 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   }
   plot_outputs
 }
-
 
 #' Parse Plot Names to Data Frame
 #'

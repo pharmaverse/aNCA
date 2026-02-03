@@ -1,4 +1,3 @@
-
 #' Manual Slopes Table UI for Slope Selection
 #'
 #' UI module for displaying and editing the manual slopes table (inclusion/exclusion rules).
