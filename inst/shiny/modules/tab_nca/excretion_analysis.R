@@ -86,14 +86,14 @@ excretion_server <- function(id, input_pknca_data) {
 
       dose_col <- data$dose$columns$dose
       doseu <- data$dose$columns$doseu
-      weight_col <- "WEIGHT"
-      weightu <- "WEIGHTU"
+      weight_col <- "WTBL"
+      weightu <- "WTBLU"
 
       # Adjust dose by bodyweight if selected
       if (input$adjust_bw) {
         # Check if weight columns exist
         if (!(weight_col %in% names(data$dose$data)) || !(weightu %in% names(data$dose$data))) {
-          showNotification("Please ensure WEIGHT and WEIGHTU columns exist in the dose data.
+          showNotification("Please ensure WTBL and WTBLU columns exist in the dose data.
                            No adjustments can be made.", type = "warning")
           return(NULL)
         }
