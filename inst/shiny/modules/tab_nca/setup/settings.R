@@ -368,7 +368,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           impute_c0 = data_imputation$should_impute_c0(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
-        partial_aucs = int_parameters(),
+        int_parameters = int_parameters(),
         flags = list(
           R2ADJ = list(
             is.checked = input$R2ADJ_rule,
