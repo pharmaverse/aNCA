@@ -5,6 +5,7 @@
 #' @param slopes Data frame of slope rules (TYPE, RANGE, REASON, group columns)
 #' @return Modified data object with updated flags
 update_pknca_with_rules <- function(data, slopes) {
+  browser()
   slope_groups <- intersect(group_vars(data), names(slopes))
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
@@ -24,10 +25,8 @@ update_pknca_with_rules <- function(data, slopes) {
       range()
     # Build the condition dynamically for group columns and time range
     pnt_idx <- which(
-      Reduce(`&`, lapply(slope_groups, function(col) {
-        data$conc$data[[col]] == slopes[[col]][i]
-      })) &
-        between(data$conc$data[[time_col]], range[[1]], range[[2]])
+      .are_points_in_groups(slopes, data) &
+      .are_points_in_range(slopes$RANGE[i], data$conc$data[[time_col]])
     )
     if (slopes$TYPE[i] == "Selection") {
       data$conc$data[[include_hl_col]][pnt_idx] <- TRUE
@@ -42,4 +41,27 @@ update_pknca_with_rules <- function(data, slopes) {
     )
   }
   data
+}
+
+.are_points_in_groups <- function(slopes, pknca_data) {
+  slope_groups <- setdiff(names(slopes), c("TYPE", "RANGE", "REASON"))
+  Reduce(`&`, lapply(slope_groups, function(col) {
+    pknca_data$conc$data[[col]] == slopes[[col]]
+    })
+  )
+}
+
+.are_points_in_range <- function(range_str, time_vec) {
+  parts <- strsplit(range_str, ",")[[1]]
+  idx <- rep(FALSE, length(time_vec))
+  for (part in parts) {
+    if (grepl(":", part)) {
+      bounds <- as.numeric(strsplit(part, ":")[[1]])
+      idx <- idx | (time_vec >= bounds[1] & time_vec <= bounds[2])
+    } else {
+      val <- as.numeric(part)
+      idx <- idx | (time_vec == val)
+    }
+  }
+  idx
 }
