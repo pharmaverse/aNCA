@@ -33,6 +33,8 @@
 * Bug fix to allow for unrecognized units to be used in AVALU and DOSEU (#861)
 * Bug fix so NA units are allowed in the data (as per CDISC guidelines for NA samples) and not treated as a unique unit (#907)
 * Bug fix so app doesn't crash if NCA is rerun with an error (e.g. No exclusion REASON) (#913)
+* NCA results flagging logic updated to include Missing column and correctly
+identify difference between missing and not requested (#934)
 
 # aNCA 0.1.0
 

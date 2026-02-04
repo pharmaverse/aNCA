@@ -31,7 +31,10 @@ concentration data to the output. Default is NULL.}
 \value{
 A data frame which provides an easy overview on the results from the NCA
 in each profile/subject and how it was computed lambda (half life) and the results
-of the NCA parameters (cmax, AUC, AUClast)
+of the NCA parameters (cmax, AUC, AUClast), including new columns \code{Exclude} (a
+derivation from pknca$exclude), \code{Missing}(indicating if flag parameters are missing
+from PKNCA calculation), and \code{flagged} (indicating if the row
+is ACCEPTED, FLAGGED or MISSING based on the flagging rules).
 }
 \description{
 This function reshapes the structure of the results produced by the main function
