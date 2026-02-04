@@ -253,13 +253,13 @@ get_settings_code <- function(
   ratio_table = data.frame()
 ) {
   settings <- read_settings(settings_file_path)
-  session <- list(yaml_setts = list(
+  session <- list(
     settings = settings[["settings"]],
     slope_rules = settings[["slope_rules"]],
     data_path = data_path,
     mapping = mapping,
     ratio_table = ratio_table
-  ))
+  )
   get_code(
     template_path = template_path,
     setts_obj = session,
@@ -284,7 +284,7 @@ get_settings_code <- function(
 get_session_code <- function(session, output_path, template_path = NULL) {
   get_code(
     template_path = template_path,
-    setts_obj = list(session$userData),
+    setts_obj = session$userData,
     output_path = output_path
   )
   invisible(output_path)
