@@ -23,7 +23,8 @@ NON_STD_MAPPING_INFO <- data.frame(
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
-  select(Variable, Label, Values, mapping_tooltip, mapping_section, mapping_alternatives, mapping_order) %>%
+  select(Variable, Label, Values, mapping_tooltip,
+         mapping_section, mapping_alternatives, mapping_order) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
@@ -185,7 +186,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
 
-      # ExceptionS: 
+      # Exceptions:
       # If by default VOLUME is not mapped, then neither is VOLUMEU
       if (!"VOLUME" %in% column_names) {
         updateSelectizeInput(session, "select_VOLUMEU", selected = "")
