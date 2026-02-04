@@ -159,35 +159,39 @@ parse_plot_names_to_df <- function(named_list) {
 #' @export
 check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   slope_groups <- setdiff(names(new), c("TYPE", "RANGE", "REASON"))
-  # check if any rule already exists for specific subject and profile
-  existing_index <- which(
-    existing$TYPE == new$TYPE &
-      Reduce(
-        `&`,
-        lapply(slope_groups, function(col) {
-          existing[[col]] == new[[col]]
-        })
-      )
-  )
-  if (length(existing_index) != 1) {
-    if (length(existing_index) > 1)
-      warning(
-        "More than one range for single subject, profile and rule type detected."
-      )
-    return(rbind(existing, new))
+
+  # Helper to match group columns between existing and new
+  is_matching_cols <- function(cols_to_match, existing, new) {
+    Reduce(
+      `&`,
+      lapply(cols_to_match, function(col) {
+        existing[[col]] == new[[col]]
+      })
+    )
   }
-  existing_range <- .eval_range(existing$RANGE[existing_index])
-  new_range <- .eval_range(new$RANGE)
-  is_inter <- length(intersect(existing_range, new_range)) != 0
-  is_diff <- length(setdiff(new_range, existing_range)) != 0
-  if (is_diff || .keep) {
-    existing$RANGE[existing_index] <- unique(c(existing_range, new_range)) %>%
-      .compress_range()
-  } else if (is_inter) {
-    existing$RANGE[existing_index] <- setdiff(existing_range, new_range) %>%
-      .compress_range()
+
+  if (new$TYPE == "Exclusion") {
+    # If is the same exclusion rule as an existing, remove the existing
+    rows_with_same_cols <- is_matching_cols(c(slope_groups, "TYPE", "RANGE"), existing, new)
+    if (sum(rows_with_same_cols) > 0) {
+      existing <- existing[!rows_with_same_cols, ]
+      return(existing)
+    }
+    # Otherwise, just add the new exclusion
+    existing <- bind_rows(existing, new)
   }
-  dplyr::filter(existing, !is.na(RANGE))
+  
+  if (new$TYPE == "Selection") {
+    # If it is a selection rule within the same group as an existing, modify the existing
+    rows_with_same_groups <- is_matching_cols(c(slope_groups, "TYPE"), existing, new)
+    if (sum(rows_with_same_groups) > 0) {
+      existing <- existing[!rows_with_same_groups, ]
+    }
+    # Otherwise, just add the new selection
+    existing <- bind_rows(existing, new)
+  }
+  
+  return(existing)
 }
 
 #' Update plots with PKNCA data (for affected intervals)
