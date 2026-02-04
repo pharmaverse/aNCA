@@ -22,7 +22,8 @@ settings_ui <- function(id) {
         title = "General Settings",
         # Selection of analyte, dose number and specimen
         fluidRow(
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_analyte"),
               "Choose the Analyte:",
@@ -31,7 +32,8 @@ settings_ui <- function(id) {
               options = list(`actions-box` = TRUE)
             )
           ),
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_profile"),
               "Choose the NCA Profile:",
@@ -40,7 +42,8 @@ settings_ui <- function(id) {
               options = list(`actions-box` = TRUE)
             )
           ),
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_pcspec"),
               "Choose the Specimen:",
@@ -142,7 +145,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       # if settings exist, update analyte picker input and check compatibility
       if (!is.null(settings)) {
-
         if (all(settings$analyte %in% choices)) {
           selected <- settings$analyte
         } else {
@@ -160,9 +162,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         # Additional settings (PCSPEC and ATPTREF handled later)
         updateSelectInput(session, inputId = "method", selected = settings$method)
 
-        if (!is.null(settings$bioavailability))
-          updateSelectInput(session, inputId = "bioavailability",
-                            selected = settings$bioavailability)
+        if (!is.null(settings$bioavailability)) {
+          updateSelectInput(session,
+            inputId = "bioavailability",
+            selected = settings$bioavailability
+          )
+        }
 
         # Data imputation #
         update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
@@ -209,8 +214,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       }
 
       if (length(not_compatible) > 0) {
-        msg <- paste0(paste0(not_compatible, collapse = ", "),
-                      " settings not found in data. Reverting to defaults.")
+        msg <- paste0(
+          paste0(not_compatible, collapse = ", "),
+          " settings not found in data. Reverting to defaults."
+        )
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 10)
       }
@@ -229,7 +236,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         filter(PARAM %in% input$select_analyte, !is.na(PCSPEC), !is.na(ATPTREF))
 
       profile_choices <- sort(unique(filtered_data$ATPTREF))
-      pcspec_choices  <- unique(filtered_data$PCSPEC)
+      pcspec_choices <- unique(filtered_data$PCSPEC)
 
       # PROFILE
       current_profile <- isolate(input$select_profile)
@@ -285,7 +292,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       tibble(
         parameter = INT_PARAMS$PPTESTCD[1],
         start_auc = rep(NA_real_, 2),
-        end_auc = rep(NA_real_, 2))
+        end_auc = rep(NA_real_, 2)
+      )
     )
 
     # Render the editable reactable table
@@ -300,16 +308,16 @@ settings_server <- function(id, data, adnca_data, settings_override) {
               id = ns("edit_parameter"),
               choices = INT_PARAMS$PPTESTCD,
               class = "table-dropdown"
-             ),
-             align = "center"
+            ),
+            align = "center"
           ),
           start_auc = colDef(
-            name = "Start",  # Display name
+            name = "Start", # Display name
             cell = text_extra(id = ns("edit_start_auc")),
             align = "center"
           ),
           end_auc = colDef(
-            name = "End",    # Display name
+            name = "End", # Display name
             cell = text_extra(id = ns("edit_end_auc")),
             align = "center"
           )
@@ -324,8 +332,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       int_parameters(bind_rows(df, tibble(
         parameter = INT_PARAMS$PPTESTCD[2],
         start_auc = NA_real_,
-        end_auc = NA_real_)
-      ))
+        end_auc = NA_real_
+      )))
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
@@ -470,8 +478,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   rule_id <- paste0(id, "_rule")
 
   updateCheckboxInput(session = session, inputId = rule_id, value = checked)
-  if (checked)
+  if (checked) {
     updateNumericInput(session = session, inputId = threshold_id, value = value)
+  }
 }
 
 INT_PARAMS <- metadata_nca_parameters %>%

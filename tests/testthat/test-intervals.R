@@ -231,7 +231,13 @@ describe("update_main_intervals", {
       start_auc = c(0, 1, 2),
       end_auc = c(1, 2, 3)
     )
-    result <- update_main_intervals(data, parameters, study_types_df, int_parameters, impute = FALSE)
+    result <- update_main_intervals(
+      data,
+      parameters,
+      study_types_df,
+      int_parameters,
+      impute = FALSE
+    )
 
     manual_intervals <- result$intervals %>% filter(type_interval == "manual")
     expect_true(all(manual_intervals$aucint.last == TRUE))
@@ -244,7 +250,13 @@ describe("update_main_intervals", {
   })
 
   it("does not impute C0 when not requested", {
-    result <- update_main_intervals(data, parameters, study_types_df, int_parameters, impute = FALSE)
+    result <- update_main_intervals(
+      data,
+      parameters,
+      study_types_df,
+      int_parameters,
+      impute = FALSE
+    )
     expect_true("impute" %in% names(result))
     expect_true(all(is.na(result$intervals$impute)))
   })
