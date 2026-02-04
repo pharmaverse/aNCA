@@ -122,7 +122,7 @@ describe("read_settings", {
   it("converts settings elements into data frames", {
     # Partial AUC definitions
     res <- read_settings(path)
-    expect_s3_class(res$settings$partial_aucs, "data.frame")
+    expect_s3_class(res$settings$int_parameters, "data.frame")
 
     # Parameter selections by study type
     expect_s3_class(res$settings$parameters$types_df, "data.frame")

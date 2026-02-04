@@ -49,14 +49,14 @@
 #'   analytes <- unique(adnca_sub$PARAM)
 #'   dosnos <- unique(adnca_sub$ATPTREF)
 #'   pcspecs <- unique(adnca_sub$PCSPEC)
-#'   auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
+#'   int_parameters <- data.frame(start_auc = numeric(), end_auc = numeric())
 #'
 #'   # Build a minimal PKNCA data object and run NCA (kept in \donttest for CRAN safety)
 #'   pknca_data <- PKNCA_create_data_object(adnca_sub)
 #'   pknca_data <- create_start_impute(pknca_data)
 #'   pknca_data <- PKNCA_update_data_object(
 #'     pknca_data,
-#'     auc_data = auc_data,
+#'     int_parameters = int_parameters,
 #'     method = method,
 #'     params = params,
 #'     selected_analytes = analytes,
