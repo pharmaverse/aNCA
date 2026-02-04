@@ -50,20 +50,21 @@ detect_pknca_data_changes <- function(old, new) {
 handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
   incl_hl_col <- new_pknca_data$conc$columns$include_half.life
-  affected_groups <- anti_join(
-    dplyr::select(
-      new_pknca_data$conc$data,
-      any_of(c(group_vars(new_pknca_data), "ATPTREF", excl_hl_col, incl_hl_col))
-    ),
-    dplyr::select(
-      old_pknca_data$conc$data,
-      any_of(c(group_vars(old_pknca_data), "ATPTREF", excl_hl_col, incl_hl_col))
-    ),
-    by = c(group_vars(new_pknca_data), "ATPTREF", excl_hl_col, incl_hl_col)
-  ) %>%
-    select(any_of(c(group_vars(new_pknca_data), "ATPTREF"))) %>%
-    distinct()
-  update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
+
+  ix_excl_changes <- which(new_pknca_data$conc$data[[excl_hl_col]] != old_pknca_data$conc$data[[excl_hl_col]])
+  ix_incl_changes <- which(new_pknca_data$conc$data[[incl_hl_col]] != old_pknca_data$conc$data[[incl_hl_col]])
+
+  if (length(c(ix_excl_changes, ix_incl_changes)) > 0) {
+    time_col <- new_pknca_data$conc$columns$time
+    affected_groups <- new_pknca_data$conc$data[c(ix_excl_changes, ix_incl_changes), ] %>%
+      select(any_of(c(group_vars(new_pknca_data), time_col))) %>%
+      merge(new_pknca_data$intervals, by = group_vars(new_pknca_data)) %>%
+      filter(!!sym(time_col) >= start, !!sym(time_col) <= end) %>%
+      select(-any_of(time_col)) %>%
+      distinct()
+      plot_outputs <- update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
+  }
+  plot_outputs
 }
 
 #' Handle interval changes
