@@ -17,7 +17,7 @@ update_pknca_with_rules <- function(data, slopes) {
   # Make sure when rows are removed no NA value is left
   slopes <- na.omit(slopes)
   #####################################################
-  
+
   for (i in seq_len(nrow(slopes))) {
     # Determine the time range for the points adjusted
     range <- strsplit(as.character(slopes$RANGE[i]), ":")[[1]] %>%
@@ -26,7 +26,7 @@ update_pknca_with_rules <- function(data, slopes) {
     # Build the condition dynamically for group columns and time range
     pnt_idx <- which(
       .are_points_in_groups(slopes, data) &
-      .are_points_in_range(slopes$RANGE[i], data$conc$data[[time_col]])
+        .are_points_in_range(slopes$RANGE[i], data$conc$data[[time_col]])
     )
     if (slopes$TYPE[i] == "Selection") {
       data$conc$data[[include_hl_col]][pnt_idx] <- TRUE
@@ -47,8 +47,7 @@ update_pknca_with_rules <- function(data, slopes) {
   slope_groups <- setdiff(names(slopes), c("TYPE", "RANGE", "REASON"))
   Reduce(`&`, lapply(slope_groups, function(col) {
     pknca_data$conc$data[[col]] == slopes[[col]]
-    })
-  )
+  }))
 }
 
 .are_points_in_range <- function(range_str, time_vec) {

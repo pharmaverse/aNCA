@@ -50,19 +50,21 @@ detect_pknca_data_changes <- function(old, new) {
 handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   excl_hl_col <- new_pknca_data$conc$columns$exclude_half.life
   incl_hl_col <- new_pknca_data$conc$columns$include_half.life
+  new_concdata <- new_pknca_data$conc$data
+  old_concdata <- old_pknca_data$conc$data
 
-  ix_excl_changes <- which(new_pknca_data$conc$data[[excl_hl_col]] != old_pknca_data$conc$data[[excl_hl_col]])
-  ix_incl_changes <- which(new_pknca_data$conc$data[[incl_hl_col]] != old_pknca_data$conc$data[[incl_hl_col]])
+  ix_excl_changes <- which(new_concdata[[excl_hl_col]] != old_concdata[[excl_hl_col]])
+  ix_incl_changes <- which(new_concdata[[incl_hl_col]] != old_concdata[[incl_hl_col]])
 
   if (length(c(ix_excl_changes, ix_incl_changes)) > 0) {
     time_col <- new_pknca_data$conc$columns$time
-    affected_groups <- new_pknca_data$conc$data[c(ix_excl_changes, ix_incl_changes), ] %>%
+    affected_groups <- new_concdata[c(ix_excl_changes, ix_incl_changes), ] %>%
       select(any_of(c(group_vars(new_pknca_data), time_col))) %>%
       merge(new_pknca_data$intervals, by = group_vars(new_pknca_data)) %>%
       filter(!!sym(time_col) >= start, !!sym(time_col) <= end) %>%
       select(-any_of(time_col)) %>%
       distinct()
-      plot_outputs <- update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
+    plot_outputs <- update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
   }
   plot_outputs
 }
@@ -181,7 +183,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     # Otherwise, just add the new exclusion
     existing <- bind_rows(existing, new)
   }
-  
+
   if (new$TYPE == "Selection") {
     # If it is a selection rule within the same group as an existing, modify the existing
     rows_with_same_groups <- is_matching_cols(c(slope_groups, "TYPE"), existing, new)
@@ -191,8 +193,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     # Otherwise, just add the new selection
     existing <- bind_rows(existing, new)
   }
-  
-  return(existing)
+  existing
 }
 
 #' Update plots with PKNCA data (for affected intervals)
