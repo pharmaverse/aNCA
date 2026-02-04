@@ -1,9 +1,9 @@
 parameter_datasets_ui <- function(id) {
   ns <- NS(id)
   navset_pill(
-    nav_panel("PP",   reactable_ui(ns("pp_dataset"))),
-    nav_panel("ADPP", reactable_ui(ns("adpp_dataset"))),
-    nav_panel("ADNCA", reactable_ui(ns("adnca_dataset")))
+    nav_panel("PP", card(reactable_ui(ns("pp_dataset")), class = "border-0 shadow-none")),
+    nav_panel("ADPP", card(reactable_ui(ns("adpp_dataset")), class = "border-0 shadow-none")),
+    nav_panel("ADNCA", card(reactable_ui(ns("adnca_dataset")), class = "border-0 shadow-none"))
   )
 }
 
@@ -11,49 +11,26 @@ parameter_datasets_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
     CDISC <- reactive({
       req(res_nca())
-
-      # Only select from results the requested parameters by the user
-      ############################################################################
-      # TODO (Gerardo): Once PKNCA non covered parameters start being covered,
-      # this can be done instead using filter_requested = TRUE
-      res_nca_req <- res_nca()
-      params_not_requested <- res_nca_req$data$intervals %>%
-        select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
-        # For all logical columns, mutate FALSE to NA
-        mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
-        # Only select column that are only NA
-        select(where(~ all(is.na(.x)))) %>%
-        names()
-      res_nca_req$result <- res_nca_req$result %>%
-        filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
-      ############################################################################
-
-      export_cdisc(res_nca_req)
+      export_cdisc(res_nca())
     })
 
     reactable_server(
       "pp_dataset",
       reactive(CDISC()$pp),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_pp"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_name(), "_pp")
     )
     reactable_server(
       "adpp_dataset",
       reactive(CDISC()$adpp),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_adpp"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_name(), "_adpp")
     )
     reactable_server(
       "adnca_dataset",
       reactive(CDISC()$adnca),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_adnca"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_name(), "_adnca")
     )
 
     # Save the results in the output folder

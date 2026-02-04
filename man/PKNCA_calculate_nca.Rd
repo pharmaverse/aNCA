@@ -4,10 +4,19 @@
 \alias{PKNCA_calculate_nca}
 \title{Calculates results for PKNCA analysis.}
 \usage{
-PKNCA_calculate_nca(pknca_data)
+PKNCA_calculate_nca(pknca_data, blq_rule = NULL)
 }
 \arguments{
 \item{pknca_data}{Data object created using PKNCA::PKNCAdata() function.}
+
+\item{blq_rule}{A list defining the Below Limit of Quantification (BLQ)
+imputation rule using PKNCA format. The list should either contain three elements named:
+\code{first}, \code{middle}, and \code{last} or two elements named \code{before.tmax} and \code{after.tmax}.
+Each element can be a numeric value (substituting the BLQ value), or a string such as
+\code{"drop"} (ignores the value) or \code{"keep"} (keeps the value as 0). Default is NULL,
+which does not specify any BLQ function to use for imputation. It is required if \code{blq}
+is defined in the intervals impute column of the \code{pknca_data} object, as the function
+will be applied to those intervals during the NCA calculation.}
 }
 \value{
 Results object with start and end times for each dose, from first dose

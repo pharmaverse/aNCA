@@ -15,7 +15,7 @@ data_upload_ui <- function(id) {
     div(
       class = "upload-container",
       id = ns("upload_container"),
-      p("Upload your PK dataset."),
+      p("Upload your PK dataset and Settings file (optional)."),
       fileInput(
         ns("data_upload"),
         width = "50%",
@@ -26,7 +26,7 @@ data_upload_ui <- function(id) {
       ),
       uiOutput(ns("file_loading_message"))
     ),
-    reactable_ui(ns("data_display"))
+    card(reactable_ui(ns("data_display")), class = "border-0 shadow-none")
   )
 }
 
@@ -41,6 +41,7 @@ data_upload_server <- function(id) {
 
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
+    settings_override <- reactiveVal(NULL) # Store loaded settings
 
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
@@ -71,30 +72,56 @@ data_upload_server <- function(id) {
           filenames <- input$data_upload$name
         }
 
-        # Iterate over files: Read and classify
+        # Iterate over files: Identify file extension and read either settings or data
         read_results <- purrr::map2(paths, filenames, function(path, name) {
-          tryCatch({
-            # Attempt to read
-            data <- read_pk(path)
-            list(status = "success", data = data, name = name, type = "data")
-          }, error = function(e) {
-            # TODO: @Jana, check if settings file is loaded and then create settings override (719)
-            list(status = "error", message = e$message, name = name)
-          })
+          if (tools::file_ext(path) %in% c("yml", "yaml")) {
+            tryCatch({
+              obj <- read_settings(path)
+              list(status = "success", type = "settings", content = obj, name = name)
+            }, error = function(e) {
+              list(status = "error", msg = conditionMessage(e), name = name)
+            })
+          } else {
+            tryCatch({
+              obj <- read_pk(path)
+              list(status = "success", type = "data", content = obj, name = name)
+            }, error = function(e) {
+              list(status = "error", msg = conditionMessage(e), name = name)
+            })
+          }
         })
 
         # Process results
-        successful_loads <- purrr::keep(read_results, ~ .x$status == "success")
+        successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
-          purrr::map(\(x) paste0(x$name, ": ", x$message))
+          purrr::map(\(x) paste0(x$name, ": ", x$msg))
+
+        # Extract and apply settings if any found
+        found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
+
+        if (length(found_settings) > 1) {
+          # Error: Too many settings files
+          errors <- append(errors, "Error: Multiple settings files detected.
+                           Please upload only one settings file.")
+          # Do not apply any settings if ambiguous
+          settings_override(NULL)
+
+        } else if (length(found_settings) == 1) {
+          # Success: Single settings file
+          latest <- found_settings[[1]]
+          settings_override(latest$content)
+          log_success("Settings successfully loaded from ", latest$name)
+          showNotification(paste("Settings successfully loaded."), type = "message")
+        }
 
         loaded_data <- DUMMY_DATA
 
+        found_data <- purrr::keep(successful_loads, \(x) x$type == "data")
         # Handle Errors
-        if (length(successful_loads) > 0) {
+        if (length(found_data) > 0) {
           tryCatch({
             loaded_data <- successful_loads %>%
-              purrr::map("data") %>%
+              purrr::map("content") %>%
               dplyr::bind_rows() %>%
               #mutate all to character to prevent errors
               dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
@@ -118,15 +145,20 @@ data_upload_server <- function(id) {
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
 
+    observeEvent(raw_data(), {
+      session$userData$raw_data <- raw_data()
+    })
+
     reactable_server(
       "data_display",
       raw_data,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data()))),
       height = "50vh",
-      class = "reactable-table",
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data())))
     )
 
-    raw_data
+    list(
+      adnca_raw = raw_data,
+      settings_override = settings_override
+    )
   })
 }

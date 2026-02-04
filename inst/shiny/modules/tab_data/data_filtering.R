@@ -26,7 +26,7 @@ data_filtering_ui <- function(id) {
         class = "data-filtering-container",
         div(
           class = "filtered-table-container",
-          reactable_ui(ns("filtered_data_display"))
+          card(reactable_ui(ns("filtered_data_display")), class = "border-0 shadow-none")
         ),
         div(
           class = "filters-container",
@@ -112,6 +112,9 @@ data_filtering_server <- function(id, raw_adnca_data) {
         paste0("Submitting the following filters:\n", .) %>%
         log_info()
 
+      # Save the filters object
+      session$userData$applied_filters <- applied_filters
+
       # Filter and return data
       withCallingHandlers({
         apply_filters(raw_adnca_data(), applied_filters)
@@ -130,9 +133,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
     reactable_server(
       "filtered_data_display",
       filtered_data,
-      height = "50vh",
-      defaultPageSize = 25,
-      style = list(fontSize = "0.75em")
+      height = "50vh"
     )
 
     filtered_data

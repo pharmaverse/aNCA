@@ -4,7 +4,7 @@
 \alias{pivot_wider_pknca_results}
 \title{Reshape PKNCA Results}
 \usage{
-pivot_wider_pknca_results(myres)
+pivot_wider_pknca_results(myres, flag_rules = NULL, extra_vars_to_keep = NULL)
 }
 \arguments{
 \item{myres}{The output of PKNCA::pk.nca. It makes some additional assumptions:
@@ -18,11 +18,23 @@ of the dose, relative to the last reference dose.
 \item Temporarily: CDISC denomination of PK parameters related to half-life: "LAMZNPT",
 "LAMZLL", "LAMZ" Used to derive \code{LAMZNPT} and \code{LAMZMTD}.
 }}
+
+\item{flag_rules}{A named list of flagging rules to be applied to the results. Each rule
+should be a list with two elements: \code{is.checked} (logical) indicating whether the rule
+should be applied, and \code{threshold} (numeric) specifying the threshold value for flagging.
+The name of each rule should correspond to a parameter in the results data.frame as a PPTESTCD
+(e.g., "R2ADJ", "AUCPEO", "AUCPEP", "LAMZSPN").}
+
+\item{extra_vars_to_keep}{Optional character vector of variable names to join from the
+concentration data to the output. Default is NULL.}
 }
 \value{
 A data frame which provides an easy overview on the results from the NCA
 in each profile/subject and how it was computed lambda (half life) and the results
-of the NCA parameters (cmax, AUC, AUClast)
+of the NCA parameters (cmax, AUC, AUClast), including new columns \code{Exclude} (a
+derivation from pknca$exclude), \code{Missing}(indicating if flag parameters are missing
+from PKNCA calculation), and \code{flagged} (indicating if the row
+is ACCEPTED, FLAGGED or MISSING based on the flagging rules).
 }
 \description{
 This function reshapes the structure of the results produced by the main function
