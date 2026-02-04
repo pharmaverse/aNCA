@@ -5,7 +5,6 @@
 #' @param slopes Data frame of slope rules (TYPE, RANGE, REASON, group columns)
 #' @return Modified data object with updated flags
 update_pknca_with_rules <- function(data, slopes) {
-  browser()
   slope_groups <- intersect(group_vars(data), names(slopes))
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
@@ -18,6 +17,7 @@ update_pknca_with_rules <- function(data, slopes) {
   # Make sure when rows are removed no NA value is left
   slopes <- na.omit(slopes)
   #####################################################
+  
   for (i in seq_len(nrow(slopes))) {
     # Determine the time range for the points adjusted
     range <- strsplit(as.character(slopes$RANGE[i]), ":")[[1]] %>%

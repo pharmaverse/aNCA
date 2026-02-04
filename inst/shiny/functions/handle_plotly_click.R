@@ -62,7 +62,6 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   )
 }
 
-
 #' Extract Click Info for Slope Selection
 #'
 #' Helper for handle_plotly_click. Given plotly click data and PKNCA data, returns a list with:
