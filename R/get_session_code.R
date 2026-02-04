@@ -271,12 +271,14 @@ get_settings_code <- function(
 #'
 #' @param session The Shiny session object containing user data (typically from a running app).
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R").
+#' @param template_path Path to the R script template file. By default, uses the one
+#' installed from your aNCA package version.
 #' @return Invisibly returns the output_path.
 #' @keywords Internal
 #' @noRd
-get_session_code <- function(session, output_path) {
+get_session_code <- function(session, output_path, template_path) {
   get_code(
-    template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+    template_path = template_path,
     setts_obj = list(session$userData),
     output_path = output_path
   )

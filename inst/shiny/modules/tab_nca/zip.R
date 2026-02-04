@@ -196,9 +196,9 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               if ("r_script" %in% input$res_tree) {
                 script_tmpdir <- file.path(output_tmpdir, "code")
                 dir.create(script_tmpdir, recursive = TRUE)
-                script_template_path <- "www/templates/script_template.R"
+                script_template_path <- "shiny/www/templates/script_template.R"
                 get_session_code(
-                  template_path = script_template_path,
+                  template_path = system.file(script_template_path, package = "aNCA"),
                   session = session,
                   output_path = paste0(script_tmpdir, "/session_code.R")
                 )
