@@ -10,8 +10,13 @@
 get_code <- function(
   setts_obj,
   output_path,
-  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+  template_path = NULL
 ) {
+  # If no defined template, uses the default
+  if (is.null(template_path)) {
+    template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+  }
+
   # Helper to get value from yaml_setts by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
@@ -241,7 +246,7 @@ get_settings_code <- function(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+  template_path = NULL,
   # TODO: mapping & ratio_table should be included in the settings file as well
   # so they keep working as expected also from the settings file
   mapping = default_mapping,
@@ -276,7 +281,7 @@ get_settings_code <- function(
 #' @return Invisibly returns the output_path.
 #' @keywords Internal
 #' @noRd
-get_session_code <- function(session, output_path, template_path) {
+get_session_code <- function(session, output_path, template_path = NULL) {
   get_code(
     template_path = template_path,
     setts_obj = list(session$userData),
