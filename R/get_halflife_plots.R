@@ -218,7 +218,7 @@ get_halflife_plots_single <- function(
 ) {
   if (is.null(text)) {
     text <- paste0(
-      "Data Point: ", seq_len(nrow(plot_data)), "\n(",
+      "Data Row: ", plot_data[["ROWID"]], "\n(",
       plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
     )
   }
