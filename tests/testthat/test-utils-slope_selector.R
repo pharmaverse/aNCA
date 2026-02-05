@@ -11,16 +11,16 @@ EXISTING_FIXTURE <- data.frame(
 describe("update_pknca_with_rules", {
   old_data <- FIXTURE_PKNCA_DATA
   group1 <- old_data$intervals %>%
-    select(any_of(c(group_vars(old_data), "start", "end"))) %>%
-    .[1, ]
+    select(any_of(c(group_vars(old_data)))) %>%
+    .[1, , drop = FALSE]
 
   it("applies selection and exclusion rules to data", {
     slopes_incl <- cbind(
-      data.frame(TYPE = "Selection", ID = 1, RANGE = "2:4", REASON = "because I want to"),
+      data.frame(TYPE = "Selection", USUBJID = 1, RANGE = "2:4", REASON = "because I want to"),
       group1
     )
     slopes_excl <- cbind(
-      data.frame(TYPE = "Exclusion", ID = 1, RANGE = "2:4", REASON = "always good reasons"),
+      data.frame(TYPE = "Exclusion", USUBJID = 1, RANGE = "2:4", REASON = "always good reasons"),
       group1
     )
 
@@ -29,8 +29,8 @@ describe("update_pknca_with_rules", {
 
     old_have_points_na <- all(is.na(old_data$conc$data %>%
                                       filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
-                                      pull(include_half.life))
-    )
+                                      pull(include_half.life)))
+
     new_have_points_incl <- all(new_with_incl$conc$data %>%
                                   filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
                                   pull(include_half.life))
