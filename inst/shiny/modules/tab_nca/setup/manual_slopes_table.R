@@ -80,7 +80,14 @@ manual_slopes_table_server <- function(
         data.frame(
           TYPE = "Exclusion",
           RANGE = paste0(
-            inner_join(first_group, pknca_data()$conc$data)[[time_col]][2]
+            inner_join(
+              first_group,
+              pknca_data()$conc$data,
+              by = intersect(
+                names(first_group),
+                names(pknca_data()$conc$data)
+              )
+            )[[time_col]][2]
           ),
           REASON = ""
         )
