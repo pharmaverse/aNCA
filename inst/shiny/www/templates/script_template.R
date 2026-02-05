@@ -12,9 +12,9 @@ data_path <- "../data/data.rds"
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data ########################################
-mapping <- yaml_setts$mapping
+mapping <- yaml_settings$mapping
 names(mapping) <- gsub("select_", "", names(mapping))
-applied_filters <- yaml_setts$applied_filters
+applied_filters <- yaml_settings$applied_filters
 
 preprocessed_adnca <- adnca_data %>%
 
@@ -40,11 +40,11 @@ preprocessed_adnca <- adnca_data %>%
   adjust_class_and_length(metadata_nca_variables)
 
 ## Setup NCA settings in the PKNCA object ########################
-auc_data <- yaml_setts$settings$partial_aucs
-units_table <- yaml_setts$final_units
-parameters_selected_per_study <- yaml_setts$settings$parameters$selections
-study_types_df <- yaml_setts$settings$parameters$types_df
-extra_vars_to_keep <-  yaml_setts$extra_vars_to_keep
+auc_data <- yaml_settings$settings$partial_aucs
+units_table <- yaml_settings$final_units
+parameters_selected_per_study <- yaml_settings$settings$parameters$selections
+study_types_df <- yaml_settings$settings$parameters$types_df
+extra_vars_to_keep <-  yaml_settings$extra_vars_to_keep
 
 pknca_obj <- preprocessed_adnca %>%
 
@@ -55,12 +55,12 @@ pknca_obj <- preprocessed_adnca %>%
 
   # Setup basic settings
   PKNCA_update_data_object(
-    method = yaml_setts$settings$method,
-    selected_analytes = yaml_setts$settings$analyte,
-    selected_profile = yaml_setts$settings$profile,
-    selected_pcspec = yaml_setts$settings$pcspec,
-    should_impute_c0 = yaml_setts$settings$data_imputation$impute_c0,
-    exclusion_list = yaml_setts$settings$general_exclusions,
+    method = yaml_settings$settings$method,
+    selected_analytes = yaml_settings$settings$analyte,
+    selected_profile = yaml_settings$settings$profile,
+    selected_pcspec = yaml_settings$settings$pcspec,
+    should_impute_c0 = yaml_settings$settings$data_imputation$impute_c0,
+    exclusion_list = yaml_settings$settings$general_exclusions,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE"))
   ) %>%
 
@@ -68,7 +68,7 @@ pknca_obj <- preprocessed_adnca %>%
     auc_data = auc_data,
     parameter_selections = parameters_selected_per_study,
     study_types_df =  study_types_df,
-    impute = yaml_setts$settings$data_imputation$impute_c0
+    impute = yaml_settings$settings$data_imputation$impute_c0
   ) %>%
 
   # Define the desired units for the parameters (PPSTRESU)
@@ -82,13 +82,13 @@ pknca_obj <- preprocessed_adnca %>%
 
 ## Run NCA calculations ########################################
 slope_rules <- list(
-  manual_slopes = yaml_setts$slope_rules$manual_slopes,
-  profiles_per_subject = yaml_setts$slope_rules$profiles_per_subject,
-  slopes_groups = yaml_setts$slope_rules$slopes_groups
+  manual_slopes = yaml_settings$slope_rules$manual_slopes,
+  profiles_per_subject = yaml_settings$slope_rules$profiles_per_subject,
+  slopes_groups = yaml_settings$slope_rules$slopes_groups
 )
-flag_rules <- yaml_setts$settings$flags
-ratio_table <- yaml_setts$ratio_table
-blq_rule <- yaml_setts$settings$data_imputation$blq_imputation_rule
+flag_rules <- yaml_settings$settings$flags
+ratio_table <- yaml_settings$ratio_table
+blq_rule <- yaml_settings$settings$data_imputation$blq_imputation_rule
 
 pknca_res <- pknca_obj %>%
 
@@ -106,7 +106,7 @@ pknca_res <- pknca_obj %>%
   ) %>%
 
   # Add bioavailability results if requested
-  add_f_to_pknca_results(yaml_setts$settings$bioavailability) %>%
+  add_f_to_pknca_results(yaml_settings$settings$bioavailability) %>%
 
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
