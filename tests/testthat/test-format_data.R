@@ -120,6 +120,31 @@ describe("format_pkncaconc_data", {
     )
   })
 
+  # jr 
+  it("handles AEFRLT column correctly, if present", {
+    
+    ADNCA <- tibble::add_column(ADNCA, AEFRLT = rep(seq(0, 9), 2))
+    df_conc <- format_pkncaconc_data(ADNCA,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DOSETRT", "PARAM"),
+                                     time_end_column = "AEFRLT",
+                                     time_column = "AFRLT",
+                                     rrlt_column = "ARRLT")
+
+    expect_s3_class(df_conc, "data.frame")
+    expect_true(!is.null(df_conc$AEFRLT))
+    
+    expect_no_error(
+      PKNCA::PKNCAconc(
+        df_conc,
+        formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+        exclude_half.life = "exclude_half.life",
+        time.nominal = "NFRLT"
+      )
+    )
+ })
+  
+  
   it("processes multiple analytes correctly", {
     multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Analyte2"), each = 10))
     df_conc <- format_pkncaconc_data(multi_analyte_adnca,
