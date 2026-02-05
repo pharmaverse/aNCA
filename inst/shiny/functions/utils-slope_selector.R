@@ -166,6 +166,7 @@ parse_plot_names_to_df <- function(named_list) {
 #' @export
 check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   slope_groups <- setdiff(names(new), c("TYPE", "RANGE", "REASON"))
+  existing <- filter(existing, !is.na(TYPE))
 
   # Helper to match group columns between existing and new
   is_matching_cols <- function(cols_to_match, existing, new) {
@@ -176,7 +177,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
       })
     )
   }
-
+  browser()
   if (new$TYPE == "Exclusion") {
     # If is the same exclusion rule as an existing, remove the existing
     rows_with_same_cols <- is_matching_cols(c(slope_groups, "TYPE", "RANGE"), existing, new)
