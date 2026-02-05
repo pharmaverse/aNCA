@@ -177,7 +177,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
       })
     )
   }
-  browser()
+
   if (new$TYPE == "Exclusion") {
     # If is the same exclusion rule as an existing, remove the existing
     rows_with_same_cols <- is_matching_cols(c(slope_groups, "TYPE", "RANGE"), existing, new)
