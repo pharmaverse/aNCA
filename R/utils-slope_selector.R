@@ -25,9 +25,10 @@ update_pknca_with_rules <- function(data, slopes) {
       range()
     # Build the condition dynamically for group columns and time range
     pnt_idx <- which(
-      .are_points_in_groups(slopes, data) &
+      .are_points_in_groups(slopes[i, ], data) &
         .are_points_in_range(slopes$RANGE[i], data$conc$data[[time_col]])
     )
+
     if (slopes$TYPE[i] == "Selection") {
       data$conc$data[[include_hl_col]][pnt_idx] <- TRUE
     } else if (slopes$TYPE[i] == "Exclusion") {
