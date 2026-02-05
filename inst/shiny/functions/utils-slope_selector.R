@@ -9,8 +9,9 @@
 #' or selected intervals have changed. Used to decide when to update plots.
 #' @param old Previous PKNCA data object
 #' @param new New PKNCA data object
+#' @param reason_col Optional column name for reasons (default: "REASON") to ignore in data comparison
 #' @return List with logicals: `in_data`, `in_hl_adj`, `in_selected_intervals`
-detect_pknca_data_changes <- function(old, new) {
+detect_pknca_data_changes <- function(old, new, reason_col = "REASON") {
   excl_hl_col <- new$conc$columns$exclude_half.life
   incl_hl_col <- new$conc$columns$include_half.life
   list(
@@ -20,11 +21,11 @@ detect_pknca_data_changes <- function(old, new) {
       !identical(
         dplyr::select(
           old$conc$data,
-          -any_of(c(excl_hl_col, incl_hl_col))
+          -any_of(c(excl_hl_col, incl_hl_col, reason_col))
         ),
         dplyr::select(
           new$conc$data,
-          -any_of(c(excl_hl_col, incl_hl_col))
+          -any_of(c(excl_hl_col, incl_hl_col, reason_col))
         )
       )
     },

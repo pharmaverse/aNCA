@@ -121,7 +121,8 @@ slope_selector_server <- function( # nolint
         unique()
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
-        new = new_pknca_data
+        new = new_pknca_data,
+        reason_col = "REASON"
       )
 
       if (changes$in_data) {
