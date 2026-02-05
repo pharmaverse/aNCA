@@ -186,15 +186,21 @@ describe("get_settings_code: ", {
   setts_file <- testthat::test_path("data/test-settings.yaml")
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   output_file <- tempfile(fileext = ".R")
+  placeholder <- "yaml_settings"
 
-  it("writes a script R file output", {
-    get_settings_code(
-      settings_file_path = setts_file,
-      data_path = data_file,
-      output_path = output_file
-    )
-    # Check if the file was created
+  get_settings_code(
+    settings_file_path = setts_file,
+    data_path = data_file,
+    output_path = output_file
+  )
+
+  it("writes a script R file output and substitutes placeholders", {
     expect_true(file.exists(output_file))
+  })
+
+  it("substitutes placeholders in the output file", {
+    file_content <- readLines(output_file)
+    expect_false(any(grepl(placeholder, file_content)))
   })
 })
 
@@ -202,6 +208,7 @@ describe("get_session_code: ", {
   setts_file <- testthat::test_path("data/test-settings.yaml")
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   output_file <- tempfile(fileext = ".R")
+  placeholder <- "yaml_settings"
 
   default_mapping <- list(
     select_STUDYID = "STUDYID",
@@ -233,19 +240,25 @@ describe("get_session_code: ", {
   setts <- read_settings(setts_file)
   session <- list(
     userData = list(
-      yaml_setts = setts,
+      yaml_settings = setts,
       data_path = data_file,
       mapping = default_mapping,
       ratio_table = data.frame()
     )
   )
 
+  # Call the function and generate the output file
+  get_session_code(
+    session = session$userData,
+    output_path = output_file
+  )
+
   it("writes a script R file output", {
-    get_session_code(
-      session = session,
-      output_path = output_file
-    )
-    # Check if the file was created
     expect_true(file.exists(output_file))
+  })
+
+  it("substitutes placeholders in the output file", {
+    file_content <- readLines(output_file)
+    expect_false(any(grepl(placeholder, file_content)))
   })
 })
