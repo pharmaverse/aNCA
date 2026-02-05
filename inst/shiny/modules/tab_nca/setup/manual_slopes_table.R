@@ -85,8 +85,10 @@ manual_slopes_table_server <- function(
           REASON = ""
         )
       )
+
+      old_rows <- filter(manual_slopes(), !is.na(TYPE))
       updated_data <- as.data.frame(
-        rbind(manual_slopes(), new_row),
+        rbind(old_rows, new_row),
         stringsAsFactors = FALSE
       )
       manual_slopes(updated_data)
