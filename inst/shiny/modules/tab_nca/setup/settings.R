@@ -231,32 +231,20 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       profile_choices <- sort(unique(filtered_data$ATPTREF))
       pcspec_choices  <- unique(filtered_data$PCSPEC)
 
-      # PROFILE
-      current_profile <- isolate(input$select_profile)
-      # SPECIMEN
-      current_pcspec <- isolate(input$select_pcspec)
+      target_profile <- .get_target_selection(
+        current_val = isolate(input$select_profile),
+        available_choices = profile_choices,
+        override_val = settings$profile
+      )
 
-      if (!is.null(settings)) {
-        if (all(settings$profile %in% profile_choices)) {
-          target_profile <- settings$profile
+      target_pcspec <- .get_target_selection(
+        current_val = isolate(input$select_pcspec),
+        available_choices = pcspec_choices,
+        override_val = settings$pcspec,
+        default_logic = function(choices) {
+          grep("^plasma$|^serum$", choices, value = TRUE, ignore.case = TRUE)
         }
-        if (all(settings$pcspec %in% pcspec_choices)) {
-          target_pcspec <- settings$pcspec
-        }
-      } else {
-        if (length(intersect(current_profile, profile_choices)) > 0) {
-          target_profile <- current_profile # Keep current if valid
-        } else {
-          target_profile <- profile_choices[1]
-        }
-        if (length(intersect(current_pcspec, pcspec_choices)) > 0) {
-          target_pcspec <- current_pcspec # Keep current if valid
-        } else {
-          # Smart Default (Plasma/Serum)
-          plasma_serum <- grep("^plasma$|^serum$", pcspec_choices, value = TRUE, ignore.case = TRUE)
-          target_pcspec <- if (length(plasma_serum) > 0) plasma_serum else pcspec_choices
-        }
-      }
+      )
 
       updatePickerInput(
         session,
@@ -454,4 +442,34 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   updateCheckboxInput(session = session, inputId = rule_id, value = checked)
   if (checked)
     updateNumericInput(session = session, inputId = threshold_id, value = value)
+}
+
+#'Helper to get target selection
+#' @param current_val Current selected value(s).
+#' @param available_choices Available choices to select from.
+#' @param override_val Override value(s) to use if valid.
+#' @param default_logic Optional function to determine default selection from available choices.
+.get_target_selection <- function(
+  current_val,
+  available_choices,
+  override_val,
+  default_logic = NULL
+) {
+  # Check Settings Override
+  if (!is.null(override_val) && all(override_val %in% available_choices)) {
+    return(override_val)
+  }
+
+  # Maintain Selection
+  if (length(intersect(current_val, available_choices)) > 0) {
+    return(current_val)
+  }
+
+  # Fallback to Default Logic or First Choice
+  if (!is.null(default_logic)) {
+    fallback <- default_logic(available_choices)
+    if (length(fallback) > 0) return(fallback)
+  }
+
+  available_choices[1]
 }

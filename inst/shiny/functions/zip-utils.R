@@ -192,7 +192,7 @@ get_dose_esc_results <- function(
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
       # Group by cols from info vars that are in the data
       group_by(across(any_of(info_vars))) %>%
-      summarise(n = n())
+      summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop")
 
     # Create character string of Group
     # Where group_by_vars are concatenated with ": " between label and value
@@ -300,4 +300,156 @@ get_tree_leaf_ids <- function(tree) {
     }
   }
   ids
+}
+
+#' Prepare export files
+#'
+#' @param target_dir Path to the directory where files will be written.
+#' @param res_nca NCA results object.
+#' @param settings Settings object.
+#' @param grouping_vars Reactive or list of grouping variables.
+#' @param input Shiny input object from the zip module.
+#' @param session Shiny session object.
+prepare_export_files <- function(target_dir,
+                                 res_nca,
+                                 settings,
+                                 grouping_vars,
+                                 input,
+                                 session,
+                                 progress) {
+
+  # Save Standard Outputs (Tables/Plots)
+  progress$set(message = "Creating exports...",
+               detail = "Saving tables and images...")
+  save_output(
+    output = session$userData$results,
+    output_path = target_dir,
+    ggplot_formats = input$plot_formats,
+    table_formats = input$table_formats,
+    obj_names = input$res_tree
+  )
+
+  progress$inc(0.2)
+
+  if ("results_slides" %in% input$res_tree) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving slideshow...")
+    .export_slides(target_dir, res_nca, grouping_vars, input, session)
+  }
+  progress$inc(0.4)
+
+  if ("settings_file" %in% input$res_tree) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving settings...")
+    .export_settings(target_dir, session)
+  }
+  progress$inc(0.6)
+
+  data_tmpdir <- file.path(target_dir, "data")
+  dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
+  saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
+
+  if ("r_script" %in% input$res_tree) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving R script...")
+    .export_script(target_dir, session)
+  }
+  progress$inc(0.8)
+
+  .clean_export_dir(target_dir, input)
+}
+
+# Helpers to export different output types
+#' Export slides helper
+#' @param target_dir Target directory to save the slides.
+#' @param res_nca NCA results object.
+#' @param grouping_vars Grouping variables for dose escalation results.
+#' @param input Shiny input object.
+#' @param session Shiny session object.
+#' @keywords internal
+#' @noRd
+.export_slides <- function(target_dir, res_nca, grouping_vars, input, session) {
+  res_dose_slides <- get_dose_esc_results(
+    o_nca = res_nca,
+    group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
+    facet_vars = "DOSEA",
+    statistics = "Mean",
+    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+    info_vars = grouping_vars
+  )
+
+  path <- file.path(target_dir, "presentations")
+  dir.create(path, showWarnings = FALSE)
+
+  if ("qmd" %in% input$slide_formats) {
+    create_qmd_dose_slides(
+      res_dose_slides,
+      file.path(path, "results_slides.qmd"),
+      paste0("NCA Results\n", session$userData$project_name()),
+      TRUE
+    )
+  }
+  if ("pptx" %in% input$slide_formats) {
+    create_pptx_dose_slides(
+      res_dose_slides,
+      file.path(path, "results_slides.pptx"),
+      paste0("NCA Results\n", session$userData$project_name()),
+      "www/templates/template.pptx"
+    )
+  }
+}
+
+#' Helper to export settings file
+#' @param target_dir Target directory to save the settings
+#' @param session Shiny session object
+#' @keywords internal
+#' @noRd
+.export_settings <- function(target_dir, session) {
+  path <- file.path(target_dir, "settings")
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  settings_to_save <- list(
+    settings = session$userData$settings(),
+    slope_rules = session$userData$slope_rules()
+  )
+  yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
+}
+
+#' Helper to export R script
+#' @param target_dir Target directory to save the R script
+#' @param session Shiny session object
+#' @keywords internal
+#' @noRd
+.export_script <- function(target_dir, session) {
+  path <- file.path(target_dir, "code")
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  get_session_code(
+    "www/templates/script_template.R",
+    session,
+    file.path(path, "session_code.R")
+  )
+}
+
+#' Clean Export Directory
+#' @param target_dir Target directory to clean
+#' @param input Shiny input object
+#' @keywords internal
+#' @noRd
+.clean_export_dir <- function(target_dir, input) {
+  all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
+
+  exts <- c(
+    if (length(input$table_formats) > 0) paste0("\\.", input$table_formats),
+    if (length(input$plot_formats) > 0) paste0("\\.", input$plot_formats),
+    if (length(input$slide_formats) > 0) paste0("results_slides\\.", input$slide_formats),
+    "session_code\\.R", "settings\\.yaml", "data\\.rds"
+  )
+
+  pattern <- paste0("(", paste0(exts, collapse = "|"), ")$")
+  file.remove(all_files[!grepl(pattern, all_files, ignore.case = TRUE)])
+
+  # Recursive directory cleanup
+  dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
+  for (d in dirs[rev(order(nchar(dirs)))]) {
+    if (length(list.files(d, all.files = TRUE)) == 0 && d != target_dir) unlink(d, recursive = TRUE)
+  }
 }
