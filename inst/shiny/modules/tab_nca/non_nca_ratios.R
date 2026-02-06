@@ -35,9 +35,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
     card(
       height = "60vh",
       card_header(paste0(title, " Results")),
-      card_body(
-        reactable_ui(ns("results"))
-      )
+      card(reactable_ui(ns("results")), class = "border-0 shadow-none")
     )
   )
 }
@@ -190,12 +188,10 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
     reactable_server(
       "results",
       full_output,
-      download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0("Ratios_result_", Sys.Date()),
       defaultPageSize = 10,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 50, nrow(full_output()))),
-      style = list(fontSize = "0.75em")
+      download_buttons = c("csv", "xlsx"),
+      pageSizeOptions = reactive(c(10, 25, 50, nrow(full_output()))),
+      file_name = function() paste0("Ratios_result_", Sys.Date())
     )
 
     # Save the results in the output folder

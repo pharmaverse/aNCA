@@ -103,7 +103,6 @@ describe("read_settings", {
   path <- testthat::test_path("data/test-settings.yaml")
 
   it("successfully reads a valid settings YAML", {
-    skip_if_not(file.exists(path))
 
     res <- read_settings(path, "test-settings.yaml")
 
@@ -121,8 +120,12 @@ describe("read_settings", {
   })
 
   it("converts settings elements into data frames", {
+    # Partial AUC definitions
     res <- read_settings(path)
     expect_s3_class(res$settings$partial_aucs, "data.frame")
+
+    # Parameter selections by study type
+    expect_s3_class(res$settings$parameters$types_df, "data.frame")
   })
 
   it("handles empty or null units/general_exclusions gracefully", {

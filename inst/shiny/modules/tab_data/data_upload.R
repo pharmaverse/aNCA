@@ -26,7 +26,7 @@ data_upload_ui <- function(id) {
       ),
       uiOutput(ns("file_loading_message"))
     ),
-    reactable_ui(ns("data_display"))
+    card(reactable_ui(ns("data_display")), class = "border-0 shadow-none")
   )
 }
 
@@ -120,7 +120,7 @@ data_upload_server <- function(id) {
         # Handle Errors
         if (length(found_data) > 0) {
           tryCatch({
-            loaded_data <- successful_loads %>%
+            loaded_data <- found_data %>%
               purrr::map("content") %>%
               dplyr::bind_rows() %>%
               #mutate all to character to prevent errors
@@ -152,10 +152,8 @@ data_upload_server <- function(id) {
     reactable_server(
       "data_display",
       raw_data,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data()))),
       height = "50vh",
-      class = "reactable-table",
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data())))
     )
 
     list(

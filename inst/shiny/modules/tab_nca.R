@@ -43,7 +43,8 @@ tab_nca_ui <- function(id) {
         nav_panel(
           "Slopes Information",
           navset_pill(
-            nav_panel("Slopes Results", reactable_ui(ns("slope_results"))),
+            nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
+                                             class = "border-0 shadow-none")),
             nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
           )
         ),
@@ -98,7 +99,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     session$userData$ratio_table <- ratio_table
     session$userData$slope_rules <- slope_rules
 
-    reactable_server("manual_slopes", slope_rules$manual_slopes)
+    reactable_server("manual_slopes",
+                     reactive(slope_rules()$manual_slopes),
+                     columns = NULL)
 
     # List all irrelevant warnings to suppres in the NCA calculation
     irrelevant_regex_warnings <- c(
@@ -141,9 +144,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
             filter_slopes(
               slope_rules()$manual_slopes,
               slope_rules()$profiles_per_subject,
-              slope_rules()$slopes_groups,
-              check_reasons = TRUE
+              slope_rules()$slopes_groups
             ) %>%
+            # Check if there are exclusions that contains a filled reason
+            check_valid_pknca_data() %>%
             # Perform PKNCA parameter calculations
             PKNCA_calculate_nca(
               blq_rule = settings()$data_imputation$blq_imputation_rule
@@ -217,12 +221,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     reactable_server(
       "slope_results",
       pivoted_slopes,
-      download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0("NCA_Slope_Results_", Sys.Date()),
       defaultPageSize = 10,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 50, nrow(pivoted_slopes()))),
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, nrow(pivoted_slopes()))),
+      download_buttons = c("csv", "xlsx"),
+      file_name = function() paste0("NCA_Slope_Results_", Sys.Date())
     )
 
     #' Prepares and displays the pivoted NCA results
@@ -268,7 +270,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 
   } else if (grepl("^No reason provided", msg)) {
     # Handle no reason provided erros from the calculation function.
-    msg <- paste(msg, "<br><br>Please provide the reason in Setup > Slope Selector tab.")
+    msg <- msg
 
   } else {
     # Handle unknown error
