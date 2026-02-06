@@ -90,7 +90,6 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
     mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
-    filter(ARRLT >= 0) %>% # filter out negative ARRLT values
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
     ungroup() %>%
@@ -118,6 +117,8 @@ format_pkncadata_intervals <- function(pknca_conc,
       )
     }) %>%
     ungroup() %>%
+    # Remove scientifically invalid intervals where start > end
+    filter(start <= end) %>%
     select(any_of(c("start", "end", conc_groups,
                     "ATPTREF", "DOSNOA", "VOLUME", keep_interval_cols))) %>%
 
