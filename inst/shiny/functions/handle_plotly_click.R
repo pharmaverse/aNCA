@@ -9,7 +9,7 @@
 #' @param manual_slopes A reactiveVal storing the current manual slopes table (data.frame).
 #' @param click_data The new plotly click event data (list with customdata).
 #' @param pknca_data The current PKNCA data object (for context and group info).
-#' @return List with updated last_click_data and manual_slopes.
+#' @returns List with updated last_click_data and manual_slopes.
 #'
 #' @details
 #' - If the user clicks the same point twice, an exclusion rule is added for that point.
