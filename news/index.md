@@ -48,6 +48,9 @@
 - Settings file has been converted from rds to yaml, allowing better
   readability and editing for users.
   ([\#901](https://github.com/pharmaverse/aNCA/issues/901))
+- WTBL and WTBLU columns added to the data mapping, for optional
+  conversion of dose to adjust to body weight for excretion calculations
+  ([\#959](https://github.com/pharmaverse/aNCA/issues/959))
 
 ### Bugs fixed
 
