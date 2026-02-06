@@ -93,8 +93,8 @@ excretion_server <- function(id, input_pknca_data) {
       if (input$adjust_bw) {
         # Check if weight columns exist
         if (!(weight_col %in% names(data$dose$data)) || !(weightu %in% names(data$dose$data))) {
-          showNotification("Please ensure WTBL and WTBLU columns exist in the dose data.
-                           No adjustments can be made.", type = "warning")
+          showNotification(glue::glue("Please ensure {weight_col} and {weightu} columns exist in the dose data.
+                          No adjustments can be made."), type = "warning")
           return(NULL)
         }
 
