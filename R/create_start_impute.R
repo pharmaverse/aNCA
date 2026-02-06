@@ -45,7 +45,7 @@ create_start_impute <- function(pknca_data) {
     merge(pknca_data$intervals) %>%
     filter(!!sym(time_column) >= start, !!sym(time_column) <= end) %>%
     unique()
-
+browser()
   # Process imputation strategy based on each interval
   pknca_data$intervals <- mydata_with_int %>%
     group_by(across(any_of(c(group_columns, "DOSNOA", "start", "end", "type_interval")))) %>%
