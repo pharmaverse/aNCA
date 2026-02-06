@@ -111,12 +111,13 @@ describe("read_settings", {
 
   })
 
-  it("converts slope_rules elements into data frames", {
+  ##################################################
+  # TODO: Once the new implementation is integrated,
+  # change the tests for slope rules
+  ##################################################
+  it("converts slope_rules to a data.frame", {
     res <- read_settings(path)
-    expect_s3_class(res$slope_rules$manual_slopes, "data.frame")
-    expect_s3_class(res$slope_rules$profiles_per_subject, "data.frame")
-    # Check dimensions for profiles_per_subject
-    expect_equal(nrow(res$slope_rules$profiles_per_subject), 23)
+    expect_s3_class(res$slope_rules, "data.frame")
   })
 
   it("converts settings elements into data frames", {
