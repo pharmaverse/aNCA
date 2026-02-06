@@ -192,7 +192,7 @@ get_dose_esc_results <- function(
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
       # Group by cols from info vars that are in the data
       group_by(across(any_of(info_vars))) %>%
-      summarise(n = n())
+      summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop")
 
     # Create character string of Group
     # Where group_by_vars are concatenated with ": " between label and value
