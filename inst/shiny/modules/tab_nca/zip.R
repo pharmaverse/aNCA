@@ -134,23 +134,6 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               progress = progress
             )
 
-              # Create a settings folder
-              if ("settings_file" %in% input$res_tree) {
-                setts_tmpdir <- file.path(output_tmpdir, "settings")
-                dir.create(setts_tmpdir, recursive = TRUE)
-                settings_list <- session$userData$settings()
-
-                if (!is.null(settings_list$units)) {
-                  settings_list$units <- settings_list$units %>%
-                    dplyr::filter(!default) %>%
-                    dplyr::select(-default)
-                }
-
-                settings_to_save <- list(
-                  settings = settings_list,
-                  slope_rules = session$userData$slope_rules()
-                )
-                yaml::write_yaml(settings_to_save, paste0(setts_tmpdir, "/settings.yaml"))
             files <- list.files(output_tmpdir, recursive = TRUE)
 
             wd <- getwd()
