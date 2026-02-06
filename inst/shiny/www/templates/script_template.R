@@ -45,6 +45,7 @@ units_table <- session$userData$final_units
 parameters_selected_per_study <- session$userData$settings$parameters$selections
 study_types_df <- session$userData$settings$parameters$types_df
 extra_vars_to_keep <-  session$userData$extra_vars_to_keep
+slope_rules <- session$userData$slope_rules
 
 pknca_obj <- preprocessed_adnca %>%
 
@@ -61,6 +62,7 @@ pknca_obj <- preprocessed_adnca %>%
     selected_pcspec = session$userData$settings$pcspec,
     should_impute_c0 = session$userData$settings$data_imputation$impute_c0,
     exclusion_list = session$userData$settings$general_exclusions,
+    hl_adj_rules = slope_rules,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE"))
   ) %>%
 
@@ -81,24 +83,11 @@ pknca_obj <- preprocessed_adnca %>%
   }
 
 ## Run NCA calculations ########################################
-slope_rules <- list(
-  manual_slopes = session$userData$slope_rules$manual_slopes,
-  profiles_per_subject = session$userData$slope_rules$profiles_per_subject,
-  slopes_groups = session$userData$slope_rules$slopes_groups
-)
 flag_rules <- session$userData$settings$flags
 ratio_table <- session$userData$ratio_table
 blq_rule <- session$userData$settings$data_imputation$blq_imputation_rule
 
 pknca_res <- pknca_obj %>%
-
-  # Apply half-life adjustments
-  filter_slopes(
-    slope_rules$manual_slopes,
-    slope_rules$profiles_per_subject,
-    slope_rules$slopes_groups,
-    check_reasons = TRUE
-  ) %>%
 
   # Run pk.nca and join subject and dose information to the results
   # Consider the BLQ imputation rule before calculations (if any)
