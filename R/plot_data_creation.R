@@ -44,6 +44,15 @@ exploration_individualplot <- function(
     use_time_since_last_dose = use_time_since_last_dose
   )
 
+  # If no tooltip variables defined use some default ones
+  if (is.null(tooltip_vars)) {
+    tooltip_vars <- c(
+      pknca_data$conc$columns$time,
+      pknca_data$conc$columns$concentration,
+      pknca_data$conc$columns$subject
+    )
+  }
+
   g_lineplot(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
@@ -87,10 +96,11 @@ exploration_meanplot <- function(
     sd_min = FALSE,
     sd_max = FALSE,
     ci = FALSE,
-    tooltip_vars = c(group_vars(pknca_data$dose), "Mean"),
+    tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE) {
+
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
@@ -100,9 +110,21 @@ exploration_meanplot <- function(
     use_time_since_last_dose = use_time_since_last_dose
   )
 
+  # The time variable will always be the first one
+  x_var <- names(mean_data)[1]
+
+  # If no tooltip variable specified, use the default ones
+  if (is.null(tooltip_vars)) {
+    tooltip_vars <- c(
+      "Mean",
+      x_var,
+      group_vars(pknca_data$dose)
+    )
+  }
+
   plot <- g_lineplot(
     data = mean_data,
-    x_var = "TIME_NOMINAL",
+    x_var = x_var,
     y_var = "Mean",
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
@@ -129,7 +151,7 @@ exploration_meanplot <- function(
     sd_max = sd_max,
     ci = ci,
     color_by = color_by,
-    x_var = "TIME_NOMINAL",
+    x_var = x_var,
     y_var = "Mean"
   )
 }
@@ -233,7 +255,7 @@ process_data_mean <- function(pknca_data,
   y_var <- pknca_data$conc$columns$concentration
   dose_group_cols <- setdiff(group_vars(pknca_data$dose), pknca_data$conc$columns$subject)
   grouping_cols <- unique(
-    c(extra_grouping_vars, "TIME_NOMINAL", x_var_unit, y_var_unit, dose_group_cols)
+    c(extra_grouping_vars, x_var, x_var_unit, y_var_unit, dose_group_cols)
   )
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
@@ -248,7 +270,7 @@ process_data_mean <- function(pknca_data,
   }
 
   # Always create a TIME_NOMINAL column for the x variable
-  data <- dplyr::mutate(data, TIME_NOMINAL = !!rlang::sym(x_var))
+  # data <- dplyr::mutate(data, TIME_NOMINAL = !!rlang::sym(x_var))
 
   # Apply filtering
   processed <- filter_by_list(data, filtering_list) %>%
@@ -257,7 +279,7 @@ process_data_mean <- function(pknca_data,
   # Adjust time variable with dose time if using time since last dose
   if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
     processed <- processed %>%
-      dplyr::group_by(!!!rlang::syms(dose_group_cols), TIME_NOMINAL) %>%
+      dplyr::group_by(!!!rlang::syms(c(dose_group_cols, x_var))) %>%
       dplyr::mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
       dplyr::ungroup()
   }
@@ -278,7 +300,10 @@ process_data_mean <- function(pknca_data,
       SD_max = Mean + SD,
       CI_lower = Mean - 1.96 * SE,
       CI_upper = Mean + 1.96 * SE
-    )
+    )  %>%
+
+    # Make sure the nominal time column is always the first column
+    select(any_of(c(x_var)), everything())
 
   # Remove non-positive means if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
