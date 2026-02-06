@@ -134,7 +134,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     df <- info_per_plot_list[[i]]
 
     # Create line data
-    if (any(!is.na(df$is_halflife_used))) {
+    if (any(df$is_halflife_used, na.rm = TRUE)) {
       df_fit <- df[df$is_halflife_used, ]
       fit <- stats::lm(as.formula(paste0("log10(", conc_col, ") ~ ", time_col)), df_fit)
       fit_line_data <- data.frame(x = c(df$lambda.z.time.first[1], df$tlast[1]))
