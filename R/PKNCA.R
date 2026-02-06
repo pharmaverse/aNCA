@@ -117,7 +117,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   # Set default settings
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
-  df_conc$REASON <- NA
+  df_conc$REASON <- ""
   df_conc$exclude_half.life <- FALSE
 
   # Create PKNCA conc object
@@ -198,6 +198,8 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #'
 #' Step 5: Impute start values if requested
 #'
+#' Step 6: Indicate points excluded / selected manually for half-life
+#'
 #' Note*: The function assumes that the `adnca_data` object has been
 #' created using the `PKNCA_create_data_object()` function.
 #'
@@ -206,6 +208,9 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #' @param selected_analytes User selected analytes
 #' @param selected_profile User selected dose numbers/profiles
 #' @param selected_pcspec User selected specimen
+#' @param hl_adj_rules A data frame containing half-life adjustment rules. It must
+#' contain group columns and rule specification columns;
+#' TYPE: (Inclusion, Exclusion), RANGE: (start-end).
 #' @param should_impute_c0 Logical indicating whether to impute start concentration values
 #' @param exclusion_list List of exclusion reasons and row indices to apply to the
 #' concentration data. Each item in the list should have:
@@ -229,8 +234,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     selected_profile,
     selected_pcspec,
     should_impute_c0 = TRUE,
+    hl_adj_rules = NULL,
     exclusion_list = NULL,
     keep_interval_cols = NULL) {
+
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
@@ -274,6 +281,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       PCSPEC %in% selected_pcspec
     )
 
+  # Update concentration data to indicate points excluded / selected manually for half-life
+  if (!is.null(hl_adj_rules)) {
+    data <- update_pknca_with_rules(data, hl_adj_rules)
+  }
   data
 }
 
@@ -745,12 +756,6 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
-    ####################################################################################
-    # TODO (Until new slope management is merged, we need to use the old is.excluded.hl)
-    # Check with #641 and see test-PKNCA.R
-    excl_hl_col <- "is.excluded.hl"
-    ####################################################################################
-
     if (!is.null(excl_hl_col)) {
       data_conc <- processed_pknca_data$conc$data
       conc_groups <- group_vars(processed_pknca_data$conc)
@@ -770,7 +775,6 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
   }
   processed_pknca_data
 }
-
 #' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 #'
 #' This function removes parameters from the PKNCA results that were not requested by the user,
