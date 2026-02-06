@@ -188,7 +188,8 @@ manual_slopes_table_server <- function(
     # --- Manual slopes override logic (moved from slope_selector_server) ---
     if (!is.null(manual_slopes_override)) {
       observeEvent(manual_slopes_override(), {
-        req(manual_slopes_override())
+        req(manual_slopes_override(), pknca_data())
+        # TODO (Gerardo): Integrate slope rules to work with settings upload
         if (nrow(manual_slopes_override()) == 0) return(NULL)
         log_debug_list("Manual slopes override:", manual_slopes_override())
         override_valid <- apply(manual_slopes_override(), 1, function(r) {
@@ -197,7 +198,6 @@ manual_slopes_table_server <- function(
             PCSPEC == r["PCSPEC"],
             USUBJID == r["USUBJID"],
             PARAM == r["PARAM"],
-            ATPTREF == r["ATPTREF"],
             DOSNOA == r["DOSNOA"]
           ) %>%
             NROW() != 0
