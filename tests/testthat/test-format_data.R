@@ -37,7 +37,7 @@ describe("format_pkncaconc_data", {
       )
     )
   })
-  
+
   it("handles nca_exclude_reason_columns correctly", {
     df_conc <- format_pkncaconc_data(ADNCA,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
@@ -45,11 +45,10 @@ describe("format_pkncaconc_data", {
                                      time_column = "AFRLT",
                                      rrlt_column = "ARRLT",
                                      nca_exclude_reason_columns = c("RACE"))
-    
-     
-    expect_false(c("RACE") %in% colnames(df_conc)) 
+
+    expect_false(c("RACE") %in% colnames(df_conc))
     expect_s3_class(df_conc, "data.frame")
-    
+
   })
 
   it("filters EVID if column is present", {
@@ -120,9 +119,8 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  # jr 
   it("handles AEFRLT column correctly, if present", {
-    
+
     ADNCA <- tibble::add_column(ADNCA, AEFRLT = rep(seq(0, 9), 2))
     df_conc <- format_pkncaconc_data(ADNCA,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
@@ -133,7 +131,7 @@ describe("format_pkncaconc_data", {
 
     expect_s3_class(df_conc, "data.frame")
     expect_true(!is.null(df_conc$AEFRLT))
-    
+
     expect_no_error(
       PKNCA::PKNCAconc(
         df_conc,
@@ -142,9 +140,24 @@ describe("format_pkncaconc_data", {
         time.nominal = "NFRLT"
       )
     )
- })
-  
-  
+  })
+
+  test_that("concatenates exclusion reasons correctly", {
+    test_df <- data.frame(
+      USUBJID = "001", AFRLT = 1, ARRLT = 0, ROUTE = "IV",
+      EXCL_A = "Poor sample",
+      EXCL_B = "Wrong time"
+    )
+
+    res <- format_pkncaconc_data(
+      test_df,
+      group_columns = "USUBJID",
+      nca_exclude_reason_columns = c("EXCL_A", "EXCL_B")
+    )
+
+    expect_equal(res$nca_exclude, "Poor sample; Wrong time")
+  })
+
   it("processes multiple analytes correctly", {
     multi_analyte_adnca <- ADNCA %>% mutate(PARAM = rep(c("Analyte1", "Analyte2"), each = 10))
     df_conc <- format_pkncaconc_data(multi_analyte_adnca,
